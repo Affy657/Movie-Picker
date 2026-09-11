@@ -7,6 +7,7 @@ import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { queryKeys } from '@/shared/hooks/queryKeys';
+import { invalidateWatchlist } from '@/features/watchlist/hooks/useWatchlist';
 import InfoBubble from '@/shared/components/InfoBubble';
 import {
   syncLetterboxd,
@@ -80,7 +81,7 @@ export default function LetterboxdImportSection() {
   const syncAction = useCallback(async () => {
     const result = await syncLetterboxd(true);
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list });
+    void invalidateWatchlist(queryClient);
     return result;
   }, [queryClient]);
 
@@ -116,7 +117,7 @@ export default function LetterboxdImportSection() {
           }
         : prev
     );
-    void queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list });
+    void invalidateWatchlist(queryClient);
     void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
   };
 

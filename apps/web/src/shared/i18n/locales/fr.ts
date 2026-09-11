@@ -1612,6 +1612,11 @@
       bioLabel: 'Bio',
       bioHint: '{{count}} caractères restants.',
       visibilityLabel: 'Profil public',
+      watchlistVisibilityLabel: 'Watchlist visible sur mon profil',
+      watchlistVisibilityHint:
+        'Vos films à voir apparaissent à l’adresse {{url}}. Les visiteurs ne peuvent pas la modifier.',
+      watchlistVisibilityPrivateHint:
+        'Votre profil est privé\u00a0: la watchlist reste masquée tant qu’il le restera.',
       viewMyProfile: 'Voir mon profil public',
       saveSuccess: 'Profil public mis à jour.',
       fallbackError: 'Impossible de mettre à jour le profil public.',
@@ -1635,6 +1640,23 @@
       empty: 'Aucune activité pour le moment.',
       loadError: "Les statistiques n'ont pas pu être chargées.",
       retry: 'Réessayer',
+    },
+    watchlist: {
+      theirs: 'Sa watchlist',
+      mine: 'Ma watchlist',
+      countOne: '1 film à voir',
+      count: '{{count}} films à voir',
+      empty: 'Aucun film à voir',
+      hidden: 'Masquée',
+      pageTitle: 'La watchlist de {{name}}',
+      seoDescription:
+        'Watchlist de {{name}} (@{{handle}}) sur Movie Picker\u00a0: ses films à voir, à proposer pour une prochaine soirée.',
+      loadError: 'Impossible de charger la watchlist de cet utilisateur.',
+      listAria: 'Films à voir',
+      emptyTitle: 'Aucun film à voir pour le moment',
+      emptyMessage: "Cette personne n'a encore rien ajouté à sa watchlist.",
+      searchLabel: 'Rechercher dans la watchlist',
+      sortAddedAt: 'Ajouté le',
     },
     movies: {
       title: 'Derniers films vus',

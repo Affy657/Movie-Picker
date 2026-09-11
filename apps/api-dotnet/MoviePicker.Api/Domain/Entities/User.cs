@@ -44,6 +44,7 @@ public sealed record User
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;
+    public bool IsWatchlistPublic { get; init; } = true;
     public UiThemePreference UiTheme { get; init; } = UiThemePreference.System;
     public AccentColor AccentColor { get; init; } = AccentColor.Default;
     public RatingScale RatingScale { get; init; } = RatingScale.Five;

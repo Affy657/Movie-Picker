@@ -5142,6 +5142,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{handle}/watchlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    skip?: number;
+                    take?: number;
+                };
+                header?: never;
+                path: {
+                    handle: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WatchlistResponse"];
+                        "application/json": components["schemas"]["WatchlistResponse"];
+                        "text/json": components["schemas"]["WatchlistResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me/watched-movies": {
         parameters: {
             query?: never;
@@ -6276,6 +6347,7 @@ export interface components {
             handle?: string | null;
             bio?: string | null;
             isProfilePublic?: boolean;
+            isWatchlistPublic?: boolean;
             uiTheme?: string | null;
             accentColor?: string | null;
             avatarId?: string | null;
@@ -6661,6 +6733,7 @@ export interface components {
             handle?: string | null;
             bio?: string | null;
             isProfilePublic?: boolean | null;
+            isWatchlistPublic?: boolean | null;
             letterboxdUsername?: string | null;
         };
         ProblemDetails: {
@@ -6686,6 +6759,9 @@ export interface components {
             followersCount?: number;
             isSupporter?: boolean;
             isFollowedByMe?: boolean | null;
+            isWatchlistPublic?: boolean;
+            /** Format: int32 */
+            watchlistCount?: number | null;
         };
         /** @enum {string} */
         RatingScale: "five" | "ten";
@@ -6823,6 +6899,7 @@ export interface components {
             handle?: string | null;
             bio?: string | null;
             isProfilePublic?: boolean;
+            isWatchlistPublic?: boolean;
             letterboxdUsername?: string | null;
             /** Format: date-time */
             letterboxdLastSyncAt?: string | null;

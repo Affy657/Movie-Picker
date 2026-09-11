@@ -109,6 +109,55 @@
   color: var(--color-text-muted);
 }
 
+.watchlistCell {
+  margin-top: var(--space-2);
+  gap: var(--space-2);
+  text-decoration: none;
+}
+
+.watchlistIcon {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+}
+
+.watchlistIconMuted {
+  color: var(--color-text-muted);
+}
+
+.watchlistText {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+
+.watchlistLabel {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: var(--leading-tight);
+  color: var(--color-text);
+}
+
+.watchlistCount {
+  font-size: var(--font-size-2xs);
+  line-height: var(--leading-tight);
+  color: var(--color-text-muted);
+}
+
+.hiddenPill {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-badge-pending-bg);
+  color: var(--color-badge-pending-text);
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+}
+
 .divider {
   height: 1px;
   background: var(--color-border-subtle);

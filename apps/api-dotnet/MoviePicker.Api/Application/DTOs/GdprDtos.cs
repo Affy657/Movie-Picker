@@ -21,6 +21,7 @@ public sealed record ExportedProfile
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; }
+    public bool IsWatchlistPublic { get; init; }
     public string UiTheme { get; init; } = string.Empty;
     public string AccentColor { get; init; } = string.Empty;
     public string AvatarId { get; init; } = string.Empty;

@@ -37,6 +37,7 @@ const WatchlistPage = lazy(() => import('@/features/watchlist/pages/WatchlistPag
 const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'));
 const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
 const ProfileMoviesPage = lazy(() => import('@/features/profile/pages/ProfileMoviesPage'));
+const ProfileWatchlistPage = lazy(() => import('@/features/profile/pages/ProfileWatchlistPage'));
 const NotFoundPage = lazy(() => import('@/app/pages/NotFoundPage'));
 
 function PageFallback() {
@@ -167,6 +168,7 @@ export function AppRoutes() {
         />
         <Route path={ROUTES.eventDetailPattern} element={<EventDetail />} />
         <Route path={ROUTES.profileMoviesPattern} element={<ProfileMoviesPage />} />
+        <Route path={ROUTES.profileWatchlistPattern} element={<ProfileWatchlistPage />} />
         <Route path={ROUTES.profilePattern} element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

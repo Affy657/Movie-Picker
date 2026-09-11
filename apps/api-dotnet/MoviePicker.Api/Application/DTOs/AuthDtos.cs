@@ -55,6 +55,7 @@ public sealed class UserProfileResponse
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;
+    public bool IsWatchlistPublic { get; init; } = true;
     public string? LetterboxdUsername { get; init; }
     public DateTimeOffset? LetterboxdLastSyncAt { get; init; }
     public string? LetterboxdLastSyncError { get; init; }
@@ -92,6 +93,8 @@ public sealed class PatchUserProfileRequest
     public string? Bio { get; init; }
 
     public bool? IsProfilePublic { get; init; }
+
+    public bool? IsWatchlistPublic { get; init; }
 
     [MaxLength(40, ErrorMessage = "Le pseudo Letterboxd est trop long.")]
     public string? LetterboxdUsername { get; init; }

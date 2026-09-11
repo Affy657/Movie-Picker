@@ -21,6 +21,7 @@ const baseUser: UserProfile = {
   handle: 'alice',
   bio: null,
   isProfilePublic: true,
+  isWatchlistPublic: true,
   letterboxdUsername: null,
   letterboxdLastSyncAt: null,
   letterboxdLastSyncError: null,

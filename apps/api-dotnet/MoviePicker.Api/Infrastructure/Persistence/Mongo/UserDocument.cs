@@ -35,6 +35,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public bool? IsProfilePublic { get; set; }
 
+    [BsonElement("isWatchlistPublic")]
+    [BsonIgnoreIfNull]
+    public bool? IsWatchlistPublic { get; set; }
+
     [BsonElement("uiTheme")]
     public string UiTheme { get; set; } = "system";
 

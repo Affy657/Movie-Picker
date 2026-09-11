@@ -9,22 +9,27 @@ namespace MoviePicker.Api.Tests.UseCases.Profile;
 
 public sealed class GetPublicProfileHandlerTests
 {
-    private static User User(bool isPublic, DateTimeOffset? supporterSince = null) => new()
-    {
-        Id = "u1",
-        Email = "secret@private.co",
-        PasswordHash = "h",
-        DisplayName = "Alice",
-        Handle = "alice",
-        Bio = "Cinéphile",
-        AvatarId = "alpha",
-        IsProfilePublic = isPublic,
-        SupporterSince = supporterSince,
-        CreatedAt = new DateTimeOffset(2024, 3, 1, 0, 0, 0, TimeSpan.Zero),
-        UpdatedAt = DateTimeOffset.UtcNow
-    };
+    private static User User(
+        bool isPublic,
+        DateTimeOffset? supporterSince = null,
+        bool isWatchlistPublic = true) => new()
+        {
+            Id = "u1",
+            Email = "secret@private.co",
+            PasswordHash = "h",
+            DisplayName = "Alice",
+            Handle = "alice",
+            Bio = "Cinéphile",
+            AvatarId = "alpha",
+            IsProfilePublic = isPublic,
+            IsWatchlistPublic = isWatchlistPublic,
+            SupporterSince = supporterSince,
+            CreatedAt = new DateTimeOffset(2024, 3, 1, 0, 0, 0, TimeSpan.Zero),
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
 
-    private static (Mock<IUserRepository>, Mock<IFollowRepository>, GetPublicProfileHandler) Build()
+    private static (Mock<IUserRepository>, Mock<IFollowRepository>, GetPublicProfileHandler) Build(
+        Mock<IWatchlistRepository>? watchlist = null)
     {
         var users = new Mock<IUserRepository>();
         var follows = new Mock<IFollowRepository>();
@@ -32,8 +37,18 @@ public sealed class GetPublicProfileHandlerTests
             .ReturnsAsync((0, 0));
         follows.Setup(x => x.IsFollowingAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
-        var handler = new GetPublicProfileHandler(users.Object, follows.Object);
+        var handler = new GetPublicProfileHandler(
+            users.Object,
+            follows.Object,
+            (watchlist ?? new Mock<IWatchlistRepository>()).Object);
         return (users, follows, handler);
+    }
+
+    private static Mock<IWatchlistRepository> WatchlistWith(long count)
+    {
+        var watchlist = new Mock<IWatchlistRepository>();
+        watchlist.Setup(x => x.CountByUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(count);
+        return watchlist;
     }
 
     [Fact]
@@ -62,6 +77,48 @@ public sealed class GetPublicProfileHandlerTests
         var res = await handler.HandleAsync("alice");
 
         Assert.True(res.IsSupporter);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PublicWatchlist_ExposesItsCountToVisitors()
+    {
+        var watchlist = WatchlistWith(24);
+        var (users, _, handler) = Build(watchlist);
+        users.Setup(x => x.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(User(true));
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.True(res.IsWatchlistPublic);
+        Assert.Equal(24, res.WatchlistCount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HiddenWatchlist_KeepsTheCountFromVisitors()
+    {
+        var watchlist = WatchlistWith(24);
+        var (users, _, handler) = Build(watchlist);
+        users.Setup(x => x.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(User(true, isWatchlistPublic: false));
+
+        var res = await handler.HandleAsync("alice", currentUserId: "someone-else");
+
+        Assert.False(res.IsWatchlistPublic);
+        Assert.Null(res.WatchlistCount);
+        watchlist.Verify(x => x.CountByUserIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HiddenWatchlist_StillCountedForItsOwner()
+    {
+        var watchlist = WatchlistWith(24);
+        var (users, _, handler) = Build(watchlist);
+        users.Setup(x => x.GetByHandleAsync("alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(User(true, isWatchlistPublic: false));
+
+        var res = await handler.HandleAsync("alice", currentUserId: "u1");
+
+        Assert.False(res.IsWatchlistPublic);
+        Assert.Equal(24, res.WatchlistCount);
     }
 
     [Fact]

@@ -3,6 +3,7 @@ export const queryKeys = {
     me: ['auth', 'me'] as const,
   },
   profile: {
+    publicAll: ['profile', 'public'] as const,
     public: (handle: string | undefined) => ['profile', 'public', handle ?? '$pending'] as const,
     handleAvailability: (handle: string) => ['profile', 'handle-available', handle] as const,
     following: (handle: string | undefined) =>
@@ -14,6 +15,8 @@ export const queryKeys = {
     userSearch: (query: string) => ['profile', 'user-search', query] as const,
     watchedMovies: (handle: string | undefined, take: number) =>
       ['profile', 'watchedMovies', handle ?? '$pending', take] as const,
+    watchlist: (handle: string | undefined, take: number) =>
+      ['profile', 'watchlist', handle ?? '$pending', take] as const,
   },
   notifications: {
     inbox: ['notifications', 'inbox'] as const,

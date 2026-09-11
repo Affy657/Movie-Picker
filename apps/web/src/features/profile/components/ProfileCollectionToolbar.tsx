@@ -1,39 +1,42 @@
 import CollectionToolbar from '@/features/movies/components/CollectionToolbar';
 import { useTranslation } from '@/shared/i18n';
-import type {
-  ProfileMoviesSortKey,
-  SortDirection,
-} from '@/features/profile/hooks/useProfileMoviesToolbar';
+import type { MovieListSortKey, SortDirection } from '@/features/movies/hooks/useMovieListToolbar';
 
-interface ProfileMoviesToolbarProps {
+interface ProfileCollectionToolbarProps {
   search: string;
   onSearchChange: (value: string) => void;
   filtersOpen: boolean;
   onToggleFilters: () => void;
   filtersPanelId: string;
   activeFilterCount: number;
-  sortBy: ProfileMoviesSortKey;
+  sortBy: MovieListSortKey;
   sortDir: SortDirection;
-  onSetSort: (key: ProfileMoviesSortKey) => void;
+  onSetSort: (key: MovieListSortKey) => void;
   isFiltered: boolean;
   visibleCount: number;
   totalCount: number;
   onClearAll: () => void;
   isMobile: boolean;
+  searchLabel: string;
+  sortPrimaryLabel: string;
 }
 
-export default function ProfileMoviesToolbar(props: Readonly<ProfileMoviesToolbarProps>) {
+export default function ProfileCollectionToolbar({
+  searchLabel,
+  sortPrimaryLabel,
+  ...props
+}: Readonly<ProfileCollectionToolbarProps>) {
   const { t } = useTranslation();
   return (
     <CollectionToolbar
       {...props}
       sortOptions={[
-        { key: 'primary', label: t('profile.movies.toolbar.sortWatchedAt') },
+        { key: 'primary', label: sortPrimaryLabel },
         { key: 'title', label: t('profile.movies.toolbar.sortTitle') },
         { key: 'year', label: t('profile.movies.toolbar.sortYear') },
       ]}
       labels={{
-        searchLabel: t('profile.movies.toolbar.searchLabel'),
+        searchLabel,
         searchPlaceholder: t('profile.movies.toolbar.searchPlaceholder'),
         filtersToggleAriaLabel: t('profile.movies.toolbar.filtersToggleAria'),
         filtersLabel: t('profile.movies.toolbar.filtersLabel'),

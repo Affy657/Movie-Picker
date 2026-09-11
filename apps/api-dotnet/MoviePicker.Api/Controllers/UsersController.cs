@@ -114,6 +114,24 @@ public sealed class UsersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{handle}/watchlist")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]
+    [ProducesResponseType(typeof(WatchlistResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetUserWatchlist(
+        string handle,
+        [FromQuery] int skip,
+        [FromQuery] int? take,
+        [FromServices] IGetUserWatchlistHandler handler,
+        CancellationToken ct)
+    {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var result = await handler.HandleAsync(handle, currentUserId, skip, take, ct);
+        return Ok(result);
+    }
+
     [HttpGet("me/watched-movies")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]

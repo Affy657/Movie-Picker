@@ -199,7 +199,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.6 – Planifiée (26 points, 3 restants)
+## 📋 V1.6 – Planifiée (26 points, 0 restant)
 
 **Objectif** : compléter la boucle sociale entamée en V1.2 et ritualiser la soirée. Items classés par valeur utilisateur décroissante.
 
@@ -208,7 +208,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ✅ `M` **Templates de soirée** (V1.6) : jusqu'à cinq configurations nommées par compte, enregistrées depuis la création d'une soirée comme depuis les paramètres d'une soirée existante, et réappliquées en un clic. Le menu d'une soirée passée propose en plus « Refaire cette soirée ».
 - ✅ `L` **Plusieurs films gagnants par soirée** (V1.6) : l'hôte règle le nombre de films gagnants jusqu'à dix, et chaque tirage ajoute un film au palmarès en l'excluant des suivants. Les gagnants comptent partout : historique, statistiques, partage et « Vos amis ont vu ».
 - ✅ `S` **Plage de votes configurable** (V1.6) : l'hôte active une limite de votes par participant dans les paramètres de la soirée, reprise dans les templates et les soirées récurrentes. Une fois ses votes posés, le participant est prévenu qu'il doit en retirer un pour voter ailleurs.
-- ⬜ `M` **Watchlist d'un autre utilisateur** : consulter la watchlist d'un compte depuis son profil public `/u/:handle`, avec un réglage de visibilité dédié, indépendant de celui du profil.
+- ✅ `M` **Watchlist d'un autre utilisateur** (V1.6) : la watchlist d'un compte se consulte depuis son profil public `/u/:handle`, sur une page dédiée calquée sur celle des films vus. Un réglage de visibilité propre à la watchlist, indépendant de celui du profil et activé par défaut, permet de la masquer.
 
 ---
 

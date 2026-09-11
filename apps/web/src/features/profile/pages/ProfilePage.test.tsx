@@ -28,6 +28,8 @@ const ALICE_PROFILE = {
   followingCount: 3,
   followersCount: 7,
   isFollowedByMe: null,
+  isWatchlistPublic: true,
+  watchlistCount: 24,
 };
 
 const ME_PROFILE = {
@@ -300,6 +302,97 @@ describe('ProfilePage (MSW)', () => {
 
     const link = await screen.findByRole('link', { name: /modifier mon profil/i });
     expect(link).toHaveAttribute('href', '/settings');
+  });
+
+  describe('watchlist', () => {
+    it('propose la watchlist d’un autre utilisateur avec son nombre de films', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE))
+      );
+
+      renderProfile('alice');
+
+      const link = await screen.findByRole('link', { name: /sa watchlist/i });
+      expect(link).toHaveAttribute('href', '/u/alice/watchlist');
+      expect(link).toHaveTextContent(/24 films à voir/i);
+    });
+
+    it('accorde le compteur au singulier', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({ ...ALICE_PROFILE, watchlistCount: 1 })
+        )
+      );
+
+      renderProfile('alice');
+
+      expect(await screen.findByRole('link', { name: /sa watchlist/i })).toHaveTextContent(
+        /1 film à voir/i
+      );
+    });
+
+    it.each([
+      ['masquée', { isWatchlistPublic: false, watchlistCount: null }],
+      ['vide', { isWatchlistPublic: true, watchlistCount: 0 }],
+    ])('ne montre rien à un visiteur quand la watchlist est %s', async (_label, overrides) => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({ ...ALICE_PROFILE, ...overrides })
+        )
+      );
+
+      renderProfile('alice');
+
+      await screen.findByRole('heading', { name: 'Alice' });
+      expect(screen.queryByRole('link', { name: /watchlist/i })).not.toBeInTheDocument();
+    });
+
+    it('mène à ma propre watchlist depuis mon profil', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+        http.get(`${TEST_API_V1}/users/moi`, () =>
+          HttpResponse.json({
+            ...ALICE_PROFILE,
+            handle: 'moi',
+            displayName: 'Moi',
+            isFollowedByMe: null,
+            watchlistCount: 9,
+          })
+        )
+      );
+
+      renderProfile('moi');
+
+      const link = await screen.findByRole('link', { name: /ma watchlist/i });
+      expect(link).toHaveAttribute('href', '/watchlist');
+      expect(link).toHaveTextContent(/9 films à voir/i);
+      expect(screen.queryByText(/masquée/i)).not.toBeInTheDocument();
+    });
+
+    it('signale sur mon profil que ma watchlist est masquée, même vide', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+        http.get(`${TEST_API_V1}/users/moi`, () =>
+          HttpResponse.json({
+            ...ALICE_PROFILE,
+            handle: 'moi',
+            displayName: 'Moi',
+            isFollowedByMe: null,
+            isWatchlistPublic: false,
+            watchlistCount: 0,
+          })
+        )
+      );
+
+      renderProfile('moi');
+
+      const link = await screen.findByRole('link', { name: /ma watchlist/i });
+      expect(link).toHaveAttribute('href', '/watchlist');
+      expect(link).toHaveTextContent(/masquée/i);
+    });
   });
 
   it("affiche un état introuvable quand l'API renvoie 404", async () => {

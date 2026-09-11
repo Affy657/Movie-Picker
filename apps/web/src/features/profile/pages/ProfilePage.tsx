@@ -160,6 +160,7 @@ export default function ProfilePage() {
             profile={profile}
             memberSince={memberSince}
             streak={streak}
+            isOwnProfile={isOwnProfile}
             onOpenFollowModal={setFollowModal}
           >
             <ProfileActions

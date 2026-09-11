@@ -32,6 +32,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             && request.Handle is null
             && request.Bio is null
             && request.IsProfilePublic is null
+            && request.IsWatchlistPublic is null
             && request.LetterboxdUsername is null;
 
         if (nothingToUpdate)
@@ -82,6 +83,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 
         var bio = ApplyBio(user.Bio, request.Bio);
         var isProfilePublic = request.IsProfilePublic ?? user.IsProfilePublic;
+        var isWatchlistPublic = request.IsWatchlistPublic ?? user.IsWatchlistPublic;
         var letterboxdUsername = ApplyLetterboxdUsername(user.LetterboxdUsername, request.LetterboxdUsername);
 
         var letterboxdChanged = !string.Equals(
@@ -99,6 +101,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             Handle = handle,
             Bio = bio,
             IsProfilePublic = isProfilePublic,
+            IsWatchlistPublic = isWatchlistPublic,
             LetterboxdUsername = letterboxdUsername,
             LetterboxdLastSyncAt = letterboxdChanged ? null : user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = letterboxdChanged ? null : user.LetterboxdLastSyncError,
@@ -136,6 +139,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         Handle = user.Handle,
         Bio = user.Bio,
         IsProfilePublic = user.IsProfilePublic,
+        IsWatchlistPublic = user.IsWatchlistPublic,
         LetterboxdUsername = user.LetterboxdUsername,
         LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
         LetterboxdLastSyncError = user.LetterboxdLastSyncError,

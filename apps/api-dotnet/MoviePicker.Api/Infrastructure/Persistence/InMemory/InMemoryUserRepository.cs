@@ -194,6 +194,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             Handle = handle ?? string.Empty,
             Bio = user.Bio,
             IsProfilePublic = user.IsProfilePublic,
+            IsWatchlistPublic = user.IsWatchlistPublic,
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
             RatingScale = user.RatingScale,

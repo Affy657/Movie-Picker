@@ -11,6 +11,8 @@ public sealed class PublicProfileResponse
     public int FollowersCount { get; init; }
     public bool IsSupporter { get; init; }
     public bool? IsFollowedByMe { get; init; }
+    public bool IsWatchlistPublic { get; init; }
+    public int? WatchlistCount { get; init; }
 }
 
 public sealed class HandleAvailabilityResponse

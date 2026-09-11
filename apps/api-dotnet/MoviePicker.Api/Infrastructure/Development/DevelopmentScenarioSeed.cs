@@ -15,6 +15,7 @@ using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
+using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
@@ -56,6 +57,7 @@ internal static class DevelopmentScenarioSeed
         {
             await RunStepAsync(logger, "profils enrichis", () => TryEnrichProfilesAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "follows", () => TrySeedFollowsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "watchlists", () => TrySeedWatchlistsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
 
             await RunStepAsync(logger, "multi-participants", () => TrySeedMultiParticipantScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "roue & clôture", () => TrySeedWheelAndCloseScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
@@ -144,8 +146,9 @@ internal static class DevelopmentScenarioSeed
                 UiTheme = "system",
                 AccentColor = "blue",
                 AvatarId = "cool",
-                Bio = "SF, thrillers et popcorn.",
-                IsProfilePublic = true
+                Bio = "SF, thrillers et popcorn. Watchlist masquée, pour tester le réglage.",
+                IsProfilePublic = true,
+                IsWatchlistPublic = false
             },
             ct).ConfigureAwait(false);
 
@@ -193,6 +196,44 @@ internal static class DevelopmentScenarioSeed
             ct).ConfigureAwait(false);
 
         logger.LogInformation("DevelopmentSeed : profils enrichis (5 comptes, thèmes/accents/bios/visibilité/préférences).");
+    }
+
+    private static async Task TrySeedWatchlistsAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var watchlist = sp.GetRequiredService<IAddToWatchlistHandler>();
+
+        (int TmdbId, string Title, string Year)[] aliceMovies =
+        [
+            (27205, "Inception", "2010"),
+            (157336, "Interstellar", "2014"),
+            (329865, "Premier Contact", "2016"),
+            (438631, "Dune", "2021"),
+            (872585, "Oppenheimer", "2023")
+        ];
+        foreach (var (tmdbId, title, year) in aliceMovies)
+        {
+            await watchlist
+                .HandleAsync(actors.Alice.Id, new AddWatchlistItemRequest { TmdbId = tmdbId, Title = title, Year = year }, ct)
+                .ConfigureAwait(false);
+        }
+
+        (int TmdbId, string Title, string Year)[] bobMovies =
+        [
+            (603, "Matrix", "1999"),
+            (78, "Blade Runner", "1982")
+        ];
+        foreach (var (tmdbId, title, year) in bobMovies)
+        {
+            await watchlist
+                .HandleAsync(actors.Bob.Id, new AddWatchlistItemRequest { TmdbId = tmdbId, Title = title, Year = year }, ct)
+                .ConfigureAwait(false);
+        }
+
+        logger.LogInformation("DevelopmentSeed : watchlists (Alice publique, 5 films ; Bob masquée, 2 films).");
     }
 
     private static async Task TrySeedFollowsAsync(
