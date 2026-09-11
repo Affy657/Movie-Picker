@@ -38,7 +38,7 @@ Ce n'est pas du management d'équipe humaine, et il serait malhonnête de le pr�
 | **La procédure de vérification** | `.claude/skills/verify/SKILL.md` | Comment lancer et éprouver l'application, pour que la vérification ne dépende pas d'une connaissance orale |
 | **Le contrôle en sortie** | `.github/PULL_REQUEST_TEMPLATE.md` | Six points de contrôle avant intégration : tests locaux, lint et format, couverture du changement, documentation, journal des versions, issue référencée |
 
-**Les trois points d'arrêt sont l'élément managérial du dispositif.** Ils sont écrits en majuscules dans la procédure, et ils disent tous la même chose : *terminer le message, attendre, ne pas continuer*. Ils se placent après le cadrage, après la maquette et après le test manuel — c'est-à-dire aux trois moments où une erreur d'interprétation coûte cher et où seul le responsable peut trancher.
+**Les trois points d'arrêt sont l'élément managérial du dispositif.** Ils sont écrits en majuscules dans la procédure, et ils disent tous la même chose : *terminer le message, attendre, ne pas continuer*. Ils se placent après le cadrage, après la maquette et après le test manuel, c'est-à-dire aux trois moments où une erreur d'interprétation coûte cher et où seul le responsable peut trancher.
 
 **Ce que ce dispositif démontre, et que le jury peut vérifier** : la délégation n'a pas consisté à confier une tâche et à espérer. Elle a consisté à écrire d'abord le cadre, puis à placer le contrôle aux points de décision et en sortie, jamais en cours d'exécution.
 
@@ -73,7 +73,7 @@ La seule affectation réelle du projet est celle qui sépare ce que je fais de c
 | Tests et refactorisations | Relus en sortie, couverts par les portes de qualité |
 | Montées de dépendances | Dependabot, regroupées mensuellement, auditées à chaque commit |
 
-**La mesure.** Sur les 833 commits de la branche principale au 5 septembre 2026, **537 sont co-signés par un agent**, soit 64 %. Le premier date du **13 mai 2026**, à la veille de la V1 ; avant, tout a été fait à la main, migration de l'API comprise.
+**La mesure.** Sur les 833 commits de la branche principale au 5 septembre 2026, **537 sont co-signés par un agent**, soit 64 %. Le premier date du **13 mai 2026**, six jours avant la V1 ; avant, tout a été fait à la main, migration de l'API comprise.
 
 | Mois | Commits | Co-signés | Part |
 |------|--------:|----------:|-----:|
@@ -97,12 +97,12 @@ Le critère demande que le style soit **identifié et décrit**. À une personne
 
 | Style | Situation du projet où il s'applique | Pourquoi celui-là |
 |-------|--------------------------------------|-------------------|
-| **Directif** | Le durcissement des portes de qualité en juillet 2026 : la chaîne était à 52 % de succès et les échecs devenaient contournables. La règle est posée sans négociation — un contrôle rouge bloque le déploiement | La compétence n'était pas en cause, la discipline l'était. Le directif est le seul style qui tienne quand l'enjeu est la conformité et que la tentation de contourner existe |
-| **Persuasif** | Les conventions de style : la règle « ne jamais écrire de commentaire dans le code » est accompagnée de son motif — si l'intention n'est pas exprimable par le nommage, c'est le code qu'il faut refactoriser | Une règle contre-intuitive n'est appliquée que si elle est comprise. Énoncée seule, elle est contournée dès la première gêne |
+| **Directif** | Le durcissement des portes de qualité en juillet 2026 : la chaîne était à 52 % de succès et les échecs devenaient contournables. La règle est posée sans négociation : un contrôle rouge bloque le déploiement | La compétence n'était pas en cause, la discipline l'était. Le directif est le seul style qui tienne quand l'enjeu est la conformité et que la tentation de contourner existe |
+| **Persuasif** | Les conventions de style : la règle « ne jamais écrire de commentaire dans le code » est accompagnée de son motif : si l'intention n'est pas exprimable par le nommage, c'est le code qu'il faut refactoriser | Une règle contre-intuitive n'est appliquée que si elle est comprise. Énoncée seule, elle est contournée dès la première gêne |
 | **Participatif** | Le cadrage d'une fonctionnalité : questions ouvertes, reformulation de ce qui a été compris, arrêt obligatoire avant toute ligne de code. Et les retours utilisateurs, qui ont déclenché deux décisions produit | La personne qui exécute détient une information que le responsable n'a pas. Décider sans la solliciter, c'est décider moins bien |
 | **Délégatif** | L'étape « développement en autonomie » : l'exécution est confiée entièrement, sans contrôle intermédiaire, et reprise en revue et en tests | La délégation n'est possible que parce que le cadre est écrit et la porte de sortie automatisée. Sans cela, ce n'est pas de la délégation, c'est de l'abandon |
 
-**Le style dominant est le délégatif encadré** : déléguer l'exécution, conserver la décision, contrôler en sortie par des portes automatisées. Il est adapté à ce projet pour une raison simple — c'est le seul style qui reste soutenable quand la capacité de supervision est la ressource la plus rare.
+**Le style dominant est le délégatif encadré** : déléguer l'exécution, conserver la décision, contrôler en sortie par des portes automatisées. Il est adapté à ce projet pour une raison simple : c'est le seul style qui reste soutenable quand la capacité de supervision est la ressource la plus rare.
 
 **Sa condition de validité, et sa limite** : il ne fonctionne que si le cadre est écrit *avant*. Un délégatif sans référentiel de conventions produit du travail non conforme qu'il faut reprendre, ce qui coûte plus cher que de l'avoir fait soi-même. C'est ce qui fait de `AGENTS.md` un outil managérial et pas seulement un fichier de style.
 
@@ -115,7 +115,7 @@ Le critère nomme l'empathie, l'écoute, la bienveillance et le leadership. Chac
 | **Écoute** | Trois canaux entrants outillés : bouton « Proposer une idée » créant une issue, lien « Signaler un problème » pré-rempli avec le contexte technique, questionnaire utilisateurs | Issues étiquetées `idée-utilisateur`, `bug` |
 | **Bienveillance** | Le gabarit d'anomalie décrit un **comportement attendu et observé**, jamais une responsabilité. La qualification cherche une cause, pas un coupable | `.github/ISSUE_TEMPLATE/bug_report.yml` |
 | **Empathie** | Les points d'arrêt de la procédure : on n'avance pas tant que l'autre n'a pas validé, même si l'on est certain d'avoir compris | Trois arrêts explicites dans le flux de réalisation |
-| **Leadership** | Décider avec l'information disponible et l'assumer par écrit, y compris les inconvénients acceptés — le cas d'arbitrage du chapitre 3 | Document d'aide à la décision du 18/03/2026 |
+| **Leadership** | Décider avec l'information disponible et l'assumer par écrit, y compris les inconvénients acceptés, le cas d'arbitrage du chapitre 3 | Document d'aide à la décision du 18/03/2026 |
 
 **Les outils de communication et le partage de ressources.** Le critère est explicite : les outils doivent **intégrer le partage de ressources**. Tous les outils ci-dessous sont versionnés dans le dépôt, donc accessibles, datés et modifiables par toute personne qui le clone.
 
@@ -134,7 +134,7 @@ Le point à dire : **aucun de ces outils n'est un outil de communication au sens
 
 ### B.5 Inclusion : handicap et contexte international
 
-Le chapitre 1 § 5.1 traite la prise en compte du handicap à trois niveaux — affectation, poste de travail et organisation, produit lui-même. Ce chapitre ajoute ce qui relève de l'animation d'équipe, et le volet international.
+Le chapitre 1 § 5.1 traite la prise en compte du handicap à trois niveaux (affectation, poste de travail et organisation, produit lui-même). Ce chapitre ajoute ce qui relève de l'animation d'équipe, et le volet international.
 
 **Le point structurant, qui vaut pour les deux sujets** : le dispositif décrit en B.4 est **entièrement asynchrone et écrit**. Or l'asynchrone écrit est la réponse commune à trois contraintes que l'on traite habituellement séparément.
 
@@ -177,7 +177,7 @@ C'est le critère le plus discriminant du chapitre. Il porte sur une situation *
 
 **Pourquoi c'est une faute managériale et pas seulement une fatigue personnelle.** Appliquée à une équipe, cette posture porte un nom : demander un effort exceptionnel plutôt qu'arbitrer le périmètre. Elle fonctionne une fois. À la deuxième, elle est perçue comme la norme, et le responsable qui l'a instaurée n'a plus d'argument pour la refuser. **Le pilotage consistait ici à décider ce qui ne serait pas livré le 25 août ; il a consisté à décider que tout le serait.**
 
-Il faut aussi nommer ce qui a bien fonctionné, sans quoi l'autocritique n'est pas une analyse mais une flagellation : les deux échéances étaient réelles et non négociables, et le périmètre de la 1.4.0 avait une valeur produit vérifiée. La faute n'est pas d'avoir travaillé dix jours, elle est de **ne pas avoir instruit l'option de décaler** — l'arbitrage n'a pas été perdu, il n'a pas été posé.
+Il faut aussi nommer ce qui a bien fonctionné, sans quoi l'autocritique n'est pas une analyse mais une flagellation : les deux échéances étaient réelles et non négociables, et le périmètre de la 1.4.0 avait une valeur produit vérifiée. La faute n'est pas d'avoir travaillé dix jours, elle est de **ne pas avoir instruit l'option de décaler**, l'arbitrage n'a pas été perdu, il n'a pas été posé.
 
 ### C.3 Trois recommandations
 
@@ -185,8 +185,8 @@ Réalistes signifie ici : applicables sans moyen supplémentaire, et vérifiable
 
 | # | Recommandation | Mise en œuvre concrète | Indicateur de contrôle |
 |:-:|----------------|------------------------|------------------------|
-| **1** | **Traiter un chevauchement d'échéances comme un arbitrage, pas comme une contrainte** | Dès que deux échéances tombent dans la même quinzaine, poser explicitement les trois options — décaler la version, réduire son périmètre, ou absorber — et écrire celle qui est retenue et pourquoi | Nombre de chevauchements ayant donné lieu à une décision écrite |
-| **2** | **Poser une limite de charge comme on pose une limite de travail en cours** | Au-delà de **5 jours consécutifs**, c'est la version qui décale, pas la semaine de travail qui s'allonge. La limite est une règle, pas une intention | Plus longue série de jours consécutifs, relevée mensuellement — indicateur déjà au tableau de bord |
+| **1** | **Traiter un chevauchement d'échéances comme un arbitrage, pas comme une contrainte** | Dès que deux échéances tombent dans la même quinzaine, poser explicitement les trois options (décaler la version, réduire son périmètre, ou absorber) et écrire celle qui est retenue et pourquoi | Nombre de chevauchements ayant donné lieu à une décision écrite |
+| **2** | **Poser une limite de charge comme on pose une limite de travail en cours** | Au-delà de **5 jours consécutifs**, c'est la version qui décale, pas la semaine de travail qui s'allonge. La limite est une règle, pas une intention | Plus longue série de jours consécutifs, relevée mensuellement, indicateur déjà au tableau de bord |
 | **3** | **Rendre la revue croisée obligatoire sur les changements structurants** | Migration, changement de contrat d'interface, modification de la chaîne : aucune intégration sans une relecture par un tiers, humaine ou outillée | Part des changements structurants passés par une revue formelle |
 
 La recommandation 2 est la seule qui aurait empêché la situation de C.1. Les deux autres en réduisent les conséquences. **C'est celle qui est la plus difficile à tenir, parce qu'elle oblige à annoncer un décalage avant d'avoir essayé d'y échapper.**

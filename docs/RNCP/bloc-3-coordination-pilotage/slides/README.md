@@ -19,9 +19,9 @@ npm run dev
 npm run verify:rendu
 ```
 
-Construit le support, le sert, le rend dans un navigateur et signale les diapositives dont le contenu est **coupé par le bas du cadre** — ce qu'aucun autre contrôle du dossier ne voit. Il **échoue** (code 1) si une diapositive déborde, si `dist/` manque, ou s'il n'a rien pu mesurer : un résultat vert signifie que les 40 pages ont réellement été rendues et mesurées.
+Construit le support, le sert, le rend dans un navigateur et signale les diapositives dont le contenu est **coupé par le bas du cadre**, ce qu'aucun autre contrôle du dossier ne voit. Il **échoue** (code 1) si une diapositive déborde, si `dist/` manque, ou s'il n'a rien pu mesurer : un résultat vert signifie que les 40 pages ont réellement été rendues et mesurées.
 
-> La police du thème est récupérée automatiquement dans `dist/`. Sans elle le navigateur retombe sur une police plus large et le contrôle signalerait de faux débordements — il refuse donc de tourner plutôt que de mentir. `CHROME_PATH` permet de désigner un Chromium déjà installé.
+> La police du thème est récupérée automatiquement dans `dist/`. Sans elle le navigateur retombe sur une police plus large et le contrôle signalerait de faux débordements, il refuse donc de tourner plutôt que de mentir. `CHROME_PATH` permet de désigner un Chromium déjà installé.
 
 ## Exporter
 
@@ -31,7 +31,7 @@ npm run export
 
 > Le premier export peut demander d'installer Playwright : `npx playwright install chromium`.
 >
-> ⚠️ L'export **ne corrige rien** : une diapositive coupée à l'écran l'est aussi dans le PDF. Passer `verify:rendu` avant. En revanche l'export **fige les polices**, ce qui met le support à l'abri d'une salle sans réseau — le thème charge sinon Nunito Sans depuis Google Fonts au moment du rendu.
+> ⚠️ L'export **ne corrige rien** : une diapositive coupée à l'écran l'est aussi dans le PDF. Passer `verify:rendu` avant. En revanche l'export **fige les polices**, ce qui met le support à l'abri d'une salle sans réseau, le thème charge sinon Nunito Sans depuis Google Fonts au moment du rendu.
 
 ## Conventions du support
 
@@ -46,7 +46,7 @@ npm run export
 |--------|-------|
 | `.lede` | Le message de la diapositive, sous le titre |
 | `.note` / `.alert` | Bandeau teal (constat) / ambre (limite assumée, autocritique) |
-| `.kpi` | Rangée d'indicateurs — grand nombre + libellé |
+| `.kpi` | Rangée d'indicateurs, grand nombre + libellé |
 | `.cols` + `.xlab` | Histogramme en colonnes, étiquettes de valeur en `<em>` |
 | `.stack` + `.legend` | Barre empilée, étiquetée en direct |
 | `.dumb` | Écart actuel → cible (haltères) |
@@ -59,7 +59,7 @@ npm run export
 | `.steps` | Trois pas numérotés (délégation, niveaux de compte rendu) |
 | `.bars` | Barres horizontales étiquetées, `.p1` / `.p3` pour la priorité, `.cont` pour une action continue (plan de formation) |
 
-**Contraintes de rendu.** Les blocs Mermaid ignorent leur `{scale: …}` dans cette version de Slidev : le SVG est contraint par `max-height` en **pixels** et non en `vh` — la toile Slidev fait 552 px de haut et n'est que mise à l'échelle par `transform`, donc une unité de fenêtre cesserait de contraindre dès que la fenêtre dépasse 1062 px.
+**Contraintes de rendu.** Les blocs Mermaid ignorent leur `{scale: …}` dans cette version de Slidev : le SVG est contraint par `max-height` en **pixels** et non en `vh`, la toile Slidev fait 552 px de haut et n'est que mise à l'échelle par `transform`, donc une unité de fenêtre cesserait de contraindre dès que la fenêtre dépasse 1062 px.
 
 **Taille de texte.** Les tableaux sont à `0.8em` (`0.7em` en classe `dense`). Le contenu ayant été allégé diapositive par diapositive, toute nouvelle baisse doit être le **dernier recours**, après avoir coupé du contenu : un support projeté se lit depuis le fond de la salle.
 

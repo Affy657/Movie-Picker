@@ -57,7 +57,7 @@ L'API du MVP répondait à un seul critère : livrer vite. Confrontée aux exige
 |------------------------|--------------------------------|
 | Typage fort et analyse statique bloquante à la compilation | Typage TypeScript effacé à l'exécution : une rupture de contrat entre deux couches n'est pas arrêtée par le compilateur du serveur |
 | Sécurité applicative fournie par le cadre (CORS, limitation de débit, en-têtes, antiforgery) | Composants à assembler et à maintenir un par un |
-| Socle à support long terme, pour limiter la charge de veille | Écosystème npm à cadence de publication rapide, veille plus fréquente — 59 des 77 pull requests du projet sont des montées de dépendances |
+| Socle à support long terme, pour limiter la charge de veille | Écosystème npm à cadence de publication rapide, veille plus fréquente : 59 des 77 pull requests du projet sont des montées de dépendances |
 | Architecture en couches imposée par l'outillage | 18 fichiers sans séparation domaine / application / infrastructure |
 
 Ce n'est pas une dérive de délai ni de budget : **c'est un écart entre ce qui est livré et ce sur quoi les six mois suivants allaient être construits.**
@@ -74,7 +74,7 @@ C'est le cœur du cas. Le coût de la décision n'était pas stable dans le temp
 
 **La mesure qui tranche.** Au 18 mars 2026, le périmètre à réécrire pesait **944 lignes**. La même API porte aujourd'hui **44 663 lignes réparties sur 544 fichiers**. Le rapport est de 1 à 47.
 
-> Ce chiffre est la justification a posteriori de la décision, pas son argument d'origine : le 18 mars, on savait que le coût croîtrait, on ne savait pas de combien. C'est précisément la nature d'un arbitrage — décider avec l'information disponible au moment où la fenêtre est ouverte.
+> Ce chiffre est la justification a posteriori de la décision, pas son argument d'origine : le 18 mars, on savait que le coût croîtrait, on ne savait pas de combien. C'est précisément la nature d'un arbitrage, décider avec l'information disponible au moment où la fenêtre est ouverte.
 
 ---
 
@@ -158,7 +158,7 @@ Quatre arguments, dans l'ordre où ils ont pesé.
 3. **La bascule en une fois est moins risquée que la coexistence, à effectif 1.** C'est contre-intuitif et c'est le point que le jury interrogera. Maintenir deux API en parallèle double le coût de chaque évolution pendant toute la transition ; sur une équipe, ce coût se répartit, sur une personne il s'ajoute. L'option la plus progressive était ici la plus dangereuse.
 4. **La décision restait réversible jusqu'à sa validation.** L'ancienne API demeurait dans l'historique et redéployable ; le retrait n'est intervenu qu'après vérification de la parité.
 
-**Ce qui rendait la décision contrôlable** : un critère de succès défini avant de commencer — *le front ne change pas, parce que les URL et le format JSON ne changent pas*. Ce critère est vérifiable, binaire, et il transforme un chantier de réécriture en un objectif mesurable.
+**Ce qui rendait la décision contrôlable** : un critère de succès défini avant de commencer, *le front ne change pas, parce que les URL et le format JSON ne changent pas*. Ce critère est vérifiable, binaire, et il transforme un chantier de réécriture en un objectif mesurable.
 
 ---
 
@@ -178,13 +178,13 @@ Quatre arguments, dans l'ordre où ils ont pesé.
 
 Deux écarts, énoncés ici plutôt que laissés à découvrir.
 
-**Le front a bougé de 87 lignes.** L'objectif annoncé était « aucune modification du front ». Le commit de migration — celui de 11 h 57, et non le retrait de l'ancienne API à 12 h 12 — touche 9 fichiers de l'interface, pour 87 insertions et 34 suppressions, essentiellement des ajustements de typage et d'affichage sur l'écran de détail d'une soirée. Le critère de succès était donc **presque** tenu : le contrat des URL a été respecté, celui des types ne l'a pas été à la ligne près. Sur un projet à plusieurs, ces 87 lignes auraient été un incident d'intégration entre deux personnes ; à une seule, elles sont passées inaperçues. C'est un argument de plus pour la revue par un tiers, humain ou outillé, sur les changements structurants.
+**Le front a bougé de 87 lignes.** L'objectif annoncé était « aucune modification du front ». Le commit de migration, celui de 11 h 57, et non le retrait de l'ancienne API à 12 h 12, touche 9 fichiers de l'interface, pour 87 insertions et 34 suppressions, essentiellement des ajustements de typage et d'affichage sur l'écran de détail d'une soirée. Le critère de succès était donc **presque** tenu : le contrat des URL a été respecté, celui des types ne l'a pas été à la ligne près. Sur un projet à plusieurs, ces 87 lignes auraient été un incident d'intégration entre deux personnes ; à une seule, elles sont passées inaperçues. C'est un argument de plus pour la revue par un tiers, humain ou outillé, sur les changements structurants.
 
-**Le lot est chiffré 13 J/H, l'exécution du cœur tient sur deux journées.** Le chiffrage du Bloc 1 (8 de réécriture, 3 de tests et de contrat, 2 de redéploiement) a été formalisé en juin 2026, donc après coup. L'historique montre une exécution concentrée du 18 mars à 11 h 57 au 19 mars à 16 h 52. Trois raisons à l'écart, aucune ne l'annule complètement : la reconstitution de charge est **faible sur mars**, les commits de cette période étant groupés (chapitre 2, § 5.3) ; le travail préparatoire — contrat OpenAPI, analyse des options, architecture cible — précède le premier commit et n'y figure pas ; et les tests d'intégration comme l'adaptation complète de la chaîne se sont étalés au-delà de mars. **Formulé honnêtement : le lot a été chiffré a posteriori sur son périmètre complet, et l'historique ne permet pas de le vérifier au jour près.**
+**Le lot est chiffré 13 J/H, l'exécution du cœur tient sur deux journées.** Le chiffrage du Bloc 1 (8 de réécriture, 3 de tests et de contrat, 2 de redéploiement) a été formalisé en juin 2026, donc après coup. L'historique montre une exécution concentrée du 18 mars à 11 h 57 au 19 mars à 16 h 52. Trois raisons à l'écart, aucune ne l'annule complètement : la reconstitution de charge est **faible sur mars**, les commits de cette période étant groupés (chapitre 2, § 5.3) ; le travail préparatoire, contrat OpenAPI, analyse des options, architecture cible, précède le premier commit et n'y figure pas ; et les tests d'intégration comme l'adaptation complète de la chaîne se sont étalés au-delà de mars. **Formulé honnêtement : le lot a été chiffré a posteriori sur son périmètre complet, et l'historique ne permet pas de le vérifier au jour près.**
 
 ### 6.3 La prédiction du document d'aide à la décision, vérifiée
 
-Le document d'aide à la décision annonçait un inconvénient : « C# est plus verbeux que TypeScript ». Mesure : **944 lignes TypeScript remplacées par 4 653 lignes C#**, soit un facteur 4,9. L'inconvénient annoncé s'est réalisé, il avait été accepté en connaissance de cause, et il est compensé par la séparation en couches que ce volume porte — 111 fichiers structurés en domaine, application et infrastructure, là où l'API Node en comptait 18 sans séparation.
+Le document d'aide à la décision annonçait un inconvénient : « C# est plus verbeux que TypeScript ». Mesure : **944 lignes TypeScript remplacées par 4 653 lignes C#**, soit un facteur 4,9. L'inconvénient annoncé s'est réalisé, il avait été accepté en connaissance de cause, et il est compensé par la séparation en couches que ce volume porte, 111 fichiers structurés en domaine, application et infrastructure, là où l'API Node en comptait 18 sans séparation.
 
 Un arbitrage dont on peut vérifier après coup que les inconvénients annoncés étaient les bons est un arbitrage instruit. C'est la phrase de conclusion du chapitre.
 

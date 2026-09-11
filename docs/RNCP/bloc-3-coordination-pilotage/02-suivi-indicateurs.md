@@ -27,7 +27,7 @@ Nommer le commit de référence n'est pas une précaution de style : la branche 
 
 Le suivi est tenu **dans GitHub**, sans outil de gestion de projet séparé.
 
-Le critère de choix n'est pas la richesse fonctionnelle, c'est la **distance entre le travail et sa trace**. Un outil de suivi extérieur au dépôt impose une double saisie : on fait le travail, puis on va déclarer qu'on l'a fait. Sur un projet à exécutant unique, cette double saisie est la première chose qui est abandonnée sous pression — et un indicateur abandonné sous pression est un indicateur qui ment exactement au moment où on en a besoin.
+Le critère de choix n'est pas la richesse fonctionnelle, c'est la **distance entre le travail et sa trace**. Un outil de suivi extérieur au dépôt impose une double saisie : on fait le travail, puis on va déclarer qu'on l'a fait. Sur un projet à exécutant unique, cette double saisie est la première chose qui est abandonnée sous pression, et un indicateur abandonné sous pression est un indicateur qui ment exactement au moment où on en a besoin.
 
 En tenant le suivi dans la plateforme qui héberge le code, la trace est produite **par le geste de travail lui-même** : ouvrir une branche, la fusionner, publier une version, déclencher la chaîne de vérification. Aucun de ces indicateurs ne demande de saisie déclarative. C'est la propriété qui les rend fiables rétrospectivement, et vérifiables par un tiers.
 
@@ -55,7 +55,7 @@ Le critère est explicitement demandé par la grille. Il se vérifie point par p
 | Critère de sortie « déployé et vérifié en production » | La fusion déclenche le déploiement, et le test de fumée post-déploiement vérifie la disponibilité réelle avant de considérer la livraison acquise |
 | Correctif de production prioritaire sur le flux | Les anomalies sont des issues étiquetées en sévérité, traitées hors du flux fonctionnel |
 
-Le point à dire à l'oral : **l'outil n'a pas été choisi puis la méthodologie adaptée à lui**. C'est l'inverse. Un outil de suivi à sprints (planification par itération, engagement de vélocité, burndown) aurait imposé une cadence que le rythme d'alternance ne permettait pas de tenir, et aurait produit des indicateurs faux — un burndown resté plat pendant trois semaines d'école ne dit rien sur le projet, il dit seulement que l'indicateur ne mesure pas la bonne chose.
+Le point à dire à l'oral : **l'outil n'a pas été choisi puis la méthodologie adaptée à lui**. C'est l'inverse. Un outil de suivi à sprints (planification par itération, engagement de vélocité, burndown) aurait imposé une cadence que le rythme d'alternance ne permettait pas de tenir, et aurait produit des indicateurs faux, un burndown resté plat pendant trois semaines d'école ne dit rien sur le projet, il dit seulement que l'indicateur ne mesure pas la bonne chose.
 
 ### 1.4 Le circuit d'un travail, de l'entrée à la mesure
 
@@ -85,7 +85,7 @@ Trois limites, énoncées ici plutôt que découvertes par le jury.
 | **Toutes les intégrations ne passent pas par une pull request** | 122 fusions sur la branche principale pour 26 pull requests fusionnées | L'indicateur « pull requests » mesure le travail **soumis à revue formelle**, pas le débit total. Le débit total se lit sur les fusions et les commits |
 | **Le tableau de flux n'a pas été tenu comme artefact permanent** | Le flux a vécu dans les branches, les issues et les feuilles de route | Le tableau consolidé est **postérieur** au travail qu'il représente. Il visualise une matière datée, il ne la crée pas |
 
-La troisième limite est celle qu'un jury de professionnels repère seul. La réponse tient en une phrase : **la matière de suivi est datée et vérifiable, sa mise en tableau ne l'est pas**. Les 833 commits, les 77 pull requests, les 449 exécutions du pipeline et les 9 versions portent tous un horodatage produit au moment du geste. Le tableau qui les agrège n'ajoute pas d'information, il en change la lisibilité.
+La troisième limite est celle qu'un jury de professionnels repère seul. La réponse tient en une phrase : **la matière de suivi est datée et vérifiable, sa mise en tableau ne l'est pas**. Les 833 commits, les 77 pull requests, les 449 exécutions du pipeline et les 10 versions portent tous un horodatage produit au moment du geste. Le tableau qui les agrège n'ajoute pas d'information, il en change la lisibilité.
 
 ---
 
@@ -184,7 +184,7 @@ Deux lectures à porter à l'oral.
 
 **Le pic de juin n'est pas un pic de production, c'est un changement de pratique.** Les fusions passent de 6 à 39 d'un mois sur l'autre alors que les commits ne font que passer de 150 à 227. Ce qui a changé, c'est le découpage : le travail est passé d'une série de commits directs à des branches courtes fusionnées une par une. L'indicateur de fusions ne mesure donc pas la même chose avant et après juin, et il faut le dire avant qu'on le remarque.
 
-**La décroissance d'août et septembre est voulue.** Le périmètre produit se referme au profit des livrables de restitution du titre. Les 80 commits de documentation du projet le montrent : **50 d'entre eux tombent en juillet et en août**, autour des deux remises de dossier — Bloc 2 le 23 juillet, Bloc 4 le 21 août. La documentation n'est pas un lot de fin de projet, c'est un lot qui suit les échéances de restitution.
+**La décroissance d'août et septembre est voulue.** Le périmètre produit se referme au profit des livrables de restitution du titre. Les 80 commits de documentation du projet le montrent : **50 d'entre eux tombent en juillet et en août**, autour des deux remises de dossier, Bloc 2 le 23 juillet, Bloc 4 le 21 août. La documentation n'est pas un lot de fin de projet, c'est un lot qui suit les échéances de restitution.
 
 ### 3.2 La nature du travail intégré
 
@@ -215,7 +215,7 @@ Le fait que le préfixe de commit ne permette pas de séparer ces trois causes e
 
 | Version | Date | Écart avec la précédente | Périmètre livré |
 |---------|------|-------------------------:|-----------------|
-| 0.1.0 | 27/02/2026 | — | Prototype, parcours minimal |
+| 0.1.0 | 27/02/2026 | | Prototype, parcours minimal |
 | 1.0.0 | 19/05/2026 | 81 j | Première version de production |
 | 1.1.0 | 25/05/2026 | 6 j | Application installable, notifications push, séries |
 | 1.2.0 | 11/06/2026 | 17 j | Profil public, notifications, conformité RGPD, mesure d'usage |
@@ -237,7 +237,7 @@ Les 31 jours de la v1.4.0 ont une autre cause, également identifiée par le sui
 | Restitution orale Bloc 1 | 11/06/2026 | 11/06/2026 | **0** | Livrables du Bloc 1 archivés le 29/06 |
 | Remise du dossier Bloc 2 | 23/07/2026 | 23/07/2026 | **0** | Dernier commit du dossier : **23/07/2026** |
 | Remise du dossier Bloc 4 | 21/08/2026 | 21/08/2026 | **0** | Export PDF du dossier : **21/08/2026** |
-| Restitution orale Bloc 3 | 16/09/2026 | à venir | — | — |
+| Restitution orale Bloc 3 | 16/09/2026 | à venir | | |
 
 **La dernière colonne est ce qui distingue une affirmation d'une preuve.** Deux des trois échéances passées sont horodatées dans l'historique du dépôt au jour près : le dossier du Bloc 2 reçoit sa passe finale le 23 juillet, celui du Bloc 4 est exporté en PDF le 21 août. Un examinateur peut le vérifier sans me croire sur parole.
 
@@ -291,7 +291,7 @@ Trois commentaires de pilotage, plus utiles que le tableau lui-même.
 | 1er au 5 septembre 2026 | 8 | 3 | **38 %** |
 | **Total, 19/06 au 05/09** | **191** | **149** | **78 %** |
 
-La courbe raconte une décision et sa conséquence. Le creux de juin correspond à la mise en place de la chaîne elle-même. La remontée à 94 % en juillet suit la refonte du pipeline livrée en v1.3.1 et la stabilisation du contrôle de performance par médiane de trois exécutions — c'est-à-dire une correction décidée **à partir de cet indicateur**. La rechute de septembre porte sur un échantillon de 8 exécutions : elle correspond à une dette d'intégration en cours de traitement, pas à une régression du produit. Un indicateur sur 8 points ne se commente pas comme une tendance, et le dire vaut mieux que de le laisser passer.
+La courbe raconte une décision et sa conséquence. Le creux de juin correspond à la mise en place de la chaîne elle-même. La remontée à 94 % en juillet suit la refonte du pipeline livrée en v1.3.1 et la stabilisation du contrôle de performance par médiane de trois exécutions, c'est-à-dire une correction décidée **à partir de cet indicateur**. La rechute de septembre porte sur un échantillon de 8 exécutions : elle correspond à une dette d'intégration en cours de traitement, pas à une régression du produit. Un indicateur sur 8 points ne se commente pas comme une tendance, et le dire vaut mieux que de le laisser passer.
 
 ### 4.3 Ressources humaines
 
@@ -302,7 +302,7 @@ La courbe raconte une décision et sa conséquence. Le creux de juin correspond 
 | Densité sur semaines actives | **3,8** jours | 23 semaines actives sur 28 |
 | Semaines sans activité | **5** | Toutes situées avant le 10 mai : le rythme s'est densifié ensuite sans retrouver de respiration |
 | Plus longue série continue | **10 jours consécutifs** | Signal de surcharge ponctuelle |
-| Répartition hebdomadaire | 1 j : 2 sem. · 2 j : 1 · 3 j : 8 · 4 j : 4 · 5 j : 5 · 6 j : 2 · 7 j : 1 | Amplitude de 1 à 7 : la charge n'est pas lissée |
+| Répartition hebdomadaire | 1 j : 2 sem. ; 2 j : 1 ; 3 j : 8 ; 4 j : 4 ; 5 j : 5 ; 6 j : 2 ; 7 j : 1 | Amplitude de 1 à 7 : la charge n'est pas lissée |
 | Facteur de bus | **1** | Aucune redondance de compétence ni d'accès |
 
 **Ce que cet axe démontre, et c'est l'enchaînement vers le chapitre 4** : la charge a été absorbée, pas pilotée. La plus longue série, **10 jours consécutifs du 17 au 26 août 2026**, encadre deux échéances superposées : la remise du dossier Bloc 4 le 21 août et la version 1.4.0 le 25. Une semaine à sept jours travaillés suivie d'une semaine à zéro tient sur sept mois de projet étudiant ; elle ne tient pas sur une équipe et une exploitation dans la durée. C'est la mesure, pas une intuition, qui fonde l'analyse critique et la limite de charge proposées au chapitre 4.
@@ -318,7 +318,7 @@ C'est la diapositive qui prouve que le suivi a servi à **décider**, et pas seu
 | | Prévu au cadrage | Réel reconstitué | Écart |
 |--|------------------|------------------|-------|
 | Charge | 98 J/H | ≈ 88 J/H | **−10 %** |
-| Périmètre | MVP + migration + V1 + clôture du titre | **+ 8 livraisons** après la V1 (V1.1.0 à V1.5.0), dont **5 versions mineures** apportant des fonctionnalités — aucune chiffrée | **+ 51 items** |
+| Périmètre | MVP + migration + V1 + clôture du titre | **+ 8 livraisons** après la V1 (V1.1.0 à V1.5.0), dont **5 versions mineures** apportant des fonctionnalités, aucune chiffrée | **+ 51 items** |
 | Délais | 4 échéances de restitution | 4 tenues | **0** |
 | Coûts d'infrastructure | 20 à 190 €/an | ≈ 10 €/an | **borne basse** |
 
@@ -335,7 +335,7 @@ Le chiffrage initial couvrait quatre lots s'arrêtant à la V1 et à la clôture
 
 Les huit livraisons qui suivent la V1 n'ont **jamais été chiffrées**. Les cinq versions mineures qu'elles contiennent (V1.1 à V1.5) portent à elles seules **51 des 74 items** de périmètre livrés, soit 69 % du produit final. Formulé sans détour : **le périmètre a triplé pendant que la charge totale restait dans l'enveloppe prévue.**
 
-Cela ne signifie pas qu'on a fait deux fois plus avec autant. Cela signifie que le chiffrage initial était **large sur les trois premiers lots** — la marge de 20 % a couvert la migration .NET — et que l'extension de périmètre a consommé cette marge plus la capacité libérée. Le suivi n'a pas détecté une dérive de charge, il a détecté un **glissement de périmètre invisible**, parce qu'aucun indicateur ne comparait le périmètre courant au périmètre chiffré.
+Cela ne signifie pas qu'on a fait deux fois plus avec autant. Cela signifie que le chiffrage initial était **large sur les trois premiers lots** (la marge de 20 % a couvert la migration .NET) et que l'extension de périmètre a consommé cette marge plus la capacité libérée. Le suivi n'a pas détecté une dérive de charge, il a détecté un **glissement de périmètre invisible**, parce qu'aucun indicateur ne comparait le périmètre courant au périmètre chiffré.
 
 ### 5.3 Ce que vaut le chiffre de 88 J/H, et ce qu'il ne vaut pas
 
@@ -343,10 +343,10 @@ Le temps passé n'ayant pas été saisi, la charge est reconstituée depuis les 
 
 | Période | Jours actifs mesurés | Fiabilité de la reconstitution |
 |---------|---------------------:|-------------------------------|
-| 27/02 au 31/03 | 4 | **Faible.** Les commits sont groupés — le tout premier, « steps 1 to 12 », porte à lui seul 3 400 lignes. Un jour actif y représente plusieurs jours de travail |
+| 27/02 au 31/03 | 4 | **Faible.** Les commits sont groupés : le tout premier, « steps 1 to 12 », porte à lui seul 3 400 lignes. Un jour actif y représente plusieurs jours de travail |
 | 01/04 au 05/09 | 84 | **Correcte.** Le commit est devenu atomique et la branche courte : un jour actif s'y rapproche d'une journée de travail |
 
-Conséquence assumée : **la charge réelle est vraisemblablement supérieure à 88 J/H**, l'écart portant sur les cinq premières semaines. La conversion retenue est de 1 jour actif = 1 J/H, avec une incertitude d'au moins 20 % — la même que celle du chiffrage initial, ce qui interdit d'interpréter un écart de 10 % comme une performance.
+Conséquence assumée : **la charge réelle est vraisemblablement supérieure à 88 J/H**, l'écart portant sur les cinq premières semaines. La conversion retenue est de 1 jour actif = 1 J/H, avec une incertitude d'au moins 20 %, la même que celle du chiffrage initial, ce qui interdit d'interpréter un écart de 10 % comme une performance.
 
 Cette limite est elle-même un enseignement de pilotage, et c'est le plus utile du chapitre : **un indicateur ne mesure que la pratique qui le produit**. La régularité du commit n'était pas une exigence de qualité de code au départ, elle est devenue la condition d'existence de l'indicateur d'avancement.
 
@@ -356,7 +356,7 @@ L'indicateur ne vaut que par la décision qu'il déclenche. Trois décisions son
 
 | Mesure qui a déclenché | Décision | Effet mesuré ensuite |
 |------------------------|----------|---------------------|
-| Cadence de livraison : 81 jours entre le prototype et la V1 | Arbitrer la migration de l'API plutôt que la poursuivre en arrière-plan — **cas d'arbitrage du chapitre 3** | Retour à une médiane de 17 jours sur les 7 versions suivantes |
+| Cadence de livraison : 81 jours entre le prototype et la V1 | Arbitrer la migration de l'API plutôt que la poursuivre en arrière-plan, **cas d'arbitrage du chapitre 3** | Retour à une médiane de 17 jours sur les 7 versions suivantes |
 | Taux de succès de la chaîne à 52 % en juin, échecs sans cause réelle sur le contrôle de performance | Rendre les portes de qualité bloquantes **et** déterministes (médiane de trois exécutions, seuils recalibrés), livré en v1.3.1 | Passage à 94 % en juillet |
 | Salves de pull requests de mise à jour de dépendances, 59 ouvertes pour 9 fusionnées | Regrouper les mises à jour en une pull request mensuelle par écosystème, et déplacer le filet de sécurité sur l'audit à chaque commit et le scan hebdomadaire | 0 vulnérabilité HIGH ou CRITICAL ouverte, sans fusion non relue |
 
@@ -390,10 +390,10 @@ Trois manques identifiés, avec la correction qui en découle. Ce sont des recom
 
 | Question | Ligne de réponse |
 |----------|------------------|
-| Votre tableau de suivi semble avoir été construit après coup | La **matière** est datée et vérifiable au geste près : 833 commits, 77 pull requests, 449 exécutions du pipeline, 9 releases, toutes horodatées au moment où elles se sont produites. Sa **mise en tableau** est effectivement postérieure, et c'est écrit en 1.5. Le tableau change la lisibilité de la matière, il ne la crée pas |
+| Votre tableau de suivi semble avoir été construit après coup | La **matière** est datée et vérifiable au geste près : 833 commits, 77 pull requests, 449 exécutions du pipeline, 10 releases, toutes horodatées au moment où elles se sont produites. Sa **mise en tableau** est effectivement postérieure, et c'est écrit en 1.5. Le tableau change la lisibilité de la matière, il ne la crée pas |
 | Pourquoi pas Jira, Trello ou un outil dédié ? | Parce qu'un outil extérieur au dépôt impose une saisie déclarative, et qu'une saisie déclarative est la première chose abandonnée sous pression sur un projet à une personne. Tous les indicateurs retenus sont produits par le geste de travail lui-même, ce qui est la condition pour qu'ils soient encore vrais six mois plus tard |
 | 33 % de vos commits sont des corrections. C'est beaucoup | Oui, et le chiffre est présenté tel quel. Trois causes distinctes s'y mélangent : des finitions de version, une salve de mise en conformité après le durcissement des portes de qualité en juillet, et de la dette réelle. Que le dispositif ne sache pas les séparer est une limite de mesure, corrigée depuis par le rattachement des corrections à une issue |
-| Votre chaîne d'intégration échoue une fois sur cinq | Sur la fenêtre complète, oui : 78 %. La série mensuelle est plus parlante — 52 % en juin, 94 % en juillet après une correction décidée à partir de cet indicateur, 78 % en août. La valeur de septembre porte sur 8 exécutions et ne se lit pas comme une tendance |
+| Votre chaîne d'intégration échoue une fois sur cinq | Sur la fenêtre complète, oui : 78 %. La série mensuelle est plus parlante, 52 % en juin, 94 % en juillet après une correction décidée à partir de cet indicateur, 78 % en août. La valeur de septembre porte sur 8 exécutions et ne se lit pas comme une tendance |
 | Comment reconstituez-vous 88 J/H sans relevé de temps ? | Par les jours distincts portant au moins un commit, avec une conversion de 1 jour actif pour 1 J/H et une incertitude d'au moins 20 %. La reconstitution est faible sur les cinq premières semaines, où les commits étaient groupés : la charge réelle est vraisemblablement supérieure. C'est écrit en 5.3, et c'est le premier manque que je corrigerais |
 | Vous êtes à 90 % du budget de charge, c'est une bonne estimation ? | Non, et c'est le point du chapitre. Pris seul, l'écart de −10 % est dans la marge. Mis en regard du périmètre, il dit qu'on a livré quatre versions non chiffrées avec l'enveloppe prévue pour la V1. Ce que le suivi a raté, ce n'est pas une dérive de charge, c'est un glissement de périmètre qu'aucun indicateur ne comparait au chiffrage |
 | Quel indicateur vous a le plus servi ? | La cadence de livraison. C'est elle qui a rendu visible l'intervalle anormal de 81 jours entre le prototype et la première version de production, et qui a transformé la migration de l'API en arbitrage explicite plutôt qu'en dérive silencieuse. C'est le sujet du chapitre suivant |

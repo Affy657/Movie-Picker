@@ -37,7 +37,7 @@ Les quatre critères ne se satisfont pas des mêmes gestes. Traduits en exigence
 
 ### 2.1 Le principe de construction
 
-Le parcours suit **un seul fil narratif : celui que le produit raconte déjà à ses utilisateurs**. La page publique de présentation annonce le produit en quatre étapes — *Lancez la soirée, Proposez vos films, Votez ensemble, La roue tranche*. La démonstration suit exactement cet enchaînement, augmenté de ce qui l'encadre : l'arrivée d'un invité, et ce qui reste après la soirée.
+Le parcours suit **un seul fil narratif : celui que le produit raconte déjà à ses utilisateurs**. La page publique de présentation annonce le produit en quatre étapes : *Lancez la soirée, Proposez vos films, Votez ensemble, La roue tranche*. La démonstration suit exactement cet enchaînement, augmenté de ce qui l'encadre : l'arrivée d'un invité, et ce qui reste après la soirée.
 
 Ce choix a deux conséquences. Le jury entend le même récit que celui affiché sur le produit, ce qui est cohérent. Et le vocabulaire de la démonstration est **déjà écrit dans l'interface** : il suffit de dire ce que l'écran affiche.
 
@@ -95,7 +95,7 @@ Le piège n'est pas de connaître le vocabulaire client, c'est de **retomber dan
 
 | Ce qu'il ne faut pas dire | Ce qu'il faut dire |
 |--------------------------|--------------------|
-| L'API, un endpoint, une requête | *(rien — on ne mentionne pas le mécanisme)* |
+| L'API, un endpoint, une requête | *(rien, on ne mentionne pas le mécanisme)* |
 | Le slug de l'événement | « le lien de la soirée » |
 | Le jeton hôte, le cookie de session | « vous êtes reconnu comme l'organisateur » |
 | TMDB, le catalogue externe | « le catalogue de films » |
@@ -104,12 +104,12 @@ Le piège n'est pas de connaître le vocabulaire client, c'est de **retomber dan
 | Les notifications push, les clés VAPID | « les participants sont prévenus » |
 | OAuth, le fournisseur d'identité | « se connecter avec son compte Google » |
 | Le cache des affiches | « l'affiche s'affiche instantanément » |
-| La base de données, le déploiement, la CI | *(rien — hors sujet dans une démonstration client)* |
-| Le jeu de données de démonstration | *(rien — la soirée d'exemple est « une soirée de la semaine dernière »)* |
+| La base de données, le déploiement, la CI | *(rien, hors sujet dans une démonstration client)* |
+| Le jeu de données de démonstration | *(rien, la soirée d'exemple est « une soirée de la semaine dernière »)* |
 
 ### 3.3 Les mots à ne pas prononcer
 
-Une liste courte, apprise par cœur, plus efficace qu'une longue : **API, base de données, déploiement, cache, jeton**. Si l'un d'eux sort, ne pas se reprendre à voix haute — se reprendre attire l'attention sur l'erreur. Continuer.
+Une liste courte, apprise par cœur, plus efficace qu'une longue : **API, base de données, déploiement, cache, jeton**. Si l'un d'eux sort, ne pas se reprendre à voix haute : se reprendre attire l'attention sur l'erreur. Continuer.
 
 ---
 
@@ -151,7 +151,7 @@ Une démonstration en direct échoue sur des détails triviaux. Tout ce qui suit
 
 | Niveau | Déclencheur | Bascule | Ce qui est perdu |
 |:------:|-------------|---------|------------------|
-| **0** | Nominal | Production, sur le réseau de la salle | — |
+| **0** | Nominal | Production, sur le réseau de la salle | |
 | **1** | Réseau lent ou instable | **Partage de connexion** depuis le téléphone, activé d'avance | Rien |
 | **2** | Réseau indisponible | **Environnement local** déjà démarré : application et base de données sur le poste | La démonstration n'est plus sur la production. **Le dire.** Les deux appareils deviennent deux fenêtres du même écran |
 | **3** | Poste ou environnement local défaillant | **Vidéo enregistrée** du parcours complet, commentée en direct par-dessus | L'interaction. On commente en disant « voici ce que vous verriez » |
@@ -167,7 +167,7 @@ Une démonstration en direct échoue sur des détails triviaux. Tout ce qui suit
 
 « La démonstration permet d'aboutir à une validation du projet » n'est pas une conséquence automatique d'une bonne démonstration. C'est un geste : **il faut demander la validation**.
 
-Une démonstration qui se termine par « voilà, c'est tout » laisse le jury sans rien à valider. Une démonstration qui se termine par un périmètre énoncé et une question ferme met le commanditaire en position de trancher, ce qui est exactement ce que la compétence décrit — *obtenir la validation du commanditaire avant livraison*.
+Une démonstration qui se termine par « voilà, c'est tout » laisse le jury sans rien à valider. Une démonstration qui se termine par un périmètre énoncé et une question ferme met le commanditaire en position de trancher, ce qui est exactement ce que la compétence décrit, *obtenir la validation du commanditaire avant livraison*.
 
 ### 6.2 La séquence de clôture
 
@@ -179,7 +179,7 @@ Trois temps, sur la diapositive 27, en fin de présentation.
 
 **3. La demande de validation, formulée.** « Sur cette base, je vous demande de valider le périmètre livré, pour engager le lot suivant. »
 
-**Pourquoi cette formulation** : elle donne au jury quelque chose de précis à valider, elle montre que la suite est déjà instruite plutôt qu'improvisée, et elle place la démonstration dans un cycle de projet — ce qui est le sujet du Bloc 3 — au lieu d'en faire une présentation de produit isolée.
+**Pourquoi cette formulation** : elle donne au jury quelque chose de précis à valider, elle montre que la suite est déjà instruite plutôt qu'improvisée, et elle place la démonstration dans un cycle de projet, ce qui est le sujet du Bloc 3, au lieu d'en faire une présentation de produit isolée.
 
 ---
 
@@ -188,9 +188,9 @@ Trois temps, sur la diapositive 27, en fin de présentation.
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
 | 3 | Démonstration, le lien du site en production | 2.1, 3 |
-| — | **Démonstration en direct (4:50)** | 2.2 |
+| | **Démonstration en direct (4:50)** | 2.2 |
 | 27 | Bilan, et la validation du périmètre livré, en fin de présentation | 6.2 |
-| A1 | Architecture technique, si une question technique est posée | — |
+| A1 | Architecture technique, si une question technique est posée | |
 
 ---
 
@@ -201,6 +201,6 @@ Trois temps, sur la diapositive 27, en fin de présentation.
 | Est-ce une maquette ou la vraie application ? | La version en production, celle qu'utilisent les 17 comptes inscrits. L'adresse est visible dans la barre du navigateur, et le numéro de version s'affiche en pied de page |
 | Combien de personnes l'utilisent réellement ? | 17 comptes, 19 soirées créées, dont 74 % menées jusqu'au tirage. C'est un usage réel mais modeste, et je ne le présente pas autrement |
 | *(question technique posée pendant la démonstration)* | Répondre dans le registre client, puis proposer d'y revenir : « techniquement il se passe autre chose, je peux le détailler après la démonstration si vous le souhaitez ». Ne pas basculer en vocabulaire technique au milieu du parcours |
-| Pouvez-vous montrer *(fonctionnalité non prévue au parcours)* ? | Oui — deux d'entre elles sont accessibles en deux clics depuis l'écran courant. Les autres, je préfère les montrer après la démonstration pour ne pas casser le fil |
+| Pouvez-vous montrer *(fonctionnalité non prévue au parcours)* ? | Oui, deux d'entre elles sont accessibles en deux clics depuis l'écran courant. Les autres, je préfère les montrer après la démonstration pour ne pas casser le fil |
 | Que se passe-t-il si un participant n'a pas de compte ? | C'est le cas montré à l'étape 2 : il scanne, il donne son prénom, il participe. Le compte n'est nécessaire que pour retrouver son historique et son profil |
 | Et si la roue ne convient pas au groupe ? | L'organisateur peut relancer, ou choisir lui-même le film. Les deux boutons sont à l'écran. C'est une évolution issue de l'usage : les utilisateurs relançaient la roue jusqu'à tomber sur un film qui convenait |

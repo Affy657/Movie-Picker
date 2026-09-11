@@ -40,7 +40,7 @@ Ne rien commenter ici. Enchainer immediatement sur la diapo 2.
 </div>
 
 <div class="note mb-3">
-<b>Pas sans déléguer.</b> Depuis le 13 mai, <b>64 % des commits</b> sont co-signés par un agent IA, sous un cadre écrit : conventions opposables, trois points d'arrêt, contrôle en sortie.
+<b>Pas sans déléguer.</b> <b>64 % des commits</b> du projet sont co-signés par un agent IA, aucun avant le 13 mai, sous un cadre écrit : conventions opposables, trois points d'arrêt, contrôle en sortie.
 </div>
 
 <div class="alert">
@@ -76,8 +76,8 @@ travaille seul, ce que j'ai delegue a des agents d'assistance et sous quel
 cadre, et, la ou le referentiel suppose une equipe, ce que j'ai fait a la
 place et ce qui n'a pas d'equivalent. »
 
-Le chiffre a retenir : 64 % des commits co-signes par un agent depuis le
-13 mai. C'est mesurable dans l'historique du depot, et c'est ce qui donne au
+Le chiffre a retenir : 64 % des commits du projet co-signes par un agent,
+aucun avant le 13 mai. C'est mesurable dans l'historique du depot, et c'est ce qui donne au
 chapitre 5 un contenu reel : deleguer, cadrer, controler en sortie.
 
 Ne pas s'excuser d'etre seul, ne pas justifier longuement. Annoncer, puis
@@ -113,14 +113,11 @@ jury.
 Objectif unique : etablir qu'on parle d'un logiciel reellement exploite. Tout le
 reste de la presentation en depend, et la demonstration se fera dessus.
 
-Quatre chiffres, pas plus. Le plus parlant est le 74 % : ce n'est pas un chiffre
+Trois chiffres, pas plus. Le plus parlant est le 74 % : ce n'est pas un chiffre
 d'inscription, c'est un chiffre d'USAGE ABOUTI. Les gens qui creent une soiree
 vont au bout dans trois cas sur quatre.
 
 Ne pas detailler les fonctionnalites, elles seront montrees en direct.
-
-A PREPARER : capture de l'application en production a inserer sous les chiffres
-si le rendu le permet.
 
 SI ON QUESTIONNE le volume : 17 comptes, c'est modeste et je ne le presente pas
 autrement. C'est un usage reel et mesure, pas un usage de masse.
@@ -129,13 +126,12 @@ autrement. C'est un usage reel et mesure, pas un usage de masse.
 
 COMPETENCE C3.4.2, ELIMINATOIRE.
 
-CHANGEMENT DE REGISTRE, il doit s'entendre. Les six chapitres precedents
-s'adressaient a un jury de professionnels ; celui-ci s'adresse a un client. Le
-vocabulaire change, le debit ralentit, les diapos se vident.
+REGISTRE CLIENT, il doit s'entendre : pendant la demonstration on ne s'adresse
+pas a un jury de professionnels mais a un client. Le vocabulaire change, le
+debit ralentit. Le registre jury reprend a la diapo 4.
 
-La derniere ligne est la seule qui compte pour le critere « le logiciel est
-utilisable » : c'est la version en production, pas une maquette, et il y a un
-second appareil.
+Ce qui compte pour le critere « le logiciel est utilisable » : c'est la version
+en production, pas une maquette, et un second appareil est pret.
 
 MOTS INTERDITS pendant toute la demonstration : API, base de donnees,
 deploiement, cache, jeton. Si l'un sort, NE PAS se reprendre a voix haute, se
@@ -199,7 +195,7 @@ phrase en gras est a dire mot pour mot.
 CRITERE : le choix est justifie AVEC LES BENEFICES ATTENDUS.
 
 Ne pas definir Kanban, le jury connait. Aller au « pourquoi ici » et aux
-benefices constates, colonne de droite.
+benefices constates, colonne de gauche.
 
 La formule a dire : « Kanban leger » n'est pas un Kanban degrade, c'est un Kanban
 dont l'outillage a ete dimensionne a la taille reelle du projet. Ce qui a ete
@@ -221,7 +217,7 @@ ET il est compatible avec la methodologie choisie.
 
 Le critere de compatibilite est celui que les candidats ratent : ils presentent
 un Gantt sur une methode agile sans expliquer comment les deux coexistent. Le
-tableau de gauche est la reponse, et la phrase en gras est a dire mot pour mot.
+schema de droite est la reponse, et la phrase en gras est a dire mot pour mot.
 
 La contradiction classique entre Gantt et Kanban nait quand on tente de planifier
 des taches individuelles a date fixe dans un flux. Ce n'est pas ce qui est fait
@@ -368,7 +364,7 @@ precede le document. Faiblesse de tracabilite assumee, corrigee depuis.
 </div>
 
 <div class="note mt-8 text-sm">
-Aucune méthode paramétrique n'était applicable, faute d'historique comparable. <b>Ce chiffrage n'est pas rétrospectif</b> : il sert de base au budget et de référence de pilotage.
+Aucune méthode paramétrique n'était applicable, faute d'historique comparable. Établi du 20 mars au 30 avril, <b>rétrospectif sur les lots 1 et 2, déjà livrés, prévisionnel sur les lots 3 et 4</b>. Il sert de base au budget et de référence de pilotage.
 </div>
 
 <!--
@@ -378,9 +374,13 @@ Ne pas lire le contenu des lots, il est a l'ecran. Dire les quatre intitules et
 les quatre charges, puis passer a la methode d'estimation, qui est ce qu'un jury
 de professionnels va reellement interroger.
 
-Annoncer des maintenant que l'ecart previsionnel / reel sera traite au chapitre 2.
+Annoncer des maintenant que l'ecart previsionnel / reel sera traite au chapitre 3.
 Cela evite la question « et ca a tenu ? » posee trop tot, et cela montre que le
 chiffrage a servi de reference de pilotage et pas seulement de piece a produire.
+
+Dire soi-meme que les lots 1 et 2 sont chiffres apres coup : le Gantt le montre,
+et les diapos 16 et 22 le redisent. Decouvert par le jury, c'est une
+dissimulation ; annonce, c'est une limite assumee.
 
 SI ON QUESTIONNE : « 20 % de marge, c'est beaucoup ou peu ? » C'est la marge
 usuelle d'une estimation analogique sans historique. Sur les lots documentaires
@@ -766,7 +766,7 @@ indicateurs au lieu de les afficher.
 
 2. Les 81 jours entre le prototype et la V1. Seul intervalle anormal, il contient
 la migration de l'API, et c'est lui qui a rendu l'arbitrage visible. Annoncer le
-chapitre 3 ici.
+chapitre 4 ici.
 
 Sur les echeances : ecart zero sur les quatre, et deux d'entre elles sont
 HORODATEES dans le depot, passe finale du dossier Bloc 2 le 23/07, export PDF du
@@ -859,7 +859,7 @@ premier, la stabilite de la chaine, est celui qui prouve la boucle mesure ->
 decision -> effet remesure : 52 %, correction, 94 %. C'est l'histogramme de
 droite, et c'est la seule chose a commenter de ce cote.
 
-RH : c'est la transition vers le chapitre 4. La phrase a dire : « une semaine a
+RH : c'est la transition vers le chapitre 5. La phrase a dire : « une semaine a
 sept jours travailles suivie d'une semaine a zero tient sur sept mois de projet
 etudiant, elle ne tient pas sur une equipe et une exploitation dans la duree. »
 
@@ -891,7 +891,7 @@ septembre porte sur huit executions.
 
 <div class="legend mt-2">
 <span style="--c:var(--s1)">Lots 1 à 3, chiffrés au cadrage</span>
-<span style="color:#d97706">Hors chiffrage initial (V1.1 → V1.5.0)</span>
+<span style="color:#d97706">Après la V1 : V1.1 → V1.5.0, hors chiffrage, et la clôture du titre</span>
 </div>
 
 <div class="alert mt-4 text-sm">
@@ -918,15 +918,15 @@ septembre porte sur huit executions.
 
 <!--
 DUREE 1:10. C'est la diapo qui prouve que le suivi a servi a DECIDER et pas
-seulement a mesurer. Elle amene le chapitre 3.
+seulement a mesurer. Elle amene le chapitre 4.
 
 Trois temps, sans lire les tableaux :
 
 1. Les deux barres de gauche. « L'ecart de charge est de moins 10 %, dans la
-marge. Ce n'est pas la bonne lecture. » Puis designer la barre orange : 74 % des
-jours actifs et 61 % du produit final sont HORS du chiffrage initial. La derive
-n'etait pas une derive de charge, c'etait un glissement de perimetre que rien ne
-mesurait.
+marge. Ce n'est pas la bonne lecture. » Puis designer les barres orange : 74 % des
+jours actifs sont posterieurs a la V1, et 69 % du produit final est HORS du
+chiffrage initial. La derive n'etait pas une derive de charge, c'etait un
+glissement de perimetre que rien ne mesurait.
 
 2. Les trois decisions. C'est le coeur de la competence : chaque ligne est une
 mesure, une decision, et un effet REMESURE ensuite. Ne pas en developper plus
@@ -1006,7 +1006,7 @@ arbitrage, decider avec l'information disponible pendant que la fenetre est
 ouverte.
 
 Sur la troisieme exigence, si on la conteste : la charge de veille de
-l'ecosysteme npm s'est verifiee ensuite, 59 des 78 pull requests du projet sont
+l'ecosysteme npm s'est verifiee ensuite, 59 des 77 pull requests du projet sont
 des montees de dependances, mais c'etait une ANTICIPATION en mars, pas une
 mesure.
 -->
@@ -1106,7 +1106,7 @@ problematique. Les deux moities comptent.
 Deux arguments seulement pour la decision, ils sont a l'ecran : la fenetre qui
 se referme, et le cout non nul de l'option A. Ne pas les relire.
 
-Puis le tableau de droite en un seul geste : « aucun retour arriere, neuf
+Puis les trois chiffres du resultat en un seul geste : « aucun retour arriere, neuf
 versions produit livrees sur ce socle depuis. »
 
 Le bandeau orange est OBLIGATOIRE, ne pas le sauter par manque de temps. C'est
@@ -1164,7 +1164,7 @@ instruit. »
 </div>
 
 <div class="note mt-3 text-xs">
-<b>537 commits sur 833 co-signés par un agent</b>, premier le 13 mai, à la veille de la V1. Avant : tout à la main, dont la migration de l'API. Après : l'exécution est déléguée, la décision et le contrôle ne le sont pas.
+<b>537 commits sur 833 co-signés par un agent</b>, premier le 13 mai, six jours avant la V1. Avant : tout à la main, dont la migration de l'API. Après : l'exécution est déléguée, la décision et le contrôle ne le sont pas.
 </div>
 
 <div class="alert mt-2 text-xs">
@@ -1255,7 +1255,8 @@ d'anomalie qui decrit un comportement et jamais une responsabilite, l'empathie
 par les points d'arret, le leadership par la decision ecrite avec ses
 inconvenients acceptes.
 
-SI ON QUESTIONNE : « delegue a qui ? » Reponse honnete, elle est en diapo 19.
+SI ON QUESTIONNE : « delegue a qui ? » Reponse honnete, deja donnee en diapo 17 :
+a des agents IA, sous cadre ecrit. La diapo 19 detaille le dispositif.
 -->
 
 ---
@@ -1443,7 +1444,7 @@ Terminer sur la recommandation 2 en disant qu'elle est la plus difficile a tenir
 
 <div class="tl mb-3">
 <div><b>1. Produire</b><span>16 → 19 mars<br>C#, hexagonal, Mongo, CI, OpenAPI</span></div>
-<div><b>2. Fiabiliser</b><span>avril–mai<br>Performance, a11y, scans, i18n, push</span></div>
+<div><b>2. Fiabiliser</b><span>avril à mai<br>Performance, a11y, scans, i18n, push</span></div>
 <div><b>3. Exploiter</b><span>juillet<br>Supervision, sondes, alertes</span></div>
 <div><b>4. Enrichir</b><span>août<br>Identité fédérée, service tiers</span></div>
 </div>
@@ -1468,7 +1469,7 @@ d'introduction verifiable.
 Puis la frise, dans l'ordre : produire, fiabiliser, exploiter, enrichir. Cet
 ordre n'a rien d'aleatoire, c'est celui d'un produit qui va en production.
 
-Finir sur le bandeau, qui est le lien avec le chapitre 3 : la vague 1 tient sur
+Finir sur le bandeau, qui est le lien avec les chapitres 2 et 4 : la vague 1 tient sur
 quatre jours et n'est dans aucune ligne du chiffrage. C'est la justification meme
 de l'existence d'un plan de developpement des competences.
 
@@ -1490,7 +1491,7 @@ reconstitution de charge est faible sur mars, voir diapo 14.
 
 <div class="dumb">
 <div class="lbl"></div><div class="scale"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
-<div class="lbl">Architecture applicative</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u><u class="t" style="left:100%"></u></div>
+<div class="lbl">Architecture applicative</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u></div>
 <div class="lbl">Arbitrage, chiffrage</div><div class="track"><u class="a" style="left:50%"></u><u class="c" style="left:50%"></u><u class="t" style="left:100%"></u></div>
 <div class="lbl">Revue, transmission</div><div class="track"><i class="bar" style="left:25%;width:25%"></i><u class="a" style="left:25%"></u><u class="c" style="left:50%"></u><u class="t" style="left:100%"></u></div>
 <div class="lbl">React, TypeScript</div><div class="track"><u class="a" style="left:75%"></u><u class="c" style="left:75%"></u></div>
@@ -1540,8 +1541,8 @@ orange le niveau que le projet exige quand il n'est pas atteint.
 Puis COMMENTER, en designant le graphique :
 1. Les traits epais sont les competences de contexte : hexagonal,
 accessibilite, securite, supervision, veille. Elles ont ete franchies par
-autoformation, en production. La vague 1 a coute quatre jours (chapitre
-precedent).
+autoformation, en production. La vague 1 a coute quatre jours (diapo
+precedente).
 2. Les deux lignes sans progression suffisante ne sont pas techniques :
 arbitrage et chiffrage, revue et transmission. Ce sont exactement les
 faiblesses montrees aux chapitres 3, 4 et 5. C'est ce qui rend la grille
@@ -1606,7 +1607,7 @@ priorites 1 ont deja coute : un chiffrage formalise apres coup, 87 lignes
 integrees sans revue, dix jours d'aout sans arbitrage. Elles passent avant
 tout ce qui est technique, parce que le technique a ete acquis sur le projet.
 
-2. La colonne « indicateur » de chaque ligne. C'est elle qui distingue un plan
+2. L'indicateur en fin de chaque ligne. C'est elle qui distingue un plan
 d'une liste de voeux : chaque action se termine par un fait verifiable, pas
 par une attestation de presence.
 
@@ -1685,9 +1686,9 @@ point est DATE et VERIFIABLE, adosse a une etiquette posee sur le commit exact
 deploye.
 
 Le temps utile va en bas a gauche, qui est la reponse au critere : une date de
-livraison ne suffit pas a faire un point de validation qualite. Cinq controles
-bloquants, puis un test de fumee apres deploiement qui verifie la joignabilite
-reelle de la base. Un controle rouge annule la livraison.
+livraison ne suffit pas a faire un point de validation qualite. Quatre controles
+bloquants avant l'integration, puis un test de fumee apres deploiement, bloquant
+lui aussi, qui verifie la joignabilite reelle de la base. Un controle rouge annule la livraison.
 
 SI ON QUESTIONNE l'adequation avec les fonctionnalites attendues : elle se lit
 dans le diff de la feuille de route, qui est versionnee. Un item livre hors
@@ -1746,9 +1747,8 @@ DUREE 0:50. ELEMENT IMPOSE 11 : les comptes rendus sur les evolutions et
 ameliorations. CRITERES : clairs et ordonnes, et surtout ils FACILITENT LA PRISE
 DE DECISION DU CLIENT.
 
-Le second critere est celui qui se rate. Lire le tableau de gauche EN DIAGONALE :
-la colonne du milieu montre que trois blocs sur cinq ne sont pas de
-l'information. Dire la regle de redaction telle quelle : aucun constat sans
+Le second critere est celui qui se rate. La barre de gauche le montre d'un coup :
+trois blocs sur cinq ne sont pas de l'information. Dire la regle de redaction telle quelle : aucun constat sans
 proposition, aucune proposition sans cout.
 
 S'arreter sur DEUX choses de l'exemple :
@@ -1831,8 +1831,8 @@ statuts a voix haute, declenchee, confirmee, instruite non livree, et dire
 POURQUOI on les distingue : presenter une confirmation comme un declenchement
 serait surevaluer la boucle.
 
-Terminer sur les 17 jours, puis IMMEDIATEMENT sur ce qui manque. Enchainer sur la
-demonstration : changement de registre.
+Terminer sur les 17 jours, puis IMMEDIATEMENT sur ce qui manque. Enchainer sur le
+bilan, derniere diapo presentee.
 -->
 
 ---
@@ -1904,7 +1904,7 @@ remercier. C'est la derniere chose que le jury entendra avant les questions.
 
 Les huit annexes qui suivent ne sont JAMAIS presentees. Elles sont appelees
 uniquement si une question les demande. Connaitre leur ordre :
-A1 architecture 28, A2 logigramme complet 29, A3 arbitrages de reserve 30 ,
+A1 architecture 28, A2 logigramme complet 29, A3 arbitrages de reserve 30,
 A4 budget 31, A5 chaine CI/CD 32, A6 RACI complete 33, A7 journal des
 versions 34, A8 retours utilisateurs 35.
 
@@ -1918,12 +1918,12 @@ Il faut DEMANDER la validation, et la derniere phrase est ecrite pour cela.
 fonctionnalites. C'est la promesse produit qui est validee, pas une liste.
 
 2. Ce qui vient ensuite. Trois evolutions CHIFFREES et PRIORISEES, issues des
-mesures et des retours du chapitre 6. Montrer que la suite est instruite et non
+mesures et des retours du chapitre 7. Montrer que la suite est instruite et non
 improvisee.
 
 3. LA DEMANDE, prononcee telle qu'elle est ecrite, sans l'adoucir : « sur cette
 base, je vous demande de valider le perimetre livre, pour engager le lot
-suivant. » Puis SE TAIRE et laisser le silence. C'est la fin de la demonstration.
+suivant. » Puis SE TAIRE et laisser le silence. C'est la fin de la presentation.
 
 Cette formulation place la demonstration dans un cycle de projet, le sujet du
 Bloc 3, au lieu d'en faire une presentation de produit isolee.
@@ -2098,7 +2098,7 @@ Coût de trésorerie nul dans le cadre de la formation. Ce montant matérialise 
 |-------|----------------|-----------:|
 | Hébergement API (Cloud Run) | 2 M req/mois | ~0 € |
 | Registre, secrets, supervision | inclus | ~0 € |
-| Hébergement front (S3 + CloudFront) | **12 mois** | ~1–5 €/mois **ensuite** |
+| Hébergement front (S3 + CloudFront) | **12 mois** | ~1 à 5 €/mois **ensuite** |
 | Base de données (Atlas M0) | 512 Mo | ~0 € |
 | E-mail (Resend) | 3 000/mois | ~0 € |
 | Supervision d'erreurs (Sentry) | 5 000 év./mois | ~0 € |
@@ -2117,7 +2117,7 @@ Borne haute atteinte si la base passe au premier palier payant (~9 $/mois).
 
 # Annexe A5 : La chaîne d'intégration et de déploiement
 
-<div class="lede text-sm"><b>15 jobs</b>, dont <b>10 bloquants</b>. Un contrôle rouge refuse le déploiement, ce n'est pas une recommandation.</div>
+<div class="lede text-sm"><b>18 jobs</b> sur deux chaînes, dont <b>14 bloquants</b>. Un contrôle rouge refuse le déploiement, ce n'est pas une recommandation.</div>
 
 <div class="grid grid-cols-2 gap-6 dense">
 <div>
@@ -2126,21 +2126,24 @@ Borne haute atteinte si la base passe au premier palier payant (~9 $/mois).
 |-----|------|:--------:|
 | `changes` | Path-filtering, lanes web / api | |
 | `gitleaks` | Scan de secrets sur l'arbre | ✅ |
+| `lint-workflows` | Lint des workflows eux-mêmes | ✅ |
 | `lint-web` | TypeScript, ESLint, Prettier | ✅ |
 | `lint-api` | Format, build `-warnaserror`, export OpenAPI | ✅ |
 | `audit` | Trivy sur le lock, NuGet vulnérables | ✅ |
 | `test-web` | Vitest + seuils de couverture | ✅ |
 | `test-api` | xUnit unitaires et intégration, **≥ 80 %** | ✅ |
+| `test-api-mongo` | Intégration sur **MongoDB réel** | ✅ |
 
 </div>
 <div>
 
 | Job | Rôle | Bloquant |
 |-----|------|:--------:|
-| `test-api-mongo` | Intégration sur **MongoDB réel** | ✅ |
-| `sonar` | Quality Gate sur le code nouveau | ✅ |
-| `lighthouse` | Performance et accessibilité, médiane de 3 | ✅ |
 | `e2e` | Playwright, parcours de bout en bout | ✅ |
+| `e2e-mongo` | Parcours critique sur **MongoDB réel** | ✅ |
+| `sonar` | Quality Gate sur le code nouveau | ✅ |
+| `verifier-ci` | Exige une CI verte sur le commit visé | ✅ |
+| `lighthouse` | Performance et accessibilité, médiane de 3 | ✅ |
 | `docker-api` | Image conteneurisée → Artifact Registry | |
 | `deploy-api` | Cloud Run, **avec test de fumée readiness** | ✅ |
 | `deploy-front` | S3 et CloudFront | |

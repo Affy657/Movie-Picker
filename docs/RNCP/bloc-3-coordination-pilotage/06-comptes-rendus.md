@@ -44,14 +44,14 @@ Chaque version est un point de validation **daté, versionné et vérifiable**, 
 
 | Version | Date | Ce que ce point validait |
 |---------|------|--------------------------|
-| 0.1.0 | 27/02/2026 | Que le parcours minimal — créer une soirée, proposer, voter, tirer — tient debout |
+| 0.1.0 | 27/02/2026 | Que le parcours minimal (créer une soirée, proposer, voter, tirer) tient debout |
 | 1.0.0 | 19/05/2026 | Que le produit est utilisable par un compte réel, sur la nouvelle API |
 | 1.1.0 | 25/05/2026 | Que l'application s'installe et sait notifier |
 | 1.2.0 | 11/06/2026 | Que la dimension sociale et la conformité aux données personnelles sont tenables |
 | 1.3.0 | 19/06/2026 | Que la navigation et les états vides ne bloquent pas un nouvel arrivant |
 | 1.3.1 | 08/07/2026 | Que la chaîne de livraison et la politique de sécurité du contenu ne dégradent rien |
 | 1.3.2 | 25/07/2026 | Que la production est **observable** et qu'un utilisateur peut signaler un problème |
-| 1.4.0 | 25/08/2026 | Que le produit dépasse la soirée ponctuelle — watchlist, intégration tierce, identité fédérée |
+| 1.4.0 | 25/08/2026 | Que le produit dépasse la soirée ponctuelle : watchlist, intégration tierce, identité fédérée |
 | 1.4.1 | 04/09/2026 | Que le produit est consultable **sans compte**, et que les frictions remontées sont levées |
 | 1.5.0 | 07/09/2026 | Que le produit donne envie **avant** la première soirée : un accueil d'exploration ouvert à tous, sagas et sélections thématiques |
 
@@ -76,9 +76,9 @@ Le critère de la grille est précis : les points de validation doivent être **
 | Avant intégration | Scan de vulnérabilités et de secrets | ✅ |
 | Après déploiement | Test de fumée vérifiant la joignabilité réelle de la base | ✅ |
 | Après déploiement | Sondes de disponibilité depuis trois continents | continu |
-| Après livraison | Journal des versions, étiquette, note de version publiée | — |
+| Après livraison | Journal des versions, étiquette, note de version publiée | |
 
-**L'adéquation entre le développement et les fonctionnalités attendues** — l'autre exigence du critère — est assurée en amont, par le rattachement de chaque item livré à une ligne de feuille de route versionnée. Un item livré qui n'était pas au périmètre se voit dans le diff de la feuille de route, daté.
+**L'adéquation entre le développement et les fonctionnalités attendues**, l'autre exigence du critère, est assurée en amont, par le rattachement de chaque item livré à une ligne de feuille de route versionnée. Un item livré qui n'était pas au périmètre se voit dans le diff de la feuille de route, daté.
 
 ---
 
@@ -120,11 +120,11 @@ Extrait réel du compte rendu de fin de cycle, sur l'adoption des notifications.
 >
 > **Confirmation qualitative.** Sur 7 réponses au questionnaire, **4 ignoraient que l'activation était possible**, y compris des utilisateurs qui se servent de l'application à chaque soirée. L'un d'eux demande spontanément une notification qui **existe déjà**, mais qu'il ne peut pas recevoir faute d'avoir eu l'occasion de s'abonner.
 >
-> **Proposition.** Proposer l'activation une fois, au moment utile — après création ou participation à une soirée — en énonçant ce qui sera reçu.
+> **Proposition.** Proposer l'activation une fois, au moment utile, après création ou participation à une soirée, en énonçant ce qui sera reçu.
 >
 > **Coût 1 jour. Délai : une itération. Gain attendu : adoption visée au-delà de 40 %.**
 >
-> **Priorité 3.** Et le point qui rend la décision possible : *si l'adoption ne dépasse pas 40 % sous deux mois, le gel de la fonctionnalité devient défendable — mais il ne l'est pas tant que personne n'a eu l'occasion d'accepter.*
+> **Priorité 3.** Et le point qui rend la décision possible : *si l'adoption ne dépasse pas 40 % sous deux mois, le gel de la fonctionnalité devient défendable, mais il ne l'est pas tant que personne n'a eu l'occasion d'accepter.*
 
 ### 3.4 Pourquoi ce format facilite une décision
 
@@ -156,7 +156,7 @@ Le critère demande des indicateurs **cohérents au regard du projet**. À 17 co
 
 **7 réponses pour 17 comptes.** L'échantillon est réduit et vraisemblablement orienté : cinq des sept répondants utilisent l'application à chaque soirée, ce sont donc les plus engagés qui ont répondu. Aucun détracteur ne figure dans les notes, ce qui est un signal de biais autant qu'un bon résultat.
 
-**Conséquence assumée sur la lecture** : le 9,6 sur 10 n'est pas présenté comme une mesure de satisfaction. Il est présenté comme **l'absence de détracteur parmi les utilisateurs engagés**, ce qui est une information différente et beaucoup plus modeste. Les indicateurs comportementaux — 74 % d'aboutissement, 18 % d'adoption — pèsent plus lourd dans les décisions, parce qu'ils mesurent ce que les gens font et non ce qu'ils disent.
+**Conséquence assumée sur la lecture** : le 9,6 sur 10 n'est pas présenté comme une mesure de satisfaction. Il est présenté comme **l'absence de détracteur parmi les utilisateurs engagés**, ce qui est une information différente et beaucoup plus modeste. Les indicateurs comportementaux, 74 % d'aboutissement, 18 % d'adoption, pèsent plus lourd dans les décisions, parce qu'ils mesurent ce que les gens font et non ce qu'ils disent.
 
 ### 4.3 Ce que ces retours ont réellement produit
 
@@ -170,7 +170,7 @@ C'est la partie qui compte : un indicateur de satisfaction ne vaut que par la d�
 
 **La boucle, mesurée** : le questionnaire est mis en ligne le **18 août**, le retour est consigné en fiche d'anomalie le **19 août**, la fiche est close le **26 août**, et le correctif atteint la production le **4 septembre**. **Dix-sept jours du retour de l'utilisateur à sa livraison.**
 
-**Et ce qui manque, dit avant qu'on le demande** : le dispositif est **ponctuel, pas continu**. Un questionnaire diffusé une fois ne mesure pas une évolution de la satisfaction, il en donne un point. La mise en place d'une boucle continue — sollicitation courte après une soirée aboutie — est instruite, chiffrée à 1 à 2 jours, et priorisée au rang 3. Tant qu'elle n'est pas livrée, ce chapitre présente **un instantané, pas une tendance**.
+**Et ce qui manque, dit avant qu'on le demande** : le dispositif est **ponctuel, pas continu**. Un questionnaire diffusé une fois ne mesure pas une évolution de la satisfaction, il en donne un point. La mise en place d'une boucle continue, sollicitation courte après une soirée aboutie, est instruite, chiffrée à 1 à 2 jours, et priorisée au rang 3. Tant qu'elle n'est pas livrée, ce chapitre présente **un instantané, pas une tendance**.
 
 ---
 
@@ -189,9 +189,9 @@ C'est la partie qui compte : un indicateur de satisfaction ne vaut que par la d�
 | Question | Ligne de réponse |
 |----------|------------------|
 | Qui est votre commanditaire ? | Il y en a deux, et ils n'attendent pas la même chose. Le formateur et le jury valident la conformité au référentiel, sur quatre échéances de restitution. Les 17 utilisateurs valident que ce qui est livré sert, sur neuf versions. Un projet qui n'a qu'un seul format de compte rendu en sert mal au moins un des deux |
-| Sept réponses, est-ce un échantillon valable ? | Non, et c'est écrit tel quel. Il est réduit et orienté vers les plus engagés — cinq des sept utilisent l'application à chaque soirée. C'est pourquoi je ne présente pas le 9,6 comme une mesure de satisfaction, mais comme **l'absence de détracteur parmi les utilisateurs engagés**. Les indicateurs comportementaux pèsent plus lourd : ils mesurent ce que les gens font |
+| Sept réponses, est-ce un échantillon valable ? | Non, et c'est écrit tel quel. Il est réduit et orienté vers les plus engagés, cinq des sept utilisent l'application à chaque soirée. C'est pourquoi je ne présente pas le 9,6 comme une mesure de satisfaction, mais comme **l'absence de détracteur parmi les utilisateurs engagés**. Les indicateurs comportementaux pèsent plus lourd : ils mesurent ce que les gens font |
 | En quoi vos comptes rendus facilitent-ils une décision ? | Par trois propriétés : aucun constat sans proposition, aucune proposition sans coût, et un **critère d'arrêt énoncé d'avance**. Sur les notifications, le compte rendu ne dit pas « l'adoption est faible », il dit « au-delà de 40 % sous deux mois on garde, en deçà le gel devient défendable ». Le destinataire sait à quoi il s'engage en validant |
 | Vos utilisateurs lisent-ils vraiment le journal des versions ? | Probablement pas, et c'est pour cela qu'il existe un second canal : une fenêtre présente les nouveautés à la première visite suivant une mise à jour. C'est le seul compte rendu **poussé** du dispositif. Un journal que personne n'ouvre est une archive, pas un compte rendu |
 | Quelle décision un retour utilisateur a-t-il réellement changée ? | Une seule a été déclenchée par un retour et livrée : le bandeau qui propose d'ouvrir l'application dans le navigateur système depuis un navigateur intégré. Dix-sept jours du retour à la production. Une deuxième a été confirmée mais pas déclenchée, elle était déjà au périmètre. Une troisième est instruite et non livrée. Je distingue les trois, parce que présenter une confirmation comme un déclenchement serait surévaluer la boucle |
-| Vos points de validation garantissent-ils la qualité ? | Une date de livraison n'y suffirait pas. Une version n'existe que si elle a franchi cinq contrôles bloquants — tests, analyse statique, tests de bout en bout, performance et accessibilité, scan de vulnérabilités — puis un test de fumée après déploiement qui vérifie la joignabilité réelle de la base. Un contrôle rouge annule la livraison |
+| Vos points de validation garantissent-ils la qualité ? | Une date de livraison n'y suffirait pas. Une version n'existe que si elle a franchi quatre contrôles bloquants avant l'intégration, tests, analyse statique, tests de bout en bout avec performance et accessibilité, scan de vulnérabilités, puis un test de fumée après déploiement qui vérifie la joignabilité réelle de la base. Un contrôle rouge annule la livraison |
 | Comment mesurez-vous l'évolution de la satisfaction ? | Je ne la mesure pas encore : le dispositif est ponctuel. Un questionnaire diffusé une fois donne un point, pas une tendance. La boucle continue est instruite et chiffrée à un à deux jours, priorité 3. Tant qu'elle n'est pas livrée, je présente un instantané et je le dis |

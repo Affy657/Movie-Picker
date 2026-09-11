@@ -1,4 +1,4 @@
-# Passation — reprendre le travail sur le Bloc 3
+# Passation, reprendre le travail sur le Bloc 3
 
 > Écrit le **5 septembre 2026** à l'attention de quiconque, humain ou agent, reprend ce dossier.
 > Lire ce fichier **avant** de toucher au support ou aux chapitres.
@@ -14,14 +14,14 @@
 | **Épreuve** | Oral de 45 min (30 de présentation + 15 de questions), le **16 septembre 2026** |
 | **État** | ✅ Rédaction terminée et **support refondu** : 7 chapitres, 35 diapositives (27 présentées, 8 annexes), toutes vérifiées au rendu. Restructuré le 11/09 : la démonstration ouvre la présentation, 5 fusions, 9 tableaux devenus des schémas (§ 12). Épuré, schémas à la place des gros tableaux, sans répétition |
 | **Branche** | `claude/rncp-03-title-crwwov`, head `a9c2859`, **10 commits** d'avance sur `master` |
-| **Pull request** | [#83](https://github.com/Affy657/Movie-Picker/pull/83) — ✅ **fusionnée sur `master` le 06/09/2026**. Tout travail ultérieur repart de `master` : une PR fusionnée ne se réutilise pas |
+| **Pull request** | [#83](https://github.com/Affy657/Movie-Picker/pull/83), ✅ **fusionnée sur `master` le 06/09/2026**. Tout travail ultérieur repart de `master` : une PR fusionnée ne se réutilise pas |
 | **Reste** | Uniquement du **matériel** : répétitions minutées, jeu de données de démonstration, vidéo de repli, 2 captures, export PDF |
 
-Les cases du Bloc 3 dans [`../suivi-rncp.md`](../suivi-rncp.md) sont **cochées** depuis la fusion — la convention du dossier veut qu'un livrable ne le soit qu'une fois mergé sur `master`. **C3.4.2 reste hors carte** : c'est un livrable oral, il ne se coche pas avant l'épreuve.
+Les cases du Bloc 3 dans [`../suivi-rncp.md`](../suivi-rncp.md) sont **cochées** depuis la fusion, la convention du dossier veut qu'un livrable ne le soit qu'une fois mergé sur `master`. **C3.4.2 reste hors carte** : c'est un livrable oral, il ne se coche pas avant l'épreuve.
 
 ---
 
-## 2. Les règles d'écriture du dossier — ne pas les enfreindre
+## 2. Les règles d'écriture du dossier, ne pas les enfreindre
 
 Elles ne sont pas cosmétiques : c'est ce qui distingue ce dossier d'un devoir générique, et c'est sur elles que la note se joue.
 
@@ -44,7 +44,7 @@ Chaque chapitre part d'un fait vérifiable, puis **énonce lui-même sa faibless
 | 2 | Le tableau de suivi est **postérieur** au travail qu'il représente |
 | 3 | L'objectif « aucune modification du front » a été manqué de **87 lignes** |
 | 3 | Le lot est chiffré 13 J/H **a posteriori**, non vérifiable au jour près |
-| 4 | La posture critiquée du 17–26 août a **réussi** — c'est ce qui la rend dangereuse |
+| 4 | La posture critiquée du 17–26 août a **réussi**, c'est ce qui la rend dangereuse |
 | 6 | Deux des trois fiches d'anomalie ont été ouvertes et closes à **dix secondes** d'intervalle |
 | 6 | Le dispositif de satisfaction est **ponctuel**, il donne un point et pas une tendance |
 
@@ -61,7 +61,7 @@ Chaque chapitre part d'un fait vérifiable, puis **énonce lui-même sa faibless
 Le jury **n'a que les diapositives** : il n'ouvrira pas le dépôt, et il ne lira pas un paragraphe affiché 30 secondes. Trois règles en découlent.
 
 1. **Une idée par diapositive, énoncée dans le titre.** Le titre est une assertion (« L'écart n'est pas où on le cherche »), pas une étiquette de rubrique.
-2. **La preuve est à l'écran, l'argumentation est en note.** Un chiffre qui compte se montre — histogramme, barre empilée, haltère, frise. Un raisonnement se dit.
+2. **La preuve est à l'écran, l'argumentation est en note.** Un chiffre qui compte se montre, histogramme, barre empilée, haltère, frise. Un raisonnement se dit.
 3. **Pas de tableau de plus de 8 lignes sur une diapositive présentée.** Au-delà, c'est un schéma, ou c'est une annexe.
 
 Les primitives graphiques et la palette validée sont dans `slides/global-bottom.vue`, documentées dans [`slides/README.md`](slides/README.md).
@@ -84,13 +84,13 @@ Le support fait **30:00 pile**, exact chapitre par chapitre. Toute modification 
 | Exécutions de CI | API GitHub | `actions_list` sur `ci-cd.yml`, filtré `branch: master` |
 | Anomalies | GitHub Issues | `list_issues`, étiquette `bug` |
 | Couverture, Quality Gate | Dossier Bloc 2 | `docs/RNCP/bloc-2-conception-developpement/dossier-bloc-2.md` |
-| Mesures de production (17 comptes, 74 %, p95 207 ms) | Dossier Bloc 4 | `docs/RNCP/bloc-4-mco/` — **non recalculables depuis le dépôt** |
+| Mesures de production (17 comptes, 74 %, p95 207 ms) | Dossier Bloc 4 | `docs/RNCP/bloc-4-mco/`, **non recalculables depuis le dépôt** |
 | Items de feuille de route | `docs/roadmap-product.md`, `roadmap-tech.md` | § 5.2 ci-dessous |
 | Libellés de l'interface (script de démo) | `apps/web/src/shared/i18n/locales/fr.ts` | Toujours citer le libellé **exact** |
 
 ---
 
-## 4. Les pièges rencontrés — ils coûteront du temps à qui les ignore
+## 4. Les pièges rencontrés, ils coûteront du temps à qui les ignore
 
 ### 4.1 Le dépôt est cloné en superficiel
 
@@ -113,7 +113,7 @@ git log origin/master --date=format:'%Y-%m' --pretty=format:'%ad' | sort | uniq 
 
 ### 4.3 Le frontmatter par diapositive Slidev est un piège
 
-Un bloc `---\nlayout: center\n---` mal interprété crée une **diapositive vide** et décale toute la numérotation — donc la table `REFS` et le rattachement des 14 éléments imposés. Il a été **retiré** de l'ancienne diapositive 30, aujourd'hui fusionnée dans la 2, au profit de classes utilitaires (`text-center`, `mx-auto`). **Ne pas le réintroduire** sans revérifier le compte de diapositives.
+Un bloc `---\nlayout: center\n---` mal interprété crée une **diapositive vide** et décale toute la numérotation, donc la table `REFS` et le rattachement des 14 éléments imposés. Il a été **retiré** de l'ancienne diapositive 30, aujourd'hui fusionnée dans la 2, au profit de classes utilitaires (`text-center`, `mx-auto`). **Ne pas le réintroduire** sans revérifier le compte de diapositives.
 
 ### 4.4 `npm install` échoue sur le téléchargement du navigateur
 
@@ -133,21 +133,21 @@ Le thème demande **Nunito Sans** à `fonts.googleapis.com` au moment où la pag
 
 **Pour vérifier le rendu**, il faut la police, sinon le navigateur retombe sur une police plus large et signale des débordements qui n'existent pas. `npm run verify:rendu` la récupère tout seul, et **refuse de tourner** s'il n'y parvient pas plutôt que de rendre un verdict faux.
 
-**Pour l'oral**, c'est une dépendance réseau non déclarée : présenter le support en ligne dans une salle sans réseau dégrade la mise en page de toutes les diapositives. **L'export PDF fige les polices** — c'est la raison la plus solide de présenter depuis le PDF.
+**Pour l'oral**, c'est une dépendance réseau non déclarée : présenter le support en ligne dans une salle sans réseau dégrade la mise en page de toutes les diapositives. **L'export PDF fige les polices**, c'est la raison la plus solide de présenter depuis le PDF.
 
-### 4.6 Le pipeline bouge — revérifier avant de citer un nombre de jobs
+### 4.6 Le pipeline bouge, revérifier avant de citer un nombre de jobs
 
-L'annexe A5 énumère les jobs de `ci-cd.yml`. Ce fichier évolue : un job `test-api-mongo` a été ajouté sur `master` le 5 septembre, faisant passer le total de 14 à 15 pendant que cette PR était ouverte. **Avant toute relecture du dossier, recompter :**
+L'annexe A5 énumère les jobs de `ci-cd.yml` et de `deploy.yml`. Ces fichiers évoluent : `test-api-mongo` a été ajouté le 5 septembre, et le 11 septembre le compte réel était de 18 (12 dans `ci-cd.yml`, 6 dans `deploy.yml`) alors que l'annexe en listait 15. **Avant toute relecture du dossier, recompter :**
 
 ```bash
-git show origin/master:.github/workflows/ci-cd.yml | grep -cE '^  [a-z0-9-]+:$'   # retirer 1 pour « push », qui est un déclencheur
+for f in ci-cd deploy; do git show origin/master:.github/workflows/$f.yml | grep -cE '^  [a-z0-9-]+:$'; done   # retirer 1 sur ci-cd pour « push », qui est un déclencheur
 ```
 
-Et vérifier le caractère bloquant d'un job par sa présence dans les `needs` de `docker-api`, `deploy-api` ou `deploy-front`.
+Et vérifier le caractère bloquant : tout job de `ci-cd.yml` l'est, puisque `verifier-ci` exige un run vert sur le commit avant tout déploiement ; dans `deploy.yml`, `lighthouse` bloque `deploy-front` et le test de fumée de `deploy-api` bloque la bascule.
 
 ### 4.7 Prettier ne touche pas à ce dossier
 
-`.prettierignore` exclut `*.md` et `docs/`, et `format:check` ne cible que `apps/`, `configs/` et `e2e/`. **Aucun formatage automatique à craindre ni à lancer** sur ce dossier. La CI ignore d'ailleurs entièrement une PR qui ne touche que `docs/` — seuls `changes` et `gitleaks` s'exécutent, tout le reste est *skipped* par le path-filtering. C'est normal, ce n'est pas un échec.
+`.prettierignore` exclut `*.md` et `docs/`, et `format:check` ne cible que `apps/`, `configs/` et `e2e/`. **Aucun formatage automatique à craindre ni à lancer** sur ce dossier. La CI ignore d'ailleurs entièrement une PR qui ne touche que `docs/`, seuls `changes` et `gitleaks` s'exécutent, tout le reste est *skipped* par le path-filtering. C'est normal, ce n'est pas un échec.
 
 ### 4.8 Penser à nettoyer avant de committer
 
@@ -159,7 +159,7 @@ rm -rf docs/RNCP/bloc-3-coordination-pilotage/slides/{node_modules,dist}
 
 ---
 
-## 5. Vérifier son travail — scripts prêts à l'emploi
+## 5. Vérifier son travail, scripts prêts à l'emploi
 
 Tous à lancer depuis `docs/RNCP/bloc-3-coordination-pilotage/`.
 
@@ -195,11 +195,11 @@ for l in open('docs/roadmap-product.md',encoding='utf-8'):
         sz=re.search(r'`(S|M|L|XL)`',l); p=W.get(sz.group(1),0) if sz else 0
         if l.startswith('- ✅'): d+=1; dp+=p
         else: t+=1; tp+=p
-print(f'livres {d} ({dp} pts) · restants {t} ({tp} pts) · total {d+t}')
+print(f'livres {d} ({dp} pts) ; restants {t} ({tp} pts) ; total {d+t}')
 PY
 ```
 
-### 5.3 Intégrité du support — à lancer avant chaque commit
+### 5.3 Intégrité du support, à lancer avant chaque commit
 
 ```bash
 cd /home/user/Movie-Picker/docs/RNCP/bloc-3-coordination-pilotage
@@ -218,7 +218,7 @@ for n,c in enumerate(chunks,1):
     if o!=cl: print(f'  !! diapo {n} : div {o}/{cl}'); bad+=1
     if not [l for l in c if l.startswith('# ')]: print(f'  !! diapo {n} sans titre H1')
 d=re.findall(r'DUREE (\d+):(\d\d)', s); tot=sum(int(a)*60+int(b) for a,b in d)
-print(f'durees : {len(d)} (attendu 27) · total {(tot+290)//60}:{(tot+290)%60:02d} demo comprise (attendu 30:00)')
+print(f'durees : {len(d)} (attendu 27) ; total {(tot+290)//60}:{(tot+290)%60:02d} demo comprise (attendu 30:00)')
 for c,(a,b) in {0:(1,2),1:(3,3),2:(4,9),3:(10,14),4:(15,16),5:(17,20),6:(21,23),7:(24,26),8:(27,27)}.items():
     t=sum(int(d[n-1][0])*60+int(d[n-1][1]) for n in range(a,b+1))+(290 if c==1 else 0)
     print(f'  ch.{c} : {t//60}:{t%60:02d}')
@@ -226,9 +226,9 @@ print('desequilibres div :', bad)
 PY
 ```
 
-**Cibles** : 35 diapositives · 27 durées · total 30:00 · chapitres 0:50 / 5:40 (démonstration comprise) / 6:20 / 5:20 / 2:20 / 3:30 / 2:40 / 2:40 / 0:40. Les numéros de chapitre des titres de diapositives sont ceux du sommaire, la démonstration étant le chapitre 1.
+**Cibles** : 35 diapositives ; 27 durées ; total 30:00 ; chapitres 0:50 / 5:40 (démonstration comprise) / 6:20 / 5:20 / 2:20 / 3:30 / 2:40 / 2:40 / 0:40. Les numéros de chapitre des titres de diapositives sont ceux du sommaire, la démonstration étant le chapitre 1.
 
-### 5.4 Rendu du support — le contrôle que les autres ne font pas
+### 5.4 Rendu du support, le contrôle que les autres ne font pas
 
 Les contrôles du § 5.3 lisent le Markdown : ils restent **verts sur une diapositive dont le tiers inférieur est invisible**. C'est ce qui avait laissé passer 17 à 22 diapositives coupées.
 
@@ -237,7 +237,7 @@ cd docs/RNCP/bloc-3-coordination-pilotage/slides
 npm run verify:rendu
 ```
 
-Une seule commande : elle construit, sert, récupère la police du thème, rend les 40 pages et mesure. **Elle échoue** si une diapositive déborde, si `dist/` manque ou si une page n'a rien rendu — un vert signifie que les pages ont réellement été mesurées, pas seulement que rien n'a été trouvé.
+Une seule commande : elle construit, sert, récupère la police du thème, rend toutes les pages et mesure. **Elle échoue** si une diapositive déborde, si `dist/` manque ou si une page n'a rien rendu, un vert signifie que les pages ont réellement été mesurées, pas seulement que rien n'a été trouvé.
 
 **À relancer après toute retouche du support, et avant l'export PDF.** Un `npm run export` ne signale rien : il produit un PDF dont les pages sont coupées exactement comme l'écran.
 
@@ -266,7 +266,7 @@ PY
 
 | Fichier | Compétence | Alimente |
 |---------|:----------:|----------|
-| [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md) | — | **Le cadre** : minutage, déroulé des 32 diapositives, rattachement des 14 éléments imposés, questions du jury |
+| [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md) | | **Le cadre** : minutage, déroulé des 35 diapositives, rattachement des 14 éléments imposés, questions du jury |
 | [`01-planification.md`](01-planification.md) | C3.1 **ÉLIM** | Diapos 4 à 10 |
 | [`02-suivi-indicateurs.md`](02-suivi-indicateurs.md) | C3.2.1 **ÉLIM** | Diapos 11 à 15 |
 | [`03-arbitrage.md`](03-arbitrage.md) | C3.2.2 | Diapos 16 à 18 |
@@ -274,22 +274,22 @@ PY
 | [`05-competences.md`](05-competences.md) | C3.3.2 | Diapos 24 à 26 |
 | [`06-comptes-rendus.md`](06-comptes-rendus.md) | C3.4.1 | Diapos 27 à 29 |
 | [`07-demonstration.md`](07-demonstration.md) | C3.4.2 **ÉLIM** | Diapos 30 et 31, et la démonstration en direct |
-| [`slides/slides.md`](slides/slides.md) | — | Le support, 35 diapositives |
-| [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md) | — | Ce qui reste, priorisé |
+| [`slides/slides.md`](slides/slides.md) | | Le support, 35 diapositives |
+| [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md) | | Ce qui reste, priorisé |
 
 **Le sens de la dépendance** : les fichiers de matière sont la **source de vérité**, le support en est dérivé. Modifier une diapositive sans mettre à jour le chapitre correspondant crée une divergence qui se paiera à la relecture suivante.
 
 ---
 
-## 7. Décisions prises — leur défaire demande une raison
+## 7. Décisions prises, leur défaire demande une raison
 
 | Décision | Pourquoi | Si tu veux la défaire |
 |----------|----------|-----------------------|
 | **Le cas d'arbitrage est la migration .NET**, confirmée par le fait que la migration est absente de la feuille de route du MVP au moment où celui-ci est déclaré terminé (16/03 16:48), et ajoutée le 18/03 | C'est ce qui en fait un arbitrage et non l'exécution d'un plan | Deux cas de réserve documentés en § 7 de `03-arbitrage.md` |
-| **Ne pas écrire « 13 J/H non prévus au chiffrage »** | Faux : le lot figure au chiffrage du Bloc 1 (8+3+2). La formulation serait démentie par le dossier lui-même | — |
+| **Ne pas écrire « 13 J/H non prévus au chiffrage »** | Faux : le lot figure au chiffrage du Bloc 1 (8+3+2). La formulation serait démentie par le dossier lui-même | |
 | **Le cas « environnement de test rejeté malgré 30 % de gain » a été retiré** | Aucune trace dans le dépôt. Remplacé par l'abandon de l'application mobile (16/05 → 26/05), lui documenté | Si le propriétaire du projet confirme que c'est réel mais non tracé, le réintégrer en annexe A3 |
 | **Le chapitre 4 s'appuie sur la délégation à des agents d'assistance** comme management réel du projet, mesuré (537 commits co-signés sur 833) | Depuis le 11/09, c'est le seul ancrage du chapitre : l'organisation cible a été retirée. Le texte dit explicitement qu'un agent n'est pas un membre d'équipe | Décision prise par le propriétaire le 11/09/2026 : dire la vérité du solo plutôt que simuler une équipe |
-| **Pas de frontmatter par diapositive** | Risque de décalage de numérotation (§ 4.3) | — |
+| **Pas de frontmatter par diapositive** | Risque de décalage de numérotation (§ 4.3) | |
 
 ---
 
@@ -297,7 +297,7 @@ PY
 
 1. ~~Garder ou retirer la partie A du chapitre 4~~ : tranché le 11/09/2026, elle est devenue le cœur du chapitre, et l'organisation cible a été retirée.
 2. **Le cas d'arbitrage « environnement de test / 30 % »** correspond-il à une décision réelle non tracée ?
-3. ~~Fusionner la PR #83~~ — ✅ fait le 06/09/2026, les cases de `suivi-rncp.md` sont cochées.
+3. ~~Fusionner la PR #83~~, ✅ fait le 06/09/2026, les cases de `suivi-rncp.md` sont cochées.
 
 ---
 
@@ -310,7 +310,7 @@ d757b5e  chapitre 4, piloter l'équipe (C3.3.1)
 7f1b954  chapitre 5, les besoins en compétences (C3.3.2)
 4349b7e  chapitre 6, rendre compte au commanditaire (C3.4.1)
 ba00a51  chapitre 7, la démonstration (C3.4.2 ÉLIM)
-1171d9e  conclusion et annexes — le support est complet
+1171d9e  conclusion et annexes, le support est complet
 a4c5850  revue complète, corrections et suivi des restes
 f9db920  traitement des 5 points de vigilance de la revue
 a9c2859  référence la PR #83 dans le suivi des restes
@@ -321,7 +321,7 @@ a9c2859  référence la PR #83 dans le suivi des restes
 
 ## 10. Seconde relecture du 5 septembre 2026
 
-Relecture de vérification : chaque chiffre recoupé contre le dépôt, chaque libellé d'interface contre `fr.ts`, chaque fichier cité contre son contenu, et — pour la première fois — **le support rendu dans un navigateur**.
+Relecture de vérification : chaque chiffre recoupé contre le dépôt, chaque libellé d'interface contre `fr.ts`, chaque fichier cité contre son contenu, et, pour la première fois, **le support rendu dans un navigateur**.
 
 **Ce qui tient.** Les 25 libellés d'interface du script de démonstration existent tous, au mot près. Le dispositif de délégation du chapitre 4 est exact (7 étapes, 3 arrêts en majuscules, 6 contrôles de pull request). Les 944 lignes TypeScript, les 4 653 lignes C# sur 111 fichiers, les 87 lignes de front, la médiane de 17 jours, les 7 écarts à +2 de la grille, le budget de 20 J/H et 2 100 €, les 5 contrôles bloquants : tous vérifiés exacts.
 
@@ -329,7 +329,7 @@ Relecture de vérification : chaque chiffre recoupé contre le dépôt, chaque l
 
 **Ce qui a été découvert** : le support n'avait jamais été rendu, et 17 diapositives sont coupées (§ 0 de `RESTE-A-FAIRE.md`). D'où le nouveau contrôle du § 5.4 ci-dessus.
 
-**La leçon de méthode, pour la prochaine reprise** : les contrôles du § 5.3 vérifient la *structure* du support — nombre de diapositives, équilibre des balises, minutage. Aucun ne vérifiait qu'il **s'affiche**. Un contrôle qui lit la source ne remplace pas un contrôle qui regarde le résultat.
+**La leçon de méthode, pour la prochaine reprise** : les contrôles du § 5.3 vérifient la *structure* du support, nombre de diapositives, équilibre des balises, minutage. Aucun ne vérifiait qu'il **s'affiche**. Un contrôle qui lit la source ne remplace pas un contrôle qui regarde le résultat.
 
 ## 11. Refonte du support, 5 septembre 2026
 
@@ -337,7 +337,7 @@ Déclenchée par une remarque du propriétaire du projet, et elle change la règ
 
 **Ce qui a changé.** Une idée par diapositive, énoncée dans le titre. La preuve à l'écran, l'argumentation en note de présentateur. Sept tableaux devenus des schémas (§ 0 de `RESTE-A-FAIRE.md`). Le mur de 25 indicateurs de la diapositive 12 remplacé par la méthode de sélection et les 5 axes, les valeurs restant sur les deux tableaux de bord. Trois répétitions littérales supprimées.
 
-**Ce qui n'a pas changé, et ne doit pas changer** : les 40 diapositives, la numérotation, le rattachement des 14 éléments imposés, le minutage à 30:00 exact chapitre par chapitre, et l'ordre des chapitres — qui est celui du référentiel, ce qui permet au jury de cocher compétence par compétence sans chercher.
+**Ce qui n'a pas changé, et ne doit pas changer** : les 40 diapositives, la numérotation, le rattachement des 14 éléments imposés, le minutage à 30:00 exact chapitre par chapitre, et l'ordre des chapitres, qui est celui du référentiel, ce qui permet au jury de cocher compétence par compétence sans chercher.
 
 **Le piège de rédaction à connaître** : dans un bloc HTML, une ligne qui commence par une balise **inline** (`<b>`, `<span>`) après une ligne vide est enveloppée dans un `<p>` par markdown, ce qui casse la grille CSS. Commencer chaque ligne par `<div>`. C'est ce qui avait cassé la grille de compétences au premier essai.
 
@@ -347,7 +347,7 @@ Trois consignes du propriétaire du projet, appliquées ensemble : **moins de te
 
 **Ce qui a changé.** 40 → 35 diapositives, 32 → 27 présentées, volume de texte des diapositives présentées en baisse de 16 % (35 200 → 29 400 caractères). La densité moyenne par diapositive reste proche de 1 100 caractères, les fusions concentrant ce qu'elles regroupent : les plus lourdes sont désormais la 16 (options + logigramme + décision), la 19 et la 23, à alléger encore si la relecture le demande. Cinq fusions : méthode + outils de planification (ancienne 4 + 5 → 4), logigramme + décision (17 + 18 → 16), animation + inclusion (21 + 22 → 19), annonce de la démonstration réduite à un mot et au lien du site (2 + 30 → 3), validation + bilan (31 + 32 → 27). Dix tableaux devenus des schémas : lots en barre empilée (6), ressources en indicateurs (7), RACI en grille colorée (8), vigilance en cartes (9), outil de suivi en indicateurs (10), dérive en frise (15), styles en quadrant (18), plan de développement en barres (23), compte rendu en pas et en barre (25), satisfaction en indicateurs et frise (26). Répétitions retirées : « une version tous les 17 jours » et les « 9 livraisons » de l'ancienne diapositive 4, les 98 J/H par profil ne sont plus qu'en 17.
 
-**Correspondance ancienne → nouvelle numérotation**, pour lire les sections historiques de ce fichier et de `RESTE-A-FAIRE.md` : 1 → 1 · 3 → 2 · 2 + 30 → 3 · 4 + 5 → 4 · 6 → 5 · 7 → 6 · 8 → 7 · 9 → 8 · 10 → 9 · 11 → 10 · 12 → 11 · 13 → 12 · 14 → 13 · 15 → 14 · 16 → 15 · 17 + 18 → 16 · 19 → 17 · 20 → 18 · 21 + 22 → 19 · 23 → 20 · 24 → 21 · 25 → 22 · 26 → 23 · 27 → 24 · 28 → 25 · 29 → 26 · 31 + 32 → 27 · annexes 33 à 40 → 28 à 35.
+**Correspondance ancienne → nouvelle numérotation**, pour lire les sections historiques de ce fichier et de `RESTE-A-FAIRE.md` : 1 → 1 ; 3 → 2 ; 2 + 30 → 3 ; 4 + 5 → 4 ; 6 → 5 ; 7 → 6 ; 8 → 7 ; 9 → 8 ; 10 → 9 ; 11 → 10 ; 12 → 11 ; 13 → 12 ; 14 → 13 ; 15 → 14 ; 16 → 15 ; 17 + 18 → 16 ; 19 → 17 ; 20 → 18 ; 21 + 22 → 19 ; 23 → 20 ; 24 → 21 ; 25 → 22 ; 26 → 23 ; 27 → 24 ; 28 → 25 ; 29 → 26 ; 31 + 32 → 27 ; annexes 33 à 40 → 28 à 35.
 
 **Ce qui n'a pas changé** : le minutage à 30:00 exact chapitre par chapitre, les 14 éléments imposés tous rattachés (le plan § 1 porte la nouvelle table), les deux registres annoncés en diapositive 2, avant la démonstration, les limites assumées.
 

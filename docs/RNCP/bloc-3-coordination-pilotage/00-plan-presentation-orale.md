@@ -79,7 +79,7 @@ Critères visés par la démonstration : le logiciel est utilisable, la démonst
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
 | 1 | Movie Picker, coordonner et piloter un projet de développement logiciel | 0:10 | Titre, Bloc 3 RNCP 39583, Adrien MORAND, 16 septembre 2026 |
-| 2 | Un projet mené seul | 0:40 | Une personne, pas d'équipe ; 64 % des commits co-signés par un agent depuis le 13 mai, sous cadre écrit ; là où le référentiel parle d'équipe, ce qui a été fait réellement. Sommaire : la démonstration puis les 7 chapitres, chacun avec sa compétence, les 3 éliminatoires signalées |
+| 2 | Un projet mené seul | 0:40 | Une personne, pas d'équipe ; 64 % des commits du projet co-signés par un agent, aucun avant le 13 mai, sous cadre écrit ; là où le référentiel parle d'équipe, ce qui a été fait réellement. Sommaire : la démonstration puis les 7 chapitres, chacun avec sa compétence, les 3 éliminatoires signalées |
 | 3 | 1. Démonstration | 0:50 | Un seul mot et le lien du site en production, `web.movie-picker.fr`. Dit à voix haute, rien à l'écran : 10 versions livrées de février à septembre 2026, 17 comptes, 74 % des soirées menées jusqu'au tirage, puis les 6 temps du parcours en une phrase. Deux appareils. Le plan de repli à 4 niveaux est en note de présentateur |
 | | **Démonstration en direct** | 4:50 | Parcours détaillé au point 5 |
 
@@ -148,7 +148,7 @@ Critères visés : comptes rendus clairs et ordonnés, facilitant la prise de d�
 
 | # | Titre | Durée | Contenu et preuve à l'écran |
 |:-:|-------|------:|------------------------------|
-| 24 | 7. Rendre compte : les points de validation | 0:50 | **Deux commanditaires, deux rythmes** : le jury valide la conformité sur 4 échéances, les 17 utilisateurs valident l'usage sur 10 versions. Frise des versions, et ce qui fait d'une livraison un point de validation qualité : 5 contrôles bloquants puis un test de fumée |
+| 24 | 7. Rendre compte : les points de validation | 0:50 | **Deux commanditaires, deux rythmes** : le jury valide la conformité sur 4 échéances, les 17 utilisateurs valident l'usage sur 10 versions. Frise des versions, et ce qui fait d'une livraison un point de validation qualité : 4 contrôles bloquants avant l'intégration, puis un test de fumée bloquant après déploiement |
 | 25 | Le compte rendu qui fait décider | 0:50 | Le gabarit en 5 blocs dont 3 de décision, sur le cas réel de l'adoption des notifications. Les trois niveaux de compte rendu, du poussé au décisionnel, et la limite : le niveau poussé n'existe que depuis la v1.4.0 |
 | 26 | Les indicateurs de satisfaction | 1:00 | Trois familles en trois indicateurs : 74 % comportemental, 9,6 déclaratif sur 7 réponses, 100 % opérationnel. Le 9,6 présenté pour ce qu'il est. La boucle mesurée en frise, 17 jours du retour à la production, et ce que les retours ont produit |
 
@@ -171,7 +171,7 @@ Critères visés : comptes rendus clairs et ordonnés, facilitant la prise de d�
 | 5 | 1:00 | Configuration puis lancement de la roue, film gagnant | Cœur du produit |
 | 6 | 0:50 | Clôture, historique, profil public et statistiques | Suivi et dimension sociale |
 
-**Préparation obligatoire** : la liste complète est en § 4 de [`07-demonstration.md`](07-demonstration.md) — 8 points la veille, 8 vérifications dans les dix minutes précédentes. Le **plan de repli à quatre niveaux** est en § 5, avec sa phrase de bascule préparée. La compétence est éliminatoire, elle ne peut pas dépendre du wifi d'une salle d'examen.
+**Préparation obligatoire** : la liste complète est en § 4 de [`07-demonstration.md`](07-demonstration.md), 8 points la veille, 8 vérifications dans les dix minutes précédentes. Le **plan de repli à quatre niveaux** est en § 5, avec sa phrase de bascule préparée. La compétence est éliminatoire, elle ne peut pas dépendre du wifi d'une salle d'examen.
 
 > **Détail du parcours, glossaire de vocabulaire client et séquence de clôture** : [`07-demonstration.md`](07-demonstration.md). Le tableau ci-dessus en est le résumé ; le script d'exécution, mot pour mot avec les libellés réels de l'interface, est dans le chapitre.
 
@@ -185,7 +185,7 @@ Placées après la diapositive 27, jamais présentées, appelées seulement si u
 | A2 | **29** | Le logigramme d'arbitrage en version complète, avec le chemin réellement suivi le 18/03/2026 |
 | A3 | **30** | Les deux arbitrages de réserve : la porte de qualité instable (52 % → 94 %), l'abandon de l'application mobile |
 | A4 | **31** | Le budget prévisionnel détaillé : valeur de développement par lot, infrastructure poste par poste |
-| A5 | **32** | La chaîne d'intégration et de déploiement, ses 15 jobs et leur caractère bloquant |
+| A5 | **32** | La chaîne d'intégration et de déploiement, ses 18 jobs et leur caractère bloquant |
 | A6 | **33** | La matrice RACI complète, 15 lignes, et ses trois propriétés |
 | A7 | **34** | Le journal des versions et le détail de la v1.3.2, avec la traçabilité bidirectionnelle |
 | A8 | **35** | Les retours utilisateurs question par question, et ce qu'ils ont produit |
@@ -198,7 +198,7 @@ Les questions les plus probables sont celles qui touchent aux points faibles con
 
 | Question probable | Ligne de réponse |
 |-------------------|------------------|
-| Combien de personnes dans l'équipe ? | Une, et c'est dit dès la diapositive 2. Ce qui a été délégué l'a été à des agents d'assistance, sous un cadre écrit et un contrôle en sortie : 64 % des commits co-signés depuis le 13 mai. Là où le référentiel suppose une équipe, la présentation montre ce qui a été fait à la place et dit ce qui n'a pas d'équivalent. Elle sert à démontrer la conception des outils de pilotage, pas à faire croire à une équipe |
+| Combien de personnes dans l'équipe ? | Une, et c'est dit dès la diapositive 2. Ce qui a été délégué l'a été à des agents d'assistance, sous un cadre écrit et un contrôle en sortie : 64 % des commits co-signés, aucun avant le 13 mai. Là où le référentiel suppose une équipe, la présentation montre ce qui a été fait à la place et dit ce qui n'a pas d'équivalent. Elle sert à démontrer la conception des outils de pilotage, pas à faire croire à une équipe |
 | Vos étiquettes de version ont-elles été posées au fil de l'eau ? | Les dates de livraison réelles sont celles du journal des versions, vérifiables dans l'historique des commits et des déploiements. La formalisation du versionnage est intervenue en juillet 2026, les six premières étiquettes ont donc été posées à ce moment-là |
 | Votre tableau de suivi semble récent | Le suivi quotidien s'est fait sur les issues, les pull requests, les exécutions du pipeline et les releases, toutes horodatées au moment du geste. Le tableau consolide cette matière, il ne la crée pas. La limite est écrite en 1.5 du chapitre 2 |
 | Comment avez-vous estimé les 98 J/H ? | Méthode analogique par comparaison entre lots de complexité voisine, marge d'incertitude de 20 % assumée au chiffrage |

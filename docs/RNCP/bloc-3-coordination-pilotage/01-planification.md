@@ -160,7 +160,7 @@ Chaque version est un jalon daté, vérifiable dans le journal des versions et d
 
 ### 3.4 Le découpage en lots et la charge
 
-Chiffrage établi au cadrage (Bloc 1), méthode **analogique** par comparaison entre lots de complexité voisine, marge d'incertitude assumée de 20 % sur les lots de développement.
+Chiffrage établi au cadrage (Bloc 1) du 20 mars au 30 avril, rétrospectif sur les lots 1 et 2 déjà livrés et prévisionnel sur les lots 3 et 4 ; méthode **analogique** par comparaison entre lots de complexité voisine, marge d'incertitude assumée de 20 % sur les lots de développement.
 
 | Lot | Contenu | Charge |
 |-----|---------|-------:|

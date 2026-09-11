@@ -38,7 +38,7 @@ L'ordre dans lequel les compétences ont dû être mobilisées est lisible dans 
 | **3. Exploiter** | juillet 2026 | Supervision applicative, sondes de disponibilité, politiques d'alerte, traçabilité release / incident | La production a des utilisateurs réels : il faut savoir ce qui s'y passe |
 | **4. Enrichir** | août 2026 | Identité fédérée, intégration d'un service tiers bidirectionnel | Le périmètre produit hors chiffrage initial (chapitre 2) |
 
-**Le commentaire à porter à l'oral** : la vague 1 est concentrée sur **quatre jours** — du MVP figé le 16 mars à la migration terminée le 19 (chapitre 3, § 2.1). C'est le coût de compétence de l'arbitrage du chapitre 3, et il n'apparaît nulle part dans le chiffrage en jours-homme. Un plan de développement des compétences sert précisément à rendre ce coût visible avant de le payer.
+**Le commentaire à porter à l'oral** : la vague 1 est concentrée sur **quatre jours**, du MVP figé le 16 mars à la migration terminée le 19 (chapitre 3, § 2.1). C'est le coût de compétence de l'arbitrage du chapitre 3, et il n'apparaît nulle part dans le chiffrage en jours-homme. Un plan de développement des compétences sert précisément à rendre ce coût visible avant de le payer.
 
 ### 1.3 La cartographie
 
@@ -78,7 +78,7 @@ Une échelle en pourcentage ou en « débutant / intermédiaire / avancé » n'e
 
 | Compétence | Février | Septembre | Exigé | Preuve dans le dépôt |
 |------------|:-------:|:---------:|:-----:|----------------------|
-| Architecture applicative | 2 | 3 | 4 | Découpage hexagonal de l'API, 111 fichiers ; contrat OpenAPI tenu depuis le MVP |
+| Architecture applicative | 2 | 3 | 3 | Découpage hexagonal de l'API, 111 fichiers ; contrat OpenAPI tenu depuis le MVP |
 | **Arbitrage et chiffrage** | 2 | **2** | 4 | Chiffrage formalisé après coup, lot de migration chiffré a posteriori, dix jours d'août sans arbitrage posé |
 | **Revue de code et transmission** | 1 | **2** | 4 | 87 lignes de front intégrées sans revue en mars ; gabarit de PR et conventions écrites depuis |
 | React et TypeScript | 3 | 3 | 3 | Front du MVP livré en trois semaines, février 2026 |
@@ -87,7 +87,7 @@ Une échelle en pourcentage ou en « débutant / intermédiaire / avancé » n'e
 | C# et ASP.NET Core | 2 | 3 | 3 | Migration de l'API en quatre jours, 16 au 19 mars 2026 |
 | Architecture hexagonale | 1 | 3 | 3 | Même migration, ports et adaptateurs, tests d'intégration |
 | Sécurité applicative et identité | 1 | 3 | 3 | Session par cookie, identité fédérée, politique de sécurité du contenu, août 2026 |
-| Intégration et déploiement continus, conteneurs | 2 | 3 | 3 | Chaîne à 15 jobs, déploiement par digest, exécution sans serveur |
+| Intégration et déploiement continus, conteneurs | 2 | 3 | 3 | Chaîne à 18 jobs, déploiement par digest, exécution sans serveur |
 | Supervision et exploitation | 1 | 3 | 3 | Sondes sur trois continents, politiques d'alerte, juillet 2026 |
 | Veille de vulnérabilités | 1 | 3 | 3 | Dependabot regroupé, scans de secrets et d'images, alertes d'analyse statique traitées |
 
@@ -151,7 +151,7 @@ Le critère est explicite : les modalités de formation doivent prendre en compt
 | **Choix du prestataire** | L'accessibilité de la plateforme de formation est un **critère de sélection** du prestataire, au même titre que le contenu |
 | **Compagnonnage** | Les actions internes se font en binôme écrit et asynchrone, ce qui n'impose ni la simultanéité ni l'oral |
 
-**Le point à dire** : la dernière ligne n'est pas un aménagement particulier, c'est le mode de travail normal du projet décrit au chapitre 4. **Une organisation dont le fonctionnement courant est déjà accessible n'a pas à produire d'aménagement exceptionnel** — c'est ce qui distingue une inclusion conçue d'une inclusion rapportée.
+**Le point à dire** : la dernière ligne n'est pas un aménagement particulier, c'est le mode de travail normal du projet décrit au chapitre 4. **Une organisation dont le fonctionnement courant est déjà accessible n'a pas à produire d'aménagement exceptionnel**, c'est ce qui distingue une inclusion conçue d'une inclusion rapportée.
 
 ---
 
@@ -170,8 +170,8 @@ Le critère est explicite : les modalités de formation doivent prendre en compt
 | Question | Ligne de réponse |
 |----------|------------------|
 | Une auto-évaluation, est-ce évaluable ? | Elle est étalonnée ligne par ligne sur le dépôt : la date d'introduction de chaque technologie, ce qui a été livré avec, et ce qui a échoué. Elle avoue deux écarts non comblés, sur les compétences que les indicateurs désignent aussi. Une grille flatteuse n'en avouerait aucun |
-| Comment avez-vous étalonné les niveaux cibles ? | Sur ce que le projet a réellement exigé, pas sur un référentiel. Chaque compétence de la cartographie correspond à une technologie présente dans le dépôt, avec une date d'introduction vérifiable — la chronologie des quatre vagues |
+| Comment avez-vous étalonné les niveaux cibles ? | Sur ce que le projet a réellement exigé, pas sur un référentiel. Chaque compétence de la cartographie correspond à une technologie présente dans le dépôt, avec une date d'introduction vérifiable, la chronologie des quatre vagues |
 | Pourquoi une certification d'accessibilité, si le niveau est atteint ? | Parce que l'acquis a été construit sur un seul produit, avec des outils automatisés. Une certification le formalise et le rend transférable. Et parce que c'est le seul domaine où un écart a un effet immédiat et bloquant : la porte de qualité échoue le déploiement |
 | Pourquoi si peu de technique dans le plan ? | Parce que le technique a été acquis sur le projet, en production, et que la grille le montre. Ce qui reste et qui a déjà coûté est du pilotage : chiffrer avant, arbitrer quand il le faut, faire relire le structurant |
 | Vos deux plus gros écarts sur le lead ne sont pas techniques | Non, et c'est volontaire. Arbitrage, chiffrage et transmission sont les deux compétences que le projet a le plus sollicitées et le moins bien exercées : le chiffrage a été formalisé a posteriori, et 87 lignes ont été intégrées sans revue. La grille désigne les mêmes faiblesses que les indicateurs, sinon elle serait de complaisance |
-| Les modalités handicap ne sont-elles pas des clauses de style ? | Trois d'entre elles ont un coût réel et sont donc vérifiables : le tiers-temps accordé de droit, la fourniture systématique d'un support en texte structuré, et l'accessibilité de la plateforme comme critère de sélection du prestataire. Et le compagnonnage interne est déjà asynchrone et écrit — c'est le mode de travail normal du projet, pas un aménagement rapporté |
+| Les modalités handicap ne sont-elles pas des clauses de style ? | Trois d'entre elles ont un coût réel et sont donc vérifiables : le tiers-temps accordé de droit, la fourniture systématique d'un support en texte structuré, et l'accessibilité de la plateforme comme critère de sélection du prestataire. Et le compagnonnage interne est déjà asynchrone et écrit, c'est le mode de travail normal du projet, pas un aménagement rapporté |
