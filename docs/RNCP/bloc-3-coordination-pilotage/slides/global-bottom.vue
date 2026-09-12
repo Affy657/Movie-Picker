@@ -288,7 +288,7 @@ const ANNEX_FROM = 99
 
 .skills {
   display: grid;
-  grid-template-columns: 6.4rem 8.6rem 1fr 9.6rem;
+  grid-template-columns: 6.2rem 12.6rem 1fr 9.2rem;
   gap: 2px;
   font-size: 0.68rem;
   line-height: 1.28;
@@ -300,6 +300,9 @@ const ANNEX_FROM = 99
   padding: 0.3rem 0.45rem;
   border-radius: 3px;
   background: rgb(0 0 0 / 5%);
+}
+.skills > div:empty {
+  background: none;
 }
 .skills .h {
   background: none;

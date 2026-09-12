@@ -33,12 +33,12 @@ L'ordre dans lequel les compétences ont dû être mobilisées est lisible dans 
 
 | Vague | Période | Compétences mobilisées | Ce qui la déclenche |
 |-------|---------|------------------------|---------------------|
-| **1. Produire** | 16 au 19 mars 2026 | Chaîne d'intégration continue, C# et ASP.NET Core, architecture hexagonale, driver MongoDB, tests unitaires et d'intégration .NET, contrat OpenAPI, conteneurisation | L'arbitrage du chapitre 3. Le document de décision identifiait explicitement la **courbe d'apprentissage** comme un risque assumé |
+| **1. Produire** | 16 au 19 mars 2026 | Chaîne d'intégration continue, C# et ASP.NET Core, architecture hexagonale, driver MongoDB, tests unitaires et d'intégration .NET, contrat OpenAPI, conteneurisation | L'arbitrage du thème 8. Ces compétences étaient déjà acquises en février : c'est ce qui rend une migration en quatre jours possible |
 | **2. Fiabiliser** | avril à mai 2026 | Mesure de performance et d'accessibilité, analyse statique et portes de qualité, scan de vulnérabilités et de secrets, internationalisation, application installable et service worker, notifications push | La préparation de la V1 : ce qui est livré à des utilisateurs doit être vérifié avant, pas après |
 | **3. Exploiter** | juillet 2026 | Supervision applicative, sondes de disponibilité, politiques d'alerte, traçabilité release / incident | La production a des utilisateurs réels : il faut savoir ce qui s'y passe |
 | **4. Enrichir** | août 2026 | Identité fédérée, intégration d'un service tiers bidirectionnel | Le périmètre produit hors chiffrage initial (chapitre 2) |
 
-**Le commentaire à porter à l'oral** : la vague 1 est concentrée sur **quatre jours**, du MVP figé le 16 mars à la migration terminée le 19 (chapitre 3, § 2.1). C'est le coût de compétence de l'arbitrage du chapitre 3, et il n'apparaît nulle part dans le chiffrage en jours-homme. Un plan de développement des compétences sert précisément à rendre ce coût visible avant de le payer.
+**Le commentaire à porter à l'oral** : la vague 1 est concentrée sur **quatre jours**, du MVP figé le 16 mars à la migration terminée le 19 (chapitre 3, § 2.1), et elle ne mobilise que des compétences déjà acquises. Le coût d'apprentissage est dans les vagues 2 à 4, tout ce qu'un produit en production impose et que le socle n'apprend pas, et il n'apparaît nulle part dans le chiffrage en jours-homme. Un plan de développement des compétences sert précisément à rendre ce coût visible avant de le payer.
 
 ### 1.3 La cartographie
 
@@ -66,7 +66,7 @@ Trois états, un par colonne :
 
 | Colonne | Ce qu'elle contient | Preuve |
 |---------|---------------------|--------|
-| **Février, déjà acquis** | Ce que je savais au démarrage : la pile du MVP, livré le 16 mars 2026 | `v0.1.0`, dépendances de `apps/api` et `apps/web` au 27 février |
+| **Février, déjà acquis** | Ce que je savais au démarrage : un profil back et DevOps, plus la pile du MVP livré le 16 mars 2026 | Déclaratif pour le socle .NET et la chaîne ; `v0.1.0` pour la pile du MVP |
 | **Appris sur le projet** | Ce que le projet m'a obligé à apprendre, avec la version qui le prouve | La version où la technologie entre dans `docs/roadmap.md` ou dans le dépôt |
 | **Reste à acquérir** | Ce que la suite du projet demande et que je n'ai pas encore | Feuille de route 1.7, 1.8 et backlog technique, ou un indicateur des thèmes 4, 7 et 8 |
 
@@ -74,21 +74,21 @@ Trois états, un par colonne :
 
 | Domaine | Février, déjà acquis | Appris sur le projet, et la version qui le prouve | Reste à acquérir |
 |---------|----------------------|---------------------------------------------------|------------------|
-| **Back** | Node, Express, Mongoose, Zod, Swagger | C#, ASP.NET Core, architecture hexagonale, driver MongoDB et transactions, contrat OpenAPI généré et types front dérivés (V1) ; Web Push VAPID (1.1) ; OAuth Google et GitHub, synchronisation Letterboxd (1.4) ; passe planifiée Cloud Scheduler (1.6) | Temps réel, SignalR ou WebSocket ; TOTP (1.7) |
+| **Back** | C#, ASP.NET Core, architecture hexagonale, driver MongoDB et transactions, contrat OpenAPI généré ; Node, Express, Mongoose | Web Push VAPID (1.1) ; OAuth Google et GitHub, synchronisation Letterboxd (1.4) ; passe planifiée Cloud Scheduler (1.6) | Temps réel, SignalR ou WebSocket ; TOTP (1.7) |
 | **Front** | React, TypeScript, Vite, React Router | TanStack Query, cache de données distantes ; i18n FR et EN (V1) ; PWA Workbox (1.1) ; design system à jetons, SEO JSON-LD et sitemap (1.5) ; pré-rendu, coquille de démarrage LCP (1.6) | Consultation hors-ligne en lecture seule (1.8) |
-| **Tests, qualité** | Aucun test automatisé | Vitest, Testing Library, MSW ; xUnit, Moq, WebApplicationFactory ; tests sur MongoDB réel en replica set ; Playwright bout en bout ; Stryker, tests de mutation ; SonarCloud et seuils de couverture bloquants (V1 à 1.6) | Revue de code par un tiers |
-| **Accessibilité, performance** | Rien | axe automatisé sur 9 vues, critères RGAA clavier, focus et contraste (1.2) ; Lighthouse bloquant au déploiement (V1) ; mesure et correction du LCP (1.6) | Formation RGAA certifiante |
-| **Livraison, infrastructure** | Docker, Git et GitHub | GitHub Actions, 6 workflows, filtrage par chemins ; Artifact Registry et Cloud Run, déploiement par digest, rollback de trafic ; S3 et CloudFront, politique d'en-têtes ; Secret Manager ; Dependabot regroupé (1.3) ; sauvegarde Atlas vérifiée par restauration (1.6) | Terraform ; fédération d'identité pour la CI ; environnement de recette |
-| **Sécurité, exploitation** | Cookie de session | Data Protection, CSP ; Gitleaks, Trivy, zizmor ; export et suppression RGPD, PostHog sous consentement (1.2) ; Sentry front et API (1.3) ; 3 sondes de disponibilité, 5 politiques d'alerte, journal de versions | Double authentification (1.7) ; OWASP |
-| **Méthode** | Commits directs, sans pull request | Cycle en V par version, feuille de route chiffrée en points, board ; pull request et CI bloquante ; AGENTS.md et conduite d'assistants de code ; document d'aide à la décision, gabarit de PR | Chiffrage avant réalisation, arbitrage consigné ; management d'équipe |
+| **Tests, qualité** | xUnit, Playwright, SonarCloud | Vitest, Testing Library, MSW ; Moq, WebApplicationFactory ; tests sur MongoDB réel en replica set ; Stryker, tests de mutation ; seuils de couverture bloquants (V1 à 1.6) | Revue de code par un tiers |
+| **Accessibilité, performance** | | axe automatisé sur 9 vues, critères RGAA clavier, focus et contraste (1.2) ; Lighthouse bloquant au déploiement (V1) ; mesure et correction du LCP (1.6) | Formation RGAA certifiante |
+| **Livraison, infrastructure** | GitHub Actions, Dependabot regroupé, Docker, Git | Artifact Registry et Cloud Run, déploiement par digest, rollback de trafic ; S3 et CloudFront, politique d'en-têtes ; Secret Manager ; sauvegarde Atlas vérifiée par restauration (1.6) | Terraform ; fédération d'identité pour la CI ; environnement de recette |
+| **Sécurité, exploitation** | Gitleaks ; cookie de session | Data Protection, CSP ; Trivy, zizmor ; export et suppression RGPD, PostHog sous consentement (1.2) ; Sentry front et API (1.3) ; 3 sondes de disponibilité, 5 politiques d'alerte, journal de versions | Double authentification (1.7) ; OWASP |
+| **Méthode** | | Cycle en V par version, feuille de route chiffrée en points, board ; AGENTS.md et conduite d'assistants de code ; document d'aide à la décision, gabarit de PR | Chiffrage avant réalisation, arbitrage consigné ; management d'équipe |
 
 ### 2.3 Le commentaire de la grille
 
 Le critère exige que la grille soit **commentée**, pas seulement affichée. Trois lectures.
 
-**1. La colonne de février tient en une ligne par domaine, et deux cases sont vides.** Aucun test automatisé, rien en accessibilité : le MVP a été livré avec ça. Tout ce qui est dans la colonne du milieu a été appris seul, en production, pendant le projet, sans plan ni budget. C'est la justification du plan du § 3 : rendre ce coût visible avant de le payer. La vague 1 du § 1.2 en donne l'ordre de grandeur, quatre jours pour absorber un changement de socle complet, qui n'apparaissent dans aucune ligne du chiffrage.
+**1. La colonne de février est un profil back et DevOps.** C#, hexagonal, MongoDB, OpenAPI, xUnit, Playwright, GitHub Actions, SonarCloud, Gitleaks : c'est ce qui a rendu la migration de mars possible en quatre jours (thème 8), on ne migre pas vers une pile qu'on ne connaît pas. Deux cases sont vides, l'accessibilité et la méthode de pilotage.
 
-**2. La colonne du milieu n'est pas du vernis.** Chaque case est une chose qui tourne en production ou qui bloque la chaîne de livraison, et chaque case porte la version qui l'a fait entrer dans le dépôt.
+**2. La colonne du milieu, c'est ce qu'un produit en production impose et que le socle n'apprend pas.** Push, OAuth, PWA, i18n, accessibilité, supervision, RGPD, sauvegarde vérifiée, et la méthode elle-même. Tout a été appris seul, en production, pendant le projet, sans plan ni budget : c'est la justification du plan du § 3, rendre ce coût visible avant de le payer. Chaque case porte la version qui l'a fait entrer dans le dépôt.
 
 **3. La colonne de droite a deux natures.** Les lignes techniques viennent de la feuille de route, 1.7, 1.8 et les huit lots Terraform du backlog : ce sont des besoins datés. La ligne méthode vient des indicateurs : chiffrage formalisé après coup (thème 4), migration chiffrée a posteriori et 87 lignes intégrées sans revue (thème 8), facteur de bus (thème 7). **La grille désigne les mêmes faiblesses que les indicateurs, c'est ce qui la rend crédible.** Une grille flatteuse n'aurait pas de colonne de droite.
 
@@ -125,12 +125,14 @@ Le plan, c'est la colonne « reste à acquérir » de la grille, ligne par ligne
 
 Le référentiel demande de **transmettre les besoins en recrutement**. Le projet n'en a pas aujourd'hui : il tient à une personne, et c'est le premier point de vigilance du chapitre 1. La question est instruite pour le jour où il passerait en équipe, à partir de la grille du § 2.2 et du facteur de bus.
 
-| Profil à recruter | Exigé au recrutement | Construit en interne, sur le cadre écrit |
-|-------------------|----------------------|------------------------------------------|
-| **Développeur front** | React et TypeScript, et **l'accessibilité, RGAA** : la porte de qualité échoue une livraison qui ne la tient pas | Conventions, procédures, service worker, internationalisation |
-| **DevOps, à mi-temps** | GitHub Actions, conteneurs, Terraform et Cloud Run | Supervision, exploitation, veille de vulnérabilités, sur les procédures existantes |
+Le point de départ est mon profil, back et DevOps : ce qui manque est en face.
 
-**La note transmise tient en une phrase** : recruter sur le langage et l'expérience, former sur le contexte et la conformité. Ce que ces deux personnes recevraient le premier jour existe déjà : les conventions du dépôt, les procédures exécutables, les gabarits d'issue et de pull request, le journal des versions.
+| Profil à recruter | Ce qu'il apporte que le profil actuel n'a pas | Construit en interne, sur le cadre écrit |
+|-------------------|-----------------------------------------------|------------------------------------------|
+| **Développeur front, designer** | L'interface et le design, l'accessibilité au-delà des tests automatisés | Conventions, procédures, service worker, internationalisation |
+| **Product owner, chargé de marketing** | Le cadrage produit et l'acquisition : 21 comptes en sept mois disent qu'elle n'a pas été faite | La feuille de route, le board, le journal des versions |
+
+**La note transmise tient en une phrase** : recruter ce qui complète le profil, former sur le contexte. Ce que ces deux personnes recevraient le premier jour existe déjà : les conventions du dépôt, les procédures exécutables, les gabarits d'issue et de pull request, le journal des versions.
 
 ### 3.4 Les modalités adaptées au handicap
 

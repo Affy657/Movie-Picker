@@ -864,19 +864,19 @@ dans le HTML initial en 1.6, 2,3 s, porte verte.
 <div class="skills mt-2">
 <div class="h"></div><div class="h">Février, déjà acquis</div><div class="h a">Appris sur le projet, et la version qui le prouve</div><div class="h r">Reste à acquérir</div>
 
-<div class="l">Back</div><div class="b">Node, Express, Mongoose, Zod, Swagger</div><div class="a">C#, ASP.NET Core, architecture hexagonale, driver MongoDB et transactions, contrat OpenAPI généré et types front dérivés <u>V1</u> ; Web Push VAPID <u>1.1</u> ; OAuth Google et GitHub, synchronisation Letterboxd <u>1.4</u> ; passe planifiée Cloud Scheduler <u>1.6</u></div><div class="r">Temps réel, SignalR ou WebSocket ; TOTP <u>1.7</u></div>
+<div class="l">Back</div><div class="b">C#, ASP.NET Core, architecture hexagonale, driver MongoDB et transactions, contrat OpenAPI généré ; Node, Express, Mongoose</div><div class="a">Web Push VAPID <u>1.1</u> ; OAuth Google et GitHub, synchronisation Letterboxd <u>1.4</u> ; passe planifiée Cloud Scheduler <u>1.6</u></div><div class="r">Temps réel, SignalR ou WebSocket ; TOTP <u>1.7</u></div>
 
 <div class="l">Front</div><div class="b">React, TypeScript, Vite, React Router</div><div class="a">TanStack Query, cache de données distantes ; i18n FR et EN <u>V1</u> ; PWA Workbox <u>1.1</u> ; design system à jetons, SEO JSON-LD et sitemap <u>1.5</u> ; pré-rendu, coquille de démarrage LCP <u>1.6</u></div><div class="r">Consultation hors-ligne en lecture seule <u>1.8</u></div>
 
-<div class="l">Tests, qualité</div><div class="b">Aucun test automatisé</div><div class="a">Vitest, Testing Library, MSW ; xUnit, Moq, WebApplicationFactory ; tests sur MongoDB réel en replica set ; Playwright bout en bout ; Stryker, tests de mutation ; SonarCloud et seuils de couverture bloquants <u>V1 à 1.6</u></div><div class="r">Revue de code par un tiers</div>
+<div class="l">Tests, qualité</div><div class="b">xUnit, Playwright, SonarCloud</div><div class="a">Vitest, Testing Library, MSW ; Moq, WebApplicationFactory ; tests sur MongoDB réel en replica set ; Stryker, tests de mutation ; seuils de couverture bloquants <u>V1 à 1.6</u></div><div class="r">Revue de code par un tiers</div>
 
-<div class="l">Accessibilité, performance</div><div class="b">Rien</div><div class="a">axe automatisé sur 9 vues, critères RGAA clavier, focus et contraste <u>1.2</u> ; Lighthouse bloquant au déploiement <u>V1</u> ; mesure et correction du LCP <u>1.6</u></div><div class="r">Formation RGAA certifiante</div>
+<div class="l">Accessibilité, performance</div><div class="b"></div><div class="a">axe automatisé sur 9 vues, critères RGAA clavier, focus et contraste <u>1.2</u> ; Lighthouse bloquant au déploiement <u>V1</u> ; mesure et correction du LCP <u>1.6</u></div><div class="r">Formation RGAA certifiante</div>
 
-<div class="l">Livraison, infrastructure</div><div class="b">Docker, Git et GitHub</div><div class="a">GitHub Actions, 6 workflows, filtrage par chemins ; Artifact Registry et Cloud Run, déploiement par digest, rollback de trafic ; S3 et CloudFront, politique d'en-têtes ; Secret Manager ; Dependabot regroupé <u>1.3</u> ; sauvegarde Atlas vérifiée par restauration <u>1.6</u></div><div class="r">Terraform ; fédération d'identité pour la CI ; environnement de recette</div>
+<div class="l">Livraison, infrastructure</div><div class="b">GitHub Actions, Dependabot regroupé, Docker, Git</div><div class="a">Artifact Registry et Cloud Run, déploiement par digest, rollback de trafic ; S3 et CloudFront, politique d'en-têtes ; Secret Manager ; sauvegarde Atlas vérifiée par restauration <u>1.6</u></div><div class="r">Terraform ; fédération d'identité pour la CI ; environnement de recette</div>
 
-<div class="l">Sécurité, exploitation</div><div class="b">Cookie de session</div><div class="a">Data Protection, CSP ; Gitleaks, Trivy, zizmor ; export et suppression RGPD, PostHog sous consentement <u>1.2</u> ; Sentry front et API <u>1.3</u> ; 3 sondes de disponibilité, 5 politiques d'alerte, journal de versions</div><div class="r">Double authentification <u>1.7</u> ; OWASP</div>
+<div class="l">Sécurité, exploitation</div><div class="b">Gitleaks ; cookie de session</div><div class="a">Data Protection, CSP ; Trivy, zizmor ; export et suppression RGPD, PostHog sous consentement <u>1.2</u> ; Sentry front et API <u>1.3</u> ; 3 sondes de disponibilité, 5 politiques d'alerte, journal de versions</div><div class="r">Double authentification <u>1.7</u> ; OWASP</div>
 
-<div class="l">Méthode</div><div class="b">Commits directs, sans pull request</div><div class="a">Cycle en V par version, feuille de route chiffrée en points, board ; pull request et CI bloquante ; AGENTS.md et conduite d'assistants de code ; document d'aide à la décision, gabarit de PR</div><div class="r">Chiffrage avant réalisation, arbitrage consigné ; management d'équipe</div>
+<div class="l">Méthode</div><div class="b"></div><div class="a">Cycle en V par version, feuille de route chiffrée en points, board ; AGENTS.md et conduite d'assistants de code ; document d'aide à la décision, gabarit de PR</div><div class="r">Chiffrage avant réalisation, arbitrage consigné ; management d'équipe</div>
 </div>
 
 <!--
@@ -886,20 +886,21 @@ competences actuelles et a acquerir est COMMENTEE, afficher ne suffit pas.
 
 Convention, a dire avant de lire : pas de note. Une competence est ici une
 technologie ou une methode nommee, et son etat se lit dans le depot. Colonne
-grise : ce que je savais en fevrier, c'est la pile du MVP livre le 16 mars.
-Colonne verte : ce que le projet m'a oblige a apprendre, avec la version qui
-le prouve. Colonne orange : ce que la suite du projet demande et que je n'ai
-pas encore.
+grise : ce que je savais en fevrier. Colonne verte : ce que le projet m'a
+oblige a apprendre, avec la version qui le prouve. Colonne orange : ce que la
+suite du projet demande et que je n'ai pas encore.
 
 COMMENTER, trois lectures :
-1. La colonne de fevrier tient en une ligne par domaine, et deux cases sont
-vides : aucun test, rien en accessibilite. Le MVP a ete livre avec ca. Tout ce
-qui est vert a ete appris seul, en production, pendant le projet, sans plan
-ni budget : c'est la justification du plan de la diapo suivante, rendre ce
-cout visible avant de le payer.
-2. Le vert n'est pas du vernis : chaque case est une chose qui tourne en prod
-ou qui bloque la chaine. La migration C# a coute quatre jours, du 16 au 19
-mars, et n'apparait dans aucune ligne du chiffrage, theme 8.
+1. La colonne de fevrier, c'est un profil back et DevOps : C#, hexagonal,
+Mongo, OpenAPI, xUnit, Playwright, GitHub Actions, SonarCloud, Gitleaks.
+C'est ce qui a rendu la migration de mars possible en quatre jours, theme 8 :
+on ne migre pas vers une pile qu'on ne connait pas. Deux cases vides :
+l'accessibilite, et la methode de pilotage.
+2. Le vert, c'est ce qu'un produit en production impose et que le socle
+n'apprend pas : push, OAuth, PWA, i18n, accessibilite, supervision, RGPD,
+sauvegarde verifiee, et la methode elle-meme. Appris seul, en production,
+sans plan ni budget : c'est la justification du plan de la diapo suivante,
+rendre ce cout visible avant de le payer.
 3. La colonne orange a deux natures. Les lignes techniques viennent de la
 feuille de route, 1.7, 1.8 et le backlog Terraform : ce sont des besoins
 dates. La ligne methode vient des indicateurs : chiffrage apres coup, theme 4,
@@ -909,8 +910,12 @@ credible.
 
 SI ON QUESTIONNE « c'est une auto-evaluation » : oui, et chaque case est
 verifiable, une dependance dans package.json ou un csproj, un job dans un
-workflow, une version taggee. Une grille flatteuse n'aurait pas de colonne
+workflow, une version taguee. Une grille flatteuse n'aurait pas de colonne
 orange.
+
+SI ON QUESTIONNE « pourquoi un MVP en Node alors que C# etait acquis » :
+reponse a fixer par toi ; la diapo 10 dit seulement que la pile du MVP
+n'etait pas celle voulue pour la suite.
 -->
 
 ---
@@ -935,10 +940,10 @@ orange.
 
 <div class="grid grid-cols-2 gap-6 mt-4">
 <div>
-<div class="text-xs opacity-75 mb-1">Recrutement, si le projet passait en équipe</div>
+<div class="text-xs opacity-75 mb-1">Recrutement, pour compléter un profil back et DevOps</div>
 <div class="chips">
-<div><span>Développeur front</span><u>accessibilité, RGAA</u></div>
-<div><span>Profil DevOps</span><u>à mi-temps, Terraform et Cloud Run</u></div>
+<div><span>Développeur front, designer</span><u>interface, accessibilité</u></div>
+<div><span>Product owner, chargé de marketing</span><u>21 comptes en sept mois</u></div>
 </div>
 </div>
 <div>
@@ -975,8 +980,11 @@ les tests automatises ne couvrent qu'une partie des criteres.
 plan Terraform vide, une soiree sans polling, une livraison sans reprise.
 
 Le recrutement : je ne recruterais pas aujourd'hui, mais la question est
-instruite. Deux profils, et ce qu'ils recevraient le premier jour existe deja,
-la RACI et le contexte ecrit.
+instruite a partir de mon profil, back et DevOps. Ce qui manque est en face :
+un developpeur front et designer, et un product owner ou charge de marketing,
+parce que 21 comptes en sept mois disent que l'acquisition n'a pas ete faite.
+Ce qu'ils recevraient le premier jour existe deja, la RACI et le contexte
+ecrit.
 
 Sur le handicap, ne citer que les modalites verifiables : le tiers-temps de
 droit, le support en texte structure, l'accessibilite de la plateforme comme
