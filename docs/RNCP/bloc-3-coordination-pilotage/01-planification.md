@@ -328,11 +328,14 @@ Sept points, chacun avec son indicateur de contrôle et sa parade, placés sur u
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 4 | Planifier : un V par version, un flux pour le run | 1, 2 |
-| 5 | Le planning : une ligne par version | 3.1, 3.2 |
-| 6 | Huit versions en lots, et les ressources réelles | 3.3, 3.4, 4 |
-| 7 | La matrice RACI : quatre rôles, une personne | 5 |
-| 8 | Sept points de vigilance, un seul d'organisation | 6 |
+| 4 | 2. Un V par version, un flux pour le run, un board | 1, 2 |
+| 5 | 3. Le planning : une ligne par version | 3.1, 3.2, 3.3 |
+| 6 | 4. Huit lots, et l'avancement mois par mois | 3.4 |
+| 7 | 5. La matrice RACI : quatre rôles, une personne | 4.1, 5 |
+| 8 | 6. Les moyens : ce projet n'a coûté que ses outils | 4.2, 4.3 |
+| 9 | 7. Sept points de vigilance, un seul d'organisation | 6 |
+
+Le support est organisé par thème et non par compétence : chacune de ces diapositives sert aussi le chapitre 3 (C3.2.1), qui y ajoute l'indicateur du thème.
 
 ## 8. Questions probables sur ce chapitre
 

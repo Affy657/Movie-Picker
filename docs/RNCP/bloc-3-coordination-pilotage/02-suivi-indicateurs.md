@@ -386,10 +386,15 @@ Trois manques identifiés, avec la correction qui en découle. Ce sont des recom
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 9 | Piloter l'avancement : le suivi est dans GitHub | 1, 2 |
-| 10 | Tableau de bord : avancement et délais | 3 |
-| 11 | Tableau de bord : coûts, risques, ressources | 4 |
-| 12 | L'écart n'est pas où on le cherche | 5 |
+| 4 | 2. Un V par version, un flux pour le run, un board : les six surfaces du suivi | 1, 2 |
+| 5 | 3. Le planning : une ligne par version : cadence et échéances | 3.3, 3.4 |
+| 6 | 4. Huit lots, et l'avancement mois par mois | 3.1, 3.2 |
+| 7 | 5. La matrice RACI : la charge réelle | 4.3 |
+| 8 | 6. Les moyens : prévu contre réel | 4.1 |
+| 9 | 7. Sept points de vigilance : un indicateur par point | 4.2 |
+| 10 | 8. L'écart n'est pas où on le cherche | 5 |
+
+Le support est organisé par thème et non par compétence : les indicateurs de ce chapitre sont posés sur les diapositives du chapitre 2, chacune portant les deux compétences en pied de page, pour que rien ne soit dit deux fois.
 
 ---
 

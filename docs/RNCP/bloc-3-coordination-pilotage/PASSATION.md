@@ -431,3 +431,19 @@ Quatre diapositives (9 à 12), reprises de l'ancien support et **réancrées au 
 - **Écart** : 98 J/H prévus contre 95 jours actifs, soit −3 % ; 23 jours actifs jusqu'à la V1 (24 %), 72 après (76 %) ; 81 items produit livrés dont 23 chiffrés au cadrage et 58 hors chiffrage (72 %).
 - **Décisions à effet remesuré** sur la diapositive 12, choisies par le propriétaire : chaîne 54 % → portes bloquantes et déterministes → 94 % ; 59 PR Dependabot pour 9 fusionnées → regroupement mensuel → 0 vulnérabilité ; accueil à 4,2 s, porte Lighthouse rouge → coquille de démarrage (v1.6) → 2,3 s, porte verte. L'arbitrage de la migration (81 jours) reste dans `02-suivi-indicateurs.md` § 5.4 et revient au chapitre 4.
 - **Écarté par le propriétaire** : le suivi du coût des minutes GitHub Actions (quota, dépôt public le 10/09) ne figure ni au tableau des coûts ni parmi les décisions.
+
+### 16.3 Regroupement par thème, 12 septembre 2026
+
+Le propriétaire a constaté que le découpage par compétence faisait répéter les mêmes faits (board, versions, chaîne, coûts, charge) d'un chapitre à l'autre. **Le support est désormais organisé par thème**, chaque diapositive portant en pied de page les compétences qu'elle sert (`REFS` accepte une chaîne « C3.1, C3.2.1 »). Les diapositives 4 à 12 sont devenues 4 à 10 :
+
+| Diapo | Thème | Ce qu'elle fusionne | Compétences | Durée |
+|:-----:|-------|---------------------|-------------|------:|
+| 4 | 2. Un V par version, un flux pour le run, un board | méthode, outil de planification, outil de suivi et ses six surfaces, règle de sélection des indicateurs (notes) | C3.1, C3.2.1 | 2:20 |
+| 5 | 3. Le planning : une ligne par version | Gantt, cadence (médiane 14 j), échéances 4 / 4, écart de 81 j | C3.1, C3.2.1 | 1:40 |
+| 6 | 4. Huit lots, et l'avancement mois par mois | poids des versions, commits et fusions par mois | C3.1, C3.2.1 | 1:30 |
+| 7 | 5. La matrice RACI : quatre rôles, une personne | RACI, handicap, charge réelle (95 / 198, 3,3, 0 à 7, 12, 5) | C3.1, C3.2.1 | 1:30 |
+| 8 | 6. Les moyens : ce projet n'a coûté que ses outils | ressources matérielles, coûts prévu / réel, deux échéances de coût | C3.1, C3.2.1 | 1:00 |
+| 9 | 7. Sept points de vigilance, un seul d'organisation | carte probabilité par impact, un indicateur par point, quatre voyants qualité | C3.1, C3.2.1 | 1:30 |
+| 10 | 8. L'écart n'est pas où on le cherche | écart de charge et de périmètre, trois décisions à effet remesuré ; le cas d'arbitrage (C3.2.2) s'y ajoutera | C3.2.1 | 1:30 |
+
+Le sommaire suit les thèmes (onze entrées, compétences en sous-libellé) : 1 Démonstration ; 2 La méthode et les outils ; 3 Les versions ; 4 Les lots et l'avancement ; 5 Les ressources et les rôles ; 6 Les moyens et les coûts ; 7 Les risques ; 8 Les décisions et un arbitrage ; 9 Les compétences ; 10 Piloter le travail, seul ; 11 Rendre compte, et la validation du périmètre livré. Les histogrammes de stabilité de la chaîne et le tableau des écarts entre versions ont été retirés du support : leurs valeurs sont dans les notes et dans `02-suivi-indicateurs.md`. Les sections « Rattachement aux diapositives » de `01` et `02` sont réalignées ; le plan et le script restent suspendus (§ 16).
