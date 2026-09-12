@@ -856,3 +856,161 @@ dependances pour 9 fusionnees, regroupement mensuel, zero vulnerabilite
 ouverte ; l'accueil a 4,2 s et la porte de performance rouge, le titre peint
 dans le HTML initial en 1.6, 2,3 s, porte verte.
 -->
+
+---
+
+# 9. Les compétences : moi, avant et après le projet
+
+<div class="text-xs opacity-80 mb-1">
+<b>0</b> non acquis ; <b>1</b> lit et modifie accompagné ; <b>2</b> autonome sur une tâche courante ; <b>3</b> conçoit, arbitre, traite le cas non nominal ; <b>4</b> définit le standard et forme.
+</div>
+
+<div class="grid grid-cols-5 gap-5 mt-3">
+<div class="col-span-3">
+
+<div class="dumb">
+<div class="lbl"></div><div class="scale"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
+<div class="lbl">Architecture applicative</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Arbitrage, chiffrage</div><div class="track"><u class="a" style="left:50%"></u><u class="c" style="left:50%"></u><u class="t" style="left:100%"></u></div>
+<div class="lbl">Revue, transmission</div><div class="track"><i class="bar" style="left:25%;width:25%"></i><u class="a" style="left:25%"></u><u class="c" style="left:50%"></u><u class="t" style="left:100%"></u></div>
+<div class="lbl">React, TypeScript</div><div class="track"><u class="a" style="left:75%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Accessibilité</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">App installable, i18n</div><div class="track"><i class="bar" style="left:25%;width:25%"></i><u class="a" style="left:25%"></u><u class="c" style="left:50%"></u></div>
+<div class="lbl">C#, ASP.NET Core</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Architecture hexagonale</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Sécurité, identité</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">CI/CD, conteneurs</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Supervision, exploitation</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+<div class="lbl">Veille de vulnérabilités</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
+</div>
+
+<div class="legend mt-1">
+<span style="color:#a7b0ae">Février 2026</span>
+<span style="--c:var(--s1)">Septembre 2026</span>
+<span class="nokey" style="opacity:.8">cercle orange : niveau exigé, non atteint</span>
+</div>
+
+</div>
+<div class="col-span-2 text-sm">
+
+<div class="text-xs opacity-75 mb-1">Ordre d'apparition dans le dépôt</div>
+<div class="tl">
+<div><b>1. Produire</b><span>16 → 19 mars<br>C#, hexagonal, CI, OpenAPI</span></div>
+<div><b>2. Fiabiliser</b><span>avril à mai<br>Performance, a11y, scans, i18n, push</span></div>
+<div><b>3. Exploiter</b><span>juillet<br>Supervision, sondes, alertes</span></div>
+<div><b>4. Enrichir</b><span>août<br>Identité fédérée, service tiers</span></div>
+</div>
+
+<div class="kpi grid-cols-2 mt-5">
+<div><b>9</b><span>écarts comblés par autoformation, en production, sans plan ni budget</span></div>
+<div><b>2</b><span>écarts restants, non techniques : arbitrage et chiffrage, revue et transmission</span></div>
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 1:50. ELEMENT IMPOSE 9 : l'evaluation des besoins en competences via une
+grille. CRITERES : les competences a mobiliser sont IDENTIFIEES, ce sont les
+douze lignes ; la grille des competences actuelles et a acquerir est
+COMMENTEE, afficher ne suffit pas.
+
+Convention a enoncer avant le graphique : c'est une auto-evaluation, etalonnee
+sur des preuves. Chaque ligne est une technologie presente dans le depot, avec
+une date d'introduction et ce qui a ete livre avec ; les competences sont
+deduites des lots, pas d'un catalogue. Le point gris est fevrier 2026, le point
+vert septembre, le cercle orange le niveau que le projet exige quand il n'est
+pas atteint.
+
+Puis COMMENTER, en designant le graphique :
+1. Les traits epais sont les competences de contexte : hexagonal,
+accessibilite, securite, supervision, veille. Elles ont ete franchies par
+autoformation, en production. La vague 1 a coute quatre jours, la frise de
+droite, et elle n'est dans aucune ligne du chiffrage : c'est la justification
+meme d'un plan de developpement des competences.
+2. Les deux lignes sans progression suffisante ne sont pas techniques :
+arbitrage et chiffrage, revue et transmission. Ce sont exactement les
+faiblesses montrees sur l'ecart au chiffrage, l'arbitrage et le facteur de bus.
+C'est ce qui rend la grille credible plutot que flatteuse.
+3. Le 3 est le seuil de responsabilite. Sur un projet a une personne, il
+faut y etre partout ou l'on porte le R, et c'est le cas sur le technique.
+
+La frise de droite, dans l'ordre : produire, fiabiliser, exploiter, enrichir.
+C'est l'ordre d'un produit qui va en production.
+
+SI ON QUESTIONNE l'auto-evaluation : elle est verifiable ligne par ligne dans
+le depot, et elle avoue deux ecarts. Une grille flatteuse n'en avouerait
+aucun.
+
+SI ON QUESTIONNE « quatre jours pour changer de socle, c'est peu » : le
+perimetre etait de 944 lignes et 12 routes, avec un contrat deja specifie, et
+la reconstitution de charge est faible sur mars.
+-->
+
+---
+
+# Le plan de développement : ce qui reste à acquérir
+
+<div class="grid grid-cols-5 gap-5">
+<div class="col-span-3">
+
+<div class="bars">
+<div class="p1"><span>P1 Arbitrage, chiffrage</span><div class="t"><i style="width:27%">3 j</i><em>formation courte, puis pratique à chaque version. Chiffrage <b>avant</b>, arbitrage consigné <b>quand il est pris</b></em></div></div>
+<div class="p1"><span>P1 Revue, transmission</span><div class="t"><i class="cont" style="width:14%">continu</i><em>revue par un tiers, humain ou outillé, obligatoire sur le structurant. 100 % du structurant relu</em></div></div>
+<div><span>P2 Sécurité applicative</span><div class="t"><i style="width:36%">4 j</i><em>autoformation OWASP, revue outillée. Aucune vulnérabilité sur un trimestre</em></div></div>
+<div><span>P2 Accessibilité</span><div class="t"><i style="width:27%">3 j</i><em>certification externe. Une livraison passe la porte <b>sans reprise</b></em></div></div>
+<div class="p3"><span>P3 Management d'équipe</span><div class="t"><i style="width:18%">2 j</i><em>formation courte, utile le jour où le projet passe en équipe. Un contributeur opérationnel en une journée sur le cadre écrit</em></div></div>
+</div>
+
+<div class="legend mt-2">
+<span style="--c:#d97706">P1, a déjà coûté au projet</span>
+<span style="--c:var(--s1)">P2, consolide un acquis</span>
+<span style="--c:var(--s3)">P3, prépare la suite</span>
+</div>
+
+<div class="text-xs opacity-75 mt-2">12 jours. Un seul poste payant, la certification d'accessibilité.</div>
+
+</div>
+<div class="col-span-2 text-sm">
+
+<div class="text-xs opacity-75 mb-1">Recrutement, si le projet passait en équipe</div>
+<div class="chips">
+<div><span>Développeur front</span><u>niveau 3 en accessibilité</u></div>
+<div><span>Profil DevOps</span><u>à mi-temps</u></div>
+</div>
+
+<div class="text-xs opacity-75 mt-4 mb-1">Modalités de formation, posées par défaut</div>
+<div class="chips">
+<div><span>Tiers-temps de droit</span><u>formation et évaluation</u></div>
+<div><span>Support en texte structuré</span><u>lecteur d'écran</u></div>
+<div><span>Matériel adapté</span><u>pendant la formation</u></div>
+<div><span>Plateforme accessible</span><u>critère de choix du prestataire</u></div>
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:50. ELEMENT IMPOSE 10 : le plan de developpement des competences.
+CRITERES : le plan est etabli et DETAILLE ; des FORMATIONS sont preconisees
+selon les besoins du projet et le profil ; les MODALITES sont adaptees au
+handicap ; le besoin en recrutement est transmis aux RH.
+
+Trois choses, une par bloc :
+1. Le principe d'ordonnancement, par cout d'un ecart non comble. Les deux
+priorites 1 ont deja coute : un chiffrage formalise apres coup, 87 lignes
+integrees sans revue, dix jours d'aout sans arbitrage. Elles passent avant
+tout ce qui est technique, parce que le technique a ete acquis sur le projet.
+2. L'indicateur en fin de chaque ligne. C'est lui qui distingue un plan d'une
+liste de voeux : chaque action se termine par un fait verifiable, pas par une
+attestation de presence. Douze jours, un seul poste payant, la certification
+d'accessibilite.
+3. Le recrutement, colonne de droite : je ne recruterais pas aujourd'hui, mais
+la question est instruite. Deux profils, et ce qu'ils recevraient le premier
+jour existe deja, la RACI et le contexte ecrit.
+
+Sur le handicap, ne citer que les modalites qui ont un cout reel, donc
+verifiables : le tiers-temps de droit, le support en texte structure, le
+materiel adapte, l'accessibilite de la plateforme comme critere de choix du
+prestataire.
+-->
