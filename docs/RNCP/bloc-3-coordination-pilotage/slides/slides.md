@@ -1093,8 +1093,8 @@ POUSSE : un journal des versions que personne n'ouvre est une archive, pas un
 compte rendu. A DIRE HONNETEMENT : ce canal n'existe que depuis la v1.4.0,
 les sept versions precedentes n'ont ete annoncees qu'au niveau du journal.
 Puis les points de validation : une version n'existe que si les portes de la
-chaine sont vertes, theme 2, et l'adequation au perimetre attendu se lit dans
-le diff date de la feuille de route.
+chaine sont vertes, theme 2, et le perimetre livre se lit dans le diff date
+de la feuille de route.
 
 Droite, les indicateurs. Dire d'emblee : a une vingtaine de comptes et de
 soirees, un NPS n'a aucune validite statistique. D'ou trois familles, et
