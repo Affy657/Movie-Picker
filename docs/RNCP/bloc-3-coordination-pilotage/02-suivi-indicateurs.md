@@ -392,7 +392,8 @@ Trois manques identifiés, avec la correction qui en découle. Ce sont des recom
 | 7 | 5. La matrice RACI : la charge réelle | 4.3 |
 | 8 | 6. Les moyens : prévu contre réel | 4.1 |
 | 9 | 7. Sept points de vigilance : un indicateur par point | 4.2 |
-| 10 | 8. L'écart n'est pas où on le cherche | 5 |
+| 6 | 4. Huit lots, et l'avancement mois par mois : l'écart au chiffrage en un chiffre, 58 / 81 | 5.1 à 5.3, 5.5 |
+| à venir | 8. Les décisions et un arbitrage : les trois décisions à effet remesuré, avec le cas d'arbitrage | 5.4 |
 
 Le support est organisé par thème et non par compétence : les indicateurs de ce chapitre sont posés sur les diapositives du chapitre 2, chacune portant les deux compétences en pied de page, pour que rien ne soit dit deux fois.
 

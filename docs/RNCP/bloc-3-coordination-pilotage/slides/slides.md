@@ -457,15 +457,16 @@ Bloc 1. La decision precede le document.
 </div></div>
 </div>
 
-<div class="kpi grid-cols-3 mt-6" style="gap:0.3rem 1rem;line-height:1.25">
+<div class="kpi grid-cols-4 mt-6" style="gap:0.3rem 0.8rem;line-height:1.25">
 <div><b style="font-size:1.25rem">1 à 3 jours</b><span>une feature, de la maquette à la fusion</span></div>
 <div><b style="font-size:1.25rem">1 à 3 semaines</b><span>une version, en réalisation</span></div>
 <div><b style="font-size:1.25rem">6 puis 39</b><span>fusions en mai puis juin : le découpage change, pas la production</span></div>
+<div><b style="font-size:1.25rem">58 / 81</b><span>items produit hors du chiffrage initial, 95 jours actifs pour 98 prévus</span></div>
 </div>
 
 <!--
-DUREE 1:30. CRITERES : le planning est decoupe en phases, en taches ou LOTS ;
-le tableau de bord integre l'AVANCEMENT du projet.
+DUREE 1:50. CRITERES : le planning est decoupe en phases, en taches ou LOTS ;
+le tableau de bord integre l'AVANCEMENT du projet, et l'ecart au previsionnel.
 
 La barre du haut : les lots sont les versions, et chaque version est un lot
 ferme, avec ses items et leur taille, donc un poids, la somme des tailles,
@@ -490,6 +491,22 @@ livrees, 1.4.1, 1.5 et 1.6.
 2. Le creux d'aout est voulu : le perimetre produit se referme au profit du
 dossier du Bloc 4, remis le 21 ; 140 commits du projet sont de la
 documentation, et la moitie tombe autour des deux remises de dossier.
+
+L'ECART AU CHIFFRAGE, le dernier chiffre, une lecture en deux phrases : « la
+charge est dans l'enveloppe, 95 jours actifs pour 98 prevus, moins 3 %. Ce
+n'est pas la bonne lecture : 58 des 81 items produit livres sont HORS du
+chiffrage initial, qui s'arretait a la V1. » La derive n'etait pas une derive
+de charge, c'etait un glissement de perimetre que rien ne mesurait : aucun
+indicateur ne comparait le perimetre courant au perimetre chiffre, et c'est le
+premier compteur que j'ajouterais. Le dire soi-meme vaut mieux que de le
+laisser trouver.
+
+SI ON QUESTIONNE « comment reconstituez-vous 95 jours sans releve de temps ? »
+Par les jours distincts portant au moins un commit, un jour actif pour un
+jour-homme, incertitude d'au moins 20 %. La reconstitution est FAIBLE sur les
+cinq premieres semaines, ou les commits etaient groupes, le premier commit du
+projet porte 3 400 lignes a lui seul : la charge reelle est vraisemblablement
+superieure. Un indicateur ne mesure que la pratique qui le produit.
 
 SI ON QUESTIONNE le poids en points : l'echelle est celle de la roadmap,
 calibree sur l'empreinte reelle des features livrees, S sous 800 lignes, M
@@ -728,80 +745,4 @@ en juin, 94 % en juillet apres la decision, theme suivant, 78 % en aout, 67 %
 en septembre. Septembre est compte hors quinze executions qui n'ont jamais
 demarre, sans rapport avec le code ; elles se reconnaissent a leur duree, deux
 secondes.
--->
-
----
-
-# 8. L'écart n'est pas où on le cherche
-
-<div class="grid grid-cols-2 gap-6">
-<div>
-
-<div class="text-sm mb-1">Charge : <b>98 J/H prévus</b> → <b>95 jours actifs</b> reconstitués, soit <b>−3 %</b>, dans la marge de 20 %.</div>
-
-<div class="text-xs opacity-75 mb-1">Où sont passés les 95 jours actifs</div>
-<div class="stack">
-<i style="width:24%;background:var(--s1)">23 j, 24 %</i>
-<i style="width:76%;background:#d97706">72 j, 76 %</i>
-</div>
-
-<div class="text-xs opacity-75 mt-4 mb-1">D'où viennent les 81 items produit livrés</div>
-<div class="stack">
-<i style="width:28.4%;background:var(--s1)">23 items</i>
-<i style="width:71.6%;background:#d97706">58 items, 72 %</i>
-</div>
-
-<div class="legend mt-2">
-<span style="--c:var(--s1)">Lots 1 à 3, chiffrés au cadrage</span>
-<span style="color:#d97706">Après la V1 : V1.1 à V1.6, hors chiffrage, et la clôture du titre</span>
-</div>
-
-</div>
-<div class="text-sm">
-
-### Trois décisions, effet remesuré
-
-| Mesure | Décision | Effet remesuré |
-|--------|----------|----------------|
-| Chaîne à 54 %, échecs sans cause réelle | Portes de qualité bloquantes **et** déterministes | **94 %** le mois suivant |
-| 59 PR de dépendances pour 9 fusionnées | Regroupement mensuel, audit à chaque commit | **0 vulnérabilité** ouverte, sans fusion non relue |
-| Accueil affiché en 4,2 s, porte de performance rouge | Coquille de démarrage dans le HTML initial | **2,3 s**, porte verte |
-
-</div>
-</div>
-
-<!--
-DUREE 1:30. C'est la diapo qui prouve que le suivi a servi a DECIDER et pas
-seulement a mesurer. Elle ouvre le theme des decisions, et le cas d'arbitrage
-la suit.
-
-Trois temps, sans lire les tableaux :
-
-1. Les deux barres de gauche. « L'ecart de charge est de moins 3 %, dans la
-marge. Ce n'est pas la bonne lecture. » Puis designer les barres orange : 76 %
-des jours actifs sont posterieurs a la V1, et 72 % du produit final est HORS du
-chiffrage initial, 58 items sur 81. La derive n'etait pas une derive de charge,
-c'etait un glissement de perimetre que rien ne mesurait.
-
-2. Les trois decisions. C'est le coeur de la competence : chaque ligne est une
-mesure, une decision, et un effet REMESURE ensuite. Ne pas en developper plus
-d'une. La deuxieme est la plus parlante : cinquante pull requests ouvertes puis
-fermees sans fusion ne sont pas un gaspillage, c'est le symptome qu'un
-automatisme etait mal regle. L'indicateur a servi a regler la frequence de
-l'automatisme, pas a juger le travail. La troisieme est la plus recente : la
-porte de performance passait au rouge sur l'accueil, 4,2 s pour peindre le plus
-grand element ; le titre est peint dans le HTML initial depuis la 1.6, 2,3 s,
-porte verte.
-
-3. L'autocritique, sans support : aucun indicateur ne comparait le perimetre
-courant au perimetre chiffre, le glissement de 58 items n'a ete visible qu'a
-posteriori, et c'est le premier compteur que j'ajouterais. Ne pas l'escamoter,
-c'est elle qui rend les deux premiers temps credibles.
-
-SI ON QUESTIONNE : « comment reconstituez-vous 95 J/H sans releve de temps ? »
-Par les jours distincts portant au moins un commit, 1 jour actif pour 1 J/H,
-incertitude d'au moins 20 %. La reconstitution est FAIBLE sur les cinq premieres
-semaines, ou les commits etaient groupes, le premier commit du projet porte
-3 400 lignes a lui seul. La charge reelle est vraisemblablement SUPERIEURE a 95.
-Un indicateur ne mesure que la pratique qui le produit.
 -->

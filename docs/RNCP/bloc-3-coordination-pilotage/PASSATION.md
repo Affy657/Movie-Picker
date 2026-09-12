@@ -444,6 +444,8 @@ Le propriétaire a constaté que le découpage par compétence faisait répéter
 | 7 | 5. La matrice RACI : quatre rôles, une personne | RACI, handicap, charge réelle (95 / 198, 3,3, 0 à 7, 12, 5) | C3.1, C3.2.1 | 1:30 |
 | 8 | 6. Les moyens : ce projet n'a coûté que ses outils | ressources matérielles, coûts prévu / réel, deux échéances de coût | C3.1, C3.2.1 | 1:00 |
 | 9 | 7. Sept points de vigilance, un seul d'organisation | carte probabilité par impact, un indicateur par point, quatre voyants qualité | C3.1, C3.2.1 | 1:30 |
-| 10 | 8. L'écart n'est pas où on le cherche | écart de charge et de périmètre, trois décisions à effet remesuré ; le cas d'arbitrage (C3.2.2) s'y ajoutera | C3.2.1 | 1:30 |
+| 6 | 4. Huit lots (suite) | l'écart au chiffrage se réduit à un chiffre, 58 / 81 items hors chiffrage pour 95 jours actifs sur 98, et à ses notes | C3.2.1 | +0:20 |
+
+**La diapositive « L'écart n'est pas où on le cherche » a été supprimée** le 12/09 sur décision du propriétaire, comme redondante : son chiffre passe sur la diapositive 6 (durée 1:50), ses trois décisions à effet remesuré (chaîne, dépendances, coquille de démarrage) sont réservées à la diapositive du thème 8, à construire avec le cas d'arbitrage (C3.2.2). Le support compte 9 diapositives.
 
 Le sommaire suit les thèmes (onze entrées, compétences en sous-libellé) : 1 Démonstration ; 2 La méthode et les outils ; 3 Les versions ; 4 Les lots et l'avancement ; 5 Les ressources et les rôles ; 6 Les moyens et les coûts ; 7 Les risques ; 8 Les décisions et un arbitrage ; 9 Les compétences ; 10 Piloter le travail, seul ; 11 Rendre compte, et la validation du périmètre livré. Les histogrammes de stabilité de la chaîne et le tableau des écarts entre versions ont été retirés du support : leurs valeurs sont dans les notes et dans `02-suivi-indicateurs.md`. Les sections « Rattachement aux diapositives » de `01` et `02` sont réalignées ; le plan et le script restent suspendus (§ 16).
