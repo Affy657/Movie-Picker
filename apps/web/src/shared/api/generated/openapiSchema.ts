@@ -4630,7 +4630,9 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header?: {
+                    "X-Scheduler-Token"?: string;
+                };
                 path?: never;
                 cookie?: never;
             };
