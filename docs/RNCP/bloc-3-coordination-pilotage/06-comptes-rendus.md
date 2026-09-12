@@ -123,8 +123,8 @@ C'est la partie qui compte : un indicateur de satisfaction ne vaut que par la d�
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 15 | 11. Rendre compte aux utilisateurs, et mesurer | 1, 2, 3, 4 |
-| 16 | Bilan, et la validation du périmètre livré | chapitre 07, § 6 |
+| 14 | 11. Rendre compte aux utilisateurs, et mesurer | 1, 2, 3, 4 |
+| 15 | Bilan, et la validation du périmètre livré | chapitre 07, § 6 |
 
 ---
 

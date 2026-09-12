@@ -1050,6 +1050,17 @@ de ma presence. Une regle non ecrite n'est pas une regle.
 SI ON QUESTIONNE « delegue a qui ? » : a la chaine, pas a une personne. A une
 personne, le management s'exerce sur le processus et sur soi-meme.
 
+SI ON DEMANDE une analyse critique de ma posture : du 17 au 26 aout, dix
+jours travailles d'affilee pour tenir un dossier le 21 et la v1.4.0 le 25,
+sans arbitrer le perimetre. Les deux ont ete tenus, et c'est le probleme :
+une posture qui reussit se repete, douze jours d'affilee du 1er au 12
+septembre pour la 1.6 et cet oral. La chaine a paye, 94 % en juillet, 78 en
+aout, 67 en septembre. L'arbitrage n'a pas ete perdu, il n'a pas ete pose.
+Deux regles depuis : un chevauchement d'echeances est un arbitrage ecrit,
+decaler, reduire ou absorber ; et au-dela de cinq jours consecutifs, c'est la
+version qui decale. La seconde n'a pas encore ete tenue, septembre le
+prouve.
+
 SI ON DEMANDE le handicap ou le contexte international : personne dans ces
 situations sur le projet, rien a en dire. Ce qui est verifiable est sur le
 produit, bilingue FR / EN, porte d'accessibilite bloquante ; et le dispositif
@@ -1062,77 +1073,6 @@ gabarit d'anomalie qui decrit un comportement, jamais une responsabilite ;
 l'empathie par le delai de reponse, 17 jours du questionnaire du 18 aout a la
 production ; le leadership par la decision ecrite avec ses inconvenients
 acceptes, theme 8.
--->
-
----
-
-# Analyse critique : une posture qui a réussi, deux fois
-
-<div class="grid grid-cols-2 gap-8 text-sm mt-4">
-<div>
-
-<div class="chips">
-<div><span>Fait mesuré</span><u><b>10 jours travaillés consécutifs</b>, 17 au 26 août</u></div>
-<div><span>Cause</span><u>un dossier à rendre le <b>21/08</b>, la v1.4.0 le <b>25/08</b></u></div>
-<div><span>Résultat</span><u>les deux échéances tenues, <b>sans arbitrer</b> le périmètre</u></div>
-</div>
-
-<div class="text-xs opacity-75 mt-4 mb-1">Ce que ça a coûté, et ce qui s'est répété</div>
-<div class="chips">
-<div><span>Stabilité de la chaîne, juillet → août → septembre</span><u>94 % → 78 % → 67 %</u></div>
-<div><span>Plus longue série du projet, 1er au 12 septembre</span><u><b>12 jours</b>, v1.6 et cet oral</u></div>
-</div>
-
-</div>
-<div>
-
-<div class="text-xs opacity-75 mb-1">Deux recommandations</div>
-<div class="chips">
-<div><span><b>1.</b> Un chevauchement d'échéances est un <b>arbitrage</b> : décaler, réduire ou absorber, et l'écrire</span></div>
-<div><span><b>2.</b> Une <b>limite de charge</b> : au-delà de <b>5 jours consécutifs</b>, c'est la version qui décale</span></div>
-</div>
-
-</div>
-</div>
-
-<!--
-DUREE 0:50. LA DIAPO LA PLUS DISCRIMINANTE DU THEME. CRITERES : une analyse
-critique d'une situation ou d'une posture manageriale est presentee, ET les
-recommandations sont realistes et realisables.
-
-Le marqueur de sincerite : la posture critiquee a REUSSI, les deux echeances
-ont ete tenues. Personne ne s'autocritique sur un succes, donc c'est credible.
-
-La these se dit, elle n'est pas a l'ecran : une posture qui produit le
-resultat attendu ne s'auto-corrige pas, elle se repete. La preuve est sur la
-diapo : la plus longue serie du projet n'est plus celle d'aout, c'est celle
-de septembre, douze jours d'affilee pour la 1.6 et cet oral. La
-recommandation 2 existait sur le papier depuis le 5 septembre, elle n'a pas
-ete appliquee. Le dire soi-meme vaut mieux que de le laisser trouver.
-
-Dans l'ordre : les faits ; le cout, en designant 94, 78, 67, la chaine a
-paye le mois meme et septembre n'est pas remonte ; la phrase centrale,
-« l'arbitrage n'a pas ete perdu, il n'a pas ete pose » ; la transposition a
-une equipe, demander un effort exceptionnel plutot qu'arbitrer le perimetre,
-ca marche une fois, a la deuxieme c'est la norme, et septembre est la
-deuxieme fois.
-
-NE PAS tomber dans la flagellation : les echeances etaient reelles et non
-negociables, et le perimetre de la 1.4.0 avait une valeur produit verifiee.
-La faute n'est pas d'avoir travaille dix jours, c'est de ne pas avoir
-INSTRUIT l'option de decaler.
-
-Les recommandations sont realistes parce qu'elles ne coutent rien et se
-verifient avec un indicateur deja en place : les decisions ecrites, la serie
-maximale relevee chaque mois, 12 aujourd'hui. La troisieme du dossier, la
-relecture par un tiers sur le structurant, est deja dans le plan de la diapo
-12, ne pas la repeter. Terminer sur la 2 : la seule qui aurait empeche la
-situation, et la plus difficile a tenir, parce qu'elle oblige a annoncer un
-decalage avant d'avoir essaye d'y echapper.
-
-SI ON QUESTIONNE le 67 % de septembre : hors quinze executions echouees pour
-une cause sans rapport avec le code ; avec elles, le mois serait plus bas
-encore, la lecture ne change pas.
 -->
 
 ---
@@ -1217,31 +1157,57 @@ priorite 3.
 
 # Bilan, et la validation du périmètre livré
 
-<div class="text-center mt-10" style="font-size:1.5rem">Organiser, inviter, proposer, voter, trancher, garder une trace</div>
+<div class="grid grid-cols-2 gap-8 text-sm mt-3">
+<div>
 
-<div class="chips mt-8" style="max-width:38rem;margin-left:auto;margin-right:auto;font-size:0.9rem">
-<div><span>Périmètre livré</span><u>11 versions, 106 items, 348 points</u></div>
-<div><span>Lot suivant, cadré du 08 au 11/09</span><u>1.7 : 7 items, 34 points</u></div>
+<div class="text-xs opacity-75 mb-1">Livré, du 27 février au 12 septembre</div>
+<div class="chips">
+<div><span>11 versions en 198 jours</span><u>écart médian 14 j, 0 retour arrière</u></div>
+<div><span>106 items, 348 points</span><u>81 produit, dont 58 hors du chiffrage initial</u></div>
+<div><span>21 comptes, 27 soirées, 125 films</span><u>en production, données réelles</u></div>
+<div><span>0 vulnérabilité, 0 anomalie ouverte</span><u>disponibilité 100 %</u></div>
 </div>
 
-<div class="note text-base mt-10" style="max-width:40rem;margin-left:auto;margin-right:auto">
+</div>
+<div>
+
+<div class="text-xs opacity-75 mb-1">Retenu</div>
+<div class="chips">
+<div><span><b>1.</b> Un indicateur ne mesure que la pratique qui le produit</span></div>
+<div><span><b>2.</b> Quand le coût d'une décision croît avec le temps, décider tôt a une valeur propre : 944 lignes le 18/03, 50 000 aujourd'hui</span></div>
+<div><span><b>3.</b> Un arbitrage non posé n'est pas un arbitrage : 58 items hors chiffrage, dix puis douze jours d'affilée</span></div>
+</div>
+
+<div class="text-xs opacity-75 mt-4 mb-1">Suite</div>
+<div class="chips">
+<div><span>1.7, cadrée, 7 items, 34 points</span><u>temps réel, co-hôte, double authentification</u></div>
+</div>
+
+</div>
+</div>
+
+<div class="note text-base mt-6" style="max-width:40rem;margin-left:auto;margin-right:auto">
 <b>Sur cette base, je vous demande de valider le périmètre livré.</b>
 </div>
 
 <!--
-DUREE 0:40. DERNIERE DIAPO PRESENTEE. C'EST ELLE QUI SATISFAIT LE QUATRIEME
+DUREE 0:50. DERNIERE DIAPO PRESENTEE. C'EST ELLE QUI SATISFAIT LE QUATRIEME
 CRITERE DE C3.4.2 : « la demonstration permet d'aboutir a une VALIDATION du
 projet ». La demonstration a ouvert la presentation ; la demande de
 validation la ferme, une fois le pilotage demontre.
 
-Trois enseignements en une phrase chacun, sans support :
+Gauche, ce qui est livre, quatre lignes, sans les relire : onze versions,
+aucun retour arriere ; le perimetre, et la part hors chiffrage dite une
+derniere fois ; l'usage reel ; l'etat de la production.
+
+Droite, ce que je retiens, une phrase chacun :
 1. Un indicateur ne mesure que la pratique qui le produit : la regularite du
 commit est devenue la condition d'existence de l'indicateur d'avancement.
-2. Quand le cout d'une decision croit avec le temps, decider tot a une valeur
-propre : 944 lignes a migrer le 18 mars, 50 000 aujourd'hui.
+2. Decider tot quand le cout croit : 944 lignes a migrer le 18 mars, 50 000
+aujourd'hui, theme 8.
 3. L'arbitrage n'a pas ete perdu, il n'a pas ete pose, deux fois : 58 items
-hors chiffrage que rien ne comparait au prevu, et dix jours consecutifs en
-aout plutot que decider ce qui ne serait pas livre, puis douze en septembre.
+hors chiffrage que rien ne comparait au prevu, et dix jours d'affilee en
+aout, douze en septembre, plutot que decider ce qui ne serait pas livre.
 
 Le troisieme est celui qui compte. Ne pas l'edulcorer. Un jury de
 professionnels a passe trente minutes a entendre un candidat qui mesure et
@@ -1250,13 +1216,10 @@ chiffres, est ce qui rend credible tout ce qui precede. Les deux echecs ont
 la MEME RACINE : une option non instruite n'est pas un arbitrage, c'est une
 absence de decision.
 
-Puis ce qui est valide, les six verbes du parcours, la promesse produit et
-non une liste ; ce qui vient ensuite, la 1.7, cadree, sept items pour
-trente-quatre points, temps reel, co-hote, double authentification, et elle
-part apres l'oral, decision prise ; et LA DEMANDE, prononcee telle qu'elle
-est ecrite, sans l'adoucir. Il n'y a pas de commanditaire a qui la 1.7 serait
-soumise : ce que le jury valide, c'est le perimetre demontre. Puis SE TAIRE et
-laisser le silence. C'est la fin de la presentation.
+La suite est decidee, pas soumise : la 1.7 part apres l'oral. Puis LA
+DEMANDE, prononcee telle qu'elle est ecrite, sans l'adoucir. Ce que le jury
+valide, c'est le perimetre demontre. Puis SE TAIRE et laisser le silence.
+C'est la fin de la presentation.
 
 Les annexes qui suivent ne sont JAMAIS presentees, seulement appelees par une
 question.

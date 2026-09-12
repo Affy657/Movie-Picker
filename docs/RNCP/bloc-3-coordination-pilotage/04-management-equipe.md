@@ -191,7 +191,7 @@ La recommandation 2 est la seule qui aurait empêché la situation de C.1. Les d
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
 | 13 | 10. Piloter seul : les missions et le style | A.2, B.1, B.2 (outils) |
-| 14 | Analyse critique : une posture qui a réussi, deux fois | C |
+| 13, notes | Analyse critique, dite seulement si la question vient | C |
 
 ---
 
