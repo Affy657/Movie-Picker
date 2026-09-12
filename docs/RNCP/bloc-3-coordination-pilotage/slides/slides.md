@@ -33,7 +33,7 @@ Ne rien commenter ici. Enchainer immediatement sur la diapo suivante.
 # Sommaire
 
 <div class="chips mt-4" style="font-size:0.98rem;gap:0.45rem 0;max-width:46rem;margin-left:auto;margin-right:auto">
-<div><span><b>1.</b> Démonstration en production</span><u>C3.4.2, éliminatoire</u></div>
+<div><span><b>1.</b> Démonstration en production</span><u>C3.4.2</u></div>
 <div><span><b>2.</b> La méthode et les outils</span><u>C3.1, C3.2.1</u></div>
 <div><span><b>3.</b> Les versions : planning et cadence</span><u>C3.1, C3.2.1</u></div>
 <div><span><b>4.</b> Les lots et l'avancement</span><u>C3.1, C3.2.1</u></div>
@@ -43,7 +43,7 @@ Ne rien commenter ici. Enchainer immediatement sur la diapo suivante.
 <div><span><b>8.</b> Un cas d'arbitrage</span><u>C3.2.2</u></div>
 <div><span><b>9.</b> Les compétences : apprises, et à acquérir</span><u>C3.3.2</u></div>
 <div><span><b>10.</b> Piloter le travail, seul</span><u>C3.3.1</u></div>
-<div><span><b>11.</b> Rendre compte, et la validation du périmètre livré</span><u>C3.4.1, C3.4.2</u></div>
+<div><span><b>11.</b> Rendre compte, et le bilan</span><u>C3.4.1, C3.4.2</u></div>
 </div>
 
 <!--
@@ -170,19 +170,17 @@ en silence se lit comme une defaillance du logiciel.
 <div class="done"><b>Livré</b><i></i><i></i><i></i><i></i></div>
 </div>
 
-<div class="text-xs opacity-75 mt-3 mb-1">Le suivi est dans GitHub, six surfaces, zéro saisie</div>
-<div class="kpi grid-cols-3" style="gap:0.35rem 0.5rem;line-height:1.25">
+<div class="text-xs opacity-75 mt-3 mb-1">Le suivi est dans GitHub, zéro saisie</div>
+<div class="kpi grid-cols-2" style="gap:0.35rem 0.5rem;line-height:1.25">
 <div><b style="font-size:1.2rem">160</b><span>tickets au board</span></div>
 <div><b style="font-size:1.2rem">11</b><span>releases datées</span></div>
-<div><b style="font-size:1.2rem">10</b><span>fiches, 5 anomalies</span></div>
-<div><b style="font-size:1.2rem">35 / 86</b><span>pull requests fusionnées</span></div>
-<div><b style="font-size:1.2rem">851</b><span>exécutions de la chaîne</span></div>
+<div><b style="font-size:1.2rem">10</b><span>fiches, dont 5 anomalies</span></div>
 <div><b style="font-size:1.2rem">0</b><span>saisie déclarative</span></div>
 </div>
 
 <div class="chips mt-3">
 <div><span><b>Périmètre figé</b> par version</span><u>livrable daté, notes de version</u></div>
-<div><span><b>Correctif</b> sans attendre la version</span><u>bug corrigé en un jour</u></div>
+<div><span><b>Correctif</b> sans attendre la version</span><u>0 à 7 jours, cinq anomalies closes</u></div>
 <div><span><b>Écartés</b></span><u>Scrum, V intégral, outil de suivi séparé</u></div>
 </div>
 
@@ -339,10 +337,9 @@ endroit, la trace nait du geste.
 }
 </style>
 
-<div class="kpi grid-cols-4 mt-2" style="gap:0.3rem 0.8rem;line-height:1.25">
+<div class="kpi grid-cols-3 mt-2" style="gap:0.3rem 0.8rem;line-height:1.25">
 <div><b style="font-size:1.25rem">11</b><span>versions publiées depuis le 27/02</span></div>
 <div><b style="font-size:1.25rem">14 j</b><span>écart médian entre deux versions</span></div>
-<div><b style="font-size:1.25rem">3</b><span>versions correctives, sans conception, le run en flux</span></div>
 <div><b style="font-size:1.25rem">81 j</b><span>le seul écart anormal, 0.1 → 1.0</span></div>
 </div>
 
@@ -376,9 +373,8 @@ ce que la production a corrige en aout.
 Deux lignes n'ont pas de conception : les versions correctives, 1.3.1, 1.3.2
 et 1.4.1, qui sont le run en flux de la diapo precedente.
 
-LES DELAIS, les quatre chiffres du bas : onze versions, une mediane de 14
-jours entre deux versions ; trois versions correctives sans conception, le run
-en flux ; le seul ecart anormal, 81 jours entre le prototype et la V1,
+LES DELAIS, les trois chiffres du bas : onze versions, une mediane de 14
+jours entre deux versions ; le seul ecart anormal, 81 jours entre le prototype et la V1,
 contient la migration de l'API, c'est lui qui a rendu l'arbitrage visible,
 theme 8. La date d'une version est posee a la fin de sa conception, et c'est
 le PERIMETRE qui absorbe la variation, jamais la date : quand la capacite
@@ -406,54 +402,24 @@ par la methode, pas par la discipline.
 <i style="width:10.9%;background:var(--s4);color:#3b2f00">1.6, 38</i>
 </div>
 
-<div class="grid grid-cols-2 gap-6 mt-6">
-<div>
-
-<div class="text-xs opacity-75 mb-1">Commits intégrés sur la branche principale : <b>1 070</b></div>
+<div class="text-xs opacity-75 mt-6 mb-1">Commits intégrés sur la branche principale, mois par mois : <b>1 070</b></div>
 <div class="cols" style="height:6.4rem">
 <div><i style="height:0%"></i></div>
-<div><i style="height:10%"></i></div>
-<div><i style="height:26%"></i></div>
+<div><em>28</em><i style="height:10%"></i></div>
+<div><em>72</em><i style="height:26%"></i></div>
 <div><em>150</em><i style="height:55%"></i></div>
 <div><em>227</em><i style="height:83%"></i></div>
-<div><i style="height:71%"></i></div>
-<div><i style="height:47%"></i></div>
+<div><em>194</em><i style="height:71%"></i></div>
+<div><em>127</em><i style="height:47%"></i></div>
 <div><em>272</em><i style="height:100%"></i></div>
 </div>
-
-
-
-</div>
-<div>
-
-<div class="text-xs opacity-75 mb-1">Fusions sur la branche principale : <b>187</b></div>
-<div class="cols" style="height:6.4rem">
-<div><i class="b" style="height:0%"></i></div>
-<div><i class="b" style="height:0%"></i></div>
-<div><i class="b" style="height:1%"></i></div>
-<div><i class="b" style="height:8%"></i></div>
-<div><em>39</em><i class="b" style="height:55%"></i></div>
-<div><em>52</em><i class="b" style="height:73%"></i></div>
-<div><i class="b" style="height:25%"></i></div>
-<div><em>71</em><i class="b" style="height:100%"></i></div>
-</div>
-
-
-</div>
-</div>
-<div class="grid grid-cols-2 gap-6">
-<div><div class="xlab">
+<div class="xlab">
 <div>fév.</div><div>mars</div><div>avril</div><div>mai</div><div>juin</div><div>juil.</div><div>août</div><div>sept.</div>
-</div></div>
-<div><div class="xlab">
-<div>fév.</div><div>mars</div><div>avril</div><div>mai</div><div>juin</div><div>juil.</div><div>août</div><div>sept.</div>
-</div></div>
 </div>
 
-<div class="kpi grid-cols-4 mt-6" style="gap:0.3rem 0.8rem;line-height:1.25">
+<div class="kpi grid-cols-3 mt-6" style="gap:0.3rem 0.8rem;line-height:1.25">
 <div><b style="font-size:1.25rem">1 à 3 jours</b><span>une feature, de la maquette à la fusion</span></div>
 <div><b style="font-size:1.25rem">1 à 3 semaines</b><span>une version, en réalisation</span></div>
-<div><b style="font-size:1.25rem">6 puis 39</b><span>fusions en mai puis juin : le découpage change, pas la production</span></div>
 <div><b style="font-size:1.25rem">58 / 81</b><span>items produit hors du chiffrage initial, 95 jours actifs pour 98 prévus</span></div>
 </div>
 
@@ -610,7 +576,6 @@ premier le jour ou quelqu'un rejoint le projet : la colonne Dev, puis DevOps.
 | Infrastructure | 1 à 5 €/mois | **0 €**, paliers gratuits |
 | Nom de domaine | ≈ 10 €/an | **≈ 10 €** |
 | Assistant de code | non prévu | **100 €/mois**, 300 € |
-| Licences | 0 € | **0 €** |
 
 <div class="chips mt-3">
 <div><span><b>≈ 310 €</b> engagés sur sept mois</span><u>le seul poste non prévu : l'assistant</u></div>
@@ -760,9 +725,8 @@ secondes.
 <div><span><b>D</b> Deux API en parallèle</span><u>double maintenance, à effectif 1</u></div>
 </div>
 
-<div class="kpi grid-cols-5 mt-4">
+<div class="kpi grid-cols-4 mt-4">
 <div><b>1 → 53</b><span>944 lignes à réécrire le 18/03, 50 000 aujourd'hui</span></div>
-<div><b>12</b><span>routes réécrites à l'identique</span></div>
 <div><b>19/05</b><span>v1.0.0 à la date prévue</span></div>
 <div><b>0</b><span>retour arrière, 10 versions depuis</span></div>
 <div><b>87</b><span>lignes de front modifiées, objectif : 0</span></div>
@@ -927,7 +891,6 @@ n'etait pas celle voulue pour la suite.
 
 <div class="b">Porte d'accessibilité : reprises avant chaque livraison</div><div class="r">RGAA, au-delà des tests automatisés</div><div class="m">Formation certifiante</div><div class="a">Une livraison passe la porte sans reprise</div>
 
-<div class="b">Si le projet passe en équipe</div><div class="r">Management d'équipe, transmission</div><div class="m">Formation courte ; le cadre écrit existe déjà, RACI et AGENTS.md</div><div class="a">Un contributeur opérationnel en une journée</div>
 </div>
 
 <div class="mt-4" style="max-width:34rem">
@@ -1090,7 +1053,6 @@ acceptes, theme 8.
 
 <div class="chips mt-5">
 <div><span>Points de validation</span><u>11 versions datées ; un contrôle rouge annule la livraison</u></div>
-<div><span>Adéquation au périmètre attendu</span><u>le diff daté de la feuille de route</u></div>
 </div>
 
 </div>
@@ -1155,7 +1117,7 @@ priorite 3.
 
 ---
 
-# Bilan, et la validation du périmètre livré
+# Bilan
 
 <div class="grid grid-cols-2 gap-8 text-sm mt-3">
 <div>
@@ -1163,7 +1125,7 @@ priorite 3.
 <div class="text-xs opacity-75 mb-1">Livré, du 27 février au 12 septembre</div>
 <div class="chips">
 <div><span>11 versions en 198 jours</span><u>écart médian 14 j, 0 retour arrière</u></div>
-<div><span>106 items, 348 points</span><u>81 produit, dont 58 hors du chiffrage initial</u></div>
+<div><span>106 items, 348 points</span><u>81 produit, 25 techniques</u></div>
 <div><span>21 comptes, 27 soirées, 125 films</span><u>en production, données réelles</u></div>
 <div><span>0 vulnérabilité, 0 anomalie ouverte</span><u>disponibilité 100 %</u></div>
 </div>
@@ -1174,8 +1136,8 @@ priorite 3.
 <div class="text-xs opacity-75 mb-1">Retenu</div>
 <div class="chips">
 <div><span><b>1.</b> Un indicateur ne mesure que la pratique qui le produit</span></div>
-<div><span><b>2.</b> Quand le coût d'une décision croît avec le temps, décider tôt a une valeur propre : 944 lignes le 18/03, 50 000 aujourd'hui</span></div>
-<div><span><b>3.</b> Un arbitrage non posé n'est pas un arbitrage : 58 items hors chiffrage, dix puis douze jours d'affilée</span></div>
+<div><span><b>2.</b> Quand le coût d'une décision croît avec le temps, décider tôt a une valeur propre</span></div>
+<div><span><b>3.</b> Un arbitrage non posé n'est pas un arbitrage</span></div>
 </div>
 
 <div class="text-xs opacity-75 mt-4 mb-1">Suite</div>
@@ -1184,10 +1146,6 @@ priorite 3.
 </div>
 
 </div>
-</div>
-
-<div class="note text-base mt-6" style="max-width:40rem;margin-left:auto;margin-right:auto">
-<b>Sur cette base, je vous demande de valider le périmètre livré.</b>
 </div>
 
 <!--
@@ -1216,9 +1174,10 @@ chiffres, est ce qui rend credible tout ce qui precede. Les deux echecs ont
 la MEME RACINE : une option non instruite n'est pas un arbitrage, c'est une
 absence de decision.
 
-La suite est decidee, pas soumise : la 1.7 part apres l'oral. Puis LA
-DEMANDE, prononcee telle qu'elle est ecrite, sans l'adoucir. Ce que le jury
-valide, c'est le perimetre demontre. Puis SE TAIRE et laisser le silence.
+La suite est decidee, pas soumise : la 1.7 part apres l'oral. Fermer sur
+« voila ce qui est livre, et ce que j'en retiens », puis remercier et
+laisser le silence. Pas de demande de validation formulee : la validation
+est le jugement du jury sur ce qui a ete demontre, elle ne se demande pas.
 C'est la fin de la presentation.
 
 Les annexes qui suivent ne sont JAMAIS presentees, seulement appelees par une
