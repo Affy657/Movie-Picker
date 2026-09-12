@@ -1,6 +1,7 @@
 <script setup>
 const REFS = {
-  2: 'C3.1', 3: 'C3.1', 4: 'C3.1', 5: 'C3.1', 6: 'C3.1',
+  3: 'C3.4.2',
+  4: 'C3.1', 5: 'C3.1', 6: 'C3.1', 7: 'C3.1', 8: 'C3.1',
 }
 const ANNEX_FROM = 99
 </script>

@@ -82,7 +82,7 @@ Trois outils, à deux échelles. C'est cette différence d'échelle qui les rend
 
 | | |
 |--|--|
-| **Nature** | Une ligne par version, chaque ligne découpée en ses cinq phases, plus les jalons du titre |
+| **Nature** | Une ligne par version, chaque ligne découpée en conception, réalisation, restitution et mesure ; l'étude, le cadrage dans la roadmap, se dit |
 | **Bénéfice attendu** | Rendre visibles les **chevauchements** : l'étude de la version suivante pendant la mesure de la précédente, et la position des releases par rapport aux échéances |
 
 ### 2.4 La compatibilité avec la méthode
@@ -323,7 +323,7 @@ Sept points, chacun avec son indicateur de contrôle et sa parade. Le premier es
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
 | 4 | Planifier : un V par version, un flux pour le run | 1, 2 |
-| 5 | Le planning : chaque version parcourt les cinq phases | 3.1, 3.2 |
+| 5 | Le planning : une ligne par version | 3.1, 3.2 |
 | 6 | Sept versions en lots, et les ressources réelles | 3.3, 3.4, 4 |
 | 7 | La matrice RACI : quatre rôles, une personne | 5 |
 | 8 | Sept points de vigilance, un seul d'organisation | 6 |

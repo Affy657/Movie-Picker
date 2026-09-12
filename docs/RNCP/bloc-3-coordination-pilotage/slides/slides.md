@@ -30,6 +30,105 @@ Ne rien commenter ici. Enchainer immediatement sur la diapo suivante.
 
 ---
 
+# Sommaire
+
+<div class="chips mt-6" style="font-size:1.05rem;gap:0.55rem 0;max-width:44rem;margin-left:auto;margin-right:auto">
+<div><span><b>1.</b> Démonstration en production</span><u>C3.4.2, éliminatoire</u></div>
+<div><span><b>2.</b> Planifier l'exécution</span><u>C3.1, éliminatoire</u></div>
+<div><span><b>3.</b> Piloter l'avancement</span><u>C3.2.1, éliminatoire</u></div>
+<div><span><b>4.</b> Un cas d'arbitrage</span><u>C3.2.2</u></div>
+<div><span><b>5.</b> Piloter le travail, seul</span><u>C3.3.1</u></div>
+<div><span><b>6.</b> Les compétences, avant et après</span><u>C3.3.2</u></div>
+<div><span><b>7.</b> Rendre compte au commanditaire</span><u>C3.4.1</u></div>
+<div><span><b>8.</b> Bilan, et la validation du périmètre livré</span><u>C3.4.2, éliminatoire</u></div>
+</div>
+
+<!--
+DUREE 0:40. AVANT LA DEMONSTRATION. RIEN D'AUTRE A L'ECRAN QUE LE SOMMAIRE :
+TOUT CE QUI SUIT SE DIT. DIAPO CRITIQUE POUR LES 15 MINUTES DE QUESTIONS.
+
+Dire la phrase telle quelle : « Le projet a ete mene seul, du 27 fevrier au
+16 septembre : developpeur, architecte, exploitant et chef de projet. Je ne
+vais pas vous presenter une equipe que je n'ai pas eue. Je vais vous montrer
+comment j'ai travaille seul et, la ou le referentiel suppose une equipe, ce
+que j'ai fait a la place et ce qui n'a pas d'equivalent. »
+
+Puis le sommaire, une phrase par chapitre au plus, en signalant les trois
+competences eliminatoires.
+
+Ne pas s'excuser d'etre seul, ne pas justifier longuement. Annoncer, puis
+avancer. Un jury previent des le debut evalue la methode ; un jury qui
+decouvre en cours de route qu'une equipe etait fictive sanctionne.
+-->
+
+---
+
+# 1. Démonstration
+
+<div class="text-center" style="font-size:1.9rem"><a href="https://web.movie-picker.fr" target="_blank">web.movie-picker.fr</a></div>
+
+<style>
+h1 { text-align: center; font-size: 4.4rem !important; font-weight: 700; margin-top: 7rem !important; margin-bottom: 1.5rem !important; }
+</style>
+
+
+<!--
+DUREE 0:50, PUIS LA DEMONSTRATION EN DIRECT, 4:50. LE LIEN EST CLIQUABLE. ELEMENT IMPOSE 14 : la
+demonstration des fonctionnalites. COMPETENCE C3.4.2, ELIMINATOIRE.
+
+La presentation OUVRE sur le produit : le jury voit le logiciel avant d'entendre
+comment il a ete pilote. Dire la phrase de bascule : « je commence par vous
+montrer le produit, comme je le montrerais a un client. Tout ce qui suivra,
+planning, indicateurs, arbitrages, porte sur ce logiciel-la. »
+
+A DIRE, rien n'est a l'ecran : 10 versions en production depuis fevrier,
+17 comptes, 74 % des soirees menees jusqu'au tirage. Puis les six temps du
+parcours en une phrase, et la demonstration. Au retour, diapo 4 : on parle au
+jury.
+
+Objectif unique : etablir qu'on parle d'un logiciel reellement exploite. Tout le
+reste de la presentation en depend, et la demonstration se fera dessus.
+
+Trois chiffres, pas plus. Le plus parlant est le 74 % : ce n'est pas un chiffre
+d'inscription, c'est un chiffre d'USAGE ABOUTI. Les gens qui creent une soiree
+vont au bout dans trois cas sur quatre.
+
+Ne pas detailler les fonctionnalites, elles seront montrees en direct.
+
+SI ON QUESTIONNE le volume : 17 comptes, c'est modeste et je ne le presente pas
+autrement. C'est un usage reel et mesure, pas un usage de masse.
+
+= = =
+
+COMPETENCE C3.4.2, ELIMINATOIRE.
+
+REGISTRE CLIENT, il doit s'entendre : pendant la demonstration on ne s'adresse
+pas a un jury de professionnels mais a un client. Le vocabulaire change, le
+debit ralentit. Le registre jury reprend a la diapo 4.
+
+Ce qui compte pour le critere « le logiciel est utilisable » : c'est la version
+en production, pas une maquette, et un second appareil est pret.
+
+MOTS INTERDITS pendant toute la demonstration : API, base de donnees,
+deploiement, cache, jeton. Si l'un sort, NE PAS se reprendre a voix haute, se
+reprendre attire l'attention sur l'erreur. Continuer.
+
+Si une question technique arrive en cours de demonstration : repondre dans le
+registre client, puis « je peux le detailler apres la demonstration si vous le
+souhaitez ». Ne pas basculer au milieu du parcours.
+
+=== BASCULE DE REPLI, si le reseau lache ===
+Niveau 1, reseau lent : partage de connexion du telephone, deja active.
+Niveau 2, reseau indisponible : environnement local deja demarre. DIRE la
+phrase preparee : « le reseau de la salle ne suit pas, je bascule sur la meme
+version, installee sur mon poste. » Puis continuer sans commentaire.
+Niveau 3, poste defaillant : video enregistree, commentee par-dessus.
+Niveau 4 : captures imprimees.
+Un incident annonce calmement se lit comme de la preparation ; un incident subi
+en silence se lit comme une defaillance du logiciel.
+-->
+---
+
 # 2. Planifier : un V par version, un flux pour le run
 
 <div class="grid grid-cols-5 gap-6 mt-2">
@@ -135,7 +234,7 @@ nait du geste. Le choix est developpe au chapitre 3.
 
 ---
 
-# Le planning : chaque version parcourt les cinq phases
+# Le planning : une ligne par version
 
 <div class="gantt">
 
@@ -153,23 +252,21 @@ nait du geste. Le choix est developpe au chapitre 3.
 </div>
 </div>
 
-<div class="row"><div class="lab">0.1, MVP</div><div class="track"><i class="e" style="grid-column:1/8"></i><i class="c" style="grid-column:8/13"></i><i class="r" style="grid-column:13/30"></i><b style="grid-column:29/30"></b><i class="m" style="grid-column:30/32"></i></div></div>
-<div class="row"><div class="lab">1.0, socle .NET</div><div class="track"><i class="e" style="grid-column:29/31"></i><i class="c" style="grid-column:31/32"></i><i class="r" style="grid-column:31/33"></i><b style="grid-column:32/33"></b><i class="m" style="grid-column:33/49"></i></div></div>
-<div class="row"><div class="lab">1.0, V1 produit</div><div class="track"><i class="e" style="grid-column:33/50"></i><i class="c" style="grid-column:48/53"></i><i class="r" style="grid-column:51/93"></i><b style="grid-column:93/94"></b><i class="m" style="grid-column:94/100"></i></div></div>
-<div class="row"><div class="lab">1.1</div><div class="track"><i class="e" style="grid-column:89/92"></i><i class="c" style="grid-column:92/94"></i><i class="r" style="grid-column:94/99"></i><b style="grid-column:99/100"></b><i class="m" style="grid-column:100/117"></i></div></div>
-<div class="row"><div class="lab">1.2</div><div class="track"><i class="e" style="grid-column:94/100"></i><i class="c" style="grid-column:100/103"></i><i class="r" style="grid-column:101/116"></i><b style="grid-column:116/117"></b><i class="m" style="grid-column:117/125"></i></div></div>
-<div class="row"><div class="lab">1.3</div><div class="track"><i class="e" style="grid-column:109/114"></i><i class="c" style="grid-column:114/117"></i><i class="r" style="grid-column:116/124"></i><b style="grid-column:124/125"></b><i class="m" style="grid-column:125/144"></i></div></div>
+<div class="row"><div class="lab">0.1, MVP</div><div class="track"><i class="c" style="grid-column:8/13"></i><i class="r" style="grid-column:13/30"></i><b style="grid-column:29/30"></b><i class="m" style="grid-column:30/32"></i></div></div>
+<div class="row"><div class="lab">Socle .NET</div><div class="track"><i class="c" style="grid-column:31/32"></i><i class="r" style="grid-column:31/33"></i><b style="grid-column:32/33"></b><i class="m" style="grid-column:33/49"></i></div></div>
+<div class="row"><div class="lab">V1 produit</div><div class="track"><i class="c" style="grid-column:48/53"></i><i class="r" style="grid-column:51/93"></i><b style="grid-column:93/94"></b><i class="m" style="grid-column:94/100"></i></div></div>
+<div class="row"><div class="lab">1.1</div><div class="track"><i class="c" style="grid-column:92/94"></i><i class="r" style="grid-column:94/99"></i><b style="grid-column:99/100"></b><i class="m" style="grid-column:100/117"></i></div></div>
+<div class="row"><div class="lab">1.2</div><div class="track"><i class="c" style="grid-column:100/103"></i><i class="r" style="grid-column:101/116"></i><b style="grid-column:116/117"></b><i class="m" style="grid-column:117/125"></i></div></div>
+<div class="row"><div class="lab">1.3</div><div class="track"><i class="c" style="grid-column:114/117"></i><i class="r" style="grid-column:116/124"></i><b style="grid-column:124/125"></b><i class="m" style="grid-column:125/144"></i></div></div>
 <div class="row"><div class="lab">1.3.1 et 1.3.2, run</div><div class="track"><i class="r" style="grid-column:130/143"></i><b style="grid-column:143/144"></b><i class="r" style="grid-column:144/160"></i><b style="grid-column:160/161"></b><i class="m" style="grid-column:161/192"></i></div></div>
-<div class="row"><div class="lab">1.4</div><div class="track"><i class="e" style="grid-column:135/152"></i><i class="c" style="grid-column:152/167"></i><i class="r" style="grid-column:171/191"></i><b style="grid-column:191/192"></b><i class="m" style="grid-column:192/202"></i></div></div>
+<div class="row"><div class="lab">1.4</div><div class="track"><i class="c" style="grid-column:152/167"></i><i class="r" style="grid-column:171/191"></i><b style="grid-column:191/192"></b><i class="m" style="grid-column:192/202"></i></div></div>
 <div class="row"><div class="lab">1.4.1, run</div><div class="track"><i class="r" style="grid-column:193/201"></i><b style="grid-column:201/202"></b></div></div>
-<div class="row"><div class="lab">1.5</div><div class="track"><i class="e" style="grid-column:187/195"></i><i class="c" style="grid-column:198/201"></i><i class="r" style="grid-column:201/204"></i><b style="grid-column:204/205"></b><i class="m" style="grid-column:205/214"></i></div></div>
-<div class="row"><div class="lab">1.6, en cours</div><div class="track"><i class="e" style="grid-column:195/202"></i><i class="c" style="grid-column:205/206"></i><i class="r open" style="grid-column:206/214"></i></div></div>
-<div class="row"><div class="lab">Restitutions du titre</div><div class="track"><b style="grid-column:116/117"></b><b style="grid-column:158/159"></b><b style="grid-column:187/188"></b><b style="grid-column:213/214"></b></div></div>
+<div class="row"><div class="lab">1.5</div><div class="track"><i class="c" style="grid-column:198/201"></i><i class="r" style="grid-column:201/204"></i><b style="grid-column:204/205"></b><i class="m" style="grid-column:205/214"></i></div></div>
+<div class="row"><div class="lab">1.6, en cours</div><div class="track"><i class="c" style="grid-column:205/206"></i><i class="r open" style="grid-column:206/214"></i></div></div>
 
 </div>
 
 <div class="legend mt-2 ml-2">
-<span style="--c:#cbd5e1">Étude</span>
 <span style="--c:var(--s3)">Conception</span>
 <span style="--c:var(--s1)">Réalisation</span>
 <span style="--c:#f59e0b">Restitution, release</span>
@@ -190,7 +287,6 @@ nait du geste. Le choix est developpe au chapitre 3.
   opacity: 0.95;
 }
 .gantt .track i { height: 0.82rem; border-radius: 3px; grid-row: 1; }
-.gantt .track i.e { background: #cbd5e1; }
 .gantt .track i.c { background: var(--s3); }
 .gantt .track i.r { background: var(--s1); }
 .gantt .track i.m { background: #99f6e4; }
@@ -213,15 +309,16 @@ nait du geste. Le choix est developpe au chapitre 3.
 <!--
 DUREE 1:10. ELEMENT IMPOSE 2 (suite). CRITERE : le planning est decoupe en
 phases, en taches ou lots, et permet de visualiser les phases d'ETUDE, de
-MESURE, de CONCEPTION, de REALISATION, de RESTITUTION. Les cinq mots sont dans
-la legende, et chaque ligne de version les porte dans l'ordre du V.
+MESURE, de CONCEPTION, de REALISATION, de RESTITUTION. Quatre sont dessinees,
+conception, realisation, restitution, mesure ; l'etude, le cadrage de la
+version dans la roadmap, se nomme a voix haute en ouvrant la diapo, pour que
+les cinq mots de la grille soient prononces.
 
 Une ligne par version, du 16 fevrier au 16 septembre 2026. Se lit de gauche a
-droite, une phrase par couleur :
-- ETUDE, gris : la version est cadree dans la roadmap, objectif, items,
-  tailles. Elle commence pendant que la version precedente est encore en
-  production : le cadrage de la 1.4 court de fin juin a mi-juillet, celui de
-  la 1.5 fin aout.
+droite, une phrase par couleur. L'ETUDE se dit, elle n'est pas dessinee : la
+version est cadree dans la roadmap, objectif, items, tailles, pendant que la
+version precedente est encore en production ; le cadrage de la 1.4 court de
+fin juin a mi-juillet, celui de la 1.5 fin aout.
 - CONCEPTION, bleu : questions de cadrage, maquettes des ecrans nouveaux,
   contrat d'API. Court, parce qu'une version tient en quelques items.
 - REALISATION, vert : la branche de version, une feature de un a trois jours.
@@ -232,18 +329,18 @@ droite, une phrase par couleur :
   questionnaire du 18 aout tombe dans la mesure de la 1.3.2 et nourrit la
   1.4.1.
 
-LE POINT A NE PAS MANQUER : les lignes se chevauchent, l'etude de la suivante
-pendant la mesure de la precedente, et c'est ce qui distingue un V par version
-d'un cycle en V unique. Un seul V sur sept mois aurait fige en fevrier ce que
-la production a corrige en aout.
+LE POINT A NE PAS MANQUER : les lignes se chevauchent, la conception de la
+suivante pendant la mesure de la precedente, et c'est ce qui distingue un V par
+version d'un cycle en V unique. Un seul V sur sept mois aurait fige en fevrier
+ce que la production a corrige en aout.
 
-Deux lignes n'ont pas d'etude : les versions correctives, 1.3.1, 1.3.2 et
-1.4.1, qui sont le run en flux de la diapo precedente. Elles n'ont que la
+Deux lignes n'ont pas de conception : les versions correctives, 1.3.1, 1.3.2
+et 1.4.1, qui sont le run en flux de la diapo precedente. Elles n'ont que la
 realisation et la release.
 
-La derniere ligne : les quatre echeances du titre, qui sont les points fixes du
-retroplanning. Le Bloc 1 le 11 juin tombe le jour de la 1.2, le Bloc 4 le
-21 aout quatre jours avant la 1.4 : les versions ont ete calees sur ces dates.
+Les echeances du titre ne sont pas dessinees, elles se disent : le Bloc 1 le
+11 juin tombe le jour de la 1.2, le Bloc 4 le 21 aout quatre jours avant la
+1.4. Les versions ont ete calees sur ces dates par le retroplanning.
 
 SI ON QUESTIONNE : « vos documents de cadrage sont dates de juin, votre etude de
 mars. » Les decisions ont ete prises en mars et avril, elles sont dans la
