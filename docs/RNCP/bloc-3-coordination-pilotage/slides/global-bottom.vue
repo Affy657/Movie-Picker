@@ -509,6 +509,71 @@ const ANNEX_FROM = 99
   background: var(--s1);
 }
 
+.risk {
+  display: grid;
+  grid-template-columns: 1.1rem repeat(3, 1fr);
+  grid-template-rows: repeat(3, 5rem) 1rem 1rem;
+  gap: 4px;
+  font-size: 0.66rem;
+  color: var(--ink-2);
+}
+.risk .ay {
+  grid-row: 1 / 4;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+}
+.risk .ax {
+  text-align: center;
+  align-self: start;
+}
+.risk .axl {
+  grid-column: 2 / 5;
+  text-align: center;
+  align-self: start;
+}
+.risk .cell {
+  border-radius: 6px;
+  border: 1px solid var(--grid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: rgb(13 148 136 / 5%);
+}
+.risk .cell.c1 { background: rgb(13 148 136 / 10%); }
+.risk .cell.c2 { background: rgb(13 148 136 / 18%); }
+.risk .cell.c3 { background: rgb(245 158 11 / 22%); }
+.risk .cell.c4 { background: rgb(245 158 11 / 42%); }
+.risk .cell i {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 2px solid var(--s1);
+  background: #fff;
+  color: var(--s1);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.risk .cell i.hit {
+  background: var(--s1);
+  color: #fff;
+}
+.risk .cell i.org {
+  background: #d97706;
+  border-color: #d97706;
+  color: #fff;
+}
+.legend span.hollow::before {
+  border: 2px solid var(--s1);
+  box-sizing: border-box;
+  border-radius: 50%;
+}
+
 .raci {
   display: grid;
   grid-template-columns: 1fr repeat(5, 3.4rem);

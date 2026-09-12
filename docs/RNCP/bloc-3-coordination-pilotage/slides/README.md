@@ -56,6 +56,7 @@ npm run export
 | `.vee` | Cycle en V, trois niveaux reliés (méthode par version) |
 | `.run` | Quatre pas fléchés du run en flux |
 | `.board` | Colonnes d'un board, cartes en placeholders |
+| `.risk` | Carte probabilité par impact, 3 × 3, points numérotés (`.hit` réalisé, `.org` organisation) |
 | `.raci` | Grille RACI colorée, une classe par lettre |
 | `.quad` | Quadrant 2 × 2, `.dom` sur la case dominante (styles managériaux) |
 | `.steps` | Trois pas numérotés (publics servis, niveaux de compte rendu) |

@@ -82,7 +82,7 @@ montrer le produit, comme je le montrerais a un client. Tout ce qui suivra,
 planning, indicateurs, arbitrages, porte sur ce logiciel-la. »
 
 A DIRE, rien n'est a l'ecran : 11 versions en production depuis fevrier,
-17 comptes, 74 % des soirees menees jusqu'au tirage. Puis les six temps du
+21 comptes, 74 % des soirees menees jusqu'au tirage. Puis les six temps du
 parcours en une phrase, et la demonstration. Au retour, diapo 4 : on parle au
 jury.
 
@@ -95,7 +95,7 @@ vont au bout dans trois cas sur quatre.
 
 Ne pas detailler les fonctionnalites, elles seront montrees en direct.
 
-SI ON QUESTIONNE le volume : 17 comptes, c'est modeste et je ne le presente pas
+SI ON QUESTIONNE le volume : 21 comptes, c'est modeste et je ne le presente pas
 autrement. C'est un usage reel et mesure, pas un usage de masse.
 
 = = =
@@ -378,7 +378,7 @@ Bloc 1. La decision precede le document.
 <div><span>Product owner</span><u>cadrage, recette, retours</u></div>
 <div><span>Développeur front et back</span><u>conception, code, tests</u></div>
 <div><span>DevOps</span><u>chaîne, déploiement, supervision</u></div>
-<div><span>Commanditaire, utilisateurs</span><u>4 échéances, 17 comptes</u></div>
+<div><span>Commanditaire, utilisateurs</span><u>4 échéances, 21 comptes</u></div>
 </div>
 
 </div>
@@ -428,7 +428,7 @@ de liste.
 HUMAINES : une personne, sur son temps libre, et quatre roles qu'elle porte
 tour a tour ; ce sont les colonnes de la RACI qui suit. Autour d'elle, deux
 acteurs reels : le commanditaire, le formateur puis le jury, sur quatre
-echeances ; les 17 utilisateurs, qui font la recette et remontent des retours.
+echeances ; les 21 utilisateurs, qui font la recette et remontent des retours.
 Les prestataires executent l'hebergement, le catalogue et les e-mails.
 
 MATERIELLES : ne pas enumerer. Un poste, un telephone pour tester le mobile, un
@@ -514,33 +514,65 @@ Le jour ou une personne rejoint le projet, la matrice est deja ecrite.
 
 # Sept points de vigilance, un seul d'organisation
 
-<div class="chips mt-6" style="font-size:0.9rem;gap:0.55rem 0">
-<div><span><b style="color:#b45309">1.</b> <b>Concentration des rôles sur une personne</b></span><u style="color:#b45309">facteur de bus 1, tout est écrit et versionné</u></div>
+<div class="grid grid-cols-5 gap-8 mt-5">
+<div class="col-span-2">
+
+<div class="risk">
+<div class="ay">Impact →</div>
+<div class="cell c2"><i>3</i><i>4</i></div><div class="cell c3"><i>6</i></div><div class="cell c4"><i class="org">1</i></div>
+<div class="cell c1"></div><div class="cell c2"><i class="hit">5</i></div><div class="cell c3"><i class="hit">2</i></div>
+<div class="cell"></div><div class="cell c1"></div><div class="cell c2"><i class="hit">7</i></div>
+<div></div><div class="ax">faible</div><div class="ax">moyenne</div><div class="ax">forte</div>
+<div></div><div class="axl">Probabilité →</div>
+</div>
+
+<div class="legend mt-3">
+<span style="--c:var(--s1)">s'est réalisé, traité</span>
+<span class="hollow" style="--c:#fff">surveillé</span>
+<span style="--c:#d97706">organisation</span>
+</div>
+
+</div>
+<div class="col-span-3">
+
+<div class="chips" style="font-size:0.88rem;gap:0.7rem 0">
+<div><span><b style="color:#b45309">1.</b> <b>Concentration des rôles sur une personne</b></span><u style="color:#b45309">tout est écrit et versionné</u></div>
 <div><span><b>2.</b> Sous-estimation des lots documentaires</span><u>rétroplanning depuis les échéances</u></div>
-<div><span><b>3.</b> Dépendance au catalogue de films externe</span><u>cache, débit limité, saisie manuelle</u></div>
-<div><span><b>4.</b> Transport des e-mails transactionnels</span><u>volume surveillé, fournisseur substituable</u></div>
-<div><span><b>5.</b> Durcissement de la politique de sécurité du contenu</span><u>réalisé en production, traité</u></div>
-<div><span><b>6.</b> Absence de déploiement progressif</span><u>assumé, test de fumée bloquant</u></div>
+<div><span><b>3.</b> Dépendance au catalogue de films externe</span><u>cache, débit limité, repli manuel</u></div>
+<div><span><b>4.</b> Perte de la base, aucun instantané</span><u>sauvegarde nocturne vérifiée</u></div>
+<div><span><b>5.</b> Durcissement de la sécurité du contenu</span><u>réalisé en production, traité</u></div>
+<div><span><b>6.</b> Absence de déploiement progressif</span><u>test de fumée bloquant, retour arrière</u></div>
 <div><span><b>7.</b> Instabilité de la chaîne de vérification</span><u>contrôle rendu déterministe</u></div>
+</div>
+
+</div>
 </div>
 
 <!--
 DUREE 1:00. CRITERE : les points de vigilance sont soulignes. Dernier critere de
 C3.1, competence ELIMINATOIRE : le chapitre ne peut pas se terminer sans lui.
 
-Ne pas lire les sept lignes. Deux temps :
+Ne pas lire les sept lignes. La carte a gauche place chaque point par
+probabilite et par impact ; la liste a droite donne la parade. Trois temps :
 
 1. « Six de ces points sont des risques de projet, chacun porte un indicateur
-et une parade. » Citer le point 5 comme exemple, parce qu'il s'est REALISE en
-production : un durcissement de la politique de securite du contenu a bloque les
-affiches de films et les avatars. L'incident et sa correction sont traces. Un
-point de vigilance qui s'est realise et qui a ete traite vaut mieux qu'une liste
-theorique.
+et une parade. » Les pleins se sont realises et ont ete traites : le 5, un
+durcissement de la politique de securite du contenu a bloque les affiches de
+films et les avatars en production, l'incident et sa correction sont traces ;
+le 2, l'ecart sur les lots documentaires, absorbe par le retroplanning ; le 7,
+la chaine instable, rendue deterministe. Un point qui s'est realise et qui a
+ete traite vaut mieux qu'une liste theorique.
 
-Le point 6, absence de deploiement progressif, est une faiblesse assumee. La dire
-ici plutot que de la laisser decouvrir.
+2. Les creux sont surveilles : le catalogue externe et la base, en haut a
+gauche, ont un impact fort et une probabilite faible, d'ou une parade
+preventive, cache et saisie manuelle pour l'un, sauvegarde nocturne relue et
+restauree chaque nuit pour l'autre, le palier gratuit de la base n'offrant
+aucun instantane. Le 6, absence de deploiement progressif, est une faiblesse
+assumee : test de fumee bloquant, retour arriere par redeploiement de la
+revision precedente. La dire ici plutot que de la laisser decouvrir.
 
-2. « Le point 1 est d'une autre nature. » L'indicateur vaut 1, et cette valeur
-EST le probleme. La parade ne le supprime pas, elle le rend survivable : tout ce
-qu'un remplacant recevrait le premier jour est ecrit et versionne.
+3. « Le point 1 est d'une autre nature. » Seul en haut a droite : probabilite
+certaine, impact fort, et l'indicateur vaut 1, cette valeur EST le probleme. La
+parade ne le supprime pas, elle le rend survivable : tout ce qu'un remplacant
+recevrait le premier jour est ecrit et versionne.
 -->

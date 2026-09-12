@@ -232,7 +232,7 @@ Trois autres acteurs sont réels, et ils figurent dans la matrice :
 | Acteur | Ce qu'il apporte | Depuis quand |
 |--------|------------------|--------------|
 | **Commanditaire** | Le formateur, puis le jury : quatre échéances de restitution, la validation de la conformité au référentiel | Cadrage |
-| **Utilisateurs** | 17 comptes : retours, recette informelle, questionnaire de satisfaction | 19 mai 2026, v1.0.0 |
+| **Utilisateurs** | 21 comptes au 12 septembre 2026 : retours, recette informelle, questionnaire de satisfaction | 19 mai 2026, v1.0.0 |
 | **Prestataires** | L'hébergement, le catalogue de films, le transport des e-mails, la supervision : des services exécutés par des tiers, sous contrat d'usage | 27 février 2026 |
 
 Aucun acteur intermédiaire n'est ajouté : tout ce qui n'est pas exécuté par un prestataire l'a été par une personne, et le chapitre 4 montre comment cette personne a affecté ses missions dans le temps et à l'automatisation.
@@ -308,14 +308,14 @@ Le critère est explicitement demandé par la grille. Il est traité à trois ni
 
 ## 6. Les points de vigilance
 
-Sept points, chacun avec son indicateur de contrôle et sa parade. Le premier est un risque d'organisation, les six autres sont des risques de projet, dont cinq techniques.
+Sept points, chacun avec son indicateur de contrôle et sa parade, placés sur une carte probabilité par impact. Le premier est un risque d'organisation, les six autres sont des risques de projet, dont cinq techniques ; trois se sont réalisés et ont été traités (2, 5, 7), trois sont surveillés (3, 4, 6).
 
 | # | Point de vigilance | Ce qu'il menace | Indicateur de contrôle | Parade |
 |:-:|--------------------|-----------------|------------------------|--------|
 | 1 | **Concentration des rôles sur une personne** | La continuité du projet. Un seul acteur détient la connaissance de l'architecture, des accès et des procédures | Nombre de personnes capables de mener une mise en production, aujourd'hui 1 | Procédures d'exploitation écrites et versionnées, infrastructure décrite en code, décisions d'architecture consignées, matrice RACI par rôle. C'est tout ce qu'un remplaçant recevrait le premier jour |
 | 2 | **Sous-estimation des lots documentaires** | Le calendrier du titre. Les lots de documentation sont les plus difficiles à chiffrer par analogie, faute de comparable | Écart entre charge prévue et charge consommée sur le lot de clôture | Rétroplanning à rebours depuis les échéances de restitution, périmètre de version ajusté sur la capacité restante |
 | 3 | **Dépendance au catalogue de films externe** | Le cœur du produit. Une rupture de contrat, un changement de conditions d'usage ou un dépassement de quota rend la recherche de films inopérante | Taux d'erreur des appels au catalogue | Cache des affiches et des métadonnées avec durée de vie, limitation du débit de recherche, repli de saisie manuelle |
-| 4 | **Transport des e-mails transactionnels** | La réinitialisation de mot de passe et les invitations. Le palier gratuit du service d'envoi plafonne le volume quotidien | Volume d'e-mails envoyés par jour rapporté au plafond | Envoi limité aux messages indispensables, surveillance du volume, fournisseur substituable derrière un port applicatif |
+| 4 | **Perte de la base de données** | Toutes les données du service. Le palier gratuit de la base managée n'offre aucun instantané : une suppression accidentelle ou une corruption serait définitive | Âge de la dernière sauvegarde vérifiée, résultat de la restauration d'essai | Sauvegarde nocturne vers un dépôt d'objets versionné, relue puis restaurée dans une base jetable avant d'être retenue : une archive qui échoue la restauration ne devient jamais la sauvegarde du jour |
 | 5 | **Durcissement de la politique de sécurité du contenu** | L'affichage. Un durcissement mal calibré bloque silencieusement des ressources légitimes, ce qui s'est produit en production sur les affiches et les avatars | Vérification visuelle après chaque modification de la politique, sondes de disponibilité | Inventaire des domaines externes tenu à jour, vérification obligatoire de l'affichage avant mise en production |
 | 6 | **Absence de déploiement progressif** | La disponibilité au moment d'une mise en production. Une révision défectueuse est exposée à tous les utilisateurs en même temps | Résultat du test de fumée post-déploiement, taux d'erreur serveur | Arbitrage assumé et réversible : test de fumée bloquant, vérification de la joignabilité de la base avant bascule, retour arrière par redéploiement de la révision précédente |
 | 7 | **Instabilité de la chaîne de vérification** | La cadence de livraison. Un contrôle intermittent qui échoue sans cause réelle érode la confiance dans la chaîne et pousse à la contourner | Taux d'échec de la chaîne sur la branche principale, part des échecs sans cause réelle | Contrôle de performance rendu déterministe par médiane de trois exécutions, seuils recalibrés, exécution de la chaîne en local avant remontée |
