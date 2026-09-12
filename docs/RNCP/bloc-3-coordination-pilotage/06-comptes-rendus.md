@@ -12,7 +12,7 @@
 > - Les points de validation sont organisés de manière à assurer le suivi qualité du projet.
 > - Les indicateurs de satisfaction sont définis et sont cohérents au regard du projet.
 
-Alimente les diapositives 20 à 22.
+Alimente les diapositives 16 à 18, thème 11.
 
 **Rappel de posture** : ce chapitre est intégralement réel. Les points de validation sont datés, les comptes rendus sont versionnés ou publiés, et les indicateurs de satisfaction proviennent de mesures de production et d'un questionnaire réellement diffusé.
 
@@ -26,9 +26,9 @@ Ces deux commanditaires n'attendent ni la même chose ni au même rythme, et c'e
 
 | | **Commanditaire du titre** | **Commanditaire du produit** |
 |--|---------------------------|------------------------------|
-| Qui | Formateur et jury | Les 17 utilisateurs inscrits |
+| Qui | Formateur et jury | Les 21 utilisateurs inscrits au 12 septembre 2026 |
 | Ce qu'il valide | La conformité aux compétences du référentiel | Que la fonctionnalité livrée sert réellement |
-| Rythme | 4 échéances de restitution | 10 versions livrées |
+| Rythme | 4 échéances de restitution | 11 versions livrées |
 | Forme du compte rendu | Dossiers écrits et présentations orales | Journal des versions, notes de version, résumé poussé dans l'application |
 | Ce qui prouve la validation | Acquisition prononcée compétence par compétence | Le comportement mesuré après la livraison |
 
@@ -38,7 +38,7 @@ Ces deux commanditaires n'attendent ni la même chose ni au même rythme, et c'e
 
 ## 2. La planification des points de validation
 
-### 2.1 Les 10 versions, points de validation du produit
+### 2.1 Les 11 versions, points de validation du produit
 
 Chaque version est un point de validation **daté, versionné et vérifiable**, adossé à une étiquette posée sur le commit exact déployé.
 
@@ -54,6 +54,7 @@ Chaque version est un point de validation **daté, versionné et vérifiable**, 
 | 1.4.0 | 25/08/2026 | Que le produit dépasse la soirée ponctuelle : watchlist, intégration tierce, identité fédérée |
 | 1.4.1 | 04/09/2026 | Que le produit est consultable **sans compte**, et que les frictions remontées sont levées |
 | 1.5.0 | 07/09/2026 | Que le produit donne envie **avant** la première soirée : un accueil d'exploration ouvert à tous, sagas et sélections thématiques |
+| 1.6.0 | 12/09/2026 | Que la soirée se répète sans effort : récurrence, modèles, plusieurs gagnants, limite de votes ; et que le dépôt public et la sauvegarde nocturne tiennent |
 
 ### 2.2 Les 4 échéances, points de validation du titre
 
@@ -140,7 +141,7 @@ Trois propriétés, et c'est le commentaire à porter à l'oral.
 
 ### 4.1 Comment ils sont définis, et pourquoi ceux-là
 
-Le critère demande des indicateurs **cohérents au regard du projet**. À 17 comptes et 19 soirées, un indice de recommandation net n'a aucune validité statistique. Les indicateurs sont donc retenus sur trois familles, et **c'est leur combinaison qui fait la mesure**, pas l'un d'entre eux.
+Le critère demande des indicateurs **cohérents au regard du projet**. À 17 comptes et 19 soirées le 5 septembre 2026, date des mesures ci-dessous (21 comptes au 12 septembre), un indice de recommandation net n'a aucune validité statistique. Les indicateurs sont donc retenus sur trois familles, et **c'est leur combinaison qui fait la mesure**, pas l'un d'entre eux.
 
 | Famille | Indicateur | Mesure | Ce qu'il vaut |
 |---------|-----------|--------|---------------|
@@ -178,9 +179,9 @@ C'est la partie qui compte : un indicateur de satisfaction ne vaut que par la d�
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 20 | Rendre compte : les points de validation | 1, 2 |
-| 21 | Le compte rendu qui fait décider | 3 |
-| 22 | Les indicateurs de satisfaction : trois familles | 4 |
+| 16 | 11. Rendre compte : à qui, comment, pour décider | 1, 2, 3 |
+| 17 | Les indicateurs de satisfaction : trois familles | 4 |
+| 18 | Bilan, et la validation du périmètre livré | chapitre 07, § 6 |
 
 ---
 
@@ -188,7 +189,7 @@ C'est la partie qui compte : un indicateur de satisfaction ne vaut que par la d�
 
 | Question | Ligne de réponse |
 |----------|------------------|
-| Qui est votre commanditaire ? | Il y en a deux, et ils n'attendent pas la même chose. Le formateur et le jury valident la conformité au référentiel, sur quatre échéances de restitution. Les 17 utilisateurs valident que ce qui est livré sert, sur dix versions. Un projet qui n'a qu'un seul format de compte rendu en sert mal au moins un des deux |
+| Qui est votre commanditaire ? | Il y en a deux, et ils n'attendent pas la même chose. Le formateur et le jury valident la conformité au référentiel, sur quatre échéances de restitution. Les 21 utilisateurs valident que ce qui est livré sert, sur onze versions. Un projet qui n'a qu'un seul format de compte rendu en sert mal au moins un des deux |
 | Sept réponses, est-ce un échantillon valable ? | Non, et c'est écrit tel quel. Il est réduit et orienté vers les plus engagés, cinq des sept utilisent l'application à chaque soirée. C'est pourquoi je ne présente pas le 9,6 comme une mesure de satisfaction, mais comme **l'absence de détracteur parmi les utilisateurs engagés**. Les indicateurs comportementaux pèsent plus lourd : ils mesurent ce que les gens font |
 | En quoi vos comptes rendus facilitent-ils une décision ? | Par trois propriétés : aucun constat sans proposition, aucune proposition sans coût, et un **critère d'arrêt énoncé d'avance**. Sur les notifications, le compte rendu ne dit pas « l'adoption est faible », il dit « au-delà de 40 % sous deux mois on garde, en deçà le gel devient défendable ». Le destinataire sait à quoi il s'engage en validant |
 | Vos utilisateurs lisent-ils vraiment le journal des versions ? | Probablement pas, et c'est pour cela qu'il existe un second canal : une fenêtre présente les nouveautés à la première visite suivant une mise à jour. C'est le seul compte rendu **poussé** du dispositif. Un journal que personne n'ouvre est une archive, pas un compte rendu |

@@ -189,7 +189,7 @@ Trois temps, sur la diapositive 23, en fin de présentation.
 |:-----:|-------|----------------|
 | 3 | Démonstration, le lien du site en production | 2.1, 3 |
 | | **Démonstration en direct (4:50)** | 2.2 |
-| 23 | Bilan, et la validation du périmètre livré, en fin de présentation | 6.2 |
+| 18 | Bilan, et la validation du périmètre livré, en fin de présentation | 6.2 |
 | A1 | Architecture technique, si une question technique est posée | |
 
 ---

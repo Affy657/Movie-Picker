@@ -1189,3 +1189,174 @@ SI ON QUESTIONNE le 67 % de septembre : hors quinze executions echouees pour
 une cause sans rapport avec le code ; avec elles, le mois serait plus bas
 encore, la lecture ne change pas.
 -->
+
+---
+
+# 11. Rendre compte : à qui, comment, pour décider
+
+<div class="chips mb-4" style="font-size:0.8rem">
+<div><span><b>Jury</b>, valide la conformité au référentiel</span><u>4 échéances, toutes tenues</u></div>
+<div><span><b>Utilisateurs</b>, valident que ce qui est livré sert</span><u>11 versions, un point de validation daté chacune, étiqueté sur le commit déployé</u></div>
+</div>
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+<div class="text-xs opacity-75 mb-1">Trois niveaux de compte rendu</div>
+<div class="steps">
+<div><b>Fenêtre de nouveautés</b><span>dans l'application, à chaque version. <b>Le seul compte rendu poussé</b></span></div>
+<div><b>Journal des versions</b><span>note et étiquette à chaque version : ce qui est livré, sur quel commit</span></div>
+<div><b>Compte rendu d'arbitrage</b><span>à chaque revue de cycle. <b>Prendre une décision</b></span></div>
+</div>
+
+</div>
+<div>
+
+<div class="text-xs opacity-75 mb-1">Le gabarit, sur un cas réel : l'adoption des notifications</div>
+<div class="chips">
+<div><span>Constat, mesuré et sourcé</span><u>3 abonnements sur 17, 18 %</u></div>
+<div><span>Analyse, ce que le code explique</span><u>une absence d'occasion, pas un refus</u></div>
+<div><span><b>Proposition</b> exécutable</span><u>proposer l'activation une fois, au moment utile</u></div>
+<div><span><b>Coût, délai, gain attendu</b></span><u>1 j, une itération, adoption visée &gt; 40 %</u></div>
+<div><span><b>Priorité, et critère d'arrêt</b></span><u>P3 ; gel défendable sous 40 % à deux mois</u></div>
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 1:00. ELEMENTS IMPOSES 11 et 12 : les comptes rendus sur les evolutions
+et ameliorations, et la planification des points de validation. CRITERES :
+clairs et ordonnes ; ils FACILITENT LA PRISE DE DECISION du client ; les
+points de validation assurent le SUIVI QUALITE.
+
+Ouvrir par les deux commanditaires, la distinction qui structure le theme :
+rendre compte a un jury et rendre compte a un utilisateur ne se font pas avec
+le meme document. Le jury attend une demonstration de conformite, quatre
+echeances tenues ; l'utilisateur attend de savoir ce qui a change pour lui,
+onze versions. Chaque version est un point de validation date, etiquete sur
+le commit exact deploye, et il n'existe que si les portes de la chaine sont
+vertes, theme 2 : un rouge annule la livraison.
+
+Gauche, les trois niveaux. Souligner le premier, le seul compte rendu
+POUSSE : un journal des versions que personne n'ouvre est une archive, pas un
+compte rendu. A DIRE HONNETEMENT : ce canal n'existe que depuis la v1.4.0,
+les sept versions precedentes n'ont ete annoncees qu'au niveau 2.
+
+Droite, le gabarit : trois blocs sur cinq ne sont pas de l'information, ils
+sont en gras. La regle de redaction : aucun constat sans proposition, aucune
+proposition sans cout. Deux choses de l'exemple : « le taux ne mesure pas un
+refus, il mesure une absence d'occasion », c'est l'analyse qui transforme un
+mauvais chiffre en question tranchable ; et le critere d'arret enonce
+d'avance, 40 % sous deux mois. Le destinataire sait a quoi il s'engage en
+validant.
+
+SI ON QUESTIONNE l'adequation avec les fonctionnalites attendues : elle se
+lit dans le diff de la feuille de route, versionnee. Un item livre hors
+perimetre s'y voit, date.
+-->
+
+---
+
+# Les indicateurs de satisfaction : trois familles
+
+<div class="grid grid-cols-2 gap-6 text-sm mt-2">
+<div>
+
+<div class="kpi grid-cols-1">
+<div><b>74 %</b><span><b>Comportemental</b> : 14 soirées sur 19 menées jusqu'au tirage, au 5 septembre ; notifications activées, 3 sur 17</span></div>
+<div><b>9,6 / 10</b><span><b>Déclaratif</b> : recommandation, <b>7 réponses</b> sur 17 comptes, aucun détracteur</span></div>
+<div><b>100 %</b><span><b>Opérationnel</b> : disponibilité, 207 ms en p95, 0,026 % d'erreurs, 30 jours au 5 septembre</span></div>
+</div>
+
+</div>
+<div>
+
+<div class="text-xs opacity-75 mb-2"><b>17 jours</b> entre le retour d'un utilisateur et sa mise en production</div>
+<div class="tl">
+<div><b>18/08</b><span>questionnaire en ligne</span></div>
+<div><b>19/08</b><span>fiche ouverte</span></div>
+<div><b>26/08</b><span>fiche close</span></div>
+<div><b>04/09</b><span>correctif en production, v1.4.1</span></div>
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:50. ELEMENT IMPOSE 13 : les indicateurs de satisfaction mis en place.
+CRITERE : ils sont definis et COHERENTS AU REGARD DU PROJET.
+
+La coherence est le mot du critere. Dire d'emblee : a une vingtaine de
+comptes et de soirees, un NPS n'a aucune validite statistique. D'ou trois
+familles, et c'est leur COMBINAISON qui fait la mesure. Les mesures sont
+celles du 5 septembre, le dossier du Bloc 4 ; les comptes sont 21 au 12
+septembre.
+
+Puis la limite, avant qu'on la trouve : sept reponses, echantillon oriente
+vers les plus assidus, cinq des sept utilisent l'application a chaque soiree,
+aucun detracteur. La phrase a dire : « je ne presente pas le 9,6 comme une
+mesure de satisfaction, mais comme l'absence de detracteur parmi les
+utilisateurs engages. » Les indicateurs COMPORTEMENTAUX pesent plus lourd,
+parce qu'ils mesurent ce que les gens FONT et non ce qu'ils disent.
+
+La colonne de droite prouve que les indicateurs SERVENT : un retour du
+questionnaire, la reconnexion depuis un navigateur integre, est en production
+dix-sept jours plus tard. SI ON DEMANDE les autres retours : une suggestion
+confirmee, la liste de films a voir, deja au perimetre de la 1.4 ; une
+demande instruite et non livree, voir quels films un utilisateur a proposes,
+0,5 jour, priorite 4. Distinguer declenchee, confirmee, instruite : presenter
+une confirmation comme un declenchement serait surevaluer la boucle.
+
+Et ce qui manque, dit avant qu'on le demande : le dispositif est ponctuel,
+pas continu. Un questionnaire diffuse une fois donne un point, pas une
+tendance. La boucle continue, sollicitation courte apres une soiree aboutie,
+est instruite, 1 a 2 jours, priorite 3.
+-->
+
+---
+
+# Bilan, et la validation du périmètre livré
+
+<div class="text-center mt-10" style="font-size:1.5rem">Organiser, inviter, proposer, voter, trancher, garder une trace</div>
+
+<div class="chips mt-8" style="max-width:38rem;margin-left:auto;margin-right:auto;font-size:0.9rem">
+<div><span>Périmètre livré</span><u>11 versions, 106 items, 348 points</u></div>
+<div><span>Lot suivant, cadré du 08 au 11/09</span><u>1.7 : 7 items, 34 points</u></div>
+</div>
+
+<div class="note text-base mt-10" style="max-width:40rem;margin-left:auto;margin-right:auto">
+<b>Sur cette base, je vous demande de valider le périmètre livré, pour engager la 1.7.</b>
+</div>
+
+<!--
+DUREE 0:40. DERNIERE DIAPO PRESENTEE. C'EST ELLE QUI SATISFAIT LE QUATRIEME
+CRITERE DE C3.4.2 : « la demonstration permet d'aboutir a une VALIDATION du
+projet ». La demonstration a ouvert la presentation ; la demande de
+validation la ferme, une fois le pilotage demontre.
+
+Trois enseignements en une phrase chacun, sans support :
+1. Un indicateur ne mesure que la pratique qui le produit : la regularite du
+commit est devenue la condition d'existence de l'indicateur d'avancement.
+2. Quand le cout d'une decision croit avec le temps, decider tot a une valeur
+propre : 944 lignes a migrer le 18 mars, 50 000 aujourd'hui.
+3. L'arbitrage n'a pas ete perdu, il n'a pas ete pose, deux fois : 58 items
+hors chiffrage que rien ne comparait au prevu, et dix jours consecutifs en
+aout plutot que decider ce qui ne serait pas livre, puis douze en septembre.
+
+Le troisieme est celui qui compte. Ne pas l'edulcorer. Un jury de
+professionnels a passe trente minutes a entendre un candidat qui mesure et
+qui arbitre : entendre en cloture qu'il a rate deux arbitrages, avec les
+chiffres, est ce qui rend credible tout ce qui precede. Les deux echecs ont
+la MEME RACINE : une option non instruite n'est pas un arbitrage, c'est une
+absence de decision.
+
+Puis ce qui est valide, les six verbes du parcours, la promesse produit et
+non une liste ; ce qui vient ensuite, la 1.7, cadree, sept items pour
+trente-quatre points, temps reel, co-hote, double authentification ; et LA
+DEMANDE, prononcee telle qu'elle est ecrite, sans l'adoucir. Puis SE TAIRE et
+laisser le silence. C'est la fin de la presentation.
+
+Les annexes qui suivent ne sont JAMAIS presentees, seulement appelees par une
+question.
+-->
