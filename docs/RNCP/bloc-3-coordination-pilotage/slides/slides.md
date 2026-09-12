@@ -1384,9 +1384,11 @@ les portes qui deviennent bloquantes.
 
 | Question | Réponses, n = 7 |
 |----------|-----------------|
-| Décision réelle du groupe | 1 répondant **relance la roue jusqu'à un résultat qui convient** |
+| Usage des boutons de vote | 6 ont voté au moins une fois ; 1 jamais |
+| Effet du vote sur le tirage | 4 « ça dépend d'un réglage de l'hôte » ; **1 seul identifie la réalité** : le réglage n'est jamais activé |
+| Décision réelle du groupe | 5 « ça dépend des soirées » ; 1 **relance la roue jusqu'à un résultat qui convient** |
 | Attente vis-à-vis du vote | **3 veulent écarter du tirage les films rejetés**, mécanisme qui n'existe pas ; 1 veut une pondération |
-| Connaissance des notifications | **4 ignoraient que l'activation était possible** ; 3 abonnements actifs sur 17 comptes |
+| Connaissance des notifications | **4 ignoraient que l'activation était possible** ; 3 les ont activées |
 | Connaissance du réglage de la roue | 5 le connaissaient, **jamais actionné** : 0 soirée sur 19 en mode pondéré |
 | Ce qui ferait revenir plus souvent | 5 « rien de particulier, je l'utilise quand j'en ai besoin » |
 | Recommandation, 0 à 10 | 10, 10, 10, 8, 9, 10, 10, soit **9,6**, aucun détracteur |
