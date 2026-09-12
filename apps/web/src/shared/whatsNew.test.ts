@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ROUTES } from '@/app/routes';
+import { APP_VERSION } from '@/shared/appVersion';
 import {
   shouldShowWhatsNewNavChip,
   whatsNewLinkPath,
@@ -79,6 +80,9 @@ describe('LATEST_WHATS_NEW_RELEASE', () => {
     expect(LATEST_WHATS_NEW_RELEASE.version).toBe('1.6.0');
   });
 
+  it('annonce la version que le pied de page affiche', () => {
+    expect(LATEST_WHATS_NEW_RELEASE.version).toBe(APP_VERSION);
+  });
 });
 
 describe('whatsNewLinkPath', () => {

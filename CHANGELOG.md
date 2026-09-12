@@ -6,7 +6,7 @@ Le format s'appuie sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) 
 projet suit le [versionnage sémantique](https://semver.org/lang/fr/) (SemVer). Chaque
 version publiée est associée à un tag Git et à une release GitHub.
 
-## [Non publié]
+## [1.6.0] - 2026-09-12
 
 ### Added
 
@@ -300,7 +300,9 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage — front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.4.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/Affy657/Movie-Picker/compare/v1.5.0...v1.6.0
+[1.5.0]: https://github.com/Affy657/Movie-Picker/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/Affy657/Movie-Picker/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/Affy657/Movie-Picker/compare/v1.3.2...v1.4.0
 [1.3.2]: https://github.com/Affy657/Movie-Picker/compare/v1.3.1...v1.3.2
