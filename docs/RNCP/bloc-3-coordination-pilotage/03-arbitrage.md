@@ -26,7 +26,7 @@ Trois cas d'arbitrage réels étaient candidats. Le tableau ci-dessous justifie 
 | Cas | Écart déclencheur | Pourquoi il est, ou n'est pas, retenu |
 |-----|-------------------|---------------------------------------|
 | **Le changement de stack de l'API** | Le MVP est livré sur une pile qui ne satisfait pas les exigences retenues pour la suite, et le coût de la corriger augmente chaque jour | **Retenu.** C'est le seul des trois où la décision engage l'architecture du produit, où les options ont été instruites par écrit **avant** la décision, et où le résultat se mesure encore aujourd'hui |
-| La porte de qualité de performance instable | Chaîne d'intégration à 52 % de succès en juin 2026, échecs sans cause réelle bloquant les fusions | Réserve. Excellent cas mesure → décision → effet remesuré (52 % puis 94 %), déjà exposé en diapositives 11 et 12. Le garder ici ferait doublon |
+| La porte de qualité de performance instable | Chaîne d'intégration à 54 % de succès en juin 2026, échecs sans cause réelle bloquant les fusions | Réserve. Excellent cas mesure → décision → effet remesuré (54 % puis 94 %), déjà exposé au thème 7 et en annexe A2. Le garder ici ferait doublon |
 | L'abandon de l'application mobile | Application mobile démarrée le 16 mai 2026, archivée le 26 mai | Réserve. La décision est saine mais le motif est extérieur au projet, ce qui affaiblit l'exercice d'arbitrage |
 
 ---
@@ -172,7 +172,7 @@ Quatre arguments, dans l'ordre où ils ont pesé.
 | Bascule en une fois, sans double maintenance | Ancienne API retirée **15 minutes** après le début de la bascule | Commit `clean migration` |
 | Ne pas décaler la V1 | **v1.0.0 livrée le 19/05/2026**, deux mois après la bascule, et dix versions depuis sans retour arrière | Journal des versions |
 | Décision non rejouée | **Aucun retour arrière**, aucune seconde migration. 10 versions livrées sur ce socle depuis | Journal des versions |
-| Socle tenable dans la durée | 44 663 lignes aujourd'hui, couverture **86,6 %**, Quality Gate **A / A / A**, architecture hexagonale | SonarCloud, dossier Bloc 2 |
+| Socle tenable dans la durée | 50 277 lignes C# non vides au 12/09, couverture **88,1 %**, Quality Gate **A / A / A**, architecture hexagonale | SonarCloud, dossier Bloc 2 |
 
 ### 6.2 Ce qui n'a pas été tenu, et qu'il faut dire
 
@@ -196,10 +196,10 @@ Un arbitrage dont on peut vérifier après coup que les inconvénients annoncés
 
 | | **La porte de qualité instable** | **L'abandon de l'application mobile** |
 |--|--------------------------------|--------------------------------------|
-| **Écart** | Chaîne d'intégration à 52 % de succès en juin 2026, échecs sans cause réelle bloquant les fusions | Application mobile démarrée le 16/05/2026, parcours complet livré en une journée |
+| **Écart** | Chaîne d'intégration à 54 % de succès en juin 2026, échecs sans cause réelle bloquant les fusions | Application mobile démarrée le 16/05/2026, parcours complet livré en une journée |
 | **Options** | Désactiver la porte, abaisser les seuils, rendre la mesure déterministe, changer d'outil | Poursuivre en parallèle du web, geler, archiver |
 | **Décision** | Rendre la mesure déterministe (médiane de trois exécutions) et recalibrer les seuils, plutôt que baisser l'exigence | Archiver le 26/05/2026 : deux surfaces produit à maintenir sont hors de portée d'un exécutant unique, et le web porte la totalité des utilisateurs |
-| **Résultat** | **52 % → 94 %** le mois suivant, portes rendues bloquantes en v1.3.1 | Code conservé dans `archive/`, aucune dette de maintenance, aucun utilisateur impacté |
+| **Résultat** | **54 % → 94 %** le mois suivant, portes rendues bloquantes en v1.3.1 | Code conservé dans `archive/`, aucune dette de maintenance, aucun utilisateur impacté |
 
 ---
 

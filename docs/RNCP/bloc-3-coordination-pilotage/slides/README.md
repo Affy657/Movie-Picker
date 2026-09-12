@@ -90,8 +90,8 @@ npm run export
 | 8. Bilan, et la demande de validation | 23 | **C3.4.2** ÉLIM | ✅ |
 | Annexes pour les questions | 24 à 30 | | ✅ |
 
-**Support complet : 30 diapositives**, dont 23 présentées et 7 annexes appelées uniquement sur question. Les 30 **tiennent dans le cadre**, vérifié par `npm run verify:rendu`. Les annexes portent la mention `ANNEXE` en pied de page ; les diapositives présentées portent la compétence évaluée.
+**Support complet : 22 diapositives**, dont 15 présentées et 7 annexes appelées uniquement sur question. Les 22 **tiennent dans le cadre**, vérifié par `npm run verify:rendu`. Les annexes portent la mention `ANNEXE` en pied de page ; les diapositives présentées portent la compétence évaluée.
 
-**Navigation pendant les questions** : en mode présentateur, taper le numéro de page puis `Entrée` va directement à la diapositive. A1 architecture = **24**, A2 arbitrages de réserve = **25**, A3 budget = **26**, A4 chaîne = **27**, A5 RACI = **28**, A6 journal des versions = **29**, A7 retours utilisateurs = **30**.
+**Navigation pendant les questions** : en mode présentateur, taper le numéro de page puis `Entrée` va directement à la diapositive. A1 architecture = **16**, A2 arbitrages de réserve = **17**, A3 chaîne = **18**, A4 journal des versions = **19**, A5 retours utilisateurs = **20**, A6 RACI complète = **21**, A7 infrastructure = **22**.
 
 **Règle de numérotation** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` du plan, et donc au rattachement des 14 éléments imposés établi dans ce plan. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion de diapositive impose de mettre à jour le plan et la table `REFS` dans le même mouvement.

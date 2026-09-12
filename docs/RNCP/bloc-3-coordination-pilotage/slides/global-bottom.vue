@@ -6,7 +6,7 @@ const REFS = {
   11: 'C3.3.2', 12: 'C3.3.2',
   13: 'C3.3.1', 14: 'C3.4.1', 15: 'C3.4.1, C3.4.2',
 }
-const ANNEX_FROM = 99
+const ANNEX_FROM = 16
 </script>
 
 <template>
@@ -696,6 +696,10 @@ const ANNEX_FROM = 99
 .raci .I {
   background: rgb(0 0 0 / 9%);
   color: var(--ink-2);
+}
+
+.jobs td:first-child {
+  white-space: nowrap;
 }
 
 .quad {

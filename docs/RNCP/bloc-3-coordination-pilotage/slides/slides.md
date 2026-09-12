@@ -1173,3 +1173,305 @@ C'est la fin de la presentation.
 Les annexes qui suivent ne sont JAMAIS presentees, seulement appelees par une
 question.
 -->
+
+---
+
+# Annexe A1 : L'architecture technique
+
+<div class="grid grid-cols-2 gap-6 text-sm mt-2">
+<div>
+
+```mermaid
+flowchart LR
+  U["Navigateur, PWA"]
+  U -->|assets| CF["CloudFront + S3<br/>AWS"]
+  U -->|/api/v1| CR["ASP.NET Core<br/>Cloud Run, GCP"]
+  CR --> M[("MongoDB Atlas")]
+  CR --> TMDB["TMDB"]
+  CR --> RS["Resend"]
+  M -.->|chaque nuit| GCS[("Cloud Storage<br/>sauvegarde")]
+```
+
+<div class="text-xs opacity-75 mt-2">
+Secrets injectés au déploiement par Secret Manager. Session par cookie, jamais par jeton en stockage local. Chaque révision de l'API est déployée sans trafic, puis promue une fois sa sonde de readiness verte.
+</div>
+
+</div>
+<div>
+
+### L'API en architecture hexagonale
+
+| Couche | Contenu |
+|--------|---------|
+| **Entrée** | Contrôleurs `/api/v1`, CORS, limitation de débit, CSP, en-têtes, corrélation |
+| **Application** | Cas d'usage et **ports**, les interfaces |
+| **Domaine** | Règles métier : soirée, partage, vote, roue |
+| **Infrastructure** | Adaptateurs : MongoDB, catalogue, e-mail, notifications |
+
+<div class="kpi grid-cols-3 mt-4" style="gap:0.3rem 0.6rem;line-height:1.25">
+<div><b style="font-size:1.2rem">50 277</b><span>lignes C# non vides, 652 fichiers, tests compris</span></div>
+<div><b style="font-size:1.2rem">88,1 %</b><span>de couverture, front et API</span></div>
+<div><b style="font-size:1.2rem">A / A / A</b><span>duplication 0,7 %, 0 vulnérabilité</span></div>
+</div>
+
+</div>
+</div>
+
+<!--
+ANNEXE, appelee sur question « comment c'est fait ? », « ou tourne le
+service ? », « et les sauvegardes ? ». Deux hebergeurs, un cloud par
+surface : le front statique sur AWS, l'API conteneurisee sur GCP, la base
+chez Atlas, le catalogue TMDB et l'e-mail Resend en services tiers. La
+sauvegarde nocturne date de la 1.6 : le palier gratuit d'Atlas ne fournit
+aucun instantane, un dump part chaque nuit vers un bucket versionne et n'est
+publie qu'apres une restauration d'essai. Les chiffres sont ceux du 12
+septembre, SonarCloud du 11.
+-->
+
+---
+
+# Annexe A2 : Les deux arbitrages de réserve
+
+<div class="grid grid-cols-2 gap-6 text-sm mt-2">
+<div>
+
+### La porte de qualité instable
+
+| | |
+|--|--|
+| **Écart** | Chaîne à **54 %** de succès en juin, échecs sans cause réelle sur le contrôle de performance |
+| **Conséquence** | Une porte qu'on apprend à contourner ne garde plus rien |
+| **Options** | Désactiver, abaisser les seuils, **rendre la mesure déterministe**, changer d'outil |
+| **Décision** | Médiane de trois exécutions et seuils recalibrés, plutôt que baisser l'exigence |
+| **Résultat** | **54 % → 94 %** le mois suivant. Portes rendues bloquantes en v1.3.1 |
+
+</div>
+<div>
+
+### L'abandon de l'application mobile
+
+| | |
+|--|--|
+| **Écart** | Application mobile démarrée le **16/05**, parcours complet en une journée |
+| **Conséquence** | Deux surfaces produit à maintenir, pour un seul exécutant |
+| **Options** | Poursuivre en parallèle, geler, **archiver** |
+| **Décision** | Archivée le **26/05** : le web porte la totalité des utilisateurs |
+| **Résultat** | Code conservé dans `archive/`, aucune dette, aucun utilisateur impacté |
+
+</div>
+</div>
+
+<div class="note mt-4 text-sm">
+Le critère qui a tranché les deux cas est celui du cas principal : <b>la soutenabilité par l'effectif réel</b>.
+</div>
+
+<!--
+ANNEXE, appelee sur « un autre arbitrage ? ». Deux cas, meme critere que la
+migration du theme 8 : ce qu'une personne seule peut tenir dans la duree. La
+porte instable, c'est mesure, decision, effet remesure, 54 puis 94. Le mobile,
+c'est dix jours entre le premier commit et l'archivage, avant qu'un
+utilisateur ne depende de la seconde surface.
+-->
+
+---
+
+# Annexe A3 : La chaîne CI/CD
+
+<div class="lede text-sm"><b>18 jobs</b> sur deux chaînes, dont <b>14 bloquants</b>. Un contrôle rouge refuse le déploiement. La mise en production se déclenche à la main, cible tout, front ou API.</div>
+
+<div class="grid grid-cols-2 gap-6 dense jobs">
+<div>
+
+| Job | Rôle | Bloquant |
+|-----|------|:--------:|
+| `changes` | Filtrage par chemins, lanes web et API | |
+| `gitleaks` | Scan de secrets sur l'arbre | ✅ |
+| `lint-workflows` | Lint des workflows eux-mêmes | ✅ |
+| `lint-web` | TypeScript, ESLint, Prettier | ✅ |
+| `lint-api` | Format, build `-warnaserror`, export OpenAPI | ✅ |
+| `audit` | Trivy sur le lock, NuGet vulnérables | ✅ |
+| `test-web` | Vitest, seuils de couverture | ✅ |
+| `test-api` | xUnit unitaires et intégration, **≥ 80 %** | ✅ |
+| `test-api-mongo` | Intégration sur **MongoDB réel** | ✅ |
+
+</div>
+<div>
+
+| Job | Rôle | Bloquant |
+|-----|------|:--------:|
+| `e2e` | Playwright, parcours de bout en bout | ✅ |
+| `e2e-mongo` | Parcours critique sur **MongoDB réel** | ✅ |
+| `sonar` | Quality Gate sur le code nouveau | ✅ |
+| `verifier-ci` | Exige une CI verte sur le commit visé | ✅ |
+| `lighthouse` | Performance et accessibilité, médiane de 3 | ✅ |
+| `docker-api` | Image conteneurisée, Artifact Registry | |
+| `deploy-api` | Cloud Run, révision **sans trafic**, promue si readiness verte | ✅ |
+| `deploy-front` | S3 et CloudFront, build archivé 30 jours | |
+| `deploy-guard` | Vérifie que chaque cible demandée est en ligne | |
+
+</div>
+</div>
+
+<div class="note mt-3 text-xs">
+Actions épinglées par empreinte, image déployée par digest, <code>persist-credentials: false</code>, secrets passés par <code>env:</code>.
+</div>
+
+<!--
+ANNEXE, appelee sur « qu'est-ce qui est confie a la chaine ? » ou sur la
+securite de la chaine. Douze jobs a chaque push, six au deploiement, qui est
+un geste manuel depuis la 1.6 : la production est en retard sur master entre
+deux declenchements, contrepartie assumee. Le bloquant est ce qui refuse la
+livraison, pas ce qui la commente.
+-->
+
+---
+
+# Annexe A4 : Le journal des versions
+
+<div class="grid grid-cols-2 gap-6 text-sm mt-2">
+<div class="dense">
+
+| Version | Date | Contenu principal |
+|---------|------|-------------------|
+| **1.6.0** | 12/09 | Soirées récurrentes, modèles, plusieurs gagnants, sauvegarde nocturne |
+| 1.5.0 | 07/09 | Accueil d'exploration, sagas, sélections, landing refondue |
+| 1.4.1 | 04/09 | Navigation sans compte, landing bilingue |
+| 1.4.0 | 25/08 | Watchlist, Letterboxd, choix manuel, flamme, OAuth |
+| 1.3.2 | 25/07 | Supervision, sonde de readiness, canal de support |
+| 1.3.1 | 08/07 | Filtre de durée, échelle de notes, CSP, refonte CI/CD |
+| 1.3.0 | 19/06 | États vides, export calendrier, navigation |
+| 1.2.0 | 11/06 | Profil public, notifications in-app, RGPD |
+| 1.1.0 | 25/05 | Application installable, notifications push, séries |
+| 1.0.0 | 19/05 | Première version de production |
+| 0.1.0 | 27/02 | Prototype initial |
+
+<div class="text-xs opacity-75 mt-1">
+Format Keep a Changelog, versionnage sémantique. Un tag et une release par version. La version est en pied de page et exposée par la sonde de readiness.
+</div>
+
+</div>
+<div>
+
+### Une release en détail, la 1.3.2
+
+**Ajouté** : lien « Signaler un problème » avec contexte pré-rempli, sonde `GET /health/ready` vérifiant MongoDB et exposant la version déployée, trois sondes depuis trois continents, cinq politiques d'alerte, readiness contrôlée par le test de fumée.
+
+**Modifié** : portes de qualité rendues **bloquantes**, Quality Gate, Lighthouse, E2E.
+
+<div class="note mt-4 text-xs">
+<b>Traçabilité</b> : la fiche d'anomalie référence le commit correctif, le commit appartient à une étiquette, l'étiquette correspond à une entrée du journal. Chaque événement d'erreur en production porte la version déployée.
+</div>
+
+</div>
+</div>
+
+<!--
+ANNEXE, appelee sur « comment on sait ce qui est parti quand ? ». Onze
+versions, onze entrees, onze tags. La 1.3.2 est prise en exemple parce
+qu'elle est la version du run : supervision, readiness, canal de support, et
+les portes qui deviennent bloquantes.
+-->
+
+---
+
+# Annexe A5 : Les retours utilisateurs
+
+<div class="text-sm mb-2 mt-2">
+<b>7 réponses pour 17 comptes</b>, questionnaire en ligne du 18 août, lu le 5 septembre. Échantillon réduit et orienté : 5 des 7 répondants utilisent l'application à chaque soirée.
+</div>
+
+<div class="dense">
+
+| Question | Réponses, n = 7 |
+|----------|-----------------|
+| Décision réelle du groupe | 1 répondant **relance la roue jusqu'à un résultat qui convient** |
+| Attente vis-à-vis du vote | **3 veulent écarter du tirage les films rejetés**, mécanisme qui n'existe pas ; 1 veut une pondération |
+| Connaissance des notifications | **4 ignoraient que l'activation était possible** ; 3 abonnements actifs sur 17 comptes |
+| Connaissance du réglage de la roue | 5 le connaissaient, **jamais actionné** : 0 soirée sur 19 en mode pondéré |
+| Ce qui ferait revenir plus souvent | 5 « rien de particulier, je l'utilise quand j'en ai besoin » |
+| Recommandation, 0 à 10 | 10, 10, 10, 8, 9, 10, 10, soit **9,6**, aucun détracteur |
+
+</div>
+
+<div class="alert mt-3 text-xs">
+<b>Ce que ces réponses ont produit</b> : une décision <b>déclenchée</b> et livrée, le bandeau des navigateurs intégrés, v1.4.1, 17 jours du retour à la production ; une <b>confirmée</b> mais déjà au périmètre, la watchlist ; une <b>instruite</b> et non livrée, voir quels films un utilisateur a proposés.
+</div>
+
+<!--
+ANNEXE, appelee sur « qu'ont dit les utilisateurs ? » ou « sept reponses,
+c'est un echantillon ? ». Non, et c'est dit tel quel : le 9,6 n'est pas une
+mesure de satisfaction, c'est l'absence de detracteur parmi les plus
+engages. Ce qui pese, c'est ce que les gens font : 0 soiree sur 19 en mode
+pondere, la roue relancee a la main. Et la boucle se juge a ce qu'elle a
+produit : une decision declenchee, une confirmee, une instruite, distinguees.
+-->
+
+---
+
+# Annexe A6 : La matrice RACI complète
+
+<div class="raci mt-2" style="grid-template-columns: 1fr 5rem 5rem 5rem 4.6rem 5.4rem 5.4rem">
+<div class="h"></div><div class="h">Chef de projet</div><div class="h">Product owner</div><div class="h">Développeur</div><div class="h">DevOps</div><div class="h">Utilisateurs</div><div class="h">Prestataires</div>
+<div class="l">Cadrage et périmètre de version</div><div class="C">C</div><div class="A">A R</div><div class="n"></div><div class="n"></div><div class="C">C</div><div class="n"></div>
+<div class="l">Architecture applicative</div><div class="I">I</div><div class="n"></div><div class="A">A R</div><div class="C">C</div><div class="n"></div><div class="n"></div>
+<div class="l">Modèle de données et contrat d'interface</div><div class="n"></div><div class="C">C</div><div class="A">A R</div><div class="n"></div><div class="n"></div><div class="n"></div>
+<div class="l">Développement de l'interface</div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="I">I</div><div class="n"></div>
+<div class="l">Développement de l'API</div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="n"></div><div class="n"></div>
+<div class="l">Revue, tests et intégration</div><div class="n"></div><div class="n"></div><div class="R">R</div><div class="A">A</div><div class="n"></div><div class="n"></div>
+<div class="l">Intégration des services tiers</div><div class="n"></div><div class="n"></div><div class="A">A R</div><div class="C">C</div><div class="n"></div><div class="C">C</div>
+<div class="l">Accessibilité et inclusion</div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="C">C</div><div class="n"></div>
+<div class="l">Chaîne d'intégration et de déploiement</div><div class="n"></div><div class="n"></div><div class="I">I</div><div class="A">A R</div><div class="n"></div><div class="n"></div>
+<div class="l">Supervision et exploitation</div><div class="I">I</div><div class="n"></div><div class="n"></div><div class="A">A R</div><div class="n"></div><div class="R">R</div>
+<div class="l">Sécurité applicative</div><div class="n"></div><div class="n"></div><div class="R">R</div><div class="A">A</div><div class="n"></div><div class="n"></div>
+<div class="l">Recette et tests de bout en bout</div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="C">C</div><div class="n"></div>
+<div class="l">Arbitrage de périmètre ou de charge</div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="n"></div><div class="C">C</div><div class="n"></div>
+<div class="l">Mise en production</div><div class="A">A</div><div class="n"></div><div class="n"></div><div class="R">R</div><div class="I">I</div><div class="R">R</div>
+<div class="l">Restitution et compte rendu</div><div class="A">A R</div><div class="C">C</div><div class="n"></div><div class="n"></div><div class="I">I</div><div class="n"></div>
+</div>
+
+<div class="legend mt-2">
+<span style="--c:var(--s1)">A approuve et rend compte</span>
+<span style="--c:rgb(13 148 136 / 40%)">R réalise</span>
+<span style="--c:rgb(13 148 136 / 14%)">C consulté</span>
+<span style="--c:rgb(0 0 0 / 9%)">I informé</span>
+</div>
+
+<!--
+ANNEXE, appelee sur une ligne absente de la matrice du theme 5, qui regroupe
+les quinze activites en neuf. Les quatre premieres colonnes sont les
+casquettes d'une meme personne ; les deux autres, les acteurs reels du
+projet. Le jour ou quelqu'un rejoint le projet, la colonne Developpeur est
+celle qu'on lui confie en premier.
+-->
+
+---
+
+# Annexe A7 : L'infrastructure, palier par palier
+
+<div class="dense mt-2" style="max-width:44rem">
+
+| Poste | Palier gratuit | Aujourd'hui | Ensuite |
+|-------|----------------|------------:|--------:|
+| API, Cloud Run | 2 M requêtes par mois | 0 € | |
+| Registre, secrets, supervision, GCP | inclus | 0 € | |
+| Front, S3 et CloudFront | **12 mois** | 0 € | 1 à 5 € par mois |
+| Base, Atlas M0 | **512 Mo** | 0 € | ≈ 9 $ par mois au premier palier |
+| E-mail, Resend | 3 000 par mois | 0 € | |
+| Erreurs, Sentry | 5 000 événements par mois | 0 € | |
+| Nom de domaine | | ≈ 10 € par an | |
+| Licences | 100 % libre ou palier gratuit | 0 € | |
+
+</div>
+
+<div class="kpi grid-cols-2 mt-4" style="gap:0.3rem 0.8rem;line-height:1.25;max-width:44rem">
+<div><b style="font-size:1.2rem">20 à 190 €</b><span>par an, infrastructure et domaine, une fois les paliers passés</span></div>
+<div><b style="font-size:1.2rem">2</b><span>échéances suivies : la fin des 12 mois du front, les 512 Mo de la base</span></div>
+</div>
+
+<!--
+ANNEXE, appelee sur « et si ca grossit ? ». Tout est dans son palier gratuit,
+par conception, et les deux echeances qui feront sortir du zero sont suivies.
+La borne haute, 190 euros par an, suppose la base au premier palier payant.
+L'assistant de code, 100 euros par mois, est un cout de developpement, pas
+d'exploitation : il est au theme 6.
+-->
