@@ -123,7 +123,7 @@ L'échelle de taille t-shirt citée ci-dessous est celle de la feuille de route 
 | Indicateur | Définition | Source | Fréquence | Valeur au 12/09/2026 |
 |------------|------------|--------|-----------|----------------------|
 | Cadence de livraison | Écart médian entre deux versions consécutives | Dates des releases | À chaque version | **14 jours** (moyenne 19,7) |
-| Échéances de restitution tenues | Jalons du titre livrés à la date | Rétroplanning, ch. 1 | Par jalon | **4 / 4** |
+| Périmètre hors chiffrage | Part des items produit livrés absents du chiffrage initial | Feuille de route, cadrage | À chaque version | **58 sur 81, 72 %** |
 | Jours d'activité | Jours distincts portant au moins un commit | Historique Git | Mensuel | **95 sur 198 jours calendaires, soit 48 %** |
 | Délai de traitement d'une anomalie | Ouverture → clôture de l'issue | GitHub Issues | Par anomalie | **7, 1 et 0 jours** sur les trois fiches ouvertes au signalement (voir ci-dessous) |
 
@@ -185,7 +185,7 @@ Deux lectures à porter à l'oral.
 
 **Le pic de juin n'est pas un pic de production, c'est un changement de pratique.** Les fusions passent de 6 à 39 d'un mois sur l'autre alors que les commits ne font que passer de 150 à 227. Ce qui a changé, c'est le découpage : le travail est passé d'une série de commits directs à des branches courtes fusionnées une par une. L'indicateur de fusions ne mesure donc pas la même chose avant et après juin, et il faut le dire avant qu'on le remarque.
 
-**Le creux d'août est voulu.** Le périmètre produit se referme au profit du dossier du Bloc 4. Les 140 commits préfixés `docs` le montrent : **50 d'entre eux tombent en juillet et en août**, autour des deux remises de dossier, Bloc 2 le 23 juillet, Bloc 4 le 21 août, et 62 en septembre, autour de l'oral du Bloc 3. La documentation n'est pas un lot de fin de projet, c'est un lot qui suit les échéances de restitution.
+**Le creux d'août est voulu.** Le périmètre produit se referme au profit d'un dossier à rendre le 21 août. Les 140 commits préfixés `docs` le montrent : **50 d'entre eux tombent en juillet et en août**, autour des deux remises de dossier, Bloc 2 le 23 juillet, Bloc 4 le 21 août, et 62 en septembre, autour de l'oral du Bloc 3. La documentation n'est pas un lot de fin de projet, c'est un lot qui suit les échéances de restitution.
 
 ### 3.2 La nature du travail intégré
 
@@ -230,20 +230,11 @@ Le fait que le préfixe de commit ne permette pas de séparer ces trois causes e
 
 **Médiane de 14 jours, moyenne de 19,7.** L'écart entre les deux tient à un seul intervalle : les **81 jours** entre le prototype et la première version de production. Cet intervalle contient la migration de l'API vers .NET, c'est-à-dire l'arbitrage du chapitre 3. La cadence de livraison est donc le premier indicateur qui a rendu cet arbitrage visible, avant même qu'il soit formulé comme tel.
 
-Les 31 jours de la v1.4.0 ont une autre cause, également identifiée par le suivi : la remise du dossier Bloc 4 le 21 août a mobilisé la capacité disponible.
+Les 31 jours de la v1.4.0 ont une autre cause, également identifiée par le suivi : un dossier à rendre le 21 août a mobilisé la capacité disponible.
 
-### 3.4 Le respect des échéances
+### 3.4 Les délais, sans commanditaire
 
-| Jalon | Date cible | Date réelle | Écart | Corroboration dans le dépôt |
-|-------|-----------|-------------|-------|------------------------------|
-| Restitution orale Bloc 1 | 11/06/2026 | 11/06/2026 | **0** | Livrables du Bloc 1 archivés le 29/06 |
-| Remise du dossier Bloc 2 | 23/07/2026 | 23/07/2026 | **0** | Dernier commit du dossier : **23/07/2026** |
-| Remise du dossier Bloc 4 | 21/08/2026 | 21/08/2026 | **0** | Export PDF du dossier : **21/08/2026** |
-| Restitution orale Bloc 3 | 16/09/2026 | à venir | | |
-
-**La dernière colonne est ce qui distingue une affirmation d'une preuve.** Deux des trois échéances passées sont horodatées dans l'historique du dépôt au jour près : le dossier du Bloc 2 reçoit sa passe finale le 23 juillet, celui du Bloc 4 est exporté en PDF le 21 août. Un examinateur peut le vérifier sans me croire sur parole.
-
-Les quatre échéances non négociables sont tenues. Ce n'est pas un effet de discipline, c'est un effet de méthode : le rétroplanning du chapitre 1 les traite comme des **dates de fin de lot**, et c'est le périmètre de la version qui absorbe la variation, jamais la date. La preuve en est lisible dans le tableau précédent : quand la capacité s'est réduite en août, c'est l'intervalle entre deux versions qui s'est allongé, pas une échéance qui a glissé.
+Aucune date n'est imposée de l'extérieur : il n'y a pas de commanditaire, les dates de version sont posées à la fin de la conception de chaque version. Le respect des délais se lit donc sur la cadence (§ 3.3) et sur ce que le périmètre a absorbé : quand la capacité s'est réduite en août, l'intervalle s'est allongé à 31 jours et le périmètre de la 1.4 a été tenu.
 
 ---
 
@@ -326,7 +317,6 @@ C'est la diapositive qui prouve que le suivi a servi à **décider**, et pas seu
 |--|------------------|------------------|-------|
 | Charge | 98 J/H | ≈ 95 J/H | **−3 %** |
 | Périmètre | MVP + migration + V1 + clôture du titre | **+ 9 livraisons** après la V1 (V1.1.0 à V1.6.0), dont **6 versions mineures** apportant des fonctionnalités, aucune chiffrée | **+ 58 items** |
-| Délais | 4 échéances de restitution | 4 tenues | **0** |
 | Coûts d'infrastructure | 20 à 190 €/an | ≈ 10 €/an | **borne basse** |
 
 L'écart de charge de −3 % tombe dans la marge d'incertitude de 20 % assumée au chiffrage. Pris seul, il donnerait l'image d'une estimation juste. **Pris avec la ligne suivante, il dit l'inverse.**

@@ -167,7 +167,7 @@ Une démonstration en direct échoue sur des détails triviaux. Tout ce qui suit
 
 « La démonstration permet d'aboutir à une validation du projet » n'est pas une conséquence automatique d'une bonne démonstration. C'est un geste : **il faut demander la validation**.
 
-Une démonstration qui se termine par « voilà, c'est tout » laisse le jury sans rien à valider. Une démonstration qui se termine par un périmètre énoncé et une question ferme met le commanditaire en position de trancher, ce qui est exactement ce que la compétence décrit, *obtenir la validation du commanditaire avant livraison*.
+Une démonstration qui se termine par « voilà, c'est tout » laisse le jury sans rien à valider. Une démonstration qui se termine par un périmètre énoncé et une question ferme met le jury en position de trancher, ce qui est exactement ce que la compétence décrit, *obtenir la validation avant livraison*. Il n'y a pas de commanditaire : ce que le jury valide, c'est le périmètre démontré.
 
 ### 6.2 La séquence de clôture
 
@@ -189,7 +189,7 @@ Trois temps, sur la diapositive 23, en fin de présentation.
 |:-----:|-------|----------------|
 | 3 | Démonstration, le lien du site en production | 2.1, 3 |
 | | **Démonstration en direct (4:50)** | 2.2 |
-| 18 | Bilan, et la validation du périmètre livré, en fin de présentation | 6.2 |
+| 16 | Bilan, et la validation du périmètre livré, en fin de présentation | 6.2 |
 | A1 | Architecture technique, si une question technique est posée | |
 
 ---

@@ -302,7 +302,7 @@ endroit, la trace nait du geste.
 <div class="legend mt-2 ml-2">
 <span style="--c:var(--s3)">Conception</span>
 <span style="--c:var(--s1)">Réalisation</span>
-<span style="--c:#f59e0b">Restitution, release</span>
+<span style="--c:#f59e0b">Release</span>
 <span style="--c:#99f6e4">Mesure en production</span>
 </div>
 
@@ -342,7 +342,7 @@ endroit, la trace nait du geste.
 <div class="kpi grid-cols-4 mt-2" style="gap:0.3rem 0.8rem;line-height:1.25">
 <div><b style="font-size:1.25rem">11</b><span>versions publiées depuis le 27/02</span></div>
 <div><b style="font-size:1.25rem">14 j</b><span>écart médian entre deux versions</span></div>
-<div><b style="font-size:1.25rem">4 / 4</b><span>échéances du titre tenues, écart 0</span></div>
+<div><b style="font-size:1.25rem">3</b><span>versions correctives, sans conception, le run en flux</span></div>
 <div><b style="font-size:1.25rem">81 j</b><span>le seul écart anormal, 0.1 → 1.0</span></div>
 </div>
 
@@ -376,25 +376,18 @@ ce que la production a corrige en aout.
 Deux lignes n'ont pas de conception : les versions correctives, 1.3.1, 1.3.2
 et 1.4.1, qui sont le run en flux de la diapo precedente.
 
-LES DELAIS, les quatre chiffres du bas : onze versions, une mediane de 14 jours
-entre deux versions ; les quatre echeances du titre tenues, ecart zero, et deux
-d'entre elles sont HORODATEES dans le depot, passe finale du dossier Bloc 2 le
-23/07, export PDF du Bloc 4 le 21/08. Ce n'est pas de la discipline, c'est de
-la methode : le retroplanning traite ces dates comme des fins de lot, et c'est
-le PERIMETRE de la version qui absorbe la variation, jamais la date. La preuve :
-quand la capacite s'est reduite en aout, c'est l'intervalle entre versions qui
-s'est allonge, 31 jours. Le seul ecart anormal, 81 jours entre le prototype et
-la V1, contient la migration de l'API : c'est lui qui a rendu l'arbitrage
-visible, theme 8.
+LES DELAIS, les quatre chiffres du bas : onze versions, une mediane de 14
+jours entre deux versions ; trois versions correctives sans conception, le run
+en flux ; le seul ecart anormal, 81 jours entre le prototype et la V1,
+contient la migration de l'API, c'est lui qui a rendu l'arbitrage visible,
+theme 8. La date d'une version est posee a la fin de sa conception, et c'est
+le PERIMETRE qui absorbe la variation, jamais la date : quand la capacite
+s'est reduite en aout, l'intervalle s'est allonge, 31 jours, et le perimetre
+de la 1.4 a ete tenu.
 
-Les echeances du titre ne sont pas dessinees, elles se disent : le Bloc 1 le
-11 juin tombe le jour de la 1.2, le Bloc 4 le 21 aout quatre jours avant la
-1.4.
-
-SI ON QUESTIONNE : « vos documents de cadrage sont dates de juin, votre etude de
-mars. » Les decisions ont ete prises en mars et avril, elles sont dans la
-roadmap et dans le code ; leur formalisation en dossier est de juin pour le
-Bloc 1. La decision precede le document.
+SI ON QUESTIONNE le calendrier : aucune date n'est imposee de l'exterieur, il
+n'y a pas de commanditaire. Les dates sont les miennes, et elles sont tenues
+par la methode, pas par la discipline.
 -->
 
 ---
@@ -517,17 +510,17 @@ jusqu'a 2 000, L jusqu'a 5 000. Elle compare, elle ne chiffre pas.
 
 # 5. La matrice RACI : quatre rôles, une personne
 
-<div class="raci mt-2" style="grid-template-columns: 1fr 4.6rem 4.6rem 4.6rem 4rem 5.6rem 5rem 5rem">
-<div class="h"></div><div class="h">Chef de projet</div><div class="h">Product owner</div><div class="h">Développeur</div><div class="h">DevOps</div><div class="h">Commanditaire</div><div class="h">Utilisateurs</div><div class="h">Prestataires</div>
-<div class="l">Cadrage et périmètre de version</div><div class="C">C</div><div class="A">A R</div><div class="n"></div><div class="n"></div><div class="C">C</div><div class="C">C</div><div class="n"></div>
-<div class="l">Architecture et contrat d'API</div><div class="I">I</div><div class="n"></div><div class="A">A R</div><div class="C">C</div><div class="I">I</div><div class="n"></div><div class="n"></div>
-<div class="l">Développement, interface et API</div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="n"></div><div class="I">I</div><div class="n"></div>
-<div class="l">Revue, tests, intégration</div><div class="n"></div><div class="n"></div><div class="R">R</div><div class="A">A</div><div class="n"></div><div class="n"></div><div class="n"></div>
-<div class="l"><b>Accessibilité et inclusion</b></div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="n"></div><div class="C">C</div><div class="n"></div>
-<div class="l">Chaîne, supervision, sécurité</div><div class="I">I</div><div class="n"></div><div class="I">I</div><div class="A">A R</div><div class="n"></div><div class="n"></div><div class="R">R</div>
-<div class="l">Arbitrage de périmètre ou de charge</div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="n"></div><div class="C">C</div><div class="C">C</div><div class="n"></div>
-<div class="l">Recette, release, retours</div><div class="C">C</div><div class="A">A R</div><div class="R">R</div><div class="n"></div><div class="C">C</div><div class="C">C</div><div class="n"></div>
-<div class="l">Mise en production</div><div class="A">A</div><div class="n"></div><div class="n"></div><div class="R">R</div><div class="I">I</div><div class="I">I</div><div class="R">R</div>
+<div class="raci mt-2" style="grid-template-columns: 1fr 5rem 5rem 5rem 4.6rem 5.4rem 5.4rem">
+<div class="h"></div><div class="h">Chef de projet</div><div class="h">Product owner</div><div class="h">Développeur</div><div class="h">DevOps</div><div class="h">Utilisateurs</div><div class="h">Prestataires</div>
+<div class="l">Cadrage et périmètre de version</div><div class="C">C</div><div class="A">A R</div><div class="n"></div><div class="n"></div><div class="C">C</div><div class="n"></div>
+<div class="l">Architecture et contrat d'API</div><div class="I">I</div><div class="n"></div><div class="A">A R</div><div class="C">C</div><div class="n"></div><div class="n"></div>
+<div class="l">Développement, interface et API</div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="I">I</div><div class="n"></div>
+<div class="l">Revue, tests, intégration</div><div class="n"></div><div class="n"></div><div class="R">R</div><div class="A">A</div><div class="n"></div><div class="n"></div>
+<div class="l"><b>Accessibilité et inclusion</b></div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="C">C</div><div class="n"></div>
+<div class="l">Chaîne, supervision, sécurité</div><div class="I">I</div><div class="n"></div><div class="I">I</div><div class="A">A R</div><div class="n"></div><div class="R">R</div>
+<div class="l">Arbitrage de périmètre ou de charge</div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="n"></div><div class="C">C</div><div class="n"></div>
+<div class="l">Recette, release, retours</div><div class="C">C</div><div class="A">A R</div><div class="R">R</div><div class="n"></div><div class="C">C</div><div class="n"></div>
+<div class="l">Mise en production</div><div class="A">A</div><div class="n"></div><div class="n"></div><div class="R">R</div><div class="I">I</div><div class="R">R</div>
 </div>
 
 <div class="legend mt-2">
@@ -547,7 +540,6 @@ jusqu'a 2 000, L jusqu'a 5 000. Elle compare, elle ne chiffre pas.
 
 <div class="chips mt-2" style="max-width:44rem">
 <div><span><b>Quatre rôles</b>, une personne : le A et le R changent de casquette, pas de personne</span><u>affectation par compétence</u></div>
-<div><span><b>Handicap</b> : aucune personne concernée sur le projet</span><u>porte d'accessibilité bloquante</u></div>
 </div>
 
 <!--
@@ -565,11 +557,11 @@ production. Quand une ligne a un A et un R differents, c'est que la meme
 personne change de casquette entre la decision et le geste : c'est ce qui
 rend la revue possible a une personne.
 
-Les acteurs externes y figurent : le commanditaire, le formateur puis le jury,
-consulte sur le perimetre et les arbitrages, informe des mises en production ;
-les 21 utilisateurs, consultes sur l'accessibilite et sur chaque version, qui
-font la recette et remontent des retours ; les prestataires qui executent
-l'hebergement, le catalogue et les e-mails.
+Les acteurs externes y figurent : les 21 utilisateurs, consultes sur
+l'accessibilite et sur chaque version, qui font la recette et remontent des
+retours ; les prestataires qui executent l'hebergement, le catalogue et les
+e-mails. Pas de commanditaire : projet personnel, les dates et le perimetre
+sont les miens.
 
 LA CHARGE, les cinq chiffres : une personne sur son temps libre, 95 jours
 actifs sur 198, 3,3 par semaine, une amplitude de zero a sept, une serie
@@ -580,11 +572,10 @@ soutenabilite, et la phrase a dire : « une semaine a sept jours travailles
 suivie d'une semaine a zero tient sur sept mois de projet etudiant, elle ne
 tient pas sur une exploitation dans la duree. » C'est ce qui amene le theme 10.
 
-Sur le handicap, dire la verite en une phrase : personne en situation de
-handicap sur le projet. Puis ce qui est verifiable : la ligne accessibilite a
-un A et un R, la porte d'accessibilite est bloquante a chaque livraison, et le
-contexte du projet est en texte structure, lisible au lecteur d'ecran. La ligne
-existe et elle a un responsable, ce n'est pas une clause de style.
+SI ON DEMANDE le handicap : personne en situation de handicap sur le projet,
+donc rien a en dire. Ce qui est verifiable est sur le produit : la ligne
+accessibilite a un A et un R, et la porte d'accessibilite est bloquante a
+chaque livraison.
 
 SI ON QUESTIONNE « une RACI a une personne, a quoi ca sert ? » : a ecrire qui
 decide et qui fait pour chaque activite, donc a savoir ce qu'on confierait en
@@ -672,7 +663,7 @@ Suivre un cout qui vaut zero, c'est savoir quand il cessera de valoir zero.
 </div>
 
 <div class="legend mt-3">
-<span style="--c:var(--s1)">s'est réalisé, traité</span>
+<span style="--c:var(--s1)">s'est réalisé</span>
 <span class="hollow" style="--c:#fff">surveillé</span>
 <span style="--c:#d97706">organisation</span>
 </div>
@@ -682,7 +673,7 @@ Suivre un cout qui vaut zero, c'est savoir quand il cessera de valoir zero.
 
 <div class="chips" style="font-size:0.88rem;gap:0.55rem 0">
 <div><span><b style="color:#b45309">1.</b> <b>Concentration des rôles sur une personne</b></span><u style="color:#b45309">facteur de bus 1 ⚠</u></div>
-<div><span><b>2.</b> Sous-estimation des lots documentaires</span><u style="color:var(--ok)">4 / 4 échéances tenues ✓</u></div>
+<div><span><b>2.</b> Périmètre livré hors du chiffrage initial</span><u style="color:#b45309">58 items sur 81, 72 % ⚠</u></div>
 <div><span><b>3.</b> Dépendance au catalogue de films externe</span><u>cache, débit limité, repli manuel</u></div>
 <div><span><b>4.</b> Perte de la base, aucun instantané</span><u style="color:var(--ok)">sauvegarde vérifiée chaque nuit ✓</u></div>
 <div><span><b>5.</b> Durcissement de la sécurité du contenu</span><u style="color:var(--ok)">traité, disponibilité 100 % ✓</u></div>
@@ -713,10 +704,11 @@ surveille, ou la parade quand il n'a pas de valeur. Trois temps :
 et une parade. » Les pleins se sont realises et ont ete traites : le 5, un
 durcissement de la politique de securite du contenu a bloque les affiches de
 films et les avatars en production, l'incident et sa correction sont traces,
-la disponibilite est a 100 % depuis ; le 2, l'ecart sur les lots documentaires,
-absorbe par le retroplanning, quatre echeances sur quatre ; le 7, la chaine
-instable, rendue deterministe. Un point qui s'est realise et qui a ete traite
-vaut mieux qu'une liste theorique.
+la disponibilite est a 100 % depuis ; le 7, la chaine instable, rendue
+deterministe ; le 2, le perimetre hors chiffrage, 58 items produit sur 81,
+realise et pas traite : aucun indicateur ne comparait le perimetre courant au
+perimetre chiffre, theme 4, c'est le premier compteur a ajouter. Un point qui
+s'est realise et qu'on nomme vaut mieux qu'une liste theorique.
 
 2. Les creux sont surveilles : le catalogue externe et la base, en haut a
 gauche, ont un impact fort et une probabilite faible, d'ou une parade
@@ -938,21 +930,11 @@ n'etait pas celle voulue pour la suite.
 <div class="b">Si le projet passe en équipe</div><div class="r">Management d'équipe, transmission</div><div class="m">Formation courte ; le cadre écrit existe déjà, RACI et AGENTS.md</div><div class="a">Un contributeur opérationnel en une journée</div>
 </div>
 
-<div class="grid grid-cols-2 gap-6 mt-4">
-<div>
+<div class="mt-4" style="max-width:34rem">
 <div class="text-xs opacity-75 mb-1">Recrutement, pour compléter un profil back et DevOps</div>
 <div class="chips">
 <div><span>Développeur front, designer</span><u>interface, accessibilité</u></div>
 <div><span>Product owner, chargé de marketing</span><u>21 comptes en sept mois</u></div>
-</div>
-</div>
-<div>
-<div class="text-xs opacity-75 mb-1">Modalités de formation, posées par défaut</div>
-<div class="chips">
-<div><span>Tiers-temps de droit</span><u>formation et évaluation</u></div>
-<div><span>Support en texte structuré</span><u>lecteur d'écran</u></div>
-<div><span>Plateforme accessible</span><u>critère de choix du prestataire</u></div>
-</div>
 </div>
 </div>
 
@@ -986,9 +968,11 @@ parce que 21 comptes en sept mois disent que l'acquisition n'a pas ete faite.
 Ce qu'ils recevraient le premier jour existe deja, la RACI et le contexte
 ecrit.
 
-Sur le handicap, ne citer que les modalites verifiables : le tiers-temps de
-droit, le support en texte structure, l'accessibilite de la plateforme comme
-critere de choix du prestataire.
+Les modalites de formation adaptees au handicap ne sont pas sur la diapo :
+personne concernee, rien a en dire. SI ON DEMANDE : tiers-temps de droit sur
+la formation et l'evaluation, support en texte structure lisible au lecteur
+d'ecran, accessibilite de la plateforme comme critere de choix du
+prestataire.
 -->
 
 ---
@@ -1005,6 +989,14 @@ critere de choix du prestataire.
 <div class="cell"><b>Directif</b><i>Juillet : portes de qualité rendues <b>bloquantes</b> sur une chaîne à 54 %, sans dérogation</i></div>
 <div class="cell dom"><b>Délégatif, dominant</b><i>À l'automatisation : ce qu'une machine vérifie n'est jamais contrôlé à la main, <b>la décision reste humaine</b></i></div>
 <div></div><div class="ax">← directivité forte</div><div class="ax">autonomie forte →</div>
+</div>
+
+<div class="text-xs opacity-75 mt-4 mb-1">Les outils, et ce que chacun partage</div>
+<div class="chips" style="font-size:0.7rem">
+<div><span>Monorepo unique</span><u>tout le contexte projet, versionné</u></div>
+<div><span>Gabarits d'issue et de PR</span><u>les mêmes contrôles à chaque changement</u></div>
+<div><span>Procédures exécutables</span><u>le flux, pas un savoir oral</u></div>
+<div><span>Journal des versions, feuille de route</span><u>l'état livré et le périmètre, datés</u></div>
 </div>
 
 </div>
@@ -1050,8 +1042,18 @@ est exactement la colonne « confie a la chaine ». Sa condition de validite :
 « un delegatif sans regle ecrite ni porte bloquante n'est pas de la
 delegation, c'est de l'abandon. »
 
+Les outils, en bas : les quatre lignes « ce qu'il partage » repondent au
+critere du partage de ressources. Aucun n'est une messagerie, c'est delibere :
+aucun n'exige la simultaneite, et c'est ce qui rend le dispositif independant
+de ma presence. Une regle non ecrite n'est pas une regle.
+
 SI ON QUESTIONNE « delegue a qui ? » : a la chaine, pas a une personne. A une
 personne, le management s'exerce sur le processus et sur soi-meme.
+
+SI ON DEMANDE le handicap ou le contexte international : personne dans ces
+situations sur le projet, rien a en dire. Ce qui est verifiable est sur le
+produit, bilingue FR / EN, porte d'accessibilite bloquante ; et le dispositif
+ecrit et asynchrone n'exige de personne d'etre present au bon moment.
 
 SI ON QUESTIONNE ecoute, bienveillance, empathie, leadership : chacun est un
 dispositif, pas une intention. L'ecoute par trois canaux entrants outilles,
@@ -1064,63 +1066,6 @@ acceptes, theme 8.
 
 ---
 
-# Animer et inclure : écrit, versionné, asynchrone
-
-<div class="grid grid-cols-2 gap-8 text-sm mt-4">
-<div>
-
-<div class="text-xs opacity-75 mb-1">Les outils, et ce que chacun partage</div>
-<div class="chips">
-<div><span>Monorepo unique</span><u>tout le contexte projet, versionné</u></div>
-<div><span>Gabarits d'issue et de PR</span><u>les mêmes contrôles à chaque changement</u></div>
-<div><span>Procédures exécutables</span><u>le flux, pas un savoir oral</u></div>
-<div><span>Journal des versions, feuille de route</span><u>l'état livré et le périmètre, datés</u></div>
-</div>
-
-</div>
-<div>
-
-<div class="text-xs opacity-75 mb-1">Le même dispositif répond à trois contraintes</div>
-<div class="chips">
-<div><span><b>Handicap</b></span><u>texte structuré, lecteur d'écran, clavier</u></div>
-<div><span><b>Fuseaux horaires</b></span><u>rien n'exige la simultanéité</u></div>
-<div><span><b>Langue</b></span><u>lisible et traduisible, une réunion ne l'est pas</u></div>
-<div><span><b>Et sur le produit</b></span><u>bilingue FR / EN, porte d'accessibilité bloquante</u></div>
-</div>
-
-</div>
-</div>
-
-<!--
-DUREE 0:40. ELEMENT IMPOSE 8 : les outils de communication et leurs objectifs.
-CRITERES : les outils collaboratifs INTEGRENT LE PARTAGE DE RESSOURCES et les
-choix sont pertinents ; les specificites du handicap et du contexte
-multiculturel et international sont prises en compte.
-
-Gauche : les quatre lignes « ce qu'il partage » SONT la reponse au critere,
-les designer d'un geste. Aucun de ces outils n'est une messagerie, c'est
-delibere : aucun n'exige la simultaneite, et c'est ce qui rend le dispositif
-independant de ma presence. Une regle non ecrite n'est pas une regle.
-
-Droite, une seule idee : le meme dispositif, l'ecrit asynchrone versionne,
-repond au handicap, aux fuseaux horaires et a la langue. Puis la verite en
-une phrase : personne dans ces situations n'a travaille sur le projet, et la
-preuve qui reste est sur le produit, bilingue, accessibilite en porte
-BLOQUANTE. Livrer un produit inaccessible et se dire inclusif ne tient pas.
-
-SI ON DEMANDE ce que je ferais pour une personne en situation de handicap qui
-rejoindrait le projet : poste adapte, outillage compatible lecteur d'ecran et
-clavier, horaires amenages, temps supplementaire en recette et en formation,
-accordes a la demande et sans justification a produire. Les modalites de
-formation sont a la diapo 12.
-
-SI ON DEMANDE les publics : trois, les utilisateurs (fenetre de nouveautes,
-questionnaire, lien « signaler un probleme »), le commanditaire (theme 11),
-la personne qui reprendra le projet (les quatre outils de gauche).
--->
-
----
-
 # Analyse critique : une posture qui a réussi, deux fois
 
 <div class="grid grid-cols-2 gap-8 text-sm mt-4">
@@ -1128,7 +1073,7 @@ la personne qui reprendra le projet (les quatre outils de gauche).
 
 <div class="chips">
 <div><span>Fait mesuré</span><u><b>10 jours travaillés consécutifs</b>, 17 au 26 août</u></div>
-<div><span>Cause</span><u>Bloc 4 le <b>21/08</b>, v1.4.0 le <b>25/08</b></u></div>
+<div><span>Cause</span><u>un dossier à rendre le <b>21/08</b>, la v1.4.0 le <b>25/08</b></u></div>
 <div><span>Résultat</span><u>les deux échéances tenues, <b>sans arbitrer</b> le périmètre</u></div>
 </div>
 
@@ -1192,126 +1137,80 @@ encore, la lecture ne change pas.
 
 ---
 
-# 11. Rendre compte : à qui, comment, pour décider
+# 11. Rendre compte aux utilisateurs, et mesurer
 
-<div class="chips mb-4" style="font-size:0.8rem">
-<div><span><b>Jury</b>, valide la conformité au référentiel</span><u>4 échéances, toutes tenues</u></div>
-<div><span><b>Utilisateurs</b>, valident que ce qui est livré sert</span><u>11 versions, un point de validation daté chacune, étiqueté sur le commit déployé</u></div>
-</div>
-
-<div class="grid grid-cols-2 gap-6 text-sm">
+<div class="grid grid-cols-2 gap-8 text-sm mt-2">
 <div>
 
-<div class="text-xs opacity-75 mb-1">Trois niveaux de compte rendu</div>
+<div class="text-xs opacity-75 mb-1">Deux comptes rendus, à chaque version</div>
 <div class="steps">
-<div><b>Fenêtre de nouveautés</b><span>dans l'application, à chaque version. <b>Le seul compte rendu poussé</b></span></div>
-<div><b>Journal des versions</b><span>note et étiquette à chaque version : ce qui est livré, sur quel commit</span></div>
-<div><b>Compte rendu d'arbitrage</b><span>à chaque revue de cycle. <b>Prendre une décision</b></span></div>
+<div><b>Fenêtre de nouveautés</b><span>dans l'application, poussée une fois par version. <b>Savoir ce qui a changé sans rien demander</b></span></div>
+<div><b>Journal des versions</b><span>note et étiquette sur le commit déployé : ce qui est livré, quand</span></div>
+</div>
+
+<div class="chips mt-5">
+<div><span>Points de validation</span><u>11 versions datées ; un contrôle rouge annule la livraison</u></div>
+<div><span>Adéquation au périmètre attendu</span><u>le diff daté de la feuille de route</u></div>
 </div>
 
 </div>
 <div>
 
-<div class="text-xs opacity-75 mb-1">Le gabarit, sur un cas réel : l'adoption des notifications</div>
-<div class="chips">
-<div><span>Constat, mesuré et sourcé</span><u>3 abonnements sur 17, 18 %</u></div>
-<div><span>Analyse, ce que le code explique</span><u>une absence d'occasion, pas un refus</u></div>
-<div><span><b>Proposition</b> exécutable</span><u>proposer l'activation une fois, au moment utile</u></div>
-<div><span><b>Coût, délai, gain attendu</b></span><u>1 j, une itération, adoption visée &gt; 40 %</u></div>
-<div><span><b>Priorité, et critère d'arrêt</b></span><u>P3 ; gel défendable sous 40 % à deux mois</u></div>
-</div>
-
-</div>
-</div>
-
-<!--
-DUREE 1:00. ELEMENTS IMPOSES 11 et 12 : les comptes rendus sur les evolutions
-et ameliorations, et la planification des points de validation. CRITERES :
-clairs et ordonnes ; ils FACILITENT LA PRISE DE DECISION du client ; les
-points de validation assurent le SUIVI QUALITE.
-
-Ouvrir par les deux commanditaires, la distinction qui structure le theme :
-rendre compte a un jury et rendre compte a un utilisateur ne se font pas avec
-le meme document. Le jury attend une demonstration de conformite, quatre
-echeances tenues ; l'utilisateur attend de savoir ce qui a change pour lui,
-onze versions. Chaque version est un point de validation date, etiquete sur
-le commit exact deploye, et il n'existe que si les portes de la chaine sont
-vertes, theme 2 : un rouge annule la livraison.
-
-Gauche, les trois niveaux. Souligner le premier, le seul compte rendu
-POUSSE : un journal des versions que personne n'ouvre est une archive, pas un
-compte rendu. A DIRE HONNETEMENT : ce canal n'existe que depuis la v1.4.0,
-les sept versions precedentes n'ont ete annoncees qu'au niveau 2.
-
-Droite, le gabarit : trois blocs sur cinq ne sont pas de l'information, ils
-sont en gras. La regle de redaction : aucun constat sans proposition, aucune
-proposition sans cout. Deux choses de l'exemple : « le taux ne mesure pas un
-refus, il mesure une absence d'occasion », c'est l'analyse qui transforme un
-mauvais chiffre en question tranchable ; et le critere d'arret enonce
-d'avance, 40 % sous deux mois. Le destinataire sait a quoi il s'engage en
-validant.
-
-SI ON QUESTIONNE l'adequation avec les fonctionnalites attendues : elle se
-lit dans le diff de la feuille de route, versionnee. Un item livre hors
-perimetre s'y voit, date.
--->
-
----
-
-# Les indicateurs de satisfaction : trois familles
-
-<div class="grid grid-cols-2 gap-6 text-sm mt-2">
-<div>
-
-<div class="kpi grid-cols-1">
-<div><b>74 %</b><span><b>Comportemental</b> : 14 soirées sur 19 menées jusqu'au tirage, au 5 septembre ; notifications activées, 3 sur 17</span></div>
+<div class="kpi grid-cols-1" style="line-height:1.25">
+<div><b>74 %</b><span><b>Comportemental</b> : 14 soirées sur 19 menées jusqu'au tirage, au 5 septembre</span></div>
 <div><b>9,6 / 10</b><span><b>Déclaratif</b> : recommandation, <b>7 réponses</b> sur 17 comptes, aucun détracteur</span></div>
 <div><b>100 %</b><span><b>Opérationnel</b> : disponibilité, 207 ms en p95, 0,026 % d'erreurs, 30 jours au 5 septembre</span></div>
 </div>
 
-</div>
-<div>
-
-<div class="text-xs opacity-75 mb-2"><b>17 jours</b> entre le retour d'un utilisateur et sa mise en production</div>
+<div class="text-xs opacity-75 mt-4 mb-2"><b>17 jours</b> entre le retour d'un utilisateur et sa mise en production</div>
 <div class="tl">
-<div><b>18/08</b><span>questionnaire en ligne</span></div>
+<div><b>18/08</b><span>questionnaire</span></div>
 <div><b>19/08</b><span>fiche ouverte</span></div>
 <div><b>26/08</b><span>fiche close</span></div>
-<div><b>04/09</b><span>correctif en production, v1.4.1</span></div>
+<div><b>04/09</b><span>en production, v1.4.1</span></div>
 </div>
 
 </div>
 </div>
 
 <!--
-DUREE 0:50. ELEMENT IMPOSE 13 : les indicateurs de satisfaction mis en place.
-CRITERE : ils sont definis et COHERENTS AU REGARD DU PROJET.
+DUREE 1:10. ELEMENTS IMPOSES 11, 12 et 13 : les comptes rendus, les points de
+validation, les indicateurs de satisfaction. CRITERES : comptes rendus clairs
+et ordonnes ; points de validation qui assurent le SUIVI QUALITE ; indicateurs
+COHERENTS au regard du projet.
 
-La coherence est le mot du critere. Dire d'emblee : a une vingtaine de
-comptes et de soirees, un NPS n'a aucune validite statistique. D'ou trois
-familles, et c'est leur COMBINAISON qui fait la mesure. Les mesures sont
-celles du 5 septembre, le dossier du Bloc 4 ; les comptes sont 21 au 12
-septembre.
+Dire d'abord a qui on rend compte : il n'y a pas de commanditaire, c'est un
+projet personnel. Les seuls destinataires sont les utilisateurs, 21 comptes,
+et ce qu'ils valident, c'est que ce qui est livre sert. Le critere « faciliter
+la prise de decision du client » ne s'applique pas : les decisions sont les
+miennes, elles sont instruites dans la feuille de route et les documents de
+decision, theme 8.
 
-Puis la limite, avant qu'on la trouve : sept reponses, echantillon oriente
-vers les plus assidus, cinq des sept utilisent l'application a chaque soiree,
-aucun detracteur. La phrase a dire : « je ne presente pas le 9,6 comme une
-mesure de satisfaction, mais comme l'absence de detracteur parmi les
-utilisateurs engages. » Les indicateurs COMPORTEMENTAUX pesent plus lourd,
-parce qu'ils mesurent ce que les gens FONT et non ce qu'ils disent.
+Gauche : deux comptes rendus, a chaque version. Souligner le premier, le seul
+POUSSE : un journal des versions que personne n'ouvre est une archive, pas un
+compte rendu. A DIRE HONNETEMENT : ce canal n'existe que depuis la v1.4.0,
+les sept versions precedentes n'ont ete annoncees qu'au niveau du journal.
+Puis les points de validation : une version n'existe que si les portes de la
+chaine sont vertes, theme 2, et l'adequation au perimetre attendu se lit dans
+le diff date de la feuille de route.
 
-La colonne de droite prouve que les indicateurs SERVENT : un retour du
-questionnaire, la reconnexion depuis un navigateur integre, est en production
-dix-sept jours plus tard. SI ON DEMANDE les autres retours : une suggestion
-confirmee, la liste de films a voir, deja au perimetre de la 1.4 ; une
-demande instruite et non livree, voir quels films un utilisateur a proposes,
-0,5 jour, priorite 4. Distinguer declenchee, confirmee, instruite : presenter
-une confirmation comme un declenchement serait surevaluer la boucle.
+Droite, les indicateurs. Dire d'emblee : a une vingtaine de comptes et de
+soirees, un NPS n'a aucune validite statistique. D'ou trois familles, et
+c'est leur COMBINAISON qui fait la mesure. Les mesures sont celles du 5
+septembre, date du releve. Puis la limite, avant qu'on la trouve : sept
+reponses, echantillon oriente vers les plus assidus, aucun detracteur. La
+phrase a dire : « je ne presente pas le 9,6 comme une mesure de satisfaction,
+mais comme l'absence de detracteur parmi les utilisateurs engages. » Les
+indicateurs COMPORTEMENTAUX pesent plus lourd, ils mesurent ce que les gens
+FONT.
 
-Et ce qui manque, dit avant qu'on le demande : le dispositif est ponctuel,
-pas continu. Un questionnaire diffuse une fois donne un point, pas une
-tendance. La boucle continue, sollicitation courte apres une soiree aboutie,
-est instruite, 1 a 2 jours, priorite 3.
+La frise prouve que les indicateurs SERVENT : un retour du questionnaire, la
+reconnexion depuis un navigateur integre, est en production dix-sept jours
+plus tard. SI ON DEMANDE les autres retours : une suggestion confirmee, deja
+au perimetre de la 1.4 ; une demande instruite et non livree, 0,5 jour,
+priorite 4. Ce qui manque, dit avant qu'on le demande : le dispositif est
+ponctuel, pas continu ; la boucle continue est instruite, 1 a 2 jours,
+priorite 3.
 -->
 
 ---
@@ -1326,7 +1225,7 @@ est instruite, 1 a 2 jours, priorite 3.
 </div>
 
 <div class="note text-base mt-10" style="max-width:40rem;margin-left:auto;margin-right:auto">
-<b>Sur cette base, je vous demande de valider le périmètre livré, pour engager la 1.7.</b>
+<b>Sur cette base, je vous demande de valider le périmètre livré.</b>
 </div>
 
 <!--
@@ -1353,8 +1252,10 @@ absence de decision.
 
 Puis ce qui est valide, les six verbes du parcours, la promesse produit et
 non une liste ; ce qui vient ensuite, la 1.7, cadree, sept items pour
-trente-quatre points, temps reel, co-hote, double authentification ; et LA
-DEMANDE, prononcee telle qu'elle est ecrite, sans l'adoucir. Puis SE TAIRE et
+trente-quatre points, temps reel, co-hote, double authentification, et elle
+part apres l'oral, decision prise ; et LA DEMANDE, prononcee telle qu'elle
+est ecrite, sans l'adoucir. Il n'y a pas de commanditaire a qui la 1.7 serait
+soumise : ce que le jury valide, c'est le perimetre demontre. Puis SE TAIRE et
 laisser le silence. C'est la fin de la presentation.
 
 Les annexes qui suivent ne sont JAMAIS presentees, seulement appelees par une

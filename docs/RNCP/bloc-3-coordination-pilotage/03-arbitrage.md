@@ -170,7 +170,7 @@ Quatre arguments, dans l'ordre où ils ont pesé.
 |----------|-----------------|--------|
 | Réécrire l'API à l'identique du contrat | 12 routes migrées, 944 lignes TypeScript remplacées par **4 653 lignes C# sur 111 fichiers** | Historique du dépôt |
 | Bascule en une fois, sans double maintenance | Ancienne API retirée **15 minutes** après le début de la bascule | Commit `clean migration` |
-| Ne pas décaler la V1 | **v1.0.0 livrée le 19/05/2026**, deux mois après la bascule. Aucune échéance de restitution du titre n'a glissé | Journal des versions |
+| Ne pas décaler la V1 | **v1.0.0 livrée le 19/05/2026**, deux mois après la bascule, et dix versions depuis sans retour arrière | Journal des versions |
 | Décision non rejouée | **Aucun retour arrière**, aucune seconde migration. 10 versions livrées sur ce socle depuis | Journal des versions |
 | Socle tenable dans la durée | 44 663 lignes aujourd'hui, couverture **86,6 %**, Quality Gate **A / A / A**, architecture hexagonale | SonarCloud, dossier Bloc 2 |
 

@@ -48,7 +48,7 @@ Trois lectures, à dire à l'oral si la question vient :
 
 1. **Mars est presque entièrement de la fiabilisation** : c'est la migration de l'API, faite à la main, puis stabilisée.
 2. **Juin, le mois de la V1 consolidée, est le mois où deux commits sur trois sont des correctifs et des tests.** Le produit s'est payé en fiabilité, pas en fonctionnalités : sur le projet entier, un commit sur deux relève de cette mission.
-3. **La documentation suit les échéances de restitution, pas la fin du projet** : un quart des commits en juillet autour des deux remises de dossier, un tiers en septembre pour ce bloc.
+3. **La documentation suit les dossiers, pas la fin du projet** : un quart des commits en juillet, un tiers en septembre pour ce bloc.
 
 ### A.2 Ce qui reste à la main, ce qui est confié à la chaîne
 
@@ -60,7 +60,7 @@ La seule répartition réelle du projet est celle qui sépare ce qu'une personne
 | Arbitrages de périmètre, de charge et de socle | Ils engagent le projet, et ils sont consignés par écrit |
 | Revue avant intégration | Le gabarit de pull request à six contrôles : tests locaux, lint et format, couverture du changement, documentation, journal des versions, issue référencée |
 | Mise en production et incidents | Un geste vérifié par un test de fumée et des sondes, jamais un automatisme lancé sans regarder |
-| Restitutions | Au commanditaire sur quatre échéances, aux utilisateurs à chaque version |
+| Comptes rendus | Aux utilisateurs, à chaque version |
 
 | Confié à la chaîne | Ce qui le rend sûr |
 |--------------------|--------------------|
@@ -103,12 +103,11 @@ Le critère nomme l'empathie, l'écoute, la bienveillance et le leadership. Chac
 | **Empathie** | Le délai de réponse à un retour : 17 jours entre le questionnaire du 18 août et le correctif en production, et une réponse écrite à chaque fiche ouverte | Fiche ouverte le 19/08, close le 26/08, v1.4.1 le 04/09 |
 | **Leadership** | Décider avec l'information disponible et l'assumer par écrit, y compris les inconvénients acceptés, le cas d'arbitrage du chapitre 3 | Document d'aide à la décision du 18/03/2026 |
 
-**Trois publics, et ce que chacun reçoit.** Il n'y a pas d'équipe à animer ; il y a trois publics à servir, et tout ce qu'ils reçoivent est écrit et versionné.
+**Deux publics, et ce que chacun reçoit.** Il n'y a pas d'équipe à animer ni de commanditaire ; il y a deux publics à servir, et tout ce qu'ils reçoivent est écrit et versionné.
 
 | Public | Ce qu'il reçoit | Objectif |
 |--------|-----------------|----------|
 | **Les utilisateurs** | La fenêtre de nouveautés à chaque version, le questionnaire, le lien « signaler un problème » | Savoir ce qui a changé sans rien demander, et pouvoir répondre |
-| **Le commanditaire** | Quatre restitutions datées, les comptes rendus d'arbitrage | Valider la conformité, décider sur une proposition chiffrée |
 | **Le contributeur à venir** | Les conventions écrites avec leur motif, les gabarits, les procédures exécutables | Être opérationnel en une journée, sans savoir oral à transmettre |
 
 **Les outils de communication et le partage de ressources.** Le critère est explicite : les outils doivent **intégrer le partage de ressources**. Tous les outils ci-dessous sont versionnés dans le dépôt, donc accessibles, datés et modifiables par toute personne qui le clone.
@@ -155,7 +154,7 @@ C'est le critère le plus discriminant du chapitre. Il porte sur une situation *
 | | |
 |--|--|
 | **Fait mesuré** | **10 jours travaillés consécutifs**, la plus longue série du projet à cette date |
-| **Ce qui la provoque** | Deux échéances superposées : la remise du dossier Bloc 4 le **21 août**, et la version 1.4.0 le **25 août** |
+| **Ce qui la provoque** | Deux échéances superposées : un dossier à rendre le **21 août**, et la version 1.4.0 le **25 août** |
 | **La posture adoptée** | Absorber. Ne pas arbitrer le périmètre, ne pas décaler, compenser par l'intensité |
 | **Le résultat immédiat** | Les deux échéances sont tenues. Aucune date n'a glissé |
 
@@ -191,9 +190,8 @@ La recommandation 2 est la seule qui aurait empêché la situation de C.1. Les d
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 13 | 10. Piloter seul : les missions et le style | A.2, B.1 |
-| 14 | Animer et inclure : écrit, versionné, asynchrone | B.2 (outils), B.3 |
-| 15 | Analyse critique : une posture qui a réussi, deux fois | C |
+| 13 | 10. Piloter seul : les missions et le style | A.2, B.1, B.2 (outils) |
+| 14 | Analyse critique : une posture qui a réussi, deux fois | C |
 
 ---
 

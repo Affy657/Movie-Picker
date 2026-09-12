@@ -16,7 +16,7 @@
 
 Alimente les diapositives 4 à 8.
 
-**Rappel de posture** : le projet a été mené par une seule personne, sur son temps libre, et aucune équipe n'est simulée. Cette personne porte quatre rôles tour à tour, chef de projet, product owner, développeur, DevOps, et la matrice RACI est écrite sur ces rôles et sur les trois acteurs réels qui entourent le projet : le commanditaire, les utilisateurs, les prestataires.
+**Rappel de posture** : le projet a été mené par une seule personne, sur son temps libre, et aucune équipe n'est simulée. Cette personne porte quatre rôles tour à tour, chef de projet, product owner, développeur, DevOps, et la matrice RACI est écrite sur ces rôles et sur les deux acteurs réels qui entourent le projet : les utilisateurs, les prestataires. Il n'y a pas de commanditaire.
 
 ---
 
@@ -51,7 +51,7 @@ Le projet est piloté en deux régimes, parce qu'il a deux natures de travail.
 |--------------|--------------------|
 | **Scrum** | Sa valeur tient à ses rôles et à ses cérémonies : sprint planning, revue, rétrospective, daily. À une personne, ces cérémonies deviennent un formalisme sans interlocuteur. On conserve le découpage en lots et la revue, on écarte les rituels et l'engagement de sprint, incompatible avec un projet mené sur le temps libre. |
 | **Cycle en V intégral** | Un seul V sur sept mois aurait figé en février un périmètre que les mesures de production ont corrigé en août : la V1.4 reprend des hypothèses invalidées par l'usage réel. Le V est gardé, mais à l'échelle d'une version, pour que la mesure de l'une cadre la suivante. |
-| **Kanban seul** | Un flux sans lot ne produit pas de livrable daté : pas de version, pas de notes, pas de point de validation avec le commanditaire. Il est gardé pour ce qu'il fait bien, le run, et pas pour les fonctionnalités. |
+| **Kanban seul** | Un flux sans lot ne produit pas de livrable daté : pas de version, pas de notes, pas de point de validation avec les utilisateurs. Il est gardé pour ce qu'il fait bien, le run, et pas pour les fonctionnalités. |
 
 **Formulation retenue pour l'oral** : « un cycle en V pour chaque version, un flux pour le run ». Le point de vigilance associé est traité en 6.
 
@@ -74,9 +74,9 @@ Trois outils, à deux échelles. C'est cette différence d'échelle qui les rend
 
 | | |
 |--|--|
-| **Nature** | Planification à rebours depuis les dates non négociables |
-| **Points fixes** | Les échéances du titre : oral Bloc 1 le 11 juin 2026, remise Bloc 2 le 23 juillet, remise Bloc 4 le 21 août, oral Bloc 3 le 16 septembre |
-| **Bénéfice attendu** | Transformer une date imposée en date de fin de version : la 1.2 sort le 11 juin, la 1.4 le 25 août, quatre jours après le Bloc 4. Une échéance qui ne bouge pas impose une capacité, donc un périmètre |
+| **Nature** | Planification à rebours depuis la date posée pour chaque version |
+| **Points fixes** | Les dates de version, posées à la fin de la conception de chaque version. Aucune date n'est imposée de l'extérieur : il n'y a pas de commanditaire |
+| **Bénéfice attendu** | Une date de version qui ne bouge pas impose une capacité connue, donc un périmètre : quand la capacité s'est réduite en août, c'est l'intervalle qui s'est allongé, 31 jours, et le périmètre de la 1.4 qui a été tenu |
 
 ### 2.3 Le diagramme de Gantt : l'échelle des versions
 
@@ -91,7 +91,7 @@ Le point est explicitement demandé par la grille. La réponse tient en deux phr
 
 | Horizon | Outil | Objet |
 |---------|-------|-------|
-| Le trimestre | Rétroplanning depuis les échéances du titre | Quelle version sort avant quelle date ? |
+| Le trimestre | Rétroplanning depuis les dates de version | Quelle version sort avant quelle date ? |
 | Le mois | Gantt des versions | Où en est chaque version dans ses cinq phases ? |
 | La semaine | Board GitHub Projects | Quel ticket est dans quelle phase, et qu'est-ce qui bloque ? |
 
@@ -162,12 +162,6 @@ gantt
     1.5                          :2026-08-21, 18d
     1.6                          :2026-08-29, 15d
     Release 1.6.0                :milestone, 2026-09-12, 0d
-
-    section Restitution
-    Restitution Bloc 1           :milestone, 2026-06-11, 0d
-    Remise Bloc 2                :milestone, 2026-07-23, 0d
-    Remise Bloc 4                :milestone, 2026-08-21, 0d
-    Restitution Bloc 3           :milestone, 2026-09-16, 0d
 ```
 
 ### 3.3 Les jalons de version
@@ -222,7 +216,7 @@ Le projet a été mené par **une seule personne, sur son temps libre, soirs et 
 
 | Rôle | Ce qu'il porte | Ce qu'il exige |
 |------|----------------|----------------|
-| **Chef de projet** | Les versions et leur date, les arbitrages, les restitutions au commanditaire | Chiffrer, décider, rendre compte |
+| **Chef de projet** | Les versions et leur date, les arbitrages, les comptes rendus aux utilisateurs | Chiffrer, décider, rendre compte |
 | **Product owner** | Le cadrage des items, la priorisation de la roadmap, la recette, les retours des utilisateurs | Porter le besoin, tester du point de vue de l'utilisateur |
 | **Développeur front et back** | La conception, le code, les tests, la revue | React et TypeScript, C# et ASP.NET Core, architecture hexagonale, accessibilité |
 | **DevOps** | La chaîne d'intégration et de déploiement, la mise en production, la supervision, la sécurité | Conteneurs, exécution sans serveur, sondes et alertes, veille de vulnérabilités |
@@ -231,7 +225,6 @@ Trois autres acteurs sont réels, et ils figurent dans la matrice :
 
 | Acteur | Ce qu'il apporte | Depuis quand |
 |--------|------------------|--------------|
-| **Commanditaire** | Le formateur, puis le jury : quatre échéances de restitution, la validation de la conformité au référentiel | Cadrage |
 | **Utilisateurs** | 21 comptes au 12 septembre 2026 : retours, recette informelle, questionnaire de satisfaction | 19 mai 2026, v1.0.0 |
 | **Prestataires** | L'hébergement, le catalogue de films, le transport des e-mails, la supervision : des services exécutés par des tiers, sous contrat d'usage | 27 février 2026 |
 
@@ -270,29 +263,29 @@ Le point à souligner : **aucune licence payante**. C'est une décision de conce
 
 Convention : **R** réalise, **A** approuve et rend compte, **C** est consulté, **I** est informé. Les quatre premières colonnes sont les rôles portés par une même personne ; les trois dernières sont les acteurs qui ont réellement existé sur le projet.
 
-| Activité | Chef de projet | Product owner | Développeur | DevOps | Commanditaire | Utilisateurs | Prestataires |
-|----------|:--------------:|:-------------:|:-----------:|:------:|:-------------:|:------------:|:------------:|
-| Cadrage et périmètre de version | C | A, R | | | C | C | |
-| Architecture applicative | I | | A, R | C | I | | |
-| Modèle de données et contrat d'interface | | C | A, R | | | | |
-| Développement de l'interface | | A | R | | | I | |
-| Développement de l'API | | A | R | | | | |
-| Revue, tests et intégration | | | R | A | | | |
-| Intégration des services tiers | | | A, R | C | | | C |
-| Accessibilité et inclusion | | A | R | | | C | |
-| Chaîne d'intégration et de déploiement | | | I | A, R | | | |
-| Supervision et exploitation | I | | | A, R | | | R |
-| Sécurité applicative | | | R | A | I | | |
-| Recette et tests de bout en bout | | A | R | | C | C | |
-| Arbitrage de périmètre ou de charge | A, R | C | C | | C | C | |
-| Mise en production | A | | | R | I | I | R |
-| Restitution et compte rendu | A, R | C | | | C | I | |
+| Activité | Chef de projet | Product owner | Développeur | DevOps | Utilisateurs | Prestataires |
+|----------|:--------------:|:-------------:|:-----------:|:------:|:------------:|:------------:|
+| Cadrage et périmètre de version | C | A, R | | | C | |
+| Architecture applicative | I | | A, R | C | | |
+| Modèle de données et contrat d'interface | | C | A, R | | | |
+| Développement de l'interface | | A | R | | I | |
+| Développement de l'API | | A | R | | | |
+| Revue, tests et intégration | | | R | A | | |
+| Intégration des services tiers | | | A, R | C | | C |
+| Accessibilité et inclusion | | A | R | | C | |
+| Chaîne d'intégration et de déploiement | | | I | A, R | | |
+| Supervision et exploitation | I | | | A, R | | R |
+| Sécurité applicative | | | R | A | | |
+| Recette et tests de bout en bout | | A | R | | C | |
+| Arbitrage de périmètre ou de charge | A, R | C | C | | C | |
+| Mise en production | A | | | R | I | R |
+| Restitution et compte rendu | A, R | C | | | I | |
 
 Trois propriétés de cette matrice, à dire explicitement :
 
 1. **L'affectation suit la compétence que l'activité exige.** Le product owner approuve le cadrage et la recette parce qu'il porte le besoin ; le développeur réalise et approuve l'architecture ; le DevOps approuve l'intégration et réalise la mise en production ; le chef de projet arbitre et approuve la mise en production. Quand une ligne porte un A et un R différents, la même personne change de casquette entre la décision et le geste : c'est ce qui rend la revue possible à une personne.
 2. **La matrice est écrite pour le jour où une personne rejoint le projet.** La colonne Développeur est celle qu'on confierait en premier, puis DevOps ; la ligne « revue, tests et intégration » est celle qui changerait en premier, et c'est la faiblesse que la grille de compétences du chapitre 5 désigne.
-3. **Les acteurs externes figurent dans la matrice.** Le commanditaire est consulté sur le périmètre et les arbitrages, informé des mises en production ; les utilisateurs sont consultés sur l'accessibilité, la recette et chaque version ; les prestataires exécutent l'hébergement et la supervision. Un acteur absent de la matrice est un acteur qu'on oubliera de solliciter.
+3. **Les acteurs externes figurent dans la matrice.** Il n'y a pas de commanditaire, le projet est personnel ; les utilisateurs sont consultés sur l'accessibilité, la recette et chaque version ; les prestataires exécutent l'hébergement et la supervision. Un acteur absent de la matrice est un acteur qu'on oubliera de solliciter.
 
 ### 5.1 Prise en compte du handicap
 
@@ -313,7 +306,7 @@ Sept points, chacun avec son indicateur de contrôle et sa parade, placés sur u
 | # | Point de vigilance | Ce qu'il menace | Indicateur de contrôle | Parade |
 |:-:|--------------------|-----------------|------------------------|--------|
 | 1 | **Concentration des rôles sur une personne** | La continuité du projet. Un seul acteur détient la connaissance de l'architecture, des accès et des procédures | Nombre de personnes capables de mener une mise en production, aujourd'hui 1 | Procédures d'exploitation écrites et versionnées, infrastructure décrite en code, décisions d'architecture consignées, matrice RACI par rôle. C'est tout ce qu'un remplaçant recevrait le premier jour |
-| 2 | **Sous-estimation des lots documentaires** | Le calendrier du titre. Les lots de documentation sont les plus difficiles à chiffrer par analogie, faute de comparable | Écart entre charge prévue et charge consommée sur le lot de clôture | Rétroplanning à rebours depuis les échéances de restitution, périmètre de version ajusté sur la capacité restante |
+| 2 | **Périmètre livré hors du chiffrage initial** | La lisibilité de l'avancement. Le chiffrage du cadrage ne couvre que 23 des 81 items produit livrés : l'écart de charge de −3 % masque un périmètre triplé | Part des items produit livrés absents du chiffrage initial, 72 % au 12 septembre 2026 | Comparer à chaque version le périmètre courant au périmètre chiffré, et chiffrer avant d'ouvrir une version, à partir de la 1.7 |
 | 3 | **Dépendance au catalogue de films externe** | Le cœur du produit. Une rupture de contrat, un changement de conditions d'usage ou un dépassement de quota rend la recherche de films inopérante | Taux d'erreur des appels au catalogue | Cache des affiches et des métadonnées avec durée de vie, limitation du débit de recherche, repli de saisie manuelle |
 | 4 | **Perte de la base de données** | Toutes les données du service. Le palier gratuit de la base managée n'offre aucun instantané : une suppression accidentelle ou une corruption serait définitive | Âge de la dernière sauvegarde vérifiée, résultat de la restauration d'essai | Sauvegarde nocturne vers un dépôt d'objets versionné, relue puis restaurée dans une base jetable avant d'être retenue : une archive qui échoue la restauration ne devient jamais la sauvegarde du jour |
 | 5 | **Durcissement de la politique de sécurité du contenu** | L'affichage. Un durcissement mal calibré bloque silencieusement des ressources légitimes, ce qui s'est produit en production sur les affiches et les avatars | Vérification visuelle après chaque modification de la politique, sondes de disponibilité | Inventaire des domaines externes tenu à jour, vérification obligatoire de l'affichage avant mise en production |
