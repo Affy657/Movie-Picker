@@ -13,9 +13,9 @@
 > - Des formations sont préconisées en fonction des besoins du projet et du profil des membres de l'équipe.
 > - Les modalités de formation sont adaptées pour prendre en considération les spécificités liées au handicap des personnes formées.
 
-Alimente les diapositives 18 et 19.
+Alimente les diapositives 11 et 12, thème 9.
 
-**Posture de ce chapitre.** Le projet a été mené seul : la grille évalue **la seule personne qui y a travaillé**, avant et après le projet, et le plan de développement est le sien. Tout est étalonné sur l'historique du dépôt : chaque compétence correspond à une technologie introduite à une date vérifiable, et les niveaux exigés sont ceux qu'il a réellement fallu atteindre pour livrer. Le besoin en recrutement, que le référentiel demande de transmettre, est instruit pour le jour où le projet passerait en équipe.
+**Posture de ce chapitre.** Le projet a été mené seul : la grille évalue **la seule personne qui y a travaillé**, avant et après le projet, et le plan de développement est le sien. Tout est étalonné sur l'historique du dépôt : chaque compétence est une technologie ou une méthode nommée, introduite à une version vérifiable, et ce qui reste à acquérir vient de la feuille de route ou des indicateurs. Le besoin en recrutement, que le référentiel demande de transmettre, est instruit pour le jour où le projet passerait en équipe.
 
 ---
 
@@ -58,48 +58,39 @@ L'ordre dans lequel les compétences ont dû être mobilisées est lisible dans 
 
 ## 2. La grille d'évaluation des compétences
 
-### 2.1 L'échelle, et pourquoi elle est comportementale
+### 2.1 Le principe : des choses nommées, pas des notes
 
-Une échelle en pourcentage ou en « débutant / intermédiaire / avancé » n'est pas évaluable : deux évaluateurs ne mettront pas la même note. L'échelle retenue décrit **ce que la personne sait faire**, pas ce qu'elle connaît.
+Une note de 0 à 4 sur « architecture » ou « sécurité » n'est pas vérifiable : deux évaluateurs ne mettront pas la même, et le jury ne peut pas la contrôler. La grille retenue ne note rien. **Une compétence y est une technologie ou une méthode nommée**, et son état se lit dans le dépôt : une dépendance dans `package.json` ou dans un `.csproj`, un job dans un workflow, une version taguée.
 
-| Niveau | Descripteur |
-|:------:|-------------|
-| **0** | Non acquis. Ne sait pas lire le code ou la configuration du domaine |
-| **1** | Notions. Sait lire et modifier un existant avec accompagnement |
-| **2** | Autonome. Sait réaliser seul une tâche courante du domaine |
-| **3** | Maîtrise. Sait concevoir, arbitrer, et traiter un cas non nominal |
-| **4** | Référent. Sait définir le standard, former, et arbitrer pour les autres |
+Trois états, un par colonne :
 
-**Le niveau 2 est le seuil d'autonomie, le niveau 3 le seuil de responsabilité.** Un profil qui porte le rôle *réalise* de la matrice RACI doit être à 3 sur son domaine ; un profil consulté peut être à 2.
+| Colonne | Ce qu'elle contient | Preuve |
+|---------|---------------------|--------|
+| **Février, déjà acquis** | Ce que je savais au démarrage : la pile du MVP, livré le 16 mars 2026 | `v0.1.0`, dépendances de `apps/api` et `apps/web` au 27 février |
+| **Appris sur le projet** | Ce que le projet m'a obligé à apprendre, avec la version qui le prouve | La version où la technologie entre dans `docs/roadmap.md` ou dans le dépôt |
+| **Reste à acquérir** | Ce que la suite du projet demande et que je n'ai pas encore | Feuille de route 1.7, 1.8 et backlog technique, ou un indicateur des thèmes 4, 7 et 8 |
 
 ### 2.2 La grille : moi, en février et en septembre 2026
 
-**Convention de lecture, à énoncer avant le tableau** : c'est une auto-évaluation, et elle est étalonnée sur des preuves. *Février* est le niveau au démarrage du projet, *septembre* le niveau atteint, *exigé* le niveau que le projet a réellement demandé. Un R de la matrice RACI exige le niveau 3.
-
-| Compétence | Février | Septembre | Exigé | Preuve dans le dépôt |
-|------------|:-------:|:---------:|:-----:|----------------------|
-| Architecture applicative | 2 | 3 | 3 | Découpage hexagonal de l'API, 111 fichiers ; contrat OpenAPI tenu depuis le MVP |
-| **Arbitrage et chiffrage** | 2 | **2** | 4 | Chiffrage formalisé après coup, lot de migration chiffré a posteriori, dix jours d'août sans arbitrage posé |
-| **Revue de code et transmission** | 1 | **2** | 4 | 87 lignes de front intégrées sans revue en mars ; gabarit de PR et conventions écrites depuis |
-| React et TypeScript | 3 | 3 | 3 | Front du MVP livré en trois semaines, du 27 février au 16 mars 2026 |
-| Accessibilité | 1 | 3 | 3 | Porte de qualité bloquante, tests automatisés sur 9 vues, avril à juin 2026 |
-| Application installable, i18n | 1 | 2 | 2 | v1.1.0, notifications push ; produit bilingue |
-| C# et ASP.NET Core | 2 | 3 | 3 | Migration de l'API en quatre jours, 16 au 19 mars 2026 |
-| Architecture hexagonale | 1 | 3 | 3 | Même migration, ports et adaptateurs, tests d'intégration |
-| Sécurité applicative et identité | 1 | 3 | 3 | Session par cookie, identité fédérée, politique de sécurité du contenu, août 2026 |
-| Intégration et déploiement continus, conteneurs | 2 | 3 | 3 | Chaîne à 18 jobs, déploiement par digest, exécution sans serveur |
-| Supervision et exploitation | 1 | 3 | 3 | Sondes sur trois continents, politiques d'alerte, juillet 2026 |
-| Veille de vulnérabilités | 1 | 3 | 3 | Dependabot regroupé, scans de secrets et d'images, alertes d'analyse statique traitées |
+| Domaine | Février, déjà acquis | Appris sur le projet, et la version qui le prouve | Reste à acquérir |
+|---------|----------------------|---------------------------------------------------|------------------|
+| **Back** | Node, Express, Mongoose, Zod, Swagger | C#, ASP.NET Core, architecture hexagonale, driver MongoDB et transactions, contrat OpenAPI généré et types front dérivés (V1) ; Web Push VAPID (1.1) ; OAuth Google et GitHub, synchronisation Letterboxd (1.4) ; passe planifiée Cloud Scheduler (1.6) | Temps réel, SignalR ou WebSocket ; TOTP (1.7) |
+| **Front** | React, TypeScript, Vite, React Router | TanStack Query, cache de données distantes ; i18n FR et EN (V1) ; PWA Workbox (1.1) ; design system à jetons, SEO JSON-LD et sitemap (1.5) ; pré-rendu, coquille de démarrage LCP (1.6) | Consultation hors-ligne en lecture seule (1.8) |
+| **Tests, qualité** | Aucun test automatisé | Vitest, Testing Library, MSW ; xUnit, Moq, WebApplicationFactory ; tests sur MongoDB réel en replica set ; Playwright bout en bout ; Stryker, tests de mutation ; SonarCloud et seuils de couverture bloquants (V1 à 1.6) | Revue de code par un tiers |
+| **Accessibilité, performance** | Rien | axe automatisé sur 9 vues, critères RGAA clavier, focus et contraste (1.2) ; Lighthouse bloquant au déploiement (V1) ; mesure et correction du LCP (1.6) | Formation RGAA certifiante |
+| **Livraison, infrastructure** | Docker, Git et GitHub | GitHub Actions, 6 workflows, filtrage par chemins ; Artifact Registry et Cloud Run, déploiement par digest, rollback de trafic ; S3 et CloudFront, politique d'en-têtes ; Secret Manager ; Dependabot regroupé (1.3) ; sauvegarde Atlas vérifiée par restauration (1.6) | Terraform ; fédération d'identité pour la CI ; environnement de recette |
+| **Sécurité, exploitation** | Cookie de session | Data Protection, CSP ; Gitleaks, Trivy, zizmor ; export et suppression RGPD, PostHog sous consentement (1.2) ; Sentry front et API (1.3) ; 3 sondes de disponibilité, 5 politiques d'alerte, journal de versions | Double authentification (1.7) ; OWASP |
+| **Méthode** | Commits directs, sans pull request | Cycle en V par version, feuille de route chiffrée en points, board ; pull request et CI bloquante ; AGENTS.md et conduite d'assistants de code ; document d'aide à la décision, gabarit de PR | Chiffrage avant réalisation, arbitrage consigné ; management d'équipe |
 
 ### 2.3 Le commentaire de la grille
 
 Le critère exige que la grille soit **commentée**, pas seulement affichée. Trois lectures.
 
-**1. Neuf écarts ont été comblés par autoformation, en production, sans plan ni budget.** Ce sont des compétences de contexte, pas de langage : hexagonal, accessibilité, sécurité, supervision, veille. La vague 1 du § 1.2 en donne le coût, quatre jours pour absorber un changement de socle complet. C'est faisable une fois, seul, sur un projet dont on est propriétaire ; ce n'est pas une méthode.
+**1. La colonne de février tient en une ligne par domaine, et deux cases sont vides.** Aucun test automatisé, rien en accessibilité : le MVP a été livré avec ça. Tout ce qui est dans la colonne du milieu a été appris seul, en production, pendant le projet, sans plan ni budget. C'est la justification du plan du § 3 : rendre ce coût visible avant de le payer. La vague 1 du § 1.2 en donne l'ordre de grandeur, quatre jours pour absorber un changement de socle complet, qui n'apparaissent dans aucune ligne du chiffrage.
 
-**2. Les deux écarts qui restent ne sont pas techniques.** Arbitrage et chiffrage, revue et transmission : ce sont les compétences que le projet a le plus sollicitées et le moins bien exercées. Le chapitre 2 montre un chiffrage formalisé a posteriori, le chapitre 3 montre 87 lignes intégrées sans revue, le chapitre 4 montre dix jours d'août sans arbitrage. **La grille désigne les mêmes faiblesses que les indicateurs, ce qui la rend crédible.**
+**2. La colonne du milieu n'est pas du vernis.** Chaque case est une chose qui tourne en production ou qui bloque la chaîne de livraison, et chaque case porte la version qui l'a fait entrer dans le dépôt.
 
-**3. Le niveau 3 est le seuil de responsabilité.** Sur un projet à une personne, il faut y être partout où l'on porte le R de la matrice, et c'est le cas sur le technique en septembre. Là où le niveau exigé est 4, c'est que le projet demandait de définir le standard, pas seulement de l'appliquer : c'est précisément ce qui manque sur l'arbitrage et la revue.
+**3. La colonne de droite a deux natures.** Les lignes techniques viennent de la feuille de route, 1.7, 1.8 et les huit lots Terraform du backlog : ce sont des besoins datés. La ligne méthode vient des indicateurs : chiffrage formalisé après coup (thème 4), migration chiffrée a posteriori et 87 lignes intégrées sans revue (thème 8), facteur de bus (thème 7). **La grille désigne les mêmes faiblesses que les indicateurs, c'est ce qui la rend crédible.** Une grille flatteuse n'aurait pas de colonne de droite.
 
 ---
 
@@ -117,15 +108,18 @@ Les actions ne sont pas classées par ordre d'importance mais par **coût d'un �
 
 ### 3.2 Les actions
 
-| Action | Modalité | Durée | Coût | Indicateur de réussite | Prio. |
-|--------|----------|-------|------|------------------------|:-----:|
-| **Arbitrage et chiffrage** : méthodes d'estimation, écriture d'une décision | Formation courte externe **gestion de projet logiciel**, puis pratique à chaque version : chiffrer avant, consigner l'arbitrage quand il est pris | 3 j | externe | Chaque version est chiffrée **avant** d'être ouverte ; chaque arbitrage est consigné **au moment où il est pris** | **1** |
-| **Revue et transmission** | Revue par un tiers, humain ou outillé, obligatoire sur les changements structurants : migration, contrat d'interface, chaîne | continu | interne | Part des changements structurants passés en revue, cible 100 % | **1** |
-| Sécurité applicative | Autoformation cadrée sur le référentiel **OWASP Top 10**, revue de sécurité outillée | 4 j | interne | Aucune vulnérabilité de catégorie OWASP introduite sur un trimestre | 2 |
-| Accessibilité | Formation certifiante externe **Opquast**, pour formaliser un acquis construit sur le projet | 3 j | ≈ 900 € | Une livraison passe la porte d'accessibilité **sans reprise** | 2 |
-| Management d'équipe | Formation courte, utile le jour où le projet passe en équipe | 2 j | interne ou externe | Un contributeur opérationnel en une journée sur le cadre écrit | 3 |
+Le plan, c'est la colonne « reste à acquérir » de la grille, ligne par ligne, avec trois choses par ligne : d'où vient le besoin, comment on l'acquiert, et à quoi on verra que c'est acquis.
 
-**Charge et budget** : **12 jours**, en autoformation ou en pratique sur du travail productif, sauf les deux formations externes ; un seul poste payant, la certification. Les deux priorités 1 passent avant tout le technique parce qu'elles ont déjà coûté au projet, et parce que le technique, lui, a été acquis sur le projet.
+| D'où vient le besoin | Compétence à acquérir | Moyen | Preuve attendue | Prio. |
+|----------------------|-----------------------|-------|-----------------|:-----:|
+| Chiffrage formalisé après coup (thème 4) ; migration chiffrée a posteriori (thème 8) | **Chiffrage avant réalisation, arbitrage consigné quand il est pris** | Pratique à chaque version, dès la 1.7 | La 1.7 est chiffrée avant le premier commit, et l'écart mesuré à la livraison | **1** |
+| Facteur de bus 1 (thème 7) ; 87 lignes intégrées sans revue (thème 8) | **Revue de code par un tiers** | Un pair humain sur le structurant, revue outillée ailleurs | 100 % des pull requests structurantes relues avant fusion | **1** |
+| 1.7 : temps réel, double authentification ; 1.8 : hors-ligne | SignalR sur ASP.NET Core, TOTP RFC 6238, stratégies hors-ligne Workbox | Documentation Microsoft et Google, prototype hors produit avant le lot | Une soirée qui se met à jour sans polling ; le code à six chiffres activable dans les paramètres | 2 |
+| Backlog technique : 8 lots Terraform | Terraform, fédération d'identité pour la CI | Tutoriels HashiCorp, lot 1 puis import de la prod existante | `terraform plan` vide sur la prod en service ; plus de clé JSON longue durée | 2 |
+| Porte d'accessibilité : reprises avant chaque livraison | RGAA, au-delà des tests automatisés | Formation certifiante, seul poste payant | Une livraison passe la porte sans reprise | 2 |
+| Si le projet passe en équipe | Management d'équipe, transmission | Formation courte ; le cadre écrit existe déjà, RACI et AGENTS.md | Un contributeur opérationnel en une journée | 3 |
+
+**Le moyen est l'autoformation sur la documentation éditeur, avec un prototype hors produit avant le lot**, parce que c'est ainsi que le C# a été absorbé en mars. Un seul poste est une formation payante, le RGAA, parce que les tests automatisés ne couvrent qu'une partie des critères. Les deux priorités 1 passent avant tout le technique parce qu'elles ont déjà coûté au projet, et parce que le technique, lui, s'apprend sur le projet.
 
 ### 3.3 Les besoins en recrutement, à transmettre aux ressources humaines
 
@@ -133,8 +127,8 @@ Le référentiel demande de **transmettre les besoins en recrutement**. Le proje
 
 | Profil à recruter | Exigé au recrutement | Construit en interne, sur le cadre écrit |
 |-------------------|----------------------|------------------------------------------|
-| **Développeur front** | React et TypeScript niveau 3, **accessibilité niveau 3** : la porte de qualité échoue une livraison au niveau 1 | Conventions, procédures, service worker, internationalisation |
-| **DevOps, à mi-temps** | Intégration continue et conteneurisation niveau 2 | Supervision, exploitation, veille de vulnérabilités, sur les procédures existantes |
+| **Développeur front** | React et TypeScript, et **l'accessibilité, RGAA** : la porte de qualité échoue une livraison qui ne la tient pas | Conventions, procédures, service worker, internationalisation |
+| **DevOps, à mi-temps** | GitHub Actions, conteneurs, Terraform et Cloud Run | Supervision, exploitation, veille de vulnérabilités, sur les procédures existantes |
 
 **La note transmise tient en une phrase** : recruter sur le langage et l'expérience, former sur le contexte et la conformité. Ce que ces deux personnes recevraient le premier jour existe déjà : les conventions du dépôt, les procédures exécutables, les gabarits d'issue et de pull request, le journal des versions.
 
@@ -159,8 +153,8 @@ Le critère est explicite : les modalités de formation doivent prendre en compt
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 18 | Les compétences : moi, avant et après le projet | 1, 2 |
-| 19 | Le plan de développement : ce qui reste à acquérir | 3 |
+| 11 | 9. Les compétences : ce qu'il a fallu apprendre | 1, 2 |
+| 12 | Le plan de développement : ce qui reste à acquérir | 3 |
 
 ---
 
@@ -168,9 +162,9 @@ Le critère est explicite : les modalités de formation doivent prendre en compt
 
 | Question | Ligne de réponse |
 |----------|------------------|
-| Une auto-évaluation, est-ce évaluable ? | Elle est étalonnée ligne par ligne sur le dépôt : la date d'introduction de chaque technologie, ce qui a été livré avec, et ce qui a échoué. Elle avoue deux écarts non comblés, sur les compétences que les indicateurs désignent aussi. Une grille flatteuse n'en avouerait aucun |
-| Comment avez-vous étalonné les niveaux cibles ? | Sur ce que le projet a réellement exigé, pas sur un référentiel. Chaque compétence de la cartographie correspond à une technologie présente dans le dépôt, avec une date d'introduction vérifiable, la chronologie des quatre vagues |
-| Pourquoi une certification d'accessibilité, si le niveau est atteint ? | Parce que l'acquis a été construit sur un seul produit, avec des outils automatisés. Une certification le formalise et le rend transférable. Et parce que c'est le seul domaine où un écart a un effet immédiat et bloquant : la porte de qualité échoue le déploiement |
+| Une auto-évaluation, est-ce évaluable ? | Elle ne note rien : chaque case est une technologie ou une méthode nommée, vérifiable dans le dépôt, une dépendance, un job de workflow, une version taguée. Et elle a une colonne « reste à acquérir » qui désigne les mêmes faiblesses que les indicateurs. Une grille flatteuse n'en aurait pas |
+| D'où viennent les compétences « à acquérir » ? | De la suite du projet, pas d'un référentiel : la 1.7 demande du temps réel et une double authentification, la 1.8 du hors-ligne, le backlog technique huit lots Terraform. Et des indicateurs pour la méthode : chiffrage après coup, revue absente |
+| Pourquoi une formation d'accessibilité, si les tests passent ? | Parce que l'acquis a été construit sur un seul produit, avec des outils automatisés. Une certification le formalise et le rend transférable. Et parce que c'est le seul domaine où un écart a un effet immédiat et bloquant : la porte de qualité échoue le déploiement |
 | Pourquoi si peu de technique dans le plan ? | Parce que le technique a été acquis sur le projet, en production, et que la grille le montre. Ce qui reste et qui a déjà coûté est du pilotage : chiffrer avant, arbitrer quand il le faut, faire relire le structurant |
 | Vos deux plus gros écarts ne sont pas techniques | Non, et c'est volontaire. Arbitrage, chiffrage et transmission sont les deux compétences que le projet a le plus sollicitées et le moins bien exercées : le chiffrage a été formalisé a posteriori, et 87 lignes ont été intégrées sans revue. La grille désigne les mêmes faiblesses que les indicateurs, sinon elle serait de complaisance |
 | Les modalités handicap ne sont-elles pas des clauses de style ? | Trois d'entre elles ont un coût réel et sont donc vérifiables : le tiers-temps accordé de droit, la fourniture systématique d'un support en texte structuré, et l'accessibilité de la plateforme comme critère de sélection du prestataire. Et le compagnonnage interne est déjà asynchrone et écrit, c'est le mode de travail normal du projet, pas un aménagement rapporté |

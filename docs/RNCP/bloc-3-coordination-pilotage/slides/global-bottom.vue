@@ -286,6 +286,54 @@ const ANNEX_FROM = 99
   height: 5px;
 }
 
+.skills {
+  display: grid;
+  grid-template-columns: 6.4rem 8.6rem 1fr 9.6rem;
+  gap: 2px;
+  font-size: 0.68rem;
+  line-height: 1.28;
+}
+.skills.plan {
+  grid-template-columns: 1.1fr 1fr 1fr 1.1fr;
+}
+.skills > div {
+  padding: 0.3rem 0.45rem;
+  border-radius: 3px;
+  background: rgb(0 0 0 / 5%);
+}
+.skills .h {
+  background: none;
+  padding-bottom: 0.05rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.skills .h.a {
+  color: var(--s1);
+}
+.skills .h.r {
+  color: var(--s2);
+}
+.skills .l {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.skills .b {
+  color: var(--ink-2);
+}
+.skills .a {
+  background: rgb(13 148 136 / 12%);
+}
+.skills .r {
+  background: rgb(235 104 52 / 12%);
+}
+.skills u {
+  text-decoration: none;
+  opacity: 0.6;
+  font-weight: 600;
+}
+
 .flow {
   font-size: 0.7rem;
   line-height: 1.2;

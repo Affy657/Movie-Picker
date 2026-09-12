@@ -41,7 +41,7 @@ Ne rien commenter ici. Enchainer immediatement sur la diapo suivante.
 <div><span><b>6.</b> Les moyens et les coûts</span><u>C3.1, C3.2.1</u></div>
 <div><span><b>7.</b> Les risques</span><u>C3.1, C3.2.1</u></div>
 <div><span><b>8.</b> Un cas d'arbitrage</span><u>C3.2.2</u></div>
-<div><span><b>9.</b> Les compétences, avant et après</span><u>C3.3.2</u></div>
+<div><span><b>9.</b> Les compétences : apprises, et à acquérir</span><u>C3.3.2</u></div>
 <div><span><b>10.</b> Piloter le travail, seul</span><u>C3.3.1</u></div>
 <div><span><b>11.</b> Rendre compte, et la validation du périmètre livré</span><u>C3.4.1, C3.4.2</u></div>
 </div>
@@ -859,134 +859,95 @@ dans le HTML initial en 1.6, 2,3 s, porte verte.
 
 ---
 
-# 9. Les compétences : moi, avant et après le projet
+# 9. Les compétences : ce qu'il a fallu apprendre
 
-<div class="text-xs opacity-80 mb-1">
-<b>0</b> non acquis ; <b>1</b> lit et modifie accompagné ; <b>2</b> autonome sur une tâche courante ; <b>3</b> conçoit, arbitre, traite le cas non nominal ; <b>4</b> définit le standard et forme.
-</div>
+<div class="skills mt-2">
+<div class="h"></div><div class="h">Février, déjà acquis</div><div class="h a">Appris sur le projet, et la version qui le prouve</div><div class="h r">Reste à acquérir</div>
 
-<div class="grid grid-cols-5 gap-5 mt-3">
-<div class="col-span-3">
+<div class="l">Back</div><div class="b">Node, Express, Mongoose, Zod, Swagger</div><div class="a">C#, ASP.NET Core, architecture hexagonale, driver MongoDB et transactions, contrat OpenAPI généré et types front dérivés <u>V1</u> ; Web Push VAPID <u>1.1</u> ; OAuth Google et GitHub, synchronisation Letterboxd <u>1.4</u> ; passe planifiée Cloud Scheduler <u>1.6</u></div><div class="r">Temps réel, SignalR ou WebSocket ; TOTP <u>1.7</u></div>
 
-<div class="dumb">
-<div class="lbl"></div><div class="scale"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
-<div class="lbl">Architecture applicative</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">Arbitrage, chiffrage</div><div class="track"><u class="a" style="left:50%"></u><u class="c" style="left:50%"></u><u class="t" style="left:100%"></u></div>
-<div class="lbl">Revue, transmission</div><div class="track"><i class="bar" style="left:25%;width:25%"></i><u class="a" style="left:25%"></u><u class="c" style="left:50%"></u><u class="t" style="left:100%"></u></div>
-<div class="lbl">React, TypeScript</div><div class="track"><u class="a" style="left:75%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">Accessibilité</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">App installable, i18n</div><div class="track"><i class="bar" style="left:25%;width:25%"></i><u class="a" style="left:25%"></u><u class="c" style="left:50%"></u></div>
-<div class="lbl">C#, ASP.NET Core</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">Architecture hexagonale</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">Sécurité, identité</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">CI/CD, conteneurs</div><div class="track"><i class="bar" style="left:50%;width:25%"></i><u class="a" style="left:50%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">Supervision, exploitation</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
-<div class="lbl">Veille de vulnérabilités</div><div class="track"><i class="bar big" style="left:25%;width:50%"></i><u class="a" style="left:25%"></u><u class="c" style="left:75%"></u></div>
-</div>
+<div class="l">Front</div><div class="b">React, TypeScript, Vite, React Router</div><div class="a">TanStack Query, cache de données distantes ; i18n FR et EN <u>V1</u> ; PWA Workbox <u>1.1</u> ; design system à jetons, SEO JSON-LD et sitemap <u>1.5</u> ; pré-rendu, coquille de démarrage LCP <u>1.6</u></div><div class="r">Consultation hors-ligne en lecture seule <u>1.8</u></div>
 
-<div class="legend mt-1">
-<span style="color:#a7b0ae">Février 2026</span>
-<span style="--c:var(--s1)">Septembre 2026</span>
-<span class="nokey" style="opacity:.8">cercle orange : niveau exigé, non atteint</span>
-</div>
+<div class="l">Tests, qualité</div><div class="b">Aucun test automatisé</div><div class="a">Vitest, Testing Library, MSW ; xUnit, Moq, WebApplicationFactory ; tests sur MongoDB réel en replica set ; Playwright bout en bout ; Stryker, tests de mutation ; SonarCloud et seuils de couverture bloquants <u>V1 à 1.6</u></div><div class="r">Revue de code par un tiers</div>
 
-</div>
-<div class="col-span-2 text-sm">
+<div class="l">Accessibilité, performance</div><div class="b">Rien</div><div class="a">axe automatisé sur 9 vues, critères RGAA clavier, focus et contraste <u>1.2</u> ; Lighthouse bloquant au déploiement <u>V1</u> ; mesure et correction du LCP <u>1.6</u></div><div class="r">Formation RGAA certifiante</div>
 
-<div class="text-xs opacity-75 mb-1">Ordre d'apparition dans le dépôt</div>
-<div class="tl">
-<div><b>1. Produire</b><span>16 → 19 mars<br>C#, hexagonal, CI, OpenAPI</span></div>
-<div><b>2. Fiabiliser</b><span>avril à mai<br>Performance, a11y, scans, i18n, push</span></div>
-<div><b>3. Exploiter</b><span>juillet<br>Supervision, sondes, alertes</span></div>
-<div><b>4. Enrichir</b><span>août<br>Identité fédérée, service tiers</span></div>
-</div>
+<div class="l">Livraison, infrastructure</div><div class="b">Docker, Git et GitHub</div><div class="a">GitHub Actions, 6 workflows, filtrage par chemins ; Artifact Registry et Cloud Run, déploiement par digest, rollback de trafic ; S3 et CloudFront, politique d'en-têtes ; Secret Manager ; Dependabot regroupé <u>1.3</u> ; sauvegarde Atlas vérifiée par restauration <u>1.6</u></div><div class="r">Terraform ; fédération d'identité pour la CI ; environnement de recette</div>
 
-<div class="kpi grid-cols-2 mt-5">
-<div><b>9</b><span>écarts comblés par autoformation, en production, sans plan ni budget</span></div>
-<div><b>2</b><span>écarts restants, non techniques : arbitrage et chiffrage, revue et transmission</span></div>
-</div>
+<div class="l">Sécurité, exploitation</div><div class="b">Cookie de session</div><div class="a">Data Protection, CSP ; Gitleaks, Trivy, zizmor ; export et suppression RGPD, PostHog sous consentement <u>1.2</u> ; Sentry front et API <u>1.3</u> ; 3 sondes de disponibilité, 5 politiques d'alerte, journal de versions</div><div class="r">Double authentification <u>1.7</u> ; OWASP</div>
 
-</div>
+<div class="l">Méthode</div><div class="b">Commits directs, sans pull request</div><div class="a">Cycle en V par version, feuille de route chiffrée en points, board ; pull request et CI bloquante ; AGENTS.md et conduite d'assistants de code ; document d'aide à la décision, gabarit de PR</div><div class="r">Chiffrage avant réalisation, arbitrage consigné ; management d'équipe</div>
 </div>
 
 <!--
 DUREE 1:50. ELEMENT IMPOSE 9 : l'evaluation des besoins en competences via une
-grille. CRITERES : les competences a mobiliser sont IDENTIFIEES, ce sont les
-douze lignes ; la grille des competences actuelles et a acquerir est
-COMMENTEE, afficher ne suffit pas.
+grille. CRITERES : les competences a mobiliser sont IDENTIFIEES ; la grille des
+competences actuelles et a acquerir est COMMENTEE, afficher ne suffit pas.
 
-Convention a enoncer avant le graphique : c'est une auto-evaluation, etalonnee
-sur des preuves. Chaque ligne est une technologie presente dans le depot, avec
-une date d'introduction et ce qui a ete livre avec ; les competences sont
-deduites des lots, pas d'un catalogue. Le point gris est fevrier 2026, le point
-vert septembre, le cercle orange le niveau que le projet exige quand il n'est
-pas atteint.
+Convention, a dire avant de lire : pas de note. Une competence est ici une
+technologie ou une methode nommee, et son etat se lit dans le depot. Colonne
+grise : ce que je savais en fevrier, c'est la pile du MVP livre le 16 mars.
+Colonne verte : ce que le projet m'a oblige a apprendre, avec la version qui
+le prouve. Colonne orange : ce que la suite du projet demande et que je n'ai
+pas encore.
 
-Puis COMMENTER, en designant le graphique :
-1. Les traits epais sont les competences de contexte : hexagonal,
-accessibilite, securite, supervision, veille. Elles ont ete franchies par
-autoformation, en production. La vague 1 a coute quatre jours, la frise de
-droite, et elle n'est dans aucune ligne du chiffrage : c'est la justification
-meme d'un plan de developpement des competences.
-2. Les deux lignes sans progression suffisante ne sont pas techniques :
-arbitrage et chiffrage, revue et transmission. Ce sont exactement les
-faiblesses montrees sur l'ecart au chiffrage, l'arbitrage et le facteur de bus.
-C'est ce qui rend la grille credible plutot que flatteuse.
-3. Le 3 est le seuil de responsabilite. Sur un projet a une personne, il
-faut y etre partout ou l'on porte le R, et c'est le cas sur le technique.
+COMMENTER, trois lectures :
+1. La colonne de fevrier tient en une ligne par domaine, et deux cases sont
+vides : aucun test, rien en accessibilite. Le MVP a ete livre avec ca. Tout ce
+qui est vert a ete appris seul, en production, pendant le projet, sans plan
+ni budget : c'est la justification du plan de la diapo suivante, rendre ce
+cout visible avant de le payer.
+2. Le vert n'est pas du vernis : chaque case est une chose qui tourne en prod
+ou qui bloque la chaine. La migration C# a coute quatre jours, du 16 au 19
+mars, et n'apparait dans aucune ligne du chiffrage, theme 8.
+3. La colonne orange a deux natures. Les lignes techniques viennent de la
+feuille de route, 1.7, 1.8 et le backlog Terraform : ce sont des besoins
+dates. La ligne methode vient des indicateurs : chiffrage apres coup, theme 4,
+migration chiffree a posteriori, theme 8, facteur de bus, theme 7. La grille
+designe les memes faiblesses que les indicateurs, c'est ce qui la rend
+credible.
 
-La frise de droite, dans l'ordre : produire, fiabiliser, exploiter, enrichir.
-C'est l'ordre d'un produit qui va en production.
-
-SI ON QUESTIONNE l'auto-evaluation : elle est verifiable ligne par ligne dans
-le depot, et elle avoue deux ecarts. Une grille flatteuse n'en avouerait
-aucun.
-
-SI ON QUESTIONNE « quatre jours pour changer de socle, c'est peu » : le
-perimetre etait de 944 lignes et 12 routes, avec un contrat deja specifie, et
-la reconstitution de charge est faible sur mars.
+SI ON QUESTIONNE « c'est une auto-evaluation » : oui, et chaque case est
+verifiable, une dependance dans package.json ou un csproj, un job dans un
+workflow, une version taggee. Une grille flatteuse n'aurait pas de colonne
+orange.
 -->
 
 ---
 
 # Le plan de développement : ce qui reste à acquérir
 
-<div class="grid grid-cols-5 gap-5">
-<div class="col-span-3">
+<div class="skills plan mt-2">
+<div class="h">D'où vient le besoin</div><div class="h r">Compétence à acquérir</div><div class="h">Moyen</div><div class="h a">Preuve attendue</div>
 
-<div class="bars">
-<div class="p1"><span>P1 Arbitrage, chiffrage</span><div class="t"><i style="width:27%">3 j</i><em>formation courte, puis pratique à chaque version. Chiffrage <b>avant</b>, arbitrage consigné <b>quand il est pris</b></em></div></div>
-<div class="p1"><span>P1 Revue, transmission</span><div class="t"><i class="cont" style="width:14%">continu</i><em>revue par un tiers, humain ou outillé, obligatoire sur le structurant. 100 % du structurant relu</em></div></div>
-<div><span>P2 Sécurité applicative</span><div class="t"><i style="width:36%">4 j</i><em>autoformation OWASP, revue outillée. Aucune vulnérabilité sur un trimestre</em></div></div>
-<div><span>P2 Accessibilité</span><div class="t"><i style="width:27%">3 j</i><em>certification externe. Une livraison passe la porte <b>sans reprise</b></em></div></div>
-<div class="p3"><span>P3 Management d'équipe</span><div class="t"><i style="width:18%">2 j</i><em>formation courte, utile le jour où le projet passe en équipe. Un contributeur opérationnel en une journée sur le cadre écrit</em></div></div>
+<div class="b">Chiffrage formalisé après coup, thème 4 ; migration chiffrée a posteriori, thème 8</div><div class="r">Chiffrage avant réalisation, arbitrage consigné quand il est pris</div><div class="m">Pratique à chaque version, dès la 1.7</div><div class="a">1.7 chiffrée avant le premier commit, écart mesuré à la livraison</div>
+
+<div class="b">Facteur de bus 1, thème 7 ; 87 lignes intégrées sans revue, thème 8</div><div class="r">Revue de code par un tiers</div><div class="m">Un pair humain sur le structurant, revue outillée ailleurs</div><div class="a">100 % des pull requests structurantes relues avant fusion</div>
+
+<div class="b">1.7 : temps réel, double authentification ; 1.8 : hors-ligne</div><div class="r">SignalR sur ASP.NET Core, TOTP RFC 6238, stratégies hors-ligne Workbox</div><div class="m">Documentation Microsoft et Google, prototype hors produit avant le lot</div><div class="a">Une soirée qui se met à jour sans polling ; le code à six chiffres activable dans les paramètres</div>
+
+<div class="b">Backlog tech : 8 lots Terraform</div><div class="r">Terraform, fédération d'identité pour la CI</div><div class="m">Tutoriels HashiCorp, lot 1 puis import de la prod existante</div><div class="a">terraform plan vide sur la prod en service ; plus de clé JSON longue durée</div>
+
+<div class="b">Porte d'accessibilité : reprises avant chaque livraison</div><div class="r">RGAA, au-delà des tests automatisés</div><div class="m">Formation certifiante</div><div class="a">Une livraison passe la porte sans reprise</div>
+
+<div class="b">Si le projet passe en équipe</div><div class="r">Management d'équipe, transmission</div><div class="m">Formation courte ; le cadre écrit existe déjà, RACI et AGENTS.md</div><div class="a">Un contributeur opérationnel en une journée</div>
 </div>
 
-<div class="legend mt-2">
-<span style="--c:#d97706">P1, a déjà coûté au projet</span>
-<span style="--c:var(--s1)">P2, consolide un acquis</span>
-<span style="--c:var(--s3)">P3, prépare la suite</span>
-</div>
-
-<div class="text-xs opacity-75 mt-2">12 jours. Un seul poste payant, la certification d'accessibilité.</div>
-
-</div>
-<div class="col-span-2 text-sm">
-
+<div class="grid grid-cols-2 gap-6 mt-4">
+<div>
 <div class="text-xs opacity-75 mb-1">Recrutement, si le projet passait en équipe</div>
 <div class="chips">
-<div><span>Développeur front</span><u>niveau 3 en accessibilité</u></div>
-<div><span>Profil DevOps</span><u>à mi-temps</u></div>
+<div><span>Développeur front</span><u>accessibilité, RGAA</u></div>
+<div><span>Profil DevOps</span><u>à mi-temps, Terraform et Cloud Run</u></div>
 </div>
-
-<div class="text-xs opacity-75 mt-4 mb-1">Modalités de formation, posées par défaut</div>
+</div>
+<div>
+<div class="text-xs opacity-75 mb-1">Modalités de formation, posées par défaut</div>
 <div class="chips">
 <div><span>Tiers-temps de droit</span><u>formation et évaluation</u></div>
 <div><span>Support en texte structuré</span><u>lecteur d'écran</u></div>
-<div><span>Matériel adapté</span><u>pendant la formation</u></div>
 <div><span>Plateforme accessible</span><u>critère de choix du prestataire</u></div>
 </div>
-
 </div>
 </div>
 
@@ -996,21 +957,28 @@ CRITERES : le plan est etabli et DETAILLE ; des FORMATIONS sont preconisees
 selon les besoins du projet et le profil ; les MODALITES sont adaptees au
 handicap ; le besoin en recrutement est transmis aux RH.
 
-Trois choses, une par bloc :
-1. Le principe d'ordonnancement, par cout d'un ecart non comble. Les deux
-priorites 1 ont deja coute : un chiffrage formalise apres coup, 87 lignes
-integrees sans revue, dix jours d'aout sans arbitrage. Elles passent avant
-tout ce qui est technique, parce que le technique a ete acquis sur le projet.
-2. L'indicateur en fin de chaque ligne. C'est lui qui distingue un plan d'une
-liste de voeux : chaque action se termine par un fait verifiable, pas par une
-attestation de presence. Douze jours, un seul poste payant, la certification
-d'accessibilite.
-3. Le recrutement, colonne de droite : je ne recruterais pas aujourd'hui, mais
-la question est instruite. Deux profils, et ce qu'ils recevraient le premier
-jour existe deja, la RACI et le contexte ecrit.
+Le plan, c'est la colonne orange de la diapo precedente, ligne par ligne,
+avec trois choses par ligne : d'ou vient le besoin, comment on l'acquiert, et
+a quoi on verra que c'est acquis.
 
-Sur le handicap, ne citer que les modalites qui ont un cout reel, donc
-verifiables : le tiers-temps de droit, le support en texte structure, le
-materiel adapte, l'accessibilite de la plateforme comme critere de choix du
-prestataire.
+1. L'ordre est celui du cout d'un ecart non comble. Les deux premieres
+lignes ont deja coute : un chiffrage apres coup, 87 lignes sans revue, dix
+jours d'aout sans arbitrage. Elles passent avant le technique parce que le
+technique, lui, s'est appris sur le projet.
+2. Les lignes techniques sont datees par la feuille de route : SignalR et
+TOTP pour la 1.7, le hors-ligne pour la 1.8, Terraform en huit lots au
+backlog. Le moyen est l'autoformation sur la documentation editeur, avec un
+prototype hors produit avant le lot, parce que c'est ainsi que le C# a ete
+absorbe en mars. Un seul poste est une formation payante : le RGAA, parce que
+les tests automatises ne couvrent qu'une partie des criteres.
+3. La preuve attendue est un fait, jamais une attestation de presence : un
+plan Terraform vide, une soiree sans polling, une livraison sans reprise.
+
+Le recrutement : je ne recruterais pas aujourd'hui, mais la question est
+instruite. Deux profils, et ce qu'ils recevraient le premier jour existe deja,
+la RACI et le contexte ecrit.
+
+Sur le handicap, ne citer que les modalites verifiables : le tiers-temps de
+droit, le support en texte structure, l'accessibilite de la plateforme comme
+critere de choix du prestataire.
 -->
