@@ -2,8 +2,8 @@ import {
   type ChangeEvent,
   type ClipboardEvent,
   type DragEvent,
-  type FormEvent,
   type ReactNode,
+  type SubmitEvent,
   useEffect,
   useId,
   useMemo,
@@ -161,7 +161,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
     setAttachmentError(null);
   }, [open]);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus('submitting');
     setError(null);

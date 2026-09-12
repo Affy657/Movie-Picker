@@ -230,16 +230,16 @@ export default function LetterboxdImportSection() {
       </div>
 
       {connected && !report && !confirmResult && user.letterboxdPendingReconciliationCount > 0 && (
-        <div className={sharedStyles.attention} role="status">
+        <output className={sharedStyles.attention}>
           <TriangleAlert size={15} aria-hidden />
-          <p>
+          <span className={sharedStyles.attentionText}>
             {pluralizeCount(
               user.letterboxdPendingReconciliationCount,
               'auth.account.letterboxd.attentionMessageOne',
               'auth.account.letterboxd.attentionMessage',
               t
             )}
-          </p>
+          </span>
           <Button
             type="button"
             className={sharedStyles.attentionBtn}
@@ -248,7 +248,7 @@ export default function LetterboxdImportSection() {
           >
             {t('auth.account.letterboxd.attentionConfirm')}
           </Button>
-        </div>
+        </output>
       )}
 
       {saveUsernameError && (

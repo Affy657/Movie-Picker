@@ -33,7 +33,9 @@ async function boot(): Promise<void> {
   hideSplash();
 }
 
-boot().catch((error: unknown) => {
+try {
+  await boot();
+} catch (error: unknown) {
   hideSplash();
   captureException(error);
-});
+}

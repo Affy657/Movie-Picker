@@ -128,8 +128,7 @@
   flex-shrink: 0;
 }
 
-.attention p {
-  margin: 0;
+.attentionText {
   flex: 1;
 }
 

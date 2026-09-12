@@ -257,8 +257,10 @@ export default function TechPage() {
     ogType: 'article',
   });
 
-  const eyebrow = (id: TechSectionId) =>
-    `${sectionNumber(id)} / ${t(`tech.nav.${id}` as TranslationKey)}`;
+  const eyebrow = (id: TechSectionId) => {
+    const label = t(`tech.nav.${id}` as TranslationKey);
+    return `${sectionNumber(id)} / ${label}`;
+  };
 
   const iconFacts = (
     group: string,

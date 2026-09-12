@@ -1,4 +1,4 @@
-import { useCallback, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useId, useMemo, useState, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
@@ -6,28 +6,23 @@ import clsx from 'clsx';
 import PageLayout from '@/shared/components/PageLayout';
 import Button from '@/shared/components/Button';
 import { ROUTES } from '@/app/routes';
-import { getErrorMessage } from '@/shared/api/apiError';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useRecommendationSeed } from '@/app/pages/home/usePersonalRows';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
-import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
-import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
-import CollectionToolbar from '@/features/movies/components/CollectionToolbar';
-import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
-import FilteredCollectionLayout, {
-  FilterSheet,
-  FilteredEmptyState,
-  toCollectionToolbarProps,
-} from '@/features/movies/components/FilteredCollectionLayout';
+import CollectionToolbar, {
+  type CollectionToolbarLabels,
+} from '@/features/movies/components/CollectionToolbar';
+import { toCollectionToolbarProps } from '@/features/movies/components/FilteredCollectionLayout';
+import MovieListFilteredLayout from '@/features/movies/components/MovieListFilteredLayout';
 import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
 import listCardStyles from '@/features/movies/components/MovieListCard.module.css';
 import { useMovieListToolbar } from '@/features/movies/hooks/useMovieListToolbar';
@@ -48,11 +43,7 @@ import {
 } from '@/features/movies/showcaseSections';
 
 export type { ShowcaseListVariant };
-import {
-  useAddToWatchlist,
-  useRemoveFromWatchlist,
-  useWatchlist,
-} from '@/features/watchlist/hooks/useWatchlist';
+import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
 import ShowcaseListStates from './ShowcaseListStates';
 import type { MovieMediaType } from '@/shared/types/movie';
@@ -70,10 +61,6 @@ interface ShowcaseListItem {
   runtimeMinutes?: number | null;
   order: number;
   rank: number | null;
-}
-
-function watchlistKey(tmdbId: number, mediaType: string): string {
-  return `${tmdbId}|${mediaType}`;
 }
 
 const TITLE_KEYS: Record<ShowcaseListVariant, TranslationKey> = {
@@ -229,6 +216,35 @@ function resolveSubtitle({
   return t(SUBTITLE_KEYS[variant]);
 }
 
+function showcaseToolbarLabels(
+  toolbar: { isFiltered: boolean; visibleCount: number; totalCount: number },
+  t: Translate
+): CollectionToolbarLabels {
+  return {
+    searchLabel: t('showcase.toolbar.searchLabel'),
+    searchPlaceholder: t('showcase.toolbar.searchPlaceholder'),
+    filtersToggleAriaLabel: t('profile.movies.toolbar.filtersToggleAria'),
+    filtersLabel: t('profile.movies.toolbar.filtersLabel'),
+    sortLabel: t('profile.movies.toolbar.sortLabel'),
+    sortMenuAriaLabel: t('profile.movies.toolbar.sortMenuAria'),
+    sortDirectionAscLabel: t('profile.movies.toolbar.sortDirectionAsc'),
+    sortDirectionDescLabel: t('profile.movies.toolbar.sortDirectionDesc'),
+    resultCountText: toolbar.isFiltered
+      ? t('showcase.filteredCount', { shown: toolbar.visibleCount, total: toolbar.totalCount })
+      : pluralizeCount(toolbar.totalCount, 'showcase.resultCountOne', 'showcase.resultCount', t),
+    clearAllLabel: t('profile.movies.toolbar.clearAll'),
+  };
+}
+
+function rankBadge(rank: number | null, t: Translate): ReactNode {
+  if (rank == null) return undefined;
+  return (
+    <span className={clsx(listCardStyles.badge, listCardStyles.badgeStacked)}>
+      {t('showcase.rank', { rank })}
+    </span>
+  );
+}
+
 export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -269,9 +285,10 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     [variant, routeSelection]
   );
 
+  const isSearch = variant === 'search';
   const showcaseEnabled = isShowcaseQueryEnabled(variant, routeSelection);
-  const searchEnabled = variant === 'search' && searchQuery.length > 0;
-  const queryEnabled = variant === 'search' ? searchEnabled : showcaseEnabled;
+  const searchEnabled = isSearch && searchQuery.length > 0;
+  const queryEnabled = isSearch ? searchEnabled : showcaseEnabled;
 
   const showcase = useMovieShowcase(showcaseQuery, showcaseEnabled);
   const collections = useMovieCollections(variant === 'collection');
@@ -283,15 +300,10 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     enabled: searchEnabled,
   });
 
-  const source = variant === 'search' ? search : showcase;
+  const source = isSearch ? search : showcase;
+  const rows = source.data?.items;
 
-  const items = useMemo<ShowcaseListItem[]>(
-    () =>
-      toShowcaseListItems(
-        variant === 'search' ? (search.data?.items ?? []) : (showcase.data?.items ?? [])
-      ),
-    [variant, search.data, showcase.data]
-  );
+  const items = useMemo<ShowcaseListItem[]>(() => toShowcaseListItems(rows ?? []), [rows]);
 
   const mediaTypeLabels = useMemo(
     () => ({
@@ -307,56 +319,10 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   );
 
   const toolbar = useMovieListToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
-  const filtersPanelRef = useRef<HTMLDivElement>(null);
-  useClickOutside(
-    filtersPanelRef,
-    () => toolbar.setFiltersOpen(false),
-    toolbar.filtersOpen && !isMobile,
-    '[data-filters-toggle]'
-  );
-
-  const filtersLabels = useMemo(
-    () => ({
-      genre: t('watchlist.toolbar.filterGenre'),
-      type: t('watchlist.toolbar.filterType'),
-      typeMovie: t('watchlist.toolbar.filterTypeMovie'),
-      typeTv: t('watchlist.toolbar.filterTypeTv'),
-      decade: t('watchlist.toolbar.filterDecade'),
-      resetAll: t('profile.movies.toolbar.filtersResetAll'),
-    }),
-    [t]
-  );
 
   const [detailsTarget, setDetailsTarget] = useState<ShowcaseListItem | null>(null);
   const [proposeTarget, setProposeTarget] = useState<ShowcaseListItem | null>(null);
-  const [watchlistError, setWatchlistError] = useState<string | null>(null);
-
-  const watchlistQuery = useWatchlist({ enabled: isLoggedIn });
-  const watchlistKeys = useMemo(
-    () => new Set((watchlistQuery.data ?? []).map((i) => watchlistKey(i.tmdbId, i.mediaType))),
-    [watchlistQuery.data]
-  );
-  const { mutate: addToWatchlist } = useAddToWatchlist({
-    onError: (err) => setWatchlistError(getErrorMessage(err, t('watchlist.card.addError'))),
-  });
-  const { mutate: removeFromWatchlist } = useRemoveFromWatchlist({
-    onError: (err) => setWatchlistError(getErrorMessage(err, t('watchlist.card.removeError'))),
-  });
-
-  const handleToggleWatchlist = (item: ShowcaseListItem) => {
-    setWatchlistError(null);
-    if (watchlistKeys.has(watchlistKey(item.tmdbId, item.mediaType))) {
-      removeFromWatchlist({ tmdbId: item.tmdbId, mediaType: item.mediaType });
-    } else {
-      addToWatchlist({
-        tmdbId: item.tmdbId,
-        mediaType: item.mediaType,
-        title: item.title,
-        year: item.year,
-        posterPath: item.posterPath,
-      });
-    }
-  };
+  const watchlist = useWatchlistToggle(isLoggedIn);
 
   const headingText = resolveHeading({
     variant,
@@ -385,21 +351,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
   const activeFilterCount = toolbar.activeFilterChips.length;
   const totalCount = items.length;
-
-  const filtersPanel = (
-    <MovieListFiltersPanel
-      panelId={filtersPanelId}
-      tmdbLanguage={tmdbLanguage}
-      labels={filtersLabels}
-      selectedGenres={toolbar.selectedGenres}
-      onToggleGenre={toolbar.toggleGenre}
-      selectedMediaTypes={toolbar.selectedMediaTypes}
-      onToggleMediaType={toolbar.toggleMediaType}
-      selectedDecade={toolbar.selectedDecade}
-      onToggleDecade={toolbar.toggleDecade}
-      onReset={isMobile ? undefined : toolbar.clearAllFilters}
-    />
-  );
+  const hasResults = queryEnabled && !source.isError && totalCount > 0;
 
   return (
     <PageLayout className={styles.layout}>
@@ -415,9 +367,9 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
       <h2 className="visually-hidden">{t('showcase.sectionsHeading')}</h2>
 
-      {watchlistError ? (
+      {watchlist.error ? (
         <p className="error" role="alert">
-          {watchlistError}
+          {watchlist.error}
         </p>
       ) : null}
 
@@ -430,8 +382,8 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
         onRetry={() => void source.refetch()}
       />
 
-      {queryEnabled && !source.isError && totalCount > 0 ? (
-        <FilteredCollectionLayout
+      {hasResults ? (
+        <MovieListFilteredLayout
           toolbar={
             <CollectionToolbar
               {...toCollectionToolbarProps(toolbar, {
@@ -444,73 +396,13 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 { key: 'title', label: t('profile.movies.toolbar.sortTitle') },
                 { key: 'year', label: t('profile.movies.toolbar.sortYear') },
               ]}
-              labels={{
-                searchLabel: t('showcase.toolbar.searchLabel'),
-                searchPlaceholder: t('showcase.toolbar.searchPlaceholder'),
-                filtersToggleAriaLabel: t('profile.movies.toolbar.filtersToggleAria'),
-                filtersLabel: t('profile.movies.toolbar.filtersLabel'),
-                sortLabel: t('profile.movies.toolbar.sortLabel'),
-                sortMenuAriaLabel: t('profile.movies.toolbar.sortMenuAria'),
-                sortDirectionAscLabel: t('profile.movies.toolbar.sortDirectionAsc'),
-                sortDirectionDescLabel: t('profile.movies.toolbar.sortDirectionDesc'),
-                resultCountText: toolbar.isFiltered
-                  ? t('showcase.filteredCount', {
-                      shown: toolbar.visibleCount,
-                      total: toolbar.totalCount,
-                    })
-                  : pluralizeCount(
-                      toolbar.totalCount,
-                      'showcase.resultCountOne',
-                      'showcase.resultCount',
-                      t
-                    ),
-                clearAllLabel: t('profile.movies.toolbar.clearAll'),
-              }}
+              labels={showcaseToolbarLabels(toolbar, t)}
             />
           }
-          desktopFilters={
-            toolbar.filtersOpen && !isMobile ? (
-              <div ref={filtersPanelRef}>{filtersPanel}</div>
-            ) : null
-          }
-          chips={
-            activeFilterCount > 0 ? (
-              <ActiveFilterChips
-                chips={toolbar.activeFilterChips}
-                groupAriaLabel={t('watchlist.filter.toggleAria')}
-                removeAriaLabel={t('profile.movies.toolbar.removeFilterAria')}
-              />
-            ) : null
-          }
-          mobileSheet={
-            isMobile ? (
-              <FilterSheet
-                open={toolbar.filtersOpen}
-                title={t('profile.movies.toolbar.filtersSheetTitle')}
-                onClose={() => toolbar.setFiltersOpen(false)}
-                resetLabel={t('profile.movies.toolbar.filtersReset')}
-                applyLabel={pluralizeCount(
-                  toolbar.visibleCount,
-                  'profile.movies.toolbar.filtersApplyOne',
-                  'profile.movies.toolbar.filtersApply',
-                  t
-                )}
-                onReset={toolbar.clearAllFilters}
-              >
-                {filtersPanel}
-              </FilterSheet>
-            ) : null
-          }
-          emptyFiltered={
-            toolbar.visibleItems.length === 0 ? (
-              <FilteredEmptyState
-                title={t('profile.movies.toolbar.emptyTitle')}
-                message={t('profile.movies.toolbar.emptyMessage')}
-                resetLabel={t('profile.movies.toolbar.filtersResetAll')}
-                onReset={toolbar.resetAll}
-              />
-            ) : null
-          }
+          filters={toolbar}
+          filtersPanelId={filtersPanelId}
+          tmdbLanguage={tmdbLanguage}
+          isMobile={isMobile}
         >
           <ul className={styles.grid} aria-label={t('showcase.sectionsHeading')}>
             {toolbar.revealedItems.map((item) => (
@@ -519,36 +411,30 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 item={item}
                 hasHover={hasHover}
                 isLoggedIn={isLoggedIn}
-                inWatchlist={watchlistKeys.has(watchlistKey(item.tmdbId, item.mediaType))}
-                onToggleWatchlist={() => handleToggleWatchlist(item)}
+                inWatchlist={watchlist.has(item)}
+                onToggleWatchlist={() => watchlist.toggle(item)}
                 onOpenDetails={() => setDetailsTarget(item)}
                 onProposeFallback={() => setProposeTarget(item)}
                 openDetailsAriaLabel={t('profile.movies.card.openDetailsAria', {
                   title: item.title,
                 })}
                 ratingScale={user?.ratingScale}
-                leadingBadge={
-                  item.rank != null ? (
-                    <span className={clsx(listCardStyles.badge, listCardStyles.badgeStacked)}>
-                      {t('showcase.rank', { rank: item.rank })}
-                    </span>
-                  ) : undefined
-                }
+                leadingBadge={rankBadge(item.rank, t)}
                 t={t}
               />
             ))}
           </ul>
           {toolbar.remainingCount > 0 && (
             <Button className={styles.loadMoreBtn} onClick={toolbar.revealMore}>
-              {t(
-                toolbar.remainingCount === 1
-                  ? 'profile.movies.loadMoreOne'
-                  : 'profile.movies.loadMore',
-                { count: toolbar.remainingCount }
+              {pluralizeCount(
+                toolbar.remainingCount,
+                'profile.movies.loadMoreOne',
+                'profile.movies.loadMore',
+                t
               )}
             </Button>
           )}
-        </FilteredCollectionLayout>
+        </MovieListFilteredLayout>
       ) : null}
 
       {detailsTarget && (

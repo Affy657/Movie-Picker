@@ -190,7 +190,7 @@ export function AppRoutesWithErrorBoundary() {
   );
 }
 
-export function AppProviders({ children }: { children: ReactNode }) {
+export function AppProviders({ children }: Readonly<{ children: ReactNode }>) {
   const [queryClient] = useState(() => createAppQueryClient());
 
   return (
