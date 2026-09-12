@@ -15,7 +15,7 @@
 > - Les recommandations sont réalistes et réalisables dans leur mise en œuvre.
 > - Les outils collaboratifs utilisés intègrent le partage de ressources, et les choix d'outils sont pertinents au regard de l'objectif poursuivi.
 
-Alimente les diapositives 14 à 17.
+Alimente les diapositives 13 à 15, thème 10.
 
 **Posture de ce chapitre.** Le projet a été mené par une seule personne, et le chapitre le dit sans détour : il n'y a pas d'équipe, pas de délégation à une autre personne, et aucun acteur intermédiaire n'est inventé pour remplir le critère. Ce qui est présenté, c'est **comment une personne a affecté ses missions dans le temps et à l'automatisation**, les styles qu'elle a appliqués au processus et à elle-même, ce qu'elle a mis en place pour les trois publics du projet, et une analyse critique d'une posture réelle et mesurée.
 
@@ -25,30 +25,30 @@ Alimente les diapositives 14 à 17.
 
 ### A.1 L'affectation des missions dans le temps
 
-Le critère demande **l'affectation des missions réalisée au cours du projet**. Une personne portant toutes les missions, l'affectation ne se lit pas entre profils mais **dans le temps** : quelle mission a occupé quel mois. La mesure est faite sur les 833 commits de la branche principale au 5 septembre 2026, classés en quatre missions par le préfixe du message de commit (`feat`, `fix`, `test`, `ci`, `docs`...), et par mots-clés pour les 184 messages sans préfixe, surtout ceux de mars et d'avril.
+Le critère demande **l'affectation des missions réalisée au cours du projet**. Une personne portant toutes les missions, l'affectation ne se lit pas entre profils mais **dans le temps** : quelle mission a occupé quel mois. La mesure est faite sur les **891 commits hors fusion** de la branche principale au 12 septembre 2026, classés en quatre missions par le préfixe du message de commit (`feat`, `fix`, `test`, `ci`, `docs`...), et par mots-clés pour les 70 messages sans préfixe, surtout ceux de mars et d'avril. Elle est recalculable depuis le dépôt et n'est pas sur le support : la diapositive 13 ne garde que la répartition entre la main et la chaîne (§ A.2).
 
 | Mission | Ce qu'elle contient | Commits | Part |
 |---------|---------------------|--------:|-----:|
-| **Produit** | Fonctionnalités, performance, interface | 201 | 24 % |
-| **Fiabilité** | Correctifs, tests, refactorisations, style | 427 | 51 % |
-| **Chaîne, dépendances, exploitation** | Intégration continue, montées de version, configuration, publication | 107 | 13 % |
-| **Documentation, pilotage** | Dossiers, feuilles de route, journal des versions | 98 | 12 % |
+| **Produit** | Fonctionnalités, performance, interface | 212 | 24 % |
+| **Fiabilité** | Correctifs, tests, refactorisations, style | 437 | 49 % |
+| **Chaîne, dépendances, exploitation** | Intégration continue, montées de version, configuration, publication | 91 | 10 % |
+| **Documentation, pilotage** | Dossiers, feuilles de route, journal des versions | 151 | 17 % |
 
 | Mois | Commits | Produit | Fiabilité | Chaîne | Documentation |
 |------|--------:|--------:|----------:|-------:|--------------:|
-| Mars | 28 | 14 % | 72 % | 14 % | 0 % |
-| Avril | 72 | 44 % | 35 % | 8 % | 13 % |
-| Mai | 150 | 33 % | 50 % | 13 % | 4 % |
-| Juin | 227 | 19 % | 64 % | 9 % | 8 % |
-| Juillet | 194 | 12 % | 50 % | 17 % | 21 % |
-| Août | 127 | 29 % | 43 % | 13 % | 15 % |
-| Septembre, 5 jours | 34 | 32 % | 35 % | 24 % | 9 % |
+| Mars | 28 | 18 % | 79 % | 4 % | 0 % |
+| Avril | 71 | 44 % | 35 % | 8 % | 13 % |
+| Mai | 144 | 33 % | 51 % | 10 % | 5 % |
+| Juin | 188 | 18 % | 66 % | 7 % | 8 % |
+| Juillet | 142 | 10 % | 49 % | 16 % | 25 % |
+| Août | 109 | 32 % | 49 % | 5 % | 15 % |
+| Septembre, 12 jours | 208 | 21 % | 33 % | 13 % | 33 % |
 
-Trois lectures, à dire à l'oral :
+Trois lectures, à dire à l'oral si la question vient :
 
 1. **Mars est presque entièrement de la fiabilisation** : c'est la migration de l'API, faite à la main, puis stabilisée.
 2. **Juin, le mois de la V1 consolidée, est le mois où deux commits sur trois sont des correctifs et des tests.** Le produit s'est payé en fiabilité, pas en fonctionnalités : sur le projet entier, un commit sur deux relève de cette mission.
-3. **Juillet est le seul mois où la documentation dépasse 20 %**, autour des deux remises de dossier du titre. La documentation n'est pas un lot de fin de projet, elle suit les échéances de restitution.
+3. **La documentation suit les échéances de restitution, pas la fin du projet** : un quart des commits en juillet autour des deux remises de dossier, un tiers en septembre pour ce bloc.
 
 ### A.2 Ce qui reste à la main, ce qui est confié à la chaîne
 
@@ -71,7 +71,7 @@ La seule répartition réelle du projet est celle qui sépare ce qu'une personne
 
 ### A.3 La charge, et ce que le critère ne peut pas mesurer ici
 
-Le critère demande une charge **répartie sur l'ensemble de l'équipe de manière équilibrée**. Il n'y a pas d'équipe, donc pas de répartition entre personnes, et le dire vaut mieux qu'une répartition inventée. Ce qui existe et se mesure, c'est **la charge dans le temps**, relevée au chapitre 2 : 88 jours actifs sur 191, une amplitude de 1 à 7 jours par semaine, une série de 10 jours consécutifs, 5 semaines à zéro. Elle n'a pas été équilibrée non plus : elle a été absorbée plutôt que pilotée, et c'est l'objet de l'analyse critique de la partie C.
+Le critère demande une charge **répartie sur l'ensemble de l'équipe de manière équilibrée**. Il n'y a pas d'équipe, donc pas de répartition entre personnes, et le dire vaut mieux qu'une répartition inventée. Ce qui existe et se mesure, c'est **la charge dans le temps**, relevée au chapitre 2 : 95 jours actifs sur 198, de 0 à 7 jours par semaine, une série de 12 jours consécutifs, 5 semaines à zéro (thème 5). Elle n'a pas été équilibrée non plus : elle a été absorbée plutôt que pilotée, et c'est l'objet de l'analyse critique de la partie C.
 
 ---
 
@@ -83,7 +83,7 @@ Le critère demande que le style soit **identifié et décrit**. À une personne
 
 | Style | Situation du projet où il s'applique | Pourquoi celui-là |
 |-------|--------------------------------------|-------------------|
-| **Directif** | Le durcissement des portes de qualité en juillet 2026 : la chaîne était à 52 % de succès et les échecs devenaient contournables. La règle est posée sans négociation : un contrôle rouge bloque le déploiement | La compétence n'était pas en cause, la discipline l'était. Le directif est le seul style qui tienne quand l'enjeu est la conformité et que la tentation de contourner existe, y compris pour soi-même |
+| **Directif** | Le durcissement des portes de qualité en juillet 2026 : la chaîne était à 54 % de succès en juin et les échecs devenaient contournables. La règle est posée sans négociation : un contrôle rouge bloque le déploiement | La compétence n'était pas en cause, la discipline l'était. Le directif est le seul style qui tienne quand l'enjeu est la conformité et que la tentation de contourner existe, y compris pour soi-même |
 | **Persuasif** | Les conventions du dépôt : la règle « ne jamais écrire de commentaire dans le code » est accompagnée de son motif : si l'intention n'est pas exprimable par le nommage, c'est le code qu'il faut refactoriser | Une règle contre-intuitive n'est appliquée que si elle est comprise. Énoncée seule, elle est contournée dès la première gêne, par son auteur comme par un autre |
 | **Participatif** | Les utilisateurs : questionnaire, fiches d'anomalie et d'idée ouvertes, retours intégrés à la feuille de route. Deux décisions produit ont été déclenchées par ces retours | Ceux qui utilisent le produit détiennent une information que le responsable n'a pas. Décider sans la solliciter, c'est décider moins bien |
 | **Délégatif** | À l'automatisation : tout ce qu'une machine vérifie, tests, analyse, scans, déploiement, test de fumée, n'est jamais recontrôlé à la main. La décision reste humaine | La délégation à la chaîne n'est possible que parce que la règle est écrite et la porte de sortie bloquante. Sans cela, ce n'est pas de la délégation, c'est de l'abandon |
@@ -154,20 +154,20 @@ C'est le critère le plus discriminant du chapitre. Il porte sur une situation *
 
 | | |
 |--|--|
-| **Fait mesuré** | **10 jours travaillés consécutifs**, la plus longue série du projet |
+| **Fait mesuré** | **10 jours travaillés consécutifs**, la plus longue série du projet à cette date |
 | **Ce qui la provoque** | Deux échéances superposées : la remise du dossier Bloc 4 le **21 août**, et la version 1.4.0 le **25 août** |
 | **La posture adoptée** | Absorber. Ne pas arbitrer le périmètre, ne pas décaler, compenser par l'intensité |
 | **Le résultat immédiat** | Les deux échéances sont tenues. Aucune date n'a glissé |
 
 ### C.2 Ce qui n'a pas fonctionné
 
-**La posture a réussi, et c'est exactement le problème.** Une posture qui produit le résultat attendu ne s'auto-corrige pas : elle se répète. Trois éléments mesurés montrent ce qu'elle a coûté.
+**La posture a réussi, et c'est exactement le problème.** Une posture qui produit le résultat attendu ne s'auto-corrige pas : elle se répète, et septembre le prouve. Trois éléments mesurés montrent ce qu'elle a coûté.
 
 | Constat | Mesure |
 |---------|--------|
 | **La qualité de la chaîne baisse le mois même** | Taux de succès sur la branche principale : **94 % en juillet, 78 % en août** |
-| **La dette n'a pas été absorbée, elle a été déplacée** | **38 %** de succès sur les premiers jours de septembre, et une série de correctifs d'intégration à traiter ensuite |
-| **Le découpage du travail s'est relâché** | Taille moyenne d'une branche avant intégration : **2,7 commits en juillet, 6,1 en août**, soit des branches 2,3 fois plus grosses au moment d'être relues. C'est le mécanisme qui, en mars, avait laissé passer les 87 lignes de front non prévues (chapitre 3) |
+| **La dette n'a pas été absorbée, elle a été déplacée** | **67 %** en septembre, hors quinze exécutions échouées pour une cause sans rapport avec le code : le mois n'est pas remonté |
+| **La posture s'est répétée** | Du 1er au 12 septembre, **12 jours travaillés consécutifs**, pour la version 1.6 et la préparation de cet oral : la plus longue série du projet n'est plus celle d'août. La recommandation 2 ci-dessous, écrite le 5 septembre, n'a pas été appliquée |
 
 **Pourquoi c'est une faute managériale et pas seulement une fatigue personnelle.** Transposée à une équipe, cette posture porterait un nom : demander un effort exceptionnel plutôt qu'arbitrer le périmètre. Elle fonctionne une fois. À la deuxième, elle est perçue comme la norme, et le responsable qui l'a instaurée n'a plus d'argument pour la refuser. **Le pilotage consistait ici à décider ce qui ne serait pas livré le 25 août ; il a consisté à décider que tout le serait.**
 
@@ -180,7 +180,7 @@ Réalistes signifie ici : applicables sans moyen supplémentaire, et vérifiable
 | # | Recommandation | Mise en œuvre concrète | Indicateur de contrôle |
 |:-:|----------------|------------------------|------------------------|
 | **1** | **Traiter un chevauchement d'échéances comme un arbitrage, pas comme une contrainte** | Dès que deux échéances tombent dans la même quinzaine, poser explicitement les trois options (décaler la version, réduire son périmètre, ou absorber) et écrire celle qui est retenue et pourquoi | Nombre de chevauchements ayant donné lieu à une décision écrite |
-| **2** | **Poser une limite de charge comme on pose une limite de travail en cours** | Au-delà de **5 jours consécutifs**, c'est la version qui décale, pas la semaine de travail qui s'allonge. La limite est une règle, pas une intention | Plus longue série de jours consécutifs, relevée mensuellement, indicateur déjà au tableau de bord |
+| **2** | **Poser une limite de charge comme on pose une limite de travail en cours** | Au-delà de **5 jours consécutifs**, c'est la version qui décale, pas la semaine de travail qui s'allonge. La limite est une règle, pas une intention | Plus longue série de jours consécutifs, relevée mensuellement, indicateur déjà au tableau de bord : 12 en septembre |
 | **3** | **Rendre obligatoire une relecture par un tiers sur les changements structurants** | Migration, changement de contrat d'interface, modification de la chaîne : aucune intégration sans une relecture par un tiers, humaine ou outillée | Part des changements structurants passés par une revue formelle |
 
 La recommandation 2 est la seule qui aurait empêché la situation de C.1. Les deux autres en réduisent les conséquences. **C'est celle qui est la plus difficile à tenir, parce qu'elle oblige à annoncer un décalage avant d'avoir essayé d'y échapper.**
@@ -191,10 +191,9 @@ La recommandation 2 est la seule qui aurait empêché la situation de C.1. Les d
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 14 | Une personne, toutes les missions | A |
-| 15 | Les quatre styles managériaux, situés | B.1 |
-| 16 | Animer, partager, inclure : écrit, versionné, asynchrone | B.2, B.3 |
-| 17 | Analyse critique : une posture qui a réussi | C |
+| 13 | 10. Piloter seul : les missions et le style | A.2, B.1, B.2 |
+| 14 | Animer et inclure : écrit, versionné, asynchrone | B.2, B.3 |
+| 15 | Analyse critique : une posture qui a réussi, deux fois | C |
 
 ---
 
@@ -202,10 +201,10 @@ La recommandation 2 est la seule qui aurait empêché la situation de C.1. Les d
 
 | Question | Ligne de réponse |
 |----------|------------------|
-| Vous n'avez managé personne. Que vaut ce chapitre ? | Je n'ai managé personne, et je ne présente aucune équipe. Le chapitre montre comment une personne a affecté ses missions dans le temps et à l'automatisation, mesuré sur les 833 commits, les styles qu'elle a appliqués au processus et à elle-même, ce que reçoivent les trois publics du projet, et une analyse critique de ma propre posture, mesurée |
-| La charge est-elle répartie de manière équilibrée ? | Il n'y a pas d'équipe, donc pas de répartition entre personnes, et je préfère le dire que l'inventer. Ce qui se mesure, c'est la charge dans le temps : 88 jours actifs, une amplitude de 1 à 7 jours par semaine, dix jours consécutifs en août. Elle n'a pas été équilibrée non plus, et c'est ce que l'analyse critique traite |
+| Vous n'avez managé personne. Que vaut ce chapitre ? | Je n'ai managé personne, et je ne présente aucune équipe. Le chapitre montre comment une personne a affecté ses missions dans le temps et à l'automatisation, mesuré sur les 891 commits, les styles qu'elle a appliqués au processus et à elle-même, ce que reçoivent les trois publics du projet, et une analyse critique de ma propre posture, mesurée |
+| La charge est-elle répartie de manière équilibrée ? | Il n'y a pas d'équipe, donc pas de répartition entre personnes, et je préfère le dire que l'inventer. Ce qui se mesure, c'est la charge dans le temps : 95 jours actifs sur 198, de 0 à 7 jours par semaine, dix jours consécutifs en août et douze en septembre. Elle n'a pas été équilibrée non plus, et c'est ce que l'analyse critique traite |
 | Quel est votre style managérial dominant ? | Le délégatif à l'automatisation : confier à la chaîne tout ce qui est vérifiable mécaniquement, garder la décision, contrôler en sortie. Sa condition de validité est que la règle soit écrite avant et que la porte soit bloquante. Une chaîne contournable n'est pas une délégation, c'est une absence de contrôle |
-| Un style managérial à une personne, cela a-t-il un sens ? | Oui, sur trois objets : le processus, l'automatisation et soi-même. La règle directive de juillet s'est appliquée d'abord à moi, et l'indicateur qui en mesure l'effet, 52 puis 94 %, ne dépend pas de qui l'a subie |
+| Un style managérial à une personne, cela a-t-il un sens ? | Oui, sur trois objets : le processus, l'automatisation et soi-même. La règle directive de juillet s'est appliquée d'abord à moi, et l'indicateur qui en mesure l'effet, 54 puis 94 %, ne dépend pas de qui l'a subie |
 | Vos outils de communication n'incluent aucune messagerie. Pourquoi ? | C'est délibéré. Aucun dispositif du projet n'exige la simultanéité, et c'est ce qui le rend compatible à la fois avec un contributeur d'un autre fuseau horaire et avec une personne qui ne peut pas suivre une réunion en direct. L'écrit versionné reste consultable après coup, un fil de discussion non |
 | La prise en compte du handicap n'est-elle pas une clause de style ? | Elle porte un responsable identifié dans la matrice RACI, des aménagements nommés et accordés sans justification à produire, une documentation en texte structuré compatible lecteur d'écran, et une exigence d'accessibilité du produit **bloquante** dans la chaîne de livraison, au niveau maximum sur tous les écrans |
-| Qu'auriez-vous fait différemment ? | Du 17 au 26 août, j'ai travaillé dix jours d'affilée pour tenir deux échéances superposées. Elles ont été tenues, et la qualité de la chaîne est passée de 94 % à 78 % le mois même, puis à 38 % début septembre. L'erreur n'est pas d'avoir travaillé dix jours, c'est de **ne pas avoir posé l'arbitrage** : décider ce qui ne serait pas livré le 25 août. Aujourd'hui je poserais une limite à cinq jours consécutifs, au-delà de laquelle c'est la version qui décale |
+| Qu'auriez-vous fait différemment ? | Du 17 au 26 août, j'ai travaillé dix jours d'affilée pour tenir deux échéances superposées. Elles ont été tenues, et la qualité de la chaîne est passée de 94 % à 78 % le mois même, puis 67 % en septembre. Et j'ai recommencé : douze jours d'affilée en septembre pour la 1.6 et cet oral. L'erreur n'est pas d'avoir travaillé dix jours, c'est de **ne pas avoir posé l'arbitrage** : décider ce qui ne serait pas livré le 25 août. Aujourd'hui je poserais une limite à cinq jours consécutifs, au-delà de laquelle c'est la version qui décale |

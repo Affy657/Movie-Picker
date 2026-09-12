@@ -990,3 +990,225 @@ Sur le handicap, ne citer que les modalites verifiables : le tiers-temps de
 droit, le support en texte structure, l'accessibilite de la plateforme comme
 critere de choix du prestataire.
 -->
+
+---
+
+# 10. Piloter seul : les missions et le style
+
+<div class="grid grid-cols-5 gap-5 mt-2">
+<div class="col-span-3">
+
+<div class="quad">
+<div class="ay">Soutien relationnel →</div>
+<div class="cell"><b>Persuasif</b><i>Les conventions du dépôt : chaque règle est accompagnée de <b>son motif</b></i></div>
+<div class="cell"><b>Participatif</b><i>Les utilisateurs : questionnaire, fiches ouvertes, retours intégrés à la feuille de route</i></div>
+<div class="cell"><b>Directif</b><i>Juillet : portes de qualité rendues <b>bloquantes</b> sur une chaîne à 54 %, sans dérogation</i></div>
+<div class="cell dom"><b>Délégatif, dominant</b><i>À l'automatisation : ce qu'une machine vérifie n'est jamais contrôlé à la main, <b>la décision reste humaine</b></i></div>
+<div></div><div class="ax">← directivité forte</div><div class="ax">autonomie forte →</div>
+</div>
+
+<div class="kpi grid-cols-2 mt-3" style="line-height:1.25">
+<div><b>54 → 94 %</b><span>stabilité de la chaîne, juin puis juillet, le mois qui suit la décision directive</span></div>
+<div><b>3</b><span>canaux entrants outillés : questionnaire, fiches, lien « signaler un problème »</span></div>
+</div>
+
+</div>
+<div class="col-span-2">
+
+<div class="text-xs opacity-75 mb-1">À la main</div>
+<div class="chips">
+<div><span>Cadrage et maquette</span><u>avant toute ligne de code</u></div>
+<div><span>Arbitrages</span><u>périmètre, charge, socle</u></div>
+<div><span>Revue avant intégration</span><u>gabarit à 6 contrôles</u></div>
+<div><span>Mise en production, incidents</span><u>geste vérifié</u></div>
+<div><span>Restitutions</span><u>commanditaire, utilisateurs</u></div>
+</div>
+
+<div class="text-xs opacity-75 mt-3 mb-1">Confié à la chaîne</div>
+<div class="chips">
+<div><span>Tests, analyse, scans</span><u>portes bloquantes</u></div>
+<div><span>Déploiement et test de fumée</span><u>à chaque fusion</u></div>
+<div><span>Montées de dépendances</span><u>Dependabot, regroupées</u></div>
+<div><span>Alertes de supervision</span><u>5 politiques, 3 sondes</u></div>
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 1:20. ELEMENTS IMPOSES 6 et 7 : l'affectation des missions realisee au
+cours du projet, et le ou les styles manageriaux utilises. CRITERES : la charge
+est repartie de maniere equilibree ; le style est IDENTIFIE ET DECRIT.
+
+Dire d'abord ce que le critere ne peut pas mesurer ici : il n'y a pas d'equipe,
+donc pas de repartition entre personnes. La charge dans le temps est au theme
+5 : 95 jours actifs sur 198, de 0 a 7 jours par semaine, et elle n'a pas ete
+equilibree non plus, c'est la troisieme diapo de ce theme.
+
+La seule affectation reelle est la colonne de droite : ce qui reste a la main,
+cadrer, arbitrer, relire, mettre en production, rendre compte ; et ce qui est
+confie a la chaine, tout ce qu'une machine verifie mieux qu'un humain fatigue.
+
+Les styles : ne pas les definir, le jury les connait. Les SITUER, une
+situation du projet par style. Le style a developper est le DIRECTIF, parce
+que c'est le seul ou la decision est verifiable : juin, chaine a 54 %, portes
+rendues bloquantes en juillet, 94 % le mois suivant. Un style managerial qui
+produit un indicateur mesurable vaut plus qu'une declaration d'intention.
+
+Puis le dominant, le delegatif a l'automatisation, et c'est exactement la
+colonne « confie a la chaine ». Sa CONDITION DE VALIDITE est la phrase qui
+compte : « un delegatif sans regle ecrite ni porte bloquante n'est pas de la
+delegation, c'est de l'abandon. »
+
+Sur les principes que la grille nomme, empathie, ecoute, bienveillance,
+leadership, chacun est incarne dans un dispositif, pas dans une intention :
+l'ecoute par trois canaux entrants outilles, la bienveillance par un gabarit
+d'anomalie qui decrit un comportement et jamais une responsabilite, l'empathie
+par le delai de reponse aux retours, 17 jours du questionnaire du 18 aout a la
+production, le leadership par la decision ecrite avec ses inconvenients
+acceptes, theme 8.
+
+SI ON QUESTIONNE « delegue a qui ? » : a la chaine, pas a une personne. A une
+personne, le management s'exerce sur le processus et sur soi-meme, et c'est
+dit sans detour.
+-->
+
+---
+
+# Animer et inclure : écrit, versionné, asynchrone
+
+<div class="grid grid-cols-2 gap-6 text-sm mt-2">
+<div>
+
+<div class="steps">
+<div><b>Utilisateurs</b><span>fenêtre de nouveautés, questionnaire, lien « signaler un problème »</span></div>
+<div><b>Commanditaire</b><span>quatre restitutions datées, comptes rendus d'arbitrage</span></div>
+<div><b>Contributeur à venir</b><span>conventions écrites avec leur motif, gabarits, procédures</span></div>
+</div>
+
+<div class="text-xs opacity-75 mt-4 mb-1">Les outils, et ce que chacun partage</div>
+<div class="chips">
+<div><span>Monorepo unique</span><u>tout le contexte projet, versionné</u></div>
+<div><span>Gabarits d'issue et de PR</span><u>les mêmes contrôles à chaque changement</u></div>
+<div><span>Procédures exécutables</span><u>le flux, pas un savoir oral</u></div>
+<div><span>Journal des versions, feuilles de route</span><u>l'état livré et le périmètre, datés</u></div>
+</div>
+
+</div>
+<div>
+
+<div class="chips">
+<div><span><b>Handicap</b></span><u>texte structuré, lecteur d'écran, clavier</u></div>
+<div><span><b>Fuseaux horaires</b></span><u>rien n'exige la simultanéité</u></div>
+<div><span><b>Langue</b></span><u>lisible et traduisible, une réunion ne l'est pas</u></div>
+</div>
+
+<div class="kpi grid-cols-2 mt-4">
+<div><b>FR / EN</b><span>produit bilingue</span></div>
+<div><b>Bloquante</b><span>la porte d'accessibilité, à chaque livraison</span></div>
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 0:50. ELEMENT IMPOSE 8 : les outils de communication et leurs objectifs.
+CRITERES : les outils collaboratifs INTEGRENT LE PARTAGE DE RESSOURCES et les
+choix sont pertinents ; les specificites du handicap et du contexte
+multiculturel et international sont prises en compte.
+
+Gauche, etre franc : il n'y a pas d'equipe a animer, il y a trois publics a
+servir, les utilisateurs, le commanditaire, et la personne qui reprendra le
+projet un jour. Tout ce qu'ils recoivent est ecrit et versionne, et c'est ce
+qui rend le dispositif independant de ma presence : une regle non ecrite n'est
+pas une regle. Les quatre lignes « ce qu'il partage » SONT la reponse au
+critere, les designer d'un geste. Aucun de ces outils n'est une messagerie,
+c'est deliberee : aucun n'exige la simultaneite.
+
+Droite, une seule idee : le meme dispositif, l'ecrit asynchrone versionne,
+repond au handicap, aux fuseaux horaires et a la langue. Puis la verite en
+une phrase : personne dans ces situations n'a travaille sur le projet, et la
+preuve qui reste est sur le produit, bilingue, accessibilite en porte
+BLOQUANTE. Livrer un produit inaccessible et se dire inclusif ne tient pas.
+
+SI ON DEMANDE ce que je ferais pour une personne en situation de handicap qui
+rejoindrait le projet : poste adapte, outillage compatible lecteur d'ecran et
+clavier, horaires amenages, temps supplementaire en recette et en formation,
+accordes a la demande et sans justification a produire. Les modalites de
+formation sont a la diapo 12.
+-->
+
+---
+
+# Analyse critique : une posture qui a réussi, deux fois
+
+<div class="grid grid-cols-2 gap-8 text-sm mt-2">
+<div>
+
+<div class="chips">
+<div><span>Fait mesuré</span><u><b>10 jours travaillés consécutifs</b>, 17 au 26 août</u></div>
+<div><span>Cause</span><u>Bloc 4 le <b>21/08</b>, v1.4.0 le <b>25/08</b></u></div>
+<div><span>Posture</span><u><b>absorber</b>, sans arbitrer le périmètre</u></div>
+<div><span>Résultat</span><u>les deux échéances tenues</u></div>
+</div>
+
+<div class="text-xs opacity-75 mt-4 mb-1">Ce que la chaîne a payé, et ce qui s'est répété</div>
+<div class="chips">
+<div><span>Stabilité de la chaîne, juillet → août → septembre</span><u>94 % → 78 % → 67 %</u></div>
+<div><span>Plus longue série du projet, 1er au 12 septembre</span><u><b>12 jours</b>, v1.6 et cet oral</u></div>
+</div>
+
+</div>
+<div>
+
+### Trois recommandations
+
+<div class="chips">
+<div><span><b>1.</b> Un chevauchement d'échéances est un <b>arbitrage</b> : décaler, réduire ou absorber, et l'écrire</span><u>décisions écrites</u></div>
+<div><span><b>2.</b> Une <b>limite de charge</b> : au-delà de <b>5 jours consécutifs</b>, la version décale</span><u>série maximale, 12 aujourd'hui</u></div>
+<div><span><b>3.</b> <b>Relecture par un tiers</b>, humain ou outillé, sur le structurant</span><u>part du structurant relu</u></div>
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 1:00. LA DIAPO LA PLUS DISCRIMINANTE DU THEME. CRITERES : une analyse
+critique d'une situation ou d'une posture manageriale est presentee, ET les
+recommandations sont realistes et realisables.
+
+Le marqueur de sincerite : la posture critiquee a REUSSI, les deux echeances
+ont ete tenues. Personne ne s'autocritique sur un succes, donc c'est credible.
+
+La these se dit, elle n'est pas a l'ecran : une posture qui produit le
+resultat attendu ne s'auto-corrige pas, elle se repete. Et la preuve est sur
+la diapo : la plus longue serie du projet n'est plus celle d'aout, c'est
+celle de septembre, douze jours d'affilee pour la 1.6 et cet oral. La
+recommandation 2 existait sur le papier depuis le 5 septembre, elle n'a pas
+ete appliquee. Le dire soi-meme vaut mieux que de le laisser trouver.
+
+Dans l'ordre :
+1. Les faits. Dix jours d'affilee, deux echeances superposees, les deux
+tenues.
+2. Le cout mesure, en designant la ligne 94, 78, 67 : la chaine a paye le
+mois meme, et septembre n'est pas remonte.
+3. La phrase centrale : « l'arbitrage n'a pas ete perdu, il n'a pas ete
+pose. »
+4. La transposition, si le projet passait en equipe : demander un effort
+exceptionnel plutot qu'arbitrer le perimetre. Ca marche une fois ; a la
+deuxieme c'est la norme, et le responsable qui l'a instauree n'a plus
+d'argument pour la refuser. Septembre est la deuxieme fois.
+
+NE PAS tomber dans la flagellation : les echeances etaient reelles et non
+negociables, et le perimetre de la 1.4.0 avait une valeur produit verifiee.
+La faute n'est pas d'avoir travaille dix jours, c'est de ne pas avoir
+INSTRUIT l'option de decaler.
+
+Terminer sur la recommandation 2 : c'est la seule qui aurait empeche la
+situation, et la plus difficile a tenir, parce qu'elle oblige a annoncer un
+decalage avant d'avoir essaye d'y echapper. Septembre le prouve.
+
+SI ON QUESTIONNE le 67 % de septembre : hors quinze executions echouees pour
+une cause sans rapport avec le code ; avec elles, le mois serait plus bas
+encore, la lecture ne change pas.
+-->
