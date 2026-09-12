@@ -191,8 +191,8 @@ La recommandation 2 est la seule qui aurait empêché la situation de C.1. Les d
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 13 | 10. Piloter seul : les missions et le style | A.2, B.1, B.2 |
-| 14 | Animer et inclure : écrit, versionné, asynchrone | B.2, B.3 |
+| 13 | 10. Piloter seul : les missions et le style | A.2, B.1 |
+| 14 | Animer et inclure : écrit, versionné, asynchrone | B.2 (outils), B.3 |
 | 15 | Analyse critique : une posture qui a réussi, deux fois | C |
 
 ---
