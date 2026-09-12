@@ -1945,6 +1945,58 @@
         description:
           'Les navigateurs intégrés aux réseaux effaçaient votre session. Un bandeau propose maintenant d’ouvrir Movie Picker dans Safari ou Chrome.',
       },
+      userSearch: {
+        title: 'Trouver un compte',
+        description:
+          'Un onglet Rechercher dans vos abonnements retrouve un ami par pseudo ou par handle.',
+      },
+      recurringEvents: {
+        title: 'Soirées récurrentes',
+        description:
+          'Chaque semaine, tous les quinze jours ou chaque mois : la suivante naît toute seule à la clôture.',
+      },
+      eventTemplates: {
+        title: 'Modèles de soirée',
+        description:
+          'Jusqu’à cinq configurations enregistrées, à réappliquer en un clic, et « Refaire cette soirée » depuis l’historique.',
+      },
+      multipleWinners: {
+        title: 'Plusieurs films gagnants',
+        description:
+          'L’hôte choisit combien de films sortent du tirage, jusqu’à dix : idéal pour un marathon.',
+      },
+      voteLimit: {
+        title: 'Limite de votes par participant',
+        description: 'L’hôte fixe un nombre de votes par personne ; chacun doit alors choisir.',
+      },
+      friendsWatchlist: {
+        title: 'La liste d’un ami',
+        description:
+          'Sa watchlist se lit depuis son profil. La vôtre se masque d’un réglage dans le compte.',
+      },
+      openEventMovies: {
+        title: 'Les films visibles avant de rejoindre',
+        description:
+          'Un lien de soirée montre affiches, scores et gagnant sans participer ; voter demande toujours de rejoindre.',
+      },
+      wheelAnnounce: {
+        title: 'Le gagnant annoncé au bon moment',
+        description: 'La notification part quand la roue s’arrête, plus pendant qu’elle tourne.',
+      },
+      letterboxdFromCard: {
+        title: 'Letterboxd depuis la carte',
+        description: 'Le menu d’un film en soirée ouvre sa page Letterboxd en un clic.',
+      },
+      scrollableDialogs: {
+        title: 'Fenêtres qui défilent sur mobile',
+        description:
+          'Signaler un problème et Proposer une idée gardent leurs boutons accessibles, même avec des images jointes.',
+      },
+      offlineEventPage: {
+        title: 'Soirée hors ligne',
+        description:
+          'Un lien de soirée ouvert sans réseau affiche une erreur au lieu d’un squelette sans fin.',
+      },
     },
   },
   pwaInstall: {
@@ -2087,7 +2139,7 @@
         'Plateforme de dons pour créateurs ; le soutien confirmé apparaît ensuite comme un badge sur le profil.',
       scheduler: 'Cloud Scheduler',
       schedulerValue:
-        'Appelle le serveur à heure fixe pour déclencher les rappels de soirée. Même protection par jeton, puisque la route est ouverte sur internet.',
+        'Appelle le serveur à heure fixe : toutes les 30 minutes pour les rappels de soirée, une fois par jour pour les soirées récurrentes. Même protection par jeton, puisque les routes sont ouvertes sur internet.',
       schedulerHint:
         "Planificateur de Google Cloud : il appelle une adresse à l'heure dite, ce qui remplace une minuterie vivant dans le serveur.",
       issues: 'GitHub Issues',
@@ -2098,7 +2150,7 @@
     },
     trajectory: {
       title: '{{months}} mois, {{shipped}} paliers livrés',
-      lead: "{{commits}} commits depuis février 2026. Chaque palier est parti en production avant que le suivant ne s'ouvre. La V1.6 est en cours, et les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
+      lead: "{{commits}} commits depuis février 2026. Chaque palier est parti en production avant que le suivant ne s'ouvre. Les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
       plannedBadge: 'à venir',
       currentBadge: 'en cours',
       unplannedSpan: 'Entre la V1.8 et la V2',
@@ -2119,13 +2171,10 @@
         'Le compte de service de déploiement a plus de droits que nécessaire ; le découper par usage est le pas suivant.',
       consolidate: 'Front vers Google Cloud',
       consolidateHint:
-        'Déplacer le front de S3 et CloudFront vers Cloud Storage et Cloud CDN mettrait les deux applications chez le même fournisseur, et retirerait une console, un modèle de droits et une facture.',
+        'Déplacer le front de S3 et CloudFront vers Firebase Hosting mettrait les deux applications chez le même fournisseur, et retirerait une console, un modèle de droits et une facture. Cloud Storage et Cloud CDN ont été écartés : leur règle de transfert coûte près de 18 $ par mois avant le premier octet servi.',
       sharedCache: 'Cache partagé entre instances',
       sharedCacheHint:
         'Le cache des fiches TMDB vit dans la mémoire de chaque instance : deux instances refont le même appel, et un redémarrage repart à froid. Un cache commun corrigerait les deux.',
-      prerender: 'Pré-rendu des pages publiques',
-      prerenderHint:
-        'Les pages publiques sont aujourd’hui référencées par métadonnées et sitemap ; du HTML pré-rendu ferait mieux.',
       techLead: 'Ce qui n’est pas fait, et qui est nommé plutôt que passé sous silence.',
       mvpWhen: 'Février 2026',
       mvpWhat: 'MVP',
@@ -2224,7 +2273,7 @@
       v16When: 'Septembre 2026',
       v16What: 'V1.6',
       v16Detail:
-        'Fermer la boucle sociale ouverte en V1.2 et ritualiser la soirée. Les six repères sont en place, la version part en production à la fusion dans master.',
+        'La boucle sociale ouverte en V1.2 se referme et la soirée devient un rituel : elle se répète, se rejoue depuis un modèle et peut couronner plusieurs films.',
       v16Hint:
         'Le mode tournoi a quitté ce palier pour le backlog : son coût dépassait à lui seul celui des cinq autres items réunis.',
       v16Item1: "Recherche d'utilisateurs",
@@ -2537,7 +2586,7 @@
       bugCaption:
         'Le test précède le correctif. Sans lui, rien ne prouve que la cause a été traitée.',
       toolingCaption:
-        "Les cinq procédures sont rappelées par leur nom : l'assistant recharge la marche à suivre au lieu que je la redécrive.",
+        "Les six procédures sont rappelées par leur nom : l'assistant recharge la marche à suivre au lieu que je la redécrive.",
       mcpNoteLead: 'Les outils branchés :',
       mcpNote:
         "{{tools}} connecteurs donnent à l'assistant une lecture directe de l'état réel, au lieu de ce que je lui en raconte. Ils servent à constater : aucun ne décide, aucun ne court-circuite les quatre points de validation ni la chaîne de contrôle.",
@@ -2599,7 +2648,7 @@
       frontHint:
         "Le rendu serveur aurait ajouté une infrastructure à tenir pour un catalogue de pages publiques restreint : l'accueil, les profils, le dossier technique et les pages légales.",
       frontTrade:
-        'Ces pages publiques sont référencées par métadonnées et sitemap plutôt que par du HTML pré-rendu, et le pré-rendu reste un chantier ouvert.',
+        "Cinq pages publiques sont pré-rendues au build, HTML complet et métadonnées compris ; l'accueil et les profils, dynamiques, restent référencés par métadonnées et sitemap.",
       styling: 'Modules CSS plutôt que Tailwind',
       stylingValue:
         'Des modules CSS et des jetons maison : espacements, tailles, couleurs et profondeurs forment une échelle fermée que le contrôle refuse de voir contournée.',
@@ -2689,9 +2738,9 @@
         'Les révisions restent disponibles chez l’hébergeur et les anciennes images dans le registre, purgées par une chaîne dédiée pour qu’il ne gonfle pas.',
       scheduler: 'Travail périodique',
       schedulerValue:
-        'Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, sur une route protégée par jeton.',
+        "Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, et une fois par jour pour faire naître l'occurrence suivante des soirées récurrentes, sur des routes protégées par jeton.",
       schedulerHint:
-        'Le job est créé par la chaîne de déploiement, mais seulement si le jeton existe : sans lui, aucun rappel ne part et le déploiement le signale par un avertissement.',
+        'Les deux jobs sont créés par la chaîne de déploiement, mais seulement si le jeton existe : sans lui, ni rappel ni occurrence suivante ne partent, et le déploiement le signale par un avertissement.',
       origins: 'Origines',
       originsValue:
         'Le serveur n’accepte que les origines déclarées. Le déploiement échoue si la liste n’est pas renseignée.',
@@ -2700,7 +2749,7 @@
     },
     quality: {
       title: 'Ce qui est mesuré, et le seuil qui fait échouer',
-      lead: 'Une métrique sans seuil est une décoration. Les quatre premières arrêtent une livraison ; les deux dernières racontent ce qui se passe une fois en ligne.',
+      lead: 'Une métrique sans seuil est une décoration. Les quatre premières arrêtent une livraison ; les trois dernières racontent ce qui se passe une fois en ligne.',
       blockingHeading: 'Seuils bloquants',
       informativeHeading: 'Ce qui est observé en production',
       coverage: 'Couverture de tests',
@@ -2712,7 +2761,7 @@
       lighthouseValue:
         '{{pages}} pages auditées à chaque envoi, avec des minimums de {{perf}} en performance, {{a11y}} en accessibilité, {{bp}} en bonnes pratiques et {{seo}} en référencement.',
       lighthouseHint:
-        'Chaque page est mesurée trois fois et c’est la médiane qui est retenue. Une seule page déroge, la plus lourde, dont le minimum de performance descend à {{watchlist}} : le runner y perd quatre points sans qu’il y ait de régression réelle.',
+        "Chaque page est mesurée cinq fois et c'est la médiane qui est retenue, pour lisser la variance du runner. Plus aucune page n'a de plancher à elle depuis que l'état déconnecté d'une route protégée se rend depuis la coquille.",
       axe: 'Accessibilité automatisée',
       axeValue:
         '{{views}} vues passées à axe-core pendant la suite de tests. Une violation fait échouer le test, pas un rapport.',
@@ -2724,6 +2773,11 @@
         'Analyse à chaque envoi, couverture ingérée depuis la CI. La chaîne attend le verdict du portail qualité et échoue s’il est rouge.',
       sonarHint:
         'Les deux déploiements dépendent de ce job : un portail rouge arrête la livraison, il ne se contente pas de l’annoter.',
+      monitoring: 'Cloud Monitoring',
+      monitoringValue:
+        "Trois sondes interrogent le service de l'extérieur, depuis trois continents, et cinq politiques d'alerte préviennent par courriel : service ou base injoignables, erreurs serveur, latence dégradée.",
+      monitoringHint:
+        "Les sondes visent /health, /health/ready et la racine du front. Les seuils sont posés au-dessus du bruit mesuré pour qu'une alerte reste crédible, et un incident se referme seul après trente minutes de retour à la normale.",
       sentry: 'Sentry',
       sentryValue:
         'Erreurs du navigateur et du serveur, rattachées à la version déployée par le SHA du commit.',
@@ -2869,10 +2923,11 @@
         'Les quatre étapes encadrées attendent ma relecture et mon accord avant de continuer.',
       toolingTitle: "Procédures nommées et connecteurs de lecture branchés sur l'assistant.",
       skillsLabel: 'PROCÉDURES OUTILLÉES, RAPPELÉES PAR LEUR NOM',
+      skillDevFeatureWhen: 'du cadrage au déploiement',
       skillCritiqueWhen: 'sur la maquette',
       skillVerifyWhen: 'avant chaque envoi',
       skillReviewWhen: 'avant la fusion',
-      skillDebtWhen: 'passe périodique',
+      skillMaintenanceWhen: 'passe hebdomadaire',
       mcpLabel: "OUTILS BRANCHÉS SUR L'ASSISTANT (MCP ET LIGNE DE COMMANDE)",
       mcpAssistant: 'assistant',
       mcpGithub: 'PR et CI',
@@ -2995,7 +3050,7 @@
       infraRegistrySub: 'une image par commit',
       infraRegistryDetail: 'taguée par SHA, purgée',
       infraScheduler: 'Cloud Scheduler',
-      infraSchedulerSub: 'rappels de soirée',
+      infraSchedulerSub: 'rappels et soirées récurrentes',
       infraSchedulerDetail: 'créé si le jeton existe',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'replica set managé',

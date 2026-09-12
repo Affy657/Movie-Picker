@@ -75,9 +75,10 @@ describe('shouldShowWhatsNewNavChip', () => {
 });
 
 describe('LATEST_WHATS_NEW_RELEASE', () => {
-  it('pointe sur la 1.5.0', () => {
-    expect(LATEST_WHATS_NEW_RELEASE.version).toBe('1.5.0');
+  it('pointe sur la 1.6.0', () => {
+    expect(LATEST_WHATS_NEW_RELEASE.version).toBe('1.6.0');
   });
+
 });
 
 describe('whatsNewLinkPath', () => {
@@ -98,24 +99,23 @@ describe('whatsNewLinkPath', () => {
   });
 });
 
-describe('WHATS_NEW 1.5.0', () => {
+describe('WHATS_NEW 1.6.0', () => {
   it('couvre les changements visibles de la version', () => {
     const slugs = LATEST_WHATS_NEW_RELEASE.entries.map((entry) =>
       entry.titleKey.replace('whatsNew.entries.', '').replace('.title', '')
     );
     expect(slugs).toEqual([
-      'explorationHome',
-      'homeSearch',
-      'visitorNav',
-      'landingRevamp',
-      'personalRows',
-      'streamingRow',
-      'themeSelections',
-      'sagas',
-      'communityRanking',
-      'browseLists',
-      'carousels',
-      'listCardDetails',
+      'userSearch',
+      'recurringEvents',
+      'eventTemplates',
+      'multipleWinners',
+      'voteLimit',
+      'friendsWatchlist',
+      'openEventMovies',
+      'wheelAnnounce',
+      'letterboxdFromCard',
+      'scrollableDialogs',
+      'offlineEventPage',
     ]);
   });
 });

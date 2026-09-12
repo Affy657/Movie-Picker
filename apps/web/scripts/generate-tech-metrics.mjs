@@ -154,13 +154,22 @@ function computeMetrics(previous) {
     /^ +it\(/gm
   );
 
-  const workflow = readText(join(repoRoot, '.github/workflows/ci-cd.yml'));
-  const jobsSection = workflow.slice(workflow.search(/^jobs:$/m));
-  const secretsLine = workflow.match(/SECRETS="[^"]+"/)?.[0] ?? '';
+  const workflowsDir = join(repoRoot, '.github/workflows');
+  const workflowText = (name) => readText(join(workflowsDir, name));
+  const ciJobs = ['ci-cd.yml', 'deploy.yml']
+    .map(workflowText)
+    .reduce((total, workflow) => {
+      const jobsSection = workflow.slice(workflow.search(/^jobs:$/m));
+      return total + (jobsSection.match(/^ {2}[a-z][a-z0-9-]*:$/gm) ?? []).length;
+    }, 0);
+  const allWorkflows = listDir(workflowsDir)
+    .filter((name) => name.endsWith('.yml'))
+    .map(workflowText)
+    .join('\n');
+  const secretsLine = allWorkflows.match(/SECRETS="[^"]+"/)?.[0] ?? '';
   const deploySecrets = (secretsLine.match(/:latest/g) ?? []).length;
-  const ciJobs = (jobsSection.match(/^ {2}[a-z][a-z0-9-]*:$/gm) ?? []).length;
   const apiCoverageLines = Number(
-    workflow.match(/Gate couverture back \(lignes >= (\d+)%/)?.[1] ?? 0
+    workflowText('ci-cd.yml').match(/Gate couverture back \(lignes >= (\d+)%/)?.[1] ?? 0
   );
   const mongoCoverageLines = Number(
     readText(join(repoRoot, 'scripts/check-mongo-coverage.mjs')).match(
@@ -223,8 +232,6 @@ function computeMetrics(previous) {
   const lighthousePages = (
     readText(join(repoRoot, 'scripts/lighthouse-run.mjs')).match(/^\s*\{ path: '/gm) ?? []
   ).length;
-  const lighthouseWatchlistPerformance = budgets.perPageMinimumScores.watchlist.performance;
-
   const webPackage = JSON.parse(readText(join(repoRoot, 'apps/web/package.json')));
   const dependencyMajor = (name) => {
     const range = webPackage.dependencies?.[name] ?? webPackage.devDependencies?.[name] ?? '';
@@ -269,7 +276,6 @@ function computeMetrics(previous) {
     contractRoutesChecked,
     mswTestFiles,
     deploySecrets,
-    lighthouseWatchlistPerformance,
     rateLimitPolicies,
     assistantTools,
     apiCoverageLines,
@@ -330,7 +336,6 @@ function computeMetrics(previous) {
     contractRoutesChecked,
     mswTestFiles,
     deploySecrets,
-    lighthouseWatchlistPerformance,
     rateLimitPolicies,
     assistantTools,
     apiCoverageLines,
@@ -339,24 +344,13 @@ function computeMetrics(previous) {
   };
 }
 
-const previous = readPreviousMetrics();
-const measurable = Object.values(previous).length > 0;
+const metrics = computeMetrics(readPreviousMetrics());
 
-let metrics;
-try {
-  metrics = computeMetrics(previous);
-} catch (error) {
-  if (!measurable) throw error;
-  process.stderr.write(
-    `tech metrics: mesure impossible (${error.message}), chiffres precedents conserves\n`
-  );
-  process.exit(0);
-}
-
-if (Object.values(metrics).some((value) => !Number.isFinite(value))) {
-  if (!measurable) throw new Error('métrique non numérique et aucun repli disponible');
-  process.stderr.write('tech metrics: metrique non numerique, chiffres precedents conserves\n');
-  process.exit(0);
+const unmeasured = Object.entries(metrics)
+  .filter(([, value]) => !Number.isFinite(value))
+  .map(([name]) => name);
+if (unmeasured.length > 0) {
+  throw new Error(`métrique non numérique : ${unmeasured.join(', ')}`);
 }
 
 const buildDate = new Date().toISOString().slice(0, 10);

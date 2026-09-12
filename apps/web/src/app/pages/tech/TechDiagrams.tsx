@@ -708,6 +708,7 @@ const MCP_TOOLS = [
 }[];
 
 const SKILLS = [
+  { key: 'feature', command: '/dev-feature', when: 'tech.diagram.skillDevFeatureWhen' },
   { key: 'critique', command: '/design:design-critique', when: 'tech.diagram.skillCritiqueWhen' },
   {
     key: 'strategy',
@@ -716,7 +717,11 @@ const SKILLS = [
   },
   { key: 'verify', command: '/verify', when: 'tech.diagram.skillVerifyWhen' },
   { key: 'review', command: '/engineering:code-review', when: 'tech.diagram.skillReviewWhen' },
-  { key: 'debt', command: '/engineering:tech-debt', when: 'tech.diagram.skillDebtWhen' },
+  {
+    key: 'maintenance',
+    command: '/weekly-maintenance',
+    when: 'tech.diagram.skillMaintenanceWhen',
+  },
 ].map((skill, index) => ({
   ...skill,
   column: 10 + (index % 3) * 290,

@@ -212,7 +212,6 @@ const OPEN_TECH_WORK = [
   'leastPrivilege',
   'consolidate',
   'sharedCache',
-  'prerender',
 ] as const;
 
 const QUALITY_BLOCKING_KEYS = [
@@ -223,6 +222,7 @@ const QUALITY_BLOCKING_KEYS = [
 ] as const;
 
 const QUALITY_OBSERVED_KEYS = [
+  { key: 'monitoring', Icon: GoogleCloudLogo },
   { key: 'sentry', Icon: SentryLogo },
   { key: 'posthog', Icon: PostHogLogo },
 ] as const;
@@ -486,32 +486,23 @@ export default function TechPage() {
           >
             <FactGrid
               heading={t('tech.quality.blockingHeading')}
-              items={iconFacts(
-                'quality',
-                QUALITY_BLOCKING_KEYS,
-                {
-                  coverage: t('tech.quality.coverageValue', {
-                    lines: TECH_METRICS.coverageLines,
-                    functions: TECH_METRICS.coverageFunctions,
-                    branches: TECH_METRICS.coverageBranches,
-                    apiLines: TECH_METRICS.apiCoverageLines,
-                    mongoLines: TECH_METRICS.mongoCoverageLines,
-                  }),
-                  lighthouse: t('tech.quality.lighthouseValue', {
-                    pages: TECH_METRICS.lighthousePages,
-                    perf: TECH_METRICS.lighthousePerformance,
-                    a11y: TECH_METRICS.lighthouseAccessibility,
-                    bp: TECH_METRICS.lighthouseBestPractices,
-                    seo: TECH_METRICS.lighthouseSeo,
-                  }),
-                  axe: t('tech.quality.axeValue', { views: TECH_METRICS.a11yViews }),
-                },
-                {
-                  lighthouse: t('tech.quality.lighthouseHint', {
-                    watchlist: TECH_METRICS.lighthouseWatchlistPerformance,
-                  }),
-                }
-              )}
+              items={iconFacts('quality', QUALITY_BLOCKING_KEYS, {
+                coverage: t('tech.quality.coverageValue', {
+                  lines: TECH_METRICS.coverageLines,
+                  functions: TECH_METRICS.coverageFunctions,
+                  branches: TECH_METRICS.coverageBranches,
+                  apiLines: TECH_METRICS.apiCoverageLines,
+                  mongoLines: TECH_METRICS.mongoCoverageLines,
+                }),
+                lighthouse: t('tech.quality.lighthouseValue', {
+                  pages: TECH_METRICS.lighthousePages,
+                  perf: TECH_METRICS.lighthousePerformance,
+                  a11y: TECH_METRICS.lighthouseAccessibility,
+                  bp: TECH_METRICS.lighthouseBestPractices,
+                  seo: TECH_METRICS.lighthouseSeo,
+                }),
+                axe: t('tech.quality.axeValue', { views: TECH_METRICS.a11yViews }),
+              })}
             />
             <p className={shared.note}>
               <strong>{t('tech.quality.noteLead')}</strong>{' '}

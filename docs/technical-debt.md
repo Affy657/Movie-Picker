@@ -175,24 +175,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   ```
 - refs: pendant GCP de DEBT-003 (AWS). Le lot Terraform 5 de `roadmap.md` traite les deux au fond.
 
-## DEBT-019 quatre fonctions restent au-dessus du seuil de complexité cognitive
-
-- state: agent
-- impact: qualité. Sonar refuse quatre fonctions au-dessus de 15 de complexité cognitive, dont deux très loin. Aucune n'est un bug, mais chacune est un endroit où une modification future se fait à l'aveugle.
-- ou: analyse du 2026-09-10 sur `25c58bd`
-  - `apps/web/src/features/events/pages/MyEventsPage.tsx:297` (85)
-  - `apps/web/src/app/pages/ShowcaseListPage.tsx:143` (44)
-  - `apps/web/src/features/events/components/HostEventSettingsPanel.tsx:177` (19)
-  - `apps/web/src/features/events/pages/event-detail/EventDetailSession.tsx:638` (18)
-- verify: lire le total. Exporter `SONAR_TOKEN` d'abord, sa valeur se relevant dans la configuration MCP locale, serveur `sonarqube`.
-  ```bash
-  curl -sS -H "Authorization: Bearer $SONAR_TOKEN" "https://sonarcloud.io/api/issues/search?componentKeys=Affy657_Movie-Picker&resolved=false&rules=typescript:S3776,csharpsquid:S3776&ps=1"
-  ```
-- fix: **découper le composant**, pas extraire des expressions. Pour les quatre qui restent, le compteur est porté par les conditionnelles du rendu, pas par les valeurs dérivées : il faut sortir des blocs de JSX entiers dans des composants qui reçoivent les booléens et branchent chez eux. Sur `EventDetailSession`, le bloc cohérent est le groupe des dialogues, au prix d'une trentaine de props à faire descendre.
-- fini-quand: plus aucun `S3776` ouvert, ou ceux qui restent portent une justification « won't fix »
-- piege: **la complexité cognitive ne se mesure pas en local**, aucun outil du dépôt ne la calcule ; la seule boucle de retour est une analyse Sonar en CI, soit un run par itération. Second piège, mesuré à ses dépens le 2026-09-10 : **extraire des expressions dérivées dans des fonctions de module marche, mais seulement quand le compteur vient de là.** Quatre fonctions sont passées sous le seuil de cette façon (`FollowListModal` 22, `PatchEventConfigHandler` 18, `useEventWheel` 17, `MovieDetailsModal` 17), et `HostEventSettingsPanel` est resté **exactement à 19** après trois extractions du même genre : son compteur vient de ses 400 lignes de JSX conditionnel, que déplacer trois expressions ne touche pas. Troisième piège, à l'inverse du réflexe attendu : ces refactorisations **ajoutent** des lignes, parce qu'extraire un bloc coûte une déclaration de type et une liste de props. Ce n'est plus un problème de plafond depuis que le projet SonarCloud est public : mesuré le 2026-09-10, `ncloc` est passé de 49 231 à 52 349 en rendant `TechPage.tsx` et `app/pages/tech/` à l'analyse, soit au-dessus de l'ancien plafond de 50 000, et l'analyse est passée avec un Quality Gate vert.
-- refs: le chantier de septembre a bien servi, contrairement à ce que l'entrée d'avant craignait : `S3776` est passé de 15 à 7, puis à 4 le 2026-09-10, et les code smells de 42 à 18.
-
 ## DEBT-023 la limite de votes par participant se vérifie puis s'écrit, sans verrou
 
 - state: differe
@@ -325,6 +307,8 @@ Deux pièges d'énumération, payés une fois : `approval_policy` n'accepte que 
 ## C8 jamais d'`await` de premier niveau dans `main.tsx`
 
 `apps/web/src/main.tsx` termine par `boot().catch(...)`, **pas** par `await boot()`. Le `.catch` existe pour que la promesse ne soit pas flottante, ce que Sonar refuse, et pour retirer la coquille de démarrage si `boot` échoue — sans lui, un échec laisse l'utilisateur sur un écran de démarrage permanent.
+
+**Sonar réclame l'inverse et il a tort ici** : la règle `typescript:S7785` (« prefer top-level await ») cible exactement cette ligne. Le constat est marqué « accepté » sur SonarCloud le 2026-09-12 avec cette contrainte en justification. Ne pas le solder dans le code : ça a été fait une fois le 2026-09-12 en corrigeant les constats ouverts, et repéré avant la fusion. Si l'analyse le rouvre après un déplacement de la ligne, le ré-accepter, pas le corriger.
 
 **Un `await` de premier niveau y a coûté 3 à 5 points Lighthouse sur onze pages sur treize**, posé le 2026-09-09 par `86d8770` en soldant une promesse flottante, mesuré et retiré le 2026-09-10. Il rend l'évaluation du module d'entrée asynchrone et retarde tout le montage de React.
 

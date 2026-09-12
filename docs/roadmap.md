@@ -199,7 +199,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.6 – Planifiée (26 points, 0 restant)
+## ✅ V1.6 – Livré (26 points produit, 12 points tech)
 
 **Objectif** : compléter la boucle sociale entamée en V1.2 et ritualiser la soirée. Items classés par valeur utilisateur décroissante.
 
@@ -209,6 +209,15 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ✅ `L` **Plusieurs films gagnants par soirée** (V1.6) : l'hôte règle le nombre de films gagnants jusqu'à dix, et chaque tirage ajoute un film au palmarès en l'excluant des suivants. Les gagnants comptent partout : historique, statistiques, partage et « Vos amis ont vu ».
 - ✅ `S` **Plage de votes configurable** (V1.6) : l'hôte active une limite de votes par participant dans les paramètres de la soirée, reprise dans les templates et les soirées récurrentes. Une fois ses votes posés, le participant est prévenu qu'il doit en retirer un pour voter ailleurs.
 - ✅ `M` **Watchlist d'un autre utilisateur** (V1.6) : la watchlist d'un compte se consulte depuis son profil public `/u/:handle`, sur une page dédiée calquée sur celle des films vus. Un réglage de visibilité propre à la watchlist, indépendant de celui du profil et activé par défaut, permet de la masquer.
+
+**Tech**
+
+- ✅ 🏗️ `M` **Sauvegarde nocturne de la base** : le palier gratuit Atlas n'offre aucun instantané ; un dump part chaque nuit vers un bucket versionné, est relu depuis ce bucket et restauré dans une MongoDB jetable avant d'être publié. Une archive qui échoue la restauration ne devient jamais la sauvegarde du jour.
+- ✅ 🔒 `S` **Dépôt public** : historique audité, identifiants d'infrastructure remplacés par des gabarits, `CONTRIBUTING.md` et `SECURITY.md` posés. SonarCloud perd son plafond de lignes et les minutes GitHub Actions deviennent gratuites.
+- ✅ ⚙️ `M` **Pré-rendu des pages publiques** : cinq routes (Comment ça marche, Soutenir, dossier technique, mentions légales, confidentialité) sont rendues en HTML complet au build, métadonnées et données structurées comprises. Un moteur d'indexation ou un aperçu de lien reçoit la page, plus une coquille vide.
+- ✅ ⚙️ `S` **Coquille de démarrage** : le titre de l'accueil est peint dans le HTML initial, la langue inactive et les icônes sortent du chemin de démarrage. Le plus grand élément de l'accueil s'affiche en 2,3 s au lieu de 4,2 s et la porte Lighthouse repasse au vert.
+- ✅ 🔒 `S` **Balayage de secrets en local** : `verify:local` joue gitleaks avec l'image et le mode de la CI, donc une clé ou un jeton se découvre avant le push, plus dans un run rouge.
+- ✅ ⚙️ `M` **Complexité cognitive sous le seuil** : les quinze fonctions que Sonar refusait sont découpées en composants, dossier technique rendu à l'analyse compris, et plus aucune règle `S3776` n'est ouverte.
 
 ---
 

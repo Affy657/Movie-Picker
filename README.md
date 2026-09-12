@@ -20,14 +20,16 @@ On crée une soirée, on partage le lien, chacun propose des films et vote, la r
 3. **Proposer des films** via la recherche TMDB (affiches, métadonnées, disponibilité en streaming).
 4. **Voter** pour ou contre, et signaler un film déjà vu.
 5. **Lancer la roue**, en tirage strictement aléatoire ou pondéré par les votes, au choix de l'hôte.
-6. **Clôturer** sur le film gagnant.
+6. **Couronner** un ou plusieurs films, jusqu'à dix selon le réglage de l'hôte : chaque tirage en ajoute un au palmarès.
 
-Autour de ce parcours : une page d'accueil d'exploration (rangées personnalisées, 120 sagas,
-sélections thématiques, ce qui passe ce soir en streaming), une liste de films personnelle avec
-notes sur 5 ou sur 10, des profils publics `/u/:handle` avec suivi entre comptes, l'import
-Letterboxd, les notifications push et in-app, l'export calendrier `.ics`, le thème clair ou sombre,
-l'installation en PWA, l'export et la suppression de compte au sens RGPD, et une navigation clavier
-vérifiée par axe sur les vues principales.
+Autour de ce parcours : des soirées qui se répètent au rythme choisi et des modèles de soirée
+réutilisables, une limite de votes par participant, une page d'accueil d'exploration (rangées
+personnalisées, 120 sagas, sélections thématiques, ce qui passe ce soir en streaming), une liste de
+films personnelle avec notes sur 5 ou sur 10 et consultable depuis le profil de ses amis, des profils
+publics `/u/:handle` avec recherche de comptes et suivi entre eux, l'import Letterboxd, les
+notifications push et in-app, l'export calendrier `.ics`, le thème clair ou sombre, l'installation en
+PWA, l'export et la suppression de compte au sens RGPD, et une navigation clavier vérifiée par axe
+sur les vues principales.
 
 ## La stack
 

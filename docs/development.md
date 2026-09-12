@@ -156,7 +156,7 @@ movie-picker/
 ├─ archive/           Application Expo du cursus et documents gelés, plus construits
 ├─ artifacts/         Contrat OpenAPI, rapports Lighthouse et Stryker
 ├─ configs/           tsconfig et Prettier partagés, exclusions Sonar
-├─ docs/              Roadmaps, dette technique, ce guide
+├─ docs/              Roadmap, dette technique, ce guide
 ├─ e2e/               Parcours Playwright
 ├─ infra/             Politiques IAM, CloudFront et rétention de registre
 └─ scripts/           verify:local, lint des workflows, prérequis, export OpenAPI, seuils de couverture

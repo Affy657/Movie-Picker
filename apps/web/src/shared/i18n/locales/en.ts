@@ -1913,6 +1913,57 @@ export const en: Locale = {
         description:
           'In-app browsers were wiping your session. A banner now offers to open Movie Picker in Safari or Chrome.',
       },
+      userSearch: {
+        title: 'Find an account',
+        description: 'A Search tab in your follows finds a friend by nickname or by handle.',
+      },
+      recurringEvents: {
+        title: 'Recurring nights',
+        description:
+          'Weekly, fortnightly or monthly: the next one is born on its own when the previous one closes.',
+      },
+      eventTemplates: {
+        title: 'Night templates',
+        description:
+          'Up to five saved set-ups, reapplied in one click, and “Redo this night” from your history.',
+      },
+      multipleWinners: {
+        title: 'Several winning films',
+        description:
+          'The host picks how many films come out of the draw, up to ten: perfect for a marathon.',
+      },
+      voteLimit: {
+        title: 'Vote limit per participant',
+        description: 'The host sets a number of votes per person; everyone then has to choose.',
+      },
+      friendsWatchlist: {
+        title: 'A friend’s list',
+        description:
+          'Their watchlist can be read from their profile. Yours can be hidden with one account setting.',
+      },
+      openEventMovies: {
+        title: 'Films visible before joining',
+        description:
+          'A night link shows posters, scores and the winner without taking part; voting still requires joining.',
+      },
+      wheelAnnounce: {
+        title: 'The winner announced at the right moment',
+        description: 'The notification goes out when the wheel stops, no longer while it spins.',
+      },
+      letterboxdFromCard: {
+        title: 'Letterboxd from the card',
+        description: 'A film’s menu during a night opens its Letterboxd page in one click.',
+      },
+      scrollableDialogs: {
+        title: 'Dialogs that scroll on mobile',
+        description:
+          'Report a problem and Suggest an idea keep their buttons reachable, even with attached images.',
+      },
+      offlineEventPage: {
+        title: 'Night page offline',
+        description:
+          'A night link opened without network shows an error instead of an endless skeleton.',
+      },
     },
   },
   pwaInstall: {
@@ -2054,7 +2105,7 @@ export const en: Locale = {
         'A donation platform for creators; a confirmed contribution then shows as a badge on the profile.',
       scheduler: 'Cloud Scheduler',
       schedulerValue:
-        'Calls the server on a fixed schedule to trigger movie night reminders. Same token protection, since the route is open on the internet.',
+        'Calls the server on a fixed schedule: every 30 minutes for the movie night reminders, once a day for the recurring nights. Same token protection, since the routes are open on the internet.',
       schedulerHint:
         'Google Cloud scheduler: it calls an address at the appointed time, which replaces a timer living inside the server.',
       issues: 'GitHub Issues',
@@ -2065,7 +2116,7 @@ export const en: Locale = {
     },
     trajectory: {
       title: '{{months}} months, {{shipped}} milestones shipped',
-      lead: '{{commits}} commits since February 2026. Every milestone reached production before the next one opened. V1.6 is under way, and the last {{planned}} markers are the plan ahead, not work already done.',
+      lead: '{{commits}} commits since February 2026. Every milestone reached production before the next one opened. The last {{planned}} markers are the plan ahead, not work already done.',
       plannedBadge: 'ahead',
       currentBadge: 'in progress',
       unplannedSpan: 'Between V1.8 and V2',
@@ -2086,13 +2137,10 @@ export const en: Locale = {
         'The deployment service account holds more rights than it needs; splitting it by purpose is the next step.',
       consolidate: 'Front end to Google Cloud',
       consolidateHint:
-        'Moving the front end from S3 and CloudFront to Cloud Storage and Cloud CDN would put both applications with the same provider, and remove one console, one permission model and one invoice.',
+        'Moving the front end from S3 and CloudFront to Firebase Hosting would put both applications with the same provider, and remove one console, one permission model and one invoice. Cloud Storage and Cloud CDN were ruled out: their forwarding rule costs close to 18 $ a month before the first byte is served.',
       sharedCache: 'Cache shared across instances',
       sharedCacheHint:
         'The TMDB entry cache lives in the memory of each instance: two instances repeat the same call, and a restart starts cold. A shared cache would fix both.',
-      prerender: 'Pre-rendered public pages',
-      prerenderHint:
-        'Public pages are indexed today through metadata and a sitemap; pre-rendered HTML would do better.',
       techLead: 'What is not done, named rather than left unsaid.',
       mvpWhen: 'February 2026',
       mvpWhat: 'MVP',
@@ -2191,7 +2239,7 @@ export const en: Locale = {
       v16When: 'September 2026',
       v16What: 'V1.6',
       v16Detail:
-        'Close the social loop opened in V1.2 and turn the movie night into a ritual. All six markers are in place; the version ships once merged into master.',
+        'The social loop opened in V1.2 closes and the movie night becomes a ritual: it repeats, replays from a template and can crown several films.',
       v16Hint:
         'Tournament mode left this milestone for the backlog: on its own it cost more than the five other items combined.',
       v16Item1: 'User search',
@@ -2495,7 +2543,7 @@ export const en: Locale = {
       bugCaption:
         'The test comes before the fix. Without it, nothing proves the cause was addressed.',
       toolingCaption:
-        'The five procedures are recalled by name: the assistant reloads the steps instead of me describing them again.',
+        'The six procedures are recalled by name: the assistant reloads the steps instead of me describing them again.',
       mcpNoteLead: 'The connected tools:',
       mcpNote:
         '{{tools}} connectors give the assistant a direct reading of the real state, rather than whatever I tell it. They exist to observe: none decides, and none bypasses the four approval points or the check pipeline.',
@@ -2556,7 +2604,7 @@ export const en: Locale = {
       frontHint:
         'Server rendering would have added infrastructure to maintain for a narrow set of public pages: the home page, profiles, this dossier and the legal pages.',
       frontTrade:
-        'Those public pages are indexed through metadata and a sitemap rather than pre-rendered HTML, and pre-rendering is still an open piece of work.',
+        'Five public pages are pre-rendered at build time, full HTML and metadata included; the home page and the profiles, dynamic, are still indexed through metadata and a sitemap.',
       styling: 'CSS modules rather than Tailwind',
       stylingValue:
         'CSS modules and in-house tokens: spacing, sizes, colours and depths form a closed scale that the checker refuses to see bypassed.',
@@ -2644,9 +2692,9 @@ export const en: Locale = {
         'Revisions stay available at the host and old images in the registry, purged by a dedicated pipeline so that it does not grow forever.',
       scheduler: 'Periodic work',
       schedulerValue:
-        'No background work lives in the process. An external scheduler calls the server every 30 minutes for the event reminders, on a route protected by a token.',
+        'No background work lives in the process. An external scheduler calls the server every 30 minutes for the event reminders, and once a day to spawn the next occurrence of recurring nights, on routes protected by a token.',
       schedulerHint:
-        'The job is created by the deployment pipeline, but only if the token exists: without it no reminder goes out and the deployment reports it as a warning.',
+        'Both jobs are created by the deployment pipeline, but only if the token exists: without it neither a reminder nor a next occurrence goes out, and the deployment reports it as a warning.',
       origins: 'Origins',
       originsValue:
         'The server only accepts declared origins. The deployment fails if the list is not set.',
@@ -2655,7 +2703,7 @@ export const en: Locale = {
     },
     quality: {
       title: 'What is measured, and the threshold that fails the build',
-      lead: 'A metric without a threshold is decoration. The first four stop a release; the last two tell you what happens once it is live.',
+      lead: 'A metric without a threshold is decoration. The first four stop a release; the last three tell you what happens once it is live.',
       blockingHeading: 'Blocking thresholds',
       informativeHeading: 'What is observed in production',
       coverage: 'Test coverage',
@@ -2667,7 +2715,7 @@ export const en: Locale = {
       lighthouseValue:
         '{{pages}} pages audited on every push, with minimums of {{perf}} for performance, {{a11y}} for accessibility, {{bp}} for best practices and {{seo}} for SEO.',
       lighthouseHint:
-        'Each page is measured three times and the median is kept. One page differs, the heaviest one, whose performance minimum drops to {{watchlist}}: the runner loses four points there without any real regression.',
+        'Each page is measured five times and the median is kept, to smooth out the runner variance. No page has a floor of its own any more since the signed-out state of a protected route renders from the shell.',
       axe: 'Automated accessibility',
       axeValue:
         '{{views}} views run through axe-core during the test suite. A violation fails the test, not a report.',
@@ -2679,6 +2727,11 @@ export const en: Locale = {
         'Analysis on every push, coverage ingested from CI. The pipeline waits for the quality gate verdict and fails when it is red.',
       sonarHint:
         'Both deployments depend on this job: a red gate stops the release, it does not merely annotate it.',
+      monitoring: 'Cloud Monitoring',
+      monitoringValue:
+        'Three probes query the service from outside, from three continents, and five alert policies warn by e-mail: service or database unreachable, server errors, degraded latency.',
+      monitoringHint:
+        'The probes target /health, /health/ready and the front root. Thresholds sit above the measured noise so that an alert stays credible, and an incident closes on its own after thirty minutes back to normal.',
       sentry: 'Sentry',
       sentryValue:
         'Browser and server errors, tied to the deployed version through the commit SHA.',
@@ -2823,10 +2876,11 @@ export const en: Locale = {
       flowNoteDev: 'The four boxed steps wait for my review and my approval before moving on.',
       toolingTitle: 'Named procedures and read-only connectors plugged into the assistant.',
       skillsLabel: 'TOOLED PROCEDURES, RECALLED BY NAME',
+      skillDevFeatureWhen: 'from scoping to deployment',
       skillCritiqueWhen: 'on the mockup',
       skillVerifyWhen: 'before every push',
       skillReviewWhen: 'before merging',
-      skillDebtWhen: 'periodic pass',
+      skillMaintenanceWhen: 'weekly pass',
       mcpLabel: 'TOOLS CONNECTED TO THE ASSISTANT (MCP AND COMMAND LINE)',
       mcpAssistant: 'assistant',
       mcpGithub: 'PRs and CI',
@@ -2947,7 +3001,7 @@ export const en: Locale = {
       infraRegistrySub: 'one image per commit',
       infraRegistryDetail: 'tagged by SHA, purged',
       infraScheduler: 'Cloud Scheduler',
-      infraSchedulerSub: 'event reminders',
+      infraSchedulerSub: 'reminders and recurring nights',
       infraSchedulerDetail: 'created if the token exists',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'managed replica set',

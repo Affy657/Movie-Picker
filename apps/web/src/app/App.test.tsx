@@ -12,6 +12,10 @@ import {
   createUserStatsHandler,
   TEST_API_V1,
 } from '@/mocks/handlers';
+import { WHATS_NEW_NAV_RELEASED_AT_MS } from '@/shared/whatsNew';
+
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_AFTER_RELEASE_MS = WHATS_NEW_NAV_RELEASED_AT_MS + 36 * HOUR_MS;
 
 function renderRoutes(initialEntries: string[]) {
   return render(
@@ -377,7 +381,7 @@ describe('App (routes)', () => {
     });
 
     it('AppShell expose la pastille Nouveautés devant les notifications pour un compte antérieur', async () => {
-      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-09-08T12:00:00.000Z'));
+      vi.spyOn(Date, 'now').mockReturnValue(DAY_AFTER_RELEASE_MS);
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
           HttpResponse.json({
@@ -404,8 +408,8 @@ describe('App (routes)', () => {
       expect(chip.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
-    it("AppShell n'expose pas la pastille Nouveautés pour un compte créé à partir de la 1.5.0", async () => {
-      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-09-08T12:00:00.000Z'));
+    it("AppShell n'expose pas la pastille Nouveautés pour un compte créé après la livraison", async () => {
+      vi.spyOn(Date, 'now').mockReturnValue(DAY_AFTER_RELEASE_MS);
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
           HttpResponse.json({
@@ -414,7 +418,7 @@ describe('App (routes)', () => {
             emailMasked: 'a***@test.local',
             uiTheme: 'system',
             accentColor: 'default',
-            createdAt: '2026-09-08T06:00:00.000Z',
+            createdAt: new Date(WHATS_NEW_NAV_RELEASED_AT_MS + 30 * HOUR_MS).toISOString(),
           })
         ),
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))

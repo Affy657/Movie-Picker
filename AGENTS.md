@@ -166,7 +166,7 @@ Outils configurés pour qu'un agent travaille sur le projet sans intervention ma
 | GitHub | CLI `gh` | PR, issues, runs CI, releases |
 | GCP | CLI `gcloud` | Cloud Run, Artifact Registry, Secret Manager, logs. Les écritures (`services enable`, `secrets create`) sont refusées à l'agent : les demander à l'utilisateur |
 | AWS | CLI `aws` | S3, CloudFront (déploiement front) |
-| SonarCloud | MCP `sonarqube` (Docker, requiert Docker Desktop lancé et l'image `mcp/sonarqube`) | consulter qualité / issues / hotspots ; l'analyse tourne en CI (job `sonar`, SonarScanner for .NET) |
+| SonarCloud | MCP `sonarqube` (Docker, requiert Docker Desktop lancé et l'image `mcp/sonarqube`) | consulter qualité / issues / hotspots ; l'analyse tourne en CI (job `sonar`, SonarScanner for .NET). La complexité cognitive (`S3776`) se mesure en local sans attendre la CI : `eslint-plugin-sonarjs` (règle `sonarjs/cognitive-complexity`, seuil 15) installé hors du dépôt avec ESLint et TypeScript 6, lancé depuis la racine avec `--no-config-lookup`, donne les mêmes chiffres que SonarCloud |
 | MongoDB | MCP `mongodb` | base dev `moviepicker_dev` |
 | PostHog | MCP `posthog` (HTTP, scope global) | analytics, events produit |
 | Sentry | connecteur applicatif | erreurs front et API ; org et projets se relèvent dans la console Sentry ou dans les variables Actions `SENTRY_ORG` et `SENTRY_PROJECT`, région UE |
