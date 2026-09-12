@@ -8,6 +8,8 @@
 >
 > ✅ **Le support a été rendu, corrigé puis refondu le 5 septembre.** Le premier rendu réel a montré que des diapositives étaient coupées par le bas du cadre, 17 à la première mesure, 22 au contrôle rejoué. Elles tiennent toutes désormais, et le support a été **épuré** dans la foulée. Détail en § 0.
 
+> ⚠️ **Depuis le 12 septembre, le support est reconstruit compétence par compétence** : `slides/slides.md` ne contient que le titre et le chapitre 2 (C3.1), l'ancien support complet est `slides/slides-v1.md`. Les numéros de diapositives de ce fichier et du plan sont ceux de l'ancien support jusqu'au réalignement final (PASSATION § 16).
+>
 > Pour **comment** travailler dans ce dossier, règles d'écriture, sources de vérité des chiffres, pièges et scripts de vérification, voir [`PASSATION.md`](PASSATION.md).
 
 ---

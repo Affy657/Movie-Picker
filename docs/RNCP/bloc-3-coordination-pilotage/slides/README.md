@@ -72,6 +72,8 @@ npm run export
 
 ## Avancement
 
+> **Reconstruction en cours depuis le 12 septembre 2026** : `slides.md` est reconstruit compétence par compétence à partir de `slides-v1.md`, l'ancien support complet. Le tableau ci-dessous décrit l'ancien support ; il est réaligné à la fin.
+
 | Chapitre | Diapos | Compétence | État |
 |----------|:------:|:----------:|------|
 | 0. Titre et sommaire | 1, 2 | | ✅ |

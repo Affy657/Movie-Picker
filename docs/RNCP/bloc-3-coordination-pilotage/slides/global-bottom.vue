@@ -1,14 +1,8 @@
 <script setup>
 const REFS = {
-  3: 'C3.4.2',
-  4: 'C3.1', 5: 'C3.1', 6: 'C3.1', 7: 'C3.1', 8: 'C3.1',
-  9: 'C3.2.1', 10: 'C3.2.1', 11: 'C3.2.1', 12: 'C3.2.1',
-  13: 'C3.2.2',
-  14: 'C3.3.1', 15: 'C3.3.1', 16: 'C3.3.1', 17: 'C3.3.1',
-  18: 'C3.3.2', 19: 'C3.3.2',
-  20: 'C3.4.1', 21: 'C3.4.1', 22: 'C3.4.1',
-  23: 'C3.4.2',
+  2: 'C3.1', 3: 'C3.1', 4: 'C3.1', 5: 'C3.1', 6: 'C3.1',
 }
+const ANNEX_FROM = 99
 </script>
 
 <template>
@@ -20,7 +14,7 @@ const REFS = {
   </footer>
 
   <footer
-    v-else-if="$slidev.nav.currentPage > 23"
+    v-else-if="$slidev.nav.currentPage >= ANNEX_FROM"
     class="abs-bl m-3 text-xs font-mono opacity-60 select-none"
   >
     ANNEXE

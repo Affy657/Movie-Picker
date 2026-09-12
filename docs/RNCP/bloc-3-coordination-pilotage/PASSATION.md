@@ -398,3 +398,12 @@ Le propriétaire du projet a jugé les diapositives 4 à 6 vides ou incohérente
 **Le board GitHub Projects** (projet 1 du compte, privé) a été rempli le 11/09 par un script : 152 tickets en brouillon, un par item des deux feuilles de route, avec les champs Status (Backlog, Cadrage, Maquette, Dev, Revue et tests, Recette, Livré), Version, Taille et Nature. Il est postérieur au travail qu'il consolide, ce qui est dit dans `02-suivi-indicateurs.md` § 1.5 et préparé en réponse dans la note de la diapositive 9 ; il n'est plus vide, et la diapositive 4 le décrit tel qu'il est.
 
 **Les dates des phases** de la diapositive 5 sont celles du dépôt (commits de roadmap pour l'étude, branches de version pour la conception et la réalisation, tags pour la restitution, fenêtre de production pour la mesure), arrondies à la semaine ; la table de `01-planification.md` § 3.1 est la source, et le générateur est un script de session (`gantt_gen.py`, colonne 1 = 16 février, 213 colonnes).
+
+## 16. Reconstruction incrémentale du support, depuis le 12 septembre 2026
+
+Décision du propriétaire du projet : **repartir de zéro et reconstruire le support compétence par compétence**, en validant chaque bloc avant d'ajouter le suivant, avec la méthode du chapitre 2 : les faits du dépôt d'abord, ses réponses ensuite, la diapositive enfin.
+
+- `slides/slides-v1.md` est l'ancien support complet (30 diapositives, état du 11 septembre au soir). Il n'est pas construit ni servi ; il sert de réserve pour reprendre une diapositive.
+- `slides/slides.md` est le support en reconstruction. Il contient la diapositive de titre et le chapitre 2 (C3.1, diapositives 2 à 6) ; les autres compétences s'ajoutent dans l'ordre du sommaire.
+- `global-bottom.vue` : la table `REFS` ne couvre que les diapositives présentes, et `ANNEX_FROM` vaut 99 tant qu'aucune annexe n'existe. Les tenir à jour à chaque ajout.
+- **Pendant la reconstruction, la numérotation du plan (§ 1 et § 4), le script du § 5.3 (attendu 30, minutage 30:00) et les renvois « diapo N » des notes sont suspendus** : ils sont réalignés en une fois quand le sommaire est arrêté. `verify:rendu` reste obligatoire à chaque ajout.
