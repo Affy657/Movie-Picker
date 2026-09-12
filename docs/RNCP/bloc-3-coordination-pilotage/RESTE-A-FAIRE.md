@@ -64,7 +64,7 @@ Ces quatre points portent **C3.4.2**, éliminatoire. Une démonstration qui éch
 
 | # | Action | Diapo | Compétence | Détail |
 |:-:|--------|:-----:|:----------:|--------|
-| 5 | ~~Structurer le tableau GitHub Projects~~ ✅ rempli le 11/09 (152 tickets, colonnes Backlog → Livré, champs Version, Taille, Nature). Reste, facultatif : **une capture** pour la diapositive 9 | 9 | **C3.2.1** ÉLIM | La diapositive tient sans. Le board est privé : le rendre public est un clic dans ses réglages, à décider avant l'oral |
+| 5 | ~~Structurer le tableau GitHub Projects~~ ✅ rempli le 11/09, vidé et re-rempli le 12/09 depuis la roadmap fusionnée (160 tickets, colonnes Backlog → Livré, champs Version MVP à 1.8, Taille, Nature). Reste, facultatif : **une capture** pour la diapositive 9 | 9 | **C3.2.1** ÉLIM | La diapositive tient sans. Le board est privé : le rendre public est un clic dans ses réglages, à décider avant l'oral |
 | 6 | **Relever une capture de facturation** GCP et AWS | 11 | **C3.2.1** ÉLIM | Étaye la ligne « coût réel » du tableau de bord. Aujourd'hui la valeur *0 €/mois* repose sur les paliers gratuits documentés, pas sur une facture |
 
 ---

@@ -81,7 +81,7 @@ comment il a ete pilote. Dire la phrase de bascule : « je commence par vous
 montrer le produit, comme je le montrerais a un client. Tout ce qui suivra,
 planning, indicateurs, arbitrages, porte sur ce logiciel-la. »
 
-A DIRE, rien n'est a l'ecran : 10 versions en production depuis fevrier,
+A DIRE, rien n'est a l'ecran : 11 versions en production depuis fevrier,
 17 comptes, 74 % des soirees menees jusqu'au tirage. Puis les six temps du
 parcours en une phrase, et la demonstration. Au retour, diapo 4 : on parle au
 jury.
@@ -136,7 +136,7 @@ en silence se lit comme une defaillance du logiciel.
 
 <div class="text-xs opacity-75 mb-1">Chaque version 1.x, de la roadmap à la release</div>
 <div class="vee">
-<div class="row"><div class="l"><b>Cadrage</b><span>objectif de version, items, tailles S à XL</span></div><div class="link"></div><div class="r"><b>Livraison</b><span>release datée, notes, nouveautés in-app</span></div></div>
+<div class="row"><div class="l"><b>Cadrage</b><span>objectif de version, items pesés S à XL</span></div><div class="link"></div><div class="r"><b>Livraison</b><span>release datée, notes, nouveautés in-app</span></div></div>
 <div class="row r2"><div class="l"><b>Conception</b><span>questions de cadrage, maquette, contrat d'API</span></div><div class="link"></div><div class="r"><b>Validation</b><span>test manuel, go avant la fusion</span></div></div>
 <div class="row r3"><div class="l"><b>Réalisation</b><span>test écrit avant le code, branche de feature</span></div><div class="link"></div><div class="r"><b>Vérification</b><span>revue, 14 contrôles bloquants</span></div></div>
 <div class="base">une branche par version, une branche par feature</div>
@@ -185,7 +185,8 @@ l'outil est argumente avec ses benefices ET compatible avec la methodologie.
 
 La methode se dit en une phrase : « un cycle en V pour chaque version, un flux
 pour le run ». Le V a gauche : une version part de la roadmap avec un objectif,
-des items et une taille par item, chaque item passe par un cadrage par
+des items et une taille par item, donc un poids par version, chaque item
+passe par un cadrage par
 questions, une maquette si l'ecran est nouveau, une realisation ou le test est
 ecrit avant le code, puis remonte la branche droite : verification par la chaine
 et la revue, validation par un test manuel avant la fusion, livraison par une
@@ -199,7 +200,7 @@ etiquetee avec sa severite, une branche de correctif fusionnee sur master, une
 version corrective. Il ne passe pas par le V, et c'est voulu.
 
 LES BENEFICES, a dire avec les chiffres : le V par version fige un perimetre,
-donc chaque version a une date et des notes, dix versions livrees ; le flux du
+donc chaque version a une date et des notes, onze versions livrees ; le flux du
 run corrige sans attendre la version suivante, une anomalie de production
 ouverte et corrigee le meme jour en juillet, livree le lendemain.
 
@@ -262,7 +263,7 @@ nait du geste. Le choix est developpe au chapitre 3.
 <div class="row"><div class="lab">1.4</div><div class="track"><i class="c" style="grid-column:152/167"></i><i class="r" style="grid-column:171/191"></i><b style="grid-column:191/192"></b><i class="m" style="grid-column:192/202"></i></div></div>
 <div class="row"><div class="lab">1.4.1, run</div><div class="track"><i class="r" style="grid-column:193/201"></i><b style="grid-column:201/202"></b></div></div>
 <div class="row"><div class="lab">1.5</div><div class="track"><i class="c" style="grid-column:198/201"></i><i class="r" style="grid-column:201/204"></i><b style="grid-column:204/205"></b><i class="m" style="grid-column:205/214"></i></div></div>
-<div class="row"><div class="lab">1.6, en cours</div><div class="track"><i class="c" style="grid-column:205/206"></i><i class="r open" style="grid-column:206/214"></i></div></div>
+<div class="row"><div class="lab">1.6</div><div class="track"><i class="c" style="grid-column:203/206"></i><i class="r" style="grid-column:206/209"></i><b style="grid-column:209/210"></b><i class="m" style="grid-column:210/214"></i></div></div>
 
 </div>
 
@@ -318,12 +319,14 @@ Une ligne par version, du 16 fevrier au 16 septembre 2026. Se lit de gauche a
 droite, une phrase par couleur. L'ETUDE se dit, elle n'est pas dessinee : la
 version est cadree dans la roadmap, objectif, items, tailles, pendant que la
 version precedente est encore en production ; le cadrage de la 1.4 court de
-fin juin a mi-juillet, celui de la 1.5 fin aout.
+fin juin a mi-juillet, celui de la 1.5 fin aout, celui de la 1.6 debut
+septembre. La 1.7 est cadree, sept items, 34 points, elle part apres l'oral.
 - CONCEPTION, bleu : questions de cadrage, maquettes des ecrans nouveaux,
   contrat d'API. Court, parce qu'une version tient en quelques items.
 - REALISATION, vert : la branche de version, une feature de un a trois jours.
 - RESTITUTION, losange : la release, avec ses notes et la fenetre de
-  nouveautes. Dix losanges, dix versions.
+  nouveautes. Onze versions publiees, la 1.6 le 12 septembre, un losange
+  chacune ; le socle .NET, mis en production sans numero, a le sien.
 - MESURE, vert clair : la version vit en production, sondes, erreurs, usage
   et retours ; c'est ce qui alimente le cadrage de la suivante. Le
   questionnaire du 18 aout tombe dans la mesure de la 1.3.2 et nourrit la
@@ -350,17 +353,18 @@ Bloc 1. La decision precede le document.
 
 ---
 
-# Sept versions en lots, et les ressources réelles
+# Huit versions en lots, et les ressources réelles
 
-<div class="text-xs opacity-75 mb-1">Les 75 items livrés, par version</div>
+<div class="text-xs opacity-75 mb-1">Le poids des huit versions livrées : 106 items, 348 points</div>
 <div class="stack" style="height:2rem">
-<i style="width:9.3%;background:var(--s1)">MVP, 7</i>
-<i style="width:21.3%;background:var(--s3)">V1, 16</i>
-<i style="width:10.7%;background:var(--s2)">1.1, 8</i>
-<i style="width:10.7%;background:var(--s4);color:#3b2f00">1.2, 8</i>
-<i style="width:14.7%;background:var(--s1)">1.3, 11</i>
-<i style="width:14.7%;background:var(--s3)">1.4, 11</i>
-<i style="width:18.6%;background:var(--s2)">1.5, 14</i>
+<i style="width:19.0%;background:var(--s1)">MVP, 66</i>
+<i style="width:19.5%;background:var(--s3)">V1, 68</i>
+<i style="width:7.5%;background:var(--s2)">1.1, 26</i>
+<i style="width:8.6%;background:var(--s4);color:#3b2f00">1.2, 30</i>
+<i style="width:9.2%;background:var(--s1)">1.3, 32</i>
+<i style="width:15.8%;background:var(--s3)">1.4, 55</i>
+<i style="width:9.5%;background:var(--s2)">1.5, 33</i>
+<i style="width:10.9%;background:var(--s4);color:#3b2f00">1.6, 38</i>
 </div>
 
 <div class="grid grid-cols-3 gap-5 text-sm mt-5">
@@ -409,9 +413,12 @@ DUREE 1:40. CRITERES : le planning est decoupe en phases, en taches ou LOTS ;
 les ressources necessaires sont identifiees (ELEMENT IMPOSE 3).
 
 La barre du haut : les lots sont les versions, et chaque version est un lot
-ferme, avec ses items et leur taille. Dire les ordres de grandeur, pas les
-sept chiffres : 75 items livres, entre 7 et 16 par version, une feature tient
-en un a trois jours, une version en une a trois semaines de realisation. Le
+ferme, avec ses items et leur taille, donc un poids, la somme des tailles.
+C'est ce poids qui sert a comparer deux versions et a decider d'y ajouter ou
+d'en retirer un item. Dire les ordres de grandeur, pas les huit chiffres : 106
+items livres, produit et technique, 348 points, entre 26 et 68 par version ;
+une feature tient en un a trois jours, une version en une a trois semaines de
+realisation. Le
 chiffrage du cadrage, 98 jours-homme sur quatre lots, est celui du Bloc 1 ; il
 sert de reference a l'ecart du chapitre 3, pas de decoupage ici.
 

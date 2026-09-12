@@ -39,7 +39,7 @@ En tenant le suivi dans la plateforme qui héberge le code, la trace est produit
 | **Pull requests** | La revue, la trace de décision d'intégration, et l'exécution des portes de qualité avant fusion | 77 ouvertes, 26 fusionnées |
 | **Actions** | La vérification automatisée : tests, analyse statique, sécurité, performance, déploiement | 449 exécutions du pipeline sur la branche principale |
 | **Releases et tags** | Les points de livraison datés, adossés au commit exact déployé | 10 versions publiées |
-| **Board GitHub Projects** | Un ticket par item de roadmap, avec sa version, sa taille et sa phase : Backlog, Cadrage, Maquette, Dev, Revue et tests, Recette, Livré | **152 tickets** au 11/09, dont 97 livrés |
+| **Board GitHub Projects** | Un ticket par item de roadmap, avec sa version, sa taille et sa phase : Backlog, Cadrage, Maquette, Dev, Revue et tests, Recette, Livré | **160 tickets** au 12/09, dont 106 livrés |
 | **Fichiers versionnés du dépôt** | Les feuilles de route produit et technique, le journal des versions, la carte de suivi du titre | 4 fichiers, **106 items** de feuille de route au 05/09 |
 
 La feuille de route (`docs/roadmap.md`) joue le rôle du **backlog priorisé**, et le `CHANGELOG.md` celui du **journal d'avancement**. Les tenir en Markdown versionné plutôt que dans un service tiers a une conséquence directe sur le pilotage : chaque modification de périmètre est un commit daté, attribuable et diffable. La question « quand cet item est-il apparu dans le périmètre, et qu'est-ce qui l'y a mis ? » a une réponse mécanique.

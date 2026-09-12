@@ -30,7 +30,7 @@ Le projet est piloté en deux régimes, parce qu'il a deux natures de travail.
 
 | Branche gauche | Branche droite, qui la vérifie |
 |----------------|--------------------------------|
-| **Cadrage** de la version : objectif, items, tailles S à XL dans la roadmap | **Livraison** : release datée, notes de version, fenêtre de nouveautés dans l'application |
+| **Cadrage** de la version : objectif, items, tailles S à XL dans la roadmap, et le poids de la version, somme des tailles | **Livraison** : release datée, notes de version, fenêtre de nouveautés dans l'application |
 | **Conception** de l'item : questions de cadrage, maquette si l'écran est nouveau, contrat d'API | **Validation** : test manuel sur les deux serveurs, go explicite avant la fusion |
 | **Réalisation** : test écrit avant le code, une branche par feature dans la branche de version | **Vérification** : revue de code, `verify:local` en quatorze étapes, chaîne d'intégration |
 
@@ -40,7 +40,7 @@ Le projet est piloté en deux régimes, parce qu'il a deux natures de travail.
 
 | Bénéfice attendu | Traduction sur le projet |
 |------------------|--------------------------|
-| Un périmètre figé par version, donc un livrable daté | 10 versions publiées du 27 février au 7 septembre 2026, chacune avec sa release, ses notes et son étiquette sur le commit exact |
+| Un périmètre figé par version, donc un livrable daté | 11 versions publiées du 27 février au 12 septembre 2026, chacune avec sa release, ses notes et son étiquette sur le commit exact |
 | Une vérification qui répond à chaque niveau de conception | Aucune fonctionnalité fusionnée sans test écrit avant, sans revue, sans go après test manuel : la chaîne a 14 contrôles bloquants |
 | Un correctif qui n'attend pas la version suivante | Anomalie de production ouverte et corrigée le 24 juillet, livrée en 1.3.2 le 25 ; les retours du 9 septembre corrigés le 10 |
 | Une mesure qui nourrit le cadrage suivant | La 1.4 a été cadrée sur l'usage réel de la 1.3.2 ; la 1.4.1 sur le questionnaire du 18 août |
@@ -65,10 +65,10 @@ Trois outils, à deux échelles. C'est cette différence d'échelle qui les rend
 
 | | |
 |--|--|
-| **Nature** | Un ticket par item de roadmap, produit et technique, avec trois champs : la version, la taille (S à XL), la phase |
+| **Nature** | Un ticket par item de la roadmap, produit et technique, avec trois champs : la version, la taille (S à XL, qui pèse S 1, M 3, L 8, XL 20), la phase |
 | **Colonnes** | Backlog, Cadrage, Maquette, Dev, Revue et tests, Recette, Livré : **les colonnes sont les phases du V**, un ticket ne saute pas de colonne |
 | **Bénéfice attendu** | Voir en un écran ce qui est cadré, en cours et livré, sans double saisie, dans la plateforme où le code, les branches, les pull requests et les releases vivent |
-| **Ce qu'il porte** | 152 tickets au 11 septembre 2026 : 124 produit, 28 techniques, dont 97 livrés, 9 en cadrage pour la 1.6 et la 1.7, 45 au backlog |
+| **Ce qu'il porte** | 160 tickets au 12 septembre 2026 : 127 produit, 33 techniques, dont 106 livrés, 17 en cadrage pour la 1.7 et la 1.8, 37 au backlog |
 
 ### 2.2 Le rétroplanning : l'échelle des échéances
 
@@ -125,9 +125,10 @@ Les dates retenues, arrondies à la semaine :
 | 1.4 | 30/06 au 16/07 | 17 au 31/07 | 05 au 24/08 | 25/08 | 26/08 au 04/09 |
 | 1.4.1, run | | | 27/08 au 03/09 | 04/09 | |
 | 1.5 | 21 au 28/08 | 01 au 03/09 | 04 au 06/09 | 07/09 | 08 au 16/09 |
-| 1.6, en cours | 29/08 au 04/09 | 08/09 | depuis le 09/09 | | |
+| 1.6 | 29/08 au 04/09 | 06 au 08/09 | 09 au 11/09 | 12/09 | 13 au 16/09 |
+| 1.7, cadrée | 08 au 11/09 | | | | |
 
-**Le point à dire à voix haute** : les lignes **se chevauchent**. L'étude de la 1.4 court de fin juin à mi-juillet pendant que la 1.3 est mesurée en production ; celle de la 1.5 commence fin août pendant la mesure de la 1.4. Un seul V sur sept mois aurait figé en février ce que la production a corrigé en août. Les versions correctives n'ont ni étude ni conception : elles sont le run en flux.
+**Le point à dire à voix haute** : les lignes **se chevauchent**. L'étude de la 1.4 court de fin juin à mi-juillet pendant que la 1.3 est mesurée en production ; celle de la 1.5 commence fin août pendant la mesure de la 1.4, celle de la 1.6 début septembre pendant la mesure de la 1.5. La 1.7 est cadrée, sept items pour 34 points, et part après l'oral. Un seul V sur sept mois aurait figé en février ce que la production a corrigé en août. Les versions correctives n'ont ni étude ni conception : elles sont le run en flux.
 
 ### 3.2 Le diagramme
 
@@ -159,7 +160,8 @@ gantt
     1.4                          :2026-06-30, 57d
     Run 1.4.1                    :2026-08-27, 9d
     1.5                          :2026-08-21, 18d
-    1.6 en cours                 :2026-08-29, 19d
+    1.6                          :2026-08-29, 15d
+    Release 1.6.0                :milestone, 2026-09-12, 0d
 
     section Restitution
     Restitution Bloc 1           :milestone, 2026-06-11, 0d
@@ -184,23 +186,27 @@ Chaque version est un jalon daté, vérifiable dans le journal des versions et d
 | 1.4.0 | 25/08/2026 | Watchlist, intégration Letterboxd, choix manuel du gagnant, flamme de participation, connexion sociale |
 | 1.4.1 | 04/09/2026 | Navigation ouverte sans compte, page de découverte bilingue, frictions remontées levées |
 | 1.5.0 | 07/09/2026 | Accueil d'exploration ouvert à tous, sagas, sélections thématiques, landing refondue |
+| 1.6.0 | 12/09/2026 | Soirées récurrentes et templates, plusieurs gagnants, limite de votes, recherche d'utilisateurs, watchlist publique ; sauvegarde nocturne, dépôt public, pré-rendu |
 
 ### 3.4 Les lots : les versions, et leur effort réel
 
-Les lots sont les versions. Chacune est un lot fermé, avec ses items et leur taille, et son effort se lit dans l'historique.
+Les lots sont les versions. Chacune est un lot fermé, avec ses items, produit et technique, et leur taille ; le poids d'une version est la somme des tailles de ses items (S 1, M 3, L 8, XL 20), et c'est ce poids qui sert à comparer deux versions et à décider d'y ajouter ou d'en retirer un item. L'effort réel se lit dans l'historique.
 
-| Version | Items livrés | Jours actifs | Commits | Fenêtre |
-|---------|-------------:|-------------:|--------:|---------|
-| 0.1, MVP | 7 | 2 | 5 | 27/02 au 16/03 |
-| 1.0, V1 | 16, plus le socle .NET | 21 | 197 | 17/03 au 19/05 |
-| 1.1 | 8 | 2 | 22 | 20 au 25/05 |
-| 1.2 | 8 | 14 | 145 | 26/05 au 11/06 |
-| 1.3 | 11 | 5 | 37 | 12 au 19/06 |
-| 1.3.1 et 1.3.2, run | chaîne, sécurité, supervision | 19 | 259 | 20/06 au 25/07 |
-| 1.4 | 10 | 19 | 127 | 26/07 au 25/08 |
-| 1.4.1, run | 1, plus les retours | 5 | 37 | 26/08 au 04/09 |
-| 1.5 | 14 | 3 | 67 | 05 au 07/09 |
-| **Total au 7 septembre, v1.5.0** | **75** | **90** | **896** | 833 commits et 88 jours au relevé du 5 septembre du chapitre 2 |
+| Version | Items livrés | Poids | Jours actifs | Commits | Fenêtre |
+|---------|-------------:|------:|-------------:|--------:|---------|
+| 0.1, MVP | 14 | 66 | 2 | 5 | 27/02 au 16/03 |
+| 1.0, V1 | 21, dont le socle .NET | 68 | 22 | 199 | 17/03 au 19/05 |
+| 1.1 | 9 | 26 | 3 | 22 | 20 au 25/05 |
+| 1.2 | 11 | 30 | 14 | 143 | 26/05 au 11/06 |
+| 1.3 | 13 | 32 | 5 | 37 | 12 au 19/06 |
+| 1.3.1 et 1.3.2, run | chaîne, sécurité, supervision | | 19 | 259 | 20/06 au 25/07 |
+| 1.4 | 11 | 52 | 20 | 134 | 26/07 au 25/08 |
+| 1.4.1, run | 1, plus les retours | 3 | 5 | 40 | 26/08 au 04/09 |
+| 1.5 | 14 | 33 | 4 | 86 | 05 au 07/09 |
+| 1.6 | 12 | 38 | 5 | 144 | 08 au 12/09 |
+| **Total au 12 septembre, v1.6.0** | **106** | **348** | **95** | **1 069** | 833 commits et 88 jours au relevé du 5 septembre du chapitre 2 |
+
+Les jours actifs se recouvrent d'une fenêtre à l'autre, le total est le nombre de jours distincts. Les 106 items comptent 81 items produit et 25 items techniques ; c'est sur les 81 items produit que porte l'écart au chiffrage du chapitre 2.
 
 Une feature tient en un à trois jours : l'intégration Letterboxd, de taille XL, du 9 au 11 août ; la connexion sociale, L, le 12 août ; la refonte de la page soirée, L, le 18 août. Une version tient en une à trois semaines de réalisation.
 
@@ -324,7 +330,7 @@ Sept points, chacun avec son indicateur de contrôle et sa parade. Le premier es
 |:-----:|-------|----------------|
 | 4 | Planifier : un V par version, un flux pour le run | 1, 2 |
 | 5 | Le planning : une ligne par version | 3.1, 3.2 |
-| 6 | Sept versions en lots, et les ressources réelles | 3.3, 3.4, 4 |
+| 6 | Huit versions en lots, et les ressources réelles | 3.3, 3.4, 4 |
 | 7 | La matrice RACI : quatre rôles, une personne | 5 |
 | 8 | Sept points de vigilance, un seul d'organisation | 6 |
 

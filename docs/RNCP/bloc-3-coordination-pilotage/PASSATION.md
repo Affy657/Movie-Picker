@@ -86,7 +86,7 @@ Le support fait **30:00 pile**, exact chapitre par chapitre. Toute modification 
 | Couverture, Quality Gate | Dossier Bloc 2 | `docs/RNCP/bloc-2-conception-developpement/dossier-bloc-2.md` |
 | Mesures de production (17 comptes, 74 %, p95 207 ms) | Dossier Bloc 4 | `docs/RNCP/bloc-4-mco/`, **non recalculables depuis le dépôt** |
 | Items de feuille de route | `docs/roadmap.md` | § 5.2 ci-dessous |
-| Board GitHub Projects (152 tickets) | Projet 1 du compte `Affy657`, privé | `gh project item-list 1 --owner Affy657 --format json` ; rempli le 11/09/2026 depuis les deux feuilles de route par un script, champs Status, Version, Taille, Nature |
+| Board GitHub Projects (160 tickets) | Projet 1 du compte `Affy657`, privé | `gh project item-list 1 --owner Affy657 --format json --limit 200` ; rempli le 11/09/2026 depuis les deux feuilles de route par un script, vidé et re-rempli le 12/09 depuis `docs/roadmap.md` (roadmap fusionnée), champs Status, Version (MVP à 1.8, Backlog), Taille, Nature |
 | Libellés de l'interface (script de démo) | `apps/web/src/shared/i18n/locales/fr.ts` | Toujours citer le libellé **exact** |
 
 ---
@@ -292,7 +292,7 @@ PY
 | **Le chapitre 4 ne distingue pas l'auteur de ses outils d'assistance** : l'affectation des missions est mesurée dans le temps sur les 833 commits classés par mission, et entre ce qui reste à la main et ce qui est confié à la chaîne | Décision du propriétaire du projet le 11/09/2026 au soir : « moi et les agents IA, c'est la même personne, ne fais pas de différence ». La version précédente (délégation mesurée par les commits co-signés) est dans l'historique Git avant `5bd928e` | Recalculer la classification par mission (§ 14) plutôt que de réintroduire un acteur |
 | **Pas de frontmatter par diapositive** | Risque de décalage de numérotation (§ 4.3) | |
 | **Le financier est réel, aucune valorisation du temps** : 0 € de salaire, 100 €/mois d'assistant de code depuis juin 2026, une dizaine d'euros de domaine, paliers gratuits | Décision du propriétaire du projet le 11/09/2026 : « je ne me verse aucun salaire ». Le 34 300 € du Bloc 1 n'est plus cité que comme mesure d'effort en jours (98 J/H) | Ne pas réintroduire de TJM simulé |
-| **La méthode est un cycle en V par version et un flux pour le run**, l'outil est le board GitHub Projects | Décision du propriétaire du projet le 11/09/2026, après lecture des faits du dépôt (branches de version, PR de release, branches fix, roadmap par version) | Le board est réellement rempli (152 tickets) : ne pas le présenter vide |
+| **La méthode est un cycle en V par version et un flux pour le run**, l'outil est le board GitHub Projects | Décision du propriétaire du projet le 11/09/2026, après lecture des faits du dépôt (branches de version, PR de release, branches fix, roadmap par version) | Le board est réellement rempli (160 tickets au 12/09) : ne pas le présenter vide |
 
 ---
 
@@ -407,3 +407,12 @@ Décision du propriétaire du projet : **repartir de zéro et reconstruire le su
 - `slides/slides.md` est le support en reconstruction. Il contient la diapositive de titre et le chapitre 2 (C3.1, diapositives 2 à 6) ; les autres compétences s'ajoutent dans l'ordre du sommaire.
 - `global-bottom.vue` : la table `REFS` ne couvre que les diapositives présentes, et `ANNEX_FROM` vaut 99 tant qu'aucune annexe n'existe. Les tenir à jour à chaque ajout.
 - **Pendant la reconstruction, la numérotation du plan (§ 1 et § 4), le script du § 5.3 (attendu 30, minutage 30:00) et les renvois « diapo N » des notes sont suspendus** : ils sont réalignés en une fois quand le sommaire est arrêté. `verify:rendu` reste obligatoire à chaque ajout.
+
+### 16.1 La v1.6 et la roadmap fusionnée, 12 septembre 2026
+
+Le 12 septembre, la branche `v1.6` a été fusionnée dans `master` (release 1.6.0 préparée, tag et push à la main du propriétaire) et la roadmap a été réorganisée en un seul fichier, `docs/roadmap.md` : une section Tech par version, chaque version pesée dans son titre (S 1, M 3, L 8, XL 20), la règle d'une branche par version écrite dans les principes, la V1.8 ouverte. Le chapitre 2 a été mis à jour sur ces faits, à la demande du propriétaire :
+
+- **La 1.6 est livrée le 12/09** (décision du propriétaire, la fusion locale faisant foi) : ligne pleine sur la diapositive 5, conception du 06 au 08/09, réalisation du 09 au 11/09, mesure jusqu'au 16/09 ; onze versions publiées ; jalon 1.6.0 en `01-planification.md` § 3.3.
+- **Les lots se lisent en poids** (diapositive 6) : huit versions livrées, 106 items produit et tech, 348 points, de 26 (1.1) à 68 (V1). Les items produit seuls sont 81 ; c'est sur eux que porte l'écart au chiffrage du chapitre 3, encore ancré au 5 septembre (75 items à la v1.5.0) jusqu'à la reprise de ce chapitre.
+- **Le board a été vidé et re-rempli** depuis `docs/roadmap.md` : 160 tickets, 106 livrés, 17 en cadrage (1.7 et 1.8), 37 au backlog, champ Version étendu à 1.8. L'item livré en 1.4.1 est rattaché à la version 1.4.
+- **Le relevé d'effort** de `01-planification.md` § 3.4 est recalculé au 12/09 sur `master` : 1 069 commits, 95 jours actifs, fenêtres de dates disjointes dont la somme est le total. Les chapitres 3 et suivants restent ancrés au 5 septembre (833 commits, 88 jours, 10 versions) : c'est la décision 10 bis de `RESTE-A-FAIRE.md`, à prendre au moment de reprendre le chapitre 3.
