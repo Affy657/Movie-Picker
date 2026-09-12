@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { MovieData } from '@/shared/types/movie';
 import { WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
+import { randomCenteredUnit } from '@/shared/utils/random';
 import styles from './SpinningWheel.module.css';
 
 const SIZE = 460;
@@ -177,8 +178,7 @@ export default function SpinningWheel({
 
     const N = movies.length;
     const segAngle = (2 * Math.PI) / N;
-    const jitter =
-      (crypto.getRandomValues(new Uint32Array(1))[0]! / 0xffffffff - 0.5) * segAngle * 0.4;
+    const jitter = randomCenteredUnit() * segAngle * 0.4;
     const targetRotation = SPIN_ROTATIONS * 2 * Math.PI - (winnerIndex + 0.5) * segAngle + jitter;
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {

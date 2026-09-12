@@ -79,7 +79,7 @@ public sealed class MongoPosterImageStore : IPosterImageStore
         if (string.IsNullOrWhiteSpace(doc.SourceUrl)
             || !TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(doc.SourceUrl, out var source))
         {
-            _logger.LogWarning("poster_cache entrée {Key} sans sourceUrl TMDB valide", k);
+            _logger.LogWarning("poster_cache entrée {Key} sans sourceUrl TMDB valide", doc.Id);
             return null;
         }
 
@@ -107,7 +107,7 @@ public sealed class MongoPosterImageStore : IPosterImageStore
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Échec téléchargement affiche TMDB pour {Key}", k);
+            _logger.LogWarning(ex, "Échec téléchargement affiche TMDB depuis {Source}", source);
             if (doc.Data is { Length: > 0 } fallback && !string.IsNullOrWhiteSpace(doc.ContentType))
                 return new PosterImageBlob(fallback, doc.ContentType);
             return null;

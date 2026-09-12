@@ -77,25 +77,23 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
     const incoming = Array.from(files).filter((f) => f.type.startsWith('image/'));
     if (incoming.length === 0) return;
 
-    setAttachments((prev) => {
-      const next = [...prev];
-      for (const file of incoming) {
-        if (next.length >= MAX_ATTACHMENTS) {
-          setAttachmentError(t('proposeIdea.attachmentsTooMany', { max: MAX_ATTACHMENTS }));
-          break;
-        }
-        if (!ACCEPTED_ATTACHMENT_TYPES.includes(file.type)) {
-          setAttachmentError(t('proposeIdea.attachmentsUnsupportedType', { name: file.name }));
-          continue;
-        }
-        if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
-          setAttachmentError(t('proposeIdea.attachmentsTooLarge', { name: file.name }));
-          continue;
-        }
-        next.push({ id: crypto.randomUUID(), file, previewUrl: URL.createObjectURL(file) });
+    const accepted: Attachment[] = [];
+    for (const file of incoming) {
+      if (attachments.length + accepted.length >= MAX_ATTACHMENTS) {
+        setAttachmentError(t('proposeIdea.attachmentsTooMany', { max: MAX_ATTACHMENTS }));
+        break;
       }
-      return next;
-    });
+      if (!ACCEPTED_ATTACHMENT_TYPES.includes(file.type)) {
+        setAttachmentError(t('proposeIdea.attachmentsUnsupportedType', { name: file.name }));
+        continue;
+      }
+      if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
+        setAttachmentError(t('proposeIdea.attachmentsTooLarge', { name: file.name }));
+        continue;
+      }
+      accepted.push({ id: crypto.randomUUID(), file, previewUrl: URL.createObjectURL(file) });
+    }
+    if (accepted.length > 0) setAttachments((prev) => [...prev, ...accepted]);
   };
 
   const removeAttachment = (id: string) => {

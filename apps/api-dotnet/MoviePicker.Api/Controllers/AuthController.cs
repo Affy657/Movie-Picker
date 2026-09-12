@@ -120,15 +120,15 @@ public sealed class AuthController : ControllerBase
         [FromQuery] string? returnTo,
         [FromServices] OAuthProviderCatalog catalog)
     {
-        if (!OAuthProviders.IsKnown(provider) || !catalog.IsEnabled(provider))
+        if (!OAuthProviders.TryResolve(provider, out var knownProvider) || !catalog.IsEnabled(knownProvider))
             return NotFound();
 
         var props = new AuthenticationProperties
         {
-            RedirectUri = $"/{ApiRoutePrefix.V1}/auth/oauth/{provider}/callback"
+            RedirectUri = $"/{ApiRoutePrefix.V1}/auth/oauth/{knownProvider}/callback"
         };
         props.Items[ReturnToItemKey] = ReturnToPolicy.Sanitize(returnTo);
-        return Challenge(props, provider);
+        return Challenge(props, knownProvider);
     }
 
     [HttpGet("oauth/{provider}/callback")]
@@ -144,7 +144,7 @@ public sealed class AuthController : ControllerBase
     {
         var webBase = options.Value.ResolvedWebBaseUrl();
 
-        if (!OAuthProviders.IsKnown(provider) || !catalog.IsEnabled(provider))
+        if (!OAuthProviders.TryResolve(provider, out var knownProvider) || !catalog.IsEnabled(knownProvider))
             return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "provider_disabled")));
 
         var externalResult = await HttpContext.AuthenticateAsync(AuthConstants.ExternalCookieScheme);
@@ -158,7 +158,7 @@ public sealed class AuthController : ControllerBase
                 ? storedReturnTo
                 : null);
 
-        var info = ExtractExternalLoginInfo(provider, externalResult.Principal);
+        var info = ExtractExternalLoginInfo(knownProvider, externalResult.Principal);
         if (info is null)
             return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "provider_error"), (ReturnToItemKey, returnTo)));
 
@@ -167,7 +167,7 @@ public sealed class AuthController : ControllerBase
         {
             var linkOutcome = await linkHandler.HandleAsync(currentUserId, info, ct);
             return linkOutcome.Kind == OAuthOutcomeKind.Linked
-                ? Redirect(BuildFrontUrl(webBase, FrontAccountPath, ("oauthLinked", provider)))
+                ? Redirect(BuildFrontUrl(webBase, FrontAccountPath, ("oauthLinked", knownProvider)))
                 : Redirect(BuildFrontUrl(webBase, FrontAccountPath, (OauthErrorQueryKey, "identity_taken")));
         }
 
@@ -184,7 +184,7 @@ public sealed class AuthController : ControllerBase
             webBase,
             FrontCallbackPath,
             (ReturnToItemKey, returnTo),
-            ("provider", provider),
+            ("provider", knownProvider),
             ("event", loginOutcome.IsNewAccount ? "signup" : "login")));
     }
 
@@ -203,7 +203,9 @@ public sealed class AuthController : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
             return Unauthorized();
-        await handler.HandleAsync(userId, provider, ct);
+        if (!OAuthProviders.TryResolve(provider, out var knownProvider))
+            return NotFound();
+        await handler.HandleAsync(userId, knownProvider, ct);
         return NoContent();
     }
 

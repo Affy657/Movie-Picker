@@ -1,6 +1,7 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { StrictMode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
@@ -163,6 +164,27 @@ describe('ProposeIdeaButton', () => {
     const submit = screen.getByRole('button', { name: /envoyer/i });
     expect(scrollArea).not.toContainElement(submit);
     expect(submit.closest(`.${styles.actions}`)).not.toBeNull();
+  });
+
+  it("ne crée qu'une URL d'aperçu par image ajoutée, même sous StrictMode", async () => {
+    const createObjectURL = vi.fn(() => 'blob:mock');
+    globalThis.URL.createObjectURL = createObjectURL;
+    render(
+      <StrictMode>
+        <LocaleProvider>
+          <MemoryRouter initialEntries={['/e/soiree-cine']}>
+            <ProposeIdeaButton />
+          </MemoryRouter>
+        </LocaleProvider>
+      </StrictMode>
+    );
+    const user = await openDialog();
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, [pngFile('a.png'), pngFile('b.png')]);
+    await screen.findAllByRole('button', { name: /retirer cette image/i });
+
+    expect(createObjectURL).toHaveBeenCalledTimes(2);
   });
 
   it("refuse un fichier d'un format non supporté", async () => {

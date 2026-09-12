@@ -10,7 +10,7 @@ public static class EmailMasking
         if (at <= 0)
             return "***";
         var local = email[..at];
-        var domain = email[at..];
+        var domain = email[at..].ReplaceLineEndings(string.Empty);
         if (local.Length <= 1)
             return "*" + domain;
         return local[0] + "***" + domain;

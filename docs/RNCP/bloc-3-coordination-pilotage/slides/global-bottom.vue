@@ -1,13 +1,9 @@
 <script setup>
 const REFS = {
-  4: 'C3.1', 5: 'C3.1', 6: 'C3.1', 7: 'C3.1', 8: 'C3.1', 9: 'C3.1', 10: 'C3.1',
-  11: 'C3.2.1', 12: 'C3.2.1', 13: 'C3.2.1', 14: 'C3.2.1', 15: 'C3.2.1',
-  16: 'C3.2.2', 17: 'C3.2.2', 18: 'C3.2.2',
-  19: 'C3.3.1', 20: 'C3.3.1', 21: 'C3.3.1', 22: 'C3.3.1', 23: 'C3.3.1',
-  24: 'C3.3.2', 25: 'C3.3.2', 26: 'C3.3.2',
-  27: 'C3.4.1', 28: 'C3.4.1', 29: 'C3.4.1',
-  30: 'C3.4.2', 31: 'C3.4.2',
+  3: 'C3.4.2',
+  4: 'C3.1', 5: 'C3.1', 6: 'C3.1', 7: 'C3.1', 8: 'C3.1',
 }
+const ANNEX_FROM = 99
 </script>
 
 <template>
@@ -19,7 +15,7 @@ const REFS = {
   </footer>
 
   <footer
-    v-else-if="$slidev.nav.currentPage > 32"
+    v-else-if="$slidev.nav.currentPage >= ANNEX_FROM"
     class="abs-bl m-3 text-xs font-mono opacity-60 select-none"
   >
     ANNEXE
@@ -124,11 +120,14 @@ const REFS = {
   border-left: 3px solid var(--slidev-theme-primary);
   padding: 0.15rem 0 0.15rem 0.6rem;
 }
-.kpi b {
+.kpi > div > b {
   display: block;
   font-size: 1.55rem;
   line-height: 1.1;
   color: var(--slidev-theme-primary);
+}
+.kpi span b {
+  color: inherit;
 }
 .kpi span {
   font-size: 0.76rem;
@@ -155,6 +154,9 @@ const REFS = {
   border-radius: 4px 4px 0 0;
   background: var(--s1);
   display: block;
+}
+.cols.stacked i {
+  border-radius: 0;
 }
 .cols i.b {
   background: var(--s3);
@@ -256,6 +258,18 @@ const REFS = {
 .dumb .track .c {
   background: var(--s1);
 }
+.dumb .track .t {
+  background: #fff;
+  border: 2px solid var(--s2);
+  box-sizing: border-box;
+}
+.dumb .scale {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.66rem;
+  color: var(--ink-2);
+}
 .dumb .track .bar {
   position: absolute;
   top: 50%;
@@ -325,9 +339,12 @@ const REFS = {
   padding-top: 0.28rem;
   line-height: 1.2;
 }
-.tl b {
+.tl > div > b {
   display: block;
   color: var(--slidev-theme-primary);
+}
+.tl span b {
+  color: inherit;
 }
 .tl span {
   color: var(--ink-2);
@@ -349,5 +366,326 @@ const REFS = {
   text-decoration: none;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.horizons {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.74rem;
+}
+.horizons .h {
+  border-left: 4px solid var(--s1);
+  background: rgb(13 148 136 / 7%);
+  padding: 0.45rem 0.65rem;
+  border-radius: 0 6px 6px 0;
+}
+.horizons .h.day {
+  border-left-color: var(--s3);
+  background: rgb(42 120 214 / 8%);
+  margin-left: 2.4rem;
+}
+.horizons b {
+  display: block;
+}
+.horizons span {
+  display: block;
+  font-weight: 600;
+  color: var(--slidev-theme-primary);
+}
+.horizons .day span {
+  color: var(--s3);
+}
+.horizons i {
+  display: block;
+  font-style: normal;
+  color: var(--ink-2);
+  margin-top: 0.15rem;
+  line-height: 1.3;
+}
+
+.vee {
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+.vee .row {
+  display: grid;
+  grid-template-columns: 1fr 1.4rem 1fr;
+  gap: 0.3rem;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+.vee .row.r2 {
+  padding: 0 1.7rem;
+}
+.vee .row.r3 {
+  padding: 0 3.4rem;
+}
+.vee .l,
+.vee .r {
+  border: 1.5px solid var(--grid);
+  border-radius: 5px;
+  background: #f8fafc;
+  padding: 0.28rem 0.5rem;
+}
+.vee .l {
+  border-left: 4px solid var(--s3);
+}
+.vee .r {
+  border-right: 4px solid var(--s1);
+  text-align: right;
+}
+.vee b {
+  display: block;
+}
+.vee span {
+  display: block;
+  color: var(--ink-2);
+}
+.vee .link {
+  border-top: 1px dashed #94a3b8;
+  height: 0;
+}
+.vee .base {
+  text-align: center;
+  color: var(--ink-2);
+  font-style: italic;
+}
+
+.run {
+  display: flex;
+  align-items: stretch;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+.run > div {
+  flex: 1;
+  border: 1.5px solid #d97706;
+  background: #fef3c7;
+  color: #78350f;
+  border-radius: 5px;
+  padding: 0.28rem 0.4rem;
+  font-weight: 600;
+  text-align: center;
+}
+.run > div i {
+  display: block;
+  font-style: normal;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.run > span {
+  align-self: center;
+  color: var(--ink-2);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.2rem;
+  font-size: 0.56rem;
+  line-height: 1.15;
+}
+.board > div {
+  border: 1px solid var(--grid);
+  border-radius: 4px;
+  background: #f8fafc;
+  padding: 0.25rem 0.15rem 0.3rem;
+  min-height: 4.4rem;
+  text-align: center;
+}
+.board > div > b {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.board i {
+  display: block;
+  height: 0.42rem;
+  margin: 0.16rem 0.12rem 0;
+  border-radius: 2px;
+  background: rgb(13 148 136 / 22%);
+}
+.board .done i {
+  background: var(--s1);
+}
+
+.raci {
+  display: grid;
+  grid-template-columns: 1fr repeat(5, 3.4rem);
+  gap: 2px;
+  font-size: 0.7rem;
+}
+.raci > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.45rem;
+  border-radius: 3px;
+  text-align: center;
+}
+.raci .h {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.raci .l {
+  justify-content: flex-start;
+  padding-left: 0.3rem;
+  color: var(--ink-2);
+  text-align: left;
+}
+.raci .A {
+  background: var(--s1);
+  color: #fff;
+  font-weight: 700;
+}
+.raci .R {
+  background: rgb(13 148 136 / 40%);
+  font-weight: 600;
+}
+.raci .C {
+  background: rgb(13 148 136 / 14%);
+}
+.raci .I {
+  background: rgb(0 0 0 / 9%);
+  color: var(--ink-2);
+}
+
+.quad {
+  display: grid;
+  grid-template-columns: 1.2rem 1fr 1fr;
+  grid-template-rows: auto auto 1.1rem;
+  gap: 4px;
+  font-size: 0.68rem;
+}
+.quad .ay {
+  grid-row: 1 / 3;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: var(--ink-2);
+  font-size: 0.62rem;
+  text-align: center;
+}
+.quad .cell {
+  border-radius: 6px;
+  background: rgb(13 148 136 / 6%);
+  border: 1.5px solid var(--grid);
+  padding: 0.4rem 0.55rem;
+}
+.quad .cell.dom {
+  border-color: var(--s1);
+  background: rgb(13 148 136 / 16%);
+}
+.quad .cell > b {
+  display: block;
+  color: var(--slidev-theme-primary);
+  font-size: 0.82rem;
+  margin-bottom: 0.15rem;
+}
+.quad .cell i b {
+  color: inherit;
+}
+.quad .cell i {
+  display: block;
+  font-style: normal;
+  color: var(--ink-2);
+  line-height: 1.25;
+}
+.quad .ax {
+  color: var(--ink-2);
+  font-size: 0.62rem;
+  text-align: center;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  counter-reset: st;
+  padding-top: 0.7rem;
+}
+.steps > div {
+  position: relative;
+  border-top: 3px solid var(--s1);
+  padding-top: 0.5rem;
+  counter-increment: st;
+}
+.steps > div::before {
+  content: counter(st);
+  position: absolute;
+  top: -0.75rem;
+  left: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: var(--s1);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.steps > div > b {
+  display: block;
+  color: var(--slidev-theme-primary);
+}
+.steps span b {
+  color: inherit;
+}
+.steps span {
+  display: block;
+  color: var(--ink-2);
+  line-height: 1.25;
+}
+
+.bars {
+  display: grid;
+  gap: 0.24rem;
+  font-size: 0.68rem;
+}
+.bars > div {
+  display: grid;
+  grid-template-columns: 9.6rem 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+.bars span {
+  color: var(--ink-2);
+  text-align: right;
+}
+.bars .t {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+.bars i {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding-left: 0.35rem;
+  height: 1.05rem;
+  border-radius: 3px;
+  background: var(--s1);
+  color: #fff;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+.bars .p1 i {
+  background: #d97706;
+}
+.bars .p3 i {
+  background: var(--s3);
+}
+.bars i.cont {
+  background: repeating-linear-gradient(45deg, var(--s1) 0 4px, rgb(13 148 136 / 55%) 4px 8px);
+}
+.bars em {
+  font-style: normal;
+  color: var(--ink-2);
+  line-height: 1.2;
 }
 </style>

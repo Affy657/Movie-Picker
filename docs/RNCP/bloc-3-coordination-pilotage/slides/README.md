@@ -19,9 +19,9 @@ npm run dev
 npm run verify:rendu
 ```
 
-Construit le support, le sert, le rend dans un navigateur et signale les diapositives dont le contenu est **coupé par le bas du cadre** — ce qu'aucun autre contrôle du dossier ne voit. Il **échoue** (code 1) si une diapositive déborde, si `dist/` manque, ou s'il n'a rien pu mesurer : un résultat vert signifie que les 40 pages ont réellement été rendues et mesurées.
+Construit le support, le sert, le rend dans un navigateur et signale les diapositives dont le contenu est **coupé par le bas du cadre**, ce qu'aucun autre contrôle du dossier ne voit. Il **échoue** (code 1) si une diapositive déborde, si `dist/` manque, ou s'il n'a rien pu mesurer : un résultat vert signifie que les 30 pages ont réellement été rendues et mesurées.
 
-> La police du thème est récupérée automatiquement dans `dist/`. Sans elle le navigateur retombe sur une police plus large et le contrôle signalerait de faux débordements — il refuse donc de tourner plutôt que de mentir. `CHROME_PATH` permet de désigner un Chromium déjà installé.
+> La police du thème est récupérée automatiquement dans `dist/`. Sans elle le navigateur retombe sur une police plus large et le contrôle signalerait de faux débordements, il refuse donc de tourner plutôt que de mentir. `CHROME_PATH` permet de désigner un Chromium déjà installé.
 
 ## Exporter
 
@@ -31,7 +31,7 @@ npm run export
 
 > Le premier export peut demander d'installer Playwright : `npx playwright install chromium`.
 >
-> ⚠️ L'export **ne corrige rien** : une diapositive coupée à l'écran l'est aussi dans le PDF. Passer `verify:rendu` avant. En revanche l'export **fige les polices**, ce qui met le support à l'abri d'une salle sans réseau — le thème charge sinon Nunito Sans depuis Google Fonts au moment du rendu.
+> ⚠️ L'export **ne corrige rien** : une diapositive coupée à l'écran l'est aussi dans le PDF. Passer `verify:rendu` avant. En revanche l'export **fige les polices**, ce qui met le support à l'abri d'une salle sans réseau, le thème charge sinon Nunito Sans depuis Google Fonts au moment du rendu.
 
 ## Conventions du support
 
@@ -46,15 +46,22 @@ npm run export
 |--------|-------|
 | `.lede` | Le message de la diapositive, sous le titre |
 | `.note` / `.alert` | Bandeau teal (constat) / ambre (limite assumée, autocritique) |
-| `.kpi` | Rangée d'indicateurs — grand nombre + libellé |
+| `.kpi` | Rangée d'indicateurs, grand nombre + libellé |
 | `.cols` + `.xlab` | Histogramme en colonnes, étiquettes de valeur en `<em>` |
 | `.stack` + `.legend` | Barre empilée, étiquetée en direct |
 | `.dumb` | Écart actuel → cible (haltères) |
 | `.flow` | Logigramme : `.q` question, `.r` issue, `.r.no` refus, `.r.go` décision |
 | `.tl` | Frise |
-| `.chips` | Liste d'états valeur / verdict |
+| `.chips` | Liste d'états valeur / verdict, ou sommaire |
+| `.vee` | Cycle en V, trois niveaux reliés (méthode par version) |
+| `.run` | Quatre pas fléchés du run en flux |
+| `.board` | Colonnes d'un board, cartes en placeholders |
+| `.raci` | Grille RACI colorée, une classe par lettre |
+| `.quad` | Quadrant 2 × 2, `.dom` sur la case dominante (styles managériaux) |
+| `.steps` | Trois pas numérotés (publics servis, niveaux de compte rendu) |
+| `.bars` | Barres horizontales étiquetées, `.p1` / `.p3` pour la priorité, `.cont` pour une action continue (plan de formation) |
 
-**Contraintes de rendu.** Les blocs Mermaid ignorent leur `{scale: …}` dans cette version de Slidev : le SVG est contraint par `max-height` en **pixels** et non en `vh` — la toile Slidev fait 552 px de haut et n'est que mise à l'échelle par `transform`, donc une unité de fenêtre cesserait de contraindre dès que la fenêtre dépasse 1062 px.
+**Contraintes de rendu.** Les blocs Mermaid ignorent leur `{scale: …}` dans cette version de Slidev : le SVG est contraint par `max-height` en **pixels** et non en `vh`, la toile Slidev fait 552 px de haut et n'est que mise à l'échelle par `transform`, donc une unité de fenêtre cesserait de contraindre dès que la fenêtre dépasse 1062 px.
 
 **Taille de texte.** Les tableaux sont à `0.8em` (`0.7em` en classe `dense`). Le contenu ayant été allégé diapositive par diapositive, toute nouvelle baisse doit être le **dernier recours**, après avoir coupé du contenu : un support projeté se lit depuis le fond de la salle.
 
@@ -65,21 +72,23 @@ npm run export
 
 ## Avancement
 
+> **Reconstruction en cours depuis le 12 septembre 2026** : `slides.md` est reconstruit compétence par compétence à partir de `slides-v1.md`, l'ancien support complet. Le tableau ci-dessous décrit l'ancien support ; il est réaligné à la fin.
+
 | Chapitre | Diapos | Compétence | État |
 |----------|:------:|:----------:|------|
-| 0. Ouverture, produit, cadre | 1 à 3 | | ✅ |
-| 1. Planifier l'exécution | 4 à 10 | **C3.1** ÉLIM | ✅ |
-| 2. Piloter l'avancement | 11 à 15 | **C3.2.1** ÉLIM | ✅ |
-| 3. Le cas d'arbitrage | 16 à 18 | C3.2.2 | ✅ |
-| 4. Piloter l'équipe | 19 à 23 | C3.3.1 | ✅ |
-| 5. Les besoins en compétences | 24 à 26 | C3.3.2 | ✅ |
-| 6. Rendre compte au commanditaire | 27 à 29 | C3.4.1 | ✅ |
-| 7. La démonstration | 30, 31 | **C3.4.2** ÉLIM | ✅ |
-| 8. Conclusion | 32 | | ✅ |
-| Annexes pour les questions | 33 à 40 | | ✅ |
+| 0. Titre et sommaire | 1, 2 | | ✅ |
+| 1. Démonstration en direct | 3 | **C3.4.2** ÉLIM | ✅ |
+| 2. Planifier l'exécution | 4 à 8 | **C3.1** ÉLIM | ✅ |
+| 3. Piloter l'avancement | 9 à 12 | **C3.2.1** ÉLIM | ✅ |
+| 4. Le cas d'arbitrage | 13 | C3.2.2 | ✅ |
+| 5. Piloter le travail, seul | 14 à 17 | C3.3.1 | ✅ |
+| 6. Les besoins en compétences | 18, 19 | C3.3.2 | ✅ |
+| 7. Rendre compte au commanditaire | 20 à 22 | C3.4.1 | ✅ |
+| 8. Bilan, et la demande de validation | 23 | **C3.4.2** ÉLIM | ✅ |
+| Annexes pour les questions | 24 à 30 | | ✅ |
 
-**Support complet : 40 diapositives**, dont 32 présentées et 8 annexes appelées uniquement sur question. Les 40 **tiennent dans le cadre**, vérifié par `npm run verify:rendu`. Les annexes portent la mention `ANNEXE` en bas à gauche à la place du code de compétence.
+**Support complet : 30 diapositives**, dont 23 présentées et 7 annexes appelées uniquement sur question. Les 30 **tiennent dans le cadre**, vérifié par `npm run verify:rendu`. Les annexes portent la mention `ANNEXE` en pied de page ; les diapositives présentées portent la compétence évaluée.
 
-**Navigation pendant les questions** : en mode présentateur, taper le numéro de page puis `Entrée` va directement à la diapositive. A1 architecture = **33**, A2 logigramme = **34**, A3 arbitrages de réserve = **35**, A4 budget = **36**, A5 chaîne CI/CD = **37**, A6 RACI = **38**, A7 journal des versions = **39**, A8 retours utilisateurs = **40**.
+**Navigation pendant les questions** : en mode présentateur, taper le numéro de page puis `Entrée` va directement à la diapositive. A1 architecture = **24**, A2 arbitrages de réserve = **25**, A3 budget = **26**, A4 chaîne = **27**, A5 RACI = **28**, A6 journal des versions = **29**, A7 retours utilisateurs = **30**.
 
 **Règle de numérotation** : aucune diapositive de séparation de chapitre. La page `N` de Slidev correspond exactement à la diapositive `N` du plan, et donc au rattachement des 14 éléments imposés établi dans ce plan. Le titre de chapitre est porté par la première diapositive du chapitre. Toute insertion de diapositive impose de mettre à jour le plan et la table `REFS` dans le même mouvement.

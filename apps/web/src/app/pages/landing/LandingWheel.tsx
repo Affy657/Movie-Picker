@@ -5,6 +5,7 @@ import Button from '@/shared/components/Button';
 import SpinningWheel from '@/features/events/components/SpinningWheel';
 import type { MovieData } from '@/shared/types/movie';
 import { WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
+import { randomIndex } from '@/shared/utils/random';
 import { useTranslation } from '@/shared/i18n';
 import { DEMO_WHEEL_MOVIES } from './demoContent';
 import { LANDING_ANCHORS } from './anchors';
@@ -29,8 +30,7 @@ const WHEEL_MOVIES: MovieData[] = DEMO_WHEEL_MOVIES.map((title, index) => ({
 }));
 
 function pickWinnerIndex(): number {
-  const [value] = crypto.getRandomValues(new Uint32Array(1));
-  return Math.floor((value! / 2 ** 32) * WHEEL_MOVIES.length);
+  return randomIndex(WHEEL_MOVIES.length);
 }
 
 export default function LandingWheel() {

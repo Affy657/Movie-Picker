@@ -11,9 +11,9 @@
 > - Les différentes options possibles pour y remédier sont détaillées.
 > - La décision d'arbitrage est argumentée et permet de résoudre la problématique.
 
-Alimente les diapositives 16 à 18.
+Alimente la diapositive 13.
 
-**Rappel de posture** : ce chapitre ne comporte aucun volet d'organisation cible. Le cas exposé a réellement eu lieu, la décision a réellement été prise, et son résultat est mesuré dans le dépôt.
+**Rappel de posture** : le cas exposé a réellement eu lieu, la décision a réellement été prise, et son résultat est mesuré dans le dépôt.
 
 ---
 
@@ -26,7 +26,7 @@ Trois cas d'arbitrage réels étaient candidats. Le tableau ci-dessous justifie 
 | Cas | Écart déclencheur | Pourquoi il est, ou n'est pas, retenu |
 |-----|-------------------|---------------------------------------|
 | **Le changement de stack de l'API** | Le MVP est livré sur une pile qui ne satisfait pas les exigences retenues pour la suite, et le coût de la corriger augmente chaque jour | **Retenu.** C'est le seul des trois où la décision engage l'architecture du produit, où les options ont été instruites par écrit **avant** la décision, et où le résultat se mesure encore aujourd'hui |
-| La porte de qualité de performance instable | Chaîne d'intégration à 52 % de succès en juin 2026, échecs sans cause réelle bloquant les fusions | Réserve. Excellent cas mesure → décision → effet remesuré (52 % puis 94 %), déjà exposé en diapositive 14. Le garder ici ferait doublon |
+| La porte de qualité de performance instable | Chaîne d'intégration à 52 % de succès en juin 2026, échecs sans cause réelle bloquant les fusions | Réserve. Excellent cas mesure → décision → effet remesuré (52 % puis 94 %), déjà exposé en diapositives 11 et 12. Le garder ici ferait doublon |
 | L'abandon de l'application mobile | Application mobile démarrée le 16 mai 2026, archivée le 26 mai | Réserve. La décision est saine mais le motif est extérieur au projet, ce qui affaiblit l'exercice d'arbitrage |
 
 ---
@@ -57,7 +57,7 @@ L'API du MVP répondait à un seul critère : livrer vite. Confrontée aux exige
 |------------------------|--------------------------------|
 | Typage fort et analyse statique bloquante à la compilation | Typage TypeScript effacé à l'exécution : une rupture de contrat entre deux couches n'est pas arrêtée par le compilateur du serveur |
 | Sécurité applicative fournie par le cadre (CORS, limitation de débit, en-têtes, antiforgery) | Composants à assembler et à maintenir un par un |
-| Socle à support long terme, pour limiter la charge de veille | Écosystème npm à cadence de publication rapide, veille plus fréquente — 59 des 77 pull requests du projet sont des montées de dépendances |
+| Socle à support long terme, pour limiter la charge de veille | Écosystème npm à cadence de publication rapide, veille plus fréquente : 59 des 77 pull requests du projet sont des montées de dépendances |
 | Architecture en couches imposée par l'outillage | 18 fichiers sans séparation domaine / application / infrastructure |
 
 Ce n'est pas une dérive de délai ni de budget : **c'est un écart entre ce qui est livré et ce sur quoi les six mois suivants allaient être construits.**
@@ -74,7 +74,7 @@ C'est le cœur du cas. Le coût de la décision n'était pas stable dans le temp
 
 **La mesure qui tranche.** Au 18 mars 2026, le périmètre à réécrire pesait **944 lignes**. La même API porte aujourd'hui **44 663 lignes réparties sur 544 fichiers**. Le rapport est de 1 à 47.
 
-> Ce chiffre est la justification a posteriori de la décision, pas son argument d'origine : le 18 mars, on savait que le coût croîtrait, on ne savait pas de combien. C'est précisément la nature d'un arbitrage — décider avec l'information disponible au moment où la fenêtre est ouverte.
+> Ce chiffre est la justification a posteriori de la décision, pas son argument d'origine : le 18 mars, on savait que le coût croîtrait, on ne savait pas de combien. C'est précisément la nature d'un arbitrage, décider avec l'information disponible au moment où la fenêtre est ouverte.
 
 ---
 
@@ -158,7 +158,7 @@ Quatre arguments, dans l'ordre où ils ont pesé.
 3. **La bascule en une fois est moins risquée que la coexistence, à effectif 1.** C'est contre-intuitif et c'est le point que le jury interrogera. Maintenir deux API en parallèle double le coût de chaque évolution pendant toute la transition ; sur une équipe, ce coût se répartit, sur une personne il s'ajoute. L'option la plus progressive était ici la plus dangereuse.
 4. **La décision restait réversible jusqu'à sa validation.** L'ancienne API demeurait dans l'historique et redéployable ; le retrait n'est intervenu qu'après vérification de la parité.
 
-**Ce qui rendait la décision contrôlable** : un critère de succès défini avant de commencer — *le front ne change pas, parce que les URL et le format JSON ne changent pas*. Ce critère est vérifiable, binaire, et il transforme un chantier de réécriture en un objectif mesurable.
+**Ce qui rendait la décision contrôlable** : un critère de succès défini avant de commencer, *le front ne change pas, parce que les URL et le format JSON ne changent pas*. Ce critère est vérifiable, binaire, et il transforme un chantier de réécriture en un objectif mesurable.
 
 ---
 
@@ -171,20 +171,20 @@ Quatre arguments, dans l'ordre où ils ont pesé.
 | Réécrire l'API à l'identique du contrat | 12 routes migrées, 944 lignes TypeScript remplacées par **4 653 lignes C# sur 111 fichiers** | Historique du dépôt |
 | Bascule en une fois, sans double maintenance | Ancienne API retirée **15 minutes** après le début de la bascule | Commit `clean migration` |
 | Ne pas décaler la V1 | **v1.0.0 livrée le 19/05/2026**, deux mois après la bascule. Aucune échéance de restitution du titre n'a glissé | Journal des versions |
-| Décision non rejouée | **Aucun retour arrière**, aucune seconde migration. 8 versions produit livrées sur ce socle depuis | Journal des versions |
+| Décision non rejouée | **Aucun retour arrière**, aucune seconde migration. 9 versions livrées sur ce socle depuis | Journal des versions |
 | Socle tenable dans la durée | 44 663 lignes aujourd'hui, couverture **86,6 %**, Quality Gate **A / A / A**, architecture hexagonale | SonarCloud, dossier Bloc 2 |
 
 ### 6.2 Ce qui n'a pas été tenu, et qu'il faut dire
 
 Deux écarts, énoncés ici plutôt que laissés à découvrir.
 
-**Le front a bougé de 87 lignes.** L'objectif annoncé était « aucune modification du front ». Le commit de migration — celui de 11 h 57, et non le retrait de l'ancienne API à 12 h 12 — touche 9 fichiers de l'interface, pour 87 insertions et 34 suppressions, essentiellement des ajustements de typage et d'affichage sur l'écran de détail d'une soirée. Le critère de succès était donc **presque** tenu : le contrat des URL a été respecté, celui des types ne l'a pas été à la ligne près. Sur un projet à plusieurs, ces 87 lignes auraient été un incident d'intégration entre deux personnes ; à une seule, elles sont passées inaperçues. C'est un argument de plus pour la revue croisée de l'organisation cible.
+**Le front a bougé de 87 lignes.** L'objectif annoncé était « aucune modification du front ». Le commit de migration, celui de 11 h 57, et non le retrait de l'ancienne API à 12 h 12, touche 9 fichiers de l'interface, pour 87 insertions et 34 suppressions, essentiellement des ajustements de typage et d'affichage sur l'écran de détail d'une soirée. Le critère de succès était donc **presque** tenu : le contrat des URL a été respecté, celui des types ne l'a pas été à la ligne près. Sur un projet à plusieurs, ces 87 lignes auraient été un incident d'intégration entre deux personnes ; à une seule, elles sont passées inaperçues. C'est un argument de plus pour la revue par un tiers, humain ou outillé, sur les changements structurants.
 
-**Le lot est chiffré 13 J/H, l'exécution du cœur tient sur deux journées.** Le chiffrage du Bloc 1 (8 de réécriture, 3 de tests et de contrat, 2 de redéploiement) a été formalisé en juin 2026, donc après coup. L'historique montre une exécution concentrée du 18 mars à 11 h 57 au 19 mars à 16 h 52. Trois raisons à l'écart, aucune ne l'annule complètement : la reconstitution de charge est **faible sur mars**, les commits de cette période étant groupés (chapitre 2, § 5.3) ; le travail préparatoire — contrat OpenAPI, analyse des options, architecture cible — précède le premier commit et n'y figure pas ; et les tests d'intégration comme l'adaptation complète de la chaîne se sont étalés au-delà de mars. **Formulé honnêtement : le lot a été chiffré a posteriori sur son périmètre complet, et l'historique ne permet pas de le vérifier au jour près.**
+**Le lot est chiffré 13 J/H, l'exécution du cœur tient sur deux journées.** Le chiffrage du Bloc 1 (8 de réécriture, 3 de tests et de contrat, 2 de redéploiement) a été formalisé en juin 2026, donc après coup. L'historique montre une exécution concentrée du 18 mars à 11 h 57 au 19 mars à 16 h 52. Trois raisons à l'écart, aucune ne l'annule complètement : la reconstitution de charge est **faible sur mars**, les commits de cette période étant groupés (chapitre 2, § 5.3) ; le travail préparatoire, contrat OpenAPI, analyse des options, architecture cible, précède le premier commit et n'y figure pas ; et les tests d'intégration comme l'adaptation complète de la chaîne se sont étalés au-delà de mars. **Formulé honnêtement : le lot a été chiffré a posteriori sur son périmètre complet, et l'historique ne permet pas de le vérifier au jour près.**
 
 ### 6.3 La prédiction du document d'aide à la décision, vérifiée
 
-Le document d'aide à la décision annonçait un inconvénient : « C# est plus verbeux que TypeScript ». Mesure : **944 lignes TypeScript remplacées par 4 653 lignes C#**, soit un facteur 4,9. L'inconvénient annoncé s'est réalisé, il avait été accepté en connaissance de cause, et il est compensé par la séparation en couches que ce volume porte — 111 fichiers structurés en domaine, application et infrastructure, là où l'API Node en comptait 18 sans séparation.
+Le document d'aide à la décision annonçait un inconvénient : « C# est plus verbeux que TypeScript ». Mesure : **944 lignes TypeScript remplacées par 4 653 lignes C#**, soit un facteur 4,9. L'inconvénient annoncé s'est réalisé, il avait été accepté en connaissance de cause, et il est compensé par la séparation en couches que ce volume porte, 111 fichiers structurés en domaine, application et infrastructure, là où l'API Node en comptait 18 sans séparation.
 
 Un arbitrage dont on peut vérifier après coup que les inconvénients annoncés étaient les bons est un arbitrage instruit. C'est la phrase de conclusion du chapitre.
 
@@ -207,10 +207,8 @@ Un arbitrage dont on peut vérifier après coup que les inconvénients annoncés
 
 | Diapo | Titre | Section source |
 |:-----:|-------|----------------|
-| 16 | La dérive constatée et ses conséquences | 1, 2 |
-| 17 | Les options et le logigramme de décision | 3, 4 |
-| 18 | La décision et son résultat mesuré | 5, 6 |
-| A3 | Les deux arbitrages de réserve | 7 |
+| 13 | Un cas d'arbitrage : migrer l'API, quand et comment | 1 à 6 |
+| A2 | Les deux arbitrages de réserve | 7 |
 
 ---
 

@@ -1,7 +1,6 @@
 export function toAbsoluteTmdbLogoUrl(raw: string): string {
   const t = raw.trim();
   if (!t) return t;
-  if (t.startsWith('https://image.tmdb.org')) return t;
   if (t.startsWith('//')) return `https:${t}`;
   if (t.startsWith('/')) return `https://image.tmdb.org${t}`;
   try {

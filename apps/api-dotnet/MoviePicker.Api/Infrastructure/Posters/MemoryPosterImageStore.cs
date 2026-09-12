@@ -98,7 +98,7 @@ public sealed class MemoryPosterImageStore : IPosterImageStore
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Échec téléchargement affiche TMDB (mémoire) pour {Key}", k);
+            _logger.LogWarning(ex, "Échec téléchargement affiche TMDB (mémoire) depuis {Source}", source);
             if (entry.Data is { Length: > 0 } fallback && !string.IsNullOrWhiteSpace(entry.ContentType))
                 return new PosterImageBlob(fallback, entry.ContentType);
             return null;
