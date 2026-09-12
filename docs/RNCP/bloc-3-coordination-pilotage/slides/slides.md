@@ -576,3 +576,349 @@ certaine, impact fort, et l'indicateur vaut 1, cette valeur EST le probleme. La
 parade ne le supprime pas, elle le rend survivable : tout ce qu'un remplacant
 recevrait le premier jour est ecrit et versionne.
 -->
+
+---
+
+# 3. Piloter l'avancement : le suivi est dans GitHub
+
+<div class="grid grid-cols-2 gap-8 text-sm mt-4">
+<div>
+
+<div class="kpi grid-cols-2">
+<div><b>10</b><span>fiches : 5 anomalies, 5 retours d'utilisateurs</span></div>
+<div><b>35 / 86</b><span>pull requests fusionnées : revue, intégration</span></div>
+<div><b>851</b><span>exécutions de la chaîne, 540 sur master</span></div>
+<div><b>11</b><span>releases : points de livraison datés</span></div>
+<div><b>160</b><span>tickets au board, un par item de roadmap</span></div>
+<div><b>0</b><span>saisie déclarative : la trace naît du geste</span></div>
+</div>
+
+</div>
+<div>
+
+<div class="chips">
+<div><span>Une version = un lot fermé</span><u>branche de version, release étiquetée</u></div>
+<div><span>Un item = un ticket, phase par phase</span><u>board, une branche par feature</u></div>
+<div><span>Priorisation permanente</span><u>roadmap réordonnée par commit</u></div>
+<div><span>Sortie = déployé et vérifié</span><u>fusion → déploiement → test de fumée</u></div>
+<div><span>Le run en flux, hors version</span><u>fiche étiquetée, branche fix, version corrective</u></div>
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 1:30. ELEMENT IMPOSE 4 : l'outil de suivi de projet.
+CRITERE : l'outil est en adequation avec le projet ET avec la methodologie.
+
+La phrase d'ouverture, a dire telle quelle : « un outil de suivi exterieur au
+depot impose une double saisie, et la double saisie est la premiere chose
+abandonnee sous pression sur un projet a une personne. Un indicateur abandonne
+sous pression est un indicateur qui ment exactement au moment ou on en a
+besoin. »
+
+Puis la liste de droite, qui est celle que la grille demande : ligne par ligne,
+la propriete de la methode du chapitre 2 et ce que l'outil fournit. Insister sur
+la premiere : une version est un lot ferme, et l'outil le materialise par une
+branche de version et une release etiquetee sur le commit deploye. Un outil a
+sprints aurait impose une cadence que le temps libre ne permet pas de tenir, et
+aurait produit des indicateurs faux.
+
+Les six chiffres de gauche sont les six surfaces de GitHub, releves le 12
+septembre : 10 fiches, dont 5 anomalies toutes closes ; 86 pull requests dont
+35 fusionnees, 26 humaines sur 27 et 9 de mise a jour de dependances sur 59 ;
+851 executions de la chaine dont 540 sur master ; 11 releases ; 160 tickets au
+board ; et zero saisie declarative.
+
+SI ON QUESTIONNE la date du board : il consolide la roadmap, qui est versionnee
+et datee au commit. La matiere est datee au geste pres, 1 070 commits, 86 pull
+requests, 851 executions, 11 releases, toutes horodatees au moment ou elles se
+sont produites. Le board change la lisibilite de cette matiere, il ne la cree
+pas.
+
+SI ON QUESTIONNE : « pourquoi pas Jira ou Trello ? » La saisie declarative. Pas
+« c'etait plus simple ».
+
+= = =
+
+CRITERE : les indicateurs sont mesurables et quantifiables, et permettent de
+suivre les DELAIS, les COUTS et l'AVANCEMENT.
+
+La methode de selection se dit, rien n'est a l'ecran : un indicateur entre au
+tableau de bord s'il est mesurable sans saisie, quantifiable, rattache a une
+decision, et reproductible par un tiers depuis le depot public. Les valeurs
+sont sur les deux diapos qui suivent, ne pas les anticiper ici.
+
+Dire les quatre conditions en appuyant sur la TROISIEME : « un indicateur sans
+decision associee est un ornement ». C'est la condition qui a fait le tri.
+
+Puis annoncer les cinq axes, qui sont exactement les cinq que la grille demande,
+avancement, couts, delais, risques, ressources humaines, et dire qu'ils
+arrivent sur les deux diapos suivantes, l'une pour l'avancement et les delais,
+l'autre pour les couts, les risques et les ressources.
+
+LE GESTE QUI COMPTE : citer les trois indicateurs ECARTES et pourquoi : la
+velocite par sprint, parce qu'il n'y a pas de sprint ; le temps de cycle d'une
+fiche, parce que l'entree en flux n'est horodatee de facon fiable que depuis
+aout ; la charge ressentie, parce qu'elle n'est pas quantifiable. Un candidat
+qui dit ce qu'il n'a pas su mesurer est plus credible qu'un candidat dont tous
+les voyants sont au vert. C'est trente secondes bien depensees.
+-->
+
+---
+
+# Tableau de bord : avancement et délais
+
+<div class="grid grid-cols-5 gap-5">
+<div class="col-span-3">
+
+<div class="text-xs opacity-75 mb-1">Commits intégrés sur la branche principale : <b>1 070</b></div>
+<div class="cols" style="height:4.6rem">
+<div><i style="height:0%"></i></div>
+<div><i style="height:10%"></i></div>
+<div><i style="height:26%"></i></div>
+<div><em>150</em><i style="height:55%"></i></div>
+<div><em>227</em><i style="height:83%"></i></div>
+<div><i style="height:71%"></i></div>
+<div><i style="height:47%"></i></div>
+<div><em>272</em><i style="height:100%"></i></div>
+</div>
+
+<div class="text-xs opacity-75 mt-3 mb-1">Fusions sur la branche principale : <b>187</b></div>
+<div class="cols" style="height:4.6rem">
+<div><i class="b" style="height:0%"></i></div>
+<div><i class="b" style="height:0%"></i></div>
+<div><i class="b" style="height:1%"></i></div>
+<div><i class="b" style="height:8%"></i></div>
+<div><em>39</em><i class="b" style="height:55%"></i></div>
+<div><em>52</em><i class="b" style="height:73%"></i></div>
+<div><i class="b" style="height:25%"></i></div>
+<div><em>71</em><i class="b" style="height:100%"></i></div>
+</div>
+<div class="xlab">
+<div>fév.</div><div>mars</div><div>avril</div><div>mai</div><div>juin</div><div>juil.</div><div>août</div><div>sept.</div>
+</div>
+
+</div>
+<div class="col-span-2 text-sm">
+
+### Cadence de livraison
+
+<div class="kpi grid-cols-2 mb-3">
+<div><b>14 j</b><span>écart médian entre deux versions</span></div>
+<div><b>4 / 4</b><span>échéances de restitution tenues, écart 0</span></div>
+</div>
+
+| Version | Date | Écart |
+|---------|------|------:|
+| 0.1.0 → 1.0.0 | 27/02 → 19/05 | **81 j** |
+| 1.0.0 → 1.3.2 | mai → juillet | 6 à 19 j |
+| 1.3.2 → 1.4.0 | 25/07 → 25/08 | 31 j |
+| 1.4.0 → 1.5.0 | 25/08 → 07/09 | 10 et 3 j |
+| 1.5.0 → 1.6.0 | 07/09 → 12/09 | 5 j |
+
+</div>
+</div>
+
+<!--
+DUREE 1:10. CRITERE : le tableau de bord integre l'avancement et le suivi des
+delais.
+
+Ne PAS commenter les huit mois un par un. Deux lectures, pas plus :
+
+1. Le pic de fusions de juin, 6 puis 39, alors que les commits ne passent que
+de 150 a 227. Ce qui a change c'est la pratique de decoupage, pas la production.
+Le dire AVANT que le jury le remarque : c'est ce qui prouve qu'on lit ses propres
+indicateurs au lieu de les afficher. Septembre, 272 commits et 71 fusions en
+douze jours, c'est la meme pratique a plein regime : trois versions livrees,
+1.4.1, 1.5 et 1.6.
+
+2. Les 81 jours entre le prototype et la V1. Seul intervalle anormal, il contient
+la migration de l'API, et c'est lui qui a rendu l'arbitrage visible. Annoncer le
+chapitre 4 ici. Depuis, onze versions en cent seize jours : mediane de 14 jours
+entre deux versions.
+
+Sur les echeances : ecart zero sur les quatre, et deux d'entre elles sont
+HORODATEES dans le depot, passe finale du dossier Bloc 2 le 23/07, export PDF du
+Bloc 4 le 21/08. Ce n'est pas de la discipline, c'est de la methode : le
+retroplanning traite ces dates comme des fins de lot, et c'est le PERIMETRE de la
+version qui absorbe la variation, jamais la date. La preuve : quand la capacite
+s'est reduite en aout, c'est l'intervalle entre versions qui s'est allonge,
+31 jours.
+
+SI ON QUESTIONNE le creux d'aout : il est voulu, le perimetre produit se referme
+au profit du dossier du Bloc 4, remis le 21 ; 140 commits du projet sont de la
+documentation, et la moitie tombe autour des deux remises de dossier.
+-->
+
+---
+
+# Tableau de bord : coûts, risques, ressources
+
+<div class="grid grid-cols-3 gap-5 text-sm">
+<div>
+
+### Coûts, prévu / réel
+
+| Poste | Prévu | Réel |
+|-------|------:|-----:|
+| Infrastructure | 1 à 5 €/mois | **0 €** |
+| Nom de domaine | ≈ 10 €/an | **≈ 10 €** |
+| Assistant de code | non prévu | **100 €/mois**, 300 € |
+
+</div>
+<div>
+
+### Risques
+
+<div class="chips">
+<div><span>Vulnérabilités ouvertes</span><u style="color:var(--ok)">0 ✓</u></div>
+<div><span>Couverture de tests</span><u style="color:var(--ok)">88,1 % ✓</u></div>
+<div><span>Quality Gate</span><u style="color:var(--ok)">A/A/A ✓</u></div>
+<div><span>Disponibilité</span><u style="color:var(--ok)">100 % ✓</u></div>
+<div><span>Erreurs serveur</span><u style="color:var(--ok)">0,026 % ✓</u></div>
+<div><span>Anomalies ouvertes</span><u style="color:var(--ok)">0 / 5 ✓</u></div>
+<div><span>Stabilité de la chaîne</span><u style="color:#b45309">64 % ⚠ alerte</u></div>
+<div><span>Facteur de bus</span><u style="color:#b45309">1 ⚠ alerte</u></div>
+</div>
+
+</div>
+<div>
+
+### Stabilité de la chaîne
+
+<div class="cols" style="height:6.2rem;position:relative">
+<div style="position:absolute;left:0;right:0;bottom:80%;top:auto;height:0;flex:none;border-top:1px dashed #94a3b8;z-index:1"></div>
+<div><em>39 %</em><i style="height:39%;background:#d97706"></i></div>
+<div><em>69 %</em><i style="height:69%;background:#d97706"></i></div>
+<div><em>56 %</em><i style="height:56%;background:#d97706"></i></div>
+<div><em>54 %</em><i style="height:54%;background:#d97706"></i></div>
+<div><em>94 %</em><i style="height:94%"></i></div>
+<div><em>78 %</em><i style="height:78%;background:#d97706"></i></div>
+<div><em>67 %</em><i style="height:67%;background:#d97706"></i></div>
+</div>
+<div class="xlab">
+<div>mars<br><span class="opacity-60">28</span></div><div>avril<br><span class="opacity-60">40</span></div><div>mai<br><span class="opacity-60">80</span></div><div>juin<br><span class="opacity-60">153</span></div><div>juil.<br><span class="opacity-60">100</span></div><div>août<br><span class="opacity-60">38</span></div><div>sept.<br><span class="opacity-60">86</span></div>
+</div>
+
+</div>
+</div>
+
+<div class="text-xs opacity-75 mt-4 mb-1">Ressources humaines</div>
+<div class="kpi grid-cols-5">
+<div><b>95 / 198</b><span>jours actifs</span></div>
+<div><b>3,3</b><span>jours par semaine</span></div>
+<div><b>0 à 7</b><span>amplitude hebdomadaire</span></div>
+<div><b>12</b><span>jours consécutifs, série maximale</span></div>
+<div><b>5</b><span>semaines à zéro</span></div>
+</div>
+
+<!--
+DUREE 1:10. CRITERE : le tableau de bord integre le suivi des COUTS, des RISQUES
+et des RESSOURCES HUMAINES. Les trois axes restants du critere sont ici.
+
+COUTS, une phrase : le budget tient parce qu'il a ete concu pour tenir, avec une
+contrepartie technique assumee, le demarrage a froid de 3,8 s. Le seul poste
+non prevu au cadrage est l'assistant de code, 100 euros par mois depuis juin :
+c'est aussi la seule depense reelle du projet, et elle est dite comme telle.
+Puis le point de pilotage : deux echeances de cout suivies alors qu'elles
+valent zero aujourd'hui, la fin des douze mois gratuits du front et les 512 Mo
+de la base.
+
+RISQUES : ne pas parcourir la colonne. Aller aux DEUX voyants oranges. Le
+premier, la stabilite de la chaine, est celui qui prouve la boucle mesure ->
+decision -> effet remesure : 54 % en juin, correction, 94 % en juillet. C'est
+l'histogramme de droite, et c'est la seule chose a commenter de ce cote. Les
+autres voyants sont releves le 12 septembre : Sonar a 88,1 % de couverture et
+porte verte, zero vulnerabilite et zero alerte d'analyse de code ouvertes, les
+cinq anomalies closes ; disponibilite et erreurs serveur sont les mesures de
+production du dossier Bloc 4, trente jours au 5 septembre.
+
+RH : c'est la transition vers le chapitre 5. La phrase a dire : « une semaine a
+sept jours travailles suivie d'une semaine a zero tient sur sept mois de projet
+etudiant, elle ne tient pas sur une exploitation dans la duree. » La serie
+maximale, douze jours, est celle qui se termine aujourd'hui : trois versions
+et l'oral dans la meme quinzaine.
+
+SI ON QUESTIONNE : « votre chaine echoue une fois sur trois. » Sur la fenetre
+complete oui, 64 % sur 529 executions conclusives. La serie mensuelle est plus
+parlante : 39 % en mars quand la chaine se construit, 94 % en juillet apres la
+decision, 78 % en aout, 67 % en septembre. Septembre est compte hors quinze
+executions qui n'ont jamais demarre, sans rapport avec le code ; elles se
+reconnaissent a leur duree, deux secondes.
+-->
+
+---
+
+# L'écart n'est pas où on le cherche
+
+<div class="grid grid-cols-2 gap-6">
+<div>
+
+<div class="text-sm mb-1">Charge : <b>98 J/H prévus</b> → <b>95 jours actifs</b> reconstitués, soit <b>−3 %</b>, dans la marge de 20 %.</div>
+
+<div class="text-xs opacity-75 mb-1">Où sont passés les 95 jours actifs</div>
+<div class="stack">
+<i style="width:24%;background:var(--s1)">23 j, 24 %</i>
+<i style="width:76%;background:#d97706">72 j, 76 %</i>
+</div>
+
+<div class="text-xs opacity-75 mt-4 mb-1">D'où viennent les 81 items produit livrés</div>
+<div class="stack">
+<i style="width:28.4%;background:var(--s1)">23 items</i>
+<i style="width:71.6%;background:#d97706">58 items, 72 %</i>
+</div>
+
+<div class="legend mt-2">
+<span style="--c:var(--s1)">Lots 1 à 3, chiffrés au cadrage</span>
+<span style="color:#d97706">Après la V1 : V1.1 à V1.6, hors chiffrage, et la clôture du titre</span>
+</div>
+
+</div>
+<div class="text-sm">
+
+### Trois décisions, effet remesuré
+
+| Mesure | Décision | Effet remesuré |
+|--------|----------|----------------|
+| Chaîne à 54 %, échecs sans cause réelle | Portes de qualité bloquantes **et** déterministes | **94 %** le mois suivant |
+| 59 PR de dépendances pour 9 fusionnées | Regroupement mensuel, audit à chaque commit | **0 vulnérabilité** ouverte, sans fusion non relue |
+| Accueil affiché en 4,2 s, porte de performance rouge | Coquille de démarrage dans le HTML initial | **2,3 s**, porte verte |
+
+</div>
+</div>
+
+<!--
+DUREE 1:30. C'est la diapo qui prouve que le suivi a servi a DECIDER et pas
+seulement a mesurer. Elle amene le chapitre 4.
+
+Trois temps, sans lire les tableaux :
+
+1. Les deux barres de gauche. « L'ecart de charge est de moins 3 %, dans la
+marge. Ce n'est pas la bonne lecture. » Puis designer les barres orange : 76 %
+des jours actifs sont posterieurs a la V1, et 72 % du produit final est HORS du
+chiffrage initial, 58 items sur 81. La derive n'etait pas une derive de charge,
+c'etait un glissement de perimetre que rien ne mesurait.
+
+2. Les trois decisions. C'est le coeur de la competence : chaque ligne est une
+mesure, une decision, et un effet REMESURE ensuite. Ne pas en developper plus
+d'une. La deuxieme est la plus parlante : cinquante pull requests ouvertes puis
+fermees sans fusion ne sont pas un gaspillage, c'est le symptome qu'un
+automatisme etait mal regle. L'indicateur a servi a regler la frequence de
+l'automatisme, pas a juger le travail. La troisieme est la plus recente : la
+porte de performance passait au rouge sur l'accueil, 4,2 s pour peindre le plus
+grand element ; le titre est peint dans le HTML initial depuis la 1.6, 2,3 s,
+porte verte.
+
+3. L'autocritique, sans support : aucun indicateur ne comparait le perimetre
+courant au perimetre chiffre, le glissement de 58 items n'a ete visible qu'a
+posteriori, et c'est le premier compteur que j'ajouterais. Ne pas l'escamoter,
+c'est elle qui rend les deux premiers temps credibles.
+
+SI ON QUESTIONNE : « comment reconstituez-vous 95 J/H sans releve de temps ? »
+Par les jours distincts portant au moins un commit, 1 jour actif pour 1 J/H,
+incertitude d'au moins 20 %. La reconstitution est FAIBLE sur les cinq premieres
+semaines, ou les commits etaient groupes, le premier commit du projet porte
+3 400 lignes a lui seul. La charge reelle est vraisemblablement SUPERIEURE a 95.
+Un indicateur ne mesure que la pratique qui le produit.
+-->

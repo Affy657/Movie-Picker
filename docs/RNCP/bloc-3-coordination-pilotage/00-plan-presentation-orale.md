@@ -32,10 +32,10 @@ Le règlement énumère 14 éléments que la présentation doit comporter. Chacu
 | 6 | L'affectation des missions réalisée au cours du projet | C3.3.1 | 14 |
 | 7 | Le ou les styles managériaux utilisés | C3.3.1 | 15 |
 | 8 | Les outils de communication utilisés et leurs objectifs | C3.3.1 | 16 |
-| 9 | L'évaluation des besoins en compétences via grille | C3.3.2 | 18 |
-| 10 | Le plan de développement des compétences | C3.3.2 | 19 |
-| 11 | Les comptes rendus sur les évolutions et améliorations | C3.4.1 | 21 |
-| 12 | La planification des points de validation réalisés | C3.4.1 | 20 |
+| 9 | 3. Piloter l'avancement : le suivi est dans GitHub | 1:30 | Six indicateurs : 10 fiches, 35 pull requests fusionnées sur 86, 851 exécutions dont 540 sur master, 11 releases, 160 tickets au board, 0 saisie déclarative. Adéquation avec la méthode propriété par propriété. La règle de sélection des indicateurs (mesurable sans saisie, quantifiable, rattaché à une décision, reproductible) et les trois indicateurs écartés se disent |
+| 10 | Tableau de bord : avancement et délais | 1:10 | Commits et fusions par mois (1 070 et 187 au 12/09), médiane de 14 jours entre versions, les 4 échéances tenues, les 11 versions et leurs écarts. Le pic de fusions de juin, les 81 jours de la V1 et les trois versions de septembre se commentent |
+| 11 | Tableau de bord : coûts, risques, ressources | 1:10 | Coût réel contre budget, les huit indicateurs de risque dont deux en alerte, la stabilité de la chaîne mois par mois de mars à septembre (54 % en juin, 94 % en juillet), et la charge en cinq chiffres : 95 jours actifs sur 198, 3,3 par semaine, amplitude de 0 à 7, 12 jours consécutifs, 5 semaines à zéro |
+| 12 | L'écart n'est pas où on le cherche | 1:30 | 98 J/H prévus contre 95 reconstitués, mais 81 items produit livrés dont 58 hors chiffrage : deux barres empilées. Trois décisions prises à partir d'une mesure, chaîne, dépendances, performance de l'accueil, avec leur effet remesuré. Le glissement de périmètre et l'autocritique du dispositif se disent |
 | 13 | Les indicateurs de satisfaction mis en place | C3.4.1 | 22 |
 | 14 | Une démonstration des fonctionnalités du logiciel | C3.4.2 | 3, puis la démonstration en direct ; la demande de validation en 23 |
 
