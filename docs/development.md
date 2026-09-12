@@ -91,14 +91,21 @@ configuration est dans `apps/api-dotnet/MoviePicker.Api/appsettings.Development.
 | Bob | `bob@test.local` | `BobTest12345!` | Profil public |
 | Carla | `carla@test.local` | `CarlaTest123!` | Profil privé, sert à vérifier le 404 |
 | David | `david@test.local` | `DavidTest123!` | Profil public |
+| Zoé | `zoe@test.local` | `ZoeTest1234!` | Profil public que personne ne suit, sert à la recherche de comptes sans accent (`zoe`, `lefevre`) |
 
 Chaque compte n'est créé que si son adresse est absente de la base.
 
 - `SeedSampleEvents` ajoute quelques soirées au compte principal.
 - `SeedScenarioDemos` ajoute un jeu de soirées couvrant les états intéressants : multi-participants,
   roue tirée puis clôturée, capacité atteinte, retrait d'un participant, tirage gelé, soirée passée,
-  soirée à échéance, soirée vide, soirée annulée. Plus un graphe de suivi entre comptes et des
-  notifications.
+  soirée à échéance, soirée vide, soirée annulée. Côté V1.6 : une limite d'un vote par participant
+  avec le compte principal à quota, un marathon à trois gagnants dont deux déjà tirés et annoncés,
+  une trilogie terminée à trois gagnants (deux à la roue, un désigné) et une série hebdomadaire dont
+  l'occurrence précédente est close et la suivante créée par la vraie passe de récurrence. Plus
+  quatre modèles de soirée (trois sur le compte principal, un chez Alice), des watchlists (Alice
+  publique, Bob masquée, Zoé publique, trois films sur le compte principal), un graphe de suivi
+  entre comptes et des notifications. `DevelopmentScenarioSeedTests` rejoue toute la seed en mémoire
+  et refuse une étape qui journalise un avertissement.
 
 Pour couper : `DevelopmentSeed__Enabled=false`, ou finement `DevelopmentSeed__SeedSampleEvents=false`
 et `DevelopmentSeed__SeedScenarioDemos=false`.

@@ -7,12 +7,16 @@ using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
+using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
+using MoviePicker.Api.Application.UseCases.EventTemplates;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
+using MoviePicker.Api.Application.UseCases.LaunchWheel;
 using MoviePicker.Api.Application.UseCases.Notifications;
+using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Application.UseCases.Watchlist;
@@ -21,19 +25,25 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Development;
 
-internal sealed record DevelopmentSeedActors(User Dev, User Alice, User Bob, User Carla, User David);
+internal sealed record DevelopmentSeedActors(User Dev, User Alice, User Bob, User Carla, User David, User Zoe);
 
 internal static class DevelopmentScenarioSeed
 {
-    internal const string ScenarioMultiTitle = "Scénario seed — Soirée multi-participants";
-    internal const string ScenarioWheelTitle = "Scénario seed — Roue et clôture";
-    internal const string ScenarioFullCapacityTitle = "Scénario seed — Capacité atteinte";
-    internal const string ScenarioRemoveParticipantsTitle = "Scénario seed — Retirer / quitter (hôte = dev)";
-    internal const string ScenarioWheelLaunchedTitle = "Scénario seed — Roue tirée (modifications gelées)";
-    internal const string ScenarioPastTitle = "Scénario seed — Soirée passée (archivée)";
-    internal const string ScenarioPendingTitle = "Scénario seed — Soirée en suspens";
-    internal const string ScenarioEmptyTitle = "Scénario seed — Soirée vide (fraîche)";
-    internal const string ScenarioDeletedTitle = "Scénario seed — Soirée annulée";
+    private const string ScenarioPrefix = "Scénario seed — ";
+
+    internal const string ScenarioMultiTitle = ScenarioPrefix + "Soirée multi-participants";
+    internal const string ScenarioWheelTitle = ScenarioPrefix + "Roue et clôture";
+    internal const string ScenarioFullCapacityTitle = ScenarioPrefix + "Capacité atteinte";
+    internal const string ScenarioRemoveParticipantsTitle = ScenarioPrefix + "Retirer / quitter (hôte = dev)";
+    internal const string ScenarioWheelLaunchedTitle = ScenarioPrefix + "Roue tirée (modifications gelées)";
+    internal const string ScenarioPastTitle = ScenarioPrefix + "Soirée passée (archivée)";
+    internal const string ScenarioPendingTitle = ScenarioPrefix + "Soirée en suspens";
+    internal const string ScenarioEmptyTitle = ScenarioPrefix + "Soirée vide (fraîche)";
+    internal const string ScenarioDeletedTitle = ScenarioPrefix + "Soirée annulée";
+    internal const string ScenarioVoteLimitTitle = ScenarioPrefix + "Limite de votes (un vote chacun, dev à quota)";
+    internal const string ScenarioMultiWinnerTitle = ScenarioPrefix + "Marathon à trois gagnants (deux tirés)";
+    internal const string ScenarioTrilogyFinishedTitle = ScenarioPrefix + "Trilogie terminée, trois gagnants";
+    internal const string ScenarioRecurringTitle = ScenarioPrefix + "Ciné-club hebdomadaire (série)";
 
     internal const string ShowcaseLiveTitle = "Vitrine seed — En direct maintenant";
     internal const string ShowcaseNoThemeTitle = "Vitrine seed — Sans thème ni limite";
@@ -68,6 +78,11 @@ internal static class DevelopmentScenarioSeed
             await RunStepAsync(logger, "soirée en suspens", () => TrySeedPendingEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "soirée vide", () => TrySeedEmptyEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "soirée annulée", () => TrySeedDeletedEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "modèles de soirée", () => TrySeedEventTemplatesAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "limite de votes", () => TrySeedVoteLimitScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "plusieurs gagnants (en cours)", () => TrySeedMultiWinnerScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "trilogie terminée", () => TrySeedTrilogyFinishedScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "série hebdomadaire", () => TrySeedRecurringSeriesScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "rappels", () => TrySeedReminderNotificationsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
 
             await RunStepAsync(logger, "vitrine — en direct", () => TrySeedShowcaseLiveScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
@@ -175,6 +190,18 @@ internal static class DevelopmentScenarioSeed
             },
             ct).ConfigureAwait(false);
 
+        await profile.HandleAsync(
+            actors.Zoe.Id,
+            new PatchUserProfileRequest
+            {
+                UiTheme = "system",
+                AccentColor = "purple",
+                AvatarId = "glow",
+                Bio = "Cinéphile du dimanche. Personne ne me suit : la recherche « zoe » ou « lefevre », sans accent, doit me trouver.",
+                IsProfilePublic = true
+            },
+            ct).ConfigureAwait(false);
+
         await prefs.HandleAsync(
             actors.Bob.Id,
             new PatchNotificationPreferencesRequest
@@ -195,7 +222,7 @@ internal static class DevelopmentScenarioSeed
             },
             ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : profils enrichis (5 comptes, thèmes/accents/bios/visibilité/préférences).");
+        logger.LogInformation("DevelopmentSeed : profils enrichis (6 comptes, thèmes/accents/bios/visibilité/préférences).");
     }
 
     private static async Task TrySeedWatchlistsAsync(
@@ -233,7 +260,32 @@ internal static class DevelopmentScenarioSeed
                 .ConfigureAwait(false);
         }
 
-        logger.LogInformation("DevelopmentSeed : watchlists (Alice publique, 5 films ; Bob masquée, 2 films).");
+        (int TmdbId, string Title, string Year)[] devMovies =
+        [
+            (693134, "Dune : deuxième partie", "2024"),
+            (1022789, "Vice-versa 2", "2024"),
+            (872585, "Oppenheimer", "2023")
+        ];
+        foreach (var (tmdbId, title, year) in devMovies)
+        {
+            await watchlist
+                .HandleAsync(actors.Dev.Id, new AddWatchlistItemRequest { TmdbId = tmdbId, Title = title, Year = year }, ct)
+                .ConfigureAwait(false);
+        }
+
+        (int TmdbId, string Title, string Year)[] zoeMovies =
+        [
+            (194, "Le Fabuleux Destin d'Amélie Poulain", "2001"),
+            (77338, "Intouchables", "2011")
+        ];
+        foreach (var (tmdbId, title, year) in zoeMovies)
+        {
+            await watchlist
+                .HandleAsync(actors.Zoe.Id, new AddWatchlistItemRequest { TmdbId = tmdbId, Title = title, Year = year }, ct)
+                .ConfigureAwait(false);
+        }
+
+        logger.LogInformation("DevelopmentSeed : watchlists (Alice publique, 5 films ; Bob masquée, 2 films ; dev, 3 films ; Zoé publique, 2 films).");
     }
 
     private static async Task TrySeedFollowsAsync(
@@ -1414,6 +1466,446 @@ internal static class DevelopmentScenarioSeed
         logger.LogInformation("DevelopmentSeed : vitrine « terminée, rejointe seulement » créée (slug={Slug}, hôte=Carla, dev=participant, il y a 4 mois).", slug);
     }
 
+    private static async Task TrySeedEventTemplatesAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var list = sp.GetRequiredService<IListEventTemplatesHandler>();
+        var create = sp.GetRequiredService<ICreateEventTemplateHandler>();
+
+        var devTemplates = new SaveEventTemplateRequest[]
+        {
+            new()
+            {
+                Name = "Ciné-club du vendredi",
+                Theme = "Un classique par semaine",
+                MaxProposalsPerParticipant = 3,
+                MaxParticipants = 8,
+                MaxVotesPerParticipant = 2,
+                WheelMode = WheelMode.WeightedByVotes,
+                RichSharePreview = true,
+                AllowSeries = false,
+                WinnerCount = 1
+            },
+            new()
+            {
+                Name = "Marathon du samedi",
+                Theme = "Trois films d'affilée",
+                MaxProposalsPerParticipant = 5,
+                MaxParticipants = 12,
+                WheelMode = WheelMode.StrictRandom,
+                RichSharePreview = true,
+                AllowSeries = false,
+                WinnerCount = 3
+            },
+            new()
+            {
+                Name = "Séries en famille",
+                Theme = "Un épisode ou deux",
+                MaxProposalsPerParticipant = 2,
+                MaxParticipants = 6,
+                WheelMode = WheelMode.WeightedByVotes,
+                RichSharePreview = false,
+                AllowSeries = true,
+                WinnerCount = 1
+            }
+        };
+        var aliceTemplates = new SaveEventTemplateRequest[]
+        {
+            new()
+            {
+                Name = "Comédies entre amis",
+                Theme = "Comédie & feel-good",
+                MaxProposalsPerParticipant = 4,
+                MaxParticipants = 10,
+                MaxVotesPerParticipant = 3,
+                WheelMode = WheelMode.WeightedByVotes,
+                RichSharePreview = true,
+                AllowSeries = false,
+                WinnerCount = 1
+            }
+        };
+
+        var created = 0;
+        foreach (var (owner, templates) in new[] { (actors.Dev, devTemplates), (actors.Alice, aliceTemplates) })
+        {
+            var existing = (await list.HandleAsync(owner.Id, ct).ConfigureAwait(false)).Items
+                .Select(t => t.Name)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var template in templates.Where(t => !existing.Contains(t.Name!)))
+            {
+                await create.HandleAsync(owner.Id, template, ct).ConfigureAwait(false);
+                created++;
+            }
+        }
+
+        logger.LogInformation("DevelopmentSeed : modèles de soirée (dev 3, Alice 1, {Created} créés).", created);
+    }
+
+    private static async Task TrySeedVoteLimitScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Bob.Id, ScenarioVoteLimitTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : scénario limite de votes déjà présent, ignoré.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var join = sp.GetRequiredService<IJoinEventHandler>();
+        var addMovie = sp.GetRequiredService<IAddMovieHandler>();
+        var vote = sp.GetRequiredService<IVoteMovieHandler>();
+        var httpContext = sp.GetRequiredService<IHttpContextAccessor>();
+
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ScenarioVoteLimitTitle,
+                    Date = FormatDate(utc.AddDays(3)),
+                    Time = "21:00"
+                },
+                actors.Bob.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+        var bobPart = created.CreatorParticipant?.Id
+            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+
+        await ApplyConfigAsync(
+            events,
+            slug,
+            new EventConfig
+            {
+                Theme = "Un seul vote chacun",
+                ThemeColor = 200,
+                MaxProposalsPerParticipant = 2,
+                MaxParticipants = 6,
+                MaxVotesPerParticipant = 1,
+                WheelMode = WheelMode.WeightedByVotes,
+                RichSharePreview = true
+            },
+            ct).ConfigureAwait(false);
+
+        var joinDev = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Dev invité" }, actors.Dev.Id, ct)
+            .ConfigureAwait(false);
+        var joinAlice = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice invitée" }, actors.Alice.Id, ct)
+            .ConfigureAwait(false);
+        var joinZoe = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Zoé invitée" }, actors.Zoe.Id, ct)
+            .ConfigureAwait(false);
+        var devPart = joinDev.Participant.Id;
+        var alicePart = joinAlice.Participant.Id;
+
+        await AddMovieAsync(addMovie, slug, 289, "Casablanca", "1942", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
+        var mDev = await AddMovieAsync(addMovie, slug, 238, "The Godfather", "1972", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
+        var mAlice = await AddMovieAsync(addMovie, slug, 278, "The Shawshank Redemption", "1994", alicePart, actors.Alice.Id, ct).ConfigureAwait(false);
+        await AddMovieAsync(addMovie, slug, 497, "The Green Mile", "1999", joinZoe.Participant.Id, actors.Zoe.Id, ct).ConfigureAwait(false);
+
+        await VoteAsync(vote, httpContext, slug, mAlice.Id, devPart, actors.Dev.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mDev.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : scénario limite de votes créé (slug={Slug}, hôte Bob, 1 vote par participant, dev et Alice à quota).", slug);
+    }
+
+    private static async Task TrySeedMultiWinnerScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ScenarioMultiWinnerTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : scénario plusieurs gagnants déjà présent, ignoré.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var join = sp.GetRequiredService<IJoinEventHandler>();
+        var addMovie = sp.GetRequiredService<IAddMovieHandler>();
+        var vote = sp.GetRequiredService<IVoteMovieHandler>();
+        var launchWheel = sp.GetRequiredService<ILaunchWheelHandler>();
+        var announce = sp.GetRequiredService<IAnnounceWheelWinnerHandler>();
+        var httpContext = sp.GetRequiredService<IHttpContextAccessor>();
+
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ScenarioMultiWinnerTitle,
+                    Date = FormatDate(utc.AddDays(2)),
+                    Time = "18:00"
+                },
+                actors.Dev.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+        var devPart = created.CreatorParticipant?.Id
+            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+
+        await ApplyConfigAsync(
+            events,
+            slug,
+            new EventConfig
+            {
+                Theme = "Marathon années 80",
+                ThemeColor = 30,
+                MaxProposalsPerParticipant = 4,
+                MaxParticipants = 8,
+                WheelMode = WheelMode.WeightedByVotes,
+                RichSharePreview = true,
+                WinnerCount = 3
+            },
+            ct).ConfigureAwait(false);
+
+        var joinAlice = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice invitée" }, actors.Alice.Id, ct)
+            .ConfigureAwait(false);
+        var joinBob = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob invité" }, actors.Bob.Id, ct)
+            .ConfigureAwait(false);
+        var joinDavid = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "David invité" }, actors.David.Id, ct)
+            .ConfigureAwait(false);
+        var alicePart = joinAlice.Participant.Id;
+        var bobPart = joinBob.Participant.Id;
+        var davidPart = joinDavid.Participant.Id;
+
+        var mBttf = await AddMovieAsync(addMovie, slug, 105, "Back to the Future", "1985", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
+        var mGhost = await AddMovieAsync(addMovie, slug, 620, "Ghostbusters", "1984", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
+        var mDieHard = await AddMovieAsync(addMovie, slug, 562, "Die Hard", "1988", alicePart, actors.Alice.Id, ct).ConfigureAwait(false);
+        await AddMovieAsync(addMovie, slug, 601, "E.T. the Extra-Terrestrial", "1982", alicePart, actors.Alice.Id, ct).ConfigureAwait(false);
+        var mTerminator = await AddMovieAsync(addMovie, slug, 218, "The Terminator", "1984", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
+        var mAliens = await AddMovieAsync(addMovie, slug, 679, "Aliens", "1986", davidPart, actors.David.Id, ct).ConfigureAwait(false);
+
+        await VoteAsync(vote, httpContext, slug, mBttf.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mBttf.Id, bobPart, actors.Bob.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mDieHard.Id, davidPart, actors.David.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mTerminator.Id, devPart, actors.Dev.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mAliens.Id, devPart, actors.Dev.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mGhost.Id, alicePart, actors.Alice.Id, -1, ct).ConfigureAwait(false);
+
+        ActAs(httpContext, actors.Dev.Id);
+        await launchWheel.HandleAsync(slug, ct).ConfigureAwait(false);
+        await launchWheel.HandleAsync(slug, ct).ConfigureAwait(false);
+        await announce.HandleAsync(slug, ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : scénario plusieurs gagnants créé (slug={Slug}, hôte=dev, 2 gagnants tirés sur 3, annoncés).", slug);
+    }
+
+    private static async Task TrySeedTrilogyFinishedScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Alice.Id, ScenarioTrilogyFinishedTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : scénario trilogie terminée déjà présent, ignoré.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var join = sp.GetRequiredService<IJoinEventHandler>();
+        var addMovie = sp.GetRequiredService<IAddMovieHandler>();
+        var vote = sp.GetRequiredService<IVoteMovieHandler>();
+        var httpContext = sp.GetRequiredService<IHttpContextAccessor>();
+
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ScenarioTrilogyFinishedTitle,
+                    Date = FormatDate(utc.AddDays(1)),
+                    Time = "19:00"
+                },
+                actors.Alice.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+        var alicePart = created.CreatorParticipant?.Id
+            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+
+        await ApplyConfigAsync(
+            events,
+            slug,
+            new EventConfig
+            {
+                Theme = "Trilogie du Seigneur des anneaux",
+                ThemeColor = 120,
+                MaxProposalsPerParticipant = 2,
+                MaxParticipants = 6,
+                WheelMode = WheelMode.StrictRandom,
+                RichSharePreview = true,
+                WinnerCount = 3
+            },
+            ct).ConfigureAwait(false);
+
+        var joinDev = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Dev invité" }, actors.Dev.Id, ct)
+            .ConfigureAwait(false);
+        var joinBob = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob invité" }, actors.Bob.Id, ct)
+            .ConfigureAwait(false);
+        var devPart = joinDev.Participant.Id;
+        var bobPart = joinBob.Participant.Id;
+
+        var mFellowship = await AddMovieAsync(addMovie, slug, 120, "The Lord of the Rings: The Fellowship of the Ring", "2001", alicePart, actors.Alice.Id, ct).ConfigureAwait(false);
+        var mTowers = await AddMovieAsync(addMovie, slug, 121, "The Lord of the Rings: The Two Towers", "2002", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
+        var mReturn = await AddMovieAsync(addMovie, slug, 122, "The Lord of the Rings: The Return of the King", "2003", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
+        await AddMovieAsync(addMovie, slug, 49051, "The Hobbit: An Unexpected Journey", "2012", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
+
+        await VoteAsync(vote, httpContext, slug, mFellowship.Id, devPart, actors.Dev.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mTowers.Id, bobPart, actors.Bob.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mReturn.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
+
+        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Soirée trilogie seed introuvable.");
+
+        var closedDate = utc.AddDays(-10);
+        var finished = evt with
+        {
+            Date = FormatDate(closedDate),
+            Time = "19:00",
+            Winners =
+            [
+                SeedWinner(mFellowship.Id, closedDate.AddMinutes(30)),
+                SeedWinner(mTowers.Id, closedDate.AddMinutes(32)),
+                SeedWinner(mReturn.Id, closedDate.AddMinutes(35), WinnerPickMethod.Manual)
+            ],
+            WinnerAnnouncedAt = closedDate.AddMinutes(35),
+            ClosedAt = closedDate.AddHours(4),
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        await events.UpdateAsync(finished, ct).ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed : scénario trilogie terminée créé (slug={Slug}, hôte Alice, 3 gagnants, il y a 10 jours).", slug);
+    }
+
+    private static async Task TrySeedRecurringSeriesScenarioAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var events = sp.GetRequiredService<IEventRepository>();
+        var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ScenarioRecurringTitle, ct).ConfigureAwait(false);
+        if (existing is not null)
+        {
+            logger.LogInformation("DevelopmentSeed : scénario série hebdomadaire déjà présent, ignoré.");
+            return;
+        }
+
+        var create = sp.GetRequiredService<ICreateEventHandler>();
+        var join = sp.GetRequiredService<IJoinEventHandler>();
+        var addMovie = sp.GetRequiredService<IAddMovieHandler>();
+        var vote = sp.GetRequiredService<IVoteMovieHandler>();
+        var votes = sp.GetRequiredService<IVoteRepository>();
+        var pass = sp.GetRequiredService<IRecurringEventPass>();
+        var httpContext = sp.GetRequiredService<IHttpContextAccessor>();
+
+        var utc = DateTimeOffset.UtcNow;
+        var created = await create
+            .HandleAsync(
+                new CreateEventRequest
+                {
+                    Title = ScenarioRecurringTitle,
+                    Date = FormatDate(utc.AddDays(1)),
+                    Time = "20:30"
+                },
+                actors.Dev.Id,
+                ct)
+            .ConfigureAwait(false);
+
+        var slug = created.Slug;
+        var devPart = created.CreatorParticipant?.Id
+            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+
+        await ApplyConfigAsync(
+            events,
+            slug,
+            new EventConfig
+            {
+                Theme = "Un classique par semaine",
+                ThemeColor = 330,
+                MaxProposalsPerParticipant = 3,
+                MaxParticipants = 8,
+                MaxVotesPerParticipant = 2,
+                WheelMode = WheelMode.WeightedByVotes,
+                RichSharePreview = true
+            },
+            ct).ConfigureAwait(false);
+
+        var joinAlice = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice invitée" }, actors.Alice.Id, ct)
+            .ConfigureAwait(false);
+        var joinBob = await join
+            .HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob invité" }, actors.Bob.Id, ct)
+            .ConfigureAwait(false);
+        var alicePart = joinAlice.Participant.Id;
+        var bobPart = joinBob.Participant.Id;
+
+        var mAmelie = await AddMovieAsync(addMovie, slug, 194, "Le Fabuleux Destin d'Amélie Poulain", "2001", alicePart, actors.Alice.Id, ct).ConfigureAwait(false);
+        var mHaine = await AddMovieAsync(addMovie, slug, 406, "La Haine", "1995", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
+        var mIntouchables = await AddMovieAsync(addMovie, slug, 77338, "Intouchables", "2011", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
+
+        await VoteAsync(vote, httpContext, slug, mAmelie.Id, devPart, actors.Dev.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mHaine.Id, bobPart, actors.Bob.Id, 1, ct).ConfigureAwait(false);
+        await VoteAsync(vote, httpContext, slug, mIntouchables.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
+
+        var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
+            ?? throw new InvalidOperationException("Soirée série seed introuvable.");
+
+        var movies = await sp.GetRequiredService<IMovieRepository>().ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
+        var scores = await votes.AggregateScoresByMovieIdsAsync(movies.Select(m => m.Id).ToList(), ct).ConfigureAwait(false);
+        var winner = WheelWinnerPicker.Pick(
+            movies,
+            id => scores.TryGetValue(id, out var a) ? a.Score : 0,
+            WheelMode.WeightedByVotes,
+            Random.Shared);
+
+        var lastWeek = utc.AddDays(-6);
+        var lastWeekParis = TimeZoneInfo.ConvertTime(lastWeek, EventSchedule.ParisTimeZone);
+        var previous = evt with
+        {
+            Date = lastWeekParis.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            Time = "20:30",
+            Recurrence = RecurrenceFrequency.Weekly,
+            Winners = [SeedWinner(winner.Id, lastWeek)],
+            WinnerAnnouncedAt = lastWeek,
+            ClosedAt = lastWeek.AddHours(3),
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        await events.UpdateAsync(previous, ct).ConfigureAwait(false);
+
+        var result = await pass.RunForCreatorAsync(actors.Dev.Id, ct).ConfigureAwait(false);
+        if (result.Created == 0)
+            throw new InvalidOperationException("Seed : la passe de récurrence n'a créé aucune occurrence suivante.");
+
+        logger.LogInformation(
+            "DevelopmentSeed : scénario série hebdomadaire créé (slug={Slug}, occurrence close il y a 6 jours, suivante créée par la passe de récurrence).",
+            slug);
+    }
+
     private static async Task<MovieWithScoreResponse> AddMovieAsync(
         IAddMovieHandler addMovie,
         string slug,
@@ -1523,12 +2015,15 @@ internal static class DevelopmentScenarioSeed
         };
     }
 
-    private static EventWinner SeedWinner(string movieId, DateTimeOffset pickedAt) => new()
-    {
-        MovieId = movieId,
-        Method = WinnerPickMethod.Wheel,
-        PickedAt = pickedAt
-    };
+    private static EventWinner SeedWinner(
+        string movieId,
+        DateTimeOffset pickedAt,
+        WinnerPickMethod method = WinnerPickMethod.Wheel) => new()
+        {
+            MovieId = movieId,
+            Method = method,
+            PickedAt = pickedAt
+        };
 
     private static void EnsureConfigBounds(EventConfig cfg)
     {

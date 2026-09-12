@@ -43,10 +43,16 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
             Email = "david@test.local",
             Password = "DavidTest123!",
             DisplayName = "David test"
+        },
+        new()
+        {
+            Email = "zoe@test.local",
+            Password = "ZoeTest1234!",
+            DisplayName = "Zoé Lefèvre"
         }
     };
 
-    private const int ScenarioActorCount = 4;
+    private const int ScenarioActorCount = 5;
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHostEnvironment _env;
@@ -151,7 +157,8 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
                 extraUsers[0],
                 extraUsers[1],
                 extraUsers[2],
-                extraUsers[3]);
+                extraUsers[3],
+                extraUsers[4]);
 
             await DevelopmentScenarioSeed.TrySeedAsync(sp, actors, _logger, cancellationToken).ConfigureAwait(false);
         }
