@@ -72,6 +72,21 @@
   margin-top: var(--space-4);
 }
 
+.counterGrid {
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+
+.subField {
+  margin-top: var(--space-3);
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--color-border-subtle);
+}
+
+.templatesRow {
+  margin: var(--space-2) 0 var(--space-3);
+}
+
 .fieldGrid > .field {
   margin-bottom: 0;
 }
@@ -89,6 +104,25 @@
 .submit {
   width: 100%;
   margin-top: var(--space-2);
+}
+
+.reused {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-2xs);
+  font-weight: 600;
+  line-height: var(--leading-none);
+  color: var(--color-primary-text);
+}
+
+.reused svg {
+  flex-shrink: 0;
+}
+
+.reusedLabel {
+  transform: translateY(var(--text-optical-nudge));
 }
 
 .advanced {

@@ -89,6 +89,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     mutationFn: (patch: ProfilePatch) => patchAuthProfile(patch),
     onSuccess: (updated) => {
       queryClient.setQueryData(queryKeys.auth.me, updated);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.publicAll });
       track('profile_updated');
     },
   });

@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.ListMyEvents;
@@ -14,7 +15,7 @@ public sealed class MyEventListLifecycleTests
         Time = time,
         Slug = "s",
         HostToken = "h",
-        WinnerMovieId = winnerMovieId,
+        Winners = TestWinners.Won(winnerMovieId),
         CreatedAt = DateTimeOffset.Parse("2026-01-01T00:00:00Z"),
         UpdatedAt = DateTimeOffset.Parse("2026-01-02T00:00:00Z")
     };

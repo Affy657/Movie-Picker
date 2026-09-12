@@ -114,3 +114,8 @@
     background: color-mix(in srgb, currentColor 18%, transparent);
   }
 }
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

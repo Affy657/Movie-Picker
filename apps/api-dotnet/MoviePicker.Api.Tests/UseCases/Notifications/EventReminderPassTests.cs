@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Notifications;
@@ -456,7 +457,7 @@ public sealed class EventReminderPassTests
     public async Task RunAsync_PendingEventWithAWinner_IsNotPending()
     {
         var started = Now - EventSchedule.PendingDelay - TimeSpan.FromHours(1);
-        GivenOpenEvents(EventStartingAt("e1", started) with { WinnerMovieId = "m1" });
+        GivenOpenEvents(EventStartingAt("e1", started) with { Winners = TestWinners.Won("m1") });
         _users.Setup(r => r.GetByIdAsync("host", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Subscriber("host"));
 

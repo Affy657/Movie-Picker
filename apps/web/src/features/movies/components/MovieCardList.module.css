@@ -131,22 +131,6 @@
   overflow-wrap: break-word;
 }
 
-.winnerBadge {
-  flex: 0 0 auto;
-  margin-top: var(--space-0-5);
-  padding: calc(0.18rem + var(--text-optical-nudge-caps)) 0.45rem
-    calc(0.18rem - var(--text-optical-nudge-caps));
-  line-height: 1;
-  font-size: var(--font-size-3xs);
-  font-weight: 700;
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--color-primary-text);
-  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 42%, transparent);
-  border-radius: var(--radius-sm);
-}
-
 .metaLine {
   margin: 0;
   display: flex;

@@ -1,10 +1,11 @@
 import { useCallback, useId, useMemo, useState, type RefObject } from 'react';
+import clsx from 'clsx';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { clearMovieVote, setMovieWheelExclusion, voteMovie } from '@/features/movies/api/moviesApi';
-import { getErrorMessage } from '@/shared/api/apiError';
+import { API_ERROR_REASONS, ApiError, getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import { promptToJoinEvent } from '@/features/events/joinPrompt';
 import type { MovieData } from '@/shared/types/movie';
@@ -12,6 +13,7 @@ import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import MovieList, { type MovieRowSortKey } from '@/features/movies/components/MovieList';
 import SortControl from '@/features/movies/components/SortControl';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
 import { Skeleton } from '@/shared/components/Skeleton';
 import ViewModeToggle from '@/shared/components/ViewModeToggle';
@@ -21,6 +23,7 @@ import {
   useWatchlist,
 } from '@/features/watchlist/hooks/useWatchlist';
 import { useTranslation } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import styles from './EventMoviesSection.module.css';
 
 function watchlistKey(tmdbId: number, mediaType: MovieData['mediaType']): string {
@@ -37,13 +40,14 @@ const DEFAULT_SORT_DIRECTION: Record<MovieRowSortKey, 'asc' | 'desc'> = {
   releaseDate: 'desc',
 };
 
-function pinWinnerFirst(movies: MovieData[], winnerMovieId?: string): MovieData[] {
-  if (!winnerMovieId) return movies;
-  const index = movies.findIndex((m) => m.id === winnerMovieId);
-  if (index <= 0) return movies;
-  const next = [...movies];
-  const [winner] = next.splice(index, 1);
-  return [winner!, ...next];
+function pinWinnersFirst(movies: MovieData[], winnerMovieIds?: string[]): MovieData[] {
+  const ids = winnerMovieIds ?? [];
+  if (ids.length === 0) return movies;
+  const byId = new Map(movies.map((m) => [m.id, m]));
+  const pinned = ids.map((id) => byId.get(id)).filter((m): m is MovieData => m !== undefined);
+  if (pinned.length === 0) return movies;
+  const pinnedIds = new Set(pinned.map((m) => m.id));
+  return [...pinned, ...movies.filter((m) => !pinnedIds.has(m.id))];
 }
 
 function compareMovies(a: MovieData, b: MovieData, sortBy: MovieRowSortKey): number {
@@ -97,7 +101,7 @@ export type EventMoviesSectionProps = {
   addMovieOpen: boolean;
   onAddMovieOpenChange: (open: boolean) => void;
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
-  winnerMovieId?: string;
+  winnerMovieIds?: string[];
 };
 
 export default function EventMoviesSection({
@@ -118,7 +122,7 @@ export default function EventMoviesSection({
   addMovieOpen,
   onAddMovieOpenChange,
   addMovieTriggerRef,
-  winnerMovieId,
+  winnerMovieIds,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { track } = useAnalytics();
@@ -184,6 +188,21 @@ export default function EventMoviesSection({
   const [voteErrors, setVoteErrors] = useState<Record<string, { message: string; value: 1 | -1 }>>(
     {}
   );
+  const [voteLimitReached, setVoteLimitReached] = useState(false);
+  const maxVotes = event.config?.maxVotesPerParticipant ?? null;
+  const votesUsed = useMemo(() => movies.filter((m) => m.myVote != null).length, [movies]);
+  const voteQuota =
+    maxVotes !== null && participant && !isFinished ? { used: votesUsed, max: maxVotes } : null;
+  const voteQuotaLockedHint =
+    voteQuota && voteQuota.used >= voteQuota.max
+      ? pluralizeCount(
+          voteQuota.max,
+          'movies.list.voteQuotaLockedOne',
+          'movies.list.voteQuotaLockedMany',
+          t,
+          { max: voteQuota.max }
+        )
+      : null;
 
   const clearVoteError = useCallback((movieId: string) => {
     setVoteErrors((prev) => {
@@ -213,6 +232,11 @@ export default function EventMoviesSection({
         }
         refreshAll();
       } catch (e) {
+        if (ApiError.is(e) && e.reason === API_ERROR_REASONS.voteLimitReached) {
+          setVoteLimitReached(true);
+          refreshAll();
+          return;
+        }
         if (viewMode === 'list') {
           const message = getErrorMessage(e, t('movies.list.voteErrorRow'));
           setVoteErrors((prev) => ({ ...prev, [movieId]: { message, value } }));
@@ -261,11 +285,11 @@ export default function EventMoviesSection({
   );
   const inWheelMovies = useMemo(
     () =>
-      pinWinnerFirst(
+      pinWinnersFirst(
         sortedMovies.filter((m) => !m.excludedFromWheel),
-        winnerMovieId
+        winnerMovieIds
       ),
-    [sortedMovies, winnerMovieId]
+    [sortedMovies, winnerMovieIds]
   );
   const excludedMovies = useMemo(
     () => sortedMovies.filter((m) => m.excludedFromWheel),
@@ -319,7 +343,8 @@ export default function EventMoviesSection({
     voteErrors,
     onRetryVote: handleRetryVote,
     selection,
-    winnerMovieId,
+    winnerMovieIds,
+    voteQuotaLockedHint,
     participantCount: event.participants?.length ?? 0,
   };
 
@@ -385,6 +410,15 @@ export default function EventMoviesSection({
         </div>
       )}
 
+      {moviesQuery.isSuccess && voteQuota ? (
+        <output
+          className={clsx(styles.voteQuota, voteQuotaLockedHint && styles.voteQuotaReached)}
+          data-testid="vote-quota"
+        >
+          {t('movies.list.voteQuota', { used: voteQuota.used, max: voteQuota.max })}
+        </output>
+      ) : null}
+
       {moviesQuery.isSuccess && (
         <>
           <div className={viewMode === 'list' ? styles.movieListBleed : undefined}>
@@ -414,6 +448,24 @@ export default function EventMoviesSection({
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={voteLimitReached}
+        title={t('movies.list.voteLimitReachedTitle')}
+        message={pluralizeCount(
+          maxVotes ?? 0,
+          'movies.list.voteLimitReachedOne',
+          'movies.list.voteLimitReachedMany',
+          t,
+          { max: maxVotes ?? 0 }
+        )}
+        confirmLabel={t('movies.list.voteLimitReachedOk')}
+        confirmVariant="primary"
+        hideCancel
+        onConfirm={() => setVoteLimitReached(false)}
+        onCancel={() => setVoteLimitReached(false)}
+        testId="vote-limit-dialog"
+      />
     </section>
   );
 }

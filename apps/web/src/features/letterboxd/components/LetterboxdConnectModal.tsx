@@ -5,6 +5,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
+import { invalidateWatchlist } from '@/features/watchlist/hooks/useWatchlist';
 import DialogTitleBar from '@/shared/components/DialogTitleBar';
 import InfoBubble from '@/shared/components/InfoBubble';
 import {
@@ -45,7 +46,7 @@ function ConnectFormModal({
     await patchProfile({ letterboxdUsername: username.trim() });
     const result = await syncLetterboxd(true);
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list });
+    void invalidateWatchlist(queryClient);
     return result;
   }, [patchProfile, queryClient, username]);
 
@@ -318,7 +319,7 @@ export default function LetterboxdConnectModal({
           }
         : prev
     );
-    void queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list });
+    void invalidateWatchlist(queryClient);
     void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
   };
 

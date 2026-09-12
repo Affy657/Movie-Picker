@@ -1,22 +1,17 @@
-.spin,
-.manualPick,
-.close,
-.reset {
+.spin {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
   line-height: 1;
   white-space: nowrap;
 }
 
-.spinLabel,
-.manualPickLabel,
-.resetLabel {
+.spinLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.closeLabel {
   transform: translateY(var(--text-optical-nudge));
 }
 
@@ -24,6 +19,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  gap: var(--space-1);
   min-width: 1.25rem;
   height: 1.25rem;
   padding: 0 var(--space-1-5);
@@ -36,12 +33,78 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.manualBar {
+.spinCountWord {
+  font-weight: 600;
+  text-transform: lowercase;
+}
+
+.iconAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: var(--tap-target-min);
+  padding-left: var(--space-2-5);
+  padding-right: var(--space-2-5);
+}
+
+.menuContainer {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.doneStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: var(--tap-target-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-primary-border-soft);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.doneIcon {
+  flex: 0 0 auto;
+  color: var(--color-primary-text);
+}
+
+.doneLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.selectionBar {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
   margin: 0;
+  padding: var(--space-1-5) var(--space-1-5) var(--space-1-5) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.selectionIcon {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.selectionBarRemoving {
+  border-color: color-mix(in srgb, var(--color-error) 40%, var(--color-border));
+  background: color-mix(in srgb, var(--color-error) 7%, transparent);
+}
+
+.selectionBarRemoving .selectionIcon {
+  color: var(--color-error);
 }
 
 .manualHint {
@@ -64,18 +127,17 @@
     justify-content: center;
   }
 
-  .reset,
-  .manualPick,
-  .close:not(.primaryGrow),
+  .doneStatus {
+    flex: 1 1 auto;
+  }
+
   .spin:not(.primaryGrow) {
     flex: 0 0 auto;
     padding-left: var(--space-2);
     padding-right: var(--space-2);
   }
 
-  .iconOnlyLabel,
-  .manualPickLabel,
-  .resetLabel {
+  .iconOnlyLabel {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -84,5 +146,15 @@
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
+  }
+
+  .selectionBar {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 29.9375rem) {
+  .spinCountWord {
+    display: none;
   }
 }

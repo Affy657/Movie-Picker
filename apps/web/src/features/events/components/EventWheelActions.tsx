@@ -1,196 +1,217 @@
-import { Disc3, Lock, MousePointerClick, Undo2 } from 'lucide-react';
+import {
+  CircleMinus,
+  Disc3,
+  MoreHorizontal,
+  MousePointerClick,
+  RotateCcw,
+  Trophy,
+} from 'lucide-react';
 import clsx from 'clsx';
+import type { ReactNode } from 'react';
 import type { EventWheelState } from '@/features/events/hooks/useEventWheel';
 import { useTranslation } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { useMenuState } from '@/shared/hooks/useMenuState';
+import { MenuItem, MenuPanel } from '@/shared/components/Menu';
 import styles from './EventWheelActions.module.css';
 import Button from '@/shared/components/Button';
+import Tooltip from '@/shared/components/Tooltip';
 
 type EventWheelActionsProps = {
   wheel: EventWheelState;
   onRequestReset: () => void;
-  onRequestCloseWithoutMovie?: () => void;
 };
 
-type Wheel = EventWheelActionsProps['wheel'];
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-function SpinControls({
-  wheel,
-  spinIsPrimary,
-  spinLabel,
-  disabledHint,
-  t,
+function IconAction({
+  label,
+  hint,
+  icon,
+  onClick,
+  disabled,
 }: Readonly<{
-  wheel: Wheel;
-  spinIsPrimary: boolean;
-  spinLabel: string;
-  disabledHint: string | undefined;
-  t: Translate;
+  label: string;
+  hint?: string | null;
+  icon: ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
 }>) {
   return (
-    <>
+    <Tooltip label={hint ?? label} placement="top">
       <Button
         type="button"
-        variant={spinIsPrimary ? 'primary' : 'secondary'}
-        className={clsx(styles.spin, spinIsPrimary && styles.primaryGrow)}
-        onClick={wheel.launch}
-        disabled={wheel.loading || wheel.spinDisabled}
-        title={disabledHint}
+        className={styles.iconAction}
+        onClick={onClick}
+        disabled={disabled}
+        aria-label={label}
       >
-        <Disc3 size={16} aria-hidden />
-        <span className={clsx(styles.spinLabel, !spinIsPrimary && styles.iconOnlyLabel)}>
-          {wheel.loading ? t('events.wheel.spinning') : spinLabel}
-        </span>
-        {spinIsPrimary && wheel.eligibleMovies.length > 0 ? (
-          <span className={styles.spinCount}>{wheel.eligibleMovies.length}</span>
-        ) : null}
+        {icon}
       </Button>
-      <Button
-        type="button"
-        className={styles.manualPick}
-        onClick={wheel.enterManualMode}
-        disabled={wheel.loading || wheel.spinDisabled}
-        title={disabledHint}
-      >
-        <MousePointerClick size={15} aria-hidden />
-        <span className={styles.manualPickLabel}>{t('events.wheel.manualPickButton')}</span>
-      </Button>
-    </>
+    </Tooltip>
   );
 }
 
-function ResetControl({
+function SelectionBar({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translate }>) {
+  const removing = wheel.removalMode;
+  return (
+    <output className={clsx(styles.selectionBar, removing && styles.selectionBarRemoving)}>
+      {removing ? (
+        <CircleMinus size={16} aria-hidden className={styles.selectionIcon} />
+      ) : (
+        <MousePointerClick size={16} aria-hidden className={styles.selectionIcon} />
+      )}
+      <span className={styles.manualHint}>
+        {removing ? t('events.wheel.removeWinnerHint') : t('events.wheel.manualPickHint')}
+      </span>
+      <Button
+        type="button"
+        size="sm"
+        className={styles.manualCancel}
+        onClick={removing ? wheel.cancelRemovalMode : wheel.cancelManualMode}
+      >
+        {t('events.wheel.manualPickCancel')}
+      </Button>
+    </output>
+  );
+}
+
+function MoreActionsMenu({
   wheel,
   onRequestReset,
   t,
-}: Readonly<{ wheel: Wheel; onRequestReset: () => void; t: Translate }>) {
+}: Readonly<{ wheel: EventWheelState; onRequestReset: () => void; t: Translate }>) {
+  const menu = useMenuState();
+  const label = t('events.wheel.moreActionsLabel');
+
   return (
-    <Button
-      type="button"
-      className={styles.reset}
-      onClick={onRequestReset}
-      disabled={wheel.loading}
-    >
-      <Undo2 size={15} aria-hidden />
-      <span className={styles.resetLabel}>{t('events.wheel.resetButton')}</span>
-    </Button>
+    <div ref={menu.containerRef} className={styles.menuContainer}>
+      <Button
+        {...menu.triggerProps}
+        type="button"
+        className={styles.iconAction}
+        disabled={wheel.loading}
+        aria-label={label}
+      >
+        <MoreHorizontal size={16} aria-hidden />
+      </Button>
+      {menu.open ? (
+        <MenuPanel {...menu.panelProps} label={label}>
+          {wheel.showRemoveWinner ? (
+            <MenuItem
+              icon={<CircleMinus size={14} aria-hidden />}
+              onClick={() => {
+                menu.close();
+                wheel.enterRemovalMode();
+              }}
+            >
+              {t('events.wheel.removeWinnerButton')}
+            </MenuItem>
+          ) : null}
+          {wheel.showReset ? (
+            <MenuItem
+              danger
+              icon={<RotateCcw size={14} aria-hidden />}
+              onClick={() => {
+                menu.close();
+                onRequestReset();
+              }}
+            >
+              {t('events.wheel.resetButton')}
+            </MenuItem>
+          ) : null}
+        </MenuPanel>
+      ) : null}
+    </div>
   );
 }
 
-function CloseControl({
-  wheel,
-  closeIsPrimary,
-  closeLabel,
-  onClick,
-}: Readonly<{
-  wheel: Wheel;
-  closeIsPrimary: boolean;
-  closeLabel: string;
-  onClick: () => void;
-  t: Translate;
-}>) {
+function SpinButton({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translate }>) {
+  const spinIsPrimary = wheel.primaryAction === 'spin';
+  const hasWinner = wheel.winnerIds.length > 0;
+  const spinLabel = hasWinner
+    ? t('events.wheel.drawOneMoreButton')
+    : t('events.wheel.launchButton');
+  const showCount = spinIsPrimary && wheel.winnerCount > 1 && wheel.remainingDraws > 0;
+  const remaining = pluralizeCount(
+    wheel.remainingDraws,
+    'events.wheel.remainingDrawsOne',
+    'events.wheel.remainingDrawsMany',
+    t
+  );
+
   return (
     <Button
       type="button"
-      variant={closeIsPrimary ? 'primary' : 'secondary'}
-      className={clsx(styles.close, closeIsPrimary && styles.primaryGrow)}
-      onClick={onClick}
-      disabled={wheel.loading}
+      variant={spinIsPrimary ? 'primary' : 'secondary'}
+      className={clsx(styles.spin, spinIsPrimary && styles.primaryGrow)}
+      onClick={wheel.launch}
+      disabled={wheel.loading || wheel.spinDisabled}
+      title={wheel.spinDisabledHint ?? (showCount ? remaining : undefined)}
+      aria-label={showCount ? `${spinLabel}, ${remaining}` : undefined}
     >
-      <Lock size={15} aria-hidden />
-      <span className={clsx(styles.closeLabel, !closeIsPrimary && styles.iconOnlyLabel)}>
-        {closeLabel}
+      <Disc3 size={16} aria-hidden />
+      <span className={clsx(styles.spinLabel, !spinIsPrimary && styles.iconOnlyLabel)}>
+        {wheel.loading ? t('events.wheel.spinning') : spinLabel}
       </span>
+      {showCount ? (
+        <span className={styles.spinCount} aria-hidden>
+          <span>{wheel.remainingDraws}</span>
+          <span className={styles.spinCountWord}>
+            {pluralizeCount(
+              wheel.remainingDraws,
+              'events.wheel.remainingWordOne',
+              'events.wheel.remainingWordMany',
+              t
+            )}
+          </span>
+        </span>
+      ) : null}
     </Button>
   );
 }
 
-function spinDisabledHint(
-  wheel: EventWheelActionsProps['wheel'],
-  t: ReturnType<typeof useTranslation>['t']
-): string | undefined {
-  if (wheel.noEligibleMovie) return t('events.wheel.allExcludedHint');
-  if (wheel.spinDisabled) return t('events.wheel.emptyPlaceholder');
-  return undefined;
+function AllDrawnStatus({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translate }>) {
+  return (
+    <output className={styles.doneStatus} title={wheel.spinDisabledHint ?? undefined}>
+      <Trophy size={16} aria-hidden className={styles.doneIcon} />
+      <span className={styles.doneLabel}>
+        {pluralizeCount(
+          wheel.winnerCount,
+          'events.wheel.allDrawnStatusOne',
+          'events.wheel.allDrawnStatusMany',
+          t
+        )}
+      </span>
+    </output>
+  );
 }
 
 export default function EventWheelActions({
   wheel,
-  onRequestCloseWithoutMovie,
   onRequestReset,
 }: Readonly<EventWheelActionsProps>) {
   const { t } = useTranslation();
-  if (!wheel.canSpin && !wheel.manualMode && !wheel.showClose) return null;
+  if (!wheel.canSpin && !wheel.manualMode && !wheel.removalMode) return null;
 
-  const spinIsPrimary = wheel.primaryAction === 'spin';
-  const closeIsPrimary = wheel.primaryAction === 'close';
-  const spinLabel = t(
-    wheel.showRelaunch ? 'events.wheel.relaunchButton' : 'events.wheel.launchButton'
-  );
-  const closeLabel = t(
-    wheel.closeWithoutMovie ? 'events.wheel.closeWithoutMovieButton' : 'events.wheel.closeButton'
-  );
-  const disabledHint = spinDisabledHint(wheel, t);
+  if (wheel.manualMode || wheel.removalMode) return <SelectionBar wheel={wheel} t={t} />;
 
-  const handleCloseClick = () => {
-    if (wheel.closeWithoutMovie && onRequestCloseWithoutMovie) {
-      onRequestCloseWithoutMovie();
-      return;
-    }
-    wheel.closeEvent();
-  };
-
-  const spinControls =
-    !wheel.manualMode && wheel.canSpin ? (
-      <SpinControls
-        wheel={wheel}
-        spinIsPrimary={spinIsPrimary}
-        spinLabel={spinLabel}
-        disabledHint={disabledHint}
-        t={t}
-      />
-    ) : null;
-
-  const resetControl = wheel.showReset ? (
-    <ResetControl wheel={wheel} onRequestReset={onRequestReset} t={t} />
-  ) : null;
-
-  const closeControl = wheel.showClose ? (
-    <CloseControl
-      wheel={wheel}
-      closeIsPrimary={closeIsPrimary}
-      closeLabel={closeLabel}
-      onClick={handleCloseClick}
-      t={t}
-    />
-  ) : null;
-
-  if (wheel.manualMode) {
-    return (
-      <>
-        <output className={styles.manualBar}>
-          <span className={styles.manualHint}>{t('events.wheel.manualPickHint')}</span>
-          <Button
-            type="button"
-            size="sm"
-            className={styles.manualCancel}
-            onClick={wheel.cancelManualMode}
-          >
-            {t('events.wheel.manualPickCancel')}
-          </Button>
-        </output>
-        {resetControl}
-        {closeControl}
-      </>
-    );
-  }
+  const allDrawn = wheel.remainingDraws === 0;
+  const showMenu = wheel.showRemoveWinner || wheel.showReset;
 
   return (
     <>
-      {closeIsPrimary ? closeControl : null}
-      {spinControls}
-      {resetControl}
-      {closeIsPrimary ? null : closeControl}
+      {allDrawn ? <AllDrawnStatus wheel={wheel} t={t} /> : <SpinButton wheel={wheel} t={t} />}
+      {allDrawn ? null : (
+        <IconAction
+          label={t('events.wheel.manualPickButton')}
+          hint={wheel.spinDisabledHint}
+          icon={<MousePointerClick size={16} aria-hidden />}
+          onClick={wheel.enterManualMode}
+          disabled={wheel.loading || wheel.spinDisabled}
+        />
+      )}
+      {showMenu ? <MoreActionsMenu wheel={wheel} onRequestReset={onRequestReset} t={t} /> : null}
     </>
   );
 }

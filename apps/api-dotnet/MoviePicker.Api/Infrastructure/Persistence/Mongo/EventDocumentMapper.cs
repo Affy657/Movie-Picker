@@ -7,20 +7,7 @@ public static class EventDocumentMapper
 {
     public static Event ToDomain(EventDocument doc)
     {
-        EventConfig? config = null;
-        if (doc.Config is not null)
-        {
-            config = new EventConfig
-            {
-                Theme = doc.Config.Theme,
-                ThemeColor = doc.Config.ThemeColor,
-                MaxProposalsPerParticipant = doc.Config.MaxProposalsPerParticipant,
-                MaxParticipants = doc.Config.MaxParticipants,
-                WheelMode = ParseWheelMode(doc.Config.WheelMode),
-                RichSharePreview = doc.Config.RichSharePreview,
-                AllowSeries = doc.Config.AllowSeries
-            };
-        }
+        var config = doc.Config is null ? null : ToConfigDomain(doc.Config);
 
         return new Event
         {
@@ -33,13 +20,12 @@ public static class EventDocumentMapper
             CreatorUserId = doc.CreatorUserId,
             Config = config,
             ClosedAt = doc.ClosedAt.HasValue ? new DateTimeOffset(doc.ClosedAt.Value, TimeSpan.Zero) : null,
-            WinnerMovieId = doc.WinnerMovieId,
-            WinnerPickMethod = ParseWinnerPickMethod(doc.WinnerPickMethod),
+            Winners = ToWinners(doc),
             WinnerAnnouncedAt = doc.WinnerAnnouncedAt.HasValue
                 ? new DateTimeOffset(doc.WinnerAnnouncedAt.Value, TimeSpan.Zero)
                 : null,
-            WinnerPickedAt = doc.WinnerPickedAt.HasValue
-                ? new DateTimeOffset(doc.WinnerPickedAt.Value, TimeSpan.Zero)
+            WatchlistCleanedAt = doc.WatchlistCleanedAt.HasValue
+                ? new DateTimeOffset(doc.WatchlistCleanedAt.Value, TimeSpan.Zero)
                 : null,
             Recurrence = ParseRecurrence(doc.Recurrence),
             RecurrenceParentEventId = doc.RecurrenceParentEventId,
@@ -51,20 +37,7 @@ public static class EventDocumentMapper
 
     public static EventDocument ToDocument(Event evt)
     {
-        EventConfigDocument? config = null;
-        if (evt.Config is not null)
-        {
-            config = new EventConfigDocument
-            {
-                Theme = evt.Config.Theme,
-                ThemeColor = evt.Config.ThemeColor,
-                MaxProposalsPerParticipant = evt.Config.MaxProposalsPerParticipant,
-                MaxParticipants = evt.Config.MaxParticipants,
-                WheelMode = ToWheelModeString(evt.Config.WheelMode),
-                RichSharePreview = evt.Config.RichSharePreview,
-                AllowSeries = evt.Config.AllowSeries
-            };
-        }
+        var config = evt.Config is null ? null : ToConfigDocument(evt.Config);
 
         return new EventDocument
         {
@@ -77,10 +50,17 @@ public static class EventDocumentMapper
             CreatorUserId = evt.CreatorUserId,
             Config = config,
             ClosedAt = evt.ClosedAt?.UtcDateTime,
-            WinnerMovieId = evt.WinnerMovieId,
-            WinnerPickMethod = ToWinnerPickMethodString(evt.WinnerPickMethod),
-            WinnerPickedAt = evt.WinnerPickedAt?.UtcDateTime,
+            WinnerMovieId = evt.Winners.Count > 0 ? evt.Winners[0].MovieId : null,
+            Winners = evt.Winners
+                .Select(w => new EventWinnerDocument
+                {
+                    MovieId = w.MovieId,
+                    PickMethod = ToWinnerPickMethodString(w.Method) ?? "wheel",
+                    PickedAt = w.PickedAt.UtcDateTime
+                })
+                .ToList(),
             WinnerAnnouncedAt = evt.WinnerAnnouncedAt?.UtcDateTime,
+            WatchlistCleanedAt = evt.WatchlistCleanedAt?.UtcDateTime,
             Recurrence = ToRecurrenceString(evt.Recurrence),
             RecurrenceParentEventId = evt.RecurrenceParentEventId,
             NextOccurrenceEventId = evt.NextOccurrenceEventId,
@@ -88,6 +68,32 @@ public static class EventDocumentMapper
             UpdatedAt = evt.UpdatedAt.UtcDateTime
         };
     }
+
+    internal static EventConfig ToConfigDomain(EventConfigDocument doc) => new()
+    {
+        Theme = doc.Theme,
+        ThemeColor = doc.ThemeColor,
+        MaxProposalsPerParticipant = doc.MaxProposalsPerParticipant,
+        MaxParticipants = doc.MaxParticipants,
+        MaxVotesPerParticipant = doc.MaxVotesPerParticipant,
+        WheelMode = ParseWheelMode(doc.WheelMode),
+        RichSharePreview = doc.RichSharePreview,
+        AllowSeries = doc.AllowSeries,
+        WinnerCount = doc.WinnerCount ?? EventConfig.DefaultWinnerCount
+    };
+
+    internal static EventConfigDocument ToConfigDocument(EventConfig config) => new()
+    {
+        Theme = config.Theme,
+        ThemeColor = config.ThemeColor,
+        MaxProposalsPerParticipant = config.MaxProposalsPerParticipant,
+        MaxParticipants = config.MaxParticipants,
+        MaxVotesPerParticipant = config.MaxVotesPerParticipant,
+        WheelMode = ToWheelModeString(config.WheelMode),
+        RichSharePreview = config.RichSharePreview,
+        AllowSeries = config.AllowSeries,
+        WinnerCount = config.WinnerCount
+    };
 
     private static WheelMode ParseWheelMode(string? raw) =>
         raw?.Trim().ToLowerInvariant() switch
@@ -116,6 +122,34 @@ public static class EventDocumentMapper
             RecurrenceFrequency.Monthly => "monthly",
             _ => null
         };
+
+    private static IReadOnlyList<EventWinner> ToWinners(EventDocument doc)
+    {
+        if (doc.Winners is { Count: > 0 })
+            return doc.Winners
+                .Select(w => new EventWinner
+                {
+                    MovieId = w.MovieId,
+                    Method = ParseWinnerPickMethod(w.PickMethod) ?? WinnerPickMethod.Wheel,
+                    PickedAt = new DateTimeOffset(w.PickedAt, TimeSpan.Zero)
+                })
+                .ToList();
+
+        if (string.IsNullOrEmpty(doc.WinnerMovieId))
+            return [];
+
+        return
+        [
+            new EventWinner
+            {
+                MovieId = doc.WinnerMovieId,
+                Method = ParseWinnerPickMethod(doc.WinnerPickMethod) ?? WinnerPickMethod.Wheel,
+                PickedAt = doc.WinnerPickedAt.HasValue
+                    ? new DateTimeOffset(doc.WinnerPickedAt.Value, TimeSpan.Zero)
+                    : new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
+            }
+        ];
+    }
 
     private static WinnerPickMethod? ParseWinnerPickMethod(string? raw) =>
         raw?.Trim().ToLowerInvariant() switch

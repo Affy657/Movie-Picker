@@ -1,7 +1,7 @@
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.Posters;
+using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
@@ -18,7 +18,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
     private readonly IUserRepository _userRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
-    private readonly IPosterImageStore _posterImageStore;
+    private readonly IFinishedEventWatchlistPass _watchlistCleanup;
 
     public GetEventDetailHandler(
         IEventRepository eventRepository,
@@ -28,7 +28,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         IUserRepository userRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
-        IPosterImageStore posterImageStore)
+        IFinishedEventWatchlistPass watchlistCleanup)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
@@ -37,12 +37,13 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         _userRepository = userRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
-        _posterImageStore = posterImageStore;
+        _watchlistCleanup = watchlistCleanup;
     }
 
     public async Task<EventDetailResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        await _watchlistCleanup.RunForEventAsync(evt, ct);
 
         var token = _hostTokenAccessor.GetHostToken();
         var currentUserId = _currentUserAccessor.GetUserId();
@@ -51,8 +52,6 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         var eventLifecycle = evt.Lifecycle(now);
         var isFinished = eventLifecycle == EventLifecycle.Finished;
         var lifecycle = MyEventListLifecycle.FromLifecycle(eventLifecycle);
-
-        var winner = await ResolveWinnerAsync(evt, ct);
 
         var participantsTask = _participantRepository.ListByEventIdAsync(evt.Id, ct);
         var movieCountTask = _movieRepository.CountByEventIdAsync(evt.Id, ct);
@@ -94,15 +93,12 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             Slug = evt.Slug,
             Config = EventConfigResponse.FromEvent(evt),
             ClosedAt = evt.ClosedAt,
-            WinnerMovieId = evt.WinnerMovieId,
-            WinnerPickMethod = ToWinnerPickMethodString(evt.WinnerPickMethod),
-            WinnerPickedAt = evt.WinnerPickedAt,
             CreatedAt = evt.CreatedAt,
             UpdatedAt = evt.UpdatedAt,
             IsHost = isHost,
             IsFinished = isFinished,
             Lifecycle = lifecycle,
-            WinnerMovie = winner,
+            Winners = evt.Winners.Select(ToWinnerResponse).ToList(),
             MyParticipant = myParticipant,
             ParticipantCount = participants.Count,
             MovieCount = movieCount,
@@ -119,19 +115,12 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             _ => null
         };
 
-    private async Task<WinnerMovieResponse?> ResolveWinnerAsync(Event evt, CancellationToken ct)
+    private static EventWinnerResponse ToWinnerResponse(EventWinner winner) => new()
     {
-        if (string.IsNullOrEmpty(evt.WinnerMovieId))
-            return null;
-        var wm = await _movieRepository.GetByIdAsync(evt.WinnerMovieId, ct);
-        if (wm is null)
-            return null;
-        if (wm.PosterPath is not null &&
-            TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(wm.PosterPath, out var pNorm))
-            await _posterImageStore.RegisterTmdbSourceAsync(pNorm, ct);
-        var posterOut = _posterImageStore.ToPublicPosterPath(wm.PosterPath);
-        return WinnerMovieResponse.FromDomain(wm, posterOut);
-    }
+        MovieId = winner.MovieId,
+        PickMethod = ToWinnerPickMethodString(winner.Method) ?? string.Empty,
+        PickedAt = winner.PickedAt
+    };
 
     private static EventParticipantSummaryResponse ToParticipantSummary(
         Participant p,

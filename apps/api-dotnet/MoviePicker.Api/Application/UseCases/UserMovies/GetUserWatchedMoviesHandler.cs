@@ -54,8 +54,8 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
         var now = _clock.GetUtcNow();
 
         var qualifying = events
-            .Where(e => e.WinnerMovieId is not null && e.IsFinished(now))
-            .Select(e => (Event: e, WatchedAt: WatchedAtOf(e)))
+            .Where(e => e.HasWinner && e.IsFinished(now))
+            .SelectMany(e => e.WinnerMovieIds.Select(id => (MovieId: id, WatchedAt: WatchedAtOf(e))))
             .OrderByDescending(x => x.WatchedAt)
             .Take(effectiveTake)
             .ToList();
@@ -63,12 +63,12 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
         if (qualifying.Count == 0)
             return new UserWatchedMoviesResponse { Items = [] };
 
-        var winnerMovieIds = qualifying.Select(x => x.Event.WinnerMovieId!).Distinct().ToList();
+        var winnerMovieIds = qualifying.Select(x => x.MovieId).Distinct().ToList();
         var movies = await _movies.ListByIdsAsync(winnerMovieIds, ct);
         var movieById = movies.ToDictionary(m => m.Id);
 
         var items = qualifying
-            .Select(x => (x.WatchedAt, Movie: movieById.GetValueOrDefault(x.Event.WinnerMovieId!)))
+            .Select(x => (x.WatchedAt, Movie: movieById.GetValueOrDefault(x.MovieId)))
             .Where(x => x.Movie is not null)
             .Select(x => new UserWatchedMovieItem
             {

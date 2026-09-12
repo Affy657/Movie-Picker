@@ -21,14 +21,16 @@ public sealed class SchedulerControllerRecurringEventsTests
             .ReturnsAsync(new RecurringEventPassResult(3, 2, 1));
     }
 
-    private void PresentToken(string? token)
-    {
-        if (token is not null)
-            _sut.ControllerContext.HttpContext.Request.Headers["X-Scheduler-Token"] = token;
-    }
+    private string? _presentedToken;
+
+    private void PresentToken(string? token) => _presentedToken = token;
 
     private Task<IActionResult> Run() =>
-        _sut.RunRecurringEvents(_tokenValidator.Object, _pass.Object, CancellationToken.None);
+        _sut.RunRecurringEvents(
+            _tokenValidator.Object,
+            _pass.Object,
+            _presentedToken,
+            CancellationToken.None);
 
     [Fact]
     public async Task RunRecurringEvents_TokenNotConfigured_Returns503AndDoesNotRunThePass()
@@ -57,6 +59,28 @@ public sealed class SchedulerControllerRecurringEventsTests
     }
 
     [Fact]
+    public async Task RunRecurringEvents_MissingHeader_Returns401()
+    {
+        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(false);
+
+        var result = await Run();
+
+        Assert.IsType<UnauthorizedResult>(result);
+        _tokenValidator.Verify(v => v.IsValid(It.Is<string?>(t => string.IsNullOrEmpty(t))), Times.Once);
+    }
+
+    [Fact]
+    public async Task RunRecurringEvents_ForwardsThePresentedTokenToTheValidator()
+    {
+        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(true);
+        PresentToken("bon-token");
+
+        await Run();
+
+        _tokenValidator.Verify(v => v.IsValid("bon-token"), Times.Once);
+    }
+
+    [Fact]
     public async Task RunRecurringEvents_ValidToken_RunsThePassAndReturnsItsReport()
     {
         _tokenValidator.Setup(v => v.IsValid("bon-token")).Returns(true);
@@ -77,7 +101,11 @@ public sealed class SchedulerControllerRecurringEventsTests
         PresentToken("bon-token");
         using var cts = new CancellationTokenSource();
 
-        await _sut.RunRecurringEvents(_tokenValidator.Object, _pass.Object, cts.Token);
+        await _sut.RunRecurringEvents(
+            _tokenValidator.Object,
+            _pass.Object,
+            _presentedToken,
+            cts.Token);
 
         _pass.Verify(p => p.RunAsync(cts.Token), Times.Once);
     }

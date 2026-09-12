@@ -11,6 +11,8 @@ export interface PublicProfile {
   followersCount: number;
   isSupporter: boolean;
   isFollowedByMe: boolean | null;
+  isWatchlistPublic: boolean;
+  watchlistCount: number | null;
 }
 
 export interface HandleAvailability {
@@ -110,6 +112,36 @@ export async function fetchUserWatchedMovies(
     `/users/${encodeURIComponent(handle)}/watched-movies?take=${take}`,
     { signal }
   );
+}
+
+export interface UserWatchlistItem {
+  tmdbId: number;
+  mediaType: MovieMediaType;
+  title: string;
+  year: string;
+  posterPath: string | null;
+  voteAverage?: number | null;
+  runtimeMinutes?: number | null;
+  genreIds: number[];
+  createdAt: string;
+}
+
+interface UserWatchlistResponse {
+  items: Array<Omit<UserWatchlistItem, 'genreIds'> & { genreIds?: number[] }>;
+  total: number;
+  hasMore: boolean;
+}
+
+export async function fetchUserWatchlist(
+  handle: string,
+  take: number,
+  signal?: AbortSignal
+): Promise<UserWatchlistItem[]> {
+  const res = await fetchApi<UserWatchlistResponse>(
+    `/users/${encodeURIComponent(handle)}/watchlist?take=${take}`,
+    { signal }
+  );
+  return (res?.items ?? []).map((item) => ({ ...item, genreIds: item.genreIds ?? [] }));
 }
 
 export async function fetchMyWatchedMovies(

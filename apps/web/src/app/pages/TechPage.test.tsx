@@ -5,8 +5,13 @@ import { MemoryRouter } from 'react-router';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import TechPage from '@/app/pages/TechPage';
 import { TECH_SECTIONS } from '@/app/pages/tech/TechRail';
-import { PLANNED_MILESTONES, SHIPPED_MILESTONES } from '@/app/pages/tech/TechTimeline';
+import {
+  CURRENT_MILESTONES,
+  PLANNED_MILESTONES,
+  SHIPPED_MILESTONES,
+} from '@/app/pages/tech/TechTimeline';
 import { TECH_METRICS } from '@/app/pages/tech/generated/techMetrics';
+import { SKILL_COUNT } from '@/app/pages/tech/TechDiagrams';
 import { TECH_PAGE_LAST_UPDATE } from '@/app/pages/tech/lastUpdate';
 import { fr } from '@/shared/i18n/locales/fr';
 import { SITE_URL } from '@/shared/seo/siteMeta';
@@ -50,11 +55,11 @@ describe('TechPage', () => {
   it('affiche les métriques générées au build plutôt que des valeurs écrites en dur', () => {
     renderTechPage();
     expect(screen.getByText(String(TECH_METRICS.endpoints))).toBeInTheDocument();
-    expect(screen.getByText(String(TECH_METRICS.commits))).toBeInTheDocument();
-    expect(
-      screen.getAllByText((text) => text.replace(/\D/g, '') === String(TECH_METRICS.testCases))
-        .length
-    ).toBeGreaterThan(0);
+    for (const metric of [TECH_METRICS.commits, TECH_METRICS.testCases]) {
+      expect(
+        screen.getAllByText((text) => text.replace(/\D/g, '') === String(metric)).length
+      ).toBeGreaterThan(0);
+    }
     expect(
       screen.getByRole('heading', { name: new RegExp(String(TECH_METRICS.ciJobs)) })
     ).toBeInTheDocument();
@@ -111,8 +116,8 @@ describe('TechPage', () => {
 
     expect(section.querySelectorAll('article')).toHaveLength(4);
     expect(section.querySelectorAll('figure')).toHaveLength(4);
-    expect(section.textContent).toMatch(/cinq procédures/i);
-    expect(section.textContent).not.toMatch(/quatre procédures/i);
+    expect(section.textContent).toContain(`${SKILL_COUNT} procédures`);
+    expect(section.querySelectorAll('svg g[data-origin]')).toHaveLength(SKILL_COUNT);
     expect(section.textContent).toContain(String(TECH_METRICS.assistantTools));
   });
 
@@ -140,10 +145,10 @@ describe('TechPage', () => {
     const groups = [...section.querySelectorAll('[class*="factList"]')];
 
     expect(groups[0]?.querySelectorAll('article')).toHaveLength(4);
-    expect(groups[1]?.querySelectorAll('article')).toHaveLength(2);
+    expect(groups[1]?.querySelectorAll('article')).toHaveLength(3);
     expect(groups[0]?.textContent).toContain(fr.tech.quality.sonar);
+    expect(groups[1]?.textContent).toContain(fr.tech.quality.monitoring);
     expect(section.textContent).not.toMatch(/portail qualité informatif/i);
-    expect(section.textContent).toContain(String(TECH_METRICS.lighthouseWatchlistPerformance));
   });
 
   it('dit que le déploiement est constaté et que le planificateur dépend de son jeton', () => {
@@ -222,24 +227,44 @@ describe('TechPage', () => {
     const { container } = renderTechPage();
     const steps = [...container.querySelectorAll('section#trajectory > ol > li')];
 
-    expect(steps).toHaveLength(11);
+    expect(steps).toHaveLength(13);
     expect(steps[0]).toHaveTextContent(/MVP/);
     expect(steps.at(-1)).toHaveTextContent(/V2/);
+    expect(steps.some((step) => step.querySelector('h3')?.textContent?.includes('V1.8'))).toBe(
+      true
+    );
 
-    for (const step of steps) {
+    for (const step of steps.filter((step) => step.getAttribute('data-state') !== 'unplanned')) {
       expect(step.querySelector('h3')).not.toBeNull();
       expect(step.querySelectorAll(':scope > ul > li').length).toBeGreaterThanOrEqual(3);
     }
   });
 
-  it('sépare les paliers livrés de ceux qui restent à faire', () => {
+  it('sépare les paliers livrés, le palier en cours et ceux qui restent à faire', () => {
     const { container } = renderTechPage();
     const steps = [...container.querySelectorAll('section#trajectory > ol > li')];
     const state = (step: Element) => step.getAttribute('data-state');
 
+    expect(steps.filter((step) => state(step) === 'shipped')).toHaveLength(SHIPPED_MILESTONES);
+    expect(steps.filter((step) => state(step) === 'current')).toHaveLength(CURRENT_MILESTONES);
     expect(steps.filter((step) => state(step) === 'planned')).toHaveLength(PLANNED_MILESTONES);
-    expect(steps.filter((step) => state(step) !== 'planned')).toHaveLength(SHIPPED_MILESTONES);
     expect(state(steps.at(-1) as Element)).toBe('planned');
+
+    const unplanned = steps.filter((step) => state(step) === 'unplanned');
+    expect(unplanned).toHaveLength(1);
+    expect(unplanned[0]).toBe(steps.at(-2));
+    expect(unplanned[0]?.textContent).toMatch(/pas encore/i);
+    expect(unplanned[0]?.textContent).toMatch(/V1\.8.*V2/);
+    expect(unplanned[0]?.querySelector('h3')).toBeNull();
+    expect(unplanned[0]?.querySelectorAll('li')).toHaveLength(0);
+
+    expect(CURRENT_MILESTONES).toBe(0);
+    const v16 = steps.find((step) =>
+      step.querySelector('h3')?.textContent?.startsWith('V1.6')
+    ) as Element;
+    expect(state(v16)).toBe('shipped');
+    expect(v16.textContent).not.toMatch(/en cours|fusion dans master/i);
+    expect(fr.tech.trajectory.lead).not.toMatch(/en cours/i);
 
     for (const step of steps) {
       const badge = /à venir/i.test(step.textContent ?? '');
@@ -247,22 +272,74 @@ describe('TechPage', () => {
     }
   });
 
-  it('nomme les quatre procédures outillées et affiche le TDD dans le flot', () => {
+  it('nomme chaque procédure outillée du flot et affiche le TDD', () => {
     const { container } = renderTechPage();
     const labels = [...container.querySelectorAll('#method svg text')].map(
       (node) => node.textContent
     );
 
     for (const command of [
+      '/dev-feature',
+      '/product-management:write-spec',
       '/design:design-critique',
       '/engineering:testing-strategy',
       '/verify',
       '/engineering:code-review',
-      '/engineering:tech-debt',
+      '/simplify',
+      '/security-review',
+      '/engineering:deploy-checklist',
+      '/weekly-maintenance',
     ]) {
       expect(labels).toContain(command);
     }
+    expect(labels).not.toContain('/code-review');
+    expect(labels).not.toContain('/engineering:tech-debt');
     expect(labels.some((label) => label?.includes('TDD'))).toBe(true);
+  });
+
+  it('réserve la marque Anthropic aux procédures Anthropic, les procédures maison portent le clap', () => {
+    const { container } = renderTechPage();
+    const boxes = [...container.querySelectorAll('svg g[data-origin]')];
+    const boxOf = (command: string) =>
+      boxes.find((box) => box.querySelector('text')?.textContent === command) as SVGGElement;
+
+    for (const homemade of ['/dev-feature', '/verify', '/weekly-maintenance']) {
+      const box = boxOf(homemade);
+      expect(box.dataset.origin).toBe('project');
+      expect(box.querySelector('image')?.getAttribute('href')).toBe('/logo.svg');
+      expect(box.querySelector('svg')).toBeNull();
+    }
+    for (const anthropic of [
+      '/product-management:write-spec',
+      '/design:design-critique',
+      '/engineering:testing-strategy',
+      '/engineering:code-review',
+      '/simplify',
+      '/security-review',
+      '/engineering:deploy-checklist',
+    ]) {
+      const box = boxOf(anthropic);
+      expect(box.dataset.origin).toBe('anthropic');
+      expect(box.querySelector('image')).toBeNull();
+      expect(box.querySelector('svg')).not.toBeNull();
+    }
+  });
+
+  it('place le compte rendu fonctionnel dans le flot, à la place du plan technique', () => {
+    const { container } = renderTechPage();
+    const flow = container.querySelector(
+      'svg[aria-labelledby="tech-featureflow-title"]'
+    ) as SVGSVGElement;
+    const labels = [...flow.querySelectorAll('text')].map((node) => node.textContent);
+
+    expect(labels).toContain('compte rendu fonctionnel');
+    expect(labels).toContain('plan de tests');
+    expect(labels).toContain('contrôle en navigateur');
+    expect(labels).not.toContain('plan technique');
+    expect(flow.querySelectorAll('rect[width="8"]')).toHaveLength(5);
+    expect(container.querySelector('#method')?.textContent).toContain(
+      'Cadrage, compte rendu fonctionnel, maquette, recette locale.'
+    );
   });
 
   it('ouvre sur le contexte et les chiffres, sans fiche technique', () => {
@@ -534,6 +611,8 @@ describe('TechPage', () => {
     expect(section.textContent).toContain(String(TECH_METRICS.lighthousePages));
     expect(section.textContent).toContain(String(TECH_METRICS.lighthousePerformance));
     expect(section.textContent).toContain(String(TECH_METRICS.coverageBranches));
+    expect(section.textContent).not.toMatch(/déroge/i);
+    expect(section.textContent).toMatch(/cinq fois/i);
     expect(section.textContent).toMatch(/sonarcloud/i);
     expect(section.textContent).toMatch(/sentry/i);
     expect(section.textContent).toMatch(/posthog/i);
@@ -552,10 +631,46 @@ describe('TechPage', () => {
       'oidc',
       'leastPrivilege',
       'consolidate',
-      'prerender',
+      'sharedCache',
     ] as const) {
       expect(tags).toContain(fr.tech.trajectory[work]);
     }
+    expect(tags.join(' ')).not.toMatch(/pré-rendu/i);
+    expect(fr.tech.trajectory.consolidateHint).toMatch(/vers Firebase Hosting/);
+    expect(fr.tech.trajectory.consolidateHint).not.toMatch(/vers Cloud Storage/);
+  });
+
+  it('range le pré-rendu parmi les choix faits, plus parmi les chantiers ouverts', () => {
+    const { container } = renderTechPage();
+    const section = container.querySelector('#choices') as HTMLElement;
+    const front = [...section.querySelectorAll('article')].find((card) =>
+      card.textContent?.includes(fr.tech.choices.front)
+    ) as HTMLElement;
+
+    expect(front.textContent).toMatch(/pré-rendu/i);
+    expect(front.textContent).not.toMatch(/chantier ouvert/i);
+  });
+
+  it('dit que le planificateur porte les rappels et les soirées récurrentes', () => {
+    const { container } = renderTechPage();
+    const architecture = container.querySelector('#architecture') as HTMLElement;
+    const infra = container.querySelector('#infra') as HTMLElement;
+
+    expect(architecture.textContent).toMatch(/soirées récurrentes/i);
+    expect(infra.textContent).toMatch(/soirées récurrentes/i);
+    expect(infra.textContent).toMatch(/30 minutes/);
+    expect(infra.textContent).toMatch(/une fois par jour/i);
+  });
+
+  it('observe la production aussi depuis Cloud Monitoring, sondes et alertes comprises', () => {
+    const { container } = renderTechPage();
+    const section = container.querySelector('#quality') as HTMLElement;
+
+    expect(section.textContent).toMatch(/Cloud Monitoring/);
+    expect(section.textContent).toMatch(/trois sondes/i);
+    expect(section.textContent).toMatch(/cinq politiques d.alerte/i);
+    expect(section.textContent).toMatch(/les trois dernières/i);
+    expect(section.textContent).not.toMatch(/les deux dernières/i);
   });
 
   it('affiche la date de dernière mise à jour du document, tenue à la main', () => {

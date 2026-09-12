@@ -7,6 +7,7 @@ import {
   fetchFollowing,
   fetchPublicProfile,
   fetchUserStats,
+  fetchUserWatchlist,
   followUser,
   unfollowUser,
 } from '@/features/profile/api/profileApi';
@@ -55,6 +56,31 @@ describe('profileApi', () => {
 
     await fetchFollowers('bob');
     expect(mockFetchApi).toHaveBeenCalledWith('/users/bob/followers');
+  });
+
+  it('fetchUserWatchlist reads the public watchlist of a handle and fills missing genres', async () => {
+    const controller = new AbortController();
+    mockFetchApi.mockResolvedValue({
+      items: [
+        {
+          tmdbId: 27205,
+          mediaType: 'movie',
+          title: 'Inception',
+          year: '2010',
+          posterPath: null,
+          createdAt: '2026-06-01T00:00:00Z',
+        },
+      ],
+      total: 1,
+      hasMore: false,
+    });
+
+    const items = await fetchUserWatchlist('a b', 200, controller.signal);
+
+    expect(mockFetchApi).toHaveBeenCalledWith('/users/a%20b/watchlist?take=200', {
+      signal: controller.signal,
+    });
+    expect(items).toEqual([expect.objectContaining({ title: 'Inception', genreIds: [] })]);
   });
 
   it('fetchUserStats forwards the abort signal', async () => {

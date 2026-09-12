@@ -11,10 +11,14 @@ public sealed class EventConfigResponse
 
     public int? MaxParticipants { get; init; }
 
+    public int? MaxVotesPerParticipant { get; init; }
+
     public WheelMode WheelMode { get; init; }
 
     public bool RichSharePreview { get; init; }
     public bool AllowSeries { get; init; }
+
+    public int WinnerCount { get; init; }
 
     public RecurrenceFrequency? Recurrence { get; init; }
     public bool HasNextOccurrence { get; init; }
@@ -28,9 +32,11 @@ public sealed class EventConfigResponse
             ThemeColor = c?.ThemeColor,
             MaxProposalsPerParticipant = c?.MaxProposalsPerParticipant,
             MaxParticipants = c?.MaxParticipants,
+            MaxVotesPerParticipant = c?.MaxVotesPerParticipant,
             WheelMode = c?.WheelMode ?? WheelMode.StrictRandom,
             RichSharePreview = c?.RichSharePreview ?? true,
             AllowSeries = c?.AllowSeries ?? false,
+            WinnerCount = evt.TargetWinnerCount,
             Recurrence = evt.Recurrence,
             HasNextOccurrence = !string.IsNullOrEmpty(evt.NextOccurrenceEventId)
         };
@@ -48,10 +54,14 @@ public sealed class PatchEventConfigRequest
 
     public int? MaxParticipants { get; init; }
 
+    public int? MaxVotesPerParticipant { get; init; }
+
     public WheelMode? WheelMode { get; init; }
 
     public bool? RichSharePreview { get; init; }
     public bool? AllowSeries { get; init; }
+
+    public int? WinnerCount { get; init; }
 
     public RecurrenceFrequency? Recurrence { get; init; }
     public bool? ClearRecurrence { get; init; }

@@ -58,10 +58,15 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var hasDateTimeChange = request.Date is not null || request.Time is not null;
         var hasTitleChange = request.Title is not null;
         var hasRecurrenceChange = request.Recurrence.HasValue || request.ClearRecurrence == true;
+        var hasWinnerCountChange = request.WinnerCount.HasValue;
 
         EnsurePatchAllowed(evt, hasConfigChange, hasDateTimeChange, hasTitleChange, hasRecurrenceChange);
 
-        if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange && !hasRecurrenceChange)
+        if (hasWinnerCountChange)
+            EnsureWinnerCountAllowed(evt, request.WinnerCount!.Value);
+
+        if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange && !hasRecurrenceChange
+            && !hasWinnerCountChange)
             return EventConfigResponse.FromEvent(evt);
 
         var current = evt.Config ?? new EventConfig();
@@ -72,9 +77,11 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             ThemeColor = ResolveThemeColor(request, current.ThemeColor),
             MaxProposalsPerParticipant = ResolveMaxProposals(request, current.MaxProposalsPerParticipant),
             MaxParticipants = await ResolveMaxParticipantsAsync(request, current.MaxParticipants, evt, ct),
+            MaxVotesPerParticipant = ResolveMaxVotes(request, current.MaxVotesPerParticipant),
             WheelMode = request.WheelMode ?? current.WheelMode,
             RichSharePreview = request.RichSharePreview ?? current.RichSharePreview,
-            AllowSeries = request.AllowSeries ?? current.AllowSeries
+            AllowSeries = request.AllowSeries ?? current.AllowSeries,
+            WinnerCount = request.WinnerCount ?? current.WinnerCount
         };
 
         var date = ResolveDate(request, evt.Date);
@@ -163,6 +170,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         || request.ClearThemeColor == true
         || request.MaxProposalsPerParticipant.HasValue
         || request.MaxParticipants.HasValue
+        || request.MaxVotesPerParticipant.HasValue
         || request.WheelMode.HasValue
         || request.RichSharePreview.HasValue
         || request.AllowSeries.HasValue;
@@ -185,14 +193,14 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         {
             if (evt.IsFinished(DateTimeOffset.UtcNow))
                 throw new ConflictException("La soirée est terminée : la configuration ne peut plus être modifiée.");
-            if (!string.IsNullOrEmpty(evt.WinnerMovieId))
+            if (evt.HasWinner)
                 throw new ConflictException("La roue a déjà été lancée : la configuration ne peut plus être modifiée.");
         }
 
-        if (hasDateTimeChange && (evt.IsFinished(DateTimeOffset.UtcNow) || !string.IsNullOrEmpty(evt.WinnerMovieId)))
+        if (hasDateTimeChange && (evt.IsFinished(DateTimeOffset.UtcNow) || evt.HasWinner))
             throw new ConflictException("La soirée est terminée : la date ne peut plus être modifiée.");
 
-        if (hasTitleChange && (evt.IsFinished(DateTimeOffset.UtcNow) || !string.IsNullOrEmpty(evt.WinnerMovieId)))
+        if (hasTitleChange && (evt.IsFinished(DateTimeOffset.UtcNow) || evt.HasWinner))
             throw new ConflictException("La soirée est terminée : le nom ne peut plus être modifié.");
 
         if (hasRecurrenceChange && !string.IsNullOrEmpty(evt.NextOccurrenceEventId))
@@ -200,11 +208,22 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
                 "L’occurrence suivante existe déjà : la récurrence se règle désormais sur cette nouvelle soirée.");
     }
 
-    private static string? ResolveTheme(PatchEventConfigRequest request, string? current)
+    private static string? ResolveTheme(PatchEventConfigRequest request, string? current) =>
+        request.Theme is null ? current : EventConfigLimits.NormalizeTheme(request.Theme);
+
+    private static void EnsureWinnerCountAllowed(Event evt, int winnerCount)
     {
-        if (request.Theme is null)
-            return current;
-        return string.IsNullOrWhiteSpace(request.Theme) ? null : request.Theme.Trim();
+        EventConfigLimits.ResolveWinnerCount(winnerCount);
+
+        if (evt.IsFinished(DateTimeOffset.UtcNow))
+            throw new ConflictException(
+                "La soirée est terminée : le nombre de films gagnants ne peut plus être modifié.");
+
+        if (winnerCount < evt.Winners.Count)
+            throw new ConflictException(
+                evt.Winners.Count == 1
+                    ? "Un film a déjà gagné. Retirez-le du palmarès d’abord."
+                    : $"{evt.Winners.Count} films ont déjà gagné. Retirez-en un du palmarès d’abord.");
     }
 
     private static int? ResolveThemeColor(PatchEventConfigRequest request, int? current)
@@ -220,17 +239,18 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         return hue;
     }
 
-    private static int? ResolveMaxProposals(PatchEventConfigRequest request, int? current)
-    {
-        if (!request.MaxProposalsPerParticipant.HasValue)
-            return current;
+    private static int? ResolveMaxProposals(PatchEventConfigRequest request, int? current) =>
+        request.MaxProposalsPerParticipant.HasValue
+            ? EventConfigLimits.ResolveLimit(
+                request.MaxProposalsPerParticipant.Value,
+                EventConfig.MaxProposalsPerParticipantCap,
+                "maxProposalsPerParticipant")
+            : current;
 
-        var v = request.MaxProposalsPerParticipant.Value;
-        if (v < 0 || v > EventConfig.MaxProposalsPerParticipantCap)
-            throw new BadRequestException(
-                $"maxProposalsPerParticipant doit être entre 0 (pas de limite) et {EventConfig.MaxProposalsPerParticipantCap}.");
-        return v == 0 ? null : v;
-    }
+    private static int? ResolveMaxVotes(PatchEventConfigRequest request, int? current) =>
+        request.MaxVotesPerParticipant.HasValue
+            ? EventConfigLimits.ResolveLimit(request.MaxVotesPerParticipant.Value, null, "maxVotesPerParticipant")
+            : current;
 
     private async Task<int?> ResolveMaxParticipantsAsync(
         PatchEventConfigRequest request,
@@ -241,20 +261,20 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         if (!request.MaxParticipants.HasValue)
             return current;
 
-        var v = request.MaxParticipants.Value;
-        if (v < 0 || v > EventConfig.MaxParticipantsCap)
-            throw new BadRequestException(
-                $"maxParticipants doit être entre 0 (pas de limite) et {EventConfig.MaxParticipantsCap}.");
+        var limit = EventConfigLimits.ResolveLimit(
+            request.MaxParticipants.Value,
+            EventConfig.MaxParticipantsCap,
+            "maxParticipants");
 
-        if (v > 0)
+        if (limit.HasValue)
         {
             var currentCount = await _participants.CountByEventIdAsync(evt.Id, ct);
-            if (v < currentCount)
+            if (limit.Value < currentCount)
                 throw new ConflictException(
-                    $"La limite ({v}) est inférieure au nombre de participants déjà inscrits ({currentCount}).");
+                    $"La limite ({limit.Value}) est inférieure au nombre de participants déjà inscrits ({currentCount}).");
         }
 
-        return v == 0 ? null : v;
+        return limit;
     }
 
     private static string ResolveTitle(PatchEventConfigRequest request, string current)

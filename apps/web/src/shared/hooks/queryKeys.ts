@@ -3,6 +3,7 @@ export const queryKeys = {
     me: ['auth', 'me'] as const,
   },
   profile: {
+    publicAll: ['profile', 'public'] as const,
     public: (handle: string | undefined) => ['profile', 'public', handle ?? '$pending'] as const,
     handleAvailability: (handle: string) => ['profile', 'handle-available', handle] as const,
     following: (handle: string | undefined) =>
@@ -14,6 +15,8 @@ export const queryKeys = {
     userSearch: (query: string) => ['profile', 'user-search', query] as const,
     watchedMovies: (handle: string | undefined, take: number) =>
       ['profile', 'watchedMovies', handle ?? '$pending', take] as const,
+    watchlist: (handle: string | undefined, take: number) =>
+      ['profile', 'watchlist', handle ?? '$pending', take] as const,
   },
   notifications: {
     inbox: ['notifications', 'inbox'] as const,
@@ -24,6 +27,9 @@ export const queryKeys = {
     active: ['events', 'mine', 'active'] as const,
     finished: (q: string) => ['events', 'mine', 'finished', q] as const,
   },
+  eventTemplates: {
+    list: ['event-templates', 'list'] as const,
+  },
   event: {
     all: ['event'] as const,
 
@@ -32,6 +38,9 @@ export const queryKeys = {
 
     eligibleFollows: (slug: string | undefined) =>
       ['event', 'eligible-follows', slug ?? '$pending'] as const,
+
+    reusableConfig: (slug: string | undefined) =>
+      ['event', 'reusable-config', slug ?? '$pending'] as const,
   },
   movies: {
     all: ['movies'] as const,

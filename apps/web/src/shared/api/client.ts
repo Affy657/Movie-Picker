@@ -104,13 +104,16 @@ function handleErrorResponse(res: Response, text: string, isJson: boolean): neve
   if (looksLikeHtml(isJson, text)) {
     throw new ApiError(HTML_RESPONSE_MSG, { code: res.status });
   }
-  let parsed: { error?: string } = { error: res.statusText };
+  let parsed: { error?: string; reason?: string } = { error: res.statusText };
   if (isJson && text.trim()) {
     try {
-      parsed = JSON.parse(text) as { error?: string };
+      parsed = JSON.parse(text) as { error?: string; reason?: string };
     } catch {}
   }
-  throw new ApiError(parsed.error ?? `HTTP ${res.status}`, { code: res.status });
+  throw new ApiError(parsed.error ?? `HTTP ${res.status}`, {
+    code: res.status,
+    reason: typeof parsed.reason === 'string' ? parsed.reason : undefined,
+  });
 }
 
 function parseSuccessBody<T>(res: Response, text: string, isJson: boolean): T {

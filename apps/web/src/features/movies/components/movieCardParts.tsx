@@ -1,7 +1,7 @@
 import { useCallback, useId, useState } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
-import { Bookmark, Info, MessageSquarePlus, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Bookmark, Info, MessageSquarePlus, ThumbsDown, ThumbsUp, Trophy } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import Tooltip from '@/shared/components/Tooltip';
@@ -30,7 +30,14 @@ export type { MovieWheelExclusion } from '@/features/movies/types';
 export interface MovieCardSelection {
   active: boolean;
   pending?: boolean;
+  mode: 'pick' | 'remove';
+  selectableIds?: string[];
   onSelect: (movie: MovieData) => void;
+}
+
+export function isSelectable(movie: MovieData, selection?: MovieCardSelection): boolean {
+  if (!selection?.active) return false;
+  return !selection.selectableIds || selection.selectableIds.includes(movie.id);
 }
 
 export interface MovieCardCommonProps {
@@ -55,6 +62,8 @@ export interface MovieCardCommonProps {
   onToggleWheelExclusion?: (movie: MovieData) => void;
   selection?: MovieCardSelection;
   isWinner?: boolean;
+  winnerRank?: number;
+  voteLockedHint?: string;
   isMobile?: boolean;
   participantCount?: number;
 }
@@ -67,11 +76,19 @@ export function CardSelectionOverlay({
   return (
     <button
       type="button"
-      className={styles.selectOverlay}
+      className={clsx(
+        styles.selectOverlay,
+        selection.mode === 'remove' && styles.selectOverlayRemove
+      )}
       onClick={() => selection.onSelect(movie)}
       disabled={selection.pending}
-      aria-label={t('events.wheel.manualPickCardAria', { title: movie.title })}
-      data-testid={`manual-pick-${movie.id}`}
+      aria-label={t(
+        selection.mode === 'remove'
+          ? 'events.wheel.removeWinnerCardAria'
+          : 'events.wheel.manualPickCardAria',
+        { title: movie.title }
+      )}
+      data-testid={`${selection.mode === 'remove' ? 'remove-winner' : 'manual-pick'}-${movie.id}`}
     />
   );
 }
@@ -183,21 +200,26 @@ export function VoteBar({
   m,
   onVote,
   t,
+  lockedHint,
 }: Readonly<{
   m: MovieData;
   onVote: (movieId: string, value: 1 | -1) => Promise<void>;
   t: Translate;
+  lockedHint?: string;
 }>) {
+  const locked = !!lockedHint;
   return (
     <div
-      className={styles.votes}
+      className={clsx(styles.votes, locked && styles.votesLocked)}
       role="toolbar"
       aria-label={t('movies.list.voteToolbarAria', { title: m.title })}
+      title={lockedHint}
     >
       <button
         type="button"
         className={clsx(styles.voteBtn, m.myVote === 1 && styles.voteActive)}
         onClick={() => void onVote(m.id, 1)}
+        disabled={locked}
         aria-pressed={m.myVote === 1}
         aria-label={
           m.myVote === 1
@@ -212,6 +234,7 @@ export function VoteBar({
         type="button"
         className={clsx(styles.voteBtn, m.myVote === -1 && styles.voteActive)}
         onClick={() => void onVote(m.id, -1)}
+        disabled={locked}
         aria-pressed={m.myVote === -1}
         aria-label={
           m.myVote === -1
@@ -345,6 +368,36 @@ export function OverflowChip({
     <button type="button" className={styles.paidChip} onClick={onClick} aria-label={ariaLabel}>
       <span className={styles.paidChipCount}>+{count}</span>
     </button>
+  );
+}
+
+export function winnerBadgeLabel(t: Translate, winnerRank?: number): string {
+  return winnerRank
+    ? t('events.wheel.winnerRankLabel', { rank: winnerRank })
+    : t('events.wheel.winnerLabel');
+}
+
+export function WinnerRibbon({
+  isWinner,
+  winnerRank,
+  compact = false,
+  t,
+}: Readonly<{ isWinner?: boolean; winnerRank?: number; compact?: boolean; t: Translate }>) {
+  if (!isWinner) return null;
+  const label = winnerBadgeLabel(t, winnerRank);
+  if (compact) {
+    return (
+      <span className={styles.winnerRibbon} role="img" aria-label={label}>
+        <Trophy aria-hidden size={11} />
+        {winnerRank ? <span className={styles.winnerRibbonLabel}>{winnerRank}</span> : null}
+      </span>
+    );
+  }
+  return (
+    <span className={styles.winnerRibbon}>
+      <Trophy aria-hidden size={11} />
+      <span className={styles.winnerRibbonLabel}>{label}</span>
+    </span>
   );
 }
 

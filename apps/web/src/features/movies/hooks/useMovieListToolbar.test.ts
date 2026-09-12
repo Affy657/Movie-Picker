@@ -1,12 +1,17 @@
 import { StrictMode } from 'react';
 import { describe, expect, it } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useProfileMoviesToolbar } from './useProfileMoviesToolbar';
-import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
+import { useMovieListToolbar, type MovieListItemLike } from './useMovieListToolbar';
+
+type WatchedItem = MovieListItemLike & { watchedAt: string };
 
 const MEDIA_TYPE_LABELS = { movie: 'Films', tv: 'Séries' };
 
-function item(overrides: Partial<UserWatchedMovieItem>): UserWatchedMovieItem {
+function compareWatchedAt(a: WatchedItem, b: WatchedItem) {
+  return a.watchedAt.localeCompare(b.watchedAt);
+}
+
+function item(overrides: Partial<WatchedItem>): WatchedItem {
   return {
     tmdbId: 1,
     title: 'Titre',
@@ -19,7 +24,7 @@ function item(overrides: Partial<UserWatchedMovieItem>): UserWatchedMovieItem {
   };
 }
 
-const ITEMS: UserWatchedMovieItem[] = [
+const ITEMS: WatchedItem[] = [
   item({ title: 'Alpha', year: '1990', watchedAt: '2026-01-01T00:00:00Z', genreIds: [12] }),
   item({
     title: 'Beta',
@@ -30,21 +35,21 @@ const ITEMS: UserWatchedMovieItem[] = [
   item({ title: 'Gamma', year: '2010', watchedAt: '2026-02-01T00:00:00Z' }),
 ];
 
-function setup(items: UserWatchedMovieItem[] = ITEMS) {
-  return renderHook(() =>
-    useProfileMoviesToolbar({ items, tmdbLanguage: 'fr', mediaTypeLabels: MEDIA_TYPE_LABELS })
-  );
+const OPTIONS = {
+  tmdbLanguage: 'fr',
+  mediaTypeLabels: MEDIA_TYPE_LABELS,
+  comparePrimary: compareWatchedAt,
+};
+
+function setup(items: WatchedItem[] = ITEMS) {
+  return renderHook(() => useMovieListToolbar({ items, ...OPTIONS }));
 }
 
-function setupStrict(items: UserWatchedMovieItem[] = ITEMS) {
-  return renderHook(
-    () =>
-      useProfileMoviesToolbar({ items, tmdbLanguage: 'fr', mediaTypeLabels: MEDIA_TYPE_LABELS }),
-    { wrapper: StrictMode }
-  );
+function setupStrict(items: WatchedItem[] = ITEMS) {
+  return renderHook(() => useMovieListToolbar({ items, ...OPTIONS }), { wrapper: StrictMode });
 }
 
-describe('useProfileMoviesToolbar', () => {
+describe('useMovieListToolbar', () => {
   it('trie par date de visionnage (défaut, décroissant)', () => {
     const { result } = setup();
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);

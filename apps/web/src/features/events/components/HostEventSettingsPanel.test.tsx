@@ -57,6 +57,7 @@ const baseEvent: EventData = {
     maxParticipants: null,
     wheelMode: 'strictRandom',
     richSharePreview: false,
+    winnerCount: 1,
   },
 };
 
@@ -67,6 +68,29 @@ describe('HostEventSettingsPanel', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
+  it('reste ouvert une fois un film tiré et ne laisse réglable que le nombre de gagnants', () => {
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...baseEvent,
+          winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
+          config: { ...baseEvent.config!, winnerCount: 3 },
+        }}
+        open
+        onClose={() => {}}
+      />
+    );
+
+    expect(screen.getByLabelText(/nom de la soir/i)).toBeDisabled();
+    expect(screen.getByRole('radio', { name: /par les votes/i })).toBeDisabled();
+    expect(screen.getByLabelText(/films max par personne/i)).toBeDisabled();
+    expect(screen.getByLabelText(/films gagnants/i)).toBeEnabled();
+    expect(screen.getByRole('switch', { name: /répéter cette soirée/i })).toBeEnabled();
+    expect(screen.getByRole('status')).toHaveTextContent(/tirage a commenc/i);
+  });
+
   it('ouvre le panneau et envoie un PATCH config', async () => {
     const user = userEvent.setup();
     let patched = false;
@@ -74,10 +98,9 @@ describe('HostEventSettingsPanel', () => {
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         patched = true;
         const body = (await request.json()) as Record<string, unknown>;
-        expect(body.theme).toBe('SF');
         expect(body.wheelMode).toBe('weightedByVotes');
-        expect(body.richSharePreview).toBe(false);
-        expect(body.allowSeries).toBe(false);
+        expect(body.theme).toBeUndefined();
+        expect(body.allowSeries).toBeUndefined();
         expect(body.allowedReactionIds).toBeUndefined();
         return HttpResponse.json({
           theme: 'SF',
@@ -140,6 +163,105 @@ describe('HostEventSettingsPanel', () => {
     await waitFor(() => expect(seenMax).toBe(8), { timeout: 3000 });
   });
 
+  it('activer la limite de votes envoie la valeur par défaut, puis la valeur saisie', async () => {
+    const user = userEvent.setup();
+    const seen: unknown[] = [];
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        seen.push(body.maxVotesPerParticipant);
+        return HttpResponse.json({ ...baseEvent.config, maxVotesPerParticipant: 3 });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+      />
+    );
+
+    const toggle = screen.getByRole('switch', { name: /limiter les votes par participant/i });
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(screen.queryByLabelText(/^votes par participant$/i)).not.toBeInTheDocument();
+
+    await user.click(toggle);
+
+    await waitFor(() => expect(seen).toEqual([3]), { timeout: 3000 });
+    const field = screen.getByLabelText(/^votes par participant$/i);
+    expect(field).toHaveValue(3);
+
+    await user.clear(field);
+    await user.type(field, '5');
+
+    await waitFor(() => expect(seen.at(-1)).toBe(5), { timeout: 3000 });
+  });
+
+  it('désactiver la limite de votes envoie 0', async () => {
+    const user = userEvent.setup();
+    let seenMaxVotes: unknown;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        seenMaxVotes = body.maxVotesPerParticipant;
+        return HttpResponse.json({ ...baseEvent.config, maxVotesPerParticipant: null });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{ ...baseEvent, config: { ...baseEvent.config!, maxVotesPerParticipant: 4 } }}
+      />
+    );
+
+    const toggle = screen.getByRole('switch', { name: /limiter les votes par participant/i });
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByLabelText(/^votes par participant$/i)).toHaveValue(4);
+
+    await user.click(toggle);
+
+    await waitFor(() => expect(seenMaxVotes).toBe(0), { timeout: 3000 });
+    expect(screen.queryByLabelText(/^votes par participant$/i)).not.toBeInTheDocument();
+  });
+
+  it('refuse une limite de votes en dessous de 1 sans appeler l’API', async () => {
+    const user = userEvent.setup();
+    let patchCalled = false;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
+        patchCalled = true;
+        return HttpResponse.json({});
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{ ...baseEvent, config: { ...baseEvent.config!, maxVotesPerParticipant: 4 } }}
+      />
+    );
+
+    const field = screen.getByLabelText(/^votes par participant$/i);
+    await user.clear(field);
+    await user.type(field, '0');
+
+    expect(
+      await screen.findByText(/votes par participant : nombre entier à partir de 1/i)
+    ).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    expect(patchCalled).toBe(false);
+  });
+
   it('refuse une capacité inférieure au nombre de participants déjà inscrits', async () => {
     const user = userEvent.setup();
     let patchCalled = false;
@@ -169,34 +291,134 @@ describe('HostEventSettingsPanel', () => {
     expect(patchCalled).toBe(false);
   });
 
-  it('reste fonctionnel quand winnerMovie est défini (masquage géré par EventDetail)', async () => {
+  it('envoie le nombre de films à tirer saisi par l hôte', async () => {
+    const user = userEvent.setup();
+    let seenWinnerCount: unknown;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        seenWinnerCount = body.winnerCount;
+        return HttpResponse.json({ ...baseEvent.config, winnerCount: 3 });
+      })
+    );
+
     renderWithRouter(
       <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
         open
         onClose={() => {}}
+      />,
+      createTestQueryClient()
+    );
+
+    await user.clear(screen.getByLabelText(/films gagnants/i));
+    await user.type(screen.getByLabelText(/films gagnants/i), '3');
+
+    await waitFor(() => expect(seenWinnerCount).toBe(3), { timeout: 3000 });
+  });
+
+  it("n'envoie que le nombre de gagnants quand c'est le seul champ modifié après un tirage", async () => {
+    const user = userEvent.setup();
+    let body: Record<string, unknown> | null = null;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...baseEvent.config, winnerCount: 3 });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
         slug={slug}
         hostToken={null}
         event={{
           ...baseEvent,
-          winnerMovie: {
-            id: 'm1',
-            eventId: 'e1',
-            participantId: 'p1',
-            tmdbId: 1,
-            title: 'Gagnant',
-            year: '2020',
-            posterPath: null,
-            proposerPseudo: 'A',
-            score: 0,
-            up: 0,
-            down: 0,
-          },
+          winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
+          config: { ...baseEvent.config!, winnerCount: 2 },
         }}
-      />
+        open
+        onClose={() => {}}
+      />,
+      createTestQueryClient()
     );
 
-    expect(screen.queryByText(/n'est plus modifiable/i)).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/nom de la soirée/i)).not.toBeDisabled();
+    await user.clear(screen.getByLabelText(/films gagnants/i));
+    await user.type(screen.getByLabelText(/films gagnants/i), '3');
+
+    await waitFor(() => expect(body).not.toBeNull(), { timeout: 3000 });
+    expect(body).toEqual({ winnerCount: 3 });
+  });
+
+  it("envoie la date, l'heure et le choix de notification seulement quand la date change", async () => {
+    const user = userEvent.setup();
+    let body: Record<string, unknown> | null = null;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />,
+      createTestQueryClient()
+    );
+
+    const dateField = screen.getByLabelText(/date et heure/i);
+    await user.clear(dateField);
+    await user.type(dateField, '2030-02-01T21:30');
+
+    await waitFor(() => expect(body).not.toBeNull(), { timeout: 3000 });
+    expect(body).toEqual({
+      date: '2030-02-01',
+      time: '21:30',
+      notifyParticipantsOfDateChange: true,
+    });
+  });
+
+  it('refuse de descendre sous le nombre de films déjà tirés', async () => {
+    const user = userEvent.setup();
+    let patchCalled = false;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async () => {
+        patchCalled = true;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...baseEvent,
+          winners: [
+            { movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' },
+            { movieId: 'm2', pickMethod: 'wheel', pickedAt: '2030-01-01T20:10:00Z' },
+          ],
+          config: { ...baseEvent.config!, winnerCount: 3 },
+        }}
+        open
+        onClose={() => {}}
+      />,
+      createTestQueryClient()
+    );
+
+    await user.clear(screen.getByLabelText(/films gagnants/i));
+    await user.type(screen.getByLabelText(/films gagnants/i), '1');
+
+    expect(
+      await screen.findByText(/déjà 2 films gagnants/i, {}, { timeout: 3000 })
+    ).toBeInTheDocument();
+    expect(patchCalled).toBe(false);
   });
 
   describe('zone de danger (suppression)', () => {
@@ -340,6 +562,282 @@ describe('HostEventSettingsPanel', () => {
       expect(screen.queryByTestId('route-my-events')).not.toBeInTheDocument();
     });
   });
+
+  const creatorEvent: EventData = {
+    ...baseEvent,
+    myParticipant: { id: 'p1', pseudo: 'Hôte' },
+    participants: [{ id: 'p1', pseudo: 'Hôte', isCreator: true }],
+  };
+
+  const templateFixture = {
+    id: 'tpl1',
+    name: 'Soirée horreur',
+    theme: '🎃 Halloween',
+    maxProposalsPerParticipant: 4,
+    maxParticipants: 12,
+    wheelMode: 'weightedByVotes',
+    richSharePreview: false,
+    allowSeries: true,
+    winnerCount: 1,
+  };
+
+  it('applique aussi le nombre de gagnants du template', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [{ ...templateFixture, winnerCount: 3 }] })
+      ),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => HttpResponse.json({}))
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    await user.click(await screen.findByRole('button', { name: /Soirée horreur/ }));
+
+    await waitFor(() => expect(document.getElementById('host-cfg-winner-count')).toHaveValue(3));
+  });
+
+  it('applique un template aux réglages de la soirée', async () => {
+    const user = userEvent.setup();
+    let patchedBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [{ ...templateFixture, richSharePreview: true }] })
+      ),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        patchedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({
+          theme: '🎃 Halloween',
+          maxProposalsPerParticipant: 4,
+          maxParticipants: 12,
+          wheelMode: 'weightedByVotes',
+          richSharePreview: false,
+          allowSeries: true,
+        });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    await user.click(await screen.findByRole('button', { name: /Soirée horreur/ }));
+
+    await waitFor(() => expect(patchedBody).not.toBeNull());
+    expect(patchedBody).toMatchObject({
+      theme: '🎃 Halloween',
+      maxProposalsPerParticipant: 4,
+      maxParticipants: 12,
+      wheelMode: 'weightedByVotes',
+      richSharePreview: true,
+      allowSeries: true,
+    });
+  });
+
+  it('permet de gérer les templates depuis le panneau', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [templateFixture] })
+      )
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Gérer' }));
+
+    expect(
+      screen.getByRole('button', { name: /Renommer le template « Soirée horreur »/ })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Supprimer le template « Soirée horreur »/ })
+    ).toBeInTheDocument();
+  });
+
+  it('met à jour le template appliqué après une retouche des réglages', async () => {
+    const user = userEvent.setup();
+    let putBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [templateFixture] })
+      ),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () =>
+        HttpResponse.json({
+          theme: '🎃 Halloween',
+          maxProposalsPerParticipant: 4,
+          maxParticipants: 12,
+          wheelMode: 'weightedByVotes',
+          richSharePreview: false,
+          allowSeries: true,
+        })
+      ),
+      http.put(`${TEST_API_V1}/users/me/event-templates/tpl1`, async ({ request }) => {
+        putBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...templateFixture, wheelMode: 'strictRandom' });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    await user.click(await screen.findByRole('button', { name: /Soirée horreur/ }));
+    await waitFor(() =>
+      expect(screen.getByRole('radio', { name: /pondéré par les votes/i })).toBeChecked()
+    );
+
+    await user.click(screen.getByRole('radio', { name: /aléatoire strict/i }));
+
+    const updateButton = await screen.findByRole('button', { name: 'Mettre à jour' });
+    await user.click(updateButton);
+
+    await waitFor(() => expect(putBody).not.toBeNull());
+    expect(putBody).toMatchObject({
+      name: 'Soirée horreur',
+      theme: '🎃 Halloween',
+      wheelMode: 'strictRandom',
+      richSharePreview: false,
+      allowSeries: true,
+    });
+  });
+
+  it('garde le template appliqué coché quand il n’a aucune limite', async () => {
+    const user = userEvent.setup();
+    const noLimitTemplate = {
+      ...templateFixture,
+      maxProposalsPerParticipant: null,
+      maxParticipants: null,
+    };
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [noLimitTemplate] })
+      ),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () =>
+        HttpResponse.json({
+          theme: '🎃 Halloween',
+          maxProposalsPerParticipant: null,
+          maxParticipants: null,
+          wheelMode: 'weightedByVotes',
+          richSharePreview: false,
+          allowSeries: true,
+        })
+      )
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
+    await user.click(chip);
+
+    await waitFor(() => expect(chip).toHaveAttribute('aria-pressed', 'true'));
+    expect(screen.queryByRole('button', { name: 'Mettre à jour' })).not.toBeInTheDocument();
+  });
+
+  it("une fois un film tiré, les templates se gèrent encore mais ne s'appliquent plus", async () => {
+    const user = userEvent.setup();
+    let patched = false;
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [templateFixture] })
+      ),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
+        patched = true;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...creatorEvent,
+          winners: [{ movieId: 'm1', pickMethod: 'wheel', pickedAt: '2030-01-01T20:00:00Z' }],
+          config: { ...creatorEvent.config!, winnerCount: 2 },
+        }}
+      />
+    );
+
+    const section = screen.getByTestId('event-templates-section');
+    const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
+    expect(chip).toBeDisabled();
+    expect(section).toHaveTextContent(/les templates ne s’appliquent plus/i);
+    expect(screen.getByRole('button', { name: 'Gérer' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeEnabled();
+
+    await user.click(chip);
+    expect(patched).toBe(false);
+  });
+
+  it('regroupe la gestion des templates en bas du panneau', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: [templateFixture] })
+      )
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
+    const section = screen.getByTestId('event-templates-section');
+
+    expect(section).toContainElement(chip);
+    expect(section).toContainElement(
+      screen.getByRole('button', { name: 'Enregistrer en template' })
+    );
+
+    const lastSetting = screen.getByRole('radio', { name: /aléatoire strict/i });
+    expect(
+      lastSetting.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
   describe('répétition de la soirée', () => {
     function recurringEvent(config: Partial<EventData['config']> = {}): EventData {
       return { ...baseEvent, config: { ...baseEvent.config!, ...config } };

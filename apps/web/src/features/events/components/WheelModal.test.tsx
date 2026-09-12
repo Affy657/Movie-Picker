@@ -127,8 +127,9 @@ describe('WheelModal', () => {
     expect(screen.queryByTestId('provider-chips')).not.toBeInTheDocument();
   });
 
-  it('affiche le bouton Relancer si onRelaunch fourni et appelle le callback', () => {
+  it('met le tirage suivant en action principale tant qu’il reste un créneau', () => {
     const onRelaunch = vi.fn();
+    const onClose = vi.fn();
     wrap(
       <WheelModal
         open
@@ -136,18 +137,47 @@ describe('WheelModal', () => {
         winnerIndex={0}
         winner={baseMovie}
         wheelKey={1}
-        onClose={vi.fn()}
+        onClose={onClose}
         onRelaunch={onRelaunch}
+        winnerCount={3}
+        remainingDraws={2}
       />
     );
     fireEvent.click(screen.getByTestId('spin-done-trigger'));
-    const btn = screen.getByRole('button', { name: /relancer la roue/i });
-    expect(btn).toBeInTheDocument();
-    fireEvent.click(btn);
+
+    expect(screen.getByRole('heading', { name: /film 1 sur 3 sélectionné/i })).toBeInTheDocument();
+    expect(screen.getByText(/encore 2 films à tirer/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /c'est parti/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /terminer ici/i }));
+    expect(onClose).toHaveBeenCalledOnce();
+
+    fireEvent.click(screen.getByRole('button', { name: /tirer le suivant/i }));
     expect(onRelaunch).toHaveBeenCalledOnce();
   });
 
-  it("n'affiche pas le bouton Relancer si onRelaunch absent", () => {
+  it('revient à « C’est parti » sans relance possible', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        winnerCount={3}
+        remainingDraws={0}
+      />
+    );
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+
+    expect(screen.getByRole('heading', { name: /film 3 sur 3 sélectionné/i })).toBeInTheDocument();
+    expect(screen.queryByText(/à tirer/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /tirer le suivant/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /c'est parti/i })).toBeInTheDocument();
+  });
+
+  it('garde le titre simple pour une soirée à un seul gagnant', () => {
     wrap(
       <WheelModal
         open
@@ -159,7 +189,8 @@ describe('WheelModal', () => {
       />
     );
     fireEvent.click(screen.getByTestId('spin-done-trigger'));
-    expect(screen.queryByRole('button', { name: /relancer la roue/i })).not.toBeInTheDocument();
+
+    expect(screen.getByRole('heading', { name: /^film sélectionné/i })).toBeInTheDocument();
   });
 
   it("remet l'etat a spinning quand wheelKey change", () => {

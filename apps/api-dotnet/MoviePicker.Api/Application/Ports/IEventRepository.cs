@@ -25,4 +25,6 @@ public interface IEventRepository
         CancellationToken ct = default);
 
     Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default);
+
+    Task<bool> MarkWatchlistCleanedAsync(string eventId, DateTimeOffset cleanedAt, CancellationToken ct = default);
 }

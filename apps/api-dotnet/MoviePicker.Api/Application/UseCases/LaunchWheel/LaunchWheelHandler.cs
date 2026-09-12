@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -48,6 +49,9 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
+        if (evt.RemainingWinnerSlots == 0)
+            throw new ConflictException(WinnerSlots.AllDrawnMessage(evt.TargetWinnerCount));
+
         var movies = await _movieRepository.ListByEventIdAsync(evt.Id, ct);
         if (movies.Count == 0)
             throw new BadRequestException("Aucun film proposé. Proposez au moins un film pour lancer la roue.");
@@ -55,6 +59,11 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         var eligibleCount = movies.Count(m => !m.ExcludedFromWheel);
         if (eligibleCount == 0)
             throw new BadRequestException("Tous les films sont exclus du tirage. Réintégrez au moins un film pour lancer la roue.");
+
+        var alreadyPicked = evt.WinnerMovieIds;
+        var drawableCount = movies.Count(m => !m.ExcludedFromWheel && !alreadyPicked.Contains(m.Id));
+        if (drawableCount == 0)
+            throw new BadRequestException(WinnerSlots.NothingLeftToDrawMessage);
 
         var mode = evt.Config?.WheelMode ?? WheelMode.StrictRandom;
         var scores = await _voteRepository.AggregateScoresByMovieIdsAsync(
@@ -66,15 +75,17 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
             id => scores.TryGetValue(id, out var a) ? a.Score : 0,
             mode,
             Random.Shared,
-            excludedMovieId: evt.WinnerMovieId);
+            excludedMovieIds: alreadyPicked);
 
         var now = DateTimeOffset.UtcNow;
         var updated = evt with
         {
-            WinnerMovieId = winner.Id,
-            WinnerPickMethod = WinnerPickMethod.Wheel,
-            WinnerPickedAt = now,
-            WinnerAnnouncedAt = null,
+            Winners = [.. evt.Winners, new EventWinner
+            {
+                MovieId = winner.Id,
+                Method = WinnerPickMethod.Wheel,
+                PickedAt = now
+            }],
             UpdatedAt = now
         };
 
@@ -82,7 +93,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         _logger.LogInformation("Wheel launched for event {EventId}, winner: {MovieId} (mode: {WheelMode})", evt.Id, winner.Id, mode);
 
 
-        var message = eligibleCount == 1
+        var message = drawableCount == 1
             ? "Un seul film dans le tirage : gagnant direct."
             : "Roue lancée.";
 

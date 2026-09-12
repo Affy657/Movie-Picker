@@ -23,7 +23,10 @@ import {
   ProposerBadge,
   VoteBar,
   WatchlistBadge,
+  WinnerRibbon,
+  isSelectable,
   useMovieCardState,
+  winnerBadgeLabel,
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
 import Tooltip from '@/shared/components/Tooltip';
@@ -323,6 +326,8 @@ function MovieCardRowMobile({
   onToggleWheelExclusion,
   selection,
   isWinner,
+  winnerRank,
+  voteLockedHint,
   voteError,
   participantCount,
 }: Readonly<MovieCardRowView>) {
@@ -346,15 +351,13 @@ function MovieCardRowMobile({
         <div className={styles.mobilePosterCol} inert={selecting}>
           <RowPoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
           <WatchlistBadge inWatchlist={!!isInWatchlist} t={t} />
+          <WinnerRibbon isWinner={isWinner} winnerRank={winnerRank} compact t={t} />
         </div>
         <div className={styles.mobileContent} inert={selecting}>
           <div className={styles.mobileTitleRow}>
             <h3 className={styles.title} title={m.title}>
               {m.title}
             </h3>
-            {isWinner ? (
-              <span className={styles.winnerBadge}>{t('events.wheel.winnerLabel')}</span>
-            ) : null}
           </div>
           <div className={styles.mobileFacts}>
             {m.year ? <span>{m.year}</span> : null}
@@ -374,7 +377,11 @@ function MovieCardRowMobile({
           </div>
           <div className={styles.mobileBottomSection}>
             <span className={styles.mobileVoteScore}>
-              {s.canVote ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
+              {s.canVote ? (
+                <VoteBar m={m} onVote={onVote} t={t} lockedHint={voteLockedHint} />
+              ) : (
+                <VoteReadonly m={m} />
+              )}
               <ScoreBlock m={m} t={t} />
             </span>
             <div className={styles.mobileProposerRow}>
@@ -457,6 +464,8 @@ function MovieCardRowDesktop({
   onToggleWheelExclusion,
   selection,
   isWinner,
+  winnerRank,
+  voteLockedHint,
   rank,
   voteError,
   participantCount,
@@ -497,7 +506,7 @@ function MovieCardRowDesktop({
               t={t}
             />
             {isWinner ? (
-              <span className={styles.winnerBadge}>{t('events.wheel.winnerLabel')}</span>
+              <span className={styles.winnerBadge}>{winnerBadgeLabel(t, winnerRank)}</span>
             ) : null}
           </div>
           <div className={styles.metaRow}>
@@ -527,7 +536,11 @@ function MovieCardRowDesktop({
           />
         </div>
         <div className={styles.votesCol} inert={selecting}>
-          {s.canVote ? <VoteBar m={m} onVote={onVote} t={t} /> : <VoteReadonly m={m} />}
+          {s.canVote ? (
+            <VoteBar m={m} onVote={onVote} t={t} lockedHint={voteLockedHint} />
+          ) : (
+            <VoteReadonly m={m} />
+          )}
         </div>
         <div className={styles.seenCol} inert={selecting}>
           {s.canAct ? (
@@ -599,6 +612,8 @@ export const MovieCardRow = memo(function MovieCardRow({
   onToggleWheelExclusion,
   selection,
   isWinner = false,
+  winnerRank,
+  voteLockedHint,
   isMobile,
   rank,
   voteError,
@@ -625,7 +640,7 @@ export const MovieCardRow = memo(function MovieCardRow({
   const buyCount = s.providers.filter((p) => p.type === 'buy').length;
   const releaseDateLabel = formatReleaseYear(m.releaseDate);
   const excluded = !!m.excludedFromWheel;
-  const selecting = !!selection?.active && !excluded;
+  const selecting = isSelectable(m, selection) && !excluded;
   const emptyDispoLabel = t('movies.watchProviders.emptyLabel');
 
   const view: MovieCardRowView = {
@@ -651,6 +666,8 @@ export const MovieCardRow = memo(function MovieCardRow({
       onToggleWheelExclusion,
       selection,
       isWinner,
+      winnerRank,
+      voteLockedHint,
       isMobile,
       rank,
       voteError,

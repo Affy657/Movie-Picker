@@ -59,6 +59,10 @@ export const ROUTES = {
   profileMoviesPattern: '/u/:handle/films',
 
   profileMovies: (handle: string) => `/u/${handle}/films`,
+
+  profileWatchlistPattern: '/u/:handle/watchlist',
+
+  profileWatchlist: (handle: string) => `/u/${handle}/watchlist`,
 } as const;
 
 export function withReturnTo(path: string, returnTo: string): string {

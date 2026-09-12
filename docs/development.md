@@ -70,6 +70,11 @@ pnpm dev:web           # front seul, http://localhost:5173
 
 Les variantes `dev:web:log` et `dev:api-dotnet:log` écrivent dans `logs/` au lieu du terminal.
 
+Les variantes `dev:full:b`, `dev:web:b` et `dev:api-dotnet:b` lancent une seconde paire sur
+`http://localhost:5273` et `http://localhost:4100`, pour faire tourner deux agents ou deux worktrees
+côte à côte sans se marcher sur les ports. Elles partagent la même base `moviepicker_dev` que la
+première paire ; les configurations `full-b`, `web-b` et `api-b` de `.claude/launch.json` les reprennent.
+
 En Development, la page de connexion affiche un bouton qui ouvre directement la session du compte
 de démonstration, sans saisir d'identifiants.
 
@@ -86,14 +91,21 @@ configuration est dans `apps/api-dotnet/MoviePicker.Api/appsettings.Development.
 | Bob | `bob@test.local` | `BobTest12345!` | Profil public |
 | Carla | `carla@test.local` | `CarlaTest123!` | Profil privé, sert à vérifier le 404 |
 | David | `david@test.local` | `DavidTest123!` | Profil public |
+| Zoé | `zoe@test.local` | `ZoeTest1234!` | Profil public que personne ne suit, sert à la recherche de comptes sans accent (`zoe`, `lefevre`) |
 
 Chaque compte n'est créé que si son adresse est absente de la base.
 
 - `SeedSampleEvents` ajoute quelques soirées au compte principal.
 - `SeedScenarioDemos` ajoute un jeu de soirées couvrant les états intéressants : multi-participants,
   roue tirée puis clôturée, capacité atteinte, retrait d'un participant, tirage gelé, soirée passée,
-  soirée à échéance, soirée vide, soirée annulée. Plus un graphe de suivi entre comptes et des
-  notifications.
+  soirée à échéance, soirée vide, soirée annulée. Côté V1.6 : une limite d'un vote par participant
+  avec le compte principal à quota, un marathon à trois gagnants dont deux déjà tirés et annoncés,
+  une trilogie terminée à trois gagnants (deux à la roue, un désigné) et une série hebdomadaire dont
+  l'occurrence précédente est close et la suivante créée par la vraie passe de récurrence. Plus
+  quatre modèles de soirée (trois sur le compte principal, un chez Alice), des watchlists (Alice
+  publique, Bob masquée, Zoé publique, trois films sur le compte principal), un graphe de suivi
+  entre comptes et des notifications. `DevelopmentScenarioSeedTests` rejoue toute la seed en mémoire
+  et refuse une étape qui journalise un avertissement.
 
 Pour couper : `DevelopmentSeed__Enabled=false`, ou finement `DevelopmentSeed__SeedSampleEvents=false`
 et `DevelopmentSeed__SeedScenarioDemos=false`.
@@ -151,7 +163,7 @@ movie-picker/
 ├─ archive/           Application Expo du cursus et documents gelés, plus construits
 ├─ artifacts/         Contrat OpenAPI, rapports Lighthouse et Stryker
 ├─ configs/           tsconfig et Prettier partagés, exclusions Sonar
-├─ docs/              Roadmaps, dette technique, ce guide
+├─ docs/              Roadmap, dette technique, ce guide
 ├─ e2e/               Parcours Playwright
 ├─ infra/             Politiques IAM, CloudFront et rétention de registre
 └─ scripts/           verify:local, lint des workflows, prérequis, export OpenAPI, seuils de couverture

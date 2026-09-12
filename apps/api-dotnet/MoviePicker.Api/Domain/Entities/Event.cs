@@ -13,10 +13,9 @@ public sealed record Event
 
     public EventConfig? Config { get; init; }
     public DateTimeOffset? ClosedAt { get; init; }
-    public string? WinnerMovieId { get; init; }
-    public WinnerPickMethod? WinnerPickMethod { get; init; }
-    public DateTimeOffset? WinnerPickedAt { get; init; }
+    public IReadOnlyList<EventWinner> Winners { get; init; } = [];
     public DateTimeOffset? WinnerAnnouncedAt { get; init; }
+    public DateTimeOffset? WatchlistCleanedAt { get; init; }
     public RecurrenceFrequency? Recurrence { get; init; }
     public string? RecurrenceParentEventId { get; init; }
     public string? NextOccurrenceEventId { get; init; }
@@ -38,10 +37,8 @@ public sealed record Event
         if (utcNow >= autoCloseAt)
             return EventLifecycle.Finished;
 
-        var hasWinner = !string.IsNullOrEmpty(WinnerMovieId);
-
         if (utcNow >= pendingAt)
-            return hasWinner ? EventLifecycle.Finished : EventLifecycle.Pending;
+            return HasWinner ? EventLifecycle.Finished : EventLifecycle.Pending;
 
         if (utcNow >= startUtc)
             return EventLifecycle.Live;
@@ -50,6 +47,14 @@ public sealed record Event
     }
 
     public bool IsFinished(DateTimeOffset utcNow) => Lifecycle(utcNow) == EventLifecycle.Finished;
+
+    public bool HasWinner => Winners.Count > 0;
+
+    public IReadOnlyList<string> WinnerMovieIds => Winners.Select(w => w.MovieId).ToList();
+
+    public int TargetWinnerCount => Math.Max(1, Config?.WinnerCount ?? EventConfig.DefaultWinnerCount);
+
+    public int RemainingWinnerSlots => Math.Max(0, TargetWinnerCount - Winners.Count);
 }
 
 public sealed record EventConfig
@@ -66,9 +71,17 @@ public sealed record EventConfig
 
     public int? MaxParticipants { get; init; }
 
+    public int? MaxVotesPerParticipant { get; init; }
+
     public WheelMode WheelMode { get; init; } = WheelMode.WeightedByVotes;
 
     public bool RichSharePreview { get; init; }
 
     public bool AllowSeries { get; init; }
+
+    public const int DefaultWinnerCount = 1;
+
+    public const int WinnerCountCap = 10;
+
+    public int WinnerCount { get; init; } = DefaultWinnerCount;
 }

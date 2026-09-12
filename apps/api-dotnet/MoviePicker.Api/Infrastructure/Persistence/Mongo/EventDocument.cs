@@ -38,6 +38,7 @@ public sealed class EventDocument
     public DateTime? ClosedAt { get; set; }
 
     [BsonElement("winnerMovieId")]
+    [BsonIgnoreIfNull]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? WinnerMovieId { get; set; }
 
@@ -49,9 +50,17 @@ public sealed class EventDocument
     [BsonIgnoreIfNull]
     public DateTime? WinnerPickedAt { get; set; }
 
+    [BsonElement("winners")]
+    [BsonIgnoreIfNull]
+    public List<EventWinnerDocument>? Winners { get; set; }
+
     [BsonElement("winnerAnnouncedAt")]
     [BsonIgnoreIfNull]
     public DateTime? WinnerAnnouncedAt { get; set; }
+
+    [BsonElement("watchlistCleanedAt")]
+    [BsonIgnoreIfNull]
+    public DateTime? WatchlistCleanedAt { get; set; }
 
     [BsonElement("recurrence")]
     [BsonIgnoreIfNull]
@@ -93,6 +102,10 @@ public sealed class EventConfigDocument
     [BsonIgnoreIfNull]
     public int? MaxParticipants { get; set; }
 
+    [BsonElement("maxVotesPerParticipant")]
+    [BsonIgnoreIfNull]
+    public int? MaxVotesPerParticipant { get; set; }
+
     [BsonElement("wheelMode")]
     public string WheelMode { get; set; } = "weightedByVotes";
 
@@ -103,4 +116,22 @@ public sealed class EventConfigDocument
     [BsonElement("allowSeries")]
     [BsonIgnoreIfDefault]
     public bool AllowSeries { get; set; }
+
+    [BsonElement("winnerCount")]
+    [BsonIgnoreIfNull]
+    public int? WinnerCount { get; set; }
+}
+
+[BsonIgnoreExtraElements]
+public sealed class EventWinnerDocument
+{
+    [BsonElement("movieId")]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string MovieId { get; set; } = string.Empty;
+
+    [BsonElement("pickMethod")]
+    public string PickMethod { get; set; } = "wheel";
+
+    [BsonElement("pickedAt")]
+    public DateTime PickedAt { get; set; }
 }

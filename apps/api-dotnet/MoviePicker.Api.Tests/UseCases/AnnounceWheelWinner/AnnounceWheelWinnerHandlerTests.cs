@@ -16,6 +16,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor = new();
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor = new();
     private readonly Mock<IWinnerAnnouncer> _winnerAnnouncer = new();
+    private readonly List<Movie> _movies = [];
     private readonly AnnounceWheelWinnerHandler _sut;
 
     private static readonly DateTimeOffset PickedAt = DateTimeOffset.UtcNow.AddSeconds(-8);
@@ -28,9 +29,10 @@ public sealed class AnnounceWheelWinnerHandlerTests
         Time = "20:00",
         Slug = "soiree",
         HostToken = "ht1",
-        WinnerMovieId = "mov1",
-        WinnerPickMethod = WinnerPickMethod.Wheel,
-        WinnerPickedAt = PickedAt,
+        Winners =
+        [
+            new EventWinner { MovieId = "mov1", Method = WinnerPickMethod.Wheel, PickedAt = PickedAt }
+        ],
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow
     };
@@ -53,6 +55,9 @@ public sealed class AnnounceWheelWinnerHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
+        _movieRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
+                _movies.Where(m => ids.Contains(m.Id)).ToList());
         _sut = new AnnounceWheelWinnerHandler(
             _eventRepo.Object,
             _movieRepo.Object,
@@ -86,7 +91,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     public async Task HandleAsync_WheelWinnerNotYetAnnounced_AnnouncesAndStampsEvent()
     {
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(WheelEvent());
-        _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(Winner());
+        _movies.Add(Winner());
         Event? captured = null;
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .Callback<Event, CancellationToken>((e, _) => captured = e)
@@ -107,7 +112,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     {
         var announced = WheelEvent() with { WinnerAnnouncedAt = PickedAt.AddSeconds(8) };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(announced);
-        _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(Winner());
+        _movies.Add(Winner());
 
         await _sut.HandleAsync("evt1");
 
@@ -120,13 +125,9 @@ public sealed class AnnounceWheelWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_RelaunchAfterAnAnnouncedPick_AnnouncesTheNewWinner()
     {
-        var relaunched = WheelEvent() with
-        {
-            WinnerAnnouncedAt = PickedAt.AddSeconds(-60),
-            WinnerPickedAt = PickedAt
-        };
+        var relaunched = WheelEvent() with { WinnerAnnouncedAt = PickedAt.AddSeconds(-60) };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(relaunched);
-        _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(Winner());
+        _movies.Add(Winner());
 
         await _sut.HandleAsync("evt1");
 
@@ -138,9 +139,20 @@ public sealed class AnnounceWheelWinnerHandlerTests
     [Fact]
     public async Task HandleAsync_ManualPick_DoesNotAnnounceAgain()
     {
-        var manual = WheelEvent() with { WinnerPickMethod = WinnerPickMethod.Manual };
+        var manual = WheelEvent() with
+        {
+            Winners =
+            [
+                new EventWinner
+                {
+                    MovieId = "mov1",
+                    Method = WinnerPickMethod.Manual,
+                    PickedAt = PickedAt
+                }
+            ]
+        };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(manual);
-        _movieRepo.Setup(r => r.GetByIdAsync("mov1", It.IsAny<CancellationToken>())).ReturnsAsync(Winner());
+        _movies.Add(Winner());
 
         await _sut.HandleAsync("evt1");
 
@@ -150,9 +162,74 @@ public sealed class AnnounceWheelWinnerHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ManualPickAfterAnUnannouncedWheelPick_StillAnnouncesTheWheelPick()
+    {
+        var mixed = WheelEvent() with
+        {
+            Winners =
+            [
+                new EventWinner { MovieId = "mov1", Method = WinnerPickMethod.Wheel, PickedAt = PickedAt },
+                new EventWinner { MovieId = "mov2", Method = WinnerPickMethod.Manual, PickedAt = PickedAt.AddSeconds(4) }
+            ]
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(mixed);
+        _movies.Add(Winner());
+        _movies.Add(Winner() with { Id = "mov2", Title = "Manual" });
+
+        await _sut.HandleAsync("evt1");
+
+        _winnerAnnouncer.Verify(
+            a => a.AnnounceAsync(It.IsAny<Event>(), "Winner", WinnerPickMethod.Wheel, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _winnerAnnouncer.Verify(
+            a => a.AnnounceAsync(It.IsAny<Event>(), "Manual", It.IsAny<WinnerPickMethod>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TwoWheelPicksSinceTheLastAnnouncement_AnnouncesBothInPickOrderAndStampsOnce()
+    {
+        var twoPending = WheelEvent() with
+        {
+            WinnerAnnouncedAt = PickedAt.AddSeconds(-60),
+            Winners =
+            [
+                new EventWinner { MovieId = "mov2", Method = WinnerPickMethod.Wheel, PickedAt = PickedAt.AddSeconds(4) },
+                new EventWinner { MovieId = "mov1", Method = WinnerPickMethod.Wheel, PickedAt = PickedAt }
+            ]
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(twoPending);
+        _movies.Add(Winner());
+        _movies.Add(Winner() with { Id = "mov2", Title = "Second" });
+        var announced = new List<string>();
+        _winnerAnnouncer
+            .Setup(a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<CancellationToken>()))
+            .Callback<Event, string, WinnerPickMethod, CancellationToken>((_, title, _, _) => announced.Add(title))
+            .Returns(Task.CompletedTask);
+
+        await _sut.HandleAsync("evt1");
+
+        Assert.Equal(["Winner", "Second"], announced);
+        _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PendingPickWhoseMovieIsGone_NeitherAnnouncesNorStamps()
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(WheelEvent());
+
+        await _sut.HandleAsync("evt1");
+
+        _winnerAnnouncer.Verify(
+            a => a.AnnounceAsync(It.IsAny<Event>(), It.IsAny<string>(), It.IsAny<WinnerPickMethod>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_NoWinnerYet_DoesNothing()
     {
-        var noWinner = WheelEvent() with { WinnerMovieId = null, WinnerPickMethod = null, WinnerPickedAt = null };
+        var noWinner = WheelEvent() with { Winners = [] };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(noWinner);
 
         await _sut.HandleAsync("evt1");

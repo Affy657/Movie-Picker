@@ -761,6 +761,8 @@
       movieProposedOne: '1 film propos\u00e9',
       movieProposedMany: '{{count}} films propos\u00e9s',
       winnerMovieLabel: 'Gagnant\u00a0: {{title}}',
+      winnerMoviesLabel: 'Gagnants\u00a0: {{titles}}',
+      winnerMoviesCount: '{{count}} films',
       activesTab: 'Actives',
       upcomingSectionTitle: '\u00c0 venir',
       toBeHandledSection: '\u00c0 traiter',
@@ -894,9 +896,56 @@
         western: 'Western',
         classics: 'Classiques',
       },
+      templates: {
+        title: 'Mes templates',
+        manage: 'Gérer',
+        manageDone: 'Terminé',
+        count: '{{count}} template sur {{max}}.',
+        countMany: '{{count}} templates sur {{max}}.',
+        applied: 'Configuration appliquée.',
+        capReached:
+          '{{max}} templates sur {{max}}. Supprimez-en un pour en enregistrer un nouveau.',
+        applyAriaLabel: 'Appliquer le template « {{name}} »',
+        renameAriaLabel: 'Renommer le template « {{name}} »',
+        deleteAriaLabel: 'Supprimer le template « {{name}} »',
+        nameLabel: 'Nom du template',
+        deleteConfirmTitle: 'Supprimer ce template ?',
+        deleteConfirmMessage:
+          'Le template « {{name}} » sera définitivement supprimé. Les soirées déjà créées avec ne changent pas.',
+        deleteConfirmAction: 'Supprimer le template',
+        namePlaceholder: 'Soirée horreur',
+        confirmAriaLabel: 'Valider',
+        cancelAriaLabel: 'Annuler',
+        saveHint: 'Réutiliser cette configuration plus tard',
+        savedAs: 'Enregistré comme « {{name}} ».',
+        saveAction: 'Enregistrer en template',
+        saveFromEventHint: 'Cette configuration marche bien ?',
+        saveFromEventAction: 'Enregistrer en template',
+        lockedHint: 'Le tirage a commencé : les templates ne s’appliquent plus à cette soirée.',
+        saved: 'Template « {{name}} » enregistré.',
+        modifiedHint: 'Vous avez modifié la configuration de {{name}}.',
+        updateAction: 'Mettre à jour',
+        saveAsNewAction: 'Enregistrer comme nouveau',
+        updated: 'Template « {{name}} » mis à jour.',
+        deleted: 'Template « {{name}} » supprimé.',
+        reuseEventAction: 'Refaire cette soirée',
+        reusedFrom: 'Configuration de « {{title}} » reprise. Ajustez-la si besoin.',
+        reusedFromUnnamed: 'Configuration de la soirée reprise. Ajustez-la si besoin.',
+        error: 'Impossible d’enregistrer le template.',
+      },
       maxProposalsLabel: 'Films max par personne',
       maxProposalsHint: '{{max}} au maximum.',
       maxProposalsInvalid: 'Films par personne : nombre entier entre 1 et {{max}}.',
+      voteLimitLabel: 'Limiter les votes par participant',
+      voteLimitDesc: 'Chaque participant ne peut voter que pour un nombre fixe de films.',
+      maxVotesLabel: 'Votes par participant',
+      maxVotesInvalid: 'Votes par participant : nombre entier à partir de 1.',
+      winnerCountLabel: 'Films gagnants',
+      winnerCountInvalid: 'Indiquez un nombre entre 1 et {{max}}.',
+      winnerCountHint: '{{max}} au maximum.',
+      winnerCountLockedHint:
+        'Déjà {{count}} films gagnants\u00a0: retirez-en un du palmarès pour descendre plus bas.',
+      configLockedHint: 'Le tirage a commencé : seul le nombre de films gagnants reste réglable.',
       wheelModeLabel: 'Mode de la roue',
       wheelModeWeightedLabel: 'Pondéré par les votes',
       wheelModeWeightedDesc: 'Plus un film a de votes, plus il a de chances de sortir.',
@@ -930,25 +979,35 @@
       title: 'Roue',
 
       viewerTitle: 'R\u00e9sultat du tirage',
-      emptyPlaceholder: 'Aucun film. Proposez au moins un film pour lancer la roue.',
+      emptyPlaceholder: 'Aucun film. Proposez au moins un film pour désigner un gagnant.',
       winnerLabel: 'Film gagnant',
       launchButton: 'Lancer la roue',
-      relaunchButton: 'Relancer la roue',
+      drawOneMoreButton: 'Tirer un film de plus',
+      winnerRankLabel: 'Gagnant {{rank}}',
       spinning: 'Tirage\u2026',
-      closeButton: 'Clôturer la soirée',
       closeWithoutMovieButton: 'Clôturer sans film',
       closeWithoutMovieConfirmTitle: 'Clôturer sans choisir de film ?',
       closeWithoutMovieConfirmMessage:
         'La soirée « {{title}} » sera clôturée sans film. Cette action est définitive.',
       closeWithoutMovieConfirmAction: 'Clôturer sans film',
-      resetButton: 'Annuler le tirage',
-      resetConfirmTitle: 'Annuler le tirage\u00a0?',
+      resetButton: 'Repartir de zéro',
+      resetConfirmTitle: 'Repartir de zéro\u00a0?',
       resetConfirmMessage:
-        'Le film gagnant sera oublié. Les propositions et les votes restent en place.',
-      resetConfirmAction: 'Annuler le tirage',
+        'Tous les films gagnants seront oubliés. Les propositions et les votes restent en place.',
+      resetConfirmAction: 'Repartir de zéro',
       launchError: 'Tirage impossible',
       closeError: 'Clôture impossible',
-      resetError: 'Annulation impossible',
+      resetError: 'Remise à zéro impossible',
+      removeWinnerButton: 'Retirer un gagnant',
+      removeWinnerHint: 'Cliquez sur un film gagnant pour le retirer du palmarès.',
+      removeWinnerCardAria: '{{title}} : retirer ce film du palmarès',
+      removeWinnerError: 'Retrait impossible',
+      allDrawnHintOne:
+        'Le film gagnant de la soirée est déjà désigné. Montez le réglage, ou retirez-le du palmarès.',
+      allDrawnHintMany:
+        'Les {{count}} films gagnants de la soirée sont déjà désignés. Montez le réglage, ou retirez-en un du palmarès.',
+      nothingLeftToDrawHint:
+        'Tous les films proposés ont déjà gagné. Proposez un film de plus, ou retirez-en un du palmarès.',
       manualPickButton: 'Choisir moi-même',
       manualPickCancel: 'Annuler',
       manualPickHint: 'Cliquez sur un film pour le désigner gagnant.',
@@ -956,12 +1015,25 @@
       manualPickCardAria: '{{title}} : désigner ce film comme gagnant',
       manualPickError: 'Sélection impossible',
       allExcludedHint:
-        'Tous les films sont exclus du tirage. Réintégrez-en au moins un pour lancer la roue.',
+        'Tous les films sont exclus du tirage. Réintégrez-en au moins un pour désigner un gagnant.',
+      modalRelaunchButton: 'Tirer le suivant',
+      moreActionsLabel: 'Autres actions sur le tirage',
+      remainingDrawsOne: '1 tirage restant',
+      remainingDrawsMany: '{{count}} tirages restants',
+      remainingWordOne: 'restant',
+      remainingWordMany: 'restants',
+      allDrawnStatusOne: 'Film gagnant désigné',
+      allDrawnStatusMany: '{{count}} films gagnants désignés',
       modal: {
         manualWinnerTitle: 'Film choisi par l’hôte !',
+        manualWinnerTitleOfMany: 'Film {{index}} sur {{total}}, choisi par l’hôte !',
         spinningTitle: 'Tirage en cours…',
         winnerTitle: 'Film sélectionné !',
+        winnerTitleOfMany: 'Film {{index}} sur {{total}} sélectionné !',
+        remainingOne: 'Encore 1 film à tirer.',
+        remainingMany: 'Encore {{count}} films à tirer.',
         closeButton: "C'est parti !",
+        finishHereButton: 'Terminer ici',
       },
     },
     reminder: {
@@ -1042,6 +1114,15 @@
       voteErrorRow: 'Ton vote n’a pas été enregistré. Vérifie ta connexion.',
       retryVoteAction: 'Réessayer',
       voteToolbarAria: 'Votes pour « {{title}} »',
+      voteLimitReachedTitle: 'Limite de votes atteinte',
+      voteLimitReachedOne:
+        'Vous avez déjà posé votre vote pour cette soirée. Retirez-le pour voter pour un autre film.',
+      voteLimitReachedMany:
+        'Vous avez déjà posé vos {{max}} votes pour cette soirée. Retirez-en un pour voter pour un autre film.',
+      voteLimitReachedOk: 'Compris',
+      voteQuota: 'Votes posés : {{used}} sur {{max}}',
+      voteQuotaLockedOne: 'Votre vote est posé. Retirez-le pour voter pour ce film.',
+      voteQuotaLockedMany: 'Vos {{max}} votes sont posés. Retirez-en un pour voter pour ce film.',
       letterboxdButton: 'Ouvrir sur Letterboxd',
       imdbButton: 'Ouvrir sur IMDb',
       allocineButton: 'Ouvrir sur AlloCiné',
@@ -1546,6 +1627,11 @@
       bioLabel: 'Bio',
       bioHint: '{{count}} caractères restants.',
       visibilityLabel: 'Profil public',
+      watchlistVisibilityLabel: 'Watchlist visible sur mon profil',
+      watchlistVisibilityHint:
+        'Vos films à voir apparaissent à l’adresse {{url}}. Les visiteurs ne peuvent pas la modifier.',
+      watchlistVisibilityPrivateHint:
+        'Votre profil est privé\u00a0: la watchlist reste masquée tant qu’il le restera.',
       viewMyProfile: 'Voir mon profil public',
       saveSuccess: 'Profil public mis à jour.',
       fallbackError: 'Impossible de mettre à jour le profil public.',
@@ -1569,6 +1655,24 @@
       empty: 'Aucune activité pour le moment.',
       loadError: "Les statistiques n'ont pas pu être chargées.",
       retry: 'Réessayer',
+    },
+    watchlist: {
+      theirs: 'Sa watchlist',
+      mine: 'Ma watchlist',
+      countOne: '1 film à voir',
+      count: '{{count}} films à voir',
+      empty: 'Aucun film à voir',
+      hidden: 'Masquée',
+      makeVisible: 'Rendre visible',
+      pageTitle: 'La watchlist de {{name}}',
+      seoDescription:
+        'Watchlist de {{name}} (@{{handle}}) sur Movie Picker\u00a0: ses films à voir, à proposer pour une prochaine soirée.',
+      loadError: 'Impossible de charger la watchlist de cet utilisateur.',
+      listAria: 'Films à voir',
+      emptyTitle: 'Aucun film à voir pour le moment',
+      emptyMessage: "Cette personne n'a encore rien ajouté à sa watchlist.",
+      searchLabel: 'Rechercher dans la watchlist',
+      sortAddedAt: 'Ajouté le',
     },
     movies: {
       title: 'Derniers films vus',
@@ -1841,6 +1945,58 @@
         description:
           'Les navigateurs intégrés aux réseaux effaçaient votre session. Un bandeau propose maintenant d’ouvrir Movie Picker dans Safari ou Chrome.',
       },
+      userSearch: {
+        title: 'Trouver un compte',
+        description:
+          'Un onglet Rechercher dans vos abonnements retrouve un ami par pseudo ou par handle.',
+      },
+      recurringEvents: {
+        title: 'Soirées récurrentes',
+        description:
+          'Chaque semaine, tous les quinze jours ou chaque mois : la suivante naît toute seule à la clôture.',
+      },
+      eventTemplates: {
+        title: 'Modèles de soirée',
+        description:
+          'Jusqu’à cinq configurations enregistrées, à réappliquer en un clic, et « Refaire cette soirée » depuis l’historique.',
+      },
+      multipleWinners: {
+        title: 'Plusieurs films gagnants',
+        description:
+          'L’hôte choisit combien de films sortent du tirage, jusqu’à dix : idéal pour un marathon.',
+      },
+      voteLimit: {
+        title: 'Limite de votes par participant',
+        description: 'L’hôte fixe un nombre de votes par personne ; chacun doit alors choisir.',
+      },
+      friendsWatchlist: {
+        title: 'La liste d’un ami',
+        description:
+          'Sa watchlist se lit depuis son profil. La vôtre se masque d’un réglage dans le compte.',
+      },
+      openEventMovies: {
+        title: 'Les films visibles avant de rejoindre',
+        description:
+          'Un lien de soirée montre affiches, scores et gagnant sans participer ; voter demande toujours de rejoindre.',
+      },
+      wheelAnnounce: {
+        title: 'Le gagnant annoncé au bon moment',
+        description: 'La notification part quand la roue s’arrête, plus pendant qu’elle tourne.',
+      },
+      letterboxdFromCard: {
+        title: 'Letterboxd depuis la carte',
+        description: 'Le menu d’un film en soirée ouvre sa page Letterboxd en un clic.',
+      },
+      scrollableDialogs: {
+        title: 'Fenêtres qui défilent sur mobile',
+        description:
+          'Signaler un problème et Proposer une idée gardent leurs boutons accessibles, même avec des images jointes.',
+      },
+      offlineEventPage: {
+        title: 'Soirée hors ligne',
+        description:
+          'Un lien de soirée ouvert sans réseau affiche une erreur au lieu d’un squelette sans fin.',
+      },
     },
   },
   pwaInstall: {
@@ -1983,7 +2139,7 @@
         'Plateforme de dons pour créateurs ; le soutien confirmé apparaît ensuite comme un badge sur le profil.',
       scheduler: 'Cloud Scheduler',
       schedulerValue:
-        'Appelle le serveur à heure fixe pour déclencher les rappels de soirée. Même protection par jeton, puisque la route est ouverte sur internet.',
+        'Appelle le serveur à heure fixe : toutes les 30 minutes pour les rappels de soirée, une fois par jour pour les soirées récurrentes. Même protection par jeton, puisque les routes sont ouvertes sur internet.',
       schedulerHint:
         "Planificateur de Google Cloud : il appelle une adresse à l'heure dite, ce qui remplace une minuterie vivant dans le serveur.",
       issues: 'GitHub Issues',
@@ -1996,6 +2152,10 @@
       title: '{{months}} mois, {{shipped}} paliers livrés',
       lead: "{{commits}} commits depuis février 2026. Chaque palier est parti en production avant que le suivant ne s'ouvre. Les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
       plannedBadge: 'à venir',
+      currentBadge: 'en cours',
+      unplannedSpan: 'Entre la V1.8 et la V2',
+      unplannedDetail:
+        'Des versions qui ne sont pas encore cadrées. Leur nombre et leur contenu dépendront des retours d’usage.',
       techHeading: 'Les chantiers techniques ouverts',
       terraform: 'Infrastructure en code',
       terraformHint:
@@ -2011,13 +2171,10 @@
         'Le compte de service de déploiement a plus de droits que nécessaire ; le découper par usage est le pas suivant.',
       consolidate: 'Front vers Google Cloud',
       consolidateHint:
-        'Déplacer le front de S3 et CloudFront vers Cloud Storage et Cloud CDN mettrait les deux applications chez le même fournisseur, et retirerait une console, un modèle de droits et une facture.',
+        'Déplacer le front de S3 et CloudFront vers Firebase Hosting mettrait les deux applications chez le même fournisseur, et retirerait une console, un modèle de droits et une facture. Cloud Storage et Cloud CDN ont été écartés : leur règle de transfert coûte près de 18 $ par mois avant le premier octet servi.',
       sharedCache: 'Cache partagé entre instances',
       sharedCacheHint:
         'Le cache des fiches TMDB vit dans la mémoire de chaque instance : deux instances refont le même appel, et un redémarrage repart à froid. Un cache commun corrigerait les deux.',
-      prerender: 'Pré-rendu des pages publiques',
-      prerenderHint:
-        'Les pages publiques sont aujourd’hui référencées par métadonnées et sitemap ; du HTML pré-rendu ferait mieux.',
       techLead: 'Ce qui n’est pas fait, et qui est nommé plutôt que passé sous silence.',
       mvpWhen: 'Février 2026',
       mvpWhat: 'MVP',
@@ -2113,34 +2270,49 @@
       v15Item3: 'Primitives partagées',
       v15Item4: 'Accueil public refondu',
       v15Item5: 'Ce dossier technique',
-      v16When: 'Prochain palier',
+      v16When: 'Septembre 2026',
       v16What: 'V1.6',
       v16Detail:
-        'Fermer la boucle sociale ouverte en V1.2 et ajouter un second format de décision à côté de la roue.',
+        'La boucle sociale ouverte en V1.2 se referme et la soirée devient un rituel : elle se répète, se rejoue depuis un modèle et peut couronner plusieurs films.',
       v16Hint:
-        'Items classés par valeur utilisateur décroissante, comme sur les paliers précédents.',
+        'Le mode tournoi a quitté ce palier pour le backlog : son coût dépassait à lui seul celui des cinq autres items réunis.',
       v16Item1: "Recherche d'utilisateurs",
       v16Item2: 'Soirées récurrentes',
       v16Item3: 'Modèles de soirée',
       v16Item4: 'Plusieurs gagnants',
-      v16Item5: 'Mode tournoi',
+      v16Item5: 'Plage de votes réglable',
+      v16Item6: "Watchlist d'un autre compte",
       v17When: 'Ensuite',
       v17What: 'V1.7',
       v17Detail:
-        "Outils avancés pour l'hôte, et remplacement du rafraîchissement périodique par une vraie connexion temps réel.",
+        "Remplacer le rafraîchissement périodique par une vraie connexion temps réel, et armer l'hôte des outils qui lui manquent.",
       v17Hint:
         'Le temps réel est le dernier chantier de plateforme encore ouvert sur la trajectoire produit.',
-      v17Item1: 'Co-hôte',
-      v17Item2: 'Thème imposé',
-      v17Item3: 'Avertissements de contenu',
-      v17Item4: 'Temps réel et présence',
-      v17Item5: 'Palette de commandes',
+      v17Item1: 'Synchronisation temps réel',
+      v17Item2: 'Présence sur la page soirée',
+      v17Item3: 'Co-hôte',
+      v17Item4: 'Thème imposé',
+      v17Item5: 'Avertissements de contenu',
+      v17Item6: 'Double authentification',
+      v17Item7: "Centre d'aide",
+      v18When: 'Plus tard',
+      v18What: 'V1.8',
+      v18Detail:
+        'Ce que chacun garde de ses soirées : la note posée sur un film vu, les films déjà vus repris de Letterboxd, et de quoi raconter la séance.',
+      v18Hint:
+        "L'import Letterboxd remonte cette fois les films vus et leur note, là où la V1.4 ne synchronisait que la liste à voir.",
+      v18Item1: "Note d'un film vu",
+      v18Item2: 'Films vus importés de Letterboxd',
+      v18Item3: 'Partage en story',
+      v18Item4: 'Palette de commandes',
+      v18Item5: 'Photo de profil',
+      v18Item6: 'Consultation hors-ligne',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:
         'Une application mobile native, pleinement intégrée à la plateforme. Le prototype de cours a été archivé plutôt que rafistolé.',
       v2Hint:
-        'Aucune date annoncée : le périmètre dépendra de ce que la V1.7 aura laissé derrière elle.',
+        'Aucune date annoncée : le périmètre dépendra de ce que la V1.8 aura laissé derrière elle.',
       v2Item1: 'Application native',
       v2Item2: 'Notifications système',
       v2Item3: 'Parcours complet hors navigateur',
@@ -2410,11 +2582,11 @@
       productCaption:
         'Le brainstorming alimente le backlog, la roadmap le priorise. Chaque étape se mène en conversation avec un modèle frontière qui a lu la documentation et le code du dépôt avant de répondre.',
       featureCaption:
-        "Le test est écrit avant le code, et aucune ligne n'est envoyée avant que j'aie testé la fonctionnalité moi-même. Ce que la production révèle repart ensuite vers le backlog produit.",
+        "Le compte rendu fonctionnel fixe les cas à la marge, chacun devient un test avant le code, et aucune ligne n'est envoyée avant que j'aie testé la fonctionnalité moi-même. Ce que la production révèle repart ensuite vers le backlog produit.",
       bugCaption:
         'Le test précède le correctif. Sans lui, rien ne prouve que la cause a été traitée.',
       toolingCaption:
-        "Les cinq procédures sont rappelées par leur nom : l'assistant recharge la marche à suivre au lieu que je la redécrive.",
+        "Les {{count}} procédures sont rappelées par leur nom : l'assistant recharge la marche à suivre au lieu que je la redécrive.",
       mcpNoteLead: 'Les outils branchés :',
       mcpNote:
         "{{tools}} connecteurs donnent à l'assistant une lecture directe de l'état réel, au lieu de ce que je lui en raconte. Ils servent à constater : aucun ne décide, aucun ne court-circuite les quatre points de validation ni la chaîne de contrôle.",
@@ -2432,7 +2604,7 @@
       controlKicker: 'Contrôle',
       controlTitle: 'Quatre points de validation',
       controlText:
-        'Cadrage, maquette, plan technique, recette locale. Rien ne continue sans mon accord.',
+        'Cadrage, compte rendu fonctionnel, maquette, recette locale. Rien ne continue sans mon accord.',
       controlHint:
         "Quatre moments où la machine s'arrête et attend une décision humaine avant de continuer.",
       arbitrationKicker: 'Arbitrage',
@@ -2476,7 +2648,7 @@
       frontHint:
         "Le rendu serveur aurait ajouté une infrastructure à tenir pour un catalogue de pages publiques restreint : l'accueil, les profils, le dossier technique et les pages légales.",
       frontTrade:
-        'Ces pages publiques sont référencées par métadonnées et sitemap plutôt que par du HTML pré-rendu, et le pré-rendu reste un chantier ouvert.',
+        "Cinq pages publiques sont pré-rendues au build, HTML complet et métadonnées compris ; l'accueil et les profils, dynamiques, restent référencés par métadonnées et sitemap.",
       styling: 'Modules CSS plutôt que Tailwind',
       stylingValue:
         'Des modules CSS et des jetons maison : espacements, tailles, couleurs et profondeurs forment une échelle fermée que le contrôle refuse de voir contournée.',
@@ -2566,9 +2738,9 @@
         'Les révisions restent disponibles chez l’hébergeur et les anciennes images dans le registre, purgées par une chaîne dédiée pour qu’il ne gonfle pas.',
       scheduler: 'Travail périodique',
       schedulerValue:
-        'Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, sur une route protégée par jeton.',
+        "Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, et une fois par jour pour faire naître l'occurrence suivante des soirées récurrentes, sur des routes protégées par jeton.",
       schedulerHint:
-        'Le job est créé par la chaîne de déploiement, mais seulement si le jeton existe : sans lui, aucun rappel ne part et le déploiement le signale par un avertissement.',
+        'Les deux jobs sont créés par la chaîne de déploiement, mais seulement si le jeton existe : sans lui, ni rappel ni occurrence suivante ne partent, et le déploiement le signale par un avertissement.',
       origins: 'Origines',
       originsValue:
         'Le serveur n’accepte que les origines déclarées. Le déploiement échoue si la liste n’est pas renseignée.',
@@ -2577,7 +2749,7 @@
     },
     quality: {
       title: 'Ce qui est mesuré, et le seuil qui fait échouer',
-      lead: 'Une métrique sans seuil est une décoration. Les quatre premières arrêtent une livraison ; les deux dernières racontent ce qui se passe une fois en ligne.',
+      lead: 'Une métrique sans seuil est une décoration. Les quatre premières arrêtent une livraison ; les trois dernières racontent ce qui se passe une fois en ligne.',
       blockingHeading: 'Seuils bloquants',
       informativeHeading: 'Ce qui est observé en production',
       coverage: 'Couverture de tests',
@@ -2589,7 +2761,7 @@
       lighthouseValue:
         '{{pages}} pages auditées à chaque envoi, avec des minimums de {{perf}} en performance, {{a11y}} en accessibilité, {{bp}} en bonnes pratiques et {{seo}} en référencement.',
       lighthouseHint:
-        'Chaque page est mesurée trois fois et c’est la médiane qui est retenue. Une seule page déroge, la plus lourde, dont le minimum de performance descend à {{watchlist}} : le runner y perd quatre points sans qu’il y ait de régression réelle.',
+        "Chaque page est mesurée cinq fois et c'est la médiane qui est retenue, pour lisser la variance du runner. Plus aucune page n'a de plancher à elle depuis que l'état déconnecté d'une route protégée se rend depuis la coquille.",
       axe: 'Accessibilité automatisée',
       axeValue:
         '{{views}} vues passées à axe-core pendant la suite de tests. Une violation fait échouer le test, pas un rapport.',
@@ -2601,6 +2773,11 @@
         'Analyse à chaque envoi, couverture ingérée depuis la CI. La chaîne attend le verdict du portail qualité et échoue s’il est rouge.',
       sonarHint:
         'Les deux déploiements dépendent de ce job : un portail rouge arrête la livraison, il ne se contente pas de l’annoter.',
+      monitoring: 'Cloud Monitoring',
+      monitoringValue:
+        "Trois sondes interrogent le service de l'extérieur, depuis trois continents, et cinq politiques d'alerte préviennent par courriel : service ou base injoignables, erreurs serveur, latence dégradée.",
+      monitoringHint:
+        "Les sondes visent /health, /health/ready et la racine du front. Les seuils sont posés au-dessus du bruit mesuré pour qu'une alerte reste crédible, et un incident se referme seul après trente minutes de retour à la normale.",
       sentry: 'Sentry',
       sentryValue:
         'Erreurs du navigateur et du serveur, rattachées à la version déployée par le SHA du commit.',
@@ -2715,20 +2892,22 @@
       phaseReview: 'revue',
       phaseShip: 'livraison',
       skillStrategyWhen: 'avant d’écrire les tests',
-      devNeed: 'besoin, issue ou bug',
+      devNeed: 'feature de la roadmap',
       devScoping: 'cadrage fonctionnel',
+      devFunctionalSpec: 'compte rendu fonctionnel',
       devMockup: 'maquette si besoin UI',
-      devPlan: 'plan technique',
+      devTestPlan: 'plan de tests',
       devTdd: 'développement en TDD',
-      devVerify: '/verify',
+      devBrowserCheck: 'contrôle en navigateur',
       devLocalCheck: 'recette locale',
-      devReview: 'code review',
+      devReview: 'code review, sécurité',
       devFixes: 'corrections',
-      devPrePush: 'checks pre-push',
-      devPush: 'push',
+      devRoadmap: 'roadmap mise à jour',
+      devPrePush: 'verify:local avant push',
+      devPush: 'push, branche de version',
       devCi: 'CI, {{jobs}} checks',
-      devMerge: 'merge sur master',
-      devDeploy: 'déploiement en prod',
+      devMerge: 'merge en fin de version',
+      devDeploy: 'mise en prod manuelle',
       devSignals: 'monitoring',
       devSignalsSub: 'Sentry, PostHog',
       flowBrainstorm: 'brainstorming',
@@ -2746,10 +2925,14 @@
         'Les quatre étapes encadrées attendent ma relecture et mon accord avant de continuer.',
       toolingTitle: "Procédures nommées et connecteurs de lecture branchés sur l'assistant.",
       skillsLabel: 'PROCÉDURES OUTILLÉES, RAPPELÉES PAR LEUR NOM',
+      skillFlowWhen: 'le flot entier, du scope au push',
       skillCritiqueWhen: 'sur la maquette',
-      skillVerifyWhen: 'avant chaque envoi',
-      skillReviewWhen: 'avant la fusion',
-      skillDebtWhen: 'passe périodique',
+      skillVerifyWhen: 'à chaque recette locale',
+      skillReviewWhen: 'après la recette, avant le push',
+      skillSimplifyWhen: 'après la code review',
+      skillSecurityWhen: 'auth, droits, nouvel endpoint',
+      skillDeployWhen: 'à la mise en production',
+      skillMaintenanceWhen: 'passe hebdomadaire',
       mcpLabel: "OUTILS BRANCHÉS SUR L'ASSISTANT (MCP ET LIGNE DE COMMANDE)",
       mcpAssistant: 'assistant',
       mcpGithub: 'PR et CI',
@@ -2872,7 +3055,7 @@
       infraRegistrySub: 'une image par commit',
       infraRegistryDetail: 'taguée par SHA, purgée',
       infraScheduler: 'Cloud Scheduler',
-      infraSchedulerSub: 'rappels de soirée',
+      infraSchedulerSub: 'rappels et soirées récurrentes',
       infraSchedulerDetail: 'créé si le jeton existe',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'replica set managé',

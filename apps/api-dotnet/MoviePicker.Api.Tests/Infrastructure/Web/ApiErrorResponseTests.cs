@@ -41,6 +41,22 @@ public sealed class ApiErrorResponseTests
     }
 
     [Fact]
+    public void FromHttpContext_CarriesTheReason_WhenGiven()
+    {
+        var response = ApiErrorResponse.FromHttpContext(new DefaultHttpContext(), 409, "Limite", "vote-limit-reached");
+
+        Assert.Equal("vote-limit-reached", response.Reason);
+    }
+
+    [Fact]
+    public void Serialize_OmitsReason_WhenNull()
+    {
+        var json = ApiErrorJson.Serialize(new DefaultHttpContext(), 400, "x");
+
+        Assert.DoesNotContain("reason", json);
+    }
+
+    [Fact]
     public void Serialize_OmitsRequestId_WhenNull()
     {
         var json = ApiErrorJson.Serialize(new DefaultHttpContext(), 400, "x");

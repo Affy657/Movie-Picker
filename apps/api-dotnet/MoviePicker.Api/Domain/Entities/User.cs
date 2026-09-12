@@ -44,12 +44,14 @@ public sealed record User
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;
+    public bool IsWatchlistPublic { get; init; } = true;
     public UiThemePreference UiTheme { get; init; } = UiThemePreference.System;
     public AccentColor AccentColor { get; init; } = AccentColor.Default;
     public RatingScale RatingScale { get; init; } = RatingScale.Five;
     public string AvatarId { get; init; } = string.Empty;
     public IReadOnlyDictionary<UserNotificationType, bool> NotificationPreferences { get; init; }
         = NotificationPreferenceDefaults.All();
+    public IReadOnlyList<EventTemplate> EventTemplates { get; init; } = Array.Empty<EventTemplate>();
     public DateTimeOffset? SupporterSince { get; init; }
     public string? LetterboxdUsername { get; init; }
     public DateTimeOffset? LetterboxdLastSyncAt { get; init; }

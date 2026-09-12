@@ -1,11 +1,12 @@
 import confetti from 'canvas-confetti';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Film, X } from 'lucide-react';
+import { Disc3, Film, X } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useTranslation } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import SpinningWheel from './SpinningWheel';
 import Modal from '@/shared/components/Modal';
 import styles from './WheelModal.module.css';
@@ -24,6 +25,8 @@ interface WheelModalProps {
   onRelaunch?: () => void;
   onSpinComplete?: () => void;
   skipSpin?: boolean;
+  winnerCount?: number;
+  remainingDraws?: number;
 }
 
 export default function WheelModal({
@@ -36,8 +39,33 @@ export default function WheelModal({
   onRelaunch,
   onSpinComplete,
   skipSpin = false,
+  winnerCount = 1,
+  remainingDraws = 0,
 }: Readonly<WheelModalProps>) {
   const { t } = useTranslation();
+  const drawIndex = Math.max(1, winnerCount - remainingDraws);
+  const titleParams = { index: drawIndex, total: winnerCount };
+  let title: string;
+  if (skipSpin) {
+    title =
+      winnerCount > 1
+        ? t('events.wheel.modal.manualWinnerTitleOfMany', titleParams)
+        : t('events.wheel.modal.manualWinnerTitle');
+  } else {
+    title =
+      winnerCount > 1
+        ? t('events.wheel.modal.winnerTitleOfMany', titleParams)
+        : t('events.wheel.modal.winnerTitle');
+  }
+  const remainingLabel =
+    remainingDraws > 0
+      ? pluralizeCount(
+          remainingDraws,
+          'events.wheel.modal.remainingOne',
+          'events.wheel.modal.remainingMany',
+          t
+        )
+      : null;
   const dialogRef = useRef<HTMLDialogElement>(null);
   const confettiOverlayRef = useRef<HTMLDivElement>(null);
   const [animDone, setAnimDone] = useState(skipSpin);
@@ -170,9 +198,7 @@ export default function WheelModal({
           <>
             <div className={styles.header}>
               <h2 id="wheel-modal-title" className={styles.title}>
-                {skipSpin
-                  ? t('events.wheel.modal.manualWinnerTitle')
-                  : t('events.wheel.modal.winnerTitle')}
+                {title}
               </h2>
               <IconButton label={t('common.close')} onClick={onClose}>
                 <X size={20} />
@@ -202,15 +228,26 @@ export default function WheelModal({
               </div>
             </div>
 
+            {remainingLabel ? <p className={styles.remaining}>{remainingLabel}</p> : null}
+
             <div className={styles.footer}>
-              {onRelaunch && (
-                <Button type="button" onClick={onRelaunch}>
-                  {t('events.wheel.relaunchButton')}
+              {onRelaunch ? (
+                <>
+                  <Button type="button" onClick={onClose}>
+                    {t('events.wheel.modal.finishHereButton')}
+                  </Button>
+                  <Button type="button" variant="primary" onClick={onRelaunch}>
+                    <Disc3 size={16} aria-hidden />
+                    <span className={styles.relaunchLabel}>
+                      {t('events.wheel.modalRelaunchButton')}
+                    </span>
+                  </Button>
+                </>
+              ) : (
+                <Button type="button" variant="primary" onClick={onClose}>
+                  {t('events.wheel.modal.closeButton')}
                 </Button>
               )}
-              <Button type="button" variant="primary" onClick={onClose}>
-                {t('events.wheel.modal.closeButton')}
-              </Button>
             </div>
           </>
         )}

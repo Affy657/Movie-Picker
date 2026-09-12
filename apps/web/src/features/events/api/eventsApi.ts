@@ -89,6 +89,10 @@ export async function joinEvent(slug: string, pseudo: string): Promise<JoinEvent
   };
 }
 
+export function fetchEventConfig(slug: string): Promise<EventConfigData> {
+  return fetchApi<EventConfigData>(`/events/${slug}/config`);
+}
+
 export function patchEventConfig(
   slug: string,
   hostToken: string | null,
@@ -139,6 +143,14 @@ export async function postEventClose(slug: string, hostToken: string | null): Pr
 
 export async function deleteEventWheel(slug: string, hostToken: string | null): Promise<void> {
   await fetchApi(`/events/${slug}/wheel${hostQuery(hostToken)}`, { method: 'DELETE' });
+}
+
+export async function deleteEventWinner(
+  slug: string,
+  movieId: string,
+  hostToken: string | null
+): Promise<void> {
+  await fetchApi(`/events/${slug}/winners/${movieId}${hostQuery(hostToken)}`, { method: 'DELETE' });
 }
 
 export type RemoveParticipantResponse = {

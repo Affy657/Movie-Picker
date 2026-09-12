@@ -8,13 +8,16 @@ type Props = {
 
 export default function HighlightedText({ value, highlight }: Readonly<Props>) {
   if (highlight.length === 0) return value;
-  return splitOnMatch(value, highlight).map((segment, index) =>
-    segment.matched ? (
-      <mark key={index} className={styles.highlight}>
+  let offset = 0;
+  return splitOnMatch(value, highlight).map((segment) => {
+    const key = `${offset}-${segment.text}`;
+    offset += segment.text.length;
+    return segment.matched ? (
+      <mark key={key} className={styles.highlight}>
         {segment.text}
       </mark>
     ) : (
-      <span key={index}>{segment.text}</span>
-    )
-  );
+      <span key={key}>{segment.text}</span>
+    );
+  });
 }

@@ -2775,6 +2775,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{idOrSlug}/winners/{movieId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    idOrSlug: string;
+                    movieId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ResetWheelResponse"];
+                        "application/json": components["schemas"]["ResetWheelResponse"];
+                        "text/json": components["schemas"]["ResetWheelResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{idOrSlug}/close": {
         parameters: {
             query?: never;
@@ -4550,7 +4630,9 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header?: {
+                    "X-Scheduler-Token"?: string;
+                };
                 path?: never;
                 cookie?: never;
             };
@@ -5062,6 +5144,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{handle}/watchlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    skip?: number;
+                    take?: number;
+                };
+                header?: never;
+                path: {
+                    handle: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WatchlistResponse"];
+                        "application/json": components["schemas"]["WatchlistResponse"];
+                        "text/json": components["schemas"]["WatchlistResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me/watched-movies": {
         parameters: {
             query?: never;
@@ -5193,6 +5346,272 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/event-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventTemplateListResponse"];
+                        "application/json": components["schemas"]["EventTemplateListResponse"];
+                        "text/json": components["schemas"]["EventTemplateListResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SaveEventTemplateRequest"];
+                    "text/json": components["schemas"]["SaveEventTemplateRequest"];
+                    "application/*+json": components["schemas"]["SaveEventTemplateRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventTemplateResponse"];
+                        "application/json": components["schemas"]["EventTemplateResponse"];
+                        "text/json": components["schemas"]["EventTemplateResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/event-templates/{templateId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    templateId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SaveEventTemplateRequest"];
+                    "text/json": components["schemas"]["SaveEventTemplateRequest"];
+                    "application/*+json": components["schemas"]["SaveEventTemplateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventTemplateResponse"];
+                        "application/json": components["schemas"]["EventTemplateResponse"];
+                        "text/json": components["schemas"]["EventTemplateResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    templateId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -5723,7 +6142,7 @@ export interface components {
             config?: components["schemas"]["EventConfigResponse"];
             /** Format: date-time */
             closedAt?: string | null;
-            winnerMovieId?: string | null;
+            winnerMovieIds?: string[] | null;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -5806,9 +6225,13 @@ export interface components {
             maxProposalsPerParticipant?: number | null;
             /** Format: int32 */
             maxParticipants?: number | null;
+            /** Format: int32 */
+            maxVotesPerParticipant?: number | null;
             wheelMode?: components["schemas"]["WheelMode"];
             richSharePreview?: boolean;
             allowSeries?: boolean;
+            /** Format: int32 */
+            winnerCount?: number;
             recurrence?: components["schemas"]["RecurrenceFrequency"];
             hasNextOccurrence?: boolean;
         };
@@ -5821,10 +6244,7 @@ export interface components {
             config: components["schemas"]["EventConfigResponse"];
             /** Format: date-time */
             closedAt?: string | null;
-            winnerMovieId?: string | null;
-            winnerPickMethod?: string | null;
-            /** Format: date-time */
-            winnerPickedAt?: string | null;
+            winners?: components["schemas"]["EventWinnerResponse"][] | null;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -5832,7 +6252,6 @@ export interface components {
             isHost?: boolean;
             isFinished?: boolean;
             lifecycle?: string | null;
-            winnerMovie?: components["schemas"]["WinnerMovieResponse"];
             myParticipant?: components["schemas"]["ParticipantResponse"];
             /** Format: int32 */
             participantCount?: number;
@@ -5858,6 +6277,31 @@ export interface components {
             reminders24h?: number;
             /** Format: int32 */
             pendingEvents?: number;
+        };
+        EventTemplateListResponse: {
+            items?: components["schemas"]["EventTemplateResponse"][] | null;
+        };
+        EventTemplateResponse: {
+            id?: string | null;
+            name?: string | null;
+            theme?: string | null;
+            /** Format: int32 */
+            maxProposalsPerParticipant?: number | null;
+            /** Format: int32 */
+            maxParticipants?: number | null;
+            /** Format: int32 */
+            maxVotesPerParticipant?: number | null;
+            wheelMode?: components["schemas"]["WheelMode"];
+            richSharePreview?: boolean;
+            allowSeries?: boolean;
+            /** Format: int32 */
+            winnerCount?: number;
+        };
+        EventWinnerResponse: {
+            movieId?: string | null;
+            pickMethod?: string | null;
+            /** Format: date-time */
+            pickedAt?: string;
         };
         ExportedConnection: {
             handle?: string | null;
@@ -5900,6 +6344,7 @@ export interface components {
             handle?: string | null;
             bio?: string | null;
             isProfilePublic?: boolean;
+            isWatchlistPublic?: boolean;
             uiTheme?: string | null;
             accentColor?: string | null;
             avatarId?: string | null;
@@ -6194,10 +6639,13 @@ export interface components {
             /** Format: int32 */
             maxParticipants?: number | null;
             theme?: string | null;
-            winnerMovieTitle?: string | null;
-            winnerMoviePosterPath?: string | null;
+            winnerMovies?: components["schemas"]["MyEventWinnerMovieDto"][] | null;
             /** Format: date-time */
             autoCloseAt?: string | null;
+        };
+        MyEventWinnerMovieDto: {
+            title?: string | null;
+            posterPath?: string | null;
         };
         MyEventsListResponse: {
             events?: components["schemas"]["MyEventSummaryDto"][] | null;
@@ -6257,9 +6705,13 @@ export interface components {
             maxProposalsPerParticipant?: number | null;
             /** Format: int32 */
             maxParticipants?: number | null;
+            /** Format: int32 */
+            maxVotesPerParticipant?: number | null;
             wheelMode?: components["schemas"]["WheelMode"];
             richSharePreview?: boolean | null;
             allowSeries?: boolean | null;
+            /** Format: int32 */
+            winnerCount?: number | null;
             recurrence?: components["schemas"]["RecurrenceFrequency"];
             clearRecurrence?: boolean | null;
             date?: string | null;
@@ -6278,6 +6730,7 @@ export interface components {
             handle?: string | null;
             bio?: string | null;
             isProfilePublic?: boolean | null;
+            isWatchlistPublic?: boolean | null;
             letterboxdUsername?: string | null;
         };
         ProblemDetails: {
@@ -6303,6 +6756,9 @@ export interface components {
             followersCount?: number;
             isSupporter?: boolean;
             isFollowedByMe?: boolean | null;
+            isWatchlistPublic?: boolean;
+            /** Format: int32 */
+            watchlistCount?: number | null;
         };
         /** @enum {string} */
         RatingScale: "five" | "ten";
@@ -6335,6 +6791,21 @@ export interface components {
         };
         ResetWheelResponse: {
             message?: string | null;
+        };
+        SaveEventTemplateRequest: {
+            name?: string | null;
+            theme?: string | null;
+            /** Format: int32 */
+            maxProposalsPerParticipant?: number | null;
+            /** Format: int32 */
+            maxParticipants?: number | null;
+            /** Format: int32 */
+            maxVotesPerParticipant?: number | null;
+            wheelMode?: components["schemas"]["WheelMode"];
+            richSharePreview?: boolean | null;
+            allowSeries?: boolean | null;
+            /** Format: int32 */
+            winnerCount?: number | null;
         };
         SeenMarkResponse: {
             _id?: string | null;
@@ -6425,6 +6896,7 @@ export interface components {
             handle?: string | null;
             bio?: string | null;
             isProfilePublic?: boolean;
+            isWatchlistPublic?: boolean;
             letterboxdUsername?: string | null;
             /** Format: date-time */
             letterboxdLastSyncAt?: string | null;

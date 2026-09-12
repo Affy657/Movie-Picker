@@ -224,7 +224,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
     - Risques résiduels et plan de mitigation (renvois § 13)
   - **Axes de solutions techniques** retenus (architecture C4 § 14, stack § 11, hébergement § 11, sécurité § 2)
   - **Budget prévisionnel** consolidé (renvoi § 14)
-  - **Roadmap par version** : MVP → V1 → V1.1 (renvois `../roadmap-product.md` + `../roadmap-tech.md`)
+  - **Roadmap par version** : MVP → V1 → V1.1 (renvois `../roadmap.md`)
 - [ ] Préparer un **support de présentation** (slides, démo, ou page Markdown formatée pour projection) destiné à la **restitution orale** — **hors scope strict du dépôt** mais utile à mentionner ici pour boucler le critère
 - [ ] **Vocabulaire** : adapté à l'auditoire (vulgarisation des termes techniques) ; **objections** anticipées (sécurité, coûts, délais) avec réponses préparées dans le document écrit
 
@@ -325,7 +325,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
     - Création soirée : utilisateur connecté → SPA → POST `/api/v1/events` → DB → réponse + redirection `/e/:slug`
     - Lancement roue : hôte → POST `/api/v1/events/{slug}/wheel` → tirage atomique → broadcast (polling) → animation
   - **Légendes** : signification couleurs / formes / flèches explicitée
-  - **Maintenabilité / extensibilité / sécurité** : argumenté (préfixe `/api/v1` versionné, validation centralisée, secrets externes, rate limit configurables, schéma Mongo extensible — cf. [`../roadmap-tech.md`](../roadmap-tech.md))
+  - **Maintenabilité / extensibilité / sécurité** : argumenté (préfixe `/api/v1` versionné, validation centralisée, secrets externes, rate limit configurables, schéma Mongo extensible — cf. [`../roadmap.md`](../roadmap.md))
   - **Impact écologique** : Cloud Run scale-to-zero, cache posters (réduction appels TMDB), CloudFront edge cache, image Docker `mcr.microsoft.com/dotnet/aspnet:10.0` (cf. `apps/api-dotnet/MoviePicker.Api/Dockerfile:20`) — **piste d'optimisation** : migration vers `aspnet:10.0-alpine` ou `aspnet:10.0-noble-chiseled` pour réduire la surface d'attaque et l'empreinte image (à arbitrer selon compatibilité ICU / globalisation et stabilité runtime)
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/10-budget.md`** :
   - **Estimation coût** : charge V1 (ex. 30 J/H × TJM junior 350 € HT = 10 500 € HT — si simulé en agence)
@@ -470,7 +470,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
     - Couverture tests minimale (à fixer, ex. 70 % API)
     - Sonar gate verte (cf. `livraison-v1.md` § 23)
     - 0 vulnérabilité high/critical (npm + NuGet + image Docker)
-    - Lighthouse front (cf. [`../roadmap-tech.md`](../roadmap-tech.md) § MVP « avant V1 ») non bloquant mais surveillé
+    - Lighthouse front (cf. [`../roadmap.md`](../roadmap.md) § MVP « avant V1 ») non bloquant mais surveillé
   - **Schéma unique** : Mermaid `flowchart` PR → CI → merge → CD → prod, lisible en une page
   - Lien explicite depuis `README.md` racine
 
@@ -481,12 +481,12 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 > **Objectif RNCP — C4.3.1** (non ÉLIM) : « recommandations argumentées d'amélioration permettant d'évaluer les gains (coût, délai) ; recommandations réalistes et réalisables ; renforcent l'attractivité ».
 
 - [ ] Créer **`docs/RNCP/bloc-4-mco/axes-amelioration.md`** :
-  - **Source d'analyse** : indicateurs Sentry (§ 7), uptime check, retours utilisateurs (templates GitHub § 8), backlog produit ([`../roadmap-product.md`](../roadmap-product.md) § Backlog)
+  - **Source d'analyse** : indicateurs Sentry (§ 7), uptime check, retours utilisateurs (templates GitHub § 8), backlog produit ([`../roadmap.md`](../roadmap.md) § Backlog)
   - **Recommandations** (5 à 10 items) chacune avec **gain attendu** + **coût estimé (J/H)** + **délai** + **réaliste oui/non** :
     - Ex. « Push web rappels » : gain rétention +X %, coût ~5 J/H, délai 1 sprint, dépend consentement RGPD
     - Ex. « Cercles d'amis » : gain rétention forte, coût ~10 J/H, délai 2 sprints, levier produit majeur
     - Ex. « Canary deployment » : gain stabilité prod, coût ~3 J/H, délai 1 sprint, recommandé après premier incident utilisateur
-  - Lien croisé avec **Backlog produit** ([`../roadmap-product.md`](../roadmap-product.md)) et **Backlog tech** ([`../roadmap-tech.md`](../roadmap-tech.md)) — éviter de dupliquer, **prioriser** ici
+  - Lien croisé avec les deux backlogs, produit et tech ([`../roadmap.md`](../roadmap.md)) — éviter de dupliquer, **prioriser** ici
 
 ---
 

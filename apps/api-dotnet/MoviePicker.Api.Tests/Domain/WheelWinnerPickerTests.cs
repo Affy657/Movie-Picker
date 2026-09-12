@@ -64,7 +64,7 @@ public sealed class WheelWinnerPickerTests
 
         for (var i = 0; i < 50; i++)
         {
-            var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, random, excludedMovieId: "a");
+            var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, random, excludedMovieIds: ["a"]);
             Assert.NotEqual("a", w.Id);
         }
     }
@@ -82,17 +82,74 @@ public sealed class WheelWinnerPickerTests
                 id => id == "a" ? 100 : 0,
                 WheelMode.WeightedByVotes,
                 random,
-                excludedMovieId: "a");
+                excludedMovieIds: ["a"]);
             Assert.NotEqual("a", w.Id);
         }
     }
 
     [Fact]
-    public void Pick_FallsBackToExcludedMovie_WhenItIsTheOnlyCandidate()
+    public void Pick_EveryCandidateAlreadyWon_Throws()
     {
         var movies = new[] { M("only", "Only") };
-        var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, new Random(0), excludedMovieId: "only");
-        Assert.Equal("only", w.Id);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            WheelWinnerPicker.Pick(
+                movies,
+                _ => 0,
+                WheelMode.StrictRandom,
+                new Random(0),
+                excludedMovieIds: ["only"]));
+    }
+
+    [Fact]
+    public void Pick_ExcludesEveryPreviousWinner_NotOnlyTheLast()
+    {
+        var movies = new[] { M("a", "A"), M("b", "B"), M("c", "C") };
+        var random = new Random(13);
+
+        for (var i = 0; i < 50; i++)
+        {
+            var w = WheelWinnerPicker.Pick(
+                movies,
+                _ => 0,
+                WheelMode.StrictRandom,
+                random,
+                excludedMovieIds: ["a", "b"]);
+            Assert.Equal("c", w.Id);
+        }
+    }
+
+    [Fact]
+    public void Pick_Weighted_ExcludesEveryPreviousWinner_EvenTheBestScored()
+    {
+        var movies = new[] { M("a", "A"), M("b", "B"), M("c", "C") };
+        var random = new Random(17);
+
+        for (var i = 0; i < 50; i++)
+        {
+            var w = WheelWinnerPicker.Pick(
+                movies,
+                id => id == "c" ? 0 : 100,
+                WheelMode.WeightedByVotes,
+                random,
+                excludedMovieIds: ["a", "b"]);
+            Assert.Equal("c", w.Id);
+        }
+    }
+
+    [Fact]
+    public void Pick_IgnoresBlankIdsInTheExclusionList()
+    {
+        var movies = new[] { M("a", "A") };
+
+        var w = WheelWinnerPicker.Pick(
+            movies,
+            _ => 0,
+            WheelMode.StrictRandom,
+            new Random(0),
+            excludedMovieIds: ["", "   "]);
+
+        Assert.Equal("a", w.Id);
     }
 
     [Fact]
@@ -122,11 +179,17 @@ public sealed class WheelWinnerPickerTests
     }
 
     [Fact]
-    public void Pick_ExcludedFromWheel_TakesPrecedenceOverPreviousWinnerFallback()
+    public void Pick_LastEligibleMovieAlreadyWon_Throws()
     {
         var movies = new[] { M("a", "A") with { ExcludedFromWheel = true }, M("b", "B") };
-        var w = WheelWinnerPicker.Pick(movies, _ => 0, WheelMode.StrictRandom, new Random(0), excludedMovieId: "b");
-        Assert.Equal("b", w.Id);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            WheelWinnerPicker.Pick(
+                movies,
+                _ => 0,
+                WheelMode.StrictRandom,
+                new Random(0),
+                excludedMovieIds: ["b"]));
     }
 
     [Fact]

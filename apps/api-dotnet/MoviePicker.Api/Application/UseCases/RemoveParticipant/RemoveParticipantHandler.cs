@@ -47,7 +47,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         if (evt.ClosedAt.HasValue)
             throw new ConflictException("Soirée clôturée. Impossible de modifier la liste des participants.");
 
-        if (!string.IsNullOrEmpty(evt.WinnerMovieId))
+        if (evt.HasWinner)
             throw new ConflictException("La roue a déjà été lancée : la liste des participants ne peut plus être modifiée.");
 
         var participant = await _participantRepository.FindByIdAndEventIdAsync(participantId, evt.Id, ct);

@@ -2,11 +2,14 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.VoteMovie;
 
 public sealed class VoteMovieHandler : IVoteMovieHandler
 {
+    public const string VoteLimitReachedReason = "vote-limit-reached";
+
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IParticipantRepository _participantRepository;
@@ -40,6 +43,8 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
             "Vous ne pouvez voter que pour votre propre participation.",
             ct);
 
+        await EnsureWithinVoteLimitAsync(evt, movie, participant, ct);
+
         var vote = new Vote
         {
             Id = string.Empty,
@@ -63,5 +68,19 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
             CreatedAt = saved.CreatedAt,
             UpdatedAt = saved.UpdatedAt
         };
+    }
+
+    private async Task EnsureWithinVoteLimitAsync(Event evt, Movie movie, Participant participant, CancellationToken ct)
+    {
+        var maxVotes = evt.Config?.MaxVotesPerParticipant;
+        if (maxVotes is not > 0)
+            return;
+        var votes = await _voteRepository.GetParticipantVotesByEventAsync(evt.Id, participant.Id, ct);
+        if (votes.ContainsKey(movie.Id))
+            return;
+        if (votes.Count >= maxVotes)
+            throw new ConflictException(
+                $"Limite de {maxVotes} vote(s) par participant atteinte.",
+                VoteLimitReachedReason);
     }
 }

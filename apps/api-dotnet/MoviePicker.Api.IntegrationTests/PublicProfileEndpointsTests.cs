@@ -143,6 +143,73 @@ public sealed class PublicProfileEndpointsTests : IClassFixture<MoviePickerAppli
         Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
     }
 
+    private static async Task AddInceptionToWatchlistAsync(HttpClient client)
+    {
+        var add = await client.PostAsJsonAsync(
+            "/api/v1/watchlist",
+            new { tmdbId = 27205, title = "Inception", year = "2010" });
+        Assert.Equal(HttpStatusCode.Created, add.StatusCode);
+    }
+
+    [Fact]
+    public async Task Watchlist_PublicByDefault_IsListedAndCountedForVisitors()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Liste Ouverte");
+        var me = await GetMeAsync(client);
+        Assert.True(me.IsWatchlistPublic);
+        await AddInceptionToWatchlistAsync(client);
+
+        var anon = _factory.CreateClient();
+        var profile = await anon.GetFromJsonAsync<PublicProfileResponse>($"/api/v1/users/{me.Handle}", JsonOptions);
+        Assert.NotNull(profile);
+        Assert.True(profile!.IsWatchlistPublic);
+        Assert.Equal(1, profile.WatchlistCount);
+
+        var res = await anon.GetAsync($"/api/v1/users/{me.Handle}/watchlist");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var page = await res.Content.ReadFromJsonAsync<WatchlistResponse>(JsonOptions);
+        Assert.NotNull(page);
+        Assert.Equal(1, page!.Total);
+        Assert.Equal("Inception", Assert.Single(page.Items).Title);
+    }
+
+    [Fact]
+    public async Task Watchlist_Hidden_Returns404ForVisitors_ButStaysReadableByItsOwner()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Liste Cachée");
+        var me = await GetMeAsync(client);
+        await AddInceptionToWatchlistAsync(client);
+
+        var patch = await client.PatchAsJsonAsync("/api/v1/auth/me", new { isWatchlistPublic = false });
+        Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
+        var patched = await patch.Content.ReadFromJsonAsync<UserProfileResponse>(JsonOptions);
+        Assert.False(patched!.IsWatchlistPublic);
+        Assert.True(patched.IsProfilePublic);
+
+        var anon = _factory.CreateClient();
+        var profile = await anon.GetFromJsonAsync<PublicProfileResponse>($"/api/v1/users/{me.Handle}", JsonOptions);
+        Assert.False(profile!.IsWatchlistPublic);
+        Assert.Null(profile.WatchlistCount);
+        Assert.Equal(HttpStatusCode.NotFound, (await anon.GetAsync($"/api/v1/users/{me.Handle}/watchlist")).StatusCode);
+
+        var own = await client.GetFromJsonAsync<PublicProfileResponse>($"/api/v1/users/{me.Handle}", JsonOptions);
+        Assert.Equal(1, own!.WatchlistCount);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync($"/api/v1/users/{me.Handle}/watchlist")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Watchlist_PrivateProfile_Returns404()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Profil Fermé");
+        var me = await GetMeAsync(client);
+        var patch = await client.PatchAsJsonAsync("/api/v1/auth/me", new { isProfilePublic = false });
+        Assert.Equal(HttpStatusCode.OK, patch.StatusCode);
+
+        var anon = _factory.CreateClient();
+        var res = await anon.GetAsync($"/api/v1/users/{me.Handle}/watchlist");
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
     [Fact]
     public async Task HandleAvailable_ReflectsExistingHandles()
     {

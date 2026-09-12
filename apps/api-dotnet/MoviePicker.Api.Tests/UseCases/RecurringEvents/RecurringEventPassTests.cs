@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.RecurringEvents;
@@ -138,7 +139,7 @@ public sealed class RecurringEventPassTests
         Assert.NotEqual("cine-club", created.Slug);
         Assert.NotEqual("host-token", created.HostToken);
         Assert.Null(created.ClosedAt);
-        Assert.Null(created.WinnerMovieId);
+        Assert.Empty(created.Winners);
         Assert.Null(created.NextOccurrenceEventId);
         Assert.Equal("evt-1", created.RecurrenceParentEventId);
     }

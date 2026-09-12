@@ -2,9 +2,11 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.CloseEvent;
+using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.CloseEvent;
@@ -12,11 +14,9 @@ namespace MoviePicker.Api.Tests.UseCases.CloseEvent;
 public sealed class CloseEventHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepo;
-    private readonly Mock<IMovieRepository> _movieRepo;
-    private readonly Mock<IParticipantRepository> _participantRepo;
-    private readonly Mock<IWatchlistRepository> _watchlistRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUser;
+    private readonly Mock<IFinishedEventWatchlistPass> _watchlistCleanup = new();
     private readonly Mock<IRecurringEventPass> _recurringEvents = new();
     private readonly CloseEventHandler _sut;
 
@@ -35,19 +35,14 @@ public sealed class CloseEventHandlerTests
     public CloseEventHandlerTests()
     {
         _eventRepo = new Mock<IEventRepository>();
-        _movieRepo = new Mock<IMovieRepository>();
-        _participantRepo = new Mock<IParticipantRepository>();
-        _watchlistRepo = new Mock<IWatchlistRepository>();
         _hostTokenAccessor = new Mock<IHostTokenAccessor>();
         _currentUser = new Mock<ICurrentUserAccessor>();
         _currentUser.Setup(c => c.GetUserId()).Returns((string?)null);
         _sut = new CloseEventHandler(
             _eventRepo.Object,
-            _movieRepo.Object,
-            _participantRepo.Object,
-            _watchlistRepo.Object,
             _hostTokenAccessor.Object,
             _currentUser.Object,
+            _watchlistCleanup.Object,
             _recurringEvents.Object,
             NullLogger<CloseEventHandler>.Instance);
     }
@@ -150,101 +145,26 @@ public sealed class CloseEventHandlerTests
             .ReturnsAsync((Event e, CancellationToken _) => e);
     }
 
-    private static Event EventWithWinner() => ActiveEvent() with { WinnerMovieId = "m-win" };
-
-    private static Movie Winner() => new()
-    {
-        Id = "m-win",
-        EventId = "evt1",
-        TmdbId = 550,
-        MediaType = MovieMediaType.Movie,
-        Title = "Fight Club"
-    };
-
     [Fact]
-    public async Task HandleAsync_NoWinner_NeverLooksAtWatchlists()
+    public async Task HandleAsync_Closing_HandsTheClosedEventToTheWatchlistCleanup()
     {
-        GivenHostClosing(ActiveEvent());
+        GivenHostClosing(ActiveEvent() with { Winners = TestWinners.Won("m-win") });
 
         await _sut.HandleAsync("evt1");
 
-        _movieRepo.Verify(
-            r => r.GetByIdAndEventIdAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-        _watchlistRepo.Verify(
-            r => r.RemoveForUsersAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    [Fact]
-    public async Task HandleAsync_WithWinner_RemovesItFromEveryRegisteredParticipantWatchlist()
-    {
-        GivenHostClosing(EventWithWinner());
-        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("m-win", "evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Winner());
-        _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync([
-                new Participant { Id = "p1", EventId = "evt1", Pseudo = "Alice", UserId = "u1" },
-                new Participant { Id = "p2", EventId = "evt1", Pseudo = "Invité" },
-                new Participant { Id = "p3", EventId = "evt1", Pseudo = "Bob", UserId = "u2" },
-                new Participant { Id = "p4", EventId = "evt1", Pseudo = "Alice bis", UserId = "u1" }
-            ]);
-        _watchlistRepo.Setup(r => r.RemoveForUsersAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(2);
-
-        var result = await _sut.HandleAsync("evt1");
-
-        Assert.Equal("Soirée clôturée.", result.Message);
-        _watchlistRepo.Verify(
-            r => r.RemoveForUsersAsync(
-                It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 2 && ids.Contains("u1") && ids.Contains("u2")),
-                550,
-                MovieMediaType.Movie,
+        _watchlistCleanup.Verify(
+            p => p.RunForEventAsync(
+                It.Is<Event>(e => e.Id == "evt1" && e.ClosedAt != null && e.Winners.Count == 1),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
-    public async Task HandleAsync_WinnerMovieGone_RemovesNothing()
-    {
-        GivenHostClosing(EventWithWinner());
-        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("m-win", "evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Movie?)null);
-
-        var result = await _sut.HandleAsync("evt1");
-
-        Assert.Equal("Soirée clôturée.", result.Message);
-        _watchlistRepo.Verify(
-            r => r.RemoveForUsersAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    [Fact]
-    public async Task HandleAsync_OnlyGuestParticipants_RemovesNothing()
-    {
-        GivenHostClosing(EventWithWinner());
-        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("m-win", "evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Winner());
-        _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new Participant { Id = "p1", EventId = "evt1", Pseudo = "Invité" }]);
-
-        await _sut.HandleAsync("evt1");
-
-        _watchlistRepo.Verify(
-            r => r.RemoveForUsersAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    [Fact]
     public async Task HandleAsync_WatchlistCleanupFails_StillClosesTheEvent()
     {
-        GivenHostClosing(EventWithWinner());
-        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("m-win", "evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Winner());
-        _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new Participant { Id = "p1", EventId = "evt1", Pseudo = "Alice", UserId = "u1" }]);
-        _watchlistRepo.Setup(r => r.RemoveForUsersAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("base injoignable"));
+        GivenHostClosing(ActiveEvent() with { Winners = TestWinners.Won("m-win") });
+        _watchlistCleanup.Setup(p => p.RunForEventAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
         var result = await _sut.HandleAsync("evt1");
 
@@ -253,34 +173,16 @@ public sealed class CloseEventHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_WinnerIsASeries_RemovesItWithTheRightMediaType()
+    public async Task HandleAsync_AlreadyClosed_DoesNotRunTheWatchlistCleanupAgain()
     {
-        GivenHostClosing(EventWithWinner());
-        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("m-win", "evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Winner() with { MediaType = MovieMediaType.Tv, TmdbId = 1396 });
-        _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new Participant { Id = "p1", EventId = "evt1", Pseudo = "Alice", UserId = "u1" }]);
-        _watchlistRepo.Setup(r => r.RemoveForUsersAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1);
-
-        await _sut.HandleAsync("evt1");
-
-        _watchlistRepo.Verify(
-            r => r.RemoveForUsersAsync(It.IsAny<IReadOnlyCollection<string>>(), 1396, MovieMediaType.Tv, It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task HandleAsync_AlreadyClosedWithAWinner_DoesNotTouchWatchlistsAgain()
-    {
-        var closed = EventWithWinner() with { ClosedAt = DateTimeOffset.UtcNow };
+        var closed = ActiveEvent() with { Winners = TestWinners.Won("m-win"), ClosedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(closed);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         await _sut.HandleAsync("evt1");
 
-        _watchlistRepo.Verify(
-            r => r.RemoveForUsersAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
+        _watchlistCleanup.Verify(
+            p => p.RunForEventAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 }

@@ -551,9 +551,13 @@ describe('accessibilité (axe)', () => {
         isFinished: true,
         lifecycle: 'finished',
         closedAt: '2035-08-01T23:30:00Z',
-        winnerMovie: MOVIES[0],
-        winnerPickMethod: 'wheel',
-        winnerPickedAt: '2035-08-01T23:29:00Z',
+        winners: [
+          {
+            movieId: MOVIES[0]!.id,
+            pickMethod: 'wheel',
+            pickedAt: '2035-08-01T23:29:00Z',
+          },
+        ],
       });
       await assertNoViolations(container, queryClient);
     });
@@ -565,7 +569,7 @@ describe('accessibilité (axe)', () => {
         isFinished: true,
         lifecycle: 'finished',
         closedAt: '2035-08-01T23:30:00Z',
-        winnerMovie: null,
+        winners: [],
         movieCount: 0,
       });
       await assertNoViolations(container, queryClient);

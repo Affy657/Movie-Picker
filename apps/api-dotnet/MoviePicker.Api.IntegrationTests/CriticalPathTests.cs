@@ -157,8 +157,9 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         var detailRes = await client.GetAsync($"/api/v1/events/slug/{slug}");
         detailRes.EnsureSuccessStatusCode();
         var detailJson = await detailRes.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal(movieId, detailJson.GetProperty("winnerMovieId").GetString());
-        Assert.Equal("manual", detailJson.GetProperty("winnerPickMethod").GetString());
+        var winner = Assert.Single(detailJson.GetProperty("winners").EnumerateArray());
+        Assert.Equal(movieId, winner.GetProperty("movieId").GetString());
+        Assert.Equal("manual", winner.GetProperty("pickMethod").GetString());
     }
 
     [Fact]
@@ -366,7 +367,64 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     }
 
     [Fact]
-    public async Task Wheel_Relaunch_DoesNotPickPreviousWinner_WhenMultipleMovies()
+    public async Task VoteBudget_RejectsTheVoteBeyondTheLimit_UntilOneIsFreed()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "VoteBudget");
+
+        var createRes = await client.PostAsJsonAsync(
+            "/api/v1/events",
+            new { title = "Soirée budget de votes", date = "2030-07-01", time = "20:00" });
+        createRes.EnsureSuccessStatusCode();
+        var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        var slug = created!.Slug;
+        var participantId = created.CreatorParticipant!.Id;
+
+        var patch = await client.PatchAsJsonAsync($"/api/v1/events/{slug}/config", new { maxVotesPerParticipant = 1 });
+        patch.EnsureSuccessStatusCode();
+
+        var movieIds = new List<string>();
+        foreach (var tmdbId in new[] { 9101, 9102 })
+        {
+            var addRes = await client.PostAsJsonAsync($"/api/v1/events/{slug}/movies", new
+            {
+                tmdbId,
+                title = $"Budget {tmdbId}",
+                year = "2024",
+                posterPath = (string?)null,
+                participantId
+            });
+            addRes.EnsureSuccessStatusCode();
+            var movieJson = await addRes.Content.ReadFromJsonAsync<JsonElement>();
+            movieIds.Add(movieJson.GetProperty("_id").GetString()!);
+        }
+
+        var first = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movieIds[0]}/vote",
+            new { participantId, value = 1 });
+        first.EnsureSuccessStatusCode();
+
+        var second = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movieIds[1]}/vote",
+            new { participantId, value = 1 });
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+
+        var flip = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movieIds[0]}/vote",
+            new { participantId, value = -1 });
+        flip.EnsureSuccessStatusCode();
+
+        var free = await client.DeleteAsync(
+            $"/api/v1/events/{slug}/movies/{movieIds[0]}/vote?participantId={Uri.EscapeDataString(participantId)}");
+        Assert.Equal(HttpStatusCode.NoContent, free.StatusCode);
+
+        var retry = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movieIds[1]}/vote",
+            new { participantId, value = 1 });
+        retry.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Wheel_DrawsEachMovieAtMostOnce_UpToTheConfiguredCount()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "WheelRelaunch");
 
@@ -396,20 +454,19 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         await AddMovieAsync(1002, "Film B");
         await AddMovieAsync(1003, "Film C");
 
-        var first = await client.PostAsJsonAsync($"/api/v1/events/{slug}/wheel", new { });
-        first.EnsureSuccessStatusCode();
-        var firstJson = await first.Content.ReadFromJsonAsync<JsonElement>();
-        var previousWinnerId = firstJson.GetProperty("winner").GetProperty("_id").GetString()!;
+        var configRes = await client.PatchAsJsonAsync($"/api/v1/events/{slug}/config", new { winnerCount = 3 });
+        configRes.EnsureSuccessStatusCode();
 
-        for (var i = 0; i < 10; i++)
+        var drawn = new List<string>();
+        for (var i = 0; i < 3; i++)
         {
-            var relaunch = await client.PostAsJsonAsync($"/api/v1/events/{slug}/wheel", new { });
-            relaunch.EnsureSuccessStatusCode();
-            var relaunchJson = await relaunch.Content.ReadFromJsonAsync<JsonElement>();
-            var newWinnerId = relaunchJson.GetProperty("winner").GetProperty("_id").GetString()!;
-            Assert.NotEqual(previousWinnerId, newWinnerId);
-            previousWinnerId = newWinnerId;
+            var draw = await client.PostAsJsonAsync($"/api/v1/events/{slug}/wheel", new { });
+            draw.EnsureSuccessStatusCode();
+            var drawJson = await draw.Content.ReadFromJsonAsync<JsonElement>();
+            drawn.Add(drawJson.GetProperty("winner").GetProperty("_id").GetString()!);
         }
+
+        Assert.Equal(3, drawn.Distinct().Count());
     }
 
     [Fact]

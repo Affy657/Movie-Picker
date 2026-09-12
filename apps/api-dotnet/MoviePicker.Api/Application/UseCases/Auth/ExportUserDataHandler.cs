@@ -110,6 +110,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         Handle = user.Handle,
         Bio = user.Bio,
         IsProfilePublic = user.IsProfilePublic,
+        IsWatchlistPublic = user.IsWatchlistPublic,
         UiTheme = user.UiTheme.ToString(),
         AccentColor = user.AccentColor.ToString(),
         AvatarId = user.AvatarId,

@@ -35,6 +35,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public bool? IsProfilePublic { get; set; }
 
+    [BsonElement("isWatchlistPublic")]
+    [BsonIgnoreIfNull]
+    public bool? IsWatchlistPublic { get; set; }
+
     [BsonElement("uiTheme")]
     public string UiTheme { get; set; } = "system";
 
@@ -97,11 +101,30 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public List<NotificationPreferenceEntryDocument>? NotificationPreferences { get; set; }
 
+    [BsonElement("eventTemplates")]
+    [BsonIgnoreIfNull]
+    public List<EventTemplateDocument>? EventTemplates { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+}
+
+public sealed class EventTemplateDocument
+{
+    [BsonElement("id")]
+    public string Id { get; set; } = string.Empty;
+
+    [BsonElement("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [BsonElement("config")]
+    public EventConfigDocument Config { get; set; } = new();
+
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; }
 }
 
 public sealed class UserIdentityDocument

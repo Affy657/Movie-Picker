@@ -47,6 +47,19 @@ public sealed class InMemoryVoteRepositoryTests
     }
 
     [Fact]
+    public async Task UpsertAsync_ThenDelete_LeavesNoStaleVoteBehind_AfterAVoteWasChanged()
+    {
+        await _repo.UpsertAsync(Mk(value: 1));
+        await _repo.UpsertAsync(Mk(value: -1));
+
+        Assert.True(await _repo.DeleteByMovieAndParticipantAsync("mov1", "p1"));
+
+        var votes = await _repo.GetParticipantVotesByEventAsync("evt1", "p1");
+        Assert.Empty(votes);
+        Assert.Equal(0, await _repo.CountByParticipantIdsAsync(["p1"]));
+    }
+
+    [Fact]
     public async Task AggregateScoresByMovieIdsAsync_ComputesUpDownScore()
     {
         await _repo.UpsertAsync(Mk(movieId: "mov1", participantId: "p1", value: 1));

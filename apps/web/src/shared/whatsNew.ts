@@ -95,6 +95,22 @@ export const WHATS_NEW: readonly WhatsNewRelease[] = [
       entry('listCardDetails', 'improved', { link: 'profile' }),
     ],
   },
+  {
+    version: '1.6.0',
+    entries: [
+      entry('userSearch', 'new', { link: 'profile' }),
+      entry('recurringEvents', 'new', { link: 'myEvents' }),
+      entry('eventTemplates', 'new', { link: 'myEvents' }),
+      entry('multipleWinners', 'new', { link: 'myEvents' }),
+      entry('voteLimit', 'new', { link: 'myEvents' }),
+      entry('friendsWatchlist', 'new', { link: 'profile' }),
+      entry('openEventMovies', 'improved', { link: 'myEvents' }),
+      entry('wheelAnnounce', 'improved', { link: 'notifications' }),
+      entry('letterboxdFromCard', 'improved', { link: 'myEvents' }),
+      entry('scrollableDialogs', 'fixed'),
+      entry('offlineEventPage', 'fixed', { link: 'myEvents' }),
+    ],
+  },
 ];
 
 export function whatsNewLinkPath(
@@ -131,7 +147,7 @@ function getLatestRelease(releases: readonly WhatsNewRelease[]): WhatsNewRelease
 
 export const LATEST_WHATS_NEW_RELEASE: WhatsNewRelease = getLatestRelease(WHATS_NEW);
 
-export const WHATS_NEW_NAV_RELEASED_AT_MS = Date.parse('2026-09-07T00:00:00.000Z');
+export const WHATS_NEW_NAV_RELEASED_AT_MS = Date.parse('2026-09-12T00:00:00.000Z');
 export const WHATS_NEW_NAV_VISIBLE_FOR_MS = 7 * 24 * 60 * 60 * 1000;
 export const WHATS_NEW_NAV_NEW_ACCOUNT_FROM_MS = WHATS_NEW_NAV_RELEASED_AT_MS + 24 * 60 * 60 * 1000;
 

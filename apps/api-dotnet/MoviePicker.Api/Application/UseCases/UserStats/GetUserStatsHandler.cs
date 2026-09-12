@@ -59,7 +59,7 @@ public sealed class GetUserStatsHandler : IGetUserStatsHandler
         var now = _clock.GetUtcNow();
         var qualifyingEvents = participants
             .Select(p => eventById.GetValueOrDefault(p.EventId))
-            .Where(e => e is not null && e.WinnerMovieId is not null && e.IsFinished(now))
+            .Where(e => e is not null && e.HasWinner && e.IsFinished(now))
             .Select(e => e!)
             .DistinctBy(e => e.Id);
         var (currentStreakWeeks, bestStreakWeeks) = ComputeStreaks(qualifyingEvents, now);

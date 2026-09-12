@@ -47,8 +47,8 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
 
     private static User? ResolveProposerUser(
         string participantId,
-        IReadOnlyDictionary<string, Participant> participantById,
-        IReadOnlyDictionary<string, User> userById)
+        Dictionary<string, Participant> participantById,
+        Dictionary<string, User> userById)
     {
         if (!participantById.TryGetValue(participantId, out var participant))
             return null;

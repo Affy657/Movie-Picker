@@ -86,6 +86,8 @@ public sealed class InMemoryVoteRepository : IVoteRepository
         var list = _byMovieId.GetOrAdd(vote.MovieId, _ => []);
         lock (list)
         {
+            foreach (var previous in list.Where(v => v.ParticipantId == vote.ParticipantId))
+                _byId.TryRemove(previous.Id, out _);
             list.RemoveAll(v => v.ParticipantId == vote.ParticipantId);
             list.Add(created);
         }

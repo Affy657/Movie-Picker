@@ -28,7 +28,7 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
                 SentrySdk.CaptureException(context.Exception);
             }
 
-            context.Result = new JsonResult(ApiErrorResponse.FromHttpContext(http, statusCode, ex.Message))
+            context.Result = new JsonResult(ApiErrorResponse.FromHttpContext(http, statusCode, ex.Message, ex.Reason))
             {
                 StatusCode = statusCode
             };

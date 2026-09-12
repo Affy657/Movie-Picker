@@ -41,29 +41,35 @@ public sealed class AnnounceWheelWinnerHandler : IAnnounceWheelWinnerHandler
         if (!EventHost.IsHost(evt, token, userId))
             throw new ForbiddenException("Réservé à l'hôte de la soirée");
 
-        if (!IsWheelPickAwaitingAnnouncement(evt))
+        var pending = WheelPicksAwaitingAnnouncement(evt);
+        if (pending.Count == 0)
             return;
 
-        var winner = await _movieRepository.GetByIdAsync(evt.WinnerMovieId!, ct);
-        if (winner is null || winner.EventId != evt.Id)
+        var winners = await WinnerMovies.ListAsync(
+            _movieRepository,
+            evt,
+            pending.ConvertAll(pick => pick.MovieId),
+            ct);
+        if (winners.Count == 0)
             return;
 
         var now = DateTimeOffset.UtcNow;
         await _eventRepository.UpdateAsync(evt with { WinnerAnnouncedAt = now, UpdatedAt = now }, ct);
 
-        await _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Wheel, CancellationToken.None);
-        _logger.LogInformation(
-            "Wheel winner announced for event {EventId}, winner: {MovieId}", evt.Id, winner.Id);
+        foreach (var winner in winners)
+        {
+            await _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Wheel, CancellationToken.None);
+            _logger.LogInformation(
+                "Wheel winner announced for event {EventId}, winner: {MovieId}", evt.Id, winner.Id);
+        }
     }
 
-    private static bool IsWheelPickAwaitingAnnouncement(Event evt)
+    private static List<EventWinner> WheelPicksAwaitingAnnouncement(Event evt)
     {
-        if (string.IsNullOrEmpty(evt.WinnerMovieId))
-            return false;
-        if (evt.WinnerPickMethod != WinnerPickMethod.Wheel)
-            return false;
-        if (evt.WinnerPickedAt is not { } pickedAt)
-            return false;
-        return evt.WinnerAnnouncedAt is not { } announcedAt || announcedAt < pickedAt;
+        var announcedUpTo = evt.WinnerAnnouncedAt ?? DateTimeOffset.MinValue;
+        return evt.Winners
+            .Where(w => w.Method == WinnerPickMethod.Wheel && w.PickedAt > announcedUpTo)
+            .OrderBy(w => w.PickedAt)
+            .ToList();
     }
 }

@@ -323,10 +323,12 @@
 }
 
 .timeline {
+  --timeline-rail: var(--space-8);
+  --timeline-gap: var(--space-6);
   position: relative;
   display: grid;
-  gap: var(--space-6);
-  padding-left: var(--space-8);
+  gap: var(--timeline-gap);
+  padding-left: var(--timeline-rail);
 }
 
 .timeline::before {
@@ -357,10 +359,49 @@
   border-bottom: none;
 }
 
+.timelineStretch {
+  position: relative;
+  display: grid;
+  gap: var(--space-1);
+  max-width: var(--container-md);
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.timelineStretch::before {
+  content: '';
+  position: absolute;
+  top: calc(-1 * var(--timeline-gap) - 1px);
+  bottom: calc(-1 * var(--timeline-gap) - 1px);
+  left: calc(var(--space-1-5) - var(--timeline-rail) - 1px);
+  width: 2px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      var(--color-border) 0 var(--space-1-5),
+      transparent var(--space-1-5) var(--space-3)
+    ),
+    var(--color-bg);
+}
+
+.timelineStretchSpan {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-3xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-meta);
+}
+
+.timelineStretchDetail {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 .timelineMarker {
   position: absolute;
   top: var(--space-0-5);
-  left: calc(-1 * var(--space-8));
+  left: calc(-1 * var(--timeline-rail));
   width: var(--space-3-5);
   height: var(--space-3-5);
   border-radius: var(--radius-pill);
@@ -404,6 +445,13 @@
   color: var(--color-meta);
 }
 
+.timelineBadgeCurrent {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary-text);
+}
+
 .timelineChips {
   margin-top: var(--space-2);
 }
@@ -423,11 +471,7 @@
 
 @media (min-width: 48rem) {
   .timeline {
-    padding-left: var(--space-10);
-  }
-
-  .timelineMarker {
-    left: calc(-1 * var(--space-10));
+    --timeline-rail: var(--space-10);
   }
 }
 

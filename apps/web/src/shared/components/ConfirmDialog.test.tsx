@@ -81,6 +81,28 @@ describe('ConfirmDialog', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
+  it('masque Annuler avec `hideCancel` et ne garde que l’action principale', async () => {
+    const onConfirm = vi.fn();
+    render(
+      <AppTestProviders>
+        <ConfirmDialog
+          open
+          title="Limite atteinte"
+          message="Retirez un vote."
+          confirmLabel="Compris"
+          confirmVariant="primary"
+          hideCancel
+          onConfirm={onConfirm}
+          onCancel={vi.fn()}
+        />
+      </AppTestProviders>
+    );
+
+    expect(screen.queryByTestId('confirm-dialog-cancel')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Compris' }));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
   it('désactive uniquement Confirmer quand `busy=true` (Annuler reste actif)', () => {
     render(
       <AppTestProviders>

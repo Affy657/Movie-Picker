@@ -238,7 +238,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
     private static string BuildCacheKey(
         string section,
         string? theme,
-        IReadOnlyList<int> genreIds,
+        List<int> genreIds,
         int? collectionId,
         string? provider,
         int? seedTmdbId) =>

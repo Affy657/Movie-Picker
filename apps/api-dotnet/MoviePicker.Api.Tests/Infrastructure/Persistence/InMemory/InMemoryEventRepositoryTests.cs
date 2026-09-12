@@ -1,5 +1,6 @@
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Persistence.InMemory;
@@ -24,7 +25,7 @@ public sealed class InMemoryEventRepositoryTests
             HostToken = "ht",
             Slug = slug,
             CreatorUserId = creatorUserId,
-            WinnerMovieId = winnerMovieId,
+            Winners = TestWinners.Won(winnerMovieId),
             ClosedAt = closedAt,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = updatedAt == default ? DateTimeOffset.UtcNow : updatedAt
@@ -141,5 +142,27 @@ public sealed class InMemoryEventRepositoryTests
         var reloaded = await _repo.GetByIdOrSlugAsync(created.Id);
         Assert.Null(reloaded!.CreatorUserId);
         Assert.Empty(await _repo.ListByCreatorUserIdAsync("u1", 10));
+    }
+
+    [Fact]
+    public async Task MarkWatchlistCleanedAsync_StampsOnceAndKeepsTheRestOfTheEvent()
+    {
+        var evt = await _repo.AddAsync(new EventEntityBuilder().WithSlug("stamp-me").Build());
+        var at = new DateTimeOffset(2030, 6, 2, 12, 0, 0, TimeSpan.Zero);
+
+        var first = await _repo.MarkWatchlistCleanedAsync(evt.Id, at);
+        var second = await _repo.MarkWatchlistCleanedAsync(evt.Id, at.AddHours(1));
+        var reloaded = await _repo.GetByIdOrSlugAsync("stamp-me");
+
+        Assert.True(first);
+        Assert.False(second);
+        Assert.Equal(at, reloaded!.WatchlistCleanedAt);
+        Assert.Equal(evt.Title, reloaded.Title);
+    }
+
+    [Fact]
+    public async Task MarkWatchlistCleanedAsync_UnknownEvent_ReturnsFalse()
+    {
+        Assert.False(await _repo.MarkWatchlistCleanedAsync("nope", DateTimeOffset.UtcNow));
     }
 }

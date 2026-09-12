@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.EventTemplates;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Application.UseCases.SearchUsers;
@@ -113,6 +114,24 @@ public sealed class UsersController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{handle}/watchlist")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]
+    [ProducesResponseType(typeof(WatchlistResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetUserWatchlist(
+        string handle,
+        [FromQuery] int skip,
+        [FromQuery] int? take,
+        [FromServices] IGetUserWatchlistHandler handler,
+        CancellationToken ct)
+    {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var result = await handler.HandleAsync(handle, currentUserId, skip, take, ct);
+        return Ok(result);
+    }
+
     [HttpGet("me/watched-movies")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]
@@ -151,6 +170,81 @@ public sealed class UsersController : ControllerBase
 
         var result = await handler.HandleAsync(userId, take, ct);
         return Ok(result);
+    }
+
+    [HttpGet("me/event-templates")]
+    [Authorize]
+    [ProducesResponseType(typeof(EventTemplateListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ListEventTemplates(
+        [FromServices] IListEventTemplatesHandler handler,
+        [FromServices] ICurrentUserAccessor currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        return Ok(await handler.HandleAsync(userId, ct));
+    }
+
+    [HttpPost("me/event-templates")]
+    [Authorize]
+    [ProducesResponseType(typeof(EventTemplateResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CreateEventTemplate(
+        [FromBody] SaveEventTemplateRequest request,
+        [FromServices] ICreateEventTemplateHandler handler,
+        [FromServices] ICurrentUserAccessor currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        return Created(string.Empty, await handler.HandleAsync(userId, request, ct));
+    }
+
+    [HttpPut("me/event-templates/{templateId}")]
+    [Authorize]
+    [ProducesResponseType(typeof(EventTemplateResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateEventTemplate(
+        string templateId,
+        [FromBody] SaveEventTemplateRequest request,
+        [FromServices] IUpdateEventTemplateHandler handler,
+        [FromServices] ICurrentUserAccessor currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        return Ok(await handler.HandleAsync(userId, templateId, request, ct));
+    }
+
+    [HttpDelete("me/event-templates/{templateId}")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteEventTemplate(
+        string templateId,
+        [FromServices] IDeleteEventTemplateHandler handler,
+        [FromServices] ICurrentUserAccessor currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        await handler.HandleAsync(userId, templateId, ct);
+        return NoContent();
     }
 
     [HttpPost("{handle}/follow")]

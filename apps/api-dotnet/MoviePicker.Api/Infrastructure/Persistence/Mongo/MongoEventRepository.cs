@@ -98,9 +98,20 @@ public sealed class MongoEventRepository : IEventRepository
         if (ids.Count == 0)
             return 0;
 
-        var filter = Builders<EventDocument>.Filter.In(x => x.WinnerMovieId, ids);
+        var filter = Builders<EventDocument>.Filter.Or(
+            Builders<EventDocument>.Filter.In("winners.movieId", ToObjectIds(ids)),
+            Builders<EventDocument>.Filter.In(x => x.WinnerMovieId, ids));
         var c = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
         return (int)c;
+    }
+
+    private static IEnumerable<ObjectId> ToObjectIds(IEnumerable<string> ids)
+    {
+        foreach (var id in ids)
+        {
+            if (ObjectId.TryParse(id, out var parsed))
+                yield return parsed;
+        }
     }
 
     public async Task<bool> DeleteAsync(string eventId, CancellationToken ct = default)
@@ -132,6 +143,22 @@ public sealed class MongoEventRepository : IEventRepository
 
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
+    public async Task<bool> MarkWatchlistCleanedAsync(string eventId, DateTimeOffset cleanedAt, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+            return false;
+
+        var filter = Builders<EventDocument>.Filter.And(
+            Builders<EventDocument>.Filter.Eq(x => x.Id, eventId),
+            Builders<EventDocument>.Filter.Eq(x => x.WatchlistCleanedAt, null));
+        var update = Builders<EventDocument>.Update
+            .Set(x => x.WatchlistCleanedAt, cleanedAt.UtcDateTime)
+            .Set(x => x.UpdatedAt, cleanedAt.UtcDateTime);
+
+        var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
+        return result.ModifiedCount > 0;
     }
 
     public async Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default)

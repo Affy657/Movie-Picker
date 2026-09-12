@@ -7,8 +7,8 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-023`.
-5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap-product.md` ou `roadmap-tech.md`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-025`.
+5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
 
@@ -40,7 +40,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - verify: `git merge-base --is-ancestor chore/ci-keyless-oidc master && echo REGLE || echo OUVERT`
 - fix: configurer WIF et le rôle AWS, puis réécrire le patch. **La branche ne se rebase plus** : ses huit lignes modifiaient les jobs `deploy-api` et `deploy-front` de `ci-cd.yml`, partis dans `deploy.yml` le 2026-09-10. `git merge-tree master chore/ci-keyless-oidc` rend un conflit sur `ci-cd.yml` dont le contexte n'existe plus. Prendre l'intention, pas le diff.
 - fini-quand: plus aucun secret d'identifiant statique dans les secrets GitHub du dépôt
-- refs: recoupe DEBT-003 et le lot Terraform 5 de `roadmap-tech.md`, qui traite le même sujet au fond
+- refs: recoupe DEBT-003 et le lot Terraform 5 de `roadmap.md`, qui traite le même sujet au fond
 
 ## DEBT-003 une clé d'accès du compte root AWS existe encore
 
@@ -122,9 +122,8 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 ## DEBT-011 endpoint de profil public orphelin
 
-- state: humain
-- bloque: la décision, pas le geste. Cette route est très probablement le volet API de « **Watchlist d'un autre utilisateur** » du backlog de `roadmap-product.md` : la retirer supprimerait la moitié déjà écrite d'une feature planifiée. Trancher entre construire la feature et abandonner la route.
-- impact: surface d'API maintenue et testée sans aucun appelant
+- state: agent
+- impact: surface d'API maintenue et testée sans aucun appelant. L'hypothèse d'origine, « volet API de la watchlist d'un autre utilisateur », est tombée le 2026-09-11 : cette feature a été livrée en V1.6 avec sa propre route `GET users/{handle}/watchlist`, et `GET users/{handle}/movies` rend autre chose, les films proposés par un compte avec leur statut gagnant. La route est définitivement orpheline.
 - ou: `apps/api-dotnet/MoviePicker.Api/Controllers/UsersController.cs:66`, route `GET users/{handle}/movies`
 - verify: la route existe encore côté API et aucun fichier front ne l'appelle.
   ```bash
@@ -132,7 +131,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
     && ! grep -rqE '`/users/[^`]*/movies`' apps/web/src --include=*.ts --include=*.tsx --exclude-dir=generated \
     && echo "ORPHELIN: la route existe et aucun appelant front"
   ```
-- fix: décider entre rebrancher et retirer. Le retrait impose `pnpm run openapi:export && pnpm run openapi:types` et le commit du schéma régénéré.
+- fix: retirer la route, son handler `GetUserMoviesHandler` et leurs tests, puis `pnpm run openapi:export && pnpm run openapi:types` et le commit du schéma régénéré.
 - piege: `watched-movies` et `following-watched-movies` du même contrôleur sont bien utilisés par `usePersonalRows.ts`, ne pas les emporter.
 
 ## DEBT-012 le site n'est pas enregistré dans Search Console
@@ -160,7 +159,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: suivre le runbook. Élargir `ALLOWED_ORIGINS` aux deux origines, repointer le CNAME, observer les sondes. Puis reprendre les littéraux `web.movie-picker.fr` du dépôt, dont les deux liens du README et le bandeau `apps/web/public/og-image.png` qu'il affiche, l'URL y étant gravée dans l'image : la régénérer avec `node apps/web/scripts/generate-og-image.mjs`.
 - fini-quand: `www.movie-picker.fr` sert le front, plus aucun littéral `web.movie-picker.fr` hors `archive/`, et `docs/runbook-migration-domaine-www.md` est supprimé, il n'a plus d'objet
 - piege: les smoke tests de la CI ne référencent aucun de ces hôtes en dur, l'API vient de `secrets.VITE_API_URL` et le front de la première entrée de `vars.ALLOWED_ORIGINS` : ils restent justes après la migration sans qu'on y touche. Le certificat ACM est un wildcard `*.movie-picker.fr`, il couvre déjà `www`.
-- refs: le lot Terraform 4 de `roadmap-tech.md` fait la même bascule DNS en décommissionnant AWS. Si ce lot est engagé, traiter la dette ici serait du travail jeté.
+- refs: le lot Terraform 4 de `roadmap.md` fait la même bascule DNS en décommissionnant AWS. Si ce lot est engagé, traiter la dette ici serait du travail jeté.
 
 ## DEBT-015 le compte de service GCP de la CI porte roles/editor
 
@@ -174,25 +173,35 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   gcloud secrets add-iam-policy-binding MONGODB_URI --member="serviceAccount:<SA_CI>" --role=roles/secretmanager.secretAccessor
   gcloud storage buckets add-iam-policy-binding gs://<BUCKET_SAUVEGARDE> --member="serviceAccount:<SA_CI>" --role=roles/storage.objectAdmin
   ```
-- refs: pendant GCP de DEBT-003 (AWS). Le lot Terraform 5 de `roadmap-tech.md` traite les deux au fond.
+- refs: pendant GCP de DEBT-003 (AWS). Le lot Terraform 5 de `roadmap.md` traite les deux au fond.
 
-## DEBT-019 quatre fonctions restent au-dessus du seuil de complexité cognitive
+## DEBT-023 la limite de votes par participant se vérifie puis s'écrit, sans verrou
 
-- state: agent
-- impact: qualité. Sonar refuse quatre fonctions au-dessus de 15 de complexité cognitive, dont deux très loin. Aucune n'est un bug, mais chacune est un endroit où une modification future se fait à l'aveugle.
-- ou: analyse du 2026-09-10 sur `25c58bd`
-  - `apps/web/src/features/events/pages/MyEventsPage.tsx:297` (85)
-  - `apps/web/src/app/pages/ShowcaseListPage.tsx:143` (44)
-  - `apps/web/src/features/events/components/HostEventSettingsPanel.tsx:177` (19)
-  - `apps/web/src/features/events/pages/event-detail/EventDetailSession.tsx:638` (18)
-- verify: lire le total. Exporter `SONAR_TOKEN` d'abord, sa valeur se relevant dans la configuration MCP locale, serveur `sonarqube`.
+- state: differe
+- declencheur: un participant dépasse sa limite en prod, visible dans la base par un compte de votes supérieur à `maxVotesPerParticipant` sur une soirée où le réglage est actif
+- impact: contournable, pas de corruption. `VoteMovieHandler.EnsureWithinVoteLimitAsync` compte les votes existants puis insère le nouveau ; deux premiers votes envoyés en parallèle passent tous les deux la vérification. Une transaction Mongo n'y changerait rien, l'isolation par instantané ne protège pas d'une lecture fantôme sur deux documents distincts.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/VoteMovie/VoteMovieHandler.cs`, méthode `EnsureWithinVoteLimitAsync`
+- verify: la vérification est toujours un compte suivi d'un `UpsertAsync` sans garde atomique.
   ```bash
-  curl -sS -H "Authorization: Bearer $SONAR_TOKEN" "https://sonarcloud.io/api/issues/search?componentKeys=Affy657_Movie-Picker&resolved=false&rules=typescript:S3776,csharpsquid:S3776&ps=1"
+  grep -n "GetParticipantVotesByEventAsync\|UpsertAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/VoteMovie/VoteMovieHandler.cs
   ```
-- fix: **découper le composant**, pas extraire des expressions. Pour les quatre qui restent, le compteur est porté par les conditionnelles du rendu, pas par les valeurs dérivées : il faut sortir des blocs de JSX entiers dans des composants qui reçoivent les booléens et branchent chez eux. Sur `EventDetailSession`, le bloc cohérent est le groupe des dialogues, au prix d'une trentaine de props à faire descendre.
-- fini-quand: plus aucun `S3776` ouvert, ou ceux qui restent portent une justification « won't fix »
-- piege: **la complexité cognitive ne se mesure pas en local**, aucun outil du dépôt ne la calcule ; la seule boucle de retour est une analyse Sonar en CI, soit un run par itération. Second piège, mesuré à ses dépens le 2026-09-10 : **extraire des expressions dérivées dans des fonctions de module marche, mais seulement quand le compteur vient de là.** Quatre fonctions sont passées sous le seuil de cette façon (`FollowListModal` 22, `PatchEventConfigHandler` 18, `useEventWheel` 17, `MovieDetailsModal` 17), et `HostEventSettingsPanel` est resté **exactement à 19** après trois extractions du même genre : son compteur vient de ses 400 lignes de JSX conditionnel, que déplacer trois expressions ne touche pas. Troisième piège, à l'inverse du réflexe attendu : ces refactorisations **ajoutent** des lignes, parce qu'extraire un bloc coûte une déclaration de type et une liste de props. Ce n'est plus un problème de plafond depuis que le projet SonarCloud est public : mesuré le 2026-09-10, `ncloc` est passé de 49 231 à 52 349 en rendant `TechPage.tsx` et `app/pages/tech/` à l'analyse, soit au-dessus de l'ancien plafond de 50 000, et l'analyse est passée avec un Quality Gate vert.
-- refs: le chantier de septembre a bien servi, contrairement à ce que l'entrée d'avant craignait : `S3776` est passé de 15 à 7, puis à 4 le 2026-09-10, et les code smells de 42 à 18.
+- fix: porter un compteur `voteCount` sur le document participant, incrémenté par un `UpdateOne` conditionnel (`voteCount < max`) dans la même transaction que l'insertion du vote, et décrémenté quand un vote est retiré. Le front garde sa vérification locale, qui couvre le cas courant.
+- fini-quand: deux votes concurrents au-delà de la limite ne laissent qu'un vote en base, prouvé par un test d'intégration Mongo
+- piege: le compteur doit ignorer le changement de sens d'un vote déjà posé sur le même film, seul un vote sur un film nouveau consomme un créneau.
+
+## DEBT-024 le premier gagnant s'écrit encore dans l'ancien champ `winnerMovieId`
+
+- state: differe
+- declencheur: la V1.6 est en prod depuis au moins un cycle de retour arrière possible (`rollback.yml` ne peut plus viser une révision antérieure à la liste `winners`)
+- impact: aucune fonctionnalité en jeu, deux vérités en base. `EventDocumentMapper.ToDocument` recopie `Winners[0]` dans `winnerMovieId` pour qu'une révision antérieure lise encore un gagnant, alors que `winnerPickMethod` et `winnerPickedAt` ne sont plus écrits. Le compteur de soirées gagnées par film doit interroger les deux formes, et tout lecteur futur du document a deux champs à réconcilier.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/EventDocumentMapper.cs` (`ToDocument`, `ToWinners`), `MongoEventRepository.CountByWinnerMovieIdsAsync`
+- verify: la double écriture est toujours là.
+  ```bash
+  grep -n "WinnerMovieId" apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/EventDocumentMapper.cs
+  ```
+- fix: un script de reprise qui copie `winnerMovieId` + `winnerPickMethod` + `winnerPickedAt` dans `winners` sur les documents qui n'ont pas encore la liste, puis retirer la ligne de `ToDocument`, le repli de lecture de `ToWinners`, les trois champs de `EventDocument` et le `Or` du compteur. Le test `ToDocument_KeepsTheFirstWinnerInTheLegacyField` se retourne à ce moment.
+- fini-quand: `EventDocument` ne porte plus que `winners`, et un document de prod pris au hasard n'a plus de champ `winnerMovieId`
+- piege: ne pas retirer la lecture de repli avant la reprise, les soirées terminées avant la V1.6 perdraient leur gagnant dans l'historique.
 
 ---
 
@@ -238,7 +247,7 @@ Le bucket de sauvegarde MongoDB (europe-west1, versioning actif, suppression à 
 
 ## C6 sortir le front d'AWS engage le budget et suit un ordre imposé
 
-Le chantier Terraform de `roadmap-tech.md` sort le front d'AWS (lots 3 et 4). Deux cibles GCP sont possibles et **une des deux fait sortir le projet du « 0 €/mois, tous les services dans leur palier gratuit »**, indicateur suivi au Bloc 3, sans qu'aucune alerte ne le dise avant la facture.
+Le chantier Terraform de `roadmap.md` sort le front d'AWS (lots 3 et 4). Deux cibles GCP sont possibles et **une des deux fait sortir le projet du « 0 €/mois, tous les services dans leur palier gratuit »**, indicateur suivi au Bloc 3, sans qu'aucune alerte ne le dise avant la facture.
 
 - **Cloud Storage + Cloud CDN derrière un load balancer applicatif externe** est l'équivalent direct de S3 + CloudFront, mais sa règle de transfert est facturée à l'heure **sans palier gratuit** : ≈ 18 $/mois avant le moindre octet servi.
 - **Firebase Hosting** reste dans le gratuit (10 Go stockés, 360 Mo/jour transférés), porte nativement le repli SPA, les en-têtes personnalisés et le domaine sur mesure avec son certificat, et se décrit en Terraform (`google_firebase_hosting_site`, `google_firebase_hosting_custom_domain`, provider `google-beta`). **C'est la cible recommandée.** Seul point à surveiller, les 360 Mo/jour : le trafic mesuré (≈ 500 requêtes/jour) en est loin, et un dépassement bascule sur la facturation à l'octet, pas sur une coupure.
@@ -298,6 +307,8 @@ Deux pièges d'énumération, payés une fois : `approval_policy` n'accepte que 
 ## C8 jamais d'`await` de premier niveau dans `main.tsx`
 
 `apps/web/src/main.tsx` termine par `boot().catch(...)`, **pas** par `await boot()`. Le `.catch` existe pour que la promesse ne soit pas flottante, ce que Sonar refuse, et pour retirer la coquille de démarrage si `boot` échoue — sans lui, un échec laisse l'utilisateur sur un écran de démarrage permanent.
+
+**Sonar réclame l'inverse et il a tort ici** : la règle `typescript:S7785` (« prefer top-level await ») cible exactement cette ligne. Le constat est marqué « accepté » sur SonarCloud le 2026-09-12 avec cette contrainte en justification. Ne pas le solder dans le code : ça a été fait une fois le 2026-09-12 en corrigeant les constats ouverts, et repéré avant la fusion. Si l'analyse le rouvre après un déplacement de la ligne, le ré-accepter, pas le corriger.
 
 **Un `await` de premier niveau y a coûté 3 à 5 points Lighthouse sur onze pages sur treize**, posé le 2026-09-09 par `86d8770` en soldant une promesse flottante, mesuré et retiré le 2026-09-10. Il rend l'évaluation du module d'entrée asynchrone et retarde tout le montage de React.
 

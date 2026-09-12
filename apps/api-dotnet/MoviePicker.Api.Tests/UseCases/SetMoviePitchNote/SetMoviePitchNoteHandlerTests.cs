@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.SetMoviePitchNote;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.SetMoviePitchNote;
@@ -29,7 +30,7 @@ public sealed class SetMoviePitchNoteHandlerTests
         Id = "evt1",
         HostToken = "ht",
         CreatorUserId = "host",
-        WinnerMovieId = winnerMovieId,
+        Winners = TestWinners.Won(winnerMovieId),
         ClosedAt = closedAt
     };
 

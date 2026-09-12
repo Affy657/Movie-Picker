@@ -57,7 +57,7 @@ public sealed class GetUserMoviesHandler : IGetUserMoviesHandler
             .Select(m =>
             {
                 var evt = eventById.GetValueOrDefault(m.EventId);
-                var isWinner = evt is not null && evt.WinnerMovieId == m.Id && evt.IsFinished(now);
+                var isWinner = evt is not null && evt.WinnerMovieIds.Contains(m.Id) && evt.IsFinished(now);
                 return new UserMovieItem
                 {
                     TmdbId = m.TmdbId,

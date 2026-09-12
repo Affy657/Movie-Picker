@@ -44,10 +44,10 @@ function prepareEvent(event: ErrorEvent): ErrorEvent | null {
   return event;
 }
 
-type InstrumentedRoutes = Parameters<SentryApi['withSentryReactRouterV7Routing']>[0];
+type InstrumentedRoutes = Parameters<SentryApi['wrapReactRouterRouting']>[0];
 
 export function getInstrumentedRoutes(routesComponent: InstrumentedRoutes): InstrumentedRoutes {
-  return api ? api.withSentryReactRouterV7Routing(routesComponent) : routesComponent;
+  return api ? api.wrapReactRouterRouting(routesComponent) : routesComponent;
 }
 
 export async function initSentry(): Promise<void> {
@@ -60,7 +60,7 @@ export async function initSentry(): Promise<void> {
     tracesSampleRate: 0.1,
     tracePropagationTargets: sentryTracePropagationTargets(),
     integrations: [
-      Sentry.reactRouterV7BrowserTracingIntegration({
+      Sentry.reactRouterBrowserTracingIntegration({
         useEffect,
         useLocation,
         useNavigationType,

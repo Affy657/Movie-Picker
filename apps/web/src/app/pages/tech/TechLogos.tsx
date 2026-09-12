@@ -246,6 +246,10 @@ export function WebPushLogo(props: Readonly<LogoProps>) {
   );
 }
 
+export function MoviePickerLogo({ x, y, size = DEFAULT_SIZE }: Readonly<LogoProps>) {
+  return <image href="/logo.svg" x={x} y={y} width={size} height={size} aria-hidden="true" />;
+}
+
 export function AnthropicLogo(props: Readonly<LogoProps>) {
   return (
     <LogoFrame {...props} viewBox="0 0 24 24">

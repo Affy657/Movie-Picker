@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.UserMovies;
@@ -74,7 +75,7 @@ public sealed class GetUserMoviesHandlerTests
         Slug = id,
         HostToken = "ht",
         CreatorUserId = "u1",
-        WinnerMovieId = winnerMovieId,
+        Winners = TestWinners.Won(winnerMovieId),
         ClosedAt = closedAt,
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow

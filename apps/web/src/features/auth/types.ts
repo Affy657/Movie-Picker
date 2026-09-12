@@ -12,6 +12,7 @@ export interface UserProfile {
   handle: string;
   bio: string | null;
   isProfilePublic: boolean;
+  isWatchlistPublic: boolean;
   letterboxdUsername: string | null;
   letterboxdLastSyncAt: string | null;
   letterboxdLastSyncError: string | null;

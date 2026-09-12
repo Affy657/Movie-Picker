@@ -20,6 +20,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
   const [displayName, setDisplayName] = useState(user.displayName);
   const [bio, setBio] = useState(user.bio ?? '');
   const [isPublic, setIsPublic] = useState(user.isProfilePublic ?? true);
+  const [isWatchlistPublic, setIsWatchlistPublic] = useState(user.isWatchlistPublic ?? true);
   const [pseudoError, setPseudoError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, flashSaved] = useSavedFlash();
@@ -31,12 +32,13 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
     setDisplayName(user.displayName);
     setBio(user.bio ?? '');
     setIsPublic(user.isProfilePublic ?? true);
+    setIsWatchlistPublic(user.isWatchlistPublic ?? true);
   }, [user]);
 
   useEffect(() => () => globalThis.clearTimeout(timerRef.current), []);
 
   const flush = useCallback(
-    async (overrides: { isProfilePublic?: boolean } = {}) => {
+    async (overrides: { isProfilePublic?: boolean; isWatchlistPublic?: boolean } = {}) => {
       globalThis.clearTimeout(timerRef.current);
       const trimmedName = displayName.trim();
       if (!trimmedName) {
@@ -46,11 +48,13 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
       setPseudoError(null);
 
       const nextIsPublic = overrides.isProfilePublic ?? isPublic;
+      const nextIsWatchlistPublic = overrides.isWatchlistPublic ?? isWatchlistPublic;
       const bioTrimmed = bio.trim();
       const bioChanged = bioTrimmed !== (user.bio?.trim() ?? '');
       const nameChanged = trimmedName !== user.displayName;
       const publicChanged = nextIsPublic !== (user.isProfilePublic ?? true);
-      if (!nameChanged && !bioChanged && !publicChanged) return;
+      const watchlistChanged = nextIsWatchlistPublic !== (user.isWatchlistPublic ?? true);
+      if (!nameChanged && !bioChanged && !publicChanged && !watchlistChanged) return;
       if (savingRef.current) {
         pendingRetryRef.current = true;
         return;
@@ -63,6 +67,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
           displayName: trimmedName,
           ...(bioChanged ? { bio: bioTrimmed === '' ? null : bioTrimmed } : {}),
           isProfilePublic: nextIsPublic,
+          isWatchlistPublic: nextIsWatchlistPublic,
         });
         flashSaved();
       } catch (err) {
@@ -75,7 +80,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
         }
       }
     },
-    [displayName, bio, isPublic, user, patchProfile, flashSaved, t]
+    [displayName, bio, isPublic, isWatchlistPublic, user, patchProfile, flashSaved, t]
   );
 
   const scheduleSave = () => {
@@ -87,6 +92,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
   const showBioHint = bioCharsLeft <= BIO_HINT_THRESHOLD;
   const errorMsg = pseudoError ?? saveError;
   const profileUrl = user.handle ? `movie-picker.fr${ROUTES.profile(user.handle)}` : '';
+  const watchlistUrl = user.handle ? `movie-picker.fr${ROUTES.profileWatchlist(user.handle)}` : '';
 
   return (
     <>
@@ -165,6 +171,27 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
               const next = !isPublic;
               setIsPublic(next);
               void flush({ isProfilePublic: next });
+            }}
+          />
+        </div>
+
+        <div className={styles.row}>
+          <div className={styles.rowMain}>
+            <p className={styles.rowLabel}>{t('profile.settings.watchlistVisibilityLabel')}</p>
+            <p className={styles.rowSub}>
+              {isPublic
+                ? t('profile.settings.watchlistVisibilityHint', { url: watchlistUrl })
+                : t('profile.settings.watchlistVisibilityPrivateHint')}
+            </p>
+          </div>
+          <Toggle
+            checked={isWatchlistPublic}
+            disabled={!isPublic}
+            label={t('profile.settings.watchlistVisibilityLabel')}
+            onChange={() => {
+              const next = !isWatchlistPublic;
+              setIsWatchlistPublic(next);
+              void flush({ isWatchlistPublic: next });
             }}
           />
         </div>

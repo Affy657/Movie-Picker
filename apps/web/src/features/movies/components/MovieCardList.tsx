@@ -13,6 +13,8 @@ import {
   PaidOfferChip,
   VoteBar,
   WatchlistBadge,
+  WinnerRibbon,
+  isSelectable,
   useMovieCardState,
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
@@ -76,6 +78,8 @@ export const MovieCardList = memo(function MovieCardList({
   onToggleWheelExclusion,
   selection,
   isWinner = false,
+  winnerRank,
+  voteLockedHint,
   participantCount,
 }: MovieCardCommonProps) {
   const s = useMovieCardState({
@@ -99,7 +103,7 @@ export const MovieCardList = memo(function MovieCardList({
   const hasRenderableOffers = flatrateProviders.length > 0 || rentCount > 0 || buyCount > 0;
 
   const excluded = !!m.excludedFromWheel;
-  const selecting = !!selection?.active && !excluded;
+  const selecting = isSelectable(m, selection) && !excluded;
 
   return (
     <li
@@ -111,11 +115,14 @@ export const MovieCardList = memo(function MovieCardList({
       )}
     >
       {excluded && <span className="visually-hidden">{t('movies.list.excludedFromWheelSr')}</span>}
-      {selecting && <CardSelectionOverlay movie={m} selection={selection} t={t} />}
+      {selecting && selection ? (
+        <CardSelectionOverlay movie={m} selection={selection} t={t} />
+      ) : null}
       <div className={styles.posterCol} inert={selecting}>
         <ListPoster src={s.posterSrc} srcSet={s.posterSrcSet} eager={eager} />
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
         <WatchlistBadge inWatchlist={isInWatchlist} t={t} />
+        <WinnerRibbon isWinner={isWinner} winnerRank={winnerRank} t={t} />
       </div>
 
       <div className={styles.info} inert={selecting}>
@@ -134,9 +141,6 @@ export const MovieCardList = memo(function MovieCardList({
           <h3 className={styles.title} title={m.title}>
             {m.title}
           </h3>
-          {isWinner ? (
-            <span className={styles.winnerBadge}>{t('events.wheel.winnerLabel')}</span>
-          ) : null}
         </div>
 
         <p className={styles.metaLine}>
@@ -189,7 +193,7 @@ export const MovieCardList = memo(function MovieCardList({
         <div className={styles.bottomSection}>
           {s.canVote && (
             <div className={styles.actions}>
-              <VoteBar m={m} onVote={onVote} t={t} />
+              <VoteBar m={m} onVote={onVote} t={t} lockedHint={voteLockedHint} />
               {s.canAct && (
                 <SeenButton
                   m={m}

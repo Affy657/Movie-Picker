@@ -10,6 +10,7 @@ public sealed class InMemoryUserRepository : IUserRepository
     private readonly ConcurrentDictionary<string, User> _byId = new();
     private readonly ConcurrentDictionary<string, string> _emailToId = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _handleToId = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object _templatesGate = new();
 
     public Task<User?> GetByIdAsync(string id, CancellationToken ct = default) =>
         Task.FromResult(_byId.TryGetValue(id, out var u) ? u : null);
@@ -125,6 +126,65 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(true);
     }
 
+    public Task<bool> AddEventTemplateAsync(
+        string userId,
+        EventTemplate template,
+        int maxPerUser,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        lock (_templatesGate)
+        {
+            if (!_byId.TryGetValue(userId, out var user) || user.EventTemplates.Count >= maxPerUser)
+                return Task.FromResult(false);
+
+            _byId[userId] = user with { EventTemplates = [.. user.EventTemplates, template], UpdatedAt = now };
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<bool> ReplaceEventTemplateAsync(
+        string userId,
+        EventTemplate template,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        lock (_templatesGate)
+        {
+            if (!_byId.TryGetValue(userId, out var user))
+                return Task.FromResult(false);
+
+            var next = user.EventTemplates.ToList();
+            var index = next.FindIndex(t => t.Id == template.Id);
+            if (index < 0)
+                return Task.FromResult(false);
+
+            next[index] = template;
+            _byId[userId] = user with { EventTemplates = next, UpdatedAt = now };
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<bool> RemoveEventTemplateAsync(
+        string userId,
+        string templateId,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        lock (_templatesGate)
+        {
+            if (!_byId.TryGetValue(userId, out var user))
+                return Task.FromResult(false);
+
+            var next = user.EventTemplates.Where(t => t.Id != templateId).ToList();
+            if (next.Count == user.EventTemplates.Count)
+                return Task.FromResult(false);
+
+            _byId[userId] = user with { EventTemplates = next, UpdatedAt = now };
+            return Task.FromResult(true);
+        }
+    }
+
     public Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
     {
         IReadOnlyList<PublicProfileRef> result = _byId.Values
@@ -194,11 +254,13 @@ public sealed class InMemoryUserRepository : IUserRepository
             Handle = handle ?? string.Empty,
             Bio = user.Bio,
             IsProfilePublic = user.IsProfilePublic,
+            IsWatchlistPublic = user.IsWatchlistPublic,
             UiTheme = user.UiTheme,
             AccentColor = user.AccentColor,
             RatingScale = user.RatingScale,
             AvatarId = user.AvatarId,
             NotificationPreferences = user.NotificationPreferences,
+            EventTemplates = user.EventTemplates,
             SupporterSince = user.SupporterSince,
             LetterboxdUsername = user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,

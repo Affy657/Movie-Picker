@@ -26,6 +26,7 @@ public sealed class GetUserProfileHandler : IGetUserProfileHandler
             Handle = user.Handle,
             Bio = user.Bio,
             IsProfilePublic = user.IsProfilePublic,
+            IsWatchlistPublic = user.IsWatchlistPublic,
             LetterboxdUsername = user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,

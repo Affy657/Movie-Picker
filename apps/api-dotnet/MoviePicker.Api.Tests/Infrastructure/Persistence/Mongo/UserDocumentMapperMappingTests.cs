@@ -98,6 +98,7 @@ public sealed class UserDocumentMapperMappingTests
         Assert.Equal(string.Empty, user.Handle);
         Assert.Null(user.Bio);
         Assert.True(user.IsProfilePublic);
+        Assert.True(user.IsWatchlistPublic);
         Assert.Equal(string.Empty, user.AvatarId);
         Assert.Equal(AccentColor.Default, user.AccentColor);
         Assert.Equal(RatingScale.Five, user.RatingScale);
@@ -129,6 +130,7 @@ public sealed class UserDocumentMapperMappingTests
             NotifyOnEventDeleted = false,
             NotifyOnNewFollower = false,
             IsProfilePublic = false,
+            IsWatchlistPublic = false,
             CreatedAt = Utc,
             UpdatedAt = Utc
         };
@@ -136,6 +138,7 @@ public sealed class UserDocumentMapperMappingTests
         var user = UserDocumentMapper.ToDomain(doc);
 
         Assert.False(user.IsProfilePublic);
+        Assert.False(user.IsWatchlistPublic);
         Assert.False(user.NotifiesOn(UserNotificationType.ParticipantJoined));
         Assert.False(user.NotifiesOn(UserNotificationType.NewFollower));
     }
@@ -154,6 +157,7 @@ public sealed class UserDocumentMapperMappingTests
             AvatarId = string.Empty,
             AccentColor = AccentColor.Default,
             IsProfilePublic = false,
+            IsWatchlistPublic = false,
             CreatedAt = new DateTimeOffset(Utc),
             UpdatedAt = new DateTimeOffset(Utc)
         };
@@ -165,6 +169,7 @@ public sealed class UserDocumentMapperMappingTests
         Assert.Null(doc.AvatarId);
         Assert.Null(doc.AccentColor);
         Assert.False(doc.IsProfilePublic);
+        Assert.False(doc.IsWatchlistPublic);
     }
 
     [Fact]

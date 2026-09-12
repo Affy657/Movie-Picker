@@ -6,7 +6,7 @@ Le format s'appuie sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) 
 projet suit le [versionnage sémantique](https://semver.org/lang/fr/) (SemVer). Chaque
 version publiée est associée à un tag Git et à une release GitHub.
 
-## [Non publié]
+## [1.6.0] - 2026-09-12
 
 ### Added
 
@@ -17,11 +17,24 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Archive du build front à chaque déploiement** (30 jours) : l'hébergement ne conserve aucune version, un retour arrière ne demande plus de rejouer toute la chaîne de portes.
 - Porte de qualité sur les workflows eux-mêmes (`actionlint`, `shellcheck`, `zizmor`), bloquante pour le déploiement : jusqu'ici la chaîne qui garde le code n'était gardée par rien.
 - **Les pages publiques sont servies en HTML complet** : « Comment ça marche », « Soutenir » et le dossier technique sont rendus au moment du build, titre, description et données structurées compris. Un moteur d'indexation ou un aperçu de lien recevait jusqu'ici un document vide qu'il fallait exécuter pour lire ; il reçoit maintenant la page.
+- **Modèles de soirée** : jusqu'à cinq configurations nommées par compte, enregistrées depuis la création d'une soirée comme depuis les paramètres d'une soirée existante, et réappliquées en un clic. Le modèle porte la configuration avancée seule, le titre et la date restent propres à chaque soirée, et le menu d'une soirée passée propose « Refaire cette soirée ».
+- **Plusieurs films gagnants par soirée** : l'hôte règle le nombre de films gagnants jusqu'à dix, à la création comme en cours de soirée. Chaque tirage, roue ou choix manuel, ajoute un film au palmarès et l'exclut des suivants ; les gagnants comptent partout, historique, statistiques, partage et « Vos amis ont vu ». Le bouton de clôture disparaît, il ne servait plus à rien.
+- **Limite de votes par participant** : l'hôte active un nombre de votes par personne dans les paramètres de la soirée, repris par les modèles et les soirées récurrentes. Le quota s'affiche au-dessus de la liste, les pouces des autres films se grisent une fois le quota consommé, et le serveur refuse le vote de trop.
+- **Watchlist d'un autre compte** : la liste d'un compte se consulte depuis son profil public, sur une page calquée sur celle de ses films vus. Un réglage dédié, actif par défaut, permet de masquer la sienne ; le serveur répond alors 404 aux visiteurs et cache le compteur.
+- **Les films d'une soirée se voient sans avoir rejoint** : un lien de soirée montre affiches, titres, scores et film gagnant à tout visiteur ; un clic sur un vote sans avoir rejoint ramène sur la carte de participation. Proposer, voter et marquer un film vu restent réservés aux participants.
+- **Letterboxd depuis la carte d'un film en soirée** : le menu des trois points ouvre la page Letterboxd du film en un clic, sans passer par sa fiche.
 
 ### Fixed
 
 - **Le site entier était ralenti par un mot** : une ligne du point d'entrée attendait la fin du démarrage avant de laisser le reste s'exécuter, ce qui retardait l'affichage sur onze pages sur treize. Le plus grand élément de chaque page apparaît de nouveau 3 à 5 points de performance plus tôt. Les deux pages épargnées étaient l'accueil et la connexion, les seules dont le contenu principal n'attendait pas l'application.
 - **Un échec au démarrage laissait l'écran de lancement affiché indéfiniment.** Il est désormais retiré et l'erreur remontée, donc l'utilisateur voit l'application ou une erreur, plus un écran figé.
+- **Le gagnant de la roue était annoncé avant qu'elle ne s'arrête** : la notification partait dès le lancement du tirage, pendant les sept secondes d'animation. Elle part maintenant quand le résultat est révélé, et une seule fois par tirage.
+- **Les modales « Proposer une idée » et « Signaler un problème » débordaient de l'écran sur mobile**, ce qui rendait leur bouton d'envoi inatteignable avec des images jointes ou une police agrandie. Elles adoptent le gabarit des autres fenêtres du projet : en-tête et pied fixes, corps défilant.
+- **La barre du bas mobile recouvrait les actions d'une soirée** quand le libellé « Nouvelle soirée » passait sur deux lignes : sa hauteur est désormais fixe, le libellé court sur mobile.
+- **Un lien de soirée ouvert sans réseau restait sur son squelette de chargement** sans message : la page distingue maintenant la pause réseau du chargement et affiche l'erreur réseau existante.
+- **PostHog ne se charge plus avant le consentement** : la bibliothèque s'amorçait au démarrage et posait déjà des identifiants dans le stockage local avant tout choix ; elle n'est chargée qu'après un consentement explicite.
+- **Les captures jointes à une suggestion ne disparaissent plus de l'issue GitHub** : l'URL portait un jeton temporaire qui expirait en quelques minutes ; seul son chemin est conservé.
+- **Le réglage « Watchlist visible sur mon profil » revenait à ON à chaque rechargement** alors que la liste était masquée : le serveur renvoie maintenant la visibilité réelle.
 
 ### Changed
 
@@ -40,6 +53,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 - Le front ne charge plus que la langue affichée : la langue inactive, environ 93 Ko, quitte le chemin de démarrage.
 - Les icônes sont regroupées en un seul fichier au lieu d'une quarantaine : autant d'allers-retours réseau en moins avant le premier rendu.
 - `<html lang>` porte la langue réelle du visiteur dès la première peinture, au lieu d'être corrigé après le montage de React.
+- **Le bouton de partage d'une soirée reste une icône seule** sur toutes les largeurs, son libellé survivant comme nom accessible et infobulle.
+- **Les chiffres du dossier technique sont de nouveau mesurés à chaque build** : le script qui les relève échouait en silence depuis le 2026-09-10 et republiait les nombres du 2026-09-09 ; il lit maintenant les deux workflows et fait échouer le build plutôt que de conserver des chiffres périmés. Le dossier annonce la V1.6 livrée, les deux jobs du planificateur, les sondes et alertes Cloud Monitoring, les pages pré-rendues et les six procédures outillées.
 
 ### Security
 
@@ -285,7 +300,9 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage — front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.4.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/Affy657/Movie-Picker/compare/v1.5.0...v1.6.0
+[1.5.0]: https://github.com/Affy657/Movie-Picker/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/Affy657/Movie-Picker/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/Affy657/Movie-Picker/compare/v1.3.2...v1.4.0
 [1.3.2]: https://github.com/Affy657/Movie-Picker/compare/v1.3.1...v1.3.2

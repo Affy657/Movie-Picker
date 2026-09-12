@@ -156,10 +156,75 @@ describe('MovieList', () => {
 
     it('affiche le badge gagnant uniquement sur le film désigné', () => {
       renderWithLocale(
-        <MovieList movies={movies} {...baseProps()} viewMode="list" winnerMovieId="m1" />
+        <MovieList movies={movies} {...baseProps()} viewMode="list" winnerMovieIds={['m1']} />
       );
       expect(screen.getByText('Film gagnant')).toBeInTheDocument();
       expect(screen.getAllByText('Film gagnant')).toHaveLength(1);
+    });
+
+    it('en grille, le marqueur gagnant est posé sur l affiche, hors du titre', () => {
+      renderWithLocale(
+        <MovieList movies={movies} {...baseProps()} viewMode="grid" winnerMovieIds={['m2', 'm1']} />
+      );
+      const badge = screen.getByText('Gagnant 1');
+      expect(badge.closest('h3')).toBeNull();
+      expect(badge.closest('[class*=posterCol]')).not.toBeNull();
+    });
+
+    it('numérote les gagnants dès qu il y en a plusieurs', () => {
+      renderWithLocale(
+        <MovieList movies={movies} {...baseProps()} viewMode="list" winnerMovieIds={['m2', 'm1']} />
+      );
+      expect(screen.getByText('Gagnant 1')).toBeInTheDocument();
+      expect(screen.getByText('Gagnant 2')).toBeInTheDocument();
+      expect(screen.queryByText('Film gagnant')).not.toBeInTheDocument();
+    });
+
+    it('en vue liste, le mode retrait ne propose que les films désignés comme sélectionnables', () => {
+      renderWithLocale(
+        <MovieList
+          movies={movies}
+          {...baseProps()}
+          viewMode="list"
+          winnerMovieIds={['m1']}
+          selection={{
+            active: true,
+            mode: 'remove',
+            selectableIds: ['m1'],
+            onSelect: vi.fn(),
+          }}
+        />
+      );
+      expect(screen.getByTestId('remove-winner-m1')).toBeInTheDocument();
+      expect(screen.queryByTestId('remove-winner-m2')).not.toBeInTheDocument();
+    });
+
+    it('en vue liste, le choix manuel ignore les films déjà gagnants', () => {
+      renderWithLocale(
+        <MovieList
+          movies={movies}
+          {...baseProps()}
+          viewMode="list"
+          winnerMovieIds={['m1']}
+          selection={{ active: true, mode: 'pick', selectableIds: ['m2'], onSelect: vi.fn() }}
+        />
+      );
+      expect(screen.queryByTestId('manual-pick-m1')).not.toBeInTheDocument();
+      expect(screen.getByTestId('manual-pick-m2')).toBeInTheDocument();
+    });
+
+    it('laisse la colonne rang vide sur les lignes gagnantes', () => {
+      renderWithLocale(
+        <MovieList
+          movies={movies}
+          {...baseProps()}
+          viewMode="list"
+          showRank
+          winnerMovieIds={['m1']}
+        />
+      );
+      const ranks = screen.getAllByTestId('movie-rank').map((el) => el.textContent);
+      expect(ranks).toEqual(['', '1']);
     });
 
     it('affiche vote et déjà-vu en vue liste avec participantId', async () => {
@@ -358,7 +423,7 @@ describe('MovieList', () => {
           participantId="p0"
           participantPseudo="Alice"
           viewMode="grid"
-          selection={{ active: true, onSelect: vi.fn() }}
+          selection={{ active: true, mode: 'pick' as const, onSelect: vi.fn() }}
         />
       );
       const pickButton = screen.getByTestId('manual-pick-m1');
@@ -439,7 +504,7 @@ describe('MovieList', () => {
           movies={[{ ...movies[0]!, excludedFromWheel: true }, movies[1]!]}
           {...baseProps()}
           viewMode="grid"
-          selection={{ active: true, onSelect: vi.fn() }}
+          selection={{ active: true, mode: 'pick' as const, onSelect: vi.fn() }}
         />
       );
       expect(screen.queryByTestId('manual-pick-m1')).not.toBeInTheDocument();
@@ -453,7 +518,7 @@ describe('MovieList', () => {
           movies={movies}
           {...baseProps()}
           viewMode="grid"
-          selection={{ active: true, onSelect }}
+          selection={{ active: true, mode: 'pick', onSelect }}
         />
       );
       await userEvent.click(screen.getByTestId('manual-pick-m2'));

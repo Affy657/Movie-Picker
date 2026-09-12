@@ -1,13 +1,27 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { useNavigate, Link } from 'react-router';
-import { ArrowLeft, Settings2 } from 'lucide-react';
+import { useNavigate, useLocation, Link } from 'react-router';
+import clsx from 'clsx';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Settings2, Sparkles } from 'lucide-react';
 import ThemeField from '@/features/events/components/ThemeField';
 import WheelModeField from '@/features/events/components/WheelModeField';
+import EventTemplatesRow from '@/features/events/components/EventTemplatesRow';
+import EventTemplateSaveBar from '@/features/events/components/EventTemplateSaveBar';
+import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
+import {
+  buildTemplateDraft,
+  configToFields,
+  draftToConfigPatch,
+  type ApplicableConfig,
+} from '@/features/events/lib/eventTemplateDraft';
 import NumberInput from '@/shared/components/NumberInput';
 import Toggle from '@/shared/components/Toggle';
-import { useQueryClient } from '@tanstack/react-query';
 import PageLayout from '@/shared/components/PageLayout';
-import { createEvent as createEventApi, patchEventConfig } from '@/features/events/api/eventsApi';
+import {
+  createEvent as createEventApi,
+  fetchEventConfig,
+  patchEventConfig,
+} from '@/features/events/api/eventsApi';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
@@ -16,8 +30,10 @@ import { setStoredParticipant } from '@/features/events/storage';
 import { ROUTES } from '@/app/routes';
 import {
   DEFAULT_EVENT_CONFIG,
+  DEFAULT_VOTE_LIMIT,
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
+  MAX_WINNERS_PER_EVENT,
 } from '@/features/events/types';
 import type { WheelMode } from '@/features/events/types';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -53,8 +69,9 @@ export default function CreateEvent() {
   const wheelModeLabelId = useId();
 
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
-  const { isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { track } = useAnalytics();
   const [date, setDate] = useState(getDefaultDate);
   const [time, setTime] = useState(getDefaultTime);
@@ -71,9 +88,69 @@ export default function CreateEvent() {
   const [themeText, setThemeText] = useState('');
   const [maxParticipants, setMaxParticipants] = useState(String(MAX_EVENT_PARTICIPANTS));
   const [maxProposals, setMaxProposals] = useState(String(MAX_PROPOSALS_PER_PARTICIPANT));
+  const [voteLimitEnabled, setVoteLimitEnabled] = useState(false);
+  const [maxVotes, setMaxVotes] = useState(String(DEFAULT_VOTE_LIMIT));
+  const [winnerCount, setWinnerCount] = useState(String(DEFAULT_EVENT_CONFIG.winnerCount));
   const [wheelMode, setWheelMode] = useState<WheelMode>(DEFAULT_EVENT_CONFIG.wheelMode);
   const [allowSeries, setAllowSeries] = useState(DEFAULT_EVENT_CONFIG.allowSeries ?? false);
+  const [richSharePreview, setRichSharePreview] = useState(
+    DEFAULT_EVENT_CONFIG.richSharePreview ?? true
+  );
+  const [templateError, setTemplateError] = useState<string | null>(null);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
+  const applyConfig = useCallback((config: ApplicableConfig) => {
+    const fields = configToFields(config);
+    setThemeEmoji(fields.themeEmoji);
+    setThemeText(fields.themeText);
+    setMaxProposals(fields.maxProposals);
+    setMaxParticipants(fields.maxParticipants);
+    setVoteLimitEnabled(fields.voteLimitEnabled);
+    setMaxVotes(fields.maxVotes);
+    setWheelMode(fields.wheelMode);
+    setRichSharePreview(fields.richSharePreview);
+    setAllowSeries(fields.allowSeries);
+    setWinnerCount(fields.winnerCount);
+    setAdvancedOpen(true);
+  }, []);
+
+  const templateDraft = buildTemplateDraft({
+    themeEmoji,
+    themeText,
+    maxProposals,
+    maxParticipants,
+    voteLimitEnabled,
+    maxVotes,
+    wheelMode,
+    richSharePreview,
+    allowSeries,
+    winnerCount,
+  });
+  const eventTemplates = useEventTemplates(!!user, {
+    draft: templateDraft,
+    onError: setTemplateError,
+    onApply: applyConfig,
+  });
+
+  const reuseState = location.state as { reuseEventSlug?: string; reuseEventTitle?: string } | null;
+  const reuseEventSlug = reuseState?.reuseEventSlug;
+  const reusedConfigQuery = useQuery({
+    queryKey: queryKeys.event.reusableConfig(reuseEventSlug),
+    queryFn: () => fetchEventConfig(reuseEventSlug!),
+    enabled: !!reuseEventSlug && !!user,
+  });
+
+  const reusedConfig = reusedConfigQuery.data;
+  const reusedConfigApplied = useRef(false);
+  const [reusedFrom, setReusedFrom] = useState<string | null>(null);
+  useEffect(() => {
+    if (!reusedConfig || reusedConfigApplied.current) return;
+    reusedConfigApplied.current = true;
+    applyConfig(reusedConfig);
+    setReusedFrom(reuseState?.reuseEventTitle ?? '');
+  }, [reusedConfig, applyConfig, reuseState?.reuseEventTitle]);
+
+  const configPatch = draftToConfigPatch(templateDraft);
   const createAction = useCallback(async () => {
     const res = await createEventApi({ title, date, time });
     track('event_created');
@@ -82,39 +159,15 @@ export default function CreateEvent() {
       setStoredParticipant(res.slug, res.creatorParticipant.id, res.creatorParticipant.pseudo);
     }
 
-    const themeTrimmed = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
-    const maxPartParsed = maxParticipants.trim() === '' ? 0 : Number(maxParticipants);
-    const maxPropParsed = maxProposals.trim() === '' ? 0 : Number(maxProposals);
-
     try {
-      await patchEventConfig(res.slug, null, {
-        theme: themeTrimmed,
-        maxProposalsPerParticipant: Number.isFinite(maxPropParsed) ? maxPropParsed : 0,
-        maxParticipants: Number.isFinite(maxPartParsed) ? maxPartParsed : 0,
-        wheelMode,
-        richSharePreview: true,
-        allowSeries,
-      });
+      await patchEventConfig(res.slug, null, configPatch);
     } catch {}
 
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     navigate(ROUTES.eventDetail(res.slug), {
       state: { shareUrl: publicUrl, justCreated: true },
     });
-  }, [
-    title,
-    date,
-    time,
-    themeEmoji,
-    themeText,
-    maxParticipants,
-    maxProposals,
-    wheelMode,
-    allowSeries,
-    queryClient,
-    navigate,
-    track,
-  ]);
+  }, [title, date, time, configPatch, queryClient, navigate, track]);
 
   const {
     run: submit,
@@ -146,11 +199,12 @@ export default function CreateEvent() {
         <h1 className={styles.title}>{t('events.create.title')}</h1>
         <p className={styles.description}>{t('events.create.description')}</p>
         <form onSubmit={handleSubmit} className="form">
-          {error && (
+          {(error ?? templateError) && (
             <p className="error" role="alert">
-              {error}
+              {error ?? templateError}
             </p>
           )}
+
           <label className="label" htmlFor="create-title">
             {t('events.create.titleLabel')}
           </label>
@@ -196,7 +250,32 @@ export default function CreateEvent() {
             </div>
           </div>
 
-          <details className={styles.advanced}>
+          <EventTemplatesRow
+            className={styles.templatesRow}
+            templates={eventTemplates.templates}
+            appliedTemplate={eventTemplates.matchingTemplate}
+            disabled={eventTemplates.isBusy || loading}
+            onApply={eventTemplates.apply}
+            onRename={eventTemplates.rename}
+            onDelete={eventTemplates.remove}
+          />
+
+          {reusedFrom !== null && (
+            <p className={styles.reused} role="status">
+              <Sparkles size={14} aria-hidden />
+              <span className={styles.reusedLabel}>
+                {reusedFrom.length > 0
+                  ? t('events.settings.templates.reusedFrom', { title: reusedFrom })
+                  : t('events.settings.templates.reusedFromUnnamed')}
+              </span>
+            </p>
+          )}
+
+          <details
+            className={styles.advanced}
+            open={advancedOpen}
+            onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}
+          >
             <summary className={styles.advancedSummary}>
               <Settings2 size={16} aria-hidden className={styles.advancedIcon} />
               <span className={styles.advancedLabel}>{t('events.create.advancedOptions')}</span>
@@ -214,7 +293,7 @@ export default function CreateEvent() {
                 onTextChange={setThemeText}
               />
 
-              <div className={styles.fieldGrid}>
+              <div className={clsx(styles.fieldGrid, styles.counterGrid)}>
                 <div>
                   <label className="label" htmlFor="create-max-proposals">
                     {t('events.settings.maxProposalsLabel')}
@@ -238,6 +317,21 @@ export default function CreateEvent() {
                     min={1}
                     max={MAX_EVENT_PARTICIPANTS}
                   />
+                </div>
+                <div>
+                  <label className="label" htmlFor="create-winner-count">
+                    {t('events.settings.winnerCountLabel')}
+                  </label>
+                  <NumberInput
+                    id="create-winner-count"
+                    value={winnerCount}
+                    onChange={setWinnerCount}
+                    min={1}
+                    max={MAX_WINNERS_PER_EVENT}
+                  />
+                  <p className="hint">
+                    {t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })}
+                  </p>
                 </div>
               </div>
 
@@ -264,6 +358,41 @@ export default function CreateEvent() {
                   onChange={() => setAllowSeries((v) => !v)}
                 />
               </div>
+
+              <div className={styles.toggleRow}>
+                <span>
+                  <span className={styles.toggleName}>{t('events.settings.voteLimitLabel')}</span>
+                  <span className={styles.toggleDesc}>{t('events.settings.voteLimitDesc')}</span>
+                </span>
+                <Toggle
+                  checked={voteLimitEnabled}
+                  label={t('events.settings.voteLimitLabel')}
+                  onChange={() => setVoteLimitEnabled((v) => !v)}
+                />
+              </div>
+              {voteLimitEnabled && (
+                <div className={styles.subField}>
+                  <label className="label" htmlFor="create-max-votes">
+                    {t('events.settings.maxVotesLabel')}
+                  </label>
+                  <NumberInput
+                    id="create-max-votes"
+                    value={maxVotes}
+                    onChange={setMaxVotes}
+                    min={1}
+                  />
+                </div>
+              )}
+
+              <EventTemplateSaveBar
+                draft={templateDraft}
+                templates={eventTemplates.templates}
+                appliedTemplate={eventTemplates.appliedTemplate}
+                lastSaved={eventTemplates.lastSaved}
+                disabled={eventTemplates.isBusy || loading}
+                onSave={eventTemplates.saveAs}
+                onUpdate={eventTemplates.updateApplied}
+              />
             </div>
           </details>
 

@@ -9,7 +9,7 @@ public static class WheelWinnerPicker
         Func<string, int> getNetVoteScore,
         WheelMode mode,
         Random random,
-        string? excludedMovieId = null)
+        IReadOnlyCollection<string>? excludedMovieIds = null)
     {
         if (movies.Count == 0)
             throw new InvalidOperationException("Liste de films vide.");
@@ -17,16 +17,10 @@ public static class WheelWinnerPicker
         var eligible = movies.Where(m => !m.ExcludedFromWheel).ToList();
         if (eligible.Count == 0)
             throw new InvalidOperationException("Tous les films sont exclus du tirage.");
-        if (eligible.Count == 1)
-            return eligible[0];
 
-        List<Movie> pool = eligible;
-        if (!string.IsNullOrEmpty(excludedMovieId))
-        {
-            var filtered = eligible.Where(m => !string.Equals(m.Id, excludedMovieId, StringComparison.Ordinal)).ToList();
-            if (filtered.Count > 0)
-                pool = filtered;
-        }
+        var pool = RemoveAlreadyPicked(eligible, excludedMovieIds);
+        if (pool.Count == 0)
+            throw new InvalidOperationException("Tous les films éligibles ont déjà été tirés.");
 
         if (pool.Count == 1)
             return pool[0];
@@ -55,5 +49,21 @@ public static class WheelWinnerPicker
         }
 
         return pool[^1];
+    }
+
+    private static List<Movie> RemoveAlreadyPicked(
+        List<Movie> eligible,
+        IReadOnlyCollection<string>? excludedMovieIds)
+    {
+        if (excludedMovieIds is null || excludedMovieIds.Count == 0)
+            return eligible;
+
+        var excluded = excludedMovieIds
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .ToHashSet(StringComparer.Ordinal);
+
+        return excluded.Count == 0
+            ? eligible
+            : eligible.Where(m => !excluded.Contains(m.Id)).ToList();
     }
 }

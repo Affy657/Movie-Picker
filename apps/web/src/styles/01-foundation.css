@@ -219,6 +219,7 @@
   --color-bg-tint: color-mix(in srgb, var(--color-text) 3%, var(--color-bg));
   --surface-sunken: color-mix(in srgb, var(--color-text) 4%, var(--color-surface));
   --color-primary-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --color-primary-border-soft: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
   --color-streak-fg: color-mix(in srgb, var(--color-streak) 58%, black);
 }
 

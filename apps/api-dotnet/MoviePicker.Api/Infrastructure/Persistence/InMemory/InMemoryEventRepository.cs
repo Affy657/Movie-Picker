@@ -31,6 +31,18 @@ public sealed class InMemoryEventRepository : IEventRepository
         return Task.FromResult(created);
     }
 
+    public Task<bool> MarkWatchlistCleanedAsync(string eventId, DateTimeOffset cleanedAt, CancellationToken ct = default)
+    {
+        if (!_byId.TryGetValue(eventId, out var evt) || evt.WatchlistCleanedAt is not null)
+            return Task.FromResult(false);
+
+        var stamped = evt with { WatchlistCleanedAt = cleanedAt, UpdatedAt = cleanedAt };
+        _byId[eventId] = stamped;
+        if (!string.IsNullOrEmpty(stamped.Slug))
+            _bySlug[stamped.Slug] = stamped;
+        return Task.FromResult(true);
+    }
+
     public Task<Event> UpdateAsync(Event evt, CancellationToken ct = default)
     {
         _byId[evt.Id] = evt;
@@ -88,7 +100,7 @@ public sealed class InMemoryEventRepository : IEventRepository
         if (set.Count == 0)
             return Task.FromResult(0);
 
-        var n = _byId.Values.Count(e => e.WinnerMovieId is not null && set.Contains(e.WinnerMovieId));
+        var n = _byId.Values.Count(e => e.WinnerMovieIds.Any(set.Contains));
         return Task.FromResult(n);
     }
 

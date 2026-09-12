@@ -79,6 +79,7 @@ export interface ProfilePatch {
   handle?: string;
   bio?: string | null;
   isProfilePublic?: boolean;
+  isWatchlistPublic?: boolean;
   letterboxdUsername?: string | null;
 }
 

@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.UseCases.DeleteEvent;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.DeleteEvent;
@@ -67,7 +68,7 @@ public sealed class DeleteEventHandlerTests
         Slug = "soiree",
         HostToken = "ht1",
         CreatorUserId = creatorUserId,
-        WinnerMovieId = winnerMovieId,
+        Winners = TestWinners.Won(winnerMovieId),
         ClosedAt = closedAt,
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow

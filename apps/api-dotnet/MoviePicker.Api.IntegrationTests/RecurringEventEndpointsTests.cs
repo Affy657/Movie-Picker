@@ -27,7 +27,7 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
     private static DateOnly TwoDaysAgo() =>
         EventRecurrence.TodayInParis(DateTimeOffset.UtcNow).AddDays(-2);
 
-    private async Task<CreateEventResponse> CreateEventAsync(HttpClient client, string title, DateOnly date)
+    private static async Task<CreateEventResponse> CreateEventAsync(HttpClient client, string title, DateOnly date)
     {
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type SubmitEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import PageLayout from '@/shared/components/PageLayout';
 import { buttonClass } from '@/shared/components/Button';
@@ -109,7 +109,7 @@ export default function HomePage() {
     void navigate(ROUTES.movieSearchFor(trimmed));
   };
 
-  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
+  const submitSearch = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     runSearch(searchTerm);
   };

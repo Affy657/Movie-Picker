@@ -4,10 +4,9 @@ import {
   SHOWCASE_PROVIDERS,
   SHOWCASE_THEMES,
   type ShowcaseProvider,
+  type ShowcaseSection,
   type ShowcaseTheme,
 } from '@/features/movies/api/showcaseApi';
-
-import type { ShowcaseSection } from '@/features/movies/api/showcaseApi';
 
 export type ShowcaseListVariant = ShowcaseSection | 'search';
 

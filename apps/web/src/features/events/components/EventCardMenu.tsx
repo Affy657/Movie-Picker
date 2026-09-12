@@ -1,9 +1,6 @@
-import { useCallback, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { LogOut, MoreVertical, Trash2 } from 'lucide-react';
-import { useClickOutside } from '@/shared/hooks/useClickOutside';
-import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
-import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
+import { LogOut, MoreVertical, RotateCcw, Trash2 } from 'lucide-react';
+import { useMenuState } from '@/shared/hooks/useMenuState';
 import { MenuPanel, MenuItem } from '@/shared/components/Menu';
 import { useTranslation } from '@/shared/i18n';
 import styles from './EventCardMenu.module.css';
@@ -14,6 +11,7 @@ interface EventCardMenuProps {
   onDelete?: () => void;
   onRemove?: () => void;
   removeLabel?: string;
+  onReuse?: () => void;
 }
 
 export default function EventCardMenu({
@@ -22,50 +20,39 @@ export default function EventCardMenu({
   onDelete,
   onRemove,
   removeLabel,
+  onReuse,
 }: Readonly<EventCardMenuProps>) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const menuId = useId();
+  const menu = useMenuState();
 
-  const close = useCallback(() => setOpen(false), []);
-  useClickOutside(containerRef, close, open);
-  useMenuFocus(open, panelRef, triggerRef);
-  const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
-
-  if (!onDelete && !onRemove) return null;
+  if (!onDelete && !onRemove && !onReuse) return null;
 
   const label = t('events.myEvents.eventOptionsLabel', { title });
 
   return (
-    <div ref={containerRef} className={clsx(styles.container, className)}>
-      <button
-        ref={triggerRef}
-        type="button"
-        className={styles.trigger}
-        onClick={() => setOpen((v) => !v)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={open ? menuId : undefined}
-        aria-label={label}
-      >
+    <div ref={menu.containerRef} className={clsx(styles.container, className)}>
+      <button {...menu.triggerProps} type="button" className={styles.trigger} aria-label={label}>
         <MoreVertical aria-hidden size={16} />
       </button>
-      {open ? (
-        <MenuPanel
-          ref={panelRef}
-          id={menuId}
-          label={label}
-          style={fitLeft !== null ? { left: fitLeft, right: 'auto' } : undefined}
-        >
+      {menu.open ? (
+        <MenuPanel {...menu.panelProps} label={label}>
+          {onReuse && (
+            <MenuItem
+              icon={<RotateCcw size={14} aria-hidden />}
+              onClick={() => {
+                menu.close();
+                onReuse();
+              }}
+            >
+              {t('events.settings.templates.reuseEventAction')}
+            </MenuItem>
+          )}
           {onDelete && (
             <MenuItem
               danger
               icon={<Trash2 size={14} aria-hidden />}
               onClick={() => {
-                close();
+                menu.close();
                 onDelete();
               }}
             >
@@ -77,7 +64,7 @@ export default function EventCardMenu({
               danger
               icon={<LogOut size={14} aria-hidden />}
               onClick={() => {
-                close();
+                menu.close();
                 onRemove();
               }}
             >

@@ -1,4 +1,5 @@
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.Builders;
 
 namespace MoviePicker.Api.Tests.Builders;
 
@@ -11,6 +12,7 @@ public sealed class EventEntityBuilder
     private string _date = "2030-06-01";
     private string _time = "20:00";
     private DateTimeOffset? _closedAt;
+    private EventConfig _config = new();
 
     public EventEntityBuilder WithId(string id)
     {
@@ -27,6 +29,12 @@ public sealed class EventEntityBuilder
     public EventEntityBuilder WithTitle(string title)
     {
         _title = title;
+        return this;
+    }
+
+    public EventEntityBuilder WithConfig(EventConfig config)
+    {
+        _config = config;
         return this;
     }
 
@@ -47,9 +55,9 @@ public sealed class EventEntityBuilder
             HostToken = _hostToken,
             Date = _date,
             Time = _time,
-            Config = new EventConfig(),
+            Config = _config,
             ClosedAt = _closedAt,
-            WinnerMovieId = null,
+            Winners = [],
             CreatedAt = now,
             UpdatedAt = now,
         };
