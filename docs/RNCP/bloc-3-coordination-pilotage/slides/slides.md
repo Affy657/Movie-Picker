@@ -1119,33 +1119,23 @@ priorite 3.
 
 # Bilan
 
-<div class="grid grid-cols-2 gap-8 text-sm mt-3">
-<div>
-
-<div class="text-xs opacity-75 mb-1">Livré, du 27 février au 12 septembre</div>
-<div class="chips">
-<div><span>11 versions en 198 jours</span><u>écart médian 14 j, 0 retour arrière</u></div>
-<div><span>106 items, 348 points</span><u>81 produit, 25 techniques</u></div>
-<div><span>21 comptes, 27 soirées, 125 films</span><u>en production, données réelles</u></div>
-<div><span>0 vulnérabilité, 0 anomalie ouverte</span><u>disponibilité 100 %</u></div>
+<div class="text-xs opacity-75 mt-2 mb-1">Livré, du 27 février au 12 septembre</div>
+<div class="kpi grid-cols-4" style="line-height:1.25">
+<div><b>11</b><span>versions en 198 jours, écart médian 14 j, <b>0 retour arrière</b></span></div>
+<div><b>348</b><span>points livrés, 106 items : 81 produit, 25 techniques</span></div>
+<div><b>21</b><span>comptes, <b>27 soirées</b>, 125 films, en production</span></div>
+<div><b>100 %</b><span>de disponibilité, 0 vulnérabilité, 0 anomalie ouverte</span></div>
 </div>
 
-</div>
-<div>
-
-<div class="text-xs opacity-75 mb-1">Retenu</div>
-<div class="chips">
-<div><span><b>1.</b> Un indicateur ne mesure que la pratique qui le produit</span></div>
-<div><span><b>2.</b> Quand le coût d'une décision croît avec le temps, décider tôt a une valeur propre</span></div>
-<div><span><b>3.</b> Un arbitrage non posé n'est pas un arbitrage</span></div>
+<div class="text-xs opacity-75 mt-6 mb-1">Retenu</div>
+<div class="lessons">
+<div><b>1</b><span>Un indicateur ne mesure que la pratique qui le produit</span></div>
+<div><b>2</b><span>Quand le coût d'une décision croît avec le temps, décider tôt a une valeur propre</span></div>
+<div><b>3</b><span>Un arbitrage non posé n'est pas un arbitrage</span></div>
 </div>
 
-<div class="text-xs opacity-75 mt-4 mb-1">Suite</div>
-<div class="chips">
-<div><span>1.7, cadrée, 7 items, 34 points</span><u>temps réel, co-hôte, double authentification</u></div>
-</div>
-
-</div>
+<div class="note mt-6">
+<b>Suite : 1.7</b>, cadrée, 7 items pour 34 points. Temps réel, co-hôte, double authentification.
 </div>
 
 <!--

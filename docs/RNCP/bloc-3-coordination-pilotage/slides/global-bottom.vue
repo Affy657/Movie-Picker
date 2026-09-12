@@ -338,6 +338,35 @@ const ANNEX_FROM = 99
   font-weight: 600;
 }
 
+.lessons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+}
+.lessons > div {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border-radius: 6px;
+  background: rgb(13 148 136 / 6%);
+  border: 1.5px solid var(--grid);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.86rem;
+  line-height: 1.3;
+}
+.lessons > div > b {
+  flex: none;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: var(--s1);
+  color: #fff;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .flow {
   font-size: 0.7rem;
   line-height: 1.2;
