@@ -72,7 +72,7 @@ C'est le cœur du cas. Le coût de la décision n'était pas stable dans le temp
 | Le coût de la migration devient un coût d'arrêt du produit | Une réécriture menée après la V1 fige les évolutions pendant sa durée, cette fois avec des utilisateurs en production |
 | Le report se transforme en renoncement | Un chantier technique sans échéance et sans bénéfice utilisateur visible ne se replanifie jamais spontanément |
 
-**La mesure qui tranche.** Au 18 mars 2026, le périmètre à réécrire pesait **944 lignes**. La même API porte aujourd'hui **44 663 lignes réparties sur 544 fichiers**. Le rapport est de 1 à 47.
+**La mesure qui tranche.** Au 18 mars 2026, le périmètre à réécrire pesait **944 lignes**. La même API porte au 12 septembre **50 277 lignes non vides réparties sur 652 fichiers**, tests compris. Le rapport est de 1 à 53.
 
 > Ce chiffre est la justification a posteriori de la décision, pas son argument d'origine : le 18 mars, on savait que le coût croîtrait, on ne savait pas de combien. C'est précisément la nature d'un arbitrage, décider avec l'information disponible au moment où la fenêtre est ouverte.
 
@@ -171,7 +171,7 @@ Quatre arguments, dans l'ordre où ils ont pesé.
 | Réécrire l'API à l'identique du contrat | 12 routes migrées, 944 lignes TypeScript remplacées par **4 653 lignes C# sur 111 fichiers** | Historique du dépôt |
 | Bascule en une fois, sans double maintenance | Ancienne API retirée **15 minutes** après le début de la bascule | Commit `clean migration` |
 | Ne pas décaler la V1 | **v1.0.0 livrée le 19/05/2026**, deux mois après la bascule. Aucune échéance de restitution du titre n'a glissé | Journal des versions |
-| Décision non rejouée | **Aucun retour arrière**, aucune seconde migration. 9 versions livrées sur ce socle depuis | Journal des versions |
+| Décision non rejouée | **Aucun retour arrière**, aucune seconde migration. 10 versions livrées sur ce socle depuis | Journal des versions |
 | Socle tenable dans la durée | 44 663 lignes aujourd'hui, couverture **86,6 %**, Quality Gate **A / A / A**, architecture hexagonale | SonarCloud, dossier Bloc 2 |
 
 ### 6.2 Ce qui n'a pas été tenu, et qu'il faut dire

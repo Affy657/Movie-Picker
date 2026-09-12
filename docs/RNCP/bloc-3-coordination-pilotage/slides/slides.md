@@ -40,7 +40,7 @@ Ne rien commenter ici. Enchainer immediatement sur la diapo suivante.
 <div><span><b>5.</b> Les ressources et les rôles</span><u>C3.1, C3.2.1</u></div>
 <div><span><b>6.</b> Les moyens et les coûts</span><u>C3.1, C3.2.1</u></div>
 <div><span><b>7.</b> Les risques</span><u>C3.1, C3.2.1</u></div>
-<div><span><b>8.</b> Les décisions et un arbitrage</span><u>C3.2.1, C3.2.2</u></div>
+<div><span><b>8.</b> Un cas d'arbitrage</span><u>C3.2.2</u></div>
 <div><span><b>9.</b> Les compétences, avant et après</span><u>C3.3.2</u></div>
 <div><span><b>10.</b> Piloter le travail, seul</span><u>C3.3.1</u></div>
 <div><span><b>11.</b> Rendre compte, et la validation du périmètre livré</span><u>C3.4.1, C3.4.2</u></div>
@@ -745,4 +745,114 @@ en juin, 94 % en juillet apres la decision, theme suivant, 78 % en aout, 67 %
 en septembre. Septembre est compte hors quinze executions qui n'ont jamais
 demarre, sans rapport avec le code ; elles se reconnaissent a leur duree, deux
 secondes.
+-->
+
+---
+
+# 8. Un cas d'arbitrage : migrer l'API, quand et comment
+
+<div class="grid grid-cols-5 gap-5 text-sm">
+<div class="col-span-3">
+
+<div class="tl">
+<div><b>16/03, 16:48</b><span><b>MVP terminé</b>, 944 lignes, 12 routes ; aucune migration à la feuille de route</span></div>
+<div><b>18/03, 11:57</b><span>Décision exécutée, document d'aide à la décision versionné</span></div>
+<div><b>18/03, 12:12</b><span>Ancienne API retirée, <b>15 min</b> après</span></div>
+<div><b>19/03, 16:52</b><span>Migration terminée</span></div>
+</div>
+
+<div class="chips mt-4">
+<div><span><b>A</b> Ne rien changer</span><u>0 J/H, 4 écarts qui s'accumulent 6 mois</u></div>
+<div><span><b>B</b> Migrer maintenant, bascule en une fois</span><u><b>13 J/H</b>, contrat du front à préserver</u></div>
+<div><span><b>C</b> Migrer après la V1</span><u>périmètre multiplié, utilisateurs en production</u></div>
+<div><span><b>D</b> Deux API en parallèle</span><u>double maintenance, à effectif 1</u></div>
+</div>
+
+<div class="kpi grid-cols-5 mt-4">
+<div><b>1 → 53</b><span>944 lignes à réécrire le 18/03, 50 000 aujourd'hui</span></div>
+<div><b>12</b><span>routes réécrites à l'identique</span></div>
+<div><b>19/05</b><span>v1.0.0 à la date prévue</span></div>
+<div><b>0</b><span>retour arrière, 10 versions depuis</span></div>
+<div><b>87</b><span>lignes de front modifiées, objectif : 0</span></div>
+</div>
+
+</div>
+<div class="col-span-2">
+
+<div class="flow">
+<div class="row"><div class="q">Contrat d'interface<br>intégralement préservable ?</div><div class="r no">REFUS</div></div>
+<div class="arrow">↓ oui &nbsp;/&nbsp; non →</div>
+<div class="row"><div class="q">Périmètre à réécrire<br>connu et figé <i>maintenant</i> ?</div><div class="r">DIFFÉRER</div></div>
+<div class="arrow">↓ oui &nbsp;/&nbsp; non →</div>
+<div class="row"><div class="q">Le coût de la décision<br>croît-il avec le temps ?</div><div class="r">DIFFÉRER</div></div>
+<div class="arrow">↓ oui &nbsp;/&nbsp; non →</div>
+<div class="row"><div class="q">Charge soutenable<br>par l'effectif <i>réel</i> ?</div><div class="r">RÉDUIRE</div></div>
+<div class="arrow">↓ oui &nbsp;/&nbsp; non →</div>
+<div class="row"><div class="q">Critère de bascule<br>mesurable définissable ?</div><div class="r no">REFUS</div></div>
+<div class="arrow">↓ oui</div>
+<div class="r go">DÉCIDER MAINTENANT, bascule en une fois</div>
+<div class="arrow">↓</div>
+<div class="row"><div class="q">Parité vérifiée<br>sur tout le contrat ?</div><div class="r">RETOUR<br>ARRIÈRE</div></div>
+<div class="arrow">↓ oui</div>
+<div class="r go">BASCULE, retrait de l'ancien socle</div>
+</div>
+
+</div>
+</div>
+
+<!--
+DUREE 2:20. ELEMENT IMPOSE 5 : un cas d'arbitrage. CRITERES : la problematique
+est exposee AVEC SES CONSEQUENCES ; les options sont DETAILLEES ; la decision
+est argumentee ET resout la problematique. La grille nomme le LOGIGRAMME : il
+est a l'ecran et il se parcourt du doigt.
+
+LA PROBLEMATIQUE, phrase d'ouverture qui desamorce la question piege : « le MVP
+a ete livre sur une pile que je ne voulais pas garder pour la suite. L'etude
+comparative du Bloc 1 retient .NET, mais elle a ete formalisee en juin : elle
+consigne la decision finale, pas la chronologie. La verite est celle de
+l'historique. » Premiere case de la frise : la migration est ABSENTE de la
+feuille de route quand le MVP est declare termine, et executee deux jours plus
+tard. Les quatre exigences que l'API du MVP ne tenait pas : typage arrete a la
+compilation, securite fournie par le cadre, socle a support long terme,
+architecture en couches. LES CONSEQUENCES : quatre ecarts qui s'accumulent a
+chaque version, et un cout de migration qui croit avec le code, rapport de 1 a
+53 aujourd'hui. Preciser aussitot que ce rapport est la justification A
+POSTERIORI : le 18 mars on savait que le cout croitrait, pas de combien. C'est
+la nature d'un arbitrage, decider avec l'information disponible pendant que la
+fenetre est ouverte.
+
+LES OPTIONS, une phrase chacune, sans les lire. Le temps utile va a l'option
+D, la plus contre-intuitive : elle parait la plus prudente et ne l'est pas, a
+effectif 1 la double maintenance s'ajoute au lieu de se repartir, et la
+question 4 du logigramme l'ecarte.
+
+LE LOGIGRAMME, parcouru a voix haute sur le chemin du 18 mars : contrat
+preservable OUI, grace au contrat OpenAPI de l'API Node ; perimetre fige OUI,
+le MVP venait d'etre declare termine ; cout croissant OUI ; charge soutenable
+OUI, 13 jours pour un executant ; critere de bascule definissable OUI, la
+parite sur les 12 routes. Donc DECIDER MAINTENANT. Insister sur la derniere
+branche : parite non verifiee = retour arriere, l'ancien socle restant
+deployable. C'est ce qui rendait la decision reversible, et ce qui distingue
+un arbitrage d'un pari. Aucune techno n'y figure : il est reutilisable.
+
+LA DECISION ET SON RESULTAT, en un geste : « aucun retour arriere, dix
+versions livrees sur ce socle depuis, la V1 a la date prevue ». Le critere de
+succes avait ete defini avant : le front ne change pas, parce que les URL et
+le format JSON ne changent pas. Le chiffre 87 est OBLIGATOIRE : « aucune
+modification du front » annoncee, 87 lignes sur 9 fichiers en realite, et le
+lot chiffre 13 jours a posteriori. C'est ce qui distingue un bilan d'un
+plaidoyer.
+
+PHRASE DE FIN : « le document d'aide a la decision annoncait que C# serait
+plus verbeux. 944 lignes TypeScript sont devenues 4 653 lignes C#, un facteur
+4,9. L'inconvenient annonce s'est realise, il avait ete accepte en
+connaissance de cause. Un arbitrage dont on peut verifier apres coup que les
+inconvenients annonces etaient les bons est un arbitrage instruit. »
+
+SI ON QUESTIONNE « et les autres decisions prises a partir d'une mesure ? » :
+trois, chacune avec un effet remesure. La chaine a 54 % en juin, portes
+rendues bloquantes et deterministes, 94 % en juillet ; 59 pull requests de
+dependances pour 9 fusionnees, regroupement mensuel, zero vulnerabilite
+ouverte ; l'accueil a 4,2 s et la porte de performance rouge, le titre peint
+dans le HTML initial en 1.6, 2,3 s, porte verte.
 -->
