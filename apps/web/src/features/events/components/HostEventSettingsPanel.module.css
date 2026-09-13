@@ -153,6 +153,9 @@
 }
 
 .section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3-5);
   margin-bottom: var(--space-5);
   padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--color-border-subtle);
@@ -165,7 +168,7 @@
 }
 
 .sectionTitle {
-  margin: 0 0 var(--space-3);
+  margin: 0;
   font-size: var(--font-size-3xs);
   font-weight: 700;
   letter-spacing: var(--tracking-caps);
@@ -196,14 +199,6 @@
   border-top-style: dashed;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
-}
-
-.field {
-  margin-bottom: var(--space-3-5);
-}
-
-.field:last-child {
-  margin-bottom: 0;
 }
 
 .clearThemeBtn {
@@ -246,12 +241,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: var(--space-3-5) var(--space-3);
-  margin-bottom: var(--space-3-5);
 }
 
 .counterGrid .field {
   min-width: 0;
-  margin-bottom: 0;
 }
 
 .field :global(.hint) {

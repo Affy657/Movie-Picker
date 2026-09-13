@@ -221,7 +221,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7 – Planifiée (34 points)
+## 📋 V1.7 – Planifiée (34 points, 34 restants)
 
 **Objectif** : faire passer la soirée en temps réel et armer l'hôte, avec la sécurité du compte en complément.
 

@@ -6,6 +6,12 @@ Le format s'appuie sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) 
 projet suit le [versionnage sémantique](https://semver.org/lang/fr/) (SemVer). Chaque
 version publiée est associée à un tag Git et à une release GitHub.
 
+## [Non publié]
+
+### Fixed
+
+- **Les interrupteurs des paramètres de la soirée étaient inégalement espacés** : « Répéter cette soirée » collait à « Limiter les votes par participant ». Les champs du panneau suivent maintenant un pas unique.
+
 ## [1.6.0] - 2026-09-12
 
 ### Added
