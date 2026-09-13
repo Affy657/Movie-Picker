@@ -60,7 +60,7 @@ Puis le sommaire, une phrase par theme au plus. Dire que le plan suit les
 THEMES du pilotage et non l'ordre des competences, pour ne rien dire deux fois :
 chaque diapo porte en pied de page les competences qu'elle sert, et les trois
 competences eliminatoires, C3.1, C3.2.1 et C3.4.2, sont couvertes par les
-themes 1 a 8 et 11.
+themes 1 a 7 et 11.
 
 Ne pas s'excuser d'etre seul, ne pas justifier longuement. Annoncer, puis
 avancer. Un jury previent des le debut evalue la methode ; un jury qui
@@ -88,7 +88,7 @@ montrer le produit, comme je le montrerais a un client. Tout ce qui suivra,
 planning, indicateurs, arbitrages, porte sur ce logiciel-la. »
 
 A DIRE, rien n'est a l'ecran : 11 versions en production depuis fevrier,
-21 comptes, 74 % des soirees menees jusqu'au tirage. Puis les six temps du
+21 comptes, 74 % des soirees menees jusqu'au tirage, mesure du 5 septembre. Puis les six temps du
 parcours en une phrase, et la demonstration. Au retour, diapo 4 : on parle au
 jury.
 
@@ -227,11 +227,9 @@ le board GitHub Projects, un ticket par item de roadmap avec sa version, sa
 taille et sa phase. Les colonnes du board SONT les phases du V, c'est ce qui
 fait la compatibilite avec la methode : un ticket ne saute pas de colonne, il
 passe par la maquette quand l'ecran est nouveau, par la revue avant la recette.
-Au-dessus du board, deux outils a l'echelle des versions : le retroplanning
-depuis les quatre echeances du titre, qui transforme une date imposee en date
-de fin de version, et le Gantt des versions, diapo suivante. Ils placent les
-versions, le board porte l'etat des tickets : c'est cette difference d'echelle
-qui les rend compatibles.
+Au-dessus du board, un outil a l'echelle des versions : le Gantt, diapo
+suivante. Il place les versions, le board porte l'etat des tickets : c'est
+cette difference d'echelle qui les rend compatibles.
 
 Le suivi tient dans la meme plateforme, six surfaces, releves le 12 septembre :
 160 tickets, 11 releases, 10 fiches dont 5 anomalies toutes closes, 86 pull
@@ -483,7 +481,7 @@ jusqu'a 2 000, L jusqu'a 5 000. Elle compare, elle ne chiffre pas.
 <div class="l">Développement, interface et API</div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="I">I</div><div class="n"></div>
 <div class="l">Revue, tests, intégration</div><div class="n"></div><div class="n"></div><div class="R">R</div><div class="A">A</div><div class="n"></div><div class="n"></div>
 <div class="l"><b>Accessibilité et inclusion</b></div><div class="n"></div><div class="A">A</div><div class="R">R</div><div class="n"></div><div class="C">C</div><div class="n"></div>
-<div class="l">Chaîne, supervision, sécurité</div><div class="I">I</div><div class="n"></div><div class="I">I</div><div class="A">A R</div><div class="n"></div><div class="R">R</div>
+<div class="l">Chaîne, supervision, sécurité</div><div class="I">I</div><div class="n"></div><div class="R">R</div><div class="A">A R</div><div class="n"></div><div class="R">R</div>
 <div class="l">Arbitrage de périmètre ou de charge</div><div class="A">A R</div><div class="C">C</div><div class="C">C</div><div class="n"></div><div class="C">C</div><div class="n"></div>
 <div class="l">Recette, release, retours</div><div class="C">C</div><div class="A">A R</div><div class="R">R</div><div class="n"></div><div class="C">C</div><div class="n"></div>
 <div class="l">Mise en production</div><div class="A">A</div><div class="n"></div><div class="n"></div><div class="R">R</div><div class="I">I</div><div class="R">R</div>
@@ -501,7 +499,7 @@ jusqu'a 2 000, L jusqu'a 5 000. Elle compare, elle ne chiffre pas.
 <div><b style="font-size:1.2rem">95 / 198</b><span>jours actifs, 3,3 par semaine</span></div>
 <div><b style="font-size:1.2rem">0 à 7</b><span>jours par semaine, amplitude</span></div>
 <div><b style="font-size:1.2rem">12</b><span>jours consécutifs au plus</span></div>
-<div><b style="font-size:1.2rem">5</b><span>semaines à zéro, avant mai</span></div>
+<div><b style="font-size:1.2rem">5</b><span>semaines à zéro, toutes avant la V1</span></div>
 </div>
 
 <div class="chips mt-2" style="max-width:44rem">
@@ -531,8 +529,8 @@ sont les miens.
 
 LA CHARGE, les cinq chiffres : une personne sur son temps libre, 95 jours
 actifs sur 198, 3,3 par semaine, une amplitude de zero a sept, une serie
-maximale de douze jours consecutifs qui se termine aujourd'hui, trois versions
-et l'oral dans la meme quinzaine, cinq semaines a zero, toutes avant mai. Ce
+maximale de douze jours consecutifs, du 1er au 12 septembre, trois versions
+et l'oral dans la meme quinzaine, cinq semaines a zero, toutes avant la V1. Ce
 ne sont pas des chiffres de productivite, ce sont des chiffres de
 soutenabilite, et la phrase a dire : « une semaine a sept jours travailles
 suivie d'une semaine a zero tient sur sept mois de projet etudiant, elle ne
@@ -826,7 +824,7 @@ dans le HTML initial en 1.6, 2,3 s, porte verte.
 
 <div class="l">Tests, qualité</div><div class="b">xUnit, Playwright, SonarCloud</div><div class="a">Vitest, Testing Library, MSW ; Moq, WebApplicationFactory ; tests sur MongoDB réel en replica set ; Stryker, tests de mutation ; seuils de couverture bloquants <u>V1 à 1.6</u></div><div class="r">Revue de code par un tiers</div>
 
-<div class="l">Accessibilité, performance</div><div class="b"></div><div class="a">axe automatisé sur 9 vues, critères RGAA clavier, focus et contraste <u>1.2</u> ; Lighthouse bloquant au déploiement <u>V1</u> ; mesure et correction du LCP <u>1.6</u></div><div class="r">Formation RGAA certifiante</div>
+<div class="l">Accessibilité, performance</div><div class="b"></div><div class="a">axe automatisé sur 9 vues, critères RGAA clavier, focus et contraste <u>1.2</u> ; Lighthouse au déploiement <u>V1</u>, bloquant <u>1.3.2</u> ; mesure et correction du LCP <u>1.6</u></div><div class="r">Formation RGAA certifiante</div>
 
 <div class="l">Livraison, infrastructure</div><div class="b">GitHub Actions, Dependabot regroupé, Docker, Git</div><div class="a">Artifact Registry et Cloud Run, déploiement par digest, rollback de trafic ; S3 et CloudFront, politique d'en-têtes ; Secret Manager ; sauvegarde Atlas vérifiée par restauration <u>1.6</u></div><div class="r">Terraform ; fédération d'identité pour la CI ; environnement de recette</div>
 
@@ -985,13 +983,15 @@ prestataire.
 </div>
 
 <!--
-DUREE 1:10. ELEMENTS IMPOSES 6 et 7 : l'affectation des missions realisee au
-cours du projet, et le ou les styles manageriaux utilises. CRITERES : la charge
+DUREE 1:10. ELEMENTS IMPOSES 6, 7 et 8 : l'affectation des missions realisee
+au cours du projet, le ou les styles manageriaux utilises, les outils de
+communication et leurs objectifs. CRITERES : la charge
 est repartie de maniere equilibree ; le style est IDENTIFIE ET DECRIT.
 
 Dire d'abord ce que le critere ne peut pas mesurer ici : pas d'equipe, donc
 pas de repartition entre personnes. La charge dans le temps est au theme 5,
-et elle n'a pas ete equilibree non plus, c'est la troisieme diapo du theme.
+et elle n'a pas ete equilibree non plus : l'analyse critique, plus bas, se
+donne en reponse a une question.
 
 La seule affectation reelle est la colonne de droite : ce qui reste a la main,
 cadrer, arbitrer, relire, mettre en production ; et ce qui est confie a la
@@ -1141,14 +1141,14 @@ priorite 3.
 <!--
 DUREE 0:50. DERNIERE DIAPO PRESENTEE. C'EST ELLE QUI SATISFAIT LE QUATRIEME
 CRITERE DE C3.4.2 : « la demonstration permet d'aboutir a une VALIDATION du
-projet ». La demonstration a ouvert la presentation ; la demande de
-validation la ferme, une fois le pilotage demontre.
+projet ». La demonstration a ouvert la presentation ; le bilan la
+ferme, une fois le pilotage demontre.
 
-Gauche, ce qui est livre, quatre lignes, sans les relire : onze versions,
-aucun retour arriere ; le perimetre, et la part hors chiffrage dite une
-derniere fois ; l'usage reel ; l'etat de la production.
+En haut, ce qui est livre, quatre chiffres, sans les relire : onze versions,
+aucun retour arriere ; le perimetre, produit et technique ; l'usage reel ;
+l'etat de la production.
 
-Droite, ce que je retiens, une phrase chacun :
+En bas, ce que je retiens, une phrase chacun :
 1. Un indicateur ne mesure que la pratique qui le produit : la regularite du
 commit est devenue la condition d'existence de l'indicateur d'avancement.
 2. Decider tot quand le cout croit : 944 lignes a migrer le 18 mars, 50 000
@@ -1243,7 +1243,7 @@ septembre, SonarCloud du 11.
 | **Conséquence** | Une porte qu'on apprend à contourner ne garde plus rien |
 | **Options** | Désactiver, abaisser les seuils, **rendre la mesure déterministe**, changer d'outil |
 | **Décision** | Médiane de trois exécutions et seuils recalibrés, plutôt que baisser l'exigence |
-| **Résultat** | **54 % → 94 %** le mois suivant. Portes rendues bloquantes en v1.3.1 |
+| **Résultat** | **54 % → 94 %** le mois suivant. Portes rendues bloquantes en v1.3.2 |
 
 </div>
 <div>
@@ -1338,7 +1338,7 @@ livraison, pas ce qui la commente.
 | 1.4.1 | 04/09 | Navigation sans compte, landing bilingue |
 | 1.4.0 | 25/08 | Watchlist, Letterboxd, choix manuel, flamme, OAuth |
 | 1.3.2 | 25/07 | Supervision, sonde de readiness, canal de support |
-| 1.3.1 | 08/07 | Filtre de durée, échelle de notes, CSP, refonte CI/CD |
+| 1.3.1 | 08/07 | CSP, refonte CI/CD, scans de sécurité, cartes film |
 | 1.3.0 | 19/06 | États vides, export calendrier, navigation |
 | 1.2.0 | 11/06 | Profil public, notifications in-app, RGPD |
 | 1.1.0 | 25/05 | Application installable, notifications push, séries |
