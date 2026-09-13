@@ -852,7 +852,7 @@ instruite a partir de mon profil, back et DevOps. Ce qui manque est en face :
 un developpeur front et designer, et un product owner ou charge de marketing,
 parce que 21 comptes en sept mois disent que l'acquisition n'a pas ete faite.
 Ce qu'ils recevraient le premier jour existe deja, la RACI, annexe A6, et le
-ecrit.
+contexte ecrit.
 
 Les modalites de formation adaptees au handicap ne sont pas sur la diapo :
 personne concernee, rien a en dire. SI ON DEMANDE : tiers-temps de droit sur
