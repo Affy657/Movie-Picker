@@ -2,11 +2,11 @@
 const REFS = {
   3: 'C3.4.2',
   4: 'C3.1, C3.2.1', 5: 'C3.1, C3.2.1', 6: 'C3.1, C3.2.1', 7: 'C3.1, C3.2.1',
-  8: 'C3.1, C3.2.1', 9: 'C3.1, C3.2.1', 10: 'C3.2.2',
-  11: 'C3.3.2', 12: 'C3.3.2',
-  13: 'C3.3.1', 14: 'C3.4.1', 15: 'C3.4.1, C3.4.2',
+  8: 'C3.1, C3.2.1', 9: 'C3.2.2',
+  10: 'C3.3.2', 11: 'C3.3.2',
+  12: 'C3.2.1, C3.3.1', 13: 'C3.4.1', 14: 'C3.4.1, C3.4.2',
 }
-const ANNEX_FROM = 16
+const ANNEX_FROM = 15
 </script>
 
 <template>
@@ -440,6 +440,7 @@ const ANNEX_FROM = 16
 }
 .chips > div {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 0.4rem;
   border-bottom: 1px solid var(--grid);
@@ -695,6 +696,24 @@ const ANNEX_FROM = 16
 }
 .raci .I {
   background: rgb(0 0 0 / 9%);
+  color: var(--ink-2);
+}
+
+.list {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.25;
+}
+.list > div {
+  border-bottom: 1px solid var(--grid);
+  padding-bottom: 0.28rem;
+}
+.list > div > b {
+  display: block;
+  font-weight: 600;
+}
+.list > div > span {
   color: var(--ink-2);
 }
 
