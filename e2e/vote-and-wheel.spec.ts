@@ -24,7 +24,8 @@ test.describe('Vote et roue (hote)', () => {
 
     await spinWheelAndDismissWinner(page);
 
-    await page.getByRole('button', { name: 'Repartir de zéro' }).first().click();
+    await page.getByRole('button', { name: 'Autres actions sur le tirage' }).click();
+    await page.getByRole('menuitem', { name: 'Repartir de zéro' }).click();
     const resetDialog = page.getByRole('dialog').filter({ hasText: /repartir de zéro/i });
     await expect(resetDialog).toBeVisible({ timeout: 15_000 });
     await resetDialog.getByRole('button', { name: 'Repartir de zéro' }).click();
