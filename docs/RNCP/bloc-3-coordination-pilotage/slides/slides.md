@@ -974,7 +974,7 @@ prestataire.
 <div class="text-xs opacity-75 mt-3 mb-1">Confié à la chaîne</div>
 <div class="chips">
 <div><span>Tests, analyse, scans</span><u>portes bloquantes</u></div>
-<div><span>Déploiement et test de fumée</span><u>à chaque fusion</u></div>
+<div><span>Déploiement et test de fumée</span><u>exécutés par la chaîne, déclenchés à la main</u></div>
 <div><span>Montées de dépendances</span><u>Dependabot, regroupées</u></div>
 <div><span>Alertes de supervision</span><u>5 politiques, 3 sondes</u></div>
 </div>
