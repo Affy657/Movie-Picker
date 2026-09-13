@@ -6,6 +6,8 @@ Le format s'appuie sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) 
 projet suit le [versionnage sémantique](https://semver.org/lang/fr/) (SemVer). Chaque
 version publiée est associée à un tag Git et à une release GitHub.
 
+## [Non publié]
+
 ## [1.6.0] - 2026-09-12
 
 ### Added
