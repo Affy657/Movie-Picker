@@ -6,6 +6,7 @@ using Moq;
 using Moq.Protected;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
@@ -30,6 +31,7 @@ public sealed class TmdbMovieSearchPersonCreditsTests
             client,
             Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }),
             new MemoryCache(new MemoryCacheOptions()),
+            new InMemorySharedCache(),
             NullLogger<TmdbMovieSearch>.Instance);
 
     private static HttpResponseMessage Json(string body) =>

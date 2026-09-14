@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Moq;
+using MoviePicker.Api.Application.Caching;
+using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Configuration;
@@ -12,10 +14,14 @@ namespace MoviePicker.Api.Tests.UseCases.GetMovieShowcase;
 public sealed class GetMovieCollectionsHandlerTests
 {
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
+    private readonly Mock<ISharedCache> _shared = new();
     private readonly MemoryCache _cache = new(new MemoryCacheOptions());
 
     private GetMovieCollectionsHandler Build(string? apiKey = "key") =>
-        new(_tmdb.Object, _cache, Options.Create(new MoviePickerOptions { TmdbApiKey = apiKey }));
+        new(
+            _tmdb.Object,
+            new SharedCacheReadThrough(_cache, _shared.Object, new SingleFlight()),
+            Options.Create(new MoviePickerOptions { TmdbApiKey = apiKey }));
 
     private static TmdbCollectionSummary Summary(int id) =>
         new(id, $"Saga {id}", $"Resume {id}", $"/poster-{id}.jpg", 4);
@@ -127,5 +133,18 @@ public sealed class GetMovieCollectionsHandlerTests
         var result = await Build(apiKey: null).HandleAsync();
 
         Assert.Equal(MovieShowcaseCatalog.CollectionIds.Count, result.Items.Count);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SharedCacheHit_SkipsTmdb()
+    {
+        var snapshot = new List<MovieCollectionResponse> { new() { Id = 1, Name = "Saga cache", MovieCount = 3 } };
+        _shared.Setup(c => c.TryGetAsync<IReadOnlyList<MovieCollectionResponse>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SharedCacheEntry<IReadOnlyList<MovieCollectionResponse>>(snapshot, DateTimeOffset.UtcNow.AddHours(1)));
+
+        var result = await Build().HandleAsync();
+
+        Assert.Equal("Saga cache", Assert.Single(result.Items).Name);
+        _tmdb.Verify(t => t.GetCollectionAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

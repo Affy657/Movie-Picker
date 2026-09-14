@@ -200,9 +200,9 @@ public sealed class ServiceCollectionExtensionsBranchTests
     }
 
     [Theory]
-    [InlineData("8", 8)]
+    [InlineData("4", 4)]
     [InlineData("64", 16)]
-    [InlineData("0", 4)]
+    [InlineData("0", 8)]
     public void TmdbListEnrichmentParallelism_IsCappedAtSixteen(string raw, int expected)
     {
         var options = OptionsFrom(new Dictionary<string, string?> { ["TMDB_LIST_ENRICHMENT_MAX_PARALLEL"] = raw });

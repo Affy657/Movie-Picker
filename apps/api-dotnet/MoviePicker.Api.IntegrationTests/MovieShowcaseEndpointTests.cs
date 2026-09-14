@@ -95,6 +95,33 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
         Assert.Empty(body.Items);
     }
 
+    [Theory]
+    [InlineData("/api/v1/movies/showcase?section=trending")]
+    [InlineData("/api/v1/movies/collections")]
+    public async Task PublicShowcase_IsCacheableByTheBrowser(string path)
+    {
+        var anon = _factory.CreateClient();
+
+        var res = await anon.GetAsync(path);
+
+        res.EnsureSuccessStatusCode();
+        Assert.Equal("public, max-age=300, stale-while-revalidate=3600", res.Headers.CacheControl?.ToString());
+    }
+
+    [Theory]
+    [InlineData("br")]
+    [InlineData("gzip")]
+    public async Task Showcase_IsCompressed_WhenTheClientAcceptsIt(string encoding)
+    {
+        var anon = _factory.CreateClient();
+        anon.DefaultRequestHeaders.AcceptEncoding.ParseAdd(encoding);
+
+        var res = await anon.GetAsync("/api/v1/movies/showcase?section=trending");
+
+        res.EnsureSuccessStatusCode();
+        Assert.Equal(encoding, Assert.Single(res.Content.Headers.ContentEncoding));
+    }
+
     [Fact]
     public async Task Collections_IsAnonymous_ReturnsCuratedList()
     {

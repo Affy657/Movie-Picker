@@ -7,6 +7,7 @@ using Moq.Protected;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
@@ -17,7 +18,7 @@ public sealed class TmdbMovieSearchTests
     private static HttpClient CreateHttpClient(HttpMessageHandler handler) => new(handler) { BaseAddress = new Uri("https://api.themoviedb.org") };
 
     private static TmdbMovieSearch CreateSut(HttpClient client, IOptions<MoviePickerOptions> options) =>
-        new(client, options, new MemoryCache(new MemoryCacheOptions()), NullLogger<TmdbMovieSearch>.Instance);
+        new(client, options, new MemoryCache(new MemoryCacheOptions()), new InMemorySharedCache(), NullLogger<TmdbMovieSearch>.Instance);
 
     [Fact]
     public async Task SearchAsync_NoApiKey_ThrowsInvalidOperationException()
@@ -227,6 +228,54 @@ public sealed class TmdbMovieSearchTests
             Times.Exactly(2),
             ItExpr.IsAny<HttpRequestMessage>(),
             ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetEnrichmentAsync_SharedCacheHit_SkipsHttpOnAFreshInstance()
+    {
+        var shared = new InMemorySharedCache();
+        var enrichment = new TmdbMovieEnrichment(7.1, [], null, 95);
+        await shared.SetAsync("tmdb-enrich-v2:movie:FR:550", enrichment, TimeSpan.FromHours(1));
+        var mockHandler = new Mock<HttpMessageHandler>();
+        var sut = new TmdbMovieSearch(
+            CreateHttpClient(mockHandler.Object),
+            Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }),
+            new MemoryCache(new MemoryCacheOptions()),
+            shared,
+            NullLogger<TmdbMovieSearch>.Instance);
+
+        var result = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
+
+        Assert.Equal(95, result?.RuntimeMinutes);
+        mockHandler.Protected().Verify(
+            "SendAsync",
+            Times.Never(),
+            ItExpr.IsAny<HttpRequestMessage>(),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetEnrichmentAsync_FreshFetch_PublishesToTheSharedCache()
+    {
+        var shared = new InMemorySharedCache();
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"vote_average": 8.4, "runtime": 139, "results": {}}""")
+            });
+        var sut = new TmdbMovieSearch(
+            CreateHttpClient(mockHandler.Object),
+            Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }),
+            new MemoryCache(new MemoryCacheOptions()),
+            shared,
+            NullLogger<TmdbMovieSearch>.Instance);
+
+        await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
+
+        var published = await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v2:movie:FR:550");
+        Assert.Equal(139, published?.Value.RuntimeMinutes);
     }
 
     [Fact]

@@ -41,6 +41,7 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
     private readonly HttpClient _http;
     private readonly MoviePickerOptions _options;
     private readonly IMemoryCache _cache;
+    private readonly ISharedCache _sharedCache;
     private readonly ILogger<TmdbMovieSearch> _logger;
 
     private TimeSpan FailureCacheTtl() =>
@@ -50,11 +51,13 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
         HttpClient http,
         IOptions<MoviePickerOptions> options,
         IMemoryCache cache,
+        ISharedCache sharedCache,
         ILogger<TmdbMovieSearch> logger)
     {
         _http = http;
         _options = options.Value;
         _cache = cache;
+        _sharedCache = sharedCache;
         _logger = logger;
     }
 
@@ -642,10 +645,18 @@ public sealed class TmdbMovieSearch : ITmdbMovieSearch
                 return null;
         }
 
+        var shared = await _sharedCache.TryGetAsync<TmdbMovieEnrichment>(cacheKey, ct).ConfigureAwait(false);
+        if (shared is not null)
+        {
+            _cache.Set(cacheKey, shared.Value, new MemoryCacheEntryOptions { AbsoluteExpiration = shared.ExpiresAt });
+            return shared.Value;
+        }
+
         try
         {
             var fresh = await FetchEnrichmentUncachedAsync(tmdbId, mediaType, r, ct).ConfigureAwait(false);
             _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
+            await _sharedCache.SetAsync(cacheKey, fresh, ttl, ct).ConfigureAwait(false);
             return fresh;
         }
         catch (Exception ex) when (

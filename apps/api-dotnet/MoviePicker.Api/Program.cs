@@ -1,7 +1,9 @@
+using System.IO.Compression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.ResponseCompression;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.Web;
 using Sentry;
@@ -48,6 +50,15 @@ if (!builder.Environment.IsDevelopment())
     builder.Logging.AddFilter("Microsoft.AspNetCore.Routing", LogLevel.Warning);
 }
 
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+
 builder.Services.AddMoviePicker(builder.Configuration, builder.Environment);
 builder.Services.AddMoviePickerAuthentication(builder.Configuration);
 builder.Services.AddMoviePickerRateLimiter(builder.Environment);
@@ -89,6 +100,8 @@ var app = builder.Build();
 ProductionStartupValidation.Validate(app);
 
 app.UseForwardedHeaders();
+
+app.UseResponseCompression();
 
 app.UseMiddleware<CorrelationIdMiddleware>();
 

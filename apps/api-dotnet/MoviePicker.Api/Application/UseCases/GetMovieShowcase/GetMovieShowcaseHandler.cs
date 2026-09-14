@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
@@ -13,13 +13,13 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
 {
     private readonly ITmdbMovieSearch _tmdb;
     private readonly IMovieRepository _movies;
-    private readonly IMemoryCache _cache;
+    private readonly SharedCacheReadThrough _cache;
     private readonly MoviePickerOptions _options;
 
     public GetMovieShowcaseHandler(
         ITmdbMovieSearch tmdb,
         IMovieRepository movies,
-        IMemoryCache cache,
+        SharedCacheReadThrough cache,
         IOptions<MoviePickerOptions> options)
     {
         _tmdb = tmdb;
@@ -41,15 +41,11 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         var provider = string.IsNullOrWhiteSpace(query.Provider) ? null : query.Provider.Trim();
         var cacheKey = BuildCacheKey(section, theme, genreIds, query.CollectionId, provider, query.SeedTmdbId);
 
-        if (_cache.TryGetValue(cacheKey, out object? boxed)
-            && boxed is IReadOnlyList<MovieShowcaseItemResponse> cached)
-            return BuildResponse(section, theme, cached);
-
-        var items = await LoadSectionAsync(section, theme, genreIds, query, provider, ct);
-        _cache.Set(
+        var items = await _cache.GetOrLoadAsync(
             cacheKey,
-            items,
-            new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = CacheTtl() });
+            CacheTtl(),
+            token => LoadSectionAsync(section, theme, genreIds, query, provider, token),
+            ct);
 
         return BuildResponse(section, theme, items);
     }

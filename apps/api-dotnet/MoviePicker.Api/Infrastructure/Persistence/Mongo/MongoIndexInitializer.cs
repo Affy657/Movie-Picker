@@ -34,6 +34,7 @@ public sealed class MongoIndexInitializer : IHostedService
             await EnsureKofiWebhookLogIndexesAsync(cancellationToken);
             await EnsurePushDedupIndexesAsync(cancellationToken);
             await EnsureRateLimitCounterIndexesAsync(cancellationToken);
+            await EnsureSharedCacheIndexesAsync(cancellationToken);
             _logger.LogInformation("Index MongoDB initialisés.");
         }
         catch (Exception ex)
@@ -293,6 +294,15 @@ public sealed class MongoIndexInitializer : IHostedService
         var ttl = new CreateIndexModel<RateLimitCounterDocument>(
             Builders<RateLimitCounterDocument>.IndexKeys.Ascending(x => x.ExpiresAt),
             new CreateIndexOptions { Name = "rate_limit_counters_expiresAt_ttl", ExpireAfter = TimeSpan.Zero });
+        await col.Indexes.CreateOneAsync(ttl, cancellationToken: ct);
+    }
+
+    private async Task EnsureSharedCacheIndexesAsync(CancellationToken ct)
+    {
+        var col = _database.GetCollection<SharedCacheDocument>(MongoSharedCache.CollectionName);
+        var ttl = new CreateIndexModel<SharedCacheDocument>(
+            Builders<SharedCacheDocument>.IndexKeys.Ascending(x => x.ExpiresAt),
+            new CreateIndexOptions { Name = "shared_cache_expiresAt_ttl", ExpireAfter = TimeSpan.Zero });
         await col.Indexes.CreateOneAsync(ttl, cancellationToken: ct);
     }
 

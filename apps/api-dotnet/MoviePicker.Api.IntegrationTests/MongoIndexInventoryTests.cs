@@ -70,6 +70,8 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
 
         new("rate_limit_counters", "rate_limit_counters_expiresAt_ttl", ExpireAfterSeconds: 0),
 
+        new("shared_cache", "shared_cache_expiresAt_ttl", ExpireAfterSeconds: 0),
+
         new("kofi_webhook_log", "kofi_webhook_log_receivedAt_ttl", ExpireAfterSeconds: OneYear)
     ];
 

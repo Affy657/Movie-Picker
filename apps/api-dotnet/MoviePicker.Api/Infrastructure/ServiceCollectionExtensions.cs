@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
@@ -40,6 +41,8 @@ public static class ServiceCollectionExtensions
             .Configure<IConfiguration>(ConfigureMoviePickerOptions);
 
         services.AddMemoryCache();
+        services.AddSingleton<SingleFlight>();
+        services.AddSingleton<SharedCacheReadThrough>();
 
         services.AddCors(o =>
             o.AddPolicy(
@@ -257,6 +260,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IDatabaseHealthProbe, InMemoryDatabaseHealthProbe>();
             services.AddSingleton<IMigrationHistoryRepository, InMemoryMigrationHistoryRepository>();
             services.AddSingleton<IUnitOfWork, InMemoryUnitOfWork>();
+            services.AddSingleton<ISharedCache, InMemorySharedCache>();
             return;
         }
 
@@ -305,6 +309,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRateLimitCounterStore, MongoRateLimitCounterStore>();
         services.AddSingleton<IDatabaseHealthProbe, MongoDatabaseHealthProbe>();
         services.AddScoped<IMigrationHistoryRepository, MongoMigrationHistoryRepository>();
+        services.AddSingleton<ISharedCache, MongoSharedCache>();
         services.AddHostedService<MongoIndexInitializer>();
         services.AddDataMigrations();
     }

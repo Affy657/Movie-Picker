@@ -20,7 +20,7 @@ public sealed class MoviePickerOptions
 
     public int TmdbSearchMaxWatchProviderLookups { get; set; } = 10;
 
-    public int TmdbListEnrichmentMaxParallelism { get; set; } = 4;
+    public int TmdbListEnrichmentMaxParallelism { get; set; } = 8;
 
     public bool PosterCacheEnabled { get; set; } = true;
 

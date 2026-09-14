@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Moq;
+using MoviePicker.Api.Application.Caching;
+using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Configuration;
@@ -14,13 +16,14 @@ public sealed class GetMovieShowcaseHandlerTests
 {
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
     private readonly Mock<IMovieRepository> _movies = new();
+    private readonly Mock<ISharedCache> _shared = new();
     private readonly MemoryCache _cache = new(new MemoryCacheOptions());
 
     private GetMovieShowcaseHandler Build(string? apiKey = "key") =>
         new(
             _tmdb.Object,
             _movies.Object,
-            _cache,
+            new SharedCacheReadThrough(_cache, _shared.Object, new SingleFlight()),
             Options.Create(new MoviePickerOptions { TmdbApiKey = apiKey }));
 
     private static List<TmdbSearchItem> Items(int count, int idBase = 1) =>
@@ -294,5 +297,56 @@ public sealed class GetMovieShowcaseHandlerTests
                 It.IsAny<int>(),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task HandleAsync_SharedCacheHit_SkipsTmdbEntirely()
+    {
+        var snapshot = new List<MovieShowcaseItemResponse>
+        {
+            new() { Id = 7, MediaType = MovieMediaType.Movie, Title = "Depuis le cache", Year = "2020" }
+        };
+        _shared.Setup(c => c.TryGetAsync<IReadOnlyList<MovieShowcaseItemResponse>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SharedCacheEntry<IReadOnlyList<MovieShowcaseItemResponse>>(snapshot, DateTimeOffset.UtcNow.AddHours(1)));
+
+        var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
+
+        Assert.Equal("Depuis le cache", Assert.Single(result.Items).Title);
+        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SharedCacheMiss_PublishesTheLoadedSection()
+    {
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(3));
+
+        await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
+
+        _shared.Verify(
+            c => c.SetAsync(
+                It.IsAny<string>(),
+                It.Is<IReadOnlyList<MovieShowcaseItemResponse>>(items => items.Count == 3),
+                TimeSpan.FromHours(6),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ConcurrentRequestsOnTheSameSection_HitTmdbOnce()
+    {
+        var gate = new TaskCompletionSource<IReadOnlyList<TmdbSearchItem>>();
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CancellationToken>()))
+            .Returns(gate.Task);
+        var handler = Build();
+        var query = new MovieShowcaseQuery(MovieShowcaseSections.Trending);
+
+        var first = handler.HandleAsync(query);
+        var second = handler.HandleAsync(query);
+        gate.SetResult(Items(2));
+
+        Assert.Equal(2, (await first).Items.Count);
+        Assert.Equal(2, (await second).Items.Count);
+        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

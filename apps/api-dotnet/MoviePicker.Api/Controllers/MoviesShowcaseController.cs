@@ -12,6 +12,8 @@ namespace MoviePicker.Api.Controllers;
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class MoviesShowcaseController : ControllerBase
 {
+    private const string PublicCacheControl = "public, max-age=300, stale-while-revalidate=3600";
+
     [HttpGet("showcase")]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitingExtensions.MovieShowcasePolicy)]
@@ -37,6 +39,7 @@ public sealed class MoviesShowcaseController : ControllerBase
             provider,
             seedTmdbId);
         var result = await handler.HandleAsync(query, ct);
+        Response.Headers.CacheControl = PublicCacheControl;
         return Ok(result);
     }
 
@@ -51,6 +54,7 @@ public sealed class MoviesShowcaseController : ControllerBase
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(ct);
+        Response.Headers.CacheControl = PublicCacheControl;
         return Ok(result);
     }
 
