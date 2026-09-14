@@ -67,7 +67,7 @@ describe('ConfirmDialog', () => {
         <ConfirmDialog
           open
           title="Quitter"
-          message="Sûr·e ?"
+          message="Sûr ?"
           onConfirm={onConfirm}
           onCancel={onCancel}
         />

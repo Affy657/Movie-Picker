@@ -2906,7 +2906,7 @@ export const en: Locale = {
       domainNotifications: 'notifications',
       domainProfiles: 'profiles',
       domainLetterboxd: 'Letterboxd',
-      sharedCore: 'shared/ — {{components}} components, hooks, HTTP client',
+      sharedCore: 'shared/: {{components}} components, hooks, HTTP client',
       sharedCoreSub: 'knows no feature',
       frontGraphNote: 'The core is a leaf of the graph: no arrow leaves it. A cycle fails the CI.',
       unitOfWorkTitle:

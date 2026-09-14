@@ -30,7 +30,7 @@ run("Règles d'architecture", 'node', ['scripts/check-architecture.mjs']);
 run('Workflows (actionlint + shellcheck + zizmor)', 'node', ['scripts/check-workflows.mjs']);
 // Même image et même mode `dir` que le job `gitleaks` de la CI : cette porte scanne l'arbre de
 // travail, pas l'historique. Sans elle en local, une chaîne de forme secrète ne se découvre qu'en
-// CI, et c'est arrivé le 2026-09-10 — la règle `curl-auth-user` déclenche sur
+// CI, et c'est arrivé le 2026-09-10, la règle `curl-auth-user` déclenche sur
 // `curl -u "$TOKEN:"` même quand la valeur est un nom de variable. Garder le digest aligné sur
 // celui de `.github/workflows/ci-cd.yml`.
 run('Secrets (Gitleaks, arbre de travail)', 'docker', [
@@ -79,42 +79,56 @@ run('Export OpenAPI (SKIP_OPENAPI_BUILD)', 'node', ['scripts/export-openapi.cjs'
 
 run('Types OpenAPI (dérive du contrat)', 'node', ['scripts/check-openapi-types.mjs']);
 
-run('Audit npm (Trivy fs — pnpm audit indisponible depuis le 2026-07-15, cf. pnpm/pnpm#11265)', 'docker', [
-  'run',
-  '--rm',
-  '-v',
-  './pnpm-lock.yaml:/repo/pnpm-lock.yaml:ro',
-  '-v',
-  'trivy-cache:/root/.cache/trivy',
-  'aquasec/trivy@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e',
-  'fs',
-  '--scanners',
-  'vuln',
-  '--severity',
-  'HIGH,CRITICAL',
-  '--exit-code',
-  '1',
-  '--ignore-unfixed',
-  '/repo/pnpm-lock.yaml',
-]);
+run(
+  'Audit npm (Trivy fs, pnpm audit indisponible depuis le 2026-07-15, cf. pnpm/pnpm#11265)',
+  'docker',
+  [
+    'run',
+    '--rm',
+    '-v',
+    './pnpm-lock.yaml:/repo/pnpm-lock.yaml:ro',
+    '-v',
+    'trivy-cache:/root/.cache/trivy',
+    'aquasec/trivy@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e',
+    'fs',
+    '--scanners',
+    'vuln',
+    '--severity',
+    'HIGH,CRITICAL',
+    '--exit-code',
+    '1',
+    '--ignore-unfixed',
+    '/repo/pnpm-lock.yaml',
+  ]
+);
 run('Tests front (Vitest + seuils couverture)', 'pnpm', ['run', 'test:coverage', '--filter=web']);
 
-run('Tests API unitaires', 'dotnet', [
-  'test',
-  'apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj',
-  '-c',
-  'Debug',
-  '--verbosity',
-  'normal',
-], { env: envMongoEmpty });
+run(
+  'Tests API unitaires',
+  'dotnet',
+  [
+    'test',
+    'apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj',
+    '-c',
+    'Debug',
+    '--verbosity',
+    'normal',
+  ],
+  { env: envMongoEmpty }
+);
 
-run('Tests API intégration', 'dotnet', [
-  'test',
-  'apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj',
-  '-c',
-  'Debug',
-  '--verbosity',
-  'normal',
-], { env: envMongoEmpty });
+run(
+  'Tests API intégration',
+  'dotnet',
+  [
+    'test',
+    'apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj',
+    '-c',
+    'Debug',
+    '--verbosity',
+    'normal',
+  ],
+  { env: envMongoEmpty }
+);
 
-process.stdout.write('\n\x1b[32m✓ verify:local — tout est passé.\x1b[0m\n\n');
+process.stdout.write('\n\x1b[32m✓ verify:local : tout est passé.\x1b[0m\n\n');

@@ -10,6 +10,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
+- **Le retrait d'un gagnant journalisait l'identifiant reçu dans la requête** plutôt que celui du film réellement retiré de la soirée, la dernière alerte CodeQL ouverte du dépôt. La description des aperçus de partage et les métadonnées SEO abandonnent aussi le tiret cadratin et le point médian.
 - **Les interrupteurs des paramètres de la soirée étaient inégalement espacés** : « Répéter cette soirée » collait à « Limiter les votes par participant ». Les champs du panneau suivent maintenant un pas unique.
 
 ## [1.6.0] - 2026-09-12
@@ -18,8 +19,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 - **Recherche d'utilisateurs** : un troisième onglet « Rechercher » dans la modale Abonnements / Abonnés trouve un compte par pseudo ou par handle, insensible à la casse et aux accents, la portion trouvée surlignée. Les profils privés en sont exclus, et les correspondances en début de pseudo passent devant les autres.
 - **Soirée récurrente** : l'hôte fait se répéter une soirée au rythme hebdomadaire, bimensuel ou mensuel. L'occurrence suivante naît à la clôture de la précédente, avec la même configuration et une liste de films vide, une seule ouverte à la fois. Le groupe n'est pas reconduit : à l'hôte de repartager le lien. Une série laissée en plan est rattrapée à l'ouverture de « Mes soirées », et une série dormante au-delà de soixante intervalles s'arrête d'elle-même.
-- **Le dépôt est préparé pour être lu de l'extérieur** : `CONTRIBUTING.md` dit que le projet est solo et qu'aucune PR externe ne sera fusionnée, `SECURITY.md` détourne les failles vers un canal privé plutôt qu'un ticket public, et `infra/README.md` documente les fichiers de configuration appliqués à la main. Les identifiants d'infrastructure qui traînaient dans la documentation — compte, distribution, bucket, certificat, projet, organisation — sont remplacés par des gabarits, avec la commande qui relève chaque valeur.
-- **Sauvegarde quotidienne de la base de production** : le palier gratuit Atlas ne fournit aucun instantané, et rien ne sauvegardait la base. Un dump part chaque nuit vers un bucket Cloud Storage versionné, puis est relu depuis ce bucket et restauré dans une MongoDB jetable avant d'être publié — une archive qui échoue la restauration ne devient jamais la sauvegarde du jour.
+- **Le dépôt est préparé pour être lu de l'extérieur** : `CONTRIBUTING.md` dit que le projet est solo et qu'aucune PR externe ne sera fusionnée, `SECURITY.md` détourne les failles vers un canal privé plutôt qu'un ticket public, et `infra/README.md` documente les fichiers de configuration appliqués à la main. Les identifiants d'infrastructure qui traînaient dans la documentation, compte, distribution, bucket, certificat, projet, organisation, sont remplacés par des gabarits, avec la commande qui relève chaque valeur.
+- **Sauvegarde quotidienne de la base de production** : le palier gratuit Atlas ne fournit aucun instantané, et rien ne sauvegardait la base. Un dump part chaque nuit vers un bucket Cloud Storage versionné, puis est relu depuis ce bucket et restauré dans une MongoDB jetable avant d'être publié, une archive qui échoue la restauration ne devient jamais la sauvegarde du jour.
 - **Archive du build front à chaque déploiement** (30 jours) : l'hébergement ne conserve aucune version, un retour arrière ne demande plus de rejouer toute la chaîne de portes.
 - Porte de qualité sur les workflows eux-mêmes (`actionlint`, `shellcheck`, `zizmor`), bloquante pour le déploiement : jusqu'ici la chaîne qui garde le code n'était gardée par rien.
 - **Les pages publiques sont servies en HTML complet** : « Comment ça marche », « Soutenir » et le dossier technique sont rendus au moment du build, titre, description et données structurées compris. Un moteur d'indexation ou un aperçu de lien recevait jusqu'ici un document vide qu'il fallait exécuter pour lire ; il reçoit maintenant la page.
@@ -304,7 +305,7 @@ Première version de production complète.
 
 ### Added
 
-- Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage — front React, API Node / Express.
+- Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
 [Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.6.0...HEAD
 [1.6.0]: https://github.com/Affy657/Movie-Picker/compare/v1.5.0...v1.6.0

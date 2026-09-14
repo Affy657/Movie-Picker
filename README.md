@@ -89,10 +89,11 @@ démonstration, catalogue des scripts, structure du dépôt) est dans
 
 ## Qualité
 
-`pnpm run verify:local` rejoue la CI en local, en treize étapes : règles d'architecture, `pnpm lint`,
-ESLint, Prettier, `dotnet restore`, `dotnet format`, build Release en `-warnaserror`, export OpenAPI,
-contrôle de dérive des types, audit de vulnérabilités Trivy, tests front avec seuils de couverture,
-tests API unitaires, tests API d'intégration.
+`pnpm run verify:local` rejoue la CI en local, en quinze étapes : règles d'architecture, lint des
+workflows (`actionlint`, `shellcheck`, `zizmor`), Gitleaks sur l'arbre de travail, `pnpm lint`, ESLint,
+Prettier, `dotnet restore`, `dotnet format`, build Release en `-warnaserror`, export OpenAPI, contrôle
+de dérive des types, audit de vulnérabilités Trivy, tests front avec seuils de couverture, tests API
+unitaires, tests API d'intégration.
 
 Ce que la chaîne empêche, plutôt que ce qu'elle mesure :
 
@@ -124,8 +125,8 @@ dépendances npm et NuGet, les suites de tests, les E2E et le Quality Gate Sonar
 ne déploie rien. Le déclenchement choisit sa cible (tout, front seul, API seule), refuse de partir
 si le run de CI du commit visé n'est pas vert, puis ajoute les deux portes propres au déploiement,
 les seuils Lighthouse et le scan Trivy de l'image. Grouper plusieurs livraisons dans un seul
-déploiement est le but : les minutes GitHub Actions d'un dépôt privé sont facturées, et rejouer le
-chemin de déploiement à chaque commit en consommait la moitié.
+déploiement est le but : quand le dépôt était privé, ses minutes GitHub Actions étaient facturées et
+rejouer le chemin de déploiement à chaque commit en consommait la moitié.
 
 Trois choix structurent la mise en production :
 
@@ -140,7 +141,7 @@ Trois choix structurent la mise en production :
   ses bundles. Le `dist` est archivé trente jours, l'hébergement statique ne gardant aucune version.
 - **Les routes publiques indexables sont prérendues** au build et publiées sous une clé sans
   extension égale à leur chemin, ce qui les fait servir en HTML complet au lieu de la coquille SPA.
-  Un client sans JavaScript — moteur d'indexation, aperçu de lien — reçoit le contenu et les
+  Un client sans JavaScript, moteur d'indexation ou aperçu de lien, reçoit le contenu et les
   métadonnées de la page, pas un document vide.
 
 Workflows annexes : `backup-mongo.yml` sauvegarde la base chaque nuit et restaure l'archive pour la
@@ -163,7 +164,6 @@ vérifier avant de la publier, `rollback.yml` est la porte manuelle de retour ar
 ## Licence
 
 Code publié pour être lu, pas pour être réutilisé : tous droits réservés, voir
-[`LICENSE`](LICENSE). C'est un projet solo, et le dépôt n'accepte aucune contribution externe
-— [`CONTRIBUTING.md`](CONTRIBUTING.md) dit où adresser un signalement, et
-[`SECURITY.md`](SECURITY.md) une faille. Movie Picker utilise l'API de The Movie Database sans
-être approuvé ni certifié par TMDB.
+[`LICENSE`](LICENSE). C'est un projet solo, et le dépôt n'accepte aucune contribution externe :
+[`CONTRIBUTING.md`](CONTRIBUTING.md) dit où adresser un signalement, et [`SECURITY.md`](SECURITY.md)
+une faille. Movie Picker utilise l'API de The Movie Database sans être approuvé ni certifié par TMDB.

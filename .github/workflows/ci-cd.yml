@@ -1,9 +1,9 @@
-# CI Movie Picker — monorepo (front Vite/React, API .NET). **Ce workflow ne déploie rien.**
+# CI Movie Picker : monorepo (front Vite/React, API .NET). **Ce workflow ne déploie rien.**
 #
 # Le déploiement est un geste manuel, dans `.github/workflows/deploy.yml` : un push sur master
 # joue les portes ci-dessous et s'arrête là. `deploy.yml` refuse de partir sur un commit dont le
 # run de ce workflow n'est pas vert, donc la conclusion d'un run master est ce que consomme la
-# production — la garder honnête est la raison d'être de ce fichier.
+# production, la garder honnête est la raison d'être de ce fichier.
 #
 # Path-filtering : le job "changes" (dorny/paths-filter) calcule 3 sorties web/api/e2e ; chaque
 # job ne tourne que si sa lane est impactée (skip sinon). workflow_dispatch force les 3 lanes.
@@ -21,8 +21,8 @@
 #   - Images Docker (base .NET + gitleaks) épinglées par digest sha256.
 #   - permissions least-privilege (deny par défaut) ; checkout avec persist-credentials: false.
 #   - Secrets passés via env: (jamais interpolés directement dans un bloc run:).
-#   - Quality Gate SonarCloud bloquant — un QG rouge fait échouer le job, donc interdit le déploiement.
-#   - concurrency: group ci-<ref> — cancel-in-progress sur PR / false sur master.
+#   - Quality Gate SonarCloud bloquant, un QG rouge fait échouer le job, donc interdit le déploiement.
+#   - concurrency: group ci-<ref>, cancel-in-progress sur PR / false sur master.
 #   - timeout-minutes sur chaque job ; caches NuGet / Turbo.
 
 name: CI
@@ -137,7 +137,7 @@ jobs:
   # inconditionnelle comme gitleaks : un run master rouge interdit le déploiement.
   #   - actionlint : erreurs de syntaxe, expressions ${{ }} invalides, permissions incohérentes.
   #     Il délègue aux blocs `run:` à shellcheck, préinstallé sur les runners GitHub.
-  #   - zizmor : audit sécurité des workflows. Seuil `medium` — le dépôt est à 0 medium et 0 high,
+  #   - zizmor : audit sécurité des workflows. Seuil `medium`, le dépôt est à 0 medium et 0 high,
   #     donc la porte est verte aujourd'hui et n'attrape que du sérieux (injection depuis un
   #     contexte non fiable, secrets exposés). Descendre à `low` demanderait de traiter 9 constats
   #     cosmétiques. `--offline` pour que la porte ne dépende pas de l'API GitHub.
@@ -246,7 +246,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Audit npm (Trivy — pnpm audit indisponible, endpoint npm retiré le 2026-07-15, cf. pnpm/pnpm#11265)
+      - name: Audit npm (Trivy, pnpm audit indisponible, endpoint npm retiré le 2026-07-15, cf. pnpm/pnpm#11265)
         if: needs.changes.outputs.web == 'true'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -270,10 +270,10 @@ jobs:
       - name: Restore API .NET (pour audit NuGet)
         if: needs.changes.outputs.api == 'true'
         run: dotnet restore apps/api-dotnet/MoviePicker.slnx
-      - name: Audit NuGet — liste vulnérabilités (informatif)
+      - name: "Audit NuGet : liste vulnérabilités (informatif)"
         if: needs.changes.outputs.api == 'true'
         run: dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive
-      - name: Audit NuGet — échoue si High / Critical
+      - name: "Audit NuGet : échoue si High / Critical"
         if: needs.changes.outputs.api == 'true'
         run: |
           set -o pipefail
@@ -541,13 +541,13 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('apps/api-dotnet/**/*.csproj', 'apps/api-dotnet/Directory.Build.props') }}
           restore-keys: |
             nuget-${{ runner.os }}-
-      - name: Couverture front — download artefact (si test-web a tourné)
+      - name: "Couverture front : download artefact (si test-web a tourné)"
         if: needs.test-web.result == 'success'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: coverage-web
           path: apps/web/coverage
-      - name: Couverture front — fallback (régénère si test-web non exécuté)
+      - name: "Couverture front : fallback (régénère si test-web non exécuté)"
         if: needs.test-web.result != 'success'
         run: |
           pnpm install --frozen-lockfile --ignore-scripts
@@ -599,7 +599,7 @@ jobs:
             --settings apps/api-dotnet/coverlet.runsettings \
             --results-directory apps/api-dotnet/MoviePicker.Api.Tests/TestResults
           dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
-      - name: "Quality Gate — detail des conditions en echec"
+      - name: "Quality Gate : detail des conditions en echec"
         if: failure()
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

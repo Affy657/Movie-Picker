@@ -1,14 +1,14 @@
-# Déploiement Movie Picker — front Vite/React → S3+CloudFront ; API .NET → Cloud Run.
+# Déploiement Movie Picker : front Vite/React → S3+CloudFront ; API .NET → Cloud Run.
 #
 # **Manuel, jamais automatique.** Un push sur master ne déploie plus : il ne fait que jouer les
 # portes de `ci-cd.yml`. La production part quand ce workflow est déclenché à la main, ce qui
-# permet de grouper plusieurs livraisons dans un seul déploiement. Les minutes GitHub Actions
-# d'un dépôt privé sont facturées et 99 % du coût partait sur les pushes master : la moitié de
-# ce coût était le chemin de déploiement, rejoué à chaque commit qu'on ne livrait pas pour autant.
+# permet de grouper plusieurs livraisons dans un seul déploiement. Quand le dépôt était privé, ses
+# minutes GitHub Actions étaient facturées et 99 % du coût partait sur les pushes master : la moitié
+# de ce coût était le chemin de déploiement, rejoué à chaque commit qu'on ne livrait pas pour autant.
 #
 # Contrepartie assumée : la production est périmée par défaut entre deux déclenchements. Le
 # garde-fou final vérifie donc que chaque cible demandée est réellement partie, et non la couleur
-# du run — un job de déploiement sauté par un `needs:` rouge n'apparaît pas en échec.
+# du run, un job de déploiement sauté par un `needs:` rouge n'apparaît pas en échec.
 #
 # Les portes de qualité ne sont pas contournées, elles sont *consommées* : `verifier-ci` refuse de
 # déployer un commit dont le run `ci-cd.yml` n'est pas vert (gitleaks, lint, tests, E2E, Quality
@@ -124,7 +124,7 @@ jobs:
       - uses: browser-actions/setup-chrome@48ad923757ca74d66703209fe939badbdf80f2f4 # v2
       # Médiane sur 5 passages au lieu de 3. Aucun seuil n'est abaissé : c'est la MESURE qui est
       # fiabilisée, pas la barre. Sur un même commit, deux exécutions ont donné à la page d'accueil
-      # 82 puis 93, et fait échouer deux pages différentes — la variance des runners dépasse la
+      # 82 puis 93, et fait échouer deux pages différentes, la variance des runners dépasse la
       # marge qui sépare plusieurs pages de leur plancher, donc la porte virait au rouge au hasard,
       # y compris sur un commit sans le moindre changement front. Depuis que la porte est sur le
       # chemin du déploiement, un faux rouge coûte une livraison bloquée : la médiane sur 5 passages
@@ -171,7 +171,7 @@ jobs:
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      # § 25 — Scan CVE de l'image avant push. Politique :
+      # § 25 : Scan CVE de l'image avant push. Politique :
       #   - bloque sur CRITICAL inconditionnellement
       #   - bloque sur HIGH **uniquement si un fix amont est disponible** (`ignore-unfixed: true`),
       #     pour éviter de geler le déploiement sur des CVE base-image sans patch publié.
@@ -232,7 +232,7 @@ jobs:
     timeout-minutes: 15
     # Un `needs:` nu, sans `always()` ni test de `result` : les portes de qualité sont déjà
     # exigées par `verifier-ci` en amont de `docker-api`, et un `always()` laissait le skip d'un
-    # job intermédiaire se propager en silence jusqu'ici — c'est exactement ce piège qui a laissé
+    # job intermédiaire se propager en silence jusqu'ici, c'est exactement ce piège qui a laissé
     # la prod dix jours en retard. Un docker-api rouge ou sauté saute ce job, et le garde-fou
     # final le signale.
     needs: docker-api
@@ -254,7 +254,7 @@ jobs:
       # La révision est déployée SANS trafic puis validée sur son URL taguée : un conteneur qui
       # échoue ses sondes n'atteint jamais un utilisateur. Ce schéma remplace « déployer, constater,
       # revenir en arrière », qui exposait la mauvaise révision le temps des smoke tests et laissait
-      # ensuite le trafic épinglé sur une révision nommée — état dans lequel `gcloud run deploy`
+      # ensuite le trafic épinglé sur une révision nommée, état dans lequel `gcloud run deploy`
       # n'envoie plus aucun trafic aux révisions suivantes, sans que rien ne vire au rouge.
       - name: Déployer sans trafic (secrets GCP + CORS)
         id: deploy
@@ -321,17 +321,17 @@ jobs:
           curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$TAG_URL/health"
           echo "Réponse /health : $(cat "$BODY")"
           grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
-            echo "::error::/health ne renvoie pas status=ok — révision non promue"
+            echo "::error::/health ne renvoie pas status=ok, révision non promue"
             exit 1
           }
           curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$BODY" "$TAG_URL/health/ready"
           echo "Réponse /health/ready : $(cat "$BODY")"
           grep -qE '"status"[[:space:]]*:[[:space:]]*"ready"' "$BODY" || {
-            echo "::error::/health/ready ne renvoie pas status=ready (dépendance indisponible) — révision non promue"
+            echo "::error::/health/ready ne renvoie pas status=ready (dépendance indisponible), révision non promue"
             exit 1
           }
           grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
-            echo "::error::/health/ready signale MongoDB comme non joignable — révision non promue"
+            echo "::error::/health/ready signale MongoDB comme non joignable, révision non promue"
             exit 1
           }
       # --to-latest rebranche `latestRevision: true` : c'est aussi ce qui désépingle le service si
@@ -346,7 +346,7 @@ jobs:
       # Le balayage des soirées récurrentes n'est qu'un filet : la clôture d'une soirée et
       # l'ouverture de « Mes soirées » créent déjà l'occurrence suivante. Une passe par nuit
       # suffit donc à rattraper les séries que personne n'a rouvertes.
-      - name: Rappels de soirée et soirées récurrentes — Cloud Scheduler
+      - name: "Rappels de soirée et soirées récurrentes : Cloud Scheduler"
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
@@ -386,7 +386,7 @@ jobs:
           upsert_job movie-picker-recurring-events "15 3 * * *" /api/v1/scheduler/recurring-events
       # La révision est déjà prouvée : ce qui est vérifié ici, c'est que le trafic a bien basculé et
       # que le domaine public y mène. Un échec relève du routage, du DNS ou du certificat, pas du
-      # code — d'où l'absence de retour arrière. PUBLIC_API_URL est dérivé de VITE_API_URL, l'URL
+      # code, d'où l'absence de retour arrière. PUBLIC_API_URL est dérivé de VITE_API_URL, l'URL
       # contre laquelle le front est construit : rien de nouveau à configurer, et la valeur reste
       # juste après une migration de domaine.
       - name: Vérifier la production après promotion
@@ -403,13 +403,13 @@ jobs:
             exit 1
           }
           if [ -z "$PUBLIC_API_URL" ]; then
-            echo "::warning::VITE_API_URL absent — domaine public non vérifié."
+            echo "::warning::VITE_API_URL absent, domaine public non vérifié."
             exit 0
           fi
           curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$PUBLIC_API_URL/health"
           echo "Domaine public : $(cat "$BODY")"
           grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
-            echo "::error::Le domaine public de l'API ne renvoie pas status=ok — DNS, certificat ou mapping de domaine."
+            echo "::error::Le domaine public de l'API ne renvoie pas status=ok : DNS, certificat ou mapping de domaine."
             exit 1
           }
       # Les tags s'accumulent sur le service s'ils ne sont pas retirés, y compris ceux des
@@ -429,7 +429,7 @@ jobs:
           SENTRY_RELEASE: ${{ github.sha }}
         run: |
           if [ -z "$SENTRY_AUTH_TOKEN" ]; then
-            echo "SENTRY_AUTH_TOKEN absent — skip"
+            echo "SENTRY_AUTH_TOKEN absent, skip"
             exit 0
           fi
           curl -sSfL "https://github.com/getsentry/sentry-cli/releases/download/2.58.6/sentry-cli-Linux-x86_64" -o sentry-cli
@@ -488,7 +488,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
-      - name: "S3 — étape 1 : assets hachés (hors entry-points)"
+      - name: "S3, étape 1 : assets hachés (hors entry-points)"
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
@@ -501,7 +501,7 @@ jobs:
             --exclude "route-assets.json" \
             --exclude "*.map" \
             --cache-control "public, max-age=31536000, immutable"
-      - name: "S3 — étape 2 : SW, manifest (no-cache)"
+      - name: "S3, étape 2 : SW, manifest (no-cache)"
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
@@ -509,7 +509,7 @@ jobs:
             --cache-control "no-cache, no-store, must-revalidate" --content-type "application/javascript"
           aws s3 cp apps/web/dist/manifest.webmanifest "s3://$AWS_S3_BUCKET/manifest.webmanifest" \
             --cache-control "no-cache, must-revalidate" --content-type "application/manifest+json"
-      - name: "S3 — sitemap.xml (cache court, application/xml)"
+      - name: "S3, sitemap.xml (cache court, application/xml)"
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
@@ -517,14 +517,14 @@ jobs:
             --cache-control "public, max-age=3600, must-revalidate" --content-type "application/xml; charset=utf-8"
       # Routes prérendues. Chaque fichier part sous une clé S3 **sans extension**, égale au chemin
       # de la route : `/decouvrir` devient la clé `decouvrir`. C'est ce qui les rend servies sans
-      # toucher à l'infrastructure — l'origine S3 est une origine REST, elle n'a pas de document
+      # toucher à l'infrastructure, l'origine S3 est une origine REST, elle n'a pas de document
       # d'index par dossier, donc `decouvrir/index.html` n'aurait jamais été servi pour
       # `/decouvrir` : CloudFront serait tombé sur son repli 403/404 vers `/index.html`, la coquille
       # SPA générique. Une clé exacte, elle, répond 200 directement.
       # `Content-Type` est explicite pour la même raison que `sw.js` : une clé sans extension part
       # sinon en `application/octet-stream`, que le navigateur télécharge au lieu de l'afficher.
       # Le repli SPA reste en place pour toutes les autres routes, rien n'est retiré.
-      - name: "S3 — routes prérendues (clés sans extension, no-cache)"
+      - name: "S3, routes prérendues (clés sans extension, no-cache)"
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
@@ -548,7 +548,7 @@ jobs:
             exit 1
           fi
           echo "$count routes prérendues publiées."
-      - name: "S3 — étape 3 : index.html en dernier (point d'entrée)"
+      - name: "S3, étape 3 : index.html en dernier (point d'entrée)"
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
@@ -589,8 +589,8 @@ jobs:
           test "$code" = "200"
       # Le smoke test précédent interroge le domaine CloudFront : il ne dit rien du domaine public
       # servi aux utilisateurs, dont le DNS, le certificat ou l'alias peuvent être cassés alors que
-      # la distribution répond très bien. L'origine est lue dans ALLOWED_ORIGINS — celle que l'API
-      # accepte, donc celle du front par construction — plutôt que réécrite ici : une valeur de plus
+      # la distribution répond très bien. L'origine est lue dans ALLOWED_ORIGINS, celle que l'API
+      # accepte, donc celle du front par construction, plutôt que réécrite ici : une valeur de plus
       # à tenir à jour serait une valeur de plus à oublier lors d'une migration de domaine.
       # Un 200 ne dit pas quelle version est servie : sans invalidation, le CDN répond 200 avec
       # l'ancien index.html et le déploiement passe pour bon. On compare donc le point d'entrée
@@ -602,24 +602,24 @@ jobs:
           set -eo pipefail
           PUBLIC_WEB_URL="${ALLOWED_ORIGINS%%,*}"
           if [ -z "$PUBLIC_WEB_URL" ]; then
-            echo "::warning::ALLOWED_ORIGINS absent — domaine public du front non vérifié."
+            echo "::warning::ALLOWED_ORIGINS absent, domaine public du front non vérifié."
             exit 0
           fi
           echo "Domaine public : $PUBLIC_WEB_URL"
           code="$(curl -sS -o "$RUNNER_TEMP/pub.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$PUBLIC_WEB_URL/")"
           echo "GET $PUBLIC_WEB_URL/ -> $code"
           if [ "$code" != "200" ]; then
-            echo "::error::$PUBLIC_WEB_URL ne répond pas 200 — DNS, certificat ou alias de l'hébergement du front."
+            echo "::error::$PUBLIC_WEB_URL ne répond pas 200 : DNS, certificat ou alias de l'hébergement du front."
             exit 1
           fi
           ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' apps/web/dist/index.html | head -1)"
           if [ -z "$ENTRY" ]; then
-            echo "::error::Point d'entrée introuvable dans le build local — smoke test de version impossible."
+            echo "::error::Point d'entrée introuvable dans le build local, smoke test de version impossible."
             exit 1
           fi
           echo "Point d'entrée attendu : $ENTRY"
           if ! grep -qF "$ENTRY" "$RUNNER_TEMP/pub.html"; then
-            echo "::error::$PUBLIC_WEB_URL sert un index.html qui ne référence pas $ENTRY — build périmé en cache (invalidation CDN absente ou incomplète)."
+            echo "::error::$PUBLIC_WEB_URL sert un index.html qui ne référence pas $ENTRY, build périmé en cache (invalidation CDN absente ou incomplète)."
             exit 1
           fi
       - name: Enregistrer le déploiement Sentry (front)
@@ -631,7 +631,7 @@ jobs:
           SENTRY_RELEASE: ${{ github.sha }}
         run: |
           if [ -z "$SENTRY_AUTH_TOKEN" ]; then
-            echo "SENTRY_AUTH_TOKEN absent — skip"
+            echo "SENTRY_AUTH_TOKEN absent, skip"
             exit 0
           fi
           extra=()
@@ -641,7 +641,7 @@ jobs:
 
   # `always()` est ici indispensable et sans danger : le job ne déploie rien, il ne fait que
   # comparer ce qui a été demandé à ce qui est parti. Sans lui, une cible sautée par un gate rouge
-  # laisserait le run vert avec une production périmée — le mode d'échec le plus coûteux de ce
+  # laisserait le run vert avec une production périmée, le mode d'échec le plus coûteux de ce
   # pipeline, et le seul qui ne se voit pas dans la couleur du run.
   deploy-guard:
     name: Garde-fou déploiement

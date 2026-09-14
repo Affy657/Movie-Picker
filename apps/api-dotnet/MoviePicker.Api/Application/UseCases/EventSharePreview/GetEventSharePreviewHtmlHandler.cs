@@ -84,7 +84,7 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
             parts.Add($"🎭 {theme}");
 
         parts.Add("Rejoins la soirée et vote pour ton film !");
-        return string.Join(" · ", parts);
+        return string.Join(". ", parts);
     }
 
     private async Task<string> ResolveOgImageAsync(Event evt, string apiBase, string webBase, CancellationToken ct)

@@ -1,4 +1,4 @@
-# Scan sécurité planifié — complète Dependabot (updates mensuels) en attrapant les CVE
+# Scan sécurité planifié : complète Dependabot (updates mensuels) en attrapant les CVE
 # divulguées entre deux bumps, sur des dépendances déjà épinglées.
 #   - Hebdomadaire (lundi) + déclenchable à la main.
 #   - Échoue sur High/Critical → notification via l'e-mail d'échec de run planifié.
@@ -48,7 +48,7 @@ jobs:
             echo "::error::Vulnérabilités NuGet High/Critical détectées."
             exit 1
           fi
-      - name: Scan filesystem (Trivy — deps vulnérables npm+NuGet dans les lockfiles ; remplace pnpm audit, endpoint npm retiré le 2026-07-15 cf. pnpm/pnpm#11265)
+      - name: Scan filesystem (Trivy, deps vulnérables npm+NuGet dans les lockfiles ; remplace pnpm audit, endpoint npm retiré le 2026-07-15 cf. pnpm/pnpm#11265)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs

@@ -20,7 +20,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 - state: humain
 - bloque: écritures `gcloud` refusées par le classifieur d'auto-mode ; l'utilisateur doit lancer la commande
-- impact: prod. Les deux routes `POST /api/v1/scheduler/*` répondent 503 faute de planificateur. Aucun rappel J-1, 1 h ni « en suspens » ne part, et le balayage des soirées récurrentes ne tourne pas — celles-ci ne se reconduisent qu'à la clôture ou à l'ouverture de « Mes soirées ». Le 503 est volontaire, préféré à un échec silencieux.
+- impact: prod. Les deux routes `POST /api/v1/scheduler/*` répondent 503 faute de planificateur. Aucun rappel J-1, 1 h ni « en suspens » ne part, et le balayage des soirées récurrentes ne tourne pas, celles-ci ne se reconduisent qu'à la clôture ou à l'ouverture de « Mes soirées ». Le 503 est volontaire, préféré à un échec silencieux.
 - ou: `.github/workflows/deploy.yml`, l'étape « Rappels de soirée et soirées récurrentes »
 - verify: `gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)'` ; encore ouvert tant que la sortie est vide
 - fix:
@@ -274,9 +274,9 @@ La bascule est **faite**. Ce qu'elle a rendu lisible, c'est **chaque commit jama
 
 **Ce que la bascule a publié, et qui ne se reprend pas. Assumé sciemment, ne pas y revenir comme si c'était un oubli :**
 
-1. **Le courriel personnel de l'auteur est l'adresse de 916 commits sur 1 003**, désormais public, moissonnable et miroité. 28 commits utilisaient déjà l'adresse `noreply` GitHub, l'identité était donc déjà incohérente. Le seul recours restant serait de réécrire les 1 003 commits, ce qui change **tous** les SHA et casse les liens de commit des 86 PR fusionnées — pour une adresse déjà publiée, donc sans bénéfice. Ce qui reste utile, et pas fait : poser `user.email` sur l'adresse `noreply` pour les commits **à venir**.
+1. **Le courriel personnel de l'auteur est l'adresse de 916 commits sur 1 003**, désormais public, moissonnable et miroité. 28 commits utilisaient déjà l'adresse `noreply` GitHub, l'identité était donc déjà incohérente. Le seul recours restant serait de réécrire les 1 003 commits, ce qui change **tous** les SHA et casse les liens de commit des 86 PR fusionnées, pour une adresse déjà publiée, donc sans bénéfice. Depuis le 2026-09-14, `user.email` est posé en local sur ce dépôt (`git config --local`) sur l'adresse `noreply`, donc les commits **à venir** ne la publient plus ; un clone neuf hérite de la configuration globale, à reposer.
 2. **Les livrables RNCP et un support de cours Ynov sont publiés** : `docs/RNCP/` (dossiers PDF, captures, slides du Bloc 3) et `archive/docs/_ynov/`, qui contient une consigne de module, donc du matériel de l'école. Des livrables notés en verbatim sont désormais copiables, et l'oral du Bloc 3 est le 2026-09-16. Un `git rm` maintenant ne retirerait que le head.
-3. **Cinq branches distantes sont visibles**, dont trois branches de travail d'agent, et `feedback-attachments` dont l'objet n'est plus identifiable. Rien de secret, mais c'est ce que voit un visiteur en premier. Ne pas les supprimer sans vérifier `git worktree list` : deux d'entre elles sauvegardent le travail en cours d'un worktree.
+3. **Les branches distantes sont visibles** : depuis le 2026-09-14 il ne reste que `master`, la branche de version en cours et `feedback-attachments`, où `GitHubIssueClient` publie les captures d'écran jointes aux signalements du pied de page, lisibles par quiconque via `raw.githubusercontent.com`. Rien de secret, mais c'est ce que voit un visiteur en premier. Ne pas les supprimer sans vérifier `git worktree list` : deux d'entre elles sauvegardent le travail en cours d'un worktree.
 4. **Les journaux et les artefacts des runs Actions sont publics eux aussi**, pas seulement le code. Vérifié : aucun `set -x`, aucun `echo` de secret dans les six workflows, seulement des contrôles de présence, et GitHub masque de lui-même tout secret déclaré. Le résidu est ailleurs, dans deux artefacts : `playwright-traces`, qui embarque corps de requêtes et cookies du run E2E, et `sbom-api`. La rétention est de 90 jours, donc attendre déplace le problème au lieu de le régler.
 
 **Traité le 2026-09-10, ne pas refaire :**
@@ -295,9 +295,9 @@ La bascule est **faite**. Ce qu'elle a rendu lisible, c'est **chaque commit jama
 | épinglage des actions par SHA | obligatoire | `gh api repos/<DEPOT>/actions/permissions` |
 | `master` : ni force push ni suppression | ruleset actif | `gh api repos/<DEPOT>/rulesets` |
 
-Deux pièges d'énumération, payés une fois : `approval_policy` n'accepte que des valeurs **en minuscules** (`all_external_contributors`), et le ruleset ne demande **aucun contrôle de statut** — en exiger un casserait le workflow de poussée directe, un commit tout juste poussé n'ayant encore aucun run attaché.
+Deux pièges d'énumération, payés une fois : `approval_policy` n'accepte que des valeurs **en minuscules** (`all_external_contributors`), et le ruleset ne demande **aucun contrôle de statut**, en exiger un casserait le workflow de poussée directe, un commit tout juste poussé n'ayant encore aucun run attaché.
 
-**Il reste un geste, sans API : passer le projet SonarCloud en public.** C'est lui qui supprime le plafond de 50 000 lignes, donc la cause de l'exclusion de `TechPage.tsx` et de `app/pages/tech/` posée le 2026-09-09 — ~3 000 lignes rendues à l'analyse — et la contrainte de marge de DEBT-021. Le palier gratuit est annoncé illimité sur un projet public, à relire sur la page de tarification avant d'en dépendre. Contrepartie : les constats deviennent publics.
+**Il reste un geste, sans API : passer le projet SonarCloud en public.** C'est lui qui supprime le plafond de 50 000 lignes, donc la cause de l'exclusion de `TechPage.tsx` et de `app/pages/tech/` posée le 2026-09-09, ~3 000 lignes rendues à l'analyse, et la contrainte de marge de DEBT-021. Le palier gratuit est annoncé illimité sur un projet public, à relire sur la page de tarification avant d'en dépendre. Contrepartie : les constats deviennent publics.
 
 **Deux limites à connaître, qui ne se règlent pas :**
 
@@ -306,7 +306,7 @@ Deux pièges d'énumération, payés une fois : `approval_policy` n'accepte que 
 
 ## C8 jamais d'`await` de premier niveau dans `main.tsx`
 
-`apps/web/src/main.tsx` termine par `boot().catch(...)`, **pas** par `await boot()`. Le `.catch` existe pour que la promesse ne soit pas flottante, ce que Sonar refuse, et pour retirer la coquille de démarrage si `boot` échoue — sans lui, un échec laisse l'utilisateur sur un écran de démarrage permanent.
+`apps/web/src/main.tsx` termine par `boot().catch(...)`, **pas** par `await boot()`. Le `.catch` existe pour que la promesse ne soit pas flottante, ce que Sonar refuse, et pour retirer la coquille de démarrage si `boot` échoue, sans lui, un échec laisse l'utilisateur sur un écran de démarrage permanent.
 
 **Sonar réclame l'inverse et il a tort ici** : la règle `typescript:S7785` (« prefer top-level await ») cible exactement cette ligne. Le constat est marqué « accepté » sur SonarCloud le 2026-09-12 avec cette contrainte en justification. Ne pas le solder dans le code : ça a été fait une fois le 2026-09-12 en corrigeant les constats ouverts, et repéré avant la fusion. Si l'analyse le rouvre après un déplacement de la ligne, le ré-accepter, pas le corriger.
 

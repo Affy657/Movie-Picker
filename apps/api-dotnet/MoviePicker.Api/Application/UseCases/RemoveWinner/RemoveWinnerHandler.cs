@@ -40,13 +40,13 @@ public sealed class RemoveWinnerHandler : IRemoveWinnerHandler
         if (evt.IsFinished(DateTimeOffset.UtcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
-        var remaining = evt.Winners.Where(w => w.MovieId != movieId).ToList();
-        if (remaining.Count == evt.Winners.Count)
-            throw new NotFoundException("Ce film ne fait pas partie des gagnants de la soirée");
+        var removed = evt.Winners.FirstOrDefault(w => w.MovieId == movieId)
+            ?? throw new NotFoundException("Ce film ne fait pas partie des gagnants de la soirée");
+        var remaining = evt.Winners.Where(w => w.MovieId != removed.MovieId).ToList();
 
         var now = DateTimeOffset.UtcNow;
         await _eventRepository.UpdateAsync(evt with { Winners = remaining, UpdatedAt = now }, ct);
-        _logger.LogInformation("Winner {MovieId} removed from event {EventId}", movieId, evt.Id);
+        _logger.LogInformation("Winner {MovieId} removed from event {EventId}", removed.MovieId, evt.Id);
 
         return new ResetWheelResponse { Message = "Film retiré du palmarès." };
     }

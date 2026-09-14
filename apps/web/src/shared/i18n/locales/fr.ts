@@ -813,7 +813,7 @@
       dialogTitle: 'Partager la soirée',
       shareText: "Je t'invite à {{title}} le {{date}} à {{time}} sur Movie Picker !",
       shareTextNoDate: "Je t'invite à {{title}} à {{time}} sur Movie Picker !",
-      shareTextFallback: 'Tu es invité·e à une soirée ciné sur Movie Picker !',
+      shareTextFallback: 'Invitation à une soirée ciné sur Movie Picker !',
       qrHint: "Ouvrez l'appareil photo pour rejoindre la soirée sur mobile.",
     },
     calendar: {
@@ -2954,7 +2954,7 @@
       domainNotifications: 'notifications',
       domainProfiles: 'profils',
       domainLetterboxd: 'Letterboxd',
-      sharedCore: 'shared/ — {{components}} composants, hooks, client HTTP',
+      sharedCore: 'shared/ : {{components}} composants, hooks, client HTTP',
       sharedCoreSub: 'ne connaît aucune feature',
       frontGraphNote:
         "Le socle est une feuille du graphe : aucune flèche n'en repart. Un cycle fait échouer la CI.",

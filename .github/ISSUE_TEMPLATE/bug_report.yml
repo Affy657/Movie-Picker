@@ -12,7 +12,7 @@ body:
     attributes:
       label: Contexte
       description: URL concernée, navigateur, système d'exploitation, version de l'application (visible dans Sentry / le pied de page).
-      placeholder: "ex. https://movie-picker.app/e/soiree-ciné — Chrome 130 / Windows 11 — build a1b2c3d"
+      placeholder: "ex. https://web.movie-picker.fr/e/soiree-cine, Chrome 130 / Windows 11, build a1b2c3d"
     validations:
       required: true
   - type: textarea
@@ -51,9 +51,9 @@ body:
       label: Sévérité
       description: Estimation de l'impact utilisateur.
       options:
-        - "critical — service inutilisable ou perte de données"
-        - "high — fonctionnalité principale bloquée"
-        - "medium — contournement possible"
-        - "low — cosmétique / mineur"
+        - "critical : service inutilisable ou perte de données"
+        - "high : fonctionnalité principale bloquée"
+        - "medium : contournement possible"
+        - "low : cosmétique / mineur"
     validations:
       required: true

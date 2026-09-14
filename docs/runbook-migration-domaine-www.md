@@ -1,4 +1,4 @@
-# Runbook — Migration domaine front : `web.movie-picker.fr` → `www.movie-picker.fr`
+# Runbook de migration du domaine front : `web.movie-picker.fr` → `www.movie-picker.fr`
 
 > **Statut : à exécuter (rien n'a encore été fait).** Rédigé le 2026-07-16.
 > Ce document est autonome : il contient l'état initial constaté, les décisions actées,
@@ -16,7 +16,7 @@ L'apex `movie-picker.fr` redirige en 301 vers `www`. `web.movie-picker.fr` est r
 
 | Hôte | Rôle |
 |---|---|
-| `www.movie-picker.fr` | **canonical** — sert le front (CloudFront) |
+| `www.movie-picker.fr` | **canonical**, sert le front (CloudFront) |
 | `movie-picker.fr` (apex) | 301 → `https://www.movie-picker.fr` (redirection OVH) |
 | `web.movie-picker.fr` | **retiré** (DNS + alias CloudFront supprimés) |
 | `api.movie-picker.fr` | inchangé (Cloud Run domain mapping) |
@@ -37,7 +37,7 @@ L'apex `movie-picker.fr` redirige en 301 vers `www`. `web.movie-picker.fr` est r
 
 > Les identifiants de ce runbook sont des gabarits `<COMME_CECI>` : le dépôt est public. La table de correspondance, et la commande qui relève chaque valeur, sont dans [`../infra/README.md`](../infra/README.md).
 
-**AWS (front)** — compte `<COMPTE_AWS>` :
+**AWS (front)**, compte `<COMPTE_AWS>` :
 
 - Distribution CloudFront : **`<ID_DISTRIBUTION_CLOUDFRONT>`** (`d1uc368ae7xu4s.cloudfront.net`), alias actuel : `web.movie-picker.fr`.
 - Certificat ACM (us-east-1) : **wildcard `*.movie-picker.fr`**
@@ -55,17 +55,17 @@ L'apex `movie-picker.fr` redirige en 301 vers `www`. `web.movie-picker.fr` est r
 | `www.movie-picker.fr` | A `213.186.33.5` (redirection OVH) |
 | `web.movie-picker.fr` | CNAME → `d1uc368ae7xu4s.cloudfront.net` |
 | `api.movie-picker.fr` | CNAME → `ghs.googlehosted.com` (Cloud Run) |
-| MX | `mx1/2/3.mail.ovh.net` (mail reçu OVH — **ne pas toucher**) |
-| TXT | SPF / DKIM / DMARC (dont Resend — **ne pas toucher**) |
+| MX | `mx1/2/3.mail.ovh.net` (mail reçu OVH, **ne pas toucher**) |
+| TXT | SPF / DKIM / DMARC (dont Resend, **ne pas toucher**) |
 
 ## 4. Pré-requis outillage
 
 Vérifié disponible et authentifié en local le 2026-07-16 :
 
-- `aws` CLI — authentifié **en ROOT** (compte `<COMPTE_AWS>`). ⚠️ Rayon d'action maximal : confirmer chaque commande mutante.
-- `gcloud` CLI — authentifié (`<PROJET_GCP>`).
-- `gh` CLI — authentifié (`Affy657`, scopes `repo` + `workflow`).
-- PostHog — via MCP (projet `movie-picker-prod`).
+- `aws` CLI, authentifié **en ROOT** (compte `<COMPTE_AWS>`). ⚠️ Rayon d'action maximal : confirmer chaque commande mutante.
+- `gcloud` CLI, authentifié (`<PROJET_GCP>`).
+- `gh` CLI, authentifié (`Affy657`, scopes `repo` + `workflow`).
+- PostHog, via MCP (projet `movie-picker-prod`).
 - `jq` requis pour l'édition CloudFront (sinon éditer le JSON à la main).
 - **OVH** : aucun MCP, aucune CLI → les 3 gestes DNS se font **manuellement dans le manager OVH**.
 
@@ -73,7 +73,7 @@ Vérifié disponible et authentifié en local le 2026-07-16 :
 
 ## 5. Étapes d'exécution (dans l'ordre)
 
-### Étape 1 — Repo §1 : `web.` → `www.` (moi)
+### Étape 1, Repo §1 : `web.` → `www.` (moi)
 
 Remplacer le littéral `web.movie-picker.fr` par `www.movie-picker.fr` dans les fichiers
 versionnés **sauf `archive/`** (laissée en historique). Le remplacement est sûr : `web.movie-picker.fr`
@@ -100,7 +100,7 @@ Fichiers impactés (à relire) :
 | `README.md` | 5, 75 |
 
 **NE PAS toucher** : `noreply@movie-picker.fr` (EmailFromAddress), `mailto:noreply@movie-picker.fr`
-(VapidSubject), `api.movie-picker.fr`, la CSP (`apps/web/vite.config.ts` — utilise `'self'` + origine API),
+(VapidSubject), `api.movie-picker.fr`, la CSP (`apps/web/vite.config.ts`, utilise `'self'` + origine API),
 le secret `VITE_API_URL` (= API), et tout `archive/`.
 
 Vérifs avant commit :
@@ -123,7 +123,7 @@ git checkout master && git merge --no-ff feat/domaine-www
 > Note : le push déclenche la CI/CD (lane api impactée → `deploy-api`, lane web → `deploy-front`).
 > Faire les étapes 2–4 **avant** le push pour que le déploiement atterrisse sur une infra prête.
 
-### Étape 2 — CloudFront : ajouter l'alias `www` (moi — réversible, zéro impact)
+### Étape 2, CloudFront : ajouter l'alias `www` (moi, réversible, zéro impact)
 
 Le cert wildcard couvre déjà `www`. Ajout de l'alias sans impact tant que le DNS ne pointe pas.
 
@@ -136,7 +136,7 @@ aws cloudfront update-distribution --id <ID_DISTRIBUTION_CLOUDFRONT> --distribut
 
 Attendre le déploiement de la distribution (`Status: Deployed`, ~5 min).
 
-### Étape 3 — OVH : CNAME `www` → CloudFront (toi)
+### Étape 3, OVH : CNAME `www` → CloudFront (toi)
 
 Dans le manager OVH (zone DNS `movie-picker.fr`) :
 
@@ -145,7 +145,7 @@ Dans le manager OVH (zone DNS `movie-picker.fr`) :
 
 (Un sous-domaine ne peut pas avoir à la fois une redirection OVH et un CNAME : supprimer d'abord.)
 
-### Étape 4 — CORS : `ALLOWED_ORIGINS` (moi)
+### Étape 4, CORS : `ALLOWED_ORIGINS` (moi)
 
 Variable de repo GitHub lue par `deploy-api` (`vars.ALLOWED_ORIGINS`). **Pendant la fenêtre**, autoriser les deux :
 
@@ -156,7 +156,7 @@ gh variable set ALLOWED_ORIGINS --repo Affy657/Movie-Picker --body "https://www.
 > Prend effet au **prochain `deploy-api`** (variable injectée via `--set-env-vars` au déploiement).
 > D'où l'ordre : régler la variable **avant** le push de l'étape 5.
 
-### Étape 5 — Push → build + déploiement (moi)
+### Étape 5 : Push → build + déploiement (moi)
 
 ```bash
 git push origin master
@@ -172,17 +172,17 @@ git push origin master
 > et n'inclut PAS `PUBLIC_WEB_BASE_URL` → il **écraserait** un réglage manuel. Le défaut code (§1)
 > est donc le mécanisme fiable ; le `gcloud` manuel n'est utile qu'en stopgap avant le merge.
 
-### Étape 6 — PostHog (moi)
+### Étape 6 : PostHog (moi)
 
 Ajouter `https://www.movie-picker.fr` aux *authorized URLs* (toolbar / web analytics) du projet
 `movie-picker-prod`, retirer `web.` si présent. Non bloquant pour l'ingestion d'events (pas de
 filtrage par domaine côté PostHog), mais nécessaire pour la toolbar / le heatmap.
 
-### Étape 7 — Vérifications E2E (moi)
+### Étape 7 : Vérifications E2E (moi)
 
 Voir §6. Ne pas passer à l'étape 8 tant que `www` ne sert pas correctement (auth + CORS OK).
 
-### Étape 8 — OVH : apex + retrait `web` (toi)
+### Étape 8, OVH : apex + retrait `web` (toi)
 
 Dans le manager OVH :
 
@@ -190,7 +190,7 @@ Dans le manager OVH :
    S'assurer que la redirection supporte **HTTPS** (option SSL OVH sur la redirection).
 2. **Supprimer** le CNAME `web` → `d1uc368ae7xu4s.cloudfront.net`.
 
-### Étape 9 — Finalisation (moi)
+### Étape 9 : Finalisation (moi)
 
 Retirer `web` de CloudFront :
 
@@ -210,7 +210,7 @@ gh variable set ALLOWED_ORIGINS --repo Affy657/Movie-Picker --body "https://www.
 > Nécessite un redéploiement API pour propager (relancer le workflow CI/CD via `workflow_dispatch`
 > s'il n'y a pas de nouveau commit).
 
-### Étape 10 — Search Console (toi)
+### Étape 10 : Search Console (toi)
 
 Ajouter la propriété `https://www.movie-picker.fr`, soumettre `https://www.movie-picker.fr/sitemap.xml`.
 
@@ -242,10 +242,10 @@ Manuel :
 - **AWS = credentials root** (dette sécu connue) → confirmer chaque commande, une à la fois.
 - **`--set-env-vars` de la CI écrase les env vars manuelles** sur Cloud Run (cf. étape 5) → s'appuyer sur le défaut code.
 - **`ALLOWED_ORIGINS` ne se propage qu'au déploiement** API (pas à chaud).
-- **Wildcard `*.movie-picker.fr`** couvre `www` mais **pas l'apex nu** — OK car l'apex ne fait qu'une redirection OVH.
+- **Wildcard `*.movie-picker.fr`** couvre `www` mais **pas l'apex nu**, OK car l'apex ne fait qu'une redirection OVH.
 - **Cookie de session** : `www` et `api` partagent l'eTLD+1 `movie-picker.fr` → `SameSite=Lax` OK, pas de régression auth.
 - **MX + TXT (SPF/DKIM/DMARC Resend)** : ne pas y toucher (email envoi/réception).
-- Un alias CloudFront (CNAME) ne peut être attaché qu'à une seule distribution — `www` n'est attaché nulle part, OK.
+- Un alias CloudFront (CNAME) ne peut être attaché qu'à une seule distribution, `www` n'est attaché nulle part, OK.
 
 ## 9. Checklist
 

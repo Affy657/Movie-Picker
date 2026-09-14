@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.RemoveWinner;
@@ -14,6 +14,7 @@ public sealed class RemoveWinnerHandlerTests
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IHostTokenAccessor> _hostToken = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
+    private readonly CapturingLogger<RemoveWinnerHandler> _logger = new();
     private readonly RemoveWinnerHandler _sut;
 
     public RemoveWinnerHandlerTests()
@@ -22,7 +23,7 @@ public sealed class RemoveWinnerHandlerTests
             _events.Object,
             _hostToken.Object,
             _currentUser.Object,
-            NullLogger<RemoveWinnerHandler>.Instance);
+            _logger);
         _events.Setup(e => e.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
     }
@@ -120,5 +121,33 @@ public sealed class RemoveWinnerHandlerTests
         var result = await _sut.HandleAsync("evt1", "m1");
 
         Assert.Equal("Film retiré du palmarès.", result.Message);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LogsTheStoredWinnerAndTheEvent()
+    {
+        GivenEvent(Evt(null, "m1", "m2"));
+        AsHost();
+
+        await _sut.HandleAsync("evt1", "m2");
+
+        var entry = Assert.Single(_logger.Entries);
+        Assert.Equal(LogLevel.Information, entry.Level);
+        Assert.Equal("Winner m2 removed from event evt1", entry.Message);
+    }
+
+    private sealed class CapturingLogger<T> : ILogger<T>
+    {
+        public List<(LogLevel Level, string Message)> Entries { get; } = [];
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
+        public bool IsEnabled(LogLevel logLevel) => true;
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            => Entries.Add((logLevel, formatter(state, exception)));
+
+        private sealed class NullScope : IDisposable
+        {
+            public static readonly NullScope Instance = new();
+            public void Dispose() { }
+        }
     }
 }
