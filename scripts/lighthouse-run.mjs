@@ -15,6 +15,11 @@ const PORT = Number(process.env.LH_PORT || 4179);
 const BASE = `http://127.0.0.1:${PORT}`;
 const API_PORT = Number(process.env.LH_API_PORT || 4000);
 const API_URL = `http://localhost:${API_PORT}`;
+/**
+ * DSN factice pointé sur le stub : la production charge le SDK Sentry, donc la mesure doit le
+ * charger aussi, sinon la porte mesure un chemin de démarrage que personne ne reçoit.
+ */
+const SENTRY_STUB_DSN = `http://lighthouse@localhost:${API_PORT}/1`;
 const BUDGETS_PATH = path.join(ROOT, 'configs', 'lighthouse-budgets.json');
 const OUT = path.join(ROOT, 'artifacts', 'lighthouse');
 
@@ -211,6 +216,11 @@ function startApiStub(port) {
       res.writeHead(200, { 'Content-Type': 'application/json' }).end('[]');
       return;
     }
+    if (urlPath === '/api/1/envelope/') {
+      req.resume();
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end('{}');
+      return;
+    }
     res
       .writeHead(404, { 'Content-Type': 'application/json' })
       .end(JSON.stringify({ message: 'Not Found' }));
@@ -223,7 +233,7 @@ execSync('pnpm --filter web run build', {
   cwd: ROOT,
   stdio: 'inherit',
   shell: true,
-  env: { ...process.env, VITE_API_URL: API_URL },
+  env: { ...process.env, VITE_API_URL: API_URL, VITE_SENTRY_DSN: SENTRY_STUB_DSN },
 });
 
 if (!fs.existsSync(DIST)) {
@@ -264,10 +274,7 @@ const serveConfigPath = path.join(DIST, 'serve.json');
 fs.writeFileSync(
   serveConfigPath,
   JSON.stringify({
-    rewrites: [
-      ...prerenderRewrites(),
-      { source: '!/prerendered/**', destination: '/index.html' },
-    ],
+    rewrites: [...prerenderRewrites(), { source: '!/prerendered/**', destination: '/index.html' }],
     headers: [
       {
         source: 'assets/**',

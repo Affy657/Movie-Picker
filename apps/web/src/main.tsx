@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { startPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
-import { captureException, initSentry } from '@/shared/observability/sentry';
+import { captureException, startSentryWhenIdle } from '@/shared/observability/sentry';
 import { loadLocale, preferredLocale } from '@/shared/i18n';
 import './index.css';
 
@@ -22,7 +22,6 @@ function hideSplash(): void {
 
 async function boot(): Promise<void> {
   const translationsReady = loadLocale(preferredLocale());
-  await initSentry();
   const { default: App } = await import('@/app/App');
   await translationsReady;
   createRoot(document.getElementById('root')!).render(
@@ -31,9 +30,11 @@ async function boot(): Promise<void> {
     </StrictMode>
   );
   hideSplash();
+  startSentryWhenIdle();
 }
 
 boot().catch((error: unknown) => {
   hideSplash();
   captureException(error);
+  startSentryWhenIdle();
 });

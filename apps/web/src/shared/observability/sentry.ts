@@ -1,17 +1,15 @@
-import { useEffect } from 'react';
-import {
-  createRoutesFromChildren,
-  matchRoutes,
-  useLocation,
-  useNavigationType,
-} from 'react-router';
 import type { ErrorEvent } from '@sentry/react';
 
 type SentryApi = typeof import('@sentry/react');
 
 let api: SentryApi | null = null;
+let loading: Promise<void> | null = null;
 
 const IN_APP_BROWSER_NOISE = /SCDynimacBridge/i;
+const IDLE_INIT_TIMEOUT_MS = 3000;
+
+type PendingCapture = { error: unknown; componentStack?: string };
+const capturedBeforeInit: Array<PendingCapture> = [];
 
 export function shouldDropSentryEvent(event: {
   exception?: { values?: Array<{ value?: string }> };
@@ -44,41 +42,51 @@ function prepareEvent(event: ErrorEvent): ErrorEvent | null {
   return event;
 }
 
-type InstrumentedRoutes = Parameters<SentryApi['wrapReactRouterRouting']>[0];
-
-export function getInstrumentedRoutes(routesComponent: InstrumentedRoutes): InstrumentedRoutes {
-  return api ? api.wrapReactRouterRouting(routesComponent) : routesComponent;
+function sendToSentry(sentry: SentryApi, { error, componentStack }: PendingCapture): void {
+  sentry.captureException(
+    error,
+    componentStack ? { contexts: { react: { componentStack } } } : undefined
+  );
 }
 
-export async function initSentry(): Promise<void> {
-  const dsn = import.meta.env.VITE_SENTRY_DSN;
-  if (api || !dsn || !import.meta.env.PROD) return;
+async function loadAndInit(dsn: string): Promise<void> {
   const Sentry = await import('@sentry/react');
   Sentry.init({
     dsn,
     environment: 'production',
     tracesSampleRate: 0.1,
     tracePropagationTargets: sentryTracePropagationTargets(),
-    integrations: [
-      Sentry.reactRouterBrowserTracingIntegration({
-        useEffect,
-        useLocation,
-        useNavigationType,
-        createRoutesFromChildren,
-        matchRoutes,
-      }),
-    ],
+    integrations: [Sentry.browserTracingIntegration()],
     sendDefaultPii: false,
     ignoreErrors: ['SCDynimacBridge'],
     beforeSend: prepareEvent,
   });
   api = Sentry;
+  for (const pending of capturedBeforeInit.splice(0)) sendToSentry(Sentry, pending);
+}
+
+export function initSentry(): Promise<void> {
+  const dsn = import.meta.env.VITE_SENTRY_DSN;
+  if (api || !dsn || !import.meta.env.PROD) return Promise.resolve();
+  loading ??= loadAndInit(dsn);
+  return loading;
+}
+
+export function startSentryWhenIdle(): void {
+  const start = (): void => {
+    void initSentry();
+  };
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(start, { timeout: IDLE_INIT_TIMEOUT_MS });
+    return;
+  }
+  setTimeout(start, 0);
 }
 
 export function captureException(error: unknown, componentStack?: string): void {
-  if (!api) return;
-  api.captureException(
-    error,
-    componentStack ? { contexts: { react: { componentStack } } } : undefined
-  );
+  if (api) {
+    sendToSentry(api, { error, componentStack });
+    return;
+  }
+  capturedBeforeInit.push({ error, componentStack });
 }

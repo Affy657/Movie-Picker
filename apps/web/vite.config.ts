@@ -40,7 +40,6 @@ const CRITICAL_FONT_BASES = [
 const APP_SHELL_CHUNK = /(?:^|\/)App-[\w-]+\.js$/;
 const APP_SHELL_STYLES = /(?:^|\/)App-[\w-]+\.css$/;
 
-const LOCALE_MODULE = /[\\/]shared[\\/]i18n[\\/]locales[\\/](fr|en)\.ts$/;
 const LOCALE_CODES = ['fr', 'en'] as const;
 const LOCALE_STORAGE_KEY = 'moviepicker-locale';
 const DEFAULT_LOCALE = 'fr';
@@ -68,10 +67,68 @@ function activeLocalePreloadScript(chunkByCode: Record<string, string>): string 
   ].join('');
 }
 
-const REACT_VENDOR = /[\\/](react|react-dom|react-router|scheduler)[\\/]/;
-const ICON_VENDOR = /[\\/]lucide-react[\\/]/;
+const REACT_VENDOR = /[\\/]node_modules[\\/].*[\\/](react|react-dom|react-router|scheduler)[\\/]/;
+const QUERY_VENDOR = /[\\/]node_modules[\\/].*[\\/]@tanstack[\\/]/;
+const ICON_VENDOR = /[\\/]node_modules[\\/].*[\\/]lucide-react[\\/]/;
 const VENDORS_LOADED_ON_DEMAND = /[\\/](@sentry|posthog-js|canvas-confetti|react-qr-code)[\\/]/;
-const CHUNK_SIZE_NOT_WORTH_A_ROUND_TRIP = 12_000;
+
+function isReactVendor(id: string): boolean {
+  return REACT_VENDOR.test(id) && !VENDORS_LOADED_ON_DEMAND.test(id);
+}
+
+/**
+ * Vite 8 bundle avec rolldown, qui ignore `experimentalMinChunkSize` sans un mot : mesure du
+ * 2026-09-14, 71 chunks sur 92 sous 12 Ko et 28 requetes JS pour la page d'accueil. Les groupes
+ * ci-dessous portent l'intention d'origine : un chunk par langue et par vendeur eager, et la
+ * coquille `App` avec toute sa fermeture statique. Regrouper en plus les modules partages entre
+ * pages (`entriesAware`) a ete mesure et ecarte, voir I10 de `docs/technical-debt.md`.
+ */
+function codeSplittingGroups(appShellModules: ReadonlySet<string>) {
+  return [
+    ...LOCALE_CODES.map((code) => ({
+      name: `i18n-${code}`,
+      test: new RegExp(`[\\\\/]shared[\\\\/]i18n[\\\\/]locales[\\\\/]${code}\\.ts$`),
+      priority: 30,
+    })),
+    { name: 'react-vendor', test: isReactVendor, priority: 20 },
+    { name: 'query-vendor', test: QUERY_VENDOR, priority: 20 },
+    { name: 'icons-vendor', test: ICON_VENDOR, priority: 20 },
+    { name: 'App', test: (id: string) => appShellModules.has(id), priority: 15 },
+  ];
+}
+
+const APP_SHELL_MODULE = /[\\/]src[\\/]app[\\/]App\.tsx$/;
+
+/**
+ * Releve la fermeture des imports statiques de la coquille `App` pendant la phase de build, pour
+ * que le groupe `App` du decoupage la contienne entierement. Ce que la coquille importe est de
+ * toute facon charge avant la premiere page : le laisser en chunks separes ajoute des requetes a
+ * la premiere vague (I9 de `docs/technical-debt.md`) ou des allers-retours apres l'evaluation de
+ * la coquille, sans jamais epargner un octet.
+ */
+function appShellClosurePlugin(appShellModules: Set<string>): Plugin {
+  const staticImports = new Map<string, ReadonlyArray<string>>();
+  return {
+    name: 'moviepicker-app-shell-closure',
+    apply: 'build',
+    buildStart() {
+      appShellModules.clear();
+      staticImports.clear();
+    },
+    moduleParsed(info) {
+      staticImports.set(info.id, info.importedIds);
+    },
+    buildEnd() {
+      const queue = [...staticImports.keys()].filter((id) => APP_SHELL_MODULE.test(id));
+      while (queue.length > 0) {
+        const id = queue.pop()!;
+        if (appShellModules.has(id)) continue;
+        appShellModules.add(id);
+        queue.push(...(staticImports.get(id) ?? []));
+      }
+    },
+  };
+}
 
 type BundleChunkInfo = {
   type?: string;
@@ -165,7 +222,7 @@ function preloadCriticalAssetsPlugin(): Plugin {
         (file) => bundle[file]?.type === 'chunk' && bundle[file]?.isEntry
       );
 
-      if (appChunk) {
+      if (appChunk && !html.includes('/' + appChunk)) {
         tags.push({
           tag: 'link',
           attrs: { rel: 'modulepreload', crossorigin: '', href: '/' + appChunk },
@@ -226,6 +283,7 @@ function preloadCriticalAssetsPlugin(): Plugin {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, path.resolve(__dirname));
+  const appShellModules = new Set<string>();
   const apiOrigin = toApiOrigin(process.env.VITE_API_URL || env.VITE_API_URL || '');
   const sentryDsn = process.env.VITE_SENTRY_DSN || env.VITE_SENTRY_DSN || '';
   const sentryOrigin = toSentryIngestOrigin(sentryDsn);
@@ -286,6 +344,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
       cspMetaPlugin(apiOrigin, sentryOrigin),
+      appShellClosurePlugin(appShellModules),
       preloadCriticalAssetsPlugin(),
       ...(sentryAuthToken
         ? sentryVitePlugin({
@@ -323,17 +382,7 @@ export default defineConfig(({ mode }) => {
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash][extname]',
-          experimentalMinChunkSize: CHUNK_SIZE_NOT_WORTH_A_ROUND_TRIP,
-          manualChunks(id) {
-            const localeModule = LOCALE_MODULE.exec(id);
-            if (localeModule) return `i18n-${localeModule[1]}`;
-            if (!id.includes('node_modules')) return undefined;
-            if (VENDORS_LOADED_ON_DEMAND.test(id)) return undefined;
-            if (REACT_VENDOR.test(id)) return 'react-vendor';
-            if (id.includes('@tanstack')) return 'query-vendor';
-            if (ICON_VENDOR.test(id)) return 'icons-vendor';
-            return undefined;
-          },
+          codeSplitting: { groups: codeSplittingGroups(appShellModules) },
         },
       },
     },

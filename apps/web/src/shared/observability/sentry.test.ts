@@ -1,7 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { Routes } from 'react-router';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  getInstrumentedRoutes,
   sentryTracePropagationTargets,
   shouldDropSentryEvent,
 } from '@/shared/observability/sentry';
@@ -47,8 +45,77 @@ describe('sentryTracePropagationTargets', () => {
   });
 });
 
-describe('getInstrumentedRoutes', () => {
-  it('renvoie Routes tant que Sentry n’est pas initialisé', () => {
-    expect(getInstrumentedRoutes(Routes)).toBe(Routes);
+describe('initSentry', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.stubEnv('PROD', true);
+    vi.stubEnv('VITE_SENTRY_DSN', 'https://key@o1.ingest.de.sentry.io/1');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+  });
+
+  it('rejoue les erreurs capturées avant que le SDK soit chargé', async () => {
+    const init = vi.fn();
+    const captureException = vi.fn();
+    vi.doMock('@sentry/react', () => ({
+      init,
+      captureException,
+      browserTracingIntegration: () => ({ name: 'BrowserTracing' }),
+    }));
+    const sentry = await import('./sentry');
+    const early = new Error('avant le chargement');
+
+    sentry.captureException(early, 'stack');
+    expect(captureException).not.toHaveBeenCalled();
+    await sentry.initSentry();
+
+    expect(init).toHaveBeenCalledTimes(1);
+    expect(captureException).toHaveBeenCalledWith(early, {
+      contexts: { react: { componentStack: 'stack' } },
+    });
+  });
+
+  it("instrumente la navigation sans envelopper les routes de l'application", async () => {
+    const init = vi.fn();
+    const browserTracingIntegration = vi.fn(() => ({ name: 'BrowserTracing' }));
+    vi.doMock('@sentry/react', () => ({
+      init,
+      captureException: vi.fn(),
+      browserTracingIntegration,
+    }));
+    const sentry = await import('./sentry');
+
+    await sentry.initSentry();
+
+    expect(browserTracingIntegration).toHaveBeenCalledTimes(1);
+    expect(init).toHaveBeenCalledWith(
+      expect.objectContaining({ integrations: [{ name: 'BrowserTracing' }] })
+    );
+  });
+
+  it('ne charge le SDK qu’une fois le fil principal libre', async () => {
+    vi.useFakeTimers();
+    const init = vi.fn();
+    vi.doMock('@sentry/react', () => ({
+      init,
+      captureException: vi.fn(),
+      browserTracingIntegration: () => ({ name: 'BrowserTracing' }),
+    }));
+    const idle = vi.fn((callback: () => void) => {
+      setTimeout(callback, 0);
+      return 1;
+    });
+    vi.stubGlobal('requestIdleCallback', idle);
+    const sentry = await import('./sentry');
+
+    sentry.startSentryWhenIdle();
+
+    expect(idle).toHaveBeenCalledWith(expect.any(Function), { timeout: 3000 });
+    expect(init).not.toHaveBeenCalled();
+    await vi.runAllTimersAsync();
+    expect(init).toHaveBeenCalledTimes(1);
   });
 });
