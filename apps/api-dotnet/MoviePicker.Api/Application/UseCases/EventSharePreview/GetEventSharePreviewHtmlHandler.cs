@@ -45,14 +45,14 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
         if (!rich)
         {
             pageTitle = "Movie Picker";
-            ogTitle = "Movie Picker — Soirée ciné";
+            ogTitle = "Movie Picker : soirée ciné";
             ogDescription = "Tu as reçu une invitation pour une soirée ciné sur Movie Picker. Ouvre le lien pour rejoindre !";
             ogImage = $"{webBase}/og-image.png";
         }
         else
         {
-            pageTitle = $"{evt.Title} — Movie Picker";
-            ogTitle = $"{evt.Title} — Movie Picker";
+            pageTitle = $"{evt.Title} | Movie Picker";
+            ogTitle = $"{evt.Title} | Movie Picker";
             ogDescription = BuildRichDescription(evt);
             ogImage = await ResolveOgImageAsync(evt, apiBase, webBase, ct);
         }

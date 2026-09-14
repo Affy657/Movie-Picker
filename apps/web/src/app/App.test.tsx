@@ -441,7 +441,7 @@ describe('App (routes)', () => {
       { timeout: 20000 }
     );
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: /movie picker .*accueil/i })).toHaveAttribute(
+      expect(screen.getByRole('link', { name: /movie picker, accueil/i })).toHaveAttribute(
         'href',
         '/'
       );

@@ -35,8 +35,8 @@ public static class PasswordResetEmailFactory
                     <a href="{url}" style="background:#2563eb;color:#ffffff;padding:12px 20px;text-decoration:none;border-radius:6px;display:inline-block;">Définir un nouveau mot de passe</a>
                   </p>
                   <p style="font-size:14px;color:#555;">Si le bouton ne fonctionne pas, copie cette URL dans ton navigateur :<br/><a href="{url}">{url}</a></p>
-                  <p style="font-size:14px;color:#555;">Si tu n'es pas à l'origine de cette demande, ignore cet email — ton mot de passe restera inchangé.</p>
-                  <p style="font-size:12px;color:#999;margin-top:32px;">— L'équipe Movie Picker</p>
+                  <p style="font-size:14px;color:#555;">Si tu n'es pas à l'origine de cette demande, ignore cet email : ton mot de passe restera inchangé.</p>
+                  <p style="font-size:12px;color:#999;margin-top:32px;">L'équipe Movie Picker</p>
                 </td></tr>
               </table>
             </body>
@@ -50,9 +50,9 @@ public static class PasswordResetEmailFactory
 
             {url}
 
-            Si tu n'es pas à l'origine de cette demande, ignore cet email — ton mot de passe restera inchangé.
+            Si tu n'es pas à l'origine de cette demande, ignore cet email : ton mot de passe restera inchangé.
 
-            — L'équipe Movie Picker
+            L'équipe Movie Picker
             """;
         return new EmailMessage(toEmail, toName, subject, htmlBody, textBody, Tag);
     }
@@ -75,8 +75,8 @@ public static class PasswordResetEmailFactory
                     <a href="{url}" style="background:#2563eb;color:#ffffff;padding:12px 20px;text-decoration:none;border-radius:6px;display:inline-block;">Set a new password</a>
                   </p>
                   <p style="font-size:14px;color:#555;">If the button doesn't work, copy this URL into your browser:<br/><a href="{url}">{url}</a></p>
-                  <p style="font-size:14px;color:#555;">If you didn't request this, ignore this email — your password will remain unchanged.</p>
-                  <p style="font-size:12px;color:#999;margin-top:32px;">— The Movie Picker team</p>
+                  <p style="font-size:14px;color:#555;">If you didn't request this, ignore this email: your password will remain unchanged.</p>
+                  <p style="font-size:12px;color:#999;margin-top:32px;">The Movie Picker team</p>
                 </td></tr>
               </table>
             </body>
@@ -90,9 +90,9 @@ public static class PasswordResetEmailFactory
 
             {url}
 
-            If you didn't request this, ignore this email — your password will remain unchanged.
+            If you didn't request this, ignore this email: your password will remain unchanged.
 
-            — The Movie Picker team
+            The Movie Picker team
             """;
         return new EmailMessage(toEmail, toName, subject, htmlBody, textBody, Tag);
     }

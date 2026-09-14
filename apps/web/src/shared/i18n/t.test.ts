@@ -18,7 +18,7 @@ describe('t (i18n)', () => {
 
   it('interpole plusieurs variables', () => {
     expect(t('common.pageTitle', { segment: 'Mes soir\u00e9es' })).toBe(
-      'Mes soir\u00e9es \u2014 Movie Picker'
+      'Mes soir\u00e9es | Movie Picker'
     );
   });
 

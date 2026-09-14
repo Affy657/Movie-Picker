@@ -10,7 +10,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
-- **Le retrait d'un gagnant journalisait l'identifiant reçu dans la requête** plutôt que celui du film réellement retiré de la soirée, la dernière alerte CodeQL ouverte du dépôt. La description des aperçus de partage et les métadonnées SEO abandonnent aussi le tiret cadratin et le point médian.
+- **Le retrait d'un gagnant journalisait l'identifiant reçu dans la requête** plutôt que celui du film réellement retiré de la soirée, la dernière alerte CodeQL ouverte du dépôt. Les titres d'onglet (« Mes soirées | Movie Picker »), les aperçus de partage, les courriels de réinitialisation et les métadonnées SEO abandonnent aussi le tiret cadratin et le point médian.
 - **Les interrupteurs des paramètres de la soirée étaient inégalement espacés** : « Répéter cette soirée » collait à « Limiter les votes par participant ». Les champs du panneau suivent maintenant un pas unique.
 
 ## [1.6.0] - 2026-09-12

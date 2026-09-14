@@ -4,7 +4,7 @@ import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '@/shared/hooks/
 
 describe('useDocumentTitle', () => {
   it('pageTitle ajoute le suffixe produit', () => {
-    expect(pageTitle('Accueil')).toBe(`Accueil — ${APP_DOCUMENT_TITLE}`);
+    expect(pageTitle('Accueil')).toBe(`Accueil | ${APP_DOCUMENT_TITLE}`);
   });
 
   it('met à jour document.title', () => {

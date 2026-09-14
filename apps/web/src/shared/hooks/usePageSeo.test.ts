@@ -116,8 +116,8 @@ describe('usePageSeo', () => {
   });
 
   it('useNoindexPage pose noindex et un canonical de la route', () => {
-    renderHook(() => useNoindexPage('Connexion : Movie Picker', '/login'));
-    expect(document.title).toBe('Connexion : Movie Picker');
+    renderHook(() => useNoindexPage('Connexion | Movie Picker', '/login'));
+    expect(document.title).toBe('Connexion | Movie Picker');
     expect(meta('meta[name="robots"]')).toBe('noindex, nofollow');
     expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe(
       `${SITE_URL}/login`
