@@ -349,4 +349,50 @@ public sealed class GetMovieShowcaseHandlerTests
         Assert.Equal(2, (await second).Items.Count);
         _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    [Theory]
+    [InlineData(MovieShowcaseSections.Recommendations)]
+    [InlineData(MovieShowcaseSections.Collection)]
+    public async Task HandleAsync_SectionKeyedOnAnArbitraryId_StaysOutOfTheSharedCache(string section)
+    {
+        _tmdb.Setup(t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(2));
+        _tmdb.Setup(t => t.GetCollectionMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(2));
+
+        await Build().HandleAsync(new MovieShowcaseQuery(section, CollectionId: 4242, SeedTmdbId: 4242));
+
+        _shared.Verify(
+            c => c.TryGetAsync<IReadOnlyList<MovieShowcaseItemResponse>>(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _shared.Verify(
+            c => c.SetAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<MovieShowcaseItemResponse>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TrendingWithSeveralGenres_StaysOutOfTheSharedCache()
+    {
+        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(2));
+
+        await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, GenreIds: [28, 12]));
+
+        _shared.Verify(
+            c => c.SetAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<MovieShowcaseItemResponse>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TrendingWithOneGenre_IsSharedAcrossInstances()
+    {
+        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(2));
+
+        await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, GenreIds: [28]));
+
+        _shared.Verify(
+            c => c.SetAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<MovieShowcaseItemResponse>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 }

@@ -25,7 +25,7 @@ registerRoute(
   new StaleWhileRevalidate({
     cacheName: 'showcase-cache-v1',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 }),
+      new ExpirationPlugin({ maxEntries: 40, maxAgeSeconds: 60 * 60 * 6 }),
       new CacheableResponsePlugin({ statuses: [0, 200] }),
     ],
   })

@@ -81,7 +81,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - ou: `Infrastructure/Tmdb/TmdbMovieSearch.cs` pour ce qui reste en mémoire seule ; `Application/Caching/SharedCacheReadThrough.cs` pour le modèle à réutiliser
 - verify: `grep -rln IMemoryCache apps/api-dotnet --include=*.cs`
 - fix: passer les caches restants par `SharedCacheReadThrough`, ou un cache hors processus dédié
-- piege: `min-instances` reste à 0, donc le démarrage à froid de l'API (3,5 s en prod, 0,7 s en local avec ReadyToRun) subsiste. Le poser à 1 coûte environ 8 à 10 $ par mois : décision de l'utilisateur, jamais de l'agent.
+- piege: `min-instances` reste à 0, donc le démarrage à froid de l'API (3,5 s en prod, 0,7 s en local avec ReadyToRun) subsiste. Le poser à 1 coûte environ 8 à 10 $ par mois : décision de l'utilisateur, jamais de l'agent. Deux règles du cache partagé à ne pas casser : seules les clés de catalogue (sections à liste fermée, au plus un genre) sont écrites dans Mongo, parce que `recommendations`, `collection` et les combinaisons de genres ouvrent un espace de clés illimité à 24 Ko le document sur un palier Atlas de 512 Mo ; et chaque famille de clés porte une version (`showcase-v1`, `showcase-collections-v1`, `tmdb-enrich-v2`) à incrémenter quand le DTO sérialisé change, sinon les instances relisent d'anciens documents pendant tout le TTL après un déploiement.
 - refs: même racine que DEBT-007 et DEBT-008, la contrainte Cloud Run
 
 ## DEBT-007 affiches servies en octets depuis Mongo à travers Cloud Run

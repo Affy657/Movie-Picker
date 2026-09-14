@@ -76,4 +76,18 @@ public sealed class SharedCacheReadThroughTests
         Assert.False(_memory.TryGetValue("k", out _));
         _shared.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public async Task GetOrLoadAsync_NotShared_UsesMemoryAndSingleFlightOnly()
+    {
+        var sut = Build();
+
+        var first = await sut.GetOrLoadAsync("k", Ttl, _ => Task.FromResult("loaded"), shareAcrossInstances: false);
+        var second = await sut.GetOrLoadAsync("k", Ttl, _ => Task.FromResult("again"), shareAcrossInstances: false);
+
+        Assert.Equal("loaded", first);
+        Assert.Equal("loaded", second);
+        _shared.Verify(c => c.TryGetAsync<string>(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _shared.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

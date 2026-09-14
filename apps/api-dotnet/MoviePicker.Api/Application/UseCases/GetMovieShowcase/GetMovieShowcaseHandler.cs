@@ -45,10 +45,15 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             cacheKey,
             CacheTtl(),
             token => LoadSectionAsync(section, theme, genreIds, query, provider, token),
-            ct);
+            ct,
+            shareAcrossInstances: IsCatalogSection(section, genreIds));
 
         return BuildResponse(section, theme, items);
     }
+
+    private static bool IsCatalogSection(string section, IReadOnlyList<int> genreIds) =>
+        section is not (MovieShowcaseSections.Recommendations or MovieShowcaseSections.Collection)
+        && genreIds.Count <= 1;
 
     private async Task<IReadOnlyList<MovieShowcaseItemResponse>> LoadSectionAsync(
         string section,

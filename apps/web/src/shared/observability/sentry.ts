@@ -9,6 +9,7 @@ const IN_APP_BROWSER_NOISE = /SCDynimacBridge/i;
 const IDLE_INIT_TIMEOUT_MS = 3000;
 
 type PendingCapture = { error: unknown; componentStack?: string };
+const MAX_CAPTURES_BEFORE_INIT = 20;
 const capturedBeforeInit: Array<PendingCapture> = [];
 
 export function shouldDropSentryEvent(event: {
@@ -74,7 +75,9 @@ export function initSentry(): Promise<void> {
 
 export function startSentryWhenIdle(): void {
   const start = (): void => {
-    void initSentry();
+    initSentry().catch(() => {
+      loading = null;
+    });
   };
   if (typeof requestIdleCallback === 'function') {
     requestIdleCallback(start, { timeout: IDLE_INIT_TIMEOUT_MS });
@@ -89,4 +92,5 @@ export function captureException(error: unknown, componentStack?: string): void 
     return;
   }
   capturedBeforeInit.push({ error, componentStack });
+  if (capturedBeforeInit.length > MAX_CAPTURES_BEFORE_INIT) capturedBeforeInit.shift();
 }

@@ -78,6 +78,40 @@ describe('initSentry', () => {
     });
   });
 
+  it('borne la file des erreurs capturées avant le SDK', async () => {
+    const captureException = vi.fn();
+    vi.doMock('@sentry/react', () => ({
+      init: vi.fn(),
+      captureException,
+      browserTracingIntegration: () => ({ name: 'BrowserTracing' }),
+    }));
+    const sentry = await import('./sentry');
+
+    for (let index = 0; index < 30; index++) sentry.captureException(new Error(`e${index}`));
+    await sentry.initSentry();
+
+    expect(captureException).toHaveBeenCalledTimes(20);
+    expect((captureException.mock.calls[0]![0] as Error).message).toBe('e10');
+  });
+
+  it('ne laisse pas une promesse rejetée sans suite si le SDK ne se charge pas', async () => {
+    vi.stubGlobal('requestIdleCallback', undefined);
+    vi.doMock('@sentry/react', () => {
+      throw new Error('chunk introuvable');
+    });
+    const unhandled = vi.fn();
+    process.on('unhandledRejection', unhandled);
+    const sentry = await import('./sentry');
+
+    sentry.startSentryWhenIdle();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    process.off('unhandledRejection', unhandled);
+    vi.unstubAllGlobals();
+    expect(unhandled).not.toHaveBeenCalled();
+    await expect(sentry.initSentry()).rejects.toThrow();
+  });
+
   it("instrumente la navigation sans envelopper les routes de l'application", async () => {
     const init = vi.fn();
     const browserTracingIntegration = vi.fn(() => ({ name: 'BrowserTracing' }));

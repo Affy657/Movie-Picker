@@ -20,22 +20,28 @@ public sealed class SharedCacheReadThrough
         string key,
         TimeSpan ttl,
         Func<CancellationToken, Task<T>> load,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        bool shareAcrossInstances = true)
         where T : class
     {
         if (_memory.TryGetValue(key, out object? boxed) && boxed is T cached)
             return cached;
 
-        return await _singleFlight.RunAsync(key, () => LoadThroughSharedAsync(key, ttl, load), ct).ConfigureAwait(false);
+        return await _singleFlight
+            .RunAsync(key, () => LoadThroughSharedAsync(key, ttl, load, shareAcrossInstances), ct)
+            .ConfigureAwait(false);
     }
 
     private async Task<T> LoadThroughSharedAsync<T>(
         string key,
         TimeSpan ttl,
-        Func<CancellationToken, Task<T>> load)
+        Func<CancellationToken, Task<T>> load,
+        bool shareAcrossInstances)
         where T : class
     {
-        var shared = await _shared.TryGetAsync<T>(key, CancellationToken.None).ConfigureAwait(false);
+        var shared = shareAcrossInstances
+            ? await _shared.TryGetAsync<T>(key, CancellationToken.None).ConfigureAwait(false)
+            : null;
         if (shared is not null)
         {
             _memory.Set(key, shared.Value, new MemoryCacheEntryOptions { AbsoluteExpiration = shared.ExpiresAt });
@@ -44,7 +50,8 @@ public sealed class SharedCacheReadThrough
 
         var loaded = await load(CancellationToken.None).ConfigureAwait(false);
         _memory.Set(key, loaded, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
-        await _shared.SetAsync(key, loaded, ttl, CancellationToken.None).ConfigureAwait(false);
+        if (shareAcrossInstances)
+            await _shared.SetAsync(key, loaded, ttl, CancellationToken.None).ConfigureAwait(false);
         return loaded;
     }
 }
