@@ -4,6 +4,7 @@ import {
   bindPostHogForTests,
   capture,
   identify,
+  initPostHog,
   optIn,
   optOut,
   resetIdentity,
@@ -93,5 +94,35 @@ describe('file d’attente consentement / identify', () => {
     bindPostHogForTests(stub);
     capture('vote_cast', { value: 1, displayName: 'Ada' });
     expect(stub.capture).toHaveBeenCalledWith('vote_cast', { value: 1 });
+  });
+});
+
+describe('initPostHog', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    vi.doUnmock('posthog-js');
+    resetPostHogForTests();
+  });
+
+  it('attend un temps libre du fil principal avant de charger le SDK', async () => {
+    vi.stubEnv('PROD', true);
+    vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test');
+    const idle: Array<() => void> = [];
+    vi.stubGlobal('requestIdleCallback', (callback: () => void) => {
+      idle.push(callback);
+      return idle.length;
+    });
+    const init = vi.fn();
+    vi.doMock('posthog-js', () => ({ default: { ...createStub(), init } }));
+
+    const pending = initPostHog();
+    await Promise.resolve();
+    expect(init).not.toHaveBeenCalled();
+    expect(idle).toHaveLength(1);
+
+    idle[0]!();
+    await pending;
+    expect(init).toHaveBeenCalledWith('phc_test', expect.objectContaining({ autocapture: false }));
   });
 });

@@ -539,7 +539,7 @@ jobs:
             key="${route#/}"
             echo "prérendu $route → clé $key"
             aws s3 cp "apps/web/dist/prerendered/$file" "s3://$AWS_S3_BUCKET/$key" \
-              --cache-control "no-cache, no-store, must-revalidate" \
+              --cache-control "no-cache, must-revalidate" \
               --content-type "text/html; charset=utf-8"
             count=$((count + 1))
           done < <(jq -r '.[] | "\(.route)\t\(.file)"' "$MANIFEST")
@@ -553,7 +553,7 @@ jobs:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
           aws s3 cp apps/web/dist/index.html "s3://$AWS_S3_BUCKET/index.html" \
-            --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
+            --cache-control "no-cache, must-revalidate" --content-type "text/html"
       # Le front n'a aucun retour arrière côté hébergement : `aws s3 sync` écrase et le build
       # précédent n'existe plus nulle part. Archiver le dist rend un retour arrière possible sans
       # rejouer toute la chaîne de portes. Placé APRÈS l'envoi S3 : une archive de confort ne doit

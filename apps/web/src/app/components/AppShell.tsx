@@ -8,6 +8,7 @@ import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxd
 import { useWhatsNew } from '@/shared/hooks/useWhatsNew';
 import { shouldShowWhatsNewNavChip } from '@/shared/whatsNew';
 import { withReturnTo, ROUTES } from '@/app/routes';
+import { routeIntentHandlers } from '@/app/routeChunks';
 import { LANDING_ANCHORS } from '@/app/pages/landing/anchors';
 import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
@@ -72,6 +73,7 @@ function DesktopNavItem({
       to={to}
       end={end}
       className={(state) => clsx(navLinkClass(state), wideOnly && styles.navLinkWideOnly)}
+      {...routeIntentHandlers(to)}
     >
       {label}
     </NavLink>
@@ -88,7 +90,7 @@ function LandingNavItem({ anchor, label }: Readonly<{ anchor: string; label: str
 
 function MobileNavItem({ to, end, label, Icon }: Readonly<NavItemDef>) {
   return (
-    <NavLink to={to} end={end} className={navLinkClass}>
+    <NavLink to={to} end={end} className={navLinkClass} {...routeIntentHandlers(to)}>
       <Icon className={styles.navIcon} aria-hidden="true" focusable="false" />
       <span className={styles.navMobileLabel}>{label}</span>
     </NavLink>
@@ -133,6 +135,7 @@ function HeaderNavActions({
       <Link
         to={withReturnTo(ROUTES.login, returnTo)}
         className={buttonClass({ size: 'sm', className: styles.guestLogin })}
+        {...routeIntentHandlers(ROUTES.login)}
       >
         {t('home.ctaLogin')}
       </Link>
@@ -143,6 +146,7 @@ function HeaderNavActions({
           size: 'sm',
           className: styles.guestRegister,
         })}
+        {...routeIntentHandlers(ROUTES.register)}
       >
         {t('home.ctaRegister')}
       </Link>

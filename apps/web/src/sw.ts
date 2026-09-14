@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { NetworkFirst, CacheFirst } from 'workbox-strategies';
+import { NetworkFirst, CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
@@ -17,6 +17,19 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
 
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
+
+const PUBLIC_SHOWCASE_PATHS = ['/api/v1/movies/showcase', '/api/v1/movies/collections'];
+
+registerRoute(
+  ({ url }) => PUBLIC_SHOWCASE_PATHS.includes(url.pathname),
+  new StaleWhileRevalidate({
+    cacheName: 'showcase-cache-v1',
+    plugins: [
+      new ExpirationPlugin({ maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 }),
+      new CacheableResponsePlugin({ statuses: [0, 200] }),
+    ],
+  })
+);
 
 registerRoute(
   ({ url }) => url.pathname.startsWith('/api/v1/') && !url.pathname.startsWith('/api/v1/posters/'),

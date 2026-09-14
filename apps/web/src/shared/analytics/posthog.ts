@@ -63,9 +63,22 @@ function flushPending(): void {
   }
 }
 
+const IDLE_LOAD_TIMEOUT_MS = 5000;
+
+function mainThreadIdle(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(() => resolve(), { timeout: IDLE_LOAD_TIMEOUT_MS });
+      return;
+    }
+    setTimeout(resolve, 0);
+  });
+}
+
 async function doInit(): Promise<void> {
   const key = import.meta.env.VITE_POSTHOG_KEY;
   if (!key || !import.meta.env.PROD) return;
+  await mainThreadIdle();
   const { default: ph } = await import('posthog-js');
   ph.init(key, {
     api_host: 'https://eu.i.posthog.com',

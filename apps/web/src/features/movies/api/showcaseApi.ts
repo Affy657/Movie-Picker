@@ -1,6 +1,8 @@
 import { fetchApi } from '@/shared/api/client';
 import type { MovieMediaType } from '@/shared/types/movie';
 
+export const SHOWCASE_STALE_TIME = 1000 * 60 * 30;
+
 export type ShowcaseSection =
   | 'trending'
   | 'now-playing'

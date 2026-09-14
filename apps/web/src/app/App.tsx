@@ -14,30 +14,32 @@ import SessionGate from '@/app/components/SessionGate';
 import ScrollToTop from '@/app/components/ScrollToTop';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
+import { ROUTE_CHUNKS } from '@/app/routeChunks';
+import { useHomeShowcasePrefetch } from '@/features/movies/homeShowcasePrefetch';
 
-const HomePage = lazy(() => import('@/app/pages/HomePage'));
-const ShowcaseListPage = lazy(() => import('@/app/pages/ShowcaseListPage'));
-const MovieCollectionsPage = lazy(() => import('@/app/pages/MovieCollectionsPage'));
-const LandingPage = lazy(() => import('@/app/pages/LandingPage'));
-const CreateEvent = lazy(() => import('@/features/events/pages/CreateEvent'));
-const EventDetail = lazy(() => import('@/features/events/pages/EventDetail'));
-const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
-const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage'));
-const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
-const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
-const OAuthCallbackPage = lazy(() => import('@/features/auth/pages/OAuthCallbackPage'));
-const AccountPage = lazy(() => import('@/features/auth/pages/AccountPage'));
-const LegalNoticePage = lazy(() => import('@/app/pages/LegalNoticePage'));
-const PrivacyPolicyPage = lazy(() => import('@/app/pages/PrivacyPolicyPage'));
-const DonatePage = lazy(() => import('@/app/pages/DonatePage'));
-const TechPage = lazy(() => import('@/app/pages/TechPage'));
-const MyEventsPage = lazy(() => import('@/features/events/pages/MyEventsPage'));
-const WatchlistPage = lazy(() => import('@/features/watchlist/pages/WatchlistPage'));
-const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'));
-const ProfilePage = lazy(() => import('@/features/profile/pages/ProfilePage'));
-const ProfileMoviesPage = lazy(() => import('@/features/profile/pages/ProfileMoviesPage'));
-const ProfileWatchlistPage = lazy(() => import('@/features/profile/pages/ProfileWatchlistPage'));
-const NotFoundPage = lazy(() => import('@/app/pages/NotFoundPage'));
+const HomePage = lazy(ROUTE_CHUNKS.home);
+const ShowcaseListPage = lazy(ROUTE_CHUNKS.showcaseList);
+const MovieCollectionsPage = lazy(ROUTE_CHUNKS.movieCollections);
+const LandingPage = lazy(ROUTE_CHUNKS.landing);
+const CreateEvent = lazy(ROUTE_CHUNKS.createEvent);
+const EventDetail = lazy(ROUTE_CHUNKS.eventDetail);
+const LoginPage = lazy(ROUTE_CHUNKS.login);
+const RegisterPage = lazy(ROUTE_CHUNKS.register);
+const ForgotPasswordPage = lazy(ROUTE_CHUNKS.forgotPassword);
+const ResetPasswordPage = lazy(ROUTE_CHUNKS.resetPassword);
+const OAuthCallbackPage = lazy(ROUTE_CHUNKS.oauthCallback);
+const AccountPage = lazy(ROUTE_CHUNKS.account);
+const LegalNoticePage = lazy(ROUTE_CHUNKS.legalNotice);
+const PrivacyPolicyPage = lazy(ROUTE_CHUNKS.privacyPolicy);
+const DonatePage = lazy(ROUTE_CHUNKS.donate);
+const TechPage = lazy(ROUTE_CHUNKS.tech);
+const MyEventsPage = lazy(ROUTE_CHUNKS.myEvents);
+const WatchlistPage = lazy(ROUTE_CHUNKS.watchlist);
+const NotificationsPage = lazy(ROUTE_CHUNKS.notifications);
+const ProfilePage = lazy(ROUTE_CHUNKS.profile);
+const ProfileMoviesPage = lazy(ROUTE_CHUNKS.profileMovies);
+const ProfileWatchlistPage = lazy(ROUTE_CHUNKS.profileWatchlist);
+const NotFoundPage = lazy(ROUTE_CHUNKS.notFound);
 
 function PageFallback() {
   const { t } = useTranslation();
@@ -175,6 +177,7 @@ export function AppRoutes() {
 
 export function AppRoutesWithErrorBoundary() {
   const location = useLocation();
+  useHomeShowcasePrefetch();
   return (
     <>
       <ScrollToTop />

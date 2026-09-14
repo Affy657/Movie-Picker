@@ -6,6 +6,7 @@ const workbox = vi.hoisted(() => ({
   registerRoute: vi.fn(),
   NetworkFirst: vi.fn(),
   CacheFirst: vi.fn(),
+  StaleWhileRevalidate: vi.fn(),
   ExpirationPlugin: vi.fn(),
   CacheableResponsePlugin: vi.fn(),
 }));
@@ -18,6 +19,7 @@ vi.mock('workbox-routing', () => ({ registerRoute: workbox.registerRoute }));
 vi.mock('workbox-strategies', () => ({
   NetworkFirst: workbox.NetworkFirst,
   CacheFirst: workbox.CacheFirst,
+  StaleWhileRevalidate: workbox.StaleWhileRevalidate,
 }));
 vi.mock('workbox-expiration', () => ({ ExpirationPlugin: workbox.ExpirationPlugin }));
 vi.mock('workbox-cacheable-response', () => ({
@@ -46,12 +48,16 @@ function pending(): { waitUntil: ReturnType<typeof vi.fn>; settled: () => Promis
   };
 }
 
-function apiRouteMatcher(): RouteMatcher {
+function showcaseRouteMatcher(): RouteMatcher {
   return workbox.registerRoute.mock.calls[0]![0] as RouteMatcher;
 }
 
-function tmdbRouteMatcher(): RouteMatcher {
+function apiRouteMatcher(): RouteMatcher {
   return workbox.registerRoute.mock.calls[1]![0] as RouteMatcher;
+}
+
+function tmdbRouteMatcher(): RouteMatcher {
+  return workbox.registerRoute.mock.calls[2]![0] as RouteMatcher;
 }
 
 beforeAll(async () => {
@@ -85,12 +91,24 @@ describe('service worker — mise en cache', () => {
     expect(workbox.cleanupOutdatedCaches).toHaveBeenCalledTimes(1);
   });
 
+  it('sert les sélections publiques depuis le cache puis les rafraîchit derrière', () => {
+    const matches = showcaseRouteMatcher();
+    expect(matches({ url: new URL(`${origin()}/api/v1/movies/showcase?section=trending`) })).toBe(
+      true
+    );
+    expect(matches({ url: new URL(`${origin()}/api/v1/movies/collections`) })).toBe(true);
+    expect(matches({ url: new URL(`${origin()}/api/v1/movies/search?q=heat`) })).toBe(false);
+    expect(matches({ url: new URL(`${origin()}/api/v1/events`) })).toBe(false);
+    expect(workbox.registerRoute.mock.calls[0]![1]).toBeInstanceOf(workbox.StaleWhileRevalidate);
+  });
+
   it('met en cache les appels API mais laisse passer les affiches', () => {
     const matches = apiRouteMatcher();
     expect(matches({ url: new URL(`${origin()}/api/v1/events`) })).toBe(true);
     expect(matches({ url: new URL(`${origin()}/api/v1/users/me`) })).toBe(true);
     expect(matches({ url: new URL(`${origin()}/api/v1/posters/550`) })).toBe(false);
     expect(matches({ url: new URL(`${origin()}/assets/app.js`) })).toBe(false);
+    expect(workbox.registerRoute.mock.calls[1]![1]).toBeInstanceOf(workbox.NetworkFirst);
   });
 
   it('met en cache les images TMDB', () => {
