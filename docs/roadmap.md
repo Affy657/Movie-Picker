@@ -233,6 +233,13 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
 - ⬜ `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
 
+**Tech**
+
+- ✅ ⚙️ `M` **Cache partagé des sélections** : les rangées de la home, les collections et l'enrichissement TMDB gardent un second niveau de cache dans Mongo, relu par toute instance Cloud Run neuve au lieu de refaire jusqu'à 290 appels TMDB (6 à 10 s par requête mesurées dans les logs). Les requêtes simultanées sur une même clé partagent un seul chargement, les réponses JSON sont compressées et les endpoints publics portent un cache navigateur. L'image API part en ReadyToRun.
+- ✅ ⚙️ `M` **Démarrage du front sans Sentry sur le chemin critique** : React monte avant le SDK, qui se charge au premier temps libre et rejoue les erreurs capturées entre-temps ; la porte Lighthouse construit désormais avec un DSN pour mesurer ce que la production reçoit. Le découpage du bundle passe par `codeSplitting` de rolldown, l'option héritée de Rollup étant ignorée sous Vite 8, et la coquille embarque sa fermeture statique : 7 requêtes de moins par page.
+- ✅ ⚙️ `S` **Page soirée allégée** : la liste des films part sans attendre la réponse de la soirée, les fenêtres (partage, paramètres, roue, proposition) se chargent à la première ouverture et se préchargent au premier temps libre, la roue dessine son disque une fois puis le fait tourner. 22 fichiers JS au lieu de 37 et 35 Ko brotli de moins pour un invité qui ouvre un lien.
+- ✅ ⚙️ `S` **Home plus tôt** : les rangées de sélections sont demandées dès le montage de la coquille, avant le chunk de la page, et le service worker les sert depuis son cache en rafraîchissant derrière. PostHog attend le premier temps libre, et les pages de la navigation se préchargent au survol ou au focus.
+
 
 ---
 

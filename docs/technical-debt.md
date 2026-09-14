@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-025`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-027`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -77,10 +77,11 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 - state: differe
 - declencheur: la mise à l'échelle devient routinière au lieu d'être exceptionnelle
-- impact: Cloud Run monte jusqu'à `maxScale 20`, donc jusqu'à 20 caches froids indépendants, ce qui annule le bénéfice du cache
-- ou: `GetMovieCollectionsHandler.cs`, `GetMovieShowcaseHandler.cs`, `Infrastructure/Tmdb/TmdbMovieSearch.cs`
+- impact: Cloud Run monte jusqu'à `maxScale 20`, donc jusqu'à 20 caches froids indépendants. Depuis le 2026-09-14, les sélections de la home, les collections et l'enrichissement TMDB passent par `ISharedCache` (Mongo, collection `shared_cache`, index TTL) en second niveau : une instance neuve relit ces snapshots au lieu de refaire le fan-out TMDB, mesuré à 6 à 10 s par requête dans les logs. Le reste des `IMemoryCache` (recherche TMDB, détails) reste local.
+- ou: `Infrastructure/Tmdb/TmdbMovieSearch.cs` pour ce qui reste en mémoire seule ; `Application/Caching/SharedCacheReadThrough.cs` pour le modèle à réutiliser
 - verify: `grep -rln IMemoryCache apps/api-dotnet --include=*.cs`
-- fix: cache partagé hors processus
+- fix: passer les caches restants par `SharedCacheReadThrough`, ou un cache hors processus dédié
+- piege: `min-instances` reste à 0, donc le démarrage à froid de l'API (3,5 s en prod, 0,7 s en local avec ReadyToRun) subsiste. Le poser à 1 coûte environ 8 à 10 $ par mois : décision de l'utilisateur, jamais de l'agent.
 - refs: même racine que DEBT-007 et DEBT-008, la contrainte Cloud Run
 
 ## DEBT-007 affiches servies en octets depuis Mongo à travers Cloud Run
@@ -119,6 +120,25 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - verify: `wc -l apps/web/src/features/events/pages/event-detail/EventDetailSession.tsx apps/web/src/features/events/components/HostEventSettingsPanel.tsx` ; cette commande sort toujours quelque chose, lire les nombres : encore ouvert tant qu'un des deux dépasse 600 lignes
 - fix: extraire par responsabilité vers les primitives partagées existantes avant d'écrire du local
 - piege: un troisième fichier, `movieCardParts.tsx`, figurait ici sur la foi d'un relevé à 1096 lignes. Il en fait 436 depuis l'extraction des briques de listes. Mesurer avant de croire un relevé de cette liste.
+
+## DEBT-025 la fiche film est montée fermée pour chaque carte de liste
+
+- state: agent
+- impact: `movieCardParts.tsx` rend un `MovieDetailsModal` (et son `<dialog>`) par film affiché, fermé, sur la home, les vitrines, la watchlist et le profil : autant de nœuds DOM inutiles tant que personne ne clique, et le chunk de la fiche (6 Ko brotli plus ses styles) est dans la fermeture statique de toutes ces pages
+- ou: `apps/web/src/features/movies/components/movieCardParts.tsx:476`, plus les cinq autres appelants (`grep -rln MovieDetailsModal apps/web/src --include=*.tsx`)
+- verify: `grep -n "import MovieDetailsModal" apps/web/src/features/movies/components/movieCardParts.tsx` ; encore ouvert tant que l'import est statique
+- fix: même recette que la page soirée (2026-09-14) : `lazy()` plus `useEverOpened` pour ne monter la fiche qu'à la première ouverture, `useIdlePrefetch` pour que le premier clic ne paie pas le chargement
+- piege: les tests de ces pages ouvrent la fiche avec des `getBy` synchrones après le clic, ils passent en `findBy` avec le chargement paresseux. Compter l'ampleur avant de commencer, il y a six appelants.
+
+## DEBT-026 le flou de fond des barres collantes n'a jamais été mesuré au défilement
+
+- state: differe
+- declencheur: un signalement de défilement saccadé sur mobile, ou une mesure de fluidité posée sur un Android milieu de gamme
+- impact: `backdrop-filter: blur(12px)` sur la barre de `AppShell` et `blur(10px)` sur `EventDetailHeader` recomposent la zone floutée à chaque image pendant le défilement ; c'est le premier suspect connu de saccades sur mobile, sans preuve ici
+- ou: `apps/web/src/app/components/AppShell.module.css:54`, `apps/web/src/features/events/pages/event-detail/EventDetailHeader.module.css:346`
+- verify: `grep -rn "backdrop-filter" apps/web/src --include=*.css`
+- fix: mesurer d'abord (Performance panel, frames longues au défilement) ; si confirmé, fond opaque légèrement translucide sans flou, ou flou réservé à `(hover: hover)`
+- piege: ne pas retirer le flou sur une intuition, c'est un choix visuel de l'utilisateur. Mesure avant geste.
 
 ## DEBT-011 endpoint de profil public orphelin
 
@@ -241,6 +261,11 @@ Le même plugin fait deux autres choses depuis le 2026-09-10 :
 - **Il met la feuille de style de l'entrée en ligne** dans le document, voir C2.
 - **Il publie `dist/route-assets.json`**, indexé par **nom de chunk** (`DonatePage`, `LegalNoticePage`, ...), avec la fermeture des imports statiques de chaque page chargée à la demande. `scripts/prerender.mjs` s'en sert, et cette moitié-là est gardée : renommer un composant de page renomme son chunk et **fait échouer le build**, avec le nom cherché dans le message.
 
+Depuis le 2026-09-14, le découpage passe par `output.codeSplitting.groups` (rolldown) et non plus par `manualChunks` : **`experimentalMinChunkSize` n'existe pas sous Vite 8**, il était ignoré sans avertissement, et `manualChunks` est ignoré dès que `codeSplitting` est posé. Deux choses à savoir en y touchant :
+
+- le groupe `App` est alimenté par `appShellClosurePlugin`, qui relève au build la fermeture statique de `src/app/App.tsx` (`moduleParsed` puis parcours dans `buildEnd`). C'est ce qui vide la première vague de ses six petits chunks et fait que `index` importe `App` statiquement. Un module importé par la coquille atterrit donc dans `App-[hash].js`, même s'il est aussi importé par des pages ; c'est voulu, la coquille est toujours chargée avant elles ;
+- le groupe `react-vendor` teste `node_modules/…/(react|react-dom|react-router|scheduler)/` **en excluant** `VENDORS_LOADED_ON_DEMAND`, parce que `@sentry/react/` contient `/react/` : sans l'exclusion, le SDK Sentry entier partirait dans le chunk eager de React.
+
 ## C5 le bucket de sauvegarde contient des données personnelles
 
 Le bucket de sauvegarde MongoDB (europe-west1, versioning actif, suppression à 30 jours, nom dans `backup-mongo.yml`) porte des données personnelles. Accès public interdit, accès uniforme au niveau du bucket, et l'archive n'est **jamais** publiée en artefact GitHub. La limite connue est écrite dans l'en-tête de `backup-mongo.yml` : la vérification prouve que l'archive se restaure, pas qu'elle est cohérente entre collections.
@@ -338,6 +363,15 @@ Deux choses à ne pas casser :
 1. **Le discriminant est `hasSessionHint()`, pas `isLoading`.** Au premier rendu la requête de session est `isLoading` même quand aucune session n'est possible, et rendre les enfants dans ce cas suffit à déclencher l'import du chunk. La première version faisait exactement ça : l'affichage était juste, la mesure identique à l'avant, et rien ne signalait l'erreur. `fetchAuthMeForSession` rend `null` sans requête réseau quand l'indice est absent, donc l'état déconnecté est connu de façon synchrone.
 2. **Une page dont l'état déconnecté rend autre chose qu'un `SignedOutState` n'entre pas dans ce portail.** `/settings` rend `GuestPreferencesSection`, une vraie fonctionnalité pour visiteur anonyme : elle reste dehors, et son LCP reste derrière son chunk.
 
+## C10 Sentry se charge après le montage, et la porte Lighthouse le charge aussi
+
+`apps/web/src/main.tsx` monte React puis appelle `startSentryWhenIdle()` : le SDK (475 Ko brut, 145 Ko gzip) part au premier temps libre du fil principal, jamais avant `createRoot().render()`. Jusqu'au 2026-09-14, `boot()` faisait `await initSentry()` **avant** `import('@/app/App')` : mesuré en production, les dépendances de la coquille ne partaient qu'à 1,29 s au lieu de 0,92 s et le montage attendait l'évaluation du SDK. Deux choses tiennent ce gain :
+
+1. **Les erreurs d'avant le SDK ne sont pas perdues.** `captureException` les met en file et `initSentry` les rejoue ; c'est ce qui autorise à charger tard. Ne pas remplacer la file par un `if (!api) return`.
+2. **La porte Lighthouse construit avec un DSN factice** (`SENTRY_STUB_DSN` dans `scripts/lighthouse-run.mjs`, enveloppes acceptées par le stub sur `/api/1/envelope/`). Sans lui, `initSentry` retourne immédiatement et la porte mesure un démarrage que la production ne suit pas : c'est exactement ainsi que le `await` est resté invisible pendant des mois. Retirer le DSN du build de la porte fait remonter les scores pour une mauvaise raison.
+
+L'instrumentation des routes (`wrapReactRouterRouting`) a disparu avec ce changement : elle exigeait que le SDK soit initialisé avant l'évaluation d'`App`. `browserTracingIntegration()` suffit, les transactions portent l'URL brute au lieu du motif de route, ce qui est sans conséquence à 10 % d'échantillonnage sur quelques centaines de requêtes par jour.
+
 ---
 
 # Impasses
@@ -352,4 +386,5 @@ Mesuré, sans gain, retiré. Ne pas rejouer sans une raison neuve.
 - **I5 `mongodump --oplog`** pour la cohérence transactionnelle : impose un dump de l'instance entière et des droits supplémentaires.
 - **I6 factoriser `auth` + `setup-gcloud` (5 copies) et les smoke tests en actions composites.** Juste sur le fond, mais touche 4 workflows dont 2 hors périmètre. À faire dans un lot dédié, jamais en fin de diff.
 - **I7 descendre zizmor au seuil `low`** : 9 constats cosmétiques. Le seuil `medium` est vert et n'attrape que du sérieux.
+- **I10 regrouper les petits modules partagés entre pages en chunks « entries-aware » (rolldown `codeSplitting.groups`, `entriesAware: true`).** Mesuré le 2026-09-14 sur le build, en brotli. Avec un seuil de fusion à 12 Ko : `login` passe de 18 fichiers / 111,7 Ko à 14 fichiers / **141,9 Ko**, parce que les sous-groupes trop petits sont fusionnés avec un voisin chargé par d'autres pages, et la première vague de la coquille passe de 5 à 16 fichiers, soit exactement ce qu'I9 a mesuré perdant. À 3 Ko, `login` redescend à 7 fichiers / 107,7 Ko mais `my-events` prend 14 Ko et `home` 8 Ko. À 0, c'est le découpage automatique. Ce qui a été gardé est le seul geste qui gagne partout : la fermeture statique de `App` capturée dans son chunk (`appShellClosurePlugin`), qui retire 6 à 7 fichiers par page et 3 à 4 Ko à chacune sans rien ajouter à la première vague. Leçon : sous rolldown, le seul regroupement sans perdant est celui qui suit le graphe réel des imports, pas un seuil de taille.
 - **I8 espacer les workflows planifiés pour économiser des minutes GitHub Actions.** Mesuré au 2026-09-10 sur l'historique des runs : `security-scan.yml` tourne en 45 à 80 s une fois par semaine (≈ 5 min/mois), `registry-cleanup.yml` une fois par mois (≈ 1 min/mois), `backup-mongo.yml` en ≈ 90 s par nuit (≈ 45 min/mois). Total ≈ 51 min/mois, contre ≈ 450 min pour 20 runs de CI : les crons ne sont pas le poste de coût, et le seul qui pèse est le seul filet en cas de perte de données. Espacer la sauvegarde à deux jours économiserait 22 min/mois en doublant le point de restauration acceptable, ce qui est un mauvais échange sur des données personnelles non reconstituables. Ne pas rejouer sans un changement de cadran : soit le quota redevient contraignant après le passage du dépôt en public, soit la sauvegarde grossit assez pour changer l'ordre de grandeur.

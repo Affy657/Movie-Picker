@@ -8,6 +8,12 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **La page d'accueil n'attend plus TMDB à chaque redémarrage du serveur** : les sélections de films gardent une copie partagée entre les instances, donc un serveur qui vient de démarrer répond en quelques millisecondes au lieu de 6 à 10 secondes. Deux visiteurs qui arrivent en même temps ne déclenchent plus deux fois le même travail, et les réponses de l'API voyagent compressées.
+- **L'application s'affiche plus tôt** : l'outil de suivi des erreurs se charge après le premier rendu au lieu de le retarder, et chaque page demande sept fichiers de moins. Les rangées de l'accueil sont demandées dès l'ouverture et servies depuis le cache du navigateur quand on revient.
+- **Un lien de soirée s'ouvre plus vite** : la liste des films part sans attendre les détails de la soirée, et les fenêtres de partage, de paramètres, de proposition et de tirage ne sont chargées qu'à leur première ouverture, soit un tiers de JavaScript en moins pour un invité. L'animation de la roue est plus régulière sur mobile.
+
 ### Fixed
 
 - **Le retrait d'un gagnant journalisait l'identifiant reçu dans la requête** plutôt que celui du film réellement retiré de la soirée, la dernière alerte CodeQL ouverte du dépôt. Les titres d'onglet (« Mes soirées | Movie Picker »), les aperçus de partage, les courriels de réinitialisation et les métadonnées SEO abandonnent aussi le tiret cadratin et le point médian.
