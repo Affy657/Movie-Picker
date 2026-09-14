@@ -74,15 +74,11 @@ function maxFontForSegment(segAngle: number): number {
   return Math.max(MIN_FONT, Math.min(MAX_FONT, fromArc));
 }
 
-function drawFrame(ctx: CanvasRenderingContext2D, movies: MovieData[], rotation: number): void {
+function drawSegments(ctx: CanvasRenderingContext2D, movies: MovieData[], rotation: number): void {
   const cx = SIZE / 2;
   const cy = SIZE / 2;
   const N = movies.length;
-  if (N === 0) return;
-
   const segAngle = (2 * Math.PI) / N;
-
-  ctx.clearRect(0, 0, SIZE, SIZE);
 
   for (let i = 0; i < N; i++) {
     const startA = -Math.PI / 2 + rotation + i * segAngle;
@@ -118,6 +114,11 @@ function drawFrame(ctx: CanvasRenderingContext2D, movies: MovieData[], rotation:
     ctx.fillText(label, readsRightToLeft ? -LABEL_OUTER : LABEL_OUTER, 0);
     ctx.restore();
   }
+}
+
+function drawHubAndPointer(ctx: CanvasRenderingContext2D): void {
+  const cx = SIZE / 2;
+  const cy = SIZE / 2;
 
   ctx.save();
   ctx.beginPath();
@@ -149,6 +150,42 @@ function drawFrame(ctx: CanvasRenderingContext2D, movies: MovieData[], rotation:
   ctx.restore();
 }
 
+type WheelLayers = {
+  disc: HTMLCanvasElement;
+  overlay: HTMLCanvasElement;
+  restRotation: number;
+};
+
+function createLayer(dpr: number): [HTMLCanvasElement, CanvasRenderingContext2D | null] {
+  const layer = document.createElement('canvas');
+  layer.width = SIZE * dpr;
+  layer.height = SIZE * dpr;
+  const ctx = layer.getContext('2d');
+  ctx?.scale(dpr, dpr);
+  return [layer, ctx];
+}
+
+function renderLayers(movies: MovieData[], restRotation: number, dpr: number): WheelLayers {
+  const [disc, discCtx] = createLayer(dpr);
+  if (discCtx) drawSegments(discCtx, movies, restRotation);
+  const [overlay, overlayCtx] = createLayer(dpr);
+  if (overlayCtx) drawHubAndPointer(overlayCtx);
+  return { disc, overlay, restRotation };
+}
+
+function drawFrame(ctx: CanvasRenderingContext2D, layers: WheelLayers, rotation: number): void {
+  const cx = SIZE / 2;
+  const cy = SIZE / 2;
+
+  ctx.clearRect(0, 0, SIZE, SIZE);
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation - layers.restRotation);
+  ctx.drawImage(layers.disc, -cx, -cy, SIZE, SIZE);
+  ctx.restore();
+  ctx.drawImage(layers.overlay, 0, 0, SIZE, SIZE);
+}
+
 interface SpinningWheelProps {
   movies: MovieData[];
   winnerIndex: number;
@@ -177,12 +214,14 @@ export default function SpinningWheel({
     ctx.scale(dpr, dpr);
 
     const N = movies.length;
+    if (N === 0) return;
     const segAngle = (2 * Math.PI) / N;
     const jitter = randomCenteredUnit() * segAngle * 0.4;
     const targetRotation = SPIN_ROTATIONS * 2 * Math.PI - (winnerIndex + 0.5) * segAngle + jitter;
+    const layers = renderLayers(movies, targetRotation, dpr);
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      drawFrame(ctx, movies, targetRotation);
+      drawFrame(ctx, layers, targetRotation);
       const timeoutId = setTimeout(() => onDoneRef.current(), 0);
       return () => clearTimeout(timeoutId);
     }
@@ -193,17 +232,17 @@ export default function SpinningWheel({
     function animate(ts: number): void {
       startTime ??= ts;
       const t = Math.min((ts - startTime) / WHEEL_SPIN_DURATION_MS, 1);
-      drawFrame(ctx!, movies, easeOutQuint(t) * targetRotation);
+      drawFrame(ctx!, layers, easeOutQuint(t) * targetRotation);
 
       if (t < ANIM_CUT) {
         rafRef.current = requestAnimationFrame(animate);
       } else {
-        drawFrame(ctx!, movies, targetRotation);
+        drawFrame(ctx!, layers, targetRotation);
         onDoneRef.current();
       }
     }
 
-    drawFrame(ctx, movies, 0);
+    drawFrame(ctx, layers, 0);
     rafRef.current = requestAnimationFrame(animate);
 
     return () => {

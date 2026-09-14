@@ -25,11 +25,11 @@ export function useEventDetailPage(slug: string | undefined) {
   const eventQuery = useEvent(slug, hostToken);
   const event = eventQuery.data ?? null;
 
-  const moviesQueryEnabled = !!slug && eventQuery.isSuccess;
+  const moviesQueryEnabled = !!slug;
   const { moviesRefetchInterval } = useEventLive(event ?? undefined, { moviesQueryEnabled });
 
   const [participant, setParticipant] = useState<{ participantId: string; pseudo: string } | null>(
-    null
+    () => (slug ? getStoredParticipant(slug) : null)
   );
 
   const moviesQuery = useMovies(slug, {

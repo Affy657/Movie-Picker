@@ -30,6 +30,7 @@ const canvas2dStub = {
   rotate: noop,
   scale: noop,
   fillText: noop,
+  drawImage: noop,
   setTransform: noop,
 } as unknown as CanvasRenderingContext2D;
 

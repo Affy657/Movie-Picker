@@ -40,9 +40,13 @@ function contrastWithWhite(hex: string): number {
 describe('SpinningWheel', () => {
   const originalGetContext = HTMLCanvasElement.prototype.getContext;
   let rotateCalls: number[] = [];
+  let fillTextCalls = 0;
+  let drawImageCalls = 0;
 
   beforeEach(() => {
     rotateCalls = [];
+    fillTextCalls = 0;
+    drawImageCalls = 0;
     HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
       clearRect: vi.fn(),
       beginPath: vi.fn(),
@@ -57,7 +61,12 @@ describe('SpinningWheel', () => {
       translate: vi.fn(),
       rotate: (angle: number) => rotateCalls.push(angle),
       scale: vi.fn(),
-      fillText: vi.fn(),
+      fillText: () => {
+        fillTextCalls++;
+      },
+      drawImage: () => {
+        drawImageCalls++;
+      },
       measureText: () => ({ width: 0 }),
     })) as unknown as typeof HTMLCanvasElement.prototype.getContext;
   });
@@ -97,9 +106,30 @@ describe('SpinningWheel', () => {
 
     render(<SpinningWheel movies={makeMovies(22)} winnerIndex={7} onDone={vi.fn()} />);
 
-    expect(rotateCalls).toHaveLength(22);
+    const discRotations = 1;
+    expect(rotateCalls).toHaveLength(22 + discRotations);
     for (const angle of rotateCalls) {
       expect(Math.cos(angle)).toBeGreaterThan(-1e-9);
     }
+  });
+
+  it('dessine les libellés une seule fois puis fait tourner le disque image par image', async () => {
+    stubMatchMedia(false);
+    const frames: Array<FrameRequestCallback> = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+
+    render(<SpinningWheel movies={makeMovies(6)} winnerIndex={2} onDone={vi.fn()} />);
+    frames.shift()!(0);
+    frames.shift()!(100);
+    frames.shift()!(200);
+
+    const framesDrawn = 4;
+    const layersPerFrame = 2;
+    expect(fillTextCalls).toBe(6);
+    expect(drawImageCalls).toBe(framesDrawn * layersPerFrame);
   });
 });

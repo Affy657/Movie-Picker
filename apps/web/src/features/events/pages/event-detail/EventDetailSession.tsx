@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -10,7 +12,6 @@ import {
 } from 'react';
 import { useNavigate } from 'react-router';
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import { Film, Users } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import {
   formatMyEventsListDate,
@@ -18,8 +19,6 @@ import {
   formatEventDateLong,
 } from '@/shared/utils/formatMyEventsListDate';
 import JoinForm from '@/features/events/components/JoinForm';
-import WheelModal from '@/features/events/components/WheelModal';
-import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
 import EventParticipantsList from '@/features/events/components/EventParticipantsList';
 import EventDetailHeader from '@/features/events/pages/event-detail/EventDetailHeader';
 import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMoviesLoadError';
@@ -40,16 +39,25 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import ShareDialog from '@/shared/components/ShareDialog';
-import EventInviteFriendsTab from '@/features/events/components/EventInviteFriendsTab';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
 import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import { eventCountdown, type EventCountdown } from '@/shared/utils/eventCountdown';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
+import { useEverOpened } from '@/shared/hooks/useEverOpened';
+import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
+
+const loadWheelModal = () => import('@/features/events/components/WheelModal');
+const loadHostEventSettingsPanel = () =>
+  import('@/features/events/components/HostEventSettingsPanel');
+const loadEventShareDialog = () => import('@/features/events/pages/event-detail/EventShareDialog');
+const WheelModal = lazy(loadWheelModal);
+const HostEventSettingsPanel = lazy(loadHostEventSettingsPanel);
+const EventShareDialog = lazy(loadEventShareDialog);
+const OVERLAY_CHUNKS = [loadWheelModal, loadHostEventSettingsPanel, loadEventShareDialog];
 
 type ParticipantRef = { participantId: string; pseudo: string };
 
@@ -191,6 +199,7 @@ export default function EventDetailSession({
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  useIdlePrefetch(OVERLAY_CHUNKS);
   const [shareInitialTab, setShareInitialTab] = useState<'link' | 'friends'>('link');
   const openShare = useCallback((tab: 'link' | 'friends' = 'link') => {
     setShareInitialTab(tab);
@@ -547,70 +556,6 @@ export default function EventDetailSession({
 
 type WheelApi = ReturnType<typeof useEventWheel>;
 
-function EventShareDialog({
-  open,
-  onClose,
-  slug,
-  event,
-  shareUrl,
-  dateFormatted,
-  timeFormatted,
-  dateLabel,
-  participantsLabel,
-  initialTab,
-  hostCanInvite,
-  friendsBadge,
-  t,
-}: Readonly<{
-  open: boolean;
-  onClose: () => void;
-  slug: string;
-  event: EventData;
-  shareUrl: string;
-  dateFormatted: string;
-  timeFormatted: string;
-  dateLabel: string;
-  participantsLabel: string;
-  initialTab: 'link' | 'friends' | undefined;
-  hostCanInvite: boolean;
-  friendsBadge: number | undefined;
-  t: ReturnType<typeof useTranslation>['t'];
-}>) {
-  const friendsTab = hostCanInvite
-    ? {
-        id: 'friends',
-        label: t('share.tabFriends'),
-        icon: <Users size={15} aria-hidden />,
-        badge: friendsBadge,
-        content: <EventInviteFriendsTab slug={slug} onNavigate={onClose} />,
-      }
-    : undefined;
-
-  return (
-    <ShareDialog
-      open={open}
-      onClose={onClose}
-      title={t('events.share.dialogTitle')}
-      url={shareUrl}
-      qrHint={t('events.share.qrHint')}
-      fileSlug={slug}
-      preview={{
-        icon: <Film size={20} aria-hidden />,
-        name: event.title,
-        meta: [dateFormatted, participantsLabel],
-      }}
-      shareText={t('events.share.shareText', {
-        title: event.title,
-        time: timeFormatted,
-        date: dateLabel,
-      })}
-      surface="event"
-      initialTab={initialTab}
-      extraTab={friendsTab}
-    />
-  );
-}
-
 function EventDetailSessionOverlays({
   slug,
   hostToken,
@@ -669,37 +614,45 @@ function EventDetailSessionOverlays({
     t
   );
 
+  const settingsEverOpened = useEverOpened(settingsOpen);
+  const shareEverOpened = useEverOpened(shareOpen);
+
   return (
     <>
-      {canConfigure ? (
-        <HostEventSettingsPanel
-          slug={slug}
-          hostToken={hostToken}
-          event={event}
-          open={settingsOpen}
-          onClose={onCloseSettings}
-        />
+      {canConfigure && settingsEverOpened ? (
+        <Suspense fallback={null}>
+          <HostEventSettingsPanel
+            slug={slug}
+            hostToken={hostToken}
+            event={event}
+            open={settingsOpen}
+            onClose={onCloseSettings}
+          />
+        </Suspense>
       ) : null}
       {wheelError ? (
         <p className="error" role="alert">
           {wheelError}
         </p>
       ) : null}
-      <EventShareDialog
-        open={shareOpen}
-        onClose={onCloseShare}
-        slug={slug}
-        event={event}
-        shareUrl={shareUrl}
-        dateFormatted={dateFormatted}
-        timeFormatted={timeFormatted}
-        dateLabel={dateLabel}
-        participantsLabel={participantsLabel}
-        initialTab={shareInitialTab}
-        hostCanInvite={hostCanInvite}
-        friendsBadge={eligibleFollowsQuery.data?.follows.length}
-        t={t}
-      />
+      {shareEverOpened ? (
+        <Suspense fallback={null}>
+          <EventShareDialog
+            open={shareOpen}
+            onClose={onCloseShare}
+            slug={slug}
+            event={event}
+            shareUrl={shareUrl}
+            dateFormatted={dateFormatted}
+            timeFormatted={timeFormatted}
+            dateLabel={dateLabel}
+            participantsLabel={participantsLabel}
+            initialTab={shareInitialTab}
+            hostCanInvite={hostCanInvite}
+            friendsBadge={eligibleFollowsQuery.data?.follows.length}
+          />
+        </Suspense>
+      ) : null}
       {moviesQuery.isError ? (
         <EventMoviesLoadError error={moviesQuery.error} onRetry={() => moviesQuery.refetch()} />
       ) : null}
@@ -930,19 +883,21 @@ function EventDetailSessionBody({
         </p>
       ) : null}
       {wheel.isModalOpen && wheel.winnerIndex >= 0 && wheel.spinWinner ? (
-        <WheelModal
-          open={wheel.isModalOpen}
-          movies={wheel.spinPool}
-          winnerIndex={wheel.winnerIndex}
-          winner={wheel.spinWinner}
-          wheelKey={wheel.wheelKey}
-          onClose={wheel.dismissModal}
-          onSpinComplete={wheel.revealWinner}
-          onRelaunch={wheel.canRelaunchFromModal ? wheel.launch : undefined}
-          skipSpin={wheel.manualReveal}
-          winnerCount={wheel.winnerCount}
-          remainingDraws={wheel.remainingDraws}
-        />
+        <Suspense fallback={null}>
+          <WheelModal
+            open={wheel.isModalOpen}
+            movies={wheel.spinPool}
+            winnerIndex={wheel.winnerIndex}
+            winner={wheel.spinWinner}
+            wheelKey={wheel.wheelKey}
+            onClose={wheel.dismissModal}
+            onSpinComplete={wheel.revealWinner}
+            onRelaunch={wheel.canRelaunchFromModal ? wheel.launch : undefined}
+            skipSpin={wheel.manualReveal}
+            winnerCount={wheel.winnerCount}
+            remainingDraws={wheel.remainingDraws}
+          />
+        </Suspense>
       ) : null}
       <div ref={moviesSectionRef}>
         <EventMoviesSection

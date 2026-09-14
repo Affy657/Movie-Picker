@@ -181,7 +181,7 @@ describe('EventDetail (MSW)', () => {
     renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^partager$/i }));
-    expect(screen.getByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /télécharger/i })).toBeInTheDocument();
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
@@ -193,7 +193,7 @@ describe('EventDetail (MSW)', () => {
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(document.title).toBe(pageTitle('Soirée démo'));
     await user.click(screen.getByRole('button', { name: /^partager$/i }));
-    expect(screen.getByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
 
@@ -211,12 +211,11 @@ describe('EventDetail (MSW)', () => {
 
     const settingsToggle = screen.getByRole('button', { name: 'Paramètres de la soirée' });
     expect(settingsToggle).toHaveAttribute('aria-haspopup', 'dialog');
-    const settingsDialog = document.querySelector('dialog[aria-labelledby]');
-    expect(settingsDialog).not.toHaveAttribute('open');
+    expect(screen.queryByLabelText(/nom de la soirée/i)).not.toBeInTheDocument();
 
     await userEvent.setup().click(settingsToggle);
-    await waitFor(() => expect(settingsDialog).toHaveAttribute('open'));
-    expect(screen.getByLabelText(/nom de la soirée/i)).toBeInTheDocument();
+    const nameField = await screen.findByLabelText(/nom de la soirée/i);
+    await waitFor(() => expect(nameField.closest('dialog')).toHaveAttribute('open'));
   });
 
   it('affiche erreur films + Réessayer si le chargement des films échoue', async () => {

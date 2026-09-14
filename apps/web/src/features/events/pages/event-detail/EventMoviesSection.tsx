@@ -1,15 +1,15 @@
-import { useCallback, useId, useMemo, useState, type RefObject } from 'react';
+import { lazy, Suspense, useCallback, useId, useMemo, useState, type RefObject } from 'react';
 import clsx from 'clsx';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { clearMovieVote, setMovieWheelExclusion, voteMovie } from '@/features/movies/api/moviesApi';
 import { API_ERROR_REASONS, ApiError, getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import { promptToJoinEvent } from '@/features/events/joinPrompt';
 import type { MovieData } from '@/shared/types/movie';
-import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import MovieList, { type MovieRowSortKey } from '@/features/movies/components/MovieList';
 import SortControl from '@/features/movies/components/SortControl';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
@@ -25,6 +25,10 @@ import {
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import styles from './EventMoviesSection.module.css';
+
+const loadAddMoviePanel = () => import('@/features/movies/components/AddMoviePanel');
+const AddMoviePanel = lazy(loadAddMoviePanel);
+const ADD_MOVIE_CHUNKS = [loadAddMoviePanel];
 
 function watchlistKey(tmdbId: number, mediaType: MovieData['mediaType']): string {
   return `${tmdbId}|${mediaType ?? 'movie'}`;
@@ -130,6 +134,7 @@ export default function EventMoviesSection({
   const ratingScale = user?.ratingScale;
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  useIdlePrefetch(ADD_MOVIE_CHUNKS);
   const sectionHeadingId = useId();
   const [sortBy, setSortBy] = useState<MovieRowSortKey>('score');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
@@ -355,20 +360,22 @@ export default function EventMoviesSection({
       </h2>
       {!isFinished && participant && addMovieOpen && (
         <div className={styles.addSection}>
-          <AddMoviePanel
-            triggerLabel={t('movies.search.label')}
-            panelTitle={t('movies.search.label')}
-            slug={slug}
-            participantId={participant.participantId}
-            participantPseudo={participant.pseudo}
-            existingMovies={movies}
-            onAdded={refreshAll}
-            disabled={isFinished}
-            open={addMovieOpen}
-            onOpenChange={onAddMovieOpenChange}
-            hideTrigger
-            returnFocusRef={addMovieTriggerRef}
-          />
+          <Suspense fallback={null}>
+            <AddMoviePanel
+              triggerLabel={t('movies.search.label')}
+              panelTitle={t('movies.search.label')}
+              slug={slug}
+              participantId={participant.participantId}
+              participantPseudo={participant.pseudo}
+              existingMovies={movies}
+              onAdded={refreshAll}
+              disabled={isFinished}
+              open={addMovieOpen}
+              onOpenChange={onAddMovieOpenChange}
+              hideTrigger
+              returnFocusRef={addMovieTriggerRef}
+            />
+          </Suspense>
         </div>
       )}
       {actionError && (
