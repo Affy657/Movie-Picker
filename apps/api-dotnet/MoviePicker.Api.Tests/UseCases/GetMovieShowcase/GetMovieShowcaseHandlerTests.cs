@@ -395,4 +395,24 @@ public sealed class GetMovieShowcaseHandlerTests
             c => c.SetAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<MovieShowcaseItemResponse>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Theory]
+    [InlineData(MovieShowcaseSections.Theme, "nawak", null, null, null)]
+    [InlineData(MovieShowcaseSections.Provider, null, "nawak", null, null)]
+    [InlineData(MovieShowcaseSections.Recommendations, null, null, null, null)]
+    [InlineData(MovieShowcaseSections.Collection, null, null, null, null)]
+    public async Task HandleAsync_InvalidQuery_IsRejectedBeforeAnyCacheLookup(
+        string section,
+        string? theme,
+        string? provider,
+        int? collectionId,
+        int? seedTmdbId)
+    {
+        await Assert.ThrowsAsync<BadRequestException>(
+            () => Build().HandleAsync(new MovieShowcaseQuery(section, theme, null, collectionId, provider, seedTmdbId)));
+
+        _shared.Verify(
+            c => c.TryGetAsync<IReadOnlyList<MovieShowcaseItemResponse>>(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }

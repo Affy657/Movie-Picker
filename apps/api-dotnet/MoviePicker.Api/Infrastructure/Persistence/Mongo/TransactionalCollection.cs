@@ -177,4 +177,7 @@ public sealed class MongoCollectionFactory
 
     public TransactionalCollection<TDocument> GetCollection<TDocument>(string name) =>
         new(_database.GetCollection<TDocument>(name), _sessions);
+
+    public IMongoCollection<TDocument> GetCollectionOutsideTransactions<TDocument>(string name) =>
+        _database.GetCollection<TDocument>(name);
 }

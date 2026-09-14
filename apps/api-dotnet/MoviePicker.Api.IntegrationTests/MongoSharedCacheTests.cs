@@ -72,6 +72,23 @@ public sealed class MongoSharedCacheTests : IClassFixture<MoviePickerApplication
     }
 
     [MongoFact]
+    public async Task SetAsync_InsideARolledBackTransaction_StillPersistsTheEntry()
+    {
+        var key = "snapshot:" + Guid.NewGuid().ToString("N");
+        using var scope = _factory.Services.CreateScope();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            unitOfWork.ExecuteAsync(async token =>
+            {
+                await Cache().SetAsync(key, "cached-anyway", TimeSpan.FromMinutes(5), token);
+                throw new InvalidOperationException("le metier echoue");
+            }));
+
+        Assert.Equal("cached-anyway", (await Cache().TryGetAsync<string>(key))?.Value);
+    }
+
+    [MongoFact]
     public async Task TryGetAsync_UnknownKey_ReturnsNull()
     {
         Assert.Null(await Cache().TryGetAsync<string>("snapshot:" + Guid.NewGuid().ToString("N")));

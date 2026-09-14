@@ -8,12 +8,12 @@ public sealed class MongoSharedCache : ISharedCache
 {
     public const string CollectionName = "shared_cache";
 
-    private readonly TransactionalCollection<SharedCacheDocument> _collection;
+    private readonly IMongoCollection<SharedCacheDocument> _collection;
     private readonly ILogger<MongoSharedCache> _logger;
 
     public MongoSharedCache(MongoCollectionFactory collections, ILogger<MongoSharedCache> logger)
     {
-        _collection = collections.GetCollection<SharedCacheDocument>(CollectionName);
+        _collection = collections.GetCollectionOutsideTransactions<SharedCacheDocument>(CollectionName);
         _logger = logger;
     }
 

@@ -39,6 +39,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         var genreIds = NormalizeGenreIds(query.GenreIds);
         var theme = string.IsNullOrWhiteSpace(query.Theme) ? null : query.Theme.Trim();
         var provider = string.IsNullOrWhiteSpace(query.Provider) ? null : query.Provider.Trim();
+        RejectInvalidQuery(section, theme, provider, query);
         var cacheKey = BuildCacheKey(section, theme, genreIds, query.CollectionId, provider, query.SeedTmdbId);
 
         var items = await _cache.GetOrLoadAsync(
@@ -49,6 +50,22 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             shareAcrossInstances: IsCatalogSection(section, genreIds));
 
         return BuildResponse(section, theme, items);
+    }
+
+    private void RejectInvalidQuery(string section, string? theme, string? provider, MovieShowcaseQuery query)
+    {
+        switch (section)
+        {
+            case MovieShowcaseSections.Provider
+                when MovieShowcaseCatalog.CriteriaForProvider(provider, _options.TmdbWatchProvidersRegion) is null:
+                throw new BadRequestException("Plateforme inconnue");
+            case MovieShowcaseSections.Recommendations when query.SeedTmdbId is not > 0:
+                throw new BadRequestException("Film de référence manquant");
+            case MovieShowcaseSections.Collection when query.CollectionId is not > 0:
+                throw new BadRequestException("Identifiant de collection manquant");
+            case MovieShowcaseSections.Theme when MovieShowcaseCatalog.CriteriaForTheme(theme) is null:
+                throw new BadRequestException("Thème inconnu");
+        }
     }
 
     private static bool IsCatalogSection(string section, IReadOnlyList<int> genreIds) =>
