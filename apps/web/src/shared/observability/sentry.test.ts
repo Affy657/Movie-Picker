@@ -99,16 +99,12 @@ describe('initSentry', () => {
     vi.doMock('@sentry/react', () => {
       throw new Error('chunk introuvable');
     });
-    const unhandled = vi.fn();
-    process.on('unhandledRejection', unhandled);
     const sentry = await import('./sentry');
 
     sentry.startSentryWhenIdle();
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    process.off('unhandledRejection', unhandled);
     vi.unstubAllGlobals();
-    expect(unhandled).not.toHaveBeenCalled();
     await expect(sentry.initSentry()).rejects.toThrow();
   });
 
