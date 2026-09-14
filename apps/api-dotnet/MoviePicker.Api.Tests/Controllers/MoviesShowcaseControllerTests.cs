@@ -11,7 +11,7 @@ public sealed class MoviesShowcaseControllerTests
 {
     private readonly Mock<IGetMovieShowcaseHandler> _showcase = new();
     private readonly Mock<IGetMovieCollectionsHandler> _collections = new();
-    private readonly MoviesShowcaseController _controller = new();
+    private readonly MoviesShowcaseController _controller = new MoviesShowcaseController().WithContext();
 
     private MovieShowcaseQuery? _captured;
 
@@ -118,5 +118,21 @@ public sealed class MoviesShowcaseControllerTests
         var result = await _controller.GetCollections(_collections.Object, CancellationToken.None);
 
         Assert.Same(payload, Assert.IsType<OkObjectResult>(result).Value);
+    }
+
+    [Fact]
+    public async Task PublicEndpoints_LetTheBrowserCacheTheResponse()
+    {
+        CaptureQuery();
+        _collections
+            .Setup(h => h.HandleAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MovieCollectionListResponse { Items = [] });
+
+        await GetShowcaseAsync();
+        var showcaseHeader = _controller.Response.Headers.CacheControl.ToString();
+        await _controller.GetCollections(_collections.Object, CancellationToken.None);
+
+        Assert.Equal("public, max-age=300, stale-while-revalidate=3600", showcaseHeader);
+        Assert.Equal("public, max-age=300, stale-while-revalidate=3600", _controller.Response.Headers.CacheControl.ToString());
     }
 }
