@@ -108,7 +108,7 @@ function startApiStub(port) {
   const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Origin', BASE);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, sentry-trace, baggage');
     if (req.method === 'OPTIONS') {
       res.writeHead(204).end();
       return;
