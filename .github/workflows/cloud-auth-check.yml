@@ -1,0 +1,52 @@
+# Proves that the keyless authentication of the workflows still works, without touching anything:
+# the GitHub OIDC token is exchanged for the CI service account on GCP (Workload Identity
+# Federation) and for the deploy role on AWS, then each side answers a read-only call. Run it
+# after any change to the federation (pool, provider, role trust policy, environment name) before
+# relying on a deployment to find out.
+
+name: 🔐 Cloud auth check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: 🔐 Exchange the OIDC token on both clouds
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: GCP, read-only calls as the CI service account
+        run: |
+          gcloud auth list --filter=status:ACTIVE --format='value(account)'
+          gcloud secrets describe SCHEDULER_TOKEN --format='value(name)' >/dev/null
+          gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)'
+          echo "GCP federation OK"
+        env:
+          GCP_REGION: europe-west1
+          CLOUD_RUN_SERVICE_NAME: movie-picker-api
+      - uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
+      - name: AWS, read-only calls as the deploy role
+        run: |
+          aws sts get-caller-identity --query Arn --output text | sed -E 's#:[0-9]{12}:#:<account>:#'
+          aws s3api list-objects-v2 --bucket "$AWS_S3_BUCKET" --max-items 1 --query 'KeyCount' --output text >/dev/null
+          echo "AWS federation OK"
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}

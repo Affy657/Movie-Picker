@@ -25,18 +25,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - verify: `git merge-base --is-ancestor chore/ci-keyless-oidc master && echo REGLE || echo OUVERT`
 - fix: configurer WIF et le rôle AWS, puis réécrire le patch. **La branche ne se rebase plus** : ses huit lignes modifiaient les jobs `deploy-api` et `deploy-front` de `ci-cd.yml`, partis dans `deploy.yml` le 2026-09-10. `git merge-tree master chore/ci-keyless-oidc` rend un conflit sur `ci-cd.yml` dont le contexte n'existe plus. Prendre l'intention, pas le diff. Côté GCP, l'authentification n'a plus qu'un seul endroit depuis le 2026-09-15 : `.github/actions/gcloud-auth/action.yml`, appelée par les cinq jobs qui parlent à GCP ; c'est là que `credentials_json` devient `workload_identity_provider`, et nulle part ailleurs.
 - fini-quand: plus aucun secret d'identifiant statique dans les secrets GitHub du dépôt
-- refs: recoupe DEBT-003 et le lot Terraform 5 de `roadmap.md`, qui traite le même sujet au fond
-
-## DEBT-003 une clé d'accès du compte root AWS existe encore
-
-- state: humain
-- bloque: la suppression d'une clé root ne se fait que dans « Security credentials » du compte root, aucune API n'y donne accès
-- impact: la clé root n'a aucune limite de périmètre. Sa compromission donne le compte entier, y compris la facturation et la suppression des sauvegardes.
-- verify: `aws iam get-account-summary --query 'SummaryMap.AccountAccessKeysPresent'` ; encore ouvert tant que la réponse vaut `1`
-- fix: configurer le profil `aws` local sur une identité IAM dédiée aux gestes d'exploitation, vérifier que plus aucun script local ne dépend du profil root, puis supprimer la clé root.
-- fini-quand: `AccountAccessKeysPresent` vaut `0` et `aws sts get-caller-identity` ne rend plus un ARN en `:root`
-- piege: **la moitié de l'intitulé d'origine était périmée, mesuré le 2026-09-10.** Le volet CI est déjà fait : l'utilisateur `movie-picker-github-actions` existe depuis le 2026-03-16, porte la politique gérée `MoviePickerDeploy` dont les trois déclarations correspondent au caractère près à `infra/iam-github-actions-deploy-policy.json`, et sa clé est active. Le bucket du front est fermé sur les quatre verrous (`BlockPublicAcls`, `IgnorePublicAcls`, `BlockPublicPolicy`, `RestrictPublicBuckets`) et sa politique n'est pas publique. Le MFA du compte root est actif. **Ce qui reste tient en un point** : `aws sts get-caller-identity` en local rend un ARN `:root`, donc la clé root est celle du poste de travail, pas celle de la CI. Le risque n'est pas dans le dépôt ni dans la chaîne de déploiement, il est dans le fichier d'identifiants local.
-- refs: DEBT-002 le supprime au fond en retirant AWS de la chaîne. Ne pas invoquer C7 comme motif : les identifiants d'infrastructure sont sortis du dépôt le 2026-09-10 et n'ont jamais été le sujet de cette entrée.
+- refs: recoupe le lot Terraform 5 de `roadmap.md`, qui traite le même sujet au fond
 
 ## DEBT-005 enrichissement TMDB sur le chemin sondé
 
@@ -309,7 +298,7 @@ La bascule est **faite**. Ce qu'elle a rendu lisible, c'est **chaque commit jama
 
 **Traité le 2026-09-10, ne pas refaire :**
 
-- **Les identifiants d'infrastructure sont sortis des fichiers suivis** : compte AWS, distribution CloudFront, ARN du certificat ACM, nom du bucket, projet GCP et organisation Sentry sont remplacés par des gabarits `<COMME_CECI>`, et `infra/README.md` porte la table qui dit par quelle commande relever chaque valeur. `scripts/apply-cloudfront-headers.sh` n'a plus de valeur par défaut, il sort en 2 si `DISTRIBUTION_ID` manque. Aucun n'était un secret et aucun n'était dans les PR ni les tickets, donc le head suffisait, sans réécriture d'historique. **Ce qui reste de DEBT-003 n'en est pas dispensé pour autant** : des clés root AWS actives, même derrière une cible qui n'est plus nommée, restent le vrai sujet.
+- **Les identifiants d'infrastructure sont sortis des fichiers suivis** : compte AWS, distribution CloudFront, ARN du certificat ACM, nom du bucket, projet GCP et organisation Sentry sont remplacés par des gabarits `<COMME_CECI>`, et `infra/README.md` porte la table qui dit par quelle commande relever chaque valeur. `scripts/apply-cloudfront-headers.sh` n'a plus de valeur par défaut, il sort en 2 si `DISTRIBUTION_ID` manque. Aucun n'était un secret et aucun n'était dans les PR ni les tickets, donc le head suffisait, sans réécriture d'historique. La clé d'accès du compte root AWS, qui n'a jamais été le sujet de cette sortie, est supprimée depuis le 2026-09-15 : le poste de travail utilise un utilisateur IAM dédié.
 - **Aucune contribution externe n'est possible sans un geste de l'auteur.** `CONTRIBUTING.md` le dit, la licence l'impose, et les jobs d'entrée de `ci-cd.yml` (`changes`, `gitleaks`, `lint-workflows`, plus `sonar` dont l'`always()` ignorerait un `changes` sauté) portent `github.event.pull_request.head.repo.fork != true`. Une PR de fork ne déclenche donc rien : ni minutes dépensées, ni `sonar` rouge faute de secrets. `SECURITY.md` détourne les failles vers un canal privé plutôt qu'un ticket public.
 
 **Les réglages posés le 2026-09-10, juste après la bascule.** Ne pas les reposer, les vérifier :

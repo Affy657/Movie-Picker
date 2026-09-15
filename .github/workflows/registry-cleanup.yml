@@ -22,7 +22,7 @@ jobs:
     name: 🧹 Apply the retention policy
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    # Reads GCP_SA_KEY: `production` environment, like every job carrying that secret.
+    # Talks to GCP: `production` environment, whose branch policy is what the federation trusts.
     environment: production
     permissions:
       contents: read
@@ -33,7 +33,8 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/gcloud-auth
         with:
-          credentials-json: ${{ secrets.GCP_SA_KEY }}
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
       - name: set-cleanup-policies (keep the 10 most recent, purge > 30 days)
         run: |

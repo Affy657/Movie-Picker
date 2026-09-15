@@ -53,7 +53,8 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/gcloud-auth
         with:
-          credentials-json: ${{ secrets.GCP_SA_KEY }}
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
       - name: Determine the target revision
         id: target

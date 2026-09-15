@@ -1,8 +1,11 @@
 name: "GCP auth + gcloud"
-description: "Authenticates the runner on GCP with the CI service account JSON key, then installs gcloud. The only place to rewrite for Workload Identity Federation (DEBT-002)."
+description: "Authenticates the runner on GCP through Workload Identity Federation (GitHub OIDC token exchanged for the CI service account), then installs gcloud. The only place where the GCP authentication lives."
 inputs:
-  credentials-json:
-    description: "Service account JSON key (GCP_SA_KEY secret)"
+  workload-identity-provider:
+    description: "Full resource name of the Workload Identity provider (GCP_WORKLOAD_IDENTITY_PROVIDER secret)"
+    required: true
+  service-account:
+    description: "CI service account to impersonate (GCP_SERVICE_ACCOUNT secret)"
     required: true
   project-id:
     description: "GCP project (GCP_PROJECT_ID secret)"
@@ -12,7 +15,8 @@ runs:
   steps:
     - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
       with:
-        credentials_json: ${{ inputs.credentials-json }}
+        workload_identity_provider: ${{ inputs.workload-identity-provider }}
+        service_account: ${{ inputs.service-account }}
     - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
       with:
         project_id: ${{ inputs.project-id }}
