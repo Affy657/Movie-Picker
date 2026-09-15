@@ -284,10 +284,10 @@ public sealed class MongoUserRepository : IUserRepository
         var filter = Builders<UserDocument>.Filter.And(
             Builders<UserDocument>.Filter.Eq(x => x.Id, user.Id),
             OptimisticConcurrency.ExpectedVersion<UserDocument>(x => x.Version, user.Version));
-        ReplaceOneResult result;
+        UpdateResult result;
         try
         {
-            result = await _collection.ReplaceOneAsync(filter, doc, cancellationToken: ct);
+            result = await _collection.UpdateOneAsync(filter, KnownFieldsUpdate.From(doc), cancellationToken: ct);
         }
         catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
         {
@@ -295,7 +295,7 @@ public sealed class MongoUserRepository : IUserRepository
             throw;
         }
         if (result.MatchedCount == 0)
-            await OptimisticConcurrency.ThrowForUnmatchedReplaceAsync(_collection, x => x.Id == user.Id, "Utilisateur", ct);
+            await OptimisticConcurrency.ThrowForUnmatchedWriteAsync(_collection, x => x.Id == user.Id, "Utilisateur", ct);
         return UserDocumentMapper.ToDomain(doc);
     }
 

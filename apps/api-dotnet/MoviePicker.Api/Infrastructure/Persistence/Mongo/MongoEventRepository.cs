@@ -51,9 +51,9 @@ public sealed class MongoEventRepository : IEventRepository
         var filter = Builders<EventDocument>.Filter.And(
             Builders<EventDocument>.Filter.Eq(x => x.Id, evt.Id),
             OptimisticConcurrency.ExpectedVersion<EventDocument>(x => x.Version, evt.Version));
-        var result = await _collection.ReplaceOneAsync(filter, doc, cancellationToken: ct);
+        var result = await _collection.UpdateOneAsync(filter, KnownFieldsUpdate.From(doc), cancellationToken: ct);
         if (result.MatchedCount == 0)
-            await OptimisticConcurrency.ThrowForUnmatchedReplaceAsync(_collection, x => x.Id == evt.Id, "Soirée", ct);
+            await OptimisticConcurrency.ThrowForUnmatchedWriteAsync(_collection, x => x.Id == evt.Id, "Soirée", ct);
         return EventDocumentMapper.ToDomain(doc);
     }
 

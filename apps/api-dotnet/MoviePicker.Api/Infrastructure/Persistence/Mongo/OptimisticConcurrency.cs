@@ -17,7 +17,7 @@ internal static class OptimisticConcurrency
             : builder.Eq(field, expected);
     }
 
-    public static async Task ThrowForUnmatchedReplaceAsync<TDocument>(
+    public static async Task ThrowForUnmatchedWriteAsync<TDocument>(
         TransactionalCollection<TDocument> collection,
         Expression<Func<TDocument, bool>> byId,
         string entityLabel,
