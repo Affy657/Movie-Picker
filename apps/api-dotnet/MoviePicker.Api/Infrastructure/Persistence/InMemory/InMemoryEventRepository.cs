@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
 
@@ -36,7 +37,7 @@ public sealed class InMemoryEventRepository : IEventRepository
         if (!_byId.TryGetValue(eventId, out var evt) || evt.WatchlistCleanedAt is not null)
             return Task.FromResult(false);
 
-        var stamped = evt with { WatchlistCleanedAt = cleanedAt, UpdatedAt = cleanedAt };
+        var stamped = evt with { WatchlistCleanedAt = cleanedAt, UpdatedAt = cleanedAt, Version = evt.Version + 1 };
         _byId[eventId] = stamped;
         if (!string.IsNullOrEmpty(stamped.Slug))
             _bySlug[stamped.Slug] = stamped;
@@ -45,10 +46,25 @@ public sealed class InMemoryEventRepository : IEventRepository
 
     public Task<Event> UpdateAsync(Event evt, CancellationToken ct = default)
     {
-        _byId[evt.Id] = evt;
-        if (!string.IsNullOrEmpty(evt.Slug))
-            _bySlug[evt.Slug] = evt;
-        return Task.FromResult(evt);
+        if (!_byId.TryGetValue(evt.Id, out var current))
+            throw new NotFoundException("Soirée introuvable");
+        if (current.Version != evt.Version)
+            throw new ConflictException(
+                "Soirée modifiée entre-temps. Rechargez la page et réessayez.",
+                ConcurrencyConflict.Reason);
+
+        var saved = evt with { Version = evt.Version + 1 };
+        _byId[saved.Id] = saved;
+        if (!string.IsNullOrEmpty(saved.Slug))
+            _bySlug[saved.Slug] = saved;
+        return Task.FromResult(saved);
+    }
+
+    public Task LockForWriteAsync(string eventId, CancellationToken ct = default)
+    {
+        if (!_byId.ContainsKey(eventId))
+            throw new NotFoundException("Soirée introuvable");
+        return Task.CompletedTask;
     }
 
     public Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default)
@@ -145,7 +161,7 @@ public sealed class InMemoryEventRepository : IEventRepository
         long count = 0;
         foreach (var e in _byId.Values.Where(e => e.CreatorUserId == creatorUserId).ToList())
         {
-            var anonymized = e with { CreatorUserId = null };
+            var anonymized = e with { CreatorUserId = null, Version = e.Version + 1 };
             _byId[e.Id] = anonymized;
             if (!string.IsNullOrEmpty(anonymized.Slug))
                 _bySlug[anonymized.Slug] = anonymized;

@@ -69,6 +69,17 @@ public sealed class MongoSeenMarkRepository : ISeenMarkRepository
             x => x.EventId == eventId && x.MovieId == movieId,
             cancellationToken: ct);
 
+    public async Task<long> DeleteByMovieIdsAsync(string eventId, IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        if (movieIds.Count == 0)
+            return 0;
+        var filter = Builders<SeenMarkDocument>.Filter.And(
+            Builders<SeenMarkDocument>.Filter.Eq(x => x.EventId, eventId),
+            Builders<SeenMarkDocument>.Filter.In(x => x.MovieId, movieIds));
+        var result = await _collection.DeleteManyAsync(filter, ct);
+        return result.DeletedCount;
+    }
+
     public async Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default) =>
         await _collection.DeleteManyAsync(
             x => x.EventId == eventId && x.ParticipantId == participantId,

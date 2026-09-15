@@ -490,8 +490,9 @@ internal static class DevelopmentScenarioSeed
             Random.Shared);
 
         var now = DateTimeOffset.UtcNow;
-        var withWinner = CloneEvent(evt, winnerMovieId: winner.Id, updatedAt: now);
-        await events.UpdateAsync(withWinner, ct).ConfigureAwait(false);
+        var withWinner = await events
+            .UpdateAsync(CloneEvent(evt, winnerMovieId: winner.Id, updatedAt: now), ct)
+            .ConfigureAwait(false);
         var closed = CloneEvent(withWinner, closedAt: now, updatedAt: now);
         await events.UpdateAsync(closed, ct).ConfigureAwait(false);
 

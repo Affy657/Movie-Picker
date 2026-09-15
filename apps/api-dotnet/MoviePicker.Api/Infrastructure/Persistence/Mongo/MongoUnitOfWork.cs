@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
@@ -6,19 +7,24 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoUnitOfWork : IUnitOfWork
 {
+    private const int IllegalOperationCode = 20;
+
     private static int _transactionsUnavailableLogged;
 
     private readonly IMongoClient _client;
     private readonly MongoSessionAccessor _sessions;
+    private readonly bool _isDevelopment;
     private readonly ILogger<MongoUnitOfWork> _logger;
 
     public MongoUnitOfWork(
         IMongoClient client,
         MongoSessionAccessor sessions,
+        IHostEnvironment environment,
         ILogger<MongoUnitOfWork> logger)
     {
         _client = client;
         _sessions = sessions;
+        _isDevelopment = environment.IsDevelopment();
         _logger = logger;
     }
 
@@ -42,7 +48,7 @@ public sealed class MongoUnitOfWork : IUnitOfWork
                 },
                 cancellationToken: ct);
         }
-        catch (MongoException ex) when (IsTransactionUnsupported(ex))
+        catch (MongoException ex) when (ShouldRunWithoutTransaction(ex, _isDevelopment))
         {
             _sessions.Session = null;
             WarnOnce(ex);
@@ -54,12 +60,18 @@ public sealed class MongoUnitOfWork : IUnitOfWork
         }
     }
 
-    private static bool IsTransactionUnsupported(MongoException ex) =>
-        ex is MongoClientException
-        || (ex is MongoCommandException command
-            && (command.Code == 20
-                || command.Message.Contains("replica set", StringComparison.OrdinalIgnoreCase)
-                || command.Message.Contains("Transaction numbers", StringComparison.OrdinalIgnoreCase)));
+    internal static bool ShouldRunWithoutTransaction(MongoException ex, bool isDevelopment) =>
+        isDevelopment
+        && ex switch
+        {
+            MongoCommandException { Code: IllegalOperationCode } command => MentionsMissingReplicaSet(command.Message),
+            MongoClientException client => MentionsMissingReplicaSet(client.Message),
+            _ => false
+        };
+
+    private static bool MentionsMissingReplicaSet(string message) =>
+        message.Contains("replica set", StringComparison.OrdinalIgnoreCase)
+        || message.Contains("Transaction numbers", StringComparison.OrdinalIgnoreCase);
 
     private void WarnOnce(MongoException ex)
     {
@@ -69,6 +81,6 @@ public sealed class MongoUnitOfWork : IUnitOfWork
         _logger.LogWarning(
             ex,
             "MongoDB ne supporte pas les transactions sur cette instance (replica set requis) : "
-                + "les écritures multi-documents s'exécutent sans atomicité");
+                + "les écritures multi-documents s'exécutent sans atomicité, toléré en Development seulement");
     }
 }

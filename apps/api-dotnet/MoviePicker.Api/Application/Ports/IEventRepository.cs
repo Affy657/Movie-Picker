@@ -8,6 +8,8 @@ public interface IEventRepository
     Task<Event> AddAsync(Event evt, CancellationToken ct = default);
     Task<Event> UpdateAsync(Event evt, CancellationToken ct = default);
 
+    Task LockForWriteAsync(string eventId, CancellationToken ct = default);
+
     Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);

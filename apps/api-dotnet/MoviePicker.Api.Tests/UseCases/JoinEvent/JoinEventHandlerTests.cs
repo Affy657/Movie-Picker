@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.JoinEvent;
@@ -27,6 +28,8 @@ public sealed class JoinEventHandlerTests
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
+    private readonly RecordingUnitOfWork _unitOfWork = new();
+
     public JoinEventHandlerTests()
     {
         _eventRepo = new Mock<IEventRepository>();
@@ -38,6 +41,7 @@ public sealed class JoinEventHandlerTests
             new Mock<IPushSubscriptionRepository>().Object,
             new Mock<IPushNotificationSender>().Object,
             Mock.Of<IUserNotificationRepository>(),
+            _unitOfWork,
             Mock.Of<ILogger<JoinEventHandler>>());
     }
 
@@ -164,6 +168,28 @@ public sealed class JoinEventHandlerTests
 
         Assert.True(result.IsNew);
         Assert.Equal("p1", result.Participant.Id);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithCapacity_LocksTheEventThenCountsAndInsertsInsideTheUnitOfWork()
+    {
+        var evt = ActiveEvent() with { Config = new EventConfig { MaxParticipants = 5 } };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(evt.Id, "Alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Participant?)null);
+        var steps = new List<string>();
+        _eventRepo.Setup(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "lock" : "lock-outside")).Returns(Task.CompletedTask);
+        _participantRepo.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "count" : "count-outside")).ReturnsAsync(2);
+        _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "insert" : "insert-outside"))
+            .ReturnsAsync((Participant p, CancellationToken _) => p with { Id = "p1" });
+
+        await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1");
+
+        Assert.Equal(["lock", "count", "insert"], steps);
+        Assert.Equal(1, _unitOfWork.Executions);
     }
 
     [Fact]

@@ -59,4 +59,5 @@ public sealed record User
     public int LetterboxdPendingReconciliationCount { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
+    public long Version { get; init; }
 }

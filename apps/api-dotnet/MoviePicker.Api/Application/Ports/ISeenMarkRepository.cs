@@ -12,6 +12,8 @@ public interface ISeenMarkRepository
 
     Task DeleteByMovieIdAsync(string eventId, string movieId, CancellationToken ct = default);
 
+    Task<long> DeleteByMovieIdsAsync(string eventId, IReadOnlyCollection<string> movieIds, CancellationToken ct = default);
+
     Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default);
 
     Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);

@@ -18,6 +18,7 @@ public sealed class VoteMovieHandlerTests
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IVoteRepository> _voteRepo;
     private readonly Mock<ICurrentUserAccessor> _currentUser;
+    private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly VoteMovieHandler _sut;
 
     private static Event ActiveEvent() =>
@@ -31,7 +32,7 @@ public sealed class VoteMovieHandlerTests
         _voteRepo = new Mock<IVoteRepository>();
         _currentUser = new Mock<ICurrentUserAccessor>();
         _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
-        _sut = new VoteMovieHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _voteRepo.Object, _currentUser.Object);
+        _sut = new VoteMovieHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _voteRepo.Object, _currentUser.Object, _unitOfWork);
     }
 
     [Fact]
@@ -152,6 +153,29 @@ public sealed class VoteMovieHandlerTests
         Assert.Contains("2 vote(s)", ex.Message);
         Assert.Equal(VoteMovieHandler.VoteLimitReachedReason, ex.Reason);
         _voteRepo.Verify(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithVoteLimit_LocksTheEventThenCountsAndWritesInsideTheUnitOfWork()
+    {
+        var evt = EventWithVoteLimit(2);
+        var movie = new Movie { Id = "mov2", EventId = evt.Id, ParticipantId = "p0", TmdbId = 2, Title = "Y", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        GivenVotableMovie(evt, movie, participant, new Dictionary<string, int> { ["mov1"] = 1 });
+        var steps = new List<string>();
+        _eventRepo.Setup(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "lock" : "lock-outside")).Returns(Task.CompletedTask);
+        _voteRepo.Setup(r => r.GetParticipantVotesByEventAsync(evt.Id, participant.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "count" : "count-outside"))
+            .ReturnsAsync(new Dictionary<string, int> { ["mov1"] = 1 });
+        _voteRepo.Setup(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "write" : "write-outside"))
+            .ReturnsAsync((Vote v, CancellationToken _) => v with { Id = "saved" });
+
+        await _sut.HandleAsync("evt1", "mov2", new VoteRequest { ParticipantId = participant.Id, Value = 1 });
+
+        Assert.Equal(["lock", "count", "write"], steps);
+        Assert.Equal(1, _unitOfWork.Executions);
     }
 
     [Fact]

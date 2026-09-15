@@ -110,6 +110,9 @@ public sealed class UserDocument
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+
+    [BsonElement("version")]
+    public long Version { get; set; }
 }
 
 public sealed class EventTemplateDocument

@@ -103,6 +103,16 @@ public sealed class MongoMovieRepository : IMovieRepository
         await _collection.DeleteOneAsync(x => x.Id == movieId, cancellationToken: ct);
     }
 
+    public async Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        if (movieIds.Count == 0)
+            return 0;
+        var result = await _collection.DeleteManyAsync(
+            Builders<MovieDocument>.Filter.In(x => x.Id, movieIds),
+            ct);
+        return result.DeletedCount;
+    }
+
     public async Task UpdatePitchNoteAsync(string movieId, string? pitchNote, CancellationToken ct = default)
     {
         var update = Builders<MovieDocument>.Update

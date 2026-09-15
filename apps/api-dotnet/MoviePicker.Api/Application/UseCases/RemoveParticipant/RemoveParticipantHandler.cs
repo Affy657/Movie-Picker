@@ -15,6 +15,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
     private readonly ISeenMarkRepository _seenMarkRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<RemoveParticipantHandler> _logger;
 
     public RemoveParticipantHandler(
@@ -25,6 +26,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         ISeenMarkRepository seenMarkRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
+        IUnitOfWork unitOfWork,
         ILogger<RemoveParticipantHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -34,6 +36,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         _seenMarkRepository = seenMarkRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -68,17 +71,18 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             throw new ForbiddenException("Action réservée à l'hôte ou au participant lui-même.");
 
         var movieIds = await _movieRepository.ListIdsByEventAndParticipantAsync(evt.Id, participant.Id, ct);
-        foreach (var movieId in movieIds)
-        {
-            await _voteRepository.DeleteByMovieIdAsync(movieId, ct);
-            await _seenMarkRepository.DeleteByMovieIdAsync(evt.Id, movieId, ct);
-            await _movieRepository.DeleteAsync(movieId, ct);
-        }
-
-        await _voteRepository.DeleteByEventAndParticipantAsync(evt.Id, participant.Id, ct);
-        await _seenMarkRepository.DeleteByEventAndParticipantAsync(evt.Id, participant.Id, ct);
-
-        var deleted = await _participantRepository.DeleteAsync(participant.Id, evt.Id, ct);
+        var deleted = false;
+        await _unitOfWork.ExecuteAsync(
+            async token =>
+            {
+                await _voteRepository.DeleteByMovieIdsAsync(movieIds, token);
+                await _seenMarkRepository.DeleteByMovieIdsAsync(evt.Id, movieIds, token);
+                await _movieRepository.DeleteByIdsAsync(movieIds, token);
+                await _voteRepository.DeleteByEventAndParticipantAsync(evt.Id, participant.Id, token);
+                await _seenMarkRepository.DeleteByEventAndParticipantAsync(evt.Id, participant.Id, token);
+                deleted = await _participantRepository.DeleteAsync(participant.Id, evt.Id, token);
+            },
+            ct);
         if (!deleted)
             throw new NotFoundException("Participant introuvable");
 

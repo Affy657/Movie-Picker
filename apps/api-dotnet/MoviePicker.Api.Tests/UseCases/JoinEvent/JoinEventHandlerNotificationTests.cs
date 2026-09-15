@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.JoinEvent;
@@ -42,7 +43,7 @@ public sealed class JoinEventHandlerNotificationTests
 
         _sut = new JoinEventHandler(
             _eventRepo.Object, _participantRepo.Object, _userRepo.Object, _pushSubRepo.Object,
-            _pushSender.Object, _notifications.Object, NullLogger<JoinEventHandler>.Instance);
+            _pushSender.Object, _notifications.Object, new RecordingUnitOfWork(), NullLogger<JoinEventHandler>.Instance);
     }
 
     [Fact]

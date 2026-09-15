@@ -9,6 +9,21 @@ public sealed class InMemoryVoteRepository : IVoteRepository
     private readonly ConcurrentDictionary<string, Vote> _byId = new();
     private readonly ConcurrentDictionary<string, List<Vote>> _byMovieId = new();
 
+    public async Task<long> DeleteByMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        long deleted = 0;
+        foreach (var movieId in movieIds)
+        {
+            if (_byMovieId.TryGetValue(movieId, out var list))
+            {
+                lock (list)
+                    deleted += list.Count;
+            }
+            await DeleteByMovieIdAsync(movieId, ct);
+        }
+        return deleted;
+    }
+
     public Task DeleteByMovieIdAsync(string movieId, CancellationToken ct = default)
     {
         if (_byMovieId.TryGetValue(movieId, out var list))

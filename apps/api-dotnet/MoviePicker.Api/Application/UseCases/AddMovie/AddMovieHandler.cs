@@ -21,6 +21,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     private readonly IUserNotificationRepository _notifications;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ITmdbMovieSearch _tmdb;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<AddMovieHandler> _logger;
 
     public AddMovieHandler(
@@ -34,6 +35,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         IUserNotificationRepository notifications,
         ICurrentUserAccessor currentUserAccessor,
         ITmdbMovieSearch tmdb,
+        IUnitOfWork unitOfWork,
         ILogger<AddMovieHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -46,6 +48,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         _notifications = notifications;
         _currentUserAccessor = currentUserAccessor;
         _tmdb = tmdb;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -75,8 +78,6 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), ct))
             throw new ConflictException("Un film avec ce titre a déjà été proposé");
 
-        await EnsureWithinProposalLimitAsync(evt, participant, ct);
-
         var now = DateTimeOffset.UtcNow;
         var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
         var genreIdsTask = FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, ct);
@@ -101,7 +102,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             UpdatedAt = now
         };
 
-        var created = await _movieRepository.InsertAsync(movie, ct);
+        var created = await InsertWithinProposalLimitAsync(evt, participant, movie, ct);
 
         await NotifyParticipantsOnMovieAddedAsync(evt, created.Title, participant.UserId, CancellationToken.None);
 
@@ -141,14 +142,28 @@ public sealed class AddMovieHandler : IAddMovieHandler
         return _posterImageStore.ToPublicPosterPath(poster);
     }
 
-    private async Task EnsureWithinProposalLimitAsync(Event evt, Participant participant, CancellationToken ct)
+    private async Task<Movie> InsertWithinProposalLimitAsync(
+        Event evt,
+        Participant participant,
+        Movie movie,
+        CancellationToken ct)
     {
         var maxProp = evt.Config?.MaxProposalsPerParticipant;
         if (maxProp is not > 0)
-            return;
-        var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, ct);
-        if (count >= maxProp)
-            throw new ConflictException($"Limite de {maxProp} proposition(s) par participant atteinte.");
+            return await _movieRepository.InsertAsync(movie, ct);
+
+        Movie created = movie;
+        await _unitOfWork.ExecuteAsync(
+            async token =>
+            {
+                await _eventRepository.LockForWriteAsync(evt.Id, token);
+                var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, token);
+                if (count >= maxProp)
+                    throw new ConflictException($"Limite de {maxProp} proposition(s) par participant atteinte.");
+                created = await _movieRepository.InsertAsync(movie, token);
+            },
+            ct);
+        return created;
     }
 
     private async Task<IReadOnlyList<int>> FetchGenreIdsBestEffortAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)

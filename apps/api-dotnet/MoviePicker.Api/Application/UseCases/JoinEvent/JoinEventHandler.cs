@@ -14,6 +14,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
     private readonly IUserNotificationRepository _notifications;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<JoinEventHandler> _logger;
 
     public JoinEventHandler(
@@ -23,6 +24,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
+        IUnitOfWork unitOfWork,
         ILogger<JoinEventHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -31,6 +33,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
         _notifications = notifications;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -69,14 +72,6 @@ public sealed class JoinEventHandler : IJoinEventHandler
             };
         }
 
-        if (evt.Config?.MaxParticipants is { } cap && cap > 0)
-        {
-            var currentCount = await _participantRepository.CountByEventIdAsync(evt.Id, ct);
-            if (currentCount >= cap)
-                throw new ConflictException(
-                    $"La soirée est complète ({cap} participants maximum).");
-        }
-
         var now = DateTimeOffset.UtcNow;
         var participant = new Participant
         {
@@ -88,7 +83,25 @@ public sealed class JoinEventHandler : IJoinEventHandler
             UpdatedAt = now
         };
 
-        var created = await _participantRepository.AddAsync(participant, ct);
+        Participant created = participant;
+        if (evt.Config?.MaxParticipants is { } cap && cap > 0)
+        {
+            await _unitOfWork.ExecuteAsync(
+                async token =>
+                {
+                    await _eventRepository.LockForWriteAsync(evt.Id, token);
+                    var currentCount = await _participantRepository.CountByEventIdAsync(evt.Id, token);
+                    if (currentCount >= cap)
+                        throw new ConflictException(
+                            $"La soirée est complète ({cap} participants maximum).");
+                    created = await _participantRepository.AddAsync(participant, token);
+                },
+                ct);
+        }
+        else
+        {
+            created = await _participantRepository.AddAsync(participant, ct);
+        }
 
         await NotifyHostAsync(evt, pseudo, userId, CancellationToken.None);
 

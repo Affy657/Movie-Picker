@@ -81,6 +81,12 @@ public sealed class EventDocument
 
     [BsonElement("updatedAt")]
     public DateTime UpdatedAt { get; set; }
+
+    [BsonElement("version")]
+    public long Version { get; set; }
+
+    [BsonElement("writeSeq")]
+    public long WriteSeq { get; set; }
 }
 
 [BsonIgnoreExtraElements]

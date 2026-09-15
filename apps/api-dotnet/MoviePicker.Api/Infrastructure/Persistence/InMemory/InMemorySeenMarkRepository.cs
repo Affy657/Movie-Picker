@@ -40,6 +40,20 @@ public sealed class InMemorySeenMarkRepository : ISeenMarkRepository
         return Task.FromResult(_byKey.TryRemove(k, out _));
     }
 
+    public Task<long> DeleteByMovieIdsAsync(string eventId, IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        var targets = new HashSet<string>(movieIds);
+        long deleted = 0;
+        foreach (var key in _byKey.Keys.ToArray())
+        {
+            if (_byKey.TryGetValue(key, out var r) && r.EventId == eventId && targets.Contains(r.MovieId)
+                && _byKey.TryRemove(key, out _))
+                deleted++;
+        }
+
+        return Task.FromResult(deleted);
+    }
+
     public Task DeleteByMovieIdAsync(string eventId, string movieId, CancellationToken ct = default)
     {
         foreach (var key in _byKey.Keys.ToArray())

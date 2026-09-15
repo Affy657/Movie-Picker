@@ -2,6 +2,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
@@ -46,8 +47,24 @@ public sealed class MongoEventRepository : IEventRepository
     public async Task<Event> UpdateAsync(Event evt, CancellationToken ct = default)
     {
         var doc = EventDocumentMapper.ToDocument(evt);
-        await _collection.ReplaceOneAsync(x => x.Id == evt.Id, doc, cancellationToken: ct);
+        doc.Version = evt.Version + 1;
+        var filter = Builders<EventDocument>.Filter.And(
+            Builders<EventDocument>.Filter.Eq(x => x.Id, evt.Id),
+            OptimisticConcurrency.ExpectedVersion<EventDocument>(x => x.Version, evt.Version));
+        var result = await _collection.ReplaceOneAsync(filter, doc, cancellationToken: ct);
+        if (result.MatchedCount == 0)
+            await OptimisticConcurrency.ThrowForUnmatchedReplaceAsync(_collection, x => x.Id == evt.Id, "Soirée", ct);
         return EventDocumentMapper.ToDomain(doc);
+    }
+
+    public async Task LockForWriteAsync(string eventId, CancellationToken ct = default)
+    {
+        var result = await _collection.UpdateOneAsync(
+            x => x.Id == eventId,
+            Builders<EventDocument>.Update.Inc(x => x.WriteSeq, 1),
+            cancellationToken: ct);
+        if (result.MatchedCount == 0)
+            throw new NotFoundException("Soirée introuvable");
     }
 
     public async Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default)
@@ -155,7 +172,8 @@ public sealed class MongoEventRepository : IEventRepository
             Builders<EventDocument>.Filter.Eq(x => x.WatchlistCleanedAt, null));
         var update = Builders<EventDocument>.Update
             .Set(x => x.WatchlistCleanedAt, cleanedAt.UtcDateTime)
-            .Set(x => x.UpdatedAt, cleanedAt.UtcDateTime);
+            .Set(x => x.UpdatedAt, cleanedAt.UtcDateTime)
+            .Inc(x => x.Version, 1);
 
         var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
         return result.ModifiedCount > 0;
@@ -165,7 +183,7 @@ public sealed class MongoEventRepository : IEventRepository
     {
         if (string.IsNullOrWhiteSpace(creatorUserId))
             return 0;
-        var update = Builders<EventDocument>.Update.Unset(x => x.CreatorUserId);
+        var update = Builders<EventDocument>.Update.Unset(x => x.CreatorUserId).Inc(x => x.Version, 1);
         var res = await _collection.UpdateManyAsync(x => x.CreatorUserId == creatorUserId, update, cancellationToken: ct);
         return res.IsAcknowledged ? res.ModifiedCount : 0;
     }

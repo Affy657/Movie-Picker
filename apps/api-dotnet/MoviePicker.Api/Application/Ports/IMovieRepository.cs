@@ -22,6 +22,8 @@ public interface IMovieRepository
     Task<int> CountByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default);
     Task<Movie> InsertAsync(Movie movie, CancellationToken ct = default);
     Task DeleteAsync(string movieId, CancellationToken ct = default);
+
+    Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default);
     Task UpdatePitchNoteAsync(string movieId, string? pitchNote, CancellationToken ct = default);
 
     Task UpdateWheelExclusionAsync(string movieId, bool excluded, CancellationToken ct = default);

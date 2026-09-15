@@ -19,6 +19,16 @@ public sealed class MongoVoteRepository : IVoteRepository
         await _collection.DeleteManyAsync(x => x.MovieId == movieId, cancellationToken: ct);
     }
 
+    public async Task<long> DeleteByMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        if (movieIds.Count == 0)
+            return 0;
+        var result = await _collection.DeleteManyAsync(
+            Builders<VoteDocument>.Filter.In(x => x.MovieId, movieIds),
+            ct);
+        return result.DeletedCount;
+    }
+
     public async Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
     {
         await _collection.DeleteManyAsync(
