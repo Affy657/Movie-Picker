@@ -32,7 +32,13 @@ describe('formatRelativeEventDate', () => {
   });
 
   it('bascule en mois au-delà de 31 jours', () => {
-    expect(formatRelativeEventDate('2027-07-20', 'fr')).toBe('dans 13 mois');
+    expect(formatRelativeEventDate('2027-02-20', 'fr')).toBe('dans 8 mois');
+  });
+
+  it('bascule en années à partir de douze mois', () => {
+    expect(formatRelativeEventDate('2027-07-20', 'fr')).toBe('l’année prochaine');
+    expect(formatRelativeEventDate('2035-03-01', 'fr')).toBe('dans 9 ans');
+    expect(formatRelativeEventDate('2024-01-10', 'fr')).toBe('il y a 2 ans');
   });
 
   it('formate en anglais', () => {

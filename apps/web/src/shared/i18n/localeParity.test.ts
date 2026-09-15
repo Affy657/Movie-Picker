@@ -31,4 +31,13 @@ describe('parité des locales', () => {
       .map(([key]) => key);
     expect(invalid, `valeurs invalides : ${invalid.join(', ')}`).toEqual([]);
   });
+
+  it('la locale française vouvoie partout', () => {
+    const tutoiement =
+      /(^|[\s«(])(tu|Tu|toi|Toi|Ton|tes|Rejoins|Rejoins-la|Connecte-toi|Indique|Demande)(?=[\s.,!?'’»)]|$)/u;
+    const familiar = frEntries
+      .filter(([, value]) => typeof value === 'string' && tutoiement.test(value))
+      .map(([key]) => key);
+    expect(familiar, `tutoiement dans : ${familiar.join(', ')}`).toEqual([]);
+  });
 });

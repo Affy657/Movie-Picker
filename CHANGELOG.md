@@ -18,6 +18,12 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 - **Le retrait d'un gagnant journalisait l'identifiant reçu dans la requête** plutôt que celui du film réellement retiré de la soirée, la dernière alerte CodeQL ouverte du dépôt. Les titres d'onglet (« Mes soirées | Movie Picker »), les aperçus de partage, les courriels de réinitialisation et les métadonnées SEO abandonnent aussi le tiret cadratin et le point médian.
 - **Les interrupteurs des paramètres de la soirée étaient inégalement espacés** : « Répéter cette soirée » collait à « Limiter les votes par participant ». Les champs du panneau suivent maintenant un pas unique.
+- **Se déconnecter oublie vraiment la soirée en cours** : la page gardait les commandes de l'hôte et les votes du compte fermé, jusqu'à afficher « Retirer mon vote » à un visiteur anonyme sur un appareil partagé. La déconnexion vide le cache et les identités de participant retenues par l'onglet.
+- **Une adresse de réglages inconnue** (`/settings/account`, un vieux favori) affichait une page vide en empilant `profil/profil/profil…` dans l'URL. Elle renvoie vers le profil.
+- **Un film de la watchlist Letterboxd ne peut plus être pris pour une série** : « Come and See » (1985) arrivait comme série TMDB sans note. Le rapprochement automatique ne retient plus qu'un film ; à titre égal, l'année Letterboxd départage, ce qui réduit aussi la liste des titres à confirmer.
+- **Les votes d'un participant restent les siens** : la liste des films d'une soirée renvoyait « mon vote » pour n'importe quel identifiant de participant, y compris à un visiteur anonyme. Le champ n'est rempli que pour le compte connecté.
+- **Demander un nouveau mot de passe répond dans le même temps** qu'une adresse existe ou non, ce qui fermait une façon de deviner les comptes.
+- **Détails de coquilles** : l'aide sous la date d'une soirée commençait par « aujourd'hui. », une soirée dans neuf ans se disait « dans 105 mois », un groupe de notifications proposait « Voir les 1 autres », la date de sortie d'un film s'affichait en `2021-09-15`, et le bloc « Rejoindre la soirée » tutoyait dans une application qui vouvoie. Les boutons « Ajouter » de la recherche de films portent maintenant le titre pour les lecteurs d'écran.
 
 ## [1.6.0] - 2026-09-12
 

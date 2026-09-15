@@ -10,6 +10,8 @@ namespace MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
 
 public sealed class RequestPasswordResetHandler : IRequestPasswordResetHandler
 {
+    public static readonly TimeSpan ResponseTimeFloor = TimeSpan.FromMilliseconds(500);
+
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan ResendThrottle = TimeSpan.FromSeconds(60);
 
@@ -41,6 +43,24 @@ public sealed class RequestPasswordResetHandler : IRequestPasswordResetHandler
         string? clientIp,
         string? userAgent,
         CancellationToken ct = default)
+    {
+        var startedAt = _clock.GetTimestamp();
+        await ProcessAsync(request, clientIp, userAgent, ct);
+        await HideProcessingTimeAsync(startedAt, ct);
+    }
+
+    private async Task HideProcessingTimeAsync(long startedAt, CancellationToken ct)
+    {
+        var remaining = ResponseTimeFloor - _clock.GetElapsedTime(startedAt);
+        if (remaining > TimeSpan.Zero)
+            await Task.Delay(remaining, _clock, ct);
+    }
+
+    private async Task ProcessAsync(
+        PasswordResetRequest request,
+        string? clientIp,
+        string? userAgent,
+        CancellationToken ct)
     {
         var email = (request.Email ?? "").Trim();
         if (string.IsNullOrEmpty(email))

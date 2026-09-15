@@ -239,7 +239,7 @@ describe('WatchlistPage (MSW)', () => {
     await user.type(screen.getByPlaceholderText(/rechercher un film à ajouter/i), 'Film Test');
     expect(await screen.findByText('Film Test', {}, { timeout: 3000 })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
+    await user.click(screen.getByRole('button', { name: /^ajouter « /i }));
 
     await waitFor(() => expect(addedBody).not.toBeNull());
     expect(addedBody).toMatchObject({
@@ -250,7 +250,7 @@ describe('WatchlistPage (MSW)', () => {
     });
 
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: /^ajouter$/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /^ajouter « /i })).not.toBeInTheDocument()
     );
   });
 

@@ -436,7 +436,7 @@
       submit: 'Mettre à jour mon mot de passe',
       submitting: 'Mise à jour\u2026',
       successTitle: 'Mot de passe mis à jour',
-      successMessage: 'Tu peux maintenant te connecter avec ton nouveau mot de passe.',
+      successMessage: 'Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.',
       goToLogin: 'Aller à la connexion',
       requestNewLink: 'Demander un nouveau lien',
       invalidTokenTitle: 'Lien invalide ou expiré',
@@ -664,17 +664,17 @@
     },
     join: {
       title: 'Rejoindre la soirée',
-      pseudoLabel: 'Ton pseudo',
+      pseudoLabel: 'Votre pseudo',
       pseudoPlaceholder: 'Ex: Alice',
       submit: 'Rejoindre',
       submitting: 'Envoi\u2026',
       fallbackError: 'Impossible de rejoindre',
-      pseudoRequired: 'Indique un pseudo pour rejoindre.',
+      pseudoRequired: 'Indiquez un pseudo pour rejoindre.',
       fullWithCap:
-        "La soirée est complète ({{max}} participants maximum). Demande à l'hôte d'augmenter la capacité pour rejoindre.",
-      full: "La soirée est complète. Demande à l'hôte d'augmenter la capacité pour rejoindre.",
-      intro: 'Rejoins la soirée pour proposer des films et voter.',
-      signedOutIntro: 'Connecte-toi ou crée un compte pour rejoindre la soirée.',
+        "La soirée est complète ({{max}} participants maximum). Demandez à l'hôte d'augmenter la capacité pour rejoindre.",
+      full: "La soirée est complète. Demandez à l'hôte d'augmenter la capacité pour rejoindre.",
+      intro: 'Rejoignez la soirée pour proposer des films et voter.',
+      signedOutIntro: 'Connectez-vous ou créez un compte pour rejoindre la soirée.',
     },
     participants: {
       title: 'Participants',
@@ -822,7 +822,7 @@
       google: 'Google Calendar',
       outlook: 'Outlook',
       apple: 'Apple Calendar (.ics)',
-      icsDescription: 'Soirée ciné sur Movie Picker. Rejoins-la ici : {{url}}',
+      icsDescription: 'Soirée ciné sur Movie Picker. Rejoignez-la ici : {{url}}',
       icsDescriptionNoUrl: 'Soirée ciné sur Movie Picker.',
     },
     invite: {
@@ -861,7 +861,8 @@
       dateTimeLabel: 'Date et heure de la soirée',
       dateRequired: 'La date de la soirée est requise.',
       dateInvalid: 'Date et heure de la soirée invalides.',
-      dateHint: '{{relative}}. Les participants seront prévenus si vous modifiez la date.',
+      dateHint:
+        'Soirée prévue {{relative}}. Les participants seront prévenus si vous modifiez la date.',
       notifyDateChangeLabel: 'Prévenir les participants du changement de date',
       themeLabel: 'Thème / ambiance',
       themeEmptyTitle: 'Ajouter un thème',
@@ -1052,7 +1053,8 @@
       hostMeta:
         'Relance la roue, reprogramme, ou clôture sans film. Sans action, la soirée se clôture automatiquement dans 7 jours.',
       participantText: "L'heure de la soirée est passée, aucun film n'a encore été choisi.",
-      participantMeta: "Tu peux encore voter et proposer des films en attendant que l'hôte décide.",
+      participantMeta:
+        "Vous pouvez encore voter et proposer des films en attendant que l'hôte décide.",
     },
   },
 
@@ -1064,6 +1066,7 @@
       searching: '\u2026',
       fallbackError: 'Recherche indisponible',
       addButton: 'Ajouter',
+      addButtonAria: 'Ajouter « {{title}} »',
       alreadyListed: 'Déjà listé',
       alreadyListedHint: 'Ce film est déjà dans la liste de la soirée',
       duplicateHint: 'Déjà proposé dans cette soirée.',
@@ -1111,7 +1114,7 @@
       voteUpRemoveAria: 'Retirer mon vote pour « {{title}} »',
       voteDownRemoveAria: 'Retirer mon vote contre « {{title}} »',
       voteError: 'Vote impossible',
-      voteErrorRow: 'Ton vote n’a pas été enregistré. Vérifie ta connexion.',
+      voteErrorRow: 'Votre vote n’a pas été enregistré. Vérifiez votre connexion.',
       retryVoteAction: 'Réessayer',
       voteToolbarAria: 'Votes pour « {{title}} »',
       voteLimitReachedTitle: 'Limite de votes atteinte',
@@ -1245,7 +1248,7 @@
     },
     closed: {
       emptyTitle: "Aucun film n'a été choisi",
-      emptyHost: 'La soirée est clôturée. Tu peux en créer une nouvelle quand tu veux.',
+      emptyHost: 'La soirée est clôturée. Vous pouvez en créer une nouvelle quand vous voulez.',
       emptyParticipant: "Cette soirée s'est terminée sans qu'un film soit choisi.",
     },
   },
@@ -1404,6 +1407,7 @@
     markOneReadError: 'Impossible de marquer cette notification comme lue.',
     prefsLoadError: 'Impossible de charger vos préférences de notifications.',
     prefsSaveError: "Impossible d'enregistrer cette préférence.",
+    seeMoreGroupOne: 'Voir l’autre',
     seeMoreGroup: 'Voir les {{count}} autres',
     newFollowerText: '{{name}} a commencé à vous suivre.',
     participantJoinedText: '{{name}} vient de rejoindre **{{eventTitle}}** ! 🎉',
@@ -1616,7 +1620,7 @@
     settings: {
       title: 'Profil public',
       description:
-        'Ton profil est accessible via un lien unique. Tu peux le rendre privé à tout moment.',
+        'Votre profil est accessible via un lien unique. Vous pouvez le rendre privé à tout moment.',
       handleLabel: 'Identifiant public (handle)',
       handleHint: '3 à 20 caractères : lettres minuscules, chiffres et underscores.',
       handleChecking: 'Vérification de la disponibilité…',

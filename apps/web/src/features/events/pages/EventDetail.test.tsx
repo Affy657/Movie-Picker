@@ -252,7 +252,7 @@ describe('EventDetail (MSW)', () => {
     await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Test');
     await user.click(screen.getByRole('button', { name: /^rechercher$/i }));
     expect(await screen.findByText(/film test/i)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
+    await user.click(screen.getByRole('button', { name: /^ajouter « /i }));
     await waitFor(() => expect(screen.queryByText(/film test/i)).not.toBeInTheDocument());
   });
 

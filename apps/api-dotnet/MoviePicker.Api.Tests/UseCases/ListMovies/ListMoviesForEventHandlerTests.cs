@@ -19,6 +19,7 @@ public sealed class ListMoviesForEventHandlerTests
     private readonly Mock<IUserRepository> _userRepo;
     private readonly Mock<ITmdbMovieSearch> _tmdb;
     private readonly Mock<IPosterImageStore> _posterStore;
+    private readonly Mock<ICurrentUserAccessor> _currentUser;
     private readonly ListMoviesForEventHandler _sut;
     private static readonly string[] ParticipantIds = new[] { "p2", "p3" };
     private static readonly string[] expected = new[] { "Bob", "Chloé" };
@@ -46,6 +47,7 @@ public sealed class ListMoviesForEventHandlerTests
         _userRepo = new Mock<IUserRepository>();
         _tmdb = new Mock<ITmdbMovieSearch>();
         _posterStore = new Mock<IPosterImageStore>();
+        _currentUser = new Mock<ICurrentUserAccessor>();
         _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
         _posterStore.Setup(s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _posterStore
@@ -73,6 +75,7 @@ public sealed class ListMoviesForEventHandlerTests
             _userRepo.Object,
             _tmdb.Object,
             _posterStore.Object,
+            _currentUser.Object,
             opts);
     }
 
@@ -217,9 +220,13 @@ public sealed class ListMoviesForEventHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_WithParticipantId_PopulatesMyVotePerMovie()
+    public async Task HandleAsync_WithOwnParticipantId_PopulatesMyVotePerMovie()
     {
         var evt = ActiveEvent();
+        _currentUser.Setup(a => a.GetUserId()).Returns("user-me");
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new Participant { Id = "me", EventId = evt.Id, Pseudo = "Moi", UserId = "user-me" } });
         var movies = new List<Movie>
         {
             new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "A", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
@@ -239,6 +246,37 @@ public sealed class ListMoviesForEventHandlerTests
         Assert.Equal(1, result.First(m => m.Id == "mov1").MyVote);
         Assert.Null(result.First(m => m.Id == "mov2").MyVote);
         Assert.Equal(-1, result.First(m => m.Id == "mov3").MyVote);
+    }
+
+    [Theory]
+    [InlineData(null, "user-other")]
+    [InlineData("user-me", "user-other")]
+    [InlineData("user-me", null)]
+    public async Task HandleAsync_WithSomeoneElsesParticipantId_KeepsTheirVotesPrivate(string? callerUserId, string? participantUserId)
+    {
+        var evt = ActiveEvent();
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "A", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+        _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string>());
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new Participant { Id = "p1", EventId = evt.Id, Pseudo = "Alice", UserId = participantUserId } });
+        _currentUser.Setup(a => a.GetUserId()).Returns(callerUserId);
+        _voteRepo
+            .Setup(r => r.GetParticipantVotesByEventAsync(evt.Id, "p1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, int> { ["mov1"] = 1 });
+
+        var result = await _sut.HandleAsync("evt1", "p1");
+
+        Assert.Null(Assert.Single(result).MyVote);
+        _voteRepo.Verify(
+            r => r.GetParticipantVotesByEventAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -295,6 +333,7 @@ public sealed class ListMoviesForEventHandlerTests
             _userRepo.Object,
             _tmdb.Object,
             _posterStore.Object,
+            _currentUser.Object,
             Options.Create(
                 new MoviePickerOptions
                 {

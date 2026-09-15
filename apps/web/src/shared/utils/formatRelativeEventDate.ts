@@ -31,5 +31,7 @@ export function formatRelativeEventDate(isoDate: string, locale: LocaleCode): st
 
   const monthDiff =
     (eventDay.getFullYear() - today.getFullYear()) * 12 + (eventDay.getMonth() - today.getMonth());
-  return rtf.format(monthDiff, 'month');
+  if (Math.abs(monthDiff) < 12) return rtf.format(monthDiff, 'month');
+
+  return rtf.format(Math.round(monthDiff / 12), 'year');
 }

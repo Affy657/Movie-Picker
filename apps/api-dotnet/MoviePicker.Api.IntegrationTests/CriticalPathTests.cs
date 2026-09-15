@@ -349,6 +349,14 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
         var firstAnon = listAnonJson.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Null, firstAnon.GetProperty("myVote").ValueKind);
 
+        var strangerList = await _factory.CreateClient().GetAsync(
+            $"/api/v1/events/{slug}/movies?participantId={Uri.EscapeDataString(participantId)}");
+        strangerList.EnsureSuccessStatusCode();
+        var strangerJson = await strangerList.Content.ReadFromJsonAsync<JsonElement>();
+        var firstForStranger = strangerJson.EnumerateArray().First();
+        Assert.Equal(1, firstForStranger.GetProperty("up").GetInt32());
+        Assert.Equal(JsonValueKind.Null, firstForStranger.GetProperty("myVote").ValueKind);
+
         var deleteVoteRes = await client.DeleteAsync(
             $"/api/v1/events/{slug}/movies/{movieId}/vote?participantId={Uri.EscapeDataString(participantId)}");
         Assert.Equal(HttpStatusCode.NoContent, deleteVoteRes.StatusCode);

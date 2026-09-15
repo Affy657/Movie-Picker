@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
+  clearStoredEventIdentities,
   getStoredHostToken,
   setStoredHostToken,
   getStoredParticipant,
@@ -56,6 +57,34 @@ describe('event storage', () => {
         'moviepicker_participant_' + slug,
         JSON.stringify({ participantId: 'p1', pseudo: 'Alice' })
       );
+    });
+  });
+
+  describe('clearStoredEventIdentities', () => {
+    it('retire toutes les identités de participant et tous les jetons hôte, rien d’autre', () => {
+      const keys = [
+        'moviepicker_participant_abc',
+        'moviepicker_host_abc',
+        'moviepicker_participant_xyz',
+        'moviepicker-consent',
+      ];
+      Object.assign(sessionStorage, { length: keys.length });
+      (sessionStorage.key as ReturnType<typeof vi.fn>).mockImplementation(
+        (index: number) => keys[index] ?? null
+      );
+
+      clearStoredEventIdentities();
+
+      expect(sessionStorage.removeItem).toHaveBeenCalledTimes(3);
+      expect(sessionStorage.removeItem).toHaveBeenCalledWith('moviepicker_participant_abc');
+      expect(sessionStorage.removeItem).toHaveBeenCalledWith('moviepicker_host_abc');
+      expect(sessionStorage.removeItem).toHaveBeenCalledWith('moviepicker_participant_xyz');
+      expect(sessionStorage.removeItem).not.toHaveBeenCalledWith('moviepicker-consent');
+    });
+
+    it('ne lève pas si sessionStorage est inaccessible', () => {
+      vi.stubGlobal('sessionStorage', undefined);
+      expect(() => clearStoredEventIdentities()).not.toThrow();
     });
   });
 });

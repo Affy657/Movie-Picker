@@ -9,6 +9,7 @@ import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
@@ -194,7 +195,7 @@ function NotifCard({
       ))}
       {hidden > 0 && (
         <button type="button" className={styles.seeMore} onClick={() => setExpanded(true)}>
-          {t('notifications.seeMoreGroup', { count: hidden })}
+          {pluralizeCount(hidden, 'notifications.seeMoreGroupOne', 'notifications.seeMoreGroup', t)}
         </button>
       )}
     </div>

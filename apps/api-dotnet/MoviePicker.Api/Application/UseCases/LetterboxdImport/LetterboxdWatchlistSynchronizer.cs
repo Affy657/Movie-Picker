@@ -124,7 +124,7 @@ public sealed class LetterboxdWatchlistSynchronizer
                 continue;
             }
 
-            var confident = LetterboxdTmdbMatcher.SelectConfident(film.Title, candidates);
+            var confident = LetterboxdTmdbMatcher.SelectConfident(film.Title, film.Year, candidates);
             if (confident is null)
             {
                 pending.Add(await ToRowAsync(rowIndex, film, candidates, ct));

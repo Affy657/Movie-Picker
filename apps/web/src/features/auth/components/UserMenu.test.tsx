@@ -5,8 +5,9 @@ import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import UserMenu from '@/features/auth/components/UserMenu';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import { resetPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import type { UserProfile } from '@/features/auth/types';
 
@@ -157,5 +158,36 @@ describe('UserMenu', () => {
     await user.click(screen.getByRole('button', { name: /se déconnecter/i }));
 
     await waitFor(() => expect(loggedOut).toBe(true));
+  });
+
+  it('la déconnexion oublie les identités de soirée et vide le cache des requêtes', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post(`${TEST_API_V1}/auth/logout`, () => new HttpResponse(null, { status: 204 }))
+    );
+    sessionStorage.setItem(
+      'moviepicker_participant_abc',
+      JSON.stringify({ participantId: 'p1', pseudo: 'Alice' })
+    );
+    sessionStorage.setItem('moviepicker_host_abc', 'host-token');
+    const client = createTestQueryClient();
+    client.setQueryData(queryKeys.event.detail('abc', null), { slug: 'abc' });
+    client.setQueryData(queryKeys.movies.list('abc'), [{ id: 'm1', myVote: 1 }]);
+    render(
+      <AppTestProviders client={client}>
+        <MemoryRouter>
+          <UserMenu user={baseUser} />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+    await user.click(screen.getByRole('button', { name: /se déconnecter/i }));
+
+    await waitFor(() => expect(client.getQueryData(queryKeys.auth.me)).toBeNull());
+    expect(sessionStorage.getItem('moviepicker_participant_abc')).toBeNull();
+    expect(sessionStorage.getItem('moviepicker_host_abc')).toBeNull();
+    expect(client.getQueryData(queryKeys.event.detail('abc', null))).toBeUndefined();
+    expect(client.getQueryData(queryKeys.movies.list('abc'))).toBeUndefined();
   });
 });

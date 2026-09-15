@@ -85,6 +85,29 @@ describe('NotificationsPage (MSW)', () => {
     expect(headers).toHaveLength(1);
   });
 
+  it('accorde le bouton de dépliage au singulier quand une seule notification est masquée', async () => {
+    server.use(
+      authedUserHandler,
+      http.get(`${TEST_API_V1}/notifications/inbox`, () =>
+        HttpResponse.json({
+          items: ['Matrix', 'Heat', 'Alien', 'Dune'].map((movieTitle, index) => ({
+            ...base,
+            id: `n${index}`,
+            type: 'movieadded',
+            eventSlug: 's1',
+            eventTitle: 'Soiree Groupee',
+            movieTitle,
+          })),
+          unreadCount: 4,
+        })
+      )
+    );
+
+    renderPage();
+
+    expect(await screen.findByRole('button', { name: 'Voir l’autre' })).toBeInTheDocument();
+  });
+
   it('un lien follower pointe vers le profil, et le clic marque la notif comme lue', async () => {
     const user = userEvent.setup();
     let markedId: string | null = null;

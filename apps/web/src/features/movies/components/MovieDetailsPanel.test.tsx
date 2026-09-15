@@ -8,7 +8,9 @@ import MovieDetailsPanel, {
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 
 vi.mock('@/features/movies/hooks/useMovieDetails', () => ({ useMovieDetails: vi.fn() }));
-vi.mock('@/shared/i18n', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock('@/shared/i18n', () => ({
+  useTranslation: () => ({ t: (key: string) => key, locale: 'fr' }),
+}));
 
 const mockUseMovieDetails = vi.mocked(useMovieDetails);
 
@@ -78,7 +80,17 @@ describe('MovieDetailsContent', () => {
     expect(screen.getByText('Christopher Nolan')).toBeInTheDocument();
     expect(screen.getByText('A1, A2, A3, A4, A5, A6')).toBeInTheDocument();
     expect(screen.getByText('Action, Sci-Fi')).toBeInTheDocument();
+    expect(screen.getByText('16 juillet 2010')).toBeInTheDocument();
+    expect(screen.queryByText('2010-07-16')).not.toBeInTheDocument();
     expect(screen.getByText(/Un rêve dans un rêve/)).toBeInTheDocument();
+  });
+
+  it('keeps a release date it cannot parse as is', () => {
+    mockUseMovieDetails.mockReturnValue(state({ data: { ...fullData, releaseDate: '2010' } }));
+
+    render(<MovieDetailsContent tmdbId={1} open panelId="p" />);
+
+    expect(screen.getByText('2010')).toBeInTheDocument();
   });
 
   it('renders a trailer link that calls onPlayTrailer', async () => {

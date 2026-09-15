@@ -21,6 +21,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
     private readonly IUserRepository _userRepository;
     private readonly ITmdbMovieSearch _tmdbMovieSearch;
     private readonly IPosterImageStore _posterImageStore;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly MoviePickerOptions _options;
 
     public ListMoviesForEventHandler(
@@ -32,6 +33,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         IUserRepository userRepository,
         ITmdbMovieSearch tmdbMovieSearch,
         IPosterImageStore posterImageStore,
+        ICurrentUserAccessor currentUserAccessor,
         IOptions<MoviePickerOptions> options)
     {
         _eventRepository = eventRepository;
@@ -42,7 +44,19 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         _userRepository = userRepository;
         _tmdbMovieSearch = tmdbMovieSearch;
         _posterImageStore = posterImageStore;
+        _currentUserAccessor = currentUserAccessor;
         _options = options.Value;
+    }
+
+    private bool IsCallersOwnParticipant(string? participantId, IReadOnlyList<Participant> eventParticipants)
+    {
+        if (string.IsNullOrEmpty(participantId))
+            return false;
+        var currentUserId = _currentUserAccessor.GetUserId();
+        if (string.IsNullOrEmpty(currentUserId))
+            return false;
+        var participant = eventParticipants.FirstOrDefault(p => p.Id == participantId);
+        return participant is not null && participant.UserId == currentUserId;
     }
 
     private static User? ResolveProposerUser(
@@ -96,9 +110,9 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         var upVotersAgg = await upVotersAggTask;
         var eventParticipants = await eventParticipantsTask;
 
-        IReadOnlyDictionary<string, int> myVotes = string.IsNullOrEmpty(participantId)
-            ? new Dictionary<string, int>()
-            : await _voteRepository.GetParticipantVotesByEventAsync(evt.Id, participantId, ct);
+        IReadOnlyDictionary<string, int> myVotes = IsCallersOwnParticipant(participantId, eventParticipants)
+            ? await _voteRepository.GetParticipantVotesByEventAsync(evt.Id, participantId!, ct)
+            : new Dictionary<string, int>();
         var seenParticipantIds = seenAgg.Values.SelectMany(v => v.ParticipantIds).Distinct().ToList();
         var upVoterParticipantIds = upVotersAgg.Values.SelectMany(v => v).Distinct().ToList();
         var participantIds = movies.Select(m => m.ParticipantId).Concat(seenParticipantIds).Concat(upVoterParticipantIds).Distinct().ToList();

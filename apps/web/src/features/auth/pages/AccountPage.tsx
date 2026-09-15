@@ -61,7 +61,7 @@ function AccountAuthenticated({ user }: Readonly<{ user: UserProfile }>) {
           <Route path="integrations" element={<AccountIntegrationsPage user={user} />} />
           <Route path="securite" element={<AccountSecurityPage user={user} />} />
         </Route>
-        <Route path="*" element={<Navigate to="profil" replace />} />
+        <Route path="*" element={<Navigate to={ROUTES.accountProfile} replace />} />
       </Routes>
     </PageLayout>
   );

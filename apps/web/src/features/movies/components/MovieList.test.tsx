@@ -326,12 +326,14 @@ describe('MovieList', () => {
           participantId="p0"
           participantPseudo="Alice"
           viewMode="list"
-          voteErrors={{ m1: { message: 'Ton vote n’a pas été enregistré. Vérifie ta connexion.' } }}
+          voteErrors={{
+            m1: { message: 'Votre vote n’a pas été enregistré. Vérifiez votre connexion.' },
+          }}
           onRetryVote={onRetryVote}
         />
       );
       expect(
-        screen.getByText('Ton vote n’a pas été enregistré. Vérifie ta connexion.')
+        screen.getByText('Votre vote n’a pas été enregistré. Vérifiez votre connexion.')
       ).toBeInTheDocument();
       await userEvent.click(screen.getByRole('button', { name: /réessayer/i }));
       expect(onRetryVote).toHaveBeenCalledWith('m1');

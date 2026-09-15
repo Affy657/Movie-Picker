@@ -37,7 +37,7 @@ describe('AddMovieForm (MSW)', () => {
 
     await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
     expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /^ajouter$/i }));
+    await user.click(screen.getByRole('button', { name: 'Ajouter « Film Test »' }));
 
     await waitFor(() => expect(onAdded).toHaveBeenCalled());
   });

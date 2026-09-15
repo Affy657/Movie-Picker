@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import AccountPage from '@/features/auth/pages/AccountPage';
@@ -115,4 +115,37 @@ describe('AccountPage (MSW)', () => {
 
     expect(screen.queryByText('Échelle des notes')).not.toBeInTheDocument();
   });
+
+  it('une rubrique inconnue renvoie vers le profil sans empiler de segments', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u-acc',
+          displayName: 'Pat',
+          emailMasked: 'p***@test.local',
+          uiTheme: 'light',
+          accentColor: 'default',
+        })
+      )
+    );
+
+    render(
+      <AppTestProviders>
+        <MemoryRouter initialEntries={['/settings/account']}>
+          <Routes>
+            <Route path="/settings/*" element={<AccountPage />} />
+          </Routes>
+          <LocationProbe />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Profil' })).toBeInTheDocument();
+    expect(screen.getByTestId('location').textContent).toBe('/settings/profil');
+  });
 });
+
+function LocationProbe() {
+  const location = useLocation();
+  return <span data-testid="location">{location.pathname}</span>;
+}

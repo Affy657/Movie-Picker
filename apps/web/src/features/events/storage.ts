@@ -46,3 +46,14 @@ export function clearStoredHostToken(slug: string): void {
     sessionStorage.removeItem(HOST_KEY + slug);
   } catch {}
 }
+
+export function clearStoredEventIdentities(): void {
+  try {
+    const identityKeys: string[] = [];
+    for (let index = 0; index < sessionStorage.length; index++) {
+      const key = sessionStorage.key(index);
+      if (key?.startsWith(PARTICIPANT_KEY) || key?.startsWith(HOST_KEY)) identityKeys.push(key);
+    }
+    for (const key of identityKeys) sessionStorage.removeItem(key);
+  } catch {}
+}

@@ -28,7 +28,7 @@ export async function addStubMovie(page: Page): Promise<void> {
   await search.fill('stub');
   const result = page.getByRole('listitem').filter({ hasText: /film e2e stub/i });
   await expect(result).toBeVisible({ timeout: 15_000 });
-  await result.getByRole('button', { name: /^ajouter$/i }).click();
+  await result.getByRole('button', { name: /^ajouter « /i }).click();
   await expect(search).toHaveValue('', { timeout: 15_000 });
   await page
     .getByRole('heading', { name: /proposer un film/i })

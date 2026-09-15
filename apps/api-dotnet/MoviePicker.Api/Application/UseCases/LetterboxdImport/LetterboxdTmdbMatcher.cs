@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.LetterboxdImport;
 
@@ -36,17 +37,27 @@ public static class LetterboxdTmdbMatcher
 
     public static TmdbSearchItem? SelectConfident(
         string letterboxdTitle,
+        string letterboxdYear,
         IReadOnlyList<TmdbSearchItem> candidates)
     {
         var expected = Normalize(letterboxdTitle);
         if (expected.Length == 0)
             return null;
 
-        var exact = candidates
+        var exactMovies = candidates
+            .Where(c => c.MediaType == MovieMediaType.Movie)
             .Where(c => Normalize(c.OriginalTitle) == expected || Normalize(c.Title) == expected)
             .ToList();
 
-        return exact.Count == 1 ? exact[0] : null;
+        if (exactMovies.Count == 1)
+            return exactMovies[0];
+
+        var year = letterboxdYear.Trim();
+        if (exactMovies.Count < 2 || year.Length == 0)
+            return null;
+
+        var sameYear = exactMovies.Where(c => c.Year == year).ToList();
+        return sameYear.Count == 1 ? sameYear[0] : null;
     }
 
     private static string Normalize(string? value)

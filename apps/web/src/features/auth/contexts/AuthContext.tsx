@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { hashKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   fetchAuthMeForSession,
   patchAuthProfile,
@@ -8,6 +8,7 @@ import {
   postAuthRegister,
   type ProfilePatch,
 } from '@/features/auth/api/authApi';
+import { clearStoredEventIdentities } from '@/features/events/storage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import type { UserProfile } from '@/features/auth/types';
@@ -24,6 +25,10 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function signedOutStateRendered(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const queryClient = useQueryClient();
@@ -79,8 +84,12 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       await postAuthLogout();
+      clearStoredEventIdentities();
       queryClient.setQueryData(queryKeys.auth.me, null);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+      await signedOutStateRendered();
+      await queryClient.resetQueries({
+        predicate: (query) => query.queryHash !== hashKey(queryKeys.auth.me),
+      });
     },
     onSuccess: () => track('user_logged_out'),
   });

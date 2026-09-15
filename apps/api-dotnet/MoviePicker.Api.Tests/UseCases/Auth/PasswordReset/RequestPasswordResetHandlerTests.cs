@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -18,12 +19,31 @@ public sealed class RequestPasswordResetHandlerTests
     private sealed class FakeTimeProvider : TimeProvider
     {
         private DateTimeOffset _now;
+        private readonly long _timestamp = Stopwatch.GetTimestamp();
 
         public FakeTimeProvider(DateTimeOffset start) => _now = start;
 
+        public List<TimeSpan> RequestedDelays { get; } = [];
+
         public override DateTimeOffset GetUtcNow() => _now;
 
+        public override long GetTimestamp() => _timestamp;
+
+        public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
+        {
+            RequestedDelays.Add(dueTime);
+            callback(state);
+            return new CompletedTimer();
+        }
+
         public void Advance(TimeSpan delta) => _now = _now.Add(delta);
+
+        private sealed class CompletedTimer : ITimer
+        {
+            public bool Change(TimeSpan dueTime, TimeSpan period) => false;
+            public void Dispose() { }
+            public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+        }
     }
 
     private sealed class CapturingLogger<T> : ILogger<T>
@@ -89,6 +109,50 @@ public sealed class RequestPasswordResetHandlerTests
         tokens.Verify(x => x.GetMostRecentForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         tokens.Verify(x => x.AddAsync(It.IsAny<PasswordResetToken>(), It.IsAny<CancellationToken>()), Times.Never);
         emailSender.Verify(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_UnknownEmail_TakesAtLeastTheResponseTimeFloor()
+    {
+        var clock = new FakeTimeProvider(TestEpoch);
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByEmailAsync("ghost@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+        var handler = CreateHandler(
+            users.Object,
+            new Mock<IPasswordResetTokenRepository>().Object,
+            new Mock<IEmailSender>().Object,
+            clock,
+            new CapturingLogger<RequestPasswordResetHandler>());
+
+        await handler.HandleAsync(new PasswordResetRequest { Email = "ghost@example.com" }, null, null);
+
+        Assert.Equal([RequestPasswordResetHandler.ResponseTimeFloor], clock.RequestedDelays);
+    }
+
+    [Fact]
+    public async Task HandleAsync_KnownEmail_WaitsForTheSameFloorAsAnUnknownOne()
+    {
+        var clock = new FakeTimeProvider(TestEpoch);
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByEmailAsync("known@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SampleUser());
+        var tokens = new Mock<IPasswordResetTokenRepository>();
+        tokens.Setup(x => x.GetMostRecentForUserAsync("user-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PasswordResetToken?)null);
+        tokens
+            .Setup(x => x.AddAsync(It.IsAny<PasswordResetToken>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PasswordResetToken t, CancellationToken _) => t with { Id = "tok" });
+        var handler = CreateHandler(
+            users.Object,
+            tokens.Object,
+            new Mock<IEmailSender>().Object,
+            clock,
+            new CapturingLogger<RequestPasswordResetHandler>());
+
+        await handler.HandleAsync(new PasswordResetRequest { Email = "known@example.com" }, null, null);
+
+        Assert.Equal([RequestPasswordResetHandler.ResponseTimeFloor], clock.RequestedDelays);
     }
 
     private static RequestPasswordResetHandler CreateHandler(

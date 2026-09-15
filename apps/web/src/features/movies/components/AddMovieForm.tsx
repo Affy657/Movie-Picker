@@ -607,6 +607,11 @@ export default function AddMovieForm({
                       className={styles.addButton}
                       onClick={() => addMovie(r)}
                       disabled={adding || alreadyAdded}
+                      aria-label={
+                        alreadyAdded
+                          ? undefined
+                          : t('movies.search.addButtonAria', { title: r.title })
+                      }
                       title={
                         alreadyAdded
                           ? (alreadyAddedHint ?? t('movies.search.alreadyListedHint'))

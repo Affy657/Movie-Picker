@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, Info, PlayCircle } from 'lucide-react';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 import { useTranslation } from '@/shared/i18n';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
+import { formatReleaseDate } from '@/shared/utils/formatReleaseDate';
 import { extractYouTubeId } from '@/shared/utils/youtube';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './MovieDetailsPanel.module.css';
@@ -110,7 +111,7 @@ interface MovieDetailsBodyProps {
 }
 
 function MovieDetailsBody({ data, onPlayTrailer }: Readonly<MovieDetailsBodyProps>) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const facts: Array<[string, string]> = [];
   const trailerYtId = extractYouTubeId(data.trailerUrl);
   const safeTrailerUrl = trailerYtId
@@ -123,7 +124,8 @@ function MovieDetailsBody({ data, onPlayTrailer }: Readonly<MovieDetailsBodyProp
   const runtimeLabel = formatRuntimeMinutes(data.runtimeMinutes);
   if (runtimeLabel) facts.push([t('movies.details.runtimeLabel'), runtimeLabel]);
   if (data.genres.length > 0) facts.push([t('movies.details.genresLabel'), data.genres.join(', ')]);
-  if (data.releaseDate) facts.push([t('movies.details.releasedLabel'), data.releaseDate]);
+  if (data.releaseDate)
+    facts.push([t('movies.details.releasedLabel'), formatReleaseDate(data.releaseDate, locale)]);
 
   const hasContent = !!data.overview || !!data.tagline || facts.length > 0;
   if (!hasContent) {
