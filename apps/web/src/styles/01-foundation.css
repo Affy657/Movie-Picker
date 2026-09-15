@@ -541,8 +541,8 @@
   --color-primary-border: color-mix(in srgb, var(--color-primary) 50%, transparent);
   --color-error-bg: color-mix(in srgb, var(--color-error) 14%, transparent);
   --color-error-border: color-mix(in srgb, var(--color-error) 40%, transparent);
-  --color-success-bg: color-mix(in srgb, var(--green-400) 14%, transparent);
-  --color-success-border: color-mix(in srgb, var(--green-400) 40%, transparent);
+  --color-success-bg: color-mix(in srgb, var(--color-success) 14%, transparent);
+  --color-success-border: color-mix(in srgb, var(--color-success) 40%, transparent);
   --color-warning-bg: color-mix(in srgb, var(--color-warning) 14%, transparent);
   --color-warning-border: color-mix(in srgb, var(--color-warning) 40%, transparent);
   --color-streak-fg: var(--color-streak-soft);

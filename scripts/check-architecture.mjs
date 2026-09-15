@@ -192,7 +192,7 @@ const TOKENISED_PROPS = [
   ['letter-spacing', /var\(--tracking-|inherit|normal|^0$/, '--tracking-*'],
   ['font-weight', /var\(--font-weight-|inherit/, '--font-weight-*'],
   ['font-family', /var\(--font-|inherit/, '--font-body / --font-mono'],
-  ['border-radius', /var\(--radius-|inherit|^(?:0|50%|100%)$/, '--radius-*'],
+  ['border-radius', /var\(--radius-|inherit|^(?:(?:0|50%|100%)\s*)+$/, '--radius-*'],
 ];
 const MOTION_PROP =
   /(?:^|[;{\n])\s*(transition|animation)(?:-duration|-timing-function)?\s*:\s*([^;{}]+)/g;

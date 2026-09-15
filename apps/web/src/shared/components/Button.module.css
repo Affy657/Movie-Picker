@@ -70,13 +70,13 @@
     box-shadow: var(--shadow-md);
   }
 
-  .ghost:not(:disabled):hover {
+  .btn.ghost:not(:disabled):hover {
     background: var(--color-surface-hover);
     border-color: transparent;
     box-shadow: none;
   }
 
-  .danger:not(:disabled):hover {
+  .btn.danger:not(:disabled):hover {
     color: var(--color-error);
     border-color: var(--color-error);
   }
