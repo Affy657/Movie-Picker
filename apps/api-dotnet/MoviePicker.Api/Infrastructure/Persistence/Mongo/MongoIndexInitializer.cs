@@ -1,41 +1,48 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using MoviePicker.Api.Application.Ports;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoIndexInitializer : IHostedService
 {
     private readonly IMongoDatabase _database;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly TimeProvider _clock;
     private readonly ILogger<MongoIndexInitializer> _logger;
 
-    public MongoIndexInitializer(IMongoDatabase database, ILogger<MongoIndexInitializer> logger)
+    public MongoIndexInitializer(
+        IMongoDatabase database,
+        IServiceScopeFactory scopeFactory,
+        TimeProvider clock,
+        ILogger<MongoIndexInitializer> logger)
     {
         _database = database;
+        _scopeFactory = scopeFactory;
+        _clock = clock;
         _logger = logger;
     }
 
+    public string MarkerId => BuildPlan().MarkerId;
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        var plan = BuildPlan();
         try
         {
-            await EnsureUserIndexesAsync(cancellationToken);
-            await EnsureEventIndexesAsync(cancellationToken);
-            await EnsureParticipantIndexesAsync(cancellationToken);
-            await EnsureMovieIndexesAsync(cancellationToken);
-            await EnsureVoteIndexesAsync(cancellationToken);
-            await EnsureAuthSessionIndexesAsync(cancellationToken);
-            await EnsureSeenMarkIndexesAsync(cancellationToken);
-            await EnsurePasswordResetTokenIndexesAsync(cancellationToken);
-            await EnsurePushSubscriptionIndexesAsync(cancellationToken);
-            await EnsureFollowIndexesAsync(cancellationToken);
-            await EnsureWatchlistIndexesAsync(cancellationToken);
-            await EnsureUserNotificationIndexesAsync(cancellationToken);
-            await EnsureKofiWebhookLogIndexesAsync(cancellationToken);
-            await EnsurePushDedupIndexesAsync(cancellationToken);
-            await EnsureRateLimitCounterIndexesAsync(cancellationToken);
-            await EnsureSharedCacheIndexesAsync(cancellationToken);
-            _logger.LogInformation("Index MongoDB initialisés.");
+            using var scope = _scopeFactory.CreateScope();
+            var history = scope.ServiceProvider.GetRequiredService<IMigrationHistoryRepository>();
+            if (await history.IsAppliedAsync(plan.MarkerId, cancellationToken))
+            {
+                _logger.LogInformation("Index MongoDB déjà à jour ({MarkerId}).", plan.MarkerId);
+                return;
+            }
+
+            await plan.ExecuteAsync(cancellationToken);
+            await history.MarkAppliedAsync(plan.MarkerId, plan.StepCount, _clock.GetUtcNow(), cancellationToken);
+            _logger.LogInformation("Index MongoDB initialisés ({MarkerId}).", plan.MarkerId);
         }
         catch (Exception ex)
         {
@@ -45,9 +52,30 @@ public sealed class MongoIndexInitializer : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    private async Task EnsureUserIndexesAsync(CancellationToken ct)
+    private MongoIndexPlan BuildPlan()
     {
-        var col = _database.GetCollection<UserDocument>("users");
+        var plan = new MongoIndexPlan(_database);
+        EnsureUserIndexes(plan);
+        EnsureEventIndexes(plan);
+        EnsureParticipantIndexes(plan);
+        EnsureMovieIndexes(plan);
+        EnsureVoteIndexes(plan);
+        EnsureAuthSessionIndexes(plan);
+        EnsureSeenMarkIndexes(plan);
+        EnsurePasswordResetTokenIndexes(plan);
+        EnsurePushSubscriptionIndexes(plan);
+        EnsureFollowIndexes(plan);
+        EnsureWatchlistIndexes(plan);
+        EnsureUserNotificationIndexes(plan);
+        EnsureKofiWebhookLogIndexes(plan);
+        EnsurePushDedupIndexes(plan);
+        EnsureRateLimitCounterIndexes(plan);
+        EnsureSharedCacheIndexes(plan);
+        return plan;
+    }
+
+    private static void EnsureUserIndexes(MongoIndexPlan plan)
+    {
         var email = new CreateIndexModel<UserDocument>(
             Builders<UserDocument>.IndexKeys.Ascending(x => x.Email),
             new CreateIndexOptions { Name = "users_email_unique", Unique = true });
@@ -67,12 +95,11 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending("identities.provider")
                 .Ascending("identities.subject"),
             new CreateIndexOptions { Name = "users_identities_provider_subject_unique", Unique = true, Sparse = true });
-        await col.Indexes.CreateManyAsync(new[] { email, handle, updatedAt, identity }, ct);
+        plan.Create("users", email, handle, updatedAt, identity);
     }
 
-    private async Task EnsureEventIndexesAsync(CancellationToken ct)
+    private static void EnsureEventIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<EventDocument>("events");
         var slug = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.Slug),
             new CreateIndexOptions { Name = "events_slug_unique", Unique = true });
@@ -82,24 +109,25 @@ public sealed class MongoIndexInitializer : IHostedService
         var recurrence = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.Recurrence).Ascending(x => x.CreatorUserId),
             new CreateIndexOptions { Name = "events_recurrence_creatorUserId", Sparse = true });
-        await col.Indexes.CreateManyAsync(new[] { slug, creator, recurrence }, ct);
+        var startAt = new CreateIndexModel<EventDocument>(
+            Builders<EventDocument>.IndexKeys.Ascending(x => x.StartAtUtc),
+            new CreateIndexOptions { Name = "events_startAtUtc", Sparse = true });
+        plan.Create("events", slug, creator, recurrence, startAt);
     }
 
-    private async Task EnsureMovieIndexesAsync(CancellationToken ct)
+    private static void EnsureMovieIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<MovieDocument>("movies");
         var byEvent = new CreateIndexModel<MovieDocument>(
             Builders<MovieDocument>.IndexKeys.Ascending(x => x.EventId),
             new CreateIndexOptions { Name = "movies_eventId" });
         var byEventTmdb = new CreateIndexModel<MovieDocument>(
             Builders<MovieDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.TmdbId),
             new CreateIndexOptions { Name = "movies_eventId_tmdbId_unique", Unique = true });
-        await col.Indexes.CreateManyAsync(new[] { byEvent, byEventTmdb }, ct);
+        plan.Create("movies", byEvent, byEventTmdb);
     }
 
-    private async Task EnsureVoteIndexesAsync(CancellationToken ct)
+    private static void EnsureVoteIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<VoteDocument>("votes");
         var byMovie = new CreateIndexModel<VoteDocument>(
             Builders<VoteDocument>.IndexKeys.Ascending(x => x.MovieId),
             new CreateIndexOptions { Name = "votes_movieId" });
@@ -109,14 +137,13 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending(x => x.MovieId)
                 .Ascending(x => x.ParticipantId),
             new CreateIndexOptions { Name = "votes_event_movie_participant_unique", Unique = true });
-        await col.Indexes.CreateManyAsync(new[] { byMovie, unique }, ct);
+        plan.Create("votes", byMovie, unique);
     }
 
-    private async Task EnsureParticipantIndexesAsync(CancellationToken ct)
+    private static void EnsureParticipantIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<ParticipantDocument>("participants");
 
-        await DropIndexIfExistsAsync(col, "participants_eventId_pseudo", ct);
+        plan.DropIfExists<ParticipantDocument>("participants", "participants_eventId_pseudo");
 
         var eventUserUnique = new CreateIndexModel<ParticipantDocument>(
             Builders<ParticipantDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.UserId),
@@ -139,26 +166,24 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<ParticipantDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "participants_eventId_createdAt" });
 
-        await col.Indexes.CreateManyAsync(new[] { eventUserUnique, byUser, eventPseudo, eventCreated }, ct);
+        plan.Create("participants", eventUserUnique, byUser, eventPseudo, eventCreated);
     }
 
-    private async Task EnsureAuthSessionIndexesAsync(CancellationToken ct)
+    private static void EnsureAuthSessionIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<AuthSessionDocument>("auth_sessions");
         var ttl = new CreateIndexModel<AuthSessionDocument>(
             Builders<AuthSessionDocument>.IndexKeys.Ascending(x => x.ExpiresAtUtc),
             new CreateIndexOptions { Name = "auth_sessions_expires_ttl", ExpireAfter = TimeSpan.Zero });
-        await col.Indexes.CreateOneAsync(ttl, cancellationToken: ct);
+        plan.Create("auth_sessions", ttl);
 
         var byUser = new CreateIndexModel<AuthSessionDocument>(
             Builders<AuthSessionDocument>.IndexKeys.Ascending(x => x.UserId),
             new CreateIndexOptions { Name = "auth_sessions_userId", Sparse = true });
-        await col.Indexes.CreateOneAsync(byUser, cancellationToken: ct);
+        plan.Create("auth_sessions", byUser);
     }
 
-    private async Task EnsurePasswordResetTokenIndexesAsync(CancellationToken ct)
+    private static void EnsurePasswordResetTokenIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<PasswordResetTokenDocument>("password_reset_tokens");
         var tokenHash = new CreateIndexModel<PasswordResetTokenDocument>(
             Builders<PasswordResetTokenDocument>.IndexKeys.Ascending(x => x.TokenHash),
             new CreateIndexOptions { Name = "password_reset_tokens_tokenHash_unique", Unique = true });
@@ -168,12 +193,11 @@ public sealed class MongoIndexInitializer : IHostedService
         var ttl = new CreateIndexModel<PasswordResetTokenDocument>(
             Builders<PasswordResetTokenDocument>.IndexKeys.Ascending(x => x.ExpiresAtUtc),
             new CreateIndexOptions { Name = "password_reset_tokens_expires_ttl", ExpireAfter = TimeSpan.Zero });
-        await col.Indexes.CreateManyAsync(new[] { tokenHash, byUser, ttl }, ct);
+        plan.Create("password_reset_tokens", tokenHash, byUser, ttl);
     }
 
-    private async Task EnsureSeenMarkIndexesAsync(CancellationToken ct)
+    private static void EnsureSeenMarkIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<SeenMarkDocument>("seen_marks");
         var unique = new CreateIndexModel<SeenMarkDocument>(
             Builders<SeenMarkDocument>.IndexKeys
                 .Ascending(x => x.EventId)
@@ -187,12 +211,11 @@ public sealed class MongoIndexInitializer : IHostedService
         var byMovie = new CreateIndexModel<SeenMarkDocument>(
             Builders<SeenMarkDocument>.IndexKeys.Ascending(x => x.MovieId),
             new CreateIndexOptions { Name = "seen_marks_movieId" });
-        await col.Indexes.CreateManyAsync(new[] { unique, byMovie }, ct);
+        plan.Create("seen_marks", unique, byMovie);
     }
 
-    private async Task EnsurePushSubscriptionIndexesAsync(CancellationToken ct)
+    private static void EnsurePushSubscriptionIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<PushSubscriptionDocument>("push_subscriptions");
         var unique = new CreateIndexModel<PushSubscriptionDocument>(
             Builders<PushSubscriptionDocument>.IndexKeys
                 .Ascending(x => x.UserId)
@@ -201,12 +224,11 @@ public sealed class MongoIndexInitializer : IHostedService
         var byUser = new CreateIndexModel<PushSubscriptionDocument>(
             Builders<PushSubscriptionDocument>.IndexKeys.Ascending(x => x.UserId),
             new CreateIndexOptions { Name = "push_subscriptions_userId" });
-        await col.Indexes.CreateManyAsync(new[] { unique, byUser }, ct);
+        plan.Create("push_subscriptions", unique, byUser);
     }
 
-    private async Task EnsureFollowIndexesAsync(CancellationToken ct)
+    private static void EnsureFollowIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<FollowDocument>("follows");
         var unique = new CreateIndexModel<FollowDocument>(
             Builders<FollowDocument>.IndexKeys
                 .Ascending(x => x.FollowerId)
@@ -222,12 +244,11 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending(x => x.FolloweeId)
                 .Descending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "follows_followeeId_createdAt" });
-        await col.Indexes.CreateManyAsync(new[] { unique, byFollowerDate, byFolloweeDate }, ct);
+        plan.Create("follows", unique, byFollowerDate, byFolloweeDate);
     }
 
-    private async Task EnsureWatchlistIndexesAsync(CancellationToken ct)
+    private static void EnsureWatchlistIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<WatchlistItemDocument>("watchlist");
         var unique = new CreateIndexModel<WatchlistItemDocument>(
             Builders<WatchlistItemDocument>.IndexKeys
                 .Ascending(x => x.UserId)
@@ -242,12 +263,11 @@ public sealed class MongoIndexInitializer : IHostedService
         var missingRuntime = new CreateIndexModel<WatchlistItemDocument>(
             Builders<WatchlistItemDocument>.IndexKeys.Ascending(x => x.RuntimeMinutes),
             new CreateIndexOptions { Name = "watchlist_runtimeMinutes_missing" });
-        await col.Indexes.CreateManyAsync(new[] { unique, byUserDate, missingRuntime }, ct);
+        plan.Create("watchlist", unique, byUserDate, missingRuntime);
     }
 
-    private async Task EnsureUserNotificationIndexesAsync(CancellationToken ct)
+    private static void EnsureUserNotificationIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<UserNotificationDocument>("user_notifications");
         var byUser = new CreateIndexModel<UserNotificationDocument>(
             Builders<UserNotificationDocument>.IndexKeys
                 .Ascending(x => x.UserId)
@@ -268,13 +288,12 @@ public sealed class MongoIndexInitializer : IHostedService
         var ttl = new CreateIndexModel<UserNotificationDocument>(
             Builders<UserNotificationDocument>.IndexKeys.Ascending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "user_notifications_createdAt_ttl", ExpireAfter = TimeSpan.FromDays(90) });
-        await col.Indexes.CreateManyAsync(new[] { byUser, unread, byEvent, ttl }, ct);
+        plan.Create("user_notifications", byUser, unread, byEvent, ttl);
     }
 
-    private async Task EnsurePushDedupIndexesAsync(CancellationToken ct)
+    private static void EnsurePushDedupIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<PushDedupMarkerDocument>("push_dedup_markers");
-        await DropIndexIfExistsAsync(col, "push_dedup_markers_unique", ct);
+        plan.DropIfExists<PushDedupMarkerDocument>("push_dedup_markers", "push_dedup_markers_unique");
         var unique = new CreateIndexModel<PushDedupMarkerDocument>(
             Builders<PushDedupMarkerDocument>.IndexKeys
                 .Ascending(x => x.UserId)
@@ -285,41 +304,30 @@ public sealed class MongoIndexInitializer : IHostedService
         var ttl = new CreateIndexModel<PushDedupMarkerDocument>(
             Builders<PushDedupMarkerDocument>.IndexKeys.Ascending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "push_dedup_markers_createdAt_ttl", ExpireAfter = TimeSpan.FromDays(3) });
-        await col.Indexes.CreateManyAsync(new[] { unique, ttl }, ct);
+        plan.Create("push_dedup_markers", unique, ttl);
     }
 
-    private async Task EnsureRateLimitCounterIndexesAsync(CancellationToken ct)
+    private static void EnsureRateLimitCounterIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<RateLimitCounterDocument>("rate_limit_counters");
         var ttl = new CreateIndexModel<RateLimitCounterDocument>(
             Builders<RateLimitCounterDocument>.IndexKeys.Ascending(x => x.ExpiresAt),
             new CreateIndexOptions { Name = "rate_limit_counters_expiresAt_ttl", ExpireAfter = TimeSpan.Zero });
-        await col.Indexes.CreateOneAsync(ttl, cancellationToken: ct);
+        plan.Create("rate_limit_counters", ttl);
     }
 
-    private async Task EnsureSharedCacheIndexesAsync(CancellationToken ct)
+    private static void EnsureSharedCacheIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<SharedCacheDocument>(MongoSharedCache.CollectionName);
         var ttl = new CreateIndexModel<SharedCacheDocument>(
             Builders<SharedCacheDocument>.IndexKeys.Ascending(x => x.ExpiresAt),
             new CreateIndexOptions { Name = "shared_cache_expiresAt_ttl", ExpireAfter = TimeSpan.Zero });
-        await col.Indexes.CreateOneAsync(ttl, cancellationToken: ct);
+        plan.Create(MongoSharedCache.CollectionName, ttl);
     }
 
-    private async Task EnsureKofiWebhookLogIndexesAsync(CancellationToken ct)
+    private static void EnsureKofiWebhookLogIndexes(MongoIndexPlan plan)
     {
-        var col = _database.GetCollection<KofiWebhookLogDocument>("kofi_webhook_log");
         var ttl = new CreateIndexModel<KofiWebhookLogDocument>(
             Builders<KofiWebhookLogDocument>.IndexKeys.Ascending(x => x.ReceivedAt),
             new CreateIndexOptions { Name = "kofi_webhook_log_receivedAt_ttl", ExpireAfter = TimeSpan.FromDays(365) });
-        await col.Indexes.CreateOneAsync(ttl, cancellationToken: ct);
-    }
-
-    private static async Task DropIndexIfExistsAsync<T>(IMongoCollection<T> col, string name, CancellationToken ct)
-    {
-        try { await col.Indexes.DropOneAsync(name, ct); }
-        catch (MongoCommandException ex) when (ex.Code == MongoErrorCodes.IndexNotFound)
-        {
-        }
+        plan.Create("kofi_webhook_log", ttl);
     }
 }

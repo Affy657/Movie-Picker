@@ -67,6 +67,18 @@ public sealed class MongoEventRepository : IEventRepository
             throw new NotFoundException("Soirée introuvable");
     }
 
+    public async Task<IReadOnlyList<Event>> ListAllByCreatorUserIdAsync(string creatorUserId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(creatorUserId))
+            return [];
+
+        var docs = await _collection
+            .Find(x => x.CreatorUserId == creatorUserId)
+            .SortByDescending(x => x.UpdatedAt)
+            .ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
     public async Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(creatorUserId) || limit <= 0)
@@ -140,10 +152,27 @@ public sealed class MongoEventRepository : IEventRepository
         return result.IsAcknowledged && result.DeletedCount > 0;
     }
 
-    public async Task<IReadOnlyList<Event>> ListOpenEventsAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<Event>> ListOpenEventsStartingBetweenAsync(
+        DateTimeOffset fromInclusive,
+        DateTimeOffset toInclusive,
+        CancellationToken ct = default)
     {
-        var filter = Builders<EventDocument>.Filter.Eq(x => x.ClosedAt, (DateTime?)null);
+        var builder = Builders<EventDocument>.Filter;
+        var filter = builder.And(
+            builder.Eq(x => x.ClosedAt, (DateTime?)null),
+            builder.Gte(x => x.StartAtUtc, fromInclusive.UtcDateTime),
+            builder.Lte(x => x.StartAtUtc, toInclusive.UtcDateTime));
         var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<Event>> ListMissingStartAtAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return [];
+
+        var filter = Builders<EventDocument>.Filter.Exists(x => x.StartAtUtc, false);
+        var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 

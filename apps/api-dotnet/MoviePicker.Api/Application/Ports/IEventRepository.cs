@@ -12,6 +12,8 @@ public interface IEventRepository
 
     Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default);
 
+    Task<IReadOnlyList<Event>> ListAllByCreatorUserIdAsync(string creatorUserId, CancellationToken ct = default);
+
     Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
 
     Task<int> CountByWinnerMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default);
@@ -20,7 +22,12 @@ public interface IEventRepository
 
     Task<bool> DeleteAsync(string eventId, CancellationToken ct = default);
 
-    Task<IReadOnlyList<Event>> ListOpenEventsAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<Event>> ListOpenEventsStartingBetweenAsync(
+        DateTimeOffset fromInclusive,
+        DateTimeOffset toInclusive,
+        CancellationToken ct = default);
+
+    Task<IReadOnlyList<Event>> ListMissingStartAtAsync(int limit, CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(
         string? creatorUserId,

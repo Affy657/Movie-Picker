@@ -91,6 +91,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("logout")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthLogoutPolicy)]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

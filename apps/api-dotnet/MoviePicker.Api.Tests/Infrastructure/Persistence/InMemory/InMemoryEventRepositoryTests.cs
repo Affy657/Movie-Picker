@@ -120,15 +120,20 @@ public sealed class InMemoryEventRepositoryTests
     }
 
     [Fact]
-    public async Task ListOpenEventsAsync_ExcludesClosed()
+    public async Task ListOpenEventsStartingBetweenAsync_ExcludesClosedAndOutOfRange()
     {
         await _repo.AddAsync(Mk(slug: "open", closedAt: null));
         await _repo.AddAsync(Mk(slug: "closed", closedAt: DateTimeOffset.UtcNow));
+        await _repo.AddAsync(Mk(slug: "later", closedAt: null) with { Date = "2031-01-01" });
+        await _repo.AddAsync(Mk(slug: "unparsable", closedAt: null) with { Date = "pas-une-date" });
 
-        var open = await _repo.ListOpenEventsAsync();
+        var open = await _repo.ListOpenEventsStartingBetweenAsync(
+            new DateTimeOffset(2029, 12, 31, 0, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2030, 1, 2, 0, 0, 0, TimeSpan.Zero));
 
         Assert.Single(open);
         Assert.Equal("open", open[0].Slug);
+        Assert.Empty(await _repo.ListMissingStartAtAsync(10));
     }
 
     [Fact]

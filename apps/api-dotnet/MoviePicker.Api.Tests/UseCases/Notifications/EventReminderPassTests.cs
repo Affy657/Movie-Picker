@@ -33,7 +33,8 @@ public sealed class EventReminderPassTests
 
     public EventReminderPassTests()
     {
-        _events.Setup(r => r.ListOpenEventsAsync(It.IsAny<CancellationToken>()))
+        _events.Setup(r => r.ListOpenEventsStartingBetweenAsync(
+                It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         _participants.Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
@@ -87,8 +88,25 @@ public sealed class EventReminderPassTests
     }
 
     private void GivenOpenEvents(params Event[] events) =>
-        _events.Setup(r => r.ListOpenEventsAsync(It.IsAny<CancellationToken>()))
+        _events.Setup(r => r.ListOpenEventsStartingBetweenAsync(
+                It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(events);
+
+    [Fact]
+    public async Task RunAsync_QueriesOnlyTheStartWindowTheRemindersCanUse()
+    {
+        DateTimeOffset? from = null;
+        DateTimeOffset? to = null;
+        _events.Setup(r => r.ListOpenEventsStartingBetweenAsync(
+                It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Callback((DateTimeOffset f, DateTimeOffset t, CancellationToken _) => { from = f; to = t; })
+            .ReturnsAsync([]);
+
+        await CreatePass().RunAsync();
+
+        Assert.Equal(Now - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay, from);
+        Assert.Equal(Now + TimeSpan.FromHours(24) + TimeSpan.FromMinutes(20), to);
+    }
 
     private void GivenParticipants(string eventId, params string?[] userIds) =>
         _participants.Setup(r => r.ListByEventIdAsync(eventId, It.IsAny<CancellationToken>()))

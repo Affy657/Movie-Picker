@@ -49,7 +49,7 @@ public sealed class ListMyEventsHandlerTests
     {
         var created = new EventEntityBuilder().WithId("e1").Build();
         var joined = new EventEntityBuilder().WithId("e2").Build();
-        _eventRepo.Setup(r => r.ListByCreatorUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _eventRepo.Setup(r => r.ListAllByCreatorUserIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync([created]);
         _participantRepo.Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(["e1", "e2"]);
@@ -94,7 +94,7 @@ public sealed class ListMyEventsHandlerTests
             UpdatedAt = DateTimeOffset.Parse("2026-01-04T00:00:00Z")
         };
 
-        _eventRepo.Setup(r => r.ListByCreatorUserIdAsync("u1", 200, It.IsAny<CancellationToken>())).ReturnsAsync(new[] { created });
+        _eventRepo.Setup(r => r.ListAllByCreatorUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(new[] { created });
         _participantRepo.Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(value);
         _eventRepo.Setup(r => r.ListByIdsAsync(It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 1 && ids.Contains("e2")), It.IsAny<CancellationToken>()))
@@ -140,7 +140,7 @@ public sealed class ListMyEventsHandlerTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.Parse("2026-06-02T00:00:00Z")
         };
-        _eventRepo.Setup(r => r.ListByCreatorUserIdAsync("u1", 200, It.IsAny<CancellationToken>())).ReturnsAsync(new[] { e1, e2 });
+        _eventRepo.Setup(r => r.ListAllByCreatorUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(new[] { e1, e2 });
         _participantRepo.Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<string>());
         _eventRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -178,7 +178,7 @@ public sealed class ListMyEventsHandlerTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.Parse("2026-06-02T00:00:00Z")
         };
-        _eventRepo.Setup(r => r.ListByCreatorUserIdAsync("u1", 200, It.IsAny<CancellationToken>())).ReturnsAsync(new[] { e1 });
+        _eventRepo.Setup(r => r.ListAllByCreatorUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(new[] { e1 });
         _participantRepo.Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<string>());
         _eventRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -228,7 +228,7 @@ public sealed class ListMyEventsHandlerTests
         };
 
         _eventRepo
-            .Setup(r => r.ListByCreatorUserIdAsync("u1", 200, It.IsAny<CancellationToken>()))
+            .Setup(r => r.ListAllByCreatorUserIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { capped, unlimited });
         _participantRepo
             .Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
@@ -260,7 +260,7 @@ public sealed class ListMyEventsHandlerTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        _eventRepo.Setup(r => r.ListByCreatorUserIdAsync("u1", 200, It.IsAny<CancellationToken>())).ReturnsAsync(new[] { e1 });
+        _eventRepo.Setup(r => r.ListAllByCreatorUserIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(new[] { e1 });
         _participantRepo.Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<string>());
         _eventRepo.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -315,7 +315,7 @@ public sealed class ListMyEventsHandlerTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        _eventRepo.Setup(r => r.ListByCreatorUserIdAsync("u1", 200, It.IsAny<CancellationToken>()))
+        _eventRepo.Setup(r => r.ListAllByCreatorUserIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { active, finishedOld, finishedRecent });
         _participantRepo.Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<string>());
@@ -361,7 +361,7 @@ public sealed class ListMyEventsHandlerTests
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
-        _eventRepo.Setup(r => r.ListByCreatorUserIdAsync("u1", 200, It.IsAny<CancellationToken>()))
+        _eventRepo.Setup(r => r.ListAllByCreatorUserIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { byTitle, byWinner });
         _participantRepo.Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<string>());

@@ -37,6 +37,10 @@ public static class RateLimitingExtensions
     public const string KofiWebhookPolicy = "kofi-webhook";
     public const string IdeaSuggestionPolicy = "idea-suggestion";
     public const string SchedulerPolicy = "scheduler";
+    public const string HostActionPolicy = "host-action";
+    public const string MovieMutationPolicy = "movie-mutation";
+    public const string NotificationMutationPolicy = "notification-mutation";
+    public const string AuthLogoutPolicy = "auth-logout";
 
     private static readonly PolicySpec[] Policies =
     [
@@ -69,7 +73,11 @@ public static class RateLimitingExtensions
         new(LetterboxdImportPolicy, 10, 1, false),
         new(KofiWebhookPolicy, 20, 1, false),
         new(IdeaSuggestionPolicy, 10, 60, true),
-        new(SchedulerPolicy, 10, 1, false)
+        new(SchedulerPolicy, 10, 1, false),
+        new(HostActionPolicy, 60, 1, false),
+        new(MovieMutationPolicy, 60, 1, false),
+        new(NotificationMutationPolicy, 60, 1, false),
+        new(AuthLogoutPolicy, 30, 1, false)
     ];
 
     public static IServiceCollection AddMoviePickerRateLimiter(

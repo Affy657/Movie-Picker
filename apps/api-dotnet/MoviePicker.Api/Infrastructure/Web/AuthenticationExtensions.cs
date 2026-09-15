@@ -15,9 +15,10 @@ public static class AuthenticationExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.AddSingleton<AuthTicketCache>();
         services.AddSingleton<ITicketStore>(sp =>
             sp.GetService<MongoCollectionFactory>() is { } collections
-                ? new MongoAuthTicketStore(collections)
+                ? new CachedAuthTicketStore(new MongoAuthTicketStore(collections), sp.GetRequiredService<AuthTicketCache>())
                 : new MemoryAuthTicketStore());
 
         services.AddSingleton<IConfigureOptions<CookieAuthenticationOptions>, MoviePickerCookieAuthenticationConfigurer>();

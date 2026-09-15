@@ -65,6 +65,9 @@ public static class EventDocumentMapper
             Recurrence = ToRecurrenceString(evt.Recurrence),
             RecurrenceParentEventId = evt.RecurrenceParentEventId,
             NextOccurrenceEventId = evt.NextOccurrenceEventId,
+            StartAtUtc = EventSchedule.TryGetStartUtc(evt.Date, evt.Time, out var startAt)
+                ? startAt.UtcDateTime
+                : null,
             CreatedAt = evt.CreatedAt.UtcDateTime,
             UpdatedAt = evt.UpdatedAt.UtcDateTime,
             Version = evt.Version

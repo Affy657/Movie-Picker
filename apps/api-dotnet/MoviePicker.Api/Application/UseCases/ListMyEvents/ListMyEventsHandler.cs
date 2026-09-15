@@ -43,7 +43,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
 
         await _recurringEvents.RunForCreatorAsync(userId, ct);
 
-        var created = await _eventRepository.ListByCreatorUserIdAsync(userId, 200, ct);
+        var created = await _eventRepository.ListAllByCreatorUserIdAsync(userId, ct);
         var joinedIds = await _participantRepository.ListDistinctEventIdsByUserIdAsync(userId, ct);
         var joinedSet = new HashSet<string>(joinedIds);
         var createdIds = new HashSet<string>(created.Select(e => e.Id));

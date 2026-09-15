@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -66,6 +67,9 @@ public sealed class InMemoryEventRepository : IEventRepository
             throw new NotFoundException("Soirée introuvable");
         return Task.CompletedTask;
     }
+
+    public Task<IReadOnlyList<Event>> ListAllByCreatorUserIdAsync(string creatorUserId, CancellationToken ct = default) =>
+        ListByCreatorUserIdAsync(creatorUserId, int.MaxValue, ct);
 
     public Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default)
     {
@@ -134,10 +138,19 @@ public sealed class InMemoryEventRepository : IEventRepository
         return Task.FromResult(true);
     }
 
-    public Task<IReadOnlyList<Event>> ListOpenEventsAsync(CancellationToken ct = default)
+    public Task<IReadOnlyList<Event>> ListMissingStartAtAsync(int limit, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<Event>>([]);
+
+    public Task<IReadOnlyList<Event>> ListOpenEventsStartingBetweenAsync(
+        DateTimeOffset fromInclusive,
+        DateTimeOffset toInclusive,
+        CancellationToken ct = default)
     {
         IReadOnlyList<Event> result = _byId.Values
-            .Where(e => !e.ClosedAt.HasValue)
+            .Where(e => !e.ClosedAt.HasValue
+                && EventSchedule.TryGetStartUtc(e.Date, e.Time, out var startAt)
+                && startAt >= fromInclusive
+                && startAt <= toInclusive)
             .ToList();
         return Task.FromResult(result);
     }

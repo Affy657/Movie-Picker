@@ -1,6 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -27,6 +30,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("events", "events_slug_unique", Unique: true),
         new("events", "events_creatorUserId"),
         new("events", "events_recurrence_creatorUserId"),
+        new("events", "events_startAtUtc"),
 
         new("movies", "movies_eventId"),
         new("movies", "movies_eventId_tmdbId_unique", Unique: true),
@@ -109,6 +113,17 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
 
             Assert.Equal(expected, found);
         }
+    }
+
+    [MongoFact]
+    public async Task Startup_RecordsTheIndexSpecificationMarker_SoTheNextStartSkipsCreation()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var initializer = scope.ServiceProvider.GetServices<IHostedService>().OfType<MongoIndexInitializer>().Single();
+        var history = scope.ServiceProvider.GetRequiredService<IMigrationHistoryRepository>();
+
+        Assert.StartsWith(MongoIndexPlan.MarkerPrefix, initializer.MarkerId);
+        Assert.True(await history.IsAppliedAsync(initializer.MarkerId));
     }
 
     [MongoFact]

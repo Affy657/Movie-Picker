@@ -154,6 +154,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpPost("{idOrSlug}/wheel")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(WheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -171,6 +172,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpPost("{idOrSlug}/wheel/announce")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -186,6 +188,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpPost("{idOrSlug}/winner")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(WheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -203,6 +206,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpDelete("{idOrSlug}/winners/{movieId}")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(ResetWheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -218,6 +222,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpDelete("{idOrSlug}/wheel")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(ResetWheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -232,6 +237,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpPost("{idOrSlug}/close")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(CloseEventResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

@@ -62,7 +62,10 @@ public sealed class EventReminderPass : IEventReminderPass
     public async Task<EventReminderPassResult> RunAsync(CancellationToken ct = default)
     {
         var now = _clock.GetUtcNow();
-        var openEvents = await _events.ListOpenEventsAsync(ct);
+        var openEvents = await _events.ListOpenEventsStartingBetweenAsync(
+            now - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay,
+            now + Window24hMax,
+            ct);
         var eventsWithStart = openEvents
             .Select(e => (Event: e, HasStart: EventSchedule.TryGetStartUtc(e.Date, e.Time, out var startAt), StartUtc: startAt))
             .Where(x => x.HasStart)

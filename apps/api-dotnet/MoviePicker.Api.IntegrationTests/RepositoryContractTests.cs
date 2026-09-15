@@ -135,6 +135,39 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task ListOpenEventsStartingBetween_ReturnsOnlyOpenEventsInsideTheWindow()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        var inside = await events.AddAsync(NewEvent("inside-" + marker) with { Date = "2040-03-10", Time = "20:00" });
+        await events.AddAsync(NewEvent("before-" + marker) with { Date = "2040-03-01", Time = "20:00" });
+        await events.AddAsync(NewEvent("after-" + marker) with { Date = "2040-03-20", Time = "20:00" });
+        await events.AddAsync(NewEvent("closed-" + marker) with { Date = "2040-03-10", Time = "20:00", ClosedAt = Now });
+
+        var found = await events.ListOpenEventsStartingBetweenAsync(
+            new DateTimeOffset(2040, 3, 5, 0, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2040, 3, 15, 0, 0, 0, TimeSpan.Zero));
+
+        var mine = found.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).ToList();
+        Assert.Equal([inside.Id], mine.Select(e => e.Id));
+    }
+
+    [Fact]
+    public async Task ListAllByCreatorUserId_ReturnsEveryCreatedEvent_EvenBeyondTwoHundred()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var creator = "creator-" + Guid.NewGuid().ToString("N");
+        for (var i = 0; i < 205; i++)
+            await events.AddAsync(NewEvent($"Soirée {i}") with { CreatorUserId = creator });
+
+        var all = await events.ListAllByCreatorUserIdAsync(creator);
+
+        Assert.Equal(205, all.Count);
+    }
+
+    [Fact]
     public async Task CascadeDeletes_OnlyRemoveTheListedMovies()
     {
         using var scope = _factory.Services.CreateScope();

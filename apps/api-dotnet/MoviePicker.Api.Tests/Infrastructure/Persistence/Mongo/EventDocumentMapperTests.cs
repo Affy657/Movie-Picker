@@ -98,6 +98,32 @@ public sealed class EventDocumentMapperTests
     }
 
     [Fact]
+    public void ToDocument_ComputesStartAtUtcFromParisDateAndTime()
+    {
+        var evt = new EventEntityBuilder().WithId("evt1").WithSlug("soiree").Build() with
+        {
+            Date = "2030-07-14",
+            Time = "21:00"
+        };
+
+        var doc = EventDocumentMapper.ToDocument(evt);
+
+        Assert.Equal(new DateTime(2030, 7, 14, 19, 0, 0, DateTimeKind.Utc), doc.StartAtUtc);
+    }
+
+    [Fact]
+    public void ToDocument_LeavesStartAtUtcNull_WhenTheDateCannotBeParsed()
+    {
+        var evt = new EventEntityBuilder().WithId("evt1").WithSlug("soiree").Build() with
+        {
+            Date = "bientôt",
+            Time = "21:00"
+        };
+
+        Assert.Null(EventDocumentMapper.ToDocument(evt).StartAtUtc);
+    }
+
+    [Fact]
     public void ToDocument_WithConfig_RoundTrips()
     {
         var evt = new Event
