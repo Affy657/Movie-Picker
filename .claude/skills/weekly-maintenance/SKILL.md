@@ -23,7 +23,7 @@ Hors périmètre : corriger les bug reports GitHub. La passe les liste et les pr
 
 Sources indépendantes, à interroger en parallèle.
 
-**1. PR Dependabot ouvertes.** Dependabot est configuré en mensuel et groupé, une PR par écosystème (voir [.github/dependabot.yml](../../../.github/dependabot.yml)) : la plupart des semaines la liste est vide, c'est normal. Une PR groupée peut mélanger patch, mineure et **majeure**, donc lire le corps de la PR pour la liste réelle des bumps, jamais le titre. `typescript >= 7.0.0` est déjà neutralisé côté config.
+**1. PR Dependabot ouvertes.** Dependabot est configuré en mensuel avec un groupe multi-écosystèmes `monthly` : **une seule PR** par mois pour npm, GitHub Actions, NuGet et Docker réunis (voir [.github/dependabot.yml](../../../.github/dependabot.yml)) ; seules les mises à jour de sécurité arrivent à part, une par dépendance vulnérable. La plupart des semaines la liste est vide, c'est normal. La PR groupée peut mélanger patch, mineure et **majeure**, donc lire le corps de la PR pour la liste réelle des bumps, jamais le titre. `typescript >= 7.0.0` est déjà neutralisé côté config.
 
 **2. Alertes de sécurité GitHub.** Dependabot alerts et code scanning. Croiser avec la source 1 : une alerte déjà couverte par une PR ouverte n'est pas une ligne de plus.
 
