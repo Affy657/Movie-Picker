@@ -1,4 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -220,4 +222,81 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         CreatedAt = Now,
         UpdatedAt = Now
     };
+
+    private async Task<BsonDocument> ReadRawAsync(string collection, string id)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+        return await database
+            .GetCollection<BsonDocument>(collection)
+            .Find(Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(id)))
+            .SingleAsync();
+    }
+
+    private async Task SetRawFieldAsync(string collection, string id, string field, string value)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+        await database.GetCollection<BsonDocument>(collection).UpdateOneAsync(
+            Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(id)),
+            Builders<BsonDocument>.Update.Set(field, value));
+    }
+
+    [MongoFact]
+    public async Task EventUpdate_KeepsTheFieldsWrittenByANewerApiVersion()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var created = await events.AddAsync(NewEvent("Rolled back"));
+        await SetRawFieldAsync("events", created.Id, "fieldFromANewerVersion", "kept");
+
+        await events.UpdateAsync(created with { Title = "Rewritten by the older version" });
+
+        var stored = await ReadRawAsync("events", created.Id);
+        Assert.Equal("kept", stored["fieldFromANewerVersion"].AsString);
+        Assert.Equal("Rewritten by the older version", stored["title"].AsString);
+    }
+
+    [MongoFact]
+    public async Task EventUpdate_ClearingAnOptionalField_RemovesItFromTheDocument()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var created = await events.AddAsync(NewEvent("Announced") with { WinnerAnnouncedAt = Now });
+        Assert.True((await ReadRawAsync("events", created.Id)).Contains("winnerAnnouncedAt"));
+
+        await events.UpdateAsync(created with { WinnerAnnouncedAt = null });
+
+        var stored = await ReadRawAsync("events", created.Id);
+        Assert.False(stored.Contains("winnerAnnouncedAt"));
+    }
+
+    [MongoFact]
+    public async Task UserUpdate_KeepsTheFieldsWrittenByANewerApiVersion()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var created = await users.AddAsync(NewUser("rollback"));
+        await SetRawFieldAsync("users", created.Id, "fieldFromANewerVersion", "kept");
+
+        await users.UpdateAsync(created with { Bio = "Rewritten by the older version" });
+
+        var stored = await ReadRawAsync("users", created.Id);
+        Assert.Equal("kept", stored["fieldFromANewerVersion"].AsString);
+        Assert.Equal("Rewritten by the older version", stored["bio"].AsString);
+    }
+
+    [MongoFact]
+    public async Task UserUpdate_ClearingAnOptionalField_RemovesItFromTheDocument()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var created = await users.AddAsync(NewUser("bio") with { Bio = "Written" });
+        Assert.True((await ReadRawAsync("users", created.Id)).Contains("bio"));
+
+        await users.UpdateAsync(created with { Bio = null });
+
+        var stored = await ReadRawAsync("users", created.Id);
+        Assert.False(stored.Contains("bio"));
+    }
 }

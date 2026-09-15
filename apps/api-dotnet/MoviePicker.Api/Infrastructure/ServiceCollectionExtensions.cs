@@ -114,14 +114,19 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    private const int DefaultMaxConnectionPoolSize = 20;
+
     private static MongoClientSettings BuildMongoClientSettings(MongoUrl url)
     {
         var settings = MongoClientSettings.FromUrl(url);
-        if (url.MaxConnectionPoolSize == 0)
-            settings.MaxConnectionPoolSize = 50;
+        if (!ConnectionStringSetsPoolSize(url))
+            settings.MaxConnectionPoolSize = DefaultMaxConnectionPoolSize;
         settings.ServerSelectionTimeout = TimeSpan.FromSeconds(10);
         return settings;
     }
+
+    private static bool ConnectionStringSetsPoolSize(MongoUrl url) =>
+        url.Url.Contains("maxPoolSize=", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsInProcessRemindersEnabled(IConfiguration cfg) =>
         ConfigurationFlags.IsEnabled(cfg["IN_PROCESS_REMINDERS_ENABLED"], defaultValue: false);

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -137,5 +138,35 @@ public sealed class ServiceCollectionExtensionsTests
             Environments.Development);
 
         Assert.Equal(typeof(MongoEventRepository), ImplOf<IEventRepository>(services));
+    }
+
+    private const int CloudRunMaxInstances = 20;
+    private const int AtlasClusterConnectionCap = 500;
+    private const int ConnectionsReservedForOperatorsAndBackups = 100;
+
+    [Fact]
+    public void AddMoviePicker_MongoClientPool_FitsEveryCloudRunInstanceUnderTheClusterConnectionCap()
+    {
+        var services = Wire(
+            new Dictionary<string, string?> { ["MONGODB_URI"] = "mongodb://localhost:27017/moviepicker" },
+            Environments.Production);
+        using var provider = services.BuildServiceProvider();
+
+        var poolSize = provider.GetRequiredService<IMongoClient>().Settings.MaxConnectionPoolSize;
+
+        Assert.True(
+            poolSize * CloudRunMaxInstances <= AtlasClusterConnectionCap - ConnectionsReservedForOperatorsAndBackups,
+            $"{poolSize} connections per instance times {CloudRunMaxInstances} instances exceeds the cluster budget");
+    }
+
+    [Fact]
+    public void AddMoviePicker_MongoClientPool_KeepsAPoolSizeWrittenInTheConnectionString()
+    {
+        var services = Wire(
+            new Dictionary<string, string?> { ["MONGODB_URI"] = "mongodb://localhost:27017/moviepicker?maxPoolSize=7" },
+            Environments.Production);
+        using var provider = services.BuildServiceProvider();
+
+        Assert.Equal(7, provider.GetRequiredService<IMongoClient>().Settings.MaxConnectionPoolSize);
     }
 }

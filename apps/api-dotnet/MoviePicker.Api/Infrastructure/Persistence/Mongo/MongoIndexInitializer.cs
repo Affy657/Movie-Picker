@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Infrastructure.Posters;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
@@ -71,6 +72,7 @@ public sealed class MongoIndexInitializer : IHostedService
         EnsurePushDedupIndexes(plan);
         EnsureRateLimitCounterIndexes(plan);
         EnsureSharedCacheIndexes(plan);
+        EnsurePosterCacheIndexes(plan);
         return plan;
     }
 
@@ -321,6 +323,14 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<SharedCacheDocument>.IndexKeys.Ascending(x => x.ExpiresAt),
             new CreateIndexOptions { Name = "shared_cache_expiresAt_ttl", ExpireAfter = TimeSpan.Zero });
         plan.Create(MongoSharedCache.CollectionName, ttl);
+    }
+
+    private static void EnsurePosterCacheIndexes(MongoIndexPlan plan)
+    {
+        var ttl = new CreateIndexModel<PosterCacheDocument>(
+            Builders<PosterCacheDocument>.IndexKeys.Ascending(x => x.ExpiresAtUtc),
+            new CreateIndexOptions { Name = "poster_cache_expiresAtUtc_ttl", ExpireAfter = TimeSpan.Zero });
+        plan.Create(MongoPosterImageStore.CollectionName, ttl);
     }
 
     private static void EnsureKofiWebhookLogIndexes(MongoIndexPlan plan)
