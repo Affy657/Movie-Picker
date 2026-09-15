@@ -173,7 +173,12 @@ public sealed class AuthController : ControllerBase
 
         var loginOutcome = await loginHandler.HandleAsync(info, ct);
         if (loginOutcome.Kind != OAuthOutcomeKind.SignedIn || loginOutcome.User is null)
-            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "email_not_verified"), (ReturnToItemKey, returnTo)));
+        {
+            var errorCode = loginOutcome.Kind == OAuthOutcomeKind.PasswordAccountRequiresManualLink
+                ? "account_exists"
+                : "email_not_verified";
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, errorCode), (ReturnToItemKey, returnTo)));
+        }
 
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,

@@ -134,7 +134,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     {
         var poster = string.IsNullOrWhiteSpace(request.PosterPath) ? null : request.PosterPath.Trim();
         if (poster is not null && !IsAcceptablePosterPath(poster))
-            throw new BadRequestException("posterPath doit être une URL https absolue, un chemin /api/v1/posters/… ou null");
+            throw new BadRequestException("posterPath doit être une URL https d'affiche TMDB, un chemin /api/v1/posters/… ou null");
 
         if (poster is not null && TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(poster, out var norm))
             await _posterImageStore.RegisterTmdbSourceAsync(norm, ct);
@@ -229,10 +229,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         }
     }
 
-    private static bool IsAcceptablePosterPath(string p)
-    {
-        if (Uri.TryCreate(p, UriKind.Absolute, out var u) && u.Scheme == Uri.UriSchemeHttps)
-            return true;
-        return TmdbPosterUrlNormalizer.TryParsePosterKey(p, out _);
-    }
+    private static bool IsAcceptablePosterPath(string p) =>
+        TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(p, out _)
+        || TmdbPosterUrlNormalizer.TryParsePosterKey(p, out _);
 }

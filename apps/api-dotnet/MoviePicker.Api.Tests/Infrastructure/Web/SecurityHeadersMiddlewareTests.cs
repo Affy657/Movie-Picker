@@ -27,4 +27,30 @@ public sealed class SecurityHeadersMiddlewareTests
         Assert.Contains("microphone=()", h["Permissions-Policy"].ToString());
         Assert.Contains("default-src 'none'", h.ContentSecurityPolicy.ToString());
     }
+
+    [Fact]
+    public async Task InvokeAsync_AddsHsts_WhenRequestIsHttps()
+    {
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Scheme = "https";
+        var mw = new SecurityHeadersMiddleware(_ => Task.CompletedTask);
+
+        await mw.InvokeAsync(ctx);
+
+        Assert.Equal(
+            "max-age=63072000; includeSubDomains",
+            ctx.Response.Headers.StrictTransportSecurity.ToString());
+    }
+
+    [Fact]
+    public async Task InvokeAsync_OmitsHsts_WhenRequestIsPlainHttp()
+    {
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Scheme = "http";
+        var mw = new SecurityHeadersMiddleware(_ => Task.CompletedTask);
+
+        await mw.InvokeAsync(ctx);
+
+        Assert.False(ctx.Response.Headers.ContainsKey("Strict-Transport-Security"));
+    }
 }

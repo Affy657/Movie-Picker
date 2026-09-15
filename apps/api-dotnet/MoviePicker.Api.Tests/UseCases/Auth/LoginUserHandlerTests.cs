@@ -34,8 +34,8 @@ public sealed class LoginUserHandlerTests
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
             handler.HandleAsync(new LoginRequest { Email = "x@y.z", Password = "abcd1234" }));
         hasher.Verify(
-            x => x.Verify(It.IsAny<string>(), It.IsAny<string>()),
-            Times.Never);
+            x => x.Verify(LoginUserHandler.DecoyPasswordHash, "abcd1234"),
+            Times.Once);
     }
 
     [Fact]
@@ -66,8 +66,8 @@ public sealed class LoginUserHandlerTests
         await Assert.ThrowsAsync<UnauthorizedException>(() =>
             handler.HandleAsync(new LoginRequest { Email = "a@b.co", Password = "abcd1234" }));
         hasher.Verify(
-            x => x.Verify(It.IsAny<string>(), It.IsAny<string>()),
-            Times.Never);
+            x => x.Verify(LoginUserHandler.DecoyPasswordHash, It.IsAny<string>()),
+            Times.Once);
     }
 
     [Fact]

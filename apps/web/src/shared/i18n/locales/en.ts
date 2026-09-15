@@ -409,6 +409,8 @@ export const en: Locale = {
         providerError: 'The provider did not return the expected information. Please try again.',
         emailNotVerified:
           'This account’s email is not verified by the provider. Log in with your password, then link this account from the Settings page.',
+        accountExists:
+          'A Movie Picker account already exists with this email. Log in with your password, then link this provider from the Settings page.',
         identityTaken: 'This account is already linked to another Movie Picker profile.',
         generic: 'Sign-in failed. Please try again.',
       },

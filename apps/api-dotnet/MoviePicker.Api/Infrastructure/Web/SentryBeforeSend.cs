@@ -8,6 +8,8 @@ internal static class SentryBeforeSend
     internal static SentryEvent? Prepare(SentryEvent sentryEvent)
     {
         sentryEvent.User = new SentryUser();
+        sentryEvent.Request.Url = SensitiveQueryRedaction.RedactUrl(sentryEvent.Request.Url);
+        sentryEvent.Request.QueryString = SensitiveQueryRedaction.RedactQueryString(sentryEvent.Request.QueryString);
         return IsAuthenticationNoise(sentryEvent) ? null : sentryEvent;
     }
 

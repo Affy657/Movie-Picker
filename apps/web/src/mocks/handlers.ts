@@ -31,7 +31,7 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
 
   return [
     http.get(`${V1}/events/slug/${slug}`, ({ request }) => {
-      const host = new URL(request.url).searchParams.get('host');
+      const host = request.headers.get('X-Host-Token');
       const body: EventDetailPayload = {
         _id: 'evt-msw',
         title,

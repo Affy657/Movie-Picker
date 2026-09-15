@@ -5,6 +5,8 @@ namespace MoviePicker.Api.Infrastructure.Web;
 
 public sealed class HostTokenAccessor : IHostTokenAccessor
 {
+    public const string HostHeaderName = "X-Host-Token";
+
     private const string HostQueryKey = "host";
     private const string HostCookieName = "moviepicker_host";
 
@@ -20,6 +22,9 @@ public sealed class HostTokenAccessor : IHostTokenAccessor
         var ctx = _httpContextAccessor.HttpContext;
         if (ctx is null)
             return null;
+
+        if (ctx.Request.Headers.TryGetValue(HostHeaderName, out var header) && !string.IsNullOrEmpty(header))
+            return header.ToString();
 
         if (ctx.Request.Query.TryGetValue(HostQueryKey, out var q) && !string.IsNullOrEmpty(q))
             return q.ToString();

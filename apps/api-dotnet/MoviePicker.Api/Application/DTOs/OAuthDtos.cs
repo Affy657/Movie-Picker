@@ -14,6 +14,7 @@ public enum OAuthOutcomeKind
     SignedIn,
     Linked,
     EmailNotVerified,
+    PasswordAccountRequiresManualLink,
     IdentityLinkedToOtherAccount
 }
 

@@ -271,6 +271,20 @@ public sealed class AddMovieHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_PosterFromForeignHost_ThrowsBadRequestException()
+    {
+        var evt = ActiveEvent();
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
+        var req = new AddMovieRequest { TmdbId = 27205, Title = "Inception", Year = "2010", PosterPath = "https://tracker.example/pixel.png", ParticipantId = participant.Id };
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", req, null));
+        Assert.Contains("posterPath", ex.Message);
+        _movieRepo.Verify(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_MaxProposalsPerParticipant_RejectsWhenAtLimit()
     {
         var evt = new Event

@@ -12,6 +12,7 @@ public sealed class RegisterRequest
 
     [Required(ErrorMessage = "Le mot de passe est requis.")]
     [MinLength(1)]
+    [MaxLength(128)]
     public string Password { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Le pseudo est requis.")]
@@ -106,6 +107,7 @@ public sealed class ChangePasswordRequest
 
     [Required(ErrorMessage = "Le nouveau mot de passe est requis.")]
     [MinLength(8, ErrorMessage = "Le mot de passe doit contenir au moins 8 caractères.")]
+    [MaxLength(128)]
     public string NewPassword { get; init; } = string.Empty;
 }
 

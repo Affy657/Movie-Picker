@@ -14,7 +14,10 @@ import {
   voteMovie,
 } from '@/features/movies/api/moviesApi';
 
-vi.mock('@/shared/api/client', () => ({ fetchApi: vi.fn() }));
+vi.mock('@/shared/api/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/shared/api/client')>()),
+  fetchApi: vi.fn(),
+}));
 vi.mock('@/shared/api/apiMapping', () => ({
   mapMovieData: vi.fn((raw: { id: string }) => ({ id: raw.id, mapped: true })),
 }));
@@ -182,9 +185,10 @@ describe('movie mutations', () => {
   it('removeMovieFromEvent includes the host token when provided', async () => {
     await removeMovieFromEvent('soiree', 'm1', 'p1', 'HT');
 
-    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1?host=HT', {
+    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1', {
       method: 'DELETE',
       body: JSON.stringify({ participantId: 'p1' }),
+      headers: { 'X-Host-Token': 'HT' },
     });
   });
 
@@ -200,9 +204,10 @@ describe('movie mutations', () => {
   it('setMovieWheelExclusion puts the flag with the host token', async () => {
     await setMovieWheelExclusion('soiree', 'm1', true, 'HT');
 
-    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/wheel-exclusion?host=HT', {
+    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/wheel-exclusion', {
       method: 'PUT',
       body: JSON.stringify({ excluded: true }),
+      headers: { 'X-Host-Token': 'HT' },
     });
   });
 
