@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-032`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-033`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -265,6 +265,23 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: un script de reprise qui copie `winnerMovieId` + `winnerPickMethod` + `winnerPickedAt` dans `winners` sur les documents qui n'ont pas encore la liste, puis retirer la ligne de `ToDocument`, le repli de lecture de `ToWinners`, les trois champs de `EventDocument` et le `Or` du compteur. Le test `ToDocument_KeepsTheFirstWinnerInTheLegacyField` se retourne à ce moment.
 - fini-quand: `EventDocument` ne porte plus que `winners`, et un document de prod pris au hasard n'a plus de champ `winnerMovieId`
 - piege: ne pas retirer la lecture de repli avant la reprise, les soirées terminées avant la V1.6 perdraient leur gagnant dans l'historique.
+
+---
+
+## DEBT-032 cinq briques d'interface vivent encore à côté des primitives
+
+- state: differe
+- declencheur: une feature repasse dans le fichier concerné. Ne jamais en faire un chantier isolé.
+- impact: reliquat de l'audit du design system du 2026-09-15. Cinq endroits rendent à la main ce qu'une primitive de `shared/components/` sait faire, donc un changement de la primitive ne les suit pas : la classe globale `.icon-btn-outline` posée sur des `<button>` nus là où `IconButton` existe ; le squelette de la page compte (`AccountLoadingSkeleton`) qui dessine son propre miroitement au lieu de composer `Skeleton` ; le spinner du bouton suivre (`ProfileActions`) alors que `Button` et `IconButton` portent `loading` ; la pastille participant (`EventParticipantsList.chip`), un `<li>` avec avatar, lien et retrait, que `Chip` ne sait pas rendre ; le badge sur affiche (`MovieListCard.badge`, capitales, rayon carré) que `Chip` n'a pas en tone.
+- ou: `apps/web/src/styles/02-forms-and-content.css` (`.icon-btn-outline`), `apps/web/src/features/auth/pages/account/AccountLoadingSkeleton.tsx`, `apps/web/src/features/profile/components/ProfileActions.module.css` (`.spinner`), `apps/web/src/features/events/components/EventParticipantsList.module.css` (`.chip`), `apps/web/src/features/movies/components/MovieListCard.module.css` (`.badge`)
+- verify: chaque commande liste ce qui reste à rapatrier.
+  ```bash
+  grep -rln "icon-btn-outline" apps/web/src --include=*.tsx
+  grep -n "spinner|shimmer" apps/web/src/features/profile/components/ProfileActions.module.css apps/web/src/features/auth/pages/account/AccountLoadingSkeleton.module.css
+  ```
+- fix: `IconButton` pour les sept boutons nus, puis supprimer la classe globale ; `SkeletonScreen` + `Skeleton` pour la page compte ; `loading` sur le bouton suivre ; pour la pastille participant et le badge sur affiche, ajouter à `Chip` un `as` et un tone `onPoster` seulement si un second consommateur apparaît, sinon les laisser.
+- fini-quand: les deux commandes de `verify` ne sortent rien et `docs/design-system.md` ne mentionne plus ces exceptions
+- piege: `Chip` enveloppe ses enfants dans un span décalé par `--text-optical-nudge` ; un avatar posé dedans serait décalé aussi, c'est pour ça que la pastille participant n'a pas été migrée.
 
 ---
 
