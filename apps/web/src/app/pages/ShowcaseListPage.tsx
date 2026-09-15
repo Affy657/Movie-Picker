@@ -16,7 +16,10 @@ import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
+import LazyMovieDetailsModal, {
+  loadMovieDetailsModal,
+} from '@/features/movies/components/LazyMovieDetailsModal';
+import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import CollectionToolbar, {
   type CollectionToolbarLabels,
@@ -245,8 +248,11 @@ function rankBadge(rank: number | null, t: Translate): ReactNode {
   );
 }
 
+const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
+
 export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const { t } = useTranslation();
+  useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
   const { tmdbLanguage } = useLocale();
   const { user } = useAuth();
   const params = useParams<{
@@ -438,7 +444,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
       ) : null}
 
       {detailsTarget && (
-        <MovieDetailsModal
+        <LazyMovieDetailsModal
           open={!!detailsTarget}
           title={detailsTarget.title}
           year={detailsTarget.year}

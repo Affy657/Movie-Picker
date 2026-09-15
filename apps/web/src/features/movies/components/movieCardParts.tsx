@@ -5,10 +5,12 @@ import { Bookmark, Info, MessageSquarePlus, ThumbsDown, ThumbsUp, Trophy } from 
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import Tooltip from '@/shared/components/Tooltip';
-import MovieDetailsModal, {
-  type MovieDetailsEventContext,
-  type MovieDetailsTabKey,
+import LazyMovieDetailsModal from '@/features/movies/components/LazyMovieDetailsModal';
+import type {
+  MovieDetailsEventContext,
+  MovieDetailsTabKey,
 } from '@/features/movies/components/MovieDetailsModal';
+import { useEverOpened } from '@/shared/hooks/useEverOpened';
 import { ModeIcon } from '@/features/movies/components/WatchProviderChips';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
@@ -445,6 +447,7 @@ export function CardModals({
     onToggleWatchlist,
     onToggleWheelExclusion
   );
+  const detailsEverOpened = useEverOpened(s.detailsOpen);
 
   const eventContext: MovieDetailsEventContext = {
     movie: m,
@@ -472,8 +475,8 @@ export function CardModals({
 
   return (
     <>
-      {s.hasDetails && (
-        <MovieDetailsModal
+      {s.hasDetails && detailsEverOpened && (
+        <LazyMovieDetailsModal
           open={s.detailsOpen}
           title={m.title}
           year={m.year}

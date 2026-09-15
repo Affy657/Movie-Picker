@@ -123,15 +123,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: extraire par responsabilité vers les primitives partagées existantes avant d'écrire du local
 - piege: un troisième fichier, `movieCardParts.tsx`, figurait ici sur la foi d'un relevé à 1096 lignes. Il en fait 436 depuis l'extraction des briques de listes. Mesurer avant de croire un relevé de cette liste.
 
-## DEBT-025 la fiche film est montée fermée pour chaque carte de liste
-
-- state: agent
-- impact: `movieCardParts.tsx` rend un `MovieDetailsModal` (et son `<dialog>`) par film affiché, fermé, sur la home, les vitrines, la watchlist et le profil : autant de nœuds DOM inutiles tant que personne ne clique, et le chunk de la fiche (6 Ko brotli plus ses styles) est dans la fermeture statique de toutes ces pages
-- ou: `apps/web/src/features/movies/components/movieCardParts.tsx:476`, plus les cinq autres appelants (`grep -rln MovieDetailsModal apps/web/src --include=*.tsx`)
-- verify: `grep -n "import MovieDetailsModal" apps/web/src/features/movies/components/movieCardParts.tsx` ; encore ouvert tant que l'import est statique
-- fix: même recette que la page soirée (2026-09-14) : `lazy()` plus `useEverOpened` pour ne monter la fiche qu'à la première ouverture, `useIdlePrefetch` pour que le premier clic ne paie pas le chargement
-- piege: les tests de ces pages ouvrent la fiche avec des `getBy` synchrones après le clic, ils passent en `findBy` avec le chargement paresseux. Compter l'ampleur avant de commencer, il y a six appelants.
-
 ## DEBT-026 le flou de fond des barres collantes n'a jamais été mesuré au défilement
 
 - state: differe

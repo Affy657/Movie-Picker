@@ -5,6 +5,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
+import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
 import { clearMovieVote, setMovieWheelExclusion, voteMovie } from '@/features/movies/api/moviesApi';
 import { API_ERROR_REASONS, ApiError, getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
@@ -28,7 +29,7 @@ import styles from './EventMoviesSection.module.css';
 
 const loadAddMoviePanel = () => import('@/features/movies/components/AddMoviePanel');
 const AddMoviePanel = lazy(loadAddMoviePanel);
-const ADD_MOVIE_CHUNKS = [loadAddMoviePanel];
+const ADD_MOVIE_CHUNKS = [loadAddMoviePanel, loadMovieDetailsModal];
 
 function watchlistKey(tmdbId: number, mediaType: MovieData['mediaType']): string {
   return `${tmdbId}|${mediaType ?? 'movie'}`;

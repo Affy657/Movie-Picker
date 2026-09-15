@@ -18,7 +18,10 @@ import FilteredCollectionLayout, {
   FilteredEmptyState,
   toCollectionToolbarProps,
 } from '@/features/movies/components/FilteredCollectionLayout';
-import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
+import LazyMovieDetailsModal, {
+  loadMovieDetailsModal,
+} from '@/features/movies/components/LazyMovieDetailsModal';
+import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
@@ -104,8 +107,11 @@ function WatchlistFiltersPanel({
   );
 }
 
+const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
+
 export default function WatchlistPage() {
   const { t } = useTranslation();
+  useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
   const { tmdbLanguage } = useLocale();
   const { user, isLoading: authLoading } = useAuth();
   useNoindexPage(pageTitle(t('watchlist.title')), ROUTES.watchlist);
@@ -397,7 +403,7 @@ export default function WatchlistPage() {
       )}
 
       {detailsTarget && (
-        <MovieDetailsModal
+        <LazyMovieDetailsModal
           open={!!detailsTarget}
           title={detailsTarget.title}
           year={detailsTarget.year}

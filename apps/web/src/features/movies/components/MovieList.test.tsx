@@ -6,9 +6,13 @@ import type { MovieData, WatchProviderOffer } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 
+const renderDetailsModal = vi.fn();
+
 vi.mock('@/features/movies/components/MovieDetailsModal', () => ({
-  default: ({ open, initialTab }: { open: boolean; initialTab?: string }) =>
-    open ? <div data-testid="details-modal-open" data-tab={initialTab} /> : null,
+  default: ({ open, initialTab }: { open: boolean; initialTab?: string }) => {
+    renderDetailsModal();
+    return open ? <div data-testid="details-modal-open" data-tab={initialTab} /> : null;
+  },
 }));
 
 function renderWithLocale(ui: React.ReactElement) {
@@ -72,6 +76,21 @@ function baseProps() {
 }
 
 describe('MovieList', () => {
+  it('does not mount the movie details modal before its first opening', async () => {
+    renderDetailsModal.mockClear();
+    renderWithLocale(
+      <MovieList
+        movies={[{ ...movies[0]!, watchProviders: mixedProviders }]}
+        {...baseProps()}
+        viewMode="grid"
+      />
+    );
+    expect(renderDetailsModal).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: /Location/ }));
+    expect(await screen.findByTestId('details-modal-open')).toBeInTheDocument();
+    expect(renderDetailsModal).toHaveBeenCalled();
+  });
+
   it('affiche un placeholder si liste vide', () => {
     renderWithLocale(<MovieList movies={[]} {...baseProps()} />);
     expect(screen.getByText(/aucun film proposé/i)).toBeInTheDocument();
@@ -398,7 +417,7 @@ describe('MovieList', () => {
       const buyBtn = screen.getByRole('button', { name: /Achat/ });
       expect(screen.queryByTestId('details-modal-open')).not.toBeInTheDocument();
       await userEvent.click(rentBtn);
-      const modal = screen.getByTestId('details-modal-open');
+      const modal = await screen.findByTestId('details-modal-open');
       expect(modal).toBeInTheDocument();
       expect(modal).toHaveAttribute('data-tab', 'dispo');
       expect(buyBtn).toBeInTheDocument();

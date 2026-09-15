@@ -10,7 +10,10 @@ import { useLocale, useTranslation } from '@/shared/i18n';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { ROUTES } from '@/app/routes';
-import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
+import LazyMovieDetailsModal, {
+  loadMovieDetailsModal,
+} from '@/features/movies/components/LazyMovieDetailsModal';
+import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import type {
   ShowcaseItem,
   ShowcaseProvider,
@@ -48,8 +51,11 @@ interface SelectedMovie {
   posterPath: string | null;
 }
 
+const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
+
 export default function HomePage() {
   const { t } = useTranslation();
+  useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
   const { locale } = useLocale();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -240,7 +246,7 @@ export default function HomePage() {
       </Card>
 
       {selected ? (
-        <MovieDetailsModal
+        <LazyMovieDetailsModal
           open
           tmdbId={selected.tmdbId}
           mediaType={selected.mediaType}

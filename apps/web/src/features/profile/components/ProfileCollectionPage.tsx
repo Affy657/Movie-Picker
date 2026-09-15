@@ -15,7 +15,10 @@ import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import MovieDetailsModal from '@/features/movies/components/MovieDetailsModal';
+import LazyMovieDetailsModal, {
+  loadMovieDetailsModal,
+} from '@/features/movies/components/LazyMovieDetailsModal';
+import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { toCollectionToolbarProps } from '@/features/movies/components/FilteredCollectionLayout';
 import MovieListFilteredLayout from '@/features/movies/components/MovieListFilteredLayout';
@@ -78,6 +81,8 @@ function isNotFoundError(error: unknown): boolean {
   return ApiError.is(error) && error.code === 404;
 }
 
+const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
+
 export default function ProfileCollectionPage<T extends MovieListItemLike>({
   handle,
   queryKey,
@@ -88,6 +93,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
   texts,
 }: Readonly<ProfileCollectionPageProps<T>>) {
   const { t } = useTranslation();
+  useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
   const { tmdbLanguage } = useLocale();
   const { user } = useAuth();
   const isLoggedIn = !!user;
@@ -250,7 +256,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
       )}
 
       {detailsTarget && (
-        <MovieDetailsModal
+        <LazyMovieDetailsModal
           open={!!detailsTarget}
           title={detailsTarget.title}
           year={detailsTarget.year}
