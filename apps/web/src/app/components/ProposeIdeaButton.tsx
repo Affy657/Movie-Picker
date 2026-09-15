@@ -50,7 +50,7 @@ function fileToBase64(file: File): Promise<string> {
       resolve(dataUrl.split(',')[1] ?? '');
     };
     reader.onerror = () =>
-      reject(reader.error ?? new Error('Lecture de la pièce jointe impossible'));
+      reject(reader.error ?? new Error('Attachment could not be read'));
     reader.readAsDataURL(file);
   });
 }

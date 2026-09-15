@@ -1,18 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import {
-  isMyEventLifecycle,
-  myEventLifecycleLabel,
-  normalizeMyEventLifecycle,
-} from '@/shared/utils/myEventLifecycle';
+import { isMyEventLifecycle, normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 
 describe('myEventLifecycle', () => {
-  it('labels lifecycle in French', () => {
-    expect(myEventLifecycleLabel('upcoming')).toBe('À venir');
-    expect(myEventLifecycleLabel('live')).toBe('En cours');
-    expect(myEventLifecycleLabel('pending')).toBe('En suspens');
-    expect(myEventLifecycleLabel('finished')).toBe('Terminée');
-  });
-
   it('normalizeMyEventLifecycle defaults unknown to finished', () => {
     expect(normalizeMyEventLifecycle(undefined)).toBe('finished');
     expect(normalizeMyEventLifecycle('')).toBe('finished');

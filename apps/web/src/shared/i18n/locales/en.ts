@@ -1322,6 +1322,12 @@ export const en: Locale = {
   },
 
   errors: {
+    api: {
+      unavailable: 'The service is temporarily unavailable. Please try again in a moment.',
+      network: 'Could not connect to the server. Check your internet connection, then try again.',
+      server: 'Something went wrong on the server. Please try again in a moment.',
+      invalidJson: 'Invalid server response (JSON expected).',
+    },
     network: 'Could not reach the server. Check your connection.',
     generic: 'An error occurred.',
     notFound: 'Page not found',
@@ -1555,6 +1561,8 @@ export const en: Locale = {
   },
 
   profile: {
+    seoDescription:
+      '{{name}} (@{{handle}}) on Movie Picker: movie night stats, proposed films and follows.',
     notFound: 'This profile does not exist or is not public.',
     loadError: 'Unable to load this profile.',
     loading: 'Loading profile…',

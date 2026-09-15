@@ -1,12 +1,7 @@
 import { useEffect } from 'react';
-import {
-  absoluteUrl,
-  DEFAULT_DESCRIPTION,
-  DEFAULT_OG_IMAGE,
-  DEFAULT_OG_IMAGE_ALT,
-  SITE_NAME,
-} from '@/shared/seo/siteMeta';
+import { absoluteUrl, DEFAULT_OG_IMAGE, SITE_NAME } from '@/shared/seo/siteMeta';
 import { ROUTES } from '@/app/routes';
+import { preferredLocale, t } from '@/shared/i18n';
 
 export type OgType = 'website' | 'profile' | 'article';
 
@@ -36,16 +31,25 @@ const JSON_LD_MARKER = 'data-page-seo';
 const INACTIVE_JSON_LD_TYPE = 'application/ld+json-inactive';
 const LANDING_URL = absoluteUrl(ROUTES.home);
 
-const SEO_DEFAULTS: ResolvedSeo = {
-  title: SITE_NAME,
-  description: DEFAULT_DESCRIPTION,
-  url: LANDING_URL,
-  ogType: 'website',
-  image: DEFAULT_OG_IMAGE,
-  imageAlt: DEFAULT_OG_IMAGE_ALT,
-  noindex: false,
-  jsonLdSerialized: '',
-};
+function siteDefaults(): Pick<ResolvedSeo, 'description' | 'imageAlt'> {
+  const locale = preferredLocale();
+  return {
+    description: t('landing.seoDescription', undefined, locale),
+    imageAlt: t('landing.ogImageAlt', undefined, locale),
+  };
+}
+
+function seoDefaults(): ResolvedSeo {
+  return {
+    title: SITE_NAME,
+    ...siteDefaults(),
+    url: LANDING_URL,
+    ogType: 'website',
+    image: DEFAULT_OG_IMAGE,
+    noindex: false,
+    jsonLdSerialized: '',
+  };
+}
 
 function upsertMeta(attr: 'name' | 'property', key: string, content: string): void {
   const selector = `meta[${attr}="${key}"]`;
@@ -138,13 +142,14 @@ function resolveCanonical(canonical: string | undefined, noindex: boolean): stri
 }
 
 export function usePageSeo(seo: PageSeo): void {
+  const defaults = siteDefaults();
   const {
     title,
-    description = DEFAULT_DESCRIPTION,
+    description = defaults.description,
     canonical,
     ogType = 'website',
     image = DEFAULT_OG_IMAGE,
-    imageAlt = DEFAULT_OG_IMAGE_ALT,
+    imageAlt = defaults.imageAlt,
     noindex = false,
     jsonLd = null,
   } = seo;
@@ -155,7 +160,7 @@ export function usePageSeo(seo: PageSeo): void {
     applySeo({ title, description, url, ogType, image, imageAlt, noindex, jsonLdSerialized });
   }, [title, description, url, ogType, image, imageAlt, noindex, jsonLdSerialized]);
 
-  useEffect(() => () => applySeo(SEO_DEFAULTS), []);
+  useEffect(() => () => applySeo(seoDefaults()), []);
 }
 
 export function useNoindexPage(title: string, path?: string): void {

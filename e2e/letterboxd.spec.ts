@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { registerAccount } from './helpers';
 
-test.describe('Import Letterboxd', () => {
-  test('importe la watchlist, arbitre un titre ambigu et retrouve les films dans Ma liste', async ({
+test.describe('Letterboxd import', () => {
+  test('imports the watchlist, resolves an ambiguous title and finds the films in the watchlist page', async ({
     page,
   }) => {
     await registerAccount(page, 'LetterboxdE2E');
@@ -38,7 +38,7 @@ test.describe('Import Letterboxd', () => {
     await expect(page.getByText('Autre film test').first()).toBeVisible();
   });
 
-  test('affiche une erreur quand la watchlist Letterboxd est inaccessible', async ({ page }) => {
+  test('shows an error when the Letterboxd watchlist is unreachable', async ({ page }) => {
     await registerAccount(page, 'LetterboxdKO');
 
     await page.goto('/watchlist');

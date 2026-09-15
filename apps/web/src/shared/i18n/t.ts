@@ -31,14 +31,14 @@ export function translate(
 
   for (const part of parts) {
     if (node == null || typeof node !== 'object') {
-      if (import.meta.env.DEV) console.warn(`[i18n] clé introuvable : "${key}"`);
+      if (import.meta.env.DEV) console.warn(`[i18n] missing key: "${key}"`);
       return key;
     }
     node = (node as Record<string, unknown>)[part];
   }
 
   if (typeof node !== 'string') {
-    if (import.meta.env.DEV) console.warn(`[i18n] clé introuvable : "${key}"`);
+    if (import.meta.env.DEV) console.warn(`[i18n] missing key: "${key}"`);
     return key;
   }
 

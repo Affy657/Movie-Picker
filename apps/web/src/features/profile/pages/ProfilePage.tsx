@@ -43,10 +43,13 @@ function formatMemberSince(iso: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date);
 }
 
-function buildProfileDescription(profile: PublicProfile): string {
+function buildProfileDescription(
+  profile: PublicProfile,
+  t: ReturnType<typeof useTranslation>['t']
+): string {
   const bio = profile.bio?.trim();
   if (bio) return bio;
-  return `Profil de ${profile.displayName} (@${profile.handle}) sur Movie Picker : statistiques de soirées ciné, films proposés et abonnements.`;
+  return t('profile.seoDescription', { name: profile.displayName, handle: profile.handle });
 }
 
 function buildProfileJsonLd(profile: PublicProfile): Record<string, unknown> {
@@ -100,7 +103,7 @@ export default function ProfilePage() {
     profile
       ? {
           title: pageTitle(`@${profile.handle}`),
-          description: buildProfileDescription(profile),
+          description: buildProfileDescription(profile, t),
           canonical: absoluteUrl(ROUTES.profile(profile.handle)),
           ogType: 'profile',
           jsonLd: buildProfileJsonLd(profile),

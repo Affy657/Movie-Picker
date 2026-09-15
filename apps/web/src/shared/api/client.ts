@@ -1,4 +1,5 @@
 import { ApiError } from '@/shared/api/apiError';
+import { preferredLocale, t, type TranslationKey } from '@/shared/i18n';
 
 function hostLooksLocal(host: string): boolean {
   const h = (host.split(':')[0] ?? host).toLowerCase();
@@ -45,11 +46,17 @@ export function apiUrl(path: string): string {
   return `${base}${API_VERSION_PREFIX}${p}`;
 }
 
-const MISCONFIG_ERROR_MSG = IS_DEV
-  ? "Configuration incorrecte : l'URL de l'API pointe vers ce site au lieu de l'API. " +
-    "Vérifiez le secret VITE_API_URL (doit être l'URL Cloud Run, ex. https://xxx.run.app). " +
-    'Puis redéployez le front et faites un rechargement forcé (Ctrl+Shift+R).'
-  : 'Le service est momentanément indisponible. Réessayez dans quelques instants.';
+function userFacing(key: TranslationKey): string {
+  return t(key, undefined, preferredLocale());
+}
+
+function misconfigurationMessage(): string {
+  return IS_DEV
+    ? 'Misconfiguration: the API URL points to this site instead of the API. ' +
+        'Check the VITE_API_URL secret (it must be the Cloud Run URL, e.g. https://xxx.run.app), ' +
+        'then redeploy the front and hard-reload (Ctrl+Shift+R).'
+    : userFacing('errors.api.unavailable');
+}
 
 function ensureApiIsNotFrontOrigin(url: string): void {
   if (globalThis.window === undefined) return;
@@ -60,13 +67,15 @@ function ensureApiIsNotFrontOrigin(url: string): void {
     return;
   }
   if (apiOrigin === globalThis.location.origin) {
-    throw new ApiError(MISCONFIG_ERROR_MSG, { code: 0 });
+    throw new ApiError(misconfigurationMessage(), { code: 0 });
   }
 }
 
-const NETWORK_ERROR_MSG = IS_DEV
-  ? 'Impossible de joindre l’API. Vérifiez que l’API est démarrée (pnpm dev:api-dotnet) et votre connexion.'
-  : 'Connexion au serveur impossible. Vérifiez votre connexion internet, puis réessayez.';
+function networkErrorMessage(): string {
+  return IS_DEV
+    ? 'Unable to reach the API. Check that the API is running (pnpm dev:api-dotnet) and your connection.'
+    : userFacing('errors.api.network');
+}
 
 function mergeRequestHeaders(init?: HeadersInit): Record<string, string> {
   const out: Record<string, string> = {};
@@ -85,9 +94,11 @@ function mergeRequestHeaders(init?: HeadersInit): Record<string, string> {
   return out;
 }
 
-const HTML_RESPONSE_MSG = IS_DEV
-  ? 'L’API a renvoyé du HTML au lieu de JSON. Vérifiez que VITE_API_URL pointe vers l’URL de l’API (ex. Cloud Run), pas vers le site web.'
-  : 'Une erreur est survenue côté serveur. Réessayez dans un instant.';
+function htmlResponseMessage(): string {
+  return IS_DEV
+    ? 'The API returned HTML instead of JSON. Check that VITE_API_URL points to the API URL (e.g. Cloud Run), not to the website.'
+    : userFacing('errors.api.server');
+}
 
 function looksLikeHtml(isJson: boolean, text: string): boolean {
   return !isJson && text.trimStart().startsWith('<');
@@ -110,12 +121,12 @@ function rethrowFetchError(e: unknown): never {
     (msg.toLowerCase().includes('fetch') ||
       msg.toLowerCase().includes('network') ||
       e instanceof TypeError);
-  throw new ApiError(isNetwork ? NETWORK_ERROR_MSG : msg, { code: 0 });
+  throw new ApiError(isNetwork ? networkErrorMessage() : msg, { code: 0 });
 }
 
 function handleErrorResponse(res: Response, text: string, isJson: boolean): never {
   if (looksLikeHtml(isJson, text)) {
-    throw new ApiError(HTML_RESPONSE_MSG, { code: res.status });
+    throw new ApiError(htmlResponseMessage(), { code: res.status });
   }
   let parsed: { error?: string; reason?: string } = { error: res.statusText };
   if (isJson && text.trim()) {
@@ -132,13 +143,13 @@ function handleErrorResponse(res: Response, text: string, isJson: boolean): neve
 function parseSuccessBody<T>(res: Response, text: string, isJson: boolean): T {
   if (res.status === 204) return undefined as T;
   if (looksLikeHtml(isJson, text)) {
-    throw new ApiError(HTML_RESPONSE_MSG, { code: res.status });
+    throw new ApiError(htmlResponseMessage(), { code: res.status });
   }
   if (!text.trim()) return undefined as T;
   try {
     return JSON.parse(text) as T;
   } catch {
-    throw new ApiError('Réponse invalide du serveur (JSON attendu).', { code: res.status });
+    throw new ApiError(userFacing('errors.api.invalidJson'), { code: res.status });
   }
 }
 

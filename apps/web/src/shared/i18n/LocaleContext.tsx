@@ -90,6 +90,6 @@ export function LocaleProvider({ children }: Readonly<{ children: ReactNode }>) 
 
 export function useLocale(): LocaleContextValue {
   const ctx = useContext(LocaleContext);
-  if (!ctx) throw new Error('useLocale doit être utilisé sous LocaleProvider');
+  if (!ctx) throw new Error('useLocale must be used within LocaleProvider');
   return ctx;
 }

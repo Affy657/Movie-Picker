@@ -6,8 +6,10 @@ import {
   spinWheelAndDismissWinner,
 } from './helpers';
 
-test.describe('Vote et roue (hote)', () => {
-  test('propose un film, vote, lance la roue, annule le tirage puis relance', async ({ page }) => {
+test.describe('Vote and wheel (host)', () => {
+  test('proposes a film, votes, spins the wheel, cancels the draw, then spins again', async ({
+    page,
+  }) => {
     test.setTimeout(120_000);
     await registerAccount(page, 'HoteRoue');
 

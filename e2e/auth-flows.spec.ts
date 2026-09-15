@@ -7,8 +7,8 @@ import {
   dismissWhatsNewModal,
 } from './helpers';
 
-test.describe('Parcours authentification', () => {
-  test('inscription puis deconnexion puis reconnexion depuis une page ouverte sans compte (returnTo)', async ({
+test.describe('Authentication journey', () => {
+  test('signs up, signs out, then signs back in from a page opened without an account (returnTo)', async ({
     page,
   }) => {
     const displayName = 'AuthE2E';
@@ -37,7 +37,7 @@ test.describe('Parcours authentification', () => {
     await expect(page).toHaveURL(/\/new$/, { timeout: 15_000 });
   });
 
-  test('suppression de compte RGPD depuis les reglages', async ({ page }) => {
+  test('deletes the account (GDPR) from the settings page', async ({ page }) => {
     await registerAccount(page, 'DeleteE2E');
 
     await page.goto('/settings/securite');

@@ -1,8 +1,8 @@
 import { test, expect, type BrowserContext } from '@playwright/test';
 import { fillCreateEventForm, registerAccount } from './helpers';
 
-test.describe('Parcours social (suivre puis inviter)', () => {
-  test("un hote suit un ami puis l'invite a sa soiree", async ({ browser }) => {
+test.describe('Social journey (follow, then invite)', () => {
+  test('a host follows a friend, then invites them to their movie night', async ({ browser }) => {
     let ctxA: BrowserContext | undefined;
     let ctxB: BrowserContext | undefined;
 

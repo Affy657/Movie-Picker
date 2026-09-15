@@ -1344,6 +1344,13 @@ export const fr = {
   },
 
   errors: {
+    api: {
+      unavailable: 'Le service est momentanément indisponible. Réessayez dans quelques instants.',
+      network:
+        'Connexion au serveur impossible. Vérifiez votre connexion internet, puis réessayez.',
+      server: 'Une erreur est survenue côté serveur. Réessayez dans un instant.',
+      invalidJson: 'Réponse invalide du serveur (JSON attendu).',
+    },
     network: 'Problème de connexion au serveur. Vérifiez votre réseau.',
     generic: 'Une erreur est survenue.',
     notFound: 'Page introuvable',
@@ -1582,6 +1589,8 @@ export const fr = {
   },
 
   profile: {
+    seoDescription:
+      'Profil de {{name}} (@{{handle}}) sur Movie Picker : statistiques de soirées ciné, films proposés et abonnements.',
     notFound: "Ce profil n'existe pas ou n'est pas public.",
     loadError: 'Impossible de charger ce profil.',
     loading: 'Chargement du profil…',

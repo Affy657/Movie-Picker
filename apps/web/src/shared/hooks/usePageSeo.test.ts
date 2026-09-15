@@ -1,16 +1,25 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { usePageSeo, useNoindexPage } from '@/shared/hooks/usePageSeo';
-import { DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE, SITE_URL } from '@/shared/seo/siteMeta';
+import { DEFAULT_OG_IMAGE, SITE_URL } from '@/shared/seo/siteMeta';
+import { fr } from '@/shared/i18n/locales/fr';
+import { en } from '@/shared/i18n/locales/en';
+import { loadLocale } from '@/shared/i18n/locales';
 
 function meta(selector: string): string | null {
   return document.head.querySelector(selector)?.getAttribute('content') ?? null;
 }
 
 describe('usePageSeo', () => {
+  beforeAll(async () => {
+    await loadLocale('fr');
+    await loadLocale('en');
+  });
+
   beforeEach(() => {
     document.head.innerHTML = '';
     document.title = '';
+    localStorage.setItem('moviepicker-locale', 'fr');
   });
 
   it('applique titre, description, canonical et Open Graph', () => {
@@ -37,10 +46,19 @@ describe('usePageSeo', () => {
   it('retombe sur les valeurs par défaut du site', () => {
     renderHook(() => usePageSeo({ title: 'Accueil' }));
 
-    expect(meta('meta[name="description"]')).toBe(DEFAULT_DESCRIPTION);
+    expect(meta('meta[name="description"]')).toBe(fr.landing.seoDescription);
+    expect(meta('meta[property="og:image:alt"]')).toBe(fr.landing.ogImageAlt);
     expect(meta('meta[property="og:type"]')).toBe('website');
     expect(meta('meta[property="og:image"]')).toBe(DEFAULT_OG_IMAGE);
     expect(meta('meta[property="og:url"]')).toBe(`${SITE_URL}/`);
+  });
+
+  it('takes the default description and image alt from the preferred locale', () => {
+    localStorage.setItem('moviepicker-locale', 'en');
+    renderHook(() => usePageSeo({ title: 'Home' }));
+
+    expect(meta('meta[name="description"]')).toBe(en.landing.seoDescription);
+    expect(meta('meta[property="og:image:alt"]')).toBe(en.landing.ogImageAlt);
   });
 
   it('émet noindex quand demandé', () => {

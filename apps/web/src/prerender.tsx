@@ -29,7 +29,7 @@ async function waitForHeading(container: HTMLElement): Promise<void> {
     if (container.querySelector('h1')) return;
     await new Promise((resolve) => setTimeout(resolve, READY_POLL_MS));
   }
-  throw new Error(`aucun <h1> rendu après ${READY_TIMEOUT_MS} ms`);
+  throw new Error(`no <h1> rendered after ${READY_TIMEOUT_MS} ms`);
 }
 
 export async function renderRoute(url: string): Promise<PrerenderedPage> {

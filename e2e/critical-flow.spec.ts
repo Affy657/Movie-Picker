@@ -6,8 +6,8 @@ import {
   spinWheelAndDismissWinner,
 } from './helpers';
 
-test.describe('Parcours critique', () => {
-  test('inscription hôte → création soirée → invité rejoint → propose un film → hôte lance la roue', async ({
+test.describe('Critical journey', () => {
+  test('host signs up, creates a movie night, a guest joins and proposes a film, the host spins the wheel', async ({
     browser,
   }) => {
     let hostContext: BrowserContext | undefined;
@@ -47,7 +47,7 @@ test.describe('Parcours critique', () => {
     }
   });
 
-  test('une page réservée aux comptes reste ouverte aux visiteurs non connectés, avec un CTA de connexion', async ({
+  test('an account-only page stays open to signed-out visitors, with a sign-in call to action', async ({
     page,
   }) => {
     await page.goto('/new');

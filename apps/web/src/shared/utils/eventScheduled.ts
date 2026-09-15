@@ -47,6 +47,6 @@ export function formatEventStartInUserTimezone(
       minute: '2-digit',
     }).format(new Date(ms));
   } catch {
-    return `${date} à ${time}`;
+    return `${date} ${time}`;
   }
 }
