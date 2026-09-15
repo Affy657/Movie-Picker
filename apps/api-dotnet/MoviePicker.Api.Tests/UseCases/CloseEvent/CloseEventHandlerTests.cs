@@ -44,7 +44,8 @@ public sealed class CloseEventHandlerTests
             _currentUser.Object,
             _watchlistCleanup.Object,
             _recurringEvents.Object,
-            NullLogger<CloseEventHandler>.Instance);
+            NullLogger<CloseEventHandler>.Instance,
+            TimeProvider.System);
     }
 
     [Fact]

@@ -39,7 +39,8 @@ public sealed class WinnerAnnouncerTests
             _pushSubRepo.Object,
             _pushSender.Object,
             _notifications.Object,
-            NullLogger<WinnerAnnouncer>.Instance);
+            NullLogger<WinnerAnnouncer>.Instance,
+            TimeProvider.System);
     }
 
     private void HasParticipants(params string[] userIds) =>

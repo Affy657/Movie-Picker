@@ -40,7 +40,8 @@ public sealed class ListMyEventsHandlerTests
             _participantRepo.Object,
             _movieRepo.Object,
             _recurringEvents.Object,
-            _watchlistCleanup.Object);
+            _watchlistCleanup.Object,
+            TimeProvider.System);
     }
 
     [Fact]

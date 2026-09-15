@@ -20,7 +20,8 @@ public sealed class DeleteMoviePitchNoteHandlerTests
     public DeleteMoviePitchNoteHandlerTests()
     {
         _sut = new DeleteMoviePitchNoteHandler(
-            _events.Object, _movies.Object, _participants.Object, _hostToken.Object, _currentUser.Object);
+            _events.Object, _movies.Object, _participants.Object, _hostToken.Object, _currentUser.Object,
+            TimeProvider.System);
     }
 
     private static Event ActiveEvent() => new() { Id = "evt1", HostToken = "ht", CreatorUserId = "host" };

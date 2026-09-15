@@ -43,7 +43,8 @@ public sealed class JoinEventHandlerNotificationTests
 
         _sut = new JoinEventHandler(
             _eventRepo.Object, _participantRepo.Object, _userRepo.Object, _pushSubRepo.Object,
-            _pushSender.Object, _notifications.Object, new RecordingUnitOfWork(), NullLogger<JoinEventHandler>.Instance);
+            _pushSender.Object, _notifications.Object, new RecordingUnitOfWork(), NullLogger<JoinEventHandler>.Instance,
+            TimeProvider.System);
     }
 
     [Fact]

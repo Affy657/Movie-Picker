@@ -27,7 +27,7 @@ public sealed class RegisterUserHandlerTests
                 UpdatedAt = DateTimeOffset.UtcNow
             });
         var hasher = new Mock<IPasswordHasher>();
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
 
         await Assert.ThrowsAsync<ConflictException>(() =>
             handler.HandleAsync(
@@ -41,7 +41,7 @@ public sealed class RegisterUserHandlerTests
         users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
         var hasher = new Mock<IPasswordHasher>();
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(
@@ -55,7 +55,7 @@ public sealed class RegisterUserHandlerTests
         users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
         var hasher = new Mock<IPasswordHasher>();
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(
@@ -69,7 +69,7 @@ public sealed class RegisterUserHandlerTests
         users.Setup(x => x.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
         var hasher = new Mock<IPasswordHasher>();
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(
@@ -104,7 +104,7 @@ public sealed class RegisterUserHandlerTests
             .Setup(x => x.Hash("abcd1234"))
             .Returns("HASH_FROM_HASHER");
 
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
         var res = await handler.HandleAsync(
             new RegisterRequest { Email = "new@b.co", Password = "abcd1234", DisplayName = "Neo" });
 
@@ -133,7 +133,7 @@ public sealed class RegisterUserHandlerTests
         var hasher = new Mock<IPasswordHasher>();
         hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("HASH");
 
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
         await handler.HandleAsync(
             new RegisterRequest { Email = "jean@b.co", Password = "abcd1234", DisplayName = "Jean Dupont" });
 
@@ -160,7 +160,7 @@ public sealed class RegisterUserHandlerTests
         var hasher = new Mock<IPasswordHasher>();
         hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("HASH");
 
-        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance);
+        var handler = new RegisterUserHandler(users.Object, hasher.Object, NullLogger<RegisterUserHandler>.Instance, TimeProvider.System);
         await handler.HandleAsync(
             new RegisterRequest { Email = "alice@b.co", Password = "abcd1234", DisplayName = "Alice" });
 

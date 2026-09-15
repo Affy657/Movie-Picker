@@ -64,7 +64,8 @@ public sealed class AnnounceWheelWinnerHandlerTests
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
             _winnerAnnouncer.Object,
-            NullLogger<AnnounceWheelWinnerHandler>.Instance);
+            NullLogger<AnnounceWheelWinnerHandler>.Instance,
+            TimeProvider.System);
     }
 
     [Fact]

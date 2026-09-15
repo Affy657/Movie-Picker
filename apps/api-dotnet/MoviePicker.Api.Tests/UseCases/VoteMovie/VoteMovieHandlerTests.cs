@@ -32,7 +32,7 @@ public sealed class VoteMovieHandlerTests
         _voteRepo = new Mock<IVoteRepository>();
         _currentUser = new Mock<ICurrentUserAccessor>();
         _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
-        _sut = new VoteMovieHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _voteRepo.Object, _currentUser.Object, _unitOfWork);
+        _sut = new VoteMovieHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _voteRepo.Object, _currentUser.Object, _unitOfWork, TimeProvider.System);
     }
 
     [Fact]

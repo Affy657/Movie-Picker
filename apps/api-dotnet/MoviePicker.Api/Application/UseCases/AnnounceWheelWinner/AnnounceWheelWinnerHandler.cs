@@ -15,6 +15,7 @@ public sealed class AnnounceWheelWinnerHandler : IAnnounceWheelWinnerHandler
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IWinnerAnnouncer _winnerAnnouncer;
     private readonly ILogger<AnnounceWheelWinnerHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public AnnounceWheelWinnerHandler(
         IEventRepository eventRepository,
@@ -22,7 +23,8 @@ public sealed class AnnounceWheelWinnerHandler : IAnnounceWheelWinnerHandler
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IWinnerAnnouncer winnerAnnouncer,
-        ILogger<AnnounceWheelWinnerHandler> logger)
+        ILogger<AnnounceWheelWinnerHandler> logger,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
@@ -30,6 +32,7 @@ public sealed class AnnounceWheelWinnerHandler : IAnnounceWheelWinnerHandler
         _currentUserAccessor = currentUserAccessor;
         _winnerAnnouncer = winnerAnnouncer;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task HandleAsync(string idOrSlug, CancellationToken ct = default)
@@ -53,7 +56,7 @@ public sealed class AnnounceWheelWinnerHandler : IAnnounceWheelWinnerHandler
         if (winners.Count == 0)
             return;
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         await _eventRepository.UpdateAsync(evt with { WinnerAnnouncedAt = now, UpdatedAt = now }, ct);
 
         foreach (var winner in winners)

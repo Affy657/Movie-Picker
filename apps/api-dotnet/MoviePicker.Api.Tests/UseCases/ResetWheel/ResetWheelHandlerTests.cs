@@ -19,7 +19,8 @@ public sealed class ResetWheelHandlerTests
     public ResetWheelHandlerTests()
     {
         _sut = new ResetWheelHandler(
-            _events.Object, _hostToken.Object, _currentUser.Object, NullLogger<ResetWheelHandler>.Instance);
+            _events.Object, _hostToken.Object, _currentUser.Object, NullLogger<ResetWheelHandler>.Instance,
+            TimeProvider.System);
     }
 
     private static Event Evt(string? winnerMovieId = null, DateTimeOffset? closedAt = null) => new()

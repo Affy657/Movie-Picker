@@ -52,7 +52,7 @@ public sealed class UnmarkAsSeenHandlerTests
         _seenMarkRepo = new Mock<ISeenMarkRepository>();
         _currentUser = new Mock<ICurrentUserAccessor>();
         _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
-        _sut = new UnmarkAsSeenHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _seenMarkRepo.Object, _currentUser.Object);
+        _sut = new UnmarkAsSeenHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _seenMarkRepo.Object, _currentUser.Object, TimeProvider.System);
     }
 
     [Fact]

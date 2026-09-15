@@ -12,19 +12,22 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
     private readonly IParticipantRepository _participantRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly TimeProvider _clock;
 
     public MarkAsSeenHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
         ISeenMarkRepository seenMarkRepository,
-        ICurrentUserAccessor currentUserAccessor)
+        ICurrentUserAccessor currentUserAccessor,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
         _seenMarkRepository = seenMarkRepository;
         _currentUserAccessor = currentUserAccessor;
+        _clock = clock;
     }
 
     public async Task<SeenMarkResponse> HandleAsync(
@@ -38,13 +41,14 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
             _movieRepository,
             _participantRepository,
             _currentUserAccessor,
+            _clock.GetUtcNow(),
             idOrSlug,
             movieId,
             request.ParticipantId,
             "Vous ne pouvez marquer un film que pour votre propre participation.",
             ct);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         var saved = await _seenMarkRepository.AddAsync(
             new SeenMark
             {

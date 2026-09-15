@@ -10,19 +10,22 @@ public sealed class ClearMovieVoteHandler : IClearMovieVoteHandler
     private readonly IParticipantRepository _participantRepository;
     private readonly IVoteRepository _voteRepository;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly TimeProvider _clock;
 
     public ClearMovieVoteHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
         IVoteRepository voteRepository,
-        ICurrentUserAccessor currentUserAccessor)
+        ICurrentUserAccessor currentUserAccessor,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
         _voteRepository = voteRepository;
         _currentUserAccessor = currentUserAccessor;
+        _clock = clock;
     }
 
     public async Task HandleAsync(string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
@@ -32,6 +35,7 @@ public sealed class ClearMovieVoteHandler : IClearMovieVoteHandler
             _movieRepository,
             _participantRepository,
             _currentUserAccessor,
+            _clock.GetUtcNow(),
             idOrSlug,
             movieId,
             participantId,

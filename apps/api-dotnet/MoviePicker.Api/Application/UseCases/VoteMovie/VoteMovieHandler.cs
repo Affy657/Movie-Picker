@@ -16,6 +16,7 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
     private readonly IVoteRepository _voteRepository;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly TimeProvider _clock;
 
     public VoteMovieHandler(
         IEventRepository eventRepository,
@@ -23,7 +24,8 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
         IParticipantRepository participantRepository,
         IVoteRepository voteRepository,
         ICurrentUserAccessor currentUserAccessor,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
@@ -31,6 +33,7 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
         _voteRepository = voteRepository;
         _currentUserAccessor = currentUserAccessor;
         _unitOfWork = unitOfWork;
+        _clock = clock;
     }
 
     public async Task<VoteResponse> HandleAsync(string idOrSlug, string movieId, VoteRequest request, CancellationToken ct = default)
@@ -40,6 +43,7 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
             _movieRepository,
             _participantRepository,
             _currentUserAccessor,
+            _clock.GetUtcNow(),
             idOrSlug,
             movieId,
             request.ParticipantId,

@@ -12,17 +12,20 @@ public sealed class RemoveWinnerHandler : IRemoveWinnerHandler
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ILogger<RemoveWinnerHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public RemoveWinnerHandler(
         IEventRepository eventRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
-        ILogger<RemoveWinnerHandler> logger)
+        ILogger<RemoveWinnerHandler> logger,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<ResetWheelResponse> HandleAsync(
@@ -37,14 +40,14 @@ public sealed class RemoveWinnerHandler : IRemoveWinnerHandler
         if (!EventHost.IsHost(evt, token, userId))
             throw new ForbiddenException("Réservé à l'hôte de la soirée");
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
+        if (evt.IsFinished(_clock.GetUtcNow()))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
         var removed = evt.Winners.FirstOrDefault(w => w.MovieId == movieId)
             ?? throw new NotFoundException("Ce film ne fait pas partie des gagnants de la soirée");
         var remaining = evt.Winners.Where(w => w.MovieId != removed.MovieId).ToList();
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         await _eventRepository.UpdateAsync(evt with { Winners = remaining, UpdatedAt = now }, ct);
         _logger.LogInformation("Winner {MovieId} removed from event {EventId}", removed.MovieId, evt.Id);
 

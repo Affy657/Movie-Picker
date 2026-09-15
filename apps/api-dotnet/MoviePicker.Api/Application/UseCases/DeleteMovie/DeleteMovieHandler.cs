@@ -14,6 +14,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly TimeProvider _clock;
 
     public DeleteMovieHandler(
         IEventRepository eventRepository,
@@ -23,7 +24,8 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         IParticipantRepository participantRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
@@ -33,6 +35,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _unitOfWork = unitOfWork;
+        _clock = clock;
     }
 
     public async Task HandleAsync(string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
@@ -42,6 +45,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
             _movieRepository,
             _hostTokenAccessor,
             _currentUserAccessor,
+            _clock.GetUtcNow(),
             idOrSlug,
             movieId,
             "La roue a déjà été lancée, suppression impossible",

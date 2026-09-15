@@ -16,6 +16,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
     private readonly IUserNotificationRepository _notifications;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<JoinEventHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public JoinEventHandler(
         IEventRepository eventRepository,
@@ -25,7 +26,8 @@ public sealed class JoinEventHandler : IJoinEventHandler
         IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
         IUnitOfWork unitOfWork,
-        ILogger<JoinEventHandler> logger)
+        ILogger<JoinEventHandler> logger,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _participantRepository = participantRepository;
@@ -35,6 +37,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
         _notifications = notifications;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string authenticatedUserId, CancellationToken ct = default)
@@ -44,7 +47,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
 
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
+        if (evt.IsFinished(_clock.GetUtcNow()))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
         var userId = authenticatedUserId;
@@ -72,7 +75,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
             };
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         var participant = new Participant
         {
             Id = string.Empty,
@@ -151,7 +154,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
                 EventSlug = evt.Slug,
                 EventTitle = evt.Title,
                 IsRead = false,
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = _clock.GetUtcNow()
             }, ct);
         }
         catch (Exception ex)

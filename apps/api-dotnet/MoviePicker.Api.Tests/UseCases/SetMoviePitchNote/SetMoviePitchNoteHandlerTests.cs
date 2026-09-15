@@ -22,7 +22,7 @@ public sealed class SetMoviePitchNoteHandlerTests
     public SetMoviePitchNoteHandlerTests()
     {
         _currentUser.Setup(c => c.GetUserId()).Returns(UserId);
-        _sut = new SetMoviePitchNoteHandler(_events.Object, _movies.Object, _participants.Object, _currentUser.Object);
+        _sut = new SetMoviePitchNoteHandler(_events.Object, _movies.Object, _participants.Object, _currentUser.Object, TimeProvider.System);
     }
 
     private static Event ActiveEvent(string? winnerMovieId = null, DateTimeOffset? closedAt = null) => new()

@@ -23,6 +23,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     private readonly ITmdbMovieSearch _tmdb;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<AddMovieHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public AddMovieHandler(
         IEventRepository eventRepository,
@@ -36,7 +37,8 @@ public sealed class AddMovieHandler : IAddMovieHandler
         ICurrentUserAccessor currentUserAccessor,
         ITmdbMovieSearch tmdb,
         IUnitOfWork unitOfWork,
-        ILogger<AddMovieHandler> logger)
+        ILogger<AddMovieHandler> logger,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
@@ -50,13 +52,14 @@ public sealed class AddMovieHandler : IAddMovieHandler
         _tmdb = tmdb;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<MovieWithScoreResponse> HandleAsync(string idOrSlug, AddMovieRequest request, string? callerUserId, CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
+        if (evt.IsFinished(_clock.GetUtcNow()))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
         if (request.MediaType == MovieMediaType.Tv && evt.Config?.AllowSeries != true)
@@ -78,7 +81,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), ct))
             throw new ConflictException("Un film avec ce titre a déjà été proposé");
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
         var genreIdsTask = FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, ct);
         var proposerUserTask = _userRepository.GetByIdAsync(currentUserId, ct);
@@ -219,7 +222,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
                     ct);
             }
 
-            var now = DateTimeOffset.UtcNow;
+            var now = _clock.GetUtcNow();
             foreach (var userId in notifiableIds)
             {
                 await _notifications.AddAsync(new UserNotification

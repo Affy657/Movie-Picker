@@ -53,7 +53,8 @@ public sealed class DeleteMovieHandlerTests
             _participantRepo.Object,
             _hostToken.Object,
             _currentUser.Object,
-            _unitOfWork);
+            _unitOfWork,
+            TimeProvider.System);
     }
 
     [Fact]

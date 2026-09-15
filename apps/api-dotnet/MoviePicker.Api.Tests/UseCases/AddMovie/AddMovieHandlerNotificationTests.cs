@@ -64,7 +64,8 @@ public sealed class AddMovieHandlerNotificationTests
         _sut = new AddMovieHandler(
             _eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _posterStore.Object,
             _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object,
-            _currentUser.Object, _tmdb.Object, new RecordingUnitOfWork(), NullLogger<AddMovieHandler>.Instance);
+            _currentUser.Object, _tmdb.Object, new RecordingUnitOfWork(), NullLogger<AddMovieHandler>.Instance,
+            TimeProvider.System);
     }
 
     private void OwnerParticipant() =>

@@ -24,7 +24,8 @@ public sealed class CreateEventHandlerTests
         _userRepo = new Mock<IUserRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
         _sut = new CreateEventHandler(_eventRepo.Object, _userRepo.Object, _participantRepo.Object, new InMemoryUnitOfWork(),
-            NullLogger<CreateEventHandler>.Instance);
+            NullLogger<CreateEventHandler>.Instance,
+            TimeProvider.System);
     }
 
     [Fact]

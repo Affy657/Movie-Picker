@@ -27,7 +27,8 @@ public sealed class ClearMovieVoteHandlerTests
             _movieRepo.Object,
             _participantRepo.Object,
             _voteRepo.Object,
-            _currentUser.Object);
+            _currentUser.Object,
+            TimeProvider.System);
     }
 
     private static Event ActiveEvent() =>

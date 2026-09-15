@@ -56,7 +56,8 @@ public sealed class DeleteEventHandlerTests
             _pushSender.Object,
             Mock.Of<IUserNotificationRepository>(),
             new InMemoryUnitOfWork(),
-            NullLogger<DeleteEventHandler>.Instance);
+            NullLogger<DeleteEventHandler>.Instance,
+            TimeProvider.System);
     }
 
     private static Event MakeEvent(string? creatorUserId = "user-1", string? winnerMovieId = null, DateTimeOffset? closedAt = null) => new()

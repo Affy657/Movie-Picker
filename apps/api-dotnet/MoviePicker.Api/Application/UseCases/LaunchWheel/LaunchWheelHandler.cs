@@ -18,6 +18,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IPosterImageStore _posterImageStore;
     private readonly ILogger<LaunchWheelHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public LaunchWheelHandler(
         IEventRepository eventRepository,
@@ -26,7 +27,8 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IPosterImageStore posterImageStore,
-        ILogger<LaunchWheelHandler> logger)
+        ILogger<LaunchWheelHandler> logger,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
@@ -35,6 +37,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         _currentUserAccessor = currentUserAccessor;
         _posterImageStore = posterImageStore;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<WheelResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
@@ -46,7 +49,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         if (!EventHost.IsHost(evt, token, userId))
             throw new ForbiddenException("Réservé à l'hôte de la soirée");
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
+        if (evt.IsFinished(_clock.GetUtcNow()))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
         if (evt.RemainingWinnerSlots == 0)
@@ -77,7 +80,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
             Random.Shared,
             excludedMovieIds: alreadyPicked);
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         var updated = evt with
         {
             Winners = [.. evt.Winners, new EventWinner

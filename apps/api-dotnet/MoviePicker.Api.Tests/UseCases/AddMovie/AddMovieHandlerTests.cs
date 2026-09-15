@@ -88,7 +88,8 @@ public sealed class AddMovieHandlerTests
             _currentUser.Object,
             _tmdb.Object,
             _unitOfWork,
-            NullLogger<AddMovieHandler>.Instance);
+            NullLogger<AddMovieHandler>.Instance,
+            TimeProvider.System);
     }
 
     [Fact]

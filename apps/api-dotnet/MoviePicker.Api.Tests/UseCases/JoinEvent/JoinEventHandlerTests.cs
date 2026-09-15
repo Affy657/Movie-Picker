@@ -42,7 +42,8 @@ public sealed class JoinEventHandlerTests
             new Mock<IPushNotificationSender>().Object,
             Mock.Of<IUserNotificationRepository>(),
             _unitOfWork,
-            Mock.Of<ILogger<JoinEventHandler>>());
+            Mock.Of<ILogger<JoinEventHandler>>(),
+            TimeProvider.System);
     }
 
     [Fact]

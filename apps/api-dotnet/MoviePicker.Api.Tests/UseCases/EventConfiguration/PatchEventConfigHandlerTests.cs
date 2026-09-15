@@ -37,7 +37,8 @@ public sealed class PatchEventConfigHandlerTests
             _pushSubRepo.Object,
             _pushSender.Object,
             _notifications.Object,
-            NullLogger<PatchEventConfigHandler>.Instance);
+            NullLogger<PatchEventConfigHandler>.Instance,
+            TimeProvider.System);
     }
 
     private static Event Evt() => new()

@@ -12,6 +12,7 @@ internal static class MovieActionContext
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
         ICurrentUserAccessor currentUserAccessor,
+        DateTimeOffset utcNow,
         string idOrSlug,
         string movieId,
         string participantId,
@@ -21,7 +22,7 @@ internal static class MovieActionContext
     {
         var evt = await eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
+        if (evt.IsFinished(utcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
         if (wheelLockedError is not null && evt.HasWinner)
@@ -47,6 +48,7 @@ internal static class MovieActionContext
         IMovieRepository movieRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
+        DateTimeOffset utcNow,
         string idOrSlug,
         string movieId,
         string wheelLockedError,
@@ -54,7 +56,7 @@ internal static class MovieActionContext
     {
         var evt = await eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
+        if (evt.IsFinished(utcNow))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
         if (evt.HasWinner)

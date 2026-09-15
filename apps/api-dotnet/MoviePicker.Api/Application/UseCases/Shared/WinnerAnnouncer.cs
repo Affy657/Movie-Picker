@@ -12,6 +12,7 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
     private readonly IPushNotificationSender _pushSender;
     private readonly IUserNotificationRepository _notifications;
     private readonly ILogger<WinnerAnnouncer> _logger;
+    private readonly TimeProvider _clock;
 
     public WinnerAnnouncer(
         IParticipantRepository participantRepository,
@@ -19,7 +20,8 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
-        ILogger<WinnerAnnouncer> logger)
+        ILogger<WinnerAnnouncer> logger,
+        TimeProvider clock)
     {
         _participantRepository = participantRepository;
         _userRepository = userRepository;
@@ -27,6 +29,7 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
         _pushSender = pushSender;
         _notifications = notifications;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task AnnounceAsync(Event evt, string winnerTitle, WinnerPickMethod method, CancellationToken ct = default)
@@ -68,7 +71,7 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
                     ct);
             }
 
-            var now = DateTimeOffset.UtcNow;
+            var now = _clock.GetUtcNow();
             foreach (var userId in notifiableIds)
             {
                 await _notifications.AddAsync(new UserNotification

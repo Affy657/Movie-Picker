@@ -48,7 +48,8 @@ public sealed class DeleteEventHandlerNotificationTests
             _eventRepo.Object, _participantRepo.Object, _movieRepo.Object, _voteRepo.Object,
             _seenMarkRepo.Object, _currentUser.Object, _userRepo.Object, _pushSubRepo.Object,
             _pushSender.Object, _notifications.Object, new InMemoryUnitOfWork(),
-            NullLogger<DeleteEventHandler>.Instance);
+            NullLogger<DeleteEventHandler>.Instance,
+            TimeProvider.System);
     }
 
     private void Participants(params string[] userIds) =>

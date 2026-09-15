@@ -19,6 +19,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IFinishedEventWatchlistPass _watchlistCleanup;
+    private readonly TimeProvider _clock;
 
     public GetEventDetailHandler(
         IEventRepository eventRepository,
@@ -28,7 +29,8 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         IUserRepository userRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
-        IFinishedEventWatchlistPass watchlistCleanup)
+        IFinishedEventWatchlistPass watchlistCleanup,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
@@ -38,6 +40,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _watchlistCleanup = watchlistCleanup;
+        _clock = clock;
     }
 
     public async Task<EventDetailResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
@@ -48,7 +51,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         var token = _hostTokenAccessor.GetHostToken();
         var currentUserId = _currentUserAccessor.GetUserId();
         var isHost = EventHost.IsHost(evt, token, currentUserId);
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         var eventLifecycle = evt.Lifecycle(now);
         var isFinished = eventLifecycle == EventLifecycle.Finished;
         var lifecycle = MyEventListLifecycle.FromLifecycle(eventLifecycle);
