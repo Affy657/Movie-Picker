@@ -38,16 +38,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - piege: **la moitié de l'intitulé d'origine était périmée, mesuré le 2026-09-10.** Le volet CI est déjà fait : l'utilisateur `movie-picker-github-actions` existe depuis le 2026-03-16, porte la politique gérée `MoviePickerDeploy` dont les trois déclarations correspondent au caractère près à `infra/iam-github-actions-deploy-policy.json`, et sa clé est active. Le bucket du front est fermé sur les quatre verrous (`BlockPublicAcls`, `IgnorePublicAcls`, `BlockPublicPolicy`, `RestrictPublicBuckets`) et sa politique n'est pas publique. Le MFA du compte root est actif. **Ce qui reste tient en un point** : `aws sts get-caller-identity` en local rend un ARN `:root`, donc la clé root est celle du poste de travail, pas celle de la CI. Le risque n'est pas dans le dépôt ni dans la chaîne de déploiement, il est dans le fichier d'identifiants local.
 - refs: DEBT-002 le supprime au fond en retirant AWS de la chaîne. Ne pas invoquer C7 comme motif : les identifiants d'infrastructure sont sortis du dépôt le 2026-09-10 et n'ont jamais été le sujet de cette entrée.
 
-## DEBT-004 en-tête frame-ancestors absent du front
-
-- state: humain
-- bloque: aucune infrastructure CloudFront décrite dans le dépôt, la policy se pose en console ou en CLI AWS
-- impact: la page peut être embarquée dans une iframe tierce
-- ou: distribution CloudFront `<ID_DISTRIBUTION_CLOUDFRONT>`, alias `web.movie-picker.fr`
-- verify: `curl -sI https://web.movie-picker.fr | grep -i content-security-policy` ; encore ouvert si la directive `frame-ancestors` est absente
-- fix: Response Headers Policy sur la distribution, en repartant de `infra/cloudfront-response-headers-policy.json`
-- piege: le report initial était motivé par la remise du dossier RNCP Bloc 2, remis depuis le 2026-07-23. Le motif a expiré, ne pas le réinvoquer.
-
 ## DEBT-005 enrichissement TMDB sur le chemin sondé
 
 - state: differe
@@ -145,25 +135,11 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - piege: les smoke tests de la CI ne référencent aucun de ces hôtes en dur, l'API vient de `secrets.VITE_API_URL` et le front de la première entrée de `vars.ALLOWED_ORIGINS` : ils restent justes après la migration sans qu'on y touche. Le certificat ACM est un wildcard `*.movie-picker.fr`, il couvre déjà `www`.
 - refs: le lot Terraform 4 de `roadmap.md` fait la même bascule DNS en décommissionnant AWS. Si ce lot est engagé, traiter la dette ici serait du travail jeté.
 
-## DEBT-015 le compte de service GCP de la CI porte roles/editor
+## DEBT-027 `SENTRY_AUTH_TOKEN` est encore un secret de dépôt
 
 - state: humain
-- bloque: console ou CLI GCP, hors de portée de l'agent, les écritures `gcloud` sont refusées au classifieur d'auto-mode
-- impact: le projet n'a qu'un seul compte de service et il porte `roles/editor`. Il déploie, lit tous les secrets et écrit dans le bucket de sauvegarde, là où trois rôles distincts suffiraient.
-- verify: lister les rôles du compte de service de la CI dans la console IAM du projet, ou en CLI avec son adresse relevée là. Encore ouvert tant que `roles/editor` figure dans la liste.
-- fix: rôles au moindre privilège par usage
-- piege: **`roles/editor` masque aujourd'hui deux liaisons IAM absentes** qui redeviendront nécessaires au moment de la réduction, sinon la sauvegarde casse sans prévenir :
-  ```bash
-  gcloud secrets add-iam-policy-binding MONGODB_URI --member="serviceAccount:<SA_CI>" --role=roles/secretmanager.secretAccessor
-  gcloud storage buckets add-iam-policy-binding gs://<BUCKET_SAUVEGARDE> --member="serviceAccount:<SA_CI>" --role=roles/storage.objectAdmin
-  ```
-- refs: pendant GCP de DEBT-003 (AWS). Le lot Terraform 5 de `roadmap.md` traite les deux au fond.
-
-## DEBT-027 `SENTRY_AUTH_TOKEN` est encore un secret de dépôt, et deux clés cloud désactivées attendent leur suppression
-
-- state: humain
-- bloque: un jeton d'organisation Sentry ne se crée que dans son interface (Settings → Auth Tokens), l'API MCP ne l'expose pas ; et la valeur d'un secret GitHub ne se relit pas, donc il faut le ressaisir
-- impact: c'est le seul secret de déploiement lisible par n'importe quel workflow sur n'importe quelle branche, tout le reste vit dans l'environnement `production` depuis le 2026-09-15 (politique de branche `master`, clés GCP et AWS recréées et vérifiées, anciennes désactivées). Portée du jeton : créer des releases et des deploys Sentry, pas de lecture de données.
+- bloque: un jeton d'organisation Sentry ne se crée que dans son interface (Settings → Auth Tokens), l'API MCP ne l'expose pas ; et la valeur d'un secret GitHub ne se relit pas, donc il faut le ressaisir. L'agent ne manipule pas de jeton en clair, le geste entier est humain.
+- impact: c'est le seul secret de déploiement lisible par n'importe quel workflow sur n'importe quelle branche, tout le reste vit dans l'environnement `production` depuis le 2026-09-15 (politique de branche `master`). Portée du jeton : créer des releases et des deploys Sentry, pas de lecture de données.
 - ou: Settings → Secrets and variables → Actions, secret de dépôt `SENTRY_AUTH_TOKEN` ; jobs `deploy-api`, `deploy-front` de `deploy.yml` et `rollback` de `rollback-front.yml`
 - verify: `gh secret list --json name --jq '[.[].name] | join(",")'` rend `SENTRY_AUTH_TOKEN,SONAR_TOKEN`. Réglé quand il ne rend plus que `SONAR_TOKEN`.
 - fix: créer un nouveau jeton d'organisation Sentry (scopes `project:releases` et `org:read`), puis :
@@ -171,9 +147,8 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   gh secret set SENTRY_AUTH_TOKEN --env production
   gh secret delete SENTRY_AUTH_TOKEN
   ```
-  révoquer l'ancien jeton dans Sentry. Puis, après un déploiement vert avec les nouvelles clés, supprimer les deux anciennes clés désactivées le 2026-09-15 : la clé utilisateur du compte de service de la CI datée du 2026-03-16 (`gcloud iam service-accounts keys list` puis `keys delete`) et la clé d'accès de l'utilisateur IAM `movie-picker-github-actions` datée du même jour (`aws iam list-access-keys` puis `delete-access-key`).
-- fini-quand: `verify` vide, et les listes de clés GCP et AWS ne portent plus que la clé active de 2026-09-15
-- piege: `SONAR_TOKEN` reste volontairement au niveau du dépôt, le job `sonar` tourne sur les PR et les branches `v*`, que la politique de branche de `production` exclurait. Tout job qui lit un secret de déploiement porte `environment: production` ; sans cette ligne il lirait une valeur vide.
+  révoquer l'ancien jeton dans Sentry.
+- piege: `SONAR_TOKEN` reste volontairement au niveau du dépôt, le job `sonar` tourne sur les PR et les branches `v*`, que la politique de branche de `production` exclurait. Tout job qui lit un secret de déploiement porte `environment: production` ; sans cette ligne il lirait une valeur vide. Les deux anciennes clés cloud désactivées le 2026-09-15 sont supprimées depuis le même jour, après un run de sauvegarde et un déploiement verts avec les nouvelles : les listes de clés GCP et AWS ne portent plus que la clé active.
 - refs: DEBT-002 et le lot Terraform 5 remplacent ces clés par une fédération d'identité
 
 ## DEBT-030 les captures des suggestions d'idées sont hébergées sur une branche du dépôt public

@@ -1,6 +1,6 @@
 {
   "Name": "movie-picker-front-security-headers",
-  "Comment": "En-tetes de securite du front S3/CloudFront, alignes sur SecurityHeadersMiddleware cote API. La CSP se limite a frame-ancestors : les autres directives casseraient la SPA et sont deja portees par l'API pour ses propres reponses.",
+  "Comment": "Front security headers, aligned with the API SecurityHeadersMiddleware. CSP limited to frame-ancestors.",
   "SecurityHeadersConfig": {
     "FrameOptions": {
       "Override": true,
