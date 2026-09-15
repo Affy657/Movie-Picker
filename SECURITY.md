@@ -23,7 +23,7 @@ Je demande de ne pas divulguer publiquement avant qu'un correctif soit en produc
 
 **Dans le périmètre** : l'application web, son API, et le code de ce dépôt.
 
-**Hors périmètre** : les services tiers que le projet consomme (TMDB, MongoDB Atlas, GCP, AWS, Sentry, PostHog, Resend), qui ont leurs propres canaux ; l'absence d'un en-tête ou d'un durcissement déjà consigné dans [`docs/technical-debt.md`](docs/technical-debt.md), qui est connu et suivi ; et les rapports issus d'un scanner automatique sans démonstration d'impact.
+**Hors périmètre** : les services tiers que le projet consomme (TMDB, MongoDB Atlas, GCP, AWS, Sentry, PostHog, Resend), qui ont leurs propres canaux ; l'absence d'un en-tête ou d'un durcissement déjà consigné dans [`docs/technical-debt.md`](docs/technical-debt.md), qui est connu et suivi ; le délai d'au plus 30 secondes entre la révocation d'une session (déconnexion de tous les appareils, changement de mot de passe, suppression du compte) et sa prise en compte par toutes les instances de l'API, qui est un choix documenté (contrainte C14 du même fichier) ; et les rapports issus d'un scanner automatique sans démonstration d'impact.
 
 ## Versions couvertes
 

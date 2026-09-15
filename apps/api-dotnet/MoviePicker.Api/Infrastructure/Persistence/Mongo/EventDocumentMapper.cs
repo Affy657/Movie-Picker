@@ -32,7 +32,8 @@ public static class EventDocumentMapper
             NextOccurrenceEventId = doc.NextOccurrenceEventId,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero),
-            Version = doc.Version
+            Version = doc.Version,
+            WriteSeq = doc.WriteSeq
         };
     }
 
@@ -70,7 +71,8 @@ public static class EventDocumentMapper
                 : null,
             CreatedAt = evt.CreatedAt.UtcDateTime,
             UpdatedAt = evt.UpdatedAt.UtcDateTime,
-            Version = evt.Version
+            Version = evt.Version,
+            WriteSeq = evt.WriteSeq
         };
     }
 

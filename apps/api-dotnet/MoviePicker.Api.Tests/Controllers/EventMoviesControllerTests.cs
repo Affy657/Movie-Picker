@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
@@ -5,6 +6,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMoviePitchNote;
+using MoviePicker.Api.Application.UseCases.EventViewTag;
 using MoviePicker.Api.Application.UseCases.ListMovies;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.SetMoviePitchNote;
@@ -19,15 +21,41 @@ public sealed class EventMoviesControllerTests
 {
     private static EventMoviesController Controller() => new EventMoviesController().WithContext();
 
+    private static Mock<IEventViewTagHandler> ViewTag(string? tag)
+    {
+        var viewTag = new Mock<IEventViewTagHandler>();
+        viewTag.Setup(v => v.HandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(tag);
+        return viewTag;
+    }
+
     [Fact]
-    public async Task List_ForwardsToHandler_ReturnsOk()
+    public async Task List_ForwardsToHandler_ReturnsOk_StampedWithTheViewTag()
     {
         var handler = new Mock<IListMoviesForEventHandler>();
+        var controller = Controller();
 
-        var result = await Controller().List("e", handler.Object, CancellationToken.None, "p1");
+        var result = await controller.List("e", ViewTag("W/\"tag\"").Object, handler.Object, CancellationToken.None, "p1");
 
         Assert.IsType<OkObjectResult>(result);
+        Assert.Equal("W/\"tag\"", controller.Response.Headers.ETag);
+        Assert.Equal("private, no-cache", controller.Response.Headers.CacheControl);
         handler.Verify(h => h.HandleAsync("e", "p1", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task List_WithAMatchingIfNoneMatch_Returns304WithoutRunningTheHandler()
+    {
+        var handler = new Mock<IListMoviesForEventHandler>();
+        var controller = Controller();
+        controller.Request.Headers.IfNoneMatch = "W/\"tag\"";
+
+        var result = await controller.List("e", ViewTag("W/\"tag\"").Object, handler.Object, CancellationToken.None, "p1");
+
+        var status = Assert.IsType<StatusCodeResult>(result);
+        Assert.Equal(StatusCodes.Status304NotModified, status.StatusCode);
+        handler.Verify(
+            h => h.HandleAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

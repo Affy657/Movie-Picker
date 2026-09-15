@@ -29,7 +29,7 @@ public sealed class SetMoviePitchNoteHandler : ISetMoviePitchNoteHandler
 
     public async Task HandleAsync(string idOrSlug, string movieId, SetMoviePitchNoteRequest request, CancellationToken ct = default)
     {
-        var (_, movie, participant) = await MovieActionContext.ResolveOwnedMovieAsync(
+        var (evt, movie, participant) = await MovieActionContext.ResolveOwnedMovieAsync(
             _eventRepository,
             _movieRepository,
             _participantRepository,
@@ -49,5 +49,6 @@ public sealed class SetMoviePitchNoteHandler : ISetMoviePitchNoteHandler
         if (pitchNote.Length > 140)
             throw Errors.PitchNoteTooLong(140);
         await _movieRepository.UpdatePitchNoteAsync(movieId, pitchNote, ct);
+        await _eventRepository.MarkChangedAsync(evt.Id, ct);
     }
 }

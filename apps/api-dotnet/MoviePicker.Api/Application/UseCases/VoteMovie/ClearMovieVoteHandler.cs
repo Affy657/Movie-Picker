@@ -31,7 +31,7 @@ public sealed class ClearMovieVoteHandler : IClearMovieVoteHandler
 
     public async Task HandleAsync(string idOrSlug, string movieId, string participantId, CancellationToken ct = default)
     {
-        var (_, movie, participant) = await MovieActionContext.ResolveOwnedMovieAsync(
+        var (evt, movie, participant) = await MovieActionContext.ResolveOwnedMovieAsync(
             _eventRepository,
             _movieRepository,
             _participantRepository,
@@ -44,5 +44,6 @@ public sealed class ClearMovieVoteHandler : IClearMovieVoteHandler
             ct);
 
         await _voteRepository.DeleteByMovieAndParticipantAsync(movie.Id, participant.Id, ct);
+        await _eventRepository.MarkChangedAsync(evt.Id, ct);
     }
 }

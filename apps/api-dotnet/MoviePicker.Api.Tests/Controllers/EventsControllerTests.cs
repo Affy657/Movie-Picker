@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
@@ -6,6 +7,7 @@ using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteEvent;
 using MoviePicker.Api.Application.UseCases.EventConfiguration;
 using MoviePicker.Api.Application.UseCases.EventSharePreview;
+using MoviePicker.Api.Application.UseCases.EventViewTag;
 using MoviePicker.Api.Application.UseCases.GetEligibleFollowsForEvent;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
 using MoviePicker.Api.Application.UseCases.InviteUser;
@@ -104,14 +106,68 @@ public sealed class EventsControllerTests
     }
 
     [Fact]
-    public async Task GetBySlug_ReturnsOk()
+    public async Task GetBySlug_ReturnsOk_StampedWithTheViewTag()
     {
+        var viewTag = new Mock<IEventViewTagHandler>();
+        viewTag.Setup(v => v.HandleAsync("e", It.IsAny<CancellationToken>())).ReturnsAsync("W/\"tag\"");
         var handler = new Mock<IGetEventDetailHandler>();
+        var controller = Controller(null);
 
-        var result = await Controller(null).GetBySlug("e", handler.Object, CancellationToken.None);
+        var result = await controller.GetBySlug("e", viewTag.Object, handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
+        Assert.Equal("W/\"tag\"", controller.Response.Headers.ETag);
+        Assert.Equal("private, no-cache", controller.Response.Headers.CacheControl);
         handler.Verify(h => h.HandleAsync("e", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetBySlug_WithAMatchingIfNoneMatch_Returns304WithoutRunningTheHandler()
+    {
+        var viewTag = new Mock<IEventViewTagHandler>();
+        viewTag.Setup(v => v.HandleAsync("e", It.IsAny<CancellationToken>())).ReturnsAsync("W/\"tag\"");
+        var handler = new Mock<IGetEventDetailHandler>();
+        var controller = Controller(null);
+        controller.Request.Headers.IfNoneMatch = "W/\"tag\"";
+
+        var result = await controller.GetBySlug("e", viewTag.Object, handler.Object, CancellationToken.None);
+
+        var status = Assert.IsType<StatusCodeResult>(result);
+        Assert.Equal(StatusCodes.Status304NotModified, status.StatusCode);
+        Assert.Equal("W/\"tag\"", controller.Response.Headers.ETag);
+        handler.Verify(h => h.HandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetBySlug_WithAStaleIfNoneMatch_RunsTheHandler()
+    {
+        var viewTag = new Mock<IEventViewTagHandler>();
+        viewTag.Setup(v => v.HandleAsync("e", It.IsAny<CancellationToken>())).ReturnsAsync("W/\"new\"");
+        var handler = new Mock<IGetEventDetailHandler>();
+        var controller = Controller(null);
+        controller.Request.Headers.IfNoneMatch = "W/\"old\"";
+
+        var result = await controller.GetBySlug("e", viewTag.Object, handler.Object, CancellationToken.None);
+
+        Assert.IsType<OkObjectResult>(result);
+        Assert.Equal("W/\"new\"", controller.Response.Headers.ETag);
+        handler.Verify(h => h.HandleAsync("e", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetBySlug_WhenTheEventIsUnknownToTheTag_LetsTheHandlerAnswer()
+    {
+        var viewTag = new Mock<IEventViewTagHandler>();
+        viewTag.Setup(v => v.HandleAsync("missing", It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
+        var handler = new Mock<IGetEventDetailHandler>();
+        var controller = Controller(null);
+        controller.Request.Headers.IfNoneMatch = "W/\"any\"";
+
+        var result = await controller.GetBySlug("missing", viewTag.Object, handler.Object, CancellationToken.None);
+
+        Assert.IsType<OkObjectResult>(result);
+        Assert.False(controller.Response.Headers.ContainsKey("ETag"));
+        handler.Verify(h => h.HandleAsync("missing", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

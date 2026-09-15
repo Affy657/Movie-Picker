@@ -153,7 +153,11 @@ public sealed class AddMovieHandler : IAddMovieHandler
     {
         var maxProp = evt.Config?.MaxProposalsPerParticipant;
         if (maxProp is not > 0)
-            return await _movieRepository.InsertAsync(movie, ct);
+        {
+            var inserted = await _movieRepository.InsertAsync(movie, ct);
+            await _eventRepository.MarkChangedAsync(evt.Id, ct);
+            return inserted;
+        }
 
         Movie created = movie;
         await _unitOfWork.ExecuteAsync(

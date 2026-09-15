@@ -103,6 +103,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
         else
         {
             created = await _participantRepository.AddAsync(participant, ct);
+            await _eventRepository.MarkChangedAsync(evt.Id, ct);
         }
 
         await NotifyHostAsync(evt, pseudo, userId, CancellationToken.None);

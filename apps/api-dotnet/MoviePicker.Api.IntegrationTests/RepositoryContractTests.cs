@@ -92,6 +92,62 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task EventMarkChanged_IncrementsTheWriteSequence()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var created = await events.AddAsync(NewEvent("Changed"));
+
+        await events.MarkChangedAsync(created.Id);
+        await events.MarkChangedAsync(created.Id);
+
+        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        Assert.Equal(created.WriteSeq + 2, reloaded!.WriteSeq);
+        Assert.Equal(created.Version, reloaded.Version);
+    }
+
+    [Fact]
+    public async Task EventMarkChanged_OnAMissingEvent_ThrowsNotFound()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+
+        await Assert.ThrowsAsync<NotFoundException>(() => events.MarkChangedAsync(ObjectId.GenerateNewId().ToString()));
+    }
+
+    [Fact]
+    public async Task EventUpdate_IncrementsTheWriteSequence_AndNeverRewindsIt()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var created = await events.AddAsync(NewEvent("Seq"));
+        var read = await events.GetByIdOrSlugAsync(created.Id);
+
+        await events.MarkChangedAsync(created.Id);
+        await events.UpdateAsync(read! with { Title = "Seq 2" });
+
+        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        Assert.Equal("Seq 2", reloaded!.Title);
+        Assert.Equal(read.WriteSeq + 2, reloaded.WriteSeq);
+    }
+
+    [Fact]
+    public async Task EventTargetedUpdates_IncrementTheWriteSequence()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var created = await events.AddAsync(NewEvent("Targeted") with { CreatorUserId = ObjectId.GenerateNewId().ToString() });
+
+        Assert.True(await events.MarkWatchlistCleanedAsync(created.Id, Now.AddHours(1)));
+        var afterCleanup = await events.GetByIdOrSlugAsync(created.Id);
+        Assert.Equal(1, await events.AnonymizeCreatorAsync(created.CreatorUserId!));
+        var afterAnonymize = await events.GetByIdOrSlugAsync(created.Id);
+
+        Assert.Equal(created.WriteSeq + 1, afterCleanup!.WriteSeq);
+        Assert.Equal(created.WriteSeq + 2, afterAnonymize!.WriteSeq);
+    }
+
+    [Fact]
     public async Task EventUpdate_OnAMissingEvent_ThrowsNotFound()
     {
         using var scope = _factory.Services.CreateScope();

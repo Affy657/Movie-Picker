@@ -133,5 +133,6 @@ public sealed class SetMoviePitchNoteHandlerTests
         await _sut.HandleAsync("evt1", "m1", Request(note: "  Super film  "));
 
         _movies.Verify(m => m.UpdatePitchNoteAsync("m1", "Super film", It.IsAny<CancellationToken>()), Times.Once);
+        _events.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
     }
 }

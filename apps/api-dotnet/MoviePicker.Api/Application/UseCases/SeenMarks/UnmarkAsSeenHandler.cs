@@ -50,5 +50,6 @@ public sealed class UnmarkAsSeenHandler : IUnmarkAsSeenHandler
         var deleted = await _seenMarkRepository.DeleteAsync(evt.Id, movie.Id, participant.Id, ct);
         if (!deleted)
             throw Errors.SeenMarkNotFound();
+        await _eventRepository.MarkChangedAsync(evt.Id, ct);
     }
 }

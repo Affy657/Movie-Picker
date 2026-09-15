@@ -61,6 +61,7 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
                 UpdatedAt = now
             },
             ct);
+        await _eventRepository.MarkChangedAsync(evt.Id, ct);
 
         return new SeenMarkResponse
         {

@@ -83,6 +83,7 @@ public sealed class JoinEventHandlerTests
         Assert.Equal("p1", result.Participant.Id);
         Assert.Equal("Alice", result.Participant.Pseudo);
         Assert.Equal(evt.Id, result.Participant.EventId);
+        _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

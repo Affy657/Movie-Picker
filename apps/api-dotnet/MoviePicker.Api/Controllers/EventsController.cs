@@ -8,6 +8,7 @@ using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteEvent;
 using MoviePicker.Api.Application.UseCases.EventConfiguration;
 using MoviePicker.Api.Application.UseCases.EventSharePreview;
+using MoviePicker.Api.Application.UseCases.EventViewTag;
 using MoviePicker.Api.Application.UseCases.GetEligibleFollowsForEvent;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
 using MoviePicker.Api.Application.UseCases.InviteUser;
@@ -112,12 +113,19 @@ public sealed class EventsController : ControllerBase
 
     [HttpGet("slug/{idOrSlug}")]
     [ProducesResponseType(typeof(EventDetailResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetBySlug(
         string idOrSlug,
+        [FromServices] IEventViewTagHandler viewTag,
         [FromServices] IGetEventDetailHandler handler,
         CancellationToken ct)
     {
+        var entityTag = await viewTag.HandleAsync(idOrSlug, ct);
+        ConditionalGet.Stamp(Response, entityTag);
+        if (ConditionalGet.IsNotModified(Request, entityTag))
+            return StatusCode(StatusCodes.Status304NotModified);
+
         var result = await handler.HandleAsync(idOrSlug, ct);
         return Ok(result);
     }

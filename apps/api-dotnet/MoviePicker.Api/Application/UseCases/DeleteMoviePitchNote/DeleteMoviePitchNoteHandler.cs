@@ -57,5 +57,6 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
         }
 
         await _movieRepository.UpdatePitchNoteAsync(movieId, null, ct);
+        await _eventRepository.MarkChangedAsync(evt.Id, ct);
     }
 }

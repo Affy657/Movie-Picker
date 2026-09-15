@@ -38,7 +38,13 @@ public sealed class InMemoryEventRepository : IEventRepository
         if (!_byId.TryGetValue(eventId, out var evt) || evt.WatchlistCleanedAt is not null)
             return Task.FromResult(false);
 
-        var stamped = evt with { WatchlistCleanedAt = cleanedAt, UpdatedAt = cleanedAt, Version = evt.Version + 1 };
+        var stamped = evt with
+        {
+            WatchlistCleanedAt = cleanedAt,
+            UpdatedAt = cleanedAt,
+            Version = evt.Version + 1,
+            WriteSeq = evt.WriteSeq + 1
+        };
         _byId[eventId] = stamped;
         if (!string.IsNullOrEmpty(stamped.Slug))
             _bySlug[stamped.Slug] = stamped;
@@ -52,17 +58,28 @@ public sealed class InMemoryEventRepository : IEventRepository
         if (current.Version != evt.Version)
             throw Errors.ConcurrentUpdate();
 
-        var saved = evt with { Version = evt.Version + 1 };
+        var saved = evt with { Version = evt.Version + 1, WriteSeq = current.WriteSeq + 1 };
         _byId[saved.Id] = saved;
         if (!string.IsNullOrEmpty(saved.Slug))
             _bySlug[saved.Slug] = saved;
         return Task.FromResult(saved);
     }
 
-    public Task LockForWriteAsync(string eventId, CancellationToken ct = default)
+    public Task LockForWriteAsync(string eventId, CancellationToken ct = default) =>
+        IncrementWriteSeqAsync(eventId);
+
+    public Task MarkChangedAsync(string eventId, CancellationToken ct = default) =>
+        IncrementWriteSeqAsync(eventId);
+
+    private Task IncrementWriteSeqAsync(string eventId)
     {
-        if (!_byId.ContainsKey(eventId))
+        if (!_byId.TryGetValue(eventId, out var evt))
             throw Errors.EventNotFound();
+
+        var bumped = evt with { WriteSeq = evt.WriteSeq + 1 };
+        _byId[eventId] = bumped;
+        if (!string.IsNullOrEmpty(bumped.Slug))
+            _bySlug[bumped.Slug] = bumped;
         return Task.CompletedTask;
     }
 
@@ -184,7 +201,7 @@ public sealed class InMemoryEventRepository : IEventRepository
         long count = 0;
         foreach (var e in _byId.Values.Where(e => e.CreatorUserId == creatorUserId).ToList())
         {
-            var anonymized = e with { CreatorUserId = null, Version = e.Version + 1 };
+            var anonymized = e with { CreatorUserId = null, Version = e.Version + 1, WriteSeq = e.WriteSeq + 1 };
             _byId[e.Id] = anonymized;
             if (!string.IsNullOrEmpty(anonymized.Slug))
                 _bySlug[anonymized.Slug] = anonymized;

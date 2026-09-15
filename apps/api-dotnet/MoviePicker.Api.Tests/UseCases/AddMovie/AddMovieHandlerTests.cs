@@ -362,5 +362,6 @@ public sealed class AddMovieHandlerTests
         Assert.Equal(0, result.Down);
         Assert.Empty(result.SeenByPseudos);
         Assert.Empty(result.VotersUpPseudos);
+        _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

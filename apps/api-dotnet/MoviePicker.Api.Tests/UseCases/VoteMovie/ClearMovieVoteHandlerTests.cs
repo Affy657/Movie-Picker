@@ -119,5 +119,6 @@ public sealed class ClearMovieVoteHandlerTests
         await _sut.HandleAsync("evt1", "mov1", participant.Id);
 
         _voteRepo.Verify(r => r.DeleteByMovieAndParticipantAsync(movie.Id, participant.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
     }
 }

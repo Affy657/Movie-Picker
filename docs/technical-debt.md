@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-035`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-039`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -51,10 +51,10 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 - state: differe
 - declencheur: approcher la moitié du plafond d'opérations du palier Atlas, chiffre inconnu aujourd'hui, voir DEBT-009
-- impact: environ 15 allers-retours Mongo par cycle et par participant, soit environ 26 opérations par seconde pour une soirée de 6, et environ 260 à 10 soirées simultanées
+- impact: environ 15 allers-retours Mongo par cycle et par participant **quand la soirée a bougé depuis le cycle précédent**, soit environ 26 opérations par seconde pour une soirée de 6 en pleine activité, et environ 260 à 10 soirées simultanées. Depuis le 2026-09-15, un cycle où rien n'a changé coûte 2 lectures (une par route sondée, `EventViewTagHandler`) et rend 304 : le chiffre ci-dessus est le pire cas, plus la moyenne.
 - verify: `grep -n EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS apps/web/src/features/events/hooks/useEventLive.ts` ; encore ouvert tant que la constante existe, c'est-à-dire tant qu'on sonde
 - fix: passer en SSE
-- piege: ce n'est pas un défaut. Le sondage reste le bon choix aujourd'hui, zéro infrastructure et Cloud Run n'aime pas les connexions longues. C'est le paramètre qui fixe la limite, à ne changer que sur le déclencheur.
+- piege: ce n'est pas un défaut. Le sondage reste le bon choix aujourd'hui, zéro infrastructure et Cloud Run n'aime pas les connexions longues. C'est le paramètre qui fixe la limite, à ne changer que sur le déclencheur. Le 304 tient à une règle non outillée, écrite dans `AGENTS.md` : toute mutation de la vue soirée fait bouger `writeSeq` (`UpdateAsync`, `LockForWriteAsync` ou `MarkChangedAsync`), sinon les clients en sondage gardent l'ancienne réponse jusqu'à la minute suivante.
 - refs: DEBT-033 porte la conception du remplacement et le plafond produit qui dépend de cette limite
 
 ## DEBT-009 palier Atlas jamais vérifié
@@ -182,7 +182,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - verify: `grep -n "MaxParticipantsCap = " apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` ; lire le nombre : encore ouvert tant qu'il dépasse 50 et que le front sonde encore
 - fix: deux volets, dans cet ordre.
   1. Tant que le sondage reste le mode de synchronisation : plafond à 50, ce que le cluster tient avec plusieurs soirées simultanées.
-  2. La synchronisation temps réel de V1.7 (`L`), évaluée le 2026-09-15. **Retenir SSE avec vérification de version côté serveur** : `GET /api/v1/events/{slug}/stream` en `text/event-stream`, où chaque instance relit `{version}` de la soirée une fois par seconde par soirée connectée (`Event.Version` existe déjà, et `writeSeq` bouge à chaque écriture sous verrou) et envoie un événement « changé » à ses clients, qui refont alors leur GET habituel. Coût : 1 opération par seconde et par soirée quel que soit le nombre de participants, zéro dépendance nouvelle, `EventSource` reconnecte seul avec `Last-Event-ID`. Écarter WebSocket (les votes et propositions restent des POST, le flux n'a besoin que d'un sens, et il faudrait l'affinité de session) ; garder un service tiers (Ably, Pusher, Firebase) en repli si SSE échoue à l'usage ; réserver les change streams Mongo à un palier qui les supporte, jamais vérifié. « Présence » se pose sur le même flux avec un battement en base à TTL 30 s, jamais en mémoire d'instance.
+  2. La synchronisation temps réel de V1.7 (`L`), évaluée le 2026-09-15. **Retenir SSE avec vérification de version côté serveur** : `GET /api/v1/events/{slug}/stream` en `text/event-stream`, où chaque instance relit `writeSeq` de la soirée une fois par seconde par soirée connectée (depuis le 2026-09-15 c'est un compteur exhaustif : `UpdateAsync`, `LockForWriteAsync` et `MarkChangedAsync` l'incrémentent, et `EventViewTagHandler` en fait déjà l'ETag des deux routes sondées) et envoie un événement « changé » à ses clients, qui refont alors leur GET habituel. Coût : 1 opération par seconde et par soirée quel que soit le nombre de participants, zéro dépendance nouvelle, `EventSource` reconnecte seul avec `Last-Event-ID`. Écarter WebSocket (les votes et propositions restent des POST, le flux n'a besoin que d'un sens, et il faudrait l'affinité de session) ; garder un service tiers (Ably, Pusher, Firebase) en repli si SSE échoue à l'usage ; réserver les change streams Mongo à un palier qui les supporte, jamais vérifié. « Présence » se pose sur le même flux avec un battement en base à TTL 30 s, jamais en mémoire d'instance.
 - fini-quand: le plafond est aligné sur une mesure réelle du mode de synchronisation en place
 - piege: quatre choses cassent SSE sur Cloud Run sans le dire. `timeoutSeconds` est à 300 sur le service, donc chaque flux tombe toutes les 5 minutes et `EventSource` reconnecte, ce qui est acceptable, ou le monter à 3 600. `UseResponseCompression` met en tampon : exclure `text/event-stream` explicitement. Un flux ouvert compte comme une requête en cours, donc l'instance reste vivante et facturée tant qu'un client écoute, environ 0,09 $ par heure au-delà du palier gratuit, à relire sur la grille europe-west1 : c'est le coût du temps réel, à annoncer, pas à découvrir sur la facture. Enfin C12 devient bloquant avant ce chantier, des flux ouverts maintiennent plus d'instances debout que le trafic seul. Garder le sondage en repli après 15 s sans battement.
 
@@ -202,6 +202,55 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: `IconButton` pour les sept boutons nus, puis supprimer la classe globale ; `SkeletonScreen` + `Skeleton` pour la page compte ; `loading` sur le bouton suivre ; pour la pastille participant et le badge sur affiche, ajouter à `Chip` un `as` et un tone `onPoster` seulement si un second consommateur apparaît, sinon les laisser.
 - fini-quand: les deux commandes de `verify` ne sortent rien et `docs/design-system.md` ne mentionne plus ces exceptions
 - piege: `Chip` enveloppe ses enfants dans un span décalé par `--text-optical-nudge` ; un avatar posé dedans serait décalé aussi, c'est pour ça que la pastille participant n'a pas été migrée.
+
+---
+
+## DEBT-035 la diffusion push se fait dans la requête, sans file ni reprise
+
+- state: differe
+- declencheur: un p95 des `POST` de soirée (`join`, `movies`, `vote`, `wheel`) au-dessus de 500 ms dans les logs Cloud Run, ou un premier incident Web Push visible dans Sentry
+- impact: `PushFanOut.SendToAllAsync` (8 envois en parallèle) est attendu dans `JoinEventHandler`, `AddMovieHandler` et `WinnerAnnouncer` : la latence d'un vote ou d'un tirage inclut ⌈abonnés / 8⌉ vagues vers le service push, et le plafond de DEBT-033 la multiplie. Un échec autre que 410 / 404 est journalisé puis perdu, sans compteur ni reprise. C'est correct sous les règles Cloud Run (pas de tire-et-oublie), c'est le prix de l'absence de file.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Shared/PushFanOut.cs`, `Infrastructure/Push/WebPushSender.cs` (les `catch`), appelants par `grep -rn "PushFanOut.SendToAllAsync" apps/api-dotnet/MoviePicker.Api --include=*.cs`
+- verify: `grep -rln "PushFanOut.SendToAllAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases --include=*.cs` ; encore ouvert tant qu'un handler de mutation apparaît dans la liste
+- fix: une collection `push_outbox` (un document par notification, `status`, `attempts`, index TTL), écrite dans la même transaction que la mutation, puis drainée hors requête : d'abord par le motif scheduler existant (`POST /api/v1/scheduler/push-outbox`, Cloud Scheduler chaque minute), puis par Cloud Tasks (cible HTTP sur Cloud Run, jeton OIDC) quand le lot Terraform 7 décrit les jobs, pour une latence en secondes.
+- fini-quand: aucun handler de mutation n'attend le service push, et une panne push d'une heure se rattrape sans perte
+- piege: ne pas remplacer l'attente par un `_ = SendAsync(...)`, c'est exactement le tire-et-oublie que Cloud Run ne reprend jamais (règle 2 des contraintes Cloud Run). Le rappel de soirée (`EventReminderPass`) est déjà hors requête, il ne fait pas partie du périmètre.
+
+## DEBT-036 le graphe des features front est une maille, pas des couches
+
+- state: differe
+- declencheur: une feature repasse dans un des fichiers concernés, ou une nouvelle feature s'ajoute à `apps/web/src/features/`
+- impact: six paires de features s'importent mutuellement, mesuré le 2026-09-15 : `auth ↔ events` (`auth` lit `events/storage`), `auth ↔ letterboxd` et `auth ↔ notifications` (la page compte compose `LetterboxdImportSection` et `NotificationsSection`), `events ↔ watchlist` (`useWatchlist` d'un côté, `eventsApi` et `EventSummaryCard` de l'autre), `movies ↔ watchlist`, `letterboxd ↔ watchlist`. Aucune feature n'est retirable ni chargeable seule, la fermeture statique d'`App` grossit par transitivité (C4), et une modification de `watchlist` peut casser `events` sans qu'un test de `watchlist` le dise. `check:architecture` ne voit que les cycles de **fichiers** et `shared → feature`.
+- ou: `scripts/check-architecture.mjs` (règles d'import), `apps/web/src/features/*`
+- verify: liste les arêtes sortantes de chaque feature ; encore ouvert tant qu'une paire apparaît dans les deux sens.
+  ```bash
+  for f in auth events letterboxd movies notifications profile watchlist; do echo "$f -> $(grep -rhoE "from '@/features/[a-z]+" apps/web/src/features/$f --include=*.ts --include=*.tsx | grep -v "features/$f'" | sort -u | sed "s#from '@/features/##" | tr '\n' ' ')"; done
+  ```
+- fix: d'abord la règle, ensuite le démêlage. Dans `check-architecture.mjs`, une liste d'arêtes autorisées entre features (`auth` en feuille, `movies → auth`, `events → movies, auth`, `watchlist → movies, auth`, `profile → movies, watchlist, auth`, `letterboxd → watchlist, auth`, `notifications → auth`), toute autre arête étant une violation ; la porte reste rouge jusqu'au démêlage, donc poser la règle et le démêlage dans le même commit. Le démêlage : la page compte sort de `auth` vers `app/pages/account/` qui compose les sections des autres features ; `events/storage` (jeton d'hôte) descend dans `shared/` ou disparaît avec DEBT-032 ; la carte de soirée de la watchlist et `useWatchlist` côté soirée se règlent en déplaçant la brique commune dans `movies`, qui est déjà la couche partagée par `events`, `watchlist` et `profile`.
+- fini-quand: `verify` ne montre plus aucune paire dans les deux sens, et `check:architecture` refuse une arête hors liste
+- piege: déplacer une page renomme son chunk : vérifier `PRERENDERED_ROUTE_CHUNKS` et `route-assets.json` (C4) avant de croire un build vert, et remesurer `login` et `home` après, ce sont les pages que tout regroupement fait reculer (I1, I9).
+
+## DEBT-037 les passes planifiées s'authentifient par un secret statique là où Cloud Scheduler sait signer
+
+- state: differe
+- declencheur: le lot Terraform 7 de `roadmap.md` (les jobs Cloud Scheduler décrits en IaC), ou une rotation forcée de `SCHEDULER_TOKEN`
+- impact: `X-Scheduler-Token` est un secret partagé de longue durée, le treizième de Secret Manager, tous lus en `:latest`. Le faire tourner demande deux gestes coordonnés (la version du secret, puis les trois jobs Cloud Scheduler qui l'envoient), sans quoi les rappels de soirée cessent en silence, ce qui est déjà arrivé une fois avec un secret absent. Cloud Scheduler sait signer un jeton OIDC avec un compte de service ; l'API n'aurait qu'à vérifier l'émetteur Google et l'audience.
+- ou: `apps/api-dotnet/MoviePicker.Api/Controllers/SchedulerController.cs`, `Infrastructure/Security/SchedulerTokenValidator.cs`, `.github/workflows/deploy.yml` (étape qui crée ou met à jour les jobs)
+- verify: `grep -n "X-Scheduler-Token" apps/api-dotnet/MoviePicker.Api/Controllers/SchedulerController.cs` ; encore ouvert tant que l'en-tête est lu
+- fix: jobs Cloud Scheduler avec `--oidc-service-account-email` et `--oidc-token-audience` sur l'URL du service ; côté API, `JwtBearer` sur les seules routes `/scheduler/*`, autorité `https://accounts.google.com`, audience vérifiée, `email` du jeton comparé au compte de service attendu. Retirer ensuite `SCHEDULER_TOKEN` de Secret Manager et de `deploy.yml`.
+- fini-quand: `SCHEDULER_TOKEN` n'existe plus dans Secret Manager ni dans `deploy.yml`, et les trois passes tournent
+- piege: le service est en `--allow-unauthenticated`, donc la vérification du jeton se fait dans l'API, pas par IAM Cloud Run ; le webhook Ko-fi reste sur son jeton, Ko-fi ne signe pas. Les jobs ne portent aujourd'hui aucun compte de service (ils appellent une URL publique avec l'en-tête) : en créer un dédié, sans autre rôle que `roles/cloudscheduler.jobRunner` et `roles/iam.serviceAccountTokenCreator` sur lui-même, plutôt que de réutiliser le compte d'exécution de Cloud Run.
+
+## DEBT-038 la synchronisation Letterboxd lit du HTML par expression régulière, sans canari
+
+- state: humain
+- bloque: choisir le compte Letterboxd public qui sert de témoin (le compte de l'auteur, ou un compte créé pour ça), à poser en variable Actions `LETTERBOXD_CANARY_USERNAME`
+- impact: `LetterboxdWatchlistClient` lit les attributs `data-item-*` de la page watchlist, Letterboxd n'ayant pas d'API publique pour ça. Le garde compteur annoncé / films lus empêche bien une lecture partielle d'effacer une watchlist (`LetterboxdWatchlistIncomplete`), mais un changement de balisage rend 100 % des synchronisations en échec, et le `LogWarning` ne remonte pas dans Sentry : la fonctionnalité meurt jusqu'à ce qu'un utilisateur le dise.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Letterboxd/LetterboxdWatchlistClient.cs` (`GeneratedRegex`), `.github/workflows/security-scan.yml` (le cron hebdomadaire qui accueillerait le pas)
+- verify: `grep -n "LETTERBOXD_CANARY_USERNAME" .github/workflows/*.yml` ; encore ouvert tant que rien ne sort
+- fix: un test xUnit sous trait `Category=Canary`, exclu par défaut, qui lit la watchlist du compte témoin par le vrai client et échoue si `IsComplete` est faux ou si le nombre de films est nul ; un pas dans `security-scan.yml` qui le lance avec `--filter Category=Canary` quand la variable est posée, et ouvre un ticket GitHub en cas d'échec.
+- fini-quand: le pas tourne chaque semaine et un balisage cassé produit un ticket dans les sept jours
+- piege: le compte témoin doit garder au moins un film dans sa watchlist, sinon le canari est rouge pour une mauvaise raison ; ne pas lancer ce test dans `verify:local` ni dans `ci-cd.yml`, il dépend d'un site tiers.
 
 ---
 
@@ -373,6 +422,10 @@ Piège découvert en posant le test, le 2026-09-15 : `MongoUrl.MaxConnectionPool
 ## C13 `UpdateAsync` écrit les champs connus, il ne remplace pas le document
 
 `MongoEventRepository.UpdateAsync` et `MongoUserRepository.UpdateAsync` passent par `KnownFieldsUpdate.From(doc)` : un `$set` des champs sérialisés plus un `$unset` des champs mappés absents, jamais `ReplaceOneAsync`. Les documents portent `BsonIgnoreExtraElements`, donc une révision de l'API qui ne connaît pas un champ le lit sans erreur ; avec `ReplaceOne` elle l'effaçait à sa prochaine écriture, ce qui a fait perdre `Winners`, `Recurrence`, `EventTemplates` et `IsWatchlistPublic` à tout retour arrière de la V1.6 vers la V1.5. Depuis le 2026-09-15, un champ inconnu fait l'aller-retour, et un champ connu remis à `null` disparaît bien du document comme avant : les tests `*_KeepsTheFieldsWrittenByANewerApiVersion` et `*_ClearingAnOptionalField_RemovesItFromTheDocument` de `RepositoryContractTests` gardent les deux moitiés. Revenir à `ReplaceOneAsync`, ou écrire un nouveau document en entier sans passer par `KnownFieldsUpdate`, rend `rollback.yml` destructif sans qu'aucun test d'API ne le voie. La protection ne vaut que pour les révisions qui portent le changement : revenir vers une révision antérieure au 2026-09-15 efface encore.
+
+## C14 une session révoquée reste valable jusqu'à 30 s sur les autres instances
+
+`AuthTicketCache` (`Infrastructure/Web/CachedAuthTicketStore.cs`) garde chaque ticket de session 30 s en mémoire d'instance pour ne pas relire `auth_sessions` à chaque requête, et `MongoAuthSessionInvalidator` n'invalide que la génération de l'instance qui traite la révocation. « Déconnecter partout », un changement de mot de passe ou la suppression du compte laissent donc une fenêtre d'au plus 30 s pendant laquelle un cookie déjà présenté à une **autre** instance y passe encore. C'est accepté, et c'est écrit dans `SECURITY.md` comme hors périmètre : la lecture Mongo par requête est exactement ce que le cache évite, et une génération partagée en base coûterait cette lecture. Ne pas « corriger » en allongeant le TTL (la fenêtre suit) ni en le supprimant (retour au coût d'avant le 2026-09-12) ; si la fenêtre devient inacceptable, la seule voie propre est un compteur de génération par utilisateur lu depuis le cache partagé (`ISharedCache`), au prix d'un aller-retour par requête authentifiée.
 
 # Impasses
 

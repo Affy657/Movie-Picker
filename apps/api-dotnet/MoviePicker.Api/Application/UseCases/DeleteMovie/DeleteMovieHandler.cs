@@ -70,6 +70,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
                 await _voteRepository.DeleteByMovieIdAsync(movieId, token);
                 await _seenMarkRepository.DeleteByMovieIdAsync(evt.Id, movieId, token);
                 await _movieRepository.DeleteAsync(movieId, token);
+                await _eventRepository.MarkChangedAsync(evt.Id, token);
             },
             ct);
     }

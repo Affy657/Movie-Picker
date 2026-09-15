@@ -6,6 +6,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMoviePitchNote;
+using MoviePicker.Api.Application.UseCases.EventViewTag;
 using MoviePicker.Api.Application.UseCases.ListMovies;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.SetMoviePitchNote;
@@ -26,13 +27,20 @@ public sealed class EventMoviesController : ControllerBase
     [HttpGet]
     [AllowAnonymous]
     [ProducesResponseType(typeof(IReadOnlyList<MovieWithScoreResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> List(
         string idOrSlug,
+        [FromServices] IEventViewTagHandler viewTag,
         [FromServices] IListMoviesForEventHandler handler,
         CancellationToken ct,
         [FromQuery] string? participantId = null)
     {
+        var entityTag = await viewTag.HandleAsync(idOrSlug, ct);
+        ConditionalGet.Stamp(Response, entityTag);
+        if (ConditionalGet.IsNotModified(Request, entityTag))
+            return StatusCode(StatusCodes.Status304NotModified);
+
         var list = await handler.HandleAsync(idOrSlug, participantId, ct);
         return Ok(list);
     }

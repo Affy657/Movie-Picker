@@ -132,6 +132,7 @@ public sealed class MarkAsSeenHandlerTests
         Assert.Equal(evt.Id, result.EventId);
         Assert.Equal(movie.Id, result.MovieId);
         Assert.Equal(participant.Id, result.ParticipantId);
+        _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

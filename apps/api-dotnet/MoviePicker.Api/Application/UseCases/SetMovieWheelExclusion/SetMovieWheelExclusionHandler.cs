@@ -51,5 +51,6 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
             return;
 
         await _movieRepository.UpdateWheelExclusionAsync(movieId, request.Excluded, ct);
+        await _eventRepository.MarkChangedAsync(evt.Id, ct);
     }
 }

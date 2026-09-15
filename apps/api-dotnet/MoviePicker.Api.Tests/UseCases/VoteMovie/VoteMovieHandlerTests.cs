@@ -101,6 +101,7 @@ public sealed class VoteMovieHandlerTests
         Assert.Equal(1, result.Value);
         Assert.Equal(movie.Id, result.MovieId);
         Assert.Equal(participant.Id, result.ParticipantId);
+        _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

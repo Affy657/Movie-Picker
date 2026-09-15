@@ -133,5 +133,6 @@ public sealed class UnmarkAsSeenHandlerTests
         _seenMarkRepo.Verify(
             r => r.DeleteAsync(evt.Id, movie.Id, participant.Id, It.IsAny<CancellationToken>()),
             Times.Once);
+        _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

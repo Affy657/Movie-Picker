@@ -84,7 +84,11 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
     {
         var maxVotes = evt.Config?.MaxVotesPerParticipant;
         if (maxVotes is not > 0)
-            return await _voteRepository.UpsertAsync(vote, ct);
+        {
+            var upserted = await _voteRepository.UpsertAsync(vote, ct);
+            await _eventRepository.MarkChangedAsync(evt.Id, ct);
+            return upserted;
+        }
 
         Vote saved = vote;
         await _unitOfWork.ExecuteAsync(

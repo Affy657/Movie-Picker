@@ -81,6 +81,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
                 await _voteRepository.DeleteByEventAndParticipantAsync(evt.Id, participant.Id, token);
                 await _seenMarkRepository.DeleteByEventAndParticipantAsync(evt.Id, participant.Id, token);
                 deleted = await _participantRepository.DeleteAsync(participant.Id, evt.Id, token);
+                await _eventRepository.MarkChangedAsync(evt.Id, token);
             },
             ct);
         if (!deleted)

@@ -134,6 +134,7 @@ public sealed class DeleteMovieHandlerTests
         _movieRepo.Verify(r => r.DeleteAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(1, _unitOfWork.Executions);
         Assert.Equal(0, deletesOutsideUnitOfWork);
+        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

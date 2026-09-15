@@ -23,6 +23,7 @@ public sealed record Event
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
     public long Version { get; init; }
+    public long WriteSeq { get; init; }
 
     public EventLifecycle Lifecycle(DateTimeOffset utcNow)
     {

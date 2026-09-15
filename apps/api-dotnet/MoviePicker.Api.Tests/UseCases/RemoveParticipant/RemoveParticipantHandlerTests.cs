@@ -173,6 +173,7 @@ public sealed class RemoveParticipantHandlerTests
         _seenMarkRepo.Verify(r => r.DeleteByEventAndParticipantAsync("evt1", "p1", It.IsAny<CancellationToken>()), Times.Once);
         _participantRepo.Verify(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(1, _unitOfWork.Executions);
+        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -203,6 +204,7 @@ public sealed class RemoveParticipantHandlerTests
 
         Assert.Equal(0, deletesOutsideUnitOfWork);
         Assert.Equal(1, _unitOfWork.Executions);
+        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

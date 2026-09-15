@@ -982,6 +982,13 @@ export interface paths {
                         "text/json": components["schemas"]["MovieWithScoreResponse"][];
                     };
                 };
+                /** @description Not Modified */
+                304: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Unauthorized */
                 401: {
                     headers: {
@@ -2270,6 +2277,13 @@ export interface paths {
                         "application/json": components["schemas"]["EventDetailResponse"];
                         "text/json": components["schemas"]["EventDetailResponse"];
                     };
+                };
+                /** @description Not Modified */
+                304: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description Not Found */
                 404: {

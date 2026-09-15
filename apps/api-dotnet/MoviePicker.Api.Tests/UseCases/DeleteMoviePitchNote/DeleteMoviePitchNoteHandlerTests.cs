@@ -60,6 +60,7 @@ public sealed class DeleteMoviePitchNoteHandlerTests
         await _sut.HandleAsync("evt1", "m1", new DeleteMoviePitchNoteRequest());
 
         _movies.Verify(m => m.UpdatePitchNoteAsync("m1", null, It.IsAny<CancellationToken>()), Times.Once);
+        _events.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

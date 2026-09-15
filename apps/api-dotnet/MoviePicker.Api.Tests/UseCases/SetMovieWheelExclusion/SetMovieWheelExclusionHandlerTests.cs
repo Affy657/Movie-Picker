@@ -107,6 +107,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         await _sut.HandleAsync("evt1", "mov1", Request(true));
 
         _movieRepo.Verify(r => r.UpdateWheelExclusionAsync("mov1", true, It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -135,6 +136,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _movieRepo.Verify(
             r => r.UpdateWheelExclusionAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        _eventRepo.Verify(r => r.MarkChangedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -148,6 +150,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         await _sut.HandleAsync("evt1", "mov1", Request(true));
 
         _movieRepo.Verify(r => r.UpdateWheelExclusionAsync("mov1", true, It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -162,5 +165,6 @@ public sealed class SetMovieWheelExclusionHandlerTests
         await _sut.HandleAsync("evt1", "mov1", Request(true));
 
         _movieRepo.Verify(r => r.UpdateWheelExclusionAsync("mov1", true, It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
     }
 }
