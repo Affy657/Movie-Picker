@@ -131,7 +131,7 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run openapi:export`, `pnpm run openapi:types:check` | Contrat OpenAPI et dérive des types |
 | `pnpm --filter web prerender` | Prérendu des routes publiques indexables, à lancer après un build |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
-| `pnpm run verify:local` | La chaîne complète, quinze étapes |
+| `pnpm run verify:local` | La chaîne complète, quinze étapes en trois voies concurrentes puis la suite front seule, durées affichées en fin de run |
 
 ## Tests
 

@@ -89,11 +89,12 @@ démonstration, catalogue des scripts, structure du dépôt) est dans
 
 ## Qualité
 
-`pnpm run verify:local` rejoue la CI en local, en quinze étapes : règles d'architecture, lint des
-workflows (`actionlint`, `shellcheck`, `zizmor`), Gitleaks sur l'arbre de travail, `pnpm lint`, ESLint,
-Prettier, `dotnet restore`, `dotnet format`, build Release en `-warnaserror`, export OpenAPI, contrôle
-de dérive des types, audit de vulnérabilités Trivy, tests front avec seuils de couverture, tests API
-unitaires, tests API d'intégration.
+`pnpm run verify:local` rejoue la CI en local, en quinze étapes réparties sur trois voies concurrentes
+puis la suite front seule : règles d'architecture, `pnpm lint`, ESLint, Prettier (voie node) ;
+`dotnet restore`, build Release en `-warnaserror`, `dotnet format`, tests API unitaires et
+d'intégration, export OpenAPI, contrôle de dérive des types (voie dotnet) ; lint des workflows
+(`actionlint`, `shellcheck`, `zizmor`), Gitleaks sur l'arbre de travail, audit de vulnérabilités Trivy
+(voie docker) ; tests front avec seuils de couverture.
 
 Ce que la chaîne empêche, plutôt que ce qu'elle mesure :
 
