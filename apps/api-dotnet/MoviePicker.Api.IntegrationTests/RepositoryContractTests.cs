@@ -158,7 +158,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     {
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
-        var creator = "creator-" + Guid.NewGuid().ToString("N");
+        var creator = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
         for (var i = 0; i < 205; i++)
             await events.AddAsync(NewEvent($"Soirée {i}") with { CreatorUserId = creator });
 
