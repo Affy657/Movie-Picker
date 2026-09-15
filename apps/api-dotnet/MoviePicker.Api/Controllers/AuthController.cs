@@ -206,8 +206,7 @@ public sealed class AuthController : ControllerBase
         [FromServices] IOAuthUnlinkHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
         if (!OAuthProviders.TryResolve(provider, out var knownProvider))
             return NotFound();
@@ -251,8 +250,7 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Me([FromServices] IGetUserProfileHandler handler, CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
         var profile = await handler.HandleAsync(userId, ct);
         return Ok(profile);
@@ -277,8 +275,7 @@ public sealed class AuthController : ControllerBase
                 ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "Corps JSON requis."));
         }
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
         var profile = await handler.HandleAsync(userId, request, ct);
         return Ok(profile);
@@ -302,8 +299,7 @@ public sealed class AuthController : ControllerBase
             return BadRequest(
                 ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "Corps JSON requis."));
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         await handler.HandleAsync(userId, request, ct);
@@ -325,8 +321,7 @@ public sealed class AuthController : ControllerBase
         [FromServices] IExportUserDataHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var export = await handler.HandleAsync(userId, ct);
@@ -357,8 +352,7 @@ public sealed class AuthController : ControllerBase
             return BadRequest(
                 ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "Corps JSON requis."));
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         await handler.HandleAsync(userId, request, ct);

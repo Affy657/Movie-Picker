@@ -123,12 +123,8 @@ public static class ServiceCollectionExtensions
         return settings;
     }
 
-    private static bool IsInProcessRemindersEnabled(IConfiguration cfg)
-    {
-        var flag = cfg["IN_PROCESS_REMINDERS_ENABLED"];
-        return !string.IsNullOrWhiteSpace(flag)
-            && (flag == "1" || flag.Equals("true", StringComparison.OrdinalIgnoreCase));
-    }
+    private static bool IsInProcessRemindersEnabled(IConfiguration cfg) =>
+        ConfigurationFlags.IsEnabled(cfg["IN_PROCESS_REMINDERS_ENABLED"], defaultValue: false);
 
     private static void ConfigureMoviePickerOptions(MoviePickerOptions opts, IConfiguration cfg)
     {
@@ -150,9 +146,7 @@ public static class ServiceCollectionExtensions
         var schedulerToken = cfg["SCHEDULER_TOKEN"];
         opts.SchedulerToken = string.IsNullOrWhiteSpace(schedulerToken) ? null : schedulerToken.Trim();
 
-        var inProcessReminders = cfg["IN_PROCESS_REMINDERS_ENABLED"];
-        opts.InProcessRemindersEnabled = !string.IsNullOrWhiteSpace(inProcessReminders)
-            && (inProcessReminders == "1" || inProcessReminders.Equals("true", StringComparison.OrdinalIgnoreCase));
+        opts.InProcessRemindersEnabled = IsInProcessRemindersEnabled(cfg);
 
         ConfigureGitHubOptions(opts, cfg);
     }
@@ -192,9 +186,7 @@ public static class ServiceCollectionExtensions
 
     private static void ConfigurePosterOptions(MoviePickerOptions opts, IConfiguration cfg)
     {
-        var posterEn = cfg["POSTER_CACHE_ENABLED"];
-        opts.PosterCacheEnabled = string.IsNullOrWhiteSpace(posterEn)
-            || (posterEn != "0" && !posterEn.Equals("false", StringComparison.OrdinalIgnoreCase));
+        opts.PosterCacheEnabled = GetPosterCacheEnabledFlag(cfg);
         if (int.TryParse(cfg["POSTER_CACHE_TTL_DAYS"], out var pttl) && pttl > 0)
             opts.PosterCacheTtlDays = pttl;
         if (int.TryParse(cfg["POSTER_CACHE_MAX_BYTES"], out var pmax) && pmax >= 4096)
@@ -364,13 +356,8 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IPosterImageStore, MongoPosterImageStore>();
     }
 
-    private static bool GetPosterCacheEnabledFlag(IConfiguration configuration)
-    {
-        var raw = configuration["POSTER_CACHE_ENABLED"];
-        if (string.IsNullOrWhiteSpace(raw))
-            return true;
-        return raw != "0" && !raw.Equals("false", StringComparison.OrdinalIgnoreCase);
-    }
+    private static bool GetPosterCacheEnabledFlag(IConfiguration configuration) =>
+        ConfigurationFlags.IsEnabled(configuration["POSTER_CACHE_ENABLED"], defaultValue: true);
 
     private static void RegisterHandlers(IServiceCollection services)
     {
@@ -384,12 +371,27 @@ public static class ServiceCollectionExtensions
                         && t.Namespace.StartsWith(handlerNamespace, StringComparison.Ordinal)
                         && t.Name.EndsWith("Handler", StringComparison.Ordinal));
 
-        foreach (var type in types)
+        RegisterHandlerTypes(services, types);
+    }
+
+    internal static void RegisterHandlerTypes(IServiceCollection services, IEnumerable<Type> handlerTypes)
+    {
+        var orphans = new List<string>();
+        foreach (var type in handlerTypes)
         {
             var iface = type.GetInterfaces()
                 .FirstOrDefault(i => i.Name == $"I{type.Name}");
-            if (iface is not null)
+            if (iface is null)
+                orphans.Add(type.Name);
+            else
                 services.AddScoped(iface, type);
+        }
+
+        if (orphans.Count > 0)
+        {
+            throw new InvalidOperationException(
+                "Handlers sans interface I{Nom} (convention d'enregistrement) : "
+                + string.Join(", ", orphans));
         }
     }
 

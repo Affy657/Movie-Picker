@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -32,8 +31,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] ISubscribePushHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         await handler.HandleAsync(userId, request, ct);
@@ -50,8 +48,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] IUnsubscribePushHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         await handler.HandleAsync(userId, request.Endpoint, ct);
@@ -66,8 +63,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] IGetNotificationPreferencesHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(userId, ct);
@@ -84,8 +80,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] IPatchNotificationPreferencesHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(userId, request, ct);
@@ -102,8 +97,7 @@ public sealed class NotificationsController : ControllerBase
         [FromQuery] int? offset,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(userId, limit, offset, ct);
@@ -119,8 +113,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] IMarkAllReadHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         await handler.HandleAsync(userId, ct);
@@ -137,8 +130,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] IMarkOneReadHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         await handler.HandleAsync(userId, id, ct);

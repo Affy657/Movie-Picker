@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -40,8 +39,7 @@ public sealed class EventsController : ControllerBase
         [FromServices] ICreateEventHandler handler,
         CancellationToken ct)
     {
-        var creatorUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(creatorUserId))
+        if (!User.TryGetUserId(out var creatorUserId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(request, creatorUserId, ct);
@@ -60,8 +58,7 @@ public sealed class EventsController : ControllerBase
         [FromQuery] string? q,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(userId, scope, limit, offset, q, ct);
@@ -141,8 +138,7 @@ public sealed class EventsController : ControllerBase
         [FromServices] IJoinEventHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(idOrSlug, request, userId, ct);
@@ -281,8 +277,7 @@ public sealed class EventsController : ControllerBase
         [FromServices] IGetEligibleFollowsForEventHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(idOrSlug, ct);
@@ -305,8 +300,7 @@ public sealed class EventsController : ControllerBase
         [FromServices] IInviteUserHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(idOrSlug, request, ct);

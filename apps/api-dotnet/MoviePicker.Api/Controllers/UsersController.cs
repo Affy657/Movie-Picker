@@ -263,8 +263,7 @@ public sealed class UsersController : ControllerBase
         [FromServices] IFollowUserHandler handler,
         CancellationToken ct)
     {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(currentUserId))
+        if (!User.TryGetUserId(out var currentUserId))
             return Unauthorized();
 
         await handler.HandleAsync(currentUserId, handle, ct);
@@ -283,8 +282,7 @@ public sealed class UsersController : ControllerBase
         [FromServices] IUnfollowUserHandler handler,
         CancellationToken ct)
     {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(currentUserId))
+        if (!User.TryGetUserId(out var currentUserId))
             return Unauthorized();
 
         await handler.HandleAsync(currentUserId, handle, ct);

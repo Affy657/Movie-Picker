@@ -43,7 +43,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
     public async Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string authenticatedUserId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(authenticatedUserId))
-            throw new ArgumentException("Un compte est requis pour rejoindre une soirée.", nameof(authenticatedUserId));
+            throw new UnauthorizedException("Un compte est requis pour rejoindre une soirée.");
 
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 

@@ -194,11 +194,11 @@ public sealed class JoinEventHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_WithoutAccount_ThrowsArgumentException()
+    public async Task HandleAsync_WithoutAccount_ThrowsUnauthorized()
     {
         var request = new JoinEventRequest { Pseudo = "Alice" };
 
-        await Assert.ThrowsAsync<ArgumentException>(() => _sut.HandleAsync("evt1", request, ""));
+        await Assert.ThrowsAsync<UnauthorizedException>(() => _sut.HandleAsync("evt1", request, ""));
     }
 
     [Fact]

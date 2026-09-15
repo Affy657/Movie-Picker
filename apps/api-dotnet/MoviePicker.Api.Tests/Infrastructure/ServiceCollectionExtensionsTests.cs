@@ -34,6 +34,40 @@ public sealed class ServiceCollectionExtensionsTests
         services.LastOrDefault(d => d.ServiceType == typeof(TService))?.ImplementationType;
 
     [Fact]
+    public void AddMoviePicker_RegistersEveryHandlerInterfaceOfTheUseCasesNamespace()
+    {
+        var services = Wire([], Environments.Development);
+        var handlerInterfaces = typeof(MoviePicker.Api.Infrastructure.ServiceCollectionExtensions).Assembly.GetTypes()
+            .Where(t => t.IsInterface
+                && t.Namespace is not null
+                && t.Namespace.StartsWith("MoviePicker.Api.Application.UseCases", StringComparison.Ordinal)
+                && t.Name.StartsWith('I')
+                && t.Name.EndsWith("Handler", StringComparison.Ordinal))
+            .ToList();
+
+        var unregistered = handlerInterfaces
+            .Where(i => services.All(d => d.ServiceType != i))
+            .Select(i => i.Name)
+            .ToList();
+
+        Assert.NotEmpty(handlerInterfaces);
+        Assert.Empty(unregistered);
+    }
+
+    [Fact]
+    public void RegisterHandlers_RefusesAHandlerClassWithoutItsInterface()
+    {
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            MoviePicker.Api.Infrastructure.ServiceCollectionExtensions.RegisterHandlerTypes(new ServiceCollection(), [typeof(OrphanHandler)]));
+
+        Assert.Contains(nameof(OrphanHandler), ex.Message);
+    }
+
+    private sealed class OrphanHandler
+    {
+    }
+
+    [Fact]
     public void AddMoviePicker_NoMongoUri_RegistersInMemoryRepositories()
     {
         var services = Wire([], Environments.Development);
