@@ -50,21 +50,21 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 ## DEBT-008 le sondage à 3,5 s fixe le plafond de la base
 
 - state: differe
-- declencheur: approcher la moitié du plafond d'opérations du palier Atlas, chiffre inconnu aujourd'hui, voir DEBT-009
-- impact: environ 15 allers-retours Mongo par cycle et par participant **quand la soirée a bougé depuis le cycle précédent**, soit environ 26 opérations par seconde pour une soirée de 6 en pleine activité, et environ 260 à 10 soirées simultanées. Depuis le 2026-09-15, un cycle où rien n'a changé coûte 2 lectures (une par route sondée, `EventViewTagHandler`) et rend 304 : le chiffre ci-dessus est le pire cas, plus la moyenne.
+- declencheur: approcher la moitié du plafond d'opérations du palier Atlas, soit 50 opérations par seconde sur le M0 présumé (DEBT-009) : deux soirées de 6 en sondage actif au même moment y sont
+- impact: environ 15 allers-retours Mongo par cycle et par participant **quand la soirée a bougé depuis le cycle précédent**, soit environ 26 opérations par seconde pour une soirée de 6 en pleine activité, et environ 260 à 10 soirées simultanées. Depuis le 2026-09-15, un cycle où rien n'a changé coûte 2 lectures (une par route sondée, `EventViewTagHandler`) et rend 304 : le chiffre ci-dessus est le pire cas, plus la moyenne. Plafond du palier : 100 opérations par seconde sur le M0 présumé (500 sur Flex, DEBT-009), au-delà duquel Atlas met les opérations en file.
 - verify: `grep -n EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS apps/web/src/features/events/hooks/useEventLive.ts` ; encore ouvert tant que la constante existe, c'est-à-dire tant qu'on sonde
 - fix: passer en SSE
 - piege: ce n'est pas un défaut. Le sondage reste le bon choix aujourd'hui, zéro infrastructure et Cloud Run n'aime pas les connexions longues. C'est le paramètre qui fixe la limite, à ne changer que sur le déclencheur. Le 304 tient à une règle non outillée, écrite dans `AGENTS.md` : toute mutation de la vue soirée fait bouger `writeSeq` (`UpdateAsync`, `LockForWriteAsync` ou `MarkChangedAsync`), sinon les clients en sondage gardent l'ancienne réponse jusqu'à la minute suivante.
 - refs: DEBT-033 porte la conception du remplacement et le plafond produit qui dépend de cette limite
 
-## DEBT-009 palier Atlas jamais vérifié
+## DEBT-009 palier Atlas jamais confirmé
 
 - state: humain
-- bloque: l'accès MCP Atlas est désactivé pour les deux organisations du compte, un Organization Owner doit activer l'accès client IA
-- impact: le chiffre à confronter aux 260 opérations par seconde de DEBT-008 est inconnu, donc son déclencheur est inobservable. La moitié est levée le 2026-09-15 : **le cluster accepte 500 connexions** (`serverStatus().connections`, 14 en cours), replica set de 3 nœuds en MongoDB 8.0, dev et prod sur le même cluster, 61 Mo de stockage à eux deux, **hébergé chez AWS en eu-west-1 (Irlande)** alors que l'API tourne sur GCP en europe-west1, un aller-retour mesuré à 6 ms en médiane depuis Cloud Run (I12). Restent inconnus la limite d'opérations par seconde et l'espace disque du palier.
-- verify: tenter `atlas-list-clusters` via le MCP mongodb ; encore ouvert si l'accès est refusé (refusé le 2026-09-15 encore)
-- fini-quand: le plafond d'opérations par seconde et l'espace disque du palier sont connus et reportés dans DEBT-008 et DEBT-033
-- piege: sans le MCP, tout ce que le cluster dit de lui-même se lit par `mongosh` sans rien installer : `docker run --rm mongo:7 mongosh --quiet "$MONGODB_URI" --eval 'db.serverStatus().connections'`, et `db.stats()` par base pour les tailles. Le palier lui-même (M0, Flex) ne se lit que dans la console Atlas, onglet du cluster ; c'est là que se trouve la limite d'opérations par seconde.
+- bloque: l'accès MCP Atlas est désactivé pour les deux organisations du compte (refusé le 2026-09-15 encore), un Organization Owner doit activer l'accès client IA dans les réglages de l'organisation ; et la console Atlas est refusée à l'agent même par l'extension Chrome
+- impact: les limites par palier sont connues depuis le 2026-09-15 (documentation Atlas) : **M0** 100 opérations par seconde, 0,5 Go, 500 connexions, 10 Go de transfert par semaine glissante ; **Flex** 500 opérations par seconde, 5 Go, 500 connexions. Tout indique un M0 (cluster `cluster0`, DEBT-006 parle d'un palier de 512 Mo, replica set de 3 nœuds en MongoDB 8.0, 61 Mo occupés par dev et prod ensemble, hébergé chez AWS en eu-west-1, voir I12), sans lecture directe du palier. DEBT-008 et DEBT-033 sont chiffrées sur M0 ; si le cluster est un Flex, leurs seuils sont cinq fois plus larges.
+- verify: lire le palier dans la console Atlas, onglet du cluster ; encore ouvert tant que la lecture n'a pas été faite. `atlas-list-clusters` via le MCP mongodb le rend aussi, une fois l'accès IA activé.
+- fini-quand: le palier est lu et le mot « présumé » retiré de DEBT-008 et DEBT-033
+- piege: sans le MCP, tout ce que le cluster dit de lui-même se lit par `mongosh` sans rien installer : `docker run --rm mongo:7 mongosh --quiet "$MONGODB_URI" --eval 'db.serverStatus().connections'`, et `db.stats()` par base pour les tailles. Le palier lui-même ne se lit que dans la console, `serverStatus` ne le dit pas.
 
 ## DEBT-010 deux composants trop chargés
 
@@ -86,31 +86,19 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: mesurer d'abord (Performance panel, frames longues au défilement) ; si confirmé, fond opaque légèrement translucide sans flou, ou flou réservé à `(hover: hover)`
 - piege: ne pas retirer le flou sur une intuition, c'est un choix visuel de l'utilisateur. Mesure avant geste.
 
-## DEBT-012 le site n'est pas enregistré dans Search Console
-
-- state: humain
-- bloque: la vérification de propriété du domaine, qui passe par la console Google et un enregistrement DNS ou un fichier posé à la racine
-- impact: aucune remontée d'indexation, de requêtes ni d'erreurs de couverture. Le `sitemap.xml` est généré et servi, mais n'est déclaré nulle part.
-- ou: rien dans le dépôt, tout est côté console Google
-- verify: ouvrir Search Console sur la propriété `movie-picker.fr` ; encore ouvert si la propriété n'existe pas ou n'est pas vérifiée
-- fix: créer la propriété, la vérifier, puis y soumettre `https://web.movie-picker.fr/sitemap.xml`
-- fini-quand: la propriété est vérifiée et le sitemap soumis
-- piege: le front n'est ni sur l'apex ni sur `www` mais sur `web.movie-picker.fr` (voir DEBT-014). Déclarer la mauvaise propriété donne une console qui ne verra jamais aucun trafic.
-- refs: le volet prérendu du chantier SEO est livré depuis le 2026-09-10, `apps/web/scripts/prerender.mjs`. Il ne restait que cette moitié.
-
 ## DEBT-014 le domaine www ne répond pas
 
 - state: humain
-- bloque: le CNAME se change chez OVH à la main, il n'y a pas de CLI OVH
+- bloque: la bascule enchaîne un CNAME chez OVH (manager, pas de CLI ; faisable par l'extension Chrome de l'utilisateur), un déploiement des deux lanes (geste de l'utilisateur) et une décision assumée : les liens `/e/:slug` déjà partagés et les courriels de réinitialisation déjà envoyés vers `web.` meurent, sauf à poser une redirection `web` → `www` chez OVH, non prévue par le runbook
 - impact: un visiteur qui tape `www.movie-picker.fr` n'obtient rien. Le front live est sur `web.movie-picker.fr`, et `www` pointe vers une redirection OVH morte (A `213.186.33.5`).
-- ou: `docs/runbook-migration-domaine-www.md`, écrit et jamais exécuté
+- ou: `docs/runbook-migration-domaine-www.md`, écrit le 2026-07-16, exécuté jusqu'aux étapes sans impact
 - verify: encore ouvert si la commande échoue ou ne renvoie pas 200.
   ```bash
   curl -sS -o /dev/null -w '%{http_code}' --max-time 10 https://www.movie-picker.fr
   ```
-- fix: suivre le runbook. Élargir `ALLOWED_ORIGINS` aux deux origines, repointer le CNAME, observer les sondes. Puis reprendre les littéraux `web.movie-picker.fr` du dépôt, dont les deux liens du README et le bandeau `apps/web/public/og-image.png` qu'il affiche, l'URL y étant gravée dans l'image : la régénérer avec `node apps/web/scripts/generate-og-image.mjs`.
+- fix: suivre le runbook à partir de son étape 1. **Déjà fait le 2026-09-15, ne pas refaire** : étape 2, l'alias `www.movie-picker.fr` est attaché à la distribution CloudFront (le certificat wildcard le couvre) ; étape 4, `ALLOWED_ORIGINS` porte `web`, `www` et le domaine CloudFront, `web` en première position parce que le smoke test du front lit la première entrée ; étape 10 est sans objet, Search Console porte une propriété de domaine `movie-picker.fr` qui couvre tous les sous-domaines, seule l'URL du sitemap soumise (`https://web.movie-picker.fr/sitemap.xml`) sera à remplacer. Ordre restant : littéraux du dépôt (étape 1, dont le README et le bandeau `apps/web/public/og-image.png` à régénérer par `node apps/web/scripts/generate-og-image.mjs`), CNAME `www` chez OVH (étape 3), déploiement `target=all` (étape 5), PostHog (6), vérifications (7), retrait de `web` chez OVH, CloudFront et `ALLOWED_ORIGINS` (8 et 9), puis supprimer le runbook.
 - fini-quand: `www.movie-picker.fr` sert le front, plus aucun littéral `web.movie-picker.fr` hors `archive/`, et `docs/runbook-migration-domaine-www.md` est supprimé, il n'a plus d'objet
-- piege: les smoke tests de la CI ne référencent aucun de ces hôtes en dur, l'API vient de `secrets.VITE_API_URL` et le front de la première entrée de `vars.ALLOWED_ORIGINS` : ils restent justes après la migration sans qu'on y touche. Le certificat ACM est un wildcard `*.movie-picker.fr`, il couvre déjà `www`.
+- piege: les smoke tests de la CI ne référencent aucun de ces hôtes en dur, l'API vient de `secrets.VITE_API_URL` et le front de la première entrée de `vars.ALLOWED_ORIGINS` : ils restent justes après la migration tant que `www` n'est pas mis en première position avant que le DNS ne pointe. Pointer le CNAME avant de déployer donne un `www` à moitié vivant : le front se charge, l'API refuse l'origine (CORS injecté au déploiement, pas à chaud).
 - refs: le lot Terraform 4 de `roadmap.md` fait la même bascule DNS en décommissionnant AWS. Si ce lot est engagé, traiter la dette ici serait du travail jeté.
 
 ## DEBT-027 `SENTRY_AUTH_TOKEN` est encore un secret de dépôt
@@ -177,11 +165,11 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 - state: humain
 - bloque: décision produit sur le plafond, et le choix du mode de synchronisation temps réel de V1.7
-- impact: `EventConfig.MaxParticipantsCap = 500` alors qu'en sondage actif chaque participant coûte environ 4,3 opérations Mongo par seconde (15 allers-retours par cycle de 3,5 s, DEBT-008). Une soirée pleine vaut ~2 150 opérations par seconde et jusqu'à 500 clients, sur un cluster partagé qui accepte 500 connexions et dont la limite d'opérations est inconnue (DEBT-009). Le plafond est inatteignable, et un hôte qui le vise fait tomber la base pour toutes les soirées en cours.
+- impact: `EventConfig.MaxParticipantsCap = 500` alors qu'en sondage actif chaque participant coûte environ 4,3 opérations Mongo par seconde (15 allers-retours par cycle de 3,5 s, DEBT-008). Une soirée pleine vaut ~2 150 opérations par seconde et jusqu'à 500 clients, sur un cluster partagé qui accepte 500 connexions et 100 opérations par seconde sur le M0 présumé (DEBT-009). Une seule soirée de 23 participants en sondage actif sature le cluster ; le plafond de 500 est inatteignable, et un hôte qui le vise fait tomber la base pour toutes les soirées en cours.
 - ou: `apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` (`MaxParticipantsCap`), `apps/web/src/features/events/hooks/useEventLive.ts`
 - verify: `grep -n "MaxParticipantsCap = " apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` ; lire le nombre : encore ouvert tant qu'il dépasse 50 et que le front sonde encore
 - fix: deux volets, dans cet ordre.
-  1. Tant que le sondage reste le mode de synchronisation : plafond à 50, ce que le cluster tient avec plusieurs soirées simultanées.
+  1. Tant que le sondage reste le mode de synchronisation : plafond à 50 était le chiffre d'avant la lecture des limites ; sur M0, 50 participants font 215 opérations par seconde, le double du plafond. Le chiffre honnête pour une soirée pleine seule est 20, et il faut choisir entre ce plafond et le volet 2.
   2. La synchronisation temps réel de V1.7 (`L`), évaluée le 2026-09-15. **Retenir SSE avec vérification de version côté serveur** : `GET /api/v1/events/{slug}/stream` en `text/event-stream`, où chaque instance relit `writeSeq` de la soirée une fois par seconde par soirée connectée (depuis le 2026-09-15 c'est un compteur exhaustif : `UpdateAsync`, `LockForWriteAsync` et `MarkChangedAsync` l'incrémentent, et `EventViewTagHandler` en fait déjà l'ETag des deux routes sondées) et envoie un événement « changé » à ses clients, qui refont alors leur GET habituel. Coût : 1 opération par seconde et par soirée quel que soit le nombre de participants, zéro dépendance nouvelle, `EventSource` reconnecte seul avec `Last-Event-ID`. Écarter WebSocket (les votes et propositions restent des POST, le flux n'a besoin que d'un sens, et il faudrait l'affinité de session) ; garder un service tiers (Ably, Pusher, Firebase) en repli si SSE échoue à l'usage ; réserver les change streams Mongo à un palier qui les supporte, jamais vérifié. « Présence » se pose sur le même flux avec un battement en base à TTL 30 s, jamais en mémoire d'instance.
 - fini-quand: le plafond est aligné sur une mesure réelle du mode de synchronisation en place
 - piege: quatre choses cassent SSE sur Cloud Run sans le dire. `timeoutSeconds` est à 300 sur le service, donc chaque flux tombe toutes les 5 minutes et `EventSource` reconnecte, ce qui est acceptable, ou le monter à 3 600. `UseResponseCompression` met en tampon : exclure `text/event-stream` explicitement. Un flux ouvert compte comme une requête en cours, donc l'instance reste vivante et facturée tant qu'un client écoute, environ 0,09 $ par heure au-delà du palier gratuit, à relire sur la grille europe-west1 : c'est le coût du temps réel, à annoncer, pas à découvrir sur la facture. Enfin C12 devient bloquant avant ce chantier, des flux ouverts maintiennent plus d'instances debout que le trafic seul. Garder le sondage en repli après 15 s sans battement.
