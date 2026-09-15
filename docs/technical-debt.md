@@ -16,17 +16,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 ---
 
-## DEBT-002 authentification keyless écrite mais jamais fusionnée
-
-- state: humain
-- bloque: le merge est faisable par un agent, mais la configuration Workload Identity Federation côté GCP et le rôle côté AWS demandent la console
-- impact: les déploiements s'authentifient avec des identifiants statiques de longue durée (`GCP_SA_KEY`, clés AWS)
-- ou: branche `chore/ci-keyless-oidc`, commit `eb72fbb`, non fusionnée depuis le 2026-06-12
-- verify: `git merge-base --is-ancestor chore/ci-keyless-oidc master && echo REGLE || echo OUVERT`
-- fix: configurer WIF et le rôle AWS, puis réécrire le patch. **La branche ne se rebase plus** : ses huit lignes modifiaient les jobs `deploy-api` et `deploy-front` de `ci-cd.yml`, partis dans `deploy.yml` le 2026-09-10. `git merge-tree master chore/ci-keyless-oidc` rend un conflit sur `ci-cd.yml` dont le contexte n'existe plus. Prendre l'intention, pas le diff. Côté GCP, l'authentification n'a plus qu'un seul endroit depuis le 2026-09-15 : `.github/actions/gcloud-auth/action.yml`, appelée par les cinq jobs qui parlent à GCP ; c'est là que `credentials_json` devient `workload_identity_provider`, et nulle part ailleurs.
-- fini-quand: plus aucun secret d'identifiant statique dans les secrets GitHub du dépôt
-- refs: recoupe le lot Terraform 5 de `roadmap.md`, qui traite le même sujet au fond
-
 ## DEBT-005 enrichissement TMDB sur le chemin sondé
 
 - state: differe
@@ -138,7 +127,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   ```
   révoquer l'ancien jeton dans Sentry.
 - piege: `SONAR_TOKEN` reste volontairement au niveau du dépôt, le job `sonar` tourne sur les PR et les branches `v*`, que la politique de branche de `production` exclurait. Tout job qui lit un secret de déploiement porte `environment: production` ; sans cette ligne il lirait une valeur vide. Les deux anciennes clés cloud désactivées le 2026-09-15 sont supprimées depuis le même jour, après un run de sauvegarde et un déploiement verts avec les nouvelles : les listes de clés GCP et AWS ne portent plus que la clé active.
-- refs: DEBT-002 et le lot Terraform 5 remplacent ces clés par une fédération d'identité
 
 ## DEBT-030 les captures des suggestions d'idées sont hébergées sur une branche du dépôt public
 
@@ -272,7 +260,7 @@ Le chantier Terraform de `roadmap.md` sort le front d'AWS (lots 3 et 4). Deux ci
 Deux corollaires sur l'ordre des lots, qui ne se lisent pas dans leur numérotation :
 
 1. **Les lots qui sortent le front d'AWS passent avant ceux d'identités et de CI.** Décrire en Terraform, puis outiller, un hébergement qu'on s'apprête à supprimer est du travail jeté.
-2. **Le gain visé est la consolidation, pas l'économie.** Le palier gratuit de CloudFront (1 To/mois) est plus large que celui de la cible GCP. Ce que la migration supprime, c'est un second fournisseur, un second modèle d'identité, un second endroit où regarder pendant un incident, et les deux identifiants statiques du volet AWS. `GCP_SA_KEY` reste, c'est le lot 5 qui la retire.
+2. **Le gain visé est la consolidation, pas l'économie.** Le palier gratuit de CloudFront (1 To/mois) est plus large que celui de la cible GCP. Ce que la migration supprime, c'est un second fournisseur, un second modèle d'identité et un second endroit où regarder pendant un incident. Aucun identifiant statique n'est en jeu depuis le 2026-09-15 : les deux clouds font confiance au jeton OIDC de GitHub (`.github/actions/gcloud-auth/action.yml`, rôle AWS assumé par `deploy-front`), ce que `cloud-auth-check.yml` prouve à la demande.
 
 Deux pièges au décommissionnement d'AWS lui-même (lot 4) :
 

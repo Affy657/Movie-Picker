@@ -148,7 +148,7 @@ jobs:
 
   # `environment: production` on every job talking to GCP or AWS: both clouds trust the GitHub OIDC
   # token only when its subject is this environment, whose branch policy restricts it to `master`.
-  # No long-lived cloud credential exists in the repository secrets any more (DEBT-002).
+  # No long-lived cloud credential exists in the repository secrets any more.
   docker-api:
     name: 🐳 Docker API → Artifact Registry
     runs-on: ubuntu-24.04

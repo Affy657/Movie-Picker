@@ -4,7 +4,7 @@ Documents de configuration appliqués à la main sur les fournisseurs, en attend
 
 | Fichier | Ce qu'il décrit | Comment il s'applique |
 |---|---|---|
-| `iam-github-actions-deploy-policy.json` | politique au moindre privilège pour l'identité de déploiement du front | console IAM, ou `aws iam put-user-policy` |
+| `iam-github-actions-deploy-policy.json` | politique au moindre privilège du rôle que `deploy-front` assume par OIDC | console IAM, ou `aws iam attach-role-policy` |
 | `cloudfront-response-headers-policy.json` | en-têtes de sécurité servis par CloudFront | [`../scripts/apply-cloudfront-headers.sh`](../scripts/apply-cloudfront-headers.sh) |
 | `artifact-registry-cleanup-policy.json` | rétention des images de l'API | [`../.github/workflows/registry-cleanup.yml`](../.github/workflows/registry-cleanup.yml) |
 
