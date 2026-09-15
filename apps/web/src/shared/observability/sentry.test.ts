@@ -5,7 +5,7 @@ import {
 } from '@/shared/observability/sentry';
 
 describe('shouldDropSentryEvent', () => {
-  it('écarte le pont injecté par le navigateur intégré Snapchat', () => {
+  it('discards the bridge injected by the Snapchat in-app browser', () => {
     expect(
       shouldDropSentryEvent({
         exception: { values: [{ value: "Can't find variable: SCDynimacBridge" }] },
@@ -21,7 +21,7 @@ describe('shouldDropSentryEvent', () => {
     ).toBe(false);
   });
 
-  it('conserve un événement sans exception', () => {
+  it('keeps an event without exception', () => {
     expect(shouldDropSentryEvent({})).toBe(false);
   });
 });
@@ -33,7 +33,7 @@ describe('sentryTracePropagationTargets', () => {
     ]);
   });
 
-  it('ajoute https si le schéma manque', () => {
+  it('adds https when the scheme is missing', () => {
     expect(sentryTracePropagationTargets('api.movie-picker.fr/v1')).toEqual([
       'https://api.movie-picker.fr',
     ]);
@@ -57,7 +57,7 @@ describe('initSentry', () => {
     vi.useRealTimers();
   });
 
-  it('rejoue les erreurs capturées avant que le SDK soit chargé', async () => {
+  it('replays the errors captured before the SDK loaded', async () => {
     const init = vi.fn();
     const captureException = vi.fn();
     vi.doMock('@sentry/react', () => ({
@@ -78,7 +78,7 @@ describe('initSentry', () => {
     });
   });
 
-  it('borne la file des erreurs capturées avant le SDK', async () => {
+  it('bounds the queue of errors captured before the SDK', async () => {
     const captureException = vi.fn();
     vi.doMock('@sentry/react', () => ({
       init: vi.fn(),
@@ -94,7 +94,7 @@ describe('initSentry', () => {
     expect((captureException.mock.calls[0]![0] as Error).message).toBe('e10');
   });
 
-  it('ne laisse pas une promesse rejetée sans suite si le SDK ne se charge pas', async () => {
+  it('does not leave a rejected promise unhandled when the SDK fails to load', async () => {
     vi.stubGlobal('requestIdleCallback', undefined);
     vi.doMock('@sentry/react', () => {
       throw new Error('chunk introuvable');
@@ -182,7 +182,7 @@ describe('initSentry', () => {
     readyState.mockRestore();
   });
 
-  it('démarre le SDK dès la première interaction, sans attendre le délai', async () => {
+  it('starts the SDK at the first interaction, without waiting for the delay', async () => {
     vi.useFakeTimers();
     const init = vi.fn();
     vi.doMock('@sentry/react', () => ({

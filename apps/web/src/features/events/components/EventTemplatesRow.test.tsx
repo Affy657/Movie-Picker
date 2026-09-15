@@ -79,7 +79,7 @@ describe('EventTemplatesRow', () => {
     expect(onApply).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }));
   });
 
-  it('marque la pastille appliquée et annonce la configuration', () => {
+  it('marks the applied chip and announces the configuration', () => {
     renderRow({ appliedTemplate: makeTemplate() });
 
     expect(screen.getByRole('button', { name: /Soirée horreur/ })).toHaveAttribute(
@@ -152,7 +152,7 @@ describe('EventTemplatesRow', () => {
     expect(screen.getByRole('button', { name: /Renommer le template/ })).toBeInTheDocument();
   });
 
-  it('supprime un template après confirmation', async () => {
+  it('deletes a template after confirmation', async () => {
     const user = userEvent.setup();
     const { onDelete } = renderRow();
 
@@ -169,7 +169,7 @@ describe('EventTemplatesRow', () => {
     expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }));
   });
 
-  it('renonce à la suppression', async () => {
+  it('gives up the deletion', async () => {
     const user = userEvent.setup();
     const { onDelete } = renderRow();
 
@@ -185,7 +185,7 @@ describe('EventTemplatesRow', () => {
     );
   });
 
-  it('quitte le mode gestion quand le dernier template disparaît', () => {
+  it('leaves the management mode when the last template disappears', () => {
     const { rerender } = render(
       <LocaleProvider>
         <EventTemplatesRow

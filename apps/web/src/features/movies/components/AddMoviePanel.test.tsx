@@ -45,7 +45,7 @@ describe('AddMoviePanel', () => {
     expect(screen.queryByText('Ajouter un film à ma liste')).not.toBeInTheDocument();
   });
 
-  it('ouvre un panneau inline sur desktop au clic sur le déclencheur', async () => {
+  it('opens an inline panel on desktop when clicking the trigger', async () => {
     stubMatchMedia(false);
     const user = userEvent.setup();
     renderPanel();
@@ -67,7 +67,7 @@ describe('AddMoviePanel', () => {
     expect(screen.queryByText('Ajouter un film à ma liste')).not.toBeInTheDocument();
   });
 
-  it('ouvre une feuille (sheet) sur mobile au clic sur le déclencheur', async () => {
+  it('opens a sheet on mobile when clicking the trigger', async () => {
     stubMatchMedia(true);
     const user = userEvent.setup();
     renderPanel();
@@ -77,7 +77,7 @@ describe('AddMoviePanel', () => {
     expect(screen.getByRole('heading', { name: 'Ajouter un film à ma liste' })).toBeInTheDocument();
   });
 
-  it('masque le déclencheur pendant que le panneau est ouvert, puis le réaffiche à la fermeture', async () => {
+  it('hides the trigger while the panel is open, then shows it again on close', async () => {
     stubMatchMedia(false);
     const user = userEvent.setup();
     renderPanel();
@@ -89,7 +89,7 @@ describe('AddMoviePanel', () => {
     expect(screen.getByRole('button', { name: 'Ajouter un film' })).toBeInTheDocument();
   });
 
-  it('rend le focus au déclencheur après la fermeture', async () => {
+  it('gives the focus back to the trigger after closing', async () => {
     stubMatchMedia(false);
     const user = userEvent.setup();
     renderPanel();

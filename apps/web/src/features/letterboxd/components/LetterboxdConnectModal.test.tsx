@@ -90,7 +90,7 @@ describe('LetterboxdConnectModal (MSW)', () => {
     expect(screen.queryByText(/laissé/)).not.toBeInTheDocument();
   });
 
-  it('distingue les titres introuvables sur TMDB des titres laissés en attente', async () => {
+  it('tells the titles not found on TMDB apart from the titles left pending', async () => {
     const user = userEvent.setup();
     server.use(
       authedUserHandler,

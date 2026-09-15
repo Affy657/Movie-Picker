@@ -20,7 +20,7 @@ describe('session hint', () => {
     localStorage.clear();
   });
 
-  it('reflète la valeur stockée quand le storage est lisible', () => {
+  it('reflects the stored value when the storage is readable', () => {
     expect(hasSessionHint()).toBe(false);
     setSessionHint();
     expect(localStorage.getItem(STORAGE_KEY)).toBe('1');
@@ -29,14 +29,14 @@ describe('session hint', () => {
     expect(hasSessionHint()).toBe(false);
   });
 
-  it('ne conclut pas à une absence de session quand le storage est illisible', () => {
+  it('does not conclude to a missing session when the storage is unreadable', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('storage indisponible');
     });
     expect(hasSessionHint()).toBe(true);
   });
 
-  it('garde la session en mémoire quand le storage refuse les écritures', () => {
+  it('keeps the session in memory when the storage refuses writes', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('storage indisponible');
     });
@@ -44,7 +44,7 @@ describe('session hint', () => {
     expect(hasSessionHint()).toBe(true);
   });
 
-  it('reste à faux après déconnexion même si le storage est illisible', () => {
+  it('stays false after sign-out even when the storage is unreadable', () => {
     clearSessionHint();
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('storage indisponible');

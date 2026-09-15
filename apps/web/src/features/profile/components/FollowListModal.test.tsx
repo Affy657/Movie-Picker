@@ -113,7 +113,7 @@ describe('FollowListModal (MSW)', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it('s’ouvre en modale native et se ferme sur l’événement close (Échap)', async () => {
+  it('opens as a native modal and closes on the close event (Escape)', async () => {
     const onClose = vi.fn();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
@@ -180,7 +180,7 @@ describe('FollowListModal (MSW)', () => {
     }
   });
 
-  it("démarre sur l'onglet Followers si initialTab='followers'", async () => {
+  it("starts on the Followers tab when initialTab='followers'", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice/followers`, () => HttpResponse.json({ items: [] }))

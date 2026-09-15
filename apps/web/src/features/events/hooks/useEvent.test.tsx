@@ -33,7 +33,7 @@ describe('useEvent', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('charge le détail événement pour un slug', async () => {
+  it('loads the event detail for a slug', async () => {
     const client = createTestQueryClient();
     const { result } = renderHook(() => useEvent('hook-slug', null), {
       wrapper: ({ children }) => (
@@ -79,7 +79,7 @@ describe('useEvent', () => {
     expect(ApiError.is(result.current.error)).toBe(true);
   });
 
-  it('ne lance pas de requête si slug est undefined', () => {
+  it('sends no request when slug is undefined', () => {
     const client = createTestQueryClient();
     const { result } = renderHook(() => useEvent(undefined, null), {
       wrapper: ({ children }) => (

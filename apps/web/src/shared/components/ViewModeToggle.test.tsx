@@ -14,7 +14,7 @@ function renderToggle(value: 'grid' | 'list', onChange = vi.fn()) {
 }
 
 describe('ViewModeToggle', () => {
-  it('est une barre d’outils dont seul le mode courant est enfoncé', () => {
+  it('is a toolbar where only the current mode is pressed', () => {
     renderToggle('grid');
 
     expect(screen.getByRole('toolbar', { name: 'Mode d’affichage' })).toBeInTheDocument();

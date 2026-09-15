@@ -45,7 +45,7 @@ describe('useEventDetailPage', () => {
     );
   }
 
-  it('demande la liste des films sans attendre la réponse de la soirée', async () => {
+  it('requests the movie list without waiting for the movie night response', async () => {
     serveEventNever();
 
     const { result } = renderHook(() => useEventDetailPage(slug), { wrapper });
@@ -55,7 +55,7 @@ describe('useEventDetailPage', () => {
     expect(requested).toEqual(['event', 'movies:']);
   });
 
-  it('part directement avec le participant mémorisé, sans second aller-retour', async () => {
+  it('starts straight away with the remembered participant, without a second round trip', async () => {
     setStoredParticipant(slug, 'p-42', 'Alice');
     serveEventNever();
 

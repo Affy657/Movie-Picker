@@ -28,7 +28,7 @@ function finishSpin(): void {
 }
 
 describe('LandingWheel', () => {
-  it('monte la roue, annonce un gagnant puis réarme le bouton', async () => {
+  it('mounts the wheel, announces a winner then re-arms the button', async () => {
     renderWheel();
 
     expect(screen.getByTestId('spinning-wheel')).toBeInTheDocument();
@@ -43,7 +43,7 @@ describe('LandingWheel', () => {
     expect(screen.getByRole('button')).toHaveTextContent(/relancer la roue/i);
   });
 
-  it('relance un tirage au clic et efface le gagnant précédent', async () => {
+  it('spins again on click and clears the previous winner', async () => {
     const user = userEvent.setup();
     renderWheel();
     finishSpin();
@@ -60,7 +60,7 @@ describe('LandingWheel', () => {
     expect(await screen.findByText(/film de la soirée/i)).toBeInTheDocument();
   });
 
-  it('expose la roue comme image nommée pour les lecteurs d’écran', () => {
+  it('exposes the wheel as a named image for screen readers', () => {
     renderWheel();
     expect(screen.getByRole('img', { name: /roue de tirage/i })).toBeInTheDocument();
   });

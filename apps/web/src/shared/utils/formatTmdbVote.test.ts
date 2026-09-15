@@ -8,20 +8,20 @@ describe('formatTmdbVote', () => {
     expect(formatTmdbVote(NaN)).toBeNull();
   });
 
-  it('convertit la note TMDB (sur 10) sur 5 avec une décimale (entier)', () => {
+  it('converts the TMDB rating (out of 10) to a 5 scale with one decimal (integer)', () => {
     expect(formatTmdbVote(7)).toBe('3.5/5');
   });
 
-  it('convertit un décimal sur 5 avec une décimale', () => {
+  it('converts a decimal to a 5 scale with one decimal', () => {
     expect(formatTmdbVote(8.46)).toBe('4.2/5');
   });
 
-  it('retourne null pour une note nulle (film non noté)', () => {
+  it('returns null for a null rating (unrated movie)', () => {
     expect(formatTmdbVote(0)).toBeNull();
     expect(formatTmdbVote(0, 'ten')).toBeNull();
   });
 
-  it('formate une note faible mais réelle', () => {
+  it('formats a low but real rating', () => {
     expect(formatTmdbVote(0.4)).toBe('0.2/5');
   });
 

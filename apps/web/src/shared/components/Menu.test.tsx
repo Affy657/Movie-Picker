@@ -13,7 +13,7 @@ describe('Menu', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  it('ouvre le panneau au clic sur le déclencheur et affiche les items', async () => {
+  it('opens the panel when clicking the trigger and shows the items', async () => {
     const user = userEvent.setup();
     render(
       <Menu triggerLabel="Options" panelLabel="Options">
@@ -72,7 +72,7 @@ describe('Menu', () => {
 });
 
 describe('MenuPanel', () => {
-  it('se rend seule, sans déclencheur ni logique d’ouverture', () => {
+  it('renders on its own, without trigger nor opening logic', () => {
     render(
       <MenuPanel label="Actions">
         <MenuItem>Un choix</MenuItem>
@@ -84,7 +84,7 @@ describe('MenuPanel', () => {
 });
 
 describe('MenuItem', () => {
-  it('affiche l’icône fournie et marque les variantes selected et danger', () => {
+  it('shows the provided icon and marks the selected and danger variants', () => {
     render(
       <MenuPanel label="Actions">
         <MenuItem icon={<span data-testid="icon" />} selected>
@@ -100,14 +100,14 @@ describe('MenuItem', () => {
 });
 
 describe('MenuLabel', () => {
-  it('affiche son intitulé', () => {
+  it('shows its heading', () => {
     render(<MenuLabel>Trier par</MenuLabel>);
     expect(screen.getByText('Trier par')).toBeInTheDocument();
   });
 });
 
 describe('MenuSeparator', () => {
-  it('se rend comme un séparateur', () => {
+  it('renders as a separator', () => {
     render(<MenuSeparator />);
     expect(screen.getByRole('separator')).toBeInTheDocument();
   });

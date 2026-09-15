@@ -31,7 +31,7 @@ describe('AccountPage (MSW)', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('affiche les préférences (langue + thème) et envoie uiTheme au PATCH profil', async () => {
+  it('shows the preferences (language and theme) and sends uiTheme to the profile PATCH', async () => {
     const user = userEvent.setup();
     let patchedTheme: string | undefined;
 
@@ -66,7 +66,7 @@ describe('AccountPage (MSW)', () => {
     await waitFor(() => expect(patchedTheme).toBe('dark'));
   });
 
-  it("affiche l'échelle des notes et envoie ratingScale au PATCH profil", async () => {
+  it('shows the rating scale and sends ratingScale to the profile PATCH', async () => {
     const user = userEvent.setup();
     let patchedRatingScale: string | undefined;
 
@@ -104,7 +104,7 @@ describe('AccountPage (MSW)', () => {
     await waitFor(() => expect(patchedRatingScale).toBe('ten'));
   });
 
-  it("n'affiche pas le contrôle d'échelle des notes pour un invité non connecté", async () => {
+  it('does not show the rating scale control for a signed-out visitor', async () => {
     server.use(authMeGuestHandler);
 
     renderAccount();

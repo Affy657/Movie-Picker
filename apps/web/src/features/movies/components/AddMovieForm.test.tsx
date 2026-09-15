@@ -31,7 +31,7 @@ describe('AddMovieForm (MSW)', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('recherche TMDB puis ajoute le film sélectionné (debounce ou bouton)', async () => {
+  it('searches TMDB then adds the selected movie (debounce or button)', async () => {
     const user = userEvent.setup();
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
 
@@ -42,7 +42,7 @@ describe('AddMovieForm (MSW)', () => {
     await waitFor(() => expect(onAdded).toHaveBeenCalled());
   });
 
-  it('affiche une erreur si la recherche échoue (≥ 2 caractères)', async () => {
+  it('shows an error when the search fails (2 characters or more)', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
         HttpResponse.json({ error: 'TMDB down' }, { status: 503 })
@@ -54,7 +54,7 @@ describe('AddMovieForm (MSW)', () => {
     expect(await screen.findByText(/TMDB down|503/i, {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
-  it('une seule requête si la frappe continue avant la fin du debounce', async () => {
+  it('a single request when typing continues before the end of the debounce', async () => {
     let searchCalls = 0;
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () => {
@@ -104,7 +104,7 @@ describe('AddMovieForm (MSW)', () => {
     expect(await screen.findByText(/aucun film ne correspond/i)).toBeInTheDocument();
   });
 
-  it('ne relance pas la recherche si seuls des espaces sont ajoutés après le terme', async () => {
+  it('does not search again when only spaces are added after the term', async () => {
     let searchCalls = 0;
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () => {
@@ -171,7 +171,7 @@ describe('AddMovieForm (MSW)', () => {
     expect(screen.queryByText(/recherches recentes|recherches r/i)).not.toBeInTheDocument();
   });
 
-  it("les cartes de résultat affichent l'abonnement en détail, la location et l'achat en simple compteur", async () => {
+  it('the result cards show the subscription in detail, rental and purchase as a plain counter', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
         HttpResponse.json({
@@ -208,7 +208,7 @@ describe('AddMovieForm (MSW)', () => {
     expect(screen.getByRole('img', { name: /achat \(2\).*film test/i })).toBeInTheDocument();
   });
 
-  it('affiche les genres du film sur la carte de résultat', async () => {
+  it('shows the movie genres on the result card', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
         HttpResponse.json({
@@ -236,7 +236,7 @@ describe('AddMovieForm (MSW)', () => {
     expect(await screen.findByText('2024, Action, Aventure')).toBeInTheDocument();
   });
 
-  it('masque les providers de streaming et le rappel de région quand showWatchProviders est désactivé', async () => {
+  it('hides the streaming providers and the region reminder when showWatchProviders is off', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
         HttpResponse.json({
@@ -276,7 +276,7 @@ describe('AddMovieForm (MSW)', () => {
     await waitFor(() => expect(screen.getByPlaceholderText(/ajouter un film/i)).toHaveFocus());
   });
 
-  it('un film disponible uniquement en location reste signalé sur la carte de résultat', async () => {
+  it('a movie available only for rent is still flagged on the result card', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
         HttpResponse.json({

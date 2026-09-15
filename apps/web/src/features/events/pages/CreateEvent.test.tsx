@@ -87,7 +87,7 @@ describe('CreateEvent', () => {
     });
   });
 
-  it('envoie le nombre de films gagnants choisi à la création', async () => {
+  it('sends the chosen number of winning movies at creation', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockResolvedValueOnce({
       slug: 'abc123',
@@ -112,7 +112,7 @@ describe('CreateEvent', () => {
     });
   });
 
-  it("affiche un message d'erreur si l'API échoue", async () => {
+  it('shows an error message when the API fails', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation((path: unknown) =>
       isTemplatesCall(path)
@@ -134,7 +134,7 @@ describe('CreateEvent', () => {
     });
   });
 
-  it('n’affiche pas la rangée de templates quand il n’y en a aucun', async () => {
+  it('does not show the template row when there is none', async () => {
     RenderCreateEvent();
 
     await waitFor(() => expect(mockFetchApi).toHaveBeenCalled());
@@ -174,7 +174,7 @@ describe('CreateEvent', () => {
     expect(screen.getByRole('radio', { name: /aléatoire strict/i })).toBeChecked();
   });
 
-  it('retire la coche de la pastille dès qu’un champ couvert change', async () => {
+  it('removes the tick from the chip as soon as a covered field changes', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation((path: unknown) =>
       isTemplatesCall(path)
@@ -210,7 +210,7 @@ describe('CreateEvent', () => {
     );
   });
 
-  it('annonce la configuration reprise d’une soirée passée et ouvre les options', async () => {
+  it('announces the configuration taken from a past movie night and opens the options', async () => {
     mockFetchApi.mockImplementation((path: unknown) => {
       if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
       if (typeof path === 'string' && path.includes('/config')) {
@@ -248,7 +248,7 @@ describe('CreateEvent', () => {
     expect(screen.getByLabelText(/films max par personne/i)).toHaveValue(4);
   });
 
-  it('sans limite de votes activée, la soirée est créée sans limite', async () => {
+  it('without the vote limit enabled, the movie night is created without a limit', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation((path: unknown) => {
       if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
@@ -303,7 +303,7 @@ describe('CreateEvent', () => {
     });
   });
 
-  it('limite activée mais compteur vidé : la valeur par défaut part quand même', async () => {
+  it('limit enabled but counter cleared: the default value is still sent', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation((path: unknown) => {
       if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
@@ -328,7 +328,7 @@ describe('CreateEvent', () => {
     });
   });
 
-  it('transmet toute la configuration du template à la soirée créée', async () => {
+  it('passes the whole template configuration to the created movie night', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation((path: unknown) => {
       if (isTemplatesCall(path)) {

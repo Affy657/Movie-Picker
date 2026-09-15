@@ -10,32 +10,32 @@ describe('formatMyEventsListDate', () => {
     expect(formatMyEventsListDate('2026-04-30', 'fr')).toMatch(/30/);
   });
 
-  it('inclut le jour de la semaine abrégé', () => {
+  it('includes the abbreviated weekday', () => {
     const currentYear = new Date().getFullYear();
     const result = formatMyEventsListDate(`${currentYear}-04-15`, 'fr');
     expect(result).toBe('mer. 15 avr.');
   });
 
-  it('inclut le jour de la semaine côté anglais', () => {
+  it('includes the weekday on the English side', () => {
     const currentYear = new Date().getFullYear();
     const result = formatMyEventsListDate(`${currentYear}-04-15`, 'en');
     expect(result).toBe('Wed 15 Apr');
   });
 
-  it("n'affiche pas l'année si c'est l'année courante", () => {
+  it('does not show the year when it is the current year', () => {
     const currentYear = new Date().getFullYear();
     const isoDate = `${currentYear}-06-15`;
     const result = formatMyEventsListDate(isoDate, 'fr');
     expect(result).not.toMatch(String(currentYear));
   });
 
-  it("affiche l'année si c'est une année différente", () => {
+  it('shows the year when it is a different year', () => {
     const nextYear = new Date().getFullYear() + 1;
     const result = formatMyEventsListDate(`${nextYear}-06-15`, 'fr');
     expect(result).toMatch(String(nextYear));
   });
 
-  it('garde le jour de la semaine quand l’année est affichée', () => {
+  it('keeps the weekday when the year is shown', () => {
     const nextYear = new Date().getFullYear() + 1;
     const result = formatMyEventsListDate(`${nextYear}-04-15`, 'fr');
     expect(result).toBe(`jeu. 15 avr. ${nextYear}`);
@@ -59,14 +59,14 @@ describe('formatEventTime', () => {
 });
 
 describe('formatEventDateLong', () => {
-  it('écrit le jour en entier et le mois abrégé, sans année pour l’année en cours', () => {
+  it('writes the day in full and the month abbreviated, without a year for the current year', () => {
     const currentYear = new Date().getFullYear();
     const result = formatEventDateLong(`${currentYear}-08-22`, '20:30', 'fr', 'à');
     expect(result).toMatch(/^\p{L}+ 22 août à 20h30$/u);
     expect(result).not.toContain(String(currentYear));
   });
 
-  it('ajoute l’année quand elle diffère de l’année en cours', () => {
+  it('adds the year when it differs from the current year', () => {
     const nextYear = new Date().getFullYear() + 1;
     expect(formatEventDateLong(`${nextYear}-04-15`, '21:00', 'fr', 'à')).toContain(
       `avr. ${nextYear} à 21h`
@@ -77,7 +77,7 @@ describe('formatEventDateLong', () => {
     expect(formatEventDateLong('2030-12-20', '19:05', 'en', 'at')).toContain('at 19h05');
   });
 
-  it('renvoie la chaîne brute si la date est invalide', () => {
+  it('returns the raw string when the date is invalid', () => {
     expect(formatEventDateLong('nope', '20:00', 'fr', 'à')).toBe('nope');
   });
 });

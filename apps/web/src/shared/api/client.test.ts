@@ -6,7 +6,7 @@ import { fr } from '@/shared/i18n/locales/fr';
 import { en } from '@/shared/i18n/locales/en';
 
 describe('apiUrl', () => {
-  it('préfixe avec la base, version /api/v1, et forme un chemin valide', () => {
+  it('prefixes with the base, the /api/v1 version, and forms a valid path', () => {
     expect(apiUrl('/events')).toMatch(/^https?:\/\/.+\/api\/v1\/events$/);
     expect(apiUrl('events')).toMatch(/\/api\/v1\/events$/);
     expect(apiUrl('/health')).toMatch(/\/health$/);
@@ -77,7 +77,7 @@ describe('fetchApi', () => {
     });
   });
 
-  it('réponse 4xx renvoie une ApiError avec message et code', async () => {
+  it('a 4xx response returns an ApiError with message and code', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
       status: 404,
@@ -96,7 +96,7 @@ describe('fetchApi', () => {
     }
   });
 
-  it('réponse 4xx porte la raison métier quand le serveur en donne une', async () => {
+  it('a 4xx response carries the business reason when the server gives one', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
       status: 409,
@@ -112,7 +112,7 @@ describe('fetchApi', () => {
     });
   });
 
-  it('réponse 5xx renvoie une erreur', async () => {
+  it('a 5xx response returns an error', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
       status: 500,
@@ -132,14 +132,14 @@ describe('fetchApi', () => {
     await expect(fetchApi('/events')).rejects.toThrow(/HTML/);
   });
 
-  it('erreur réseau renvoie message dédié', async () => {
+  it('a network error returns a dedicated message', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
       new TypeError('fetch failed')
     );
     await expect(fetchApi('/events')).rejects.toThrow(/API|connexion|impossible/i);
   });
 
-  it('réponse 200 JSON corps vide renvoie undefined', async () => {
+  it('a 200 JSON response with an empty body returns undefined', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 200,
@@ -150,7 +150,7 @@ describe('fetchApi', () => {
     expect(data).toBeUndefined();
   });
 
-  it('réponse 202 Accepted sans body ni Content-Type renvoie undefined (cas ASP.NET Accepted())', async () => {
+  it('a 202 Accepted response without body nor Content-Type returns undefined (ASP.NET Accepted() case)', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 202,
@@ -164,7 +164,7 @@ describe('fetchApi', () => {
     expect(data).toBeUndefined();
   });
 
-  it('réponse 200 JSON renvoie les données brutes (sans mapping domaine)', async () => {
+  it('a 200 JSON response returns the raw data (no domain mapping)', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 200,
@@ -200,7 +200,7 @@ describe('fetchApi', () => {
     );
   });
 
-  it('body malformé avec Content-Type JSON produit ApiError lisible (pas SyntaxError)', async () => {
+  it('a malformed body with a JSON Content-Type produces a readable ApiError (not a SyntaxError)', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
       status: 502,
@@ -220,7 +220,7 @@ describe('fetchApi', () => {
     }
   });
 
-  it('réponse 200 avec body JSON malformé produit ApiError', async () => {
+  it('a 200 response with a malformed JSON body produces an ApiError', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 200,
@@ -266,7 +266,7 @@ describe('fetchApi', () => {
     }
   });
 
-  it('fusionne les en-têtes natifs Headers avec Content-Type JSON si body', async () => {
+  it('merges the native Headers with a JSON Content-Type when there is a body', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       status: 200,

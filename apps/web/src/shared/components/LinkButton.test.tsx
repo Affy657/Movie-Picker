@@ -5,7 +5,7 @@ import LinkButton from '@/shared/components/LinkButton';
 import styles from '@/shared/components/LinkButton.module.css';
 
 describe('LinkButton', () => {
-  it('est un bouton de type button, petit par défaut', async () => {
+  it('is a button of type button, small by default', async () => {
     const onClick = vi.fn();
     render(<LinkButton onClick={onClick}>Tout afficher</LinkButton>);
 
@@ -17,7 +17,7 @@ describe('LinkButton', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
-  it('prend la taille md et une classe supplémentaire', () => {
+  it('takes the md size and an extra class', () => {
     render(
       <LinkButton size="md" className="extra">
         Voir plus
@@ -27,7 +27,7 @@ describe('LinkButton', () => {
     expect(screen.getByRole('button', { name: 'Voir plus' })).toHaveClass(styles.md!, 'extra');
   });
 
-  it('reste désactivable', async () => {
+  it('stays disableable', async () => {
     const onClick = vi.fn();
     render(
       <LinkButton disabled onClick={onClick}>

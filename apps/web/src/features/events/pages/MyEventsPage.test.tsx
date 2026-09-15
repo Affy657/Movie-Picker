@@ -98,7 +98,7 @@ describe('MyEventsPage (MSW)', () => {
   });
   afterAll(() => server.close());
 
-  it('affiche le bloc À traiter, la grille active et les compteurs d’onglets', async () => {
+  it('shows the To handle block, the active grid and the tab counters', async () => {
     server.use(
       authMeHandler,
       myEventsHandler(
@@ -179,7 +179,7 @@ describe('MyEventsPage (MSW)', () => {
     expect(document.title).toBe(pageTitle('Mes soirées'));
   });
 
-  it('historique : ouvrir le menu et supprimer une soirée hôte terminée', async () => {
+  it('history: open the menu and delete a finished hosted movie night', async () => {
     const user = (await import('@testing-library/user-event')).default.setup();
     let deleteCalled = false;
     server.use(
@@ -234,7 +234,7 @@ describe('MyEventsPage (MSW)', () => {
     await waitFor(() => expect(deleteCalled).toBe(true));
   });
 
-  it('historique : un participant retire une soirée terminée de son historique', async () => {
+  it('history: a participant removes a finished movie night from their history', async () => {
     const user = (await import('@testing-library/user-event')).default.setup();
     setStoredParticipant('rejointe-terminee', 'part-1', 'Alice');
     let removeCalled = false;
@@ -282,7 +282,7 @@ describe('MyEventsPage (MSW)', () => {
     await waitFor(() => expect(removeCalled).toBe(true));
   });
 
-  it('historique : filtrer par résultat (avec/sans film choisi)', async () => {
+  it('history: filter by outcome (with/without a chosen movie)', async () => {
     const user = (await import('@testing-library/user-event')).default.setup();
     server.use(
       authMeHandler,

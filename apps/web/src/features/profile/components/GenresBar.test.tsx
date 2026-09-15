@@ -41,7 +41,7 @@ describe('GenresBar', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(8);
   });
 
-  it('affiche le total cumulé des genres affichés', () => {
+  it('shows the cumulative total of the displayed genres', () => {
     renderBar([
       { genreId: 28, count: 5 },
       { genreId: 12, count: 3 },

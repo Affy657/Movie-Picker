@@ -51,7 +51,7 @@ describe('UserMenu', () => {
   });
   afterAll(() => server.close());
 
-  it('le menu est fermé par défaut', () => {
+  it('the menu is closed by default', () => {
     renderMenu();
     expect(screen.getByRole('button', { name: /menu du compte/i })).toHaveAttribute(
       'aria-expanded',
@@ -60,7 +60,7 @@ describe('UserMenu', () => {
     expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument();
   });
 
-  it('ouvre le menu et affiche profil, compte et déconnexion', async () => {
+  it('opens the menu and shows profile, account and sign out', async () => {
     const user = userEvent.setup();
     renderMenu();
 
@@ -80,7 +80,7 @@ describe('UserMenu', () => {
     expect(screen.getByRole('button', { name: /se déconnecter/i })).toBeInTheDocument();
   });
 
-  it("place le focus sur le premier élément à l'ouverture", async () => {
+  it('puts the focus on the first item when opening', async () => {
     const user = userEvent.setup();
     renderMenu();
 
@@ -101,7 +101,7 @@ describe('UserMenu', () => {
     expect(screen.getByRole('link', { name: /paramètres/i })).toBeInTheDocument();
   });
 
-  it('ferme le menu avec Échap et rend le focus au déclencheur', async () => {
+  it('closes the menu with Escape and gives the focus back to the trigger', async () => {
     const user = userEvent.setup();
     renderMenu();
     const trigger = screen.getByRole('button', { name: /menu du compte/i });
@@ -117,7 +117,7 @@ describe('UserMenu', () => {
     expect(trigger).toHaveFocus();
   });
 
-  it('ouvre la modale « Proposer une idée » et la garde ouverte après fermeture du menu', async () => {
+  it('opens the "Suggest an idea" modal and keeps it open after the menu closes', async () => {
     const user = userEvent.setup();
     renderMenu();
 
@@ -143,7 +143,7 @@ describe('UserMenu', () => {
     ).toBeInTheDocument();
   });
 
-  it('déclenche la déconnexion au clic sur Se déconnecter', async () => {
+  it('triggers the sign-out when clicking Sign out', async () => {
     const user = userEvent.setup();
     let loggedOut = false;
     server.use(
@@ -160,7 +160,7 @@ describe('UserMenu', () => {
     await waitFor(() => expect(loggedOut).toBe(true));
   });
 
-  it('la déconnexion oublie les identités de soirée et vide le cache des requêtes', async () => {
+  it('signing out forgets the movie night identities and clears the query cache', async () => {
     const user = userEvent.setup();
     server.use(
       http.post(`${TEST_API_V1}/auth/logout`, () => new HttpResponse(null, { status: 204 }))

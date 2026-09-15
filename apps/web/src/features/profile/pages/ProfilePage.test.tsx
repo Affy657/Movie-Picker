@@ -94,7 +94,7 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.queryByRole('heading', { name: 'Alice' })).not.toBeInTheDocument();
   });
 
-  it('affiche une erreur avec un bouton Réessayer si les statistiques échouent, et se rétablit', async () => {
+  it('shows an error with a Retry button when the statistics fail, and recovers', async () => {
     const user = userEvent.setup();
     let statsCallCount = 0;
     server.use(
@@ -122,7 +122,7 @@ describe('ProfilePage (MSW)', () => {
     });
   });
 
-  it('annonce la copie du lien via une région aria-live', async () => {
+  it('announces the link copy through an aria-live region', async () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
@@ -208,7 +208,7 @@ describe('ProfilePage (MSW)', () => {
     );
   });
 
-  it("ouvre la modal followers au clic sur le compteur d'abonnés", async () => {
+  it('opens the followers modal when clicking the followers counter', async () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
@@ -226,7 +226,7 @@ describe('ProfilePage (MSW)', () => {
     });
   });
 
-  it('propose un lien Suivre vers la connexion pour un visiteur non connecté', async () => {
+  it('offers a Follow link to sign-in for a signed-out visitor', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice`, () =>
@@ -240,7 +240,7 @@ describe('ProfilePage (MSW)', () => {
     expect(link).toHaveAttribute('href', expect.stringContaining('/login'));
   });
 
-  it('affiche le bouton Suivre quand connecté sur un profil tiers', async () => {
+  it("shows the Follow button when signed in on someone else's profile", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/alice`, () =>
@@ -253,7 +253,7 @@ describe('ProfilePage (MSW)', () => {
     expect(await screen.findByRole('button', { name: /suivre/i })).toBeInTheDocument();
   });
 
-  it('affiche le bouton Ne plus suivre quand déjà suivi', async () => {
+  it('shows the Unfollow button when already following', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
       http.get(`${TEST_API_V1}/users/alice`, () =>
@@ -350,7 +350,7 @@ describe('ProfilePage (MSW)', () => {
       expect(screen.queryByRole('link', { name: /watchlist/i })).not.toBeInTheDocument();
     });
 
-    it('mène à ma propre watchlist depuis mon profil', async () => {
+    it('leads to my own watchlist from my profile', async () => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
         http.get(`${TEST_API_V1}/users/moi`, () =>
@@ -372,7 +372,7 @@ describe('ProfilePage (MSW)', () => {
       expect(screen.queryByText(/masquée/i)).not.toBeInTheDocument();
     });
 
-    it('signale sur mon profil que ma watchlist est masquée, même vide', async () => {
+    it('flags on my profile that my watchlist is hidden, even when empty', async () => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
         http.get(`${TEST_API_V1}/users/moi`, () =>
@@ -398,7 +398,7 @@ describe('ProfilePage (MSW)', () => {
       );
     });
 
-    it('ne propose pas le raccourci vers le réglage quand ma watchlist est visible', async () => {
+    it('does not offer the shortcut to the setting when my watchlist is visible', async () => {
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
         http.get(`${TEST_API_V1}/users/moi`, () =>
@@ -420,7 +420,7 @@ describe('ProfilePage (MSW)', () => {
     });
   });
 
-  it("affiche un état introuvable quand l'API renvoie 404", async () => {
+  it('shows a not found state when the API returns 404', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/ghost`, () =>
@@ -525,7 +525,7 @@ describe('ProfilePage (MSW)', () => {
     expect(screen.queryByRole('group', { name: /semaine.*de suite/i })).not.toBeInTheDocument();
   });
 
-  it("masque la section stats si l'endpoint stats échoue", async () => {
+  it('hides the stats section when the stats endpoint fails', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice`, () => HttpResponse.json(ALICE_PROFILE)),

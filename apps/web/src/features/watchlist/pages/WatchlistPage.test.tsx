@@ -84,7 +84,7 @@ describe('WatchlistPage (MSW)', () => {
     expect(await screen.findByText(/votre liste est vide/i)).toBeInTheDocument();
   });
 
-  it('filtre la liste par note minimum puis réinitialise', async () => {
+  it('filters the list by minimum rating then resets', async () => {
     server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
 
     renderPage();
@@ -140,7 +140,7 @@ describe('WatchlistPage (MSW)', () => {
     await waitFor(() => expect(titlesInOrder()).toHaveLength(2));
   });
 
-  it("n'affiche aucun résultat quand la recherche ne correspond à rien, avec un bouton de réinitialisation", async () => {
+  it('shows no result when the search matches nothing, with a reset button', async () => {
     server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
 
     renderPage();
@@ -159,7 +159,7 @@ describe('WatchlistPage (MSW)', () => {
     expect(await screen.findByRole('list', { name: /films de ma liste/i })).toBeInTheDocument();
   });
 
-  it('trie par ajout (défaut), note et durée, et inverse le sens au second clic', async () => {
+  it('sorts by addition (default), rating and runtime, and reverses the direction on the second click', async () => {
     server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
 
     renderPage();
@@ -199,7 +199,7 @@ describe('WatchlistPage (MSW)', () => {
     });
   });
 
-  it('recherche un film, l’ajoute avec note/durée, ferme la recherche', async () => {
+  it('searches for a movie, adds it with rating/runtime, closes the search', async () => {
     let addedBody: Record<string, unknown> | null = null;
     server.use(
       authedUserHandler,
@@ -277,7 +277,7 @@ describe('WatchlistPage (MSW)', () => {
     await waitFor(() => expect(removeCalled).toBe(true));
   });
 
-  it('affiche les détails d’un film', async () => {
+  it('shows the details of a movie', async () => {
     server.use(
       authedUserHandler,
       watchlistHandler([ITEM_A]),
@@ -312,7 +312,7 @@ describe('WatchlistPage (MSW)', () => {
     expect(await screen.findByText('Netflix')).toBeInTheDocument();
   });
 
-  it('propose un film à une soirée depuis la modal (fallback tactile)', async () => {
+  it('proposes a movie to a movie night from the modal (touch fallback)', async () => {
     let proposedBody: Record<string, unknown> | null = null;
     server.use(
       authedUserHandler,
@@ -450,7 +450,7 @@ describe('WatchlistPage (MSW)', () => {
     vi.unstubAllGlobals();
   });
 
-  it("propose l'import Letterboxd quand aucun pseudo n'est configuré, et ouvre la modale de connexion", async () => {
+  it('offers the Letterboxd import when no username is configured, and opens the connection modal', async () => {
     server.use(authedUserHandler, watchlistHandler([ITEM_A]));
 
     renderPage();
@@ -464,7 +464,7 @@ describe('WatchlistPage (MSW)', () => {
     ).toBeInTheDocument();
   });
 
-  it("masque l'incitation Letterboxd une fois le pseudo configuré", async () => {
+  it('hides the Letterboxd prompt once the username is configured', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
         HttpResponse.json({
@@ -488,7 +488,7 @@ describe('WatchlistPage (MSW)', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('sur mobile, affiche Importer à côté de Ajouter avec un libellé court', async () => {
+  it('on mobile, shows Import next to Add with a short label', async () => {
     vi.stubGlobal(
       'matchMedia',
       vi.fn((query: string) => ({

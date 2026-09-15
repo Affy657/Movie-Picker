@@ -43,7 +43,7 @@ describe('usePageSeo', () => {
     expect(meta('meta[name="twitter:title"]')).toBe('Page test');
   });
 
-  it('retombe sur les valeurs par défaut du site', () => {
+  it('falls back to the site defaults', () => {
     renderHook(() => usePageSeo({ title: 'Accueil' }));
 
     expect(meta('meta[name="description"]')).toBe(fr.landing.seoDescription);
@@ -61,7 +61,7 @@ describe('usePageSeo', () => {
     expect(meta('meta[property="og:image:alt"]')).toBe(en.landing.ogImageAlt);
   });
 
-  it('émet noindex quand demandé', () => {
+  it('emits noindex when requested', () => {
     renderHook(() => usePageSeo({ title: 'Introuvable', noindex: true }));
     expect(meta('meta[name="robots"]')).toBe('noindex, nofollow');
   });
@@ -81,7 +81,7 @@ describe('usePageSeo', () => {
     expect(JSON.parse(scripts[0]?.textContent ?? '{}')).toMatchObject({ name: 'Alice' });
   });
 
-  it('masque le JSON-LD d’accueil hors de la home et le restaure au démontage', () => {
+  it('hides the home JSON-LD outside the home and restores it on unmount', () => {
     const homeLd = document.createElement('script');
     homeLd.type = 'application/ld+json';
     homeLd.textContent = '{"@type":"WebSite"}';
@@ -109,7 +109,7 @@ describe('usePageSeo', () => {
     expect(JSON.parse(restored[0]?.textContent ?? '{}')).toMatchObject({ '@type': 'WebSite' });
   });
 
-  it('réinitialise les balises aux valeurs par défaut au démontage', () => {
+  it('resets the tags to the default values on unmount', () => {
     const { unmount } = renderHook(() =>
       usePageSeo({
         title: 'Profil',

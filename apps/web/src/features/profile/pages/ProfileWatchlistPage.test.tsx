@@ -75,7 +75,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('affiche le titre, le compteur et les films à voir, avec un retour au profil', async () => {
+  it('shows the title, the counter and the movies to watch, with a link back to the profile', async () => {
     renderPage('alice');
 
     expect(
@@ -117,7 +117,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
     expect(await screen.findByRole('heading', { name: 'Inception', level: 2 })).toBeInTheDocument();
   });
 
-  it('affiche un état vide quand la watchlist ne contient rien', async () => {
+  it('shows an empty state when the watchlist contains nothing', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
         HttpResponse.json({ items: [], total: 0, hasMore: false })
@@ -128,7 +128,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
     expect(await screen.findByText(/aucun film à voir pour le moment/i)).toBeInTheDocument();
   });
 
-  it("affiche l'introuvable quand la watchlist est masquée ou le profil privé", async () => {
+  it('shows not found when the watchlist is hidden or the profile private', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/:handle/watchlist`, () =>
         HttpResponse.json({ code: 'NOT_FOUND', message: 'Introuvable' }, { status: 404 })

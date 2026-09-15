@@ -36,7 +36,7 @@ describe('RegisterPage (MSW)', () => {
   });
   afterAll(() => server.close());
 
-  it('inscription réussie puis navigation vers returnTo', async () => {
+  it('successful sign-up then navigation to returnTo', async () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>

@@ -22,7 +22,7 @@ function baseProps() {
 
 describe('SortControl', () => {
   describe('desktop (pastilles)', () => {
-    it('affiche une pastille par critère, celle active en évidence avec sa direction', () => {
+    it('shows one chip per criterion, the active one highlighted with its direction', () => {
       render(<SortControl {...baseProps()} sortBy="score" sortDir="desc" isMobile={false} />);
       const active = screen.getByRole('button', { name: /votes/i });
       expect(active).toHaveAttribute('aria-pressed', 'true');
@@ -30,7 +30,7 @@ describe('SortControl', () => {
       expect(others.every((b) => b.getAttribute('aria-pressed') === 'false')).toBe(true);
     });
 
-    it('cliquer une pastille appelle onSetSort avec sa clé', async () => {
+    it('clicking a chip calls onSetSort with its key', async () => {
       const onSetSort = vi.fn();
       render(
         <SortControl
@@ -45,7 +45,7 @@ describe('SortControl', () => {
       expect(onSetSort).toHaveBeenCalledWith('duration');
     });
 
-    it('recliquer la pastille active permet de changer le sens (même clé renvoyée)', async () => {
+    it('clicking the active chip again allows changing the direction (same key returned)', async () => {
       const onSetSort = vi.fn();
       render(
         <SortControl
@@ -62,7 +62,7 @@ describe('SortControl', () => {
   });
 
   describe('mobile (menu)', () => {
-    it('affiche le critère actif comme libellé du déclencheur et ouvre la liste des choix', async () => {
+    it('shows the active criterion as the trigger label and opens the list of choices', async () => {
       render(<SortControl {...baseProps()} sortBy="score" sortDir="desc" isMobile />);
       const trigger = screen.getByRole('button', { name: /votes/i });
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
@@ -74,7 +74,7 @@ describe('SortControl', () => {
       expect(screen.getByRole('menuitem', { name: 'Durée' })).toBeInTheDocument();
     });
 
-    it('choisir un autre critère dans le menu appelle onSetSort et referme le menu', async () => {
+    it('choosing another criterion in the menu calls onSetSort and closes the menu', async () => {
       const onSetSort = vi.fn();
       render(
         <SortControl
@@ -91,7 +91,7 @@ describe('SortControl', () => {
       expect(screen.queryByRole('menuitem', { name: 'Durée' })).not.toBeInTheDocument();
     });
 
-    it("l'entrée de direction affiche le sens courant et appelle onSetSort avec la clé active", async () => {
+    it('the direction entry shows the current direction and calls onSetSort with the active key', async () => {
       const onSetSort = vi.fn();
       render(
         <SortControl {...baseProps()} onSetSort={onSetSort} sortBy="score" sortDir="asc" isMobile />

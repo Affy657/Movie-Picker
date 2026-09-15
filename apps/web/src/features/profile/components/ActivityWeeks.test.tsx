@@ -32,7 +32,7 @@ describe('ActivityWeeks', () => {
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
-  it('agrège les jours en une cellule par semaine, chacune focusable au clavier', () => {
+  it('aggregates the days into one cell per week, each focusable with the keyboard', () => {
     const points = days(new Array(21).fill(0), '2026-01-05');
     renderWeeks(points);
     const cells = screen.getAllByRole('button');
@@ -40,12 +40,12 @@ describe('ActivityWeeks', () => {
     cells.forEach((cell) => expect(cell).toBeInstanceOf(HTMLButtonElement));
   });
 
-  it('gère une date invalide sans planter (branche isNaN)', () => {
+  it('handles an invalid date without crashing (isNaN branch)', () => {
     renderWeeks([{ date: 'pas-une-date', count: 3 }]);
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
-  it('affiche le total dans le libellé du groupe', () => {
+  it('shows the total in the group label', () => {
     renderWeeks([
       { date: '2026-01-01', count: 2 },
       { date: '2026-01-02', count: 3 },
@@ -53,12 +53,12 @@ describe('ActivityWeeks', () => {
     expect(screen.getByRole('group', { name: /5 participation/ })).toBeInTheDocument();
   });
 
-  it('affiche une légende avec 4 niveaux', () => {
+  it('shows a legend with 4 levels', () => {
     renderWeeks(days(new Array(7).fill(1), '2026-01-05'));
     expect(document.querySelectorAll('[class*="legendSwatch"]')).toHaveLength(4);
   });
 
-  it('affiche un repère de mois pour la première semaine', () => {
+  it('shows a month marker for the first week', () => {
     renderWeeks(days(new Array(7).fill(1), '2026-02-02'));
     const label = document.querySelector('[class*="weekMonthLabel"]');
     expect(label?.textContent).not.toBe('');

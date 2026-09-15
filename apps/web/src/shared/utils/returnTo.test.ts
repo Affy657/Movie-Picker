@@ -15,11 +15,11 @@ describe('safeReturnTo', () => {
     expect(safeReturnTo('https://x')).toBe('/');
   });
 
-  it('refuse les variantes protocol-relative masquées par un antislash', () => {
+  it('rejects protocol-relative variants hidden by a backslash', () => {
     expect(safeReturnTo('/\\evil.test')).toBe('/');
   });
 
-  it("refuse les pages d'authentification pour éviter une boucle de redirection", () => {
+  it('rejects the authentication pages to avoid a redirect loop', () => {
     expect(safeReturnTo('/login')).toBe('/');
     expect(safeReturnTo('/login?returnTo=%2Flogin')).toBe('/');
     expect(safeReturnTo('/register')).toBe('/');
@@ -27,7 +27,7 @@ describe('safeReturnTo', () => {
     expect(safeReturnTo('/reset?token=abc')).toBe('/');
   });
 
-  it("refuse les pages d'authentification même avec un slash final ou une casse différente (react-router les résout vers la même route)", () => {
+  it('rejects the authentication pages even with a trailing slash or a different case (react-router resolves them to the same route)', () => {
     expect(safeReturnTo('/login/')).toBe('/');
     expect(safeReturnTo('/Login')).toBe('/');
     expect(safeReturnTo('/LOGIN/')).toBe('/');

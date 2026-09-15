@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 import PageLayout from '@/shared/components/PageLayout';
 
 describe('PageLayout', () => {
-  it('rend le landmark principal, cible du lien d’évitement', () => {
+  it('renders the main landmark, target of the skip link', () => {
     render(<PageLayout>Contenu</PageLayout>);
 
     const main = screen.getByRole('main');

@@ -22,19 +22,19 @@ describe('useWhatsNew', () => {
     expect(result.current.isOpen).toBe(true);
   });
 
-  it('reste fermé si la dernière version vue correspond à la version courante', () => {
+  it('stays closed when the last seen version matches the current version', () => {
     localStorage.setItem(KEY, LATEST_WHATS_NEW_RELEASE.version);
     const { result } = renderHook(() => useWhatsNew(USER_ID));
     expect(result.current.isOpen).toBe(false);
   });
 
-  it('s’ouvre automatiquement si la version vue est différente de la version courante', () => {
+  it('opens automatically when the seen version differs from the current version', () => {
     localStorage.setItem(KEY, '1.0.0');
     const { result } = renderHook(() => useWhatsNew(USER_ID));
     expect(result.current.isOpen).toBe(true);
   });
 
-  it('recalcule l’état à l’ouverture quand userId change', () => {
+  it('recomputes the state at opening when userId changes', () => {
     localStorage.setItem(KEY, LATEST_WHATS_NEW_RELEASE.version);
     const { result, rerender } = renderHook(({ uid }) => useWhatsNew(uid), {
       initialProps: { uid: USER_ID as string | undefined },
@@ -61,7 +61,7 @@ describe('useWhatsNew', () => {
   });
 
   describe('openOnDemand', () => {
-    it('rouvre la modale même si la version courante a déjà été vue', () => {
+    it('reopens the modal even when the current version was already seen', () => {
       localStorage.setItem(KEY, LATEST_WHATS_NEW_RELEASE.version);
       const { result } = renderHook(() => useWhatsNew(USER_ID));
       expect(result.current.isOpen).toBe(false);
@@ -70,12 +70,12 @@ describe('useWhatsNew', () => {
     });
   });
 
-  it('expose toujours la dernière version curée', () => {
+  it('always exposes the latest curated version', () => {
     const { result } = renderHook(() => useWhatsNew(USER_ID));
     expect(result.current.release).toBe(LATEST_WHATS_NEW_RELEASE);
   });
 
-  it('ne plante pas et reste fermée dans la même session si localStorage.setItem échoue', () => {
+  it('does not crash and stays closed in the same session when localStorage.setItem fails', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');
     });

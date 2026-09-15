@@ -20,7 +20,7 @@ const PRIVATE_ROUTES = [
 ];
 
 describe('PRERENDERED_ROUTES', () => {
-  it('ne contient que des chemins statiques déclarés dans ROUTES', () => {
+  it('contains only static paths declared in ROUTES', () => {
     const staticRoutes = Object.values<unknown>(ROUTES).filter(
       (value) => typeof value === 'string' && !value.includes(':')
     );
@@ -31,11 +31,11 @@ describe('PRERENDERED_ROUTES', () => {
     for (const route of PRERENDERED_ROUTES) expect(route).not.toContain(':');
   });
 
-  it('ne contient aucune route privée ou authentifiée', () => {
+  it('contains no private or authenticated route', () => {
     for (const route of PRERENDERED_ROUTES) expect(PRIVATE_ROUTES).not.toContain(route);
   });
 
-  it("laisse la page d'accueil hors du prérendu", () => {
+  it('leaves the home page out of the prerendering', () => {
     expect(PRERENDERED_ROUTES).not.toContain(ROUTES.home);
   });
 
@@ -43,14 +43,14 @@ describe('PRERENDERED_ROUTES', () => {
     expect(new Set(PRERENDERED_ROUTES).size).toBe(PRERENDERED_ROUTES.length);
   });
 
-  it('donne à chaque route le nom du chunk dont le document doit porter les styles', () => {
+  it('gives every route the name of the chunk whose styles the document must carry', () => {
     for (const route of PRERENDERED_ROUTES) {
       expect(PRERENDERED_ROUTE_CHUNKS[route]).toBeTruthy();
     }
     expect(Object.keys(PRERENDERED_ROUTE_CHUNKS).sort()).toEqual([...PRERENDERED_ROUTES].sort());
   });
 
-  it('ne dispense du référencement que des routes effectivement prérendues', () => {
+  it('only exempts from indexing routes that are actually prerendered', () => {
     for (const route of PRERENDERED_FOR_FIRST_PAINT_ONLY) {
       expect(PRERENDERED_ROUTES).toContain(route);
     }

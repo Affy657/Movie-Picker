@@ -53,19 +53,19 @@ function renderActions(wheel: EventWheelState, onRequestReset = vi.fn()) {
 }
 
 describe('EventWheelActions', () => {
-  it('ne propose plus de clôturer la soirée', () => {
+  it('no longer offers to close the movie night', () => {
     renderActions(wheelState());
 
     expect(screen.queryByRole('button', { name: /clôturer/i })).not.toBeInTheDocument();
   });
 
-  it('parle de lancer la roue tant qu’aucun film n’est tiré', () => {
+  it('talks about spinning the wheel as long as no movie is drawn', () => {
     renderActions(wheelState());
 
     expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeInTheDocument();
   });
 
-  it('parle de tirer un film de plus dès qu’un film est au palmarès', () => {
+  it('talks about drawing one more movie as soon as a movie is among the winners', () => {
     renderActions(wheelState({ winnerIds: ['m1'], remainingDraws: 2, winnerCount: 3 }));
 
     expect(screen.getByRole('button', { name: /tirer un film de plus/i })).toBeInTheDocument();
@@ -81,13 +81,13 @@ describe('EventWheelActions', () => {
     expect(button).toHaveTextContent(/restants/);
   });
 
-  it('ne pose pas de badge sur une soirée à un seul gagnant', () => {
+  it('puts no badge on a single-winner movie night', () => {
     renderActions(wheelState({ remainingDraws: 1, winnerCount: 1 }));
 
     expect(screen.getByRole('button', { name: 'Lancer la roue' })).not.toHaveTextContent(/1/);
   });
 
-  it('désactive le tirage et porte la raison en infobulle', () => {
+  it('disables the draw and carries the reason in a tooltip', () => {
     renderActions(
       wheelState({
         spinDisabled: true,
@@ -100,7 +100,7 @@ describe('EventWheelActions', () => {
     expect(button).toHaveAttribute('title', 'Tous les films proposés ont déjà été tirés.');
   });
 
-  it('remplace le bouton de tirage par le palmarès complet quand tout est tiré', () => {
+  it('replaces the draw button with the full winners list when everything is drawn', () => {
     renderActions(
       wheelState({
         winnerIds: ['m1', 'm2', 'm3'],
@@ -121,7 +121,7 @@ describe('EventWheelActions', () => {
     expect(screen.getByRole('button', { name: /autres actions sur le tirage/i })).toBeEnabled();
   });
 
-  it('cache le menu du palmarès tant qu’il n’y a pas de gagnant', () => {
+  it('hides the winners menu as long as there is no winner', () => {
     renderActions(wheelState());
 
     expect(
@@ -140,7 +140,7 @@ describe('EventWheelActions', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  it('demande confirmation avant de repartir de zéro, depuis le menu', async () => {
+  it('asks for confirmation before starting over, from the menu', async () => {
     const onRequestReset = vi.fn();
     renderActions(wheelState({ winnerIds: ['m1'], showReset: true }), onRequestReset);
 

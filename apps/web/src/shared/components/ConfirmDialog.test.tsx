@@ -19,7 +19,7 @@ beforeAll(() => {
 });
 
 describe('ConfirmDialog', () => {
-  it('ouvre la modale quand `open` passe à true et expose les libellés fournis', () => {
+  it('opens the modal when `open` turns true and exposes the provided labels', () => {
     const { rerender } = render(
       <AppTestProviders>
         <ConfirmDialog
@@ -58,7 +58,7 @@ describe('ConfirmDialog', () => {
     expect(screen.getByTestId('confirm-dialog-cancel')).toHaveTextContent('Annuler');
   });
 
-  it('appelle onConfirm puis onCancel selon le bouton cliqué', async () => {
+  it('calls onConfirm then onCancel depending on the clicked button', async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
     const onCancel = vi.fn();
@@ -103,7 +103,7 @@ describe('ConfirmDialog', () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
-  it('désactive uniquement Confirmer quand `busy=true` (Annuler reste actif)', () => {
+  it('disables only Confirm when `busy=true` (Cancel stays active)', () => {
     render(
       <AppTestProviders>
         <ConfirmDialog open title="x" message="y" busy onConfirm={vi.fn()} onCancel={vi.fn()} />

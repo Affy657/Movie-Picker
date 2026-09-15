@@ -103,7 +103,7 @@ describe('MovieSearchFiltersPanel', () => {
     expect(screen.getByRole('button', { name: 'Purchase' })).toBeInTheDocument();
   });
 
-  it('masque les groupes genre/langue/disponibilité quand leur callback est omis', () => {
+  it('hides the genre/language/availability groups when their callback is omitted', () => {
     renderPanel({
       onToggleGenre: undefined,
       onToggleLanguage: undefined,

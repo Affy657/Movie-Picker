@@ -51,7 +51,7 @@ const AUTH_USER = {
 
 const HEAVIEST_PAGE_AXE_BUDGET = 60000;
 
-describe('accessibilité (axe)', () => {
+describe('accessibility (axe)', () => {
   const server = setupServer(
     authMeGuestHandler,
     http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
@@ -380,13 +380,13 @@ describe('accessibilité (axe)', () => {
     await assertNoViolations(container, queryClient);
   });
 
-  it("NotificationsPage (boîte vide) n'a pas de violations", async () => {
+  it('NotificationsPage (empty inbox) has no violations', async () => {
     const { container, queryClient } = renderPage(<NotificationsPage />);
     await screen.findByRole('heading', { name: /^notifications$/i, level: 1 });
     await assertNoViolations(container, queryClient);
   });
 
-  describe('états déconnectés (portail de session, C9)', () => {
+  describe('signed-out states (session gate, C9)', () => {
     function renderGate(ui: React.ReactElement) {
       resetSessionHintMemoryForTests();
       clearSessionHint();
@@ -410,7 +410,7 @@ describe('accessibilité (axe)', () => {
       await assertNoViolations(container, queryClient);
     });
 
-    it("le portail avec titre masqué et lien de retour n'a pas de violations", async () => {
+    it('the gate with hidden title and back link has no violations', async () => {
       const { container, queryClient } = renderGate(
         <SessionGate
           icon={<CalendarPlus size={26} aria-hidden />}
@@ -430,7 +430,7 @@ describe('accessibilité (axe)', () => {
     });
   });
 
-  describe('EventDetailSession (page soirée)', () => {
+  describe('EventDetailSession (movie night page)', () => {
     const EVENT: EventData = {
       id: 'evt-a11y',
       title: 'Soirée ciné accessible',
@@ -544,7 +544,7 @@ describe('accessibilité (axe)', () => {
       await assertNoViolations(container, queryClient);
     });
 
-    it("soirée close avec un gagnant n'a pas de violations", async () => {
+    it('closed movie night with a winner has no violations', async () => {
       server.use(authMeGuestHandler, watchlistHandler([]));
       const { container, queryClient } = renderEventSession('list', {
         ...EVENT,
@@ -562,7 +562,7 @@ describe('accessibilité (axe)', () => {
       await assertNoViolations(container, queryClient);
     });
 
-    it("soirée close sans film n'a pas de violations", async () => {
+    it('closed movie night without a movie has no violations', async () => {
       server.use(authMeGuestHandler, watchlistHandler([]));
       const { container, queryClient } = renderEventSession('list', {
         ...EVENT,

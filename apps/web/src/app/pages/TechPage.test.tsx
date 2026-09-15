@@ -38,7 +38,7 @@ describe('TechPage', () => {
     );
   });
 
-  it('rend une section par entrée du sommaire, chacune atteignable par ancre', () => {
+  it('renders one section per table-of-contents entry, each reachable by anchor', () => {
     const { container } = renderTechPage();
     const rail = screen.getByRole('navigation', { name: /sommaire/i });
     const links = within(rail).getAllByRole('link');
@@ -52,7 +52,7 @@ describe('TechPage', () => {
     );
   });
 
-  it('affiche les métriques générées au build plutôt que des valeurs écrites en dur', () => {
+  it('shows the metrics generated at build time rather than hard-coded values', () => {
     renderTechPage();
     expect(screen.getByText(String(TECH_METRICS.endpoints))).toBeInTheDocument();
     for (const metric of [TECH_METRICS.commits, TECH_METRICS.testCases]) {
@@ -65,7 +65,7 @@ describe('TechPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('donne un titre accessible à chaque schéma', () => {
+  it('gives every diagram an accessible title', () => {
     renderTechPage();
     const diagrams = screen.getAllByRole('img');
     expect(diagrams.length).toBeGreaterThanOrEqual(10);
@@ -74,7 +74,7 @@ describe('TechPage', () => {
     }
   });
 
-  it('cite les huit outils branchés sur l’assistant, Sentry et Resend compris', () => {
+  it('cites the eight tools wired to the assistant, Sentry and Resend included', () => {
     const { container } = renderTechPage();
     const labels = [...container.querySelectorAll('#method svg text')].map(
       (node) => node.textContent
@@ -94,7 +94,7 @@ describe('TechPage', () => {
     }
   });
 
-  it('présente les faits en cartes titrées plutôt qu’en paragraphes', () => {
+  it('presents the facts as titled cards rather than paragraphs', () => {
     const { container } = renderTechPage();
     const cards = container.querySelectorAll('article');
 
@@ -105,12 +105,12 @@ describe('TechPage', () => {
     }
   });
 
-  it('ne laisse fuiter aucune clé de traduction non résolue', () => {
+  it('leaks no unresolved translation key', () => {
     const { container } = renderTechPage();
     expect(container.textContent).not.toMatch(/tech\.[a-zA-Z]+\.[a-zA-Z]+/);
   });
 
-  it('présente la méthode en cartes et compte ses procédures comme le schéma', () => {
+  it('presents the method as cards and counts its procedures like the diagram', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#method') as HTMLElement;
 
@@ -121,7 +121,7 @@ describe('TechPage', () => {
     expect(section.textContent).toContain(String(TECH_METRICS.assistantTools));
   });
 
-  it('nomme les deux secrets vitaux au démarrage et chiffre la limitation de débit', () => {
+  it('names the two vital secrets at startup and quantifies the rate limiting', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#production') as HTMLElement;
 
@@ -132,7 +132,7 @@ describe('TechPage', () => {
     expect(section.textContent).not.toMatch(/refuse de démarrer s.il manque un secret/i);
   });
 
-  it("ne présente plus le format d'erreur comme un chantier ouvert", () => {
+  it('no longer presents the error format as open work', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#trajectory') as HTMLElement;
 
@@ -151,7 +151,7 @@ describe('TechPage', () => {
     expect(section.textContent).not.toMatch(/portail qualité informatif/i);
   });
 
-  it('dit que le déploiement est constaté et que le planificateur dépend de son jeton', () => {
+  it('says the deployment is observed and that the scheduler depends on its token', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#infra') as HTMLElement;
 
@@ -161,7 +161,7 @@ describe('TechPage', () => {
     expect(section.textContent).not.toMatch(/remet en ligne l.image précédente/i);
   });
 
-  it("détaille la chaîne d'intégration au lieu de la laisser au seul schéma", () => {
+  it('details the integration chain instead of leaving it to the diagram alone', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#ci') as HTMLElement;
     const diagram = [...section.querySelectorAll('svg text')]
@@ -223,7 +223,7 @@ describe('TechPage', () => {
     expect(heading).not.toMatch(/sept mois|huit paliers/i);
   });
 
-  it('présente la trajectoire en frise, un repère par palier', () => {
+  it('presents the trajectory as a timeline, one marker per milestone', () => {
     const { container } = renderTechPage();
     const steps = [...container.querySelectorAll('section#trajectory > ol > li')];
 
@@ -240,7 +240,7 @@ describe('TechPage', () => {
     }
   });
 
-  it('sépare les paliers livrés, le palier en cours et ceux qui restent à faire', () => {
+  it('separates the delivered milestones, the current one and those still to do', () => {
     const { container } = renderTechPage();
     const steps = [...container.querySelectorAll('section#trajectory > ol > li')];
     const state = (step: Element) => step.getAttribute('data-state');
@@ -272,7 +272,7 @@ describe('TechPage', () => {
     }
   });
 
-  it('nomme chaque procédure outillée du flot et affiche le TDD', () => {
+  it('names every tooled procedure of the flow and shows the TDD', () => {
     const { container } = renderTechPage();
     const labels = [...container.querySelectorAll('#method svg text')].map(
       (node) => node.textContent
@@ -297,7 +297,7 @@ describe('TechPage', () => {
     expect(labels.some((label) => label?.includes('TDD'))).toBe(true);
   });
 
-  it('réserve la marque Anthropic aux procédures Anthropic, les procédures maison portent le clap', () => {
+  it('reserves the Anthropic brand for Anthropic procedures, in-house procedures carry the clapperboard', () => {
     const { container } = renderTechPage();
     const boxes = [...container.querySelectorAll('svg g[data-origin]')];
     const boxOf = (command: string) =>
@@ -325,7 +325,7 @@ describe('TechPage', () => {
     }
   });
 
-  it('place le compte rendu fonctionnel dans le flot, à la place du plan technique', () => {
+  it('places the functional report in the flow, instead of the technical plan', () => {
     const { container } = renderTechPage();
     const flow = container.querySelector(
       'svg[aria-labelledby="tech-featureflow-title"]'
@@ -376,7 +376,7 @@ describe('TechPage', () => {
     expect(hero.textContent).not.toMatch(/février à septembre 2026/i);
   });
 
-  it('explique chaque terme par une bulle rattachée au repère qui la déclenche', () => {
+  it('explains every term through a bubble attached to the marker that triggers it', () => {
     const { container } = renderTechPage();
     const terms = container.querySelectorAll('[aria-describedby]');
 
@@ -390,7 +390,7 @@ describe('TechPage', () => {
     }
   });
 
-  it('offre un sommaire dépliable qui annonce la section courante', async () => {
+  it('offers a collapsible table of contents that announces the current section', async () => {
     const user = userEvent.setup();
     renderTechPage();
     const rail = screen.getByRole('navigation', { name: /sommaire/i });
@@ -409,7 +409,7 @@ describe('TechPage', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('ne contient plus les sections retirées ni de bloc incident', () => {
+  it('no longer contains the removed sections nor an incident block', () => {
     const { container } = renderTechPage();
 
     expect(container.querySelector('#quality')?.textContent).toMatch(/contrôle d.architecture/i);
@@ -435,7 +435,7 @@ describe('TechPage', () => {
     expect(ids.at(-1)).toBe('trajectory');
   });
 
-  it('appuie la promesse de frontière par des faits de structure', () => {
+  it('backs the boundary promise with structural facts', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#architecture') as HTMLElement;
 
@@ -445,7 +445,7 @@ describe('TechPage', () => {
     expect(section.textContent).toContain(fr.tech.architecture.structureHeading);
   });
 
-  it("sépare les services appelés par le serveur de ceux qui l'appellent", () => {
+  it('separates the services called by the server from those calling it', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#architecture') as HTMLElement;
     const diagram = [...section.querySelectorAll('svg text')]
@@ -463,7 +463,7 @@ describe('TechPage', () => {
     }
   });
 
-  it('ne facture un prix que là où il y en a un, sans prétendre que tout a été arbitré', () => {
+  it('only quotes a price where there is one, without claiming everything was decided', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#choices') as HTMLElement;
 
@@ -498,13 +498,13 @@ describe('TechPage', () => {
     }
   });
 
-  it('date la réécriture du serveur sans lui prêter un contrat qui n’existait pas', () => {
+  it('dates the server rewrite without lending it a contract that did not exist', () => {
     expect(fr.tech.choices.runtimeHint).not.toMatch(/OpenAPI/i);
     expect(fr.tech.choices.runtimeTrade).not.toMatch(/deux mois/i);
     expect(fr.tech.choices.persistenceValue).not.toMatch(/chaque document est traduit/i);
   });
 
-  it('laisse les suites de tests à leur section et garde le serveur sur ses garanties', () => {
+  it('leaves the test suites to their section and keeps the server on its guarantees', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#server') as HTMLElement;
     const cards = [...section.querySelectorAll('article')];
@@ -516,7 +516,7 @@ describe('TechPage', () => {
     expect(section.textContent).not.toMatch(/suite unitaire|suite d.intégration/i);
   });
 
-  it('décrit le contrat comme une vérification, pas comme une génération', () => {
+  it('describes the contract as a check, not as a generation', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#contract') as HTMLElement;
     const diagram = [...section.querySelectorAll('svg text')]
@@ -544,7 +544,7 @@ describe('TechPage', () => {
     expect(section.textContent).toContain(String(TECH_METRICS.lazyRoutes));
   });
 
-  it("n'annonce plus les écrans publics comme une exception", () => {
+  it('no longer announces the public screens as an exception', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#choices') as HTMLElement;
 
@@ -552,7 +552,7 @@ describe('TechPage', () => {
     expect(section.textContent).not.toMatch(/un numéro de version/i);
   });
 
-  it('détaille le modèle de données, collections et index compris', () => {
+  it('details the data model, collections and indexes included', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#data') as HTMLElement;
     const labels = [...section.querySelectorAll('svg text')].map((node) => node.textContent);
@@ -564,7 +564,7 @@ describe('TechPage', () => {
     expect(section.textContent).toContain(String(TECH_METRICS.mongoIndexes));
   });
 
-  it('adosse unicité, expirations et cache des affiches à des mesures de build', () => {
+  it('backs uniqueness, expirations and the poster cache with build-time measures', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#data') as HTMLElement;
 
@@ -578,7 +578,7 @@ describe('TechPage', () => {
     expect(section.textContent).not.toMatch(/jamais rechargées/i);
   });
 
-  it('déroule une fonctionnalité de bout en bout, arbitrage humain compris', () => {
+  it('walks a feature end to end, human arbitration included', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#feature') as HTMLElement;
 
@@ -592,7 +592,7 @@ describe('TechPage', () => {
     expect(section.textContent).not.toMatch(/un client modifié ne peut pas/i);
   });
 
-  it('nomme les régions et les briques d’infrastructure', () => {
+  it('names the regions and the infrastructure building blocks', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#infra') as HTMLElement;
     const labels = [...section.querySelectorAll('svg text')].map((node) => node.textContent);
@@ -604,7 +604,7 @@ describe('TechPage', () => {
     expect(section.textContent).toMatch(/eu-west-1/);
   });
 
-  it('rattache chaque mesure à un seuil qui peut arrêter une livraison', () => {
+  it('ties every measure to a threshold that can stop a delivery', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#quality') as HTMLElement;
 
@@ -640,7 +640,7 @@ describe('TechPage', () => {
     expect(fr.tech.trajectory.consolidateHint).not.toMatch(/vers Cloud Storage/);
   });
 
-  it('range le pré-rendu parmi les choix faits, plus parmi les chantiers ouverts', () => {
+  it('files the prerendering among the choices made, no longer among open work', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#choices') as HTMLElement;
     const front = [...section.querySelectorAll('article')].find((card) =>
@@ -651,7 +651,7 @@ describe('TechPage', () => {
     expect(front.textContent).not.toMatch(/chantier ouvert/i);
   });
 
-  it('dit que le planificateur porte les rappels et les soirées récurrentes', () => {
+  it('says the scheduler carries the reminders and the recurring movie nights', () => {
     const { container } = renderTechPage();
     const architecture = container.querySelector('#architecture') as HTMLElement;
     const infra = container.querySelector('#infra') as HTMLElement;
@@ -673,14 +673,14 @@ describe('TechPage', () => {
     expect(section.textContent).not.toMatch(/les deux dernières/i);
   });
 
-  it('affiche la date de dernière mise à jour du document, tenue à la main', () => {
+  it("shows the document's last update date, kept by hand", () => {
     renderTechPage();
     expect(
       screen.getByText(new RegExp(`mis à jour le ${TECH_PAGE_LAST_UPDATE}`, 'i'))
     ).toBeVisible();
   });
 
-  it('garde la date de mise à jour au format ISO et jamais dans le futur', () => {
+  it('keeps the update date in ISO format and never in the future', () => {
     expect(TECH_PAGE_LAST_UPDATE).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     const update = new Date(`${TECH_PAGE_LAST_UPDATE}T00:00:00Z`);
     expect(Number.isNaN(update.getTime())).toBe(false);

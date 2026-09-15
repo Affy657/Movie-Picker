@@ -7,7 +7,7 @@ import {
 } from '@/shared/pwa/pwaInstall';
 
 describe('isStandaloneDisplayMode', () => {
-  it('détecte navigator.standalone (iOS)', () => {
+  it('detects navigator.standalone (iOS)', () => {
     expect(
       isStandaloneDisplayMode({
         matchMedia: () => ({ matches: false }),
@@ -16,7 +16,7 @@ describe('isStandaloneDisplayMode', () => {
     ).toBe(true);
   });
 
-  it('détecte display-mode standalone', () => {
+  it('detects display-mode standalone', () => {
     expect(
       isStandaloneDisplayMode({
         matchMedia: (query) => ({ matches: query === '(display-mode: standalone)' }),
@@ -25,7 +25,7 @@ describe('isStandaloneDisplayMode', () => {
     ).toBe(true);
   });
 
-  it('détecte window-controls-overlay', () => {
+  it('detects window-controls-overlay', () => {
     expect(
       isStandaloneDisplayMode({
         matchMedia: (query) => ({
@@ -46,7 +46,7 @@ describe('isStandaloneDisplayMode', () => {
 });
 
 describe('isIosDevice', () => {
-  it('détecte iPhone', () => {
+  it('detects iPhone', () => {
     expect(
       isIosDevice({
         userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15',
@@ -56,7 +56,7 @@ describe('isIosDevice', () => {
     ).toBe(true);
   });
 
-  it('détecte iPadOS qui se déclare Macintosh', () => {
+  it('detects iPadOS that declares itself as Macintosh', () => {
     expect(
       isIosDevice({
         userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15',
@@ -66,7 +66,7 @@ describe('isIosDevice', () => {
     ).toBe(true);
   });
 
-  it('ne détecte pas un Mac desktop', () => {
+  it('does not detect a desktop Mac', () => {
     expect(
       isIosDevice({
         userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
@@ -86,11 +86,11 @@ describe('resolvePwaInstallMode', () => {
     isIos: false,
   };
 
-  it('masque le bouton en PWA déjà ouverte', () => {
+  it('hides the button in an already open PWA', () => {
     expect(resolvePwaInstallMode({ ...browsable, isStandalone: true })).toBeNull();
   });
 
-  it('masque le bouton si l’app liée est déjà installée', () => {
+  it('hides the button when the related app is already installed', () => {
     expect(resolvePwaInstallMode({ ...browsable, isInstalledRelatedApp: true })).toBeNull();
   });
 
@@ -112,7 +112,7 @@ describe('resolvePwaInstallMode', () => {
     expect(resolvePwaInstallMode({ ...browsable, isIos: true })).toBe('ios');
   });
 
-  it('utilise le guide générique par défaut', () => {
+  it('uses the generic guide by default', () => {
     expect(resolvePwaInstallMode(browsable)).toBe('generic');
   });
 });

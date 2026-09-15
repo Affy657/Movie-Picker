@@ -38,14 +38,14 @@ describe('copyTextToClipboard', () => {
     expect(execCommand).not.toHaveBeenCalled();
   });
 
-  it('replie sur execCommand quand le presse-papiers échoue', async () => {
+  it('falls back to execCommand when the clipboard fails', async () => {
     writeText.mockRejectedValue(new Error('denied'));
     execCommand.mockReturnValue(true);
     expect(await copyTextToClipboard('hello')).toBe(true);
     expect(execCommand).toHaveBeenCalledWith('copy');
   });
 
-  it('retourne false quand les deux méthodes échouent', async () => {
+  it('returns false when both methods fail', async () => {
     writeText.mockRejectedValue(new Error('denied'));
     expect(await copyTextToClipboard('hello')).toBe(false);
   });

@@ -94,7 +94,7 @@ describe('ProfileMoviesPage (MSW)', () => {
     expect(screen.queryByText('Inception')).not.toBeInTheDocument();
   });
 
-  it('ouvre la modale de détails au clic sur une affiche', async () => {
+  it('opens the details modal when clicking a poster', async () => {
     const user = userEvent.setup();
     renderPage('alice');
     await screen.findByText('Inception');
@@ -104,7 +104,7 @@ describe('ProfileMoviesPage (MSW)', () => {
     expect(await screen.findByRole('heading', { name: 'Inception', level: 2 })).toBeInTheDocument();
   });
 
-  it("affiche l'introuvable pour un profil privé ou inconnu", async () => {
+  it('shows not found for a private or unknown profile', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/:handle`, () =>
         HttpResponse.json({ code: 'NOT_FOUND', message: 'Introuvable' }, { status: 404 })
@@ -115,7 +115,7 @@ describe('ProfileMoviesPage (MSW)', () => {
     expect(await screen.findByText(/ce profil n'existe pas/i)).toBeInTheDocument();
   });
 
-  it('révèle le reste des films au clic sur "Charger"', async () => {
+  it('reveals the rest of the movies when clicking "Load"', async () => {
     const items = Array.from({ length: 30 }, (_, i) =>
       movieItem({
         title: `Film ${i}`,

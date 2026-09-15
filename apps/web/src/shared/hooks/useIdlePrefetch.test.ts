@@ -26,7 +26,7 @@ describe('useIdlePrefetch', () => {
     expect(load).toHaveBeenCalledTimes(1);
   });
 
-  it('annule le rendez-vous si le composant disparaît avant', () => {
+  it('cancels the appointment when the component disappears first', () => {
     const cancel = vi.fn();
     vi.stubGlobal('requestIdleCallback', () => 7);
     vi.stubGlobal('cancelIdleCallback', cancel);
@@ -37,7 +37,7 @@ describe('useIdlePrefetch', () => {
     expect(cancel).toHaveBeenCalledWith(7);
   });
 
-  it('se rabat sur un délai quand requestIdleCallback manque', () => {
+  it('falls back to a delay when requestIdleCallback is missing', () => {
     vi.useFakeTimers();
     vi.stubGlobal('requestIdleCallback', undefined);
     const load = vi.fn(() => Promise.resolve());
@@ -48,7 +48,7 @@ describe('useIdlePrefetch', () => {
     expect(load).toHaveBeenCalledTimes(1);
   });
 
-  it('ignore un chargement qui échoue', async () => {
+  it('ignores a load that fails', async () => {
     vi.useFakeTimers();
     vi.stubGlobal('requestIdleCallback', (callback: () => void) => {
       callback();

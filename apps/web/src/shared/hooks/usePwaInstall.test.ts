@@ -48,7 +48,7 @@ afterEach(() => {
 });
 
 describe('usePwaInstall', () => {
-  it('propose le guide générique dans un navigateur desktop sans prompt', () => {
+  it('offers the generic guide in a desktop browser without a prompt', () => {
     stubStandaloneMatchMedia(false);
     const { result } = renderHook(() => usePwaInstall());
 
@@ -64,7 +64,7 @@ describe('usePwaInstall', () => {
     expect(result.current.mode).toBeNull();
   });
 
-  it('passe en mode native après beforeinstallprompt et déclenche le prompt', async () => {
+  it('switches to native mode after beforeinstallprompt and triggers the prompt', async () => {
     stubStandaloneMatchMedia(false);
     const { result } = renderHook(() => usePwaInstall());
     const event = dispatchBeforeInstallPrompt('accepted');
@@ -81,7 +81,7 @@ describe('usePwaInstall', () => {
     await waitFor(() => expect(result.current.mode).toBe('generic'));
   });
 
-  it('ouvre le mode in_app dans Instagram même si un prompt existe', async () => {
+  it('opens the in_app mode in Instagram even when a prompt exists', async () => {
     stubStandaloneMatchMedia(false);
     const restoreUa = stubUserAgent(
       'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.0.0 Mobile Safari/537.36 Instagram 302.0.0.23.114'
@@ -112,7 +112,7 @@ describe('usePwaInstall', () => {
     }
   });
 
-  it('conserve un beforeinstallprompt émis avant le montage du hook', async () => {
+  it('keeps a beforeinstallprompt emitted before the hook mounted', async () => {
     stubStandaloneMatchMedia(false);
     resetPwaInstallRuntime();
     startPwaInstallRuntime();
@@ -123,7 +123,7 @@ describe('usePwaInstall', () => {
     await waitFor(() => expect(result.current.mode).toBe('native'));
   });
 
-  it('masque le bouton après appinstalled', async () => {
+  it('hides the button after appinstalled', async () => {
     stubStandaloneMatchMedia(false);
     const { result } = renderHook(() => usePwaInstall());
     expect(result.current.shouldShow).toBe(true);

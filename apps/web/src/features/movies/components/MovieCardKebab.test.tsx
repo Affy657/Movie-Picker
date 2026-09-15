@@ -34,7 +34,7 @@ async function openKebab(externalLinks?: 'all' | 'letterboxd') {
 }
 
 describe('CardKebab', () => {
-  it('propose Letterboxd en un clic quand seul ce lien externe est affiché', async () => {
+  it('offers Letterboxd in one click when it is the only external link shown', async () => {
     await openKebab('letterboxd');
 
     const letterboxd = screen.getByRole('menuitem', { name: /letterboxd/i });
@@ -43,7 +43,7 @@ describe('CardKebab', () => {
     expect(screen.queryByRole('menuitem', { name: /allociné/i })).toBeNull();
   });
 
-  it('affiche tous les liens externes par défaut', async () => {
+  it('shows every external link by default', async () => {
     await openKebab();
 
     expect(screen.getByRole('menuitem', { name: /letterboxd/i })).toBeInTheDocument();

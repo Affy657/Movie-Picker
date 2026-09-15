@@ -41,21 +41,21 @@ describe('Tabs', () => {
     expect(screen.queryByText('Contenu Beta')).not.toBeInTheDocument();
   });
 
-  it('un seul panneau est monté à la fois', () => {
+  it('a single panel is mounted at a time', () => {
     render(<Harness active="b" onChange={vi.fn()} />);
     expect(screen.queryByText('Contenu Alpha')).not.toBeInTheDocument();
     expect(screen.getByText('Contenu Beta')).toBeInTheDocument();
     expect(screen.queryByText('Contenu Gamma')).not.toBeInTheDocument();
   });
 
-  it('le clic sur un onglet déclenche onChange', async () => {
+  it('clicking a tab triggers onChange', async () => {
     const onChange = vi.fn();
     render(<Harness active="a" onChange={onChange} />);
     await userEvent.click(screen.getByRole('tab', { name: 'Gamma' }));
     expect(onChange).toHaveBeenCalledWith('c');
   });
 
-  it('la flèche droite déplace la sélection et le focus vers l’onglet suivant', async () => {
+  it('the right arrow moves the selection and the focus to the next tab', async () => {
     const user = userEvent.setup();
     render(<Harness active="a" onChange={vi.fn()} />);
     screen.getByRole('tab', { name: 'Alpha' }).focus();
@@ -63,7 +63,7 @@ describe('Tabs', () => {
     expect(screen.getByRole('tab', { name: 'Beta3' })).toHaveFocus();
   });
 
-  it('chaque panneau référence son onglet via aria-labelledby / id', () => {
+  it('each panel references its tab through aria-labelledby / id', () => {
     render(<Harness active="a" onChange={vi.fn()} />);
     const tab = screen.getByRole('tab', { name: 'Alpha' });
     const panel = screen.getByRole('tabpanel');

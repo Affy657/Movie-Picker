@@ -4,7 +4,7 @@ import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { ApiError } from '@/shared/api/apiError';
 
 describe('useAsyncAction', () => {
-  it('gère le cycle loading → résultat', async () => {
+  it('handles the loading to result cycle', async () => {
     const action = vi.fn().mockResolvedValue('ok');
     const { result } = renderHook(() => useAsyncAction(action));
 
@@ -55,7 +55,7 @@ describe('useAsyncAction', () => {
     expect(result.current.error).toBe('Erreur personnalisée');
   });
 
-  it("clearError remet l'erreur à null", async () => {
+  it('clearError sets the error back to null', async () => {
     const action = vi.fn().mockRejectedValue(new Error('fail'));
     const { result } = renderHook(() => useAsyncAction(action));
 
@@ -68,7 +68,7 @@ describe('useAsyncAction', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it("réinitialise l'erreur avant chaque exécution", async () => {
+  it('resets the error before each run', async () => {
     const action = vi.fn().mockRejectedValueOnce(new Error('first')).mockResolvedValueOnce('ok');
     const { result } = renderHook(() => useAsyncAction(action));
 

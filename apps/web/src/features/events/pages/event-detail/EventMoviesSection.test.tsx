@@ -132,7 +132,7 @@ describe('EventMoviesSection (MSW)', () => {
   });
   afterAll(() => server.close());
 
-  it('ajoute un film à la watchlist avec vote/durée depuis la page soirée', async () => {
+  it('adds a movie to the watchlist with vote/runtime from the movie night page', async () => {
     let addedBody: Record<string, unknown> | null = null;
     server.use(
       authedUserHandler,
@@ -160,7 +160,7 @@ describe('EventMoviesSection (MSW)', () => {
     });
   });
 
-  it('retire un film de la watchlist depuis la page soirée', async () => {
+  it('removes a movie from the watchlist from the movie night page', async () => {
     let removeCalled = false;
     server.use(
       authedUserHandler,
@@ -188,7 +188,7 @@ describe('EventMoviesSection (MSW)', () => {
 
     await waitFor(() => expect(removeCalled).toBe(true));
   });
-  it("l'hôte exclut un film du tirage depuis le menu de la card", async () => {
+  it('the host excludes a movie from the draw through the card menu', async () => {
     let excludedBody: Record<string, unknown> | null = null;
     const refreshAll = vi.fn();
     server.use(
@@ -235,7 +235,7 @@ describe('EventMoviesSection (MSW)', () => {
     expect(removeCalled).toBe(false);
   });
 
-  it("un participant non hôte n'a pas l'action d'exclusion", async () => {
+  it('a non-host participant has no exclusion action', async () => {
     server.use(authedUserHandler, watchlistHandler([]));
 
     renderSection();
@@ -288,7 +288,7 @@ describe('EventMoviesSection (MSW)', () => {
     expect(screen.getByRole('button', { name: /affichage liste/i })).toBeInTheDocument();
   });
 
-  it("n'affiche pas la bascule grille/liste sur desktop (déplacée dans l'en-tête)", () => {
+  it('does not show the grid/list toggle on desktop (moved to the header)', () => {
     server.use(authedUserHandler, watchlistHandler([]));
     renderSection({ movies: [MOVIE], viewMode: 'grid' });
 
@@ -314,7 +314,7 @@ describe('EventMoviesSection (MSW)', () => {
     expect(screen.queryByRole('button', { name: /^votes$/i })).not.toBeInTheDocument();
   });
 
-  it('épingle le film gagnant en tête et affiche son badge', () => {
+  it('pins the winning movie at the top and shows its badge', () => {
     server.use(authedUserHandler, watchlistHandler([]));
     const later: MovieData = {
       ...MOVIE,
@@ -334,7 +334,7 @@ describe('EventMoviesSection (MSW)', () => {
     expect(screen.getByText('Film gagnant')).toBeInTheDocument();
   });
 
-  it('épingle les gagnants dans l ordre des tirages, pas dans celui du tri', () => {
+  it('pins the winners in draw order, not in sort order', () => {
     server.use(authedUserHandler, watchlistHandler([]));
     const second: MovieData = { ...MOVIE, id: 'm2', title: 'Inception', createdAt: '2030-01-02' };
     const third: MovieData = { ...MOVIE, id: 'm3', title: 'Whiplash', createdAt: '2030-01-03' };
@@ -351,7 +351,7 @@ describe('EventMoviesSection (MSW)', () => {
     expect(screen.getByText('Gagnant 2')).toBeInTheDocument();
   });
 
-  it('envoie vote_cast après un vote pour un film', async () => {
+  it('sends vote_cast after voting for a movie', async () => {
     let voted: Record<string, unknown> | null = null;
     server.use(
       authedUserHandler,
@@ -370,7 +370,7 @@ describe('EventMoviesSection (MSW)', () => {
     expect(track).toHaveBeenCalledWith('vote_cast', { value: 1 });
   });
 
-  it('envoie vote_cast cleared quand le même vote est retiré', async () => {
+  it('sends vote_cast cleared when the same vote is removed', async () => {
     let cleared = false;
     server.use(
       authedUserHandler,
@@ -429,7 +429,7 @@ describe('EventMoviesSection (MSW)', () => {
       expect(screen.getByTestId('vote-quota')).toHaveTextContent('Votes posés : 1 sur 2');
     });
 
-    it('limite atteinte : les pouces des autres films sont désactivés et expliqués', () => {
+    it('limit reached: the thumbs of the other movies are disabled and explained', () => {
       server.use(authedUserHandler, watchlistHandler([]));
       renderSection({ event: limitedEvent(1), movies: [{ ...MOVIE, myVote: -1 }, SECOND_MOVIE] });
 
@@ -447,7 +447,7 @@ describe('EventMoviesSection (MSW)', () => {
       expect(screen.getByTestId('vote-limit-dialog')).not.toHaveAttribute('open');
     });
 
-    it('limite atteinte : retirer ou changer un vote déjà posé reste possible', async () => {
+    it('limit reached: removing or changing a vote already cast stays possible', async () => {
       let cleared = false;
       let flipped = false;
       server.use(
@@ -479,7 +479,7 @@ describe('EventMoviesSection (MSW)', () => {
       expect(screen.getByTestId('vote-limit-dialog')).not.toHaveAttribute('open');
     });
 
-    it("un 409 de l'API sur un nouveau vote ouvre la fenêtre et resynchronise la liste", async () => {
+    it('a 409 from the API on a new vote opens the window and resynchronises the list', async () => {
       const refreshAll = vi.fn();
       server.use(
         authedUserHandler,
@@ -510,7 +510,7 @@ describe('EventMoviesSection (MSW)', () => {
       expect(screen.queryByText(/limite de 2 vote\(s\)/i)).not.toBeInTheDocument();
     });
 
-    it("un autre 409 sur un nouveau vote n'ouvre pas la fenêtre de limite mais affiche l'erreur", async () => {
+    it('another 409 on a new vote does not open the limit window but shows the error', async () => {
       server.use(
         authedUserHandler,
         watchlistHandler([]),
@@ -534,7 +534,7 @@ describe('EventMoviesSection (MSW)', () => {
       expect(screen.getByTestId('vote-limit-dialog')).not.toHaveAttribute('open');
     });
 
-    it('le message parle au pluriel quand la limite dépasse un vote', () => {
+    it('the message uses the plural when the limit exceeds one vote', () => {
       server.use(authedUserHandler, watchlistHandler([]));
       renderSection({
         event: limitedEvent(2),
@@ -553,7 +553,7 @@ describe('EventMoviesSection (MSW)', () => {
     });
   });
 
-  it("échec de vote en vue liste : l'erreur apparaît sur la ligne, pas dans le bandeau global, et Réessayer relance le vote", async () => {
+  it('vote failure in list view: the error appears on the row, not in the global banner, and Retry casts the vote again', async () => {
     let attempts = 0;
     server.use(
       authedUserHandler,

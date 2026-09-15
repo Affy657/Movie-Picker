@@ -90,7 +90,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('affiche un titre à la fois avec les candidats sans présélection', () => {
+  it('shows one title at a time with the candidates, none preselected', () => {
     renderModal(ONE_CHOICE);
 
     expect(screen.getByRole('heading', { name: 'Un titre à confirmer' })).toBeInTheDocument();
@@ -103,7 +103,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     expect(screen.getByRole('button', { name: 'Confirmer et terminer' })).toBeDisabled();
   });
 
-  it('confirme le choix sélectionné et notifie le résultat sur le dernier titre', async () => {
+  it('confirms the selected choice and reports the result on the last title', async () => {
     const user = userEvent.setup();
     let received: unknown;
 
@@ -149,7 +149,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     expect(screen.getByRole('button', { name: 'Confirmer et terminer' })).toBeEnabled();
   });
 
-  it('avance au titre suivant et envoie toutes les réponses au dernier écran', async () => {
+  it('moves to the next title and sends every answer on the last screen', async () => {
     const user = userEvent.setup();
     let received: unknown;
 
@@ -193,7 +193,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     );
   });
 
-  it('permet de décider plus tard en envoyant seulement les titres déjà tranchés', async () => {
+  it('allows deciding later by sending only the titles already settled', async () => {
     const user = userEvent.setup();
     let received: unknown;
 

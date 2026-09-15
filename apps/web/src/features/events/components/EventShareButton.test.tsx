@@ -5,7 +5,7 @@ import EventShareButton from '@/features/events/components/EventShareButton';
 import { LocaleProvider } from '@/shared/i18n';
 
 describe('EventShareButton', () => {
-  it('reste une icône seule, sans libellé texte, et déclenche onClick', async () => {
+  it('stays an icon alone, without a text label, and triggers onClick', async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
     render(

@@ -19,7 +19,7 @@ describe('Sheet', () => {
     expect(screen.getByText('Contenu')).toBeInTheDocument();
   });
 
-  it('ne rend pas le contenu quand fermé', () => {
+  it('does not render the content when closed', () => {
     wrap(
       <Sheet open={false} title="Ajouter un film" onClose={vi.fn()}>
         <p>Contenu</p>

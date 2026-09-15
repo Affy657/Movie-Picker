@@ -16,7 +16,7 @@ describe('isSafeTmdbWatchPageUrl', () => {
     expect(isSafeTmdbWatchPageUrl('http://www.themoviedb.org/movie/1/watch')).toBe(false);
   });
 
-  it('refuse un autre hôte', () => {
+  it('rejects another host', () => {
     expect(isSafeTmdbWatchPageUrl('https://evil.com/movie/1/watch')).toBe(false);
   });
 

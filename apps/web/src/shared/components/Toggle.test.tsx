@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import Toggle from '@/shared/components/Toggle';
 
 describe('Toggle', () => {
-  it('est un interrupteur nommé qui reflète son état', () => {
+  it('is a named switch that reflects its state', () => {
     const { rerender } = render(<Toggle checked={false} onChange={vi.fn()} label="Mode sombre" />);
 
     const toggle = screen.getByRole('switch', { name: 'Mode sombre' });
@@ -15,7 +15,7 @@ describe('Toggle', () => {
     expect(toggle).toHaveAttribute('aria-checked', 'true');
   });
 
-  it('peut être nommé par un élément externe plutôt que par aria-label', () => {
+  it('can be named by an external element rather than by aria-label', () => {
     render(
       <>
         <span id="notif-label">Notifications</span>
@@ -27,7 +27,7 @@ describe('Toggle', () => {
     expect(toggle).not.toHaveAttribute('aria-label');
   });
 
-  it('déclenche onChange au clic et au clavier, pas quand il est désactivé', async () => {
+  it('triggers onChange on click and with the keyboard, not when disabled', async () => {
     const onChange = vi.fn();
     const { rerender } = render(<Toggle checked={false} onChange={onChange} label="x" />);
 

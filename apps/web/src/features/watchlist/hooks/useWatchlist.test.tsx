@@ -23,7 +23,7 @@ function setup<T>(hook: () => T, ownHandle?: string) {
 }
 
 describe('useWatchlist mutations', () => {
-  it('un ajout rafraîchit ma liste et mon profil public, pas ceux des autres', async () => {
+  it("an addition refreshes my list and my public profile, not other people's", async () => {
     const { result, invalidateSpy } = setup(() => useAddToWatchlist(), 'alice');
 
     act(() =>
@@ -36,7 +36,7 @@ describe('useWatchlist mutations', () => {
     expect(invalidateSpy).not.toHaveBeenCalledWith({ queryKey: queryKeys.profile.publicAll });
   });
 
-  it('un retrait sans compte en cache ne rafraîchit que ma liste', async () => {
+  it('a removal without a cached account only refreshes my list', async () => {
     const { result, invalidateSpy } = setup(() => useRemoveFromWatchlist());
 
     act(() => result.current.mutate({ tmdbId: 1 }));

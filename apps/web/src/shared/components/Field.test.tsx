@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import Field from '@/shared/components/Field';
 
 describe('Field', () => {
-  it('associe le label au contrôle et relaie le hint via aria-describedby', () => {
+  it('ties the label to the control and relays the hint through aria-describedby', () => {
     render(
       <Field label="Pseudo" hint="Trois caractères minimum.">
         {({ id, describedBy }) => (
@@ -34,7 +34,7 @@ describe('Field', () => {
     expect(input.getAttribute('aria-describedby')).toBe(`${error.id} ${hint.id}`);
   });
 
-  it('respecte un htmlFor imposé', () => {
+  it('honours an imposed htmlFor', () => {
     render(
       <Field label="Pseudo" htmlFor="handle">
         {({ id }) => <input id={id} className="input" />}

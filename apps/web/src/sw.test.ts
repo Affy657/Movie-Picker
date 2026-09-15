@@ -86,12 +86,12 @@ beforeEach(() => {
 });
 
 describe('service worker — mise en cache', () => {
-  it('précharge le manifeste et purge les caches obsolètes', () => {
+  it('precaches the manifest and purges the stale caches', () => {
     expect(workbox.precacheAndRoute).toHaveBeenCalledTimes(1);
     expect(workbox.cleanupOutdatedCaches).toHaveBeenCalledTimes(1);
   });
 
-  it('sert les sélections publiques depuis le cache puis les rafraîchit derrière', () => {
+  it('serves the public selections from the cache then refreshes them behind', () => {
     const matches = showcaseRouteMatcher();
     expect(matches({ url: new URL(`${origin()}/api/v1/movies/showcase?section=trending`) })).toBe(
       true
@@ -119,13 +119,13 @@ describe('service worker — mise en cache', () => {
 });
 
 describe('service worker — cycle de vie', () => {
-  it('prend la main sur les onglets ouverts à l’activation', () => {
+  it('takes over the open tabs at activation', () => {
     const event = pending();
     listeners.get('activate')!(event as unknown as Record<string, unknown>);
     expect(event.waitUntil).toHaveBeenCalledTimes(1);
   });
 
-  it('applique la mise à jour sur demande explicite', () => {
+  it('applies the update on explicit request', () => {
     listeners.get('message')!({ data: { type: 'SKIP_WAITING' } });
     expect(skipWaiting).toHaveBeenCalledTimes(1);
   });
@@ -138,7 +138,7 @@ describe('service worker — cycle de vie', () => {
 });
 
 describe('service worker — notifications', () => {
-  it('affiche la notification poussée', async () => {
+  it('shows the pushed notification', async () => {
     const event = {
       ...pending(),
       data: { json: () => ({ title: 'Soirée ce soir', body: '20h30', tag: 'evt-1', url: '/e/x' }) },
@@ -152,14 +152,14 @@ describe('service worker — notifications', () => {
     );
   });
 
-  it('ignore une poussée sans charge utile', () => {
+  it('ignores a push without payload', () => {
     const event = { ...pending(), data: null };
     listeners.get('push')!(event as unknown as Record<string, unknown>);
     expect(event.waitUntil).not.toHaveBeenCalled();
     expect(showNotification).not.toHaveBeenCalled();
   });
 
-  it('donne le focus à un onglet déjà ouvert sur la même page', async () => {
+  it('focuses a tab already open on the same page', async () => {
     const focus = vi.fn();
     openClients = [
       { url: `${origin()}/watchlist`, focus: vi.fn() },

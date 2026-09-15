@@ -31,23 +31,23 @@ describe('icsCalendar', () => {
     expect(ics?.endsWith('\r\n')).toBe(true);
   });
 
-  it('buildIcsContent applique une durée par défaut de 2h sur DTEND', () => {
+  it('buildIcsContent applies a default 2 h duration to DTEND', () => {
     const ics = buildIcsContent(baseEvent, FIXED_NOW);
     expect(ics).toContain('DTEND:20260615T210000');
   });
 
-  it('buildIcsContent respecte une durée personnalisée', () => {
+  it('buildIcsContent honours a custom duration', () => {
     const ics = buildIcsContent({ ...baseEvent, durationMinutes: 90 }, FIXED_NOW);
     expect(ics).toContain('DTSTART:20260615T190000');
     expect(ics).toContain('DTEND:20260615T203000');
   });
 
-  it('buildIcsContent échappe les caractères spéciaux du titre', () => {
+  it('buildIcsContent escapes the special characters of the title', () => {
     const ics = buildIcsContent({ ...baseEvent, title: 'Ciné; pizza, popcorn' }, FIXED_NOW);
     expect(ics).toContain('SUMMARY:Ciné\\; pizza\\, popcorn');
   });
 
-  it("buildIcsContent garde un UID stable quand seule l'heure change (mise à jour, pas doublon)", () => {
+  it('buildIcsContent keeps a stable UID when only the time changes (update, not duplicate)', () => {
     const a = buildIcsContent(baseEvent, FIXED_NOW);
     const b = buildIcsContent({ ...baseEvent, time: '21:30' }, FIXED_NOW);
     const uid = /UID:(.+)/.exec(a ?? '')?.[1];
@@ -55,7 +55,7 @@ describe('icsCalendar', () => {
     expect(b).toContain(`UID:${uid}`);
   });
 
-  it("buildIcsContent n'échappe pas la propriété URL mais échappe LOCATION", () => {
+  it('buildIcsContent does not escape the URL property but escapes LOCATION', () => {
     const ics = buildIcsContent({ ...baseEvent, url: 'https://moviepicker.app/e/a,b' }, FIXED_NOW);
     expect(ics).toContain('URL:https://moviepicker.app/e/a,b');
     expect(ics).toContain('LOCATION:https://moviepicker.app/e/a\\,b');
@@ -95,7 +95,7 @@ describe('icsCalendar', () => {
     expect(outlookCalendarUrl({ ...baseEvent, date: '' })).toBeNull();
   });
 
-  it('calendarFileName produit un nom de fichier .ics slugifié', () => {
+  it('calendarFileName produces a slugified .ics file name', () => {
     expect(calendarFileName(baseEvent)).toBe('movie-picker-soiree-cine.ics');
     expect(calendarFileName({ ...baseEvent, title: '' })).toBe('movie-picker-soiree.ics');
   });

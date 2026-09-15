@@ -24,7 +24,7 @@ describe('ServerErrorPage', () => {
     expect(document.title).toContain('Movie Picker');
   });
 
-  it('propose Réessayer quand un rappel est fourni', async () => {
+  it('offers Retry when a callback is provided', async () => {
     const onRetry = vi.fn();
     renderPage(<ServerErrorPage onRetry={onRetry} />);
 
@@ -32,7 +32,7 @@ describe('ServerErrorPage', () => {
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
-  it('sans erreur, tombe sur le message générique', () => {
+  it('without an error, falls back to the generic message', () => {
     renderPage(<ServerErrorPage />);
 
     expect(screen.getByRole('alert')).toHaveTextContent('Une erreur inattendue s’est produite.');

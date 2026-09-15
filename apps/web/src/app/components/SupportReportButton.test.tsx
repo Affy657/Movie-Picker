@@ -39,12 +39,12 @@ describe('SupportReportButton', () => {
     vi.clearAllMocks();
   });
 
-  it('la boîte de dialogue est fermée au départ', () => {
+  it('the dialog is closed at first', () => {
     const { container } = renderButton();
     expect(container.querySelector('dialog')).toBeNull();
   });
 
-  it('ouvre la boîte de dialogue au clic', async () => {
+  it('opens the dialog on click', async () => {
     const { container } = renderButton();
     await openDialog();
 
@@ -54,7 +54,7 @@ describe('SupportReportButton', () => {
     expect(screen.getByRole('heading', { name: /signaler un problème/i })).toBeInTheDocument();
   });
 
-  it('propose le message pré-rempli avec le contexte technique de la page courante', async () => {
+  it('offers the pre-filled message with the technical context of the current page', async () => {
     renderButton('/e/soiree-cine');
     await openDialog();
 
@@ -88,7 +88,7 @@ describe('SupportReportButton', () => {
     expect(vi.mocked(copyTextToClipboard).mock.calls[0]?.[0]).toContain(SUPPORT_EMAIL);
   });
 
-  it('invite à copier à la main quand le presse-papier est bloqué', async () => {
+  it('invites to copy by hand when the clipboard is blocked', async () => {
     vi.mocked(copyTextToClipboard).mockResolvedValue(false);
     renderButton();
     const user = await openDialog();
@@ -111,7 +111,7 @@ describe('SupportReportButton', () => {
     expect(hint).toBeInTheDocument();
   });
 
-  it('garde les actions hors de la zone défilante', async () => {
+  it('keeps the actions out of the scrolling area', async () => {
     renderButton();
     await openDialog();
 

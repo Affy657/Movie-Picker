@@ -132,7 +132,7 @@ describe('HomePage', () => {
     expect(screen.getByText(/parcourez les sélections/i)).toBeInTheDocument();
   });
 
-  it('aligne les rangées sur un seul niveau de titre sous le h1', async () => {
+  it('aligns the rows on a single heading level under the h1', async () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
 
@@ -149,7 +149,7 @@ describe('HomePage', () => {
     expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0);
   });
 
-  it('masque une rangée vide au lieu de laisser un titre orphelin', async () => {
+  it('hides an empty row instead of leaving an orphan heading', async () => {
     server.use(
       authMeGuestHandler,
       collectionsHandler,
@@ -182,7 +182,7 @@ describe('HomePage', () => {
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('mène la recherche vers la page résultats', async () => {
+  it('leads the search to the results page', async () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
 
@@ -193,7 +193,7 @@ describe('HomePage', () => {
     });
   });
 
-  it('lance une recherche depuis un exemple proposé', async () => {
+  it('starts a search from a suggested example', async () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
 
@@ -204,7 +204,7 @@ describe('HomePage', () => {
     });
   });
 
-  it('expose la rangée streaming avec ses plateformes', async () => {
+  it('exposes the streaming row with its platforms', async () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
 
@@ -216,7 +216,7 @@ describe('HomePage', () => {
     expect(within(tablist).getByRole('tab', { name: 'Disney+' })).toBeInTheDocument();
   });
 
-  it('ne montre aucune rangée personnelle à un visiteur', async () => {
+  it('shows no personal row to a visitor', async () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
 
@@ -228,7 +228,7 @@ describe('HomePage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('ajoute les rangées personnelles à un utilisateur connecté', async () => {
+  it('adds the personal rows for a signed-in user', async () => {
     server.use(authedUserHandler, showcaseHandler, collectionsHandler, ...personalHandlers);
     renderPage();
 
@@ -244,14 +244,14 @@ describe('HomePage', () => {
     expect(screen.queryByRole('heading', { name: /prochaine soirée/i })).not.toBeInTheDocument();
   });
 
-  it('mène à la création de soirée depuis la bande de bas de page', () => {
+  it('leads to movie night creation from the bottom band', () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
 
     expect(screen.getByRole('link', { name: /créer une soirée/i })).toHaveAttribute('href', '/new');
   });
 
-  it('déclare une canonique sur la racine', () => {
+  it('declares a canonical on the root', () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
 
@@ -275,7 +275,7 @@ describe('HomePage', () => {
     ).toBeInTheDocument();
   });
 
-  it('garde un panneau d’onglets valide même quand la section échoue', async () => {
+  it('keeps a valid tab panel even when the section fails', async () => {
     server.use(
       authMeGuestHandler,
       collectionsHandler,

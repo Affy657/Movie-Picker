@@ -53,7 +53,7 @@ describe('file d’attente consentement / identify', () => {
     resetPostHogForTests();
   });
 
-  it('applique opt-in et pageview une fois le SDK branché', () => {
+  it('applies opt-in and pageview once the SDK is wired', () => {
     const stub = createStub();
     optIn();
     bindPostHogForTests(stub);
@@ -61,7 +61,7 @@ describe('file d’attente consentement / identify', () => {
     expect(stub.capture).toHaveBeenCalledWith('$pageview');
   });
 
-  it('n’envoie qu’un $pageview par session même si optIn est rappelé', () => {
+  it('sends only one $pageview per session even when optIn is called again', () => {
     const stub = createStub();
     optIn();
     bindPostHogForTests(stub);
@@ -77,7 +77,7 @@ describe('file d’attente consentement / identify', () => {
     expect(stub.unsetPersonProperties).toHaveBeenCalledWith(['displayName', 'handle']);
   });
 
-  it('optOut puis reset identité', () => {
+  it('optOut then identity reset', () => {
     const stub = createStub();
     bindPostHogForTests(stub);
     optIn();
@@ -88,7 +88,7 @@ describe('file d’attente consentement / identify', () => {
     expect(stub.reset).toHaveBeenCalled();
   });
 
-  it('capture ignore les événements tant que le SDK n’est pas prêt', () => {
+  it('capture ignores the events as long as the SDK is not ready', () => {
     capture('vote_cast', { value: 1 });
     const stub = createStub();
     bindPostHogForTests(stub);

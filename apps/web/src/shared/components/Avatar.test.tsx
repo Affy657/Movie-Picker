@@ -5,7 +5,7 @@ import styles from '@/shared/components/Avatar.module.css';
 import { avatarUrl } from '@/shared/utils/avatar';
 
 describe('Avatar', () => {
-  it('rend l’image de l’avatar, décorative et dimensionnée par la taille', () => {
+  it('renders the avatar image, decorative and sized by the size prop', () => {
     const { container } = render(<Avatar avatarId="cat-3" size="lg" />);
 
     const img = container.querySelector('img');
@@ -24,7 +24,7 @@ describe('Avatar', () => {
     expect(container.querySelector('img')).toBeNull();
   });
 
-  it('un pseudo d’un seul mot donne ses deux premières lettres', () => {
+  it('a single-word pseudo gives its first two letters', () => {
     const { container } = render(<Avatar avatarId={undefined} pseudo="zoé" />);
 
     expect(container.textContent).toBe('ZO');
@@ -39,7 +39,7 @@ describe('Avatar', () => {
     expect(placeholder).toHaveStyle({ width: '20px', height: '20px' });
   });
 
-  it('la couleur des initiales ne dépend que du pseudo', () => {
+  it('the colour of the initials only depends on the pseudo', () => {
     const first = render(<Avatar avatarId={null} pseudo="Alice" />).container.firstElementChild;
     const again = render(<Avatar avatarId={null} pseudo="Alice" />).container.firstElementChild;
 

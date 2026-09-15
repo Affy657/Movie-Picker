@@ -11,7 +11,7 @@ beforeEach(() => {
 });
 
 describe('useSearchHistory', () => {
-  it('retourne un historique vide si aucune donnée en localStorage', () => {
+  it('returns an empty history when there is no data in localStorage', () => {
     const { result } = renderHook(() => useSearchHistory(USER_ID));
     expect(result.current.history).toEqual([]);
   });
@@ -62,7 +62,7 @@ describe('useSearchHistory', () => {
   });
 
   describe('addToHistory', () => {
-    it('ajoute une entrée et la persiste', () => {
+    it('adds an entry and persists it', () => {
       const { result } = renderHook(() => useSearchHistory(USER_ID));
       act(() => result.current.addToHistory('inception'));
       expect(result.current.history).toEqual(['inception']);
@@ -76,7 +76,7 @@ describe('useSearchHistory', () => {
       expect(result.current.history).toEqual(['matrix', 'inception']);
     });
 
-    it('ignore les requêtes vides ou uniquement des espaces', () => {
+    it('ignores empty or whitespace-only queries', () => {
       const { result } = renderHook(() => useSearchHistory(USER_ID));
       act(() => result.current.addToHistory('   '));
       expect(result.current.history).toEqual([]);
@@ -88,7 +88,7 @@ describe('useSearchHistory', () => {
       expect(result.current.history).toEqual([]);
     });
 
-    it('respecte la limite de 5 entrées', () => {
+    it('honours the limit of 5 entries', () => {
       localStorage.setItem(KEY, JSON.stringify(['a', 'b', 'c', 'd', 'e']));
       const { result } = renderHook(() => useSearchHistory(USER_ID));
       act(() => result.current.addToHistory('f'));
@@ -98,7 +98,7 @@ describe('useSearchHistory', () => {
   });
 
   describe('removeFromHistory', () => {
-    it('supprime une entrée spécifique', () => {
+    it('removes a specific entry', () => {
       localStorage.setItem(KEY, JSON.stringify(['inception', 'matrix', 'avatar']));
       const { result } = renderHook(() => useSearchHistory(USER_ID));
       act(() => result.current.removeFromHistory('matrix'));
@@ -129,7 +129,7 @@ describe('useSearchHistory', () => {
     });
   });
 
-  it('ne plante pas si localStorage.setItem lève une erreur', () => {
+  it('does not crash when localStorage.setItem throws', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');
     });

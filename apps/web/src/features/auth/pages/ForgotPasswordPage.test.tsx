@@ -56,7 +56,7 @@ describe('ForgotPasswordPage', () => {
     });
   });
 
-  it('après soumission OK, affiche l écran de succès avec lien retour', async () => {
+  it('after a successful submission, shows the success screen with a back link', async () => {
     const user = userEvent.setup();
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/request`, () =>
@@ -72,7 +72,7 @@ describe('ForgotPasswordPage', () => {
     expect(screen.getByRole('link', { name: /retour à la connexion/i })).toBeInTheDocument();
   });
 
-  it('affiche le fallback erreur si l API échoue', async () => {
+  it('shows the error fallback when the API fails', async () => {
     const user = userEvent.setup();
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/request`, () =>
@@ -90,7 +90,7 @@ describe('ForgotPasswordPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('email vide : empêche la soumission HTML5 (champ required)', () => {
+  it('empty email: prevents the HTML5 submission (required field)', () => {
     renderForgot();
     const emailInput = screen.getByLabelText(/^e-mail$/i) as HTMLInputElement;
     expect(emailInput.required).toBe(true);

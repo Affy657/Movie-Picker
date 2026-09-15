@@ -64,14 +64,14 @@ describe('MoviePreviewRow', () => {
     );
   });
 
-  it('rattache la rangée à son titre', () => {
+  it('ties the row to its heading', () => {
     mockRailMetrics(0, 0);
     renderRow(2);
 
     expect(screen.getByRole('region', { name: /tendances de la semaine/i })).toBeInTheDocument();
   });
 
-  it('laisse chaque carte atteignable, même hors de la zone visible', () => {
+  it('leaves every card reachable, even outside the visible area', () => {
     mockRailMetrics(2000, 400);
     const { container } = renderRow(12);
 
@@ -83,7 +83,7 @@ describe('MoviePreviewRow', () => {
     }
   });
 
-  it('affiche les flèches et fait défiler la rangée quand elle déborde', async () => {
+  it('shows the arrows and scrolls the row when it overflows', async () => {
     mockRailMetrics(2000, 400);
     const scrollBy = mockScrollBy();
     renderRow(12);
@@ -97,7 +97,7 @@ describe('MoviePreviewRow', () => {
     expect(scrollBy).toHaveBeenCalledWith(expect.objectContaining({ left: 320 }));
   });
 
-  it('masque les flèches quand tout tient dans la largeur', () => {
+  it('hides the arrows when everything fits in the width', () => {
     mockRailMetrics(400, 400);
     renderRow(2);
 
@@ -105,7 +105,7 @@ describe('MoviePreviewRow', () => {
     expect(screen.queryByRole('button', { name: /vers la gauche/i })).not.toBeInTheDocument();
   });
 
-  it("annonce le rang aux lecteurs d'écran, pas seulement le chiffre", () => {
+  it('announces the rank to screen readers, not only the number', () => {
     mockRailMetrics(0, 0);
     render(
       <LocaleProvider>

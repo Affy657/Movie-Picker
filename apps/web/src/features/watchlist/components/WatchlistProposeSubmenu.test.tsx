@@ -56,7 +56,7 @@ describe('WatchlistProposeSubmenu (MSW)', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('ne charge pas les soirées avant le survol', () => {
+  it('does not load the movie nights before hover', () => {
     server.use(authMeGuestHandler, eligibleEventsHandler);
 
     renderSubmenu();
@@ -64,7 +64,7 @@ describe('WatchlistProposeSubmenu (MSW)', () => {
     expect(screen.queryByText('Chez moi')).not.toBeInTheDocument();
   });
 
-  it('affiche le flyout au survol avec la soirée éligible', async () => {
+  it('shows the flyout on hover with the eligible movie night', async () => {
     server.use(authMeGuestHandler, eligibleEventsHandler);
 
     renderSubmenu();
@@ -73,7 +73,7 @@ describe('WatchlistProposeSubmenu (MSW)', () => {
     expect(await screen.findByText('Chez moi')).toBeInTheDocument();
   });
 
-  it('affiche le flyout au focus (accessibilité clavier)', async () => {
+  it('shows the flyout on focus (keyboard accessibility)', async () => {
     server.use(authMeGuestHandler, eligibleEventsHandler);
 
     renderSubmenu();
@@ -82,7 +82,7 @@ describe('WatchlistProposeSubmenu (MSW)', () => {
     expect(await screen.findByText('Chez moi')).toBeInTheDocument();
   });
 
-  it("affiche un message quand il n'y a aucune soirée éligible", async () => {
+  it('shows a message when there is no eligible movie night', async () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
@@ -94,7 +94,7 @@ describe('WatchlistProposeSubmenu (MSW)', () => {
     expect(await screen.findByText(/aucune soirée active/i)).toBeInTheDocument();
   });
 
-  it('propose le film à la soirée choisie et appelle onDone', async () => {
+  it('proposes the movie to the chosen movie night and calls onDone', async () => {
     let proposedBody: Record<string, unknown> | null = null;
     let onDoneCalled = false;
     server.use(
@@ -135,7 +135,7 @@ describe('WatchlistProposeSubmenu (MSW)', () => {
     await waitFor(() => expect(onDoneCalled).toBe(true));
   });
 
-  it("affiche une erreur si la proposition échoue et n'appelle pas onDone", async () => {
+  it('shows an error when the proposal fails and does not call onDone', async () => {
     let onDoneCalled = false;
     server.use(
       authMeGuestHandler,

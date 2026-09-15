@@ -47,7 +47,7 @@ describe('useLetterboxdAutoSync', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('appelle la synchro non forcée quand un pseudo est enregistré', async () => {
+  it('calls the non-forced sync when a username is saved', async () => {
     let calls = 0;
     let sawForceFalse = false;
 
@@ -74,7 +74,7 @@ describe('useLetterboxdAutoSync', () => {
     expect(sawForceFalse).toBe(true);
   });
 
-  it('invalide les notifications quand des films sont à réconcilier', async () => {
+  it('invalidates the notifications when films are to be reconciled', async () => {
     server.use(
       meHandler('affy657'),
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>

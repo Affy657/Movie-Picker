@@ -32,7 +32,7 @@ describe('ResetPasswordPage', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('sans token : affiche écran lien invalide + CTA demander un nouveau lien', () => {
+  it('without token: shows the invalid link screen and a CTA to request a new link', () => {
     renderReset('/reset');
     expect(screen.getByRole('heading', { name: /lien invalide/i })).toBeInTheDocument();
     const requestLink = screen.getByRole('link', { name: /demander un nouveau lien/i });
@@ -48,7 +48,7 @@ describe('ResetPasswordPage', () => {
     expect(screen.getByRole('button', { name: /mettre à jour/i })).toBeInTheDocument();
   });
 
-  it('mots de passe différents : affiche erreur "doivent être identiques"', async () => {
+  it('different passwords: shows the "must match" error', async () => {
     const user = userEvent.setup();
     renderReset('/reset?token=abc');
     await user.type(screen.getByLabelText(/nouveau mot de passe/i), 'abcd1234');
@@ -59,7 +59,7 @@ describe('ResetPasswordPage', () => {
     });
   });
 
-  it('soumission OK : appelle API avec token + newPassword + affiche succès', async () => {
+  it('successful submission: calls the API with token and newPassword and shows success', async () => {
     const user = userEvent.setup();
     let captured: { token?: string; newPassword?: string } | null = null;
     server.use(
@@ -82,7 +82,7 @@ describe('ResetPasswordPage', () => {
     expect(screen.getByRole('link', { name: /aller à la connexion/i })).toBeInTheDocument();
   });
 
-  it('API renvoie 400 (token invalide) : affiche écran lien invalide', async () => {
+  it('API returns 400 (invalid token): shows the invalid link screen', async () => {
     const user = userEvent.setup();
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/confirm`, () =>

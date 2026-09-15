@@ -58,7 +58,7 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
   });
   afterAll(() => server.close());
 
-  it('affiche Google comme lié, seul moyen de connexion, et propose de lier GitHub', async () => {
+  it('shows Google as linked, the only sign-in method, and offers to link GitHub', async () => {
     renderAccount('/settings/integrations');
 
     expect(await screen.findByText('Google')).toBeInTheDocument();
@@ -72,7 +72,7 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     expect(linkGithub).toHaveAttribute('href', expect.stringContaining('/auth/oauth/github/start'));
   });
 
-  it('délie un provider après confirmation, quand il n’est pas le dernier', async () => {
+  it('unlinks a provider after confirmation, when it is not the last one', async () => {
     const user = userEvent.setup();
     let unlinkCalled = false;
     server.use(
@@ -98,7 +98,7 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     );
   });
 
-  it('propose de définir un mot de passe quand le compte n’en a pas', async () => {
+  it('offers to set a password when the account has none', async () => {
     const user = userEvent.setup();
     let sentCurrentPassword: string | undefined;
     server.use(
@@ -121,7 +121,7 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     await waitFor(() => expect(sentCurrentPassword ?? '').toBe(''));
   });
 
-  it('affiche le message de succès puis redirige seulement après le délai', async () => {
+  it('shows the success message then redirects only after the delay', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     vi.useFakeTimers({ shouldAdvanceTime: true });
     server.use(

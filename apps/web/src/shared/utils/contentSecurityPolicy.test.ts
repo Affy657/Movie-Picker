@@ -15,21 +15,21 @@ function directive(policy: string, name: string): string {
 }
 
 describe('toApiOrigin', () => {
-  it("garde l'origine d'une URL complète et jette le chemin", () => {
+  it('keeps the origin of a full URL and drops the path', () => {
     expect(toApiOrigin(PROD_API)).toBe(PROD_API);
     expect(toApiOrigin('https://api.movie-picker.fr/api/v1')).toBe(PROD_API);
   });
 
-  it('complète en https un hôte distant sans schéma', () => {
+  it('completes a remote host without scheme with https', () => {
     expect(toApiOrigin('api.movie-picker.fr')).toBe(PROD_API);
   });
 
-  it('complète en http un hôte local sans schéma', () => {
+  it('completes a local host without scheme with http', () => {
     expect(toApiOrigin('localhost:5010')).toBe('http://localhost:5010');
     expect(toApiOrigin('127.0.0.1:5010')).toBe('http://127.0.0.1:5010');
   });
 
-  it('rend une chaîne vide pour une valeur absente ou illisible', () => {
+  it('returns an empty string for a missing or unreadable value', () => {
     expect(toApiOrigin('')).toBe('');
     expect(toApiOrigin('   ')).toBe('');
     expect(toApiOrigin('http://')).toBe('');
@@ -41,7 +41,7 @@ describe('toSentryIngestOrigin', () => {
     expect(toSentryIngestOrigin(PROD_DSN)).toBe('https://o4507.ingest.de.sentry.io');
   });
 
-  it('rend une chaîne vide sans DSN', () => {
+  it('returns an empty string without a DSN', () => {
     expect(toSentryIngestOrigin('')).toBe('');
     expect(toSentryIngestOrigin('pas-une-url')).toBe('');
   });
@@ -88,7 +88,7 @@ describe('buildContentSecurityPolicy', () => {
     );
   });
 
-  it("sert l'origine locale telle quelle en développement", () => {
+  it('serves the local origin as is in development', () => {
     const local = buildContentSecurityPolicy(toApiOrigin('http://127.0.0.1:5010'), '');
     expect(directive(local, 'img-src')).toContain('http://127.0.0.1:5010');
     expect(directive(local, 'connect-src')).toContain('http://127.0.0.1:5010');

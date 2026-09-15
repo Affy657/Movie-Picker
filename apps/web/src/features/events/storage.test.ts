@@ -26,11 +26,11 @@ describe('event storage', () => {
       (sessionStorage.getItem as ReturnType<typeof vi.fn>).mockReturnValue(null);
       expect(getStoredHostToken(slug)).toBeNull();
     });
-    it('getStoredHostToken retourne la valeur stockée', () => {
+    it('getStoredHostToken returns the stored value', () => {
       (sessionStorage.getItem as ReturnType<typeof vi.fn>).mockReturnValue('my-token');
       expect(getStoredHostToken(slug)).toBe('my-token');
     });
-    it('setStoredHostToken appelle setItem avec la clé et la valeur', () => {
+    it('setStoredHostToken calls setItem with the key and the value', () => {
       setStoredHostToken(slug, 'token123');
       expect(sessionStorage.setItem).toHaveBeenCalledWith('moviepicker_host_' + slug, 'token123');
     });
@@ -41,13 +41,13 @@ describe('event storage', () => {
       (sessionStorage.getItem as ReturnType<typeof vi.fn>).mockReturnValue(null);
       expect(getStoredParticipant(slug)).toBeNull();
     });
-    it('getStoredParticipant retourne les données valides', () => {
+    it('getStoredParticipant returns the valid data', () => {
       (sessionStorage.getItem as ReturnType<typeof vi.fn>).mockReturnValue(
         JSON.stringify({ participantId: 'p1', pseudo: 'Alice' })
       );
       expect(getStoredParticipant(slug)).toEqual({ participantId: 'p1', pseudo: 'Alice' });
     });
-    it('getStoredParticipant retourne null si données invalides', () => {
+    it('getStoredParticipant returns null when the data is invalid', () => {
       (sessionStorage.getItem as ReturnType<typeof vi.fn>).mockReturnValue('{}');
       expect(getStoredParticipant(slug)).toBeNull();
     });
@@ -61,7 +61,7 @@ describe('event storage', () => {
   });
 
   describe('clearStoredEventIdentities', () => {
-    it('retire toutes les identités de participant et tous les jetons hôte, rien d’autre', () => {
+    it('removes every participant identity and every host token, nothing else', () => {
       const keys = [
         'moviepicker_participant_abc',
         'moviepicker_host_abc',
@@ -82,7 +82,7 @@ describe('event storage', () => {
       expect(sessionStorage.removeItem).not.toHaveBeenCalledWith('moviepicker-consent');
     });
 
-    it('ne lève pas si sessionStorage est inaccessible', () => {
+    it('does not throw when sessionStorage is unreachable', () => {
       vi.stubGlobal('sessionStorage', undefined);
       expect(() => clearStoredEventIdentities()).not.toThrow();
     });

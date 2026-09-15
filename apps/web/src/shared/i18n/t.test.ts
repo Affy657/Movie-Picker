@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { t } from './t';
 
 describe('t (i18n)', () => {
-  it('résout une clé simple (FR par défaut)', () => {
+  it('resolves a simple key (FR by default)', () => {
     expect(t('common.loading')).toBe('Chargement\u2026');
   });
 
-  it('résout une clé profonde', () => {
+  it('resolves a deep key', () => {
     expect(t('auth.login.title')).toBe('Connexion');
   });
 
@@ -22,16 +22,16 @@ describe('t (i18n)', () => {
     );
   });
 
-  it('retourne la clé brute si elle est invalide (résilience)', () => {
+  it('returns the raw key when it is invalid (resilience)', () => {
     const badKey = 'nonexistent.key' as Parameters<typeof t>[0];
     expect(t(badKey)).toBe('nonexistent.key');
   });
 
-  it('retourne la chaîne sans modification si aucune variable fournie', () => {
+  it('returns the string unchanged when no variable is provided', () => {
     expect(t('common.appName')).toBe('Movie Picker');
   });
 
-  it('ignore les vars quand la chaîne ne contient aucun placeholder', () => {
+  it('ignores the vars when the string contains no placeholder', () => {
     expect(t('common.appName', { unused: 'value' })).toBe('Movie Picker');
   });
 
@@ -41,7 +41,7 @@ describe('t (i18n)', () => {
     );
   });
 
-  it('couvre les clés de chaque domaine principal (FR)', () => {
+  it('covers the keys of every main domain (FR)', () => {
     expect(t('nav.home')).toBe('Accueil');
     expect(t('events.create.title')).toBe('Cr\u00e9er une soir\u00e9e');
     expect(t('movies.list.emptyTitle')).toContain('Aucun film');
@@ -50,11 +50,11 @@ describe('t (i18n)', () => {
   });
 
   describe('locale EN', () => {
-    it('résout une clé simple en anglais', () => {
+    it('resolves a simple key in English', () => {
       expect(t('common.loading', undefined, 'en')).toBe('Loading\u2026');
     });
 
-    it('résout une clé profonde en anglais', () => {
+    it('resolves a deep key in English', () => {
       expect(t('auth.login.title', undefined, 'en')).toBe('Log in');
     });
 
@@ -64,7 +64,7 @@ describe('t (i18n)', () => {
       );
     });
 
-    it('couvre les clés de chaque domaine principal (EN)', () => {
+    it('covers the keys of every main domain (EN)', () => {
       expect(t('nav.home', undefined, 'en')).toBe('Home');
       expect(t('events.create.title', undefined, 'en')).toBe('Create an event');
       expect(t('movies.list.emptyTitle', undefined, 'en')).toContain('No movies');
@@ -72,19 +72,19 @@ describe('t (i18n)', () => {
       expect(t('theme.light', undefined, 'en')).toBe('Light');
     });
 
-    it('retourne la clé brute si elle est invalide en EN aussi', () => {
+    it('returns the raw key when it is invalid in EN too', () => {
       const badKey = 'nonexistent.key' as Parameters<typeof t>[0];
       expect(t(badKey, undefined, 'en')).toBe('nonexistent.key');
     });
   });
 
-  describe('résilience du registre', () => {
-    it('retourne la clé brute quand elle désigne un groupe et non une chaîne', () => {
+  describe('registry resilience', () => {
+    it('returns the raw key when it points to a group and not a string', () => {
       const groupKey = 'common' as Parameters<typeof t>[0];
       expect(t(groupKey)).toBe('common');
     });
 
-    it('se replie sur une langue chargée quand la langue demandée est absente', () => {
+    it('falls back to a loaded language when the requested language is missing', () => {
       const unknownLocale = 'de' as Parameters<typeof t>[2];
       expect(t('common.loading', undefined, unknownLocale)).toBe('Chargement\u2026');
     });

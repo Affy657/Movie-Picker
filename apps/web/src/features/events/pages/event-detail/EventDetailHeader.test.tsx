@@ -40,7 +40,7 @@ describe('EventDetailHeader', () => {
     localStorage.setItem('moviepicker-locale', 'fr');
   });
 
-  it('affiche le récap de la soirée et le compte à rebours de début', () => {
+  it('shows the movie night summary and the start countdown', () => {
     renderHeader(<EventDetailHeader {...baseProps} countdownLabel="22 h" />);
     expect(screen.getByRole('heading', { name: 'Soirée ciné' })).toBeInTheDocument();
     expect(screen.getByText('Commence dans')).toBeInTheDocument();
@@ -50,19 +50,19 @@ describe('EventDetailHeader', () => {
     expect(screen.getByText('2 votants sur 3')).toBeInTheDocument();
   });
 
-  it('masque la pastille tant que la soirée n’est pas dans les 24 h', () => {
+  it('hides the badge as long as the movie night is not within 24 h', () => {
     renderHeader(<EventDetailHeader {...baseProps} />);
     expect(screen.queryByText('Commence dans')).not.toBeInTheDocument();
     expect(screen.queryByText('À venir')).not.toBeInTheDocument();
   });
 
-  it('n’affiche pas de compte à rebours quand la soirée est en cours', () => {
+  it('shows no countdown when the movie night is in progress', () => {
     renderHeader(<EventDetailHeader {...baseProps} lifecycle="live" countdownLabel="22 h" />);
     expect(screen.getByText('En cours')).toBeInTheDocument();
     expect(screen.queryByText('22 h')).not.toBeInTheDocument();
   });
 
-  it('affiche le bouton Partager et le calendrier à part', async () => {
+  it('shows the Share button and the calendar separately', async () => {
     const user = userEvent.setup();
     const onOpenShare = vi.fn();
     renderHeader(<EventDetailHeader {...baseProps} onOpenShare={onOpenShare} />);
@@ -77,7 +77,7 @@ describe('EventDetailHeader', () => {
     expect(screen.getByRole('menuitem', { name: /google calendar/i })).toBeInTheDocument();
   });
 
-  it('garde le bouton Partager visible mais masque le calendrier pour une soirée terminée', () => {
+  it('keeps the Share button visible but hides the calendar for a finished movie night', () => {
     renderHeader(
       <EventDetailHeader {...baseProps} isFinished lifecycle="finished" onOpenShare={() => {}} />
     );
@@ -101,14 +101,14 @@ describe('EventDetailHeader', () => {
     expect(onToggleParticipants).toHaveBeenCalledTimes(1);
   });
 
-  it('affiche le thème sous le titre de la soirée', () => {
+  it('shows the theme under the movie night title', () => {
     renderHeader(<EventDetailHeader {...baseProps} eventTheme="Comédie noire" />);
     const heading = screen.getByRole('heading', { name: 'Soirée ciné' });
     const theme = screen.getByRole('status', { name: /Thème de soirée : Comédie noire/i });
     expect(heading.compareDocumentPosition(theme) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('n’expose l’engrenage de réglages que si un gestionnaire est fourni', () => {
+  it('exposes the settings cog only when a handler is provided', () => {
     const { unmount } = renderHeader(<EventDetailHeader {...baseProps} />);
     expect(
       screen.queryByRole('button', { name: /paramètres de la soirée/i })

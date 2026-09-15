@@ -28,12 +28,12 @@ function renderField(
 }
 
 describe('parseTheme', () => {
-  it('retourne vide pour une chaîne vide', () => {
+  it('returns empty for an empty string', () => {
     expect(parseTheme('')).toEqual({ emoji: '', text: '' });
     expect(parseTheme(null)).toEqual({ emoji: '', text: '' });
   });
 
-  it('sépare un emoji suivi du texte', () => {
+  it('separates an emoji followed by text', () => {
     expect(parseTheme('🎃 Horreur')).toEqual({ emoji: '🎃', text: 'Horreur' });
   });
 
@@ -43,7 +43,7 @@ describe('parseTheme', () => {
 });
 
 describe('ThemeField', () => {
-  it('ouvre le sélecteur d’emoji et applique un preset', async () => {
+  it('opens the emoji picker and applies a preset', async () => {
     const user = userEvent.setup();
     const { onEmojiChange, onTextChange } = renderField();
 
@@ -57,7 +57,7 @@ describe('ThemeField', () => {
     expect(onTextChange).toHaveBeenCalledWith('Horreur');
   });
 
-  it('déplie la liste des thèmes suggérés', async () => {
+  it('unfolds the list of suggested themes', async () => {
     const user = userEvent.setup();
     renderField({ emoji: '🎃', text: 'Horreur' });
 
@@ -66,12 +66,12 @@ describe('ThemeField', () => {
     expect(screen.getByRole('button', { name: /western/i })).toBeInTheDocument();
   });
 
-  it('masque les thèmes suggérés quand disabled', () => {
+  it('hides the suggested themes when disabled', () => {
     renderField({ disabled: true });
     expect(screen.queryByText('Thèmes suggérés')).not.toBeInTheDocument();
   });
 
-  it('reconnaît un thème enregistré dans l’autre langue', () => {
+  it('recognises a theme saved in the other language', () => {
     localStorage.setItem('moviepicker-locale', 'en');
     renderField({ emoji: '🎃', text: 'Horreur' });
     expect(screen.getByRole('button', { name: /horror/i }).className).toMatch(/presetChipActive/);

@@ -51,7 +51,7 @@ describe('AccountPage — zone de danger (MSW)', () => {
   });
   afterAll(() => server.close());
 
-  it('télécharge les données via l’endpoint d’export', async () => {
+  it('downloads the data through the export endpoint', async () => {
     const user = userEvent.setup();
     let exportCalled = false;
     server.use(
@@ -74,7 +74,7 @@ describe('AccountPage — zone de danger (MSW)', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('supprime le compte après confirmation par mot de passe puis redirige', async () => {
+  it('deletes the account after password confirmation then redirects', async () => {
     const user = userEvent.setup();
     let deletedWith: string | undefined;
     server.use(

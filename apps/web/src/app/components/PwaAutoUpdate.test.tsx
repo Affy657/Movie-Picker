@@ -84,8 +84,8 @@ describe('PwaAutoUpdate', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  describe('détection des nouvelles versions', () => {
-    it('cherche une mise à jour quand la connexion est rétablie', async () => {
+  describe('new version detection', () => {
+    it('looks for an update when the connection comes back', async () => {
       const update = vi.fn().mockResolvedValue(undefined);
       const { unmount } = await renderWithRegistration(update);
 
@@ -98,7 +98,7 @@ describe('PwaAutoUpdate', () => {
       unmount();
     });
 
-    it('cherche une mise à jour en revenant sur la page (visibilitychange -> visible)', async () => {
+    it('looks for an update when returning to the page (visibilitychange -> visible)', async () => {
       stubVisibility('visible');
       const update = vi.fn().mockResolvedValue(undefined);
       const { unmount } = await renderWithRegistration(update);
@@ -112,7 +112,7 @@ describe('PwaAutoUpdate', () => {
       unmount();
     });
 
-    it('ne cherche pas de mise à jour au passage en arrière-plan (visibilitychange -> hidden)', async () => {
+    it('does not look for an update when going to the background (visibilitychange -> hidden)', async () => {
       stubVisibility('hidden');
       const update = vi.fn().mockResolvedValue(undefined);
       const { unmount } = await renderWithRegistration(update);
@@ -124,7 +124,7 @@ describe('PwaAutoUpdate', () => {
       unmount();
     });
 
-    it('ne cherche plus de mise à jour après démontage', async () => {
+    it('stops looking for updates after unmount', async () => {
       const update = vi.fn().mockResolvedValue(undefined);
       const { unmount } = await renderWithRegistration(update);
 
@@ -135,7 +135,7 @@ describe('PwaAutoUpdate', () => {
       expect(update).not.toHaveBeenCalled();
     });
 
-    it('ne cherche pas de mise à jour hors ligne', async () => {
+    it('does not look for an update offline', async () => {
       vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
       const update = vi.fn().mockResolvedValue(undefined);
       const { unmount } = await renderWithRegistration(update);
@@ -147,7 +147,7 @@ describe('PwaAutoUpdate', () => {
     });
   });
 
-  describe('application différée de la mise à jour', () => {
+  describe('deferred update application', () => {
     it("n'interrompt pas l'utilisateur : ne recharge pas tant que la page est visible", async () => {
       stubVisibility('visible');
       const { unmount } = await renderWithRegistration(vi.fn().mockResolvedValue(undefined), true);
@@ -160,7 +160,7 @@ describe('PwaAutoUpdate', () => {
       unmount();
     });
 
-    it('applique la mise à jour au passage en arrière-plan', async () => {
+    it('applies the update when going to the background', async () => {
       const visibility = stubVisibility('visible');
       const { unmount } = await renderWithRegistration(vi.fn().mockResolvedValue(undefined), true);
 
@@ -176,7 +176,7 @@ describe('PwaAutoUpdate', () => {
       unmount();
     });
 
-    it('recharge la page dès que le nouveau worker prend le contrôle', async () => {
+    it('reloads the page as soon as the new worker takes control', async () => {
       stubVisibility('hidden');
       const container = stubServiceWorkerContainer();
       const { unmount } = await renderWithRegistration(vi.fn().mockResolvedValue(undefined), true);
@@ -190,7 +190,7 @@ describe('PwaAutoUpdate', () => {
       unmount();
     });
 
-    it("recharge même si c'est un autre onglet qui a déclenché la mise à jour, sans jamais être passée en arrière-plan elle-même", async () => {
+    it('reloads even when another tab triggered the update, without ever going to the background itself', async () => {
       stubVisibility('visible');
       const container = stubServiceWorkerContainer();
       const reload = stubLocationReload();
@@ -214,7 +214,7 @@ describe('PwaAutoUpdate', () => {
       expect(navigator.serviceWorker).toBeUndefined();
     });
 
-    it("n'applique la mise à jour qu'une seule fois", async () => {
+    it('applies the update only once', async () => {
       stubVisibility('hidden');
       const { unmount } = await renderWithRegistration(vi.fn().mockResolvedValue(undefined), true);
 
@@ -228,7 +228,7 @@ describe('PwaAutoUpdate', () => {
       unmount();
     });
 
-    it('applique immédiatement si la page est déjà en arrière-plan', async () => {
+    it('applies immediately when the page is already in the background', async () => {
       stubVisibility('hidden');
       const { unmount } = await renderWithRegistration(vi.fn().mockResolvedValue(undefined), true);
 

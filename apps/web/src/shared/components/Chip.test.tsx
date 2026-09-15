@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import Chip from '@/shared/components/Chip';
 
 describe('Chip', () => {
-  it('rend un élément non interactif par défaut', () => {
+  it('renders a non-interactive element by default', () => {
     render(<Chip testId="c">Comédie</Chip>);
 
     expect(screen.queryByRole('button')).toBeNull();

@@ -16,7 +16,7 @@ function renderDialog(mode: 'ios' | 'in_app' | 'generic', onClose = vi.fn()) {
 }
 
 describe('InstallPwaDialog', () => {
-  it('affiche les étapes iOS', () => {
+  it('shows the iOS steps', () => {
     renderDialog('ios');
     expect(
       screen.getByRole('heading', { name: /ajouter à l['’]écran d['’]accueil/i })
@@ -32,7 +32,7 @@ describe('InstallPwaDialog', () => {
     expect(screen.getByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
   });
 
-  it('ferme la modale générique via le bouton principal', async () => {
+  it('closes the generic modal through the main button', async () => {
     const user = userEvent.setup();
     const { onClose } = renderDialog('generic');
 

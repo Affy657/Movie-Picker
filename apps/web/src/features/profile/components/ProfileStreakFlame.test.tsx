@@ -22,17 +22,17 @@ describe('ProfileStreakFlame', () => {
     expect(screen.getByText('1 semaine de suite')).toBeInTheDocument();
   });
 
-  it('affiche le record uniquement quand il dépasse le streak courant', () => {
+  it('shows the record only when it exceeds the current streak', () => {
     renderFlame(1, 2);
     expect(screen.getByText('Record 2 semaines')).toBeInTheDocument();
   });
 
-  it("n'affiche pas de record quand il est égal au streak courant", () => {
+  it('shows no record when it equals the current streak', () => {
     renderFlame(3, 3);
     expect(screen.queryByText(/^Record/)).not.toBeInTheDocument();
   });
 
-  it('affiche un état éteint avec le record quand le streak est cassé', () => {
+  it('shows an extinguished state with the record when the streak is broken', () => {
     renderFlame(0, 5);
     expect(screen.getByText('Aucune série en cours')).toBeInTheDocument();
     expect(screen.getByText('Record 5 semaines')).toBeInTheDocument();
@@ -45,7 +45,7 @@ describe('ProfileStreakFlame', () => {
     ).toBeInTheDocument();
   });
 
-  it('expose un nom accessible sans record en double quand ils sont égaux', () => {
+  it('exposes an accessible name without a duplicated record when they are equal', () => {
     renderFlame(3, 3);
     expect(screen.getByRole('region', { name: '3 semaines de suite' })).toBeInTheDocument();
   });

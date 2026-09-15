@@ -39,7 +39,7 @@ describe('HistoryEventRow', () => {
     expect(screen.queryByText('1')).not.toBeInTheDocument();
   });
 
-  it('énumère les titres quand plusieurs films ont gagné', () => {
+  it('lists the titles when several movies won', () => {
     renderRow({
       ...base,
       winnerMovies: [
@@ -52,7 +52,7 @@ describe('HistoryEventRow', () => {
     expect(screen.getByText('Parasite, Whiplash et Perfect Days')).toBeInTheDocument();
   });
 
-  it('pose le compte sur la vignette au-delà d un gagnant', () => {
+  it('puts the count on the thumbnail beyond one winner', () => {
     renderRow({
       ...base,
       winnerMovies: [
@@ -78,7 +78,7 @@ describe('HistoryEventRow', () => {
     expect(posters[0]!.getAttribute('src')).toContain('premier.jpg');
   });
 
-  it('retombe sur l état sans film quand la soirée n a pas de gagnant', () => {
+  it('falls back to the no-movie state when the movie night has no winner', () => {
     renderRow(base);
 
     expect(screen.getByText(/terminée sans film/i)).toBeInTheDocument();

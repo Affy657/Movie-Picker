@@ -12,12 +12,12 @@ function renderTooltip(props?: Partial<Parameters<typeof Tooltip>[0]>) {
 }
 
 describe('Tooltip', () => {
-  it('rend la bulle masquée par défaut', () => {
+  it('renders the bubble hidden by default', () => {
     renderTooltip();
     expect(screen.getByText('Notifications')).toHaveAttribute('data-state', 'hidden');
   });
 
-  it('révèle la bulle au focus clavier puis la masque au blur', () => {
+  it('reveals the bubble on keyboard focus then hides it on blur', () => {
     renderTooltip();
     const button = screen.getByRole('button');
 
@@ -28,7 +28,7 @@ describe('Tooltip', () => {
     expect(screen.getByText('Notifications')).toHaveAttribute('data-state', 'hidden');
   });
 
-  it('révèle la bulle au survol puis la masque quand le pointeur sort', async () => {
+  it('reveals the bubble on hover then hides it when the pointer leaves', async () => {
     const user = userEvent.setup();
     renderTooltip({ delayMs: 0 });
     const button = screen.getByRole('button');
@@ -40,7 +40,7 @@ describe('Tooltip', () => {
     expect(screen.getByText('Notifications')).toHaveAttribute('data-state', 'hidden');
   });
 
-  it('masque la bulle visible quand on presse Échap', () => {
+  it('hides the visible bubble when Escape is pressed', () => {
     renderTooltip();
     const button = screen.getByRole('button');
 
@@ -56,7 +56,7 @@ describe('Tooltip', () => {
     expect(screen.queryByText('Notifications')).not.toBeInTheDocument();
   });
 
-  it('applique la position demandée via data-placement', () => {
+  it('applies the requested placement through data-placement', () => {
     renderTooltip({ placement: 'bottom' });
     expect(screen.getByText('Notifications')).toHaveAttribute('data-placement', 'bottom');
   });

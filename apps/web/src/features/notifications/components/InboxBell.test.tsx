@@ -53,7 +53,7 @@ describe('InboxBell (MSW)', () => {
     expect(await screen.findByText('4')).toBeInTheDocument();
   });
 
-  it('affiche 9+ quand le nombre de non lus dépasse 9', async () => {
+  it('shows 9+ when the unread count exceeds 9', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>

@@ -51,12 +51,12 @@ describe('ProposeIdeaButton', () => {
     globalThis.URL.revokeObjectURL = () => {};
   });
 
-  it('la boîte de dialogue est fermée au départ', () => {
+  it('the dialog is closed at first', () => {
     const { container } = renderButton();
     expect(container.querySelector('dialog')).toBeNull();
   });
 
-  it('ouvre la boîte de dialogue au clic et affiche le formulaire', async () => {
+  it('opens the dialog on click and shows the form', async () => {
     const { container } = renderButton();
     await openDialog();
 
@@ -93,7 +93,7 @@ describe('ProposeIdeaButton', () => {
     });
   });
 
-  it('envoie la catégorie sélectionnée (Bug) plutôt que la valeur par défaut', async () => {
+  it('sends the selected category (Bug) rather than the default value', async () => {
     let receivedBody: unknown = null;
     server.use(
       http.post(`${TEST_API_V1}/idea-suggestions`, async ({ request }) => {
@@ -114,7 +114,7 @@ describe('ProposeIdeaButton', () => {
     });
   });
 
-  it("affiche une erreur explicite et garde le texte saisi si l'envoi échoue", async () => {
+  it('shows an explicit error and keeps the typed text when sending fails', async () => {
     server.use(
       http.post(`${TEST_API_V1}/idea-suggestions`, () =>
         HttpResponse.json(
@@ -135,7 +135,7 @@ describe('ProposeIdeaButton', () => {
     expect(screen.getByLabelText(/titre/i)).toHaveValue('Ajouter un mode battle');
   });
 
-  it('ajoute une image via le sélecteur de fichier puis peut la retirer', async () => {
+  it('adds an image through the file picker then can remove it', async () => {
     renderButton();
     const user = await openDialog();
 
@@ -149,7 +149,7 @@ describe('ProposeIdeaButton', () => {
     expect(screen.queryByRole('button', { name: /retirer cette image/i })).not.toBeInTheDocument();
   });
 
-  it("garde le bouton d'envoi hors de la zone défilante quand une image est ajoutée", async () => {
+  it('keeps the send button out of the scrolling area when an image is added', async () => {
     renderButton();
     const user = await openDialog();
 
@@ -166,7 +166,7 @@ describe('ProposeIdeaButton', () => {
     expect(submit.closest(`.${styles.actions}`)).not.toBeNull();
   });
 
-  it("ne crée qu'une URL d'aperçu par image ajoutée, même sous StrictMode", async () => {
+  it('creates only one preview URL per added image, even under StrictMode', async () => {
     const createObjectURL = vi.fn(() => 'blob:mock');
     globalThis.URL.createObjectURL = createObjectURL;
     render(
@@ -187,7 +187,7 @@ describe('ProposeIdeaButton', () => {
     expect(createObjectURL).toHaveBeenCalledTimes(2);
   });
 
-  it("refuse un fichier d'un format non supporté", async () => {
+  it('rejects a file of an unsupported format', async () => {
     renderButton();
     const user = await openDialog();
 
@@ -198,7 +198,7 @@ describe('ProposeIdeaButton', () => {
     expect(screen.queryByRole('button', { name: /retirer cette image/i })).not.toBeInTheDocument();
   });
 
-  it('refuse au-delà de 4 images et affiche un message explicite', async () => {
+  it('rejects beyond 4 images and shows an explicit message', async () => {
     renderButton();
     const user = await openDialog();
 
@@ -216,7 +216,7 @@ describe('ProposeIdeaButton', () => {
     expect(screen.getAllByRole('button', { name: /retirer cette image/i })).toHaveLength(4);
   });
 
-  it('envoie les pièces jointes en base64 avec la suggestion', async () => {
+  it('sends the attachments as base64 with the suggestion', async () => {
     type ReceivedBody = {
       attachments?: { fileName: string; contentType: string; base64Content: string }[];
     };

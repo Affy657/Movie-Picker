@@ -39,7 +39,7 @@ function renderLayout(state: MovieListFilters, isMobile = false) {
 }
 
 describe('MovieListFilteredLayout', () => {
-  it('rend la barre et la grille, sans panneau tant que les filtres sont fermés', () => {
+  it('renders the bar and the grid, without a panel while the filters are closed', () => {
     renderLayout(filters());
 
     expect(screen.getByTestId('toolbar')).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe('MovieListFilteredLayout', () => {
     expect(onRemove).toHaveBeenCalled();
   });
 
-  it('remplace la grille par un état vide quand rien ne passe les filtres', async () => {
+  it('replaces the grid with an empty state when nothing passes the filters', async () => {
     const user = userEvent.setup();
     const state = filters({ visibleCount: 0 });
     renderLayout(state);

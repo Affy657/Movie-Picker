@@ -45,7 +45,7 @@ describe('ConsentDialog', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('enregistre les préférences analytics', async () => {
+  it('saves the analytics preferences', async () => {
     const onClose = vi.fn();
     const user = userEvent.setup();
     render(

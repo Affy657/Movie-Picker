@@ -11,7 +11,7 @@ describe('formatRuntimeMinutes', () => {
     expect(formatRuntimeMinutes(-10)).toBeNull();
   });
 
-  it('formate une durée < 1h en minutes', () => {
+  it('formats a runtime under 1 h in minutes', () => {
     expect(formatRuntimeMinutes(45)).toBe('45min');
     expect(formatRuntimeMinutes(59)).toBe('59min');
   });
@@ -28,7 +28,7 @@ describe('formatRuntimeMinutes', () => {
     expect(formatRuntimeMinutes(148)).toBe('2h28');
   });
 
-  it('tronque les décimales', () => {
+  it('truncates the decimals', () => {
     expect(formatRuntimeMinutes(70.9)).toBe('1h10');
   });
 });

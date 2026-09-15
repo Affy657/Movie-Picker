@@ -36,7 +36,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     await waitFor(() => expect(container.firstChild).toBeNull());
   });
 
-  it('affiche le titre et les films récemment vus', async () => {
+  it('shows the title and the recently watched movies', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
         HttpResponse.json({

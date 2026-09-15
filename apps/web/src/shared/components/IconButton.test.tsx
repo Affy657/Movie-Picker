@@ -5,7 +5,7 @@ import IconButton from '@/shared/components/IconButton';
 import styles from '@/shared/components/IconButton.module.css';
 
 describe('IconButton', () => {
-  it('porte son libellé en aria-label et en title, sans le rendre visible', () => {
+  it('carries its label in aria-label and title, without rendering it visible', () => {
     render(
       <IconButton label="Fermer">
         <svg aria-hidden />
@@ -28,7 +28,7 @@ describe('IconButton', () => {
     expect(screen.getByRole('button', { name: 'Partager' })).not.toHaveAttribute('title');
   });
 
-  it('traduit taille, ton et zone tactile élargie en classes', () => {
+  it('turns size, tone and enlarged tap area into classes', () => {
     render(
       <IconButton label="Supprimer" size="lg" tone="danger">
         <svg aria-hidden />
@@ -39,7 +39,7 @@ describe('IconButton', () => {
     expect(button).toHaveClass(styles.root!, styles.lg!, styles.danger!, styles.expandedHitArea!);
   });
 
-  it('en chargement, remplace l’icône par le spinner et se désactive', async () => {
+  it('while loading, replaces the icon with the spinner and disables itself', async () => {
     const onClick = vi.fn();
     render(
       <IconButton label="Envoyer" loading onClick={onClick}>

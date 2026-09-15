@@ -68,7 +68,7 @@ describe('HostEventSettingsPanel', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('reste ouvert une fois un film tiré et ne laisse réglable que le nombre de gagnants', () => {
+  it('stays open once a movie is drawn and only leaves the number of winners adjustable', () => {
     renderWithRouter(
       <HostEventSettingsPanel
         slug={slug}
@@ -163,7 +163,7 @@ describe('HostEventSettingsPanel', () => {
     await waitFor(() => expect(seenMax).toBe(8), { timeout: 3000 });
   });
 
-  it('activer la limite de votes envoie la valeur par défaut, puis la valeur saisie', async () => {
+  it('enabling the vote limit sends the default value, then the typed value', async () => {
     const user = userEvent.setup();
     const seen: unknown[] = [];
     server.use(
@@ -200,7 +200,7 @@ describe('HostEventSettingsPanel', () => {
     await waitFor(() => expect(seen.at(-1)).toBe(5), { timeout: 3000 });
   });
 
-  it('désactiver la limite de votes envoie 0', async () => {
+  it('disabling the vote limit sends 0', async () => {
     const user = userEvent.setup();
     let seenMaxVotes: unknown;
     server.use(
@@ -262,7 +262,7 @@ describe('HostEventSettingsPanel', () => {
     expect(patchCalled).toBe(false);
   });
 
-  it('refuse une capacité inférieure au nombre de participants déjà inscrits', async () => {
+  it('rejects a capacity below the number of participants already in', async () => {
     const user = userEvent.setup();
     let patchCalled = false;
     server.use(
@@ -291,7 +291,7 @@ describe('HostEventSettingsPanel', () => {
     expect(patchCalled).toBe(false);
   });
 
-  it('envoie le nombre de films à tirer saisi par l hôte', async () => {
+  it('sends the number of movies to draw typed by the host', async () => {
     const user = userEvent.setup();
     let seenWinnerCount: unknown;
     server.use(
@@ -319,7 +319,7 @@ describe('HostEventSettingsPanel', () => {
     await waitFor(() => expect(seenWinnerCount).toBe(3), { timeout: 3000 });
   });
 
-  it("n'envoie que le nombre de gagnants quand c'est le seul champ modifié après un tirage", async () => {
+  it('sends only the number of winners when it is the only field changed after a draw', async () => {
     const user = userEvent.setup();
     let body: Record<string, unknown> | null = null;
     server.use(
@@ -384,7 +384,7 @@ describe('HostEventSettingsPanel', () => {
     });
   });
 
-  it('refuse de descendre sous le nombre de films déjà tirés', async () => {
+  it('refuses to go below the number of movies already drawn', async () => {
     const user = userEvent.setup();
     let patchCalled = false;
     server.use(
@@ -435,7 +435,7 @@ describe('HostEventSettingsPanel', () => {
       };
     }
 
-    it("ne montre PAS la zone de danger si l'utilisateur n'est pas le créateur connecté", async () => {
+    it('does NOT show the danger zone when the user is not the signed-in creator', async () => {
       renderWithRouter(
         <HostEventSettingsPanel
           slug={slug}
@@ -449,7 +449,7 @@ describe('HostEventSettingsPanel', () => {
       expect(screen.queryByTestId('delete-event-button')).not.toBeInTheDocument();
     });
 
-    it('montre la zone de danger pour le créateur connecté', async () => {
+    it('shows the danger zone for the signed-in creator', async () => {
       renderWithRouter(
         <HostEventSettingsPanel
           slug={slug}
@@ -463,7 +463,7 @@ describe('HostEventSettingsPanel', () => {
       expect(screen.getByTestId('delete-event-button')).toBeInTheDocument();
     });
 
-    it('confirme la modale → DELETE appelé + nettoyage local + redirection', async () => {
+    it('confirming the modal: DELETE called, local cleanup and redirect', async () => {
       const user = userEvent.setup();
       let deleteCalled = false;
       let calledUrl = '';
@@ -509,7 +509,7 @@ describe('HostEventSettingsPanel', () => {
       expect(await screen.findByTestId('route-my-events')).toBeInTheDocument();
     });
 
-    it('annule la modale → aucun DELETE émis', async () => {
+    it('cancelling the modal: no DELETE sent', async () => {
       const user = userEvent.setup();
       let deleteCalled = false;
       server.use(
@@ -535,7 +535,7 @@ describe('HostEventSettingsPanel', () => {
       expect(deleteCalled).toBe(false);
     });
 
-    it('API renvoie 403 → message d\u2019erreur affiché, pas de redirection', async () => {
+    it('API returns 403: error message shown, no redirect', async () => {
       const user = userEvent.setup();
       server.use(
         http.delete(`${TEST_API_V1}/events/${slug}`, () =>
@@ -605,7 +605,7 @@ describe('HostEventSettingsPanel', () => {
     await waitFor(() => expect(document.getElementById('host-cfg-winner-count')).toHaveValue(3));
   });
 
-  it('applique un template aux réglages de la soirée', async () => {
+  it('applies a template to the movie night settings', async () => {
     const user = userEvent.setup();
     let patchedBody: Record<string, unknown> | null = null;
     server.use(
@@ -648,7 +648,7 @@ describe('HostEventSettingsPanel', () => {
     });
   });
 
-  it('permet de gérer les templates depuis le panneau', async () => {
+  it('allows managing the templates from the panel', async () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
@@ -676,7 +676,7 @@ describe('HostEventSettingsPanel', () => {
     ).toBeInTheDocument();
   });
 
-  it('met à jour le template appliqué après une retouche des réglages', async () => {
+  it('updates the applied template after a settings tweak', async () => {
     const user = userEvent.setup();
     let putBody: Record<string, unknown> | null = null;
     server.use(
@@ -729,7 +729,7 @@ describe('HostEventSettingsPanel', () => {
     });
   });
 
-  it('garde le template appliqué coché quand il n’a aucune limite', async () => {
+  it('keeps the applied template checked when it has no limit', async () => {
     const user = userEvent.setup();
     const noLimitTemplate = {
       ...templateFixture,
@@ -769,7 +769,7 @@ describe('HostEventSettingsPanel', () => {
     expect(screen.queryByRole('button', { name: 'Mettre à jour' })).not.toBeInTheDocument();
   });
 
-  it("une fois un film tiré, les templates se gèrent encore mais ne s'appliquent plus", async () => {
+  it('once a movie is drawn, templates can still be managed but no longer applied', async () => {
     const user = userEvent.setup();
     let patched = false;
     server.use(
@@ -838,7 +838,7 @@ describe('HostEventSettingsPanel', () => {
     ).toBeTruthy();
   });
 
-  describe('répétition de la soirée', () => {
+  describe('movie night repetition', () => {
     function recurringEvent(config: Partial<EventData['config']> = {}): EventData {
       return { ...baseEvent, config: { ...baseEvent.config!, ...config } };
     }
@@ -854,7 +854,7 @@ describe('HostEventSettingsPanel', () => {
       return bodies;
     }
 
-    it('activer la répétition envoie une récurrence hebdomadaire', async () => {
+    it('enabling the repetition sends a weekly recurrence', async () => {
       const user = userEvent.setup();
       const bodies = capturePatchBody();
 
@@ -875,7 +875,7 @@ describe('HostEventSettingsPanel', () => {
       expect(bodies[0]!.clearRecurrence).toBeUndefined();
     });
 
-    it('choisir un autre rythme envoie la fréquence correspondante', async () => {
+    it('choosing another rhythm sends the matching frequency', async () => {
       const user = userEvent.setup();
       const bodies = capturePatchBody();
 
@@ -897,7 +897,7 @@ describe('HostEventSettingsPanel', () => {
       expect(bodies[0]!.recurrence).toBe('monthly');
     });
 
-    it('couper la répétition demande explicitement son retrait', async () => {
+    it('turning the repetition off explicitly asks for its removal', async () => {
       const user = userEvent.setup();
       const bodies = capturePatchBody();
 
@@ -918,7 +918,7 @@ describe('HostEventSettingsPanel', () => {
       expect(bodies[0]!.recurrence).toBeUndefined();
     });
 
-    it('un réglage sans rapport laisse la récurrence hors du PATCH', async () => {
+    it('an unrelated setting leaves the recurrence out of the PATCH', async () => {
       const user = userEvent.setup();
       const bodies = capturePatchBody();
 
@@ -939,7 +939,7 @@ describe('HostEventSettingsPanel', () => {
       expect(bodies[0]!.clearRecurrence).toBeUndefined();
     });
 
-    it('occurrence suivante déjà créée : le réglage est verrouillé et expliqué', async () => {
+    it('next occurrence already created: the setting is locked and explained', async () => {
       renderWithRouter(
         <HostEventSettingsPanel
           slug={slug}

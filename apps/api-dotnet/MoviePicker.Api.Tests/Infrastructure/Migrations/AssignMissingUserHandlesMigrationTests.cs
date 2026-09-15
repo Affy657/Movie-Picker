@@ -125,7 +125,7 @@ public sealed class AssignMissingUserHandlesMigrationTests
             UserWithoutHandle("u2", "Bob"),
             UserWithoutHandle("u3", "Carol"));
         _users.Setup(r => r.UpdateAsync(It.Is<User>(u => u.Id == "u2"), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("écriture refusée"));
+            .ThrowsAsync(new InvalidOperationException("write refused"));
 
         var assigned = await _sut.ExecuteAsync();
 

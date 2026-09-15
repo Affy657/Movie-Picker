@@ -52,7 +52,7 @@ describe('ShareDialog', () => {
     vi.clearAllMocks();
   });
 
-  it('affiche l’aperçu, le QR code, le lien et une seule commande de copie', () => {
+  it('shows the preview, the QR code, the link and a single copy command', () => {
     renderDialog(<ShareDialog {...baseProps} />);
     expect(screen.getByRole('heading', { name: 'Partager la soirée' })).toBeInTheDocument();
     expect(screen.getByText('Soirée ciné')).toBeInTheDocument();
@@ -79,7 +79,7 @@ describe('ShareDialog', () => {
     expect(track).toHaveBeenCalledWith('link_shared', { method: 'clipboard', surface: 'event' });
   });
 
-  it('lit le SVG du QR code au clic sur Télécharger', async () => {
+  it('reads the QR code SVG when clicking Download', async () => {
     const user = userEvent.setup();
     const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake');
     renderDialog(<ShareDialog {...baseProps} />);
@@ -91,12 +91,12 @@ describe('ShareDialog', () => {
     expect(blobArg.type).toContain('svg');
   });
 
-  it("n'affiche pas d'onglets quand aucun onglet supplémentaire n'est fourni", () => {
+  it('shows no tabs when no extra tab is provided', () => {
     renderDialog(<ShareDialog {...baseProps} />);
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
   });
 
-  it('bascule vers l’onglet supplémentaire fourni et respecte l’onglet initial', async () => {
+  it('switches to the provided extra tab and honours the initial tab', async () => {
     const user = userEvent.setup();
     renderDialog(
       <ShareDialog
@@ -114,7 +114,7 @@ describe('ShareDialog', () => {
     expect(screen.queryByText('Contenu amis')).not.toBeInTheDocument();
   });
 
-  it('propose le partage natif en action primaire quand disponible, avec un libellé de téléchargement distinct', async () => {
+  it('offers native sharing as the primary action when available, with a distinct download label', async () => {
     const share = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { share, clipboard: undefined } as unknown as Navigator);
     const user = userEvent.setup();
@@ -144,7 +144,7 @@ describe('ShareDialog', () => {
     expect(track).not.toHaveBeenCalled();
   });
 
-  it('replie sur la copie du lien si le partage natif échoue pour une autre raison', async () => {
+  it('falls back to copying the link when native sharing fails for another reason', async () => {
     const share = vi.fn().mockRejectedValue(new Error('NotAllowedError'));
     vi.stubGlobal('navigator', { share, clipboard: undefined } as unknown as Navigator);
     vi.mocked(copyTextToClipboard).mockResolvedValue(true);
@@ -161,7 +161,7 @@ describe('ShareDialog', () => {
     expect(track).toHaveBeenCalledWith('link_shared', { method: 'clipboard', surface: 'event' });
   });
 
-  it('ne trace pas link_shared quand la copie échoue réellement', async () => {
+  it('does not track link_shared when the copy really fails', async () => {
     vi.mocked(copyTextToClipboard).mockResolvedValue(false);
     const user = userEvent.setup();
     renderDialog(<ShareDialog {...baseProps} />);
@@ -182,7 +182,7 @@ describe('ShareDialog', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('affiche l’avatar dans l’aperçu quand aucune icône n’est fournie', () => {
+  it('shows the avatar in the preview when no icon is provided', () => {
     renderDialog(
       <ShareDialog
         {...baseProps}

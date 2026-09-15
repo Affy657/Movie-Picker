@@ -22,7 +22,7 @@ describe('ErrorState', () => {
     expect(screen.getByTestId('icon').parentElement).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('annonce le message au lecteur d’écran avec le rôle demandé', () => {
+  it('announces the message to the screen reader with the requested role', () => {
     render(
       <ErrorState
         icon={<svg />}

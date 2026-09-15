@@ -14,30 +14,30 @@ describe('eventCountdown', () => {
     expect(eventCountdown('pas-une-date', '19:00', START)).toBeNull();
   });
 
-  it('renvoie null quand le début est passé ou atteint', () => {
+  it('returns null when the start is past or reached', () => {
     expect(eventCountdown('2026-08-19', '19:00', START)).toBeNull();
     expect(eventCountdown('2026-08-19', '19:00', START + 60_000)).toBeNull();
   });
 
-  it('signale un début imminent sous la minute', () => {
+  it('flags an imminent start under the minute', () => {
     expect(eventCountdown('2026-08-19', '19:00', START - 30_000)).toEqual({ unit: 'imminent' });
   });
 
-  it('arrondit les minutes au supérieur', () => {
+  it('rounds the minutes up', () => {
     expect(eventCountdown('2026-08-19', '19:00', START - 90_000)).toEqual({
       unit: 'minutes',
       count: 2,
     });
   });
 
-  it('bascule en heures au-delà d’une heure', () => {
+  it('switches to hours beyond one hour', () => {
     expect(eventCountdown('2026-08-19', '19:00', START - 22 * 3_600_000 - 400_000)).toEqual({
       unit: 'hours',
       count: 22,
     });
   });
 
-  it('renvoie null au-delà de la fenêtre de 24 h', () => {
+  it('returns null beyond the 24 h window', () => {
     expect(eventCountdown('2026-08-19', '19:00', START - 86_400_000)).toBeNull();
     expect(eventCountdown('2026-08-19', '19:00', START - 3 * 86_400_000)).toBeNull();
   });

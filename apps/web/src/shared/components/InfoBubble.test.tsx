@@ -19,7 +19,7 @@ describe('InfoBubble', () => {
     localStorage.setItem('moviepicker-locale', 'fr');
   });
 
-  it('reste fermée au premier rendu', () => {
+  it('stays closed on the first render', () => {
     renderBubble();
 
     expect(screen.getByRole('button', { name: 'Comment ça marche' })).toHaveAttribute(
@@ -29,7 +29,7 @@ describe('InfoBubble', () => {
     expect(screen.queryByText('Explication détaillée.')).not.toBeInTheDocument();
   });
 
-  it('ouvre et referme le contenu au clic sur le déclencheur', async () => {
+  it('opens and closes the content when clicking the trigger', async () => {
     const user = userEvent.setup();
     renderBubble();
     const trigger = screen.getByRole('button', { name: 'Comment ça marche' });
@@ -42,7 +42,7 @@ describe('InfoBubble', () => {
     expect(screen.queryByText('Explication détaillée.')).not.toBeInTheDocument();
   });
 
-  it('referme le contenu avec la touche Échap', async () => {
+  it('closes the content with the Escape key', async () => {
     const user = userEvent.setup();
     renderBubble();
 
@@ -64,7 +64,7 @@ describe('InfoBubble', () => {
     expect(screen.queryByText('Explication détaillée.')).not.toBeInTheDocument();
   });
 
-  it('associe le contenu au déclencheur via aria-controls', async () => {
+  it('ties the content to the trigger through aria-controls', async () => {
     const user = userEvent.setup();
     renderBubble();
     const trigger = screen.getByRole('button', { name: 'Comment ça marche' });

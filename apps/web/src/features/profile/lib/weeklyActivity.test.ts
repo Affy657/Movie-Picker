@@ -29,7 +29,7 @@ describe('aggregateWeeklyActivity', () => {
     expect(weeks).toEqual([{ weekStart: '2026-01-05', count: 3 }]);
   });
 
-  it('gère une vraie plage de 6 mois franchissant le changement d’année', () => {
+  it('handles a real 6-month range crossing the year change', () => {
     const counts = Array.from({ length: 182 }, () => 1);
     const points = days(counts, '2025-11-01');
     const weeks = aggregateWeeklyActivity(points);
@@ -45,11 +45,11 @@ describe('aggregateWeeklyActivity', () => {
 });
 
 describe('weeklyIntensityLevel', () => {
-  it('associe 0 à un compte nul ou négatif', () => {
+  it('maps 0 to a null or negative count', () => {
     expect(weeklyIntensityLevel(0)).toBe(0);
   });
 
-  it('associe un niveau croissant à 1, 2 puis 3+', () => {
+  it('maps an increasing level to 1, 2 then 3+', () => {
     expect(weeklyIntensityLevel(1)).toBe(1);
     expect(weeklyIntensityLevel(2)).toBe(2);
     expect(weeklyIntensityLevel(3)).toBe(3);
@@ -58,7 +58,7 @@ describe('weeklyIntensityLevel', () => {
 });
 
 describe('monthMarkers', () => {
-  it('place un repère au premier index et à chaque changement de mois', () => {
+  it('puts a marker at the first index and at every month change', () => {
     const weeks = [
       { weekStart: '2026-01-26', count: 0 },
       { weekStart: '2026-02-02', count: 0 },

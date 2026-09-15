@@ -54,7 +54,7 @@ describe('Footer PWA install', () => {
     expect(screen.getByRole('button', { name: /installer l['’]app/i })).toBeInTheDocument();
   });
 
-  it('ouvre le guide générique au clic sans prompt natif', async () => {
+  it('opens the generic guide on click without a native prompt', async () => {
     const user = userEvent.setup();
     renderFooter();
 
@@ -73,7 +73,7 @@ describe('Footer PWA install', () => {
     });
   });
 
-  it('déclenche le prompt natif quand beforeinstallprompt est disponible', async () => {
+  it('triggers the native prompt when beforeinstallprompt is available', async () => {
     const user = userEvent.setup();
     renderFooter();
     const event = dispatchBeforeInstallPrompt('accepted');
@@ -104,7 +104,7 @@ describe('Footer theme control', () => {
     delete document.documentElement.dataset.theme;
   });
 
-  it('expose un groupe de thèmes libellé Apparence avec une option par thème', () => {
+  it('exposes a theme group labelled Appearance with one option per theme', () => {
     renderFooter();
 
     const group = screen.getByRole('radiogroup', { name: /apparence/i });
@@ -116,7 +116,7 @@ describe('Footer theme control', () => {
     );
   });
 
-  it('applique et mémorise le thème choisi', async () => {
+  it('applies and remembers the chosen theme', async () => {
     const user = userEvent.setup();
     renderFooter();
 

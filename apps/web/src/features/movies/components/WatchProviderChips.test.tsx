@@ -39,7 +39,7 @@ describe('WatchProviderChips', () => {
     expect(screen.getByRole('img', { name: /service inconnu.*abonnement/i })).toBeInTheDocument();
   });
 
-  it('groupe les offres par mode avec une icône libellée Abonnement / Location / Achat', () => {
+  it('groups the offers by mode with an icon labelled Subscription / Rental / Purchase', () => {
     renderWithLocale(
       <WatchProviderChips
         providers={[
@@ -112,7 +112,7 @@ describe('WatchProviderChips', () => {
     expect(link).toHaveAttribute('rel', 'noreferrer noopener');
   });
 
-  it('avec separators, ajoute une séparation visuelle entre les groupes (pas sur le premier)', () => {
+  it('with separators, adds a visual separation between the groups (not on the first one)', () => {
     const { container } = renderWithLocale(
       <WatchProviderChips
         providers={[
@@ -128,7 +128,7 @@ describe('WatchProviderChips', () => {
     expect(groups[1]?.className).toMatch(/groupSep/);
   });
 
-  it('sans separators (comportement par défaut), aucune séparation ajoutée', () => {
+  it('without separators (default behaviour), no separation added', () => {
     const { container } = renderWithLocale(
       <WatchProviderChips
         providers={[

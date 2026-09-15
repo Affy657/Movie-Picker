@@ -116,7 +116,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     await waitFor(() => expect(patched).toBe('newname'));
   });
 
-  it('permet de déconnecter le compte Letterboxd via le bouton dédié', async () => {
+  it('allows disconnecting the Letterboxd account through the dedicated button', async () => {
     const user = userEvent.setup();
     let patched: string | null | undefined;
 
@@ -169,7 +169,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     expect(patchCalled).toBe(false);
   });
 
-  it('affiche directement le champ de saisie quand aucun pseudo n’est enregistré', async () => {
+  it('shows the input field straight away when no username is saved', async () => {
     server.use(meHandler({ letterboxdUsername: null }));
 
     renderAccount();
@@ -211,7 +211,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('ouvre la modale de choix quand la synchro renvoie des correspondances ambiguës', async () => {
+  it('opens the choice modal when the sync returns ambiguous matches', async () => {
     const user = userEvent.setup();
 
     server.use(
@@ -258,7 +258,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     expect(screen.getByRole('radio', { name: /Sermons de minuit/ })).toBeInTheDocument();
   });
 
-  it('affiche une réconciliation en attente et ouvre la modale de choix au clic', async () => {
+  it('shows a pending reconciliation and opens the choice modal on click', async () => {
     const user = userEvent.setup();
 
     server.use(
@@ -307,7 +307,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     ).toBeInTheDocument();
   });
 
-  it('met à jour le nombre de films restants après une réconciliation partielle', async () => {
+  it('updates the number of remaining films after a partial reconciliation', async () => {
     const user = userEvent.setup();
 
     server.use(
@@ -377,7 +377,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     expect(screen.queryByRole('button', { name: 'Les confirmer' })).not.toBeInTheDocument();
   });
 
-  it('liste les films introuvables sur TMDB dans un dépliant', async () => {
+  it('lists the films not found on TMDB in a disclosure', async () => {
     const user = userEvent.setup();
 
     server.use(
@@ -420,7 +420,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('affiche la date de dernière synchronisation réussie', async () => {
+  it('shows the date of the last successful synchronisation', async () => {
     server.use(
       meHandler({
         letterboxdUsername: 'affy657',
@@ -433,7 +433,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     expect(await screen.findByText(/Synchronisé le/)).toBeInTheDocument();
   });
 
-  it('affiche l’erreur de la dernière synchronisation échouée', async () => {
+  it('shows the error of the last failed synchronisation', async () => {
     server.use(
       meHandler({
         letterboxdUsername: 'affy657',
@@ -467,7 +467,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     ).toBe(true);
   });
 
-  it('affiche le message d’erreur du serveur quand la synchronisation échoue', async () => {
+  it('shows the server error message when the synchronisation fails', async () => {
     const user = userEvent.setup();
 
     server.use(

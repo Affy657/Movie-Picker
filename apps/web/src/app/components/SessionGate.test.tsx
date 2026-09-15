@@ -60,7 +60,7 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('SessionGate', () => {
-  it("rend l'état déconnecté sans jamais monter la page quand aucune session n'est possible", async () => {
+  it('renders the signed-out state without ever mounting the page when no session is possible', async () => {
     renderGate();
 
     expect(await screen.findByRole('heading', { level: 2 })).toBeInTheDocument();
@@ -68,7 +68,7 @@ describe('SessionGate', () => {
     expect(pageRenders).toBe(0);
   });
 
-  it('renvoie vers la connexion en gardant la page demandée en retour', async () => {
+  it('redirects to sign-in while keeping the requested page as the return', async () => {
     renderGate();
 
     expect(await screen.findByRole('link', { name: /^se connecter$/i })).toHaveAttribute(
@@ -81,7 +81,7 @@ describe('SessionGate', () => {
     );
   });
 
-  it('monte la page quand la session est confirmée', async () => {
+  it('mounts the page when the session is confirmed', async () => {
     setSessionHint();
     server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
 
@@ -90,7 +90,7 @@ describe('SessionGate', () => {
     expect(await screen.findByText('contenu authentifié')).toBeInTheDocument();
   });
 
-  it('signale un contrôle de session en échec au lieu de proposer de se connecter', async () => {
+  it('reports a failed session check instead of offering to sign in', async () => {
     setSessionHint();
     server.use(http.get(`${TEST_API_V1}/auth/me`, () => new HttpResponse(null, { status: 500 })));
 

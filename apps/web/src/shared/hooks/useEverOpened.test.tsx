@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { useEverOpened } from '@/shared/hooks/useEverOpened';
 
 describe('useEverOpened', () => {
-  it('reste faux tant que la fenêtre ne s’est jamais ouverte', () => {
+  it('stays false as long as the window never opened', () => {
     const { result, rerender } = renderHook(({ open }) => useEverOpened(open), {
       initialProps: { open: false },
     });
@@ -13,7 +13,7 @@ describe('useEverOpened', () => {
     expect(result.current).toBe(false);
   });
 
-  it('devient vrai à la première ouverture et le reste après fermeture', () => {
+  it('turns true at the first opening and stays so after closing', () => {
     const { result, rerender } = renderHook(({ open }) => useEverOpened(open), {
       initialProps: { open: false },
     });
@@ -24,7 +24,7 @@ describe('useEverOpened', () => {
     expect(result.current).toBe(true);
   });
 
-  it('est vrai dès le premier rendu si la fenêtre s’ouvre d’emblée', () => {
+  it('is true from the first render when the window opens straight away', () => {
     const { result } = renderHook(() => useEverOpened(true));
 
     expect(result.current).toBe(true);

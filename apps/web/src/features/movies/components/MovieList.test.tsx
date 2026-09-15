@@ -122,7 +122,7 @@ describe('MovieList', () => {
       expect(ranks.map((el) => el.textContent)).toEqual(['1', '2']);
     });
 
-    it("affiche l'en-tête de colonnes triable quand showHeader et le tri sont fournis", async () => {
+    it('shows the sortable column header when showHeader and the sort are provided', async () => {
       const onSetSort = vi.fn();
       renderWithLocale(
         <MovieList
@@ -142,7 +142,7 @@ describe('MovieList', () => {
       expect(onSetSort).toHaveBeenCalledWith('duration');
     });
 
-    it("n'affiche pas l'en-tête quand showHeader est faux", () => {
+    it('does not show the header when showHeader is false', () => {
       renderWithLocale(
         <MovieList
           movies={movies}
@@ -157,7 +157,7 @@ describe('MovieList', () => {
       expect(screen.queryByRole('button', { name: /^score$/i })).not.toBeInTheDocument();
     });
 
-    it("n'affiche pas l'en-tête sur mobile", () => {
+    it('does not show the header on mobile', () => {
       renderWithLocale(
         <MovieList
           movies={movies}
@@ -173,7 +173,7 @@ describe('MovieList', () => {
       expect(screen.queryByRole('button', { name: /^score$/i })).not.toBeInTheDocument();
     });
 
-    it('affiche le badge gagnant uniquement sur le film désigné', () => {
+    it('shows the winner badge only on the designated movie', () => {
       renderWithLocale(
         <MovieList movies={movies} {...baseProps()} viewMode="list" winnerMovieIds={['m1']} />
       );
@@ -181,7 +181,7 @@ describe('MovieList', () => {
       expect(screen.getAllByText('Film gagnant')).toHaveLength(1);
     });
 
-    it('en grille, le marqueur gagnant est posé sur l affiche, hors du titre', () => {
+    it('in grid view, the winner marker sits on the poster, outside the title', () => {
       renderWithLocale(
         <MovieList movies={movies} {...baseProps()} viewMode="grid" winnerMovieIds={['m2', 'm1']} />
       );
@@ -190,7 +190,7 @@ describe('MovieList', () => {
       expect(badge.closest('[class*=posterCol]')).not.toBeNull();
     });
 
-    it('numérote les gagnants dès qu il y en a plusieurs', () => {
+    it('numbers the winners as soon as there are several', () => {
       renderWithLocale(
         <MovieList movies={movies} {...baseProps()} viewMode="list" winnerMovieIds={['m2', 'm1']} />
       );
@@ -199,7 +199,7 @@ describe('MovieList', () => {
       expect(screen.queryByText('Film gagnant')).not.toBeInTheDocument();
     });
 
-    it('en vue liste, le mode retrait ne propose que les films désignés comme sélectionnables', () => {
+    it('in list view, the removal mode only offers the designated movies as selectable', () => {
       renderWithLocale(
         <MovieList
           movies={movies}
@@ -218,7 +218,7 @@ describe('MovieList', () => {
       expect(screen.queryByTestId('remove-winner-m2')).not.toBeInTheDocument();
     });
 
-    it('en vue liste, le choix manuel ignore les films déjà gagnants', () => {
+    it('in list view, the manual pick ignores the movies that already won', () => {
       renderWithLocale(
         <MovieList
           movies={movies}
@@ -246,7 +246,7 @@ describe('MovieList', () => {
       expect(ranks).toEqual(['', '1']);
     });
 
-    it('affiche vote et déjà-vu en vue liste avec participantId', async () => {
+    it('shows vote and seen mark in list view with a participantId', async () => {
       const onVote = vi.fn().mockResolvedValue(undefined);
       renderWithLocale(
         <MovieList
@@ -264,7 +264,7 @@ describe('MovieList', () => {
       expect(screen.getAllByRole('button', { name: /Marquer « déjà vu »/ })).toHaveLength(2);
     });
 
-    it('masque les boutons de vote et affiche un décompte en lecture seule quand la soirée est terminée', () => {
+    it('hides the vote buttons and shows a read-only tally when the movie night is over', () => {
       renderWithLocale(
         <MovieList
           movies={[movies[0]!]}
@@ -281,7 +281,7 @@ describe('MovieList', () => {
       expect(screen.getByText('1')).toBeInTheDocument();
     });
 
-    it('plafonne les plateformes affichées et propose un badge de dépassement unifié', async () => {
+    it('caps the displayed platforms and offers a unified overflow badge', async () => {
       const manyProviders: WatchProviderOffer[] = [
         { providerId: 1, name: 'A', logoPath: null, type: 'flatrate' },
         { providerId: 2, name: 'B', logoPath: null, type: 'flatrate' },
@@ -301,7 +301,7 @@ describe('MovieList', () => {
       expect(screen.getByRole('button', { name: /2 autres offres/i })).toBeInTheDocument();
     });
 
-    it("affiche un libellé quand aucune offre n'est disponible", () => {
+    it('shows a label when no offer is available', () => {
       renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, watchProviders: [] }]}
@@ -312,7 +312,7 @@ describe('MovieList', () => {
       expect(screen.getByText(/pas en streaming/i)).toBeInTheDocument();
     });
 
-    it('barre de répartition : proportionne les segments pour/contre et expose le détail en infobulle', () => {
+    it('split bar: proportions the for/against segments and exposes the detail in a tooltip', () => {
       renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, up: 3, down: 1, score: 2 }]}
@@ -324,7 +324,7 @@ describe('MovieList', () => {
       expect(screen.getByText('3 pour, 1 contre')).toBeInTheDocument();
     });
 
-    it('barre de répartition : aucun segment tant qu’aucun vote n’a été exprimé', () => {
+    it('split bar: no segment as long as no vote has been cast', () => {
       renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, up: 0, down: 0, score: 0 }]}
@@ -336,7 +336,7 @@ describe('MovieList', () => {
       expect(screen.queryByText('0 pour, 0 contre')).not.toBeInTheDocument();
     });
 
-    it("échec de vote : affiche l'erreur sur la ligne concernée avec un bouton Réessayer", async () => {
+    it('vote failure: shows the error on the affected row with a Retry button', async () => {
       const onRetryVote = vi.fn();
       renderWithLocale(
         <MovieList
@@ -358,7 +358,7 @@ describe('MovieList', () => {
       expect(onRetryVote).toHaveBeenCalledWith('m1');
     });
 
-    it('ligne mobile : bascule sur un chevron de divulgation, pas de menu à trois points', () => {
+    it('mobile row: switches to a disclosure chevron, no three-dot menu', () => {
       renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, tmdbId: 27205 }]}
@@ -404,7 +404,7 @@ describe('MovieList', () => {
       expect(screen.queryByRole('button', { name: /Achat/ })).not.toBeInTheDocument();
     });
 
-    it('vue grille : sépare la location et l’achat du flatrate dans deux pastilles distinctes qui ouvrent la modale', async () => {
+    it('grid view: separates rental and purchase from flatrate in two distinct chips that open the modal', async () => {
       renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, watchProviders: mixedProviders }]}
@@ -436,7 +436,7 @@ describe('MovieList', () => {
       expect(screen.getByRole('button', { name: /Achat/ })).toBeInTheDocument();
     });
 
-    it('mode sélection en vue grille : neutralise aussi les actions habituelles', () => {
+    it('selection mode in grid view: also neutralises the usual actions', () => {
       renderWithLocale(
         <MovieList
           movies={[movies[0]!]}
@@ -491,7 +491,7 @@ describe('MovieList', () => {
       expect(onRemove).toHaveBeenCalledWith(expect.objectContaining({ id: 'm1' }));
     });
 
-    it('menu kebab : bascule sur « Réintégrer au tirage » pour un film déjà exclu', async () => {
+    it('kebab menu: switches to "Put back in the draw" for a movie already excluded', async () => {
       renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, excludedFromWheel: true }]}
@@ -508,7 +508,7 @@ describe('MovieList', () => {
       expect(screen.queryByRole('menuitem', { name: 'Exclure du tirage' })).not.toBeInTheDocument();
     });
 
-    it('film exclu : annonce son état aux lecteurs d’écran', () => {
+    it('excluded movie: announces its state to screen readers', () => {
       renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, excludedFromWheel: true }]}
@@ -519,7 +519,7 @@ describe('MovieList', () => {
       expect(screen.getByText('Film exclu du tirage')).toBeInTheDocument();
     });
 
-    it('mode sélection : un film exclu n’est pas sélectionnable', () => {
+    it('selection mode: an excluded movie is not selectable', () => {
       renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, excludedFromWheel: true }, movies[1]!]}
@@ -532,7 +532,7 @@ describe('MovieList', () => {
       expect(screen.getByTestId('manual-pick-m2')).toBeInTheDocument();
     });
 
-    it('mode sélection : cliquer sur une carte appelle onSelect avec le bon film', async () => {
+    it('selection mode: clicking a card calls onSelect with the right movie', async () => {
       const onSelect = vi.fn();
       renderWithLocale(
         <MovieList

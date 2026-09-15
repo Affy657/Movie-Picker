@@ -72,7 +72,7 @@ describe('MovieDetailsModal', () => {
     expect(container.querySelector('[role="tablist"]')).not.toBeInTheDocument();
   });
 
-  it("affiche l'en-tête avec titre, année, durée et note", () => {
+  it('shows the header with title, year, runtime and rating', () => {
     renderWithLocale(
       <MovieDetailsModal
         open
@@ -90,7 +90,7 @@ describe('MovieDetailsModal', () => {
     expect(screen.getByText('3,6/5')).toBeInTheDocument();
   });
 
-  it('sans contexte de soirée : seulement deux onglets, ouverts sur « Le film »', () => {
+  it('without a movie night context: only two tabs, opened on "The movie"', () => {
     renderWithLocale(<MovieDetailsModal open title="Inception" tmdbId={27205} onClose={vi.fn()} />);
     const tabs = screen.getAllByRole('tab');
     expect(tabs.map((el) => el.textContent)).toEqual([
@@ -100,7 +100,7 @@ describe('MovieDetailsModal', () => {
     expect(screen.getByRole('tab', { name: /Le film/ })).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('avec contexte de soirée : trois onglets, ouverts sur « La soirée »', () => {
+  it('with a movie night context: three tabs, opened on "The movie night"', () => {
     renderWithLocale(
       <MovieDetailsModal
         open
@@ -115,7 +115,7 @@ describe('MovieDetailsModal', () => {
     expect(screen.getByRole('tab', { name: /La soirée/ })).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('respecte un onglet initial explicite (ex. « Où regarder »)', () => {
+  it('honours an explicit initial tab (e.g. "Where to watch")', () => {
     renderWithLocale(
       <MovieDetailsModal
         open
@@ -132,7 +132,7 @@ describe('MovieDetailsModal', () => {
     );
   });
 
-  it('onglet Le film : affiche la rangée de liens externes', () => {
+  it('The movie tab: shows the external links row', () => {
     renderWithLocale(
       <MovieDetailsModal
         open
@@ -168,7 +168,7 @@ describe('MovieDetailsModal', () => {
     expect(screen.getByText(/pas en streaming/i)).toBeInTheDocument();
   });
 
-  it('onglet La soirée : affiche le score, les votants « pour » et le proposeur', () => {
+  it('The movie night tab: shows the score, the "for" voters and the proposer', () => {
     renderWithLocale(
       <MovieDetailsModal
         open
@@ -183,7 +183,7 @@ describe('MovieDetailsModal', () => {
     expect(screen.getByText('Alice')).toBeInTheDocument();
   });
 
-  it('onglet La soirée : les boutons de vote appellent onVote avec 1 puis -1', async () => {
+  it('The movie night tab: the vote buttons call onVote with 1 then -1', async () => {
     const onVote = vi.fn();
     renderWithLocale(
       <MovieDetailsModal
@@ -200,7 +200,7 @@ describe('MovieDetailsModal', () => {
     expect(onVote).toHaveBeenNthCalledWith(2, -1);
   });
 
-  it('onglet La soirée : masque le bloc « Mon vote » quand canAct est faux', () => {
+  it('The movie night tab: hides the "My vote" block when canAct is false', () => {
     renderWithLocale(
       <MovieDetailsModal
         open
@@ -213,7 +213,7 @@ describe('MovieDetailsModal', () => {
     expect(screen.queryByText('Mon vote')).not.toBeInTheDocument();
   });
 
-  it('pied de page : bascule la liste, exclut du tirage et retire de la soirée', async () => {
+  it('footer: toggles the watchlist, excludes from the draw and removes from the movie night', async () => {
     const onToggleWatchlist = vi.fn();
     const onToggle = vi.fn();
     const onRemove = vi.fn();
@@ -238,12 +238,12 @@ describe('MovieDetailsModal', () => {
     expect(onRemove).toHaveBeenCalledTimes(1);
   });
 
-  it('pied de page : aucune action affichée sans contexte de soirée', () => {
+  it('footer: no action shown without a movie night context', () => {
     renderWithLocale(<MovieDetailsModal open title="Inception" tmdbId={27205} onClose={vi.fn()} />);
     expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
   });
 
-  it('sans watchProviders fournis (ex. depuis Ma liste) : récupère les disponibilités via useMovieDetails', () => {
+  it('without provided watchProviders (e.g. from the watchlist): fetches the availability through useMovieDetails', () => {
     mockUseMovieDetails.mockReturnValue({
       data: {
         tmdbId: 27205,
@@ -276,7 +276,7 @@ describe('MovieDetailsModal', () => {
     expect(screen.getByText('Netflix')).toBeInTheDocument();
   });
 
-  it('avec watchProviders fournis (ex. carte de soirée déjà enrichie) : ignore useMovieDetails', () => {
+  it('with provided watchProviders (e.g. an already enriched movie night card): ignores useMovieDetails', () => {
     mockUseMovieDetails.mockReturnValue({
       data: {
         tmdbId: 27205,

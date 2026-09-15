@@ -18,7 +18,7 @@ describe('DialogTitleBar', () => {
     expect(heading).toHaveAttribute('id', 'share-title');
   });
 
-  it('le bouton de fermeture porte son libellé et déclenche onClose', async () => {
+  it('the close button carries its label and triggers onClose', async () => {
     const onClose = vi.fn();
     render(<DialogTitleBar titleId="t" title="Titre" onClose={onClose} closeLabel="Fermer" />);
 

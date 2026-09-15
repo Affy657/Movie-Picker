@@ -31,18 +31,18 @@ describe('ProfileStatsSection', () => {
     expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument();
   });
 
-  it("affiche l'état vide si toutes les stats sont à 0, sans la grille de compteurs à zéro", () => {
+  it('shows the empty state when every stat is 0, without the grid of zero counters', () => {
     renderSection(EMPTY_STATS);
     expect(screen.getByText(/aucune activité/i)).toBeInTheDocument();
     expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
   });
 
-  it("n'affiche pas l'état vide si un compteur est > 0", () => {
+  it('does not show the empty state when a counter is > 0', () => {
     renderSection({ ...EMPTY_STATS, eventsCreated: 3 });
     expect(screen.queryByText(/aucune activité/i)).toBeNull();
   });
 
-  it('affiche 4 entrées dans la grille des compteurs', () => {
+  it('shows 4 entries in the counters grid', () => {
     renderSection({ ...EMPTY_STATS, eventsCreated: 1 });
     expect(screen.getAllByRole('listitem')).toHaveLength(4);
   });
@@ -52,12 +52,12 @@ describe('ProfileStatsSection', () => {
     expect(screen.getByText('7')).toBeInTheDocument();
   });
 
-  it('ne montre plus le streak dans la grille des compteurs (déplacé dans la pastille de série)', () => {
+  it('no longer shows the streak in the counters grid (moved to the streak chip)', () => {
     renderSection({ ...EMPTY_STATS, currentStreakWeeks: 3, bestStreakWeeks: 5 });
     expect(screen.queryByText(/meilleur streak/i)).toBeNull();
   });
 
-  it('affiche le panneau activité si au moins un jour a count > 0', async () => {
+  it('shows the activity panel when at least one day has count > 0', async () => {
     renderSection({
       ...EMPTY_STATS,
       dailyActivity: [{ date: '2026-01-01', count: 2 }],
@@ -75,7 +75,7 @@ describe('ProfileStatsSection', () => {
     });
   });
 
-  it("n'affiche pas le panneau activité si tous les counts sont 0", () => {
+  it('does not show the activity panel when every count is 0', () => {
     renderSection({
       ...EMPTY_STATS,
       dailyActivity: [{ date: '2026-01-01', count: 0 }],

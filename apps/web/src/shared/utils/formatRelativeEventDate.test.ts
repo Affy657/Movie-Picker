@@ -23,19 +23,19 @@ describe('formatRelativeEventDate', () => {
     expect(formatRelativeEventDate('2026-06-14', 'fr')).toBe('hier');
   });
 
-  it('compte en jours en deçà d’un mois', () => {
+  it('counts in days under a month', () => {
     expect(formatRelativeEventDate('2026-06-19', 'fr')).toBe('dans 4 jours');
   });
 
-  it('compte en jours dans le passé récent', () => {
+  it('counts in days in the recent past', () => {
     expect(formatRelativeEventDate('2026-06-10', 'fr')).toBe('il y a 5 jours');
   });
 
-  it('bascule en mois au-delà de 31 jours', () => {
+  it('switches to months beyond 31 days', () => {
     expect(formatRelativeEventDate('2027-02-20', 'fr')).toBe('dans 8 mois');
   });
 
-  it('bascule en années à partir de douze mois', () => {
+  it('switches to years from twelve months', () => {
     expect(formatRelativeEventDate('2027-07-20', 'fr')).toBe('l’année prochaine');
     expect(formatRelativeEventDate('2035-03-01', 'fr')).toBe('dans 9 ans');
     expect(formatRelativeEventDate('2024-01-10', 'fr')).toBe('il y a 2 ans');
@@ -45,7 +45,7 @@ describe('formatRelativeEventDate', () => {
     expect(formatRelativeEventDate('2026-06-19', 'en')).toBe('in 4 days');
   });
 
-  it('retourne la chaîne brute si la date est invalide', () => {
+  it('returns the raw string when the date is invalid', () => {
     expect(formatRelativeEventDate('not-a-date', 'fr')).toBe('not-a-date');
   });
 });

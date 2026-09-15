@@ -17,7 +17,7 @@ describe('OAuthProviderButtons (MSW)', () => {
   });
   afterAll(() => server.close());
 
-  it("n'affiche rien quand aucun provider n'est configuré", async () => {
+  it('renders nothing when no provider is configured', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
     );
@@ -32,7 +32,7 @@ describe('OAuthProviderButtons (MSW)', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
-  it('affiche un lien par provider configuré, avec le bon returnTo', async () => {
+  it('shows one link per configured provider, with the right returnTo', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/oauth/providers`, () =>
         HttpResponse.json({ providers: ['google', 'github'] })

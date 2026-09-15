@@ -64,7 +64,7 @@ describe('useEventWheel : annonce du gagnant', () => {
     expect(postEventWheelAnnounce).not.toHaveBeenCalled();
   });
 
-  it('annonce le gagnant quand la roue s’arrête', async () => {
+  it('announces the winner when the wheel stops', async () => {
     const { result } = renderWheel();
 
     act(() => result.current.launch());
@@ -75,7 +75,7 @@ describe('useEventWheel : annonce du gagnant', () => {
     await waitFor(() => expect(postEventWheelAnnounce).toHaveBeenCalledWith('soiree', 'ht1'));
   });
 
-  it('annonce une seule fois, même si la révélation et le repli se cumulent', async () => {
+  it('announces only once, even when the reveal and the fallback add up', async () => {
     const { result } = renderWheel();
 
     act(() => result.current.launch());
@@ -87,7 +87,7 @@ describe('useEventWheel : annonce du gagnant', () => {
     await waitFor(() => expect(postEventWheelAnnounce).toHaveBeenCalledTimes(1));
   });
 
-  it('annonce quand même si l’animation ne rend jamais la main', async () => {
+  it('announces anyway when the animation never yields', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const { result } = renderWheel();
 
@@ -103,7 +103,7 @@ describe('useEventWheel : annonce du gagnant', () => {
   });
 });
 
-describe('useEventWheel : créneaux restants', () => {
+describe('useEventWheel: remaining slots', () => {
   const second = { id: 'mov2', title: 'Alien', tmdbId: 2 } as MovieData;
   const twoSlots = {
     ...hostEvent,
@@ -132,7 +132,7 @@ describe('useEventWheel : créneaux restants', () => {
     );
   }
 
-  it('réserve le créneau du film tiré en attendant le rafraîchissement', async () => {
+  it("reserves the drawn movie's slot while waiting for the refresh", async () => {
     const { result } = renderWithEvent(twoSlots);
 
     act(() => result.current.launch());
@@ -141,7 +141,7 @@ describe('useEventWheel : créneaux restants', () => {
     expect(result.current.drawableMovies.map((m) => m.id)).toEqual(['mov2']);
   });
 
-  it('rend le créneau dès que le serveur ne compte plus ce film au palmarès', async () => {
+  it('frees the slot as soon as the server no longer counts this movie among the winners', async () => {
     const { result, rerender } = renderWithEvent(twoSlots);
 
     act(() => result.current.launch());

@@ -20,7 +20,7 @@ beforeEach(() => {
 });
 
 describe('RatingScaleToggle', () => {
-  it('renders one radio per échelle et marque celle du profil courant', () => {
+  it('renders one radio per scale and marks the current profile one', () => {
     configure({ userId: 'u1', ratingScale: 'ten' });
 
     render(<RatingScaleToggle />);
@@ -32,7 +32,7 @@ describe('RatingScaleToggle', () => {
     ).toHaveAttribute('aria-checked', 'true');
   });
 
-  it("par défaut (pas de ratingScale sur le profil), l'option 'five' est sélectionnée", () => {
+  it("by default (no ratingScale on the profile), the 'five' option is selected", () => {
     configure({ userId: 'u1' });
 
     render(<RatingScaleToggle />);
@@ -42,7 +42,7 @@ describe('RatingScaleToggle', () => {
     ).toHaveAttribute('aria-checked', 'true');
   });
 
-  it('ne fait rien au clic sans utilisateur connecté', async () => {
+  it('does nothing on click without a signed-in user', async () => {
     const { patchProfile } = configure(null);
 
     render(<RatingScaleToggle />);
@@ -53,7 +53,7 @@ describe('RatingScaleToggle', () => {
     expect(patchProfile).not.toHaveBeenCalled();
   });
 
-  it('persiste le choix via patchProfile quand connecté', async () => {
+  it('persists the choice through patchProfile when signed in', async () => {
     const { patchProfile } = configure(
       { userId: 'u1', ratingScale: 'five' },
       vi.fn().mockResolvedValue(undefined)
@@ -67,7 +67,7 @@ describe('RatingScaleToggle', () => {
     expect(patchProfile).toHaveBeenCalledWith({ ratingScale: 'ten' });
   });
 
-  it('passe à l’option suivante avec ArrowRight', () => {
+  it('moves to the next option with ArrowRight', () => {
     const { patchProfile } = configure(
       { userId: 'u1', ratingScale: 'five' },
       vi.fn().mockResolvedValue(undefined)

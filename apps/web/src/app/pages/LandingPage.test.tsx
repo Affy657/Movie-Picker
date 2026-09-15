@@ -47,7 +47,7 @@ describe('LandingPage', () => {
     for (const link of login) expect(link).toHaveAttribute('href', '/login');
   });
 
-  it('déroule les neuf sections de la page', () => {
+  it('unfolds the nine sections of the page', () => {
     renderLanding();
     const main = screen.getByRole('main');
     const headings = within(main)
@@ -57,7 +57,7 @@ describe('LandingPage', () => {
     expect(within(main).getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });
 
-  it('expose la FAQ en accordéons, la première ouverte', () => {
+  it('exposes the FAQ as accordions, the first one open', () => {
     renderLanding();
     const questions = screen.getAllByText(/\?$/, { selector: 'summary' });
     expect(questions).toHaveLength(6);

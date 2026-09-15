@@ -81,7 +81,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
             WithUsersAsync(users => users.AddAsync(
                 NewUser(suffix, handle: "autre" + Guid.NewGuid().ToString("N")[..8]))));
 
-        Assert.Equal("Un compte existe déjà pour cette adresse e-mail.", conflict.Message);
+        Assert.Equal(ErrorCodes.EmailTaken, conflict.Reason);
     }
 
     [MongoFact]

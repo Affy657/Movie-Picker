@@ -48,7 +48,7 @@ describe('AccountProfilePage (MSW)', () => {
     server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(baseUser)));
   });
 
-  it('pré-remplit le pseudo, la bio et la visibilité depuis le compte', async () => {
+  it('pre-fills the display name, the bio and the visibility from the account', async () => {
     renderProfile();
 
     await waitFor(() => expect(screen.getByLabelText(/pseudo/i)).toHaveValue('Alice'));
@@ -59,7 +59,7 @@ describe('AccountProfilePage (MSW)', () => {
     );
   });
 
-  it('enregistre le pseudo automatiquement à la perte de focus', async () => {
+  it('saves the display name automatically on blur', async () => {
     const user = userEvent.setup();
     let patchBody: Record<string, unknown> | null = null;
     server.use(
@@ -82,7 +82,7 @@ describe('AccountProfilePage (MSW)', () => {
     expect(await screen.findByText('Enregistré')).toBeInTheDocument();
   });
 
-  it('enregistre la visibilité immédiatement au changement du bouton', async () => {
+  it('saves the visibility immediately when the toggle changes', async () => {
     const user = userEvent.setup();
     let patchBody: Record<string, unknown> | null = null;
     server.use(
@@ -101,7 +101,7 @@ describe('AccountProfilePage (MSW)', () => {
     expect(patchBody!.isProfilePublic).toBe(false);
   });
 
-  it('pré-remplit la visibilité de la watchlist et l’enregistre au changement du bouton', async () => {
+  it('pre-fills the watchlist visibility and saves it when the toggle changes', async () => {
     const user = userEvent.setup();
     let patchBody: Record<string, unknown> | null = null;
     server.use(
@@ -126,7 +126,7 @@ describe('AccountProfilePage (MSW)', () => {
     expect(patchBody!.isProfilePublic).toBe(true);
   });
 
-  it('rafraîchit mon profil public en cache après un enregistrement', async () => {
+  it('refreshes my cached public profile after a save', async () => {
     const user = userEvent.setup();
     server.use(
       http.patch(`${TEST_API_V1}/auth/me`, () =>
@@ -146,7 +146,7 @@ describe('AccountProfilePage (MSW)', () => {
     );
   });
 
-  it('grise le réglage de la watchlist tant que le profil est privé', async () => {
+  it('greys out the watchlist setting while the profile is private', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
         HttpResponse.json({ ...baseUser, isProfilePublic: false })
@@ -173,7 +173,7 @@ describe('AccountProfilePage (MSW)', () => {
     expect(await screen.findByText('Le pseudo est requis.')).toBeInTheDocument();
   });
 
-  it('affiche le hint bio uniquement dans les 20 derniers caractères', async () => {
+  it('shows the bio hint only within the last 20 characters', async () => {
     renderProfile();
     const bioInput = await screen.findByLabelText(/bio/i);
 

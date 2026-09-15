@@ -50,12 +50,12 @@ function setupStrict(items: WatchedItem[] = ITEMS) {
 }
 
 describe('useMovieListToolbar', () => {
-  it('trie par date de visionnage (défaut, décroissant)', () => {
+  it('sorts by watch date (default, descending)', () => {
     const { result } = setup();
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);
   });
 
-  it('inverse le sens quand on reclique le même critère', () => {
+  it('reverses the direction when clicking the same criterion again', () => {
     const { result } = setup();
     act(() => result.current.setSortBy('title'));
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Alpha', 'Beta', 'Gamma']);
@@ -74,13 +74,13 @@ describe('useMovieListToolbar', () => {
     expect(result.current.sortDir).toBe('desc');
   });
 
-  it('trie par année', () => {
+  it('sorts by year', () => {
     const { result } = setup();
     act(() => result.current.setSortBy('year'));
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);
   });
 
-  it('filtre par genre en tolérant les items sans genre', () => {
+  it('filters by genre while tolerating items without a genre', () => {
     const { result } = setup();
     act(() => result.current.toggleGenre(12));
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Alpha']);
@@ -113,7 +113,7 @@ describe('useMovieListToolbar', () => {
     expect(result.current.visibleItems).toHaveLength(3);
   });
 
-  it('révèle progressivement les résultats au-delà du lot initial', () => {
+  it('reveals the results progressively beyond the initial batch', () => {
     const many = Array.from({ length: 30 }, (_, i) =>
       item({
         title: `Film ${i}`,
@@ -129,7 +129,7 @@ describe('useMovieListToolbar', () => {
     expect(result.current.remainingCount).toBe(0);
   });
 
-  it('remet le lot révélé à zéro quand la recherche change', () => {
+  it('resets the revealed batch when the search changes', () => {
     const many = Array.from({ length: 30 }, (_, i) =>
       item({
         title: `Film ${i}`,

@@ -44,7 +44,7 @@ describe('MovieCollectionsPage', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it('garde l’ordre servi par l’API par défaut', async () => {
+  it('keeps the order served by the API by default', async () => {
     server.use(authMeGuestHandler, collectionsHandler);
     renderPage();
 
@@ -73,7 +73,7 @@ describe('MovieCollectionsPage', () => {
     expect(screen.getByText(/2 sagas sur 3/i)).toBeInTheDocument();
   });
 
-  it('propose un état vide quand aucune saga ne correspond', async () => {
+  it('offers an empty state when no saga matches', async () => {
     const user = userEvent.setup();
     server.use(authMeGuestHandler, collectionsHandler);
     renderPage();
@@ -85,7 +85,7 @@ describe('MovieCollectionsPage', () => {
     expect(screen.queryByText('Star Wars')).not.toBeInTheDocument();
   });
 
-  it('trie par nombre de films décroissant', async () => {
+  it('sorts by decreasing number of films', async () => {
     const user = userEvent.setup();
     server.use(authMeGuestHandler, collectionsHandler);
     renderPage();

@@ -104,14 +104,14 @@ describe('LoginPage (MSW)', () => {
     });
   });
 
-  it('expose un lien "Mot de passe oublié ?" vers /forgot-password', () => {
+  it('exposes a "Forgot password?" link to /forgot-password', () => {
     renderLogin();
     const forgotLink = screen.getByRole('link', { name: /mot de passe oublié/i });
     expect(forgotLink).toBeInTheDocument();
     expect(forgotLink).toHaveAttribute('href', '/forgot-password');
   });
 
-  it('affiche un message quand oauthError=email_not_verified est présent', async () => {
+  it('shows a message when oauthError=email_not_verified is present', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
         HttpResponse.json({ error: '401' }, { status: 401 })

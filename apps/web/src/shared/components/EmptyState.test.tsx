@@ -4,7 +4,7 @@ import EmptyState from '@/shared/components/EmptyState';
 import styles from '@/shared/components/EmptyState.module.css';
 
 describe('EmptyState', () => {
-  it('rend l’icône décorative, le message et les actions', () => {
+  it('renders the decorative icon, the message and the actions', () => {
     render(
       <EmptyState
         icon={<svg data-testid="icon" />}
@@ -19,7 +19,7 @@ describe('EmptyState', () => {
     expect(screen.queryByRole('heading')).toBeNull();
   });
 
-  it('le titre prend la balise demandée, un paragraphe par défaut', () => {
+  it('the title takes the requested tag, a paragraph by default', () => {
     const { rerender } = render(
       <EmptyState icon={<svg />} title="Rien ici" message="…" titleTag="h2" />
     );

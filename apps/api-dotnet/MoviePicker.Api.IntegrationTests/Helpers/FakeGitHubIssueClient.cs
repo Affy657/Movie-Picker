@@ -18,7 +18,7 @@ public sealed class FakeGitHubIssueClient : IGitHubIssueClient
     public Task CreateIssueAsync(GitHubIssueDraft draft, CancellationToken ct = default)
     {
         if (ShouldFail)
-            throw new ServiceUnavailableException("Impossible de créer la suggestion pour le moment. Réessayez dans un instant.");
+            throw Errors.SuggestionUnavailable();
 
         _created.Add(draft);
         return Task.CompletedTask;
@@ -27,7 +27,7 @@ public sealed class FakeGitHubIssueClient : IGitHubIssueClient
     public Task<string?> UploadAttachmentAsync(GitHubAttachmentUpload attachment, CancellationToken ct = default)
     {
         if (ShouldFail)
-            throw new ServiceUnavailableException("Impossible de créer la suggestion pour le moment. Réessayez dans un instant.");
+            throw Errors.SuggestionUnavailable();
 
         _uploadedAttachments.Add(attachment);
         return Task.FromResult<string?>($"https://raw.githubusercontent.com/fake/fake/feedback-attachments/{attachment.FileName}");

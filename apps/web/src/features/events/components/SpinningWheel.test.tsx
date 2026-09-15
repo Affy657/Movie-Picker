@@ -113,7 +113,7 @@ describe('SpinningWheel', () => {
     }
   });
 
-  it('dessine les libellés une seule fois puis fait tourner le disque image par image', async () => {
+  it('draws the labels once then spins the disc frame by frame', async () => {
     stubMatchMedia(false);
     const frames: Array<FrameRequestCallback> = [];
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {

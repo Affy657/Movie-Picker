@@ -67,14 +67,14 @@ describe('EventTemplateSaveBar', () => {
     expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
   });
 
-  it('garde le même libellé sur la page soirée, seul le conseil change', () => {
+  it('keeps the same label on the movie night page, only the advice changes', () => {
     renderBar({ variant: 'event' });
 
     expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
     expect(screen.getByText('Cette configuration marche bien ?')).toBeInTheDocument();
   });
 
-  it('préremplit le nom avec le thème puis enregistre', async () => {
+  it('pre-fills the name with the theme then saves', async () => {
     const user = userEvent.setup();
     const { onSave } = renderBar();
 
@@ -88,7 +88,7 @@ describe('EventTemplateSaveBar', () => {
     expect(onSave).toHaveBeenCalledWith('🎃 Halloween');
   });
 
-  it('propose un nom numéroté sans thème', async () => {
+  it('offers a numbered name without a theme', async () => {
     const user = userEvent.setup();
     renderBar({ draft: { ...draft, theme: null } });
 
@@ -119,7 +119,7 @@ describe('EventTemplateSaveBar', () => {
     expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
   });
 
-  it('désactive l’enregistrement au plafond', () => {
+  it('disables saving at the cap', () => {
     renderBar({
       templates: Array.from({ length: MAX_EVENT_TEMPLATES }, (_, index) =>
         makeTemplate({ id: `t${index}`, name: `Template ${index}` })
@@ -129,14 +129,14 @@ describe('EventTemplateSaveBar', () => {
     expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeDisabled();
   });
 
-  it('ne propose rien de plus quand le template appliqué est inchangé', () => {
+  it('offers nothing more when the applied template is unchanged', () => {
     renderBar({ templates: [makeTemplate()], appliedTemplate: makeTemplate() });
 
     expect(screen.queryByRole('button', { name: 'Mettre à jour' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
   });
 
-  it('propose la mise à jour quand la configuration appliquée a changé', async () => {
+  it('offers the update when the applied configuration has changed', async () => {
     const user = userEvent.setup();
     const applied = makeTemplate();
     const { onUpdate } = renderBar({
@@ -152,7 +152,7 @@ describe('EventTemplateSaveBar', () => {
     expect(onUpdate).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }));
   });
 
-  it('permet d’enregistrer une copie quand la configuration appliquée a changé', async () => {
+  it('allows saving a copy when the applied configuration has changed', async () => {
     const user = userEvent.setup();
     const applied = makeTemplate();
     const { onSave } = renderBar({
@@ -167,7 +167,7 @@ describe('EventTemplateSaveBar', () => {
     expect(onSave).toHaveBeenCalledWith('Template 1');
   });
 
-  it('propose un nom libre quand le thème est déjà pris', async () => {
+  it('offers a free name when the theme is already taken', async () => {
     const user = userEvent.setup();
     renderBar({ templates: [makeTemplate({ name: '🎃 Halloween' })] });
 
@@ -176,19 +176,19 @@ describe('EventTemplateSaveBar', () => {
     expect(screen.getByRole('textbox', { name: /Nom du template/ })).toHaveValue('Template 1');
   });
 
-  it('confirme l’enregistrement une fois le template créé', () => {
+  it('confirms the save once the template is created', () => {
     renderBar({ templates: [makeTemplate()], lastSaved: makeTemplate() });
 
     expect(screen.getByRole('status')).toHaveTextContent('Enregistré comme « Soirée horreur ».');
   });
 
-  it('n’offre pas de réenregistrer la configuration qui vient d’être enregistrée', () => {
+  it('does not offer to save again the configuration that was just saved', () => {
     renderBar({ templates: [makeTemplate()], lastSaved: makeTemplate() });
 
     expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeDisabled();
   });
 
-  it('retire la confirmation dès que la configuration change', () => {
+  it('removes the confirmation as soon as the configuration changes', () => {
     renderBar({
       draft: { ...draft, maxProposalsPerParticipant: 9 },
       templates: [makeTemplate()],
@@ -199,20 +199,20 @@ describe('EventTemplateSaveBar', () => {
     expect(screen.getByRole('button', { name: 'Enregistrer en template' })).not.toBeDisabled();
   });
 
-  it('ne repose pas la question quand le template appliqué est inchangé', () => {
+  it('does not ask again when the applied template is unchanged', () => {
     renderBar({ variant: 'event', templates: [makeTemplate()], appliedTemplate: makeTemplate() });
 
     expect(screen.queryByText('Cette configuration marche bien ?')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
   });
 
-  it('pose la question tant qu’aucun template n’est appliqué', () => {
+  it('asks as long as no template is applied', () => {
     renderBar({ variant: 'event', templates: [makeTemplate()] });
 
     expect(screen.getByText('Cette configuration marche bien ?')).toBeInTheDocument();
   });
 
-  it('confirme aussi depuis le panneau d’une soirée', () => {
+  it('also confirms from a movie night panel', () => {
     renderBar({ variant: 'event', templates: [makeTemplate()], lastSaved: makeTemplate() });
 
     expect(screen.getByRole('status')).toHaveTextContent('Enregistré comme « Soirée horreur ».');

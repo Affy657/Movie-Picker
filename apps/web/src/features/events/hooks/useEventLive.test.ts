@@ -31,24 +31,24 @@ describe('useEventLive / polling helpers', () => {
     expect(getEventLivePhase(finishedEvent, 0)).toBe('finished');
   });
 
-  it('getEventLivePhase : pending si lifecycle pending, même après le créneau', () => {
+  it('getEventLivePhase: pending when the lifecycle is pending, even after the slot', () => {
     const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
     expect(getEventLivePhase(pendingEvent, t0 + 60_000)).toBe('pending');
   });
 
-  it('event query : poll ralenti (intervalle upcoming) pour une soirée en suspens', () => {
+  it('event query: slowed poll (upcoming interval) for a pending movie night', () => {
     const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
     expect(getLivePollingRefetchIntervalForEventQuery(pendingEvent, t0 + 60_000)).toBe(
       EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS
     );
   });
 
-  it('getEventLivePhase : upcoming avant le créneau', () => {
+  it('getEventLivePhase: upcoming before the slot', () => {
     const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
     expect(getEventLivePhase(activeEvent, t0 - 60_000)).toBe('upcoming');
   });
 
-  it('getEventLivePhase : active après le créneau', () => {
+  it('getEventLivePhase: active after the slot', () => {
     const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
     expect(getEventLivePhase(activeEvent, t0 + 1)).toBe('active');
   });
@@ -58,14 +58,14 @@ describe('useEventLive / polling helpers', () => {
     expect(getLivePollingRefetchIntervalForEventQuery(finishedEvent, 0)).toBe(false);
   });
 
-  it('event query : poll actif (intervalle court) après le créneau', () => {
+  it('event query: active poll (short interval) after the slot', () => {
     const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
     expect(getLivePollingRefetchIntervalForEventQuery(activeEvent, t0 + 1)).toBe(
       EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS
     );
   });
 
-  it('event query : poll upcoming (intervalle long) avant le créneau', () => {
+  it('event query: upcoming poll (long interval) before the slot', () => {
     const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
     expect(getLivePollingRefetchIntervalForEventQuery(activeEvent, t0 - 1)).toBe(
       EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS
@@ -78,21 +78,21 @@ describe('useEventLive / polling helpers', () => {
     expect(getLivePollingRefetchIntervalForMoviesQuery(finishedEvent, true, 0)).toBe(false);
   });
 
-  it('movies query : poll si enabled et soirée non terminée (phase active)', () => {
+  it('movies query: polls when enabled and the movie night is not over (active phase)', () => {
     const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
     expect(getLivePollingRefetchIntervalForMoviesQuery(activeEvent, true, t0 + 1)).toBe(
       EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS
     );
   });
 
-  it('movies query : intervalle long avant le créneau (cohérent avec le détail event)', () => {
+  it('movies query: long interval before the slot (consistent with the event detail)', () => {
     const t0 = eventScheduledStartUtcMs({ date: '2030-06-01', time: '20:00' })!;
     expect(getLivePollingRefetchIntervalForMoviesQuery(activeEvent, true, t0 - 1)).toBe(
       EVENT_LIVE_POLL_INTERVAL_UPCOMING_MS
     );
   });
 
-  it('useEventLive expose strategy polling, phase et interval films (à venir en 2030)', () => {
+  it('useEventLive exposes the polling strategy, the phase and the movies interval (upcoming in 2030)', () => {
     const { result } = renderHook(() => useEventLive(activeEvent, { moviesQueryEnabled: true }));
     expect(result.current.strategy).toBe('polling');
     expect(result.current.livePhase).toBe('upcoming');
@@ -101,7 +101,7 @@ describe('useEventLive / polling helpers', () => {
   });
 });
 
-describe('useEventLive — passage à l’heure de début', () => {
+describe('useEventLive, crossing the start time', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -109,7 +109,7 @@ describe('useEventLive — passage à l’heure de début', () => {
     vi.useRealTimers();
   });
 
-  it('force un re-render au moment du créneau (polling plus rapide ensuite)', () => {
+  it('forces a re-render at the slot (faster polling afterwards)', () => {
     const event = {
       isFinished: false,
       date: '2035-12-01',

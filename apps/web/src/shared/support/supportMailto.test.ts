@@ -27,7 +27,7 @@ describe('buildSupportMailto', () => {
     expect(new URL(href).searchParams.get('subject')).toBe(labels.subject);
   });
 
-  it('pré-remplit le gabarit de signalement avec le contexte technique', () => {
+  it('pre-fills the report template with the technical context', () => {
     const href = buildSupportMailto({
       path: '/events/soiree-cine',
       userAgent: 'Mozilla/5.0 (Test)',

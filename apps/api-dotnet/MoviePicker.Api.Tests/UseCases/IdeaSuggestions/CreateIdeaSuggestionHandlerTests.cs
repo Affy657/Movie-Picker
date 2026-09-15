@@ -128,7 +128,7 @@ public sealed class CreateIdeaSuggestionHandlerTests
     {
         _users.Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>())).ReturnsAsync(Author());
         _github.Setup(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new ServiceUnavailableException("Impossible de créer la suggestion pour le moment. Réessayez dans un instant."));
+            .ThrowsAsync(Errors.SuggestionUnavailable());
 
         await Assert.ThrowsAsync<ServiceUnavailableException>(() => _sut.HandleAsync(UserId, Request()));
     }

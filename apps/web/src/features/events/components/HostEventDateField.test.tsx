@@ -21,7 +21,7 @@ function renderField(relativeDateLabel: string | null) {
 }
 
 describe('HostEventDateField', () => {
-  it('écrit l’aide sous la date comme une phrase, sans commencer par le libellé relatif en minuscule', () => {
+  it('writes the help under the date as a sentence, without starting with the lowercase relative label', () => {
     renderField('aujourd’hui');
 
     const hint = screen.getByText(/Les participants seront prévenus/);
@@ -34,7 +34,7 @@ describe('HostEventDateField', () => {
     );
   });
 
-  it('n’affiche aucune aide sans libellé relatif', () => {
+  it('shows no help without a relative label', () => {
     renderField(null);
     expect(screen.queryByText(/Les participants seront prévenus/)).not.toBeInTheDocument();
   });

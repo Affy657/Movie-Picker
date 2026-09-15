@@ -48,13 +48,13 @@ describe('InAppBrowserBanner', () => {
     restoreUserAgent = null;
   });
 
-  it("n'affiche rien dans un navigateur système classique", () => {
+  it('renders nothing in a regular system browser', () => {
     restoreUserAgent = stubUserAgent(SAFARI_UA);
     const { container } = renderBanner();
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('affiche le bandeau quand un navigateur intégré connu est détecté', () => {
+  it('shows the banner when a known in-app browser is detected', () => {
     restoreUserAgent = stubUserAgent(SNAPCHAT_UA);
     renderBanner();
     expect(
@@ -85,7 +85,7 @@ describe('InAppBrowserBanner', () => {
     expect(await screen.findByRole('button', { name: 'Lien copié' })).toBeInTheDocument();
   });
 
-  it('masque le bandeau après fermeture', async () => {
+  it('hides the banner after closing', async () => {
     restoreUserAgent = stubUserAgent(SNAPCHAT_UA);
     const user = userEvent.setup();
     const { container } = renderBanner();

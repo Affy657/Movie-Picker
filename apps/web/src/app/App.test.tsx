@@ -103,7 +103,7 @@ describe('App (routes)', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('AppShell : la home mène à la landing par la nav et le pied de page', async () => {
+    it('AppShell: the home leads to the landing through the nav and the footer', async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
       await screen.findByRole(
@@ -148,7 +148,7 @@ describe('App (routes)', () => {
       }
     );
 
-    it('route /settings affiche les préférences visiteur avec un CTA de connexion', async () => {
+    it('the /settings route shows the visitor preferences with a sign-in CTA', async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/settings']);
       expect(
@@ -178,7 +178,7 @@ describe('App (routes)', () => {
       expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
     });
 
-    it('soirée /e/:slug accessible sans compte, avec CTA pour rejoindre', async () => {
+    it('the /e/:slug movie night is reachable without an account, with a CTA to join', async () => {
       server.use(
         authMeGuestHandler,
         ...createEventDetailHandlers({ slug: 'soiree-secrete', title: 'Soirée secrète' })
@@ -259,7 +259,7 @@ describe('App (routes)', () => {
       expect(screen.queryByRole('heading', { name: /^connexion$/i })).not.toBeInTheDocument();
     });
 
-    it('AppShell : la navigation principale est exposée aux non-connectés', async () => {
+    it('AppShell: the main navigation is exposed to signed-out visitors', async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
       await screen.findByRole(
@@ -295,7 +295,7 @@ describe('App (routes)', () => {
       expect(screen.queryByRole('link', { name: /^notifications$/i })).not.toBeInTheDocument();
     });
 
-    it("AppShell : aucun lien « Nouveautés » n'est exposé aux non-connectés", async () => {
+    it(`AppShell: no "What's new" link is exposed to signed-out visitors`, async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
       await screen.findByRole(
@@ -307,7 +307,7 @@ describe('App (routes)', () => {
     });
   });
 
-  describe('utilisateur connecté', () => {
+  describe('signed-in user', () => {
     it("route / sert la page d'exploration au lieu de rediriger", async () => {
       server.use(
         authedUserHandler,
@@ -326,7 +326,7 @@ describe('App (routes)', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('expose Explorer dans la nav une fois connecté', async () => {
+    it('exposes Explore in the nav once signed in', async () => {
       server.use(
         authedUserHandler,
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
@@ -339,7 +339,7 @@ describe('App (routes)', () => {
       }
     });
 
-    it('AppShell expose Mes soirées + le raccourci de création dans la nav (Paramètres est dans le menu avatar)', async () => {
+    it('AppShell exposes My movie nights and the creation shortcut in the nav (Settings lives in the avatar menu)', async () => {
       server.use(
         authedUserHandler,
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
@@ -370,7 +370,7 @@ describe('App (routes)', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('AppShell expose le lien « Nouveautés » dans le pied de page pour les connectés', async () => {
+    it(`AppShell exposes the "What's new" link in the footer for signed-in users`, async () => {
       server.use(
         authedUserHandler,
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
@@ -380,7 +380,7 @@ describe('App (routes)', () => {
       expect(screen.getByRole('button', { name: /^nouveautés$/i })).toBeInTheDocument();
     });
 
-    it('AppShell expose la pastille Nouveautés devant les notifications pour un compte antérieur', async () => {
+    it("AppShell exposes the What's new badge before the notifications for an older account", async () => {
       vi.spyOn(Date, 'now').mockReturnValue(DAY_AFTER_RELEASE_MS);
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
@@ -408,7 +408,7 @@ describe('App (routes)', () => {
       expect(chip.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
-    it("AppShell n'expose pas la pastille Nouveautés pour un compte créé après la livraison", async () => {
+    it("AppShell does not expose the What's new badge for an account created after the release", async () => {
       vi.spyOn(Date, 'now').mockReturnValue(DAY_AFTER_RELEASE_MS);
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
@@ -432,7 +432,7 @@ describe('App (routes)', () => {
     });
   });
 
-  it('le brand mène toujours à la racine du site', async () => {
+  it('the brand always leads to the site root', async () => {
     server.use(authMeGuestHandler);
     renderRoutes(['/']);
     await screen.findByRole(

@@ -33,28 +33,28 @@ describe('AnalyticsSync', () => {
     localStorage.removeItem(CONSENT_KEY);
   });
 
-  it('ne charge pas PostHog tant que le consentement n’est pas donné', () => {
+  it('does not load PostHog until consent is given', () => {
     useAuth.mockReturnValue({ user: null });
     renderSync();
     expect(initPostHog).not.toHaveBeenCalled();
     expect(optIn).not.toHaveBeenCalled();
   });
 
-  it('ne charge pas PostHog quand le consentement analytics est refusé', () => {
+  it('does not load PostHog when analytics consent is declined', () => {
     localStorage.setItem(CONSENT_KEY, JSON.stringify({ decided: true, analytics: false }));
     useAuth.mockReturnValue({ user: { userId: 'u1' } });
     renderSync();
     expect(initPostHog).not.toHaveBeenCalled();
   });
 
-  it('ne charge PostHog qu’une fois le consentement analytics accordé', async () => {
+  it('loads PostHog only once analytics consent is granted', async () => {
     localStorage.setItem(CONSENT_KEY, JSON.stringify({ decided: true, analytics: true }));
     useAuth.mockReturnValue({ user: { userId: 'u1' } });
     renderSync();
     await vi.waitFor(() => expect(initPostHog).toHaveBeenCalledTimes(1));
   });
 
-  it('opt-in et identify quand le consentement analytics est accordé', async () => {
+  it('opts in and identifies when analytics consent is granted', async () => {
     localStorage.setItem(CONSENT_KEY, JSON.stringify({ decided: true, analytics: true }));
     useAuth.mockReturnValue({ user: { userId: 'u1' } });
     renderSync();
@@ -62,7 +62,7 @@ describe('AnalyticsSync', () => {
     expect(identify).toHaveBeenCalledWith('u1');
   });
 
-  it('opt-out et reset quand le consentement est refusé', () => {
+  it('opts out and resets when consent is declined', () => {
     localStorage.setItem(CONSENT_KEY, JSON.stringify({ decided: true, analytics: false }));
     useAuth.mockReturnValue({ user: { userId: 'u1' } });
     renderSync();
@@ -71,7 +71,7 @@ describe('AnalyticsSync', () => {
     expect(identify).not.toHaveBeenCalled();
   });
 
-  it('reset l’identité si analytics est accepté mais l’utilisateur est déconnecté', async () => {
+  it('resets the identity when analytics is accepted but the user is signed out', async () => {
     localStorage.setItem(CONSENT_KEY, JSON.stringify({ decided: true, analytics: true }));
     useAuth.mockReturnValue({ user: null });
     renderSync();

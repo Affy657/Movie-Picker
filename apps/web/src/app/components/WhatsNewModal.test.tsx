@@ -67,7 +67,7 @@ function renderModal(profileHandle: string | null = null, onClose = vi.fn(), onA
 }
 
 describe('WhatsNewModal', () => {
-  it('regroupe les entrées par catégorie et affiche titre + description', () => {
+  it('groups the entries by category and shows title and description', () => {
     renderModal();
 
     expect(screen.getByRole('heading', { name: /nouveautés/i, level: 3 })).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe('WhatsNewModal', () => {
     ).toBeInTheDocument();
   });
 
-  it('transforme une entrée en lien cliquable quand une destination existe, et ferme la modale au clic', async () => {
+  it('turns an entry into a clickable link when a destination exists, and closes the modal on click', async () => {
     const user = userEvent.setup();
     const { onClose } = renderModal();
 
@@ -89,14 +89,14 @@ describe('WhatsNewModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("n'affiche pas de lien quand la destination ne peut pas être résolue (profil sans handle)", () => {
+  it('shows no link when the destination cannot be resolved (profile without handle)', () => {
     renderModal(null);
 
     expect(screen.queryByRole('link', { name: /flamme de série/i })).not.toBeInTheDocument();
     expect(screen.getByText('Flamme de série')).toBeInTheDocument();
   });
 
-  it('résout le lien de profil une fois le handle connu', () => {
+  it('resolves the profile link once the handle is known', () => {
     renderModal('utilisateur_dev');
 
     expect(screen.getByRole('link', { name: /flamme de série/i })).toHaveAttribute(
@@ -105,7 +105,7 @@ describe('WhatsNewModal', () => {
     );
   });
 
-  it('le bouton "C\'est noté" ferme la modale', async () => {
+  it('the "Got it" button closes the modal', async () => {
     const user = userEvent.setup();
     const { onClose } = renderModal();
 
@@ -113,7 +113,7 @@ describe('WhatsNewModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('ouvre l’action « Proposer une idée » et ferme la modale au clic', async () => {
+  it('opens the "Suggest an idea" action and closes the modal on click', async () => {
     const user = userEvent.setup();
     const { onClose, onAction } = renderModal();
 

@@ -19,7 +19,7 @@ beforeAll(() => {
 });
 
 describe('Modal', () => {
-  it("n'ouvre le dialogue que lorsque `open` passe à true", () => {
+  it('only opens the dialog when `open` turns true', () => {
     const { rerender } = render(
       <AppTestProviders>
         <Modal open={false} onClose={vi.fn()} testId="m" ariaLabel="Fenêtre">
@@ -75,7 +75,7 @@ describe('Modal', () => {
     expect(dialog.getAttribute('aria-label')).toBeNull();
   });
 
-  it('ferme quand le dialogue émet son évènement natif close', () => {
+  it('closes when the dialog emits its native close event', () => {
     const onClose = vi.fn();
     render(
       <AppTestProviders>

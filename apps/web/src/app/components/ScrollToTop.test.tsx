@@ -27,12 +27,12 @@ describe('ScrollToTop', () => {
     scrollTo.mockClear();
   });
 
-  it('ne défile pas au premier rendu', () => {
+  it('does not scroll on the first render', () => {
     renderApp();
     expect(scrollTo).not.toHaveBeenCalled();
   });
 
-  it('remonte en haut après une navigation vers une autre route', async () => {
+  it('scrolls back to the top after navigating to another route', async () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(screen.getByRole('link', { name: 'Ma liste' }));
@@ -40,14 +40,14 @@ describe('ScrollToTop', () => {
     expect(scrollTo).toHaveBeenCalledWith(0, 0);
   });
 
-  it('remonte en haut quand le lien pointe vers la route déjà affichée', async () => {
+  it('scrolls back to the top when the link points to the route already displayed', async () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(screen.getByRole('link', { name: 'Explorer' }));
     expect(scrollTo).toHaveBeenCalledWith(0, 0);
   });
 
-  it('ne défile pas quand seuls les paramètres de la page courante changent', async () => {
+  it('does not scroll when only the current page parameters change', async () => {
     const user = userEvent.setup();
     renderApp('/watchlist');
     scrollTo.mockClear();
@@ -55,7 +55,7 @@ describe('ScrollToTop', () => {
     expect(scrollTo).not.toHaveBeenCalled();
   });
 
-  it('laisse le navigateur gérer une navigation vers une ancre', async () => {
+  it('lets the browser handle a navigation to an anchor', async () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(screen.getByRole('link', { name: 'Ancre' }));

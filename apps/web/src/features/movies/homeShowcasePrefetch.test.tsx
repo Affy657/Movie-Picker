@@ -17,7 +17,7 @@ function Probe() {
 }
 
 describe('prefetchHomeShowcase', () => {
-  it('lance les requêtes des rangées de la home sous les clés que la page utilisera', () => {
+  it('starts the home row requests under the keys the page will use', () => {
     const client = createTestQueryClient();
 
     prefetchHomeShowcase(client);
@@ -38,7 +38,7 @@ describe('prefetchHomeShowcase', () => {
 });
 
 describe('useHomeShowcasePrefetch', () => {
-  it("préchauffe les rangées quand l'application s'ouvre sur la home", () => {
+  it('warms the rows up when the application opens on the home', () => {
     const client = createTestQueryClient();
 
     render(

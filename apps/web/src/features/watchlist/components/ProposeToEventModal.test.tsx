@@ -62,7 +62,7 @@ describe('ProposeToEventModal (MSW)', () => {
     ).toBeInTheDocument();
   });
 
-  it("affiche un message quand il n'y a aucune soirée éligible", async () => {
+  it('shows a message when there is no eligible movie night', async () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
@@ -107,7 +107,7 @@ describe('ProposeToEventModal (MSW)', () => {
     );
   });
 
-  it('affiche une erreur inline si la proposition échoue', async () => {
+  it('shows an inline error when the proposal fails', async () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/events/mine`, () =>

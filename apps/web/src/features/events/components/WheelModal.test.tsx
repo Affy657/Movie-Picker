@@ -127,7 +127,7 @@ describe('WheelModal', () => {
     expect(screen.queryByTestId('provider-chips')).not.toBeInTheDocument();
   });
 
-  it('met le tirage suivant en action principale tant qu’il reste un créneau', () => {
+  it('makes the next draw the primary action as long as a slot remains', () => {
     const onRelaunch = vi.fn();
     const onClose = vi.fn();
     wrap(
@@ -156,7 +156,7 @@ describe('WheelModal', () => {
     expect(onRelaunch).toHaveBeenCalledOnce();
   });
 
-  it('revient à « C’est parti » sans relance possible', () => {
+  it(`goes back to "Let's go" without a possible rerun`, () => {
     wrap(
       <WheelModal
         open
@@ -177,7 +177,7 @@ describe('WheelModal', () => {
     expect(screen.getByRole('button', { name: /c'est parti/i })).toBeInTheDocument();
   });
 
-  it('garde le titre simple pour une soirée à un seul gagnant', () => {
+  it('keeps the title simple for a single-winner movie night', () => {
     wrap(
       <WheelModal
         open
@@ -222,7 +222,7 @@ describe('WheelModal', () => {
     expect(screen.getByText(/tirage en cours/i)).toBeInTheDocument();
   });
 
-  it('skipSpin : révèle directement le gagnant avec le titre "choisi par l\'hôte"', () => {
+  it('skipSpin: reveals the winner straight away with the "picked by the host" title', () => {
     wrap(
       <WheelModal
         open
@@ -240,7 +240,7 @@ describe('WheelModal', () => {
     expect(screen.getByText('Interstellar')).toBeInTheDocument();
   });
 
-  it('appelle onSpinComplete à la fin de la rotation', () => {
+  it('calls onSpinComplete at the end of the rotation', () => {
     const onSpinComplete = vi.fn();
     wrap(
       <WheelModal

@@ -28,7 +28,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             throw new NotSupportedException();
 
         public Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default) =>
-            throw new InvalidOperationException("purge des jetons de réinitialisation en échec");
+            throw new InvalidOperationException("reset token purge failed");
     }
 
     private readonly MoviePickerApplicationFactory _factory;

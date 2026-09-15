@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 describe('randomIndex', () => {
-  it('retourne toujours 0 pour une liste à un seul élément', () => {
+  it('always returns 0 for a single-item list', () => {
     for (let i = 0; i < 50; i += 1) expect(randomIndex(1)).toBe(0);
   });
 
@@ -32,7 +32,7 @@ describe('randomIndex', () => {
     }
   });
 
-  it('rejette les tirages situés dans la zone biaisée et retire', () => {
+  it('rejects the draws in the biased zone and draws again', () => {
     const length = 7;
     const unbiasedLimit = UINT32_RANGE - (UINT32_RANGE % length);
     stubDraws([unbiasedLimit, UINT32_RANGE - 1, 10]);
@@ -40,7 +40,7 @@ describe('randomIndex', () => {
     expect(crypto.getRandomValues).toHaveBeenCalledTimes(3);
   });
 
-  it('accepte le dernier tirage non biaisé sans retirer', () => {
+  it('accepts the last unbiased draw without drawing again', () => {
     const length = 7;
     const unbiasedLimit = UINT32_RANGE - (UINT32_RANGE % length);
     stubDraws([unbiasedLimit - 1]);

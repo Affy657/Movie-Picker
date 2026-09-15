@@ -38,7 +38,7 @@ describe('NotificationsPage (MSW)', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  it("affiche l'état vide quand il n'y a aucune notification", async () => {
+  it('shows the empty state when there is no notification', async () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
@@ -51,7 +51,7 @@ describe('NotificationsPage (MSW)', () => {
     expect(await screen.findByText(/aucune notification/i)).toBeInTheDocument();
   });
 
-  it('regroupe deux notifications de la même soirée sous un seul en-tête', async () => {
+  it('groups two notifications of the same movie night under a single header', async () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
@@ -85,7 +85,7 @@ describe('NotificationsPage (MSW)', () => {
     expect(headers).toHaveLength(1);
   });
 
-  it('accorde le bouton de dépliage au singulier quand une seule notification est masquée', async () => {
+  it('uses the singular on the expand button when a single notification is hidden', async () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>
@@ -142,7 +142,7 @@ describe('NotificationsPage (MSW)', () => {
     await waitFor(() => expect(markedId).toBe('n1'));
   });
 
-  it("une notification 'soirée annulée' n'est pas cliquable vers une destination", async () => {
+  it("a 'movie night cancelled' notification is not clickable to a destination", async () => {
     server.use(
       authedUserHandler,
       http.get(`${TEST_API_V1}/notifications/inbox`, () =>

@@ -14,17 +14,17 @@ const LEGACY_CREATED_AT = '2026-06-01T12:00:00.000Z';
 const WITHIN_WINDOW_MS = WHATS_NEW_NAV_RELEASED_AT_MS + 3 * 24 * 60 * 60 * 1000;
 
 describe('shouldShowWhatsNewNavChip', () => {
-  it('reste masquée sans date de création de compte', () => {
+  it('stays hidden without an account creation date', () => {
     expect(shouldShowWhatsNewNavChip(undefined, WITHIN_WINDOW_MS)).toBe(false);
     expect(shouldShowWhatsNewNavChip(null, WITHIN_WINDOW_MS)).toBe(false);
     expect(shouldShowWhatsNewNavChip('', WITHIN_WINDOW_MS)).toBe(false);
   });
 
-  it('reste masquée si la date de création est invalide', () => {
+  it('stays hidden when the creation date is invalid', () => {
     expect(shouldShowWhatsNewNavChip('not-a-date', WITHIN_WINDOW_MS)).toBe(false);
   });
 
-  it('reste masquée pour un compte créé à partir du lendemain de la livraison', () => {
+  it('stays hidden for an account created from the day after the release', () => {
     expect(
       shouldShowWhatsNewNavChip(
         new Date(WHATS_NEW_NAV_NEW_ACCOUNT_FROM_MS).toISOString(),
@@ -39,7 +39,7 @@ describe('shouldShowWhatsNewNavChip', () => {
     ).toBe(false);
   });
 
-  it('s’affiche pour un compte créé le jour de la livraison', () => {
+  it('shows for an account created on the release day', () => {
     expect(
       shouldShowWhatsNewNavChip(
         new Date(WHATS_NEW_NAV_RELEASED_AT_MS + 12 * 60 * 60 * 1000).toISOString(),
@@ -48,13 +48,13 @@ describe('shouldShowWhatsNewNavChip', () => {
     ).toBe(true);
   });
 
-  it('reste masquée avant la livraison', () => {
+  it('stays hidden before the release', () => {
     expect(shouldShowWhatsNewNavChip(LEGACY_CREATED_AT, WHATS_NEW_NAV_RELEASED_AT_MS - 1)).toBe(
       false
     );
   });
 
-  it('s’affiche pendant une semaine après la livraison pour un compte antérieur', () => {
+  it('shows for a week after the release for an older account', () => {
     expect(shouldShowWhatsNewNavChip(LEGACY_CREATED_AT, WHATS_NEW_NAV_RELEASED_AT_MS)).toBe(true);
     expect(shouldShowWhatsNewNavChip(LEGACY_CREATED_AT, WITHIN_WINDOW_MS)).toBe(true);
     expect(
@@ -65,7 +65,7 @@ describe('shouldShowWhatsNewNavChip', () => {
     ).toBe(true);
   });
 
-  it('disparaît une fois la semaine écoulée', () => {
+  it('disappears once the week has elapsed', () => {
     expect(
       shouldShowWhatsNewNavChip(
         LEGACY_CREATED_AT,
@@ -86,19 +86,19 @@ describe('LATEST_WHATS_NEW_RELEASE', () => {
 });
 
 describe('whatsNewLinkPath', () => {
-  it('résout home vers la racine', () => {
+  it('resolves home to the root', () => {
     expect(whatsNewLinkPath('home', null)).toBe(ROUTES.home);
   });
 
-  it('résout myEvents vers /my-events', () => {
+  it('resolves myEvents to /my-events', () => {
     expect(whatsNewLinkPath('myEvents', null)).toBe(ROUTES.myEvents);
   });
 
-  it('résout notifications vers /notifications', () => {
+  it('resolves notifications to /notifications', () => {
     expect(whatsNewLinkPath('notifications', null)).toBe(ROUTES.notifications);
   });
 
-  it('résout discover vers /decouvrir', () => {
+  it('resolves discover to /decouvrir', () => {
     expect(whatsNewLinkPath('howItWorks', null)).toBe(ROUTES.howItWorks);
   });
 });

@@ -101,11 +101,11 @@ const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/watchlist/{tmdbId}',
 ];
 
-it('expose des types front alignés sur le contrat OpenAPI', () => {
+it('exposes front types aligned with the OpenAPI contract', () => {
   expect(frontTypesMatchTheOpenApiContract.every(Boolean)).toBe(true);
 });
 
-it('ne référence chaque route du contrat qu une seule fois (leur existence est vérifiée par le typage)', () => {
+it('references each contract route only once (their existence is checked by the typing)', () => {
   expect(endpointsCalledByTheFront.length).toBeGreaterThan(0);
   expect(new Set(endpointsCalledByTheFront).size).toBe(endpointsCalledByTheFront.length);
 });

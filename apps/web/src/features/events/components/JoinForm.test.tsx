@@ -65,7 +65,7 @@ describe('JoinForm', () => {
     mockFetchApi.mockImplementation(guestAuthImpl);
   });
 
-  it('non connecté : affiche les CTA connexion/inscription, pas de champ pseudo ni bouton Rejoindre', async () => {
+  it('signed out: shows the sign-in/sign-up CTAs, no pseudo field nor Join button', async () => {
     renderForm(<JoinForm slug="soiree" onJoined={onJoined} />);
     expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
     await waitFor(() => {
@@ -76,7 +76,7 @@ describe('JoinForm', () => {
     expect(screen.queryByRole('button', { name: /rejoindre/i })).not.toBeInTheDocument();
   });
 
-  it('connecté : pas de champ pseudo, Rejoindre envoie le displayName du compte', async () => {
+  it('signed in: no pseudo field, Join sends the account displayName', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation(async (path: string) => {
       if (path === '/auth/me') return profile;
@@ -110,7 +110,7 @@ describe('JoinForm', () => {
     });
   });
 
-  it('connecté sans displayName : envoie « Participant » par défaut', async () => {
+  it('signed in without displayName: sends "Participant" by default', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation(async (path: string) => {
       if (path === '/auth/me') return { ...profile, displayName: '   ' };
@@ -133,13 +133,13 @@ describe('JoinForm', () => {
     });
   });
 
-  it('affiche un message dédié et cache le formulaire quand la soirée est complète', () => {
+  it('shows a dedicated message and hides the form when the movie night is full', () => {
     renderForm(<JoinForm slug="soiree" onJoined={onJoined} isFull maxParticipants={4} />);
     expect(screen.getByText(/complète \(4 participants maximum\)/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /rejoindre/i })).not.toBeInTheDocument();
   });
 
-  it("connecté : affiche un message d'erreur si l'API join échoue", async () => {
+  it('signed in: shows an error message when the join API fails', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation(async (path: string) => {
       if (path === '/auth/me') return profile;

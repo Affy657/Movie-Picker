@@ -5,7 +5,7 @@ import { AppTestProviders } from '@/test-utils/queryWrapper';
 import WhatsNewNavChip from '@/app/components/WhatsNewNavChip';
 
 describe('WhatsNewNavChip', () => {
-  it('ouvre la modale des nouveautés au clic', async () => {
+  it("opens the what's new modal on click", async () => {
     const user = userEvent.setup();
     const onOpen = vi.fn();
     render(

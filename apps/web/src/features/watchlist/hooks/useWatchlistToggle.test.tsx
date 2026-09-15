@@ -39,14 +39,14 @@ function setup(enabled = true) {
 }
 
 describe('useWatchlistToggle', () => {
-  it('sait quels films sont déjà dans la liste', async () => {
+  it('knows which movies are already in the list', async () => {
     const { result } = setup();
 
     await waitFor(() => expect(result.current.has(matrix)).toBe(true));
     expect(result.current.has(alien)).toBe(false);
   });
 
-  it('retire un film présent et ajoute un film absent', async () => {
+  it('removes a present movie and adds a missing one', async () => {
     const { result } = setup();
     await waitFor(() => expect(result.current.has(matrix)).toBe(true));
 
@@ -59,7 +59,7 @@ describe('useWatchlistToggle', () => {
     await waitFor(() => expect(addToWatchlist).toHaveBeenCalledWith(alien));
   });
 
-  it('remonte le message du serveur quand un ajout échoue', async () => {
+  it('surfaces the server message when an addition fails', async () => {
     vi.mocked(addToWatchlist).mockRejectedValueOnce(new Error('Liste pleine'));
     const { result } = setup();
     await waitFor(() => expect(result.current.has(matrix)).toBe(true));

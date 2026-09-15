@@ -13,7 +13,7 @@ const participants: EventParticipantSummary[] = [
 ];
 
 describe('EventParticipantsList', () => {
-  it('affiche les participants, le badge hôte et le compteur', () => {
+  it('shows the participants, the host badge and the counter', () => {
     render(
       <AppTestProviders>
         <EventParticipantsList
@@ -30,7 +30,7 @@ describe('EventParticipantsList', () => {
     expect(screen.getByText(/3 \/ 5/)).toBeInTheDocument();
   });
 
-  it("n'affiche aucun bouton retirer si l'utilisateur n'est pas hôte", () => {
+  it('shows no remove button when the user is not the host', () => {
     render(
       <AppTestProviders>
         <EventParticipantsList
@@ -46,7 +46,7 @@ describe('EventParticipantsList', () => {
     expect(screen.queryByTestId('remove-participant-p-creator')).not.toBeInTheDocument();
   });
 
-  it('hôte : peut retirer les autres participants, mais pas le créateur ni soi-même', async () => {
+  it('host: can remove the other participants, but neither the creator nor themselves', async () => {
     const user = userEvent.setup();
     const onRemove = vi.fn();
 
@@ -75,7 +75,7 @@ describe('EventParticipantsList', () => {
     expect(onRemove).toHaveBeenCalledWith('p-other', 'Bob');
   });
 
-  it('désactive le bouton du participant en cours de retrait', async () => {
+  it('disables the button of the participant being removed', async () => {
     const user = userEvent.setup();
     render(
       <AppTestProviders>

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import SearchField from '@/shared/components/SearchField';
 
 describe('SearchField', () => {
-  it('rend un champ de recherche nommé, avec sa description', () => {
+  it('renders a named search field, with its description', () => {
     render(
       <>
         <SearchField
@@ -25,7 +25,7 @@ describe('SearchField', () => {
     expect(input).toHaveAccessibleDescription('Titre ou année');
   });
 
-  it('remonte chaque frappe avec la valeur complète', async () => {
+  it('reports every keystroke with the full value', async () => {
     const onChange = vi.fn();
     render(<SearchField value="" onChange={onChange} placeholder="Chercher" />);
 
@@ -35,7 +35,7 @@ describe('SearchField', () => {
     expect(onChange).toHaveBeenNthCalledWith(2, 'b');
   });
 
-  it('reflète la valeur contrôlée', () => {
+  it('reflects the controlled value', () => {
     render(<SearchField value="Dune" onChange={vi.fn()} placeholder="Chercher" />);
 
     expect(screen.getByRole('searchbox')).toHaveValue('Dune');

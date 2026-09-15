@@ -35,7 +35,7 @@ function renderRoutes(initialEntries: string[]) {
   );
 }
 
-describe("lien d'invitation : retour vers la soirée après authentification", () => {
+describe('invite link: back to the movie night after authentication', () => {
   const server = setupServer();
   let sessionActive = false;
 
@@ -87,7 +87,7 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
     );
   }
 
-  it('connexion depuis le lien : atterrit sur la soirée, pas sur mes soirées', async () => {
+  it('sign-in from the link: lands on the movie night, not on my movie nights', async () => {
     useInviteHandlers();
 
     renderRoutes([INVITE_PATH]);
@@ -103,7 +103,7 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
     expect(screen.queryByRole('heading', { name: /^mes soirées$/i })).not.toBeInTheDocument();
   }, 60000);
 
-  it('session déjà valide : /login?returnTo renvoie directement sur la soirée sans reclic du lien', async () => {
+  it('session already valid: /login?returnTo goes straight to the movie night without clicking the link again', async () => {
     sessionActive = true;
     useInviteHandlers();
 
@@ -112,7 +112,7 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
     await expectEventPage();
   }, 60000);
 
-  it('navigation privée : le hint de session non persistable ne renvoie plus en boucle sur /login', async () => {
+  it('private browsing: the non-persistable session hint no longer loops back to /login', async () => {
     useInviteHandlers();
     localStorage.removeItem(SESSION_HINT_KEY);
 
@@ -146,7 +146,7 @@ describe("lien d'invitation : retour vers la soirée après authentification", (
     await expectEventPage();
   }, 60000);
 
-  it('vérification de session en échec : écran de réessai sur une page protégée', async () => {
+  it('failed session check: retry screen on a protected page', async () => {
     localStorage.setItem(SESSION_HINT_KEY, '1');
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>

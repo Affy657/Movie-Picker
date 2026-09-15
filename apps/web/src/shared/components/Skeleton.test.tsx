@@ -4,7 +4,7 @@ import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import styles from '@/shared/components/Skeleton.module.css';
 
 describe('Skeleton', () => {
-  it('est décoratif et prend la variante demandée', () => {
+  it('is decorative and takes the requested variant', () => {
     const { container } = render(<Skeleton variant="circle" className="extra" />);
 
     const skeleton = container.firstElementChild;
@@ -12,7 +12,7 @@ describe('Skeleton', () => {
     expect(skeleton).toHaveClass(styles.skeleton!, styles.circle!, 'extra');
   });
 
-  it('convertit les dimensions numériques en pixels et garde les chaînes telles quelles', () => {
+  it('converts numeric dimensions to pixels and keeps strings as they are', () => {
     const { container } = render(<Skeleton width={120} height="50%" style={{ opacity: 0.5 }} />);
 
     const skeleton = container.firstElementChild as HTMLElement;
@@ -23,7 +23,7 @@ describe('Skeleton', () => {
 });
 
 describe('SkeletonScreen', () => {
-  it('annonce le chargement au lecteur d’écran et masque le libellé visuellement', () => {
+  it('announces the loading to the screen reader and hides the label visually', () => {
     render(
       <SkeletonScreen label="Chargement du profil">
         <Skeleton />

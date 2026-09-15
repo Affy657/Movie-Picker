@@ -59,7 +59,7 @@ afterEach(() => {
 });
 
 describe('useSheetDrag', () => {
-  it('ferme la feuille après un glissement vers le bas suffisant', () => {
+  it('closes the sheet after a sufficient downward drag', () => {
     stubMatchMedia(
       (query) => query.includes('max-width') || query.includes('prefers-reduced-motion')
     );

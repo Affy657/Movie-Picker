@@ -9,7 +9,7 @@ function renderPill(element: React.ReactElement) {
 }
 
 describe('EventLifecyclePill', () => {
-  it('traduit chaque état du cycle de vie', () => {
+  it('translates every state of the lifecycle', () => {
     renderPill(
       <>
         <EventLifecyclePill lifecycle="upcoming" />
@@ -25,7 +25,7 @@ describe('EventLifecyclePill', () => {
     expect(screen.getByText('Terminée')).toHaveClass(styles.finished!);
   });
 
-  it('seule la soirée en cours porte la pulsation, décorative', () => {
+  it('only the movie night in progress carries the pulse, decorative', () => {
     const { container } = renderPill(
       <>
         <EventLifecyclePill lifecycle="live" />
@@ -38,7 +38,7 @@ describe('EventLifecyclePill', () => {
     expect(pulses[0]).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('accepte un libellé et un détail explicites', () => {
+  it('accepts an explicit label and detail', () => {
     renderPill(<EventLifecyclePill lifecycle="upcoming" label="Bientôt" detail="dans 2 jours" />);
 
     expect(screen.queryByText('À venir')).toBeNull();

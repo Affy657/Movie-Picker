@@ -71,7 +71,7 @@ describe('EventInviteFriendsTab (MSW)', () => {
     expect(screen.queryByText('Bob')).not.toBeInTheDocument();
   });
 
-  it('affiche un message quand la recherche ne correspond à rien', async () => {
+  it('shows a message when the search matches nothing', async () => {
     const user = userEvent.setup();
     server.use(guestMe(), eligible([follow()]));
     renderTab();

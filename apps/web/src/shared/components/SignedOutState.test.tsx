@@ -45,7 +45,7 @@ describe('SignedOutState', () => {
     );
   });
 
-  it('trace le clic sur chaque appel à l’action', async () => {
+  it('tracks the click on every call to action', async () => {
     renderState('/watchlist');
 
     await userEvent.click(screen.getByRole('link', { name: 'Se connecter' }));

@@ -116,7 +116,7 @@ public sealed class SeededDevelopmentFixture : IAsyncLifetime
     {
         var creator = await UserAsync(creatorEmail);
         return await Provider.GetRequiredService<IEventRepository>().FindByCreatorAndTitleAsync(creator.Id, title)
-            ?? throw new InvalidOperationException($"Soirée seed absente : {title}");
+            ?? throw new InvalidOperationException($"Seed movie night missing: {title}");
     }
 
     public async Task<IReadOnlyList<Event>> EventsTitledAsync(string creatorEmail, string title)
@@ -215,7 +215,7 @@ public sealed class DevelopmentScenarioSeedTests(SeededDevelopmentFixture fixtur
         var dev = await fixture.UserAsync(Dev);
         var participants = fixture.Provider.GetRequiredService<IParticipantRepository>();
         var devPart = await participants.FindByEventAndUserIdAsync(evt.Id, dev.Id)
-            ?? throw new InvalidOperationException("dev absent de la soirée à quota");
+            ?? throw new InvalidOperationException("dev is not in the quota movie night");
 
         Assert.Equal(1, evt.Config?.MaxVotesPerParticipant);
         var votes = await fixture.Provider.GetRequiredService<IVoteRepository>().GetParticipantVotesByEventAsync(evt.Id, devPart.Id);

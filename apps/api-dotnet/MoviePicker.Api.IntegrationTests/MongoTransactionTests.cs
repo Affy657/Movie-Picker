@@ -10,7 +10,7 @@ public sealed class MongoFactAttribute : FactAttribute
     public MongoFactAttribute()
     {
         if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MONGODB_TEST_URI")))
-            Skip = "MONGODB_TEST_URI non défini : test réservé à une vraie base MongoDB en replica set.";
+            Skip = "MONGODB_TEST_URI not set: this test needs a real MongoDB replica set.";
     }
 }
 
@@ -62,7 +62,7 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
                         UpdatedAt = DateTimeOffset.UtcNow
                     },
                     token);
-                throw new InvalidOperationException("échec au milieu de la transaction");
+                throw new InvalidOperationException("failure in the middle of the transaction");
             }));
 
         Assert.NotNull(createdEventId);

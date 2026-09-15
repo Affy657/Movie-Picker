@@ -61,12 +61,12 @@ afterEach(() => {
 });
 
 describe('useWatchlistToolbar', () => {
-  it('trie par ajout (défaut, décroissant)', () => {
+  it('sorts by addition (default, descending)', () => {
     const { result } = setup();
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);
   });
 
-  it('inverse le sens quand on reclique le même critère', () => {
+  it('reverses the direction when clicking the same criterion again', () => {
     const { result } = setup();
     act(() => result.current.setSortBy('voteAverage'));
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Alpha', 'Gamma', 'Beta']);
@@ -76,7 +76,7 @@ describe('useWatchlistToolbar', () => {
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);
   });
 
-  it('filtre par genre en tolérant les items sans genre', () => {
+  it('filters by genre while tolerating items without a genre', () => {
     const { result } = setup();
     act(() => result.current.toggleGenre(12));
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Alpha']);

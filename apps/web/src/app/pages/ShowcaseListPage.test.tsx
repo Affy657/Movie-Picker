@@ -66,7 +66,7 @@ describe('ShowcaseListPage', () => {
     expect(screen.getByText('Film 3')).toBeInTheDocument();
   });
 
-  it('pose un titre de niveau deux masqué au-dessus de la grille', () => {
+  it('puts a hidden level-two heading above the grid', () => {
     server.use(authMeGuestHandler, showcaseHandler);
     renderPage('trending', '/films/tendances', '/films/tendances');
 
@@ -75,7 +75,7 @@ describe('ShowcaseListPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('annonce le compte filtré et ne garde que les films retenus', async () => {
+  it('announces the filtered count and keeps only the retained films', async () => {
     server.use(authMeGuestHandler, showcaseHandler);
     renderPage('trending', '/films/tendances', '/films/tendances');
 
@@ -86,7 +86,7 @@ describe('ShowcaseListPage', () => {
     expect(screen.queryByText('Film 3')).not.toBeInTheDocument();
   });
 
-  it('trie par pertinence par défaut', async () => {
+  it('sorts by relevance by default', async () => {
     server.use(authMeGuestHandler, showcaseHandler);
     renderPage('trending', '/films/tendances', '/films/tendances');
 
@@ -115,14 +115,14 @@ describe('ShowcaseListPage', () => {
     expect(await screen.findByText(/momentanément indisponible/i)).toBeInTheDocument();
   });
 
-  it('invite à saisir un titre quand la recherche est vide', () => {
+  it('invites to type a title when the search is empty', () => {
     server.use(authMeGuestHandler);
     renderPage('search', '/films/recherche', '/films/recherche');
 
     expect(screen.getByText(/entrez un titre/i)).toBeInTheDocument();
   });
 
-  it('affiche les résultats de recherche', async () => {
+  it('shows the search results', async () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/movies/search`, () =>
@@ -142,7 +142,7 @@ describe('ShowcaseListPage', () => {
     expect(await screen.findByText('Film 9')).toBeInTheDocument();
   });
 
-  it("affiche un état vide plutôt qu'une page nue quand la section ne renvoie rien", async () => {
+  it('shows an empty state rather than a bare page when the section returns nothing', async () => {
     server.use(
       authMeGuestHandler,
       http.get(`${TEST_API_V1}/movies/showcase`, () =>
@@ -160,7 +160,7 @@ describe('ShowcaseListPage', () => {
     expect(await screen.findByText(/aucun film dans cette sélection/i)).toBeInTheDocument();
   });
 
-  it('signale une sélection inconnue et renvoie à la home', () => {
+  it('reports an unknown selection and sends back to the home', () => {
     server.use(authMeGuestHandler, showcaseHandler);
     renderPage('theme', '/films/theme/nawak', '/films/theme/:theme');
 
@@ -168,7 +168,7 @@ describe('ShowcaseListPage', () => {
     expect(screen.getAllByRole('link', { name: /retour à l'accueil/i }).length).toBeGreaterThan(0);
   });
 
-  it('conserve le genre passé en paramètre et le montre en sous-titre', async () => {
+  it('keeps the genre passed as a parameter and shows it as a subtitle', async () => {
     let requestedGenres: string | null = null;
     server.use(
       authMeGuestHandler,

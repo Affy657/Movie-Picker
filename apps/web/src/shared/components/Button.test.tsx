@@ -5,7 +5,7 @@ import Button, { buttonClass } from '@/shared/components/Button';
 import styles from '@/shared/components/Button.module.css';
 
 describe('Button', () => {
-  it('est de type button par défaut et déclenche onClick', async () => {
+  it('is of type button by default and triggers onClick', async () => {
     const onClick = vi.fn();
     render(<Button onClick={onClick}>Envoyer</Button>);
 
@@ -29,7 +29,7 @@ describe('Button', () => {
     );
   });
 
-  it('expose la même composition de classes aux liens via buttonClass', () => {
+  it('exposes the same class composition to links through buttonClass', () => {
     expect(buttonClass()).toBe(styles.btn);
     expect(buttonClass({ tone: 'danger' })).toBe(`${styles.btn} ${styles.danger}`);
     expect(buttonClass({ variant: 'ghost', size: 'lg' })).toBe(
@@ -37,7 +37,7 @@ describe('Button', () => {
     );
   });
 
-  it('reste désactivable', async () => {
+  it('stays disableable', async () => {
     const onClick = vi.fn();
     render(
       <Button disabled onClick={onClick}>
@@ -49,7 +49,7 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it('en chargement, se désactive, s’annonce occupé et garde son libellé', async () => {
+  it('while loading, disables itself, announces itself busy and keeps its label', async () => {
     const onClick = vi.fn();
     render(
       <Button loading onClick={onClick}>

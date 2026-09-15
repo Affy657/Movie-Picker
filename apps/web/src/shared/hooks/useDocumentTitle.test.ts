@@ -7,7 +7,7 @@ describe('useDocumentTitle', () => {
     expect(pageTitle('Accueil')).toBe(`Accueil | ${APP_DOCUMENT_TITLE}`);
   });
 
-  it('met à jour document.title', () => {
+  it('updates document.title', () => {
     document.title = 'initial';
     renderHook(() => useDocumentTitle('Page test'));
     expect(document.title).toBe('Page test');

@@ -6,25 +6,25 @@ describe('movieExternalLinks', () => {
     expect(letterboxdUrl(27205, 'movie', 'Inception')).toBe('https://letterboxd.com/tmdb/27205/');
   });
 
-  it('letterboxdUrl bascule sur une recherche par titre pour une série', () => {
+  it('letterboxdUrl switches to a title search for a TV show', () => {
     expect(letterboxdUrl(1399, 'tv', 'Game of Thrones')).toBe(
       'https://letterboxd.com/search/films/Game%20of%20Thrones/'
     );
   });
 
-  it('imdbUrl combine le titre et l’année', () => {
+  it('imdbUrl combines the title and the year', () => {
     expect(imdbUrl('Inception', '2010')).toBe('https://www.imdb.com/find/?q=Inception%202010&s=tt');
   });
 
-  it('imdbUrl fonctionne sans année', () => {
+  it('imdbUrl works without a year', () => {
     expect(imdbUrl('Inception')).toBe('https://www.imdb.com/find/?q=Inception&s=tt');
   });
 
-  it('allocineUrl encode le titre recherché', () => {
+  it('allocineUrl encodes the searched title', () => {
     expect(allocineUrl('Amélie')).toBe('https://www.allocine.fr/recherche/?q=Am%C3%A9lie');
   });
 
-  it('tmdbPageUrl distingue film et série', () => {
+  it('tmdbPageUrl tells movie and TV show apart', () => {
     expect(tmdbPageUrl(27205, 'movie')).toBe('https://www.themoviedb.org/movie/27205');
     expect(tmdbPageUrl(1399, 'tv')).toBe('https://www.themoviedb.org/tv/1399');
   });

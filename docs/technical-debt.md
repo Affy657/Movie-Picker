@@ -191,16 +191,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - piege: `SONAR_TOKEN` reste volontairement au niveau du dépôt, le job `sonar` tourne sur les PR et les branches `v*`, que la politique de branche de `production` exclurait. Tout job qui lit un secret de déploiement porte `environment: production` ; sans cette ligne il lirait une valeur vide.
 - refs: DEBT-002 et le lot Terraform 5 remplacent ces clés par une fédération d'identité
 
-## DEBT-028 du français subsiste dans le code, les tests et les messages de l'API
-
-- state: agent
-- impact: la règle « Langue » d'AGENTS.md (2026-09-15) veut tout le dépôt en anglais hors i18n et documentation. Le code, les journaux, les messages d'exception et les titres e2e sont traduits depuis le 2026-09-15 (les exceptions sont devenues des codes, voir AGENTS.md « Langue »). Reste le reliquat mesuré ce jour-là : 169 fichiers de tests web (1 435 lignes accentuées, des noms de `it(...)` et `describe(...)`) et 83 fichiers de tests API (364 lignes, des noms de `[Fact]` et des chaînes d'assertion).
-- ou: `grep -rlE "[éèêàçù]" apps/web/src --include=*.test.ts --include=*.test.tsx`, même chose sur `apps/api-dotnet --include=*Tests.cs`
-- verify: les deux `grep` ci-dessus rendent des fichiers ; ne pas utiliser `[éèêàçù]` sur un grep Windows sans `-P`, la classe attrape aussi les emoji et les tirets typographiques. Réglé quand ils ne rendent plus rien.
-- fix: par lots, un par catégorie, chacun avec `verify:local` vert : (1) noms de tests web, (2) noms de tests API. Une chaîne d'assertion française qui reproduit un libellé d'interface (`getByText('Créer une soirée')`) reste en français, c'est le libellé du produit qu'elle vérifie.
-- fini-quand: `verify` vide et aucune chaîne française nouvelle dans un fichier touché depuis
-- piege: les données de seed (`Léa Moreau`, `Soirée horreur`), les tables `fr`/`en` (`tmdbGenres.ts`, `movieSearchFilterOptions.ts`), les notifications push et l'e-mail de réinitialisation sont du contenu produit en français, pas du code : ils restent. Les noms de tests décrivent un comportement, les traduire ne doit pas en changer le sens ; relire chaque `it(...)` plutôt que passer un outil. `letterboxdLastSyncError` stocke désormais un code (`letterboxd_watchlist_incomplete`) que le front traduit, les documents antérieurs gardent leur phrase française et s'affichent telles quelles.
-
 ## DEBT-029 `GET /events/mine` écrit en base
 
 - state: differe

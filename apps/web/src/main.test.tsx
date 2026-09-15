@@ -18,7 +18,7 @@ vi.mock('@/shared/observability/sentry', () => ({
 vi.mock('@/app/App', () => ({ default: () => null }));
 vi.mock('@/shared/hooks/usePwaInstall', () => ({ startPwaInstallRuntime: vi.fn() }));
 
-describe('démarrage', () => {
+describe('startup', () => {
   it('monte React avant de demander le SDK Sentry', async () => {
     document.body.innerHTML = '<div id="splash"></div><div id="root"></div>';
 

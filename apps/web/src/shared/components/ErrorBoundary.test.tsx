@@ -28,7 +28,7 @@ describe('ErrorBoundary', () => {
     consoleError.mockClear();
   });
 
-  it('affiche le fallback et permet de réessayer', async () => {
+  it('shows the fallback and allows retrying', async () => {
     const user = userEvent.setup();
     const { rerender } = render(
       <BoundaryHarness>
@@ -48,7 +48,7 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText(/tout va bien/i)).toBeInTheDocument();
   });
 
-  it('lien Accueil présent', () => {
+  it('Home link present', () => {
     render(
       <BoundaryHarness>
         <Bomb fail />

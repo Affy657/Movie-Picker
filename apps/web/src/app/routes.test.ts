@@ -2,15 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { ROUTES, withReturnTo } from '@/app/routes';
 
 describe('withReturnTo', () => {
-  it('omet le paramètre returnTo quand la cible est la racine', () => {
+  it('omits the returnTo parameter when the target is the root', () => {
     expect(withReturnTo(ROUTES.login, ROUTES.home)).toBe(ROUTES.login);
   });
 
-  it('omet le paramètre returnTo quand il est vide', () => {
+  it('omits the returnTo parameter when it is empty', () => {
     expect(withReturnTo(ROUTES.login, '')).toBe(ROUTES.login);
   });
 
-  it('ajoute le returnTo encodé pour toute autre page', () => {
+  it('adds the encoded returnTo for any other page', () => {
     expect(withReturnTo(ROUTES.login, ROUTES.watchlist)).toBe(
       `${ROUTES.login}?returnTo=${encodeURIComponent(ROUTES.watchlist)}`
     );

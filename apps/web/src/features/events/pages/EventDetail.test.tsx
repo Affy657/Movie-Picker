@@ -72,7 +72,7 @@ describe('EventDetail (MSW)', () => {
   });
   afterAll(() => server.close());
 
-  it('non connecté : affiche la soirée, les films et les CTA pour rejoindre', async () => {
+  it('signed out: shows the movie night, the movies and the CTAs to join', async () => {
     renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /rejoindre la soirée/i })).toBeInTheDocument();
@@ -84,7 +84,7 @@ describe('EventDetail (MSW)', () => {
     expect(await screen.findByRole('region', { name: /films proposés/i })).toBeInTheDocument();
   });
 
-  it('sans avoir rejoint : les films du lien partagé sont lisibles et le vote invite à rejoindre', async () => {
+  it('without having joined: the movies of the shared link are readable and voting invites to join', async () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
@@ -120,7 +120,7 @@ describe('EventDetail (MSW)', () => {
     );
   });
 
-  it('affiche « Soirée introuvable » même avec la politique de retry de production', async () => {
+  it('shows "Movie night not found" even with the production retry policy', async () => {
     server.use(
       http.get(`${TEST_API_V1}/events/slug/:s`, () =>
         HttpResponse.json({ error: 'Soirée introuvable' }, { status: 404 })
@@ -138,7 +138,7 @@ describe('EventDetail (MSW)', () => {
     ).toBeInTheDocument();
   }, 20000);
 
-  it('sort du squelette quand le réseau est coupé, au lieu de charger indéfiniment', async () => {
+  it('leaves the skeleton when the network is down, instead of loading forever', async () => {
     server.use(
       http.get(`${TEST_API_V1}/events/slug/:s`, () =>
         HttpResponse.json({ error: 'nope' }, { status: 404 })
@@ -164,7 +164,7 @@ describe('EventDetail (MSW)', () => {
     }
   }, 15000);
 
-  it('affiche une erreur si la soirée est introuvable (404)', async () => {
+  it('shows an error when the movie night is not found (404)', async () => {
     server.use(
       http.get(`${TEST_API_V1}/events/slug/:s`, () =>
         HttpResponse.json({ error: 'introuvable' }, { status: 404 })
@@ -176,7 +176,7 @@ describe('EventDetail (MSW)', () => {
     expect(document.title).toBe(pageTitle('Soirée introuvable'));
   });
 
-  it('affiche le lien et le QR pour un simple participant (sans token hôte)', async () => {
+  it('shows the link and the QR code for a plain participant (without host token)', async () => {
     const user = userEvent.setup();
     renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
@@ -186,7 +186,7 @@ describe('EventDetail (MSW)', () => {
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
 
-  it('en tant qu’hôte n’affiche plus de lien « hôte » séparé (seul le lien public)', async () => {
+  it('as the host, no longer shows a separate "host" link (only the public link)', async () => {
     const user = userEvent.setup();
     const token = 'host-secret-token';
     renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
@@ -197,7 +197,7 @@ describe('EventDetail (MSW)', () => {
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
 
-  it('en tant qu’hôte affiche le bandeau thème et le panneau paramètres', async () => {
+  it('as the host, shows the theme banner and the settings panel', async () => {
     const token = 'host-secret-token';
     server.use(
       ...createEventDetailHandlers({ slug, title: 'Soirée démo', theme: 'Comédie noire' }),
@@ -218,7 +218,7 @@ describe('EventDetail (MSW)', () => {
     await waitFor(() => expect(nameField.closest('dialog')).toHaveAttribute('open'));
   });
 
-  it('affiche erreur films + Réessayer si le chargement des films échoue', async () => {
+  it('shows the movies error and Retry when loading the movies fails', async () => {
     server.use(
       http.get(`${TEST_API_V1}/events/:slug/movies`, () =>
         HttpResponse.json({ error: 'Service indisponible' }, { status: 503 })
@@ -230,7 +230,7 @@ describe('EventDetail (MSW)', () => {
     expect(screen.getByText(/indisponible|Service/i)).toBeInTheDocument();
   });
 
-  it('après rejoindre, affiche la section Films et permet de proposer un film', async () => {
+  it('after joining, shows the Movies section and allows proposing a movie', async () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
@@ -256,12 +256,12 @@ describe('EventDetail (MSW)', () => {
     await waitFor(() => expect(screen.queryByText(/film test/i)).not.toBeInTheDocument());
   });
 
-  describe('flux retrait participant (hôte)', () => {
+  describe('participant removal flow (host)', () => {
     function setupHostJoined() {
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');
     }
 
-    it('confirme la modale → DELETE appelé + message de succès affiché', async () => {
+    it('confirming the modal: DELETE called and success message shown', async () => {
       const user = userEvent.setup();
       setupHostJoined();
       let deleteCalled = false;
@@ -301,7 +301,7 @@ describe('EventDetail (MSW)', () => {
       expect(screen.getByTestId('participants-action-success')).toHaveTextContent('Alice');
     });
 
-    it('annule la modale → aucun DELETE émis', async () => {
+    it('cancelling the modal: no DELETE sent', async () => {
       const user = userEvent.setup();
       setupHostJoined();
       let deleteCalled = false;
@@ -323,7 +323,7 @@ describe('EventDetail (MSW)', () => {
       expect(deleteCalled).toBe(false);
     });
 
-    it('API renvoie 409 (roue lancée) → message d’erreur affiché', async () => {
+    it('API returns 409 (wheel spun): error message shown', async () => {
       const user = userEvent.setup();
       setupHostJoined();
       server.use(
@@ -350,7 +350,7 @@ describe('EventDetail (MSW)', () => {
   });
 
   describe('flux quitter (participant)', () => {
-    it('le créateur ne voit pas le bouton « Quitter » (masqué côté UI)', async () => {
+    it('the creator does not see the "Leave" button (hidden in the UI)', async () => {
       const user = userEvent.setup();
       const myPid = 'p-msw-host';
       setStoredParticipant(slug, myPid, 'Hôte');
@@ -390,7 +390,7 @@ describe('EventDetail (MSW)', () => {
       expect(screen.queryByTestId('leave-event-button')).not.toBeInTheDocument();
     });
 
-    it('utilisateur connecté : confirmation → DELETE appelé + navigation vers /my-events', async () => {
+    it('signed-in user: confirmation, DELETE called and navigation to /my-events', async () => {
       const user = userEvent.setup();
       const myPid = 'p-msw-self';
       setStoredParticipant(slug, myPid, 'Moi');
@@ -454,8 +454,8 @@ describe('EventDetail (MSW)', () => {
     });
   });
 
-  describe('enchaînement de modales (instance unique)', () => {
-    it('ouvrir retirer → annuler → ouvrir quitter : libellés cohérents', async () => {
+  describe('modal chaining (single instance)', () => {
+    it('open remove, cancel, open leave: consistent labels', async () => {
       const user = userEvent.setup();
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');
 
@@ -504,7 +504,7 @@ describe('EventDetail (MSW)', () => {
       );
     }
 
-    it('confirme la modale → DELETE appelé et le film disparaît de la liste', async () => {
+    it('confirming the modal: DELETE called and the movie disappears from the list', async () => {
       const user = userEvent.setup();
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');
       let deleteCalled = false;
@@ -537,7 +537,7 @@ describe('EventDetail (MSW)', () => {
       );
     });
 
-    it('annule la modale → aucun DELETE émis, le film reste', async () => {
+    it('cancelling the modal: no DELETE sent, the movie stays', async () => {
       const user = userEvent.setup();
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');
       let deleteCalled = false;
