@@ -70,7 +70,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("wrong");
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "mov1", Request(true)));
-        Assert.Contains("hôte", ex.Message);
+        Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
         _movieRepo.Verify(
             r => r.UpdateWheelExclusionAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -84,7 +84,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", Request(true)));
-        Assert.Contains("terminée", ex.Message);
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
     [Fact]

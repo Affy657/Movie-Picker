@@ -8,7 +8,7 @@ namespace MoviePicker.Api.Application.UseCases.VoteMovie;
 
 public sealed class VoteMovieHandler : IVoteMovieHandler
 {
-    public const string VoteLimitReachedReason = "vote-limit-reached";
+    public const string VoteLimitReachedReason = ErrorCodes.VoteLimitReached;
 
     private readonly IEventRepository _eventRepository;
     private readonly IMovieRepository _movieRepository;
@@ -47,7 +47,7 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
             idOrSlug,
             movieId,
             request.ParticipantId,
-            "Vous ne pouvez voter que pour votre propre participation.",
+            Errors.VoteOwnParticipationOnly,
             ct);
 
         var vote = new Vote
@@ -93,9 +93,7 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
                 await _eventRepository.LockForWriteAsync(evt.Id, token);
                 var votes = await _voteRepository.GetParticipantVotesByEventAsync(evt.Id, participant.Id, token);
                 if (!votes.ContainsKey(movie.Id) && votes.Count >= maxVotes)
-                    throw new ConflictException(
-                        $"Limite de {maxVotes} vote(s) par participant atteinte.",
-                        VoteLimitReachedReason);
+                    throw Errors.VoteLimitReached(maxVotes.Value);
                 saved = await _voteRepository.UpsertAsync(vote, token);
             },
             ct);

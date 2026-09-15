@@ -34,7 +34,7 @@ public sealed class OAuthLinkHandler : IOAuthLinkHandler
             return new OAuthOutcome { Kind = OAuthOutcomeKind.Linked, User = existing };
         }
 
-        var user = await _users.GetByIdAsync(currentUserId, ct) ?? throw new NotFoundException("Utilisateur introuvable.");
+        var user = await _users.GetByIdAsync(currentUserId, ct) ?? throw Errors.UserNotFound();
         var now = _clock.GetUtcNow();
         var identity = new LinkedIdentity
         {
@@ -51,7 +51,7 @@ public sealed class OAuthLinkHandler : IOAuthLinkHandler
         {
             saved = await _users.UpdateAsync(updated, ct);
         }
-        catch (ConflictException ex) when (ex.Message == "identity_conflict")
+        catch (ConflictException ex) when (ex.Reason == ErrorCodes.IdentityConflict)
         {
             _logger.LogWarning(ex, "OAuth link: race on identity {Provider} for userId={UserId}", info.Provider, currentUserId);
             return new OAuthOutcome { Kind = OAuthOutcomeKind.IdentityLinkedToOtherAccount };

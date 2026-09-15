@@ -42,7 +42,7 @@ public sealed class VoteMovieHandlerTests
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", "mov1", request));
-        Assert.Equal("Soirée introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public sealed class VoteMovieHandlerTests
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", request));
-        Assert.Contains("terminée", ex.Message);
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public sealed class VoteMovieHandlerTests
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "mov1", request));
-        Assert.Equal("Film introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public sealed class VoteMovieHandlerTests
         var request = new VoteRequest { ParticipantId = "p123456789012345678901234", Value = 1 };
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", "mov1", request));
-        Assert.Contains("Participant", ex.Message);
+        Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
     }
 
     [Fact]
@@ -150,7 +150,8 @@ public sealed class VoteMovieHandlerTests
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
             _sut.HandleAsync("evt1", "mov3", new VoteRequest { ParticipantId = participant.Id, Value = 1 }));
 
-        Assert.Contains("2 vote(s)", ex.Message);
+        Assert.Equal(ErrorCodes.VoteLimitReached, ex.Reason);
+        Assert.Equal(2, ex.Parameters!["max"]);
         Assert.Equal(VoteMovieHandler.VoteLimitReachedReason, ex.Reason);
         _voteRepo.Verify(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>()), Times.Never);
     }

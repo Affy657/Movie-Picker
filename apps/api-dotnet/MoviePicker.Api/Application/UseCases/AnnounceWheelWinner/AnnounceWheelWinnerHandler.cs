@@ -42,7 +42,7 @@ public sealed class AnnounceWheelWinnerHandler : IAnnounceWheelWinnerHandler
         var token = _hostTokenAccessor.GetHostToken();
         var userId = _currentUserAccessor.GetUserId();
         if (!EventHost.IsHost(evt, token, userId))
-            throw new ForbiddenException("Réservé à l'hôte de la soirée");
+            throw Errors.HostOnly();
 
         var pending = WheelPicksAwaitingAnnouncement(evt);
         if (pending.Count == 0)

@@ -10,15 +10,19 @@ public sealed record ApiErrorResponse(
     string? RequestId = null,
     [property: JsonPropertyName("reason")]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    string? Reason = null)
+    string? Reason = null,
+    [property: JsonPropertyName("params")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyDictionary<string, object?>? Params = null)
 {
     public static ApiErrorResponse FromHttpContext(
         HttpContext httpContext,
         int statusCode,
         string message,
-        string? reason = null)
+        string? reason = null,
+        IReadOnlyDictionary<string, object?>? parameters = null)
     {
         var id = httpContext.Items[CorrelationIdConstants.ItemKey] as string;
-        return new ApiErrorResponse(message, statusCode, id, reason);
+        return new ApiErrorResponse(message, statusCode, id, reason, parameters);
     }
 }

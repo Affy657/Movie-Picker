@@ -6,6 +6,7 @@ export {
   SUPPORTED_LOCALES,
   isLocaleCode,
   loadLocale,
+  loadedLocale,
 } from './locales';
 export { LocaleProvider, useLocale, preferredLocale } from './LocaleContext';
 export { useTranslation } from './useTranslation';

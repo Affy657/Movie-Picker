@@ -10,10 +10,10 @@ public sealed class CreateEventRequest
     public string Title { get; init; } = string.Empty;
 
     [Required]
-    [RegularExpression(@"^\d{4}-\d{2}-\d{2}$", ErrorMessage = "Format date attendu: YYYY-MM-DD")]
+    [RegularExpression(@"^\d{4}-\d{2}-\d{2}$", ErrorMessage = "Expected date format: YYYY-MM-DD")]
     public string Date { get; init; } = string.Empty;
 
     [Required]
-    [RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Format heure attendu: HH:mm")]
+    [RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Expected time format: HH:mm")]
     public string Time { get; init; } = string.Empty;
 }

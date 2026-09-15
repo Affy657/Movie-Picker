@@ -53,7 +53,7 @@ public sealed class MongoEventRepository : IEventRepository
             OptimisticConcurrency.ExpectedVersion<EventDocument>(x => x.Version, evt.Version));
         var result = await _collection.UpdateOneAsync(filter, KnownFieldsUpdate.From(doc), cancellationToken: ct);
         if (result.MatchedCount == 0)
-            await OptimisticConcurrency.ThrowForUnmatchedWriteAsync(_collection, x => x.Id == evt.Id, "Soirée", ct);
+            await OptimisticConcurrency.ThrowForUnmatchedWriteAsync(_collection, x => x.Id == evt.Id, Errors.EventNotFound, ct);
         return EventDocumentMapper.ToDomain(doc);
     }
 
@@ -64,7 +64,7 @@ public sealed class MongoEventRepository : IEventRepository
             Builders<EventDocument>.Update.Inc(x => x.WriteSeq, 1),
             cancellationToken: ct);
         if (result.MatchedCount == 0)
-            throw new NotFoundException("Soirée introuvable");
+            throw Errors.EventNotFound();
     }
 
     public async Task<IReadOnlyList<Event>> ListAllByCreatorUserIdAsync(string creatorUserId, CancellationToken ct = default)

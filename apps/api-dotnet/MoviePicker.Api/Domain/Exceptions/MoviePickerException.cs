@@ -6,9 +6,16 @@ public abstract class MoviePickerException : Exception
 
     public string? Reason { get; }
 
-    protected MoviePickerException(string message, ErrorKind kind, string? reason = null) : base(message)
+    public IReadOnlyDictionary<string, object?>? Parameters { get; }
+
+    protected MoviePickerException(
+        string message,
+        ErrorKind kind,
+        string? reason = null,
+        IReadOnlyDictionary<string, object?>? parameters = null) : base(message)
     {
         Kind = kind;
         Reason = reason;
+        Parameters = parameters;
     }
 }

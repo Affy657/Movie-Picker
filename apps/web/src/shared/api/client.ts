@@ -1,5 +1,5 @@
 import { ApiError } from '@/shared/api/apiError';
-import { preferredLocale, t, type TranslationKey } from '@/shared/i18n';
+import { loadedLocale, preferredLocale, t, type TranslationKey } from '@/shared/i18n';
 
 function hostLooksLocal(host: string): boolean {
   const h = (host.split(':')[0] ?? host).toLowerCase();
@@ -48,6 +48,31 @@ export function apiUrl(path: string): string {
 
 function userFacing(key: TranslationKey): string {
   return t(key, undefined, preferredLocale());
+}
+
+type ApiErrorParams = Record<string, string | number>;
+
+function translateApiReason(
+  reason: string,
+  params: ApiErrorParams | undefined
+): string | undefined {
+  const messages = loadedLocale(preferredLocale())?.apiErrors;
+  if (!messages || !Object.hasOwn(messages, reason)) return undefined;
+  const template = messages[reason as keyof typeof messages];
+  if (!params) return template;
+  return Object.entries(params).reduce(
+    (text, [key, value]) => text.replaceAll(`{{${key}}}`, String(value)),
+    template
+  );
+}
+
+function readApiErrorParams(raw: unknown): ApiErrorParams | undefined {
+  if (raw == null || typeof raw !== 'object') return undefined;
+  const params: ApiErrorParams = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (typeof value === 'string' || typeof value === 'number') params[key] = value;
+  }
+  return params;
 }
 
 function misconfigurationMessage(): string {
@@ -128,15 +153,19 @@ function handleErrorResponse(res: Response, text: string, isJson: boolean): neve
   if (looksLikeHtml(isJson, text)) {
     throw new ApiError(htmlResponseMessage(), { code: res.status });
   }
-  let parsed: { error?: string; reason?: string } = { error: res.statusText };
+  let parsed: { error?: string; reason?: string; params?: unknown } = { error: res.statusText };
   if (isJson && text.trim()) {
     try {
-      parsed = JSON.parse(text) as { error?: string; reason?: string };
+      parsed = JSON.parse(text) as { error?: string; reason?: string; params?: unknown };
     } catch {}
   }
-  throw new ApiError(parsed.error ?? `HTTP ${res.status}`, {
+  const reason = typeof parsed.reason === 'string' ? parsed.reason : undefined;
+  const translated = reason
+    ? translateApiReason(reason, readApiErrorParams(parsed.params))
+    : undefined;
+  throw new ApiError(translated ?? parsed.error ?? `HTTP ${res.status}`, {
     code: res.status,
-    reason: typeof parsed.reason === 'string' ? parsed.reason : undefined,
+    reason,
   });
 }
 

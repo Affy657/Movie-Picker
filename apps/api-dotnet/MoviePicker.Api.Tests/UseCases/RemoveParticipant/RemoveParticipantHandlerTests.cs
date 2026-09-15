@@ -120,7 +120,7 @@ public sealed class RemoveParticipantHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "p1"));
-        Assert.Contains("créateur", ex.Message);
+        Assert.Equal(ErrorCodes.CreatorCannotBeRemoved, ex.Reason);
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public sealed class RemoveParticipantHandlerTests
 
         Assert.Equal("p1", result.ParticipantId);
         Assert.Equal(2, result.RemovedMovies);
-        Assert.Equal("Participant retiré.", result.Message);
+        Assert.Equal("Participant removed", result.Message);
 
         _voteRepo.Verify(r => r.DeleteByMovieIdsAsync(
             It.Is<IReadOnlyCollection<string>>(ids => ids.SequenceEqual(value)), It.IsAny<CancellationToken>()), Times.Once);
@@ -217,7 +217,7 @@ public sealed class RemoveParticipantHandlerTests
 
         var result = await _sut.HandleAsync("evt1", "p1");
 
-        Assert.Contains("quitté", result.Message);
+        Assert.Equal("You left the movie night", result.Message);
         Assert.Equal(0, result.RemovedMovies);
     }
 
@@ -233,7 +233,7 @@ public sealed class RemoveParticipantHandlerTests
 
         var result = await _sut.HandleAsync("evt1", "p1");
 
-        Assert.Equal("Participant retiré.", result.Message);
+        Assert.Equal("Participant removed", result.Message);
     }
 
     [Fact]
@@ -257,7 +257,7 @@ public sealed class RemoveParticipantHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "p1"));
-        Assert.Contains("roue", ex.Message);
+        Assert.Equal(ErrorCodes.ParticipantsLockedWheel, ex.Reason);
 
         _participantRepo.Verify(
             r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
@@ -277,6 +277,6 @@ public sealed class RemoveParticipantHandlerTests
         var result = await _sut.HandleAsync("evt1", "p1");
 
         Assert.Equal("p1", result.ParticipantId);
-        Assert.Equal("Participant retiré.", result.Message);
+        Assert.Equal("Participant removed", result.Message);
     }
 }

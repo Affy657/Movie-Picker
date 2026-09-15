@@ -19,7 +19,7 @@ public sealed class SubscribePushHandler : ISubscribePushHandler
     public async Task HandleAsync(string userId, SubscribePushRequest request, CancellationToken ct = default)
     {
         if (!PushEndpointPolicy.IsPublicHttpsEndpoint(request.Endpoint))
-            throw new BadRequestException("endpoint doit être une URL https d'un service push public.");
+            throw Errors.InvalidPushEndpoint();
 
         var subscription = new PushSubscription
         {

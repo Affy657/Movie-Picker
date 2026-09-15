@@ -63,7 +63,7 @@ public sealed class MarkAsSeenHandlerTests
         var request = new MarkAsSeenRequest { ParticipantId = "p1" };
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", "mov1", request));
-        Assert.Equal("Soirée introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public sealed class MarkAsSeenHandlerTests
         var request = new MarkAsSeenRequest { ParticipantId = "p1" };
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", request));
-        Assert.Contains("terminée", ex.Message);
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class MarkAsSeenHandlerTests
         var request = new MarkAsSeenRequest { ParticipantId = "p1" };
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "mov1", request));
-        Assert.Equal("Film introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public sealed class MarkAsSeenHandlerTests
         var request = new MarkAsSeenRequest { ParticipantId = "ghost" };
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", "mov1", request));
-        Assert.Contains("Participant", ex.Message);
+        Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
     }
 
     [Fact]

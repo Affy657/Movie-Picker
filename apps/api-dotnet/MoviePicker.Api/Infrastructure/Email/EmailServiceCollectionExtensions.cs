@@ -32,8 +32,8 @@ public static class EmailServiceCollectionExtensions
         if (!environment.IsDevelopment() && provider == "resend")
         {
             Console.Error.WriteLine(
-                "[WARN] EMAIL_PROVIDER=resend mais RESEND_API_KEY absente → fallback LogEmailSender. " +
-                "Les emails (mot de passe oublié) ne seront PAS envoyés.");
+                "[WARN] EMAIL_PROVIDER=resend but RESEND_API_KEY is missing, falling back to LogEmailSender. " +
+                "E-mails (forgotten password) will NOT be sent.");
         }
 
         return services;

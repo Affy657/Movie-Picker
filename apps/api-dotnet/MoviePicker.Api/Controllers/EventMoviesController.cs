@@ -11,6 +11,7 @@ using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.SetMoviePitchNote;
 using MoviePicker.Api.Application.UseCases.SetMovieWheelExclusion;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -104,7 +105,7 @@ public sealed class EventMoviesController : ControllerBase
         CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(participantId))
-            return BadRequest(new { error = "Le paramètre participantId est requis." });
+            throw Errors.ParticipantIdRequired();
         await handler.HandleAsync(idOrSlug, movieId, participantId, ct);
         return NoContent();
     }

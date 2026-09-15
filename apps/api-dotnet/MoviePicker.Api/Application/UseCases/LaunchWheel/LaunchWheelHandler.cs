@@ -47,26 +47,26 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         var token = _hostTokenAccessor.GetHostToken();
         var userId = _currentUserAccessor.GetUserId();
         if (!EventHost.IsHost(evt, token, userId))
-            throw new ForbiddenException("Réservé à l'hôte de la soirée");
+            throw Errors.HostOnly();
 
         if (evt.IsFinished(_clock.GetUtcNow()))
-            throw new ConflictException("Soirée terminée. Lecture seule.");
+            throw Errors.EventFinished();
 
         if (evt.RemainingWinnerSlots == 0)
-            throw new ConflictException(WinnerSlots.AllDrawnMessage(evt.TargetWinnerCount));
+            throw Errors.WinnersAllDrawn(evt.TargetWinnerCount);
 
         var movies = await _movieRepository.ListByEventIdAsync(evt.Id, ct);
         if (movies.Count == 0)
-            throw new BadRequestException("Aucun film proposé. Proposez au moins un film pour lancer la roue.");
+            throw Errors.NoMovieProposed();
 
         var eligibleCount = movies.Count(m => !m.ExcludedFromWheel);
         if (eligibleCount == 0)
-            throw new BadRequestException("Tous les films sont exclus du tirage. Réintégrez au moins un film pour lancer la roue.");
+            throw Errors.AllMoviesExcluded();
 
         var alreadyPicked = evt.WinnerMovieIds;
         var drawableCount = movies.Count(m => !m.ExcludedFromWheel && !alreadyPicked.Contains(m.Id));
         if (drawableCount == 0)
-            throw new BadRequestException(WinnerSlots.NothingLeftToDrawMessage);
+            throw Errors.NothingLeftToDraw();
 
         var mode = evt.Config?.WheelMode ?? WheelMode.StrictRandom;
         var scores = await _voteRepository.AggregateScoresByMovieIdsAsync(
@@ -97,8 +97,8 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
 
 
         var message = drawableCount == 1
-            ? "Un seul film dans le tirage : gagnant direct."
-            : "Roue lancée.";
+            ? "Only one movie in the draw: direct winner"
+            : "Wheel spun";
 
         if (winner.PosterPath is not null &&
             TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(winner.PosterPath, out var wNorm))

@@ -47,23 +47,23 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         var token = _hostTokenAccessor.GetHostToken();
         var userId = _currentUserAccessor.GetUserId();
         if (!EventHost.IsHost(evt, token, userId))
-            throw new ForbiddenException("Réservé à l'hôte de la soirée");
+            throw Errors.HostOnly();
 
         if (evt.IsFinished(_clock.GetUtcNow()))
-            throw new ConflictException("Soirée terminée. Lecture seule.");
+            throw Errors.EventFinished();
 
         if (evt.RemainingWinnerSlots == 0)
-            throw new ConflictException(WinnerSlots.AllDrawnMessage(evt.TargetWinnerCount));
+            throw Errors.WinnersAllDrawn(evt.TargetWinnerCount);
 
         var winner = await _movieRepository.GetByIdAsync(request.MovieId, ct);
         if (winner is null || winner.EventId != evt.Id)
-            throw new NotFoundException("Film introuvable dans cette soirée");
+            throw Errors.MovieNotInEvent();
 
         if (winner.ExcludedFromWheel)
-            throw new ConflictException("Ce film est exclu du tirage. Réintégrez-le pour pouvoir le choisir.");
+            throw Errors.MovieExcludedFromWheel();
 
         if (evt.WinnerMovieIds.Contains(winner.Id))
-            throw new ConflictException(WinnerSlots.AlreadyAWinnerMessage);
+            throw Errors.MovieAlreadyAWinner();
 
         var now = _clock.GetUtcNow();
         var updated = evt with
@@ -90,7 +90,7 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         return new WheelResponse
         {
             Winner = WinnerMovieResponse.FromDomain(winner, winnerPoster),
-            Message = "Film choisi par l'hôte."
+            Message = "Movie picked by the host"
         };
     }
 }

@@ -34,12 +34,12 @@ public sealed class GetEligibleFollowsForEventHandler : IGetEligibleFollowsForEv
     {
         var currentUserId = _currentUserAccessor.GetUserId();
         if (string.IsNullOrEmpty(currentUserId))
-            throw new UnauthorizedException("Un compte est requis.");
+            throw Errors.AccountRequired();
 
         var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.CreatorUserId != currentUserId)
-            throw new ForbiddenException("Seul l'hôte peut consulter cette liste.");
+            throw Errors.HostOnlyList();
 
         var followingIds = await _follows.GetFollowingIdsAsync(currentUserId, ct: ct);
         if (followingIds.Count == 0)

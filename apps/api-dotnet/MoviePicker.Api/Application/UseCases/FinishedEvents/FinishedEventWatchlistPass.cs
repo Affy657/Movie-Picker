@@ -65,7 +65,7 @@ public sealed class FinishedEventWatchlistPass : IFinishedEventWatchlistPass
         {
             _logger.LogWarning(
                 ex,
-                "Échec du retrait des films gagnants des watchlists pour la soirée {EventId}",
+                "Failed to remove the winning movies from watchlists for movie night {EventId}",
                 evt.Id);
             return false;
         }
@@ -95,7 +95,7 @@ public sealed class FinishedEventWatchlistPass : IFinishedEventWatchlistPass
 
         if (removed > 0)
             _logger.LogInformation(
-                "Films gagnants retirés de {Count} watchlist(s) à la fin de la soirée {EventId}",
+                "Winning movies removed from {Count} watchlist(s) at the end of movie night {EventId}",
                 removed,
                 evt.Id);
     }

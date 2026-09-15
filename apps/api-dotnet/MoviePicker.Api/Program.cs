@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.Web;
 using Sentry;
@@ -91,7 +92,7 @@ builder.Services.AddSwaggerGen(c =>
             Title = "Movie Picker API",
             Version = "v1",
             Description =
-                "Ressources métier sous **`/api/v1`** (santé : `GET /health`). Voir `ApiRoutePrefix.V1` côté serveur et préfixe dans `apps/web/src/api/client.ts`."
+                "Business resources under **`/api/v1`** (health: `GET /health`). See `ApiRoutePrefix.V1` on the server and the prefix in `apps/web/src/shared/api/client.ts`."
         });
 });
 
@@ -130,7 +131,8 @@ app.UseStatusCodePages(async context =>
         var json = ApiErrorJson.Serialize(
             context.HttpContext,
             StatusCodes.Status404NotFound,
-            "Ressource introuvable");
+            "Resource not found",
+            ErrorCodes.NotFound);
         await context.HttpContext.Response.WriteAsync(json);
     }
 });

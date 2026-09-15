@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.Profile;
 
@@ -17,7 +18,7 @@ public sealed class CheckHandleAvailabilityHandler : ICheckHandleAvailabilityHan
         var normalized = HandlePolicy.Normalize(handle);
         var error = HandlePolicy.Validate(normalized);
         if (error is not null)
-            return new HandleAvailabilityResponse { Handle = normalized, Available = false, Reason = error };
+            return new HandleAvailabilityResponse { Handle = normalized, Available = false, Reason = error.Reason };
 
         var existing = await _users.GetByHandleAsync(normalized, ct);
         var available = existing is null || existing.Id == currentUserId;
@@ -26,7 +27,7 @@ public sealed class CheckHandleAvailabilityHandler : ICheckHandleAvailabilityHan
         {
             Handle = normalized,
             Available = available,
-            Reason = available ? null : "Ce handle est déjà pris."
+            Reason = available ? null : ErrorCodes.HandleTaken
         };
     }
 }

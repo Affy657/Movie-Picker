@@ -239,7 +239,7 @@ public sealed class PatchEventConfigHandlerTests
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
             _sut.HandleAsync("s", new PatchEventConfigRequest { MaxParticipants = 5 }));
-        Assert.Contains("inférieure", ex.Message);
+        Assert.Equal(ErrorCodes.ParticipantLimitBelowCurrent, ex.Reason);
     }
 
     [Fact]
@@ -305,6 +305,6 @@ public sealed class PatchEventConfigHandlerTests
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
             _sut.HandleAsync("s", new PatchEventConfigRequest { Title = "Nouveau nom" }));
-        Assert.Contains("terminée", ex.Message);
+        Assert.Equal(ErrorCodes.EventTitleLockedFinished, ex.Reason);
     }
 }

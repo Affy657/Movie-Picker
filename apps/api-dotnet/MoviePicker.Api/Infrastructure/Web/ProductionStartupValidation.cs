@@ -10,13 +10,13 @@ public static class ProductionStartupValidation
         if (string.IsNullOrWhiteSpace(app.Configuration["ALLOWED_ORIGINS"]))
         {
             throw new InvalidOperationException(
-                "ALLOWED_ORIGINS est obligatoire hors développement (liste d'URLs du front séparées par des virgules, ex. https://d123.cloudfront.net).");
+                "ALLOWED_ORIGINS is required outside development (comma-separated list of front URLs, e.g. https://d123.cloudfront.net).");
         }
 
         if (string.IsNullOrWhiteSpace(app.Configuration["MONGODB_URI"]))
         {
             throw new InvalidOperationException(
-                "MONGODB_URI est obligatoire hors développement. En GCP : secret Secret Manager référencé par Cloud Run, ou variable d'environnement pour un déploiement manuel.");
+                "MONGODB_URI is required outside development. On GCP: a Secret Manager secret referenced by Cloud Run, or an environment variable for a manual deployment.");
         }
     }
 }

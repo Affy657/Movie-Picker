@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.LetterboxdImport;
@@ -90,7 +91,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         var outcome = await _sut.SyncAsync(TheUser());
 
         Assert.False(outcome.Succeeded);
-        Assert.Contains(Username, outcome.Error!, StringComparison.Ordinal);
+        Assert.Equal(ErrorCodes.LetterboxdWatchlistIncomplete, outcome.Error);
         _watchlist.Verify(
             w => w.RemoveAsync(
                 It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),

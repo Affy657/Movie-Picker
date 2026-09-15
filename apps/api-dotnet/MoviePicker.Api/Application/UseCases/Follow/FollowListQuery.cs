@@ -18,7 +18,7 @@ internal static class FollowListQuery
         var normalized = HandlePolicy.Normalize(handle);
         var user = await users.GetByHandleAsync(normalized, ct);
         if (user is null || !user.IsProfilePublic)
-            throw new NotFoundException("Profil introuvable");
+            throw Errors.ProfileNotFound();
 
         var ids = await getTargetIds(user.Id, ct);
         if (ids.Count == 0)

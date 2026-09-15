@@ -80,7 +80,7 @@ public sealed class SetManualWinnerHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("wrong");
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", Request("mov1")));
-        Assert.Contains("hôte", ex.Message);
+        Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public sealed class SetManualWinnerHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request("mov1")));
-        Assert.Contains("terminée", ex.Message);
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public sealed class SetManualWinnerHandlerTests
             .ReturnsAsync(MovieOf("mov1", "evt1") with { ExcludedFromWheel = true });
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request("mov1")));
-        Assert.Contains("exclu", ex.Message);
+        Assert.Equal(ErrorCodes.MovieExcludedFromWheel, ex.Reason);
         _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

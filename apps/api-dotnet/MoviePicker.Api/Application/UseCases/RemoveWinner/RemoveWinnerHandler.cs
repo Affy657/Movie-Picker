@@ -38,19 +38,19 @@ public sealed class RemoveWinnerHandler : IRemoveWinnerHandler
         var token = _hostTokenAccessor.GetHostToken();
         var userId = _currentUserAccessor.GetUserId();
         if (!EventHost.IsHost(evt, token, userId))
-            throw new ForbiddenException("Réservé à l'hôte de la soirée");
+            throw Errors.HostOnly();
 
         if (evt.IsFinished(_clock.GetUtcNow()))
-            throw new ConflictException("Soirée terminée. Lecture seule.");
+            throw Errors.EventFinished();
 
         var removed = evt.Winners.FirstOrDefault(w => w.MovieId == movieId)
-            ?? throw new NotFoundException("Ce film ne fait pas partie des gagnants de la soirée");
+            ?? throw Errors.MovieNotAWinner();
         var remaining = evt.Winners.Where(w => w.MovieId != removed.MovieId).ToList();
 
         var now = _clock.GetUtcNow();
         await _eventRepository.UpdateAsync(evt with { Winners = remaining, UpdatedAt = now }, ct);
         _logger.LogInformation("Winner {MovieId} removed from event {EventId}", removed.MovieId, evt.Id);
 
-        return new ResetWheelResponse { Message = "Film retiré du palmarès." };
+        return new ResetWheelResponse { Message = "Movie removed from the winners" };
     }
 }

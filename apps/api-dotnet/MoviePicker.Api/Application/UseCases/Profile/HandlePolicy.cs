@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.Profile;
 
@@ -25,28 +26,28 @@ public static partial class HandlePolicy
 
     public static bool IsReserved(string normalized) => Reserved.Contains(normalized);
 
-    public static string? Validate(string? raw)
+    public static BadRequestException? Validate(string? raw)
     {
         var normalized = Normalize(raw);
         if (string.IsNullOrEmpty(normalized))
-            return "Le handle est requis.";
+            return Errors.HandleRequired();
         if (normalized.Length < MinLength)
-            return $"Le handle doit contenir au moins {MinLength} caractères.";
+            return Errors.HandleTooShort(MinLength);
         if (normalized.Length > MaxLength)
-            return $"Le handle ne peut pas dépasser {MaxLength} caractères.";
+            return Errors.HandleTooLong(MaxLength);
         if (!HandleRegex().IsMatch(normalized))
-            return "Le handle ne peut contenir que des lettres minuscules, chiffres et underscores.";
+            return Errors.HandleInvalidCharacters();
         if (IsReserved(normalized))
-            return "Ce handle est réservé.";
+            return Errors.HandleReserved();
         return null;
     }
 
-    public static string? ValidateBio(string? raw)
+    public static BadRequestException? ValidateBio(string? raw)
     {
         if (raw is null)
             return null;
         if (raw.Length > BioMaxLength)
-            return $"La bio ne peut pas dépasser {BioMaxLength} caractères.";
+            return Errors.BioTooLong(BioMaxLength);
         return null;
     }
 

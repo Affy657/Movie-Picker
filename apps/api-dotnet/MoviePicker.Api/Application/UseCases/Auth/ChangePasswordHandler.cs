@@ -30,7 +30,7 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
 
     public async Task HandleAsync(string userId, ChangePasswordRequest request, CancellationToken ct = default)
     {
-        var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable.");
+        var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
 
         if (!string.IsNullOrEmpty(user.PasswordHash))
         {
@@ -38,13 +38,13 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
             if (verify == PasswordVerification.Failed)
             {
                 _logger.LogWarning("ChangePassword: incorrect current password for {UserId}", userId);
-                throw new UnauthorizedException("Mot de passe actuel incorrect.");
+                throw Errors.CurrentPasswordIncorrect();
             }
         }
 
         var validationError = AuthInputValidation.ValidatePassword(request.NewPassword);
         if (validationError is not null)
-            throw new BadRequestException(validationError);
+            throw validationError;
 
         var now = _clock.GetUtcNow();
         var newHash = _passwordHasher.Hash(request.NewPassword);

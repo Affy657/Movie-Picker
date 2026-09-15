@@ -20,7 +20,7 @@ public static class WheelWinnerPicker
 
         var pool = RemoveAlreadyPicked(eligible, excludedMovieIds);
         if (pool.Count == 0)
-            throw new InvalidOperationException("Tous les films éligibles ont déjà été tirés.");
+            throw new InvalidOperationException("Every eligible movie has already been drawn");
 
         if (pool.Count == 1)
             return pool[0];

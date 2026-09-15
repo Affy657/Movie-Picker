@@ -34,13 +34,13 @@ public sealed class FollowUserHandler : IFollowUserHandler
     {
         var normalized = HandlePolicy.Normalize(targetHandle);
         var target = await _users.GetByHandleAsync(normalized, ct)
-            ?? throw new NotFoundException("Profil introuvable");
+            ?? throw Errors.ProfileNotFound();
 
         if (target.Id == currentUserId)
-            throw new BadRequestException("Vous ne pouvez pas vous suivre vous-même.");
+            throw Errors.SelfFollow();
 
         if (!target.IsProfilePublic)
-            throw new NotFoundException("Profil introuvable");
+            throw Errors.ProfileNotFound();
 
         var isNewFollow = await _follows.FollowAsync(currentUserId, target.Id, ct);
         if (!isNewFollow)

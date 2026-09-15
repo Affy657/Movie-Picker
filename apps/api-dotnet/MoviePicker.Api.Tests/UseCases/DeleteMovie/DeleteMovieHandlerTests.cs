@@ -63,7 +63,7 @@ public sealed class DeleteMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", "mov1", "p123456789012345678901234"));
-        Assert.Equal("Soirée introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public sealed class DeleteMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", "p123456789012345678901234"));
-        Assert.Contains("terminée", ex.Message);
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public sealed class DeleteMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", "p123456789012345678901234"));
-        Assert.Contains("roue", ex.Message);
+        Assert.StartsWith("wheel_locked", ex.Reason);
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public sealed class DeleteMovieHandlerTests
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "mov1", "p123456789012345678901234"));
-        Assert.Equal("Film introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public sealed class DeleteMovieHandlerTests
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "mov1", "p123456789012345678901234"));
-        Assert.Contains("proposé", ex.Message);
+        Assert.Equal(ErrorCodes.MovieRemovalRestricted, ex.Reason);
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public sealed class DeleteMovieHandlerTests
         _currentUser.Setup(u => u.GetUserId()).Returns("attacker-user");
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1", "mov1", proposerId));
-        Assert.Contains("proposé", ex.Message);
+        Assert.Equal(ErrorCodes.MovieRemovalRestricted, ex.Reason);
         _movieRepo.Verify(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

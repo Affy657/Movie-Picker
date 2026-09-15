@@ -20,15 +20,13 @@ internal static class OptimisticConcurrency
     public static async Task ThrowForUnmatchedWriteAsync<TDocument>(
         TransactionalCollection<TDocument> collection,
         Expression<Func<TDocument, bool>> byId,
-        string entityLabel,
+        Func<NotFoundException> notFound,
         CancellationToken ct)
     {
         var exists = await collection.CountDocumentsAsync(byId, cancellationToken: ct) > 0;
         if (!exists)
-            throw new NotFoundException($"{entityLabel} introuvable");
+            throw notFound();
 
-        throw new ConflictException(
-            $"{entityLabel} modifié entre-temps. Rechargez la page et réessayez.",
-            ConcurrencyConflict.Reason);
+        throw Errors.ConcurrentUpdate();
     }
 }

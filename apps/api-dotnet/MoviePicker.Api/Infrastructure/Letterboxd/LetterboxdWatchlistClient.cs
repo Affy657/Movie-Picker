@@ -43,7 +43,7 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
         if (films.Count != expected)
         {
             _logger.LogWarning(
-                "Watchlist Letterboxd incomplète pour {Username} : {Collected} film(s) lu(s) sur {Expected} annoncé(s)",
+                "Incomplete Letterboxd watchlist for {Username}: {Collected} film(s) read out of {Expected} announced",
                 normalized,
                 films.Count,
                 expected);
@@ -73,7 +73,7 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
             if (expected < 0)
             {
                 _logger.LogWarning(
-                    "Watchlist Letterboxd illisible pour {Username} : compteur d'entrées introuvable",
+                    "Unreadable Letterboxd watchlist for {Username}: entry counter not found",
                     username);
                 return new WatchlistPageOutcome(true, true, expected);
             }
@@ -109,7 +109,7 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
         {
             _logger.LogWarning(
                 ex,
-                "Échec de récupération de la watchlist Letterboxd pour {Username} (page {Page})",
+                "Failed to fetch the Letterboxd watchlist for {Username} (page {Page})",
                 username,
                 page);
             return null;
@@ -118,7 +118,7 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
         {
             _logger.LogWarning(
                 ex,
-                "Délai dépassé sur la watchlist Letterboxd pour {Username} (page {Page})",
+                "Timeout on the Letterboxd watchlist for {Username} (page {Page})",
                 username,
                 page);
             return null;

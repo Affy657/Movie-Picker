@@ -33,7 +33,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
-            throw new ServiceUnavailableException("Recherche films temporairement indisponible");
+            throw Errors.SearchUnavailable();
 
         var allowSeries = await AllowsSeriesAsync(eventSlug, ct);
 
@@ -54,7 +54,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         }
         catch (HttpRequestException)
         {
-            throw new ServiceUnavailableException("Recherche films temporairement indisponible");
+            throw Errors.SearchUnavailable();
         }
 
         var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)

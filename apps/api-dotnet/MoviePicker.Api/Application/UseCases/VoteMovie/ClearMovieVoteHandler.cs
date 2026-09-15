@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Shared;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.VoteMovie;
 
@@ -39,7 +40,7 @@ public sealed class ClearMovieVoteHandler : IClearMovieVoteHandler
             idOrSlug,
             movieId,
             participantId,
-            "Vous ne pouvez modifier que votre propre vote.",
+            Errors.VoteOwnOnly,
             ct);
 
         await _voteRepository.DeleteByMovieAndParticipantAsync(movie.Id, participant.Id, ct);

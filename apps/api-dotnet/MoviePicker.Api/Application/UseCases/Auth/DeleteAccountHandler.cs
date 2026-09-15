@@ -53,7 +53,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
 
     public async Task HandleAsync(string userId, DeleteAccountRequest request, CancellationToken ct = default)
     {
-        var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable.");
+        var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
 
         if (string.IsNullOrEmpty(user.PasswordHash))
         {
@@ -64,7 +64,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
             if (!matchesHandle && !matchesEmail)
             {
                 _logger.LogWarning("DeleteAccount: incorrect confirmation for {UserId}", userId);
-                throw new UnauthorizedException("Confirmation incorrecte.");
+                throw Errors.ConfirmationIncorrect();
             }
         }
         else
@@ -73,7 +73,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
             if (verify == PasswordVerification.Failed)
             {
                 _logger.LogWarning("DeleteAccount: incorrect password for {UserId}", userId);
-                throw new UnauthorizedException("Mot de passe incorrect.");
+                throw Errors.WrongPassword();
             }
         }
 

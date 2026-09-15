@@ -22,7 +22,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         PatchUserProfileRequest request,
         CancellationToken ct = default)
     {
-        var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable");
+        var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
 
         var nothingToUpdate = request.DisplayName is null
             && request.UiTheme is null
@@ -45,9 +45,9 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         {
             saved = await _users.UpdateAsync(updated, ct);
         }
-        catch (ConflictException ex) when (ex.Message == "handle_conflict")
+        catch (ConflictException ex) when (ex.Reason == ErrorCodes.HandleTaken)
         {
-            throw new ConflictException("Ce handle est déjà pris.");
+            throw Errors.HandleTaken();
         }
         return ToResponse(saved);
     }
@@ -59,7 +59,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         {
             var err = AuthInputValidation.ValidateDisplayName(request.DisplayName);
             if (err is not null)
-                throw new BadRequestException(err);
+                throw err;
             displayName = request.DisplayName.Trim();
         }
 
@@ -117,11 +117,11 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 
         var err = HandlePolicy.Validate(normalized);
         if (err is not null)
-            throw new BadRequestException(err);
+            throw err;
 
         var existing = await _users.GetByHandleAsync(normalized, ct);
         if (existing is not null && existing.Id != user.Id)
-            throw new ConflictException("Ce handle est déjà pris.");
+            throw Errors.HandleTaken();
 
         return normalized;
     }
@@ -157,7 +157,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             return current;
         var bioErr = HandlePolicy.ValidateBio(requested);
         if (bioErr is not null)
-            throw new BadRequestException(bioErr);
+            throw bioErr;
         var trimmed = requested.Trim();
         return trimmed.Length == 0 ? null : trimmed;
     }
@@ -168,7 +168,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             return current;
         var trimmed = requested.Trim();
         if (trimmed.Length > 0 && !IsValidLetterboxdUsername(trimmed))
-            throw new BadRequestException("Le pseudo Letterboxd ne peut contenir que des lettres, chiffres et underscores.");
+            throw Errors.LetterboxdUsernameInvalid();
         return trimmed.Length == 0 ? null : trimmed;
     }
 

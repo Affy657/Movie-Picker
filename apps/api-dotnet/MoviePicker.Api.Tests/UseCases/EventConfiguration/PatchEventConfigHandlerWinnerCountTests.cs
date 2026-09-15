@@ -111,7 +111,8 @@ public sealed class PatchEventConfigHandlerWinnerCountTests
         var ex = await Assert.ThrowsAsync<ConflictException>(
             () => _sut.HandleAsync("s", new PatchEventConfigRequest { WinnerCount = 2 }));
 
-        Assert.Contains("3 films", ex.Message, StringComparison.Ordinal);
+        Assert.Equal(ErrorCodes.WinnerCountBelowDrawn, ex.Reason);
+        Assert.Equal(3, ex.Parameters!["count"]);
     }
 
     [Fact]

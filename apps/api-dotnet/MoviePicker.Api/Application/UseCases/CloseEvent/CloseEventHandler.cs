@@ -44,11 +44,11 @@ public sealed class CloseEventHandler : ICloseEventHandler
         var token = _hostTokenAccessor.GetHostToken();
         var userId = _currentUserAccessor.GetUserId();
         if (!EventHost.IsHost(evt, token, userId))
-            throw new ForbiddenException("Réservé à l'hôte de la soirée");
+            throw Errors.HostOnly();
 
         if (evt.ClosedAt.HasValue)
         {
-            return ToResponse(evt, "Soirée déjà clôturée");
+            return ToResponse(evt, "Movie night already closed");
         }
 
         var now = _clock.GetUtcNow();
@@ -60,7 +60,7 @@ public sealed class CloseEventHandler : ICloseEventHandler
         await _watchlistCleanup.RunForEventAsync(saved, ct);
         await OpenNextOccurrenceAsync(saved, ct);
 
-        return ToResponse(saved, "Soirée clôturée.");
+        return ToResponse(saved, "Movie night closed");
     }
 
     private async Task OpenNextOccurrenceAsync(Event evt, CancellationToken ct)

@@ -70,7 +70,7 @@ public sealed class ResetWheelHandlerTests
 
         var result = await _sut.HandleAsync("evt1");
 
-        Assert.Equal("Aucun tirage à annuler.", result.Message);
+        Assert.Equal("No draw to cancel", result.Message);
         _events.Verify(e => e.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -84,7 +84,7 @@ public sealed class ResetWheelHandlerTests
 
         var result = await _sut.HandleAsync("evt1");
 
-        Assert.Equal("Tirage annulé.", result.Message);
+        Assert.Equal("Draw cancelled", result.Message);
         _events.Verify(
             e => e.UpdateAsync(
                 It.Is<Event>(x => x.Winners.Count == 0),

@@ -36,13 +36,13 @@ public sealed class ResetWheelHandler : IResetWheelHandler
         var token = _hostTokenAccessor.GetHostToken();
         var userId = _currentUserAccessor.GetUserId();
         if (!EventHost.IsHost(evt, token, userId))
-            throw new ForbiddenException("Réservé à l'hôte de la soirée");
+            throw Errors.HostOnly();
 
         if (evt.IsFinished(_clock.GetUtcNow()))
-            throw new ConflictException("Soirée terminée. Lecture seule.");
+            throw Errors.EventFinished();
 
         if (!evt.HasWinner)
-            return new ResetWheelResponse { Message = "Aucun tirage à annuler." };
+            return new ResetWheelResponse { Message = "No draw to cancel" };
 
         var now = _clock.GetUtcNow();
         var updated = evt with
@@ -53,6 +53,6 @@ public sealed class ResetWheelHandler : IResetWheelHandler
         await _eventRepository.UpdateAsync(updated, ct);
         _logger.LogInformation("Wheel reset for event {EventId}", evt.Id);
 
-        return new ResetWheelResponse { Message = "Tirage annulé." };
+        return new ResetWheelResponse { Message = "Draw cancelled" };
     }
 }

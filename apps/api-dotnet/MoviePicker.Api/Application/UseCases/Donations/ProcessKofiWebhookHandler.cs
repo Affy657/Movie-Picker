@@ -38,7 +38,7 @@ public sealed class ProcessKofiWebhookHandler : IProcessKofiWebhookHandler
         var expectedToken = _options.KofiWebhookToken;
         if (string.IsNullOrWhiteSpace(expectedToken))
         {
-            _logger.LogError("Webhook Ko-fi reçu alors que KOFI_WEBHOOK_TOKEN n'est pas configuré.");
+            _logger.LogError("Ko-fi webhook received while KOFI_WEBHOOK_TOKEN is not configured");
             return KofiWebhookOutcome.NotConfigured;
         }
 
@@ -48,13 +48,13 @@ public sealed class ProcessKofiWebhookHandler : IProcessKofiWebhookHandler
 
         if (!TokensMatch(payload.VerificationToken, expectedToken))
         {
-            _logger.LogWarning("Webhook Ko-fi rejeté : token de vérification invalide.");
+            _logger.LogWarning("Ko-fi webhook rejected: invalid verification token");
             return KofiWebhookOutcome.InvalidToken;
         }
 
         if (await _log.HasProcessedAsync(payload.MessageId, ct))
         {
-            _logger.LogInformation("Webhook Ko-fi ignoré : message {MessageId} déjà traité.", payload.MessageId);
+            _logger.LogInformation("Ko-fi webhook ignored: message {MessageId} already processed", payload.MessageId);
             return KofiWebhookOutcome.AlreadyProcessed;
         }
 
@@ -69,7 +69,7 @@ public sealed class ProcessKofiWebhookHandler : IProcessKofiWebhookHandler
     {
         if (!GrantsSupporterBadge(payload.Type))
         {
-            _logger.LogInformation("Webhook Ko-fi sans badge : type {Type} non éligible.", payload.Type);
+            _logger.LogInformation("Ko-fi webhook without badge: type {Type} is not eligible", payload.Type);
             return KofiWebhookOutcome.UnsupportedType;
         }
 
@@ -90,11 +90,11 @@ public sealed class ProcessKofiWebhookHandler : IProcessKofiWebhookHandler
 
         if (!await _users.MarkSupporterAsync(user.Id, now, ct))
         {
-            _logger.LogInformation("Webhook Ko-fi : l'utilisateur {UserId} était déjà marqué soutien.", user.Id);
+            _logger.LogInformation("Ko-fi webhook: user {UserId} was already flagged as a supporter", user.Id);
             return KofiWebhookOutcome.AlreadySupporter;
         }
 
-        _logger.LogInformation("Webhook Ko-fi : badge soutien attribué à l'utilisateur {UserId}.", user.Id);
+        _logger.LogInformation("Ko-fi webhook: supporter badge granted to user {UserId}", user.Id);
         return KofiWebhookOutcome.SupporterMarked;
     }
 

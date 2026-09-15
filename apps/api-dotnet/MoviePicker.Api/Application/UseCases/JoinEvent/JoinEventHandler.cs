@@ -43,12 +43,12 @@ public sealed class JoinEventHandler : IJoinEventHandler
     public async Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string authenticatedUserId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(authenticatedUserId))
-            throw new UnauthorizedException("Un compte est requis pour rejoindre une soirée.");
+            throw Errors.AccountRequired();
 
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.IsFinished(_clock.GetUtcNow()))
-            throw new ConflictException("Soirée terminée. Lecture seule.");
+            throw Errors.EventFinished();
 
         var userId = authenticatedUserId;
         var alreadyLinked = await _participantRepository.FindByEventAndUserIdAsync(evt.Id, userId, ct);
@@ -58,7 +58,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
             {
                 Participant = ParticipantResponse.FromDomain(alreadyLinked),
                 IsNew = false,
-                Message = "Déjà inscrit avec ce compte"
+                Message = "Already joined with this account"
             };
         }
 
@@ -71,7 +71,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
             {
                 Participant = ParticipantResponse.FromDomain(existing),
                 IsNew = false,
-                Message = "Déjà inscrit avec ce pseudo"
+                Message = "Already joined with this pseudo"
             };
         }
 
@@ -95,8 +95,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
                     await _eventRepository.LockForWriteAsync(evt.Id, token);
                     var currentCount = await _participantRepository.CountByEventIdAsync(evt.Id, token);
                     if (currentCount >= cap)
-                        throw new ConflictException(
-                            $"La soirée est complète ({cap} participants maximum).");
+                        throw Errors.EventFull(cap);
                     created = await _participantRepository.AddAsync(participant, token);
                 },
                 ct);
@@ -159,7 +158,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Échec de la notification d'inscription pour la soirée {EventId}", evt.Id);
+            _logger.LogWarning(ex, "Join notification failed for movie night {EventId}", evt.Id);
         }
     }
 }

@@ -47,7 +47,7 @@ public sealed class MongoIndexInitializer : IHostedService
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("Échec de la création des index MongoDB au démarrage.", ex);
+            throw new InvalidOperationException("MongoDB index creation failed at startup", ex);
         }
     }
 

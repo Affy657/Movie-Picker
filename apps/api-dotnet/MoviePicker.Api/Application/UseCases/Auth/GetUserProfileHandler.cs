@@ -12,7 +12,7 @@ public sealed class GetUserProfileHandler : IGetUserProfileHandler
 
     public async Task<UserProfileResponse> HandleAsync(string userId, CancellationToken ct = default)
     {
-        var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable");
+        var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
         return new UserProfileResponse
         {
             UserId = user.Id,

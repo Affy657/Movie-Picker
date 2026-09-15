@@ -6,16 +6,16 @@ namespace MoviePicker.Api.Application.DTOs;
 
 public sealed class RegisterRequest
 {
-    [Required(ErrorMessage = "L'e-mail est requis.")]
-    [EmailAddress(ErrorMessage = "Format d'e-mail invalide.")]
+    [Required(ErrorMessage = "E-mail is required")]
+    [EmailAddress(ErrorMessage = "Invalid e-mail format")]
     public string Email { get; init; } = string.Empty;
 
-    [Required(ErrorMessage = "Le mot de passe est requis.")]
+    [Required(ErrorMessage = "Password is required")]
     [MinLength(1)]
     [MaxLength(128)]
     public string Password { get; init; } = string.Empty;
 
-    [Required(ErrorMessage = "Le pseudo est requis.")]
+    [Required(ErrorMessage = "Display name is required")]
     [MaxLength(80)]
     public string DisplayName { get; init; } = string.Empty;
 }
@@ -28,11 +28,11 @@ public sealed class RegisterResponse
 
 public sealed class LoginRequest
 {
-    [Required(ErrorMessage = "L'e-mail est requis.")]
-    [EmailAddress(ErrorMessage = "Format d'e-mail invalide.")]
+    [Required(ErrorMessage = "E-mail is required")]
+    [EmailAddress(ErrorMessage = "Invalid e-mail format")]
     public string Email { get; init; } = string.Empty;
 
-    [Required(ErrorMessage = "Le mot de passe est requis.")]
+    [Required(ErrorMessage = "Password is required")]
     public string Password { get; init; } = string.Empty;
 }
 
@@ -71,33 +71,32 @@ public sealed class PatchUserProfileRequest
     [MaxLength(80)]
     public string? DisplayName { get; init; }
 
-    [RegularExpression("^(system|light|dark)$", ErrorMessage = "uiTheme doit être system, light ou dark.")]
+    [RegularExpression("^(system|light|dark)$", ErrorMessage = "uiTheme must be system, light or dark")]
     public string? UiTheme { get; init; }
 
     [RegularExpression(
         "^(default|blue|green|purple|pink|orange|red|cyan|indigo)$",
-        ErrorMessage = "accentColor doit être default, blue, green, purple, pink, orange, red, cyan ou indigo.")]
+        ErrorMessage = "accentColor must be default, blue, green, purple, pink, orange, red, cyan or indigo")]
     public string? AccentColor { get; init; }
 
-    [RegularExpression("^(five|ten)$", ErrorMessage = "ratingScale doit être five ou ten.")]
+    [RegularExpression("^(five|ten)$", ErrorMessage = "ratingScale must be five or ten")]
     public string? RatingScale { get; init; }
 
     [RegularExpression(
         "^(alpha|beta|bolt|byte|crux|delta|flux|forge|gamma|jolt|kilo|laser|dex|sigma|droid|theta|chip|vibe|cute|wink|hero|halo|grin|cool|keen|jazz|fizz|zest|bold|epic|bask|nod|glow|zoom|snap|luxe)$",
-        ErrorMessage = "avatarId invalide.")]
+        ErrorMessage = "avatarId is invalid")]
     public string? AvatarId { get; init; }
 
-    [MaxLength(20, ErrorMessage = "Handle trop long.")]
+    [MaxLength(20, ErrorMessage = "Handle is too long")]
     public string? Handle { get; init; }
 
-    [MaxLength(140, ErrorMessage = "La bio ne peut pas dépasser 140 caractères.")]
     public string? Bio { get; init; }
 
     public bool? IsProfilePublic { get; init; }
 
     public bool? IsWatchlistPublic { get; init; }
 
-    [MaxLength(40, ErrorMessage = "Le pseudo Letterboxd est trop long.")]
+    [MaxLength(40, ErrorMessage = "Letterboxd username is too long")]
     public string? LetterboxdUsername { get; init; }
 }
 
@@ -105,8 +104,7 @@ public sealed class ChangePasswordRequest
 {
     public string? CurrentPassword { get; init; }
 
-    [Required(ErrorMessage = "Le nouveau mot de passe est requis.")]
-    [MinLength(8, ErrorMessage = "Le mot de passe doit contenir au moins 8 caractères.")]
+    [Required(ErrorMessage = "New password is required")]
     [MaxLength(128)]
     public string NewPassword { get; init; } = string.Empty;
 }

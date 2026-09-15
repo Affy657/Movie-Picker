@@ -191,7 +191,7 @@ public sealed class OAuthLoginHandlerTests
             .ReturnsAsync(winner);
         users.Setup(x => x.GetByEmailAsync("neo@example.com", It.IsAny<CancellationToken>())).ReturnsAsync(byEmail);
         users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new ConflictException("identity_conflict"));
+            .ThrowsAsync(Errors.IdentityConflict());
 
         var handler = new OAuthLoginHandler(users.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 
@@ -219,7 +219,7 @@ public sealed class OAuthLoginHandlerTests
         users.Setup(x => x.GetByEmailAsync("smith@example.com", It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
         users.Setup(x => x.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
         users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new ConflictException("identity_conflict"));
+            .ThrowsAsync(Errors.IdentityConflict());
 
         var handler = new OAuthLoginHandler(users.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 

@@ -57,7 +57,7 @@ public sealed partial class TmdbMovieSearch
         {
             _logger.LogWarning(
                 ex,
-                "TMDB enrichissement échoué pour {MediaType} {TmdbId} région {Region}",
+                "TMDB enrichment failed for {MediaType} {TmdbId} region {Region}",
                 typeSegment,
                 tmdbId,
                 r);

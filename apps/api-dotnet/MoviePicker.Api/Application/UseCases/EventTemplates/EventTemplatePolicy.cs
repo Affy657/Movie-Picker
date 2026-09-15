@@ -8,26 +8,24 @@ namespace MoviePicker.Api.Application.UseCases.EventTemplates;
 
 public static class EventTemplatePolicy
 {
-    public const string NotFoundMessage = "Template de soirée introuvable";
 
     public static async Task<User> RequireUserAsync(
         IUserRepository users,
         string userId,
         CancellationToken ct) =>
-        await users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable");
+        await users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
 
     public static EventTemplate RequireTemplate(IReadOnlyList<EventTemplate> templates, string templateId) =>
         templates.FirstOrDefault(template => template.Id == templateId)
-        ?? throw new NotFoundException(NotFoundMessage);
+        ?? throw Errors.EventTemplateNotFound();
 
     public static string NormalizeName(string? raw)
     {
         var trimmed = (raw ?? string.Empty).Trim();
         if (trimmed.Length == 0)
-            throw new BadRequestException("Le nom du template ne peut pas être vide.");
+            throw Errors.EventTemplateNameRequired();
         if (trimmed.Length > EventTemplate.MaxNameLength)
-            throw new BadRequestException(
-                $"Le nom du template ne peut pas dépasser {EventTemplate.MaxNameLength} caractères.");
+            throw Errors.EventTemplateNameTooLong(EventTemplate.MaxNameLength);
         return trimmed;
     }
 
@@ -41,7 +39,7 @@ public static class EventTemplatePolicy
             && string.Equals(template.Name, name, StringComparison.OrdinalIgnoreCase));
 
         if (alreadyTaken)
-            throw new ConflictException($"Un template s'appelle déjà « {name} ».");
+            throw Errors.EventTemplateNameTaken(name);
     }
 
     public static EventConfig ToConfig(SaveEventTemplateRequest request) => new()

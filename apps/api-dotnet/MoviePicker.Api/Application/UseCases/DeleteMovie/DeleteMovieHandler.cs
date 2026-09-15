@@ -48,7 +48,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
             _clock.GetUtcNow(),
             idOrSlug,
             movieId,
-            "La roue a déjà été lancée, suppression impossible",
+            Errors.WheelLockedDelete,
             ct);
 
         var isProposer = false;
@@ -62,7 +62,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         }
 
         if (!isProposer && !isHost)
-            throw new ForbiddenException("Seul le participant qui a proposé ou l'hôte peut retirer ce film");
+            throw Errors.MovieRemovalRestricted();
 
         await _unitOfWork.ExecuteAsync(
             async token =>

@@ -38,7 +38,7 @@ public sealed class MoviePickerExceptionFilterTests
     {
         var env = new StubHostEnvironment { EnvironmentName = "Production" };
         var filter = new MoviePickerExceptionFilter(env);
-        var context = CreateContext(new NotFoundException("Soirée introuvable"));
+        var context = CreateContext(Errors.EventNotFound());
 
         filter.OnException(context);
 
@@ -49,7 +49,7 @@ public sealed class MoviePickerExceptionFilterTests
         var data = result.Value;
         var errorProp = data?.GetType().GetProperty(nameof(ApiErrorResponse.Error));
         Assert.NotNull(errorProp);
-        Assert.Equal("Soirée introuvable", errorProp.GetValue(data)?.ToString());
+        Assert.Equal("Movie night not found", errorProp.GetValue(data)?.ToString());
         var codeProp = data?.GetType().GetProperty(nameof(ApiErrorResponse.Code));
         Assert.NotNull(codeProp);
         Assert.Equal(404, codeProp.GetValue(data));

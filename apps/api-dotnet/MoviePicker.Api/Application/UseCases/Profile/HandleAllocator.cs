@@ -21,12 +21,12 @@ public static class HandleAllocator
             {
                 return await users.AddAsync(buildDraft(handle), ct);
             }
-            catch (ConflictException ex) when (ex.Message == "handle_conflict" && attempt < MaxHandleAttempts)
+            catch (ConflictException ex) when (ex.Reason == ErrorCodes.HandleTaken && attempt < MaxHandleAttempts)
             {
             }
         }
 
-        throw new ConflictException("Impossible d'allouer un handle unique. Réessayez.");
+        throw Errors.HandleAllocationFailed();
     }
 
     public static async Task<string> AllocateFromDisplayNameAsync(

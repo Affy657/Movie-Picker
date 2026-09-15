@@ -32,13 +32,13 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         CancellationToken ct = default)
     {
         var user = await _users.GetByIdAsync(userId, ct)
-            ?? throw new NotFoundException("Utilisateur introuvable.");
+            ?? throw Errors.UserNotFound();
 
         if (string.IsNullOrWhiteSpace(user.LetterboxdUsername))
         {
             if (!force)
                 return Skipped();
-            throw new BadRequestException("Aucun pseudo Letterboxd enregistré sur votre compte.");
+            throw Errors.LetterboxdUsernameMissing();
         }
 
         var now = _clock.GetUtcNow();
@@ -52,7 +52,7 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         {
             await _users.SetLetterboxdSyncStatusAsync(userId, now, outcome.Error, ct);
             if (force)
-                throw new BadRequestException(outcome.Error ?? "Synchronisation impossible.");
+                throw Errors.LetterboxdSyncFailed(outcome.Error);
             return Skipped();
         }
 

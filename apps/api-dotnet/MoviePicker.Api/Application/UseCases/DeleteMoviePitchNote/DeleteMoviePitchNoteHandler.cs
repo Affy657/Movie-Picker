@@ -40,20 +40,20 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
             _clock.GetUtcNow(),
             idOrSlug,
             movieId,
-            "La roue a déjà été lancée. Lecture seule.",
+            Errors.WheelLocked,
             ct);
 
         if (!isHost)
         {
             if (string.IsNullOrEmpty(request.ParticipantId))
-                throw new ForbiddenException("Seul le participant qui a proposé ce film ou l'hôte peut supprimer la note");
+                throw Errors.PitchNoteDeletionRestricted();
 
             var participant = await _participantRepository.FindByIdAndEventIdAsync(request.ParticipantId, evt.Id, ct);
             if (participant is null)
-                throw new BadRequestException("Participant invalide pour cette soirée");
+                throw Errors.InvalidParticipant();
 
             if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId || movie.ParticipantId != participant.Id)
-                throw new ForbiddenException("Seul le participant qui a proposé ce film ou l'hôte peut supprimer la note");
+                throw Errors.PitchNoteDeletionRestricted();
         }
 
         await _movieRepository.UpdatePitchNoteAsync(movieId, null, ct);

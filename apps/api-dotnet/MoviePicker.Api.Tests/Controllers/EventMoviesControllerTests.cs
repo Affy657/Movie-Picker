@@ -10,6 +10,7 @@ using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.SetMoviePitchNote;
 using MoviePicker.Api.Application.UseCases.VoteMovie;
 using MoviePicker.Api.Controllers;
+using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Controllers;
@@ -71,9 +72,10 @@ public sealed class EventMoviesControllerTests
     {
         var handler = new Mock<IClearMovieVoteHandler>();
 
-        var result = await Controller().ClearVote("e", "m1", "   ", handler.Object, CancellationToken.None);
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
+            Controller().ClearVote("e", "m1", "   ", handler.Object, CancellationToken.None));
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal(ErrorCodes.ParticipantIdRequired, ex.Reason);
         handler.Verify(
             h => h.HandleAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);

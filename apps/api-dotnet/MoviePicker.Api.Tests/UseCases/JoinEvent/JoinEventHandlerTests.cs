@@ -53,7 +53,7 @@ public sealed class JoinEventHandlerTests
         var request = new JoinEventRequest { Pseudo = "Alice" };
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", request, "u1"));
-        Assert.Equal("Soirée introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public sealed class JoinEventHandlerTests
         var request = new JoinEventRequest { Pseudo = "Alice" };
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", request, "u1"));
-        Assert.Contains("terminée", ex.Message);
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public sealed class JoinEventHandlerTests
 
         Assert.False(result.IsNew);
         Assert.Equal("p0", result.Participant.Id);
-        Assert.Equal("Déjà inscrit avec ce pseudo", result.Message);
+        Assert.Equal("Already joined with this pseudo", result.Message);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public sealed class JoinEventHandlerTests
         Assert.False(result.IsNew);
         Assert.Equal("p1", result.Participant.Id);
         Assert.Equal("Premier", result.Participant.Pseudo);
-        Assert.Equal("Déjà inscrit avec ce compte", result.Message);
+        Assert.Equal("Already joined with this account", result.Message);
         _participantRepo.Verify(
             r => r.FindByEventAndPseudoAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -144,7 +144,7 @@ public sealed class JoinEventHandlerTests
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
             _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1"));
-        Assert.Contains("complète", ex.Message);
+        Assert.Equal(ErrorCodes.EventFull, ex.Reason);
         _participantRepo.Verify(
             r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()),
             Times.Never);

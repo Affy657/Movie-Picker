@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -24,7 +25,8 @@ public sealed class ErrorEnvelopeAndCorrelationIdTests : IClassFixture<MoviePick
         Assert.Equal("client-req-abc-01", ids.First());
 
         var json = JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement;
-        Assert.Equal("Ressource introuvable", json.GetProperty("error").GetString());
+        Assert.Equal("Resource not found", json.GetProperty("error").GetString());
+        Assert.Equal(ErrorCodes.NotFound, json.GetProperty("reason").GetString());
         Assert.Equal(404, json.GetProperty("code").GetInt32());
         Assert.Equal("client-req-abc-01", json.GetProperty("requestId").GetString());
     }
@@ -39,7 +41,8 @@ public sealed class ErrorEnvelopeAndCorrelationIdTests : IClassFixture<MoviePick
         Assert.False(string.IsNullOrEmpty(headerId));
 
         var json = JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement;
-        Assert.Equal("Soirée introuvable", json.GetProperty("error").GetString());
+        Assert.Equal("Movie night not found", json.GetProperty("error").GetString());
+        Assert.Equal(ErrorCodes.EventNotFound, json.GetProperty("reason").GetString());
         Assert.Equal(404, json.GetProperty("code").GetInt32());
         Assert.Equal(headerId, json.GetProperty("requestId").GetString());
     }

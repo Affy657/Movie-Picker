@@ -437,7 +437,7 @@ describe('LetterboxdImportSection (MSW)', () => {
     server.use(
       meHandler({
         letterboxdUsername: 'affy657',
-        letterboxdLastSyncError: 'Watchlist Letterboxd inaccessible.',
+        letterboxdLastSyncError: 'letterboxd_watchlist_incomplete',
       })
     );
 
@@ -449,6 +449,24 @@ describe('LetterboxdImportSection (MSW)', () => {
     ).toBe(true);
   });
 
+  it('shows a stored sync error verbatim when it is not a known code', async () => {
+    server.use(
+      meHandler({
+        letterboxdUsername: 'affy657',
+        letterboxdLastSyncError: 'Watchlist Letterboxd de « affy657 » inaccessible.',
+      })
+    );
+
+    renderAccount();
+
+    const alerts = await screen.findAllByRole('alert');
+    expect(
+      alerts.some((el) =>
+        el.textContent?.includes('Watchlist Letterboxd de « affy657 » inaccessible.')
+      )
+    ).toBe(true);
+  });
+
   it('affiche le message d’erreur du serveur quand la synchronisation échoue', async () => {
     const user = userEvent.setup();
 
@@ -456,7 +474,10 @@ describe('LetterboxdImportSection (MSW)', () => {
       meHandler({ letterboxdUsername: 'inconnu' }),
       http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
         HttpResponse.json(
-          { error: 'Watchlist Letterboxd de « inconnu » inaccessible.' },
+          {
+            error: 'Letterboxd synchronization failed',
+            reason: 'letterboxd_watchlist_incomplete',
+          },
           { status: 400 }
         )
       )

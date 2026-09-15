@@ -93,7 +93,7 @@ public sealed class GetEventDetailHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad"));
-        Assert.Equal("Soirée introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
     [Fact]

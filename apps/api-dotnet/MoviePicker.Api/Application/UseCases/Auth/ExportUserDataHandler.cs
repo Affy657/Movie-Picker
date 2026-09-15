@@ -46,7 +46,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
 
     public async Task<UserDataExportResponse> HandleAsync(string userId, CancellationToken ct = default)
     {
-        var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable.");
+        var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
 
         var notifications = await _notifications.ListByUserIdAsync(userId, MaxItems, offset: 0, ct);
         var followingIds = await _follows.GetFollowingIdsAsync(userId, MaxItems, ct);

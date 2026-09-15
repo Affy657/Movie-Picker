@@ -64,7 +64,7 @@ public sealed class LaunchWheelHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad"));
-        Assert.Equal("Soirée introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public sealed class LaunchWheelHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
-        Assert.Contains("hôte", ex.Message);
+        Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class LaunchWheelHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("wrong");
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
-        Assert.Contains("hôte", ex.Message);
+        Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public sealed class LaunchWheelHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1"));
-        Assert.Contains("terminée", ex.Message);
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public sealed class LaunchWheelHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1"));
-        Assert.Contains("terminée", ex.Message);
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public sealed class LaunchWheelHandlerTests
         _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1"));
-        Assert.Contains("Aucun film", ex.Message);
+        Assert.Equal(ErrorCodes.NoMovieProposed, ex.Reason);
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public sealed class LaunchWheelHandlerTests
         _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1"));
-        Assert.Contains("exclus", ex.Message);
+        Assert.Equal(ErrorCodes.AllMoviesExcluded, ex.Reason);
         _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -182,7 +182,7 @@ public sealed class LaunchWheelHandlerTests
         var result = await _sut.HandleAsync("evt1");
 
         Assert.Equal("mov2", result.Winner.Id);
-        Assert.Contains("gagnant direct", result.Message);
+        Assert.Contains("direct winner", result.Message);
     }
 
     [Fact]
@@ -210,7 +210,7 @@ public sealed class LaunchWheelHandlerTests
         var winner = Assert.Single(captured.Winners);
         Assert.Equal("mov1", winner.MovieId);
         Assert.Equal(WinnerPickMethod.Wheel, winner.Method);
-        Assert.Contains("gagnant direct", result.Message);
+        Assert.Contains("direct winner", result.Message);
         Assert.Null(captured.WinnerAnnouncedAt);
     }
 

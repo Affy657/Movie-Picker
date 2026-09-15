@@ -54,7 +54,7 @@ public sealed class CloseEventHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad"));
-        Assert.Equal("Soirée introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public sealed class CloseEventHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
-        Assert.Contains("hôte", ex.Message);
+        Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public sealed class CloseEventHandlerTests
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("wrong");
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() => _sut.HandleAsync("evt1"));
-        Assert.Contains("hôte", ex.Message);
+        Assert.Equal(ErrorCodes.HostOnly, ex.Reason);
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public sealed class CloseEventHandlerTests
 
         var result = await _sut.HandleAsync("evt1");
 
-        Assert.Equal("Soirée déjà clôturée", result.Message);
+        Assert.Equal("Movie night already closed", result.Message);
         Assert.Equal(now, result.ClosedAt);
         _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -107,7 +107,7 @@ public sealed class CloseEventHandlerTests
 
         var result = await _sut.HandleAsync("evt1");
 
-        Assert.Equal("Soirée clôturée.", result.Message);
+        Assert.Equal("Movie night closed", result.Message);
         Assert.NotNull(captured);
         Assert.NotNull(captured.ClosedAt);
     }
@@ -135,7 +135,7 @@ public sealed class CloseEventHandlerTests
 
         var result = await _sut.HandleAsync("evt1");
 
-        Assert.Equal("Soirée clôturée.", result.Message);
+        Assert.Equal("Movie night closed", result.Message);
     }
 
     private void GivenHostClosing(Event evt)
@@ -169,7 +169,7 @@ public sealed class CloseEventHandlerTests
 
         var result = await _sut.HandleAsync("evt1");
 
-        Assert.Equal("Soirée clôturée.", result.Message);
+        Assert.Equal("Movie night closed", result.Message);
         Assert.NotNull(result.ClosedAt);
     }
 

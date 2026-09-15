@@ -86,19 +86,19 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
 
         if (string.IsNullOrEmpty(email))
         {
-            _logger.LogWarning("DevelopmentSeed activé mais Email vide — seed ignoré.");
+            _logger.LogWarning("DevelopmentSeed enabled but Email is empty, seed skipped.");
             return;
         }
 
         if (AuthInputValidation.ValidateDisplayName(displayName) is { } dnErr)
         {
-            _logger.LogWarning("DevelopmentSeed : pseudo invalide ({Reason}) — seed ignoré.", dnErr);
+            _logger.LogWarning("DevelopmentSeed: invalid display name ({Reason}), seed skipped.", dnErr.Message);
             return;
         }
 
         if (AuthInputValidation.ValidatePassword(password) is { } pwdErr)
         {
-            _logger.LogWarning("DevelopmentSeed : mot de passe invalide ({Reason}) — seed ignoré.", pwdErr);
+            _logger.LogWarning("DevelopmentSeed: invalid password ({Reason}), seed skipped.", pwdErr.Message);
             return;
         }
 
@@ -123,7 +123,7 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
             allEmails.AddRange(extraEntries.Select(e => (e.Email ?? string.Empty).Trim()));
             if (allEmails.Select(x => x.ToLowerInvariant()).Distinct().Count() != allEmails.Count)
             {
-                _logger.LogWarning("DevelopmentSeed : e-mails en conflit entre comptes seed — scénarios ignorés.");
+                _logger.LogWarning("DevelopmentSeed: conflicting e-mails between seed accounts, scenarios skipped.");
                 return;
             }
 
@@ -132,7 +132,7 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
                 if (!TryValidateExtraEntry(entry, out var entryErr))
                 {
                     _logger.LogWarning(
-                        "DevelopmentSeed : utilisateur extra {EmailMasked} invalide ({Reason}) — scénarios ignorés.",
+                        "DevelopmentSeed: extra user {EmailMasked} is invalid ({Reason}), scenarios skipped.",
                         EmailMasking.Mask((entry.Email ?? string.Empty).Trim()),
                         entryErr);
                     return;
@@ -164,7 +164,7 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "DevelopmentSeed : échec inattendu du seed — démarrage de l'application poursuivi sans seed complet.");
+            _logger.LogError(ex, "DevelopmentSeed: unexpected seed failure, application startup continues without a complete seed.");
         }
     }
 
@@ -193,19 +193,19 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
         var em = (e.Email ?? string.Empty).Trim();
         if (string.IsNullOrEmpty(em))
         {
-            error = "email vide";
+            error = "empty email";
             return false;
         }
 
         if (AuthInputValidation.ValidateDisplayName(e.DisplayName) is { } dnErr)
         {
-            error = dnErr;
+            error = dnErr.Message;
             return false;
         }
 
         if (AuthInputValidation.ValidatePassword(e.Password) is { } pwdErr)
         {
-            error = pwdErr;
+            error = pwdErr.Message;
             return false;
         }
 
@@ -233,14 +233,14 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
                 };
                 var updated = await users.UpdateAsync(rehashed, ct).ConfigureAwait(false);
                 _logger.LogInformation(
-                    "DevelopmentSeed : mot de passe de {EmailMasked} (id={UserId}) resynchronisé sur la config courante.",
+                    "DevelopmentSeed: password of {EmailMasked} (id={UserId}) resynchronized with the current configuration.",
                     EmailMasking.Mask(email),
                     updated.Id);
                 return updated;
             }
 
             _logger.LogInformation(
-                "DevelopmentSeed : utilisateur {EmailMasked} existe déjà (id={UserId}).",
+                "DevelopmentSeed: user {EmailMasked} already exists (id={UserId}).",
                 EmailMasking.Mask(email),
                 existing.Id);
             return existing;
@@ -275,7 +275,7 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
 
         var created = await users.AddAsync(user, ct).ConfigureAwait(false);
         _logger.LogInformation(
-            "DevelopmentSeed : utilisateur de test créé (id={UserId}, email={EmailMasked}, displayName={DisplayName}).",
+            "DevelopmentSeed: test user created (id={UserId}, email={EmailMasked}, displayName={DisplayName}).",
             created.Id,
             EmailMasking.Mask(email),
             created.DisplayName);
@@ -288,7 +288,7 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
         var existing = await events.ListByCreatorUserIdAsync(userId, 100, ct).ConfigureAwait(false);
         if (existing.Any(e => e.Title.StartsWith(SeedEventTitlePrefix, StringComparison.Ordinal)))
         {
-            _logger.LogInformation("DevelopmentSeed : soirées de test déjà présentes — rien à faire.");
+            _logger.LogInformation("DevelopmentSeed: test movie nights already present, nothing to do.");
             return;
         }
 
@@ -319,7 +319,7 @@ public sealed class DevelopmentDataSeedHostedService : IHostedService
         foreach (var req in samples)
             await create.HandleAsync(req, userId, ct).ConfigureAwait(false);
 
-        _logger.LogInformation("DevelopmentSeed : {Count} soirées de test créées pour l’utilisateur {UserId}.", samples.Length, userId);
+        _logger.LogInformation("DevelopmentSeed: {Count} test movie nights created for user {UserId}.", samples.Length, userId);
     }
 
     private static string FormatDate(DateTimeOffset utc) =>

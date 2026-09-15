@@ -70,30 +70,30 @@ internal static class DevelopmentScenarioSeed
             await RunStepAsync(logger, "watchlists", () => TrySeedWatchlistsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
 
             await RunStepAsync(logger, "multi-participants", () => TrySeedMultiParticipantScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "roue & clôture", () => TrySeedWheelAndCloseScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "capacité atteinte", () => TrySeedFullCapacityScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "wheel and closing", () => TrySeedWheelAndCloseScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "full capacity", () => TrySeedFullCapacityScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "retrait/quitter", () => TrySeedRemoveParticipantsScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "roue tirée (non close)", () => TrySeedWheelLaunchedNotClosedScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "soirée passée", () => TrySeedPastEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "soirée en suspens", () => TrySeedPendingEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "soirée vide", () => TrySeedEmptyEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "soirée annulée", () => TrySeedDeletedEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "modèles de soirée", () => TrySeedEventTemplatesAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "wheel spun (not closed)", () => TrySeedWheelLaunchedNotClosedScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "past movie night", () => TrySeedPastEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "pending movie night", () => TrySeedPendingEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "empty movie night", () => TrySeedEmptyEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "cancelled movie night", () => TrySeedDeletedEventScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "movie night templates", () => TrySeedEventTemplatesAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "limite de votes", () => TrySeedVoteLimitScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "plusieurs gagnants (en cours)", () => TrySeedMultiWinnerScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "trilogie terminée", () => TrySeedTrilogyFinishedScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "série hebdomadaire", () => TrySeedRecurringSeriesScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "finished trilogy", () => TrySeedTrilogyFinishedScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "weekly series", () => TrySeedRecurringSeriesScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "rappels", () => TrySeedReminderNotificationsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
 
             await RunStepAsync(logger, "vitrine — en direct", () => TrySeedShowcaseLiveScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "vitrine — sans thème", () => TrySeedShowcaseNoThemeScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "showcase, no theme", () => TrySeedShowcaseNoThemeScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "vitrine — lointaine, titre long", () => TrySeedShowcaseFarFutureLongTitleScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "vitrine — rejointe seulement", () => TrySeedShowcaseJoinedOnlyScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "vitrine — en suspens (hôte=dev)", () => TrySeedShowcasePendingHostScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "showcase, pending (host=dev)", () => TrySeedShowcasePendingHostScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "vitrine — en suspens, aucun film", () => TrySeedShowcasePendingNoMovieScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "vitrine — terminée récente", () => TrySeedShowcaseFinishedThisMonthScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "vitrine — terminée sans film", () => TrySeedShowcaseFinishedNoMovieScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
-            await RunStepAsync(logger, "vitrine — terminée, rejointe seulement", () => TrySeedShowcaseFinishedJoinedOnlyScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "showcase, recently finished", () => TrySeedShowcaseFinishedThisMonthScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "showcase, finished without a movie", () => TrySeedShowcaseFinishedNoMovieScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "showcase, finished, joined only", () => TrySeedShowcaseFinishedJoinedOnlyScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
         }
         finally
         {
@@ -109,7 +109,7 @@ internal static class DevelopmentScenarioSeed
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "DevelopmentSeed : étape « {Step} » échouée — ignorée, démarrage poursuivi.", step);
+            logger.LogError(ex, "DevelopmentSeed: step \"{Step}\" failed, skipped, startup continues.", step);
         }
     }
 
@@ -222,7 +222,7 @@ internal static class DevelopmentScenarioSeed
             },
             ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : profils enrichis (6 comptes, thèmes/accents/bios/visibilité/préférences).");
+        logger.LogInformation("DevelopmentSeed: profiles enriched (6 accounts, themes/accents/bios/visibility/preferences).");
     }
 
     private static async Task TrySeedWatchlistsAsync(
@@ -285,7 +285,7 @@ internal static class DevelopmentScenarioSeed
                 .ConfigureAwait(false);
         }
 
-        logger.LogInformation("DevelopmentSeed : watchlists (Alice publique, 5 films ; Bob masquée, 2 films ; dev, 3 films ; Zoé publique, 2 films).");
+        logger.LogInformation("DevelopmentSeed: watchlists (Alice public, 5 films; Bob hidden, 2 films; dev, 3 films; Zoé public, 2 films).");
     }
 
     private static async Task TrySeedFollowsAsync(
@@ -318,13 +318,13 @@ internal static class DevelopmentScenarioSeed
             {
                 logger.LogWarning(
                     ex,
-                    "DevelopmentSeed : follow {Follower} -> {Target} ignoré.",
+                    "DevelopmentSeed: follow {Follower} -> {Target} skipped.",
                     follower.Handle,
                     target.Handle);
             }
         }
 
-        logger.LogInformation("DevelopmentSeed : graphe de follows seedé (génère les notifs NewFollower).");
+        logger.LogInformation("DevelopmentSeed: follow graph seeded (generates NewFollower notifications).");
     }
 
     private static async Task TrySeedMultiParticipantScenarioAsync(
@@ -337,7 +337,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Alice.Id, ScenarioMultiTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario multi-participants déjà présent — ignoré.");
+            logger.LogInformation("DevelopmentSeed: multi-participant scenario already present, skipped.");
             return;
         }
 
@@ -365,7 +365,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var alicePart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         await ApplyConfigAsync(
             events,
@@ -421,7 +421,7 @@ internal static class DevelopmentScenarioSeed
         ActAs(httpContext, actors.Bob.Id);
         await deleteMovie.HandleAsync(slug, mJunk.Id, bobPart, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario multi-participants créé (slug={Slug}, hôte Alice, 4 participants).", slug);
+        logger.LogInformation("DevelopmentSeed: multi-participant scenario created (slug={Slug}, host Alice, 4 participants).", slug);
     }
 
     private static async Task TrySeedWheelAndCloseScenarioAsync(
@@ -435,7 +435,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Bob.Id, ScenarioWheelTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario roue & clôture déjà présent — ignoré.");
+            logger.LogInformation("DevelopmentSeed: wheel and closing scenario already present, skipped.");
             return;
         }
 
@@ -459,7 +459,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var bobPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         var joinDev = await join
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Dev invité" }, actors.Dev.Id, ct)
@@ -479,7 +479,7 @@ internal static class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, m3.Id, bobPart, actors.Bob.Id, -1, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée roue seed introuvable.");
+            ?? throw new InvalidOperationException("Seed wheel movie night not found.");
 
         var movies = await sp.GetRequiredService<IMovieRepository>().ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
         var scores = await votes.AggregateScoresByMovieIdsAsync(movies.Select(m => m.Id).ToList(), ct).ConfigureAwait(false);
@@ -499,7 +499,7 @@ internal static class DevelopmentScenarioSeed
         await AddMoviePickedNotificationsAsync(sp, closed, winner.Title, ct).ConfigureAwait(false);
 
         logger.LogInformation(
-            "DevelopmentSeed : scénario roue & clôture créé (slug={Slug}, gagnant={WinnerId}, notifs MoviePicked).",
+            "DevelopmentSeed: wheel and closing scenario created (slug={Slug}, winner={WinnerId}, MoviePicked notifications).",
             slug,
             winner.Id);
     }
@@ -514,7 +514,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Bob.Id, ScenarioFullCapacityTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario capacité atteinte déjà présent — ignoré.");
+            logger.LogInformation("DevelopmentSeed: full capacity scenario already present, skipped.");
             return;
         }
 
@@ -537,7 +537,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var bobPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         await ApplyConfigAsync(
             events,
@@ -562,7 +562,7 @@ internal static class DevelopmentScenarioSeed
         await AddMovieAsync(addMovie, slug, 105, "Back to the Future", "1985", bobPart, actors.Bob.Id, ct).ConfigureAwait(false);
         await AddMovieAsync(addMovie, slug, 13, "Forrest Gump", "1994", joinDev.Participant.Id, actors.Dev.Id, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario capacité atteinte créé (slug={Slug}, 3/3 participants, hôte Bob).", slug);
+        logger.LogInformation("DevelopmentSeed: full capacity scenario created (slug={Slug}, 3/3 participants, host Bob).", slug);
     }
 
     private static async Task TrySeedRemoveParticipantsScenarioAsync(
@@ -575,7 +575,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ScenarioRemoveParticipantsTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario retrait/quitter déjà présent — ignoré.");
+            logger.LogInformation("DevelopmentSeed: remove/leave scenario already present, skipped.");
             return;
         }
 
@@ -599,7 +599,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var devPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         await ApplyConfigAsync(
             events,
@@ -632,7 +632,7 @@ internal static class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, mBob.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, httpContext, slug, mDev.Id, bobPart, actors.Bob.Id, -1, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario retrait/quitter créé (slug={Slug}, hôte=dev, participants=3).", slug);
+        logger.LogInformation("DevelopmentSeed: remove/leave scenario created (slug={Slug}, host=dev, participants=3).", slug);
     }
 
     private static async Task TrySeedWheelLaunchedNotClosedScenarioAsync(
@@ -646,7 +646,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ScenarioWheelLaunchedTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario roue tirée (non close) déjà présent — ignoré.");
+            logger.LogInformation("DevelopmentSeed: wheel spun (not closed) scenario already present, skipped.");
             return;
         }
 
@@ -670,7 +670,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var devPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         var joinAlice = await join
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice (compte)" }, actors.Alice.Id, ct)
@@ -689,7 +689,7 @@ internal static class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, m3.Id, joinBob.Participant.Id, actors.Bob.Id, 1, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée roue tirée seed introuvable.");
+            ?? throw new InvalidOperationException("Seed wheel-spun movie night not found.");
 
         var movies = await sp.GetRequiredService<IMovieRepository>().ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
         var scores = await votes.AggregateScoresByMovieIdsAsync(movies.Select(m => m.Id).ToList(), ct).ConfigureAwait(false);
@@ -702,7 +702,7 @@ internal static class DevelopmentScenarioSeed
         var withWinner = CloneEvent(evt, winnerMovieId: winner.Id, updatedAt: DateTimeOffset.UtcNow);
         await events.UpdateAsync(withWinner, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario roue tirée (non close) créé (slug={Slug}, gagnant={WinnerId}).", slug, winner.Id);
+        logger.LogInformation("DevelopmentSeed: wheel spun (not closed) scenario created (slug={Slug}, winner={WinnerId}).", slug, winner.Id);
     }
 
     private static async Task TrySeedPastEventScenarioAsync(
@@ -716,7 +716,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Alice.Id, ScenarioPastTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario soirée passée déjà présent — ignoré.");
+            logger.LogInformation("DevelopmentSeed: past movie night scenario already present, skipped.");
             return;
         }
 
@@ -740,7 +740,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var alicePart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         var joinBob = await join
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob (compte)" }, actors.Bob.Id, ct)
@@ -753,7 +753,7 @@ internal static class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, m2.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée passée seed introuvable.");
+            ?? throw new InvalidOperationException("Seed past movie night not found.");
 
         var movies = await sp.GetRequiredService<IMovieRepository>().ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
         var scores = await votes.AggregateScoresByMovieIdsAsync(movies.Select(m => m.Id).ToList(), ct).ConfigureAwait(false);
@@ -774,7 +774,7 @@ internal static class DevelopmentScenarioSeed
         };
         await events.UpdateAsync(past, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario soirée passée créé (slug={Slug}, lecture seule).", slug);
+        logger.LogInformation("DevelopmentSeed: past movie night scenario created (slug={Slug}, read-only).", slug);
     }
 
     private static async Task TrySeedPendingEventScenarioAsync(
@@ -787,7 +787,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Bob.Id, ScenarioPendingTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario soirée en suspens déjà présent — ignoré.");
+            logger.LogInformation("DevelopmentSeed: pending movie night scenario already present, skipped.");
             return;
         }
 
@@ -810,7 +810,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var bobPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         await ApplyConfigAsync(
             events,
@@ -834,7 +834,7 @@ internal static class DevelopmentScenarioSeed
         await AddMovieAsync(addMovie, slug, 539, "Psycho", "1960", joinDev.Participant.Id, actors.Dev.Id, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée en suspens seed introuvable.");
+            ?? throw new InvalidOperationException("Seed pending movie night not found.");
 
         var startedParis = TimeZoneInfo.ConvertTime(utc.AddHours(-3), EventSchedule.ParisTimeZone);
         var now = DateTimeOffset.UtcNow;
@@ -846,7 +846,7 @@ internal static class DevelopmentScenarioSeed
         };
         await events.UpdateAsync(pending, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario soirée en suspens créé (slug={Slug}, début -3h, aucun film choisi).", slug);
+        logger.LogInformation("DevelopmentSeed: pending movie night scenario created (slug={Slug}, started -3h, no movie picked).", slug);
     }
 
     private static async Task TrySeedEmptyEventScenarioAsync(
@@ -859,7 +859,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ScenarioEmptyTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario soirée vide déjà présent — ignoré.");
+            logger.LogInformation("DevelopmentSeed: empty movie night scenario already present, skipped.");
             return;
         }
 
@@ -890,7 +890,7 @@ internal static class DevelopmentScenarioSeed
             },
             ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario soirée vide créé (slug={Slug}, aucun film).", created.Slug);
+        logger.LogInformation("DevelopmentSeed: empty movie night scenario created (slug={Slug}, no movie).", created.Slug);
     }
 
     private static async Task TrySeedDeletedEventScenarioAsync(
@@ -904,7 +904,7 @@ internal static class DevelopmentScenarioSeed
         if (devInbox.Any(n => n.Type == UserNotificationType.EventDeleted
             && string.Equals(n.EventTitle, ScenarioDeletedTitle, StringComparison.Ordinal)))
         {
-            logger.LogInformation("DevelopmentSeed : scénario soirée annulée déjà présent — ignoré.");
+            logger.LogInformation("DevelopmentSeed: cancelled movie night scenario already present, skipped.");
             return;
         }
 
@@ -935,7 +935,7 @@ internal static class DevelopmentScenarioSeed
         await join.HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice invitée" }, actors.Alice.Id, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée annulée seed introuvable.");
+            ?? throw new InvalidOperationException("Seed cancelled movie night not found.");
 
         var participants = await participantsRepo.ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
         var recipientIds = participants
@@ -967,7 +967,7 @@ internal static class DevelopmentScenarioSeed
         await participantsRepo.DeleteByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
         await events.DeleteAsync(evt.Id, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario soirée annulée créé (notifs EventDeleted, soirée supprimée).");
+        logger.LogInformation("DevelopmentSeed: cancelled movie night scenario created (EventDeleted notifications, movie night deleted).");
     }
 
     private static async Task TrySeedReminderNotificationsAsync(
@@ -983,13 +983,13 @@ internal static class DevelopmentScenarioSeed
         var target = devEvents.FirstOrDefault(e => !e.IsFinished(DateTimeOffset.UtcNow));
         if (target is null)
         {
-            logger.LogInformation("DevelopmentSeed : aucune soirée à venir pour les rappels — ignoré.");
+            logger.LogInformation("DevelopmentSeed: no upcoming movie night for reminders, skipped.");
             return;
         }
 
         if (await notifs.ExistsAsync(actors.Dev.Id, UserNotificationType.EventReminder24h, target.Id, ct).ConfigureAwait(false))
         {
-            logger.LogInformation("DevelopmentSeed : rappels déjà présents — ignoré.");
+            logger.LogInformation("DevelopmentSeed: reminders already present, skipped.");
             return;
         }
 
@@ -1016,7 +1016,7 @@ internal static class DevelopmentScenarioSeed
             CreatedAt = now
         }, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : rappels (24h + 1h) ajoutés pour la soirée {Slug}.", target.Slug);
+        logger.LogInformation("DevelopmentSeed: reminders (24h + 1h) added for movie night {Slug}.", target.Slug);
     }
 
     private static async Task TrySeedShowcaseLiveScenarioAsync(
@@ -1029,7 +1029,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcaseLiveTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : vitrine « en direct » déjà présente — ignorée.");
+            logger.LogInformation("DevelopmentSeed: live showcase already present, skipped.");
             return;
         }
 
@@ -1053,7 +1053,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var devPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         await ApplyConfigAsync(
             events,
@@ -1068,7 +1068,7 @@ internal static class DevelopmentScenarioSeed
         await AddMovieAsync(addMovie, slug, 105, "Back to the Future", "1985", devPart, actors.Dev.Id, ct).ConfigureAwait(false);
         await AddMovieAsync(addMovie, slug, 13, "Forrest Gump", "1994", joinAlice.Participant.Id, actors.Alice.Id, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : vitrine « en direct » créée (slug={Slug}, hôte=dev, commencée il y a 30 min).", slug);
+        logger.LogInformation("DevelopmentSeed: live showcase created (slug={Slug}, host=dev, started 30 min ago).", slug);
     }
 
     private static async Task TrySeedShowcaseNoThemeScenarioAsync(
@@ -1081,7 +1081,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcaseNoThemeTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : vitrine « sans thème » déjà présente — ignorée.");
+            logger.LogInformation("DevelopmentSeed: no-theme showcase already present, skipped.");
             return;
         }
 
@@ -1099,7 +1099,7 @@ internal static class DevelopmentScenarioSeed
                 ct)
             .ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : vitrine « sans thème » créée (slug={Slug}, aucune config).", created.Slug);
+        logger.LogInformation("DevelopmentSeed: no-theme showcase created (slug={Slug}, no config).", created.Slug);
     }
 
     private static async Task TrySeedShowcaseFarFutureLongTitleScenarioAsync(
@@ -1112,7 +1112,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcaseFarFutureLongTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : vitrine « lointaine, titre long » déjà présente — ignorée.");
+            logger.LogInformation("DevelopmentSeed: far-away, long-title showcase already present, skipped.");
             return;
         }
 
@@ -1136,7 +1136,7 @@ internal static class DevelopmentScenarioSeed
             new EventConfig { Theme = "Rétrospective — cinéma muet et premiers essais couleur", MaxParticipants = 4 },
             ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : vitrine « lointaine, titre long » créée (slug={Slug}, +95 jours).", created.Slug);
+        logger.LogInformation("DevelopmentSeed: far-away, long-title showcase created (slug={Slug}, +95 days).", created.Slug);
     }
 
     private static async Task TrySeedShowcaseJoinedOnlyScenarioAsync(
@@ -1149,7 +1149,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Alice.Id, ShowcaseJoinedOnlyTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : vitrine « rejointe seulement » déjà présente — ignorée.");
+            logger.LogInformation("DevelopmentSeed: joined-only showcase already present, skipped.");
             return;
         }
 
@@ -1178,7 +1178,7 @@ internal static class DevelopmentScenarioSeed
 
         await join.HandleAsync(slug, new JoinEventRequest { Pseudo = "Dev invité" }, actors.Dev.Id, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : vitrine « rejointe seulement » créée (slug={Slug}, hôte=Alice, dev=participant).", slug);
+        logger.LogInformation("DevelopmentSeed: joined-only showcase created (slug={Slug}, host=Alice, dev=participant).", slug);
     }
 
     private static async Task TrySeedShowcasePendingHostScenarioAsync(
@@ -1191,7 +1191,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcasePendingHostTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : vitrine « en suspens, hôte=dev » déjà présente — ignorée.");
+            logger.LogInformation("DevelopmentSeed: pending (host=dev) showcase already present, skipped.");
             return;
         }
 
@@ -1214,7 +1214,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var devPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         await ApplyConfigAsync(
             events,
@@ -1230,7 +1230,7 @@ internal static class DevelopmentScenarioSeed
         await AddMovieAsync(addMovie, slug, 274, "The Silence of the Lambs", "1991", joinBob.Participant.Id, actors.Bob.Id, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée vitrine en suspens introuvable.");
+            ?? throw new InvalidOperationException("Pending showcase movie night not found.");
 
         var startedParis = TimeZoneInfo.ConvertTime(utc.AddHours(-3), EventSchedule.ParisTimeZone);
         var now = DateTimeOffset.UtcNow;
@@ -1242,7 +1242,7 @@ internal static class DevelopmentScenarioSeed
         };
         await events.UpdateAsync(pending, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : vitrine « en suspens, hôte=dev » créée (slug={Slug}, début -3h).", slug);
+        logger.LogInformation("DevelopmentSeed: pending (host=dev) showcase created (slug={Slug}, started -3h).", slug);
     }
 
     private static async Task TrySeedShowcasePendingNoMovieScenarioAsync(
@@ -1255,7 +1255,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcasePendingNoMovieTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : vitrine « en suspens, aucun film » déjà présente — ignorée.");
+            logger.LogInformation("DevelopmentSeed: pending, no-movie showcase already present, skipped.");
             return;
         }
 
@@ -1286,7 +1286,7 @@ internal static class DevelopmentScenarioSeed
         await join.HandleAsync(slug, new JoinEventRequest { Pseudo = "Bob invité" }, actors.Bob.Id, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée vitrine en suspens sans film introuvable.");
+            ?? throw new InvalidOperationException("Pending, no-movie showcase movie night not found.");
 
         var startedParis = TimeZoneInfo.ConvertTime(utc.AddHours(-3), EventSchedule.ParisTimeZone);
         var now = DateTimeOffset.UtcNow;
@@ -1298,7 +1298,7 @@ internal static class DevelopmentScenarioSeed
         };
         await events.UpdateAsync(pending, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : vitrine « en suspens, aucun film » créée (slug={Slug}, début -3h, 0 proposition).", slug);
+        logger.LogInformation("DevelopmentSeed: pending, no-movie showcase created (slug={Slug}, started -3h, 0 proposal).", slug);
     }
 
     private static async Task TrySeedShowcaseFinishedThisMonthScenarioAsync(
@@ -1311,7 +1311,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcaseFinishedThisMonthTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : vitrine « terminée récente » déjà présente — ignorée.");
+            logger.LogInformation("DevelopmentSeed: recently finished showcase already present, skipped.");
             return;
         }
 
@@ -1334,7 +1334,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var devPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         var joinAlice = await join
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Alice invitée" }, actors.Alice.Id, ct)
@@ -1344,7 +1344,7 @@ internal static class DevelopmentScenarioSeed
         await AddMovieAsync(addMovie, slug, 496243, "Parasite", "2019", joinAlice.Participant.Id, actors.Alice.Id, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée vitrine terminée récente introuvable.");
+            ?? throw new InvalidOperationException("Recently finished showcase movie night not found.");
 
         var now = DateTimeOffset.UtcNow;
         var closedDate = utc.AddDays(-5);
@@ -1358,7 +1358,7 @@ internal static class DevelopmentScenarioSeed
         };
         await events.UpdateAsync(finished, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : vitrine « terminée récente » créée (slug={Slug}, il y a 5 jours, gagnant={WinnerId}).", slug, winnerMovie.Id);
+        logger.LogInformation("DevelopmentSeed: recently finished showcase created (slug={Slug}, 5 days ago, winner={WinnerId}).", slug, winnerMovie.Id);
     }
 
     private static async Task TrySeedShowcaseFinishedNoMovieScenarioAsync(
@@ -1371,7 +1371,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ShowcaseFinishedNoMovieTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : vitrine « terminée sans film » déjà présente — ignorée.");
+            logger.LogInformation("DevelopmentSeed: finished-without-movie showcase already present, skipped.");
             return;
         }
 
@@ -1391,7 +1391,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée vitrine terminée sans film introuvable.");
+            ?? throw new InvalidOperationException("Finished-without-movie showcase movie night not found.");
 
         var now = DateTimeOffset.UtcNow;
         var closedDate = utc.AddDays(-62);
@@ -1404,7 +1404,7 @@ internal static class DevelopmentScenarioSeed
         };
         await events.UpdateAsync(finished, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : vitrine « terminée sans film » créée (slug={Slug}, il y a 2 mois, aucun gagnant).", slug);
+        logger.LogInformation("DevelopmentSeed: finished-without-movie showcase created (slug={Slug}, 2 months ago, no winner).", slug);
     }
 
     private static async Task TrySeedShowcaseFinishedJoinedOnlyScenarioAsync(
@@ -1417,7 +1417,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Carla.Id, ShowcaseFinishedJoinedOnlyTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : vitrine « terminée, rejointe seulement » déjà présente — ignorée.");
+            logger.LogInformation("DevelopmentSeed: finished, joined-only showcase already present, skipped.");
             return;
         }
 
@@ -1440,7 +1440,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var carlaPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         var joinDev = await join
             .HandleAsync(slug, new JoinEventRequest { Pseudo = "Dev invité" }, actors.Dev.Id, ct)
@@ -1450,7 +1450,7 @@ internal static class DevelopmentScenarioSeed
         await AddMovieAsync(addMovie, slug, 129, "Spirited Away", "2001", joinDev.Participant.Id, actors.Dev.Id, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée vitrine terminée rejointe introuvable.");
+            ?? throw new InvalidOperationException("Finished, joined-only showcase movie night not found.");
 
         var now = DateTimeOffset.UtcNow;
         var closedDate = utc.AddDays(-124);
@@ -1464,7 +1464,7 @@ internal static class DevelopmentScenarioSeed
         };
         await events.UpdateAsync(finished, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : vitrine « terminée, rejointe seulement » créée (slug={Slug}, hôte=Carla, dev=participant, il y a 4 mois).", slug);
+        logger.LogInformation("DevelopmentSeed: finished, joined-only showcase created (slug={Slug}, host=Carla, dev=participant, 4 months ago).", slug);
     }
 
     private static async Task TrySeedEventTemplatesAsync(
@@ -1542,7 +1542,7 @@ internal static class DevelopmentScenarioSeed
             }
         }
 
-        logger.LogInformation("DevelopmentSeed : modèles de soirée (dev 3, Alice 1, {Created} créés).", created);
+        logger.LogInformation("DevelopmentSeed: movie night templates (dev 3, Alice 1, {Created} created).", created);
     }
 
     private static async Task TrySeedVoteLimitScenarioAsync(
@@ -1555,7 +1555,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Bob.Id, ScenarioVoteLimitTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario limite de votes déjà présent, ignoré.");
+            logger.LogInformation("DevelopmentSeed: vote limit scenario already present, skipped.");
             return;
         }
 
@@ -1580,7 +1580,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var bobPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         await ApplyConfigAsync(
             events,
@@ -1617,7 +1617,7 @@ internal static class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, mAlice.Id, devPart, actors.Dev.Id, 1, ct).ConfigureAwait(false);
         await VoteAsync(vote, httpContext, slug, mDev.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario limite de votes créé (slug={Slug}, hôte Bob, 1 vote par participant, dev et Alice à quota).", slug);
+        logger.LogInformation("DevelopmentSeed: vote limit scenario created (slug={Slug}, host Bob, 1 vote per participant, dev and Alice at quota).", slug);
     }
 
     private static async Task TrySeedMultiWinnerScenarioAsync(
@@ -1630,7 +1630,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ScenarioMultiWinnerTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario plusieurs gagnants déjà présent, ignoré.");
+            logger.LogInformation("DevelopmentSeed: multiple winners scenario already present, skipped.");
             return;
         }
 
@@ -1657,7 +1657,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var devPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         await ApplyConfigAsync(
             events,
@@ -1706,7 +1706,7 @@ internal static class DevelopmentScenarioSeed
         await launchWheel.HandleAsync(slug, ct).ConfigureAwait(false);
         await announce.HandleAsync(slug, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario plusieurs gagnants créé (slug={Slug}, hôte=dev, 2 gagnants tirés sur 3, annoncés).", slug);
+        logger.LogInformation("DevelopmentSeed: multiple winners scenario created (slug={Slug}, host=dev, 2 winners drawn out of 3, announced).", slug);
     }
 
     private static async Task TrySeedTrilogyFinishedScenarioAsync(
@@ -1719,7 +1719,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Alice.Id, ScenarioTrilogyFinishedTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario trilogie terminée déjà présent, ignoré.");
+            logger.LogInformation("DevelopmentSeed: finished trilogy scenario already present, skipped.");
             return;
         }
 
@@ -1744,7 +1744,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var alicePart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         await ApplyConfigAsync(
             events,
@@ -1780,7 +1780,7 @@ internal static class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, mReturn.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée trilogie seed introuvable.");
+            ?? throw new InvalidOperationException("Seed trilogy movie night not found.");
 
         var closedDate = utc.AddDays(-10);
         var finished = evt with
@@ -1799,7 +1799,7 @@ internal static class DevelopmentScenarioSeed
         };
         await events.UpdateAsync(finished, ct).ConfigureAwait(false);
 
-        logger.LogInformation("DevelopmentSeed : scénario trilogie terminée créé (slug={Slug}, hôte Alice, 3 gagnants, il y a 10 jours).", slug);
+        logger.LogInformation("DevelopmentSeed: finished trilogy scenario created (slug={Slug}, host Alice, 3 winners, 10 days ago).", slug);
     }
 
     private static async Task TrySeedRecurringSeriesScenarioAsync(
@@ -1812,7 +1812,7 @@ internal static class DevelopmentScenarioSeed
         var existing = await events.FindByCreatorAndTitleAsync(actors.Dev.Id, ScenarioRecurringTitle, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            logger.LogInformation("DevelopmentSeed : scénario série hebdomadaire déjà présent, ignoré.");
+            logger.LogInformation("DevelopmentSeed: weekly series scenario already present, skipped.");
             return;
         }
 
@@ -1839,7 +1839,7 @@ internal static class DevelopmentScenarioSeed
 
         var slug = created.Slug;
         var devPart = created.CreatorParticipant?.Id
-            ?? throw new InvalidOperationException("Seed : hôte sans participant après création de soirée.");
+            ?? throw new InvalidOperationException("Seed: host without a participant after creating the movie night.");
 
         await ApplyConfigAsync(
             events,
@@ -1874,7 +1874,7 @@ internal static class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, mIntouchables.Id, alicePart, actors.Alice.Id, 1, ct).ConfigureAwait(false);
 
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée série seed introuvable.");
+            ?? throw new InvalidOperationException("Seed series movie night not found.");
 
         var movies = await sp.GetRequiredService<IMovieRepository>().ListByEventIdAsync(evt.Id, ct).ConfigureAwait(false);
         var scores = await votes.AggregateScoresByMovieIdsAsync(movies.Select(m => m.Id).ToList(), ct).ConfigureAwait(false);
@@ -1900,10 +1900,10 @@ internal static class DevelopmentScenarioSeed
 
         var result = await pass.RunForCreatorAsync(actors.Dev.Id, ct).ConfigureAwait(false);
         if (result.Created == 0)
-            throw new InvalidOperationException("Seed : la passe de récurrence n'a créé aucune occurrence suivante.");
+            throw new InvalidOperationException("Seed: the recurrence pass created no next occurrence.");
 
         logger.LogInformation(
-            "DevelopmentSeed : scénario série hebdomadaire créé (slug={Slug}, occurrence close il y a 6 jours, suivante créée par la passe de récurrence).",
+            "DevelopmentSeed: weekly series scenario created (slug={Slug}, occurrence closed 6 days ago, next one created by the recurrence pass).",
             slug);
     }
 
@@ -1990,7 +1990,7 @@ internal static class DevelopmentScenarioSeed
     private static async Task ApplyConfigAsync(IEventRepository events, string slug, EventConfig config, CancellationToken ct)
     {
         var evt = await events.GetByIdOrSlugAsync(slug, ct).ConfigureAwait(false)
-            ?? throw new InvalidOperationException("Soirée seed introuvable après création.");
+            ?? throw new InvalidOperationException("Seed movie night not found after creation.");
 
         await events.UpdateAsync(CloneEvent(evt, config: config), ct).ConfigureAwait(false);
     }
@@ -2033,7 +2033,7 @@ internal static class DevelopmentScenarioSeed
             throw new ArgumentOutOfRangeException(
                 nameof(cfg),
                 maxP,
-                $"DevelopmentSeed : MaxParticipants doit être entre 1 et {EventConfig.MaxParticipantsCap}.");
+                $"DevelopmentSeed: MaxParticipants must be between 1 and {EventConfig.MaxParticipantsCap}.");
         }
 
         if (cfg.MaxProposalsPerParticipant is int maxProp && (maxProp < 1 || maxProp > EventConfig.MaxProposalsPerParticipantCap))
@@ -2041,7 +2041,7 @@ internal static class DevelopmentScenarioSeed
             throw new ArgumentOutOfRangeException(
                 nameof(cfg),
                 maxProp,
-                $"DevelopmentSeed : MaxProposalsPerParticipant doit être entre 1 et {EventConfig.MaxProposalsPerParticipantCap}.");
+                $"DevelopmentSeed: MaxProposalsPerParticipant must be between 1 and {EventConfig.MaxProposalsPerParticipantCap}.");
         }
     }
 

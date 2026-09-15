@@ -55,7 +55,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var token = _hostTokenAccessor.GetHostToken();
         var userId = _currentUserAccessor.GetUserId();
         if (!EventHost.IsHost(evt, token, userId))
-            throw new ForbiddenException("Réservé à l'hôte de la soirée");
+            throw Errors.HostOnly();
 
         var hasConfigChange = HasConfigChange(request);
         var hasDateTimeChange = request.Date is not null || request.Time is not null;
@@ -163,7 +163,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Échec de la notification changement de date pour la soirée {EventId}", evt.Id);
+            _logger.LogWarning(ex, "Date change notification failed for movie night {EventId}", evt.Id);
         }
     }
 
@@ -196,20 +196,19 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         if (hasConfigChange)
         {
             if (evt.IsFinished(utcNow))
-                throw new ConflictException("La soirée est terminée : la configuration ne peut plus être modifiée.");
+                throw Errors.EventConfigLockedFinished();
             if (evt.HasWinner)
-                throw new ConflictException("La roue a déjà été lancée : la configuration ne peut plus être modifiée.");
+                throw Errors.EventConfigLockedWheel();
         }
 
         if (hasDateTimeChange && (evt.IsFinished(utcNow) || evt.HasWinner))
-            throw new ConflictException("La soirée est terminée : la date ne peut plus être modifiée.");
+            throw Errors.EventDateLockedFinished();
 
         if (hasTitleChange && (evt.IsFinished(utcNow) || evt.HasWinner))
-            throw new ConflictException("La soirée est terminée : le nom ne peut plus être modifié.");
+            throw Errors.EventTitleLockedFinished();
 
         if (hasRecurrenceChange && !string.IsNullOrEmpty(evt.NextOccurrenceEventId))
-            throw new ConflictException(
-                "L’occurrence suivante existe déjà : la récurrence se règle désormais sur cette nouvelle soirée.");
+            throw Errors.RecurrenceNextOccurrenceExists();
     }
 
     private static string? ResolveTheme(PatchEventConfigRequest request, string? current) =>
@@ -220,14 +219,10 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         EventConfigLimits.ResolveWinnerCount(winnerCount);
 
         if (evt.IsFinished(utcNow))
-            throw new ConflictException(
-                "La soirée est terminée : le nombre de films gagnants ne peut plus être modifié.");
+            throw Errors.WinnerCountLockedFinished();
 
         if (winnerCount < evt.Winners.Count)
-            throw new ConflictException(
-                evt.Winners.Count == 1
-                    ? "Un film a déjà gagné. Retirez-le du palmarès d’abord."
-                    : $"{evt.Winners.Count} films ont déjà gagné. Retirez-en un du palmarès d’abord.");
+            throw Errors.WinnerCountBelowDrawn(evt.Winners.Count);
     }
 
     private static int? ResolveThemeColor(PatchEventConfigRequest request, int? current)
@@ -239,7 +234,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 
         var hue = request.ThemeColor.Value;
         if (hue < 0 || hue > 359)
-            throw new BadRequestException("themeColor doit être une teinte entre 0 et 359.");
+            throw Errors.ThemeColorOutOfRange();
         return hue;
     }
 
@@ -274,8 +269,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         {
             var currentCount = await _participants.CountByEventIdAsync(evt.Id, ct);
             if (limit.Value < currentCount)
-                throw new ConflictException(
-                    $"La limite ({limit.Value}) est inférieure au nombre de participants déjà inscrits ({currentCount}).");
+                throw Errors.ParticipantLimitBelowCurrent(limit.Value, currentCount);
         }
 
         return limit;
@@ -287,9 +281,9 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             return current;
         var trimmed = request.Title.Trim();
         if (trimmed.Length == 0)
-            throw new BadRequestException("Le titre de la soirée ne peut pas être vide.");
+            throw Errors.EventTitleRequired();
         if (trimmed.Length > 200)
-            throw new BadRequestException("Le titre de la soirée ne peut pas dépasser 200 caractères.");
+            throw Errors.EventTitleTooLong(200);
         return trimmed;
     }
 
@@ -299,7 +293,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             return current;
         if (!DatePatternRegex().IsMatch(request.Date)
             || !DateOnly.TryParse(request.Date, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
-            throw new BadRequestException("date doit être au format YYYY-MM-DD.");
+            throw Errors.InvalidDateFormat();
         return request.Date;
     }
 
@@ -309,7 +303,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             return current;
         if (!TimePatternRegex().IsMatch(request.Time)
             || !TimeOnly.TryParse(request.Time, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
-            throw new BadRequestException("time doit être au format HH:mm.");
+            throw Errors.InvalidTimeFormat();
         return request.Time;
     }
 

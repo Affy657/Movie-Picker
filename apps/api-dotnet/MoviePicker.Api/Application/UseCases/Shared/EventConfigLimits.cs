@@ -8,10 +8,10 @@ public static class EventConfigLimits
     public static int? ResolveLimit(int value, int? cap, string field)
     {
         if (value < 0)
-            throw new BadRequestException($"{field} doit être 0 (pas de limite) ou un entier positif.");
+            throw Errors.ConfigLimitInvalid(field);
 
         if (cap.HasValue && value > cap.Value)
-            throw new BadRequestException($"{field} doit être entre 0 (pas de limite) et {cap.Value}.");
+            throw Errors.ConfigLimitOutOfRange(field, cap.Value);
 
         return value == 0 ? null : value;
     }
@@ -19,8 +19,7 @@ public static class EventConfigLimits
     public static int ResolveWinnerCount(int value)
     {
         if (value < EventConfig.DefaultWinnerCount || value > EventConfig.WinnerCountCap)
-            throw new BadRequestException(
-                $"Le nombre de films gagnants doit être compris entre {EventConfig.DefaultWinnerCount} et {EventConfig.WinnerCountCap}.");
+            throw Errors.WinnerCountOutOfRange(EventConfig.DefaultWinnerCount, EventConfig.WinnerCountCap);
 
         return value;
     }

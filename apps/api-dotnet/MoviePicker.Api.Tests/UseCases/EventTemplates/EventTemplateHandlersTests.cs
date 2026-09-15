@@ -188,7 +188,7 @@ public sealed class CreateEventTemplateHandlerTests
         var ex = await Assert.ThrowsAsync<ConflictException>(
             () => _sut.HandleAsync("u1", TemplateFixtures.Request()));
 
-        Assert.Contains("limite", ex.Message);
+        Assert.Equal(ErrorCodes.EventTemplateLimitReached, ex.Reason);
     }
 
     [Fact]

@@ -1,3 +1,5 @@
+using MoviePicker.Api.Domain.Exceptions;
+
 namespace MoviePicker.Api.Application.UseCases.Auth;
 
 public static class AuthInputValidation
@@ -6,26 +8,26 @@ public static class AuthInputValidation
     public const int PasswordMaxLength = 128;
     public const int DisplayNameMaxLength = 80;
 
-    public static string? ValidatePassword(string? password)
+    public static BadRequestException? ValidatePassword(string? password)
     {
         if (string.IsNullOrEmpty(password) || password.Length < PasswordMinLength)
-            return "Le mot de passe doit contenir au moins 8 caractères.";
+            return Errors.PasswordTooShort(PasswordMinLength);
         if (password.Length > PasswordMaxLength)
-            return $"Le mot de passe ne peut pas dépasser {PasswordMaxLength} caractères.";
+            return Errors.PasswordTooLong(PasswordMaxLength);
         if (!password.Any(char.IsLetter))
-            return "Le mot de passe doit contenir au moins une lettre.";
+            return Errors.PasswordNeedsLetter();
         if (!password.Any(char.IsDigit))
-            return "Le mot de passe doit contenir au moins un chiffre.";
+            return Errors.PasswordNeedsDigit();
         return null;
     }
 
-    public static string? ValidateDisplayName(string? displayName)
+    public static BadRequestException? ValidateDisplayName(string? displayName)
     {
         if (string.IsNullOrWhiteSpace(displayName))
-            return "Le pseudo est requis.";
+            return Errors.DisplayNameRequired();
         var t = displayName.Trim();
         if (t.Length > DisplayNameMaxLength)
-            return $"Le pseudo ne peut pas dépasser {DisplayNameMaxLength} caractères.";
+            return Errors.DisplayNameTooLong(DisplayNameMaxLength);
         return null;
     }
 }

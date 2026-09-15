@@ -13,9 +13,6 @@ namespace MoviePicker.Api.Infrastructure.GitHub;
 public sealed class GitHubIssueClient : IGitHubIssueClient
 {
     private const string BearerScheme = "Bearer";
-    private const string UnavailableMessage =
-        "Impossible de créer la suggestion pour le moment. Réessayez dans un instant.";
-
     private static readonly IReadOnlyDictionary<string, string> ExtensionByContentType =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -40,15 +37,15 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
     {
         if (string.IsNullOrWhiteSpace(_options.GitHubToken))
         {
-            _logger.LogWarning("Création d'issue GitHub ignorée : GITHUB_TOKEN non configuré");
-            throw new ServiceUnavailableException(UnavailableMessage);
+            _logger.LogWarning("GitHub issue creation skipped: GITHUB_TOKEN not configured");
+            throw Errors.SuggestionUnavailable();
         }
 
         var res = await PostIssueAsync(draft.Title, draft.Body, draft.Labels, ct);
         if (res.StatusCode == HttpStatusCode.UnprocessableEntity && draft.Labels.Count > 0)
         {
             _logger.LogWarning(
-                "Création d'issue GitHub 422 avec labels, nouvel essai sans labels");
+                "GitHub issue creation returned 422 with labels, retrying without labels");
             res.Dispose();
             res = await PostIssueAsync(draft.Title, draft.Body, [], ct);
         }
@@ -61,10 +58,10 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
                 try { body = await res.Content.ReadAsStringAsync(ct); }
                 catch { body = "<unreadable>"; }
                 _logger.LogWarning(
-                    "Création d'issue GitHub échouée status={Status} body={Body}",
+                    "GitHub issue creation failed status={Status} body={Body}",
                     (int)res.StatusCode,
                     Truncate(body, 256));
-                throw new ServiceUnavailableException(UnavailableMessage);
+                throw Errors.SuggestionUnavailable();
             }
         }
     }
@@ -73,7 +70,7 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
     {
         if (string.IsNullOrWhiteSpace(_options.GitHubToken))
         {
-            _logger.LogWarning("Upload de pièce jointe GitHub ignoré : GITHUB_TOKEN non configuré");
+            _logger.LogWarning("GitHub attachment upload skipped: GITHUB_TOKEN not configured");
             return null;
         }
 
@@ -91,7 +88,7 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
             {
                 Content = JsonContent.Create(new
                 {
-                    message = "feedback: capture d'écran",
+                    message = "feedback: screenshot",
                     content = attachment.Base64Content,
                     branch
                 })
@@ -102,7 +99,7 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
             if (!res.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "Upload de pièce jointe GitHub échoué status={Status} file={FileName}",
+                    "GitHub attachment upload failed status={Status} file={FileName}",
                     (int)res.StatusCode,
                     attachment.FileName);
                 return null;
@@ -113,7 +110,7 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
         {
-            _logger.LogWarning(ex, "Échec de l'upload de la pièce jointe GitHub {FileName}", attachment.FileName);
+            _logger.LogWarning(ex, "GitHub attachment upload failed for {FileName}", attachment.FileName);
             return null;
         }
     }
@@ -169,11 +166,11 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
         foreach (var segment in path)
         {
             if (!current.TryGetProperty(segment, out current))
-                throw new JsonException($"Champ « {segment} » absent de la réponse GitHub.");
+                throw new JsonException($"Field \"{segment}\" missing from the GitHub response");
         }
 
         return current.GetString()
-            ?? throw new JsonException($"Champ « {path[^1]} » null dans la réponse GitHub.");
+            ?? throw new JsonException($"Field \"{path[^1]}\" is null in the GitHub response");
     }
 
     private async Task<HttpResponseMessage> PostIssueAsync(
@@ -200,13 +197,13 @@ public sealed class GitHubIssueClient : IGitHubIssueClient
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogWarning(ex, "Échec réseau lors de la création de l'issue GitHub");
-            throw new ServiceUnavailableException(UnavailableMessage);
+            _logger.LogWarning(ex, "Network failure while creating the GitHub issue");
+            throw Errors.SuggestionUnavailable();
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
-            _logger.LogWarning(ex, "Timeout lors de la création de l'issue GitHub");
-            throw new ServiceUnavailableException(UnavailableMessage);
+            _logger.LogWarning(ex, "Timeout while creating the GitHub issue");
+            throw Errors.SuggestionUnavailable();
         }
     }
 

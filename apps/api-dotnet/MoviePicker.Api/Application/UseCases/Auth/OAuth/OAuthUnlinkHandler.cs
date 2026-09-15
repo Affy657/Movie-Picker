@@ -19,15 +19,15 @@ public sealed class OAuthUnlinkHandler : IOAuthUnlinkHandler
 
     public async Task HandleAsync(string userId, string provider, CancellationToken ct = default)
     {
-        var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable.");
+        var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
 
         if (!user.Identities.Any(i => i.Provider == provider))
-            throw new NotFoundException("Ce compte n'est pas lié à ce fournisseur.");
+            throw Errors.OAuthProviderNotLinked();
 
         var remainingIdentities = user.Identities.Count(i => i.Provider != provider);
         var hasPassword = !string.IsNullOrEmpty(user.PasswordHash);
         if (!hasPassword && remainingIdentities == 0)
-            throw new BadRequestException("Impossible de retirer la dernière méthode de connexion du compte.");
+            throw Errors.LastLoginMethod();
 
         var updated = user with
         {

@@ -116,7 +116,7 @@ public sealed class InviteUserHandlerTests
 
         var result = await _sut.HandleAsync("evt1", Request());
 
-        Assert.Equal("Invitation envoyée.", result.Message);
+        Assert.Equal("Invitation sent", result.Message);
         _notifications.Verify(n => n.AddAsync(
             It.Is<UserNotification>(x => x.UserId == TargetId && x.Type == UserNotificationType.EventInvitation && x.EventId == "evt1"),
             It.IsAny<CancellationToken>()), Times.Once);

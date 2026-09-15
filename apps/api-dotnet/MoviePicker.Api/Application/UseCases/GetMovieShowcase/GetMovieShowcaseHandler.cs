@@ -34,7 +34,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
     {
         var section = (query.Section ?? string.Empty).Trim().ToLowerInvariant();
         if (!MovieShowcaseSections.IsKnown(section))
-            throw new BadRequestException("Section inconnue");
+            throw Errors.UnknownSection();
 
         var genreIds = NormalizeGenreIds(query.GenreIds);
         var theme = string.IsNullOrWhiteSpace(query.Theme) ? null : query.Theme.Trim();
@@ -58,13 +58,13 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         {
             case MovieShowcaseSections.Provider
                 when MovieShowcaseCatalog.CriteriaForProvider(provider, _options.TmdbWatchProvidersRegion) is null:
-                throw new BadRequestException("Plateforme inconnue");
+                throw Errors.UnknownPlatform();
             case MovieShowcaseSections.Recommendations when query.SeedTmdbId is not > 0:
-                throw new BadRequestException("Film de référence manquant");
+                throw Errors.ReferenceMovieMissing();
             case MovieShowcaseSections.Collection when query.CollectionId is not > 0:
-                throw new BadRequestException("Identifiant de collection manquant");
+                throw Errors.CollectionIdMissing();
             case MovieShowcaseSections.Theme when MovieShowcaseCatalog.CriteriaForTheme(theme) is null:
-                throw new BadRequestException("Thème inconnu");
+                throw Errors.UnknownTheme();
         }
     }
 
@@ -92,7 +92,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         }
         catch (HttpRequestException)
         {
-            throw new ServiceUnavailableException("Sélections de films temporairement indisponibles");
+            throw Errors.ShowcaseUnavailable();
         }
     }
 
@@ -110,7 +110,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
                 var providerCriteria = MovieShowcaseCatalog.CriteriaForProvider(
                     provider,
                     _options.TmdbWatchProvidersRegion)
-                    ?? throw new BadRequestException("Plateforme inconnue");
+                    ?? throw Errors.UnknownPlatform();
                 return _tmdb.DiscoverMoviesAsync(
                     providerCriteria,
                     MovieShowcaseCatalog.PagesPerSection,
@@ -118,7 +118,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
 
             case MovieShowcaseSections.Recommendations:
                 if (query.SeedTmdbId is not > 0)
-                    throw new BadRequestException("Film de référence manquant");
+                    throw Errors.ReferenceMovieMissing();
                 return _tmdb.GetRecommendationsAsync(query.SeedTmdbId.Value, ct);
 
             case MovieShowcaseSections.NowPlaying:
@@ -129,12 +129,12 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
 
             case MovieShowcaseSections.Collection:
                 if (query.CollectionId is not > 0)
-                    throw new BadRequestException("Identifiant de collection manquant");
+                    throw Errors.CollectionIdMissing();
                 return _tmdb.GetCollectionMoviesAsync(query.CollectionId.Value, ct);
 
             case MovieShowcaseSections.Theme:
                 var criteria = MovieShowcaseCatalog.CriteriaForTheme(theme)
-                    ?? throw new BadRequestException("Thème inconnu");
+                    ?? throw Errors.UnknownTheme();
                 return _tmdb.DiscoverMoviesAsync(criteria, MovieShowcaseCatalog.PagesPerSection, ct);
 
             default:
@@ -222,7 +222,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
     private void RequireTmdbConfigured()
     {
         if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
-            throw new ServiceUnavailableException("Sélections de films temporairement indisponibles");
+            throw Errors.ShowcaseUnavailable();
     }
 
     private TimeSpan CacheTtl() =>

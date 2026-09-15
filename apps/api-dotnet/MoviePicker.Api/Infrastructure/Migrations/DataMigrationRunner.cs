@@ -57,7 +57,7 @@ public sealed class DataMigrationRunner : BackgroundService
                 var affected = await migration.ExecuteAsync(stoppingToken);
                 await history.MarkAppliedAsync(migration.Id, affected, _clock.GetUtcNow(), stoppingToken);
                 _logger.LogInformation(
-                    "Migration {MigrationId} appliquée : {Affected} document(s) mis à jour",
+                    "Migration {MigrationId} applied: {Affected} document(s) updated",
                     migration.Id,
                     affected);
             }
@@ -69,7 +69,7 @@ public sealed class DataMigrationRunner : BackgroundService
             {
                 _logger.LogError(
                     ex,
-                    "Migration {MigrationId} en échec : elle sera rejouée au prochain démarrage",
+                    "Migration {MigrationId} failed: it will be replayed at the next startup",
                     migration.Id);
             }
         }

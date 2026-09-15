@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
@@ -73,7 +74,7 @@ public sealed class SharedRateLimitFilter : IAsyncActionFilter
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Compteur de quota partagé indisponible pour {Policy}", policy.Name);
+            _logger.LogWarning(ex, "Shared quota counter unavailable for {Policy}", policy.Name);
             await next();
             return;
         }
@@ -95,7 +96,8 @@ public sealed class SharedRateLimitFilter : IAsyncActionFilter
             Content = ApiErrorJson.Serialize(
                 context.HttpContext,
                 StatusCodes.Status429TooManyRequests,
-                "Trop de requêtes. Réessayez dans un instant.")
+                "Too many requests, please retry in a moment",
+                ErrorCodes.RateLimited)
         };
     }
 }

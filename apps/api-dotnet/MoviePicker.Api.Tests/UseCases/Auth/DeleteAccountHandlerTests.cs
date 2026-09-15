@@ -68,7 +68,7 @@ public sealed class DeleteAccountHandlerTests
         var ex = await Assert.ThrowsAsync<UnauthorizedException>(() =>
             f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "wrong" }));
 
-        Assert.Equal("Mot de passe incorrect.", ex.Message);
+        Assert.Equal(ErrorCodes.WrongPassword, ex.Reason);
         Assert.NotNull(await f.Users.GetByIdAsync(user.Id));
         f.Sessions.Verify(
             x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
@@ -98,7 +98,7 @@ public sealed class DeleteAccountHandlerTests
         var ex = await Assert.ThrowsAsync<UnauthorizedException>(() =>
             f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Confirmation = "wrong" }));
 
-        Assert.Equal("Confirmation incorrecte.", ex.Message);
+        Assert.Equal(ErrorCodes.ConfirmationIncorrect, ex.Reason);
         Assert.NotNull(await f.Users.GetByIdAsync(user.Id));
     }
 

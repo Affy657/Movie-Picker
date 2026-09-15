@@ -35,7 +35,7 @@ public sealed class MongoSharedCache : ISharedCache
         }
         catch (Exception ex) when (ex is MongoException or TimeoutException or JsonException)
         {
-            _logger.LogWarning(ex, "Cache partagé illisible pour {Key}", key);
+            _logger.LogWarning(ex, "Shared cache unreadable for {Key}", key);
             return null;
         }
     }
@@ -56,7 +56,7 @@ public sealed class MongoSharedCache : ISharedCache
         }
         catch (Exception ex) when (ex is MongoException or TimeoutException)
         {
-            _logger.LogWarning(ex, "Cache partagé non écrit pour {Key}", key);
+            _logger.LogWarning(ex, "Shared cache not written for {Key}", key);
         }
     }
 }

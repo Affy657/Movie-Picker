@@ -43,22 +43,22 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
     public async Task<RemoveParticipantResponse> HandleAsync(string idOrSlug, string participantId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(participantId))
-            throw new BadRequestException("Participant requis.");
+            throw Errors.ParticipantRequired();
 
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.ClosedAt.HasValue)
-            throw new ConflictException("Soirée clôturée. Impossible de modifier la liste des participants.");
+            throw Errors.EventClosedParticipantsLocked();
 
         if (evt.HasWinner)
-            throw new ConflictException("La roue a déjà été lancée : la liste des participants ne peut plus être modifiée.");
+            throw Errors.ParticipantsLockedWheel();
 
         var participant = await _participantRepository.FindByIdAndEventIdAsync(participantId, evt.Id, ct);
         if (participant is null)
-            throw new NotFoundException("Participant introuvable");
+            throw Errors.ParticipantNotFound();
 
         if (!string.IsNullOrEmpty(evt.CreatorUserId) && participant.UserId == evt.CreatorUserId)
-            throw new ConflictException("Le créateur de la soirée ne peut pas être retiré.");
+            throw Errors.CreatorCannotBeRemoved();
 
         var hostToken = _hostTokenAccessor.GetHostToken();
         var currentUserId = _currentUserAccessor.GetUserId();
@@ -68,7 +68,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             && participant.UserId == currentUserId;
 
         if (!isHost && !isSelfConnected)
-            throw new ForbiddenException("Action réservée à l'hôte ou au participant lui-même.");
+            throw Errors.HostOrSelfOnly();
 
         var movieIds = await _movieRepository.ListIdsByEventAndParticipantAsync(evt.Id, participant.Id, ct);
         var deleted = false;
@@ -84,7 +84,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             },
             ct);
         if (!deleted)
-            throw new NotFoundException("Participant introuvable");
+            throw Errors.ParticipantNotFound();
 
         _logger.LogInformation(
             "Participant removed: {ParticipantId} from event {EventId} (byHost={IsHost}, selfConnected={IsSelf}, cascadedMovies={MovieCount})",
@@ -99,7 +99,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             ParticipantId = participant.Id,
             EventId = evt.Id,
             RemovedMovies = movieIds.Count,
-            Message = isSelfConnected && !isHost ? "Vous avez quitté la soirée." : "Participant retiré."
+            Message = isSelfConnected && !isHost ? "You left the movie night" : "Participant removed"
         };
     }
 }

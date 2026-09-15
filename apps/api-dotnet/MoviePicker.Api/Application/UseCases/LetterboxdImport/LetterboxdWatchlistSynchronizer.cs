@@ -3,6 +3,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.LetterboxdImport;
 
@@ -44,11 +45,9 @@ public sealed class LetterboxdWatchlistSynchronizer
         if (!snapshot.IsComplete)
         {
             _logger.LogWarning(
-                "Lecture incomplète de la watchlist Letterboxd de {Username} : aucune modification appliquée",
+                "Incomplete read of the Letterboxd watchlist of {Username}: no change applied",
                 user.LetterboxdUsername);
-            return Failed(
-                $"Watchlist Letterboxd de « {user.LetterboxdUsername} » inaccessible. "
-                + "Vérifiez l'orthographe du pseudo et que votre profil Letterboxd est public.");
+            return Failed(ErrorCodes.LetterboxdWatchlistIncomplete);
         }
 
         var items = await _watchlist.ListByUserIdAsync(user.Id, int.MaxValue, ct);

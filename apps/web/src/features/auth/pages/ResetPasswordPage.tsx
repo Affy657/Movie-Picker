@@ -8,15 +8,10 @@ import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { postPasswordResetConfirm } from '@/features/auth/api/authApi';
-import { ApiError } from '@/shared/api/apiError';
+import { API_ERROR_REASONS, ApiError } from '@/shared/api/apiError';
 import Button, { buttonClass } from '@/shared/components/Button';
 
 const PASSWORD_MIN_LENGTH = 8;
-
-function isExpiredOrInvalidResetTokenMessage(message: string): boolean {
-  const m = message.toLowerCase();
-  return m.includes('token invalide') || m.includes('expir');
-}
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation();
@@ -41,7 +36,7 @@ export default function ResetPasswordPage() {
       await postPasswordResetConfirm(token, newPassword);
       setSuccess(true);
     } catch (e) {
-      if (ApiError.is(e) && e.code === 400 && isExpiredOrInvalidResetTokenMessage(e.message)) {
+      if (ApiError.is(e) && e.reason === API_ERROR_REASONS.invalidResetToken) {
         setTokenInvalid(true);
         return;
       }

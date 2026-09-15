@@ -11,7 +11,7 @@ public sealed class InMemoryAuthSessionInvalidator(
     public Task<long> InvalidateAllForUserAsync(string userId, CancellationToken ct = default)
     {
         _logger.LogInformation(
-            "Sessions in-memory: rien à invalider pour l'utilisateur {UserId}",
+            "In-memory sessions: nothing to invalidate for user {UserId}",
             userId);
         return Task.FromResult(0L);
     }

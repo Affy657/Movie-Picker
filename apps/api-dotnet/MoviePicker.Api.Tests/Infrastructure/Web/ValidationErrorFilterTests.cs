@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
@@ -66,6 +67,7 @@ public sealed class ValidationErrorFilterTests
 
         var bad = Assert.IsType<BadRequestObjectResult>(ctx.Result);
         var body = Assert.IsType<ApiErrorResponse>(bad.Value);
-        Assert.Equal("Validation échouée", body.Error);
+        Assert.Equal("Validation failed", body.Error);
+        Assert.Equal(ErrorCodes.ValidationFailed, body.Reason);
     }
 }

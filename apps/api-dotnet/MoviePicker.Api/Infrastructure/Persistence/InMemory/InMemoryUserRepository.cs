@@ -214,11 +214,9 @@ public sealed class InMemoryUserRepository : IUserRepository
     public Task<User> UpdateAsync(User user, CancellationToken ct = default)
     {
         if (!_byId.TryGetValue(user.Id, out var previous))
-            throw new NotFoundException("Utilisateur introuvable");
+            throw Errors.UserNotFound();
         if (previous.Version != user.Version)
-            throw new ConflictException(
-                "Utilisateur modifié entre-temps. Rechargez la page et réessayez.",
-                ConcurrencyConflict.Reason);
+            throw Errors.ConcurrentUpdate();
 
         var prevEmail = Normalize(previous.Email) ?? previous.Email.Trim();
         _emailToId.TryRemove(prevEmail, out _);

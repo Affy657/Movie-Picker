@@ -60,26 +60,26 @@ public sealed class AddMovieHandler : IAddMovieHandler
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.IsFinished(_clock.GetUtcNow()))
-            throw new ConflictException("Soirée terminée. Lecture seule.");
+            throw Errors.EventFinished();
 
         if (request.MediaType == MovieMediaType.Tv && evt.Config?.AllowSeries != true)
-            throw new ConflictException("Cette soirée n'autorise pas les séries TV.");
+            throw Errors.TvShowsNotAllowed();
 
         var poster = await ResolvePosterAsync(request, ct);
 
         var participant = await _participantRepository.FindByIdAndEventIdAsync(request.ParticipantId, evt.Id, ct);
         if (participant is null)
-            throw new BadRequestException("Participant invalide pour cette soirée");
+            throw Errors.InvalidParticipant();
 
         var currentUserId = callerUserId ?? _currentUserAccessor.GetUserId();
         if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId)
-            throw new ForbiddenException("Vous ne pouvez proposer un film que pour votre propre participation.");
+            throw Errors.OwnParticipationOnly();
 
         if (await _movieRepository.ExistsByEventAndTmdbIdAsync(evt.Id, request.TmdbId, request.MediaType, ct))
-            throw new ConflictException("Ce film a déjà été proposé (même id TMDB)");
+            throw Errors.MovieAlreadyProposed();
 
         if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), ct))
-            throw new ConflictException("Un film avec ce titre a déjà été proposé");
+            throw Errors.MovieTitleAlreadyProposed();
 
         var now = _clock.GetUtcNow();
         var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
@@ -138,7 +138,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     {
         var poster = string.IsNullOrWhiteSpace(request.PosterPath) ? null : request.PosterPath.Trim();
         if (poster is not null && !IsAcceptablePosterPath(poster))
-            throw new BadRequestException("posterPath doit être une URL https d'affiche TMDB, un chemin /api/v1/posters/… ou null");
+            throw Errors.InvalidPosterPath();
 
         if (poster is not null && TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(poster, out var norm))
             await _posterImageStore.RegisterTmdbSourceAsync(norm, ct);
@@ -162,7 +162,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
                 await _eventRepository.LockForWriteAsync(evt.Id, token);
                 var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, token);
                 if (count >= maxProp)
-                    throw new ConflictException($"Limite de {maxProp} proposition(s) par participant atteinte.");
+                    throw Errors.ProposalLimitReached(maxProp.Value);
                 created = await _movieRepository.InsertAsync(movie, token);
             },
             ct);
@@ -178,7 +178,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Récupération des genres TMDB échouée pour {TmdbId} ; film ajouté sans genres", tmdbId);
+            _logger.LogWarning(ex, "TMDB genre lookup failed for {TmdbId}, movie added without genres", tmdbId);
             return [];
         }
     }
@@ -243,7 +243,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Échec de la notification film proposé pour la soirée {EventId}", evt.Id);
+            _logger.LogWarning(ex, "Movie proposed notification failed for movie night {EventId}", evt.Id);
         }
     }
 

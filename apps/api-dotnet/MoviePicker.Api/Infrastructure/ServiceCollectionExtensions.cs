@@ -267,18 +267,18 @@ public static class ServiceCollectionExtensions
             && SharedDatabaseNames.Contains(databaseName, StringComparer.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                $"Garde-fou : une suite de tests cible la base partagée '{databaseName}'. "
-                + "Les bases 'moviepicker' et 'moviepicker_dev' ne sont jamais accessibles aux tests. "
-                + "Fournis une base jetable via MONGODB_TEST_URI ou E2E_MONGODB_URI, "
-                + "ou laisse MONGODB_URI vide pour tourner en mémoire.");
+                $"Guard: a test suite targets the shared database '{databaseName}'. "
+                + "The 'moviepicker' and 'moviepicker_dev' databases are never reachable from tests. "
+                + "Provide a disposable database through MONGODB_TEST_URI or E2E_MONGODB_URI, "
+                + "or leave MONGODB_URI empty to run in memory.");
         }
         if (environment.IsDevelopment()
             && string.Equals(databaseName, "moviepicker", StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                "Garde-fou : en Development, MONGODB_URI cible la base de production 'moviepicker'. "
-                + "Utilise une base dédiée et jetable (ex. 'moviepicker_dev'). "
-                + "La base 'moviepicker' n'est autorisée qu'en Production.");
+                "Guard: in Development, MONGODB_URI targets the production database 'moviepicker'. "
+                + "Use a dedicated, disposable database (e.g. 'moviepicker_dev'). "
+                + "The 'moviepicker' database is only allowed in Production.");
         }
         services.AddSingleton<IMongoClient>(_ => new MongoClient(BuildMongoClientSettings(mongoUrl)));
         services.AddSingleton<MongoSessionAccessor>();

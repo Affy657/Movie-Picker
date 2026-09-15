@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
@@ -117,7 +118,8 @@ public static class RateLimitingExtensions
         var json = ApiErrorJson.Serialize(
             context.HttpContext,
             StatusCodes.Status429TooManyRequests,
-            "Trop de requêtes. Réessayez dans un instant.");
+            "Too many requests, please retry in a moment",
+            ErrorCodes.RateLimited);
         await context.HttpContext.Response.WriteAsync(json, cancellationToken);
     }
 

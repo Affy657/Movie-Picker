@@ -34,7 +34,7 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
         if (profiles.Count >= MaxProfileUrls)
         {
             _logger.LogWarning(
-                "Sitemap tronqué : {Count} profils atteignent la limite de {Max} URLs. Envisager un index de sitemaps.",
+                "Sitemap truncated: {Count} profiles reach the limit of {Max} URLs, consider a sitemap index",
                 profiles.Count,
                 MaxProfileUrls);
         }

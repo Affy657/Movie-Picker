@@ -33,7 +33,7 @@ public sealed class MongoDatabaseHealthProbe : IDatabaseHealthProbe
         }
         catch (Exception ex) when (ex is MongoException or TimeoutException or OperationCanceledException)
         {
-            _logger.LogError(ex, "Sonde de disponibilité MongoDB en échec après {DurationMs} ms", stopwatch.ElapsedMilliseconds);
+            _logger.LogError(ex, "MongoDB readiness probe failed after {DurationMs} ms", stopwatch.ElapsedMilliseconds);
             return new DatabaseProbeResult(DatabaseProbeStatus.Unavailable, stopwatch.ElapsedMilliseconds);
         }
     }

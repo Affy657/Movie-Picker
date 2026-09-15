@@ -63,7 +63,7 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
                 var updated = byEmail with { Identities = [.. byEmail.Identities, identity], UpdatedAt = now };
                 saved = await _users.UpdateAsync(updated, ct);
             }
-            catch (ConflictException ex) when (ex.Message == "identity_conflict")
+            catch (ConflictException ex) when (ex.Reason == ErrorCodes.IdentityConflict)
             {
                 saved = await ResolveIdentityRaceAsync(info, ct);
             }
@@ -105,7 +105,7 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
                 ct);
             return (created, true);
         }
-        catch (ConflictException ex) when (ex.Message == "identity_conflict")
+        catch (ConflictException ex) when (ex.Reason == ErrorCodes.IdentityConflict)
         {
             return (await ResolveIdentityRaceAsync(info, ct), false);
         }
@@ -113,5 +113,5 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
 
     private async Task<User> ResolveIdentityRaceAsync(ExternalLoginInfo info, CancellationToken ct) =>
         await _users.GetByIdentityAsync(info.Provider, info.Subject, ct)
-        ?? throw new ConflictException("Impossible de connecter ce compte. Réessayez.");
+        ?? throw Errors.OAuthLinkFailed();
 }

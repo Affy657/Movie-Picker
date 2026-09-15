@@ -22,8 +22,6 @@ public sealed class ConfirmPasswordResetHandlerTests
         public override DateTimeOffset GetUtcNow() => _now;
     }
 
-    private const string GenericTokenError = "Token invalide ou expiré.";
-    private const string SuccessMessage = "Mot de passe réinitialisé. Connecte-toi avec ton nouveau mot de passe.";
 
     private static readonly string PlainToken = Base64UrlTestToken();
     private static readonly string[] expected = new[] { "update", "mark", "invalidateTokens", "invalidateSessions" };
@@ -70,7 +68,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(new PasswordResetConfirmRequest { Token = "", NewPassword = "abcd1234" }));
 
-        Assert.Equal(GenericTokenError, ex.Message);
+        Assert.Equal(ErrorCodes.InvalidResetToken, ex.Reason);
         tokens.Verify(x => x.GetByTokenHashAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -88,7 +86,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abc1" }));
 
-        Assert.Equal("Le mot de passe doit contenir au moins 8 caractères.", ex.Message);
+        Assert.Equal(ErrorCodes.PasswordTooShort, ex.Reason);
         tokens.Verify(x => x.GetByTokenHashAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -106,7 +104,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "12345678" }));
 
-        Assert.Equal("Le mot de passe doit contenir au moins une lettre.", ex.Message);
+        Assert.Equal(ErrorCodes.PasswordNeedsLetter, ex.Reason);
         tokens.Verify(x => x.GetByTokenHashAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -124,7 +122,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abcdefgh" }));
 
-        Assert.Equal("Le mot de passe doit contenir au moins un chiffre.", ex.Message);
+        Assert.Equal(ErrorCodes.PasswordNeedsDigit, ex.Reason);
         tokens.Verify(x => x.GetByTokenHashAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -145,7 +143,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abcd1234" }));
 
-        Assert.Equal(GenericTokenError, ex.Message);
+        Assert.Equal(ErrorCodes.InvalidResetToken, ex.Reason);
         users.Verify(x => x.GetByIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -178,7 +176,7 @@ public sealed class ConfirmPasswordResetHandlerTests
         var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abcd1234" }));
 
-        Assert.Equal(GenericTokenError, ex.Message);
+        Assert.Equal(ErrorCodes.InvalidResetToken, ex.Reason);
         users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -403,6 +401,6 @@ public sealed class ConfirmPasswordResetHandlerTests
         var res = await handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abcd1234" });
 
         Assert.False(string.IsNullOrWhiteSpace(res.Message));
-        Assert.Equal(SuccessMessage, res.Message);
+        Assert.Equal("Password reset, sign in with your new password", res.Message);
     }
 }

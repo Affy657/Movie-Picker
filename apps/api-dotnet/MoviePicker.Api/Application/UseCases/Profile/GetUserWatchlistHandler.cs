@@ -25,7 +25,7 @@ public sealed class GetUserWatchlistHandler : IGetUserWatchlistHandler
     {
         var user = await PublicProfileGuard.RequirePublicUserAsync(_users, handle, ct);
         if (!PublicProfileGuard.CanSeeWatchlist(user, currentUserId))
-            throw new NotFoundException("Watchlist introuvable");
+            throw Errors.WatchlistNotFound();
 
         return await _watchlist.HandleAsync(user.Id, skip, take, ct);
     }

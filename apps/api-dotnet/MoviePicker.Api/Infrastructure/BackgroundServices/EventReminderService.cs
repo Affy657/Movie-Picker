@@ -32,7 +32,7 @@ public sealed class EventReminderService : BackgroundService
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    _logger.LogError(ex, "Erreur lors de l'envoi des rappels de soirée");
+                    _logger.LogError(ex, "Error while sending movie night reminders");
                 }
 
                 await Task.Delay(Interval, stoppingToken);

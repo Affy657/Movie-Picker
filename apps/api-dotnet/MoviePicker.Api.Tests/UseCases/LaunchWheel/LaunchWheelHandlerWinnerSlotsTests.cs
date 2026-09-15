@@ -109,7 +109,8 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1"));
 
-        Assert.Equal(WinnerSlots.AllDrawnMessage(2), ex.Message);
+        Assert.Equal(ErrorCodes.WinnersAllDrawn, ex.Reason);
+        Assert.Equal(2, ex.Parameters!["count"]);
     }
 
     [Fact]
@@ -131,7 +132,7 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1"));
 
-        Assert.Equal(WinnerSlots.NothingLeftToDrawMessage, ex.Message);
+        Assert.Equal(ErrorCodes.NothingLeftToDraw, ex.Reason);
     }
 
     [Fact]
@@ -171,6 +172,6 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
 
         var result = await _sut.HandleAsync("evt1");
 
-        Assert.Equal("Un seul film dans le tirage : gagnant direct.", result.Message);
+        Assert.Equal("Only one movie in the draw: direct winner", result.Message);
     }
 }

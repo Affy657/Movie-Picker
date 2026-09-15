@@ -29,7 +29,7 @@ public sealed class ConfirmLetterboxdImportHandler : IConfirmLetterboxdImportHan
         CancellationToken ct = default)
     {
         if (request.Selections.Count > MaxSelections)
-            throw new BadRequestException($"Trop d'éléments sélectionnés (maximum {MaxSelections}).");
+            throw Errors.TooManySelections(MaxSelections);
 
         var added = 0;
         var alreadyPresent = 0;
@@ -76,7 +76,7 @@ public sealed class ConfirmLetterboxdImportHandler : IConfirmLetterboxdImportHan
         CancellationToken ct)
     {
         var user = await _users.GetByIdAsync(userId, ct)
-            ?? throw new NotFoundException("Utilisateur introuvable.");
+            ?? throw Errors.UserNotFound();
         var current = user.LetterboxdPendingReconciliationCount;
         var floor = Math.Max(0, current - request.Selections.Count);
         var requested = request.RemainingUnresolvedCount is >= 0

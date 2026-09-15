@@ -98,7 +98,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", Request(), null));
-        Assert.Equal("Soirée introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(), null));
-        Assert.Contains("terminée", ex.Message);
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public sealed class AddMovieHandlerTests
 
         var ex = await Assert.ThrowsAsync<ConflictException>(
             () => _sut.HandleAsync("evt1", Request(mediaType: MovieMediaType.Tv), null));
-        Assert.Contains("séries", ex.Message);
+        Assert.Equal(ErrorCodes.TvShowsNotAllowed, ex.Reason);
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public sealed class AddMovieHandlerTests
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(It.IsAny<string>(), evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", Request(), null));
-        Assert.Contains("Participant", ex.Message);
+        Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
     }
 
     [Fact]
@@ -143,7 +143,7 @@ public sealed class AddMovieHandlerTests
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
-        Assert.Contains("TMDB", ex.Message);
+        Assert.Equal(ErrorCodes.MovieAlreadyProposed, ex.Reason);
     }
 
     [Fact]
@@ -256,7 +256,7 @@ public sealed class AddMovieHandlerTests
         _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
-        Assert.Contains("titre", ex.Message);
+        Assert.Equal(ErrorCodes.MovieTitleAlreadyProposed, ex.Reason);
     }
 
     [Fact]
@@ -271,7 +271,7 @@ public sealed class AddMovieHandlerTests
         var req = new AddMovieRequest { TmdbId = 27205, Title = "Inception", Year = "2010", PosterPath = "not-a-valid-absolute-uri", ParticipantId = participant.Id };
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", req, null));
-        Assert.Contains("posterPath", ex.Message);
+        Assert.Equal(ErrorCodes.InvalidPosterPath, ex.Reason);
     }
 
     [Fact]
@@ -284,7 +284,7 @@ public sealed class AddMovieHandlerTests
         var req = new AddMovieRequest { TmdbId = 27205, Title = "Inception", Year = "2010", PosterPath = "https://tracker.example/pixel.png", ParticipantId = participant.Id };
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", req, null));
-        Assert.Contains("posterPath", ex.Message);
+        Assert.Equal(ErrorCodes.InvalidPosterPath, ex.Reason);
         _movieRepo.Verify(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -336,7 +336,7 @@ public sealed class AddMovieHandlerTests
         _movieRepo.Setup(r => r.CountByEventAndParticipantAsync(evt.Id, participant.Id, It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
-        Assert.Contains("Limite", ex.Message);
+        Assert.Equal(ErrorCodes.ProposalLimitReached, ex.Reason);
     }
 
     [Fact]

@@ -28,7 +28,7 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
                 SentrySdk.CaptureException(context.Exception);
             }
 
-            context.Result = new JsonResult(ApiErrorResponse.FromHttpContext(http, statusCode, ex.Message, ex.Reason))
+            context.Result = new JsonResult(ApiErrorResponse.FromHttpContext(http, statusCode, ex.Message, ex.Reason, ex.Parameters))
             {
                 StatusCode = statusCode
             };
@@ -38,9 +38,9 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
 
         SentrySdk.CaptureException(context.Exception);
 
-        var message = _env.IsDevelopment() ? context.Exception.Message : "Une erreur interne s'est produite.";
+        var message = _env.IsDevelopment() ? context.Exception.Message : "An internal error occurred";
         context.Result = new JsonResult(
-            ApiErrorResponse.FromHttpContext(http, (int)HttpStatusCode.InternalServerError, message))
+            ApiErrorResponse.FromHttpContext(http, (int)HttpStatusCode.InternalServerError, message, ErrorCodes.InternalError))
         {
             StatusCode = (int)HttpStatusCode.InternalServerError
         };

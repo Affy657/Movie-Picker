@@ -25,12 +25,12 @@ public sealed class LoginUserHandler : ILoginUserHandler
         if (user is null || string.IsNullOrEmpty(user.PasswordHash))
         {
             _passwordHasher.Verify(DecoyPasswordHash, request.Password);
-            throw new UnauthorizedException("Identifiants incorrects.");
+            throw Errors.InvalidCredentials();
         }
 
         var verify = _passwordHasher.Verify(user.PasswordHash, request.Password);
         if (verify == PasswordVerification.Failed)
-            throw new UnauthorizedException("Identifiants incorrects.");
+            throw Errors.InvalidCredentials();
 
         return new LoginResponse { UserId = user.Id, DisplayName = user.DisplayName };
     }

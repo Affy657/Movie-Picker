@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth;
@@ -33,7 +34,7 @@ public sealed class AuthInputValidationTests
         var msg = AuthInputValidation.ValidatePassword(tooLong);
 
         Assert.NotNull(msg);
-        Assert.Contains(AuthInputValidation.PasswordMaxLength.ToString(), msg);
+        Assert.Equal(ErrorCodes.PasswordTooLong, msg!.Reason);
     }
 
     [Theory]

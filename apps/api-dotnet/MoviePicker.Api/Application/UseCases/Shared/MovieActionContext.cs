@@ -16,29 +16,29 @@ internal static class MovieActionContext
         string idOrSlug,
         string movieId,
         string participantId,
-        string ownershipError,
+        Func<ForbiddenException> ownershipError,
         CancellationToken ct,
-        string? wheelLockedError = null)
+        Func<ConflictException>? wheelLockedError = null)
     {
         var evt = await eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.IsFinished(utcNow))
-            throw new ConflictException("Soirée terminée. Lecture seule.");
+            throw Errors.EventFinished();
 
         if (wheelLockedError is not null && evt.HasWinner)
-            throw new ConflictException(wheelLockedError);
+            throw wheelLockedError();
 
         var movie = await movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
         if (movie is null)
-            throw new NotFoundException("Film introuvable");
+            throw Errors.MovieNotFound();
 
         var participant = await participantRepository.FindByIdAndEventIdAsync(participantId, evt.Id, ct);
         if (participant is null)
-            throw new BadRequestException("Participant invalide pour cette soirée");
+            throw Errors.InvalidParticipant();
 
         var currentUserId = currentUserAccessor.GetUserId();
         if (string.IsNullOrEmpty(currentUserId) || participant.UserId != currentUserId)
-            throw new ForbiddenException(ownershipError);
+            throw ownershipError();
 
         return (evt, movie, participant);
     }
@@ -51,20 +51,20 @@ internal static class MovieActionContext
         DateTimeOffset utcNow,
         string idOrSlug,
         string movieId,
-        string wheelLockedError,
+        Func<ConflictException> wheelLockedError,
         CancellationToken ct)
     {
         var evt = await eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.IsFinished(utcNow))
-            throw new ConflictException("Soirée terminée. Lecture seule.");
+            throw Errors.EventFinished();
 
         if (evt.HasWinner)
-            throw new ConflictException(wheelLockedError);
+            throw wheelLockedError();
 
         var movie = await movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
         if (movie is null)
-            throw new NotFoundException("Film introuvable");
+            throw Errors.MovieNotFound();
 
         var currentUserId = currentUserAccessor.GetUserId();
         var isHost = EventHost.IsHost(evt, hostTokenAccessor.GetHostToken(), currentUserId);

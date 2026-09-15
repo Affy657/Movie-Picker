@@ -13,7 +13,7 @@ public static class PublicProfileGuard
         var user = await users.GetByHandleAsync(normalized, ct);
 
         if (user is null || !user.IsProfilePublic)
-            throw new NotFoundException("Profil introuvable");
+            throw Errors.ProfileNotFound();
 
         return user;
     }

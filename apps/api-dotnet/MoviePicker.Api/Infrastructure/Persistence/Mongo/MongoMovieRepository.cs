@@ -120,7 +120,7 @@ public sealed class MongoMovieRepository : IMovieRepository
             .Set(x => x.UpdatedAt, DateTime.UtcNow);
         var result = await _collection.UpdateOneAsync(x => x.Id == movieId, update, cancellationToken: ct);
         if (result.ModifiedCount == 0)
-            throw new NotFoundException("Film introuvable");
+            throw Errors.MovieNotFound();
     }
 
     public async Task UpdateWheelExclusionAsync(string movieId, bool excluded, CancellationToken ct = default)
@@ -130,7 +130,7 @@ public sealed class MongoMovieRepository : IMovieRepository
             .Set(x => x.UpdatedAt, DateTime.UtcNow);
         var result = await _collection.UpdateOneAsync(x => x.Id == movieId, update, cancellationToken: ct);
         if (result.MatchedCount == 0)
-            throw new NotFoundException("Film introuvable");
+            throw Errors.MovieNotFound();
     }
 
     public async Task UpdateGenresAsync(string movieId, IReadOnlyList<int> genreIds, CancellationToken ct = default)

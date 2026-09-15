@@ -67,7 +67,7 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
     {
         var poster = string.IsNullOrWhiteSpace(posterPath) ? null : posterPath.Trim();
         if (poster is not null && !IsAcceptablePosterPath(poster))
-            throw new BadRequestException("posterPath doit être une URL https absolue, un chemin /api/v1/posters/… ou null");
+            throw Errors.InvalidPosterPath();
 
         if (poster is not null && TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(poster, out var norm))
             await _posterImageStore.RegisterTmdbSourceAsync(norm, ct);
@@ -90,7 +90,7 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Récupération des genres TMDB échouée pour {TmdbId} ; item ajouté à la watchlist sans genres", tmdbId);
+            _logger.LogWarning(ex, "TMDB genre lookup failed for {TmdbId}, item added to the watchlist without genres", tmdbId);
             return [];
         }
     }

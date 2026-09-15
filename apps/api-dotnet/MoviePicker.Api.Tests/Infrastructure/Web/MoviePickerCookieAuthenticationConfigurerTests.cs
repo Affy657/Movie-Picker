@@ -77,7 +77,7 @@ public sealed class MoviePickerCookieAuthenticationConfigurerTests
         Assert.Equal("application/json", context.Response.ContentType);
         var body = readBody();
         Assert.Contains("\"code\":401", body);
-        Assert.Contains("Authentification requise.", body);
+        Assert.Contains("\"reason\":\"unauthorized\"", body);
     }
 
     [Fact]

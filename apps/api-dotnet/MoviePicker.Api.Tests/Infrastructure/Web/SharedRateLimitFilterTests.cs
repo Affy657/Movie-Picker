@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
@@ -136,7 +137,7 @@ public sealed class SharedRateLimitFilterTests
         Assert.Equal(
             StatusCodes.Status429TooManyRequests,
             payload.RootElement.GetProperty("code").GetInt32());
-        Assert.Contains("Trop de requêtes", payload.RootElement.GetProperty("error").GetString());
+        Assert.Equal(ErrorCodes.RateLimited, payload.RootElement.GetProperty("reason").GetString());
 
         var retryAfter = context.HttpContext.Response.Headers.RetryAfter.ToString();
         Assert.True(int.TryParse(retryAfter, out var seconds));

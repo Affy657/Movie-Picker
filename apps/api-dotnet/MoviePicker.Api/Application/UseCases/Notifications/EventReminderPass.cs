@@ -105,7 +105,7 @@ public sealed class EventReminderPass : IEventReminderPass
             return 0;
 
         _logger.LogInformation(
-            "Rappels {Type} : {Count} soirée(s) dans la fenêtre [{Min}–{Max}]",
+            "{Type} reminders: {Count} movie night(s) in the window [{Min}, {Max}]",
             window.NotifType, eventsInWindow.Count, window.Min, window.Max);
 
         HashSet<string> noMovieEventIds = [];
@@ -219,7 +219,7 @@ public sealed class EventReminderPass : IEventReminderPass
         if (pendingEvents.Count == 0)
             return 0;
 
-        _logger.LogInformation("Soirées en suspens détectées : {Count}", pendingEvents.Count);
+        _logger.LogInformation("Pending movie nights detected: {Count}", pendingEvents.Count);
 
         foreach (var evt in pendingEvents)
             await ProcessPendingEventAsync(evt, now, ct);

@@ -57,12 +57,12 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
     {
         var currentUserId = _currentUserAccessor.GetUserId();
         if (string.IsNullOrEmpty(currentUserId))
-            throw new UnauthorizedException("La suppression d'une soirée nécessite un compte connecté.");
+            throw Errors.AccountRequired();
 
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (string.IsNullOrEmpty(evt.CreatorUserId) || evt.CreatorUserId != currentUserId)
-            throw new ForbiddenException("Seul le créateur de la soirée peut la supprimer.");
+            throw Errors.CreatorOnlyDelete();
 
         var participants = await _participantRepository.ListByEventIdAsync(evt.Id, ct);
         var participantUserIds = participants
@@ -92,9 +92,9 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         if (!deleted)
         {
             _logger.LogWarning(
-                "DeleteEvent: cascade OK mais l'événement {EventId} n'existait plus à la suppression finale.",
+                "DeleteEvent: cascade succeeded but movie night {EventId} no longer existed at the final deletion",
                 evt.Id);
-            throw new NotFoundException("Soirée introuvable");
+            throw Errors.EventNotFound();
         }
 
         await NotifyParticipantsOnEventDeletedAsync(evt, participantUserIds, CancellationToken.None);
@@ -113,7 +113,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         {
             EventId = evt.Id,
             Slug = evt.Slug ?? string.Empty,
-            Message = "Soirée supprimée.",
+            Message = "Movie night deleted",
             RemovedParticipants = removedParticipants,
             RemovedMovies = removedMovies,
             RemovedVotes = removedVotes,
@@ -165,7 +165,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Échec de la notification suppression pour la soirée {EventId}", evt.Id);
+            _logger.LogWarning(ex, "Deletion notification failed for movie night {EventId}", evt.Id);
         }
     }
 }

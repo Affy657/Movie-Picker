@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -48,7 +49,7 @@ public sealed class LetterboxdController : ControllerBase
         if (request is null)
         {
             return BadRequest(
-                ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "Corps JSON requis."));
+                ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "JSON body required", ErrorCodes.ValidationFailed));
         }
 
         var userId = currentUser.GetUserId();

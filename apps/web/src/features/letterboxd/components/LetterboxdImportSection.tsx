@@ -5,6 +5,7 @@ import { AlertTriangle, Check, RefreshCw, TriangleAlert, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
+import { API_ERROR_REASONS } from '@/shared/api/apiError';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { invalidateWatchlist } from '@/features/watchlist/hooks/useWatchlist';
@@ -23,6 +24,16 @@ import Button from '@/shared/components/Button';
 
 function formatSyncDate(iso: string, locale: string): string {
   return new Date(iso).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function translateStoredSyncError(
+  stored: string | null,
+  t: ReturnType<typeof useTranslation>['t']
+): string | null {
+  if (stored === API_ERROR_REASONS.letterboxdWatchlistIncomplete) {
+    return t('apiErrors.letterboxd_watchlist_incomplete');
+  }
+  return stored;
 }
 
 export default function LetterboxdImportSection() {
@@ -124,7 +135,7 @@ export default function LetterboxdImportSection() {
   if (!user) return null;
 
   const connected = Boolean(savedUsername);
-  const lastSyncError = user.letterboxdLastSyncError;
+  const lastSyncError = translateStoredSyncError(user.letterboxdLastSyncError, t);
   const lastSyncAt = user.letterboxdLastSyncAt;
   const showInput = editing || !connected;
 

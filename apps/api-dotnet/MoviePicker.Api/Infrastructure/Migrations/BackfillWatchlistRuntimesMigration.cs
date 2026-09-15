@@ -45,7 +45,7 @@ public sealed class BackfillWatchlistRuntimesMigration : IDataMigration
             },
             ex => _logger.LogWarning(
                 ex,
-                "Durée non récupérée pour l'item de watchlist {ItemId} (TMDB {TmdbId})",
+                "Runtime not fetched for watchlist item {ItemId} (TMDB {TmdbId})",
                 item.Id,
                 item.TmdbId));
 }

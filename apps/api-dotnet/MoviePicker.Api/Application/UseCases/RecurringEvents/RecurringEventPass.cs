@@ -61,7 +61,7 @@ public sealed class RecurringEventPass : IRecurringEventPass
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Échec de la relecture des soirées récurrentes en attente d'occurrence");
+            _logger.LogWarning(ex, "Failed to reload the recurring movie nights awaiting an occurrence");
             return new RecurringEventPassResult(0, 0, 0);
         }
 
@@ -80,7 +80,7 @@ public sealed class RecurringEventPass : IRecurringEventPass
 
             if (EventRecurrence.NextDate(parentDate, frequency, today) is not { } nextDate)
             {
-                await StopSeriesAsync(parent, now, "série dormante au-delà de la limite de rattrapage", ct);
+                await StopSeriesAsync(parent, now, "series dormant beyond the catch-up limit", ct);
                 stopped++;
                 continue;
             }
@@ -91,7 +91,7 @@ public sealed class RecurringEventPass : IRecurringEventPass
 
             if (host is null)
             {
-                await StopSeriesAsync(parent, now, "hôte introuvable", ct);
+                await StopSeriesAsync(parent, now, "host not found", ct);
                 stopped++;
                 continue;
             }
@@ -154,13 +154,13 @@ public sealed class RecurringEventPass : IRecurringEventPass
         {
             _logger.LogWarning(
                 ex,
-                "Échec de la création de l'occurrence suivante de la soirée {EventId}",
+                "Failed to create the next occurrence of movie night {EventId}",
                 parent.Id);
             return false;
         }
 
         _logger.LogInformation(
-            "Occurrence suivante créée pour la soirée {EventId} le {Date}",
+            "Next occurrence created for movie night {EventId} on {Date}",
             parent.Id,
             next.Date);
         return true;
@@ -172,13 +172,13 @@ public sealed class RecurringEventPass : IRecurringEventPass
         {
             await _events.UpdateAsync(parent with { Recurrence = null, UpdatedAt = now }, ct);
             _logger.LogInformation(
-                "Récurrence arrêtée sur la soirée {EventId} : {Reason}",
+                "Recurrence stopped on movie night {EventId}: {Reason}",
                 parent.Id,
                 reason);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Échec de l'arrêt de la récurrence sur la soirée {EventId}", parent.Id);
+            _logger.LogWarning(ex, "Failed to stop the recurrence on movie night {EventId}", parent.Id);
         }
     }
 

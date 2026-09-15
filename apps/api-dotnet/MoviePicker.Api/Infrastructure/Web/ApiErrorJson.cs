@@ -10,6 +10,6 @@ public static class ApiErrorJson
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
     };
 
-    public static string Serialize(HttpContext httpContext, int statusCode, string message) =>
-        JsonSerializer.Serialize(ApiErrorResponse.FromHttpContext(httpContext, statusCode, message), Options);
+    public static string Serialize(HttpContext httpContext, int statusCode, string message, string? reason = null) =>
+        JsonSerializer.Serialize(ApiErrorResponse.FromHttpContext(httpContext, statusCode, message, reason), Options);
 }

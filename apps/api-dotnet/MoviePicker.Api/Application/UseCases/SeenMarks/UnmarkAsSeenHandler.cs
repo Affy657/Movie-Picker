@@ -44,11 +44,11 @@ public sealed class UnmarkAsSeenHandler : IUnmarkAsSeenHandler
             idOrSlug,
             movieId,
             participantId,
-            "Vous ne pouvez modifier que votre propre marque « déjà vu ».",
+            Errors.SeenMarkOwnOnly,
             ct);
 
         var deleted = await _seenMarkRepository.DeleteAsync(evt.Id, movie.Id, participant.Id, ct);
         if (!deleted)
-            throw new NotFoundException("Marque « déjà vu » introuvable");
+            throw Errors.SeenMarkNotFound();
     }
 }

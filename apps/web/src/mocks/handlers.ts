@@ -12,7 +12,10 @@ export const TEST_API_V1 = `${TEST_API_BASE}/api/v1`;
 const V1 = TEST_API_V1;
 
 export const authMeGuestHandler = http.get(`${V1}/auth/me`, () =>
-  HttpResponse.json({ error: 'Non authentifié.', code: 401 }, { status: 401 })
+  HttpResponse.json(
+    { error: 'Authentication required', code: 401, reason: 'unauthorized' },
+    { status: 401 }
+  )
 );
 
 export interface MockEventOptions {

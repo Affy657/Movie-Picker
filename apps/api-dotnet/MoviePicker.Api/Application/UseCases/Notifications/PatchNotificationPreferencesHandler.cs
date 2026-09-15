@@ -21,7 +21,7 @@ public sealed class PatchNotificationPreferencesHandler : IPatchNotificationPref
         PatchNotificationPreferencesRequest request,
         CancellationToken ct = default)
     {
-        var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable");
+        var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
 
         var merged = new Dictionary<UserNotificationType, bool>(
             Enum.GetValues<UserNotificationType>().ToDictionary(t => t, user.NotifiesOn));
@@ -29,9 +29,9 @@ public sealed class PatchNotificationPreferencesHandler : IPatchNotificationPref
         foreach (var patch in request.Preferences)
         {
             if (!Enum.TryParse<UserNotificationType>(patch.Type, ignoreCase: true, out var type))
-                throw new BadRequestException($"Type de notification inconnu : « {patch.Type} »");
+                throw Errors.UnknownNotificationType(patch.Type);
             if (patch.Enabled is null)
-                throw new BadRequestException($"« enabled » est requis pour le type « {patch.Type} »");
+                throw Errors.NotificationEnabledRequired(patch.Type);
             merged[type] = patch.Enabled.Value;
         }
 

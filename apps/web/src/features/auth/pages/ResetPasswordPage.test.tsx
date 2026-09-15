@@ -86,7 +86,10 @@ describe('ResetPasswordPage', () => {
     const user = userEvent.setup();
     server.use(
       http.post(`${TEST_API_V1}/auth/password-reset/confirm`, () =>
-        HttpResponse.json({ error: 'Token invalide ou expiré.' }, { status: 400 })
+        HttpResponse.json(
+          { error: 'Invalid or expired token', reason: 'invalid_reset_token' },
+          { status: 400 }
+        )
       )
     );
     renderReset('/reset?token=expired');

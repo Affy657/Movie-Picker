@@ -36,16 +36,16 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.IsFinished(_clock.GetUtcNow()))
-            throw new ConflictException("Soirée terminée. Lecture seule.");
+            throw Errors.EventFinished();
 
         var token = _hostTokenAccessor.GetHostToken();
         var userId = _currentUserAccessor.GetUserId();
         if (!EventHost.IsHost(evt, token, userId))
-            throw new ForbiddenException("Réservé à l'hôte de la soirée");
+            throw Errors.HostOnly();
 
         var movie = await _movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct);
         if (movie is null)
-            throw new NotFoundException("Film introuvable");
+            throw Errors.MovieNotFound();
 
         if (movie.ExcludedFromWheel == request.Excluded)
             return;

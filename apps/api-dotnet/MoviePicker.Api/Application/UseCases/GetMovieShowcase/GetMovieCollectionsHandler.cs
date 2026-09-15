@@ -35,7 +35,7 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
     private async Task<IReadOnlyList<MovieCollectionResponse>> LoadCollectionsAsync(CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
-            throw new ServiceUnavailableException("Sélections de films temporairement indisponibles");
+            throw Errors.ShowcaseUnavailable();
 
         var ids = MovieShowcaseCatalog.CollectionIds;
         var summaries = new TmdbCollectionSummary?[ids.Count];
@@ -64,7 +64,7 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
             .ToList();
 
         if (items.Count == 0)
-            throw new ServiceUnavailableException("Sélections de films temporairement indisponibles");
+            throw Errors.ShowcaseUnavailable();
 
         return items;
     }

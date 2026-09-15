@@ -19,7 +19,7 @@ public sealed class UnfollowUserHandler : IUnfollowUserHandler
     {
         var normalized = HandlePolicy.Normalize(targetHandle);
         var target = await _users.GetByHandleAsync(normalized, ct)
-            ?? throw new NotFoundException("Profil introuvable");
+            ?? throw Errors.ProfileNotFound();
 
         await _follows.UnfollowAsync(currentUserId, target.Id, ct);
     }

@@ -2,6 +2,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.SeenMarks;
 
@@ -45,7 +46,7 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
             idOrSlug,
             movieId,
             request.ParticipantId,
-            "Vous ne pouvez marquer un film que pour votre propre participation.",
+            Errors.SeenMarkOwnParticipationOnly,
             ct);
 
         var now = _clock.GetUtcNow();

@@ -20,6 +20,6 @@ public sealed class DeleteEventTemplateHandler : IDeleteEventTemplateHandler
 
         var removed = await _users.RemoveEventTemplateAsync(user.Id, templateId, _clock.GetUtcNow(), ct);
         if (!removed)
-            throw new NotFoundException(EventTemplatePolicy.NotFoundMessage);
+            throw Errors.EventTemplateNotFound();
     }
 }

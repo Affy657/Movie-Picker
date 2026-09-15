@@ -83,7 +83,7 @@ public sealed class ChangePasswordHandlerTests
                 NewPassword = "wxyz5678"
             }));
 
-        Assert.Equal("Mot de passe actuel incorrect.", ex.Message);
+        Assert.Equal(ErrorCodes.CurrentPasswordIncorrect, ex.Reason);
         users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
         sessions.Verify(x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -110,7 +110,7 @@ public sealed class ChangePasswordHandlerTests
                 NewPassword = "abc1"
             }));
 
-        Assert.Equal("Le mot de passe doit contenir au moins 8 caractères.", ex.Message);
+        Assert.Equal(ErrorCodes.PasswordTooShort, ex.Reason);
         users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
         sessions.Verify(x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }

@@ -48,11 +48,9 @@ public sealed class InMemoryEventRepository : IEventRepository
     public Task<Event> UpdateAsync(Event evt, CancellationToken ct = default)
     {
         if (!_byId.TryGetValue(evt.Id, out var current))
-            throw new NotFoundException("Soirée introuvable");
+            throw Errors.EventNotFound();
         if (current.Version != evt.Version)
-            throw new ConflictException(
-                "Soirée modifiée entre-temps. Rechargez la page et réessayez.",
-                ConcurrencyConflict.Reason);
+            throw Errors.ConcurrentUpdate();
 
         var saved = evt with { Version = evt.Version + 1 };
         _byId[saved.Id] = saved;
@@ -64,7 +62,7 @@ public sealed class InMemoryEventRepository : IEventRepository
     public Task LockForWriteAsync(string eventId, CancellationToken ct = default)
     {
         if (!_byId.ContainsKey(eventId))
-            throw new NotFoundException("Soirée introuvable");
+            throw Errors.EventNotFound();
         return Task.CompletedTask;
     }
 

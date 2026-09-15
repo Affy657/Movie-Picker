@@ -40,7 +40,7 @@ public sealed class ClearMovieVoteHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("bad", "mov1", "p123"));
-        Assert.Equal("Soirée introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.EventNotFound, ex.Reason);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public sealed class ClearMovieVoteHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "mov1", "p123"));
-        Assert.Contains("terminée", ex.Message);
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public sealed class ClearMovieVoteHandlerTests
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Movie?)null);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "mov1", "p123"));
-        Assert.Equal("Film introuvable", ex.Message);
+        Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public sealed class ClearMovieVoteHandlerTests
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync("p123", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", "mov1", "p123"));
-        Assert.Contains("Participant", ex.Message);
+        Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
     }
 
     [Fact]

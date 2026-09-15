@@ -43,29 +43,29 @@ public sealed class InviteUserHandler : IInviteUserHandler
     {
         var currentUserId = _currentUserAccessor.GetUserId();
         if (string.IsNullOrEmpty(currentUserId))
-            throw new UnauthorizedException("Un compte est requis pour inviter un utilisateur.");
+            throw Errors.AccountRequired();
 
         var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
         if (evt.IsFinished(_clock.GetUtcNow()))
-            throw new ConflictException("Impossible d'inviter : la soirée est terminée.");
+            throw Errors.InviteEventFinished();
 
         if (evt.CreatorUserId != currentUserId)
-            throw new ForbiddenException("Seul l'hôte peut envoyer des invitations.");
+            throw Errors.HostOnlyInvite();
 
         var targetUserId = request.TargetUserId;
 
         var isFollow = await _follows.IsFollowingAsync(currentUserId, targetUserId, ct);
         if (!isFollow)
-            throw new BadRequestException("Vous ne pouvez inviter que des utilisateurs que vous suivez.");
+            throw Errors.InviteOnlyFollowed();
 
         var alreadyParticipant = await _participants.FindByEventAndUserIdAsync(evt.Id, targetUserId, ct);
         if (alreadyParticipant is not null)
-            throw new ConflictException("Cet utilisateur participe déjà à la soirée.");
+            throw Errors.AlreadyParticipant();
 
         var alreadyInvited = await _notifications.ExistsAsync(targetUserId, UserNotificationType.EventInvitation, evt.Id, ct);
         if (alreadyInvited)
-            throw new ConflictException("Une invitation a déjà été envoyée à cet utilisateur pour cette soirée.");
+            throw Errors.InvitationAlreadySent();
 
         var actor = await _users.GetByIdAsync(currentUserId, ct);
 
@@ -97,6 +97,6 @@ public sealed class InviteUserHandler : IInviteUserHandler
                 await _pushSender.SendAsync(sub, message, ct);
         }
 
-        return new InviteUserResponse { Message = "Invitation envoyée." };
+        return new InviteUserResponse { Message = "Invitation sent" };
     }
 }

@@ -37,8 +37,7 @@ public sealed class CreateEventTemplateHandler : ICreateEventTemplateHandler
 
         var added = await _users.AddEventTemplateAsync(user.Id, created, EventTemplate.MaxPerUser, now, ct);
         if (!added)
-            throw new ConflictException(
-                $"Vous avez atteint la limite de {EventTemplate.MaxPerUser} templates. Supprimez-en un pour en enregistrer un nouveau.");
+            throw Errors.EventTemplateLimitReached(EventTemplate.MaxPerUser);
 
         return EventTemplateResponse.FromTemplate(created);
     }

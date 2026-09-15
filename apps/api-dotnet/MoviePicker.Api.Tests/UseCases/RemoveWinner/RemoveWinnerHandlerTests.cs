@@ -120,7 +120,7 @@ public sealed class RemoveWinnerHandlerTests
 
         var result = await _sut.HandleAsync("evt1", "m1");
 
-        Assert.Equal("Film retiré du palmarès.", result.Message);
+        Assert.Equal("Movie removed from the winners", result.Message);
     }
 
     [Fact]

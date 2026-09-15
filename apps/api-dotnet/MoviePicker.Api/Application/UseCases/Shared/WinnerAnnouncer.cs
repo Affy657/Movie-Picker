@@ -89,7 +89,7 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Échec de la notification du film gagnant pour la soirée {EventId}", evt.Id);
+            _logger.LogWarning(ex, "Winning movie notification failed for movie night {EventId}", evt.Id);
         }
     }
 }

@@ -22,7 +22,7 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
     public async Task HandleAsync(string userId, CreateIdeaSuggestionRequest request, CancellationToken ct = default)
     {
         if (request.Attachments is { Count: > MaxAttachments })
-            throw new BadRequestException($"Trop de pièces jointes (maximum {MaxAttachments}).");
+            throw Errors.TooManyAttachments(MaxAttachments);
 
         if (request.Attachments is not null)
         {
@@ -45,12 +45,11 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
         }
         catch (FormatException)
         {
-            throw new BadRequestException($"Contenu invalide (base64 malformé) pour « {attachment.FileName} ».");
+            throw Errors.AttachmentContentInvalid(attachment.FileName);
         }
 
         if (!MatchesContentType(bytes, attachment.ContentType))
-            throw new BadRequestException(
-                $"Le contenu de « {attachment.FileName} » ne correspond pas au format déclaré ({attachment.ContentType}).");
+            throw Errors.AttachmentContentMismatch(attachment.FileName, attachment.ContentType);
     }
 
     private static bool MatchesContentType(ReadOnlySpan<byte> bytes, string contentType) => contentType switch

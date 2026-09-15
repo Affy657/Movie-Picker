@@ -35,12 +35,12 @@ public sealed class CreateEventHandler : ICreateEventHandler
     public async Task<CreateEventResponse> HandleAsync(CreateEventRequest request, string? creatorUserId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(creatorUserId))
-            throw new UnauthorizedException("La création d’une soirée nécessite un compte connecté.");
+            throw Errors.AccountRequired();
 
         if (!DateOnly.TryParse(request.Date, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
-            throw new BadRequestException("date doit être au format YYYY-MM-DD.");
+            throw Errors.InvalidDateFormat();
         if (!TimeOnly.TryParse(request.Time, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
-            throw new BadRequestException("time doit être au format HH:mm.");
+            throw Errors.InvalidTimeFormat();
 
         var slug = SlugGenerator.NewSlug();
         var hostToken = SlugGenerator.NewHostToken();
@@ -66,7 +66,7 @@ public sealed class CreateEventHandler : ICreateEventHandler
         };
 
         var user = await _userRepository.GetByIdAsync(ownerId, ct)
-            ?? throw new NotFoundException("Utilisateur introuvable");
+            ?? throw Errors.UserNotFound();
         var pseudo = string.IsNullOrWhiteSpace(user.DisplayName)
             ? user.Email.Split('@')[0]
             : user.DisplayName.Trim();

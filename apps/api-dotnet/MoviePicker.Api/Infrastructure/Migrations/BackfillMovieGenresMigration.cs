@@ -59,7 +59,7 @@ public sealed class BackfillMovieGenresMigration : IDataMigration
             },
             ex => _logger.LogWarning(
                 ex,
-                "Genres non récupérés pour le film {MovieId} (TMDB {TmdbId})",
+                "Genres not fetched for movie {MovieId} (TMDB {TmdbId})",
                 movie.Id,
                 movie.TmdbId));
 
@@ -76,7 +76,7 @@ public sealed class BackfillMovieGenresMigration : IDataMigration
             },
             ex => _logger.LogWarning(
                 ex,
-                "Genres non récupérés pour l'item de watchlist {ItemId} (TMDB {TmdbId})",
+                "Genres not fetched for watchlist item {ItemId} (TMDB {TmdbId})",
                 item.Id,
                 item.TmdbId));
 }

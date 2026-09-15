@@ -1,6 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { apiUrl, fetchApi } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/apiError';
+import { loadLocale } from '@/shared/i18n/locales';
+import { fr } from '@/shared/i18n/locales/fr';
+import { en } from '@/shared/i18n/locales/en';
 
 describe('apiUrl', () => {
   it('préfixe avec la base, version /api/v1, et forme un chemin valide', () => {
@@ -11,8 +14,67 @@ describe('apiUrl', () => {
 });
 
 describe('fetchApi', () => {
+  beforeAll(async () => {
+    await loadLocale('fr');
+    await loadLocale('en');
+  });
+
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn());
+    localStorage.setItem('moviepicker-locale', 'fr');
+  });
+
+  it('translates a known reason code into the preferred locale, with its params', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({
+            error: 'Limit of 3 proposal(s) per participant reached',
+            code: 409,
+            reason: 'proposal_limit_reached',
+            params: { max: 3 },
+          })
+        ),
+    });
+    await expect(fetchApi('/events/slug/x')).rejects.toMatchObject({
+      code: 409,
+      reason: 'proposal_limit_reached',
+      message: fr.apiErrors.proposal_limit_reached.replace('{{max}}', '3'),
+    });
+  });
+
+  it('follows the locale switch and keeps the server text for an unknown reason', async () => {
+    localStorage.setItem('moviepicker-locale', 'en');
+    const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({ error: 'Movie night not found', code: 404, reason: 'event_not_found' })
+        ),
+    });
+    await expect(fetchApi('/events/slug/x')).rejects.toMatchObject({
+      message: en.apiErrors.event_not_found,
+    });
+
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({ error: 'Something specific', code: 400, reason: 'brand_new_code' })
+        ),
+    });
+    await expect(fetchApi('/events/slug/x')).rejects.toMatchObject({
+      message: 'Something specific',
+      reason: 'brand_new_code',
+    });
   });
 
   it('réponse 4xx renvoie une ApiError avec message et code', async () => {

@@ -14,6 +14,7 @@ using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
 using MoviePicker.Api.Configuration;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -272,7 +273,7 @@ public sealed class AuthController : ControllerBase
         if (request is null)
         {
             return BadRequest(
-                ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "Corps JSON requis."));
+                ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "JSON body required", ErrorCodes.ValidationFailed));
         }
 
         if (!User.TryGetUserId(out var userId))
@@ -297,7 +298,7 @@ public sealed class AuthController : ControllerBase
     {
         if (request is null)
             return BadRequest(
-                ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "Corps JSON requis."));
+                ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "JSON body required", ErrorCodes.ValidationFailed));
 
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
@@ -350,7 +351,7 @@ public sealed class AuthController : ControllerBase
     {
         if (request is null)
             return BadRequest(
-                ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "Corps JSON requis."));
+                ApiErrorResponse.FromHttpContext(HttpContext, StatusCodes.Status400BadRequest, "JSON body required", ErrorCodes.ValidationFailed));
 
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();

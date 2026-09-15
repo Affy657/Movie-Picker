@@ -295,7 +295,7 @@ public sealed class MongoUserRepository : IUserRepository
             throw;
         }
         if (result.MatchedCount == 0)
-            await OptimisticConcurrency.ThrowForUnmatchedWriteAsync(_collection, x => x.Id == user.Id, "Utilisateur", ct);
+            await OptimisticConcurrency.ThrowForUnmatchedWriteAsync(_collection, x => x.Id == user.Id, Errors.UserNotFound, ct);
         return UserDocumentMapper.ToDomain(doc);
     }
 
@@ -311,10 +311,10 @@ public sealed class MongoUserRepository : IUserRepository
     {
         var msg = ex.WriteError?.Message ?? string.Empty;
         if (msg.Contains("users_handle_unique", StringComparison.OrdinalIgnoreCase))
-            throw new ConflictException("handle_conflict");
+            throw Errors.HandleTaken();
         if (msg.Contains("users_identities_provider_subject_unique", StringComparison.OrdinalIgnoreCase))
-            throw new ConflictException("identity_conflict");
-        throw new ConflictException("Un compte existe déjà pour cette adresse e-mail.");
+            throw Errors.IdentityConflict();
+        throw Errors.EmailTaken();
     }
 
     private static string? NormalizeHandle(string? handle)

@@ -11,6 +11,6 @@ public static class EventRepositoryExtensions
         CancellationToken ct = default)
     {
         return await repo.GetByIdOrSlugAsync(idOrSlug, ct)
-            ?? throw new NotFoundException("Soirée introuvable");
+            ?? throw Errors.EventNotFound();
     }
 }

@@ -35,7 +35,7 @@ public sealed class AssignMissingUserHandlesMigration : IDataMigration
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                _logger.LogWarning(ex, "Handle non attribué pour l'utilisateur {UserId}", user.Id);
+                _logger.LogWarning(ex, "Handle not assigned for user {UserId}", user.Id);
             }
         }
 

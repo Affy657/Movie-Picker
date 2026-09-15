@@ -35,7 +35,7 @@ public sealed class UpdateEventTemplateHandler : IUpdateEventTemplateHandler
 
         var replaced = await _users.ReplaceEventTemplateAsync(user.Id, updated, _clock.GetUtcNow(), ct);
         if (!replaced)
-            throw new NotFoundException(EventTemplatePolicy.NotFoundMessage);
+            throw Errors.EventTemplateNotFound();
 
         return EventTemplateResponse.FromTemplate(updated);
     }

@@ -38,16 +38,16 @@ public sealed class SetMoviePitchNoteHandler : ISetMoviePitchNoteHandler
             idOrSlug,
             movieId,
             request.ParticipantId,
-            "Seul le participant qui a proposé ce film peut modifier sa note",
+            Errors.PitchNoteEditRestricted,
             ct,
-            wheelLockedError: "La roue a déjà été lancée. Lecture seule.");
+            wheelLockedError: Errors.WheelLocked);
 
         if (movie.ParticipantId != participant.Id)
-            throw new ForbiddenException("Seul le participant qui a proposé ce film peut modifier sa note");
+            throw Errors.PitchNoteEditRestricted();
 
         var pitchNote = request.PitchNote.Trim();
         if (pitchNote.Length > 140)
-            throw new BadRequestException("La note de pitch ne peut pas dépasser 140 caractères.");
+            throw Errors.PitchNoteTooLong(140);
         await _movieRepository.UpdatePitchNoteAsync(movieId, pitchNote, ct);
     }
 }

@@ -40,7 +40,7 @@ public sealed partial class TmdbMovieSearch
                 or InvalidOperationException
                 or FormatException)
         {
-            _logger.LogWarning(ex, "TMDB détails échoué pour {MediaType} {TmdbId}", typeSegment, tmdbId);
+            _logger.LogWarning(ex, "TMDB details failed for {MediaType} {TmdbId}", typeSegment, tmdbId);
             throw new HttpRequestException("TMDB indisponible", ex);
         }
     }

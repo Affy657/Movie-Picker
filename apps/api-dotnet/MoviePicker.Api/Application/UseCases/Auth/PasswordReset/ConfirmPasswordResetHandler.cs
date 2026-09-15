@@ -9,8 +9,7 @@ namespace MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
 
 public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
 {
-    private const string GenericTokenError = "Token invalide ou expiré.";
-    private const string SuccessMessage = "Mot de passe réinitialisé. Connecte-toi avec ton nouveau mot de passe.";
+    private const string SuccessMessage = "Password reset, sign in with your new password";
 
     private readonly IUserRepository _users;
     private readonly IPasswordResetTokenRepository _tokens;
@@ -39,25 +38,25 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
     {
         var token = (request.Token ?? "").Trim();
         if (string.IsNullOrEmpty(token))
-            throw new BadRequestException(GenericTokenError);
+            throw Errors.InvalidResetToken();
 
         var pwdErr = AuthInputValidation.ValidatePassword(request.NewPassword);
         if (pwdErr is not null)
-            throw new BadRequestException(pwdErr);
+            throw pwdErr;
 
         var hash = PasswordResetTokenFactory.Hash(token);
         var stored = await _tokens.GetByTokenHashAsync(hash, ct);
         if (stored is null)
         {
             _logger.LogWarning("PasswordReset.Confirm: token not found / expired / consumed");
-            throw new BadRequestException(GenericTokenError);
+            throw Errors.InvalidResetToken();
         }
 
         var user = await _users.GetByIdAsync(stored.UserId, ct);
         if (user is null)
         {
             _logger.LogWarning("PasswordReset.Confirm: user gone (userId={UserId}, tokenId={TokenId})", stored.UserId, stored.Id);
-            throw new BadRequestException(GenericTokenError);
+            throw Errors.InvalidResetToken();
         }
 
         var now = _clock.GetUtcNow();

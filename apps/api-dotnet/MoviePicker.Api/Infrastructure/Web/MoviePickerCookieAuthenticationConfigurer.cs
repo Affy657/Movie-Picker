@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
@@ -48,7 +49,8 @@ public sealed class MoviePickerCookieAuthenticationConfigurer : IConfigureNamedO
                 ApiErrorJson.Serialize(
                     ctx.HttpContext,
                     StatusCodes.Status401Unauthorized,
-                    "Authentification requise."));
+                    "Authentication required",
+                    ErrorCodes.Unauthorized));
         };
         options.Events.OnRedirectToAccessDenied = async ctx =>
         {
@@ -58,7 +60,8 @@ public sealed class MoviePickerCookieAuthenticationConfigurer : IConfigureNamedO
                 ApiErrorJson.Serialize(
                     ctx.HttpContext,
                     StatusCodes.Status403Forbidden,
-                    "Accès refusé."));
+                    "Access denied",
+                    ErrorCodes.Forbidden));
         };
     }
 

@@ -31,7 +31,7 @@ public sealed class GetMovieDetailsHandler : IGetMovieDetailsHandler
         }
         catch (HttpRequestException)
         {
-            throw new ServiceUnavailableException("Détails film temporairement indisponibles");
+            throw Errors.MovieDetailsUnavailable();
         }
 
         if (details is null)

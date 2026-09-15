@@ -16,7 +16,7 @@ public sealed class GetNotificationPreferencesHandler : IGetNotificationPreferen
 
     public async Task<NotificationPreferencesResponse> HandleAsync(string userId, CancellationToken ct = default)
     {
-        var user = await _users.GetByIdAsync(userId, ct) ?? throw new NotFoundException("Utilisateur introuvable");
+        var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
 
         return new NotificationPreferencesResponse
         {

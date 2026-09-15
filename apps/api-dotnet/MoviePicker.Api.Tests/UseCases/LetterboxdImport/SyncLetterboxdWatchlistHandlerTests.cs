@@ -179,7 +179,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
 
         _users.Verify(
             u => u.SetLetterboxdSyncStatusAsync(
-                UserId, Now, It.Is<string>(e => e != null && e.Contains("inaccessible", StringComparison.Ordinal)),
+                UserId, Now, ErrorCodes.LetterboxdWatchlistIncomplete,
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

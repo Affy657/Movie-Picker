@@ -26,15 +26,15 @@ public sealed class RegisterUserHandler : IRegisterUserHandler
     {
         var displayErr = AuthInputValidation.ValidateDisplayName(request.DisplayName);
         if (displayErr is not null)
-            throw new BadRequestException(displayErr);
+            throw displayErr;
 
         var pwdErr = AuthInputValidation.ValidatePassword(request.Password);
         if (pwdErr is not null)
-            throw new BadRequestException(pwdErr);
+            throw pwdErr;
 
         var email = request.Email.Trim();
         if (await _users.GetByEmailAsync(email, ct) is not null)
-            throw new ConflictException("Un compte existe déjà pour cette adresse e-mail.");
+            throw Errors.EmailTaken();
 
         var displayName = request.DisplayName.Trim();
         var now = _clock.GetUtcNow();
