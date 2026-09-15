@@ -195,34 +195,22 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   ```
 - refs: pendant GCP de DEBT-003 (AWS). Le lot Terraform 5 de `roadmap.md` traite les deux au fond.
 
-## DEBT-027 les secrets de déploiement sont des secrets de dépôt, l'environnement `production` ne protège rien
+## DEBT-027 `SENTRY_AUTH_TOKEN` est encore un secret de dépôt, et deux clés cloud désactivées attendent leur suppression
 
 - state: humain
-- bloque: la valeur d'un secret GitHub ne se relit pas, donc l'agent ne peut pas la déplacer ; et les écritures sur les réglages du dépôt (environnements, secrets) sont refusées à l'agent, mesuré le 2026-09-15
-- impact: `GCP_SA_KEY`, les deux clés AWS et les autres secrets de déploiement sont lisibles par n'importe quel workflow sur n'importe quelle branche du dépôt. L'environnement `production` que portent les jobs de déploiement, de retour arrière, de sauvegarde et de nettoyage du registre n'a ni secret, ni règle de protection, ni politique de branche : il est décoratif. Le refus hors master de `deploy.yml` n'est qu'un `if` shell dans un seul job.
-- ou: Settings → Environments → production ; Settings → Secrets and variables → Actions
-- verify: `gh api repos/<DEPOT>/environments/production --jq '.deployment_branch_policy'` rend `null`, et `gh api repos/<DEPOT>/environments/production/secrets --jq .total_count` rend `0`. Encore ouvert tant que l'un des deux tient.
-- fix: en trois gestes, dans cet ordre, sans rien casser entre deux (un secret d'environnement prime sur son homonyme de dépôt, le doublon transitoire est sans effet) :
+- bloque: un jeton d'organisation Sentry ne se crée que dans son interface (Settings → Auth Tokens), l'API MCP ne l'expose pas ; et la valeur d'un secret GitHub ne se relit pas, donc il faut le ressaisir
+- impact: c'est le seul secret de déploiement lisible par n'importe quel workflow sur n'importe quelle branche, tout le reste vit dans l'environnement `production` depuis le 2026-09-15 (politique de branche `master`, clés GCP et AWS recréées et vérifiées, anciennes désactivées). Portée du jeton : créer des releases et des deploys Sentry, pas de lecture de données.
+- ou: Settings → Secrets and variables → Actions, secret de dépôt `SENTRY_AUTH_TOKEN` ; jobs `deploy-api`, `deploy-front` de `deploy.yml` et `rollback` de `rollback-front.yml`
+- verify: `gh secret list --json name --jq '[.[].name] | join(",")'` rend `SENTRY_AUTH_TOKEN,SONAR_TOKEN`. Réglé quand il ne rend plus que `SONAR_TOKEN`.
+- fix: créer un nouveau jeton d'organisation Sentry (scopes `project:releases` et `org:read`), puis :
   ```bash
-  # 1. politique de branche : seule master peut déployer, sauvegarder, nettoyer, revenir en arrière
-  gh api -X PUT repos/<DEPOT>/environments/production --input - <<'JSON'
-  {"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}
-  JSON
-  gh api -X POST repos/<DEPOT>/environments/production/deployment-branch-policies -f name=master -f type=branch
-  # 2. ressaisir chaque secret de déploiement dans l'environnement (la valeur se relit dans son
-  #    coffre d'origine : console GCP pour la clé JSON, IAM AWS pour les clés, Sentry, etc.)
-  for s in GCP_SA_KEY GCP_PROJECT_ID AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_S3_BUCKET VITE_API_URL VITE_POSTHOG_KEY VITE_SENTRY_DSN SENTRY_AUTH_TOKEN; do
-    gh secret set "$s" --env production
-  done
-  # 3. retirer les homonymes de dépôt, plus les trois secrets que plus aucun workflow ne lit
-  for s in GCP_SA_KEY GCP_PROJECT_ID AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_S3_BUCKET VITE_API_URL VITE_POSTHOG_KEY VITE_SENTRY_DSN SENTRY_AUTH_TOKEN MONGODB_URI TMDB_API_KEY AWS_CLOUDFRONT_DISTRIBUTION_ID; do
-    gh secret delete "$s"
-  done
+  gh secret set SENTRY_AUTH_TOKEN --env production
+  gh secret delete SENTRY_AUTH_TOKEN
   ```
-  `SONAR_TOKEN` reste un secret de dépôt : le job `sonar` tourne sur les PR et les branches `v*`, que la politique de branche exclurait. `MONGODB_URI` et `TMDB_API_KEY` vivent dans Secret Manager, la CI n'en a jamais eu besoin ; `AWS_CLOUDFRONT_DISTRIBUTION_ID` existe déjà en variable, c'est elle que `deploy.yml` lit.
-- fini-quand: `verify` rend `{"protected_branches":false,"custom_branch_policies":true}` et `9`, puis un `gh workflow run deploy.yml --ref master -f cible=tout` vert
-- piege: les jobs qui lisent ces secrets portent tous `environment: production` depuis le 2026-09-15 (`docker-api`, `deploy-api`, `deploy-front`, `rollback`, `backup`, `apply-policy`, `rollback-front`). Un futur job qui lirait `GCP_SA_KEY` sans cette ligne échouerait avec un secret vide une fois la migration faite, et c'est voulu. Mettre à jour la ligne « Les secrets et variables Actions se lisent dans » de `infra/README.md` en même temps.
-- refs: DEBT-002 et le lot Terraform 5 retirent ces clés au fond ; ceci borne seulement qui peut les lire d'ici là
+  révoquer l'ancien jeton dans Sentry. Puis, après un déploiement vert avec les nouvelles clés, supprimer les deux anciennes clés désactivées le 2026-09-15 : la clé utilisateur du compte de service de la CI datée du 2026-03-16 (`gcloud iam service-accounts keys list` puis `keys delete`) et la clé d'accès de l'utilisateur IAM `movie-picker-github-actions` datée du même jour (`aws iam list-access-keys` puis `delete-access-key`).
+- fini-quand: `verify` vide, et les listes de clés GCP et AWS ne portent plus que la clé active de 2026-09-15
+- piege: `SONAR_TOKEN` reste volontairement au niveau du dépôt, le job `sonar` tourne sur les PR et les branches `v*`, que la politique de branche de `production` exclurait. Tout job qui lit un secret de déploiement porte `environment: production` ; sans cette ligne il lirait une valeur vide.
+- refs: DEBT-002 et le lot Terraform 5 remplacent ces clés par une fédération d'identité
 
 ## DEBT-023 la limite de votes par participant se vérifie puis s'écrit, sans verrou
 

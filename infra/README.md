@@ -20,4 +20,4 @@ Le dépôt est public : aucun identifiant de compte, de bucket ou de distributio
 | `<ID_CERTIFICAT_ACM>` | `aws acm list-certificates --region us-east-1` |
 | `<PROJET_GCP>` | `gcloud config get-value project` |
 
-Les secrets et variables Actions se lisent dans **Settings → Secrets and variables → Actions**. Un secret ne se relit pas après sa création, seulement se remplacer.
+Les secrets de déploiement (`GCP_SA_KEY`, `GCP_PROJECT_ID`, clés et bucket AWS, `VITE_*`) vivent dans **Settings → Environments → production**, réservé à la branche `master` ; seuls `SONAR_TOKEN` et `SENTRY_AUTH_TOKEN` (DEBT-027) sont encore des secrets de dépôt, dans **Settings → Secrets and variables → Actions**, où vivent aussi les variables. Un secret ne se relit pas après sa création, seulement se remplacer : `gh secret set <NOM> --env production`.
