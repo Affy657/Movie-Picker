@@ -251,7 +251,7 @@ sprint ; le temps de cycle d'une fiche, l'entree en flux n'est horodatee de
 facon fiable que depuis aout ; la charge ressentie, non quantifiable.
 
 SI ON QUESTIONNE la date du board : il consolide la roadmap, versionnee et
-datee au commit. La matiere est datee au geste pres, 1 070 commits, 86 pull
+datee au commit. La matiere est datee au geste pres, 1 088 commits, 86 pull
 requests, 851 executions, 11 releases. Le board change la lisibilite de cette
 matiere, il ne la cree pas.
 
@@ -352,7 +352,9 @@ droite, une phrase par couleur. L'ETUDE se dit, elle n'est pas dessinee : la
 version est cadree dans la roadmap, objectif, items, tailles, pendant que la
 version precedente est encore en production ; le cadrage de la 1.4 court de
 fin juin a mi-juillet, celui de la 1.5 fin aout, celui de la 1.6 debut
-septembre. La 1.7 est cadree, sept items, 34 points, elle part apres l'oral.
+septembre. La 1.7 est cadree, sept items produit, 34 points ; son cycle est
+ouvert depuis le 13 septembre par un lot technique de performance, le produit
+part apres l'oral.
 - CONCEPTION, bleu : questions de cadrage, maquettes des ecrans nouveaux,
   contrat d'API. Court, parce qu'une version tient en quelques items.
 - REALISATION, vert : la branche de version, une feature de un a trois jours.
@@ -399,16 +401,16 @@ par la methode, pas par la discipline.
 <i style="width:10.9%;background:var(--s4);color:#3b2f00">1.6, 38</i>
 </div>
 
-<div class="text-xs opacity-75 mt-6 mb-1">Commits intégrés sur la branche principale, mois par mois : <b>1 070</b></div>
+<div class="text-xs opacity-75 mt-6 mb-1">Commits intégrés sur la branche principale, mois par mois : <b>1 088</b></div>
 <div class="cols" style="height:7.6rem">
-<div><i style="height:0%"></i></div>
+<div><em>1</em><i style="height:1%"></i></div>
 <div><em>28</em><i style="height:10%"></i></div>
-<div><em>72</em><i style="height:26%"></i></div>
-<div><em>150</em><i style="height:55%"></i></div>
-<div><em>227</em><i style="height:83%"></i></div>
-<div><em>194</em><i style="height:71%"></i></div>
-<div><em>127</em><i style="height:47%"></i></div>
-<div><em>272</em><i style="height:100%"></i></div>
+<div><em>72</em><i style="height:25%"></i></div>
+<div><em>150</em><i style="height:52%"></i></div>
+<div><em>227</em><i style="height:79%"></i></div>
+<div><em>194</em><i style="height:67%"></i></div>
+<div><em>127</em><i style="height:44%"></i></div>
+<div><em>289</em><i style="height:100%"></i></div>
 </div>
 <div class="xlab">
 <div>fév.</div><div>mars</div><div>avril</div><div>mai</div><div>juin</div><div>juil.</div><div>août</div><div>sept.</div>
@@ -435,13 +437,13 @@ une a trois semaines de realisation. Le chiffrage du cadrage, 98 jours-homme
 sur quatre lots, est celui du Bloc 1 ; il sert de reference a l'ecart du
 theme 7, pas de decoupage ici.
 
-L'AVANCEMENT, en bas : 1 070 commits et 187 fusions sur la branche principale,
+L'AVANCEMENT, en bas : 1 088 commits et 187 fusions sur la branche principale,
 mois par mois. Ne PAS commenter les huit mois un par un. Deux lectures :
 
 1. Le pic de fusions de juin, 6 puis 39, alors que les commits ne passent que
 de 150 a 227. Ce qui a change c'est la pratique de decoupage, pas la production.
 Le dire AVANT que le jury le remarque : c'est ce qui prouve qu'on lit ses
-propres indicateurs au lieu de les afficher. Septembre, 272 commits et 71
+propres indicateurs au lieu de les afficher. Septembre, 289 commits et 71
 fusions en douze jours, c'est la meme pratique a plein regime : trois versions
 livrees, 1.4.1, 1.5 et 1.6.
 
@@ -571,7 +573,7 @@ Suivre un cout qui vaut zero, c'est savoir quand il cessera de valoir zero.
 
 <div class="kpi grid-cols-4 mt-4" style="gap:0.3rem 0.5rem;line-height:1.25">
 <div><b style="font-size:1.15rem">0</b><span>vulnérabilité ouverte</span></div>
-<div><b style="font-size:1.15rem">88,1 %</b><span>couverture de tests</span></div>
+<div><b style="font-size:1.15rem">88,8 %</b><span>couverture de tests</span></div>
 <div><b style="font-size:1.15rem">A/A/A</b><span>Quality Gate, vert</span></div>
 <div><b style="font-size:1.15rem">0 / 5</b><span>anomalies ouvertes</span></div>
 </div>
@@ -614,9 +616,10 @@ recevrait le premier jour est ecrit et versionne. Le theme 9 y revient.
 
 LES QUATRE VOYANTS du bas sont les risques sans point de vigilance dedie,
 parce qu'ils sont tenus par la chaine elle-meme : zero vulnerabilite ouverte,
-88,1 % de couverture, porte de qualite verte, les cinq anomalies closes.
+88,8 % de couverture, porte de qualite verte, les cinq anomalies closes.
 Disponibilite et erreurs serveur sont les mesures de production du dossier
-Bloc 4, trente jours au 5 septembre ; le reste est releve le 12.
+Bloc 4, trente jours au 5 septembre ; couverture et porte de qualite sont
+de SonarCloud le 15, la veille ; le reste est releve le 12.
 
 SI ON QUESTIONNE : « votre chaine echoue une fois sur trois. » Sur la fenetre
 complete oui, 64 % sur 529 executions conclusives depuis mars. La serie
@@ -625,6 +628,11 @@ en juin, 94 % en juillet apres la decision, theme suivant, 78 % en aout, 67 %
 en septembre. Septembre est compte hors quinze executions qui n'ont jamais
 demarre, sans rapport avec le code ; elles se reconnaissent a leur duree, deux
 secondes.
+
+SI ON QUESTIONNE « et aujourd'hui ? » : zero vulnerabilite, et un avertissement
+CodeQL ouvert depuis le 14 septembre sur le decalage visuel de l'animation de
+la roue, un modulo sur un aleatoire cryptographique ; il n'a aucun effet sur le
+tirage, il se traite en 1.7.
 -->
 
 ---
@@ -1087,7 +1095,8 @@ chiffres, est ce qui rend credible tout ce qui precede. Les deux echecs ont
 la MEME RACINE : une option non instruite n'est pas un arbitrage, c'est une
 absence de decision.
 
-La suite est decidee, pas soumise : la 1.7 part apres l'oral. Fermer sur
+La suite est decidee, pas soumise : la 1.7 est ouverte depuis le 13
+septembre, le produit part apres l'oral. Fermer sur
 « voila ce qui est livre, et ce que j'en retiens », puis remercier et
 laisser le silence. Pas de demande de validation formulee : la validation
 est le jugement du jury sur ce qui a ete demontre, elle ne se demande pas.
@@ -1134,8 +1143,8 @@ Secrets injectés au déploiement par Secret Manager. Session par cookie, jamais
 
 <div class="kpi grid-cols-3 mt-4" style="gap:0.3rem 0.6rem;line-height:1.25">
 <div><b style="font-size:1.2rem">50 277</b><span>lignes C# non vides, 652 fichiers, tests compris</span></div>
-<div><b style="font-size:1.2rem">88,1 %</b><span>de couverture, front et API</span></div>
-<div><b style="font-size:1.2rem">A / A / A</b><span>duplication 0,7 %, 0 vulnérabilité</span></div>
+<div><b style="font-size:1.2rem">88,8 %</b><span>de couverture, front et API</span></div>
+<div><b style="font-size:1.2rem">A / A / A</b><span>duplication 0,3 %, 0 vulnérabilité</span></div>
 </div>
 
 </div>
@@ -1149,7 +1158,7 @@ chez Atlas, le catalogue TMDB et l'e-mail Resend en services tiers. La
 sauvegarde nocturne date de la 1.6 : le palier gratuit d'Atlas ne fournit
 aucun instantane, un dump part chaque nuit vers un bucket versionne et n'est
 publie qu'apres une restauration d'essai. Les chiffres sont ceux du 12
-septembre, SonarCloud du 11.
+septembre, SonarCloud du 15.
 -->
 
 ---
@@ -1226,7 +1235,7 @@ utilisateur ne depende de la seconde surface.
 | `e2e` | Playwright, parcours de bout en bout | ✅ |
 | `e2e-mongo` | Parcours critique sur **MongoDB réel** | ✅ |
 | `sonar` | Quality Gate sur le code nouveau | ✅ |
-| `verifier-ci` | Exige une CI verte sur le commit visé | ✅ |
+| `verify-ci` | Exige une CI verte sur le commit visé | ✅ |
 | `lighthouse` | Performance et accessibilité, médiane de 3 | ✅ |
 | `docker-api` | Image conteneurisée, Artifact Registry | |
 | `deploy-api` | Cloud Run, révision **sans trafic**, promue si readiness verte | ✅ |
