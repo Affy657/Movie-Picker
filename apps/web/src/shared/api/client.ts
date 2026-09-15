@@ -30,7 +30,10 @@ export function withHostToken(
   init: RequestInit = {}
 ): RequestInit {
   if (!hostToken) return init;
-  return { ...init, headers: { ...mergeRequestHeaders(init.headers), [HOST_TOKEN_HEADER]: hostToken } };
+  return {
+    ...init,
+    headers: { ...mergeRequestHeaders(init.headers), [HOST_TOKEN_HEADER]: hostToken },
+  };
 }
 
 export function apiUrl(path: string): string {
