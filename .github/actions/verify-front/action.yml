@@ -37,18 +37,18 @@ runs:
       run: |
         set -eo pipefail
         DOMAIN="$(aws cloudfront get-distribution --id "$DISTRIBUTION_ID" --query 'Distribution.DomainName' --output text)"
-        echo "CloudFront domain : $DOMAIN"
-        # -o fichier plutôt que /dev/null : avec --retry, curl ne peut pas rembobiner /dev/null
-        # et sort en 23 sans jamais écrire le code HTTP.
+        echo "CloudFront domain: $DOMAIN"
+        # -o file rather than /dev/null: with --retry, curl cannot rewind /dev/null and exits
+        # with 23 without ever writing the HTTP code.
         code="$(curl -sS -o "$RUNNER_TEMP/cf.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "https://$DOMAIN/")"
         echo "GET / -> $code"
         test "$code" = "200"
-    # Le smoke test précédent interroge le domaine CloudFront : il ne dit rien du domaine public
-    # servi aux utilisateurs, dont le DNS, le certificat ou l'alias peuvent être cassés alors que
-    # la distribution répond très bien.
-    # Un 200 ne dit pas quelle version est servie : sans invalidation, le CDN répond 200 avec
-    # l'ancien index.html et la publication passe pour bonne. On compare donc le point d'entrée
-    # haché du build qu'on vient d'envoyer à celui que le domaine public sert vraiment.
+    # The previous smoke test queries the CloudFront domain: it says nothing about the public
+    # domain served to users, whose DNS, certificate or alias can be broken while the distribution
+    # answers perfectly.
+    # A 200 does not say which version is served: without invalidation, the CDN answers 200 with
+    # the old index.html and the publication looks fine. So the hashed entry point of the build
+    # that was just uploaded is compared with the one the public domain really serves.
     - name: Web smoke test (public domain + served version)
       shell: bash
       env:
@@ -58,23 +58,23 @@ runs:
         set -eo pipefail
         PUBLIC_WEB_URL="${ALLOWED_ORIGINS%%,*}"
         if [ -z "$PUBLIC_WEB_URL" ]; then
-          echo "::warning::Origine publique absente, domaine public du front non vérifié."
+          echo "::warning::Public origin missing, public web domain not verified."
           exit 0
         fi
-        echo "Domaine public : $PUBLIC_WEB_URL"
+        echo "Public domain: $PUBLIC_WEB_URL"
         code="$(curl -sS -o "$RUNNER_TEMP/pub.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$PUBLIC_WEB_URL/")"
         echo "GET $PUBLIC_WEB_URL/ -> $code"
         if [ "$code" != "200" ]; then
-          echo "::error::$PUBLIC_WEB_URL ne répond pas 200 : DNS, certificat ou alias de l'hébergement du front."
+          echo "::error::$PUBLIC_WEB_URL does not answer 200: DNS, certificate or alias of the web hosting."
           exit 1
         fi
         ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' "$DIST/index.html" | head -1)"
         if [ -z "$ENTRY" ]; then
-          echo "::error::Point d'entrée introuvable dans le build local, smoke test de version impossible."
+          echo "::error::Entry point not found in the local build, version smoke test impossible."
           exit 1
         fi
-        echo "Point d'entrée attendu : $ENTRY"
+        echo "Expected entry point: $ENTRY"
         if ! grep -qF "$ENTRY" "$RUNNER_TEMP/pub.html"; then
-          echo "::error::$PUBLIC_WEB_URL sert un index.html qui ne référence pas $ENTRY, build périmé en cache (invalidation CDN absente ou incomplète)."
+          echo "::error::$PUBLIC_WEB_URL serves an index.html that does not reference $ENTRY: stale build in cache (CDN invalidation missing or incomplete)."
           exit 1
         fi

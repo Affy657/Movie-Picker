@@ -11,7 +11,7 @@ try {
   files = readdirSync(assetsDir).filter((f) => f.endsWith('.js'));
 } catch {
   console.error(
-    'check-prod-bundle-secrets: dist/assets introuvable — lancez le build web d’abord.'
+    'check-prod-bundle-secrets: dist/assets not found, run the web build first.'
   );
   process.exit(1);
 }
@@ -20,7 +20,7 @@ for (const name of files) {
   const content = readFileSync(join(assetsDir, name), 'utf8');
   for (const needle of forbidden) {
     if (content.includes(needle)) {
-      console.error(`check-prod-bundle-secrets: chaîne interdite "${needle}" dans assets/${name}`);
+      console.error(`check-prod-bundle-secrets: forbidden string "${needle}" in assets/${name}`);
       process.exit(1);
     }
   }

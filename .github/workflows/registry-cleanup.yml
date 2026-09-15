@@ -1,14 +1,14 @@
-# Applique une politique de rétention sur Artifact Registry (dépôt des images API).
-#   - Garde les 10 versions les plus récentes, supprime les autres de plus de 30 jours.
-#   - GCP applique ensuite la politique automatiquement (pas de suppression directe ici).
-#   - Mensuel + déclenchable à la main. SA requis : rôle artifactregistry.admin (ou update).
+# Applies a retention policy to Artifact Registry (the API images repository).
+#   - Keeps the 10 most recent versions, deletes the others older than 30 days.
+#   - GCP then applies the policy on its own (no direct deletion here).
+#   - Monthly + manually triggerable. Service account requirement: artifactregistry.admin (or update).
 
 name: 🧹 Artifact Registry cleanup
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 5 1 * *" # 1er du mois, 05:00 UTC
+    - cron: "0 5 1 * *" # 1st of the month, 05:00 UTC
 
 permissions:
   contents: read
@@ -22,7 +22,7 @@ jobs:
     name: 🧹 Apply the retention policy
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    # Lit GCP_SA_KEY : environnement `production`, comme tout job qui porte ce secret.
+    # Reads GCP_SA_KEY: `production` environment, like every job carrying that secret.
     environment: production
     permissions:
       contents: read

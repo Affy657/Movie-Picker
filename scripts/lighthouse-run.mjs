@@ -1,4 +1,4 @@
-/** Usage : `pnpm run lighthouse` à la racine (build web puis mesure des pages publiques). */
+/** Usage: `pnpm run lighthouse` from the root (web build, then measurement of the public pages). */
 import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,20 +16,20 @@ const BASE = `http://127.0.0.1:${PORT}`;
 const API_PORT = Number(process.env.LH_API_PORT || 4000);
 const API_URL = `http://localhost:${API_PORT}`;
 /**
- * DSN factice pointé sur le stub : la production charge le SDK Sentry, donc la mesure doit le
- * charger aussi, sinon la porte mesure un chemin de démarrage que personne ne reçoit.
+ * Dummy DSN pointed at the stub: production loads the Sentry SDK, so the measurement must load
+ * it too, otherwise the gate measures a startup path nobody receives.
  */
 const SENTRY_STUB_DSN = `http://lighthouse@localhost:${API_PORT}/1`;
 const BUDGETS_PATH = path.join(ROOT, 'configs', 'lighthouse-budgets.json');
 const OUT = path.join(ROOT, 'artifacts', 'lighthouse');
 
 /**
- * Routes alignées sur App.tsx.
- * `indexable: false` => la catégorie SEO n'est pas évaluée contre le seuil
- * (la page est volontairement `Disallow:` dans robots.txt ou `noindex` —
- * Lighthouse pénalise sinon ce qui est voulu par la politique d'indexation).
- * `skipPerformance: true` => le chunk EventDetail dépasse le budget 80 de la
- * landing ; la perf reste mesurée et loguée, sans faire échouer le job.
+ * Routes aligned with App.tsx.
+ * `indexable: false` => the SEO category is not checked against the threshold
+ * (the page is deliberately `Disallow:` in robots.txt or `noindex`; Lighthouse would
+ * otherwise penalise what the indexing policy wants).
+ * `skipPerformance: true` => the EventDetail chunk exceeds the landing budget of 80;
+ * performance is still measured and logged, without failing the job.
  */
 const URLS = [
   { path: '/', slug: 'home', indexable: true },
@@ -60,7 +60,7 @@ function waitForServer(hostname, port, maxMs = 60000) {
         }
       );
       req.on('error', () => {
-        if (Date.now() > deadline) reject(new Error(`Timeout: rien sur le port ${port}`));
+        if (Date.now() > deadline) reject(new Error(`Timeout: nothing on port ${port}`));
         else setTimeout(tick, 300);
       });
       req.end();
@@ -88,7 +88,7 @@ function showcaseItems(ranked = false) {
   return Array.from({ length: SHOWCASE_ITEM_COUNT }, (_, index) => ({
     id: 1000 + index,
     mediaType: 'movie',
-    title: `Film de recette ${index + 1}`,
+    title: `Test movie ${index + 1}`,
     year: `${2000 + (index % 25)}`,
     posterPath: null,
     voteAverage: 7.5,
@@ -100,9 +100,9 @@ function showcaseItems(ranked = false) {
 }
 
 /**
- * Stub minimal de l'API, requis pour que les pages testées non authentifiées
- * (redirigées vers /login) puissent résoudre leur appel `GET /auth/oauth/providers`
- * sans lever d'erreur CSP/CORS/réseau qui ferait chuter le score best-practices.
+ * Minimal API stub, required so that unauthenticated pages under test (redirected to
+ * /login) can resolve their `GET /auth/oauth/providers` call without raising a
+ * CSP/CORS/network error that would drop the best-practices score.
  */
 function startApiStub(port) {
   const server = http.createServer((req, res) => {
@@ -127,7 +127,7 @@ function startApiStub(port) {
           section,
           theme: null,
           items: showcaseItems(section === 'most-proposed'),
-          disclaimer: 'Données de recette',
+          disclaimer: 'Test data',
           tmdbAttributionUrl: 'https://www.themoviedb.org/',
         })
       );
@@ -138,12 +138,12 @@ function startApiStub(port) {
         JSON.stringify({
           items: Array.from({ length: 12 }, (_, index) => ({
             id: 500 + index,
-            name: `Saga de recette ${index + 1}`,
+            name: `Test saga ${index + 1}`,
             overview: null,
             posterPath: null,
             movieCount: 3 + index,
           })),
-          disclaimer: 'Données de recette',
+          disclaimer: 'Test data',
           tmdbAttributionUrl: 'https://www.themoviedb.org/',
         })
       );
@@ -237,7 +237,7 @@ execSync('pnpm --filter web run build', {
 });
 
 if (!fs.existsSync(DIST)) {
-  console.error('apps/web/dist introuvable après build.');
+  console.error('apps/web/dist not found after the build.');
   process.exit(1);
 }
 
@@ -248,17 +248,17 @@ const perPageMins = budgets.perPageMinimumScores ?? {};
 fs.mkdirSync(OUT, { recursive: true });
 
 /**
- * La production sert les routes prerendues comme des cles S3 exactes : `/soutenir` repond avec
- * `prerendered/soutenir.html`, pas avec la coquille SPA. Sans ces reecritures, `serve -s` renvoie
- * `index.html` et la mesure porte sur une page que personne ne recoit : son element LCP est rendu
- * par React alors qu'il est dans le document en production. Le repli SPA reste en dernier, comme
- * le repli 403/404 de CloudFront.
+ * Production serves the prerendered routes as exact S3 keys: `/soutenir` answers with
+ * `prerendered/soutenir.html`, not with the SPA shell. Without these rewrites, `serve -s` returns
+ * `index.html` and the measurement covers a page nobody receives: its LCP element is rendered by
+ * React while it sits in the document in production. The SPA fallback stays last, like the
+ * CloudFront 403/404 fallback.
  *
- * Le repli est ecrit en negation et pas en `**` parce que `serve-handler` applique ses regles en
- * cascade : il rejoue les regles restantes sur le chemin deja reecrit. Un `**` final rattraperait
- * donc `/prerendered/soutenir.html` et le renverrait sur `index.html`, ce qui annule la premiere
- * reecriture sans rien signaler. C'est aussi pour ca que `--single` n'est pas passe a `serve` :
- * il insere son propre `**` en tete de liste.
+ * The fallback is written as a negation rather than `**` because `serve-handler` applies its rules
+ * in cascade: it replays the remaining rules on the already rewritten path. A final `**` would
+ * catch `/prerendered/soutenir.html` and send it back to `index.html`, cancelling the first
+ * rewrite without any signal. That is also why `--single` is not passed to `serve`: it inserts
+ * its own `**` at the head of the list.
  */
 function prerenderRewrites() {
   const manifestPath = path.join(DIST, 'prerendered', 'manifest.json');
@@ -366,12 +366,12 @@ try {
         const skipBudget = skipSeo || skipPerf;
         const suffix = skipBudget
           ? skipSeo
-            ? ' (non indexable — seuil ignoré)'
-            : ' (SPA événement — seuil ignoré)'
-          : ` (min ${min}, médiane ${RUNS} runs)`;
-        console.log(`${slug} — ${cat}: ${score}${suffix}`);
+            ? ' (not indexable, threshold ignored)'
+            : ' (event SPA, threshold ignored)'
+          : ` (min ${min}, median of ${RUNS} runs)`;
+        console.log(`${slug} ${cat}: ${score}${suffix}`);
         if (!skipBudget && score < min) {
-          console.error(`✗ ${slug} — ${cat}: ${score} < ${min}`);
+          console.error(`✗ ${slug} ${cat}: ${score} < ${min}`);
           failed = true;
         }
       }
@@ -385,7 +385,7 @@ try {
 }
 
 if (failed) {
-  console.error('\nLighthouse : seuils non atteints — voir artifacts/lighthouse/');
+  console.error('\nLighthouse: thresholds not met, see artifacts/lighthouse/');
   process.exit(1);
 }
-console.log('\n✓ Lighthouse OK — rapports dans artifacts/lighthouse/');
+console.log('\n✓ Lighthouse OK, reports in artifacts/lighthouse/');

@@ -15,10 +15,10 @@ inputs:
 runs:
   using: composite
   steps:
-    #   --max-time : sans lui, une révision qui accepte la connexion sans jamais répondre épuise
-    #   le timeout du job, et un job *annulé* n'exécute aucune étape de rattrapage.
-    #   -o fichier plutôt que /dev/null : avec --retry, curl ne peut pas rembobiner /dev/null et
-    #   sort en 23 sans écrire le code HTTP, ce qui rendait les diagnostics suivants inatteignables.
+    #   --max-time: without it, a revision that accepts the connection but never answers exhausts
+    #   the job timeout, and a *cancelled* job runs no recovery step.
+    #   -o file rather than /dev/null: with --retry, curl cannot rewind /dev/null and exits with 23
+    #   without writing the HTTP code, which made the following diagnostics unreachable.
     - name: /health then /health/ready
       shell: bash
       env:
@@ -27,22 +27,22 @@ runs:
         set -eo pipefail
         BODY="$RUNNER_TEMP/health.json"
         curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$URL/health"
-        echo "Réponse /health : $(cat "$BODY")"
+        echo "/health response: $(cat "$BODY")"
         grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
-          echo "::error::/health ne renvoie pas status=ok"
+          echo "::error::/health does not return status=ok"
           exit 1
         }
         curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$BODY" "$URL/health/ready"
-        echo "Réponse /health/ready : $(cat "$BODY")"
+        echo "/health/ready response: $(cat "$BODY")"
         grep -qE '"status"[[:space:]]*:[[:space:]]*"ready"' "$BODY" || {
-          echo "::error::/health/ready ne renvoie pas status=ready (dépendance indisponible)"
+          echo "::error::/health/ready does not return status=ready (dependency unavailable)"
           exit 1
         }
         grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
-          echo "::error::/health/ready signale MongoDB comme non joignable"
+          echo "::error::/health/ready reports MongoDB as unreachable"
           exit 1
         }
-    # Un échec ici relève du routage, du DNS ou du certificat, pas du code.
+    # A failure here is routing, DNS or certificate, not code.
     - name: Public domain
       if: inputs.public-url != ''
       shell: bash
@@ -52,12 +52,12 @@ runs:
         set -eo pipefail
         BODY="$RUNNER_TEMP/public-health.json"
         curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$PUBLIC_URL/health"
-        echo "Domaine public : $(cat "$BODY")"
+        echo "Public domain: $(cat "$BODY")"
         grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
-          echo "::error::Le domaine public de l'API ne renvoie pas status=ok : DNS, certificat ou mapping de domaine."
+          echo "::error::The public API domain does not return status=ok: DNS, certificate or domain mapping."
           exit 1
         }
     - name: Public domain not provided
       if: inputs.public-url == '' && inputs.public-url-expected == 'true'
       shell: bash
-      run: echo "::warning::URL publique de l'API absente, domaine public non vérifié."
+      run: echo "::warning::Public API URL missing, public domain not verified."

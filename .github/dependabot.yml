@@ -1,10 +1,10 @@
-# Mises à jour de dépendances (roadmap § 26)
-# Politique « peu de PRs » : calendrier mensuel + une PR groupée par écosystème
-# (évite la pluie de PR au premier run ou chaque semaine).
-# `cooldown` : une version publiée depuis moins de 7 jours n'est pas proposée. Un paquet compromis
-# en amont est le plus souvent retiré dans ce délai, la fenêtre d'exposition se ferme avant que la
-# PR n'existe. zizmor, qui lit ce fichier depuis que la porte `lint-workflows` couvre `.github/`
-# en entier, l'exige au seuil medium.
+# Dependency updates (roadmap § 26)
+# "Few PRs" policy: monthly schedule + one grouped PR per ecosystem
+# (avoids the PR flood on the first run or every week).
+# `cooldown`: a version published less than 7 days ago is not proposed. A package compromised
+# upstream is most often pulled within that window, so the exposure closes before the PR exists.
+# zizmor, which reads this file since the `lint-workflows` gate covers the whole `.github/`,
+# requires it at the medium threshold.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -18,14 +18,14 @@ updates:
       - dependency-name: "typescript"
         versions: [">=7.0.0"]
     groups:
-      # Monorepo pnpm (racine + workspace apps/*) → un seul bump npm par cycle
+      # pnpm monorepo (root + apps/* workspace) → a single npm bump per cycle
       npm-all:
         patterns:
           - "*"
 
-  # `directory: /` ne couvre que `.github/workflows/` : les actions composites de
-  # `.github/actions/` ont dérivé pendant des mois (setup-dotnet v5 et cache v5 d'un côté,
-  # v6 de l'autre) sans qu'aucune PR ne les propose. Chaque dossier d'action doit être listé.
+  # `directory: /` only covers `.github/workflows/`: the composite actions in `.github/actions/`
+  # drifted for months (setup-dotnet v5 and cache v5 on one side, v6 on the other) without any
+  # PR proposing them. Every action folder must be listed.
   - package-ecosystem: github-actions
     directories:
       - /
@@ -52,7 +52,7 @@ updates:
         patterns:
           - "*"
 
-  # Images de base du Dockerfile API (FROM ... épinglés par digest) → bump digest auto
+  # Base images of the API Dockerfile (FROM ... pinned by digest) → automatic digest bump
   - package-ecosystem: docker
     directory: /apps/api-dotnet/MoviePicker.Api
     schedule:
@@ -65,10 +65,10 @@ updates:
         patterns:
           - "*"
 
-  # Slides Slidev archivées (archive/, non maintenues) : neutralise Dependabot
-  # version sur ce manifeste figé. Le package-lock.json local n'est pas versionné
-  # (cf. archive/.../slides/.gitignore) pour éviter les security updates GitHub
-  # qui échouent avec all_versions_ignored alors que le lockfile reste vulnérable.
+  # Archived Slidev slides (archive/, unmaintained): neutralises Dependabot version updates on
+  # this frozen manifest. The local package-lock.json is not versioned (see the slides
+  # .gitignore) to avoid GitHub security updates failing with all_versions_ignored while the
+  # lockfile stays vulnerable.
   - package-ecosystem: npm
     directory: /archive/docs/RNCP/bloc-1-cadrage/slides
     schedule:

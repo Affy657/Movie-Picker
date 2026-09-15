@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 const apiMongoUri = process.env.E2E_MONGODB_URI ?? '';
 
-/** Prérequis local : `VITE_API_URL=http://127.0.0.1:5010 pnpm --filter web build` */
+/** Local prerequisite: `VITE_API_URL=http://127.0.0.1:5010 pnpm --filter web build` */
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -16,13 +16,13 @@ export default defineConfig({
     locale: 'fr-FR',
     trace: 'on-first-retry',
   },
-  // --no-launch-profile évite le port 4000 des launchSettings ; sans profil, ASPNETCORE_* doit forcer Development
-  // sinon ProductionStartupValidation exige ALLOWED_ORIGINS + MONGODB_URI.
-  // DevelopmentSeed__Enabled=false : les tests créent leurs propres comptes ; le seed de démo
-  // n'est pas requis et son étape de vote crashe l'hôte sur un seed frais (contexte sans user courant).
-  // TMDB_API_KEY=e2e-stub : SearchMoviesHandler exige une clé non vide même avec le stub
-  // (E2E_STUB_TMDB) ; valeur factice suffisante, le stub ignore sa valeur. Sans elle, la recherche
-  // renvoie « temporairement indisponible » en CI (pas de clé), alors qu'en local une vraie clé masque le souci.
+  // --no-launch-profile avoids port 4000 from launchSettings; without a profile, ASPNETCORE_* must force
+  // Development, otherwise ProductionStartupValidation requires ALLOWED_ORIGINS + MONGODB_URI.
+  // DevelopmentSeed__Enabled=false: the tests create their own accounts; the demo seed is not needed,
+  // and its vote step crashes the host on a fresh seed (context without a current user).
+  // TMDB_API_KEY=e2e-stub: SearchMoviesHandler requires a non-empty key even with the stub
+  // (E2E_STUB_TMDB); a dummy value is enough, the stub ignores it. Without it, the search answers
+  // "temporarily unavailable" in CI (no key), while locally a real key hides the issue.
   webServer: [
     {
       command: `cross-env MOVIEPICKER_TEST_CONTEXT=1 E2E_STUB_TMDB=1 E2E_STUB_LETTERBOXD=1 TMDB_API_KEY=e2e-stub MONGODB_URI=${apiMongoUri} DevelopmentSeed__Enabled=false ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5010 dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj --no-launch-profile`,

@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-028`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-029`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -212,6 +212,16 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - piege: `SONAR_TOKEN` reste volontairement au niveau du dépôt, le job `sonar` tourne sur les PR et les branches `v*`, que la politique de branche de `production` exclurait. Tout job qui lit un secret de déploiement porte `environment: production` ; sans cette ligne il lirait une valeur vide.
 - refs: DEBT-002 et le lot Terraform 5 remplacent ces clés par une fédération d'identité
 
+## DEBT-028 du français subsiste dans le code, les tests et les messages de l'API
+
+- state: agent
+- impact: la règle « Langue » d'AGENTS.md (2026-09-15) veut tout le dépôt en anglais hors i18n et documentation. Mesuré ce jour-là, hors `.github/`, `scripts/`, `apps/web/scripts/`, `configs/` et `playwright.config.ts` déjà traduits : 154 fichiers de tests web et 23 fichiers de code web (2 670 lignes accentuées, surtout des noms de tests), 89 fichiers de tests API et 91 fichiers de code API (810 lignes : messages `throw new`, `LogInformation`, `LogWarning`, données de seed), 6 fichiers `e2e/` (26 lignes).
+- ou: `grep -rlE "[éèêàçù]" apps/web/src --include=*.ts --include=*.tsx | grep -v i18n/locales`, même chose sur `apps/api-dotnet --include=*.cs` et `e2e/`
+- verify: les deux `grep` ci-dessus rendent des fichiers. Réglé quand ils ne rendent plus que des fichiers de `i18n/locales/`.
+- fix: par lots, un par catégorie, chacun avec `verify:local` vert : (1) noms de tests web et e2e, (2) noms de tests API, (3) messages de journal de l'API et commentaires résiduels, (4) messages d'exception. Le lot 4 n'est pas une traduction : `apps/web/src/shared/api/apiError.ts:23` affiche `e.message` tel quel, donc `throw new NotFoundException("Soirée introuvable")` est une chaîne d'interface en français. Remplacer chaque message par un code stable (`event.not_found`), le front le traduit par les locales, et l'API garde un message anglais de secours pour les clients qui ne sont pas le front.
+- fini-quand: `verify` vide et aucune chaîne française nouvelle dans un fichier touché depuis
+- piege: les données de seed (`Léa Moreau`, `Soirée horreur`) sont du contenu produit, pas du code : elles restent en français. Les noms de tests décrivent un comportement, les traduire ne doit pas en changer le sens ; relire chaque `it(...)` plutôt que passer un outil.
+
 ## DEBT-023 la limite de votes par participant se vérifie puis s'écrit, sans verrou
 
 - state: differe
@@ -361,7 +371,7 @@ Deux pièges d'énumération, payés une fois : `approval_policy` n'accepte que 
 ```bash
 for ID in $(gh run list --workflow ci-cd.yml --limit 30 --json databaseId --jq '.[].databaseId'); do
   J=$(gh run view "$ID" --json jobs --jq '.jobs[]|select(.name|startswith("Lighthouse"))|.databaseId')
-  [ -n "$J" ] && gh api "repos/<DEPOT>/actions/jobs/$J/logs" | grep -E "— performance"
+  [ -n "$J" ] && gh api "repos/<DEPOT>/actions/jobs/$J/logs" | grep -E " performance:"
 done
 ```
 

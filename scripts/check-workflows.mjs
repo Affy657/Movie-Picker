@@ -1,17 +1,16 @@
 /**
- * Rejoue en local le job `lint-workflows` de la CI, aux mêmes versions.
+ * Replays the CI `lint-workflows` job locally, at the same versions.
  *
- * Les deux outils passent par Docker, épinglés par digest, pour une raison précise : actionlint
- * délègue les blocs `run:` à shellcheck et **saute silencieusement** cette moitié de son travail
- * quand shellcheck n'est pas dans le PATH. Une machine de dev sans shellcheck aurait donc une
- * porte verte qui ne vérifie que la moitié de ce que vérifie la CI. L'image `rhysd/actionlint`
- * embarque shellcheck 0.10.0, exactement la version que la CI utilise.
+ * Both tools run through Docker, pinned by digest, for one precise reason: actionlint delegates
+ * `run:` blocks to shellcheck and **silently skips** that half of its work when shellcheck is not
+ * in the PATH. A dev machine without shellcheck would have a green gate checking half of what the
+ * CI checks. The `rhysd/actionlint` image ships shellcheck 0.10.0, exactly the version the CI uses.
  *
- * La liste des fichiers est découverte, jamais écrite en dur : un workflow ajouté plus tard et
- * oublié dans une liste échapperait à la porte sans que rien ne le dise.
+ * The file list is discovered, never hardcoded: a workflow added later and forgotten in a list
+ * would escape the gate without anything saying so.
  *
- * Pas de troisième porte de parsing YAML : actionlint rend `could not parse as YAML` sur un
- * fichier mal indenté, vérifié sur un fichier de test. Elle serait redondante.
+ * No third YAML parsing gate: actionlint returns `could not parse as YAML` on a badly indented
+ * file, checked on a test file. It would be redundant.
  */
 import { readdirSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -32,7 +31,7 @@ function fail(message) {
 }
 
 if (!existsSync(workflowsDir)) {
-  fail('.github/workflows introuvable.');
+  fail('.github/workflows not found.');
 }
 
 const workflows = readdirSync(workflowsDir)
@@ -41,7 +40,7 @@ const workflows = readdirSync(workflowsDir)
   .map((name) => `.github/workflows/${name}`);
 
 if (workflows.length === 0) {
-  fail('Aucun workflow trouvé dans .github/workflows.');
+  fail('No workflow found in .github/workflows.');
 }
 
 function docker(args) {
@@ -54,19 +53,19 @@ const dockerAvailable = spawnSync('docker', ['version', '--format', '{{.Server.V
 });
 if (dockerAvailable.status !== 0) {
   fail(
-    'Docker est requis pour cette porte (actionlint embarque shellcheck, sans quoi la moitié des blocs run: ne serait pas vérifiée). Démarrer Docker Desktop puis relancer.'
+    'Docker is required for this gate (actionlint ships shellcheck, without it half of the run: blocks would go unchecked). Start Docker Desktop and run again.'
   );
 }
 
 const mount = ['-v', './.github:/repo/.github:ro', '-w', '/repo'];
 
-console.log(`actionlint + shellcheck sur ${workflows.length} workflows`);
+console.log(`actionlint + shellcheck on ${workflows.length} workflows`);
 const actionlint = docker(['run', '--rm', ...mount, ACTIONLINT_IMAGE, '-color', ...workflows]);
 if (actionlint.status !== 0) {
-  fail('actionlint a relevé des constats.');
+  fail('actionlint reported findings.');
 }
 
-console.log('zizmor (audit sécurité, seuil medium, workflows et actions composites)');
+console.log('zizmor (security audit, medium threshold, workflows and composite actions)');
 const zizmor = docker([
   'run',
   '--rm',
@@ -81,7 +80,7 @@ const zizmor = docker([
   '.github/',
 ]);
 if (zizmor.status !== 0) {
-  fail('zizmor a relevé des constats de sévérité medium ou plus.');
+  fail('zizmor reported findings of medium severity or higher.');
 }
 
-console.log(`\x1b[32m✓\x1b[0m Workflows : actionlint et zizmor sans constat.`);
+console.log(`\x1b[32m✓\x1b[0m Workflows: actionlint and zizmor report nothing.`);

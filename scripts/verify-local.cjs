@@ -1,7 +1,8 @@
 /**
- * Vérification locale alignée sur le job **lint** + **test-web** + **test-api** de la CI
- * (.github/workflows/ci-cd.yml). À lancer à la racine après `pnpm install` et avec .NET SDK installé.
- * Docker requis (daemon actif) pour l'étape d'audit npm (scan Trivy filesystem, cf. commit 26c9163).
+ * Local verification aligned with the CI **lint** + **test-web** + **test-api** jobs
+ * (.github/workflows/ci-cd.yml). Run from the repository root after `pnpm install`, with the
+ * .NET SDK installed. Docker (running daemon) is required for the npm audit step (Trivy
+ * filesystem scan, see commit 26c9163).
  */
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
@@ -26,14 +27,13 @@ function run(title, command, args, options = {}) {
   }
 }
 
-run("Règles d'architecture", 'node', ['scripts/check-architecture.mjs']);
+run('Architecture rules', 'node', ['scripts/check-architecture.mjs']);
 run('Workflows (actionlint + shellcheck + zizmor)', 'node', ['scripts/check-workflows.mjs']);
-// Même image et même mode `dir` que le job `gitleaks` de la CI : cette porte scanne l'arbre de
-// travail, pas l'historique. Sans elle en local, une chaîne de forme secrète ne se découvre qu'en
-// CI, et c'est arrivé le 2026-09-10, la règle `curl-auth-user` déclenche sur
-// `curl -u "$TOKEN:"` même quand la valeur est un nom de variable. Garder le digest aligné sur
-// celui de `.github/workflows/ci-cd.yml`.
-run('Secrets (Gitleaks, arbre de travail)', 'docker', [
+// Same image and same `dir` mode as the CI `gitleaks` job: this gate scans the working tree, not
+// the history. Without it locally, a secret-shaped string is only discovered in CI, and that
+// happened on 2026-09-10: the `curl-auth-user` rule fires on `curl -u "$TOKEN:"` even when the
+// value is a variable name. Keep the digest aligned with `.github/workflows/ci-cd.yml`.
+run('Secrets (Gitleaks, working tree)', 'docker', [
   'run',
   '--rm',
   '-v',
@@ -69,7 +69,7 @@ run('dotnet build Release (warnings → errors)', 'dotnet', [
   '-warnaserror',
 ]);
 
-run('Export OpenAPI (SKIP_OPENAPI_BUILD)', 'node', ['scripts/export-openapi.cjs'], {
+run('OpenAPI export (SKIP_OPENAPI_BUILD)', 'node', ['scripts/export-openapi.cjs'], {
   env: {
     ...process.env,
     SKIP_OPENAPI_BUILD: '1',
@@ -77,10 +77,10 @@ run('Export OpenAPI (SKIP_OPENAPI_BUILD)', 'node', ['scripts/export-openapi.cjs'
   },
 });
 
-run('Types OpenAPI (dérive du contrat)', 'node', ['scripts/check-openapi-types.mjs']);
+run('OpenAPI types (contract drift)', 'node', ['scripts/check-openapi-types.mjs']);
 
 run(
-  'Audit npm (Trivy fs, pnpm audit indisponible depuis le 2026-07-15, cf. pnpm/pnpm#11265)',
+  'npm audit (Trivy fs; pnpm audit unavailable since 2026-07-15, see pnpm/pnpm#11265)',
   'docker',
   [
     'run',
@@ -101,10 +101,10 @@ run(
     '/repo/pnpm-lock.yaml',
   ]
 );
-run('Tests front (Vitest + seuils couverture)', 'pnpm', ['run', 'test:coverage', '--filter=web']);
+run('Web tests (Vitest + coverage thresholds)', 'pnpm', ['run', 'test:coverage', '--filter=web']);
 
 run(
-  'Tests API unitaires',
+  'API unit tests',
   'dotnet',
   [
     'test',
@@ -118,7 +118,7 @@ run(
 );
 
 run(
-  'Tests API intégration',
+  'API integration tests',
   'dotnet',
   [
     'test',
@@ -131,4 +131,4 @@ run(
   { env: envMongoEmpty }
 );
 
-process.stdout.write('\n\x1b[32m✓ verify:local : tout est passé.\x1b[0m\n\n');
+process.stdout.write('\n\x1b[32m✓ verify:local: everything passed.\x1b[0m\n\n');

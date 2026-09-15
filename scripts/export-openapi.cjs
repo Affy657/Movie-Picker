@@ -1,4 +1,4 @@
-/** ASPNETCORE_ENVIRONMENT=Development requis pour éviter ProductionStartupValidation (ALLOWED_ORIGINS). */
+/** ASPNETCORE_ENVIRONMENT=Development is required to bypass ProductionStartupValidation (ALLOWED_ORIGINS). */
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -29,7 +29,7 @@ run('dotnet', ['tool', 'restore'], apiDotnet);
 if (process.env.SKIP_OPENAPI_BUILD !== '1') {
   run('dotnet', ['build', 'MoviePicker.Api/MoviePicker.Api.csproj', '-c', 'Release'], apiDotnet);
 } else if (!fs.existsSync(dll)) {
-  console.error('SKIP_OPENAPI_BUILD=1 mais DLL introuvable :', dll);
+  console.error('SKIP_OPENAPI_BUILD=1 but the DLL is missing:', dll);
   process.exit(1);
 }
 run(
@@ -37,4 +37,4 @@ run(
   ['tool', 'run', 'swagger', 'tofile', '--output', outFile, dll, 'v1'],
   apiDotnet
 );
-console.log('OpenAPI écrit :', outFile);
+console.log('OpenAPI written to', outFile);

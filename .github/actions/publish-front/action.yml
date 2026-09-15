@@ -43,15 +43,15 @@ runs:
       run: |
         aws s3 cp "$DIST/sitemap.xml" "s3://$AWS_S3_BUCKET/sitemap.xml" \
           --cache-control "public, max-age=3600, must-revalidate" --content-type "application/xml; charset=utf-8"
-    # Routes prérendues. Chaque fichier part sous une clé S3 **sans extension**, égale au chemin
-    # de la route : `/decouvrir` devient la clé `decouvrir`. C'est ce qui les rend servies sans
-    # toucher à l'infrastructure, l'origine S3 est une origine REST, elle n'a pas de document
-    # d'index par dossier, donc `decouvrir/index.html` n'aurait jamais été servi pour
-    # `/decouvrir` : CloudFront serait tombé sur son repli 403/404 vers `/index.html`, la coquille
-    # SPA générique. Une clé exacte, elle, répond 200 directement.
-    # `Content-Type` est explicite pour la même raison que `sw.js` : une clé sans extension part
-    # sinon en `application/octet-stream`, que le navigateur télécharge au lieu de l'afficher.
-    # Le repli SPA reste en place pour toutes les autres routes, rien n'est retiré.
+    # Prerendered routes. Each file is uploaded under an **extensionless** S3 key equal to the
+    # route path: `/decouvrir` becomes the key `decouvrir`. That is what gets them served without
+    # touching the infrastructure: the S3 origin is a REST origin, it has no per-folder index
+    # document, so `decouvrir/index.html` would never have been served for `/decouvrir`:
+    # CloudFront would have hit its 403/404 fallback to `/index.html`, the generic SPA shell. An
+    # exact key answers 200 directly.
+    # `Content-Type` is explicit for the same reason as `sw.js`: an extensionless key otherwise
+    # leaves as `application/octet-stream`, which the browser downloads instead of displaying.
+    # The SPA fallback stays in place for every other route, nothing is removed.
     - name: "S3, prerendered routes (extensionless keys, no-cache)"
       shell: bash
       env:
@@ -61,23 +61,23 @@ runs:
         set -eo pipefail
         MANIFEST="$DIST/prerendered/manifest.json"
         if [ ! -f "$MANIFEST" ]; then
-          echo "::error::$MANIFEST absent : le build n'a pas produit de routes prérendues."
+          echo "::error::$MANIFEST missing: the build produced no prerendered route."
           exit 1
         fi
         count=0
         while IFS=$'\t' read -r route file; do
           key="${route#/}"
-          echo "prérendu $route → clé $key"
+          echo "prerendered $route → key $key"
           aws s3 cp "$DIST/prerendered/$file" "s3://$AWS_S3_BUCKET/$key" \
             --cache-control "no-cache, must-revalidate" \
             --content-type "text/html; charset=utf-8"
           count=$((count + 1))
         done < <(jq -r '.[] | "\(.route)\t\(.file)"' "$MANIFEST")
         if [ "$count" = "0" ]; then
-          echo "::error::Le manifeste de prérendu est vide."
+          echo "::error::The prerender manifest is empty."
           exit 1
         fi
-        echo "$count routes prérendues publiées."
+        echo "$count prerendered routes published."
     - name: "S3, step 3: index.html last (entry point)"
       shell: bash
       env:

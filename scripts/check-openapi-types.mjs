@@ -15,10 +15,10 @@ execFileSync('npx', ['openapi-typescript', 'artifacts/openapi-v1.json', '-o', ge
 
 if (readFileSync(generated, 'utf8') !== before) {
   console.error(
-    "\nLes types générés depuis l'OpenAPI ne sont plus à jour.\n" +
-      'Lance `pnpm run openapi:export && pnpm run openapi:types`, relis le diff et commite-le.\n'
+    "\nThe types generated from the OpenAPI contract are out of date.\n" +
+      'Run `pnpm run openapi:export && pnpm run openapi:types`, review the diff and commit it.\n'
   );
   process.exit(1);
 }
 
-console.log('Types OpenAPI à jour avec le contrat exporté.');
+console.log('OpenAPI types match the exported contract.');

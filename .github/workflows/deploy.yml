@@ -1,25 +1,25 @@
-# Déploiement Movie Picker : front Vite/React → S3+CloudFront ; API .NET → Cloud Run.
+# Movie Picker deployment: Vite/React web app → S3+CloudFront; .NET API → Cloud Run.
 #
-# **Manuel, jamais automatique.** Un push sur master ne déploie plus : il ne fait que jouer les
-# portes de `ci-cd.yml`. La production part quand ce workflow est déclenché à la main, ce qui
-# permet de grouper plusieurs livraisons dans un seul déploiement. Quand le dépôt était privé, ses
-# minutes GitHub Actions étaient facturées et 99 % du coût partait sur les pushes master : la moitié
-# de ce coût était le chemin de déploiement, rejoué à chaque commit qu'on ne livrait pas pour autant.
+# **Manual, never automatic.** A push to master no longer deploys: it only runs the gates of
+# `ci-cd.yml`. Production leaves when this workflow is triggered by hand, which allows grouping
+# several deliveries into a single deployment. When the repository was private, its GitHub Actions
+# minutes were billed and 99% of the cost went to master pushes: half of that cost was the
+# deployment path, replayed on every commit that was not delivered anyway.
 #
-# Contrepartie assumée : la production est périmée par défaut entre deux déclenchements. Le
-# garde-fou final vérifie donc que chaque cible demandée est réellement partie, et non la couleur
-# du run, un job de déploiement sauté par un `needs:` rouge n'apparaît pas en échec.
+# Accepted trade-off: production is stale by default between two triggers. The final guard
+# therefore checks that every requested target really left, not the run colour: a deployment job
+# skipped by a red `needs:` does not show up as a failure.
 #
-# Les portes de qualité ne sont pas contournées, elles sont *consommées* : `verify-ci` refuse de
-# déployer un commit dont le run `ci-cd.yml` n'est pas vert (gitleaks, lint, tests, E2E, Quality
-# Gate Sonar). Rejouer ces portes ici doublerait leur coût sans rien prouver de plus, puisqu'elles
-# ont déjà tourné sur exactement ce commit. Lighthouse, à l'inverse, tourne **ici** : le job pèse
-# 9 des 27 minutes d'un run master, il n'a donc plus sa place sur le chemin de chaque push, et il
-# garde son rôle de porte bloquante de `deploy-front` (voir Impasses I4 de docs/technical-debt.md,
-# desserrer cette porte est mesuré sans gain).
+# The quality gates are not bypassed, they are *consumed*: `verify-ci` refuses to deploy a commit
+# whose `ci-cd.yml` run is not green (gitleaks, lint, tests, E2E, Sonar Quality Gate). Replaying
+# those gates here would double their cost without proving anything more, since they already ran
+# on exactly this commit. Lighthouse, on the other hand, runs **here**: the job weighs 9 of the 27
+# minutes of a master run, so it no longer belongs on the path of every push, and it keeps its role
+# as the blocking gate of `deploy-front` (see dead end I4 in docs/technical-debt.md, loosening this
+# gate was measured without gain).
 #
-# Retour arrière : `rollback.yml` pour l'API (révision Cloud Run antérieure), `rollback-front.yml`
-# pour le front (republication de l'artefact `front-dist-<sha>` archivé par `deploy-front`).
+# Rollback: `rollback.yml` for the API (earlier Cloud Run revision), `rollback-front.yml` for the
+# web app (republication of the `front-dist-<sha>` artifact archived by `deploy-front`).
 
 name: 🚀 Deploy
 
@@ -39,9 +39,9 @@ on:
 permissions:
   contents: read
 
-# Deux déploiements simultanés se marcheraient dessus sur S3 comme sur Cloud Run. Jamais
-# d'annulation en cours de route : un déploiement interrompu entre l'envoi S3 et l'invalidation
-# CloudFront laisse un état incohérent.
+# Two simultaneous deployments would step on each other on S3 as on Cloud Run. Never cancel
+# mid-way: a deployment interrupted between the S3 upload and the CloudFront invalidation leaves an
+# inconsistent state.
 concurrency:
   group: deploy-production
   cancel-in-progress: false
@@ -53,16 +53,16 @@ env:
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
 
 jobs:
-  # Seule porte propre à ce workflow. Elle ne rejoue rien : elle exige que le run `ci-cd.yml` du
-  # commit visé soit vert. Un run absent (aucun push depuis, ou runners bloqués par la facturation)
-  # est traité comme un refus, pas comme un feu vert par défaut.
-  # Lire la seule conclusion suffit parce qu'un run master joue toutes les lanes, sans filtre par
-  # chemin (voir l'en-tête de `ci-cd.yml`) : sa couleur vaut pour l'arbre entier du commit. Avant
-  # ça, un commit de documentation posé sur un commit de code rouge donnait un run vert en 12 s,
-  # neuf jobs sautés, et ce garde-fou l'acceptait.
-  # Le refus hors master ci-dessous est doublé par la politique de branche de l'environnement
-  # `production` (Settings → Environments), qui couvre aussi les workflows de retour arrière et
-  # de sauvegarde : ce `if` n'est que le message clair et la sortie rapide.
+  # The only gate of this workflow. It replays nothing: it requires the `ci-cd.yml` run of the
+  # target commit to be green. A missing run (no push since, or runners blocked by billing) is
+  # treated as a refusal, not as a green light by default.
+  # Reading the conclusion alone is enough because a master run plays every lane, without path
+  # filtering (see the `ci-cd.yml` header): its colour holds for the whole tree of the commit.
+  # Before that, a documentation commit on top of a red code commit gave a green run in 12 s, nine
+  # jobs skipped, and this guard accepted it.
+  # The refusal outside master below is doubled by the branch policy of the `production`
+  # environment (Settings → Environments), which also covers the rollback and backup workflows:
+  # this `if` is only the clear message and the fast exit.
   verify-ci:
     name: ✅ Require a green CI run on the target commit
     runs-on: ubuntu-24.04
@@ -74,12 +74,12 @@ jobs:
       - name: Refuse a deployment outside master
         run: |
           if [ "$GITHUB_REF" != "refs/heads/master" ]; then
-            echo "::error::La production ne part que de master (ref demandée : $GITHUB_REF). Fusionner d'abord."
+            echo "::error::Production only leaves from master (requested ref: $GITHUB_REF). Merge first."
             exit 1
           fi
-      # `--jq` filtre côté serveur GitHub sur le SHA exact : un run de pull request porte le même
-      # head_sha que le push qui l'a suivi, d'où le filtre sur l'événement et la branche. Le run le
-      # plus récent gagne, c'est celui qu'un « Re-run failed jobs » a remis au vert.
+      # `--jq` filters server-side on the exact SHA: a pull request run carries the same head_sha
+      # as the push that followed it, hence the filter on event and branch. The most recent run
+      # wins, it is the one a "Re-run failed jobs" turned green again.
       - name: Read the CI run conclusion for this commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -93,28 +93,28 @@ jobs:
                   | sort_by(.run_started_at) | reverse')"
           count="$(printf '%s' "$runs" | jq 'length')"
           if [ "$count" = "0" ]; then
-            echo "::error::Aucun run ci-cd.yml sur $GITHUB_SHA. Lancer le workflow « 🔍 CI » sur master, attendre le vert, puis redéclencher ce déploiement."
+            echo "::error::No ci-cd.yml run on $GITHUB_SHA. Run the \"🔍 CI\" workflow on master, wait for green, then trigger this deployment again."
             exit 1
           fi
           status="$(printf '%s' "$runs" | jq -r '.[0].status')"
           conclusion="$(printf '%s' "$runs" | jq -r '.[0].conclusion')"
           url="$(printf '%s' "$runs" | jq -r '.[0].html_url')"
-          echo "Run CI : $url"
+          echo "CI run: $url"
           echo "status=$status conclusion=$conclusion"
           if [ "$status" != "completed" ]; then
-            echo "::error::Le run CI de ce commit est encore '$status'. Attendre qu'il finisse."
+            echo "::error::The CI run of this commit is still '$status'. Wait for it to finish."
             exit 1
           fi
           if [ "$conclusion" != "success" ]; then
-            echo "::error::Le run CI de ce commit conclut '$conclusion' : corriger puis relancer la CI avant de déployer. $url"
+            echo "::error::The CI run of this commit concluded '$conclusion': fix, then rerun the CI before deploying. $url"
             exit 1
           fi
-          echo "Portes CI vertes sur $GITHUB_SHA."
+          echo "CI gates green on $GITHUB_SHA."
 
-  # Porte bloquante de `deploy-front`, déplacée ici depuis `ci-cd.yml` : 9 minutes par push master
-  # dont la mesure n'était consommée que par un déploiement. Sur le chemin du déploiement, elle
-  # coûte 9 minutes par livraison réelle et garde exactement le même pouvoir de blocage.
-  # Contrepartie : une régression de performance ne se voit plus au push mais au déploiement.
+  # Blocking gate of `deploy-front`, moved here from `ci-cd.yml`: 9 minutes per master push whose
+  # measurement was only consumed by a deployment. On the deployment path, it costs 9 minutes per
+  # real delivery and keeps exactly the same blocking power.
+  # Trade-off: a performance regression is no longer seen at push time but at deployment time.
   lighthouse:
     name: 💡 Lighthouse web (blocking thresholds)
     needs: verify-ci
@@ -129,13 +129,12 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-web
       - uses: browser-actions/setup-chrome@48ad923757ca74d66703209fe939badbdf80f2f4 # v2
-      # Médiane sur 5 passages au lieu de 3. Aucun seuil n'est abaissé : c'est la MESURE qui est
-      # fiabilisée, pas la barre. Sur un même commit, deux exécutions ont donné à la page d'accueil
-      # 82 puis 93, et fait échouer deux pages différentes, la variance des runners dépasse la
-      # marge qui sépare plusieurs pages de leur plancher, donc la porte virait au rouge au hasard,
-      # y compris sur un commit sans le moindre changement front. Depuis que la porte est sur le
-      # chemin du déploiement, un faux rouge coûte une livraison bloquée : la médiane sur 5 passages
-      # compte plus qu'avant, pas moins.
+      # Median over 5 passes instead of 3. No threshold is lowered: it is the MEASUREMENT that is
+      # made reliable, not the bar. On the same commit, two runs gave the home page 82 then 93 and
+      # failed two different pages: the runner variance exceeds the margin separating several pages
+      # from their floor, so the gate turned red at random, even on a commit without the slightest
+      # web change. Since the gate sits on the deployment path, a false red costs a blocked delivery:
+      # the 5-pass median matters more than before, not less.
       - run: pnpm run lighthouse
         env:
           LH_RUNS: 5
@@ -147,10 +146,9 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-  # `environment: production` sur tout job qui lit `GCP_SA_KEY` ou les clés AWS : c'est ce qui
-  # rend la politique de branche de l'environnement effective, et ce qui permet de ranger ces
-  # secrets dans l'environnement plutôt qu'au niveau du dépôt, où n'importe quel workflow sur
-  # n'importe quelle branche pouvait les lire.
+  # `environment: production` on every job reading `GCP_SA_KEY` or the AWS keys: this is what
+  # makes the environment branch policy effective, and what allows storing those secrets in the
+  # environment rather than at repository level, where any workflow on any branch could read them.
   docker-api:
     name: 🐳 Docker API → Artifact Registry
     runs-on: ubuntu-24.04
@@ -181,13 +179,13 @@ jobs:
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      # § 25 : Scan CVE de l'image avant push. Politique :
-      #   - bloque sur CRITICAL inconditionnellement
-      #   - bloque sur HIGH **uniquement si un fix amont est disponible** (`ignore-unfixed: true`),
-      #     pour éviter de geler le déploiement sur des CVE base-image sans patch publié.
-      # Si un CVE bloque ici, soit on rebuild avec une base image plus récente, soit on
-      # documente le risque (workaround / mitigation) et on suppress côté Trivy
-      # (`.trivyignore` à la racine du contexte de build) avec une note de revue.
+      # § 25: CVE scan of the image before push. Policy:
+      #   - blocks on CRITICAL unconditionally
+      #   - blocks on HIGH **only when an upstream fix is available** (`ignore-unfixed: true`),
+      #     to avoid freezing the deployment on base-image CVEs without a published patch.
+      # If a CVE blocks here, either rebuild with a newer base image, or document the risk
+      # (workaround / mitigation) and suppress it on the Trivy side (`.trivyignore` at the root of
+      # the build context) with a review note.
       - name: Scan Docker image (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -198,8 +196,8 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
           cache: true
-      # Le digest est relevé après push et sert de cible au déploiement : un tag reste
-      # réinscriptible, un digest désigne exactement les octets que Trivy vient de scanner.
+      # The digest is read after the push and is the deployment target: a tag stays rewritable, a
+      # digest names exactly the bytes Trivy just scanned.
       - name: Tag & push image
         id: push
         env:
@@ -209,18 +207,18 @@ jobs:
           IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api:${GITHUB_SHA}"
           docker tag movie-picker-api "$IMAGE"
           docker push "$IMAGE"
-          # `|| true` est indispensable : sans lui, un RepoDigests vide fait échouer le template
-          # Go et `set -e` tue l'étape avant le diagnostic ci-dessous, qui ne s'afficherait jamais.
-          # Le digest est filtré sur le dépôt cible plutôt que pris à l'index 0.
+          # `|| true` is essential: without it, an empty RepoDigests makes the Go template fail and
+          # `set -e` kills the step before the diagnostic below, which would never show up.
+          # The digest is filtered on the target repository rather than taken at index 0.
           REPO="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api"
           DIGEST="$(docker inspect --format='{{range .RepoDigests}}{{println .}}{{end}}' "$IMAGE" 2>/dev/null \
             | grep -F "${REPO}@" | head -1 | cut -d'@' -f2 || true)"
           if ! printf '%s' "$DIGEST" | grep -qE '^sha256:[0-9a-f]{64}$'; then
-            echo "::error::Digest introuvable après push pour ${REPO} (relevé : '$DIGEST')"
+            echo "::error::Digest not found after push for ${REPO} (read: '$DIGEST')"
             exit 1
           fi
-          echo "Image poussée : $IMAGE"
-          echo "Digest : $DIGEST"
+          echo "Image pushed: $IMAGE"
+          echo "Digest: $DIGEST"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
       - name: Image SBOM (Trivy → CycloneDX, artifact)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -240,11 +238,10 @@ jobs:
     name: 🚀 Deploy API → Cloud Run
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    # Un `needs:` nu, sans `always()` ni test de `result` : les portes de qualité sont déjà
-    # exigées par `verify-ci` en amont de `docker-api`, et un `always()` laissait le skip d'un
-    # job intermédiaire se propager en silence jusqu'ici, c'est exactement ce piège qui a laissé
-    # la prod dix jours en retard. Un docker-api rouge ou sauté saute ce job, et le garde-fou
-    # final le signale.
+    # A bare `needs:`, without `always()` nor `result` test: the quality gates are already required
+    # by `verify-ci` upstream of `docker-api`, and an `always()` let the skip of an intermediate job
+    # propagate silently down to here, exactly the trap that left production ten days behind. A red
+    # or skipped docker-api skips this job, and the final guard reports it.
     needs: docker-api
     environment: production
     permissions:
@@ -262,15 +259,15 @@ jobs:
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: gcloud services enable secretmanager.googleapis.com --project="$GCP_PROJECT_ID"
-      # La révision est déployée SANS trafic puis validée sur son URL taguée : un conteneur qui
-      # échoue ses sondes n'atteint jamais un utilisateur. Ce schéma remplace « déployer, constater,
-      # revenir en arrière », qui exposait la mauvaise révision le temps des smoke tests et laissait
-      # ensuite le trafic épinglé sur une révision nommée, état dans lequel `gcloud run deploy`
-      # n'envoie plus aucun trafic aux révisions suivantes, sans que rien ne vire au rouge.
+      # The revision is deployed WITHOUT traffic, then validated on its tagged URL: a container
+      # failing its probes never reaches a user. This scheme replaces "deploy, observe, roll back",
+      # which exposed the bad revision for the duration of the smoke tests and then left the traffic
+      # pinned to a named revision, a state in which `gcloud run deploy` sends no traffic to the
+      # following revisions, without anything turning red.
       - name: Deploy without traffic (GCP secrets + CORS)
         id: deploy
         env:
-          # Variables (recommandé) ou Secret de secours si tu as tout mis dans Secrets
+          # Variables (recommended) or a fallback secret if everything was put in Secrets
           ALLOWED_ORIGINS_VARS: ${{ vars.ALLOWED_ORIGINS }}
           ALLOWED_ORIGINS_SECRET: ${{ secrets.ALLOWED_ORIGINS }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -279,15 +276,15 @@ jobs:
           set -eo pipefail
           CORS="${ALLOWED_ORIGINS_VARS:-$ALLOWED_ORIGINS_SECRET}"
           if [ -z "$CORS" ]; then
-            echo "::error::ALLOWED_ORIGINS est vide. Définis-la au choix :"
-            echo "::error::  • GitHub → Settings → Secrets and variables → Actions → Variables → New repository variable : ALLOWED_ORIGINS = https://TON_DOMAINE (sans slash final ; plusieurs origines : virgules)"
-            echo "::error::  • ou Secret du même nom (ALLOWED_ORIGINS) si tu préfères."
+            echo "::error::ALLOWED_ORIGINS is empty. Define it either way:"
+            echo "::error::  • GitHub → Settings → Secrets and variables → Actions → Variables → New repository variable: ALLOWED_ORIGINS = https://YOUR_DOMAIN (no trailing slash; several origins: commas)"
+            echo "::error::  • or a Secret with the same name (ALLOWED_ORIGINS) if you prefer."
             exit 1
           fi
-          # Le format est déjà validé côté docker-api ; ici on vérifie seulement que la valeur a
-          # bien traversé la frontière entre les deux jobs.
+          # The format is already validated on the docker-api side; here only check that the value
+          # crossed the boundary between the two jobs.
           if [ -z "$IMAGE_DIGEST" ]; then
-            echo "::error::Digest d'image absent : le job docker-api ne l'a pas transmis."
+            echo "::error::Image digest missing: the docker-api job did not pass it on."
             exit 1
           fi
           TAG="s-${GITHUB_SHA:0:7}"
@@ -296,7 +293,7 @@ jobs:
           if gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
             SECRETS="$SECRETS,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest"
           else
-            echo "::warning::Secret SCHEDULER_TOKEN absent de Secret Manager. L'API démarre sans, mais les routes POST /api/v1/scheduler/* répondront 503 : ni les rappels de soirée ni le balayage des soirées récurrentes ne tourneront. Crée le secret puis relance ce déploiement."
+            echo "::warning::SCHEDULER_TOKEN secret missing from Secret Manager. The API starts without it, but the POST /api/v1/scheduler/* routes will answer 503: neither event reminders nor the recurring events sweep will run. Create the secret then rerun this deployment."
           fi
           # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
           gcloud run deploy "$CLOUD_RUN_SERVICE_NAME" \
@@ -312,45 +309,45 @@ jobs:
           TAG_URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
             | jq -r --arg t "$TAG" '[.status.traffic[]? | select(.tag == $t) | .url] | first // ""')"
           if [ -z "$TAG_URL" ]; then
-            echo "::error::URL taguée introuvable pour '$TAG' : impossible de valider la révision avant de la promouvoir."
+            echo "::error::Tagged URL not found for '$TAG': the revision cannot be validated before promotion."
             exit 1
           fi
-          echo "Révision déployée sans trafic, joignable sur $TAG_URL"
+          echo "Revision deployed without traffic, reachable at $TAG_URL"
           echo "tag_url=$TAG_URL" >> "$GITHUB_OUTPUT"
-      # Sondes jouées sur l'URL taguée : la production sert encore l'ancienne révision. Un échec
-      # ici laisse la prod intacte, il n'y a rien à réparer, la révision n'est pas promue.
+      # Probes run on the tagged URL: production still serves the previous revision. A failure here
+      # leaves production untouched, there is nothing to repair, the revision is not promoted.
       - name: Validate the revision before exposing it
         uses: ./.github/actions/check-api-health
         with:
           url: ${{ steps.deploy.outputs.tag_url }}
-      # --to-latest rebranche `latestRevision: true` : c'est aussi ce qui désépingle le service si
-      # un retour arrière manuel l'avait figé sur une révision nommée.
+      # --to-latest restores `latestRevision: true`: this is also what unpins the service if a
+      # manual rollback had frozen it on a named revision.
       - name: Promote the validated revision
         run: |
           set -eo pipefail
           gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --to-latest
-      # Repris de master. Déplacé après la promotion : le job vise l'URL du service, il ne
-      # doit donc être (re)configuré que pour une révision réellement en ligne. Une révision
-      # recalée à la validation laisse le job pointer sur la production inchangée.
-      # Le balayage des soirées récurrentes n'est qu'un filet : la clôture d'une soirée et
-      # l'ouverture de « Mes soirées » créent déjà l'occurrence suivante. Une passe par nuit
-      # suffit donc à rattraper les séries que personne n'a rouvertes.
+      # Taken from master. Moved after the promotion: the job targets the service URL, so it must
+      # only be (re)configured for a revision that is really live. A revision rejected at validation
+      # leaves the job pointing at the unchanged production.
+      # The recurring events sweep is only a safety net: closing an event and opening "My events"
+      # already create the next occurrence. One pass per night is therefore enough to catch up
+      # the series nobody reopened.
       - name: "Event reminders and recurring events: Cloud Scheduler"
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
           set -eo pipefail
           if ! gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
-            echo "::warning::Secret SCHEDULER_TOKEN absent : jobs Cloud Scheduler non configurés, les rappels de soirée ne partiront pas et les soirées récurrentes ne seront reconduites qu'à la clôture ou à l'ouverture de « Mes soirées »."
+            echo "::warning::SCHEDULER_TOKEN secret missing: Cloud Scheduler jobs not configured, event reminders will not leave and recurring events will only be renewed on closing or on opening \"My events\"."
             exit 0
           fi
-          # Deuxième garde, et elle a coûté un déploiement rouge le 2026-09-10 : le secret peut exister
-          # alors que l'API Cloud Scheduler est désactivée sur le projet. `gcloud scheduler jobs
-          # describe` sort alors en SERVICE_DISABLED, et sans cette garde l'étape faisait échouer le
-          # job **après** que la révision ait pris 100 % du trafic. Une planification absente est un
-          # avertissement, comme le secret absent : elle ne dit rien sur la santé de l'API déployée.
+          # Second guard, and it cost a red deployment on 2026-09-10: the secret can exist while the
+          # Cloud Scheduler API is disabled on the project. `gcloud scheduler jobs describe` then
+          # exits with SERVICE_DISABLED, and without this guard the step failed the job **after**
+          # the revision had taken 100% of the traffic. A missing schedule is a warning, like the
+          # missing secret: it says nothing about the health of the deployed API.
           if ! gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)' | grep -q cloudscheduler; then
-            echo "::warning::API Cloud Scheduler désactivée sur le projet : jobs non configurés, mêmes conséquences qu'un secret absent. Lancer 'gcloud services enable cloudscheduler.googleapis.com' puis relancer ce déploiement."
+            echo "::warning::Cloud Scheduler API disabled on the project: jobs not configured, same consequences as a missing secret. Run 'gcloud services enable cloudscheduler.googleapis.com' then rerun this deployment."
             exit 0
           fi
           URL="$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
@@ -373,17 +370,16 @@ jobs:
           }
           upsert_job movie-picker-event-reminders "*/30 * * * *" /api/v1/scheduler/event-reminders
           upsert_job movie-picker-recurring-events "15 3 * * *" /api/v1/scheduler/recurring-events
-      # La révision est déjà prouvée : ce qui est vérifié ici, c'est que le trafic a bien basculé et
-      # que le domaine public y mène. Un échec relève du routage, du DNS ou du certificat, pas du
-      # code, d'où l'absence de retour arrière. PUBLIC_API_URL est dérivé de VITE_API_URL, l'URL
-      # contre laquelle le front est construit : rien de nouveau à configurer, et la valeur reste
-      # juste après une migration de domaine.
+      # The revision is already proven: what is checked here is that the traffic really switched and
+      # that the public domain leads to it. A failure is routing, DNS or certificate, not code, hence
+      # no rollback. PUBLIC_API_URL derives from VITE_API_URL, the URL the web app is built against:
+      # nothing new to configure, and the value stays right after a domain migration.
       - name: Read the live service URL
         id: service
         run: |
           set -eo pipefail
           URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
-          echo "Production (URL Cloud Run) : $URL"
+          echo "Production (Cloud Run URL): $URL"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
       - name: Verify production after promotion
         uses: ./.github/actions/check-api-health
@@ -391,8 +387,8 @@ jobs:
           url: ${{ steps.service.outputs.url }}
           public-url: ${{ secrets.VITE_API_URL }}
           public-url-expected: "true"
-      # Les tags s'accumulent sur le service s'ils ne sont pas retirés, y compris ceux des
-      # déploiements qui ont échoué avant promotion.
+      # Tags pile up on the service if they are not removed, including those of deployments that
+      # failed before promotion.
       - name: Remove the validation tag
         if: always() && steps.deploy.outputs.tag != ''
         env:
@@ -408,7 +404,7 @@ jobs:
           SENTRY_RELEASE: ${{ github.sha }}
         run: |
           if [ -z "$SENTRY_AUTH_TOKEN" ]; then
-            echo "SENTRY_AUTH_TOKEN absent, skip"
+            echo "SENTRY_AUTH_TOKEN missing, skipped"
             exit 0
           fi
           curl -sSfL "https://github.com/getsentry/sentry-cli/releases/download/2.58.6/sentry-cli-Linux-x86_64" -o sentry-cli
@@ -422,9 +418,9 @@ jobs:
     name: 🚀 Deploy web → S3 & CloudFront
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    # Même raisonnement que `deploy-api` : la longue liste de gates est remplacée par
-    # `verify-ci`, qui les exige toutes sur le commit visé. Il ne reste ici que Lighthouse,
-    # la seule porte qui tourne dans ce workflow.
+    # Same reasoning as `deploy-api`: the long list of gates is replaced by `verify-ci`, which
+    # requires all of them on the target commit. Only Lighthouse remains here, the only gate that
+    # runs in this workflow.
     needs: lighthouse
     environment: production
     permissions:
@@ -436,11 +432,11 @@ jobs:
       - uses: ./.github/actions/setup-web
       - run: |
           if [ -z "$VITE_API_URL" ]; then
-            echo "::error::VITE_API_URL (secret) est vide."
+            echo "::error::VITE_API_URL (secret) is empty."
             exit 1
           fi
           if echo "$VITE_API_URL" | grep -qE 'cloudfront\.net|amazonaws'; then
-            echo "::error::VITE_API_URL doit être l'URL de l'API (Cloud Run)."
+            echo "::error::VITE_API_URL must be the API URL (Cloud Run)."
             exit 1
           fi
           pnpm --filter web build
@@ -462,20 +458,20 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
-      # Les cinq passes S3 vivent dans `publish-front`, partagée avec `rollback-front.yml` : l'ordre
-      # des passes et les en-têtes de cache y sont écrits une fois, pour que le retour arrière ne
-      # rejoue pas de tête une procédure à pièges.
+      # The five S3 passes live in `publish-front`, shared with `rollback-front.yml`: the pass order
+      # and the cache headers are written once, so that the rollback does not replay a procedure
+      # full of traps from memory.
       - name: Publish the build to S3 (immutable assets, then no-cache, index.html last)
         uses: ./.github/actions/publish-front
         with:
           dist: apps/web/dist
           bucket: ${{ secrets.AWS_S3_BUCKET }}
-      # Le front n'a aucun retour arrière côté hébergement : `aws s3 sync` écrase et le build
-      # précédent n'existe plus nulle part. Archiver le dist rend un retour arrière possible sans
-      # rejouer toute la chaîne de portes, c'est ce que `rollback-front.yml` republie. Placé APRÈS
-      # l'envoi S3 : une archive de confort ne doit jamais pouvoir empêcher un déploiement.
-      # `overwrite` parce qu'un « Re-run failed jobs » rejoue l'étape dans le même run, où le nom
-      # d'artefact existe déjà.
+      # The web app has no rollback on the hosting side: `aws s3 sync` overwrites and the previous
+      # build no longer exists anywhere. Archiving the dist makes a rollback possible without
+      # replaying the whole gate chain, that is what `rollback-front.yml` republishes. Placed AFTER
+      # the S3 upload: a convenience archive must never be able to prevent a deployment.
+      # `overwrite` because a "Re-run failed jobs" replays the step in the same run, where the
+      # artifact name already exists.
       - name: Archive the web build (makes a rollback possible)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -489,9 +485,9 @@ jobs:
         with:
           dist: apps/web/dist
           distribution-id: ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
-          # L'origine publique est lue dans ALLOWED_ORIGINS, celle que l'API accepte, donc celle du
-          # front par construction, plutôt que réécrite ici : une valeur de plus à tenir à jour
-          # serait une valeur de plus à oublier lors d'une migration de domaine.
+          # The public origin is read from ALLOWED_ORIGINS, the one the API accepts, hence the web
+          # app's by construction, rather than rewritten here: one more value to keep up to date
+          # would be one more value to forget during a domain migration.
           public-origins: ${{ vars.ALLOWED_ORIGINS }}
       - name: Record the Sentry deploy (web)
         continue-on-error: true
@@ -502,7 +498,7 @@ jobs:
           SENTRY_RELEASE: ${{ github.sha }}
         run: |
           if [ -z "$SENTRY_AUTH_TOKEN" ]; then
-            echo "SENTRY_AUTH_TOKEN absent, skip"
+            echo "SENTRY_AUTH_TOKEN missing, skipped"
             exit 0
           fi
           extra=()
@@ -510,10 +506,10 @@ jobs:
           pnpm --filter web exec sentry-cli -- "${extra[@]}" releases new "$SENTRY_RELEASE" || true
           pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-${{ github.sha }}"
 
-  # `always()` est ici indispensable et sans danger : le job ne déploie rien, il ne fait que
-  # comparer ce qui a été demandé à ce qui est parti. Sans lui, une cible sautée par un gate rouge
-  # laisserait le run vert avec une production périmée, le mode d'échec le plus coûteux de ce
-  # pipeline, et le seul qui ne se voit pas dans la couleur du run.
+  # `always()` is essential here and harmless: the job deploys nothing, it only compares what was
+  # requested with what left. Without it, a target skipped by a red gate would leave the run green
+  # with a stale production, the most expensive failure mode of this pipeline, and the only one
+  # that does not show in the run colour.
   deploy-guard:
     name: 🛑 Deployment guard
     runs-on: ubuntu-24.04
@@ -529,23 +525,23 @@ jobs:
           FRONT_RESULT: ${{ needs.deploy-front.result }}
           API_RESULT: ${{ needs.deploy-api.result }}
         run: |
-          echo "cible demandée : $TARGET"
-          echo "front : déploiement=$FRONT_RESULT"
-          echo "api   : déploiement=$API_RESULT"
+          echo "requested target: $TARGET"
+          echo "web: deployment=$FRONT_RESULT"
+          echo "api: deployment=$API_RESULT"
           fail=0
           if [ "$TARGET" = "all" ] || [ "$TARGET" = "front" ]; then
             if [ "$FRONT_RESULT" != "success" ]; then
-              echo "::error::Front demandé mais Deploy Front est '$FRONT_RESULT' : la production n'est pas à jour."
+              echo "::error::Web requested but Deploy web is '$FRONT_RESULT': production is not up to date."
               fail=1
             fi
           fi
           if [ "$TARGET" = "all" ] || [ "$TARGET" = "api" ]; then
             if [ "$API_RESULT" != "success" ]; then
-              echo "::error::API demandée mais Deploy API est '$API_RESULT' : la production n'est pas à jour."
+              echo "::error::API requested but Deploy API is '$API_RESULT': production is not up to date."
               fail=1
             fi
           fi
           if [ "$fail" = "0" ]; then
-            echo "Toutes les cibles demandées sont déployées."
+            echo "Every requested target is deployed."
           fi
           exit "$fail"

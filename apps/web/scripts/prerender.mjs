@@ -1,20 +1,20 @@
 /**
- * Prérendu des routes publiques statiques, à lancer **après** `vite build`.
+ * Prerender of the static public routes, to run **after** `vite build`.
  *
- * Ce que ça produit : un fichier HTML complet par route, identique à `dist/index.html` mais avec
- * le contenu de la page déjà dans `#root` et l'écran de démarrage retiré. Le client fait
- * `createRoot().render()` et non `hydrateRoot()`, donc React remplace ce contenu au boot : il n'y
- * a pas d'hydratation, donc aucun risque d'écart de balisage. Ce qui est gagné, c'est ce que voit
- * un client sans JavaScript — moteurs d'indexation, aperçus de liens, agents de crawl.
+ * What it produces: one complete HTML file per route, identical to `dist/index.html` but with
+ * the page content already inside `#root` and the splash screen removed. The client calls
+ * `createRoot().render()`, not `hydrateRoot()`, so React replaces this content at boot: there is
+ * no hydration, hence no markup mismatch risk. What is gained is what a client without JavaScript
+ * sees: search engines, link previews, crawlers.
  *
- * Pourquoi l'écran de démarrage est retiré sur ces routes, et seulement sur elles : il est en
- * `position: fixed; inset: 0` et masquerait le contenu prérendu jusqu'au boot. La page d'accueil
- * n'est **pas** prérendue précisément pour ne pas y toucher, son titre peint dans la coquille
- * étant son élément LCP (voir C2 de docs/technical-debt.md).
+ * Why the splash screen is removed on these routes, and only on them: it is
+ * `position: fixed; inset: 0` and would hide the prerendered content until boot. The home page is
+ * **not** prerendered precisely to leave it alone, its title painted in the shell being its LCP
+ * element (see C2 in docs/technical-debt.md).
  *
- * Rendu en français, la langue par défaut de `<html lang>` et de l'URL canonique. Un visiteur
- * anglophone voit donc brièvement du français avant que React ne reprenne la main : c'est le prix
- * d'un prérendu sans route par langue, assumé.
+ * Rendered in French, the default language of `<html lang>` and of the canonical URL. An
+ * English-speaking visitor therefore briefly sees French before React takes over: that is the
+ * accepted price of a prerender without per-language routes.
  */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -32,11 +32,11 @@ let indexHtml;
 try {
   indexHtml = readFileSync(indexHtmlPath, 'utf8');
 } catch {
-  console.error(`[prerender] ${indexHtmlPath} absent — lancer \`vite build\` avant.`);
+  console.error(`[prerender] ${indexHtmlPath} is missing, run \`vite build\` first.`);
   process.exit(1);
 }
 
-console.log('[prerender] build SSR de src/prerender.tsx');
+console.log('[prerender] SSR build of src/prerender.tsx');
 rmSync(ssrOut, { recursive: true, force: true });
 execFileSync(
   'pnpm',
@@ -44,14 +44,14 @@ execFileSync(
   { cwd: webRoot, stdio: 'inherit', shell: true }
 );
 
-// Le nom du chunk d'entrée est haché par la configuration de build partagée avec le client : on le
-// retrouve par motif plutôt que de dupliquer une convention de nommage qui n'est pas la nôtre.
+// The entry chunk name is hashed by the build configuration shared with the client: it is found
+// by pattern rather than by duplicating a naming convention that is not ours.
 const ssrEntries = readdirSync(join(ssrOut, 'assets')).filter(
   (name) => name.startsWith('prerender-') && name.endsWith('.js')
 );
 if (ssrEntries.length !== 1) {
   console.error(
-    `[prerender] ${ssrEntries.length} chunk(s) d'entrée trouvés dans dist-prerender/assets, un seul attendu : ${ssrEntries.join(', ')}`
+    `[prerender] ${ssrEntries.length} entry chunk(s) found in dist-prerender/assets, exactly one expected: ${ssrEntries.join(', ')}`
   );
   process.exit(1);
 }
@@ -61,9 +61,9 @@ const dom = new JSDOM('<!doctype html><html lang="fr"><head></head><body></body>
   url: 'https://web.movie-picker.fr/',
   pretendToBeVisual: true,
 });
-// jsdom n'implémente pas `matchMedia` et plusieurs composants l'appellent sans garde, dont
-// `usePwaInstall` par le pied de page. Même forme que le polyfill de `src/test-setup.ts` : toutes
-// les requêtes répondent `false`, ce qui donne le rendu par défaut (thème clair, hors standalone).
+// jsdom does not implement `matchMedia` and several components call it unguarded, including
+// `usePwaInstall` through the footer. Same shape as the polyfill in `src/test-setup.ts`: every
+// query answers `false`, which gives the default render (light theme, not standalone).
 Object.defineProperty(dom.window, 'matchMedia', {
   writable: true,
   configurable: true,
@@ -99,8 +99,8 @@ const browserGlobals = [
   'getComputedStyle',
   'matchMedia',
 ];
-// `defineProperty` et pas une affectation : Node 22 expose `navigator` en accesseur sans setter,
-// donc `globalThis.navigator = …` lève au lieu de remplacer la valeur.
+// `defineProperty` rather than an assignment: Node 22 exposes `navigator` as a getter without a
+// setter, so `globalThis.navigator = …` throws instead of replacing the value.
 for (const name of browserGlobals) {
   const value = dom.window[name];
   if (value === undefined) continue;
@@ -112,13 +112,13 @@ if (!globalThis.matchMedia)
     addEventListener() {},
     removeEventListener() {},
   });
-// La détection de langue lit d'abord le stockage : le semer rend le prérendu déterministe, là où
-// `navigator.language` de jsdom vaut en-US et donnerait des pages anglaises.
+// Language detection reads storage first: seeding it makes the prerender deterministic, where
+// jsdom's `navigator.language` is en-US and would produce English pages.
 globalThis.localStorage.setItem('moviepicker-locale', 'fr');
 
-// La liste des routes sort du bundle SSR, pas d'une copie ici : elle est dérivée de `ROUTES` dans
-// `src/app/prerenderRoutes.ts`, donc un renommage de route casse le build au lieu de produire
-// silencieusement un fichier que personne ne sert.
+// The route list comes out of the SSR bundle, not from a copy here: it derives from `ROUTES` in
+// `src/app/prerenderRoutes.ts`, so a route rename breaks the build instead of silently producing
+// a file nobody serves.
 const {
   renderRoute,
   PRERENDERED_ROUTES: routes,
@@ -127,36 +127,36 @@ const {
 } = await import(ssrEntry);
 
 if (!Array.isArray(routes) || routes.length === 0) {
-  console.error('[prerender] le bundle SSR ne rend aucune route à prérendre.');
+  console.error('[prerender] the SSR bundle exposes no route to prerender.');
   process.exit(1);
 }
 
-// L'écran de démarrage est reconnu par son identifiant, pas par un motif de texte : la balise
-// change de forme au build (minification des scripts en ligne) et un motif se périmerait en
-// silence, ce qui rendrait des pages où le contenu prérendu est masqué par la coquille.
+// The splash screen is recognised by its id, not by a text pattern: the tag changes shape at
+// build time (inline script minification) and a pattern would silently go stale, producing pages
+// where the prerendered content is hidden by the shell.
 function stripSplash(doc) {
   const splash = doc.getElementById('splash');
   if (!splash) return false;
-  // Le script juste après la coquille ne sert qu'à y peindre le titre de l'accueil.
+  // The script right after the shell only paints the home title into it.
   const next = splash.nextElementSibling;
   if (next?.tagName === 'SCRIPT' && next.textContent.includes('startRoute')) next.remove();
   splash.remove();
   return true;
 }
 
-// Les feuilles de style d'une page chargée à la demande sont posées par son JavaScript. Un
-// document prérendu qui ne les porte pas peint donc son contenu sans styles, se remet en page
-// quand le chunk arrive, et Chrome retient ce second rendu comme LCP : le prérendu ne rapporte
-// alors rien. Le manifeste `route-assets.json`, écrit par le plugin de build, donne la fermeture
-// des imports statiques de chaque page ; on en pose les styles dans le document et on précharge
-// son JavaScript, qui sans cela n'est découvert qu'après l'évaluation de la coquille.
+// The stylesheets of a lazily loaded page are attached by its JavaScript. A prerendered document
+// that does not carry them paints its content unstyled, reflows when the chunk arrives, and
+// Chrome records that second render as the LCP: the prerender then brings nothing. The
+// `route-assets.json` manifest, written by the build plugin, gives the static import closure of
+// each page; its styles are put in the document and its JavaScript preloaded, which is otherwise
+// only discovered after the shell has been evaluated.
 const routeAssetsPath = join(dist, 'route-assets.json');
 let routeAssets = {};
 try {
   routeAssets = JSON.parse(readFileSync(routeAssetsPath, 'utf8'));
 } catch {
   console.error(
-    `[prerender] ${routeAssetsPath} absent : le plugin de build ne publie plus le manifeste des routes.`
+    `[prerender] ${routeAssetsPath} is missing: the build plugin no longer publishes the route manifest.`
   );
   process.exit(1);
 }
@@ -165,27 +165,26 @@ function assetsForRoute(route, chunkByRoute) {
   const chunk = chunkByRoute[route];
   if (!chunk) {
     console.error(
-      `[prerender] ${route} n'a pas d'entrée dans PRERENDERED_ROUTE_CHUNKS : impossible de savoir quelles feuilles de style poser dans son document.`
+      `[prerender] ${route} has no entry in PRERENDERED_ROUTE_CHUNKS: no way to know which stylesheets to put in its document.`
     );
     process.exit(1);
   }
   const assets = routeAssets.chunks?.[chunk];
   if (!assets) {
     console.error(
-      `[prerender] le chunk « ${chunk} » de ${route} est absent de route-assets.json : nom périmé après un renommage de page ?`
+      `[prerender] chunk "${chunk}" of ${route} is missing from route-assets.json: stale name after a page rename?`
     );
     process.exit(1);
   }
   return assets;
 }
 
-// Les styles de la route sont mis en ligne et pas liés : une feuille liée bloque le rendu et
-// n'est découverte qu'après le document, donc le contenu prérendu attendrait un aller-retour
-// réseau complet avant son premier pixel, ce qui annule une bonne part du prérendu. En ligne, le
-// premier rendu ne dépend plus que du document. Elles sont concaténées de la plus profonde à la
-// plus superficielle — la coquille d'abord, la page ensuite — comme le fait le chargement par
-// JavaScript : l'ordre inverse donnerait une cascade où la page perd contre la coquille sur les
-// règles de même spécificité.
+// The route styles are inlined, not linked: a linked sheet blocks rendering and is only
+// discovered after the document, so the prerendered content would wait a full network round trip
+// before its first pixel, cancelling much of the prerender. Inlined, the first render depends on
+// the document only. They are concatenated from the deepest to the shallowest, the shell first
+// and the page next, as the JavaScript loading does: the reverse order would give a cascade where
+// the page loses against the shell on rules of equal specificity.
 function appendRouteAssets(doc, assets) {
   const inlined = new Set(routeAssets.inlinedCss ?? []);
   for (const file of assets.js) {
@@ -207,9 +206,9 @@ function appendRouteAssets(doc, assets) {
   doc.head.appendChild(style);
 }
 
-// Clé d'unicité d'une balise de tête, alignée sur `upsertMeta` de `usePageSeo` : c'est ce qui
-// permet de remplacer la description ou l'`og:title` du gabarit au lieu d'en ajouter un second,
-// un doublon laissant le moteur choisir lequel il retient.
+// Uniqueness key of a head tag, aligned with `upsertMeta` in `usePageSeo`: this is what allows
+// replacing the template description or `og:title` instead of adding a second one, a duplicate
+// leaving the engine to choose which one it keeps.
 function headKey(el) {
   const tag = el.tagName.toLowerCase();
   if (tag === 'title') return 'title';
@@ -231,7 +230,7 @@ function documentFor(route, page, assets) {
 
   if (!stripSplash(doc)) {
     console.error(
-      "[prerender] aucun #splash dans dist/index.html — le gabarit a changé, vérifier que le contenu prérendu ne serait pas masqué avant de retirer ce garde-fou."
+      '[prerender] no #splash in dist/index.html: the template changed, check that the prerendered content would not be hidden before removing this guard.'
     );
     process.exit(1);
   }
@@ -250,17 +249,16 @@ function documentFor(route, page, assets) {
     else doc.head.appendChild(imported);
   }
 
-  // Le prérendu sert deux choses distinctes, et une page en `noindex` n'en tire que la seconde :
-  // l'indexation, et le premier rendu. Une page qu'on demande aux moteurs d'ignorer doit donc le
-  // déclarer dans `PRERENDERED_FOR_FIRST_PAINT_ONLY`, sinon le build échoue — un `noindex` posé
-  // plus tard sur une page prérendue pour son référencement reste une erreur, et elle est
-  // attrapée ici plutôt que découverte dans les journaux d'un moteur. Le prérendu **renforce**
-  // d'ailleurs le `noindex` : sans lui, un robot qui ne rend pas le JavaScript reçoit la coquille
-  // SPA, qui ne porte aucune balise `robots`.
+  // The prerender serves two distinct purposes, and a `noindex` page only gets the second one:
+  // indexing, and the first paint. A page that engines are asked to ignore must therefore declare
+  // it in `PRERENDERED_FOR_FIRST_PAINT_ONLY`, otherwise the build fails: a `noindex` added later
+  // on a page prerendered for its SEO stays an error, and it is caught here rather than found in
+  // an engine's logs. The prerender also **reinforces** the `noindex`: without it, a robot that
+  // does not run JavaScript receives the SPA shell, which carries no `robots` tag.
   const robots = doc.head.querySelector('meta[name="robots"]')?.getAttribute('content') ?? '';
   if (robots.includes('noindex') && !firstPaintOnly.includes(route)) {
     console.error(
-      `[prerender] ${route} rend « robots: ${robots} » sans figurer dans PRERENDERED_FOR_FIRST_PAINT_ONLY : soit la prérendre pour son premier rendu et l'y déclarer, soit la retirer de PRERENDERED_ROUTES, soit retirer son noindex.`
+      `[prerender] ${route} renders "robots: ${robots}" without being listed in PRERENDERED_FOR_FIRST_PAINT_ONLY: either prerender it for its first paint and declare it there, or remove it from PRERENDERED_ROUTES, or remove its noindex.`
     );
     process.exit(1);
   }
@@ -269,7 +267,7 @@ function documentFor(route, page, assets) {
 
   const root = doc.getElementById('root');
   if (!root) {
-    console.error('[prerender] aucun #root dans dist/index.html.');
+    console.error('[prerender] no #root in dist/index.html.');
     process.exit(1);
   }
   root.innerHTML = page.body;
@@ -286,23 +284,23 @@ const manifest = [];
 for (const route of routes) {
   const page = await renderRoute(route);
   if (page.body.trim().length === 0) {
-    console.error(`[prerender] ${route} a rendu un corps vide.`);
+    console.error(`[prerender] ${route} rendered an empty body.`);
     process.exit(1);
   }
   const html = documentFor(route, page, assetsForRoute(route, chunkByRoute));
   const file = `${route.replace(/^\//, '').replaceAll('/', '__')}.html`;
   writeFileSync(join(outDir, file), html, 'utf8');
   manifest.push({ route, file });
-  const title = /<title>([^<]*)<\/title>/.exec(html)?.[1] ?? '(sans titre)';
-  console.log(`[prerender] ${route} → prerendered/${file} — « ${title} », ${html.length} octets`);
+  const title = /<title>([^<]*)<\/title>/.exec(html)?.[1] ?? '(untitled)';
+  console.log(`[prerender] ${route} → prerendered/${file}, "${title}", ${html.length} bytes`);
 }
 
 writeFileSync(join(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 rmSync(ssrOut, { recursive: true, force: true });
-console.log(`[prerender] ${manifest.length} routes prérendues.`);
+console.log(`[prerender] ${manifest.length} routes prerendered.`);
 
-// `pretendToBeVisual` fait tourner une boucle de requestAnimationFrame qui garde la boucle
-// d'évènements ouverte : sans ces deux lignes le script finit son travail puis ne rend jamais la
-// main, et le build reste bloqué sur un script qui a pourtant tout écrit.
+// `pretendToBeVisual` runs a requestAnimationFrame loop that keeps the event loop open: without
+// these two lines the script finishes its work then never returns, and the build stays stuck on a
+// script that has nevertheless written everything.
 dom.window.close();
 process.exit(0);

@@ -23,7 +23,7 @@ function findReport(directory) {
 
 const report = findReport(resultsDirectory);
 if (!report) {
-  console.error(`Rapport OpenCover introuvable sous ${resultsDirectory}.`);
+  console.error(`OpenCover report not found under ${resultsDirectory}.`);
   process.exit(1);
 }
 
@@ -51,7 +51,7 @@ for (const [block] of xml.matchAll(/<Class>[\s\S]*?<\/Class>/g)) {
 
 if (totals.sequenceTotal === 0) {
   console.error(
-    `Aucune classe ${NAMESPACE}* dans le rapport : la suite a-t-elle tourné contre une vraie MongoDB ?`
+    `No ${NAMESPACE}* class in the report: did the suite run against a real MongoDB?`
   );
   process.exit(1);
 }
@@ -60,20 +60,20 @@ const percent = (visited, total) => (total === 0 ? 100 : (visited / total) * 100
 const sequence = percent(totals.sequenceVisited, totals.sequenceTotal);
 const branch = percent(totals.branchVisited, totals.branchTotal);
 
-console.log(`Couverture adaptateurs Mongo — lignes   : ${sequence.toFixed(2)}% (seuil ${MINIMUM_SEQUENCE}%)`);
-console.log(`Couverture adaptateurs Mongo — branches : ${branch.toFixed(2)}% (seuil ${MINIMUM_BRANCH}%)`);
+console.log(`Mongo adapters coverage, lines:    ${sequence.toFixed(2)}% (threshold ${MINIMUM_SEQUENCE}%)`);
+console.log(`Mongo adapters coverage, branches: ${branch.toFixed(2)}% (threshold ${MINIMUM_BRANCH}%)`);
 
 if (uncovered.length > 0) {
-  console.log(`Classes Mongo jamais exécutées : ${uncovered.join(', ')}`);
+  console.log(`Mongo classes never executed: ${uncovered.join(', ')}`);
 }
 
 let failed = false;
 if (sequence < MINIMUM_SEQUENCE) {
-  console.error(`::error::Couverture lignes des adaptateurs Mongo ${sequence.toFixed(2)}% < ${MINIMUM_SEQUENCE}% requis`);
+  console.error(`::error::Mongo adapters line coverage ${sequence.toFixed(2)}% < ${MINIMUM_SEQUENCE}% required`);
   failed = true;
 }
 if (branch < MINIMUM_BRANCH) {
-  console.error(`::error::Couverture branches des adaptateurs Mongo ${branch.toFixed(2)}% < ${MINIMUM_BRANCH}% requis`);
+  console.error(`::error::Mongo adapters branch coverage ${branch.toFixed(2)}% < ${MINIMUM_BRANCH}% required`);
   failed = true;
 }
 

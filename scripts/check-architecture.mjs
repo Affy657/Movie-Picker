@@ -33,14 +33,14 @@ function checkComments(files) {
         const line = raw.trim();
         if (inBlock) {
           if (line.includes('*/')) inBlock = false;
-          violations.push(`${rel(file)}:${index + 1} commentaire interdit`);
+          violations.push(`${rel(file)}:${index + 1} forbidden comment`);
           return;
         }
         if (line.startsWith('//') || line.startsWith('/*') || line.startsWith('{/*')) {
           if (ALLOWED_COMMENT.test(line)) return;
           if (line.startsWith('/*') && !line.includes('*/')) inBlock = true;
           if (line.startsWith('{/*') && !line.includes('*/')) inBlock = true;
-          violations.push(`${rel(file)}:${index + 1} commentaire interdit`);
+          violations.push(`${rel(file)}:${index + 1} forbidden comment`);
         }
       });
   }
@@ -79,7 +79,7 @@ function checkSharedIsALeaf(files) {
     if (!rel(file).startsWith('apps/web/src/shared/') || file.includes('.test.')) continue;
     for (const spec of importsOf(file)) {
       if (spec.startsWith('@/features/'))
-        violations.push(`${rel(file)} importe ${spec} — shared/ ne doit dépendre d'aucune feature`);
+        violations.push(`${rel(file)} imports ${spec}: shared/ must not depend on any feature`);
     }
   }
 }
@@ -102,7 +102,7 @@ function checkNoImportCycles(files) {
     for (const next of graph.get(node) ?? []) {
       if (state.get(next) === 1) {
         const cycle = stack.slice(stack.indexOf(next)).concat(next).map(rel).join(' -> ');
-        violations.push(`cycle d'imports : ${cycle}`);
+        violations.push(`import cycle: ${cycle}`);
       } else if (!state.has(next) && graph.has(next)) walkNode(next, stack);
     }
     stack.pop();
@@ -121,7 +121,7 @@ const LAYER_RULES = [
   {
     layer: 'Domain',
     allow: [/^System(\.|$)/, /^MoviePicker\.Api\.Domain(\.|$)/],
-    message: 'le domaine ne doit dépendre que de System et de lui-même',
+    message: 'the domain must depend on System and itself only',
   },
   {
     layer: 'Application',
@@ -131,12 +131,12 @@ const LAYER_RULES = [
       /^MoviePicker\.Api\.Infrastructure(\.|$)/,
       /^MoviePicker\.Api\.Controllers(\.|$)/,
     ],
-    message: "l'application ne doit connaître ni le framework web, ni la base, ni l'infrastructure",
+    message: 'the application layer must know neither the web framework, nor the database, nor the infrastructure',
   },
   {
     layer: 'Controllers',
     forbid: [/^MongoDB(\.|$)/, /^MoviePicker\.Api\.Infrastructure\.Persistence(\.|$)/],
-    message: 'un contrôleur passe par un cas d’usage, jamais par la persistance',
+    message: 'a controller goes through a use case, never through persistence',
   },
 ];
 
@@ -147,7 +147,7 @@ function checkApiLayers() {
         const broken = rule.allow
           ? !rule.allow.some((re) => re.test(ns))
           : rule.forbid.some((re) => re.test(ns));
-        if (broken) violations.push(`${rel(file)} : using ${ns} — ${rule.message}`);
+        if (broken) violations.push(`${rel(file)}: using ${ns}, ${rule.message}`);
       }
     }
   }
@@ -195,7 +195,7 @@ function checkDesignTokens(cssFiles) {
         if (!normalized.startsWith('(')) continue;
         if (!ALLOWED_MEDIA.has(normalized))
           violations.push(
-            `${path} : @media ${normalized} hors de l'échelle de points de rupture (AGENTS.md)`
+            `${path}: @media ${normalized} is outside the breakpoint scale (AGENTS.md)`
           );
       }
     }
@@ -205,29 +205,29 @@ function checkDesignTokens(cssFiles) {
     for (const [, prop, value] of text.matchAll(SPACING_PROP)) {
       if (/var\(--space|calc\(|clamp\(|env\(/.test(value)) continue;
       if (RAW_LENGTH.test(value))
-        violations.push(`${path} : ${prop}: ${value.trim()} — utiliser var(--space-*)`);
+        violations.push(`${path}: ${prop}: ${value.trim()}, use var(--space-*)`);
     }
 
     for (const [, value] of text.matchAll(/font-size\s*:\s*([^;{}]+)/g)) {
       if (/var\(--font-size|clamp\(|inherit|100%/.test(value)) continue;
-      violations.push(`${path} : font-size: ${value.trim()} — utiliser var(--font-size-*)`);
+      violations.push(`${path}: font-size: ${value.trim()}, use var(--font-size-*)`);
     }
 
     for (const [, value] of text.matchAll(/z-index\s*:\s*([^;{}]+)/g)) {
       if (/var\(--z-/.test(value)) continue;
-      violations.push(`${path} : z-index: ${value.trim()} — utiliser var(--z-*)`);
+      violations.push(`${path}: z-index: ${value.trim()}, use var(--z-*)`);
     }
 
     if (path.endsWith('.module.css') && RAW_COLOR.test(text))
       violations.push(
-        `${path} : couleur littérale — passer par un jeton --color-* / --on-poster-*`
+        `${path}: literal colour, use a --color-* / --on-poster-* token`
       );
 
     if (path !== MODAL_CSS && path !== SHEET_DRAG_CSS)
       for (const [, selector] of text.matchAll(/([^\s{},]+)::backdrop/g))
         if (/dialog|modal|sheet/i.test(selector))
           violations.push(
-            `${path} : ${selector}::backdrop — le fond de modale appartient à Modal.module.css`
+            `${path}: ${selector}::backdrop, the modal backdrop belongs to Modal.module.css`
           );
   }
 }
@@ -237,7 +237,7 @@ function checkModalPrimitive(files) {
     const path = rel(file);
     if (path === MODAL_TSX || file.includes('.test.')) continue;
     if (readFileSync(file, 'utf8').includes('<dialog'))
-      violations.push(`${path} : <dialog> écrit à la main — passer par shared/components/Modal`);
+      violations.push(`${path}: hand-written <dialog>, use shared/components/Modal`);
   }
 }
 
@@ -253,7 +253,7 @@ function checkButtonPrimitive(files) {
     for (const [attr] of source.matchAll(BUTTON_CLASS_RE)) {
       if (RAW_BUTTON_CLASS.test(attr))
         violations.push(
-          `${path} : classe « btn » écrite à la main — passer par shared/components/Button (composant Button ou buttonClass)`
+          `${path}: hand-written "btn" class, use shared/components/Button (Button component or buttonClass)`
         );
     }
   }
@@ -275,24 +275,24 @@ function checkTapTargets(cssFiles) {
       const px = declared[2] === 'rem' ? value * 16 : value;
       if (px >= TAP_TARGET_MIN_PX) continue;
       violations.push(
-        `${path} : ${selector.trim()} est cliquable et plafonne à ${px}px — utiliser var(--tap-target-min)`
+        `${path}: ${selector.trim()} is clickable and caps at ${px}px, use var(--tap-target-min)`
       );
     }
   }
 }
 
 /*
- * Classes mortes dans les modules CSS. Une classe supprimée à tort est partie en production le
- * 2026-09-09 parce qu'une recherche de `styles.<classe>` ne voyait pas son usage : le module
- * était ré-exporté sous un autre nom. La règle est donc calibrée pour n'avoir aucun faux positif,
- * quitte à laisser passer des classes réellement mortes, et les quatre cas connus sont traités.
+ * Dead classes in CSS modules. A class wrongly deleted went to production on 2026-09-09 because
+ * a search for `styles.<class>` did not see its usage: the module was re-exported under another
+ * name. The rule is therefore calibrated for zero false positives, even if it lets some truly dead
+ * classes through, and the four known cases are handled.
  *
- * 1. Import sous alias — le nom local du binding est résolu par fichier, jamais supposé `styles`.
- * 2. Objet de styles ré-exporté — `export { styles as xStyles }` ajoute `xStyles` aux noms cherchés.
- * 3. Accès par crochets — `styles[variable]` rend le module inanalysable : il est exclu et **listé**
- *    dans la sortie, pour que l'exclusion soit un choix visible et non un faux négatif silencieux.
- * 4. Usage en CSS seul — une classe en position descendante (`.footer .btn`), cible d'un
- *    `composes:` ou dans un `:global(...)` sert réellement sans apparaître en TypeScript.
+ * 1. Aliased import: the local binding name is resolved per file, never assumed to be `styles`.
+ * 2. Re-exported styles object: `export { styles as xStyles }` adds `xStyles` to the searched names.
+ * 3. Bracket access: `styles[variable]` makes the module unanalysable, so it is excluded and
+ *    **listed** in the output, so that the exclusion is a visible choice, not a silent false negative.
+ * 4. CSS-only usage: a class in descendant position (`.footer .btn`), the target of a `composes:`
+ *    or inside a `:global(...)` is really used without appearing in TypeScript.
  */
 const CSS_MODULE_IMPORT_RE =
   /import\s+(?:(\w+)|\*\s+as\s+(\w+))\s+from\s*['"]([^'"]+\.module\.css)['"]/g;
@@ -389,7 +389,7 @@ function checkDeadCssClasses(cssFiles, tsFiles) {
       if (usedInCss.has(name) || names.has(name)) continue;
       const camel = name.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
       if (names.has(camel)) continue;
-      violations.push(`${path} : .${name} déclarée et jamais utilisée — supprimer la classe`);
+      violations.push(`${path}: .${name} is declared and never used, delete the class`);
     }
   }
   return excluded;
@@ -413,17 +413,17 @@ const cssModulesExcluded = checkDeadCssClasses(
 checkApiLayers();
 
 if (violations.length > 0) {
-  console.error(`\n${violations.length} violation(s) des règles d'architecture :\n`);
+  console.error(`\n${violations.length} architecture rule violation(s):\n`);
   for (const v of violations) console.error(`  ${v}`);
   console.error(
-    '\nRègles : AGENTS.md (style) et architecture hexagonale (Domain < Application < Infrastructure).\n'
+    '\nRules: AGENTS.md (style) and hexagonal architecture (Domain < Application < Infrastructure).\n'
   );
   process.exit(1);
 }
 console.log(
-  "Architecture : aucune violation (commentaires, couches API, shared/ feuille, cycles d'imports, jetons du design system, primitives Modal et Button, cibles tactiles, classes CSS mortes)."
+  'Architecture: no violation (comments, API layers, shared/ as a leaf, import cycles, design system tokens, Modal and Button primitives, tap targets, dead CSS classes).'
 );
 if (cssModulesExcluded.length > 0)
   console.log(
-    `Classes mortes — ${cssModulesExcluded.length} module(s) exclus, accès par crochets donc inanalysables : ${cssModulesExcluded.join(', ')}`
+    `Dead classes: ${cssModulesExcluded.length} module(s) excluded, bracket access makes them unanalysable: ${cssModulesExcluded.join(', ')}`
   );

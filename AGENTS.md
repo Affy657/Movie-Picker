@@ -2,19 +2,19 @@
 
 Règles pour les agents IA travaillant sur ce repo. **C'est la source unique** : `CLAUDE.md` ne fait que pointer ici, ne rien y dupliquer.
 
-## Nommage des fichiers
+## Langue
 
-**Tout fichier créé dans le dépôt porte un nom en anglais**, quelle que soit la langue de son contenu : `technical-debt.md`, pas `dette-technique.md`. Vaut pour les répertoires comme pour les fichiers, la documentation comme le code.
+**Tout ce qui vit dans le dépôt est en anglais**, sauf trois choses :
 
-Le **contenu** suit sa propre convention : documentation en français, chaînes affichées à l'utilisateur dans `apps/web/src/shared/i18n/locales/`, code et identifiants en anglais comme le veut l'usage du langage. Les messages de commit et les pull requests sont en anglais, règle ci-dessous.
+1. **les chaînes affichées à l'utilisateur**, qui passent par `apps/web/src/shared/i18n/locales/` : le français y est la langue du produit et l'anglais la seconde ; une chaîne d'interface écrite en dur dans un composant est une erreur, quelle que soit sa langue ;
+2. **la documentation** : `docs/`, `README.md`, `CHANGELOG.md`, `AGENTS.md`, `infra/README.md`, les skills de `.claude/skills/`, les gabarits d'issue (ils s'adressent aux utilisateurs du produit) ;
+3. les conversations avec l'utilisateur.
 
-Les fichiers déjà nommés en français restent en place tant qu'on ne les touche pas : ne pas lancer de renommage de masse, appliquer la règle aux fichiers créés à partir de maintenant.
+Le reste est en anglais sans exception : noms de fichiers et de répertoires, code et identifiants, noms de tests, commentaires là où ils sont admis (workflows, scripts, directives), commentaires des workflows GitHub Actions, messages écrits par les scripts et les workflows (`echo`, `::error::`, `::warning::`, sorties de `verify:local`), messages de journal et d'exception de l'API, noms de workflows, de jobs, d'étapes et d'entrées, gabarit de pull request, **titre et corps des commits, titre et description des pull requests**.
 
-## Commits et pull requests
+Commits au format Conventional Commits, `type(scope): subject`, sujet à l'impératif présent, sans majuscule initiale ni point final, types `feat`, `fix`, `perf`, `refactor`, `test`, `docs`, `chore`, `ci`. Le corps dit pourquoi, pas quoi, et cite les fichiers ou identifiants en jeu (`DEBT-027`, `C10`) plutôt que de les paraphraser.
 
-**Titre et corps d'un commit sont en anglais, comme le titre et la description d'une pull request.** Depuis le 2026-09-15 ; l'historique antérieur est en français et reste tel quel. Format Conventional Commits, `type(scope): subject`, sujet à l'impératif présent, sans majuscule initiale ni point final, types `feat`, `fix`, `perf`, `refactor`, `test`, `docs`, `chore`, `ci`. Le corps dit pourquoi, pas quoi, et cite les fichiers ou identifiants en jeu (`DEBT-027`, `C10`) plutôt que de les paraphraser. Ce qui est lu dans l'interface GitHub suit la même règle : noms de workflows, de jobs et d'étapes dans `.github/`, gabarit de pull request. Les gabarits d'issue restent en français : ils s'adressent aux utilisateurs du produit.
-
-La documentation, les commentaires de workflow, le `CHANGELOG.md` et les messages écrits par les scripts (`::error::`, `echo`) restent en français : ils s'adressent à l'exploitant, pas à l'historique.
+Règle posée le 2026-09-15 pour le contenu (le 2026-09-09 pour les noms de fichiers). L'historique git antérieur reste tel quel. Le français qui subsiste dans le code (noms de tests, messages de l'API, scripts) se traduit **quand on touche le fichier**, et le reliquat est mesuré et suivi dans `DEBT-028` de `docs/technical-debt.md` ; ne pas lancer de traduction de masse hors de ce chantier. Un message d'exception de l'API qui remonte tel quel jusqu'à l'écran n'est pas à traduire mais à remplacer par un code que le front traduit.
 
 ## Style de code
 

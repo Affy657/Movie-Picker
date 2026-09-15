@@ -1,18 +1,18 @@
-# Rollback front (S3 + CloudFront) : republie un build archivé par `deploy-front`.
-#   - Déclenché à la main (workflow_dispatch).
-#   - Input `commit` vide → le build précédent, deuxième artefact `front-dist-*` le plus récent, le
-#     plus récent étant par construction celui qui est servi (l'archive est prise après l'envoi S3).
-#   - Aucune porte rejouée : l'artefact a passé toute la chaîne au moment de son déploiement.
+# Web rollback (S3 + CloudFront): republishes a build archived by `deploy-front`.
+#   - Manually triggered (workflow_dispatch).
+#   - Empty `commit` input → the previous build, second most recent `front-dist-*` artifact, the
+#     most recent one being by construction the one served (the archive is taken after the S3 upload).
+#   - No gate replayed: the artifact went through the whole chain when it was deployed.
 #
-# L'hébergement ne garde pas les versions : `aws s3 sync` écrase, et le build précédent n'existe
-# plus que dans l'artefact `front-dist-<sha>` archivé par `deploy-front` (30 jours). Republier cet
-# artefact par un `aws s3 sync` nu poserait `index.html` et le Service Worker avec le cache par
-# défaut de CloudFront et désynchroniserait les PWA installées de leurs bundles : une panne
-# ajoutée à celle qu'on répare. C'est pourquoi ce workflow passe par les mêmes actions composites
-# que le déploiement, `publish-front` puis `verify-front`, sans rien réécrire ici.
+# The hosting keeps no versions: `aws s3 sync` overwrites, and the previous build only survives in
+# the `front-dist-<sha>` artifact archived by `deploy-front` (30 days). Republishing that artifact
+# with a bare `aws s3 sync` would upload `index.html` and the service worker with the CloudFront
+# default cache and desynchronise installed PWAs from their bundles: an outage added to the one
+# being repaired. That is why this workflow goes through the same composite actions as the
+# deployment, `publish-front` then `verify-front`, without rewriting anything here.
 #
-# Un commit qui ne touche pas le front ne produit aucun artefact : `commit` doit désigner un
-# commit qui a été déployé côté front, la liste des artefacts le dit.
+# A commit that does not touch the web app produces no artifact: `commit` must name a commit that
+# was deployed on the web side, the artifact list says which.
 
 name: ⏪ Rollback web (S3 + CloudFront)
 
@@ -27,7 +27,7 @@ on:
 permissions:
   contents: read
 
-# Même groupe que `deploy.yml` : deux publications simultanées se marcheraient dessus sur S3.
+# Same group as `deploy.yml`: two simultaneous publications would step on each other on S3.
 concurrency:
   group: deploy-production
   cancel-in-progress: false
@@ -45,8 +45,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # `--paginate` parce que les artefacts de la CI (couverture, traces, OpenAPI, sept jours de
-      # rétention) noient les `front-dist-*` sur la première page.
+      # `--paginate` because the CI artifacts (coverage, traces, OpenAPI, seven days of retention)
+      # drown the `front-dist-*` ones on the first page.
       - name: Pick the archive to republish
         id: pick
         env:
@@ -55,7 +55,7 @@ jobs:
         run: |
           set -eo pipefail
           if [ -n "$COMMIT" ] && ! printf '%s' "$COMMIT" | grep -qE '^[0-9a-f]{7,40}$'; then
-            echo "::error::'$COMMIT' n'est pas un SHA de commit (7 à 40 caractères hexadécimaux)."
+            echo "::error::'$COMMIT' is not a commit SHA (7 to 40 hexadecimal characters)."
             exit 1
           fi
           all="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
@@ -64,28 +64,28 @@ jobs:
                   | select(.expired | not)
                   | "\(.created_at)\t\(.workflow_run.id)\t\(.name)"' | sort -r)"
           if [ -z "$all" ]; then
-            echo "::error::Aucun artefact front-dist-* disponible : rien à republier."
+            echo "::error::No front-dist-* artifact available: nothing to republish."
             exit 1
           fi
-          echo "Archives disponibles (les plus récentes en premier) :"
+          echo "Available archives (most recent first):"
           printf '%s\n' "$all"
           if [ -n "$COMMIT" ]; then
             chosen="$(printf '%s\n' "$all" | awk -F'\t' -v prefix="front-dist-$COMMIT" 'index($3, prefix) == 1')"
             count="$(printf '%s' "$chosen" | grep -c . || true)"
             if [ "$count" != "1" ]; then
-              echo "::error::$count archive(s) pour le commit '$COMMIT' : il en faut exactement une. Préciser le SHA ou choisir dans la liste ci-dessus."
+              echo "::error::$count archive(s) for commit '$COMMIT': exactly one is needed. Give a longer SHA or pick one from the list above."
               exit 1
             fi
           else
             chosen="$(printf '%s\n' "$all" | sed -n '2p')"
             if [ -z "$chosen" ]; then
-              echo "::error::Une seule archive existe, c'est celle qui est servie : rien de plus ancien à republier. Donner un commit ou redéployer."
+              echo "::error::Only one archive exists, the one being served: nothing older to republish. Give a commit or redeploy."
               exit 1
             fi
           fi
           run_id="$(printf '%s' "$chosen" | cut -f2)"
           name="$(printf '%s' "$chosen" | cut -f3)"
-          echo "Archive retenue : $name (run $run_id)"
+          echo "Selected archive: $name (run $run_id)"
           {
             echo "run_id=$run_id"
             echo "name=$name"
@@ -101,11 +101,11 @@ jobs:
           gh run download "$RUN_ID" -n "$NAME" -D apps/web/dist
           for f in index.html sw.js manifest.webmanifest sitemap.xml prerendered/manifest.json; do
             if [ ! -f "apps/web/dist/$f" ]; then
-              echo "::error::L'archive ne contient pas $f : ce n'est pas un build complet de deploy-front."
+              echo "::error::The archive does not contain $f: this is not a complete deploy-front build."
               exit 1
             fi
           done
-          echo "Build $NAME prêt à republier."
+          echo "Build $NAME ready to republish."
       - uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -122,9 +122,9 @@ jobs:
           dist: apps/web/dist
           distribution-id: ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
           public-origins: ${{ vars.ALLOWED_ORIGINS }}
-      # Le bundle republié porte la release de son commit d'origine : Sentry doit savoir qu'elle
-      # est de nouveau en ligne, sinon les erreurs qui suivent sont lues comme une régression de la
-      # release qu'on vient de retirer.
+      # The republished bundle carries the release of its original commit: Sentry must know it is
+      # live again, otherwise the errors that follow read as a regression of the release that was
+      # just withdrawn.
       - name: Record the rollback in Sentry (web)
         continue-on-error: true
         env:
@@ -134,7 +134,7 @@ jobs:
           SENTRY_RELEASE: ${{ steps.pick.outputs.sha }}
         run: |
           if [ -z "$SENTRY_AUTH_TOKEN" ]; then
-            echo "SENTRY_AUTH_TOKEN absent, skip"
+            echo "SENTRY_AUTH_TOKEN missing, skipped"
             exit 0
           fi
           curl -sSfL "https://github.com/getsentry/sentry-cli/releases/download/2.58.6/sentry-cli-Linux-x86_64" -o sentry-cli

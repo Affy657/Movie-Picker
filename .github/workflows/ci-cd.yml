@@ -1,42 +1,42 @@
-# CI Movie Picker : monorepo (front Vite/React, API .NET). **Ce workflow ne déploie rien.**
+# Movie Picker CI: monorepo (Vite/React web app, .NET API). **This workflow deploys nothing.**
 #
-# Le déploiement est un geste manuel, dans `.github/workflows/deploy.yml` : un push sur master
-# joue les portes ci-dessous et s'arrête là. `deploy.yml` refuse de partir sur un commit dont le
-# run de ce workflow n'est pas vert, donc la conclusion d'un run master est ce que consomme la
-# production, la garder honnête est la raison d'être de ce fichier.
+# Deployment is a manual gesture, in `.github/workflows/deploy.yml`: a push to master runs the
+# gates below and stops there. `deploy.yml` refuses to leave on a commit whose run of this workflow
+# is not green, so the conclusion of a master run is what production consumes; keeping it honest
+# is the reason this file exists.
 #
-# Path-filtering : le job "changes" (dorny/paths-filter) calcule 3 sorties web/api/e2e ; chaque
-# job ne tourne que si sa lane est impactée (skip sinon). workflow_dispatch force les 3 lanes,
-# et **master aussi** : un commit qui ne touchait ni `apps/` ni `scripts/` sautait les 9 jobs de
-# test et concluait `success` en 12 s, or `deploy.yml` ne lit que cette conclusion. Un commit de
-# code rouge suivi d'un commit de documentation donnait un run vert, donc un déploiement autorisé
-# sur du code jamais validé. Le filtre reste utile sur les PR et les branches `v*`, où rien ne se
-# déploie ; sur master, les minutes sont gratuites depuis que le dépôt est public, et la
-# conclusion d'un run doit valoir pour l'arbre entier, pas pour le seul diff du commit.
-#   - Lane web : lint-web, test-web.
-#   - Lane api : lint-api, test-api, test-api-mongo.
-#   - Transverses : gitleaks (toujours), lint-workflows (toujours), audit npm/NuGet,
-#     sonar (analyse globale + Quality Gate bloquant).
-#   - E2E Playwright : job bloquant + exécution locale.
-#   - Lighthouse ne figure plus ici : il pesait 9 des 27 minutes d'un run master pour une mesure
-#     que seul un déploiement consommait, il est passé dans `deploy.yml` sans rien perdre de son
-#     pouvoir de blocage.
+# Path filtering: the "changes" job (dorny/paths-filter) computes 3 outputs web/api/e2e; each job
+# only runs when its lane is affected (skipped otherwise). workflow_dispatch forces the 3 lanes,
+# and **so does master**: a commit touching neither `apps/` nor `scripts/` skipped the 9 test jobs
+# and concluded `success` in 12 s, yet `deploy.yml` reads only that conclusion. A red code commit
+# followed by a documentation commit gave a green run, hence an authorised deployment of code that
+# was never validated. The filter stays useful on PRs and `v*` branches, where nothing deploys; on
+# master, minutes are free since the repository went public, and the conclusion of a run must
+# hold for the whole tree, not just the diff of the commit.
+#   - Web lane: lint-web, test-web.
+#   - API lane: lint-api, test-api, test-api-mongo.
+#   - Cross-cutting: gitleaks (always), lint-workflows (always), npm/NuGet audit,
+#     sonar (global analysis + blocking Quality Gate).
+#   - E2E Playwright: blocking job + local run.
+#   - Lighthouse is no longer here: it weighed 9 of the 27 minutes of a master run for a
+#     measurement only a deployment consumed; it moved to `deploy.yml` without losing any of its
+#     blocking power.
 #
-# Durcissement sécurité :
-#   - Actions épinglées par SHA de commit (anti supply-chain) ; le commentaire # vX permet à Dependabot de proposer les MAJ.
-#   - Images Docker (base .NET + gitleaks) épinglées par digest sha256.
-#   - permissions least-privilege (deny par défaut) ; checkout avec persist-credentials: false.
-#   - Secrets passés via env: (jamais interpolés directement dans un bloc run:).
-#   - Quality Gate SonarCloud bloquant, un QG rouge fait échouer le job, donc interdit le déploiement.
-#   - concurrency: group ci-<ref>, cancel-in-progress sur PR / false sur master.
-#   - timeout-minutes sur chaque job ; caches NuGet / Turbo.
+# Security hardening:
+#   - Actions pinned by commit SHA (anti supply-chain); the # vX comment lets Dependabot propose updates.
+#   - Docker images (.NET base + gitleaks) pinned by sha256 digest.
+#   - Least-privilege permissions (deny by default); checkout with persist-credentials: false.
+#   - Secrets passed through env: (never interpolated directly into a run: block).
+#   - Blocking SonarCloud Quality Gate: a red QG fails the job, hence forbids the deployment.
+#   - concurrency: group ci-<ref>, cancel-in-progress on PRs / false on master.
+#   - timeout-minutes on every job; NuGet / Turbo caches.
 
 name: 🔍 CI
 
 on:
   workflow_dispatch:
-  # Restreint aux branches durables : une branche éphémère avec une PR ouverte déclenchait
-  # deux runs pour le même commit (push + pull_request). Elle reste couverte par pull_request.
+  # Restricted to durable branches: an ephemeral branch with an open PR triggered two runs for the
+  # same commit (push + pull_request). It stays covered by pull_request.
   push:
     branches:
       - master
@@ -60,12 +60,12 @@ env:
   ZIZMOR_SHA256: "ec8c95cd800845abb9bbc5f377ec7c57d2eb8e2386a00a201d3a74ee4092e5ed"
 
 jobs:
-  # Projet solo : aucune contribution externe n'est acceptée, la licence l'interdit et
-  # `CONTRIBUTING.md` le dit. Une PR issue d'un fork ne reçoit aucun secret, donc son run
-  # échouerait sur `sonar` pour une raison qui n'est pas le code proposé, tout en dépensant le
-  # quota de minutes. `fork != true` couvre les trois déclencheurs : sur `push` et
-  # `workflow_dispatch` l'objet `pull_request` est nul, et nul n'est pas `true`.
-  # Les autres jobs héritent du saut par leur `needs: changes`.
+  # Solo project: no external contribution is accepted, the licence forbids it and
+  # `CONTRIBUTING.md` says so. A PR from a fork receives no secret, so its run would fail on
+  # `sonar` for a reason that is not the proposed code, while spending the minutes quota.
+  # `fork != true` covers the three triggers: on `push` and `workflow_dispatch` the `pull_request`
+  # object is null, and null is not `true`.
+  # The other jobs inherit the skip through their `needs: changes`.
   changes:
     name: 🧭 Change detection (path filtering)
     runs-on: ubuntu-24.04
@@ -79,9 +79,9 @@ jobs:
       api: ${{ steps.filter.outputs.api == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
       e2e: ${{ steps.filter.outputs.e2e == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
     steps:
-      # fetch-depth: 0 requis : sur push, paths-filter diffe contre le commit précédent
-      # via git ; sans historique complet il devrait fetch, ce qui échoue avec
-      # persist-credentials: false (pas de token). L'historique complet évite le fetch.
+      # fetch-depth: 0 required: on push, paths-filter diffs against the previous commit through
+      # git; without the full history it would have to fetch, which fails with
+      # persist-credentials: false (no token). The full history avoids the fetch.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: github.event_name != 'workflow_dispatch' && github.ref != 'refs/heads/master'
         with:
@@ -91,13 +91,13 @@ jobs:
         id: filter
         if: github.event_name != 'workflow_dispatch' && github.ref != 'refs/heads/master'
         with:
-          # `master` dans les deux cas, et ce n'est pas un oubli : dorny/paths-filter traite
-          # spécialement le cas « base égale la branche poussée » et compare alors au commit
-          # précédent. Un push master diffe donc contre son parent, un push de branche contre
-          # master. Un pseudo-ternaire vivait ici, censé passer une base vide sur master, et il
-          # rendait déjà cette même constante mais par accident : une chaîne vide est falsy en
-          # expression GitHub Actions, donc sa branche « vraie » ne gagnait jamais, pour aucune
-          # ref. Écrire la constante retire le piège sans rien changer à ce qui est vérifié.
+          # `master` in both cases, and it is not an oversight: dorny/paths-filter special-cases
+          # "base equals the pushed branch" and then compares against the previous commit. A
+          # master push therefore diffs against its parent, a branch push against master. A
+          # pseudo-ternary lived here, meant to pass an empty base on master, and it already
+          # returned this same constant, but by accident: an empty string is falsy in a GitHub
+          # Actions expression, so its "true" branch never won, for any ref. Writing the constant
+          # removes the trap without changing anything in what is checked.
           base: master
           filters: |
             web:
@@ -138,22 +138,22 @@ jobs:
             ghcr.io/gitleaks/gitleaks:v8.24.3@sha256:e1b35e12a8c6fa8901f060459cfb6b2fc4c484d3afbe3b029733a3bbfab07055 \
             dir --no-banner --redact --verbose --exit-code 1 /repo
 
-  # Les workflows sont de gros fichiers de YAML et de bash que ni check:architecture, ni ESLint,
-  # ni Prettier ne regardent : la chaîne qui garde le code n'était elle-même gardée par rien. La
-  # porte couvre `.github/workflows/` en entier, donc `deploy.yml` aussi, et elle est
-  # inconditionnelle comme gitleaks : un run master rouge interdit le déploiement.
-  #   - actionlint : erreurs de syntaxe, expressions ${{ }} invalides, permissions incohérentes.
-  #     Il délègue aux blocs `run:` à shellcheck, préinstallé sur les runners GitHub. Il ne lit
-  #     que les workflows, pas les actions composites.
-  #   - zizmor : audit sécurité des workflows **et des actions composites** de `.github/actions/`,
-  #     où vivent désormais les passes S3, les sondes de santé et l'authentification GCP. Seuil
-  #     `medium`, le dépôt est à 0 medium et 0 high, donc la porte est verte aujourd'hui et
-  #     n'attrape que du sérieux (injection depuis un contexte non fiable, secrets exposés).
-  #     Descendre à `low` demanderait de traiter 9 constats cosmétiques. `--offline` pour que la
-  #     porte ne dépende pas de l'API GitHub.
-  # `scripts/check-workflows.mjs` rejoue les deux outils en local dans `verify:local`, par Docker.
-  # Les versions des deux côtés doivent rester alignées : en changer une ici sans changer l'autre
-  # rend une porte locale verte sur ce que la CI refuse.
+  # Workflows are large YAML and bash files that neither check:architecture, nor ESLint, nor
+  # Prettier look at: the chain guarding the code was itself guarded by nothing. The gate covers
+  # the whole `.github/workflows/`, hence `deploy.yml` too, and it is unconditional like gitleaks:
+  # a red master run forbids the deployment.
+  #   - actionlint: syntax errors, invalid ${{ }} expressions, inconsistent permissions. It
+  #     delegates `run:` blocks to shellcheck, preinstalled on GitHub runners. It only reads
+  #     workflows, not composite actions.
+  #   - zizmor: security audit of the workflows **and of the composite actions** in
+  #     `.github/actions/`, where the S3 passes, the health probes and the GCP authentication now
+  #     live. `medium` threshold: the repository is at 0 medium and 0 high, so the gate is green
+  #     today and only catches serious findings (injection from an untrusted context, exposed
+  #     secrets). Going down to `low` would mean handling 9 cosmetic findings. `--offline` so that
+  #     the gate does not depend on the GitHub API.
+  # `scripts/check-workflows.mjs` replays both tools locally in `verify:local`, through Docker.
+  # The versions on both sides must stay aligned: changing one here without the other makes a
+  # local gate green on what the CI refuses.
   lint-workflows:
     name: 🧹 Lint workflows (actionlint + zizmor)
     runs-on: ubuntu-24.04
@@ -281,7 +281,7 @@ jobs:
           OUTPUT=$(dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive 2>&1)
           echo "$OUTPUT"
           if echo "$OUTPUT" | grep -Eq '\b(High|Critical)\b'; then
-            echo "::error::Vulnérabilités NuGet High/Critical détectées. Mettre à jour ou suppress via <NuGetAuditSuppress> dans Directory.Build.props (documenter la raison)."
+            echo "::error::High/Critical NuGet vulnerabilities detected. Update, or suppress through <NuGetAuditSuppress> in Directory.Build.props (document the reason)."
             exit 1
           fi
 
@@ -338,20 +338,20 @@ jobs:
           set -eo pipefail
           report="$(find ./coverage-unit -name coverage.opencover.xml | head -1)"
           if [ -z "$report" ]; then
-            echo "::error::Rapport de couverture OpenCover introuvable"
+            echo "::error::OpenCover coverage report not found"
             exit 1
           fi
           fail=0
           seq="$(grep -m1 -o 'sequenceCoverage="[0-9.]*"' "$report" | grep -o '[0-9.]*')"
           branch="$(grep -m1 -o 'branchCoverage="[0-9.]*"' "$report" | grep -o '[0-9.]*')"
-          echo "Couverture lignes back   : ${seq}% (seuil 90%)"
-          echo "Couverture branches back : ${branch}% (seuil 78%)"
+          echo "API line coverage:   ${seq}% (threshold 90%)"
+          echo "API branch coverage: ${branch}% (threshold 78%)"
           if ! awk -v c="$seq" 'BEGIN { exit !(c + 0 >= 90) }'; then
-            echo "::error::Couverture lignes back ${seq}% < 90% requis"
+            echo "::error::API line coverage ${seq}% < 90% required"
             fail=1
           fi
           if ! awk -v c="$branch" 'BEGIN { exit !(c + 0 >= 78) }'; then
-            echo "::error::Couverture branches back ${branch}% < 78% requis"
+            echo "::error::API branch coverage ${branch}% < 78% required"
             fail=1
           fi
           exit $fail
@@ -407,9 +407,9 @@ jobs:
         env:
           MONGODB_URI: ""
           MONGODB_TEST_URI: mongodb://127.0.0.1:27017/?directConnection=true
-      # Les adaptateurs Mongo sont exclus du rapport du job test-api : ils ne tournent que sur une
-      # vraie base. Sans cette porte, la seule couche qui ne s'exécute qu'en production n'est
-      # mesurée nulle part.
+      # The Mongo adapters are excluded from the test-api job report: they only run on a real
+      # database. Without this gate, the only layer that runs solely in production would be
+      # measured nowhere.
       - name: Mongo adapters coverage gate
         run: node scripts/check-mongo-coverage.mjs coverage-mongo
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -443,14 +443,14 @@ jobs:
         with:
           name: playwright-traces
           path: test-results
-          # Playwright n'écrit test-results/ qu'en cas d'échec/retry ; vide sur run vert = normal.
+          # Playwright only writes test-results/ on failure/retry; empty on a green run is normal.
           if-no-files-found: ignore
           retention-days: 7
 
   e2e-mongo:
-    # Seul job qui joue la pile complète : navigateur réel + API branchée sur un vrai MongoDB.
-    # Le job e2e tourne sur la base mémoire, test-api-mongo tourne sans navigateur : sans celui-ci,
-    # la combinaison qui tourne en production n'est reproduite nulle part avant le déploiement.
+    # The only job running the full stack: real browser + API wired to a real MongoDB. The e2e job
+    # runs on the in-memory database, test-api-mongo runs without a browser: without this one, the
+    # combination that runs in production is reproduced nowhere before the deployment.
     name: 🎭 E2E critical path on real MongoDB (blocking)
     needs: changes
     if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.e2e == 'true'
@@ -486,7 +486,7 @@ jobs:
       - name: Critical path (web build + API on MongoDB + Playwright)
         run: pnpm run test:e2e:mongo
         env:
-          # Base dédiée : le garde-fou Development refuse la base 'moviepicker'.
+          # Dedicated database: the Development guard refuses the 'moviepicker' database.
           E2E_MONGODB_URI: mongodb://127.0.0.1:27017/moviepicker_e2e?directConnection=true
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
@@ -496,15 +496,15 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # Le job tournait partout sauf sur workflow_dispatch, parce que les déploiements vivaient ici et
-  # qu'un sonar exclu était le seul moyen de rejouer un déploiement à la main. Les déploiements
-  # sont partis dans `deploy.yml`, et l'exclusion est devenue un trou : `deploy.yml` consomme la
-  # *conclusion* d'un run CI, or un job sauté ne fait pas échouer un run. Un run manuel sans
-  # Quality Gate concluait donc au vert et autorisait un déploiement que Sonar n'avait pas vu.
-  # Les branches `v*` sont analysées aussi, comme branches Sonar nommées (`sonar.branch.name`),
-  # pour que le Quality Gate se voie pendant la version et non à sa fusion dans master. Sans ce
-  # paramètre, une analyse poussée depuis une branche écraserait celle de master, que SonarCloud
-  # prend pour la branche principale par défaut.
+  # The job ran everywhere except on workflow_dispatch, because deployments lived here and an
+  # excluded sonar was the only way to replay a deployment by hand. Deployments moved to
+  # `deploy.yml`, and the exclusion became a hole: `deploy.yml` consumes the *conclusion* of a CI
+  # run, yet a skipped job does not fail a run. A manual run without Quality Gate therefore
+  # concluded green and authorised a deployment Sonar had never seen.
+  # `v*` branches are analysed too, as named Sonar branches (`sonar.branch.name`), so that the
+  # Quality Gate is seen during the version rather than at its merge into master. Without that
+  # parameter, an analysis pushed from a branch would overwrite master's, which SonarCloud takes as
+  # the main branch by default.
   sonar:
     name: 📊 SonarCloud (analysis + coverage, blocking Quality Gate)
     needs: [changes, test-web, test-api]
@@ -556,9 +556,9 @@ jobs:
         run: |
           pnpm install --frozen-lockfile --ignore-scripts
           pnpm run test:coverage --filter=web
-      # Même logique que pour le front : le job test-api a déjà produit ce rapport, le rejouer ici
-      # coûtait une minute sur le chemin critique du run. Le rapport OpenCover porte des chemins
-      # absolus, identiques d'un runner à l'autre, donc Sonar le relit sans réécriture.
+      # Same logic as for the web app: the test-api job already produced this report, replaying it
+      # here cost a minute on the critical path of the run. The OpenCover report carries absolute
+      # paths, identical from one runner to another, so Sonar reads it without rewriting.
       - name: "API coverage: download artifact (if test-api ran)"
         if: needs.test-api.result == 'success'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -569,9 +569,9 @@ jobs:
         run: |
           dotnet tool install --global dotnet-sonarscanner --version 11.2.1
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
-      # Le `dotnet build` doit rester entre begin et end, c'est là que les analyseurs Roslyn de
-      # Sonar tournent. Les tests, eux, ne servent qu'à la couverture : ils ne sont rejoués que si
-      # l'artefact de test-api manque.
+      # The `dotnet build` must stay between begin and end, that is where the Sonar Roslyn
+      # analysers run. The tests only serve the coverage: they are replayed only when the test-api
+      # artifact is missing.
       - name: SonarCloud analysis (begin + build + Quality Gate)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -585,7 +585,7 @@ jobs:
         run: |
           set -eo pipefail
           if [ -z "${SONAR_TOKEN:-}" ]; then
-            echo "::error::SONAR_TOKEN manquant (Settings → Secrets and variables → Actions)."
+            echo "::error::SONAR_TOKEN missing (Settings → Secrets and variables → Actions)."
             exit 1
           fi
           . ./configs/sonar-exclusions.sh
@@ -645,28 +645,28 @@ jobs:
           try {
             parsed = JSON.parse(body);
           } catch {
-            console.log("Reponse SonarCloud illisible : " + body.slice(0, 500));
+            console.log("Unreadable SonarCloud response: " + body.slice(0, 500));
             process.exit(0);
           }
 
           const project = parsed.projectStatus;
           if (!project) {
-            console.log("Pas de projectStatus : " + JSON.stringify(parsed).slice(0, 500));
+            console.log("No projectStatus: " + JSON.stringify(parsed).slice(0, 500));
             process.exit(0);
           }
 
-          console.log("Quality Gate : " + project.status);
+          console.log("Quality Gate: " + project.status);
 
           const failing = (project.conditions || []).filter((c) => c.status !== "OK");
           if (failing.length === 0) {
-            console.log("Aucune condition en echec : echec probablement technique.");
+            console.log("No failing condition: the failure is probably technical.");
             process.exit(0);
           }
 
           for (const c of failing) {
             console.log(
               "::error::" + c.metricKey + " = " + c.actualValue +
-                " (seuil " + c.comparator + " " + c.errorThreshold + ")"
+                " (threshold " + c.comparator + " " + c.errorThreshold + ")"
             );
           }
 
@@ -684,7 +684,7 @@ jobs:
           try {
             tree = JSON.parse(treeBody);
           } catch {
-            console.log("component_tree illisible : " + treeBody.slice(0, 800));
+            console.log("Unreadable component_tree: " + treeBody.slice(0, 800));
             process.exit(0);
           }
 
@@ -697,23 +697,23 @@ jobs:
           const rows = (tree.components || [])
             .map((component) => ({
               path: component.path,
-              neuf: readMeasure(component, "new_duplicated_lines"),
+              fresh: readMeasure(component, "new_duplicated_lines"),
               total: readMeasure(component, "duplicated_lines"),
-              densite: readMeasure(component, "duplicated_lines_density"),
+              density: readMeasure(component, "duplicated_lines_density"),
             }))
-            .filter((r) => r.neuf !== null || r.total !== null);
+            .filter((r) => r.fresh !== null || r.total !== null);
 
           if (rows.length === 0) {
-            console.log("Aucune mesure par fichier. Reponse brute :");
+            console.log("No per-file measure. Raw response:");
             console.log(treeBody.slice(0, 1500));
             process.exit(0);
           }
 
-          console.log("Fichiers les plus dupliques (neuf / total / densite) :");
+          console.log("Most duplicated files (new / total / density):");
           for (const r of rows) {
             console.log(
-              "  " + (r.neuf ?? "-") + " / " + (r.total ?? "-") + " / " +
-                (r.densite ?? "-") + "%  " + r.path
+              "  " + (r.fresh ?? "-") + " / " + (r.total ?? "-") + " / " +
+                (r.density ?? "-") + "%  " + r.path
             );
           }
           NODESCRIPT

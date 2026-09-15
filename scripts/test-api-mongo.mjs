@@ -6,8 +6,8 @@ import { resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '..');
 const container = 'movie-picker-mongo-test';
 const port = process.env.MONGO_TEST_PORT ?? '27018';
-// Pas de `shell: true` sous Windows : cmd.exe retire les guillemets internes de --eval,
-// ce qui casse le script mongosh de rs.initiate. On vise directement l'exécutable.
+// No `shell: true` on Windows: cmd.exe strips the inner quotes of --eval, which breaks the
+// rs.initiate mongosh script. The executable is targeted directly.
 const onWindows = process.platform === 'win32';
 const dockerBin = onWindows ? 'docker.exe' : 'docker';
 const dotnetBin = onWindows ? 'dotnet.exe' : 'dotnet';

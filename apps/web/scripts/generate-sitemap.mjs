@@ -17,13 +17,13 @@ function apiOrigin() {
 }
 
 function keepStaticFallback(reason) {
-  const kept = existsSync(distSitemap) ? 'sitemap statique conservé' : 'AUCUN sitemap présent';
-  console.warn(`[sitemap] ${reason} — ${kept}.`);
+  const kept = existsSync(distSitemap) ? 'static sitemap kept' : 'NO sitemap present';
+  console.warn(`[sitemap] ${reason}, ${kept}.`);
   process.exit(0);
 }
 
 const origin = apiOrigin();
-if (!origin) keepStaticFallback('VITE_API_URL absent');
+if (!origin) keepStaticFallback('VITE_API_URL is missing');
 
 const url = `${origin}/sitemap.xml`;
 const controller = new AbortController();
@@ -36,12 +36,12 @@ try {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const xml = await res.text();
-  if (!xml.includes('<urlset')) throw new Error('réponse sans <urlset>');
+  if (!xml.includes('<urlset')) throw new Error('response without <urlset>');
   writeFileSync(distSitemap, xml, 'utf8');
   const count = (xml.match(/<loc>/g) ?? []).length;
   console.log(`[sitemap] ${url} → dist/sitemap.xml (${count} URLs)`);
 } catch (err) {
-  keepStaticFallback(`échec de génération (${err.message})`);
+  keepStaticFallback(`generation failed (${err.message})`);
 } finally {
   clearTimeout(timer);
 }
