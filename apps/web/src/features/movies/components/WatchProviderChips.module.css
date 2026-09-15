@@ -54,7 +54,7 @@
   min-width: 1.75rem;
   max-width: var(--chip-max-width, 4rem);
   padding: 0;
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   background: var(--color-input-readonly);
   border: 1px solid var(--color-border-subtle);
 }
@@ -62,7 +62,7 @@
 .chipText {
   gap: var(--space-1);
   padding: var(--space-0-5) var(--space-1-5);
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   background: var(--color-input-readonly);
   border: 1px solid var(--color-border-subtle);
   font-size: var(--font-size-2xs);
@@ -80,7 +80,7 @@
   max-width: 100%;
   object-fit: contain;
   object-position: center;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
 }
 
 .chipName {
@@ -104,7 +104,7 @@
 }
 
 .chipLink:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }
 
@@ -115,9 +115,9 @@
   height: 1.75rem;
   min-width: 1.75rem;
   padding: 0 var(--space-1-5);
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   cursor: pointer;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-3xs);
   color: var(--color-text-muted);
   background: transparent;
@@ -130,7 +130,8 @@
 .more:focus-visible {
   color: var(--color-primary-text);
   border-color: var(--color-primary-border-soft);
-  outline: none;
+  outline: var(--outline-focus);
+  outline-offset: 2px;
 }
 
 @media (hover: hover) {

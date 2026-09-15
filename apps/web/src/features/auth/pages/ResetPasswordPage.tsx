@@ -149,7 +149,7 @@ export default function ResetPasswordPage() {
             required
             aria-invalid={error ? true : undefined}
           />
-          <Button type="submit" variant="primary" disabled={loading}>
+          <Button type="submit" variant="primary" loading={loading}>
             {loading ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
           </Button>
         </form>

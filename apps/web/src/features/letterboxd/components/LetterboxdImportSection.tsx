@@ -195,7 +195,7 @@ export default function LetterboxdImportSection() {
               </Button>
               <Button
                 type="button"
-                variant="danger"
+                tone="danger"
                 className={sharedStyles.smallBtn}
                 onClick={() => void runDisconnect()}
                 disabled={disconnecting}

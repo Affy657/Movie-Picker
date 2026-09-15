@@ -5,7 +5,7 @@
 
 .grid {
   display: grid;
-  gap: clamp(var(--space-11), 5vw, var(--space-16));
+  gap: clamp(var(--space-12), 5vw, var(--space-16));
   align-items: center;
 }
 
@@ -74,7 +74,7 @@
   align-items: center;
   min-height: var(--space-6);
   color: var(--color-brand-secondary);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1.5px;

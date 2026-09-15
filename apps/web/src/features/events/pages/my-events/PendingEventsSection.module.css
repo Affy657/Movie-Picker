@@ -10,11 +10,11 @@
   gap: var(--space-2);
   margin: 0;
   font-size: var(--font-size-2xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
   color: var(--color-warning);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .heading span {

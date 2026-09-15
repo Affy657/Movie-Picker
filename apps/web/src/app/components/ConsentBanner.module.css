@@ -10,7 +10,7 @@
   flex-direction: column;
   gap: var(--space-3-5);
   padding: var(--space-4) var(--space-5);
-  animation: slideUp 0.25s var(--ease-out) both;
+  animation: slideUp var(--duration-enter) var(--ease-out) both;
 }
 
 @media (min-width: 48rem) {
@@ -44,7 +44,7 @@
 .title {
   margin: 0 0 var(--space-1);
   font-size: var(--font-size-sm);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
   line-height: var(--leading-normal);
 }

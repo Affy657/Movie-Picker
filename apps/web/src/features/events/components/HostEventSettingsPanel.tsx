@@ -24,7 +24,7 @@ import { ROUTES } from '@/app/routes';
 import { clearStoredHostToken, removeStoredParticipant } from '@/features/events/storage';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
-import dragStyles from '@/shared/components/sheetDrag.module.css';
+import dragStyles from '@/shared/components/SheetDrag.module.css';
 import Modal from '@/shared/components/Modal';
 import styles from './HostEventSettingsPanel.module.css';
 import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
@@ -850,7 +850,7 @@ export default function HostEventSettingsPanel({
             )}
             <Button
               type="button"
-              variant="danger"
+              tone="danger"
               className={styles.deleteBtn}
               onClick={() => {
                 setDeleteError(null);

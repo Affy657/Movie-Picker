@@ -13,7 +13,7 @@ import MovieDetailsEventTab, {
 } from '@/features/movies/components/MovieDetailsEventTab';
 import { MovieDetailsContent } from '@/features/movies/components/MovieDetailsPanel';
 import TrailerModal from '@/features/movies/components/TrailerModal';
-import dragStyles from '@/shared/components/sheetDrag.module.css';
+import dragStyles from '@/shared/components/SheetDrag.module.css';
 import Modal from '@/shared/components/Modal';
 import styles from './MovieDetailsModal.module.css';
 import IconButton from '@/shared/components/IconButton';

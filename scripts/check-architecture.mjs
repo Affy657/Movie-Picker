@@ -156,7 +156,7 @@ function checkApiLayers() {
 
 const FOUNDATION = 'apps/web/src/styles/01-foundation.css';
 const MODAL_CSS = 'apps/web/src/shared/components/Modal.module.css';
-const SHEET_DRAG_CSS = 'apps/web/src/shared/components/sheetDrag.module.css';
+const SHEET_DRAG_CSS = 'apps/web/src/shared/components/SheetDrag.module.css';
 const MODAL_TSX = 'apps/web/src/shared/components/Modal.tsx';
 
 const ALLOWED_MEDIA = new Set([
@@ -186,7 +186,22 @@ const RAW_LENGTH = /(?<![\w-])\d*\.?\d+rem/;
 const RAW_COLOR = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
 const PRIMARY_AS_TEXT = /(?<![\w-])color\s*:\s*var\((--color-primary(?:-hover)?)\)/g;
 const AD_HOC_ROLE_MIX =
-  /(?<![\w-])((?:background|border)[a-z-]*)\s*:\s*color-mix\(in srgb, var\(--color-(primary|error|success|warning|info)\) \d+%, (?:transparent|var\(--color-(?:surface|border|border-subtle)\))\)\s*;/g;
+  /color-mix\(in srgb, var\(--color-(primary|error|success|warning|text|text-muted|meta|bg|surface|border|border-subtle)\)/g;
+const TOKENISED_PROPS = [
+  ['line-height', /var\(--leading-|inherit|normal|^0$/, '--leading-*'],
+  ['letter-spacing', /var\(--tracking-|inherit|normal|^0$/, '--tracking-*'],
+  ['font-weight', /var\(--font-weight-|inherit/, '--font-weight-*'],
+  ['font-family', /var\(--font-|inherit/, '--font-body / --font-mono'],
+  ['border-radius', /var\(--radius-|inherit|^(?:0|50%|100%)$/, '--radius-*'],
+];
+const MOTION_PROP =
+  /(?:^|[;{\n])\s*(transition|animation)(?:-duration|-timing-function)?\s*:\s*([^;{}]+)/g;
+const LITERAL_DURATION = /(?<![\w-])\d*\.?\d+m?s\b/;
+const LITERAL_EASING = /(?<![\w-])(?:ease(?:-in|-out|-in-out)?|linear|cubic-bezier\(|steps\()/;
+const BORDER_WIDTH =
+  /(?:^|[;{\n])\s*(border(?:-(?:top|right|bottom|left|inline|block)(?:-(?:start|end))?)?(?:-width)?)\s*:\s*([^;{}]+)/g;
+const OUTLINE_LITERAL = /(?:^|[;{\n])\s*outline\s*:\s*(\d+px\s+solid\s+var\(--color-primary\))/g;
+const FOCUS_VISIBLE_RULE = /([^{}]*:focus-visible[^{]*)\{([^}]*)\}/g;
 const PRIMITIVE_IN_MODULE =
   /var\((--(?:blue|green|violet|pink|orange|red|cyan|indigo|amber|emerald|yellow|sky)-\d+)\)/g;
 const DECLARED_TOKEN = /(--[a-z][\w-]*)\s*:/g;
@@ -241,10 +256,43 @@ function checkDesignTokens(cssFiles) {
           `${path}: ${primitive}, primitives stay in the foundation, a module consumes a --color-* role`
         );
 
-    for (const [, prop, role] of text.matchAll(AD_HOC_ROLE_MIX))
-      violations.push(
-        `${path}: ${prop} mixes --color-${role} by hand, use --color-${role}-bg / -border (or -tint / -soft / -soft-hover for the primary)`
-      );
+    if (path.endsWith('.module.css'))
+      for (const [, role] of text.matchAll(AD_HOC_ROLE_MIX))
+        violations.push(
+          `${path}: color-mix() on --color-${role} by hand, use its -bg / -border / -tint / -soft / -hover / -active / -sunken / -translucent token`
+        );
+
+    for (const [prop, allowed, tokens] of TOKENISED_PROPS)
+      for (const [, value] of text.matchAll(
+        new RegExp(`(?:^|[;{\\n])\\s*${prop}\\s*:\\s*([^;{}]+)`, 'g')
+      ))
+        if (!allowed.test(value.replace(/!important/, '').trim()))
+          violations.push(`${path}: ${prop}: ${value.trim()}, use var(${tokens})`);
+
+    for (const [, prop, value] of text.matchAll(MOTION_PROP)) {
+      if (/^\s*none\s*$/.test(value)) continue;
+      const shown = value.trim().replace(/\s+/g, ' ');
+      if (LITERAL_DURATION.test(value))
+        violations.push(`${path}: ${prop}: ${shown}, use var(--duration-*)`);
+      if (LITERAL_EASING.test(value)) violations.push(`${path}: ${prop}: ${shown}, use var(--ease-*)`);
+    }
+
+    for (const [, prop, value] of text.matchAll(BORDER_WIDTH)) {
+      const width = value.match(/(?<![\w.])\d*\.?\d+(?:px|rem)/);
+      if (width && !['1px', '2px'].includes(width[0]))
+        violations.push(
+          `${path}: ${prop}: ${value.trim()}, a border is 1px, 2px or var(--border-width-field)`
+        );
+    }
+
+    for (const [, value] of text.matchAll(OUTLINE_LITERAL))
+      violations.push(`${path}: outline: ${value}, use var(--outline-focus)`);
+
+    for (const [, selector, body] of text.matchAll(FOCUS_VISIBLE_RULE))
+      if (/outline\s*:\s*none/.test(body) && !/box-shadow\s*:\s*var\(--ring-focus\)/.test(body))
+        violations.push(
+          `${path}: ${selector.trim().replace(/\s+/g, ' ')} removes the outline without var(--ring-focus), the focus must stay visible`
+        );
 
     if (path !== MODAL_CSS && path !== SHEET_DRAG_CSS)
       for (const [, selector] of text.matchAll(/([^\s{},]+)::backdrop/g))
@@ -437,7 +485,26 @@ function checkDeadCssClasses(cssFiles, tsFiles) {
   return excluded;
 }
 
+const GLOBAL_CLASS_ADDED_BY_LIBRARIES = new Set(['lucide']);
+
+function checkDeadGlobalClasses(cssFiles, sourceFiles) {
+  const haystack = sourceFiles.map((file) => readFileSync(file, 'utf8')).join('\n');
+  for (const file of cssFiles) {
+    if (file.endsWith('.module.css')) continue;
+    const path = rel(file);
+    const declared = new Set();
+    for (const selector of selectorsOf(readFileSync(file, 'utf8')))
+      for (const [, name] of selector.matchAll(CLASS_IN_COMPOUND_RE)) declared.add(name);
+    for (const name of declared) {
+      if (GLOBAL_CLASS_ADDED_BY_LIBRARIES.has(name)) continue;
+      if (new RegExp(`(?<![\\w-])${name}(?![\\w-])`).test(haystack)) continue;
+      violations.push(`${path}: .${name} is declared and never used, delete the class`);
+    }
+  }
+}
+
 const webFiles = walk(webSrc, ['.ts', '.tsx', '.css']);
+const indexHtml = join(root, 'apps/web/index.html');
 const apiFiles = walk(join(root, 'apps/api-dotnet'), ['.cs']);
 const e2eFiles = walk(join(root, 'e2e'), ['.ts']);
 
@@ -455,6 +522,10 @@ checkTapTargets(webFiles.filter((f) => f.endsWith('.css')));
 const cssModulesExcluded = checkDeadCssClasses(
   webFiles.filter((f) => f.endsWith('.css')),
   webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
+);
+checkDeadGlobalClasses(
+  webFiles.filter((f) => f.endsWith('.css')),
+  [...webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')), indexHtml]
 );
 checkApiLayers();
 

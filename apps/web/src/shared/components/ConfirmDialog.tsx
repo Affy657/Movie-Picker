@@ -71,9 +71,10 @@ export default function ConfirmDialog({
         )}
         <Button
           size="sm"
-          variant={confirmVariant}
+          variant={confirmVariant === 'primary' ? 'primary' : 'secondary'}
+          tone={confirmVariant === 'danger' ? 'danger' : 'default'}
           onClick={onConfirm}
-          disabled={busy}
+          loading={busy}
           data-testid={`${testId}-confirm`}
           autoFocus
         >

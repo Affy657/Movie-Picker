@@ -4,7 +4,7 @@
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   color: var(--color-text);
   position: relative;
   transition: background var(--duration-base);
@@ -12,7 +12,7 @@
 
 @media (hover: hover) {
   .bellButton:hover {
-    background: color-mix(in srgb, var(--color-text) 8%, transparent);
+    background: var(--color-surface-hover-strong);
   }
 }
 
@@ -25,9 +25,9 @@
   padding: 0 var(--space-1);
   background: var(--color-primary);
   color: var(--color-primary-contrast);
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   font-size: var(--font-size-3xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -35,7 +35,7 @@ import {
 } from './TechLogos';
 import styles from './techShared.module.css';
 
-const SURFACE = 'var(--surface-sunken)';
+const SURFACE = 'var(--color-surface-sunken)';
 const SURFACE_PLAIN = 'var(--color-surface)';
 const BORDER = 'var(--color-border)';
 const TEXT = 'var(--color-text)';

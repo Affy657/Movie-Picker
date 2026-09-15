@@ -23,6 +23,7 @@ type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'aria-label
   tone?: IconButtonTone;
   showTitle?: boolean;
   expandHitArea?: boolean;
+  loading?: boolean;
   children: ReactNode;
 };
 
@@ -33,6 +34,8 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
     tone = 'default',
     showTitle = true,
     expandHitArea = true,
+    loading = false,
+    disabled,
     className,
     type = 'button',
     children,
@@ -53,9 +56,11 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
         expandHitArea && styles.expandedHitArea,
         className
       )}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...rest}
     >
-      {children}
+      {loading ? <span className={styles.spinner} aria-hidden="true" /> : children}
     </button>
   );
 });

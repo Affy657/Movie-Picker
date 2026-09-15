@@ -1,7 +1,7 @@
 .title {
   margin: 0 0 var(--space-5);
   font-size: clamp(1.5rem, 4vw, 1.875rem);
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   letter-spacing: var(--tracking-tight);
   line-height: var(--leading-tight);
   color: var(--color-text);
@@ -14,11 +14,11 @@
   margin: 0 0 0.85rem clamp(0.5rem, 2vw, 1rem);
   padding: var(--space-1-5) var(--space-2-5) var(--space-1-5) var(--space-1-5);
   font-size: var(--font-size-xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
   text-decoration: none;
   border-radius: var(--radius-pill);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .backLinkLabel {

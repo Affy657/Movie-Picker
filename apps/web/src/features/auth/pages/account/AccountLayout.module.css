@@ -25,8 +25,8 @@
   color: var(--color-text-muted);
   font-family: inherit;
   font-size: var(--font-size-md);
-  font-weight: 500;
-  line-height: 1;
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-none);
   text-align: left;
   text-decoration: none;
   cursor: pointer;
@@ -54,7 +54,7 @@
 .rubricActive {
   background: var(--color-primary-soft);
   color: var(--color-primary-text-hover);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .rubricActive svg {
@@ -62,7 +62,7 @@
 }
 
 .rubric:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }
 
@@ -91,8 +91,8 @@
   color: var(--color-primary-text-hover);
   font-family: inherit;
   font-size: var(--font-size-sm);
-  font-weight: 600;
-  line-height: 1;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-none);
   cursor: pointer;
 }
 
@@ -101,7 +101,7 @@
 }
 
 .back:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }
 

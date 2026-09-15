@@ -25,7 +25,7 @@
 }
 
 .card:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 3px;
 }
 
@@ -48,7 +48,7 @@
   flex: 1;
   min-width: 0;
   font-size: var(--font-size-xl);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   line-height: var(--leading-snug);
   margin: 0;
   overflow: hidden;
@@ -62,7 +62,7 @@
 .cardTheme {
   display: block;
   font-size: var(--font-size-xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -74,7 +74,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .participantStat svg {
@@ -91,7 +91,7 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
   flex-shrink: 0;
 }
@@ -106,7 +106,7 @@
   border: 1px solid var(--color-primary-border);
   overflow: hidden;
   margin-top: auto;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .winnerIcon {
@@ -119,14 +119,14 @@
   width: 28px;
   height: 42px;
   object-fit: cover;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 
 .winnerTitle {
   flex: 1;
   min-width: 0;
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-primary-text);
   white-space: nowrap;
   overflow: hidden;
@@ -157,7 +157,7 @@
 
 .meta {
   font-size: var(--font-size-xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
 }
 
@@ -192,20 +192,20 @@
 .relativeDatePill {
   display: inline-flex;
   align-items: center;
-  line-height: 1;
+  line-height: var(--leading-none);
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--color-bg);
   color: var(--color-text);
   font-size: var(--font-size-3xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .timeValue {
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .badgeHost {
@@ -213,10 +213,10 @@
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
-  line-height: 1;
+  line-height: var(--leading-none);
   margin-top: 0.2em;
   font-size: var(--font-size-3xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: var(--tracking-extra);
   padding: var(--space-1) var(--space-2-5);

@@ -13,7 +13,7 @@
 .title {
   margin: 0 0 var(--space-1);
   font-size: clamp(1.5rem, 3vw, 1.875rem);
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   letter-spacing: var(--tracking-tight);
   line-height: var(--leading-tight);
   color: var(--color-text);

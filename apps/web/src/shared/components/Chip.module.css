@@ -4,7 +4,7 @@
   gap: var(--space-1);
   padding: var(--space-1) var(--space-3);
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   line-height: var(--leading-none);
   white-space: nowrap;
   border: 1px solid transparent;
@@ -29,13 +29,15 @@
 }
 
 .success {
-  color: var(--color-badge-live-text);
-  background: var(--color-badge-live-bg);
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
 }
 
 .warning {
-  color: var(--color-badge-upcoming-text);
-  background: var(--color-badge-upcoming-bg);
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
 }
 
 .pending {
@@ -50,8 +52,8 @@
 }
 
 .muted {
-  color: var(--color-badge-finished-text);
-  background: var(--color-badge-finished-bg);
+  color: var(--color-text-muted);
+  background: var(--color-surface-active);
 }
 
 .interactive {
@@ -64,7 +66,7 @@
 }
 
 .interactive:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }
 

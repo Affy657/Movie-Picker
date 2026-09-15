@@ -7,7 +7,7 @@
   padding: var(--space-9) var(--space-6);
   border: 1px dashed var(--color-border-subtle);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+  background: var(--color-surface-translucent);
 }
 
 .iconWrap {
@@ -25,7 +25,7 @@
 .title {
   margin: 0;
   font-size: var(--font-size-lg);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-snug);
   line-height: var(--leading-snug);
   color: var(--color-text);

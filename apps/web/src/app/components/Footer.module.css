@@ -39,7 +39,7 @@
 
 .brandName {
   font-size: var(--font-size-md);
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   letter-spacing: var(--tracking-narrow);
   transition: color var(--duration-base) var(--ease-default);
 }
@@ -64,7 +64,7 @@
 
 .colTitle {
   font-size: var(--font-size-2xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-extra);
   text-transform: uppercase;
   color: var(--color-text-muted);
@@ -163,7 +163,7 @@
 
 .appearanceLabel {
   font-size: var(--font-size-2xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-extra);
   text-transform: uppercase;
   color: var(--color-text-muted);
@@ -181,7 +181,7 @@
 
 .tmdbLink {
   color: inherit;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-underline-offset: 0.2em;
 }
 

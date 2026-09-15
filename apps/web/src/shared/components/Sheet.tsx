@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { X } from 'lucide-react';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import { useTranslation } from '@/shared/i18n';
-import dragStyles from './sheetDrag.module.css';
+import dragStyles from './SheetDrag.module.css';
 import Modal from './Modal';
 import styles from './Sheet.module.css';
 

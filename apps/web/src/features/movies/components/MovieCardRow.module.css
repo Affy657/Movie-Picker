@@ -64,8 +64,8 @@
   color: var(--color-error);
   font-family: inherit;
   font-size: var(--font-size-3xs);
-  font-weight: 600;
-  line-height: 1;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-none);
   cursor: pointer;
 }
 
@@ -98,7 +98,7 @@
   justify-self: end;
   padding-right: var(--space-3);
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -142,7 +142,7 @@
 .title {
   margin: 0;
   font-size: var(--font-size-md);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: var(--tracking-snug);
   color: var(--color-text);
   overflow: hidden;
@@ -175,10 +175,10 @@
   background: var(--color-primary);
   color: var(--color-primary-contrast);
   font-size: var(--font-size-3xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .cellEnd {
@@ -256,8 +256,8 @@
 
 .scoreValue {
   font-size: var(--font-size-md);
-  font-weight: 700;
-  line-height: 1;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-none);
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -277,7 +277,7 @@
   margin-top: var(--space-1-5);
   border-radius: var(--radius-pill);
   overflow: hidden;
-  background: color-mix(in srgb, var(--color-text) 12%, transparent);
+  background: var(--color-surface-active);
 }
 
 .scoreBarUp {
@@ -318,8 +318,8 @@
   color: var(--color-meta);
   font-family: inherit;
   font-size: var(--font-size-3xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -334,7 +334,8 @@
 
 .colHeaderBtn:focus-visible {
   color: var(--color-text);
-  outline: none;
+  outline: var(--outline-focus);
+  outline-offset: -2px;
 }
 
 @media (hover: hover) {
@@ -458,7 +459,8 @@
 
 .disclosure:focus-visible {
   color: var(--color-text);
-  outline: none;
+  outline: var(--outline-focus);
+  outline-offset: 2px;
 }
 
 @media (hover: hover) {

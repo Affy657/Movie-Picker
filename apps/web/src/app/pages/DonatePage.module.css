@@ -16,7 +16,7 @@
 .kofiTitle {
   margin: 0;
   font-size: var(--font-size-xl);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 .kofiBody {

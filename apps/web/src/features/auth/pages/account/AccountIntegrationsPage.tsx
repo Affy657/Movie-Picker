@@ -97,7 +97,7 @@ export default function AccountIntegrationsPage({ user }: Readonly<{ user: UserP
                   <div className="nav-actions">
                     <Button
                       type="button"
-                      variant="danger"
+                      tone="danger"
                       disabled={unlinking}
                       onClick={() => void runUnlink(provider)}
                     >

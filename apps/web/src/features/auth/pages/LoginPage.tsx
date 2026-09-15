@@ -105,7 +105,7 @@ export default function LoginPage() {
               />
             )}
           </Field>
-          <Button type="submit" variant="primary" disabled={loading}>
+          <Button type="submit" variant="primary" loading={loading}>
             {loading ? t('auth.login.submitting') : t('auth.login.submit')}
           </Button>
           {import.meta.env.DEV ? (

@@ -316,7 +316,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
           </div>
 
           <div className={styles.actions}>
-            <Button type="submit" variant="primary" disabled={status === 'submitting'}>
+            <Button type="submit" variant="primary" loading={status === 'submitting'}>
               {status === 'submitting' ? t('proposeIdea.submitting') : t('proposeIdea.submit')}
             </Button>
           </div>

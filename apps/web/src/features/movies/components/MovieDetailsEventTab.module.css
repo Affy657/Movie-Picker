@@ -7,9 +7,9 @@
   --mc-icon-muted: var(--color-text-muted);
   --mc-border: var(--color-border-subtle);
   --mc-surface-ring: var(--color-surface);
-  --mc-overlay-hover: color-mix(in srgb, var(--color-text) 8%, transparent);
-  --mc-overlay-active: color-mix(in srgb, var(--color-text) 12%, transparent);
-  --mc-overlay-hover-soft: color-mix(in srgb, var(--color-text) 6%, transparent);
+  --mc-overlay-hover: var(--color-surface-hover-strong);
+  --mc-overlay-active: var(--color-surface-active);
+  --mc-overlay-hover-soft: var(--color-surface-hover);
   --mc-active-bg: var(--color-surface-hover);
   --mc-input-bg: var(--color-input-bg);
   --mc-kebab-bg: transparent;
@@ -45,10 +45,10 @@
 
 .scoreValue {
   font-size: var(--font-size-xl);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .scorePositive {
@@ -66,7 +66,7 @@
   flex-shrink: 0;
   border-radius: var(--radius-pill);
   overflow: hidden;
-  background: color-mix(in srgb, var(--color-text) 12%, transparent);
+  background: var(--color-surface-active);
 }
 
 .scoreBarUp {
@@ -110,8 +110,8 @@
   color: var(--color-text-muted);
   font-family: inherit;
   font-size: var(--font-size-xs);
-  font-weight: 500;
-  line-height: 1;
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-none);
   cursor: pointer;
   transition:
     background var(--duration-base) var(--ease-default),
@@ -131,7 +131,7 @@
 }
 
 .voteBtn:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }
 
@@ -139,14 +139,14 @@
   border-color: var(--color-primary);
   background: var(--color-primary);
   color: var(--color-primary-contrast);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .voteBtnDownActive {
   border-color: var(--color-error);
   background: var(--color-error);
   color: var(--color-primary-contrast);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .proposer {
@@ -181,6 +181,6 @@
 }
 
 .proposerLink:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }

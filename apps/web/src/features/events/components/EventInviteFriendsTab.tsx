@@ -16,6 +16,7 @@ import {
 } from '@/features/events/api/eventsApi';
 import styles from './EventInviteFriendsTab.module.css';
 import Button from '@/shared/components/Button';
+import Chip from '@/shared/components/Chip';
 
 type Props = {
   slug: string;
@@ -122,9 +123,9 @@ export default function EventInviteFriendsTab({ slug, onNavigate }: Readonly<Pro
                 const isBusy = inviteMutation.isPending && inviteMutation.variables === item.userId;
 
                 const inviteAction = isInvited ? (
-                  <span className={`${styles.badge} ${styles.badgeInvited}`}>
+                  <Chip size="sm" tone="success">
                     {t('events.invite.invitedBadge')}
-                  </span>
+                  </Chip>
                 ) : (
                   <Button
                     type="button"
@@ -150,9 +151,9 @@ export default function EventInviteFriendsTab({ slug, onNavigate }: Readonly<Pro
                     </div>
 
                     {isParticipant ? (
-                      <span className={`${styles.badge} ${styles.badgeParticipant}`}>
+                      <Chip size="sm" tone="muted">
                         {t('events.invite.alreadyParticipant')}
-                      </span>
+                      </Chip>
                     ) : (
                       inviteAction
                     )}

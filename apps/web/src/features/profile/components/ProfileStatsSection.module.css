@@ -57,7 +57,7 @@
 
 .heroValue {
   font-size: var(--font-size-3xl);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   line-height: var(--leading-none);
   color: var(--color-primary-text);
 }
@@ -86,7 +86,7 @@
 .panelTitle {
   margin: 0;
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-section-heading);
 }
 
@@ -121,12 +121,12 @@
 .genreDot {
   width: 0.7rem;
   height: 0.7rem;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   flex: 0 0 auto;
 }
 
 .genreLabel {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .genreCount {
@@ -140,7 +140,7 @@
   height: 0.85rem;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  background: var(--color-surface-hover);
 }
 
 .genreSegment {
@@ -190,13 +190,13 @@
   height: 100%;
   border: none;
   padding: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   min-width: 0;
   cursor: default;
 }
 
 .weekCell:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }
 
@@ -207,7 +207,7 @@
 
 .weekMonthLabel {
   font-size: var(--font-size-3xs);
-  line-height: 1;
+  line-height: var(--leading-none);
   color: var(--color-text-muted);
   overflow: hidden;
   white-space: nowrap;
@@ -225,12 +225,12 @@
 .legendSwatch {
   width: 0.875rem;
   height: 0.875rem;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   flex: 0 0 auto;
 }
 
 .legendText {
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 @media (max-width: 47.9375rem) {

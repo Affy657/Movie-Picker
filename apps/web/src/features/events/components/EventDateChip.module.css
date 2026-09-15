@@ -19,11 +19,11 @@
 
 .month {
   font-size: var(--font-size-3xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--color-text-muted);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .chipLive .month {
@@ -32,8 +32,8 @@
 
 .day {
   font-size: var(--font-size-xl);
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   letter-spacing: var(--tracking-tight);
   color: var(--color-text);
-  line-height: 1;
+  line-height: var(--leading-none);
 }

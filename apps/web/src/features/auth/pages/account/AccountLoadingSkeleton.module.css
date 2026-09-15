@@ -28,7 +28,7 @@
     var(--color-border-subtle) 75%
   );
   background-size: 400% 100%;
-  animation: shimmer 1.6s linear infinite;
+  animation: shimmer var(--duration-shimmer) var(--ease-linear) infinite;
 }
 
 .tall {
@@ -55,6 +55,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .bar {
-    animation-duration: 0.01ms;
+    animation: none;
   }
 }

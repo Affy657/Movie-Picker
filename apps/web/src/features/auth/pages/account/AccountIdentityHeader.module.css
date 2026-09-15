@@ -27,7 +27,7 @@
 }
 
 .avatarButton:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 3px;
 }
 
@@ -62,13 +62,13 @@
 
 .identityText {
   min-width: 0;
-  line-height: 1.25;
+  line-height: var(--leading-tight);
 }
 
 .identityName {
   margin: 0;
   font-size: var(--font-size-lg);
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   letter-spacing: var(--tracking-narrow);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -91,9 +91,9 @@
   border-radius: var(--radius-md);
   color: var(--color-text);
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-decoration: none;
-  line-height: 1;
+  line-height: var(--leading-none);
   flex-shrink: 0;
 }
 
@@ -120,9 +120,9 @@
   border-radius: var(--radius-md);
   color: var(--color-text);
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-decoration: none;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .identityLinkMobile span {

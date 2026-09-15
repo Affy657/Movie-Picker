@@ -23,7 +23,7 @@
   border: none;
   border-bottom: 2px solid transparent;
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
   background: transparent;
   color: var(--color-text-muted);
@@ -35,7 +35,7 @@
 .tabActive {
   border-bottom-color: var(--color-primary);
   color: var(--color-text);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
 }
 
 @media (hover: hover) {
@@ -61,7 +61,7 @@
 
 @media (hover: hover) {
   .closeButton:hover {
-    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+    background: var(--color-surface-hover);
   }
 }
 
@@ -109,7 +109,7 @@
 
 @media (hover: hover) {
   .item:hover {
-    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+    background: var(--color-surface-hover);
   }
 }
 
@@ -139,7 +139,7 @@
 
 .itemName {
   font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -160,11 +160,11 @@
   padding: 0 var(--space-3-5);
   border-radius: var(--radius-md);
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   border: 1px solid transparent;
   cursor: pointer;
   flex-shrink: 0;
-  line-height: 1;
+  line-height: var(--leading-none);
   transition:
     background var(--duration-base),
     color var(--duration-base);
@@ -186,8 +186,8 @@
   background: var(--color-primary-soft);
   color: var(--color-primary-text);
   font-size: var(--font-size-2xs);
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-wide);
   flex-shrink: 0;
 }
 
@@ -214,6 +214,6 @@
 
 @media (hover: hover) {
   .unfollowBtn:hover {
-    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+    background: var(--color-surface-hover);
   }
 }

@@ -13,11 +13,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  line-height: 1;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-none);
   color: var(--color-fixed-white);
   user-select: none;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tracking-wide);
 }
 
 .initialsText {

@@ -33,7 +33,7 @@
 }
 
 .cardTrigger:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -101,7 +101,7 @@
 .cardTitle {
   margin: 0;
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   line-height: var(--leading-snug);
   height: calc(2 * var(--leading-snug) * var(--font-size-sm));
   overflow: hidden;
@@ -149,7 +149,7 @@
   color: var(--on-poster-badge-fg);
   border: 1px solid var(--on-poster-border);
   font-size: var(--font-size-3xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-transform: uppercase;
   letter-spacing: var(--tracking-wide);
   line-height: var(--leading-none);

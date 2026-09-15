@@ -345,7 +345,7 @@ function DeleteAccountZone({ hasPassword }: Readonly<{ hasPassword: boolean }>) 
       <p>{t('auth.account.deleteAccountDescription')}</p>
 
       {!confirming ? (
-        <Button type="button" variant="danger" onClick={() => setConfirming(true)}>
+        <Button type="button" tone="danger" onClick={() => setConfirming(true)}>
           {t('auth.account.deleteAccountButton')}
         </Button>
       ) : (
@@ -376,7 +376,7 @@ function DeleteAccountZone({ hasPassword }: Readonly<{ hasPassword: boolean }>) 
             aria-describedby={errorMsg ? 'delete-account-error' : undefined}
           />
           <div className="nav-actions">
-            <Button type="submit" variant="danger" disabled={deleting}>
+            <Button type="submit" tone="danger" loading={deleting}>
               {deleting
                 ? t('auth.account.deleteAccountSubmitting')
                 : t('auth.account.deleteAccountConfirmButton')}

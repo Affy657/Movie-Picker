@@ -24,7 +24,7 @@
 }
 
 .trigger:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 3px;
 }
 
@@ -65,7 +65,7 @@
   padding: var(--space-2) var(--space-4);
   margin: 0;
   font-size: var(--font-size-sm);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
   border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
@@ -84,8 +84,8 @@
   text-align: left;
   text-decoration: none;
   font-size: var(--font-size-sm);
-  font-weight: 500;
-  line-height: 1;
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-none);
   color: var(--color-text);
   cursor: pointer;
   transition: background var(--duration-fast) var(--ease-default);
@@ -97,12 +97,12 @@
 
 @media (hover: hover) {
   .item:hover {
-    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+    background: var(--color-surface-hover);
   }
 }
 
 .item:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: -2px;
 }
 

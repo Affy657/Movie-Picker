@@ -396,7 +396,7 @@ export default function CreateEvent() {
             </div>
           </details>
 
-          <Button type="submit" variant="primary" className={styles.submit} disabled={loading}>
+          <Button type="submit" variant="primary" className={styles.submit} loading={loading}>
             {loading ? t('events.create.submitting') : t('events.create.submit')}
           </Button>
         </form>

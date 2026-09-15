@@ -61,7 +61,7 @@
   gap: var(--space-2);
   font-family: var(--font-mono);
   font-size: var(--font-size-2xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-widest);
   color: var(--color-primary-text);
 }
@@ -72,14 +72,14 @@
   height: 1px;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--color-primary) 45%, transparent),
+    var(--color-primary-border),
     transparent
   );
 }
 
 .title {
   font-size: var(--font-size-lg);
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   letter-spacing: var(--tracking-close);
   line-height: var(--leading-tight);
 }
@@ -94,7 +94,7 @@
   margin-top: auto;
   padding: var(--space-3-5);
   border-radius: var(--radius-md);
-  background: var(--surface-sunken);
+  background: var(--color-surface-sunken);
   border: 1px solid var(--color-border-subtle);
   min-height: 7.5rem;
   display: flex;

@@ -13,7 +13,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
-  line-height: 1;
+  line-height: var(--leading-none);
   margin-left: auto;
   flex-shrink: 0;
 }
@@ -34,10 +34,10 @@
   gap: var(--space-2);
   margin: 0;
   font-size: var(--font-size-md);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-snug);
   color: var(--color-text);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .headerLabel {
@@ -51,7 +51,7 @@
 
 .count {
   color: var(--color-text-muted);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   font-size: var(--font-size-sm);
 }
 
@@ -64,7 +64,7 @@
   color: var(--color-badge-upcoming-text);
   border: 1px solid color-mix(in srgb, var(--color-badge-upcoming-text) 30%, transparent);
   font-size: var(--font-size-3xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-wide-lg);
   text-transform: uppercase;
 }
@@ -88,14 +88,14 @@
   border: 1px solid var(--color-border-subtle);
   font-size: var(--font-size-sm);
   color: var(--color-text);
-  line-height: 1;
+  line-height: var(--leading-none);
   transition:
     background var(--duration-base) var(--ease-default),
     border-color var(--duration-base) var(--ease-default);
 }
 
 .chipLabel {
-  line-height: 1;
+  line-height: var(--leading-none);
   transform: translateY(var(--text-optical-nudge));
 }
 
@@ -103,7 +103,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
-  line-height: 1;
+  line-height: var(--leading-none);
   text-decoration: none;
   color: inherit;
   border-radius: var(--radius-pill);
@@ -120,7 +120,7 @@
 }
 
 .profileLink:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 3px;
 }
 
@@ -152,7 +152,8 @@
 .removeBtn:focus-visible:not(:disabled) {
   background: var(--color-error-bg);
   color: var(--color-error);
-  outline: none;
+  outline: var(--outline-focus);
+  outline-offset: 2px;
 }
 
 @media (hover: hover) {
@@ -181,7 +182,7 @@
   border: 1px dashed var(--color-border);
   color: var(--color-text-muted);
   cursor: pointer;
-  line-height: 1;
+  line-height: var(--leading-none);
   transition:
     background var(--duration-base) var(--ease-default),
     border-color var(--duration-base) var(--ease-default),
@@ -209,7 +210,7 @@
 }
 
 .inviteChip:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }
 
@@ -217,5 +218,5 @@
   border-color: var(--color-primary-border);
   background: var(--color-primary-soft);
   color: var(--color-primary-text);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }

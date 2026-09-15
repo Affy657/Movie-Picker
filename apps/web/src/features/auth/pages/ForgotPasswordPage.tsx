@@ -79,7 +79,7 @@ export default function ForgotPasswordPage() {
             required
             aria-invalid={error ? true : undefined}
           />
-          <Button type="submit" variant="primary" disabled={loading}>
+          <Button type="submit" variant="primary" loading={loading}>
             {loading ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
           </Button>
         </form>

@@ -53,7 +53,7 @@
 .name {
   color: var(--color-text);
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   line-height: var(--leading-snug);
   overflow: hidden;
   text-overflow: ellipsis;

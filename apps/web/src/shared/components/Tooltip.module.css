@@ -14,7 +14,7 @@
   color: var(--color-bg);
   font-family: var(--font-body);
   font-size: var(--font-size-2xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   letter-spacing: normal;
   line-height: var(--leading-snug);
   text-align: center;
@@ -31,9 +31,10 @@
 }
 
 .bubble::after {
+  --tooltip-arrow: 5px;
   content: '';
   position: absolute;
-  border: 5px solid transparent;
+  border: var(--tooltip-arrow) solid transparent;
 }
 
 .bubble[data-state='visible'] {
@@ -117,7 +118,7 @@
 }
 
 .wrapperFocusable:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }

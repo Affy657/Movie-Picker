@@ -22,7 +22,7 @@
   font-size: var(--font-size-xl);
   line-height: var(--leading-none);
   background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
+  border: var(--border-width-field) solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
   display: flex;
@@ -68,8 +68,8 @@
   line-height: var(--leading-none);
   padding: var(--space-1);
   background: transparent;
-  border: 1.5px solid transparent;
-  border-radius: 6px;
+  border: var(--border-width-field) solid transparent;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -86,7 +86,7 @@
 .emojiOptNone {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .emojiOptSelected {
@@ -125,7 +125,7 @@
   font-size: var(--font-size-xs);
   background: var(--color-surface);
   border: 1px solid var(--color-border-subtle);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
   color: var(--color-text-muted);
   transition:
@@ -147,7 +147,7 @@
   background: var(--color-primary-soft);
   border-color: var(--color-primary);
   color: var(--color-primary-text);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .presetMore {
@@ -156,11 +156,11 @@
   justify-content: center;
   padding: var(--space-1) var(--space-2-5);
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: var(--tracking-extra);
   background: transparent;
   border: 1px dashed var(--color-border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   cursor: pointer;
   color: var(--color-text-muted);
   transition:

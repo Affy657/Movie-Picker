@@ -10,7 +10,7 @@
   position: relative;
   width: var(--swatch-size);
   height: var(--swatch-size);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 2px solid transparent;
   padding: 0;
   cursor: pointer;

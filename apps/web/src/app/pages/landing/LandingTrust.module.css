@@ -18,7 +18,7 @@
 }
 
 .title {
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   font-size: var(--font-size-md);
   letter-spacing: var(--tracking-close);
 }

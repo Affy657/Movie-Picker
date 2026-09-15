@@ -80,7 +80,7 @@ export default function JoinForm({
               {error}
             </p>
           )}
-          <Button type="submit" variant="primary" className={styles.submit} disabled={loading}>
+          <Button type="submit" variant="primary" className={styles.submit} loading={loading}>
             {loading ? t('events.join.submitting') : t('events.join.submit')}
           </Button>
         </form>

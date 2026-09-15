@@ -38,7 +38,7 @@
 }
 
 .noteEditTrigger:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -59,7 +59,8 @@
 
 .noteExpand:focus-visible {
   color: var(--mc-fg-soft, var(--on-poster-fg-soft));
-  outline: none;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 @media (hover: hover) {
@@ -124,8 +125,8 @@
   gap: var(--space-1);
   padding: var(--space-1) var(--space-2);
   font-size: var(--font-size-3xs);
-  font-weight: 500;
-  line-height: 1;
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-none);
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
   cursor: pointer;
@@ -154,7 +155,8 @@
 
 .noteBtnGhost:focus-visible {
   background: var(--mc-overlay-hover-soft, var(--on-poster-overlay-hover-soft));
-  outline: none;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 @media (hover: hover) {
@@ -172,7 +174,8 @@
 
 .noteBtnPrimary:focus-visible {
   filter: brightness(1.08);
-  outline: none;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 @media (hover: hover) {

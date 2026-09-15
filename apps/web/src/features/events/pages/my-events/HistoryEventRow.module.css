@@ -39,8 +39,8 @@
   background: var(--on-poster-scrim-strong);
   color: var(--on-poster-fg-strong);
   font-size: var(--font-size-2xs);
-  font-weight: 700;
-  line-height: 1;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-none);
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -73,7 +73,7 @@
 .title {
   margin: 0;
   font-size: var(--font-size-md);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   line-height: var(--leading-snug);
   letter-spacing: var(--tracking-close);
   color: var(--color-text);
@@ -86,14 +86,14 @@
   display: flex;
   align-items: center;
   gap: var(--space-1-5);
-  line-height: 1;
+  line-height: var(--leading-none);
   min-width: 0;
   color: var(--color-primary-text);
 }
 
 .winner span {
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -102,7 +102,7 @@
 
 .noWinner {
   font-size: var(--font-size-xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -124,7 +124,7 @@
 
 .date {
   font-size: var(--font-size-xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
   min-width: 5.75rem;
   text-align: right;

@@ -8,14 +8,14 @@
   color: var(--color-primary-text);
   border: 2px solid var(--color-primary);
   border-radius: var(--radius-md);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-decoration: none;
   white-space: nowrap;
 }
 
 .skipLink:focus {
   left: 1rem;
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }
 
@@ -76,7 +76,7 @@
   align-items: center;
   gap: var(--space-2-5);
   flex-shrink: 0;
-  line-height: 1;
+  line-height: var(--leading-none);
   text-decoration: none;
   color: inherit;
 }
@@ -91,7 +91,7 @@
 
 .brandName {
   font-size: var(--font-size-md);
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   letter-spacing: var(--tracking-narrow);
   color: var(--color-text);
   transform: translateY(var(--text-optical-nudge));
@@ -155,10 +155,10 @@
   text-align: center;
   text-decoration: none;
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-muted);
   padding: var(--space-2) var(--space-1-5);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   min-height: var(--tap-target-min);
   display: flex;
   align-items: center;
@@ -194,7 +194,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: var(--font-size-3xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   line-height: var(--leading-none);
   letter-spacing: var(--tracking-slight);
 }
@@ -216,7 +216,7 @@
 }
 
 .navLink:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
   border-radius: var(--radius-sm, 4px);
 }

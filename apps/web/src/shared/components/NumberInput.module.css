@@ -1,7 +1,7 @@
 ﻿.wrap {
   display: flex;
   align-items: center;
-  border: 1.5px solid var(--color-border);
+  border: var(--border-width-field) solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--color-input-bg, var(--color-surface));
@@ -43,7 +43,7 @@
   width: 2.25rem;
   min-height: var(--tap-target-min);
   font-size: var(--font-size-lg);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   line-height: var(--leading-none);
   border: none;
   background: var(--color-primary-tint);

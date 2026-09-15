@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import clsx from 'clsx';
 import Menu, { MenuItem, MenuLabel, MenuSeparator } from '@/shared/components/Menu';
+import Chip from '@/shared/components/Chip';
 import styles from './SortControl.module.css';
 
 export interface SortOption<TSortKey extends string> {
@@ -81,18 +82,20 @@ export default function SortControl<TSortKey extends string>({
   return (
     <span className={clsx(styles.pillsRow, className)} role="toolbar" aria-label={sortLabel}>
       <span className={styles.label}>{sortLabel}</span>
-      {sortOptions.map((opt) => (
-        <button
-          key={opt.key}
-          type="button"
-          className={clsx(styles.pill, sortBy === opt.key && styles.pillActive)}
-          aria-pressed={sortBy === opt.key}
-          onClick={() => onSetSort(opt.key)}
-        >
-          <span className={styles.pillLabel}>{opt.label}</span>
-          {sortBy === opt.key ? <DirectionIcon size={12} aria-hidden /> : null}
-        </button>
-      ))}
+      {sortOptions.map((opt) => {
+        const isActive = sortBy === opt.key;
+        return (
+          <Chip
+            key={opt.key}
+            icon={isActive ? DirectionIcon : undefined}
+            selected={isActive}
+            pressed={isActive}
+            onClick={() => onSetSort(opt.key)}
+          >
+            {opt.label}
+          </Chip>
+        );
+      })}
     </span>
   );
 }

@@ -14,7 +14,7 @@
 .pageTitle {
   margin: 0 0 var(--space-5);
   font-size: clamp(1.5rem, 4vw, 1.875rem);
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   letter-spacing: var(--tracking-tight);
   line-height: var(--leading-tight);
   color: var(--color-text);
@@ -39,7 +39,7 @@
   gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-muted);
   background: transparent;
   border: none;
@@ -58,7 +58,7 @@
 }
 
 .tab:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 3px;
 }
 
@@ -76,9 +76,9 @@
   height: 1.3rem;
   padding: 0 var(--space-1-5);
   font-size: var(--font-size-3xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-text-muted) 25%, transparent);
+  background: var(--color-surface-active);
   color: var(--color-text-muted);
 }
 
@@ -98,7 +98,7 @@
 .sectionTitle {
   margin: 0 0 var(--space-2-5);
   font-size: var(--font-size-2xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
   color: var(--color-meta);
@@ -137,7 +137,7 @@
   margin-right: auto;
   padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-xs);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
   background: transparent;
   border: 1px solid var(--color-border-subtle);
@@ -151,12 +151,12 @@
 @media (hover: hover) {
   .loadMoreBtn:hover {
     color: var(--color-text);
-    border-color: color-mix(in srgb, var(--color-text) 35%, transparent);
+    border-color: var(--color-border-field);
   }
 }
 
 .linkWithKebab {
-  padding-right: var(--space-11);
+  padding-right: var(--tap-target-min);
 }
 
 .itemKebab {
@@ -180,7 +180,7 @@
   color: var(--color-text-muted);
   text-decoration: none;
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   transition:
     color var(--duration-base) var(--ease-default),
     border-color var(--duration-base) var(--ease-default);
@@ -229,9 +229,9 @@
 
 .monthCount {
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-meta);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .historyList {

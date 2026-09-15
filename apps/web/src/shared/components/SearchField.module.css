@@ -21,7 +21,7 @@
   font-size: var(--font-size-sm);
   color: var(--color-text);
   background: var(--color-input-bg);
-  border: 1.5px solid var(--color-border);
+  border: var(--border-width-field) solid var(--color-border);
   border-radius: var(--radius-md);
 }
 

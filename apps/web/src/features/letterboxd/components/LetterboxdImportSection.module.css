@@ -20,7 +20,7 @@
 
 .usernameValue {
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
 }
 
@@ -61,12 +61,12 @@
 
 .statusOk {
   color: var(--color-success);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .statusError {
   color: var(--color-error);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .statusOk svg,
@@ -126,7 +126,7 @@
   background: transparent;
   color: var(--color-primary-text);
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
 }
 

@@ -183,7 +183,7 @@ export default function EventParticipantsList({
         <div className={styles.leaveRow}>
           <Button
             type="button"
-            variant="danger"
+            tone="danger"
             size="sm"
             onClick={onLeave}
             disabled={leaveDisabled}

@@ -22,14 +22,15 @@
 }
 
 .trigger:focus-visible {
-  background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
+  background: var(--color-surface-active);
   color: var(--color-text);
-  outline: none;
+  outline: var(--outline-focus);
+  outline-offset: 2px;
 }
 
 @media (hover: hover) {
   .trigger:hover {
-    background: color-mix(in srgb, var(--color-text-muted) 14%, transparent);
+    background: var(--color-surface-active);
     color: var(--color-text);
     outline: none;
   }

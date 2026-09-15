@@ -9,10 +9,10 @@
   gap: var(--space-2);
   margin: 0 0 var(--space-1-5);
   font-size: var(--font-size-lg);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-close);
   color: var(--color-text);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .titleIcon {
@@ -34,7 +34,7 @@
 .fullMessage {
   margin: 0;
   font-size: var(--font-size-md);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-error);
 }
 

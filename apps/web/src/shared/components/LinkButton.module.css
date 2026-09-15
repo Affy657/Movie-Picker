@@ -6,7 +6,7 @@
   border: none;
   background: none;
   font-family: inherit;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   line-height: var(--leading-none);
   color: var(--color-primary-text);
   cursor: pointer;
@@ -29,7 +29,7 @@
 }
 
 .root:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }

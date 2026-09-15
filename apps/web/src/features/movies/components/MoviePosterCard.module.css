@@ -62,7 +62,7 @@
   color: var(--on-poster-badge-fg);
   border: 1px solid var(--on-poster-border);
   font-size: var(--font-size-3xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   line-height: var(--leading-none);
 }
 
@@ -73,7 +73,7 @@
 
 .cardTitle {
   font-size: var(--font-size-2xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   line-height: var(--leading-snug);
   overflow: hidden;
   text-overflow: ellipsis;

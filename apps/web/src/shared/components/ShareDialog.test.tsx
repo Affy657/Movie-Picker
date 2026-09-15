@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ShareDialog from '@/shared/components/ShareDialog';
+import buttonStyles from '@/shared/components/Button.module.css';
 import { LocaleProvider } from '@/shared/i18n';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
@@ -67,7 +68,7 @@ describe('ShareDialog', () => {
     renderDialog(<ShareDialog {...baseProps} />);
 
     const copyBtn = screen.getByRole('button', { name: /copier le lien/i });
-    expect(copyBtn).toHaveClass('btn-primary');
+    expect(copyBtn).toHaveClass(buttonStyles.primary!);
     await user.click(copyBtn);
 
     await waitFor(() => {

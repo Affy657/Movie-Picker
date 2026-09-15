@@ -14,11 +14,11 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    color-mix(in srgb, var(--color-surface) 70%, transparent) 50%,
+    var(--color-surface-translucent) 50%,
     transparent 100%
   );
   transform: translateX(-100%);
-  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  animation: skeleton-shimmer var(--duration-shimmer) var(--ease-in-out) infinite;
 }
 
 @keyframes skeleton-shimmer {

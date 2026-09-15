@@ -35,13 +35,13 @@
 .navText {
   flex: 1;
   min-width: 0;
-  line-height: 1.25;
+  line-height: var(--leading-tight);
 }
 
 .navLabel {
   display: block;
   font-size: var(--font-size-md);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .navSummary {

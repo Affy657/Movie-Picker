@@ -24,7 +24,7 @@
 .heading {
   margin: 0;
   font-size: var(--font-size-xl);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
 }
 
@@ -42,7 +42,7 @@
   min-height: var(--space-6);
   padding-inline: var(--space-1);
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-primary-text);
 }
 

@@ -11,9 +11,9 @@
   --mc-icon-muted: var(--color-text-muted);
   --mc-border: var(--color-border-subtle);
   --mc-surface-ring: var(--color-surface);
-  --mc-overlay-hover: color-mix(in srgb, var(--color-text) 8%, transparent);
-  --mc-overlay-active: color-mix(in srgb, var(--color-text) 12%, transparent);
-  --mc-overlay-hover-soft: color-mix(in srgb, var(--color-text) 6%, transparent);
+  --mc-overlay-hover: var(--color-surface-hover-strong);
+  --mc-overlay-active: var(--color-surface-active);
+  --mc-overlay-hover-soft: var(--color-surface-hover);
   --mc-active-bg: var(--color-surface-hover);
   --mc-input-bg: var(--color-input-bg);
   --mc-kebab-bg: transparent;

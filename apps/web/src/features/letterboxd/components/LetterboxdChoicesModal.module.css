@@ -16,7 +16,7 @@
 .title {
   margin: 0;
   font-size: var(--font-size-md);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
 }
 
@@ -69,7 +69,7 @@
 
 .askedTitle strong {
   font-size: var(--font-size-md);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
 }
 
@@ -148,7 +148,7 @@
   width: 1.05rem;
   height: 1.05rem;
   border-radius: var(--radius-pill);
-  border: 1.5px solid var(--color-border);
+  border: var(--border-width-field) solid var(--color-border);
   color: var(--color-primary-contrast);
 }
 
@@ -182,7 +182,7 @@
 
 .choiceTitle {
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   line-height: var(--leading-snug);
 }
@@ -215,7 +215,7 @@
 
 .laterLink {
   font-size: var(--font-size-xs);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-primary-text);
   background: none;
   border: none;

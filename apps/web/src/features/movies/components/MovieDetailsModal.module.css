@@ -52,7 +52,7 @@
 .title {
   margin: 0;
   font-size: var(--font-size-xl);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   line-height: var(--leading-tight);
   color: var(--color-text);
 }
@@ -66,7 +66,7 @@
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   font-variant-numeric: tabular-nums;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 @media (hover: hover) {
@@ -125,8 +125,8 @@
   color: var(--color-text);
   font-family: inherit;
   font-size: var(--font-size-xs);
-  font-weight: 500;
-  line-height: 1;
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-none);
   cursor: pointer;
   transition:
     background var(--duration-base) var(--ease-default),
@@ -144,7 +144,7 @@
 }
 
 .footerBtn:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }
 

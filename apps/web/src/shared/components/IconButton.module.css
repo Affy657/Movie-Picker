@@ -36,13 +36,13 @@
 }
 
 .lg {
-  width: var(--space-11);
-  height: var(--space-11);
+  width: var(--tap-target-min);
+  height: var(--tap-target-min);
 }
 
 @media (hover: hover) {
   .root:hover {
-    background: color-mix(in srgb, var(--color-text) 8%, transparent);
+    background: var(--color-surface-hover-strong);
     color: var(--color-text);
   }
 
@@ -58,13 +58,39 @@
 }
 
 .root:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }
 
 .root:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.root[aria-busy='true'] {
+  opacity: 0.85;
+  cursor: progress;
+}
+
+.spinner {
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-top-color: currentColor;
+  animation: icon-button-spin var(--duration-spin) var(--ease-linear) infinite;
+}
+
+@keyframes icon-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
 }
 
 .danger {

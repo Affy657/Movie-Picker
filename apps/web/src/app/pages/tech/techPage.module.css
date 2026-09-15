@@ -33,7 +33,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(var(--texture-dot) 1px, transparent 1px);
+  background-image: radial-gradient(var(--color-texture-dot) 1px, transparent 1px);
   background-size: 22px 22px;
   pointer-events: none;
   z-index: var(--z-below);
@@ -56,7 +56,7 @@
 
 .heroTitle {
   font-size: clamp(var(--font-size-4xl), 6vw, var(--font-size-6xl));
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   letter-spacing: var(--tracking-display);
   line-height: var(--leading-none);
   margin-bottom: var(--space-5);
@@ -114,7 +114,7 @@
 
 .metricValue {
   font-size: clamp(var(--font-size-3xl), 3.2vw, var(--font-size-4xl));
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--tracking-tight);
   line-height: var(--leading-none);
@@ -123,7 +123,7 @@
 
 .metricUnit {
   font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-muted);
 }
 
@@ -172,7 +172,7 @@
   align-items: center;
   gap: var(--space-3);
   width: 100%;
-  min-height: var(--space-11);
+  min-height: var(--tap-target-min);
   padding: var(--space-2) var(--space-0);
   background: none;
   border: none;
@@ -195,7 +195,7 @@
   gap: var(--space-2);
   min-width: 0;
   font-size: var(--font-size-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
 }
 
@@ -209,7 +209,7 @@
   flex: none;
   font-family: var(--font-mono);
   font-size: var(--font-size-3xs);
-  font-weight: 400;
+  font-weight: var(--font-weight-regular);
   color: var(--color-primary-text);
   font-variant-numeric: tabular-nums;
 }
@@ -299,7 +299,7 @@
 
 .railLinkVisible {
   color: var(--color-text);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .railLinkVisible .railNum {
@@ -453,7 +453,7 @@
 }
 
 .timelineWhat {
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   font-size: var(--font-size-md);
   letter-spacing: var(--tracking-tight);
   line-height: var(--leading-compact);
@@ -484,5 +484,5 @@
 
 .signatureName {
   color: var(--color-text);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }

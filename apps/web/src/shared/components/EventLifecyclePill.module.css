@@ -5,8 +5,8 @@
   flex-shrink: 0;
   text-align: center;
   font-size: var(--font-size-2xs);
-  font-weight: 600;
-  line-height: 1;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-none);
   padding: calc(0.34rem + var(--text-optical-nudge)) 0.55rem
     calc(0.34rem - var(--text-optical-nudge));
   border-radius: var(--radius-sm);
@@ -43,7 +43,7 @@
 }
 
 .detail {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   opacity: 0.72;
 }
 
@@ -52,7 +52,7 @@
   height: 6px;
   border-radius: var(--radius-pill);
   background: currentColor;
-  animation: lifecycleBlip 2.4s var(--ease-in-out) infinite;
+  animation: lifecycleBlip var(--duration-breathe) var(--ease-in-out) infinite;
 }
 
 @keyframes lifecycleBlip {

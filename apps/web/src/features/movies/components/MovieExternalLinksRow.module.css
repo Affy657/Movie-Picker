@@ -5,7 +5,7 @@
 .label {
   margin: 0 0 var(--space-2);
   font-size: var(--font-size-2xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-caps-wide);
   text-transform: uppercase;
   color: var(--color-text-muted);
@@ -28,8 +28,8 @@
   border-radius: var(--radius-pill);
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
-  font-weight: 500;
-  line-height: 1;
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-none);
   text-decoration: none;
   transition:
     background var(--duration-base) var(--ease-default),
@@ -53,6 +53,6 @@
 }
 
 .link:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--outline-focus);
   outline-offset: 2px;
 }

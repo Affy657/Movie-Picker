@@ -10,7 +10,7 @@
 }
 
 .out {
-  background: color-mix(in srgb, var(--color-text-muted) 8%, transparent);
+  background: var(--color-surface-hover);
   border-color: var(--color-border-subtle);
 }
 
@@ -20,7 +20,8 @@
   height: 1.625rem;
   display: block;
   filter: drop-shadow(0 5px 12px color-mix(in srgb, var(--color-streak) 50%, transparent));
-  animation: flicker 3.2s ease-in-out infinite;
+  --flame-flicker-duration: 3.2s;
+  animation: flicker var(--flame-flicker-duration) var(--ease-in-out) infinite;
 }
 
 .out .flame {
@@ -33,12 +34,12 @@
   flex-direction: column;
   gap: var(--space-0-5);
   min-width: 0;
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .current {
   font-size: var(--font-size-sm);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
   line-height: var(--leading-tight);
 }

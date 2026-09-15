@@ -7,11 +7,11 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
-  line-height: 1;
+  line-height: var(--leading-none);
 }
 
 .triggerLabel {
-  line-height: 1;
+  line-height: var(--leading-none);
   transform: translateY(var(--text-optical-nudge));
 }
 
@@ -52,7 +52,8 @@
 
 .item:focus-visible {
   background: var(--color-surface-hover);
-  outline: none;
+  outline: var(--outline-focus);
+  outline-offset: -2px;
 }
 
 @media (hover: hover) {
@@ -65,7 +66,7 @@
 .itemSelected {
   background: var(--color-primary-soft);
   color: var(--color-primary-text);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .itemDanger {
@@ -85,9 +86,9 @@
 .label {
   padding: var(--space-1-5) var(--space-2) var(--space-0-5);
   font-size: var(--font-size-2xs);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.04em;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-none);
+  letter-spacing: var(--tracking-wide-lg);
   text-transform: uppercase;
   color: var(--color-text-muted);
 }

@@ -8,8 +8,8 @@
   gap: var(--space-1-5);
   padding: var(--space-1-5) var(--space-3);
   font-size: var(--font-size-xs);
-  font-weight: 500;
-  line-height: 1;
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-none);
   background: transparent;
   color: var(--color-text-muted);
   border: 1px solid var(--color-border-subtle);
@@ -33,7 +33,8 @@
   background: var(--color-primary-tint);
   border-color: var(--color-primary-border-soft);
   color: var(--color-primary-text);
-  outline: none;
+  outline: var(--outline-focus);
+  outline-offset: 2px;
 }
 
 @media (hover: hover) {
@@ -49,7 +50,7 @@
   margin-top: var(--space-2-5);
   padding: var(--space-4) var(--space-4);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-bg) 60%, transparent);
+  background: var(--color-surface-sunken);
   border: 1px solid var(--color-border-subtle);
   font-size: var(--details-font-size, var(--font-size-sm));
   color: var(--color-text);
@@ -86,7 +87,7 @@
 }
 
 .factLabel {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-muted);
 }
 
@@ -119,8 +120,8 @@
   border: none;
   font-family: inherit;
   font-size: var(--font-size-xs);
-  font-weight: 500;
-  line-height: 1;
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-none);
   color: var(--color-primary-text);
   text-decoration: none;
   cursor: pointer;

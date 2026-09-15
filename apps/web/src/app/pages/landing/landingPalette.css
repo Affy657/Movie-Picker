@@ -1,4 +1,10 @@
 .landingPalette {
+  --font-size-demo-xs: 0.4375rem;
+  --font-size-demo-sm: 0.5625rem;
+  --demo-float-duration: 5.5s;
+  --demo-blink-duration: 1.1s;
+  --demo-blink-steps: steps(2, start);
+  --demo-spin-duration: 14s;
   --poster-1a: #f59e0b;
   --poster-1b: #7c2d12;
   --poster-2a: var(--sky-400);
@@ -33,6 +39,12 @@
 }
 
 [data-theme='dark'] .landingPalette {
+  --font-size-demo-xs: 0.4375rem;
+  --font-size-demo-sm: 0.5625rem;
+  --demo-float-duration: 5.5s;
+  --demo-blink-duration: 1.1s;
+  --demo-blink-steps: steps(2, start);
+  --demo-spin-duration: 14s;
   --color-letterboxd-fg: color-mix(in srgb, var(--brand-letterboxd) 55%, white);
   --color-letterboxd-bg: color-mix(in srgb, var(--brand-letterboxd) 16%, transparent);
 }

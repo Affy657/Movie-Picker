@@ -29,7 +29,7 @@
 
 .fieldLabel {
   font-size: var(--font-size-2xs);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: var(--tracking-wider);
   color: var(--color-text-muted);
@@ -62,7 +62,7 @@
   border: 1px solid var(--color-primary);
   color: var(--color-primary-text);
   font-size: var(--font-size-3xs);
-  font-weight: 800;
+  font-weight: var(--font-weight-extrabold);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -108,7 +108,7 @@
   width: 35%;
   border-radius: var(--radius-pill);
   background: var(--color-primary);
-  animation: letterboxdProgressSlide 1.3s ease-in-out infinite;
+  animation: letterboxdProgressSlide var(--duration-pulse) var(--ease-in-out) infinite;
 }
 
 @keyframes letterboxdProgressSlide {
