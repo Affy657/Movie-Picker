@@ -390,7 +390,7 @@ public static class ServiceCollectionExtensions
         if (orphans.Count > 0)
         {
             throw new InvalidOperationException(
-                "Handlers sans interface I{Nom} (convention d'enregistrement) : "
+                "Handlers without a matching I{Name} interface (registration convention): "
                 + string.Join(", ", orphans));
         }
     }

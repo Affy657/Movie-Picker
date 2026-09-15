@@ -36,13 +36,13 @@ public sealed class MongoIndexInitializer : IHostedService
             var history = scope.ServiceProvider.GetRequiredService<IMigrationHistoryRepository>();
             if (await history.IsAppliedAsync(plan.MarkerId, cancellationToken))
             {
-                _logger.LogInformation("Index MongoDB déjà à jour ({MarkerId}).", plan.MarkerId);
+                _logger.LogInformation("MongoDB indexes already up to date ({MarkerId}).", plan.MarkerId);
                 return;
             }
 
             await plan.ExecuteAsync(cancellationToken);
             await history.MarkAppliedAsync(plan.MarkerId, plan.StepCount, _clock.GetUtcNow(), cancellationToken);
-            _logger.LogInformation("Index MongoDB initialisés ({MarkerId}).", plan.MarkerId);
+            _logger.LogInformation("MongoDB indexes created ({MarkerId}).", plan.MarkerId);
         }
         catch (Exception ex)
         {

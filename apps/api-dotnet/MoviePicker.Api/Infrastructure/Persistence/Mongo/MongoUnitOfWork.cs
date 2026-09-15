@@ -80,7 +80,7 @@ public sealed class MongoUnitOfWork : IUnitOfWork
 
         _logger.LogWarning(
             ex,
-            "MongoDB ne supporte pas les transactions sur cette instance (replica set requis) : "
-                + "les écritures multi-documents s'exécutent sans atomicité, toléré en Development seulement");
+            "MongoDB does not support transactions on this instance (replica set required): "
+                + "multi-document writes run without atomicity, tolerated in Development only");
     }
 }
