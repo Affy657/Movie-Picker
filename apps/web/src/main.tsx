@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { startPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
-import { captureException, startSentryWhenIdle } from '@/shared/observability/sentry';
+import { captureException, scheduleSentryStart } from '@/shared/observability/sentry';
 import { loadLocale, preferredLocale } from '@/shared/i18n';
 import './index.css';
 
@@ -30,11 +30,11 @@ async function boot(): Promise<void> {
     </StrictMode>
   );
   hideSplash();
-  startSentryWhenIdle();
+  scheduleSentryStart();
 }
 
 boot().catch((error: unknown) => {
   hideSplash();
   captureException(error);
-  startSentryWhenIdle();
+  scheduleSentryStart();
 });

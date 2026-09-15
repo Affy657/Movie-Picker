@@ -7,6 +7,8 @@ let loading: Promise<void> | null = null;
 
 const IN_APP_BROWSER_NOISE = /SCDynimacBridge/i;
 const IDLE_INIT_TIMEOUT_MS = 3000;
+const START_DELAY_AFTER_LOAD_MS = 10000;
+const FIRST_INTERACTION_EVENTS = ['pointerdown', 'keydown', 'touchstart', 'wheel'] as const;
 
 type PendingCapture = { error: unknown; componentStack?: string };
 const MAX_CAPTURES_BEFORE_INIT = 20;
@@ -73,17 +75,46 @@ export function initSentry(): Promise<void> {
   return loading;
 }
 
-export function startSentryWhenIdle(): void {
-  const start = (): void => {
-    initSentry().catch(() => {
-      loading = null;
-    });
-  };
+function whenMainThreadIsIdle(start: () => void): void {
   if (typeof requestIdleCallback === 'function') {
     requestIdleCallback(start, { timeout: IDLE_INIT_TIMEOUT_MS });
     return;
   }
   setTimeout(start, 0);
+}
+
+function whenPageIsLoaded(callback: () => void): void {
+  if (document.readyState === 'complete') {
+    callback();
+    return;
+  }
+  window.addEventListener('load', callback, { once: true });
+}
+
+function whenUserInteractsOrAfter(delayMs: number, callback: () => void): void {
+  let fired = false;
+  const fire = (): void => {
+    if (fired) return;
+    fired = true;
+    clearTimeout(timer);
+    for (const type of FIRST_INTERACTION_EVENTS) window.removeEventListener(type, fire);
+    callback();
+  };
+  const timer = setTimeout(fire, delayMs);
+  for (const type of FIRST_INTERACTION_EVENTS) {
+    window.addEventListener(type, fire, { once: true, passive: true });
+  }
+}
+
+export function scheduleSentryStart(): void {
+  const start = (): void => {
+    initSentry().catch(() => {
+      loading = null;
+    });
+  };
+  whenPageIsLoaded(() =>
+    whenUserInteractsOrAfter(START_DELAY_AFTER_LOAD_MS, () => whenMainThreadIsIdle(start))
+  );
 }
 
 export function captureException(error: unknown, componentStack?: string): void {

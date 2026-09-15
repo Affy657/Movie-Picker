@@ -101,7 +101,7 @@ describe('initSentry', () => {
     });
     const sentry = await import('./sentry');
 
-    sentry.startSentryWhenIdle();
+    sentry.scheduleSentryStart();
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     vi.unstubAllGlobals();
@@ -141,11 +141,71 @@ describe('initSentry', () => {
     vi.stubGlobal('requestIdleCallback', idle);
     const sentry = await import('./sentry');
 
-    sentry.startSentryWhenIdle();
+    sentry.scheduleSentryStart();
 
-    expect(idle).toHaveBeenCalledWith(expect.any(Function), { timeout: 3000 });
+    expect(idle).not.toHaveBeenCalled();
     expect(init).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(idle).toHaveBeenCalledWith(expect.any(Function), { timeout: 3000 });
     await vi.runAllTimersAsync();
     expect(init).toHaveBeenCalledTimes(1);
+  });
+
+  it('attend la fin du chargement de la page puis dix secondes avant de guetter le temps libre', async () => {
+    vi.useFakeTimers();
+    const init = vi.fn();
+    vi.doMock('@sentry/react', () => ({
+      init,
+      captureException: vi.fn(),
+      browserTracingIntegration: () => ({ name: 'BrowserTracing' }),
+    }));
+    const idle = vi.fn((callback: () => void) => {
+      setTimeout(callback, 0);
+      return 1;
+    });
+    vi.stubGlobal('requestIdleCallback', idle);
+    const readyState = vi.spyOn(document, 'readyState', 'get').mockReturnValue('interactive');
+    const sentry = await import('./sentry');
+
+    sentry.scheduleSentryStart();
+
+    expect(idle).not.toHaveBeenCalled();
+    readyState.mockReturnValue('complete');
+    window.dispatchEvent(new Event('load'));
+    expect(idle).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(9999);
+    expect(idle).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(idle).toHaveBeenCalledTimes(1);
+    await vi.runAllTimersAsync();
+    expect(init).toHaveBeenCalledTimes(1);
+    readyState.mockRestore();
+  });
+
+  it('démarre le SDK dès la première interaction, sans attendre le délai', async () => {
+    vi.useFakeTimers();
+    const init = vi.fn();
+    vi.doMock('@sentry/react', () => ({
+      init,
+      captureException: vi.fn(),
+      browserTracingIntegration: () => ({ name: 'BrowserTracing' }),
+    }));
+    const idle = vi.fn((callback: () => void) => {
+      setTimeout(callback, 0);
+      return 1;
+    });
+    vi.stubGlobal('requestIdleCallback', idle);
+    const sentry = await import('./sentry');
+
+    sentry.scheduleSentryStart();
+    expect(idle).not.toHaveBeenCalled();
+    window.dispatchEvent(new Event('pointerdown'));
+
+    expect(idle).toHaveBeenCalled();
+    await vi.runAllTimersAsync();
+    expect(init).toHaveBeenCalledTimes(1);
+    const armed = idle.mock.calls.length;
+    window.dispatchEvent(new Event('keydown'));
+    expect(idle.mock.calls.length).toBe(armed);
   });
 });

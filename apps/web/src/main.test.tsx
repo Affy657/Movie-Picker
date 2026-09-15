@@ -10,7 +10,7 @@ vi.mock('react-dom/client', () => ({
   }),
 }));
 vi.mock('@/shared/observability/sentry', () => ({
-  startSentryWhenIdle: () => {
+  scheduleSentryStart: () => {
     order.push('sentry');
   },
   captureException: vi.fn(),
