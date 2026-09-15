@@ -1,11 +1,11 @@
-name: "Auth GCP + gcloud"
-description: "Authentifie le runner sur GCP avec la clé JSON du compte de service de la CI, puis installe gcloud. Seul endroit à réécrire pour passer à la fédération d'identité (DEBT-002)."
+name: "GCP auth + gcloud"
+description: "Authenticates the runner on GCP with the CI service account JSON key, then installs gcloud. The only place to rewrite for Workload Identity Federation (DEBT-002)."
 inputs:
   credentials-json:
-    description: "Clé JSON du compte de service (secret GCP_SA_KEY)"
+    description: "Service account JSON key (GCP_SA_KEY secret)"
     required: true
   project-id:
-    description: "Projet GCP (secret GCP_PROJECT_ID)"
+    description: "GCP project (GCP_PROJECT_ID secret)"
     required: true
 runs:
   using: composite

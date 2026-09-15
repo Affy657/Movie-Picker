@@ -3,7 +3,7 @@
 #   - GCP applique ensuite la politique automatiquement (pas de suppression directe ici).
 #   - Mensuel + déclenchable à la main. SA requis : rôle artifactregistry.admin (ou update).
 
-name: Nettoyage Artifact Registry
+name: 🧹 Artifact Registry cleanup
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ env:
 
 jobs:
   apply-policy:
-    name: Appliquer la politique de rétention
+    name: 🧹 Apply the retention policy
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     # Lit GCP_SA_KEY : environnement `production`, comme tout job qui porte ce secret.
@@ -35,7 +35,7 @@ jobs:
         with:
           credentials-json: ${{ secrets.GCP_SA_KEY }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
-      - name: set-cleanup-policies (garde 10 récentes, purge > 30j)
+      - name: set-cleanup-policies (keep the 10 most recent, purge > 30 days)
         run: |
           gcloud artifacts repositories set-cleanup-policies "$GCP_ARTIFACT_REPO" \
             --location="$GCP_REGION" \

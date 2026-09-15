@@ -106,7 +106,7 @@ Dans cet ordre, et seulement une fois le go de l'utilisateur obtenu à l'étape 
 **Rien ne déploie tout seul.** Un push sur `v1.x` ne déploie rien ; la version part en production à sa fusion dans `master`, par le déploiement manuel ci-dessous, jamais automatiquement. La feature est livrée dans le dépôt, pas en production. Terminer en le disant à l'utilisateur, avec la commande à lancer quand il veut la mettre en ligne :
 
 ```bash
-rtk gh workflow run deploy.yml --ref master -f cible=tout
+rtk gh workflow run deploy.yml --ref master -f target=all
 ```
 
 Ne pas le déclencher soi-même sans demande explicite : grouper plusieurs features dans un seul déploiement est précisément ce que ce découpage permet, et c'est l'utilisateur qui décide du moment. Quand il le demande, dérouler d'abord `engineering:deploy-checklist` (run `ci-cd.yml` vert sur le commit visé, migrations `IDataMigration` idempotentes, secrets attendus, critère de rollback), puis lancer la commande et vérifier que la production sert bien le commit.

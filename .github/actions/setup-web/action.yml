@@ -1,8 +1,8 @@
 name: "Setup web (pnpm + Node)"
-description: "Installe pnpm, Node (cache pnpm store) et les dépendances du monorepo (frozen lockfile)."
+description: "Installs pnpm, Node (pnpm store cache) and the monorepo dependencies (frozen lockfile)."
 inputs:
   node-version:
-    description: "Version de Node"
+    description: "Node version"
     required: false
     default: "22"
 runs:

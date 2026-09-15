@@ -34,7 +34,7 @@
 # Le bucket contient des données personnelles (adresses e-mail, empreintes de mots de passe) :
 # accès public interdit, et l'archive n'est jamais publiée en artefact GitHub.
 
-name: Sauvegarde MongoDB
+name: 💾 MongoDB backup
 
 on:
   schedule:
@@ -56,7 +56,7 @@ env:
 
 jobs:
   backup:
-    name: Dump, vérification par restauration, puis publication
+    name: 💾 Dump, verify by restoring, then publish
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     # Lit GCP_SA_KEY : environnement `production`, comme tout job qui porte ce secret.
@@ -65,7 +65,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - name: Vérifier la configuration
+      - name: Check the configuration
         env:
           BACKUP_BUCKET: ${{ vars.BACKUP_BUCKET }}
         run: |
@@ -86,7 +86,7 @@ jobs:
 
       # Outils épinglés par version *et* par empreinte, comme les actions le sont par SHA et les
       # images par digest : une archive substituée en amont ne passe pas.
-      - name: Installer mongodump / mongorestore
+      - name: Install mongodump / mongorestore
         run: |
           set -eo pipefail
           ARCHIVE_NAME="mongodb-database-tools-ubuntu2404-x86_64-${MDB_TOOLS_VERSION}"
@@ -100,7 +100,7 @@ jobs:
             "${ARCHIVE_NAME}/bin/mongodump" "${ARCHIVE_NAME}/bin/mongorestore"
           echo "$RUNNER_TEMP/mongotools" >> "$GITHUB_PATH"
 
-      - name: Dump de la production
+      - name: Dump production
         id: dump
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -140,7 +140,7 @@ jobs:
       # Dépôt en zone d'attente : rien ne doit atterrir à l'emplacement définitif avant d'avoir été
       # relu et restauré. Le préfixe est dérivé de STAMP, jamais d'un second appel à `date`, sinon
       # une exécution à cheval sur un changement de mois classe l'archive dans le mauvais dossier.
-      - name: Déposer l'archive en zone d'attente
+      - name: Upload the archive to the pending area
         id: upload
         env:
           BACKUP_BUCKET: ${{ vars.BACKUP_BUCKET }}
@@ -164,7 +164,7 @@ jobs:
       # Ce qui distingue une sauvegarde d'un fichier : la preuve qu'elle se relit. La copie testée
       # est celle relue depuis Cloud Storage, pas celle restée sur le runner, sinon un envoi
       # tronqué passerait la vérification sans être vu.
-      - name: Relire et restaurer l'archive publiée
+      - name: Read back and restore the uploaded archive
         env:
           PENDING: ${{ steps.upload.outputs.pending }}
           EXPECTED_SIZE: ${{ steps.dump.outputs.size }}
@@ -227,7 +227,7 @@ jobs:
           docker cp "$RUNNER_TEMP/verify.js" mongo-verify:/verify.js
           docker exec mongo-verify mongosh --quiet --file /verify.js
 
-      - name: Publier l'archive vérifiée
+      - name: Publish the verified archive
         env:
           PENDING: ${{ steps.upload.outputs.pending }}
           FINAL: ${{ steps.upload.outputs.final }}
@@ -239,7 +239,7 @@ jobs:
 
       # Une archive qui n'a pas passé la restauration ne doit pas rester dans le bucket : elle y
       # serait le fichier le plus récent, donc celui qu'on saisirait en incident.
-      - name: Retirer l'archive non vérifiée
+      - name: Remove the unverified archive
         if: failure() && steps.upload.outputs.pending != ''
         env:
           PENDING: ${{ steps.upload.outputs.pending }}
@@ -247,6 +247,6 @@ jobs:
           echo "::warning::Vérification en échec, retrait de $PENDING"
           gcloud storage rm "$PENDING" || true
 
-      - name: Arrêter la MongoDB de vérification
+      - name: Stop the verification MongoDB
         if: always()
         run: docker rm -f mongo-verify 2>/dev/null || true

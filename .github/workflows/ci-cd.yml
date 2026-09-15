@@ -31,7 +31,7 @@
 #   - concurrency: group ci-<ref>, cancel-in-progress sur PR / false sur master.
 #   - timeout-minutes sur chaque job ; caches NuGet / Turbo.
 
-name: CI
+name: 🔍 CI
 
 on:
   workflow_dispatch:
@@ -67,7 +67,7 @@ jobs:
   # `workflow_dispatch` l'objet `pull_request` est nul, et nul n'est pas `true`.
   # Les autres jobs héritent du saut par leur `needs: changes`.
   changes:
-    name: Détection des changements (path-filtering)
+    name: 🧭 Change detection (path filtering)
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     if: github.event.pull_request.head.repo.fork != true
@@ -122,7 +122,7 @@ jobs:
               - '.github/actions/**'
 
   gitleaks:
-    name: Secret scan (Gitleaks)
+    name: 🔑 Secret scan (Gitleaks)
     runs-on: ubuntu-24.04
     if: github.event.pull_request.head.repo.fork != true
     timeout-minutes: 5
@@ -155,7 +155,7 @@ jobs:
   # Les versions des deux côtés doivent rester alignées : en changer une ici sans changer l'autre
   # rend une porte locale verte sur ce que la CI refuse.
   lint-workflows:
-    name: Lint workflows (actionlint + zizmor)
+    name: 🧹 Lint workflows (actionlint + zizmor)
     runs-on: ubuntu-24.04
     if: github.event.pull_request.head.repo.fork != true
     timeout-minutes: 10
@@ -165,7 +165,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: actionlint (+ shellcheck sur les blocs run)
+      - name: actionlint (+ shellcheck on run blocks)
         run: |
           set -eo pipefail
           curl -sSL --retry 3 --retry-all-errors -o "$RUNNER_TEMP/actionlint.tgz" \
@@ -173,7 +173,7 @@ jobs:
           echo "${ACTIONLINT_SHA256}  $RUNNER_TEMP/actionlint.tgz" | sha256sum -c -
           tar xzf "$RUNNER_TEMP/actionlint.tgz" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint" -color
-      - name: zizmor (audit sécurité, seuil medium)
+      - name: zizmor (security audit, medium threshold)
         run: |
           set -eo pipefail
           curl -sSL --retry 3 --retry-all-errors -o "$RUNNER_TEMP/zizmor.tgz" \
@@ -183,7 +183,7 @@ jobs:
           "$RUNNER_TEMP/zizmor" --offline --no-progress --min-severity medium --format plain .github/
 
   lint-web:
-    name: Lint front (tsc + eslint + prettier)
+    name: 🧹 Lint web (tsc + eslint + prettier)
     needs: changes
     if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-24.04
@@ -207,7 +207,7 @@ jobs:
       - run: pnpm run format:check
 
   lint-api:
-    name: Lint API .NET (format + build + OpenAPI)
+    name: 🧹 Lint API .NET (format + build + OpenAPI)
     needs: changes
     if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-24.04
@@ -224,15 +224,15 @@ jobs:
       - uses: ./.github/actions/setup-dotnet-cache
       - name: Restore API .NET
         run: dotnet restore apps/api-dotnet/MoviePicker.slnx
-      - name: dotnet format (vérification, roadmap § 31)
+      - name: dotnet format (verify, roadmap § 31)
         run: dotnet format apps/api-dotnet/MoviePicker.slnx --verify-no-changes --verbosity minimal
       - name: Build API .NET (warnings → errors)
         run: dotnet build apps/api-dotnet/MoviePicker.slnx -c Release --no-restore -warnaserror
-      - name: Export OpenAPI (artefact, roadmap § 32)
+      - name: Export OpenAPI (artifact, roadmap § 32)
         env:
           SKIP_OPENAPI_BUILD: '1'
         run: node scripts/export-openapi.cjs
-      - name: Types front alignés sur le contrat OpenAPI
+      - name: Web types aligned with the OpenAPI contract
         run: |
           corepack enable
           pnpm install --frozen-lockfile
@@ -245,7 +245,7 @@ jobs:
           retention-days: 7
 
   audit:
-    name: Audit dépendances (npm + NuGet)
+    name: 🛡️ Dependency audit (npm + NuGet)
     needs: changes
     if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true'
     runs-on: ubuntu-24.04
@@ -256,7 +256,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Audit npm (Trivy, pnpm audit indisponible, endpoint npm retiré le 2026-07-15, cf. pnpm/pnpm#11265)
+      - name: npm audit (Trivy; pnpm audit unavailable since the npm endpoint was removed on 2026-07-15, see pnpm/pnpm#11265)
         if: needs.changes.outputs.web == 'true'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -268,13 +268,13 @@ jobs:
           ignore-unfixed: true
       - uses: ./.github/actions/setup-dotnet-cache
         if: needs.changes.outputs.api == 'true'
-      - name: Restore API .NET (pour audit NuGet)
+      - name: Restore API .NET (for the NuGet audit)
         if: needs.changes.outputs.api == 'true'
         run: dotnet restore apps/api-dotnet/MoviePicker.slnx
-      - name: "Audit NuGet : liste vulnérabilités (informatif)"
+      - name: "NuGet audit: list vulnerabilities (informational)"
         if: needs.changes.outputs.api == 'true'
         run: dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive
-      - name: "Audit NuGet : échoue si High / Critical"
+      - name: "NuGet audit: fail on High / Critical"
         if: needs.changes.outputs.api == 'true'
         run: |
           set -o pipefail
@@ -286,7 +286,7 @@ jobs:
           fi
 
   test-web:
-    name: Tests front + couverture
+    name: 🧪 Web tests + coverage
     needs: changes
     if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-24.04
@@ -313,7 +313,7 @@ jobs:
           retention-days: 7
 
   test-api:
-    name: Tests API .NET + couverture
+    name: 🧪 API .NET tests + coverage
     needs: changes
     if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-24.04
@@ -325,7 +325,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-dotnet-cache
-      - name: Tests unitaires + couverture
+      - name: Unit tests + coverage
         run: |
           dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj -c Debug \
             --collect:"XPlat Code Coverage" \
@@ -333,7 +333,7 @@ jobs:
             --results-directory ./coverage-unit
         env:
           MONGODB_URI: ""
-      - name: Gate couverture back (lignes >= 90%, branches >= 78%)
+      - name: API coverage gate (lines >= 90%, branches >= 78%)
         run: |
           set -eo pipefail
           report="$(find ./coverage-unit -name coverage.opencover.xml | head -1)"
@@ -355,7 +355,7 @@ jobs:
             fail=1
           fi
           exit $fail
-      - name: Tests intégration
+      - name: Integration tests
         run: dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj -c Debug --verbosity normal
         env:
           MONGODB_URI: ""
@@ -367,7 +367,7 @@ jobs:
           retention-days: 7
 
   test-api-mongo:
-    name: Tests API .NET sur MongoDB réel
+    name: 🧪 API .NET tests on real MongoDB
     needs: changes
     if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-24.04
@@ -379,7 +379,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-dotnet-cache
-      - name: Démarrer MongoDB en replica set (transactions)
+      - name: Start MongoDB as a replica set (transactions)
         run: |
           set -eo pipefail
           docker run -d --name mongo-it -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
@@ -396,7 +396,7 @@ jobs:
             fi
             sleep 2
           done
-      - name: Tests intégration sur MongoDB + couverture
+      - name: Integration tests on MongoDB + coverage
         run: |
           set -eo pipefail
           dotnet test apps/api-dotnet/MoviePicker.Api.IntegrationTests/MoviePicker.Api.IntegrationTests.csproj \
@@ -410,7 +410,7 @@ jobs:
       # Les adaptateurs Mongo sont exclus du rapport du job test-api : ils ne tournent que sur une
       # vraie base. Sans cette porte, la seule couche qui ne s'exécute qu'en production n'est
       # mesurée nulle part.
-      - name: Gate couverture des adaptateurs Mongo
+      - name: Mongo adapters coverage gate
         run: node scripts/check-mongo-coverage.mjs coverage-mongo
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
@@ -421,7 +421,7 @@ jobs:
           retention-days: 7
 
   e2e:
-    name: E2E Playwright (bloquant)
+    name: 🎭 E2E Playwright (blocking)
     needs: changes
     if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-24.04
@@ -434,9 +434,9 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-web
       - uses: ./.github/actions/setup-dotnet-cache
-      - name: Installer le navigateur Playwright
+      - name: Install the Playwright browser
         run: pnpm exec playwright install --with-deps chromium
-      - name: Tests E2E (build front + API stub + Playwright)
+      - name: E2E tests (web build + API stub + Playwright)
         run: pnpm run test:e2e:ci
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
@@ -451,7 +451,7 @@ jobs:
     # Seul job qui joue la pile complète : navigateur réel + API branchée sur un vrai MongoDB.
     # Le job e2e tourne sur la base mémoire, test-api-mongo tourne sans navigateur : sans celui-ci,
     # la combinaison qui tourne en production n'est reproduite nulle part avant le déploiement.
-    name: E2E parcours critique sur MongoDB réel (bloquant)
+    name: 🎭 E2E critical path on real MongoDB (blocking)
     needs: changes
     if: needs.changes.outputs.web == 'true' || needs.changes.outputs.api == 'true' || needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-24.04
@@ -464,7 +464,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-web
       - uses: ./.github/actions/setup-dotnet-cache
-      - name: Démarrer MongoDB en replica set (transactions)
+      - name: Start MongoDB as a replica set (transactions)
         run: |
           set -eo pipefail
           docker run -d --name mongo-e2e -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
@@ -481,9 +481,9 @@ jobs:
             fi
             sleep 2
           done
-      - name: Installer le navigateur Playwright
+      - name: Install the Playwright browser
         run: pnpm exec playwright install --with-deps chromium
-      - name: Parcours critique (front buildé + API sur MongoDB + Playwright)
+      - name: Critical path (web build + API on MongoDB + Playwright)
         run: pnpm run test:e2e:mongo
         env:
           # Base dédiée : le garde-fou Development refuse la base 'moviepicker'.
@@ -506,7 +506,7 @@ jobs:
   # paramètre, une analyse poussée depuis une branche écraserait celle de master, que SonarCloud
   # prend pour la branche principale par défaut.
   sonar:
-    name: SonarCloud (analyse + couverture ; QG bloquant)
+    name: 📊 SonarCloud (analysis + coverage, blocking Quality Gate)
     needs: [changes, test-web, test-api]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -545,13 +545,13 @@ jobs:
           key: nuget-${{ runner.os }}-${{ hashFiles('apps/api-dotnet/**/*.csproj', 'apps/api-dotnet/Directory.Build.props') }}
           restore-keys: |
             nuget-${{ runner.os }}-
-      - name: "Couverture front : download artefact (si test-web a tourné)"
+      - name: "Web coverage: download artifact (if test-web ran)"
         if: needs.test-web.result == 'success'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: coverage-web
           path: apps/web/coverage
-      - name: "Couverture front : fallback (régénère si test-web non exécuté)"
+      - name: "Web coverage: fallback (regenerate if test-web did not run)"
         if: needs.test-web.result != 'success'
         run: |
           pnpm install --frozen-lockfile --ignore-scripts
@@ -559,20 +559,20 @@ jobs:
       # Même logique que pour le front : le job test-api a déjà produit ce rapport, le rejouer ici
       # coûtait une minute sur le chemin critique du run. Le rapport OpenCover porte des chemins
       # absolus, identiques d'un runner à l'autre, donc Sonar le relit sans réécriture.
-      - name: "Couverture API : download artefact (si test-api a tourné)"
+      - name: "API coverage: download artifact (if test-api ran)"
         if: needs.test-api.result == 'success'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: coverage-api-unit
           path: coverage-unit
-      - name: Installer SonarScanner for .NET
+      - name: Install SonarScanner for .NET
         run: |
           dotnet tool install --global dotnet-sonarscanner --version 11.2.1
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
       # Le `dotnet build` doit rester entre begin et end, c'est là que les analyseurs Roslyn de
       # Sonar tournent. Les tests, eux, ne servent qu'à la couverture : ils ne sont rejoués que si
       # l'artefact de test-api manque.
-      - name: Analyse SonarCloud (begin + build + Quality Gate)
+      - name: SonarCloud analysis (begin + build + Quality Gate)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           EVENT_NAME: ${{ github.event_name }}
@@ -621,7 +621,7 @@ jobs:
               --results-directory coverage-unit
           fi
           dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
-      - name: "Quality Gate : detail des conditions en echec"
+      - name: "Quality Gate: failing conditions detail"
         if: failure()
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

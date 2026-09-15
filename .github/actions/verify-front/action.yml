@@ -1,21 +1,21 @@
-name: "Invalider CloudFront et vérifier le front servi"
-description: "Invalide la distribution, vérifie que CloudFront répond, puis que le domaine public sert bien le point d'entrée du build qui vient d'être publié. Partagée par le déploiement et le retour arrière."
+name: "Invalidate CloudFront and verify the served web build"
+description: "Invalidates the distribution, checks that CloudFront answers, then that the public domain serves the entry point of the build that was just published. Shared by the deployment and the rollback."
 inputs:
   dist:
-    description: "Dossier du build qui vient d'être publié, pour comparer son index.html à celui que le domaine sert"
+    description: "Folder of the build that was just published, to compare its index.html with the one the domain serves"
     required: true
   distribution-id:
-    description: "Identifiant de la distribution CloudFront (variable AWS_CLOUDFRONT_DISTRIBUTION_ID) ; vide pour sauter l'invalidation"
+    description: "CloudFront distribution id (AWS_CLOUDFRONT_DISTRIBUTION_ID variable); empty to skip the invalidation"
     required: false
     default: ""
   public-origins:
-    description: "Origines publiques du front, séparées par des virgules comme dans ALLOWED_ORIGINS ; la première est sondée, vide pour ne pas sonder"
+    description: "Public web origins, comma-separated as in ALLOWED_ORIGINS; the first one is probed, empty to skip"
     required: false
     default: ""
 runs:
   using: composite
   steps:
-    - name: Invalidation CloudFront
+    - name: CloudFront invalidation
       if: inputs.distribution-id != ''
       shell: bash
       env:
@@ -29,7 +29,7 @@ runs:
         aws cloudfront wait invalidation-completed \
           --distribution-id "$DISTRIBUTION_ID" \
           --id "$INV_ID"
-    - name: Smoke test front (CloudFront)
+    - name: Web smoke test (CloudFront)
       if: inputs.distribution-id != ''
       shell: bash
       env:
@@ -49,7 +49,7 @@ runs:
     # Un 200 ne dit pas quelle version est servie : sans invalidation, le CDN répond 200 avec
     # l'ancien index.html et la publication passe pour bonne. On compare donc le point d'entrée
     # haché du build qu'on vient d'envoyer à celui que le domaine public sert vraiment.
-    - name: Smoke test front (domaine public + version servie)
+    - name: Web smoke test (public domain + served version)
       shell: bash
       env:
         DIST: ${{ inputs.dist }}

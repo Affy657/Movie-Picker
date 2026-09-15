@@ -1,22 +1,22 @@
 ## Description
 
-<!-- Résumé du changement et du contexte. Quel problème est résolu ? -->
+<!-- Summary of the change and its context. Which problem does it solve? -->
 
 Closes #
 
-## Type de changement
+## Type of change
 
-- [ ] 🐞 Correction de bug (`fix`)
-- [ ] ✨ Nouvelle fonctionnalité (`feat`)
-- [ ] ♻️ Refactorisation (`refactor`)
+- [ ] 🐞 Bug fix (`fix`)
+- [ ] ✨ New feature (`feat`)
+- [ ] ♻️ Refactoring (`refactor`)
 - [ ] 📝 Documentation (`docs`)
-- [ ] 🔧 Outillage / CI (`chore` / `ci`)
+- [ ] 🔧 Tooling / CI (`chore` / `ci`)
 
 ## Checklist
 
-- [ ] Les tests passent en local (`pnpm run verify:local`)
-- [ ] Le lint et le format sont verts (`pnpm run lint` + `pnpm run format:check`)
-- [ ] Des tests couvrent le changement (unitaires / intégration / E2E selon le cas)
-- [ ] La documentation impactée est à jour
-- [ ] Le `CHANGELOG.md` est mis à jour si le changement est visible par l'utilisateur ou l'exploitant
-- [ ] L'issue liée est référencée (`Closes #…`)
+- [ ] Tests pass locally (`pnpm run verify:local`)
+- [ ] Lint and format are green (`pnpm run lint` + `pnpm run format:check`)
+- [ ] Tests cover the change (unit / integration / E2E as relevant)
+- [ ] Impacted documentation is up to date
+- [ ] `CHANGELOG.md` is updated when the change is visible to users or operators
+- [ ] The linked issue is referenced (`Closes #…`)

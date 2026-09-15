@@ -10,7 +10,7 @@
 # garde-fou final vérifie donc que chaque cible demandée est réellement partie, et non la couleur
 # du run, un job de déploiement sauté par un `needs:` rouge n'apparaît pas en échec.
 #
-# Les portes de qualité ne sont pas contournées, elles sont *consommées* : `verifier-ci` refuse de
+# Les portes de qualité ne sont pas contournées, elles sont *consommées* : `verify-ci` refuse de
 # déployer un commit dont le run `ci-cd.yml` n'est pas vert (gitleaks, lint, tests, E2E, Quality
 # Gate Sonar). Rejouer ces portes ici doublerait leur coût sans rien prouver de plus, puisqu'elles
 # ont déjà tourné sur exactement ce commit. Lighthouse, à l'inverse, tourne **ici** : le job pèse
@@ -21,18 +21,18 @@
 # Retour arrière : `rollback.yml` pour l'API (révision Cloud Run antérieure), `rollback-front.yml`
 # pour le front (republication de l'artefact `front-dist-<sha>` archivé par `deploy-front`).
 
-name: Deploy
+name: 🚀 Deploy
 
 on:
   workflow_dispatch:
     inputs:
-      cible:
-        description: "Ce qui est déployé"
+      target:
+        description: "What gets deployed"
         type: choice
         required: true
-        default: tout
+        default: all
         options:
-          - tout
+          - all
           - front
           - api
 
@@ -63,15 +63,15 @@ jobs:
   # Le refus hors master ci-dessous est doublé par la politique de branche de l'environnement
   # `production` (Settings → Environments), qui couvre aussi les workflows de retour arrière et
   # de sauvegarde : ce `if` n'est que le message clair et la sortie rapide.
-  verifier-ci:
-    name: Exiger une CI verte sur le commit visé
+  verify-ci:
+    name: ✅ Require a green CI run on the target commit
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
       actions: read
     steps:
-      - name: Refuser un déploiement hors master
+      - name: Refuse a deployment outside master
         run: |
           if [ "$GITHUB_REF" != "refs/heads/master" ]; then
             echo "::error::La production ne part que de master (ref demandée : $GITHUB_REF). Fusionner d'abord."
@@ -80,7 +80,7 @@ jobs:
       # `--jq` filtre côté serveur GitHub sur le SHA exact : un run de pull request porte le même
       # head_sha que le push qui l'a suivi, d'où le filtre sur l'événement et la branche. Le run le
       # plus récent gagne, c'est celui qu'un « Re-run failed jobs » a remis au vert.
-      - name: Lire la conclusion du run CI de ce commit
+      - name: Read the CI run conclusion for this commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -93,7 +93,7 @@ jobs:
                   | sort_by(.run_started_at) | reverse')"
           count="$(printf '%s' "$runs" | jq 'length')"
           if [ "$count" = "0" ]; then
-            echo "::error::Aucun run ci-cd.yml sur $GITHUB_SHA. Lancer le workflow « CI » sur master, attendre le vert, puis redéclencher ce déploiement."
+            echo "::error::Aucun run ci-cd.yml sur $GITHUB_SHA. Lancer le workflow « 🔍 CI » sur master, attendre le vert, puis redéclencher ce déploiement."
             exit 1
           fi
           status="$(printf '%s' "$runs" | jq -r '.[0].status')"
@@ -116,9 +116,9 @@ jobs:
   # coûte 9 minutes par livraison réelle et garde exactement le même pouvoir de blocage.
   # Contrepartie : une régression de performance ne se voit plus au push mais au déploiement.
   lighthouse:
-    name: Lighthouse front (seuils bloquants)
-    needs: verifier-ci
-    if: inputs.cible == 'tout' || inputs.cible == 'front'
+    name: 💡 Lighthouse web (blocking thresholds)
+    needs: verify-ci
+    if: inputs.target == 'all' || inputs.target == 'front'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -152,13 +152,13 @@ jobs:
   # secrets dans l'environnement plutôt qu'au niveau du dépôt, où n'importe quel workflow sur
   # n'importe quelle branche pouvait les lire.
   docker-api:
-    name: Docker API → Artifact Registry
+    name: 🐳 Docker API → Artifact Registry
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    needs: verifier-ci
+    needs: verify-ci
     outputs:
       image_digest: ${{ steps.push.outputs.digest }}
-    if: inputs.cible == 'tout' || inputs.cible == 'api'
+    if: inputs.target == 'all' || inputs.target == 'api'
     environment: production
     permissions:
       contents: read
@@ -173,7 +173,7 @@ jobs:
           project-id: ${{ secrets.GCP_PROJECT_ID }}
       - run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
-      - name: Build image API (buildx + cache GHA de layers)
+      - name: Build API image (buildx + GHA layer cache)
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: apps/api-dotnet/MoviePicker.Api
@@ -188,7 +188,7 @@ jobs:
       # Si un CVE bloque ici, soit on rebuild avec une base image plus récente, soit on
       # documente le risque (workaround / mitigation) et on suppress côté Trivy
       # (`.trivyignore` à la racine du contexte de build) avec une note de revue.
-      - name: Scan image Docker (Trivy)
+      - name: Scan Docker image (Trivy)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: movie-picker-api
@@ -222,7 +222,7 @@ jobs:
           echo "Image poussée : $IMAGE"
           echo "Digest : $DIGEST"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
-      - name: SBOM de l'image (Trivy → CycloneDX, artefact)
+      - name: Image SBOM (Trivy → CycloneDX, artifact)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: movie-picker-api
@@ -237,11 +237,11 @@ jobs:
           retention-days: 30
 
   deploy-api:
-    name: Deploy API → Cloud Run
+    name: 🚀 Deploy API → Cloud Run
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Un `needs:` nu, sans `always()` ni test de `result` : les portes de qualité sont déjà
-    # exigées par `verifier-ci` en amont de `docker-api`, et un `always()` laissait le skip d'un
+    # exigées par `verify-ci` en amont de `docker-api`, et un `always()` laissait le skip d'un
     # job intermédiaire se propager en silence jusqu'ici, c'est exactement ce piège qui a laissé
     # la prod dix jours en retard. Un docker-api rouge ou sauté saute ce job, et le garde-fou
     # final le signale.
@@ -258,7 +258,7 @@ jobs:
         with:
           credentials-json: ${{ secrets.GCP_SA_KEY }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
-      - name: Activer l’API Secret Manager (obligatoire pour --set-secrets ; idempotent)
+      - name: Enable the Secret Manager API (required by --set-secrets, idempotent)
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: gcloud services enable secretmanager.googleapis.com --project="$GCP_PROJECT_ID"
@@ -267,7 +267,7 @@ jobs:
       # revenir en arrière », qui exposait la mauvaise révision le temps des smoke tests et laissait
       # ensuite le trafic épinglé sur une révision nommée, état dans lequel `gcloud run deploy`
       # n'envoie plus aucun trafic aux révisions suivantes, sans que rien ne vire au rouge.
-      - name: Déployer sans trafic (secrets GCP + CORS)
+      - name: Deploy without traffic (GCP secrets + CORS)
         id: deploy
         env:
           # Variables (recommandé) ou Secret de secours si tu as tout mis dans Secrets
@@ -319,13 +319,13 @@ jobs:
           echo "tag_url=$TAG_URL" >> "$GITHUB_OUTPUT"
       # Sondes jouées sur l'URL taguée : la production sert encore l'ancienne révision. Un échec
       # ici laisse la prod intacte, il n'y a rien à réparer, la révision n'est pas promue.
-      - name: Valider la révision avant de l'exposer
+      - name: Validate the revision before exposing it
         uses: ./.github/actions/check-api-health
         with:
           url: ${{ steps.deploy.outputs.tag_url }}
       # --to-latest rebranche `latestRevision: true` : c'est aussi ce qui désépingle le service si
       # un retour arrière manuel l'avait figé sur une révision nommée.
-      - name: Promouvoir la révision validée
+      - name: Promote the validated revision
         run: |
           set -eo pipefail
           gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --to-latest
@@ -335,7 +335,7 @@ jobs:
       # Le balayage des soirées récurrentes n'est qu'un filet : la clôture d'une soirée et
       # l'ouverture de « Mes soirées » créent déjà l'occurrence suivante. Une passe par nuit
       # suffit donc à rattraper les séries que personne n'a rouvertes.
-      - name: "Rappels de soirée et soirées récurrentes : Cloud Scheduler"
+      - name: "Event reminders and recurring events: Cloud Scheduler"
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
@@ -378,14 +378,14 @@ jobs:
       # code, d'où l'absence de retour arrière. PUBLIC_API_URL est dérivé de VITE_API_URL, l'URL
       # contre laquelle le front est construit : rien de nouveau à configurer, et la valeur reste
       # juste après une migration de domaine.
-      - name: Lire l'URL du service en ligne
+      - name: Read the live service URL
         id: service
         run: |
           set -eo pipefail
           URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
           echo "Production (URL Cloud Run) : $URL"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
-      - name: Vérifier la production après promotion
+      - name: Verify production after promotion
         uses: ./.github/actions/check-api-health
         with:
           url: ${{ steps.service.outputs.url }}
@@ -393,13 +393,13 @@ jobs:
           public-url-expected: "true"
       # Les tags s'accumulent sur le service s'ils ne sont pas retirés, y compris ceux des
       # déploiements qui ont échoué avant promotion.
-      - name: Retirer le tag de validation
+      - name: Remove the validation tag
         if: always() && steps.deploy.outputs.tag != ''
         env:
           TAG: ${{ steps.deploy.outputs.tag }}
         run: |
           gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --remove-tags "$TAG" || true
-      - name: Enregistrer le déploiement Sentry (API)
+      - name: Record the Sentry deploy (API)
         continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -419,11 +419,11 @@ jobs:
           ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "api-${{ github.sha }}"
 
   deploy-front:
-    name: Deploy Front → S3 & CloudFront
+    name: 🚀 Deploy web → S3 & CloudFront
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Même raisonnement que `deploy-api` : la longue liste de gates est remplacée par
-    # `verifier-ci`, qui les exige toutes sur le commit visé. Il ne reste ici que Lighthouse,
+    # `verify-ci`, qui les exige toutes sur le commit visé. Il ne reste ici que Lighthouse,
     # la seule porte qui tourne dans ce workflow.
     needs: lighthouse
     environment: production
@@ -453,7 +453,7 @@ jobs:
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
           SENTRY_URL: ${{ vars.SENTRY_URL }}
           SENTRY_RELEASE: ${{ github.sha }}
-      - name: "Sitemap dynamique (profils publics via l'API)"
+      - name: "Dynamic sitemap (public profiles via the API)"
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: node apps/web/scripts/generate-sitemap.mjs
@@ -465,7 +465,7 @@ jobs:
       # Les cinq passes S3 vivent dans `publish-front`, partagée avec `rollback-front.yml` : l'ordre
       # des passes et les en-têtes de cache y sont écrits une fois, pour que le retour arrière ne
       # rejoue pas de tête une procédure à pièges.
-      - name: Publier le build sur S3 (assets immutable, puis no-cache, index.html en dernier)
+      - name: Publish the build to S3 (immutable assets, then no-cache, index.html last)
         uses: ./.github/actions/publish-front
         with:
           dist: apps/web/dist
@@ -476,7 +476,7 @@ jobs:
       # l'envoi S3 : une archive de confort ne doit jamais pouvoir empêcher un déploiement.
       # `overwrite` parce qu'un « Re-run failed jobs » rejoue l'étape dans le même run, où le nom
       # d'artefact existe déjà.
-      - name: Archiver le build front (rend un retour arrière possible)
+      - name: Archive the web build (makes a rollback possible)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: front-dist-${{ github.sha }}
@@ -484,7 +484,7 @@ jobs:
           if-no-files-found: error
           overwrite: true
           retention-days: 30
-      - name: Invalider CloudFront et vérifier le front servi
+      - name: Invalidate CloudFront and verify the served web build
         uses: ./.github/actions/verify-front
         with:
           dist: apps/web/dist
@@ -493,7 +493,7 @@ jobs:
           # front par construction, plutôt que réécrite ici : une valeur de plus à tenir à jour
           # serait une valeur de plus à oublier lors d'une migration de domaine.
           public-origins: ${{ vars.ALLOWED_ORIGINS }}
-      - name: Enregistrer le déploiement Sentry (front)
+      - name: Record the Sentry deploy (web)
         continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -515,7 +515,7 @@ jobs:
   # laisserait le run vert avec une production périmée, le mode d'échec le plus coûteux de ce
   # pipeline, et le seul qui ne se voit pas dans la couleur du run.
   deploy-guard:
-    name: Garde-fou déploiement
+    name: 🛑 Deployment guard
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     needs: [deploy-api, deploy-front]
@@ -523,23 +523,23 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Vérifier que chaque cible demandée est bien partie
+      - name: Check that every requested target was deployed
         env:
-          CIBLE: ${{ inputs.cible }}
+          TARGET: ${{ inputs.target }}
           FRONT_RESULT: ${{ needs.deploy-front.result }}
           API_RESULT: ${{ needs.deploy-api.result }}
         run: |
-          echo "cible demandée : $CIBLE"
+          echo "cible demandée : $TARGET"
           echo "front : déploiement=$FRONT_RESULT"
           echo "api   : déploiement=$API_RESULT"
           fail=0
-          if [ "$CIBLE" = "tout" ] || [ "$CIBLE" = "front" ]; then
+          if [ "$TARGET" = "all" ] || [ "$TARGET" = "front" ]; then
             if [ "$FRONT_RESULT" != "success" ]; then
               echo "::error::Front demandé mais Deploy Front est '$FRONT_RESULT' : la production n'est pas à jour."
               fail=1
             fi
           fi
-          if [ "$CIBLE" = "tout" ] || [ "$CIBLE" = "api" ]; then
+          if [ "$TARGET" = "all" ] || [ "$TARGET" = "api" ]; then
             if [ "$API_RESULT" != "success" ]; then
               echo "::error::API demandée mais Deploy API est '$API_RESULT' : la production n'est pas à jour."
               fail=1

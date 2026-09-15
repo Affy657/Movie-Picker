@@ -107,7 +107,7 @@ Attendre que les checks de la PR soient verts : ce sont eux que le déploiement 
 **Merger ne déploie rien.** Le déploiement est manuel depuis le 2026-09-10, pour tenir le quota de minutes GitHub Actions. Attendre que le run `ci-cd.yml` du commit de merge soit **terminé et vert** — le workflow de déploiement le vérifie et refusera de partir sinon — puis :
 
 ```bash
-rtk gh workflow run deploy.yml --ref master -f cible=tout
+rtk gh workflow run deploy.yml --ref master -f target=all
 ```
 
 **STOP. Le déploiement met la production à jour : attendre le go de l'utilisateur avant de le déclencher.**
@@ -118,7 +118,7 @@ rtk gh workflow run deploy.yml --ref master -f cible=tout
 
 **1. Le run de `deploy.yml` est terminé et `deploy-guard` est vert.** Ce job échoue quand une cible demandée n'est pas partie : c'est lui qui attrape le déploiement resté en `skipped`.
 
-**2. Aucun job de déploiement en `skipped`.** `deploy-front` dépend de `lighthouse`, `deploy-api` dépend de `docker-api`, et les deux dépendent de `verifier-ci`. Un seul de ces jobs rouge laisse le déploiement en `skipped` : le run n'apparaît pas en échec et la prod reste périmée en silence. C'est comme ça que le front est resté dix jours en retard. Les autres portes (gitleaks, lint, tests, E2E, Quality Gate Sonar) ne sont plus dans ce `needs:` : elles sont exigées en bloc par `verifier-ci`, qui refuse un commit dont le run de CI n'est pas vert.
+**2. Aucun job de déploiement en `skipped`.** `deploy-front` dépend de `lighthouse`, `deploy-api` dépend de `docker-api`, et les deux dépendent de `verify-ci`. Un seul de ces jobs rouge laisse le déploiement en `skipped` : le run n'apparaît pas en échec et la prod reste périmée en silence. C'est comme ça que le front est resté dix jours en retard. Les autres portes (gitleaks, lint, tests, E2E, Quality Gate Sonar) ne sont plus dans ce `needs:` : elles sont exigées en bloc par `verify-ci`, qui refuse un commit dont le run de CI n'est pas vert.
 
 **3. La production sert bien le SHA de master.** Côté API, le signal qui fait foi est l'image de la révision Cloud Run active : elle est taguée par le SHA du commit, à comparer avec `git rev-parse origin/master`.
 

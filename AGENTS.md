@@ -6,9 +6,15 @@ Règles pour les agents IA travaillant sur ce repo. **C'est la source unique** :
 
 **Tout fichier créé dans le dépôt porte un nom en anglais**, quelle que soit la langue de son contenu : `technical-debt.md`, pas `dette-technique.md`. Vaut pour les répertoires comme pour les fichiers, la documentation comme le code.
 
-Le **contenu** suit sa propre convention : documentation et messages de commit en français, chaînes affichées à l'utilisateur dans `apps/web/src/shared/i18n/locales/`, code et identifiants en anglais comme le veut l'usage du langage.
+Le **contenu** suit sa propre convention : documentation en français, chaînes affichées à l'utilisateur dans `apps/web/src/shared/i18n/locales/`, code et identifiants en anglais comme le veut l'usage du langage. Les messages de commit et les pull requests sont en anglais, règle ci-dessous.
 
 Les fichiers déjà nommés en français restent en place tant qu'on ne les touche pas : ne pas lancer de renommage de masse, appliquer la règle aux fichiers créés à partir de maintenant.
+
+## Commits et pull requests
+
+**Titre et corps d'un commit sont en anglais, comme le titre et la description d'une pull request.** Depuis le 2026-09-15 ; l'historique antérieur est en français et reste tel quel. Format Conventional Commits, `type(scope): subject`, sujet à l'impératif présent, sans majuscule initiale ni point final, types `feat`, `fix`, `perf`, `refactor`, `test`, `docs`, `chore`, `ci`. Le corps dit pourquoi, pas quoi, et cite les fichiers ou identifiants en jeu (`DEBT-027`, `C10`) plutôt que de les paraphraser. Ce qui est lu dans l'interface GitHub suit la même règle : noms de workflows, de jobs et d'étapes dans `.github/`, gabarit de pull request. Les gabarits d'issue restent en français : ils s'adressent aux utilisateurs du produit.
+
+La documentation, les commentaires de workflow, le `CHANGELOG.md` et les messages écrits par les scripts (`::error::`, `echo`) restent en français : ils s'adressent à l'exploitant, pas à l'historique.
 
 ## Style de code
 
@@ -81,7 +87,7 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 
 **Aucune contribution externe.** Projet solo : `CONTRIBUTING.md` refuse les PR de fork et la licence les rend infusionnables. Les jobs d'entrée de `ci-cd.yml` portent `github.event.pull_request.head.repo.fork != true`, donc une PR de fork ne déclenche aucun run. Ne pas retirer cette condition ni l'oublier sur un job d'entrée ajouté plus tard : un job sans `needs: changes` ne l'hérite pas.
 
-**Pousser sur master ne déploie rien.** La mise en production est un geste manuel, `gh workflow run deploy.yml --ref master -f cible=tout` (cibles : `tout`, `front`, `api`), et elle refuse de partir si le run `ci-cd.yml` du commit visé n'est pas vert. Ne jamais la déclencher sans demande explicite de l'utilisateur : le découpage existe pour qu'il groupe plusieurs livraisons dans un seul déploiement, héritage du temps où le dépôt était privé et ses minutes GitHub Actions facturées. Corollaire à annoncer en fin de tâche : **la production est en retard sur master par défaut**, et rien ne le signale.
+**Pousser sur master ne déploie rien.** La mise en production est un geste manuel, `gh workflow run deploy.yml --ref master -f target=all` (cibles : `all`, `front`, `api`), et elle refuse de partir si le run `ci-cd.yml` du commit visé n'est pas vert. Ne jamais la déclencher sans demande explicite de l'utilisateur : le découpage existe pour qu'il groupe plusieurs livraisons dans un seul déploiement, héritage du temps où le dépôt était privé et ses minutes GitHub Actions facturées. Corollaire à annoncer en fin de tâche : **la production est en retard sur master par défaut**, et rien ne le signale.
 
 **Un run master joue toutes les lanes.** Le filtre par chemin de `ci-cd.yml` ne s'applique qu'aux PR et aux branches `v*` ; sur master, un commit qui ne touche que la documentation rejoue quand même lint, tests, E2E et Sonar, parce que `deploy.yml` ne lit que la conclusion du run et qu'un run vert par vacuité posé sur un commit rouge autorisait un déploiement jamais validé. Ne pas remettre le filtre sur master pour gagner sept minutes : les minutes sont gratuites, le trou ne l'était pas.
 

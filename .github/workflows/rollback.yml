@@ -15,13 +15,13 @@
 # NB : le retour arrière du front est `rollback-front.yml`, qui republie un artefact
 #      `front-dist-<sha>` archivé par deploy-front avec les mêmes passes S3 que le déploiement.
 
-name: Rollback API (Cloud Run)
+name: ⏪ Rollback API (Cloud Run)
 
 on:
   workflow_dispatch:
     inputs:
       revision:
-        description: "Révision Cloud Run cible (vide = révision précédente)"
+        description: "Target Cloud Run revision (empty = previous revision)"
         required: false
         type: string
 
@@ -40,7 +40,7 @@ env:
 
 jobs:
   rollback:
-    name: Rollback trafic Cloud Run
+    name: ⏪ Roll back Cloud Run traffic
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: production
@@ -55,7 +55,7 @@ jobs:
         with:
           credentials-json: ${{ secrets.GCP_SA_KEY }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
-      - name: Déterminer la révision cible
+      - name: Determine the target revision
         id: target
         env:
           INPUT_REV: ${{ inputs.revision }}
@@ -75,14 +75,14 @@ jobs:
           fi
           echo "Rollback vers la révision : $TARGET"
           echo "target=$TARGET" >> "$GITHUB_OUTPUT"
-      - name: Basculer 100% du trafic
+      - name: Route 100% of the traffic
         env:
           TARGET: ${{ steps.target.outputs.target }}
         run: |
           gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" \
             --region "$GCP_REGION" \
             --to-revisions "$TARGET=100"
-      - name: Lire l'URL du service en ligne
+      - name: Read the live service URL
         id: service
         run: |
           set -eo pipefail
@@ -91,7 +91,7 @@ jobs:
           echo "url=$URL" >> "$GITHUB_OUTPUT"
       # Mêmes sondes que le déploiement, /health/ready compris : une révision antérieure peut
       # répondre ok sans être prête, si un secret qu'elle attend a disparu depuis.
-      - name: Vérifier la production après bascule
+      - name: Verify production after the switch
         uses: ./.github/actions/check-api-health
         with:
           url: ${{ steps.service.outputs.url }}

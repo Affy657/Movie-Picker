@@ -4,7 +4,7 @@
 #   - Échoue sur High/Critical → notification via l'e-mail d'échec de run planifié.
 #   - Aucun secret cloud requis (audits + scan filesystem uniquement).
 
-name: Security scan (planifié)
+name: 🛡️ Security scan (scheduled)
 
 on:
   schedule:
@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   scan:
-    name: Audit dépendances + filesystem
+    name: 🛡️ Dependency + filesystem audit
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -27,7 +27,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-dotnet-cache
       - run: dotnet restore apps/api-dotnet/MoviePicker.slnx
-      - name: Audit NuGet (échoue si High / Critical)
+      - name: NuGet audit (fail on High / Critical)
         run: |
           set -o pipefail
           OUTPUT=$(dotnet list apps/api-dotnet/MoviePicker.slnx package --vulnerable --include-transitive 2>&1)
@@ -36,7 +36,7 @@ jobs:
             echo "::error::Vulnérabilités NuGet High/Critical détectées."
             exit 1
           fi
-      - name: Scan filesystem (Trivy, deps vulnérables npm+NuGet dans les lockfiles ; remplace pnpm audit, endpoint npm retiré le 2026-07-15 cf. pnpm/pnpm#11265)
+      - name: Filesystem scan (Trivy; vulnerable npm + NuGet deps in lockfiles; replaces pnpm audit since the npm endpoint was removed on 2026-07-15, see pnpm/pnpm#11265)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs

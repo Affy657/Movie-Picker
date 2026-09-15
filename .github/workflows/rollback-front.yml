@@ -14,13 +14,13 @@
 # Un commit qui ne touche pas le front ne produit aucun artefact : `commit` doit désigner un
 # commit qui a été déployé côté front, la liste des artefacts le dit.
 
-name: Rollback Front (S3 + CloudFront)
+name: ⏪ Rollback web (S3 + CloudFront)
 
 on:
   workflow_dispatch:
     inputs:
       commit:
-        description: "SHA du commit dont le build est republié, 7 caractères ou plus (vide = build précédent)"
+        description: "SHA of the commit whose build is republished, 7+ characters (empty = previous build)"
         required: false
         type: string
 
@@ -34,7 +34,7 @@ concurrency:
 
 jobs:
   rollback:
-    name: Republier un build front archivé
+    name: ⏪ Republish an archived web build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: production
@@ -47,7 +47,7 @@ jobs:
           persist-credentials: false
       # `--paginate` parce que les artefacts de la CI (couverture, traces, OpenAPI, sept jours de
       # rétention) noient les `front-dist-*` sur la première page.
-      - name: Choisir l'archive à republier
+      - name: Pick the archive to republish
         id: pick
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -91,7 +91,7 @@ jobs:
             echo "name=$name"
             echo "sha=${name#front-dist-}"
           } >> "$GITHUB_OUTPUT"
-      - name: Télécharger l'archive
+      - name: Download the archive
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUN_ID: ${{ steps.pick.outputs.run_id }}
@@ -111,12 +111,12 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
-      - name: Publier le build sur S3 (assets immutable, puis no-cache, index.html en dernier)
+      - name: Publish the build to S3 (immutable assets, then no-cache, index.html last)
         uses: ./.github/actions/publish-front
         with:
           dist: apps/web/dist
           bucket: ${{ secrets.AWS_S3_BUCKET }}
-      - name: Invalider CloudFront et vérifier le front servi
+      - name: Invalidate CloudFront and verify the served web build
         uses: ./.github/actions/verify-front
         with:
           dist: apps/web/dist
@@ -125,7 +125,7 @@ jobs:
       # Le bundle republié porte la release de son commit d'origine : Sentry doit savoir qu'elle
       # est de nouveau en ligne, sinon les erreurs qui suivent sont lues comme une régression de la
       # release qu'on vient de retirer.
-      - name: Enregistrer le retour arrière dans Sentry (front)
+      - name: Record the rollback in Sentry (web)
         continue-on-error: true
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}

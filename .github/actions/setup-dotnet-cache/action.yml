@@ -1,8 +1,8 @@
-name: "Setup .NET (cache NuGet)"
-description: "Installe le SDK .NET et restaure le cache NuGet (~/.nuget/packages)."
+name: "Setup .NET (NuGet cache)"
+description: "Installs the .NET SDK and restores the NuGet cache (~/.nuget/packages)."
 inputs:
   dotnet-version:
-    description: "Version du SDK .NET"
+    description: ".NET SDK version"
     required: false
     default: "10.0.x"
 runs:

@@ -1,16 +1,16 @@
-name: "Publier un build front sur S3"
-description: "Envoie un dossier dist sur le bucket du front en trois passes, assets hachés en immutable, puis fichiers non hachés et routes prérendues en no-cache, index.html en dernier. Partagée par le déploiement et le retour arrière : un envoi à plat par aws s3 sync poserait index.html et le Service Worker avec le cache par défaut de CloudFront et désynchroniserait les PWA installées de leurs bundles."
+name: "Publish a web build to S3"
+description: "Uploads a dist folder to the web bucket in three passes: hashed assets as immutable, then unhashed files and prerendered routes as no-cache, index.html last. Shared by the deployment and the rollback: a flat aws s3 sync would upload index.html and the service worker with the CloudFront default cache and desynchronise installed PWAs from their bundles."
 inputs:
   dist:
-    description: "Dossier du build à publier"
+    description: "Build folder to publish"
     required: true
   bucket:
-    description: "Nom du bucket S3 du front (secret AWS_S3_BUCKET)"
+    description: "Web S3 bucket name (AWS_S3_BUCKET secret)"
     required: true
 runs:
   using: composite
   steps:
-    - name: "S3, étape 1 : assets hachés (hors entry-points)"
+    - name: "S3, step 1: hashed assets (entry points excluded)"
       shell: bash
       env:
         DIST: ${{ inputs.dist }}
@@ -25,7 +25,7 @@ runs:
           --exclude "route-assets.json" \
           --exclude "*.map" \
           --cache-control "public, max-age=31536000, immutable"
-    - name: "S3, étape 2 : SW, manifest (no-cache)"
+    - name: "S3, step 2: service worker and manifest (no-cache)"
       shell: bash
       env:
         DIST: ${{ inputs.dist }}
@@ -35,7 +35,7 @@ runs:
           --cache-control "no-cache, no-store, must-revalidate" --content-type "application/javascript"
         aws s3 cp "$DIST/manifest.webmanifest" "s3://$AWS_S3_BUCKET/manifest.webmanifest" \
           --cache-control "no-cache, must-revalidate" --content-type "application/manifest+json"
-    - name: "S3, sitemap.xml (cache court, application/xml)"
+    - name: "S3, sitemap.xml (short cache, application/xml)"
       shell: bash
       env:
         DIST: ${{ inputs.dist }}
@@ -52,7 +52,7 @@ runs:
     # `Content-Type` est explicite pour la même raison que `sw.js` : une clé sans extension part
     # sinon en `application/octet-stream`, que le navigateur télécharge au lieu de l'afficher.
     # Le repli SPA reste en place pour toutes les autres routes, rien n'est retiré.
-    - name: "S3, routes prérendues (clés sans extension, no-cache)"
+    - name: "S3, prerendered routes (extensionless keys, no-cache)"
       shell: bash
       env:
         DIST: ${{ inputs.dist }}
@@ -78,7 +78,7 @@ runs:
           exit 1
         fi
         echo "$count routes prérendues publiées."
-    - name: "S3, étape 3 : index.html en dernier (point d'entrée)"
+    - name: "S3, step 3: index.html last (entry point)"
       shell: bash
       env:
         DIST: ${{ inputs.dist }}
