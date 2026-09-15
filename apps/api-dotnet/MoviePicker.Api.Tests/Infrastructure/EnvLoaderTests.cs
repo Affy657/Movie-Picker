@@ -3,6 +3,7 @@ using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure;
 
+[Collection(ProcessEnvironmentCollection.Name)]
 public sealed class EnvLoaderTests : IDisposable
 {
     private readonly List<string> _keysToClear = [];

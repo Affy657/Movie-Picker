@@ -12,6 +12,7 @@ using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure;
 
+[Collection(ProcessEnvironmentCollection.Name)]
 public sealed class ServiceCollectionExtensionsTests
 {
     private sealed class FakeEnv : IHostEnvironment

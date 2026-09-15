@@ -7,6 +7,7 @@ using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure;
 
+[Collection(ProcessEnvironmentCollection.Name)]
 public sealed class MongoDatabaseGuardTests
 {
     private const string ProdCluster = "mongodb+srv://user:pwd@cluster0.example.mongodb.net";
