@@ -19,7 +19,7 @@
   width: 2.75rem;
   min-height: var(--tap-target-min);
   padding: var(--space-3) var(--space-2);
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   line-height: var(--leading-none);
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
@@ -36,7 +36,7 @@
 
 @media (hover: hover) {
   .emojiBtn:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+    background: var(--color-primary-tint);
     border-color: var(--color-primary);
   }
 }
@@ -55,7 +55,7 @@
   grid-template-columns: repeat(6, 1fr);
   gap: 2px;
   padding: var(--space-2);
-  background: var(--color-surface);
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
@@ -64,7 +64,7 @@
 }
 
 .emojiOpt {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   line-height: var(--leading-none);
   padding: var(--space-1);
   background: transparent;
@@ -79,7 +79,7 @@
 
 @media (hover: hover) {
   .emojiOpt:hover {
-    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    background: var(--color-primary-soft);
   }
 }
 
@@ -91,7 +91,7 @@
 
 .emojiOptSelected {
   border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  background: var(--color-primary-soft);
 }
 
 .presets {
@@ -137,16 +137,16 @@
 
 @media (hover: hover) {
   .presetChip:hover {
-    background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+    background: var(--color-primary-tint);
     border-color: var(--color-primary);
     color: var(--color-text);
   }
 }
 
 .presetChipActive {
-  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  background: var(--color-primary-soft);
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 500;
 }
 
@@ -172,6 +172,6 @@
 @media (hover: hover) {
   .presetMore:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 }

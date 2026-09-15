@@ -74,7 +74,7 @@
 }
 
 .tabActive {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   border-bottom-color: var(--color-primary);
 }
 
@@ -99,8 +99,8 @@
 }
 
 .tabActive .tabBadge {
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
-  color: var(--color-primary);
+  background: var(--color-primary-soft-hover);
+  color: var(--color-primary-text);
 }
 
 .pillWrap {

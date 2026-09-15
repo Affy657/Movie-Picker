@@ -16,7 +16,7 @@
 
 .headerIcon {
   flex-shrink: 0;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .headerLabel {
@@ -46,7 +46,7 @@
 }
 
 .row .chip[aria-pressed='true'] {
-  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+  background: var(--color-primary-soft);
   color: var(--color-primary-text);
   border-color: var(--color-primary);
 }
@@ -54,7 +54,7 @@
 @media (hover: hover) {
   .row .chip:not([aria-pressed='true']):hover {
     border-color: var(--color-primary);
-    background: color-mix(in srgb, var(--color-primary) 7%, var(--color-surface));
+    background: var(--color-primary-tint);
   }
 }
 

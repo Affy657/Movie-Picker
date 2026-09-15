@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-accent-warm) 100%);
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-brand-secondary) 100%);
 }
 
 .body {
@@ -18,7 +18,7 @@
 
 .title {
   margin: 0;
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-3xl);
   font-weight: 800;
   letter-spacing: var(--tracking-tight);
   color: var(--color-text);

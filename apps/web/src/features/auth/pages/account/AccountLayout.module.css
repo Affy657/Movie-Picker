@@ -52,8 +52,8 @@
 }
 
 .rubricActive {
-  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
-  color: var(--color-primary-hover);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text-hover);
   font-weight: 600;
 }
 
@@ -71,7 +71,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--color-badge-pending-text);
+  background: var(--color-warning);
   flex-shrink: 0;
 }
 
@@ -88,7 +88,7 @@
   border: none;
   background: none;
   border-radius: var(--radius-sm);
-  color: var(--color-primary-hover);
+  color: var(--color-primary-text-hover);
   font-family: inherit;
   font-size: var(--font-size-sm);
   font-weight: 600;

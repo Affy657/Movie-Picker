@@ -45,8 +45,8 @@
 
 .filterBtnActive,
 .filterBtn[aria-expanded='true'] {
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary-text);
+  background: var(--color-primary-soft);
   border-color: var(--color-primary);
 }
 

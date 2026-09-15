@@ -17,7 +17,7 @@
 
 .name {
   margin: 0;
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-3xl);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: var(--leading-tight);
@@ -117,7 +117,7 @@
 
 .watchlistIcon {
   flex: 0 0 auto;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .watchlistIconMuted {
@@ -160,8 +160,8 @@
   align-items: center;
   padding: var(--space-0-5) var(--space-2);
   border-radius: var(--radius-pill);
-  background: var(--color-badge-pending-bg);
-  color: var(--color-badge-pending-text);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
   font-size: var(--font-size-2xs);
   font-weight: 600;
   line-height: var(--leading-tight);

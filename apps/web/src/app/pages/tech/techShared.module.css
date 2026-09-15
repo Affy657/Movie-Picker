@@ -22,7 +22,7 @@
 
 .title {
   margin: var(--space-0);
-  font-size: clamp(var(--font-size-xl), 2.6vw, var(--font-size-3xl));
+  font-size: clamp(var(--font-size-3xl), 2.6vw, var(--font-size-4xl));
   font-weight: 700;
   letter-spacing: var(--tracking-display);
   line-height: var(--leading-compact);

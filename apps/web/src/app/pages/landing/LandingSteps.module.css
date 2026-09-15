@@ -41,7 +41,7 @@
   .step:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-md);
-    border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+    border-color: var(--color-primary-border);
   }
 }
 
@@ -78,7 +78,7 @@
 }
 
 .title {
-  font-size: var(--font-size-md-plus);
+  font-size: var(--font-size-lg);
   font-weight: 800;
   letter-spacing: var(--tracking-close);
   line-height: var(--leading-tight);

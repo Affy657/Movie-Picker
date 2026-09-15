@@ -99,8 +99,8 @@
 }
 
 .selectionBarRemoving {
-  border-color: color-mix(in srgb, var(--color-error) 40%, var(--color-border));
-  background: color-mix(in srgb, var(--color-error) 7%, transparent);
+  border-color: var(--color-error-border);
+  background: var(--color-error-bg);
 }
 
 .selectionBarRemoving .selectionIcon {

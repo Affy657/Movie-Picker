@@ -25,8 +25,8 @@
 
 @media (hover: hover) {
   .top :global(.back-link):hover {
-    color: var(--color-primary);
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    color: var(--color-primary-text);
+    background: var(--color-primary-tint);
     text-decoration: none;
   }
 }
@@ -61,7 +61,7 @@
 }
 
 .bar[data-condensed] .title {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -223,8 +223,8 @@
 
 @media (hover: hover) {
   .stack:hover {
-    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary-border);
   }
 }
 
@@ -247,7 +247,7 @@
 
 @media (hover: hover) {
   .stackBare:hover {
-    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    background: var(--color-primary-soft);
     border-color: transparent;
   }
 }
@@ -311,7 +311,7 @@
   }
 
   .title {
-    font-size: var(--font-size-lg-plus);
+    font-size: var(--font-size-2xl);
   }
 
   .actions {

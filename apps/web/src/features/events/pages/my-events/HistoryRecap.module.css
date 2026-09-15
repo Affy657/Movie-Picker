@@ -13,7 +13,7 @@
 }
 
 .value {
-  font-size: var(--font-size-lg-plus);
+  font-size: var(--font-size-2xl);
   font-weight: 800;
   letter-spacing: var(--tracking-narrow);
   color: var(--color-text);
@@ -28,7 +28,7 @@
 }
 
 .flameIcon {
-  color: var(--color-badge-pending-text);
+  color: var(--color-streak-fg);
 }
 
 .label {

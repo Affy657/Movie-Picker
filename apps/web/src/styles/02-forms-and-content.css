@@ -1,5 +1,5 @@
 .lead {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   color: var(--color-text-muted);
   margin-bottom: var(--space-8);
   line-height: 1.6;
@@ -40,7 +40,7 @@
 @media (hover: hover) {
   .btn:not(.btn-primary):hover {
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
   }
@@ -101,7 +101,7 @@
 .back-link {
   display: inline-block;
   margin-bottom: var(--space-3);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   text-decoration: none;
   font-size: var(--font-size-md);
 }
@@ -124,7 +124,7 @@ button.back-link-button {
 }
 
 .section h2 {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: 700;
   margin: 0 0 var(--space-3) 0;
   color: var(--color-section-heading);
@@ -155,8 +155,8 @@ button.back-link-button {
   font-size: var(--font-size-md);
   font-weight: 500;
   color: var(--color-error);
-  background: color-mix(in srgb, var(--color-error) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
   border-radius: var(--radius-md);
 }
 
@@ -166,8 +166,8 @@ button.back-link-button {
   font-size: var(--font-size-md);
   font-weight: 500;
   color: var(--color-success);
-  background: color-mix(in srgb, var(--color-success) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+  background: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
   border-radius: var(--radius-md);
 }
 
@@ -193,12 +193,12 @@ button.back-link-button {
 }
 
 a {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 @media (hover: hover) {
   a:hover {
-    color: var(--color-primary-hover);
+    color: var(--color-primary-text-hover);
   }
 }
 
@@ -223,7 +223,7 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   padding: 0;
-  font-size: var(--font-size-md-plus);
+  font-size: var(--font-size-lg);
   line-height: 1;
   color: var(--color-error);
   background: transparent;
@@ -238,7 +238,7 @@ a:focus-visible {
 @media (hover: hover) {
   .error .btn-link:hover {
     color: var(--color-error-hover);
-    background: color-mix(in srgb, var(--color-error) 14%, transparent);
+    background: var(--color-error-bg);
   }
 }
 
@@ -277,7 +277,7 @@ a:focus-visible {
 
 @media (hover: hover) {
   .input:hover:not(:focus) {
-    border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+    border-color: var(--color-primary-border-soft);
   }
 }
 

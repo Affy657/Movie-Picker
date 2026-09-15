@@ -28,7 +28,7 @@
 }
 
 .navIcon {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   flex-shrink: 0;
 }
 
@@ -59,6 +59,6 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--color-badge-pending-text);
+  background: var(--color-warning);
   flex-shrink: 0;
 }

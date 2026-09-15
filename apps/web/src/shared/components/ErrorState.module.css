@@ -21,8 +21,8 @@
   height: 4.5rem;
   margin-bottom: var(--space-5);
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
 }
 
 .code {
@@ -31,7 +31,7 @@
   font-weight: 700;
   letter-spacing: var(--tracking-caps-wide);
   text-transform: uppercase;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .title {

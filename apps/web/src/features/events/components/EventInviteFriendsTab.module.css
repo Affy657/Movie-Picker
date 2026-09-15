@@ -27,7 +27,7 @@
 }
 
 .emptyLink {
-  color: var(--color-accent);
+  color: var(--color-primary-text);
   text-decoration: underline;
   font-size: var(--font-size-sm);
 }

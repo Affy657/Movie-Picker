@@ -29,10 +29,12 @@
 }
 
 .elevationMd {
+  background: var(--color-surface-raised);
   box-shadow: var(--shadow-md);
 }
 
 .elevationLg {
+  background: var(--color-surface-raised);
   box-shadow: var(--shadow-lg);
 }
 

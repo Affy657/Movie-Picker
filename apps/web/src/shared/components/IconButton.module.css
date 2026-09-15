@@ -47,7 +47,7 @@
   }
 
   .danger:hover {
-    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    background: var(--color-error-bg);
     color: var(--color-error);
   }
 

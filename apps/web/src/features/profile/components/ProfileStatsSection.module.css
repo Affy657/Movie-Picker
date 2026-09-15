@@ -8,7 +8,7 @@
 
 .heading {
   margin: 0;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   line-height: var(--leading-tight);
   color: var(--color-section-heading);
 }
@@ -45,8 +45,8 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary-text);
+  background: var(--color-primary-soft);
 }
 
 .heroText {
@@ -56,10 +56,10 @@
 }
 
 .heroValue {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-3xl);
   font-weight: 700;
   line-height: var(--leading-none);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .heroLabel {
@@ -251,6 +251,6 @@
   }
 
   .heroValue {
-    font-size: var(--font-size-lg-plus);
+    font-size: var(--font-size-2xl);
   }
 }

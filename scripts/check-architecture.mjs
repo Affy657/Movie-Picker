@@ -131,7 +131,8 @@ const LAYER_RULES = [
       /^MoviePicker\.Api\.Infrastructure(\.|$)/,
       /^MoviePicker\.Api\.Controllers(\.|$)/,
     ],
-    message: 'the application layer must know neither the web framework, nor the database, nor the infrastructure',
+    message:
+      'the application layer must know neither the web framework, nor the database, nor the infrastructure',
   },
   {
     layer: 'Controllers',
@@ -183,6 +184,14 @@ const SPACING_PROP =
   /(?:^|[;{\n])\s*(padding|margin|gap|row-gap|column-gap)(?:-[a-z-]+)?\s*:\s*([^;{}]+)/g;
 const RAW_LENGTH = /(?<![\w-])\d*\.?\d+rem/;
 const RAW_COLOR = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
+const PRIMARY_AS_TEXT = /(?<![\w-])color\s*:\s*var\((--color-primary(?:-hover)?)\)/g;
+const AD_HOC_ROLE_MIX =
+  /(?<![\w-])((?:background|border)[a-z-]*)\s*:\s*color-mix\(in srgb, var\(--color-(primary|error|success|warning|info)\) \d+%, (?:transparent|var\(--color-(?:surface|border|border-subtle)\))\)\s*;/g;
+const PRIMITIVE_IN_MODULE =
+  /var\((--(?:blue|green|violet|pink|orange|red|cyan|indigo|amber|emerald|yellow|sky)-\d+)\)/g;
+const DECLARED_TOKEN = /(--[a-z][\w-]*)\s*:/g;
+const USED_TOKEN = /var\((--[a-z][\w-]*)\)/g;
+const TOKEN_IN_SOURCE = /['"`](--[a-z][\w-]*)['"`]/g;
 
 function checkDesignTokens(cssFiles) {
   for (const file of cssFiles) {
@@ -219,8 +228,22 @@ function checkDesignTokens(cssFiles) {
     }
 
     if (path.endsWith('.module.css') && RAW_COLOR.test(text))
+      violations.push(`${path}: literal colour, use a --color-* / --on-poster-* token`);
+
+    for (const [, token] of text.matchAll(PRIMARY_AS_TEXT))
       violations.push(
-        `${path}: literal colour, use a --color-* / --on-poster-* token`
+        `${path}: color: var(${token}), the primary colours surfaces, text uses --color-primary-text / --color-primary-text-hover`
+      );
+
+    if (path.endsWith('.module.css'))
+      for (const [primitive] of text.matchAll(PRIMITIVE_IN_MODULE))
+        violations.push(
+          `${path}: ${primitive}, primitives stay in the foundation, a module consumes a --color-* role`
+        );
+
+    for (const [, prop, role] of text.matchAll(AD_HOC_ROLE_MIX))
+      violations.push(
+        `${path}: ${prop} mixes --color-${role} by hand, use --color-${role}-bg / -border (or -tint / -soft / -soft-hover for the primary)`
       );
 
     if (path !== MODAL_CSS && path !== SHEET_DRAG_CSS)
@@ -229,6 +252,22 @@ function checkDesignTokens(cssFiles) {
           violations.push(
             `${path}: ${selector}::backdrop, the modal backdrop belongs to Modal.module.css`
           );
+  }
+}
+
+function checkUndeclaredTokens(cssFiles, sourceFiles) {
+  const declared = new Set();
+  for (const file of cssFiles)
+    for (const [, name] of readFileSync(file, 'utf8').matchAll(DECLARED_TOKEN)) declared.add(name);
+  for (const file of sourceFiles)
+    for (const [, name] of readFileSync(file, 'utf8').matchAll(TOKEN_IN_SOURCE)) declared.add(name);
+  for (const file of cssFiles) {
+    const path = rel(file);
+    const missing = new Set();
+    for (const [, name] of readFileSync(file, 'utf8').matchAll(USED_TOKEN))
+      if (!declared.has(name)) missing.add(name);
+    for (const name of missing)
+      violations.push(`${path}: var(${name}) is declared nowhere, renamed or removed token?`);
   }
 }
 
@@ -327,7 +366,10 @@ function classesOfCssModule(text) {
   const withoutGlobals = text.replace(GLOBAL_SELECTOR_RE, ' ');
   for (const selector of selectorsOf(withoutGlobals)) {
     for (const alternative of selector.split(',')) {
-      const compounds = alternative.trim().split(/[\s>+~]+/).filter(Boolean);
+      const compounds = alternative
+        .trim()
+        .split(/[\s>+~]+/)
+        .filter(Boolean);
       compounds.forEach((compound, index) => {
         for (const [, name] of compound.matchAll(CLASS_IN_COMPOUND_RE))
           (index === 0 ? leading : usedInCss).add(name);
@@ -403,6 +445,10 @@ checkComments([...webFiles, ...apiFiles, ...e2eFiles]);
 checkSharedIsALeaf(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
 checkNoImportCycles(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
 checkDesignTokens(webFiles.filter((f) => f.endsWith('.css')));
+checkUndeclaredTokens(
+  webFiles.filter((f) => f.endsWith('.css')),
+  webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
+);
 checkModalPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
 checkButtonPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
 checkTapTargets(webFiles.filter((f) => f.endsWith('.css')));

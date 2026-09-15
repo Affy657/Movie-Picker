@@ -36,9 +36,9 @@
   align-items: flex-start;
   gap: var(--space-3);
   padding: var(--space-3-5);
-  border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+  border: 1px solid var(--color-error-border);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-error) 8%, transparent);
+  background: var(--color-error-bg);
 }
 
 .statsErrorIcon {
@@ -50,7 +50,7 @@
   height: 2rem;
   border-radius: var(--radius-sm);
   color: var(--color-error);
-  background: color-mix(in srgb, var(--color-error) 14%, transparent);
+  background: var(--color-error-bg);
 }
 
 .statsErrorBody {

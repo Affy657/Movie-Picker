@@ -99,7 +99,7 @@
 @media (hover: hover) {
   .chipLink:hover {
     filter: brightness(1.06);
-    border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-subtle));
+    border-color: var(--color-primary-border-soft);
   }
 }
 
@@ -128,15 +128,15 @@
 }
 
 .more:focus-visible {
-  color: var(--color-primary);
-  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-subtle));
+  color: var(--color-primary-text);
+  border-color: var(--color-primary-border-soft);
   outline: none;
 }
 
 @media (hover: hover) {
   .more:hover {
-    color: var(--color-primary);
-    border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-subtle));
+    color: var(--color-primary-text);
+    border-color: var(--color-primary-border-soft);
     outline: none;
   }
 }

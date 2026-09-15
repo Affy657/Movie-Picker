@@ -58,8 +58,8 @@
 
 @media (hover: hover) {
   .historyClearBtn:hover {
-    color: var(--color-primary);
-    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+    color: var(--color-primary-text);
+    background: var(--color-primary-soft);
   }
 }
 
@@ -80,7 +80,7 @@
 
 @media (hover: hover) {
   .historyItem:hover {
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    background: var(--color-primary-tint);
   }
 }
 
@@ -103,7 +103,7 @@
 
 @media (hover: hover) {
   .historyItemBtn:hover {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 }
 
@@ -151,7 +151,7 @@
   .historyRemoveBtn:hover {
     opacity: 1;
     color: var(--color-error);
-    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    background: var(--color-error-bg);
   }
 }
 

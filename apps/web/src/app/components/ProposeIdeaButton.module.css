@@ -101,7 +101,7 @@
 .dropZoneActive {
   border-color: var(--color-primary);
   border-style: solid;
-  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface-hover));
+  background: var(--color-primary-soft);
 }
 
 .attachmentsHint {

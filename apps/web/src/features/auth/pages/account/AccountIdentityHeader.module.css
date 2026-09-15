@@ -49,13 +49,13 @@
 }
 
 .avatarButton:focus-visible .avatarEditOverlay {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   border-color: var(--color-primary);
 }
 
 @media (hover: hover) {
   .avatarButton:hover .avatarEditOverlay {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     border-color: var(--color-primary);
   }
 }
@@ -67,7 +67,7 @@
 
 .identityName {
   margin: 0;
-  font-size: var(--font-size-md-plus);
+  font-size: var(--font-size-lg);
   font-weight: 800;
   letter-spacing: var(--tracking-narrow);
   overflow: hidden;
@@ -104,7 +104,7 @@
 @media (hover: hover) {
   .identityLink:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary-hover);
+    color: var(--color-primary-text-hover);
   }
 }
 
@@ -132,6 +132,6 @@
 @media (hover: hover) {
   .identityLinkMobile:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary-hover);
+    color: var(--color-primary-text-hover);
   }
 }

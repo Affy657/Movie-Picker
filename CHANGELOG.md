@@ -10,12 +10,14 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **Le mode sombre distingue ce qui flotte** : menus, feuilles, modales, infobulles et cartes surélevées se posent sur une surface un ton plus claire que la page, au lieu de compter sur une ombre invisible sur fond sombre ; les séparateurs discrets y sont aussi un peu plus lisibles. La pastille « Nouveautés » suit la couleur d'accent choisie au lieu de rester verte, et la piste d'un interrupteur éteint est plus foncée pour rester visible.
 - **La page d'accueil n'attend plus TMDB à chaque redémarrage du serveur** : les sélections de films gardent une copie partagée entre les instances, donc un serveur qui vient de démarrer répond en quelques millisecondes au lieu de 6 à 10 secondes. Deux visiteurs qui arrivent en même temps ne déclenchent plus deux fois le même travail, et les réponses de l'API voyagent compressées.
 - **L'application s'affiche plus tôt** : l'outil de suivi des erreurs se charge à la première interaction ou dix secondes après l'affichage, au lieu de retarder le premier rendu, et chaque page demande sept fichiers de moins. Les rangées de l'accueil sont demandées dès l'ouverture et servies depuis le cache du navigateur quand on revient.
 - **Un lien de soirée s'ouvre plus vite** : la liste des films part sans attendre les détails de la soirée, et les fenêtres de partage, de paramètres, de proposition et de tirage ne sont chargées qu'à leur première ouverture, soit un tiers de JavaScript en moins pour un invité. L'animation de la roue est plus régulière sur mobile.
 
 ### Fixed
 
+- **Avec un accent vert, orange ou cyan, les liens et les textes en couleur restaient sous le seuil de lisibilité** en mode clair (3,3 à 3,7:1 au lieu des 4,5:1 requis). Le texte prend maintenant une teinte plus foncée que les boutons, pour chacun des huit accents. Au passage, le bouton d'aide des champs avait perdu son arrondi et deux étiquettes de la page `/tech` leur petite taille, deux jetons qui n'existaient pas ; une porte de qualité refuse désormais tout jeton fantôme.
 - **Le retrait d'un gagnant journalisait l'identifiant reçu dans la requête** plutôt que celui du film réellement retiré de la soirée, la dernière alerte CodeQL ouverte du dépôt. Les titres d'onglet (« Mes soirées | Movie Picker »), les aperçus de partage, les courriels de réinitialisation et les métadonnées SEO abandonnent aussi le tiret cadratin et le point médian.
 - **Les interrupteurs des paramètres de la soirée étaient inégalement espacés** : « Répéter cette soirée » collait à « Limiter les votes par participant ». Les champs du panneau suivent maintenant un pas unique.
 - **Se déconnecter oublie vraiment la soirée en cours** : la page gardait les commandes de l'hôte et les votes du compte fermé, jusqu'à afficher « Retirer mon vote » à un visiteur anonyme sur un appareil partagé. La déconnexion vide le cache et les identités de participant retenues par l'onglet.

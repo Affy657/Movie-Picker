@@ -20,7 +20,7 @@
     ),
     radial-gradient(
       80% 70% at 92% 95%,
-      color-mix(in srgb, var(--color-accent-warm) 20%, transparent),
+      color-mix(in srgb, var(--color-brand-secondary) 20%, transparent),
       transparent 62%
     ),
     var(--gradient-hero);
@@ -72,7 +72,7 @@
 }
 
 .display {
-  font-size: clamp(var(--font-size-3xl), 6.4vw, var(--font-size-5xl));
+  font-size: clamp(var(--font-size-4xl), 6.4vw, var(--font-size-6xl));
   font-weight: 800;
   letter-spacing: var(--tracking-display);
   line-height: var(--leading-flush);
@@ -80,7 +80,7 @@
 }
 
 .h2 {
-  font-size: clamp(var(--font-size-3xl), 3.6vw, var(--font-size-4xl));
+  font-size: clamp(var(--font-size-4xl), 3.6vw, var(--font-size-5xl));
   font-weight: 800;
   letter-spacing: var(--tracking-tight);
   line-height: var(--leading-compact);
@@ -88,14 +88,14 @@
 }
 
 .h3 {
-  font-size: var(--font-size-md-plus);
+  font-size: var(--font-size-lg);
   font-weight: 700;
   letter-spacing: var(--tracking-close);
   line-height: var(--leading-tight);
 }
 
 .lead {
-  font-size: clamp(var(--font-size-md), 1.4vw, var(--font-size-md-plus));
+  font-size: clamp(var(--font-size-md), 1.4vw, var(--font-size-lg));
   line-height: var(--leading-relaxed);
   color: var(--color-text-muted);
   max-width: var(--container-md);
@@ -106,7 +106,7 @@
 }
 
 .accent {
-  color: var(--color-accent-warm);
+  color: var(--color-brand-secondary);
   display: inline-block;
 }
 

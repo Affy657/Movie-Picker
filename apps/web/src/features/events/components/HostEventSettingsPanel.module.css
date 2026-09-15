@@ -61,7 +61,7 @@
 
 .summaryIcon {
   flex-shrink: 0;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .saveStatus {
@@ -89,7 +89,7 @@
 
 .saveStatusSaved {
   color: var(--color-success);
-  background: var(--color-success-bg, color-mix(in srgb, var(--color-success) 12%, transparent));
+  background: var(--color-success-bg);
 }
 
 .saveStatusSaved .saveStatusDot {
@@ -108,7 +108,7 @@
 
 .saveStatusError {
   color: var(--color-error);
-  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  background: var(--color-error-bg);
 }
 
 .saveStatusError .saveStatusDot {
@@ -227,9 +227,9 @@
 
 @media (hover: hover) {
   .clearThemeBtn:hover {
-    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    background: var(--color-error-bg);
     color: var(--color-error);
-    border-color: color-mix(in srgb, var(--color-error) 40%, transparent);
+    border-color: var(--color-error-border);
   }
 }
 
@@ -268,8 +268,8 @@
   margin-top: var(--space-2);
   padding: var(--space-2) var(--space-2-5);
   border-radius: var(--radius-md);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid var(--color-primary-border);
+  background: var(--color-primary-tint);
   font-size: var(--font-size-2xs);
   color: var(--color-text);
   cursor: pointer;
@@ -284,18 +284,14 @@
 }
 
 .themeCard {
-  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  border: 1px solid var(--color-primary-border);
   border-radius: var(--radius-md);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--color-primary) 12%, transparent),
-    color-mix(in srgb, var(--color-primary) 3%, transparent)
-  );
+  background: linear-gradient(135deg, var(--color-primary-soft), var(--color-primary-tint));
   transition: border-color var(--duration-base) var(--ease-default);
 }
 
 .themeCardOpen {
-  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  border-color: var(--color-primary-border);
 }
 
 .themeTrigger {
@@ -319,7 +315,7 @@
 
 @media (hover: hover) {
   .themeTrigger:hover {
-    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+    background: var(--color-primary-tint);
   }
 }
 
@@ -331,9 +327,9 @@
   width: 2.4rem;
   height: 2.4rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
-  color: var(--color-primary);
-  font-size: var(--font-size-lg);
+  background: var(--color-primary-soft-hover);
+  color: var(--color-primary-text);
+  font-size: var(--font-size-xl);
   line-height: 1;
 }
 
@@ -373,7 +369,7 @@
 
 .themeExpanded {
   padding: var(--space-3) var(--space-3);
-  border-top: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-top: 1px solid var(--color-primary-border);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   background: var(--color-surface);
 }

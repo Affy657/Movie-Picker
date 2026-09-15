@@ -30,17 +30,17 @@
 }
 
 .toggleBtn:focus-visible {
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-  border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border-subtle));
-  color: var(--color-primary);
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary-border-soft);
+  color: var(--color-primary-text);
   outline: none;
 }
 
 @media (hover: hover) {
   .toggleBtn:hover {
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-    border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border-subtle));
-    color: var(--color-primary);
+    background: var(--color-primary-tint);
+    border-color: var(--color-primary-border-soft);
+    color: var(--color-primary-text);
     outline: none;
   }
 }
@@ -121,7 +121,7 @@
   font-size: var(--font-size-xs);
   font-weight: 500;
   line-height: 1;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   text-decoration: none;
   cursor: pointer;
   transition: opacity var(--duration-base) var(--ease-default);

@@ -83,8 +83,8 @@
 }
 
 .tabActive .tabCount {
-  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
-  color: var(--color-primary);
+  background: var(--color-primary-soft-hover);
+  color: var(--color-primary-text);
 }
 
 .section {
@@ -188,7 +188,7 @@
 
 @media (hover: hover) {
   .ghostCard:hover {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     border-color: var(--color-primary);
   }
 }

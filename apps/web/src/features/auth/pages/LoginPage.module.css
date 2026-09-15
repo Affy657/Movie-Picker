@@ -1,8 +1,8 @@
 ﻿.devQuickLogin {
   margin-top: var(--space-6);
   padding: var(--space-4) var(--space-4);
-  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
-  border: 1px dashed color-mix(in srgb, var(--color-primary) 30%, var(--color-border-subtle));
+  background: var(--color-primary-tint);
+  border: 1px dashed var(--color-primary-border-soft);
   border-radius: var(--radius-md);
 }
 

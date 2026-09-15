@@ -181,15 +181,15 @@
 }
 
 .paidChip:focus-visible {
-  color: var(--color-primary);
-  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-subtle));
+  color: var(--color-primary-text);
+  border-color: var(--color-primary-border-soft);
   outline: none;
 }
 
 @media (hover: hover) {
   .paidChip:hover {
-    color: var(--color-primary);
-    border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border-subtle));
+    color: var(--color-primary-text);
+    border-color: var(--color-primary-border-soft);
     outline: none;
   }
 }
@@ -257,7 +257,7 @@
 
 @media (hover: hover) {
   .searchIconBtn:hover:not(:disabled) {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 }
 
@@ -279,8 +279,8 @@
   font-weight: 600;
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary-text);
+  background: var(--color-primary-soft);
   border-radius: var(--radius-pill);
   vertical-align: middle;
 }
@@ -311,7 +311,7 @@
 @media (hover: hover) {
   .filterIconBtn:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 }
 
@@ -351,8 +351,8 @@
 
 .filterIconBtnActive {
   border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary-text);
+  background: var(--color-primary-soft);
 }
 
 .filtersBadge {
@@ -418,7 +418,7 @@
 @media (hover: hover) {
   .genreChip:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 }
 
@@ -428,9 +428,9 @@
 }
 
 .genreChipActive {
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  background: var(--color-primary-soft);
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 600;
 }
 
@@ -461,7 +461,7 @@
 @media (hover: hover) {
   .decadeChip:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 }
 
@@ -471,9 +471,9 @@
 }
 
 .decadeChipActive {
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  background: var(--color-primary-soft);
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .voteChips {
@@ -504,7 +504,7 @@
 @media (hover: hover) {
   .voteChip:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 }
 
@@ -514,9 +514,9 @@
 }
 
 .voteChipActive {
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  background: var(--color-primary-soft);
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .langChips {
@@ -547,7 +547,7 @@
 @media (hover: hover) {
   .langChip:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 }
 
@@ -557,9 +557,9 @@
 }
 
 .langChipActive {
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  background: var(--color-primary-soft);
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 600;
 }
 
@@ -609,7 +609,7 @@
 @media (hover: hover) {
   .availabilityChip:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 }
 
@@ -619,8 +619,8 @@
 }
 
 .availabilityChipActive {
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  background: var(--color-primary-soft);
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 600;
 }

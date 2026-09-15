@@ -34,7 +34,7 @@
   content: '+';
   margin-left: auto;
   font-family: var(--font-mono);
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: 400;
   color: var(--color-primary-text);
   line-height: var(--leading-none);

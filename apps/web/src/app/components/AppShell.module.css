@@ -211,7 +211,7 @@
 @media (hover: hover) {
   .navLink:hover {
     color: var(--color-primary-text);
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    background: var(--color-primary-tint);
   }
 }
 
@@ -223,7 +223,7 @@
 
 .navLinkActive {
   color: var(--color-primary-text);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  background: var(--color-primary-soft);
 }
 
 @media (min-width: 48rem) and (hover: hover) {

@@ -55,7 +55,7 @@
 }
 
 .heroTitle {
-  font-size: clamp(var(--font-size-3xl), 6vw, var(--font-size-5xl));
+  font-size: clamp(var(--font-size-4xl), 6vw, var(--font-size-6xl));
   font-weight: 800;
   letter-spacing: var(--tracking-display);
   line-height: var(--leading-none);
@@ -71,7 +71,7 @@
 }
 
 .heroLead {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   color: var(--color-text-muted);
   margin: var(--space-0);
 }
@@ -113,7 +113,7 @@
 }
 
 .metricValue {
-  font-size: clamp(var(--font-size-xl), 3.2vw, var(--font-size-3xl));
+  font-size: clamp(var(--font-size-3xl), 3.2vw, var(--font-size-4xl));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--tracking-tight);
@@ -122,7 +122,7 @@
 }
 
 .metricUnit {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--color-text-muted);
 }
@@ -303,7 +303,7 @@
 }
 
 .railLinkVisible .railNum {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 @media (hover: hover) {
@@ -312,7 +312,7 @@
   }
 
   .railLink:hover .railNum {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 }
 
@@ -338,11 +338,7 @@
   bottom: var(--space-2);
   left: var(--space-1-5);
   width: 2px;
-  background: linear-gradient(
-    to bottom,
-    var(--color-primary),
-    color-mix(in srgb, var(--color-primary) 20%, transparent)
-  );
+  background: linear-gradient(to bottom, var(--color-primary), var(--color-primary-soft-hover));
   border-radius: var(--radius-pill);
 }
 
@@ -447,8 +443,8 @@
 
 .timelineBadgeCurrent {
   border-style: solid;
-  border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-border));
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-color: var(--color-primary-border-soft);
+  background: var(--color-primary-soft);
   color: var(--color-primary-text);
 }
 

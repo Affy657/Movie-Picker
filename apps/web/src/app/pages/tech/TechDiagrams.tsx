@@ -44,11 +44,11 @@ const META = 'var(--color-meta)';
 const PRIMARY = 'var(--color-primary)';
 const PRIMARY_SOFT = 'var(--color-primary-soft)';
 const DANGER = 'var(--color-error)';
-const DANGER_SOFT = 'color-mix(in srgb, var(--color-error) 10%, transparent)';
+const DANGER_SOFT = 'var(--color-error-bg)';
 const SUCCESS = 'var(--color-success)';
-const SUCCESS_SOFT = 'color-mix(in srgb, var(--color-success) 14%, transparent)';
-const WARN = 'var(--color-badge-upcoming-text)';
-const WARN_SOFT = 'var(--color-badge-upcoming-bg)';
+const SUCCESS_SOFT = 'var(--color-success-bg)';
+const WARN = 'var(--color-warning)';
+const WARN_SOFT = 'var(--color-warning-bg)';
 
 function ArrowMarker({ id, fill }: Readonly<{ id: string; fill: string }>) {
   return (

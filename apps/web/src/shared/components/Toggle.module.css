@@ -9,7 +9,7 @@
   cursor: pointer;
   flex-shrink: 0;
   padding: 0;
-  background-color: var(--color-border);
+  background-color: var(--color-border-field);
   transition: background-color var(--duration-slow) var(--ease-default);
   outline-offset: 3px;
 }

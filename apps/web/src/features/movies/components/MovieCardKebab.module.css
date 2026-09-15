@@ -42,7 +42,7 @@
   min-width: 10rem;
   max-width: calc(100vw - 1rem);
   padding: var(--space-1);
-  background: var(--color-surface);
+  background: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
@@ -110,11 +110,11 @@
 }
 
 .kebabItemDanger:focus-visible {
-  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  background: var(--color-error-bg);
 }
 
 @media (hover: hover) {
   .kebabItemDanger:hover {
-    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    background: var(--color-error-bg);
   }
 }

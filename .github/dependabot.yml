@@ -1,29 +1,27 @@
 # Dependency updates (roadmap § 26)
-# "One PR" policy: the four ecosystems of the application (npm, GitHub Actions, NuGet, Docker)
-# form a single multi-ecosystem group with a monthly schedule, so Dependabot opens **one** pull
-# request per month instead of one per ecosystem. `patterns: ["*"]` is required on every entry
-# that joins the group. Security updates stay outside the group: GitHub opens them as soon as an
-# advisory lands, one per vulnerable dependency, which is what an urgent fix should look like.
+# "Few PRs" policy: monthly schedule + one grouped PR per ecosystem
+# (avoids the PR flood on the first run or every week).
 # `cooldown`: a version published less than 7 days ago is not proposed. A package compromised
 # upstream is most often pulled within that window, so the exposure closes before the PR exists.
 # zizmor, which reads this file since the `lint-workflows` gate covers the whole `.github/`,
 # requires it at the medium threshold.
 version: 2
-multi-ecosystem-groups:
-  monthly:
-    schedule:
-      interval: monthly
 updates:
   - package-ecosystem: npm
     directory: /
-    patterns: ["*"]
-    multi-ecosystem-group: monthly
+    schedule:
+      interval: monthly
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 1
+    open-pull-requests-limit: 3
     ignore:
       - dependency-name: "typescript"
         versions: [">=7.0.0"]
+    groups:
+      # pnpm monorepo (root + apps/* workspace) → a single npm bump per cycle
+      npm-all:
+        patterns:
+          - "*"
 
   # `directory: /` only covers `.github/workflows/`: the composite actions in `.github/actions/`
   # drifted for months (setup-dotnet v5 and cache v5 on one side, v6 on the other) without any
@@ -32,28 +30,40 @@ updates:
     directories:
       - /
       - /.github/actions/*
-    patterns: ["*"]
-    multi-ecosystem-group: monthly
+    schedule:
+      interval: monthly
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 1
+    open-pull-requests-limit: 2
+    groups:
+      actions-all:
+        patterns:
+          - "*"
 
   - package-ecosystem: nuget
     directory: /apps/api-dotnet
-    patterns: ["*"]
-    multi-ecosystem-group: monthly
+    schedule:
+      interval: monthly
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 1
+    open-pull-requests-limit: 2
+    groups:
+      nuget-all:
+        patterns:
+          - "*"
 
   # Base images of the API Dockerfile (FROM ... pinned by digest) → automatic digest bump
   - package-ecosystem: docker
     directory: /apps/api-dotnet/MoviePicker.Api
-    patterns: ["*"]
-    multi-ecosystem-group: monthly
+    schedule:
+      interval: monthly
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 1
+    open-pull-requests-limit: 2
+    groups:
+      docker-all:
+        patterns:
+          - "*"
 
   # Archived Slidev slides (archive/, unmaintained): neutralises Dependabot version updates on
   # this frozen manifest. The local package-lock.json is not versioned (see the slides
@@ -65,6 +75,5 @@ updates:
       interval: monthly
     cooldown:
       default-days: 7
-    open-pull-requests-limit: 0
     ignore:
       - dependency-name: "*"

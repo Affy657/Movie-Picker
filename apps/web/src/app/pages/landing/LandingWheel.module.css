@@ -37,7 +37,7 @@
 
 .tagIcon {
   flex: none;
-  color: var(--color-accent-warm);
+  color: var(--color-brand-secondary);
 }
 
 .stage {
@@ -79,11 +79,11 @@
   font-weight: 700;
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
-  color: var(--color-accent-warm);
+  color: var(--color-brand-secondary);
 }
 
 .resultTitle {
-  font-size: var(--font-size-lg-plus);
+  font-size: var(--font-size-2xl);
   font-weight: 800;
   letter-spacing: var(--tracking-narrow);
 }

@@ -117,5 +117,5 @@
   margin-top: var(--space-1-5);
   padding: var(--space-1) var(--space-1-5) 0;
   font-size: var(--font-size-xs);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }

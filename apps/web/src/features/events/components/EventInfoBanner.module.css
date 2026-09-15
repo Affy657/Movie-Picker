@@ -10,17 +10,17 @@
 }
 
 .pending {
-  border: 1px solid color-mix(in srgb, var(--color-badge-pending-text) 30%, transparent);
-  background: var(--color-badge-pending-bg);
+  border: 1px solid var(--color-warning-border);
+  background: var(--color-warning-bg);
 }
 
 .pending .iconWrap {
-  background: color-mix(in srgb, var(--color-badge-pending-text) 22%, transparent);
-  color: var(--color-badge-pending-text);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .pending .kicker {
-  color: var(--color-badge-pending-text);
+  color: var(--color-warning);
 }
 
 .upcoming {

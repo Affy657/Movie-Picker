@@ -18,7 +18,7 @@
 .btn-ghost {
   background: transparent;
   border-color: transparent;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   box-shadow: none;
 }
 
@@ -39,14 +39,14 @@
 
 .icon-btn-outline:focus-visible {
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   outline: none;
 }
 
 @media (hover: hover) {
   .icon-btn-outline:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     outline: none;
   }
 }
@@ -59,7 +59,7 @@
 
 .tmdb-watch-link {
   font-size: var(--font-size-xs);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   text-decoration: none;
   align-self: flex-start;
 }

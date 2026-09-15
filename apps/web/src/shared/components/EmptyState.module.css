@@ -18,13 +18,13 @@
   height: 3.25rem;
   margin-bottom: var(--space-1-5);
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
 }
 
 .title {
   margin: 0;
-  font-size: var(--font-size-md-plus);
+  font-size: var(--font-size-lg);
   font-weight: 700;
   letter-spacing: var(--tracking-snug);
   line-height: var(--leading-snug);

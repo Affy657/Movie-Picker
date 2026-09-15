@@ -48,11 +48,25 @@ Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactori
 Aucune valeur littérale dans les CSS modules, tout passe par les jetons de `apps/web/src/styles/01-foundation.css` :
 
 - espacement : `var(--space-0 … --space-24)`, base 4 px avec demi-pas jusqu'à `--space-3-5` (14 px) ;
-- typographie : `var(--font-size-3xs … --font-size-5xl)` ;
+- typographie : `var(--font-size-4xs … --font-size-6xl)`, échelle nommée sans variante « plus » ;
 - profondeur : `var(--z-below … --z-skip-link)`, jamais un nombre ;
 - largeur de page : `var(--container-xs … --container-3xl)` posé sur `--page-max-width` (défaut `--layout-max`) ;
 - couleur : `var(--color-*)`, `var(--on-poster-*)` pour ce qui se pose sur une affiche ;
 - cible tactile : `var(--tap-target-min)`, 44 px, minimum sur tout élément cliquable.
+
+Les couleurs ont deux niveaux. Les **primitives** (`--blue-600`, `--orange-400`, `--amber-100`…) ne sortent pas de `01-foundation.css` et de `landingPalette.css` : un module CSS ne les référence jamais. Les **rôles** sont ce que les modules consomment, et chaque rôle porte sa déclinaison :
+
+| Rôle | Surface | Texte | Fond léger | Bordure |
+|---|---|---|---|---|
+| primaire (accent choisi par l'utilisateur) | `--color-primary`, `-hover` | `--color-primary-text`, `-text-hover` | `--color-primary-tint`, `-soft`, `-soft-hover` | `--color-primary-border`, `-border-soft` |
+| erreur, succès, avertissement, info | `--color-error`, `--color-success`, `--color-warning`, `--color-info` | idem | `--color-<rôle>-bg` | `--color-<rôle>-border` |
+
+Deux règles, vérifiées par `check:architecture` :
+
+1. **`color: var(--color-primary)` est interdit.** Le primaire colore des surfaces (bouton, fond, bordure, icône pleine) ; du texte ou un lien prend `--color-primary-text`, dont chaque accent garantit 4,5:1 sur fond clair, ce que le vert, l'orange et le cyan de `--color-primary` ne tiennent pas.
+2. **Pas de `color-mix()` maison sur un rôle** (`background: color-mix(in srgb, var(--color-error) 12%, transparent)`) : le jeton `-bg` ou `-border` existe déjà, en clair, en sombre et sous `.on-dark`.
+
+Un `var(--jeton)` sans repli doit être déclaré quelque part (fondation, module, ou posé en `style={{ '--jeton': … }}` côté TypeScript) : la même porte refuse les jetons fantômes, qui rendent la propriété invalide sans erreur. Les surfaces flottantes (menus, feuilles, modales, infobulles, cartes `elevation="md"|"lg"`) posent `--color-surface-raised` : en sombre l'élévation se lit par un ton plus clair, pas par une ombre.
 
 Points de rupture, échelle fermée : `24.9375rem`, `29.9375rem`, `39.9375rem`, `47.9375rem`, `63.9375rem` en `max-width` ; `30rem`, `40rem`, `48rem`, `64rem`, `80rem` en `min-width`. Toute autre valeur est refusée. `(hover: hover)`, `(hover: none)` et `(prefers-reduced-motion: reduce)` sont les seules autres requêtes média admises.
 

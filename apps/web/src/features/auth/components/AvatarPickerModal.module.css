@@ -7,7 +7,7 @@
 
 .title {
   margin: 0;
-  font-size: var(--font-size-md-plus);
+  font-size: var(--font-size-lg);
   font-weight: 700;
   letter-spacing: var(--tracking-close);
   color: var(--color-text);
@@ -47,7 +47,7 @@
 
 .tabActive {
   border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  background: var(--color-primary-soft);
   color: var(--color-text);
   font-weight: 600;
 }
@@ -81,14 +81,14 @@
 
 @media (hover: hover) {
   .option:hover {
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-    border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+    background: var(--color-primary-tint);
+    border-color: var(--color-primary-border);
   }
 }
 
 .optionSelected {
   border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  background: var(--color-primary-soft);
 }
 
 .img {

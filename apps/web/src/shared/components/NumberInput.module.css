@@ -42,12 +42,12 @@
   flex-shrink: 0;
   width: 2.25rem;
   min-height: var(--tap-target-min);
-  font-size: var(--font-size-md-plus);
+  font-size: var(--font-size-lg);
   font-weight: 500;
   line-height: var(--leading-none);
   border: none;
-  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
-  color: var(--color-primary);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-text);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -60,12 +60,12 @@
 
 @media (hover: hover) {
   .stepBtn:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface));
+    background: var(--color-primary-soft);
   }
 }
 
 .stepBtn:active:not(:disabled) {
-  background: color-mix(in srgb, var(--color-primary) 24%, var(--color-surface));
+  background: var(--color-primary-soft-hover);
 }
 
 .stepBtn:disabled {

@@ -17,7 +17,7 @@
 
 .radioCardSelected {
   border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  background: var(--color-primary-tint);
 }
 
 .radioInput {

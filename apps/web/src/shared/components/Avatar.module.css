@@ -55,8 +55,8 @@
   font-size: var(--font-size-md);
 }
 .initials.lg {
-  font-size: var(--font-size-lg-plus);
+  font-size: var(--font-size-2xl);
 }
 .initials.xl {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-4xl);
 }

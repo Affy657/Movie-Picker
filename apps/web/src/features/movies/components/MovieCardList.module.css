@@ -17,7 +17,7 @@
 }
 
 .cardWinner {
-  border-color: color-mix(in srgb, var(--color-primary) 52%, var(--color-border-subtle));
+  border-color: var(--color-primary-border-soft);
 }
 
 .posterCol {

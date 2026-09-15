@@ -19,7 +19,7 @@
 @media (hover: hover) {
   .card:hover {
     transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border-subtle));
+    border-color: var(--color-primary-border-soft);
     box-shadow: var(--shadow-md);
   }
 }
@@ -31,7 +31,7 @@
 
 @media (hover: hover) {
   .card:hover .title {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 }
 
@@ -47,7 +47,7 @@
 .title {
   flex: 1;
   min-width: 0;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: 700;
   line-height: var(--leading-snug);
   margin: 0;
@@ -102,8 +102,8 @@
   gap: var(--space-2);
   padding: var(--space-1-5) var(--space-2);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-border);
   overflow: hidden;
   margin-top: auto;
   line-height: 1;
@@ -111,7 +111,7 @@
 
 .winnerIcon {
   flex-shrink: 0;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .winnerPoster {
@@ -127,7 +127,7 @@
   min-width: 0;
   font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -221,9 +221,9 @@
   letter-spacing: var(--tracking-extra);
   padding: var(--space-1) var(--space-2-5);
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-  color: var(--color-primary);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary-border);
 }
 
 .badgeHostLabel {

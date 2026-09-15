@@ -230,7 +230,7 @@
 }
 
 .paidChip:focus-visible {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   border-color: color-mix(
     in srgb,
     var(--color-primary) 45%,
@@ -241,7 +241,7 @@
 
 @media (hover: hover) {
   .paidChip:hover {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     border-color: color-mix(
       in srgb,
       var(--color-primary) 45%,
@@ -297,14 +297,14 @@
 }
 
 .selectOverlay:focus-visible {
-  border-color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 
 @media (hover: hover) {
   .selectOverlay:hover {
-    border-color: var(--color-accent);
-    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
   }
 }
 
@@ -315,14 +315,14 @@
 
 .selectOverlayRemove:focus-visible {
   border-color: var(--color-error);
-  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+  background: var(--color-error-bg);
   outline-color: var(--color-error);
 }
 
 @media (hover: hover) {
   .selectOverlayRemove:hover {
     border-color: var(--color-error);
-    background: color-mix(in srgb, var(--color-error) 12%, transparent);
+    background: var(--color-error-bg);
   }
 }
 
@@ -352,7 +352,7 @@
   }
 
   .selectOverlay {
-    border-color: var(--color-accent);
-    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
   }
 }

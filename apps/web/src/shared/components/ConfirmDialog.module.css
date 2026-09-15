@@ -1,6 +1,6 @@
 .title {
   margin: 0 0 var(--space-2-5) 0;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: 700;
   letter-spacing: var(--tracking-close);
   color: var(--color-text);

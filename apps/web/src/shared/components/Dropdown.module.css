@@ -25,7 +25,7 @@
 
 @media (hover: hover) {
   .trigger:hover:not([aria-expanded='true']) {
-    border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+    border-color: var(--color-primary-border-soft);
   }
 }
 
@@ -97,17 +97,17 @@
 
 .option:focus,
 .optionActive {
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  background: var(--color-primary-soft);
   color: var(--color-text);
 }
 
 .optionSelected {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 600;
 }
 
 .optionSelected.optionActive {
-  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  background: var(--color-primary-soft-hover);
 }
 
 .optionLabel {
@@ -118,5 +118,5 @@
 
 .optionCheck {
   flex-shrink: 0;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }

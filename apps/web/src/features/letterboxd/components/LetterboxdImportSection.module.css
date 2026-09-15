@@ -109,7 +109,7 @@
   height: 1.25rem;
   flex-shrink: 0;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-success) 16%, transparent);
+  background: var(--color-success-bg);
   color: var(--color-success);
 }
 
@@ -124,7 +124,7 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;

@@ -23,7 +23,7 @@
 
 .heading {
   margin: 0;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--color-text);
 }
@@ -43,7 +43,7 @@
   padding-inline: var(--space-1);
   font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .railViewport {
@@ -123,6 +123,6 @@
 
 @media (max-width: 39.9375rem) {
   .heading {
-    font-size: var(--font-size-md-plus);
+    font-size: var(--font-size-lg);
   }
 }

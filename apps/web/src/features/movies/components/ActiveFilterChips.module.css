@@ -7,7 +7,7 @@
 .clearAll {
   font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   background: none;
   border: none;
   padding: var(--space-1) var(--space-1-5);

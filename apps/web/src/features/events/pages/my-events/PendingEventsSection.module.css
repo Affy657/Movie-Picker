@@ -13,7 +13,7 @@
   font-weight: 700;
   letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
-  color: var(--color-badge-pending-text);
+  color: var(--color-warning);
   line-height: 1;
 }
 

@@ -14,7 +14,7 @@
 
 .chipLive {
   background: var(--color-success-bg);
-  border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+  border-color: var(--color-success-border);
 }
 
 .month {
@@ -31,7 +31,7 @@
 }
 
 .day {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: 800;
   letter-spacing: var(--tracking-tight);
   color: var(--color-text);
