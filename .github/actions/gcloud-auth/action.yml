@@ -17,6 +17,9 @@ runs:
       with:
         workload_identity_provider: ${{ inputs.workload-identity-provider }}
         service_account: ${{ inputs.service-account }}
+        # Without it the action derives the project from the service account domain, which is
+        # `developer` for the default compute service account, and exports it as CLOUDSDK_CORE_PROJECT.
+        project_id: ${{ inputs.project-id }}
     - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
       with:
         project_id: ${{ inputs.project-id }}
