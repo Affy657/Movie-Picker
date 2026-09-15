@@ -156,12 +156,10 @@ function computeMetrics(previous) {
 
   const workflowsDir = join(repoRoot, '.github/workflows');
   const workflowText = (name) => readText(join(workflowsDir, name));
-  const ciJobs = ['ci-cd.yml', 'deploy.yml']
-    .map(workflowText)
-    .reduce((total, workflow) => {
-      const jobsSection = workflow.slice(workflow.search(/^jobs:$/m));
-      return total + (jobsSection.match(/^ {2}[a-z][a-z0-9-]*:$/gm) ?? []).length;
-    }, 0);
+  const ciJobs = ['ci-cd.yml', 'deploy.yml'].map(workflowText).reduce((total, workflow) => {
+    const jobsSection = workflow.slice(workflow.search(/^jobs:$/m));
+    return total + (jobsSection.match(/^ {2}[a-z][a-z0-9-]*:$/gm) ?? []).length;
+  }, 0);
   const allWorkflows = listDir(workflowsDir)
     .filter((name) => name.endsWith('.yml'))
     .map(workflowText)
@@ -169,7 +167,7 @@ function computeMetrics(previous) {
   const secretsLine = allWorkflows.match(/SECRETS="[^"]+"/)?.[0] ?? '';
   const deploySecrets = (secretsLine.match(/:latest/g) ?? []).length;
   const apiCoverageLines = Number(
-    workflowText('ci-cd.yml').match(/Gate couverture back \(lignes >= (\d+)%/)?.[1] ?? 0
+    workflowText('ci-cd.yml').match(/API coverage gate \(lines >= (\d+)%/)?.[1] ?? 0
   );
   const mongoCoverageLines = Number(
     readText(join(repoRoot, 'scripts/check-mongo-coverage.mjs')).match(
