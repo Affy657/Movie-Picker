@@ -5003,77 +5003,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/users/{handle}/movies": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    skip?: number;
-                    take?: number;
-                };
-                header?: never;
-                path: {
-                    handle: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["UserMoviesResponse"];
-                        "application/json": components["schemas"]["UserMoviesResponse"];
-                        "text/json": components["schemas"]["UserMoviesResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
-                        "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Too Many Requests */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
-                        "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/users/{handle}/watched-movies": {
         parameters: {
             query?: never;
@@ -6853,23 +6782,6 @@ export interface components {
             participations?: components["schemas"]["ExportedParticipation"][] | null;
             pushSubscriptions?: components["schemas"]["ExportedPushSubscription"][] | null;
             watchlist?: components["schemas"]["ExportedWatchlistItem"][] | null;
-        };
-        UserMovieItem: {
-            /** Format: int32 */
-            tmdbId?: number;
-            title?: string | null;
-            year?: string | null;
-            posterPath?: string | null;
-            genreIds?: number[] | null;
-            mediaType?: components["schemas"]["MovieMediaType"];
-            /** Format: date-time */
-            proposedAt?: string;
-            isWinner?: boolean;
-        };
-        UserMoviesResponse: {
-            items?: components["schemas"]["UserMovieItem"][] | null;
-            /** Format: int32 */
-            totalCount?: number;
         };
         UserNotificationItem: {
             id?: string | null;

@@ -95,7 +95,6 @@ const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/users/{handle}/follow',
   '/api/v1/users/{handle}/followers',
   '/api/v1/users/{handle}/following',
-  '/api/v1/users/{handle}/movies',
   '/api/v1/users/{handle}/stats',
   '/api/v1/users/{handle}/watched-movies',
   '/api/v1/watchlist',

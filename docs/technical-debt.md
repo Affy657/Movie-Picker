@@ -142,20 +142,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: mesurer d'abord (Performance panel, frames longues au défilement) ; si confirmé, fond opaque légèrement translucide sans flou, ou flou réservé à `(hover: hover)`
 - piege: ne pas retirer le flou sur une intuition, c'est un choix visuel de l'utilisateur. Mesure avant geste.
 
-## DEBT-011 endpoint de profil public orphelin
-
-- state: agent
-- impact: surface d'API maintenue et testée sans aucun appelant. L'hypothèse d'origine, « volet API de la watchlist d'un autre utilisateur », est tombée le 2026-09-11 : cette feature a été livrée en V1.6 avec sa propre route `GET users/{handle}/watchlist`, et `GET users/{handle}/movies` rend autre chose, les films proposés par un compte avec leur statut gagnant. La route est définitivement orpheline.
-- ou: `apps/api-dotnet/MoviePicker.Api/Controllers/UsersController.cs:66`, route `GET users/{handle}/movies`
-- verify: la route existe encore côté API et aucun fichier front ne l'appelle.
-  ```bash
-  grep -q '"{handle}/movies"' apps/api-dotnet/MoviePicker.Api/Controllers/UsersController.cs \
-    && ! grep -rqE '`/users/[^`]*/movies`' apps/web/src --include=*.ts --include=*.tsx --exclude-dir=generated \
-    && echo "ORPHELIN: la route existe et aucun appelant front"
-  ```
-- fix: retirer la route, son handler `GetUserMoviesHandler` et leurs tests, puis `pnpm run openapi:export && pnpm run openapi:types` et le commit du schéma régénéré.
-- piege: `watched-movies` et `following-watched-movies` du même contrôleur sont bien utilisés par `usePersonalRows.ts`, ne pas les emporter.
-
 ## DEBT-012 le site n'est pas enregistré dans Search Console
 
 - state: humain

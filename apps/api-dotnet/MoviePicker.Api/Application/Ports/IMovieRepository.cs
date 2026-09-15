@@ -32,14 +32,6 @@ public interface IMovieRepository
 
     Task<IReadOnlyList<Movie>> ListByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
 
-    Task<IReadOnlyList<Movie>> ListByParticipantIdsPagedAsync(
-        IReadOnlyCollection<string> participantIds,
-        int skip,
-        int take,
-        CancellationToken ct = default);
-
-    Task<int> CountByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
-
     Task<IReadOnlyList<Movie>> ListMissingGenresAsync(int limit, CancellationToken ct = default);
 
     Task<IReadOnlyList<string>> ListIdsByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default);
