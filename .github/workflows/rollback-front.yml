@@ -1,0 +1,144 @@
+# Rollback front (S3 + CloudFront) : republie un build archivé par `deploy-front`.
+#   - Déclenché à la main (workflow_dispatch).
+#   - Input `commit` vide → le build précédent, deuxième artefact `front-dist-*` le plus récent, le
+#     plus récent étant par construction celui qui est servi (l'archive est prise après l'envoi S3).
+#   - Aucune porte rejouée : l'artefact a passé toute la chaîne au moment de son déploiement.
+#
+# L'hébergement ne garde pas les versions : `aws s3 sync` écrase, et le build précédent n'existe
+# plus que dans l'artefact `front-dist-<sha>` archivé par `deploy-front` (30 jours). Republier cet
+# artefact par un `aws s3 sync` nu poserait `index.html` et le Service Worker avec le cache par
+# défaut de CloudFront et désynchroniserait les PWA installées de leurs bundles : une panne
+# ajoutée à celle qu'on répare. C'est pourquoi ce workflow passe par les mêmes actions composites
+# que le déploiement, `publish-front` puis `verify-front`, sans rien réécrire ici.
+#
+# Un commit qui ne touche pas le front ne produit aucun artefact : `commit` doit désigner un
+# commit qui a été déployé côté front, la liste des artefacts le dit.
+
+name: Rollback Front (S3 + CloudFront)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "SHA du commit dont le build est republié, 7 caractères ou plus (vide = build précédent)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+# Même groupe que `deploy.yml` : deux publications simultanées se marcheraient dessus sur S3.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    name: Republier un build front archivé
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # `--paginate` parce que les artefacts de la CI (couverture, traces, OpenAPI, sept jours de
+      # rétention) noient les `front-dist-*` sur la première page.
+      - name: Choisir l'archive à republier
+        id: pick
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT: ${{ inputs.commit }}
+        run: |
+          set -eo pipefail
+          if [ -n "$COMMIT" ] && ! printf '%s' "$COMMIT" | grep -qE '^[0-9a-f]{7,40}$'; then
+            echo "::error::'$COMMIT' n'est pas un SHA de commit (7 à 40 caractères hexadécimaux)."
+            exit 1
+          fi
+          all="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
+            --jq '.artifacts[]
+                  | select(.name | startswith("front-dist-"))
+                  | select(.expired | not)
+                  | "\(.created_at)\t\(.workflow_run.id)\t\(.name)"' | sort -r)"
+          if [ -z "$all" ]; then
+            echo "::error::Aucun artefact front-dist-* disponible : rien à republier."
+            exit 1
+          fi
+          echo "Archives disponibles (les plus récentes en premier) :"
+          printf '%s\n' "$all"
+          if [ -n "$COMMIT" ]; then
+            chosen="$(printf '%s\n' "$all" | awk -F'\t' -v prefix="front-dist-$COMMIT" 'index($3, prefix) == 1')"
+            count="$(printf '%s' "$chosen" | grep -c . || true)"
+            if [ "$count" != "1" ]; then
+              echo "::error::$count archive(s) pour le commit '$COMMIT' : il en faut exactement une. Préciser le SHA ou choisir dans la liste ci-dessus."
+              exit 1
+            fi
+          else
+            chosen="$(printf '%s\n' "$all" | sed -n '2p')"
+            if [ -z "$chosen" ]; then
+              echo "::error::Une seule archive existe, c'est celle qui est servie : rien de plus ancien à republier. Donner un commit ou redéployer."
+              exit 1
+            fi
+          fi
+          run_id="$(printf '%s' "$chosen" | cut -f2)"
+          name="$(printf '%s' "$chosen" | cut -f3)"
+          echo "Archive retenue : $name (run $run_id)"
+          {
+            echo "run_id=$run_id"
+            echo "name=$name"
+            echo "sha=${name#front-dist-}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Télécharger l'archive
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ steps.pick.outputs.run_id }}
+          NAME: ${{ steps.pick.outputs.name }}
+        run: |
+          set -eo pipefail
+          gh run download "$RUN_ID" -n "$NAME" -D apps/web/dist
+          for f in index.html sw.js manifest.webmanifest sitemap.xml prerendered/manifest.json; do
+            if [ ! -f "apps/web/dist/$f" ]; then
+              echo "::error::L'archive ne contient pas $f : ce n'est pas un build complet de deploy-front."
+              exit 1
+            fi
+          done
+          echo "Build $NAME prêt à republier."
+      - uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
+      - name: Publier le build sur S3 (assets immutable, puis no-cache, index.html en dernier)
+        uses: ./.github/actions/publish-front
+        with:
+          dist: apps/web/dist
+          bucket: ${{ secrets.AWS_S3_BUCKET }}
+      - name: Invalider CloudFront et vérifier le front servi
+        uses: ./.github/actions/verify-front
+        with:
+          dist: apps/web/dist
+          distribution-id: ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+          public-origins: ${{ vars.ALLOWED_ORIGINS }}
+      # Le bundle republié porte la release de son commit d'origine : Sentry doit savoir qu'elle
+      # est de nouveau en ligne, sinon les erreurs qui suivent sont lues comme une régression de la
+      # release qu'on vient de retirer.
+      - name: Enregistrer le retour arrière dans Sentry (front)
+        continue-on-error: true
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_URL: ${{ vars.SENTRY_URL }}
+          SENTRY_RELEASE: ${{ steps.pick.outputs.sha }}
+        run: |
+          if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "SENTRY_AUTH_TOKEN absent, skip"
+            exit 0
+          fi
+          curl -sSfL "https://github.com/getsentry/sentry-cli/releases/download/2.58.6/sentry-cli-Linux-x86_64" -o sentry-cli
+          chmod +x sentry-cli
+          extra=()
+          if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
+          ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-rollback-$SENTRY_RELEASE"

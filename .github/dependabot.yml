@@ -1,12 +1,18 @@
 # Mises à jour de dépendances (roadmap § 26)
 # Politique « peu de PRs » : calendrier mensuel + une PR groupée par écosystème
 # (évite la pluie de PR au premier run ou chaque semaine).
+# `cooldown` : une version publiée depuis moins de 7 jours n'est pas proposée. Un paquet compromis
+# en amont est le plus souvent retiré dans ce délai, la fenêtre d'exposition se ferme avant que la
+# PR n'existe. zizmor, qui lit ce fichier depuis que la porte `lint-workflows` couvre `.github/`
+# en entier, l'exige au seuil medium.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 3
     ignore:
       - dependency-name: "typescript"
@@ -17,10 +23,17 @@ updates:
         patterns:
           - "*"
 
+  # `directory: /` ne couvre que `.github/workflows/` : les actions composites de
+  # `.github/actions/` ont dérivé pendant des mois (setup-dotnet v5 et cache v5 d'un côté,
+  # v6 de l'autre) sans qu'aucune PR ne les propose. Chaque dossier d'action doit être listé.
   - package-ecosystem: github-actions
-    directory: /
+    directories:
+      - /
+      - /.github/actions/*
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 2
     groups:
       actions-all:
@@ -31,6 +44,8 @@ updates:
     directory: /apps/api-dotnet
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 2
     groups:
       nuget-all:
@@ -42,6 +57,8 @@ updates:
     directory: /apps/api-dotnet/MoviePicker.Api
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 2
     groups:
       docker-all:
@@ -56,5 +73,7 @@ updates:
     directory: /archive/docs/RNCP/bloc-1-cadrage/slides
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
     ignore:
       - dependency-name: "*"

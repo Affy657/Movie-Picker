@@ -145,8 +145,10 @@ Trois choix structurent la mise en production :
   métadonnées de la page, pas un document vide.
 
 Workflows annexes : `backup-mongo.yml` sauvegarde la base chaque nuit et restaure l'archive pour la
-vérifier avant de la publier, `rollback.yml` est la porte manuelle de retour arrière,
-`registry-cleanup.yml` et `security-scan.yml` tiennent la rétention et la veille de vulnérabilités.
+vérifier avant de la publier, `rollback.yml` et `rollback-front.yml` sont les portes manuelles de
+retour arrière (révision Cloud Run antérieure, build front archivé republié avec les mêmes passes S3
+que le déploiement), `registry-cleanup.yml` et `security-scan.yml` tiennent la rétention et la
+veille de vulnérabilités.
 
 ## Documentation
 

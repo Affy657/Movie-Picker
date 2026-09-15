@@ -4,24 +4,16 @@
 #   - Cloud Run conserve les révisions : le rollback ne redéploie rien, il route le trafic.
 #   - `--to-revisions` ÉPINGLE le trafic : tant que le service est épinglé, `gcloud run deploy`
 #     ne route plus rien vers les nouvelles révisions. Le déploiement suivant rebranche
-#     `latestRevision` via `--to-latest` (cf. ci-cd.yml), ce qui lève l'épinglage tout seul.
+#     `latestRevision` via `--to-latest` (cf. deploy.yml), ce qui lève l'épinglage tout seul.
 #
-# NB : ci-cd.yml ne déploie plus « puis vérifie ». Chaque révision part SANS trafic, est validée
+# NB : deploy.yml ne déploie plus « puis vérifie ». Chaque révision part SANS trafic, est validée
 #      sur son URL taguée, et n'est promue qu'une fois verte : une mauvaise révision n'atteint
 #      jamais un utilisateur, donc il n'y a plus de retour arrière automatique à déclencher. Ce
 #      workflow sert les cas que la chaîne ne peut pas voir : régression constatée après coup,
 #      révision précise à cibler, incident sans rapport avec un déploiement.
 #
-# NB : rollback front (S3/CloudFront) non couvert ici, l'hébergement ne garde pas les versions.
-#      deploy-front archive chaque `dist` en artefact (front-dist-<sha>, 30 jours), ce qui évite
-#      de rejouer toute la chaîne de portes. ATTENTION : ne pas renvoyer cette archive par un
-#      `aws s3 sync` nu. L'envoi doit reproduire les trois passes de deploy-front, assets hachés
-#      en `immutable`, `sitemap.xml` à une heure, puis `sw.js`, `manifest.webmanifest` et
-#      `index.html` en `no-cache` **en dernier**. Un envoi à plat pose index.html et le Service
-#      Worker avec le cache par défaut de CloudFront et désynchronise les PWA installées de leurs
-#      bundles : une panne ajoutée à celle qu'on répare.
-#      À noter : un commit qui ne touche pas le front ne produit aucun artefact (deploy-front est
-#      filtré sur `changes.outputs.web`), reprendre celui du dernier commit front.
+# NB : le retour arrière du front est `rollback-front.yml`, qui republie un artefact
+#      `front-dist-<sha>` archivé par deploy-front avec les mêmes passes S3 que le déploiement.
 
 name: Rollback API (Cloud Run)
 
@@ -35,6 +27,12 @@ on:
 
 permissions:
   contents: read
+
+# Même groupe que `deploy.yml` : un retour arrière pendant un déploiement, ou l'inverse, se
+# marcheraient dessus sur le trafic Cloud Run.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 env:
   GCP_REGION: europe-west1
@@ -50,12 +48,13 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          credentials-json: ${{ secrets.GCP_SA_KEY }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
       - name: Déterminer la révision cible
         id: target
         env:
@@ -77,15 +76,24 @@ jobs:
           echo "Rollback vers la révision : $TARGET"
           echo "target=$TARGET" >> "$GITHUB_OUTPUT"
       - name: Basculer 100% du trafic
+        env:
+          TARGET: ${{ steps.target.outputs.target }}
         run: |
           gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" \
             --region "$GCP_REGION" \
-            --to-revisions "${{ steps.target.outputs.target }}=100"
-      - name: Smoke test (/health)
+            --to-revisions "$TARGET=100"
+      - name: Lire l'URL du service en ligne
+        id: service
         run: |
           set -eo pipefail
           URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
           echo "Service URL : $URL"
-          code="$(curl -sS -o /dev/null -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 "$URL/health")"
-          echo "GET /health -> $code"
-          test "$code" = "200"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+      # Mêmes sondes que le déploiement, /health/ready compris : une révision antérieure peut
+      # répondre ok sans être prête, si un secret qu'elle attend a disparu depuis.
+      - name: Vérifier la production après bascule
+        uses: ./.github/actions/check-api-health
+        with:
+          url: ${{ steps.service.outputs.url }}
+          public-url: ${{ secrets.VITE_API_URL }}
+          public-url-expected: "true"

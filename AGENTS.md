@@ -83,6 +83,10 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 
 **Pousser sur master ne déploie rien.** La mise en production est un geste manuel, `gh workflow run deploy.yml --ref master -f cible=tout` (cibles : `tout`, `front`, `api`), et elle refuse de partir si le run `ci-cd.yml` du commit visé n'est pas vert. Ne jamais la déclencher sans demande explicite de l'utilisateur : le découpage existe pour qu'il groupe plusieurs livraisons dans un seul déploiement, héritage du temps où le dépôt était privé et ses minutes GitHub Actions facturées. Corollaire à annoncer en fin de tâche : **la production est en retard sur master par défaut**, et rien ne le signale.
 
+**Un run master joue toutes les lanes.** Le filtre par chemin de `ci-cd.yml` ne s'applique qu'aux PR et aux branches `v*` ; sur master, un commit qui ne touche que la documentation rejoue quand même lint, tests, E2E et Sonar, parce que `deploy.yml` ne lit que la conclusion du run et qu'un run vert par vacuité posé sur un commit rouge autorisait un déploiement jamais validé. Ne pas remettre le filtre sur master pour gagner sept minutes : les minutes sont gratuites, le trou ne l'était pas.
+
+**Retour arrière** : `gh workflow run rollback.yml --ref master` (API, révision Cloud Run précédente ou `-f revision=<nom>`), `gh workflow run rollback-front.yml --ref master` (front, artefact `front-dist-<sha>` précédent ou `-f commit=<sha>`). Les passes S3, les sondes de santé et l'authentification GCP sont des actions composites de `.github/actions/`, partagées entre déploiement et retour arrière : les modifier là, jamais en ligne dans un workflow.
+
 - Ne jamais skip les hooks pre-push.
 - Préférer éditer les fichiers existants à en créer de nouveaux.
 
@@ -114,7 +118,7 @@ Le prérendu sert deux choses distinctes : l'indexation, et le premier rendu. Un
 
 `scripts/lighthouse-run.mjs` réécrit ces routes vers leur fichier prérendu, parce que la production les sert comme des clés S3 exactes : sans la réécriture, `serve` rend la coquille SPA et la porte mesure une page que personne ne reçoit. Attention en y touchant, `serve-handler` applique ses réécritures **en cascade**, donc un repli `**` final rattrape la destination déjà réécrite et la renvoie sur `index.html` ; le repli est écrit en négation, et `--single` n'est pas passé parce qu'il insère son propre `**` en tête de liste.
 
-`pnpm run check:workflows` rejoue les portes de `lint-workflows` en local, dans `verify:local`. Les deux outils passent par Docker épinglé au digest parce qu'`actionlint` **saute silencieusement** sa moitié shellcheck quand shellcheck n'est pas dans le PATH : l'image embarque shellcheck 0.10.0, la version de la CI. Changer une version d'un côté sans l'autre rend une porte locale verte sur ce que la CI refuse.
+`pnpm run check:workflows` rejoue les portes de `lint-workflows` en local, dans `verify:local`. actionlint lit les workflows ; zizmor lit `.github/` en entier, donc aussi les actions composites et `dependabot.yml`, dont il exige un `cooldown`. Les deux outils passent par Docker épinglé au digest parce qu'`actionlint` **saute silencieusement** sa moitié shellcheck quand shellcheck n'est pas dans le PATH : l'image embarque shellcheck 0.10.0, la version de la CI. Changer une version d'un côté sans l'autre rend une porte locale verte sur ce que la CI refuse.
 
 La porte `gitleaks` de `verify:local` rejoue le job `gitleaks` de la CI, même image épinglée et même mode `dir` : elle scanne **l'arbre de travail, jamais l'historique**. Elle existe parce que sans elle cette classe d'échec ne se découvrait qu'en CI, et la règle `curl-auth-user` est un piège à elle seule : elle déclenche sur `curl -u "$TOKEN:"` **même quand la valeur est un nom de variable**. Pour appeler une API avec un jeton dans une commande documentée, écrire `curl -H "Authorization: Bearer $TOKEN"`.
 

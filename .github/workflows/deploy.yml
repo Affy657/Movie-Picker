@@ -18,8 +18,8 @@
 # garde son rôle de porte bloquante de `deploy-front` (voir Impasses I4 de docs/technical-debt.md,
 # desserrer cette porte est mesuré sans gain).
 #
-# Retour arrière : `rollback.yml` pour l'API (révision Cloud Run antérieure), l'artefact
-# `front-dist-<sha>` archivé par `deploy-front` pour le front.
+# Retour arrière : `rollback.yml` pour l'API (révision Cloud Run antérieure), `rollback-front.yml`
+# pour le front (republication de l'artefact `front-dist-<sha>` archivé par `deploy-front`).
 
 name: Deploy
 
@@ -56,6 +56,13 @@ jobs:
   # Seule porte propre à ce workflow. Elle ne rejoue rien : elle exige que le run `ci-cd.yml` du
   # commit visé soit vert. Un run absent (aucun push depuis, ou runners bloqués par la facturation)
   # est traité comme un refus, pas comme un feu vert par défaut.
+  # Lire la seule conclusion suffit parce qu'un run master joue toutes les lanes, sans filtre par
+  # chemin (voir l'en-tête de `ci-cd.yml`) : sa couleur vaut pour l'arbre entier du commit. Avant
+  # ça, un commit de documentation posé sur un commit de code rouge donnait un run vert en 12 s,
+  # neuf jobs sautés, et ce garde-fou l'acceptait.
+  # Le refus hors master ci-dessous est doublé par la politique de branche de l'environnement
+  # `production` (Settings → Environments), qui couvre aussi les workflows de retour arrière et
+  # de sauvegarde : ce `if` n'est que le message clair et la sortie rapide.
   verifier-ci:
     name: Exiger une CI verte sur le commit visé
     runs-on: ubuntu-24.04
@@ -140,6 +147,10 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+  # `environment: production` sur tout job qui lit `GCP_SA_KEY` ou les clés AWS : c'est ce qui
+  # rend la politique de branche de l'environnement effective, et ce qui permet de ranger ces
+  # secrets dans l'environnement plutôt qu'au niveau du dépôt, où n'importe quel workflow sur
+  # n'importe quelle branche pouvait les lire.
   docker-api:
     name: Docker API → Artifact Registry
     runs-on: ubuntu-24.04
@@ -148,6 +159,7 @@ jobs:
     outputs:
       image_digest: ${{ steps.push.outputs.digest }}
     if: inputs.cible == 'tout' || inputs.cible == 'api'
+    environment: production
     permissions:
       contents: read
       id-token: write
@@ -155,12 +167,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+      - uses: ./.github/actions/gcloud-auth
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          credentials-json: ${{ secrets.GCP_SA_KEY }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
       - run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
       - name: Build image API (buildx + cache GHA de layers)
@@ -241,12 +251,13 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          credentials-json: ${{ secrets.GCP_SA_KEY }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
       - name: Activer l’API Secret Manager (obligatoire pour --set-secrets ; idempotent)
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -307,33 +318,11 @@ jobs:
           echo "Révision déployée sans trafic, joignable sur $TAG_URL"
           echo "tag_url=$TAG_URL" >> "$GITHUB_OUTPUT"
       # Sondes jouées sur l'URL taguée : la production sert encore l'ancienne révision. Un échec
-      # ici laisse la prod intacte, il n'y a rien à réparer.
-      #   --max-time : sans lui, une révision qui accepte la connexion sans jamais répondre épuise
-      #   le timeout du job, et un job *annulé* n'exécute aucune étape de rattrapage.
-      #   -o fichier plutôt que /dev/null : avec --retry, curl ne peut pas rembobiner /dev/null et
-      #   sort en 23 sans écrire le code HTTP, ce qui rendait les diagnostics suivants inatteignables.
+      # ici laisse la prod intacte, il n'y a rien à réparer, la révision n'est pas promue.
       - name: Valider la révision avant de l'exposer
-        env:
-          TAG_URL: ${{ steps.deploy.outputs.tag_url }}
-        run: |
-          set -eo pipefail
-          BODY="$RUNNER_TEMP/health.json"
-          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$TAG_URL/health"
-          echo "Réponse /health : $(cat "$BODY")"
-          grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
-            echo "::error::/health ne renvoie pas status=ok, révision non promue"
-            exit 1
-          }
-          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$BODY" "$TAG_URL/health/ready"
-          echo "Réponse /health/ready : $(cat "$BODY")"
-          grep -qE '"status"[[:space:]]*:[[:space:]]*"ready"' "$BODY" || {
-            echo "::error::/health/ready ne renvoie pas status=ready (dépendance indisponible), révision non promue"
-            exit 1
-          }
-          grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
-            echo "::error::/health/ready signale MongoDB comme non joignable, révision non promue"
-            exit 1
-          }
+        uses: ./.github/actions/check-api-health
+        with:
+          url: ${{ steps.deploy.outputs.tag_url }}
       # --to-latest rebranche `latestRevision: true` : c'est aussi ce qui désépingle le service si
       # un retour arrière manuel l'avait figé sur une révision nommée.
       - name: Promouvoir la révision validée
@@ -389,29 +378,19 @@ jobs:
       # code, d'où l'absence de retour arrière. PUBLIC_API_URL est dérivé de VITE_API_URL, l'URL
       # contre laquelle le front est construit : rien de nouveau à configurer, et la valeur reste
       # juste après une migration de domaine.
-      - name: Vérifier la production après promotion
-        env:
-          PUBLIC_API_URL: ${{ secrets.VITE_API_URL }}
+      - name: Lire l'URL du service en ligne
+        id: service
         run: |
           set -eo pipefail
-          BODY="$RUNNER_TEMP/prod-health.json"
           URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
-          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$URL/health/ready"
-          echo "Production (URL Cloud Run) : $(cat "$BODY")"
-          grep -qE '"status"[[:space:]]*:[[:space:]]*"ready"' "$BODY" || {
-            echo "::error::La production ne répond pas ready après promotion du trafic."
-            exit 1
-          }
-          if [ -z "$PUBLIC_API_URL" ]; then
-            echo "::warning::VITE_API_URL absent, domaine public non vérifié."
-            exit 0
-          fi
-          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$PUBLIC_API_URL/health"
-          echo "Domaine public : $(cat "$BODY")"
-          grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
-            echo "::error::Le domaine public de l'API ne renvoie pas status=ok : DNS, certificat ou mapping de domaine."
-            exit 1
-          }
+          echo "Production (URL Cloud Run) : $URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+      - name: Vérifier la production après promotion
+        uses: ./.github/actions/check-api-health
+        with:
+          url: ${{ steps.service.outputs.url }}
+          public-url: ${{ secrets.VITE_API_URL }}
+          public-url-expected: "true"
       # Les tags s'accumulent sur le service s'ils ne sont pas retirés, y compris ceux des
       # déploiements qui ont échoué avant promotion.
       - name: Retirer le tag de validation
@@ -454,12 +433,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - uses: ./.github/actions/setup-web
       - run: |
           if [ -z "$VITE_API_URL" ]; then
             echo "::error::VITE_API_URL (secret) est vide."
@@ -488,77 +462,20 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
-      - name: "S3, étape 1 : assets hachés (hors entry-points)"
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        run: |
-          aws s3 sync apps/web/dist/ "s3://$AWS_S3_BUCKET/" \
-            --exclude "index.html" \
-            --exclude "sw.js" \
-            --exclude "manifest.webmanifest" \
-            --exclude "sitemap.xml" \
-            --exclude "prerendered/*" \
-            --exclude "route-assets.json" \
-            --exclude "*.map" \
-            --cache-control "public, max-age=31536000, immutable"
-      - name: "S3, étape 2 : SW, manifest (no-cache)"
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        run: |
-          aws s3 cp apps/web/dist/sw.js "s3://$AWS_S3_BUCKET/sw.js" \
-            --cache-control "no-cache, no-store, must-revalidate" --content-type "application/javascript"
-          aws s3 cp apps/web/dist/manifest.webmanifest "s3://$AWS_S3_BUCKET/manifest.webmanifest" \
-            --cache-control "no-cache, must-revalidate" --content-type "application/manifest+json"
-      - name: "S3, sitemap.xml (cache court, application/xml)"
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        run: |
-          aws s3 cp apps/web/dist/sitemap.xml "s3://$AWS_S3_BUCKET/sitemap.xml" \
-            --cache-control "public, max-age=3600, must-revalidate" --content-type "application/xml; charset=utf-8"
-      # Routes prérendues. Chaque fichier part sous une clé S3 **sans extension**, égale au chemin
-      # de la route : `/decouvrir` devient la clé `decouvrir`. C'est ce qui les rend servies sans
-      # toucher à l'infrastructure, l'origine S3 est une origine REST, elle n'a pas de document
-      # d'index par dossier, donc `decouvrir/index.html` n'aurait jamais été servi pour
-      # `/decouvrir` : CloudFront serait tombé sur son repli 403/404 vers `/index.html`, la coquille
-      # SPA générique. Une clé exacte, elle, répond 200 directement.
-      # `Content-Type` est explicite pour la même raison que `sw.js` : une clé sans extension part
-      # sinon en `application/octet-stream`, que le navigateur télécharge au lieu de l'afficher.
-      # Le repli SPA reste en place pour toutes les autres routes, rien n'est retiré.
-      - name: "S3, routes prérendues (clés sans extension, no-cache)"
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        run: |
-          set -eo pipefail
-          MANIFEST=apps/web/dist/prerendered/manifest.json
-          if [ ! -f "$MANIFEST" ]; then
-            echo "::error::$MANIFEST absent : le build n'a pas produit de routes prérendues."
-            exit 1
-          fi
-          count=0
-          while IFS=$'\t' read -r route file; do
-            key="${route#/}"
-            echo "prérendu $route → clé $key"
-            aws s3 cp "apps/web/dist/prerendered/$file" "s3://$AWS_S3_BUCKET/$key" \
-              --cache-control "no-cache, must-revalidate" \
-              --content-type "text/html; charset=utf-8"
-            count=$((count + 1))
-          done < <(jq -r '.[] | "\(.route)\t\(.file)"' "$MANIFEST")
-          if [ "$count" = "0" ]; then
-            echo "::error::Le manifeste de prérendu est vide."
-            exit 1
-          fi
-          echo "$count routes prérendues publiées."
-      - name: "S3, étape 3 : index.html en dernier (point d'entrée)"
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        run: |
-          aws s3 cp apps/web/dist/index.html "s3://$AWS_S3_BUCKET/index.html" \
-            --cache-control "no-cache, must-revalidate" --content-type "text/html"
+      # Les cinq passes S3 vivent dans `publish-front`, partagée avec `rollback-front.yml` : l'ordre
+      # des passes et les en-têtes de cache y sont écrits une fois, pour que le retour arrière ne
+      # rejoue pas de tête une procédure à pièges.
+      - name: Publier le build sur S3 (assets immutable, puis no-cache, index.html en dernier)
+        uses: ./.github/actions/publish-front
+        with:
+          dist: apps/web/dist
+          bucket: ${{ secrets.AWS_S3_BUCKET }}
       # Le front n'a aucun retour arrière côté hébergement : `aws s3 sync` écrase et le build
       # précédent n'existe plus nulle part. Archiver le dist rend un retour arrière possible sans
-      # rejouer toute la chaîne de portes. Placé APRÈS l'envoi S3 : une archive de confort ne doit
-      # jamais pouvoir empêcher un déploiement. `overwrite` parce qu'un « Re-run failed jobs »
-      # rejoue l'étape dans le même run, où le nom d'artefact existe déjà.
+      # rejouer toute la chaîne de portes, c'est ce que `rollback-front.yml` republie. Placé APRÈS
+      # l'envoi S3 : une archive de confort ne doit jamais pouvoir empêcher un déploiement.
+      # `overwrite` parce qu'un « Re-run failed jobs » rejoue l'étape dans le même run, où le nom
+      # d'artefact existe déjà.
       - name: Archiver le build front (rend un retour arrière possible)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -567,61 +484,15 @@ jobs:
           if-no-files-found: error
           overwrite: true
           retention-days: 30
-      - name: Invalidation CloudFront
-        if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
-        run: |
-          INV_ID=$(aws cloudfront create-invalidation \
-            --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*" \
-            --query 'Invalidation.Id' --output text)
-          aws cloudfront wait invalidation-completed \
-            --distribution-id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
-            --id "$INV_ID"
-      - name: Smoke test front (CloudFront)
-        if: vars.AWS_CLOUDFRONT_DISTRIBUTION_ID != ''
-        run: |
-          DOMAIN="$(aws cloudfront get-distribution --id ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }} --query 'Distribution.DomainName' --output text)"
-          echo "CloudFront domain : $DOMAIN"
-          # -o fichier plutôt que /dev/null : avec --retry, curl ne peut pas rembobiner /dev/null
-          # et sort en 23 sans jamais écrire le code HTTP.
-          code="$(curl -sS -o "$RUNNER_TEMP/cf.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "https://$DOMAIN/")"
-          echo "GET / -> $code"
-          test "$code" = "200"
-      # Le smoke test précédent interroge le domaine CloudFront : il ne dit rien du domaine public
-      # servi aux utilisateurs, dont le DNS, le certificat ou l'alias peuvent être cassés alors que
-      # la distribution répond très bien. L'origine est lue dans ALLOWED_ORIGINS, celle que l'API
-      # accepte, donc celle du front par construction, plutôt que réécrite ici : une valeur de plus
-      # à tenir à jour serait une valeur de plus à oublier lors d'une migration de domaine.
-      # Un 200 ne dit pas quelle version est servie : sans invalidation, le CDN répond 200 avec
-      # l'ancien index.html et le déploiement passe pour bon. On compare donc le point d'entrée
-      # haché du build qu'on vient d'envoyer à celui que le domaine public sert vraiment.
-      - name: Smoke test front (domaine public + version servie)
-        env:
-          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
-        run: |
-          set -eo pipefail
-          PUBLIC_WEB_URL="${ALLOWED_ORIGINS%%,*}"
-          if [ -z "$PUBLIC_WEB_URL" ]; then
-            echo "::warning::ALLOWED_ORIGINS absent, domaine public du front non vérifié."
-            exit 0
-          fi
-          echo "Domaine public : $PUBLIC_WEB_URL"
-          code="$(curl -sS -o "$RUNNER_TEMP/pub.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$PUBLIC_WEB_URL/")"
-          echo "GET $PUBLIC_WEB_URL/ -> $code"
-          if [ "$code" != "200" ]; then
-            echo "::error::$PUBLIC_WEB_URL ne répond pas 200 : DNS, certificat ou alias de l'hébergement du front."
-            exit 1
-          fi
-          ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' apps/web/dist/index.html | head -1)"
-          if [ -z "$ENTRY" ]; then
-            echo "::error::Point d'entrée introuvable dans le build local, smoke test de version impossible."
-            exit 1
-          fi
-          echo "Point d'entrée attendu : $ENTRY"
-          if ! grep -qF "$ENTRY" "$RUNNER_TEMP/pub.html"; then
-            echo "::error::$PUBLIC_WEB_URL sert un index.html qui ne référence pas $ENTRY, build périmé en cache (invalidation CDN absente ou incomplète)."
-            exit 1
-          fi
+      - name: Invalider CloudFront et vérifier le front servi
+        uses: ./.github/actions/verify-front
+        with:
+          dist: apps/web/dist
+          distribution-id: ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+          # L'origine publique est lue dans ALLOWED_ORIGINS, celle que l'API accepte, donc celle du
+          # front par construction, plutôt que réécrite ici : une valeur de plus à tenir à jour
+          # serait une valeur de plus à oublier lors d'une migration de domaine.
+          public-origins: ${{ vars.ALLOWED_ORIGINS }}
       - name: Enregistrer le déploiement Sentry (front)
         continue-on-error: true
         env:

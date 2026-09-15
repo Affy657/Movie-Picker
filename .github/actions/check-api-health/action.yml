@@ -1,0 +1,63 @@
+name: "Sondes de santé de l'API"
+description: "Sonde /health puis /health/ready sur une URL de révision ou de service Cloud Run, et /health sur le domaine public si fourni. Partagée par le déploiement (avant et après promotion) et le retour arrière."
+inputs:
+  url:
+    description: "URL de base de l'API à sonder (révision taguée ou service Cloud Run)"
+    required: true
+  public-url:
+    description: "URL publique de l'API, celle que le front appelle ; vide pour ne pas la sonder"
+    required: false
+    default: ""
+  public-url-expected:
+    description: "true quand la sonde vise la production en ligne : une URL publique vide devient alors un avertissement, au lieu d'un silence"
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    #   --max-time : sans lui, une révision qui accepte la connexion sans jamais répondre épuise
+    #   le timeout du job, et un job *annulé* n'exécute aucune étape de rattrapage.
+    #   -o fichier plutôt que /dev/null : avec --retry, curl ne peut pas rembobiner /dev/null et
+    #   sort en 23 sans écrire le code HTTP, ce qui rendait les diagnostics suivants inatteignables.
+    - name: /health puis /health/ready
+      shell: bash
+      env:
+        URL: ${{ inputs.url }}
+      run: |
+        set -eo pipefail
+        BODY="$RUNNER_TEMP/health.json"
+        curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$URL/health"
+        echo "Réponse /health : $(cat "$BODY")"
+        grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
+          echo "::error::/health ne renvoie pas status=ok"
+          exit 1
+        }
+        curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$BODY" "$URL/health/ready"
+        echo "Réponse /health/ready : $(cat "$BODY")"
+        grep -qE '"status"[[:space:]]*:[[:space:]]*"ready"' "$BODY" || {
+          echo "::error::/health/ready ne renvoie pas status=ready (dépendance indisponible)"
+          exit 1
+        }
+        grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
+          echo "::error::/health/ready signale MongoDB comme non joignable"
+          exit 1
+        }
+    # Un échec ici relève du routage, du DNS ou du certificat, pas du code.
+    - name: Domaine public
+      if: inputs.public-url != ''
+      shell: bash
+      env:
+        PUBLIC_URL: ${{ inputs.public-url }}
+      run: |
+        set -eo pipefail
+        BODY="$RUNNER_TEMP/public-health.json"
+        curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$BODY" "$PUBLIC_URL/health"
+        echo "Domaine public : $(cat "$BODY")"
+        grep -qE '"status"[[:space:]]*:[[:space:]]*"ok"' "$BODY" || {
+          echo "::error::Le domaine public de l'API ne renvoie pas status=ok : DNS, certificat ou mapping de domaine."
+          exit 1
+        }
+    - name: Domaine public non fourni
+      if: inputs.public-url == '' && inputs.public-url-expected == 'true'
+      shell: bash
+      run: echo "::warning::URL publique de l'API absente, domaine public non vérifié."

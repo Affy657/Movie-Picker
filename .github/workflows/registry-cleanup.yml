@@ -22,6 +22,8 @@ jobs:
     name: Appliquer la politique de rétention
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    # Lit GCP_SA_KEY : environnement `production`, comme tout job qui porte ce secret.
+    environment: production
     permissions:
       contents: read
       id-token: write
@@ -29,12 +31,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+      - uses: ./.github/actions/gcloud-auth
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          credentials-json: ${{ secrets.GCP_SA_KEY }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
       - name: set-cleanup-policies (garde 10 récentes, purge > 30j)
         run: |
           gcloud artifacts repositories set-cleanup-policies "$GCP_ARTIFACT_REPO" \

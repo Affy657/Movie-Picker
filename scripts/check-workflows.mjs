@@ -66,7 +66,7 @@ if (actionlint.status !== 0) {
   fail('actionlint a relevé des constats.');
 }
 
-console.log('zizmor (audit sécurité, seuil medium)');
+console.log('zizmor (audit sécurité, seuil medium, workflows et actions composites)');
 const zizmor = docker([
   'run',
   '--rm',
@@ -78,7 +78,7 @@ const zizmor = docker([
   'medium',
   '--format',
   'plain',
-  '.github/workflows/',
+  '.github/',
 ]);
 if (zizmor.status !== 0) {
   fail('zizmor a relevé des constats de sévérité medium ou plus.');

@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-027`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-028`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -38,7 +38,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - impact: les déploiements s'authentifient avec des identifiants statiques de longue durée (`GCP_SA_KEY`, clés AWS)
 - ou: branche `chore/ci-keyless-oidc`, commit `eb72fbb`, non fusionnée depuis le 2026-06-12
 - verify: `git merge-base --is-ancestor chore/ci-keyless-oidc master && echo REGLE || echo OUVERT`
-- fix: configurer WIF et le rôle AWS, puis réécrire le patch. **La branche ne se rebase plus** : ses huit lignes modifiaient les jobs `deploy-api` et `deploy-front` de `ci-cd.yml`, partis dans `deploy.yml` le 2026-09-10. `git merge-tree master chore/ci-keyless-oidc` rend un conflit sur `ci-cd.yml` dont le contexte n'existe plus. Prendre l'intention, pas le diff.
+- fix: configurer WIF et le rôle AWS, puis réécrire le patch. **La branche ne se rebase plus** : ses huit lignes modifiaient les jobs `deploy-api` et `deploy-front` de `ci-cd.yml`, partis dans `deploy.yml` le 2026-09-10. `git merge-tree master chore/ci-keyless-oidc` rend un conflit sur `ci-cd.yml` dont le contexte n'existe plus. Prendre l'intention, pas le diff. Côté GCP, l'authentification n'a plus qu'un seul endroit depuis le 2026-09-15 : `.github/actions/gcloud-auth/action.yml`, appelée par les cinq jobs qui parlent à GCP ; c'est là que `credentials_json` devient `workload_identity_provider`, et nulle part ailleurs.
 - fini-quand: plus aucun secret d'identifiant statique dans les secrets GitHub du dépôt
 - refs: recoupe DEBT-003 et le lot Terraform 5 de `roadmap.md`, qui traite le même sujet au fond
 
@@ -194,6 +194,35 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   gcloud storage buckets add-iam-policy-binding gs://<BUCKET_SAUVEGARDE> --member="serviceAccount:<SA_CI>" --role=roles/storage.objectAdmin
   ```
 - refs: pendant GCP de DEBT-003 (AWS). Le lot Terraform 5 de `roadmap.md` traite les deux au fond.
+
+## DEBT-027 les secrets de déploiement sont des secrets de dépôt, l'environnement `production` ne protège rien
+
+- state: humain
+- bloque: la valeur d'un secret GitHub ne se relit pas, donc l'agent ne peut pas la déplacer ; et les écritures sur les réglages du dépôt (environnements, secrets) sont refusées à l'agent, mesuré le 2026-09-15
+- impact: `GCP_SA_KEY`, les deux clés AWS et les autres secrets de déploiement sont lisibles par n'importe quel workflow sur n'importe quelle branche du dépôt. L'environnement `production` que portent les jobs de déploiement, de retour arrière, de sauvegarde et de nettoyage du registre n'a ni secret, ni règle de protection, ni politique de branche : il est décoratif. Le refus hors master de `deploy.yml` n'est qu'un `if` shell dans un seul job.
+- ou: Settings → Environments → production ; Settings → Secrets and variables → Actions
+- verify: `gh api repos/<DEPOT>/environments/production --jq '.deployment_branch_policy'` rend `null`, et `gh api repos/<DEPOT>/environments/production/secrets --jq .total_count` rend `0`. Encore ouvert tant que l'un des deux tient.
+- fix: en trois gestes, dans cet ordre, sans rien casser entre deux (un secret d'environnement prime sur son homonyme de dépôt, le doublon transitoire est sans effet) :
+  ```bash
+  # 1. politique de branche : seule master peut déployer, sauvegarder, nettoyer, revenir en arrière
+  gh api -X PUT repos/<DEPOT>/environments/production --input - <<'JSON'
+  {"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}
+  JSON
+  gh api -X POST repos/<DEPOT>/environments/production/deployment-branch-policies -f name=master -f type=branch
+  # 2. ressaisir chaque secret de déploiement dans l'environnement (la valeur se relit dans son
+  #    coffre d'origine : console GCP pour la clé JSON, IAM AWS pour les clés, Sentry, etc.)
+  for s in GCP_SA_KEY GCP_PROJECT_ID AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_S3_BUCKET VITE_API_URL VITE_POSTHOG_KEY VITE_SENTRY_DSN SENTRY_AUTH_TOKEN; do
+    gh secret set "$s" --env production
+  done
+  # 3. retirer les homonymes de dépôt, plus les trois secrets que plus aucun workflow ne lit
+  for s in GCP_SA_KEY GCP_PROJECT_ID AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_S3_BUCKET VITE_API_URL VITE_POSTHOG_KEY VITE_SENTRY_DSN SENTRY_AUTH_TOKEN MONGODB_URI TMDB_API_KEY AWS_CLOUDFRONT_DISTRIBUTION_ID; do
+    gh secret delete "$s"
+  done
+  ```
+  `SONAR_TOKEN` reste un secret de dépôt : le job `sonar` tourne sur les PR et les branches `v*`, que la politique de branche exclurait. `MONGODB_URI` et `TMDB_API_KEY` vivent dans Secret Manager, la CI n'en a jamais eu besoin ; `AWS_CLOUDFRONT_DISTRIBUTION_ID` existe déjà en variable, c'est elle que `deploy.yml` lit.
+- fini-quand: `verify` rend `{"protected_branches":false,"custom_branch_policies":true}` et `9`, puis un `gh workflow run deploy.yml --ref master -f cible=tout` vert
+- piege: les jobs qui lisent ces secrets portent tous `environment: production` depuis le 2026-09-15 (`docker-api`, `deploy-api`, `deploy-front`, `rollback`, `backup`, `apply-policy`, `rollback-front`). Un futur job qui lirait `GCP_SA_KEY` sans cette ligne échouerait avec un secret vide une fois la migration faite, et c'est voulu. Mettre à jour la ligne « Les secrets et variables Actions se lisent dans » de `infra/README.md` en même temps.
+- refs: DEBT-002 et le lot Terraform 5 retirent ces clés au fond ; ceci borne seulement qui peut les lire d'ici là
 
 ## DEBT-023 la limite de votes par participant se vérifie puis s'écrit, sans verrou
 
@@ -384,7 +413,6 @@ Mesuré, sans gain, retiré. Ne pas rejouer sans une raison neuve.
 - **I4 desserrer la porte Lighthouse** (baisser un seuil global, retirer une page, la repasser non bloquante). Le déficit est réel et mesuré ; c'est cette porte qui a détecté que la production ne se déployait plus.
 - **I9 annoncer d'avance la fermeture des imports statiques de la coquille** (un `modulepreload` sur chaque dépendance statique de l'entrée et de `App`, six chunks de plus que ceux que Vite pose). Retire bien une vague réseau avant le montage de React, et ne gagne que 0,15 s de LCP en local. Sur le runner, l'échange est perdant : les douze pages dont le plus grand élément vient du rendu React gagnent 1 point, et les **deux** dont il n'en vient pas en perdent 2 et 8, `home` parce que son titre est peint depuis le document (C2) et `profile` parce que son LCP est adossé à une image. Six requêtes prioritaires de plus dans la première vague passent devant cet élément-là. Mesuré dans les deux sens : en la retirant, `profile` repasse de 88 à 97 et les douze autres ne perdent rien, elles gagnent même 1 point de plus. Leçon générale : **avant d'ajouter quoi que ce soit à la première vague, regarder les pages dont le LCP n'attend pas React**, ce sont les seules que ça peut faire reculer, et elles sont aussi les seules instables d'un run à l'autre.
 - **I5 `mongodump --oplog`** pour la cohérence transactionnelle : impose un dump de l'instance entière et des droits supplémentaires.
-- **I6 factoriser `auth` + `setup-gcloud` (5 copies) et les smoke tests en actions composites.** Juste sur le fond, mais touche 4 workflows dont 2 hors périmètre. À faire dans un lot dédié, jamais en fin de diff.
 - **I7 descendre zizmor au seuil `low`** : 9 constats cosmétiques. Le seuil `medium` est vert et n'attrape que du sérieux.
 - **I10 regrouper les petits modules partagés entre pages en chunks « entries-aware » (rolldown `codeSplitting.groups`, `entriesAware: true`).** Mesuré le 2026-09-14 sur le build, en brotli. Avec un seuil de fusion à 12 Ko : `login` passe de 18 fichiers / 111,7 Ko à 14 fichiers / **141,9 Ko**, parce que les sous-groupes trop petits sont fusionnés avec un voisin chargé par d'autres pages, et la première vague de la coquille passe de 5 à 16 fichiers, soit exactement ce qu'I9 a mesuré perdant. À 3 Ko, `login` redescend à 7 fichiers / 107,7 Ko mais `my-events` prend 14 Ko et `home` 8 Ko. À 0, c'est le découpage automatique. Ce qui a été gardé est le seul geste qui gagne partout : la fermeture statique de `App` capturée dans son chunk (`appShellClosurePlugin`), qui retire 6 à 7 fichiers par page et 3 à 4 Ko à chacune sans rien ajouter à la première vague. Leçon : sous rolldown, le seul regroupement sans perdant est celui qui suit le graphe réel des imports, pas un seuil de taille.
 - **I8 espacer les workflows planifiés pour économiser des minutes GitHub Actions.** Mesuré au 2026-09-10 sur l'historique des runs : `security-scan.yml` tourne en 45 à 80 s une fois par semaine (≈ 5 min/mois), `registry-cleanup.yml` une fois par mois (≈ 1 min/mois), `backup-mongo.yml` en ≈ 90 s par nuit (≈ 45 min/mois). Total ≈ 51 min/mois, contre ≈ 450 min pour 20 runs de CI : les crons ne sont pas le poste de coût, et le seul qui pèse est le seul filet en cas de perte de données. Espacer la sauvegarde à deux jours économiserait 22 min/mois en doublant le point de restauration acceptable, ce qui est un mauvais échange sur des données personnelles non reconstituables. Ne pas rejouer sans un changement de cadran : soit le quota redevient contraignant après le passage du dépôt en public, soit la sauvegarde grossit assez pour changer l'ordre de grandeur.

@@ -6,7 +6,13 @@
 # production, la garder honnête est la raison d'être de ce fichier.
 #
 # Path-filtering : le job "changes" (dorny/paths-filter) calcule 3 sorties web/api/e2e ; chaque
-# job ne tourne que si sa lane est impactée (skip sinon). workflow_dispatch force les 3 lanes.
+# job ne tourne que si sa lane est impactée (skip sinon). workflow_dispatch force les 3 lanes,
+# et **master aussi** : un commit qui ne touchait ni `apps/` ni `scripts/` sautait les 9 jobs de
+# test et concluait `success` en 12 s, or `deploy.yml` ne lit que cette conclusion. Un commit de
+# code rouge suivi d'un commit de documentation donnait un run vert, donc un déploiement autorisé
+# sur du code jamais validé. Le filtre reste utile sur les PR et les branches `v*`, où rien ne se
+# déploie ; sur master, les minutes sont gratuites depuis que le dépôt est public, et la
+# conclusion d'un run doit valoir pour l'arbre entier, pas pour le seul diff du commit.
 #   - Lane web : lint-web, test-web.
 #   - Lane api : lint-api, test-api, test-api-mongo.
 #   - Transverses : gitleaks (toujours), lint-workflows (toujours), audit npm/NuGet,
@@ -69,20 +75,21 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      web: ${{ steps.filter.outputs.web == 'true' || github.event_name == 'workflow_dispatch' }}
-      api: ${{ steps.filter.outputs.api == 'true' || github.event_name == 'workflow_dispatch' }}
-      e2e: ${{ steps.filter.outputs.e2e == 'true' || github.event_name == 'workflow_dispatch' }}
+      web: ${{ steps.filter.outputs.web == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
+      api: ${{ steps.filter.outputs.api == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
+      e2e: ${{ steps.filter.outputs.e2e == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
     steps:
       # fetch-depth: 0 requis : sur push, paths-filter diffe contre le commit précédent
       # via git ; sans historique complet il devrait fetch, ce qui échoue avec
       # persist-credentials: false (pas de token). L'historique complet évite le fetch.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name != 'workflow_dispatch' && github.ref != 'refs/heads/master'
         with:
           fetch-depth: 0
           persist-credentials: false
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         id: filter
-        if: github.event_name != 'workflow_dispatch'
+        if: github.event_name != 'workflow_dispatch' && github.ref != 'refs/heads/master'
         with:
           # `master` dans les deux cas, et ce n'est pas un oubli : dorny/paths-filter traite
           # spécialement le cas « base égale la branche poussée » et compare alors au commit
@@ -136,11 +143,14 @@ jobs:
   # porte couvre `.github/workflows/` en entier, donc `deploy.yml` aussi, et elle est
   # inconditionnelle comme gitleaks : un run master rouge interdit le déploiement.
   #   - actionlint : erreurs de syntaxe, expressions ${{ }} invalides, permissions incohérentes.
-  #     Il délègue aux blocs `run:` à shellcheck, préinstallé sur les runners GitHub.
-  #   - zizmor : audit sécurité des workflows. Seuil `medium`, le dépôt est à 0 medium et 0 high,
-  #     donc la porte est verte aujourd'hui et n'attrape que du sérieux (injection depuis un
-  #     contexte non fiable, secrets exposés). Descendre à `low` demanderait de traiter 9 constats
-  #     cosmétiques. `--offline` pour que la porte ne dépende pas de l'API GitHub.
+  #     Il délègue aux blocs `run:` à shellcheck, préinstallé sur les runners GitHub. Il ne lit
+  #     que les workflows, pas les actions composites.
+  #   - zizmor : audit sécurité des workflows **et des actions composites** de `.github/actions/`,
+  #     où vivent désormais les passes S3, les sondes de santé et l'authentification GCP. Seuil
+  #     `medium`, le dépôt est à 0 medium et 0 high, donc la porte est verte aujourd'hui et
+  #     n'attrape que du sérieux (injection depuis un contexte non fiable, secrets exposés).
+  #     Descendre à `low` demanderait de traiter 9 constats cosmétiques. `--offline` pour que la
+  #     porte ne dépende pas de l'API GitHub.
   # `scripts/check-workflows.mjs` rejoue les deux outils en local dans `verify:local`, par Docker.
   # Les versions des deux côtés doivent rester alignées : en changer une ici sans changer l'autre
   # rend une porte locale verte sur ce que la CI refuse.
@@ -170,7 +180,7 @@ jobs:
             "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/zizmor-x86_64-unknown-linux-gnu.tar.gz"
           echo "${ZIZMOR_SHA256}  $RUNNER_TEMP/zizmor.tgz" | sha256sum -c -
           tar xzf "$RUNNER_TEMP/zizmor.tgz" -C "$RUNNER_TEMP" zizmor
-          "$RUNNER_TEMP/zizmor" --offline --no-progress --min-severity medium --format plain .github/workflows/
+          "$RUNNER_TEMP/zizmor" --offline --no-progress --min-severity medium --format plain .github/
 
   lint-web:
     name: Lint front (tsc + eslint + prettier)
@@ -256,17 +266,8 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: "1"
           ignore-unfixed: true
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: ./.github/actions/setup-dotnet-cache
         if: needs.changes.outputs.api == 'true'
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: needs.changes.outputs.api == 'true'
-        with:
-          path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('apps/api-dotnet/**/*.csproj', 'apps/api-dotnet/Directory.Build.props') }}
-          restore-keys: |
-            nuget-${{ runner.os }}-
       - name: Restore API .NET (pour audit NuGet)
         if: needs.changes.outputs.api == 'true'
         run: dotnet restore apps/api-dotnet/MoviePicker.slnx
@@ -500,6 +501,10 @@ jobs:
   # sont partis dans `deploy.yml`, et l'exclusion est devenue un trou : `deploy.yml` consomme la
   # *conclusion* d'un run CI, or un job sauté ne fait pas échouer un run. Un run manuel sans
   # Quality Gate concluait donc au vert et autorisait un déploiement que Sonar n'avait pas vu.
+  # Les branches `v*` sont analysées aussi, comme branches Sonar nommées (`sonar.branch.name`),
+  # pour que le Quality Gate se voie pendant la version et non à sa fusion dans master. Sans ce
+  # paramètre, une analyse poussée depuis une branche écraserait celle de master, que SonarCloud
+  # prend pour la branche principale par défaut.
   sonar:
     name: SonarCloud (analyse + couverture ; QG bloquant)
     needs: [changes, test-web, test-api]
@@ -509,7 +514,6 @@ jobs:
       always() &&
       github.event.pull_request.head.repo.fork != true &&
       github.actor != 'dependabot[bot]' &&
-      (github.event_name == 'pull_request' || github.ref == 'refs/heads/master') &&
       (needs.test-web.result == 'success' || needs.test-api.result == 'success')
     permissions:
       contents: read
@@ -552,17 +556,31 @@ jobs:
         run: |
           pnpm install --frozen-lockfile --ignore-scripts
           pnpm run test:coverage --filter=web
+      # Même logique que pour le front : le job test-api a déjà produit ce rapport, le rejouer ici
+      # coûtait une minute sur le chemin critique du run. Le rapport OpenCover porte des chemins
+      # absolus, identiques d'un runner à l'autre, donc Sonar le relit sans réécriture.
+      - name: "Couverture API : download artefact (si test-api a tourné)"
+        if: needs.test-api.result == 'success'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: coverage-api-unit
+          path: coverage-unit
       - name: Installer SonarScanner for .NET
         run: |
           dotnet tool install --global dotnet-sonarscanner --version 11.2.1
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
-      - name: Analyse SonarCloud (begin + build + tests + Quality Gate)
+      # Le `dotnet build` doit rester entre begin et end, c'est là que les analyseurs Roslyn de
+      # Sonar tournent. Les tests, eux, ne servent qu'à la couverture : ils ne sont rejoués que si
+      # l'artefact de test-api manque.
+      - name: Analyse SonarCloud (begin + build + Quality Gate)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_HEAD: ${{ github.head_ref }}
           PR_BASE: ${{ github.base_ref }}
+          REF_NAME: ${{ github.ref_name }}
+          API_COVERAGE_DOWNLOADED: ${{ needs.test-api.result == 'success' }}
           MONGODB_URI: ""
         run: |
           set -eo pipefail
@@ -572,9 +590,11 @@ jobs:
           fi
           . ./configs/sonar-exclusions.sh
           VERSION="$(git describe --tags --always 2>/dev/null || echo 0.0.0)"
-          PRARGS=()
+          REFARGS=()
           if [ "$EVENT_NAME" = "pull_request" ]; then
-            PRARGS=(/d:sonar.pullrequest.key="$PR_NUMBER" /d:sonar.pullrequest.branch="$PR_HEAD" /d:sonar.pullrequest.base="$PR_BASE")
+            REFARGS=(/d:sonar.pullrequest.key="$PR_NUMBER" /d:sonar.pullrequest.branch="$PR_HEAD" /d:sonar.pullrequest.base="$PR_BASE")
+          elif [ "$REF_NAME" != "master" ]; then
+            REFARGS=(/d:sonar.branch.name="$REF_NAME")
           fi
           dotnet sonarscanner begin \
             /k:"Affy657_Movie-Picker" \
@@ -589,15 +609,17 @@ jobs:
             /d:sonar.coverage.exclusions="$COV_EXCL" \
             /d:sonar.cpd.exclusions="$CPD" \
             /d:sonar.javascript.lcov.reportPaths="apps/web/coverage/lcov.info" \
-            /d:sonar.cs.opencover.reportsPaths="apps/api-dotnet/**/TestResults/**/coverage.opencover.xml" \
+            /d:sonar.cs.opencover.reportsPaths="coverage-unit/**/coverage.opencover.xml" \
             /d:sonar.qualitygate.wait=true \
             /d:sonar.qualitygate.timeout=300 \
-            "${PRARGS[@]}"
+            "${REFARGS[@]}"
           dotnet build apps/api-dotnet/MoviePicker.slnx -c Debug
-          dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj -c Debug --no-build \
-            --collect:"XPlat Code Coverage" \
-            --settings apps/api-dotnet/coverlet.runsettings \
-            --results-directory apps/api-dotnet/MoviePicker.Api.Tests/TestResults
+          if [ "$API_COVERAGE_DOWNLOADED" != "true" ]; then
+            dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj -c Debug --no-build \
+              --collect:"XPlat Code Coverage" \
+              --settings apps/api-dotnet/coverlet.runsettings \
+              --results-directory coverage-unit
+          fi
           dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
       - name: "Quality Gate : detail des conditions en echec"
         if: failure()
