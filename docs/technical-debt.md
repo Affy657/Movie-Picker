@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-029`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-032`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -78,7 +78,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - state: differe
 - declencheur: la mise à l'échelle devient routinière au lieu d'être exceptionnelle
 - impact: Cloud Run monte jusqu'à `maxScale 20`, donc jusqu'à 20 caches froids indépendants. Depuis le 2026-09-14, les sélections de la home, les collections et l'enrichissement TMDB passent par `ISharedCache` (Mongo, collection `shared_cache`, index TTL) en second niveau : une instance neuve relit ces snapshots au lieu de refaire le fan-out TMDB, mesuré à 6 à 10 s par requête dans les logs. Le reste des `IMemoryCache` (recherche TMDB, détails) reste local.
-- ou: `Infrastructure/Tmdb/TmdbMovieSearch.cs` pour ce qui reste en mémoire seule ; `Application/Caching/SharedCacheReadThrough.cs` pour le modèle à réutiliser
+- ou: `Infrastructure/Tmdb/TmdbMovieSearch.Details.cs` et `TmdbMovieSearch.Search.cs` pour ce qui reste en mémoire seule ; `Application/Caching/SharedCacheReadThrough.cs` pour le modèle à réutiliser
 - verify: `grep -rln IMemoryCache apps/api-dotnet --include=*.cs`
 - fix: passer les caches restants par `SharedCacheReadThrough`, ou un cache hors processus dédié
 - piege: `min-instances` reste à 0, donc le démarrage à froid de l'API (3,5 s en prod, 0,7 s en local avec ReadyToRun) subsiste. Le poser à 1 coûte environ 8 à 10 $ par mois : décision de l'utilisateur, jamais de l'agent. Deux règles du cache partagé à ne pas casser : seules les clés de catalogue (sections à liste fermée, au plus un genre) sont écrites dans Mongo, parce que `recommendations`, `collection` et les combinaisons de genres ouvrent un espace de clés illimité à 24 Ko le document sur un palier Atlas de 512 Mo ; et chaque famille de clés porte une version (`showcase-v1`, `showcase-collections-v1`, `tmdb-enrich-v2`) à incrémenter quand le DTO sérialisé change, sinon les instances relisent d'anciens documents pendant tout le TTL après un déploiement.
@@ -222,19 +222,35 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: `verify` vide et aucune chaîne française nouvelle dans un fichier touché depuis
 - piege: les données de seed (`Léa Moreau`, `Soirée horreur`) sont du contenu produit, pas du code : elles restent en français. Les noms de tests décrivent un comportement, les traduire ne doit pas en changer le sens ; relire chaque `it(...)` plutôt que passer un outil.
 
-## DEBT-023 la limite de votes par participant se vérifie puis s'écrit, sans verrou
+## DEBT-029 `GET /events/mine` écrit en base
 
 - state: differe
-- declencheur: un participant dépasse sa limite en prod, visible dans la base par un compte de votes supérieur à `maxVotesPerParticipant` sur une soirée où le réglage est actif
-- impact: contournable, pas de corruption. `VoteMovieHandler.EnsureWithinVoteLimitAsync` compte les votes existants puis insère le nouveau ; deux premiers votes envoyés en parallèle passent tous les deux la vérification. Une transaction Mongo n'y changerait rien, l'isolation par instantané ne protège pas d'une lecture fantôme sur deux documents distincts.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/VoteMovie/VoteMovieHandler.cs`, méthode `EnsureWithinVoteLimitAsync`
-- verify: la vérification est toujours un compte suivi d'un `UpsertAsync` sans garde atomique.
-  ```bash
-  grep -n "GetParticipantVotesByEventAsync\|UpsertAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/VoteMovie/VoteMovieHandler.cs
-  ```
-- fix: porter un compteur `voteCount` sur le document participant, incrémenté par un `UpdateOne` conditionnel (`voteCount < max`) dans la même transaction que l'insertion du vote, et décrémenté quand un vote est retiré. Le front garde sa vérification locale, qui couvre le cas courant.
-- fini-quand: deux votes concurrents au-delà de la limite ne laissent qu'un vote en base, prouvé par un test d'intégration Mongo
-- piege: le compteur doit ignorer le changement de sens d'un vote déjà posé sur le même film, seul un vote sur un film nouveau consomme un créneau.
+- declencheur: DEBT-001 réglé, c'est-à-dire Cloud Scheduler qui appelle `POST /api/v1/scheduler/recurring-events` en production
+- impact: une lecture qui écrit. `ListMyEventsHandler` crée les occurrences suivantes des soirées récurrentes et nettoie les watchlists des soirées terminées à chaque affichage de la liste, parce que rien d'autre ne le fait en production tant que le scheduler est coupé. Le coût est payé par l'utilisateur qui ouvre la page, et un GET n'est pas idempotent.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMyEvents/ListMyEventsHandler.cs`, appels à `RunForCreatorAsync` et `RunForEventsAsync` en tête de `HandleAsync`
+- verify: `grep -n "RunForCreatorAsync\|RunForEventsAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMyEvents/ListMyEventsHandler.cs` ; encore ouvert tant que les deux appels sont dans le chemin de lecture
+- fix: retirer les deux appels une fois le scheduler en service, `RecurringEventPass` et `FinishedEventWatchlistPass` restant joués par `SchedulerController`
+- piege: ne pas retirer les appels avant DEBT-001, les soirées récurrentes cesseraient de se renouveler en production sans que rien ne le signale. Depuis le 2026-09-15, le champ `version` du document soirée empêche au moins deux passes concurrentes (lecture et scheduler) de créer deux occurrences.
+
+## DEBT-030 les captures des suggestions d'idées sont hébergées sur une branche du dépôt public
+
+- state: humain
+- bloque: décision produit, garder ou non les pièces jointes des suggestions
+- impact: tout compte connecté peut publier jusqu'à 4 images par heure sur la branche `GITHUB_ATTACHMENTS_BRANCH` du dépôt, public depuis le 2026-09-10. Les octets magiques et le type MIME sont vérifiés, pas le contenu : le dépôt devient un hébergeur d'images sous le nom du projet, et une image retirée reste dans l'historique git.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/GitHub/GitHubIssueClient.cs`, `UploadAttachmentAsync`
+- verify: `grep -n "UploadAttachmentAsync" apps/api-dotnet/MoviePicker.Api/Infrastructure/GitHub/GitHubIssueClient.cs` ; encore ouvert tant que la méthode pousse un blob dans le dépôt
+- fix: soit retirer les pièces jointes du formulaire de suggestion, soit les héberger hors dépôt (bucket privé, lien signé dans le ticket)
+- fini-quand: aucune écriture du serveur dans le dépôt GitHub ne vient d'un utilisateur
+
+## DEBT-031 le limiteur de débit en mémoire est par instance
+
+- state: differe
+- declencheur: la mise à l'échelle devient routinière au lieu d'être exceptionnelle, même déclencheur que DEBT-006
+- impact: chaque politique `[EnableRateLimiting]` compte par instance Cloud Run, donc un plafond de 60 par minute vaut jusqu'à 20 fois plus en pic. Seules les politiques d'authentification doublent leur compte dans Mongo par `[SharedRateLimit]`.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` (politiques), `SharedRateLimitFilter.cs` (compteur partagé)
+- verify: `grep -c "SharedRateLimit(" apps/api-dotnet/MoviePicker.Api/Controllers/*.cs` ; encore ouvert tant que seul `AuthController` porte l'attribut
+- fix: poser `[SharedRateLimit]` sur les politiques qui protègent une ressource partagée (webhooks, scheduler, création de soirée), pas sur le sondage
+- piege: le compteur partagé coûte un aller-retour Mongo par requête, ne pas le poser sur les routes sondées toutes les 3,5 s (DEBT-008)
 
 ## DEBT-024 le premier gagnant s'écrit encore dans l'ancien champ `winnerMovieId`
 

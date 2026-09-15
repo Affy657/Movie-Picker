@@ -8,9 +8,15 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Security
+
+- **Le jeton qui donne les commandes de l'hôte ne transite plus dans l'adresse des requêtes** mais dans un en-tête, et il est masqué dans les journaux du serveur et le suivi d'erreurs. Un compte créé avec un mot de passe ne peut plus être rattaché à Google ou GitHub par simple coïncidence d'adresse e-mail : il faut se connecter puis lier le fournisseur depuis les paramètres. L'API impose HTTPS pour deux ans aux navigateurs, un e-mail inconnu au login répond dans le même temps qu'un e-mail connu, les affiches proposées ne peuvent venir que de TMDB, les abonnements aux notifications ne visent que des services push publics et le mot de passe est plafonné à 128 caractères.
+
 ### Changed
 
 - **Le mode sombre distingue ce qui flotte** : menus, feuilles, modales, infobulles et cartes surélevées se posent sur une surface un ton plus claire que la page, au lieu de compter sur une ombre invisible sur fond sombre ; les séparateurs discrets y sont aussi un peu plus lisibles. La pastille « Nouveautés » suit la couleur d'accent choisie au lieu de rester verte, et la piste d'un interrupteur éteint est plus foncée pour rester visible.
+- **Deux personnes qui modifient la même soirée en même temps ne s'écrasent plus** : deux lancements de roue simultanés donnaient deux gagnants différents, chacun affiché à son auteur et un seul retenu. Le second reçoit maintenant « modifiée entre-temps, rechargez ». Les plafonds de participants, de propositions et de votes tiennent aussi sous des envois simultanés, et retirer un participant ou un film est tout ou rien.
+- **L'API démarre et répond plus vite** : les index de la base ne sont plus recréés à chaque démarrage, la session n'est plus relue en base à chaque requête pendant trente secondes, et les rappels de soirée ne lisent plus toutes les soirées ouvertes mais seulement celles dont l'heure approche. « Mes soirées » n'oublie plus les soirées créées au-delà de la deux-centième.
 - **La page d'accueil n'attend plus TMDB à chaque redémarrage du serveur** : les sélections de films gardent une copie partagée entre les instances, donc un serveur qui vient de démarrer répond en quelques millisecondes au lieu de 6 à 10 secondes. Deux visiteurs qui arrivent en même temps ne déclenchent plus deux fois le même travail, et les réponses de l'API voyagent compressées.
 - **L'application s'affiche plus tôt** : l'outil de suivi des erreurs se charge à la première interaction ou dix secondes après l'affichage, au lieu de retarder le premier rendu, et chaque page demande sept fichiers de moins. Les rangées de l'accueil sont demandées dès l'ouverture et servies depuis le cache du navigateur quand on revient.
 - **Un lien de soirée s'ouvre plus vite** : la liste des films part sans attendre les détails de la soirée, et les fenêtres de partage, de paramètres, de proposition et de tirage ne sont chargées qu'à leur première ouverture, soit un tiers de JavaScript en moins pour un invité. L'animation de la roue est plus régulière sur mobile.
