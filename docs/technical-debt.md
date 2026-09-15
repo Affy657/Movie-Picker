@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-032`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-034`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -92,7 +92,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - ou: `apps/api-dotnet/MoviePicker.Api/Controllers/PostersController.cs`
 - verify: `grep -n 'return File(' apps/api-dotnet/MoviePicker.Api/Controllers/PostersController.cs` ; encore ouvert tant que la ligne sort, le binaire part de la base à travers Cloud Run
 - fix: stockage objet plus CDN devant
-- piege: `Cache-Control: public,max-age=86400,immutable` et l'ETag sont déjà posés, le trafic est donc déjà amorti côté navigateur. Le coût restant est la sortie réseau, pas le nombre de requêtes.
+- piege: `Cache-Control: public,max-age=86400,immutable` et l'ETag sont déjà posés, le trafic est donc déjà amorti côté navigateur. Le coût restant est la sortie réseau, pas le nombre de requêtes. Mesuré le 2026-09-15 : `poster_cache` fait 31,5 Mo sur les 32,3 Mo de données de la prod (564 affiches, ~56 Ko pièce), c'est la seule courbe de croissance de la base. Jusqu'à ce jour la collection ne se purgeait jamais, `expiresAtUtc` n'étant lu qu'à la lecture ; l'index TTL `poster_cache_expiresAtUtc_ttl` (30 jours glissants) borne désormais la taille au nombre d'affiches vues dans le mois.
 
 ## DEBT-008 le sondage à 3,5 s fixe le plafond de la base
 
@@ -102,14 +102,16 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - verify: `grep -n EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS apps/web/src/features/events/hooks/useEventLive.ts` ; encore ouvert tant que la constante existe, c'est-à-dire tant qu'on sonde
 - fix: passer en SSE
 - piege: ce n'est pas un défaut. Le sondage reste le bon choix aujourd'hui, zéro infrastructure et Cloud Run n'aime pas les connexions longues. C'est le paramètre qui fixe la limite, à ne changer que sur le déclencheur.
+- refs: DEBT-033 porte la conception du remplacement et le plafond produit qui dépend de cette limite
 
 ## DEBT-009 palier Atlas jamais vérifié
 
 - state: humain
 - bloque: l'accès MCP Atlas est désactivé pour les deux organisations du compte, un Organization Owner doit activer l'accès client IA
-- impact: le chiffre à confronter aux 260 opérations par seconde de DEBT-008 est inconnu, donc son déclencheur est inobservable
-- verify: tenter `atlas-list-clusters` via le MCP mongodb ; encore ouvert si l'accès est refusé
-- fini-quand: le plafond du palier est connu et reporté dans DEBT-008
+- impact: le chiffre à confronter aux 260 opérations par seconde de DEBT-008 est inconnu, donc son déclencheur est inobservable. La moitié est levée le 2026-09-15 : **le cluster accepte 500 connexions** (`serverStatus().connections`, 14 en cours), replica set de 3 nœuds en MongoDB 8.0, dev et prod sur le même cluster, 61 Mo de stockage à eux deux. Restent inconnus la limite d'opérations par seconde et l'espace disque du palier.
+- verify: tenter `atlas-list-clusters` via le MCP mongodb ; encore ouvert si l'accès est refusé (refusé le 2026-09-15 encore)
+- fini-quand: le plafond d'opérations par seconde et l'espace disque du palier sont connus et reportés dans DEBT-008 et DEBT-033
+- piege: sans le MCP, tout ce que le cluster dit de lui-même se lit par `mongosh` sans rien installer : `docker run --rm mongo:7 mongosh --quiet "$MONGODB_URI" --eval 'db.serverStatus().connections'`, et `db.stats()` par base pour les tailles. Le palier lui-même (M0, Flex) ne se lit que dans la console Atlas, onglet du cluster ; c'est là que se trouve la limite d'opérations par seconde.
 
 ## DEBT-010 deux composants trop chargés
 
@@ -264,7 +266,31 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   ```
 - fix: un script de reprise qui copie `winnerMovieId` + `winnerPickMethod` + `winnerPickedAt` dans `winners` sur les documents qui n'ont pas encore la liste, puis retirer la ligne de `ToDocument`, le repli de lecture de `ToWinners`, les trois champs de `EventDocument` et le `Or` du compteur. Le test `ToDocument_KeepsTheFirstWinnerInTheLegacyField` se retourne à ce moment.
 - fini-quand: `EventDocument` ne porte plus que `winners`, et un document de prod pris au hasard n'a plus de champ `winnerMovieId`
-- piege: ne pas retirer la lecture de repli avant la reprise, les soirées terminées avant la V1.6 perdraient leur gagnant dans l'historique.
+- piege: ne pas retirer la lecture de repli avant la reprise, les soirées terminées avant la V1.6 perdraient leur gagnant dans l'historique. Depuis le 2026-09-15, `UpdateAsync` n'écrit que les champs connus (voir C13) : un retour arrière vers une révision postérieure à cette date n'efface plus `winners`, le déclencheur ne vaut que pour les révisions antérieures.
+
+## DEBT-032 deux modèles d'autorisation hôte coexistent, le jeton porteur et le compte créateur
+
+- state: humain
+- bloque: décision produit, retirer ou non le jeton d'hôte. Le chantier co-hôte de V1.7 est le moment naturel : il ajouterait sinon un troisième chemin.
+- impact: `EventHost.IsHost` accepte le jeton (`X-Host-Token`, ou `?host=` pour les clients en cache, ou localStorage) **ou** `CreatorUserId`. Créer une soirée exige un compte depuis le retrait du mode invité en V1.2, donc le jeton est un vestige, et un lien partagé avec le jeton donne les commandes de l'hôte à n'importe qui, sans compte. Onze fichiers front le transportent, l'API le masque dans les logs et Sentry pour compenser.
+- ou: `apps/api-dotnet/MoviePicker.Api/Domain/EventHost.cs`, `Infrastructure/Web/HostTokenAccessor.cs`, `SensitiveQueryRedaction.cs`, et côté front `grep -rl hostToken apps/web/src --include=*.ts --include=*.tsx | grep -v test`
+- verify: `grep -n "TokenMatches" apps/api-dotnet/MoviePicker.Api/Domain/EventHost.cs` ; encore ouvert tant que le jeton compte dans `IsHost`
+- fix: hôte = `CreatorUserId`, co-hôtes = liste d'identifiants sur `Event` posée par le chantier co-hôte, puis retirer `HostToken` du document, `HostTokenAccessor`, `SensitiveQueryRedaction`, `withHostToken` et le stockage local côté front, et l'en-tête `X-Host-Token` du contrat OpenAPI.
+- fini-quand: plus aucun `hostToken` hors `archive/`, et `EventHost.IsHost` ne prend qu'un identifiant de compte
+- piege: les soirées créées avant le compte obligatoire n'ont pas de `CreatorUserId` (`events_creatorUserId` est `Sparse` pour cette raison), leur hôte perdrait ses commandes. Compter avant de retirer le jeton, par `mongosh` : `db.events.countDocuments({creatorUserId:{$exists:false}, closedAt:null})` ; si le compte n'est pas nul, attendre la clôture de ces soirées ou les rattacher par migration.
+
+## DEBT-033 le plafond de participants promet vingt fois ce que la base encaisse
+
+- state: humain
+- bloque: décision produit sur le plafond, et le choix du mode de synchronisation temps réel de V1.7
+- impact: `EventConfig.MaxParticipantsCap = 500` alors qu'en sondage actif chaque participant coûte environ 4,3 opérations Mongo par seconde (15 allers-retours par cycle de 3,5 s, DEBT-008). Une soirée pleine vaut ~2 150 opérations par seconde et jusqu'à 500 clients, sur un cluster partagé qui accepte 500 connexions et dont la limite d'opérations est inconnue (DEBT-009). Le plafond est inatteignable, et un hôte qui le vise fait tomber la base pour toutes les soirées en cours.
+- ou: `apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` (`MaxParticipantsCap`), `apps/web/src/features/events/hooks/useEventLive.ts`
+- verify: `grep -n "MaxParticipantsCap = " apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` ; lire le nombre : encore ouvert tant qu'il dépasse 50 et que le front sonde encore
+- fix: deux volets, dans cet ordre.
+  1. Tant que le sondage reste le mode de synchronisation : plafond à 50, ce que le cluster tient avec plusieurs soirées simultanées.
+  2. La synchronisation temps réel de V1.7 (`L`), évaluée le 2026-09-15. **Retenir SSE avec vérification de version côté serveur** : `GET /api/v1/events/{slug}/stream` en `text/event-stream`, où chaque instance relit `{version}` de la soirée une fois par seconde par soirée connectée (`Event.Version` existe déjà, et `writeSeq` bouge à chaque écriture sous verrou) et envoie un événement « changé » à ses clients, qui refont alors leur GET habituel. Coût : 1 opération par seconde et par soirée quel que soit le nombre de participants, zéro dépendance nouvelle, `EventSource` reconnecte seul avec `Last-Event-ID`. Écarter WebSocket (les votes et propositions restent des POST, le flux n'a besoin que d'un sens, et il faudrait l'affinité de session) ; garder un service tiers (Ably, Pusher, Firebase) en repli si SSE échoue à l'usage ; réserver les change streams Mongo à un palier qui les supporte, jamais vérifié. « Présence » se pose sur le même flux avec un battement en base à TTL 30 s, jamais en mémoire d'instance.
+- fini-quand: le plafond est aligné sur une mesure réelle du mode de synchronisation en place
+- piege: quatre choses cassent SSE sur Cloud Run sans le dire. `timeoutSeconds` est à 300 sur le service, donc chaque flux tombe toutes les 5 minutes et `EventSource` reconnecte, ce qui est acceptable, ou le monter à 3 600. `UseResponseCompression` met en tampon : exclure `text/event-stream` explicitement. Un flux ouvert compte comme une requête en cours, donc l'instance reste vivante et facturée tant qu'un client écoute, environ 0,09 $ par heure au-delà du palier gratuit, à relire sur la grille europe-west1 : c'est le coût du temps réel, à annoncer, pas à découvrir sur la facture. Enfin C12 devient bloquant avant ce chantier, des flux ouverts maintiennent plus d'instances debout que le trafic seul. Garder le sondage en repli après 15 s sans battement.
 
 ---
 
@@ -426,6 +452,16 @@ L'instrumentation des routes (`wrapReactRouterRouting`) a disparu avec ce change
 Avant d'accuser son diff sur un rouge Vitest, un vrai échec cite un **nom de test** et une assertion ; une famine cite un **nom de fichier**. Comparer les durées test par test avec un run de référence (`git checkout --detach HEAD~1`) : si des pages sans rapport ralentissent du même facteur, c'est la machine.
 
 ---
+
+## C12 pool Mongo × instances Cloud Run ≤ connexions du cluster
+
+Trois nombres se tiennent et aucun n'est posé au même endroit : le pool est de 20 connexions par instance (`DefaultMaxConnectionPoolSize` dans `ServiceCollectionExtensions.cs`, gardé par `AddMoviePicker_MongoClientPool_FitsEveryCloudRunInstanceUnderTheClusterConnectionCap`), `maxScale` est à 20 sur le service Cloud Run (annotation du service, jamais écrite par `deploy.yml`, elle survit aux déploiements), et le cluster accepte 500 connexions, dont une centaine à laisser aux opérateurs, à la sauvegarde nocturne et à la dev qui partage le cluster. Monter l'un sans baisser l'autre casse en silence : les instances au-delà du budget échouent à se connecter, la readiness passe rouge et l'alerte « base injoignable » part alors que la base va bien, précisément le jour de charge.
+
+Piège découvert en posant le test, le 2026-09-15 : `MongoUrl.MaxConnectionPoolSize` vaut 100 quand la chaîne de connexion ne dit rien, jamais 0, donc le « pool à 50 » de la passe du 2026-09-07 (`if (url.MaxConnectionPoolSize == 0)`) n'a jamais été appliqué. La prod tournait à 100 par instance, soit 2 000 connexions possibles pour 500. Une chaîne qui porte `maxPoolSize=` garde sa valeur, c'est la seule façon de changer le pool sans toucher au code.
+
+## C13 `UpdateAsync` écrit les champs connus, il ne remplace pas le document
+
+`MongoEventRepository.UpdateAsync` et `MongoUserRepository.UpdateAsync` passent par `KnownFieldsUpdate.From(doc)` : un `$set` des champs sérialisés plus un `$unset` des champs mappés absents, jamais `ReplaceOneAsync`. Les documents portent `BsonIgnoreExtraElements`, donc une révision de l'API qui ne connaît pas un champ le lit sans erreur ; avec `ReplaceOne` elle l'effaçait à sa prochaine écriture, ce qui a fait perdre `Winners`, `Recurrence`, `EventTemplates` et `IsWatchlistPublic` à tout retour arrière de la V1.6 vers la V1.5. Depuis le 2026-09-15, un champ inconnu fait l'aller-retour, et un champ connu remis à `null` disparaît bien du document comme avant : les tests `*_KeepsTheFieldsWrittenByANewerApiVersion` et `*_ClearingAnOptionalField_RemovesItFromTheDocument` de `RepositoryContractTests` gardent les deux moitiés. Revenir à `ReplaceOneAsync`, ou écrire un nouveau document en entier sans passer par `KnownFieldsUpdate`, rend `rollback.yml` destructif sans qu'aucun test d'API ne le voie. La protection ne vaut que pour les révisions qui portent le changement : revenir vers une révision antérieure au 2026-09-15 efface encore.
 
 # Impasses
 
