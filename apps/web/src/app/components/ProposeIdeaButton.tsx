@@ -49,8 +49,7 @@ function fileToBase64(file: File): Promise<string> {
       const dataUrl = typeof reader.result === 'string' ? reader.result : '';
       resolve(dataUrl.split(',')[1] ?? '');
     };
-    reader.onerror = () =>
-      reject(reader.error ?? new Error('Attachment could not be read'));
+    reader.onerror = () => reject(reader.error ?? new Error('Attachment could not be read'));
     reader.readAsDataURL(file);
   });
 }
