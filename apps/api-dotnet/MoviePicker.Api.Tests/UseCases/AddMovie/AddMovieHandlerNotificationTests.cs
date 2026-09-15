@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.AddMovie;
@@ -63,7 +64,8 @@ public sealed class AddMovieHandlerNotificationTests
         _sut = new AddMovieHandler(
             _eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _posterStore.Object,
             _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object,
-            _currentUser.Object, _tmdb.Object, NullLogger<AddMovieHandler>.Instance);
+            _currentUser.Object, _tmdb.Object, new RecordingUnitOfWork(), NullLogger<AddMovieHandler>.Instance,
+            TimeProvider.System);
     }
 
     private void OwnerParticipant() =>

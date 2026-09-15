@@ -18,6 +18,7 @@ public sealed class RemoveParticipantHandlerTests
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo = new();
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
+    private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly RemoveParticipantHandler _sut;
     private static readonly string[] value = new[] { "m1", "m2" };
 
@@ -38,6 +39,7 @@ public sealed class RemoveParticipantHandlerTests
             _seenMarkRepo.Object,
             _hostTokenAccessor.Object,
             _currentUser.Object,
+            _unitOfWork,
             NullLogger<RemoveParticipantHandler>.Instance);
     }
 
@@ -161,15 +163,46 @@ public sealed class RemoveParticipantHandlerTests
         Assert.Equal(2, result.RemovedMovies);
         Assert.Equal("Participant retiré.", result.Message);
 
-        _voteRepo.Verify(r => r.DeleteByMovieIdAsync("m1", It.IsAny<CancellationToken>()), Times.Once);
-        _voteRepo.Verify(r => r.DeleteByMovieIdAsync("m2", It.IsAny<CancellationToken>()), Times.Once);
-        _seenMarkRepo.Verify(r => r.DeleteByMovieIdAsync("evt1", "m1", It.IsAny<CancellationToken>()), Times.Once);
-        _seenMarkRepo.Verify(r => r.DeleteByMovieIdAsync("evt1", "m2", It.IsAny<CancellationToken>()), Times.Once);
-        _movieRepo.Verify(r => r.DeleteAsync("m1", It.IsAny<CancellationToken>()), Times.Once);
-        _movieRepo.Verify(r => r.DeleteAsync("m2", It.IsAny<CancellationToken>()), Times.Once);
+        _voteRepo.Verify(r => r.DeleteByMovieIdsAsync(
+            It.Is<IReadOnlyCollection<string>>(ids => ids.SequenceEqual(value)), It.IsAny<CancellationToken>()), Times.Once);
+        _seenMarkRepo.Verify(r => r.DeleteByMovieIdsAsync(
+            "evt1", It.Is<IReadOnlyCollection<string>>(ids => ids.SequenceEqual(value)), It.IsAny<CancellationToken>()), Times.Once);
+        _movieRepo.Verify(r => r.DeleteByIdsAsync(
+            It.Is<IReadOnlyCollection<string>>(ids => ids.SequenceEqual(value)), It.IsAny<CancellationToken>()), Times.Once);
         _voteRepo.Verify(r => r.DeleteByEventAndParticipantAsync("evt1", "p1", It.IsAny<CancellationToken>()), Times.Once);
         _seenMarkRepo.Verify(r => r.DeleteByEventAndParticipantAsync("evt1", "p1", It.IsAny<CancellationToken>()), Times.Once);
         _participantRepo.Verify(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal(1, _unitOfWork.Executions);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RunsEveryDeleteInsideTheUnitOfWork()
+    {
+        SetupEvent(ActiveEvent());
+        SetupParticipant(Participant(userId: null));
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo
+            .Setup(r => r.ListIdsByEventAndParticipantAsync("evt1", "p1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(value);
+        var deletesOutsideUnitOfWork = 0;
+        void CountOutside() { if (!_unitOfWork.IsExecuting) deletesOutsideUnitOfWork++; }
+        _voteRepo.Setup(r => r.DeleteByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .Callback(CountOutside).ReturnsAsync(2);
+        _seenMarkRepo.Setup(r => r.DeleteByMovieIdsAsync(It.IsAny<string>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .Callback(CountOutside).ReturnsAsync(2);
+        _movieRepo.Setup(r => r.DeleteByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .Callback(CountOutside).ReturnsAsync(2);
+        _voteRepo.Setup(r => r.DeleteByEventAndParticipantAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback(CountOutside).Returns(Task.CompletedTask);
+        _seenMarkRepo.Setup(r => r.DeleteByEventAndParticipantAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback(CountOutside).Returns(Task.CompletedTask);
+        _participantRepo.Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>()))
+            .Callback(CountOutside).ReturnsAsync(true);
+
+        await _sut.HandleAsync("evt1", "p1");
+
+        Assert.Equal(0, deletesOutsideUnitOfWork);
+        Assert.Equal(1, _unitOfWork.Executions);
     }
 
     [Fact]

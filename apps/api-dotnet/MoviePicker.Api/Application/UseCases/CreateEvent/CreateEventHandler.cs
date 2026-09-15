@@ -14,19 +14,22 @@ public sealed class CreateEventHandler : ICreateEventHandler
     private readonly IParticipantRepository _participantRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CreateEventHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public CreateEventHandler(
         IEventRepository eventRepository,
         IUserRepository userRepository,
         IParticipantRepository participantRepository,
         IUnitOfWork unitOfWork,
-        ILogger<CreateEventHandler> logger)
+        ILogger<CreateEventHandler> logger,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _userRepository = userRepository;
         _participantRepository = participantRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<CreateEventResponse> HandleAsync(CreateEventRequest request, string? creatorUserId, CancellationToken ct = default)
@@ -41,7 +44,7 @@ public sealed class CreateEventHandler : ICreateEventHandler
 
         var slug = SlugGenerator.NewSlug();
         var hostToken = SlugGenerator.NewHostToken();
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         var ownerId = creatorUserId.Trim();
 
         var evt = new Event

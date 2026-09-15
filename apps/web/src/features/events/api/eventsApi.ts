@@ -1,4 +1,4 @@
-import { fetchApi, apiUrl } from '@/shared/api/client';
+import { fetchApi, apiUrl, withHostToken } from '@/shared/api/client';
 import {
   mapEventData,
   mapParticipantData,
@@ -16,16 +16,8 @@ import type {
 } from '@/features/events/types';
 import type { MovieData, ParticipantData } from '@/shared/types/movie';
 
-function hostQuery(hostToken: string | null): string {
-  return hostToken ? `?host=${encodeURIComponent(hostToken)}` : '';
-}
-
-export function eventDetailPath(slug: string, hostToken: string | null): string {
-  return `/events/slug/${slug}${hostQuery(hostToken)}`;
-}
-
 export async function fetchEventBySlug(slug: string, hostToken: string | null): Promise<EventData> {
-  const raw = await fetchApi<RawEventData>(eventDetailPath(slug, hostToken));
+  const raw = await fetchApi<RawEventData>(`/events/slug/${slug}`, withHostToken(hostToken));
   return mapEventData(raw);
 }
 
@@ -98,10 +90,10 @@ export function patchEventConfig(
   hostToken: string | null,
   body: EventConfigPatchPayload
 ): Promise<EventConfigData> {
-  return fetchApi<EventConfigData>(`/events/${slug}/config${hostQuery(hostToken)}`, {
-    method: 'PATCH',
-    body: JSON.stringify(body),
-  });
+  return fetchApi<EventConfigData>(
+    `/events/${slug}/config`,
+    withHostToken(hostToken, { method: 'PATCH', body: JSON.stringify(body) })
+  );
 }
 
 export async function postEventWheel(
@@ -109,8 +101,8 @@ export async function postEventWheel(
   hostToken: string | null
 ): Promise<{ winner: MovieData; message: string }> {
   const raw = await fetchApi<{ winner: RawMovieData; message: string }>(
-    `/events/${slug}/wheel${hostQuery(hostToken)}`,
-    { method: 'POST', body: '{}' }
+    `/events/${slug}/wheel`,
+    withHostToken(hostToken, { method: 'POST', body: '{}' })
   );
   return { winner: mapMovieData(raw.winner), message: raw.message };
 }
@@ -119,10 +111,10 @@ export async function postEventWheelAnnounce(
   slug: string,
   hostToken: string | null
 ): Promise<void> {
-  await fetchApi(`/events/${slug}/wheel/announce${hostQuery(hostToken)}`, {
-    method: 'POST',
-    body: '{}',
-  });
+  await fetchApi(
+    `/events/${slug}/wheel/announce`,
+    withHostToken(hostToken, { method: 'POST', body: '{}' })
+  );
 }
 
 export async function postEventWinner(
@@ -131,18 +123,18 @@ export async function postEventWinner(
   hostToken: string | null
 ): Promise<{ winner: MovieData; message: string }> {
   const raw = await fetchApi<{ winner: RawMovieData; message: string }>(
-    `/events/${slug}/winner${hostQuery(hostToken)}`,
-    { method: 'POST', body: JSON.stringify({ movieId }) }
+    `/events/${slug}/winner`,
+    withHostToken(hostToken, { method: 'POST', body: JSON.stringify({ movieId }) })
   );
   return { winner: mapMovieData(raw.winner), message: raw.message };
 }
 
 export async function postEventClose(slug: string, hostToken: string | null): Promise<void> {
-  await fetchApi(`/events/${slug}/close${hostQuery(hostToken)}`, { method: 'POST', body: '{}' });
+  await fetchApi(`/events/${slug}/close`, withHostToken(hostToken, { method: 'POST', body: '{}' }));
 }
 
 export async function deleteEventWheel(slug: string, hostToken: string | null): Promise<void> {
-  await fetchApi(`/events/${slug}/wheel${hostQuery(hostToken)}`, { method: 'DELETE' });
+  await fetchApi(`/events/${slug}/wheel`, withHostToken(hostToken, { method: 'DELETE' }));
 }
 
 export async function deleteEventWinner(
@@ -150,7 +142,10 @@ export async function deleteEventWinner(
   movieId: string,
   hostToken: string | null
 ): Promise<void> {
-  await fetchApi(`/events/${slug}/winners/${movieId}${hostQuery(hostToken)}`, { method: 'DELETE' });
+  await fetchApi(
+    `/events/${slug}/winners/${movieId}`,
+    withHostToken(hostToken, { method: 'DELETE' })
+  );
 }
 
 export type RemoveParticipantResponse = {
@@ -166,8 +161,8 @@ export async function removeEventParticipant(
   hostToken: string | null
 ): Promise<RemoveParticipantResponse> {
   return fetchApi<RemoveParticipantResponse>(
-    `/events/${idOrSlug}/participants/${participantId}${hostQuery(hostToken)}`,
-    { method: 'DELETE' }
+    `/events/${idOrSlug}/participants/${participantId}`,
+    withHostToken(hostToken, { method: 'DELETE' })
   );
 }
 

@@ -47,7 +47,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
 
         var evt = await _events.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
+        if (evt.IsFinished(_clock.GetUtcNow()))
             throw new ConflictException("Impossible d'inviter : la soirée est terminée.");
 
         if (evt.CreatorUserId != currentUserId)

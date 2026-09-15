@@ -70,7 +70,8 @@ public sealed class GetEventDetailHandlerTests
             _userRepo.Object,
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
-            _watchlistCleanup.Object);
+            _watchlistCleanup.Object,
+            TimeProvider.System);
     }
 
     [Fact]

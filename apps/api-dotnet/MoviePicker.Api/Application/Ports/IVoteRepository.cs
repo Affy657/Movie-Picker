@@ -8,6 +8,8 @@ public interface IVoteRepository
 {
     Task DeleteByMovieIdAsync(string movieId, CancellationToken ct = default);
 
+    Task<long> DeleteByMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default);
+
     Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default);
 
     Task<bool> DeleteByMovieAndParticipantAsync(string movieId, string participantId, CancellationToken ct = default);

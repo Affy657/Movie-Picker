@@ -36,20 +36,6 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
             return;
         }
 
-        if (context.Exception is ArgumentException)
-        {
-            var argMessage = _env.IsDevelopment()
-                ? context.Exception.Message
-                : "Paramètre invalide.";
-            context.Result = new JsonResult(
-                ApiErrorResponse.FromHttpContext(http, (int)HttpStatusCode.BadRequest, argMessage))
-            {
-                StatusCode = (int)HttpStatusCode.BadRequest
-            };
-            context.ExceptionHandled = true;
-            return;
-        }
-
         SentrySdk.CaptureException(context.Exception);
 
         var message = _env.IsDevelopment() ? context.Exception.Message : "Une erreur interne s'est produite.";

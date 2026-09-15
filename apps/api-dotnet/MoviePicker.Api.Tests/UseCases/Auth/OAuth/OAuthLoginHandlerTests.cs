@@ -94,7 +94,7 @@ public sealed class OAuthLoginHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_VerifiedEmailMatchesExistingAccount_AutoLinksAndSignsIn()
+    public async Task HandleAsync_VerifiedEmailMatchesPasswordAccount_RefusesToLinkAndDoesNotSignIn()
     {
         var f = new Fixture();
         var user = await f.Users.AddAsync(new User
@@ -116,14 +116,43 @@ public sealed class OAuthLoginHandlerTests
             DisplayName = "Neo Anderson"
         });
 
+        Assert.Equal(OAuthOutcomeKind.PasswordAccountRequiresManualLink, outcome.Kind);
+        Assert.Null(outcome.User);
+        var reloaded = await f.Users.GetByIdAsync(user.Id);
+        Assert.Empty(reloaded!.Identities);
+        Assert.Equal("existing-hash", reloaded.PasswordHash);
+    }
+
+    [Fact]
+    public async Task HandleAsync_VerifiedEmailMatchesPasswordlessAccount_AutoLinksAndSignsIn()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "neo@example.com",
+            DisplayName = "Neo",
+            Handle = "neo",
+            PasswordHash = string.Empty,
+            Identities = [new LinkedIdentity { Provider = "github", Subject = "gh-1", Email = "neo@example.com", LinkedAt = TestEpoch.AddDays(-10) }],
+            CreatedAt = TestEpoch.AddDays(-10),
+            UpdatedAt = TestEpoch.AddDays(-10)
+        });
+
+        var outcome = await f.CreateHandler().HandleAsync(new ExternalLoginInfo
+        {
+            Provider = "google",
+            Subject = "sub-4",
+            Email = "neo@example.com",
+            EmailVerified = true,
+            DisplayName = "Neo Anderson"
+        });
+
         Assert.Equal(OAuthOutcomeKind.SignedIn, outcome.Kind);
         Assert.Equal(user.Id, outcome.User!.Id);
         Assert.False(outcome.IsNewAccount);
         var reloaded = await f.Users.GetByIdAsync(user.Id);
-        Assert.Single(reloaded!.Identities);
-        Assert.Equal("google", reloaded.Identities[0].Provider);
-        Assert.Equal("sub-4", reloaded.Identities[0].Subject);
-        Assert.Equal("existing-hash", reloaded.PasswordHash);
+        Assert.Equal(2, reloaded!.Identities.Count);
+        Assert.Contains(reloaded.Identities, i => i.Provider == "google" && i.Subject == "sub-4");
     }
 
     [Fact]

@@ -266,10 +266,12 @@ describe('EventDetail (MSW)', () => {
       setupHostJoined();
       let deleteCalled = false;
       let deleteUrl = '';
+      let deleteHostToken: string | null = null;
       server.use(
         http.delete(`${TEST_API_V1}/events/${slug}/participants/:pid`, ({ request, params }) => {
           deleteCalled = true;
           deleteUrl = request.url;
+          deleteHostToken = request.headers.get('X-Host-Token');
           return HttpResponse.json({
             participantId: params.pid,
             eventId: 'evt-msw',
@@ -292,7 +294,8 @@ describe('EventDetail (MSW)', () => {
 
       await waitFor(() => expect(deleteCalled).toBe(true));
       expect(deleteUrl).toContain('/participants/p-msw-alice');
-      expect(deleteUrl).toContain('host=host-token');
+      expect(deleteUrl).not.toContain('host-token');
+      expect(deleteHostToken).toBe('host-token');
 
       expect(await screen.findByTestId('participants-action-success')).toBeInTheDocument();
       expect(screen.getByTestId('participants-action-success')).toHaveTextContent('Alice');

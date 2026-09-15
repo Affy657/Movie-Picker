@@ -46,6 +46,23 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     }
 
     [Fact]
+    public async Task InvokeAsync_RedactsHostTokenInQueryString()
+    {
+        var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Method = "POST";
+        ctx.Request.Path = "/api/v1/events/abc/wheel";
+        ctx.Request.QueryString = new QueryString("?host=SECRET-TOKEN&participantId=p1");
+        var mw = new StructuredHttpRequestLoggingMiddleware(_ => Task.CompletedTask, logger);
+
+        await mw.InvokeAsync(ctx);
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.DoesNotContain("SECRET-TOKEN", entry.Message);
+        Assert.Contains("?host=***&participantId=p1", entry.Message);
+    }
+
+    [Fact]
     public async Task InvokeAsync_StillLogs_WhenNextThrows()
     {
         var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();

@@ -80,6 +80,19 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         return Task.FromResult(created);
     }
 
+    public async Task<long> DeleteByIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        long deleted = 0;
+        foreach (var movieId in movieIds)
+        {
+            if (!_byId.ContainsKey(movieId))
+                continue;
+            await DeleteAsync(movieId, ct);
+            deleted++;
+        }
+        return deleted;
+    }
+
     public Task DeleteAsync(string movieId, CancellationToken ct = default)
     {
         if (_byId.TryRemove(movieId, out var m) && _byEventId.TryGetValue(m.EventId, out var list))

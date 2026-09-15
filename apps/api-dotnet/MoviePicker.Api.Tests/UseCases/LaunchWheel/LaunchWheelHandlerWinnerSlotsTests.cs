@@ -42,7 +42,8 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
             _hostToken.Object,
             _currentUser.Object,
             _posters.Object,
-            NullLogger<LaunchWheelHandler>.Instance);
+            NullLogger<LaunchWheelHandler>.Instance,
+            TimeProvider.System);
     }
 
     private static Movie Film(string id) => new()

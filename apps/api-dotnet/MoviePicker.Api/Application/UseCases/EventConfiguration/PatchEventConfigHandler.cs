@@ -19,6 +19,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     private readonly IPushNotificationSender _pushSender;
     private readonly IUserNotificationRepository _notifications;
     private readonly ILogger<PatchEventConfigHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public PatchEventConfigHandler(
         IEventRepository events,
@@ -29,7 +30,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
-        ILogger<PatchEventConfigHandler> logger)
+        ILogger<PatchEventConfigHandler> logger,
+        TimeProvider clock)
     {
         _events = events;
         _participants = participants;
@@ -40,6 +42,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         _pushSender = pushSender;
         _notifications = notifications;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<EventConfigResponse> HandleAsync(
@@ -60,10 +63,11 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var hasRecurrenceChange = request.Recurrence.HasValue || request.ClearRecurrence == true;
         var hasWinnerCountChange = request.WinnerCount.HasValue;
 
-        EnsurePatchAllowed(evt, hasConfigChange, hasDateTimeChange, hasTitleChange, hasRecurrenceChange);
+        var now = _clock.GetUtcNow();
+        EnsurePatchAllowed(evt, now, hasConfigChange, hasDateTimeChange, hasTitleChange, hasRecurrenceChange);
 
         if (hasWinnerCountChange)
-            EnsureWinnerCountAllowed(evt, request.WinnerCount!.Value);
+            EnsureWinnerCountAllowed(evt, now, request.WinnerCount!.Value);
 
         if (!hasConfigChange && !hasDateTimeChange && !hasTitleChange && !hasRecurrenceChange
             && !hasWinnerCountChange)
@@ -88,7 +92,6 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var time = ResolveTime(request, evt.Time);
         var title = ResolveTitle(request, evt.Title);
 
-        var now = DateTimeOffset.UtcNow;
         var updated = evt with
         {
             Title = title,
@@ -143,7 +146,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
                     ct);
             }
 
-            var now = DateTimeOffset.UtcNow;
+            var now = _clock.GetUtcNow();
             foreach (var userId in notifiableIds)
             {
                 await _notifications.AddAsync(new UserNotification
@@ -184,6 +187,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 
     private static void EnsurePatchAllowed(
         Event evt,
+        DateTimeOffset utcNow,
         bool hasConfigChange,
         bool hasDateTimeChange,
         bool hasTitleChange,
@@ -191,16 +195,16 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     {
         if (hasConfigChange)
         {
-            if (evt.IsFinished(DateTimeOffset.UtcNow))
+            if (evt.IsFinished(utcNow))
                 throw new ConflictException("La soirée est terminée : la configuration ne peut plus être modifiée.");
             if (evt.HasWinner)
                 throw new ConflictException("La roue a déjà été lancée : la configuration ne peut plus être modifiée.");
         }
 
-        if (hasDateTimeChange && (evt.IsFinished(DateTimeOffset.UtcNow) || evt.HasWinner))
+        if (hasDateTimeChange && (evt.IsFinished(utcNow) || evt.HasWinner))
             throw new ConflictException("La soirée est terminée : la date ne peut plus être modifiée.");
 
-        if (hasTitleChange && (evt.IsFinished(DateTimeOffset.UtcNow) || evt.HasWinner))
+        if (hasTitleChange && (evt.IsFinished(utcNow) || evt.HasWinner))
             throw new ConflictException("La soirée est terminée : le nom ne peut plus être modifié.");
 
         if (hasRecurrenceChange && !string.IsNullOrEmpty(evt.NextOccurrenceEventId))
@@ -211,11 +215,11 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     private static string? ResolveTheme(PatchEventConfigRequest request, string? current) =>
         request.Theme is null ? current : EventConfigLimits.NormalizeTheme(request.Theme);
 
-    private static void EnsureWinnerCountAllowed(Event evt, int winnerCount)
+    private static void EnsureWinnerCountAllowed(Event evt, DateTimeOffset utcNow, int winnerCount)
     {
         EventConfigLimits.ResolveWinnerCount(winnerCount);
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
+        if (evt.IsFinished(utcNow))
             throw new ConflictException(
                 "La soirée est terminée : le nombre de films gagnants ne peut plus être modifié.");
 

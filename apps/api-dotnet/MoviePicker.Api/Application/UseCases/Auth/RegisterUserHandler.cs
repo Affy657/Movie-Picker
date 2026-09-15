@@ -12,12 +12,14 @@ public sealed class RegisterUserHandler : IRegisterUserHandler
     private readonly IUserRepository _users;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<RegisterUserHandler> _logger;
+    private readonly TimeProvider _clock;
 
-    public RegisterUserHandler(IUserRepository users, IPasswordHasher passwordHasher, ILogger<RegisterUserHandler> logger)
+    public RegisterUserHandler(IUserRepository users, IPasswordHasher passwordHasher, ILogger<RegisterUserHandler> logger, TimeProvider clock)
     {
         _users = users;
         _passwordHasher = passwordHasher;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<RegisterResponse> HandleAsync(RegisterRequest request, CancellationToken ct = default)
@@ -35,7 +37,7 @@ public sealed class RegisterUserHandler : IRegisterUserHandler
             throw new ConflictException("Un compte existe déjà pour cette adresse e-mail.");
 
         var displayName = request.DisplayName.Trim();
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
 
         var created = await HandleAllocator.CreateWithUniqueHandleAsync(
             _users,

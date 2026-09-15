@@ -123,7 +123,8 @@ public sealed class RecurringEventPass : IRecurringEventPass
             RecurrenceParentEventId = parent.Id,
             NextOccurrenceEventId = null,
             CreatedAt = now,
-            UpdatedAt = now
+            UpdatedAt = now,
+            Version = 0
         };
 
         try

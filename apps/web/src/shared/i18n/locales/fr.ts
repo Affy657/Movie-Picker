@@ -1,4 +1,4 @@
-﻿export const fr = {
+export const fr = {
   common: {
     appName: 'Movie Picker',
     loading: 'Chargement\u2026',
@@ -408,6 +408,8 @@
           'Le fournisseur n\u2019a pas renvoy\u00e9 les informations attendues. R\u00e9essayez.',
         emailNotVerified:
           'L\u2019adresse e-mail de ce compte n\u2019est pas v\u00e9rifi\u00e9e par le fournisseur. Connectez-vous avec votre mot de passe, puis liez ce compte depuis la page Paramètres.',
+        accountExists:
+          'Un compte Movie Picker existe déjà avec cette adresse e-mail. Connectez-vous avec votre mot de passe, puis liez ce fournisseur depuis la page Paramètres.',
         identityTaken: 'Ce compte est d\u00e9j\u00e0 li\u00e9 \u00e0 un autre profil Movie Picker.',
         generic: 'Connexion impossible. R\u00e9essayez.',
       },

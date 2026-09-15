@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-029`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-032`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -78,7 +78,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - state: differe
 - declencheur: la mise à l'échelle devient routinière au lieu d'être exceptionnelle
 - impact: Cloud Run monte jusqu'à `maxScale 20`, donc jusqu'à 20 caches froids indépendants. Depuis le 2026-09-14, les sélections de la home, les collections et l'enrichissement TMDB passent par `ISharedCache` (Mongo, collection `shared_cache`, index TTL) en second niveau : une instance neuve relit ces snapshots au lieu de refaire le fan-out TMDB, mesuré à 6 à 10 s par requête dans les logs. Le reste des `IMemoryCache` (recherche TMDB, détails) reste local.
-- ou: `Infrastructure/Tmdb/TmdbMovieSearch.cs` pour ce qui reste en mémoire seule ; `Application/Caching/SharedCacheReadThrough.cs` pour le modèle à réutiliser
+- ou: `Infrastructure/Tmdb/TmdbMovieSearch.Details.cs` et `TmdbMovieSearch.Search.cs` pour ce qui reste en mémoire seule ; `Application/Caching/SharedCacheReadThrough.cs` pour le modèle à réutiliser
 - verify: `grep -rln IMemoryCache apps/api-dotnet --include=*.cs`
 - fix: passer les caches restants par `SharedCacheReadThrough`, ou un cache hors processus dédié
 - piege: `min-instances` reste à 0, donc le démarrage à froid de l'API (3,5 s en prod, 0,7 s en local avec ReadyToRun) subsiste. Le poser à 1 coûte environ 8 à 10 $ par mois : décision de l'utilisateur, jamais de l'agent. Deux règles du cache partagé à ne pas casser : seules les clés de catalogue (sections à liste fermée, au plus un genre) sont écrites dans Mongo, parce que `recommendations`, `collection` et les combinaisons de genres ouvrent un espace de clés illimité à 24 Ko le document sur un palier Atlas de 512 Mo ; et chaque famille de clés porte une version (`showcase-v1`, `showcase-collections-v1`, `tmdb-enrich-v2`) à incrémenter quand le DTO sérialisé change, sinon les instances relisent d'anciens documents pendant tout le TTL après un déploiement.
@@ -222,19 +222,35 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: `verify` vide et aucune chaîne française nouvelle dans un fichier touché depuis
 - piege: les données de seed (`Léa Moreau`, `Soirée horreur`) sont du contenu produit, pas du code : elles restent en français. Les noms de tests décrivent un comportement, les traduire ne doit pas en changer le sens ; relire chaque `it(...)` plutôt que passer un outil.
 
-## DEBT-023 la limite de votes par participant se vérifie puis s'écrit, sans verrou
+## DEBT-029 `GET /events/mine` écrit en base
 
 - state: differe
-- declencheur: un participant dépasse sa limite en prod, visible dans la base par un compte de votes supérieur à `maxVotesPerParticipant` sur une soirée où le réglage est actif
-- impact: contournable, pas de corruption. `VoteMovieHandler.EnsureWithinVoteLimitAsync` compte les votes existants puis insère le nouveau ; deux premiers votes envoyés en parallèle passent tous les deux la vérification. Une transaction Mongo n'y changerait rien, l'isolation par instantané ne protège pas d'une lecture fantôme sur deux documents distincts.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/VoteMovie/VoteMovieHandler.cs`, méthode `EnsureWithinVoteLimitAsync`
-- verify: la vérification est toujours un compte suivi d'un `UpsertAsync` sans garde atomique.
-  ```bash
-  grep -n "GetParticipantVotesByEventAsync\|UpsertAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/VoteMovie/VoteMovieHandler.cs
-  ```
-- fix: porter un compteur `voteCount` sur le document participant, incrémenté par un `UpdateOne` conditionnel (`voteCount < max`) dans la même transaction que l'insertion du vote, et décrémenté quand un vote est retiré. Le front garde sa vérification locale, qui couvre le cas courant.
-- fini-quand: deux votes concurrents au-delà de la limite ne laissent qu'un vote en base, prouvé par un test d'intégration Mongo
-- piege: le compteur doit ignorer le changement de sens d'un vote déjà posé sur le même film, seul un vote sur un film nouveau consomme un créneau.
+- declencheur: DEBT-001 réglé, c'est-à-dire Cloud Scheduler qui appelle `POST /api/v1/scheduler/recurring-events` en production
+- impact: une lecture qui écrit. `ListMyEventsHandler` crée les occurrences suivantes des soirées récurrentes et nettoie les watchlists des soirées terminées à chaque affichage de la liste, parce que rien d'autre ne le fait en production tant que le scheduler est coupé. Le coût est payé par l'utilisateur qui ouvre la page, et un GET n'est pas idempotent.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMyEvents/ListMyEventsHandler.cs`, appels à `RunForCreatorAsync` et `RunForEventsAsync` en tête de `HandleAsync`
+- verify: `grep -n "RunForCreatorAsync\|RunForEventsAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMyEvents/ListMyEventsHandler.cs` ; encore ouvert tant que les deux appels sont dans le chemin de lecture
+- fix: retirer les deux appels une fois le scheduler en service, `RecurringEventPass` et `FinishedEventWatchlistPass` restant joués par `SchedulerController`
+- piege: ne pas retirer les appels avant DEBT-001, les soirées récurrentes cesseraient de se renouveler en production sans que rien ne le signale. Depuis le 2026-09-15, le champ `version` du document soirée empêche au moins deux passes concurrentes (lecture et scheduler) de créer deux occurrences.
+
+## DEBT-030 les captures des suggestions d'idées sont hébergées sur une branche du dépôt public
+
+- state: humain
+- bloque: décision produit, garder ou non les pièces jointes des suggestions
+- impact: tout compte connecté peut publier jusqu'à 4 images par heure sur la branche `GITHUB_ATTACHMENTS_BRANCH` du dépôt, public depuis le 2026-09-10. Les octets magiques et le type MIME sont vérifiés, pas le contenu : le dépôt devient un hébergeur d'images sous le nom du projet, et une image retirée reste dans l'historique git.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/GitHub/GitHubIssueClient.cs`, `UploadAttachmentAsync`
+- verify: `grep -n "UploadAttachmentAsync" apps/api-dotnet/MoviePicker.Api/Infrastructure/GitHub/GitHubIssueClient.cs` ; encore ouvert tant que la méthode pousse un blob dans le dépôt
+- fix: soit retirer les pièces jointes du formulaire de suggestion, soit les héberger hors dépôt (bucket privé, lien signé dans le ticket)
+- fini-quand: aucune écriture du serveur dans le dépôt GitHub ne vient d'un utilisateur
+
+## DEBT-031 le limiteur de débit en mémoire est par instance
+
+- state: differe
+- declencheur: la mise à l'échelle devient routinière au lieu d'être exceptionnelle, même déclencheur que DEBT-006
+- impact: chaque politique `[EnableRateLimiting]` compte par instance Cloud Run, donc un plafond de 60 par minute vaut jusqu'à 20 fois plus en pic. Seules les politiques d'authentification doublent leur compte dans Mongo par `[SharedRateLimit]`.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` (politiques), `SharedRateLimitFilter.cs` (compteur partagé)
+- verify: `grep -c "SharedRateLimit(" apps/api-dotnet/MoviePicker.Api/Controllers/*.cs` ; encore ouvert tant que seul `AuthController` porte l'attribut
+- fix: poser `[SharedRateLimit]` sur les politiques qui protègent une ressource partagée (webhooks, scheduler, création de soirée), pas sur le sondage
+- piege: le compteur partagé coûte un aller-retour Mongo par requête, ne pas le poser sur les routes sondées toutes les 3,5 s (DEBT-008)
 
 ## DEBT-024 le premier gagnant s'écrit encore dans l'ancien champ `winnerMovieId`
 
@@ -399,6 +415,16 @@ Deux choses à ne pas casser :
 
 L'instrumentation des routes (`wrapReactRouterRouting`) a disparu avec ce changement : elle exigeait que le SDK soit initialisé avant l'évaluation d'`App`. `browserTracingIntegration()` suffit, les transactions portent l'URL brute au lieu du motif de route, ce qui est sans conséquence à 10 % d'échantillonnage sur quelques centaines de requêtes par jour.
 
+## C11 la suite Vitest tourne seule
+
+`scripts/verify-local.cjs` joue toutes les portes sauf Vitest en trois voies concurrentes (node, dotnet, docker), puis la suite front **seule**, et seule la voie docker a le droit de déborder dessus, parce que son étape longue est le téléchargement de la base Trivy, réseau pur. Mesuré le 2026-09-15 : la chaîne séquentielle coûtait 16 min 45 s sous charge, dont 576 s de Vitest ; au calme la suite tient en ≈ 230 s, et elle est montée à 2 987 s sous charge. Ce que la charge produit n'est pas de la lenteur, c'est du **rouge sans rapport avec le code** : `Failed to start forks worker`, `Test timed out in 25000ms` sur `a11y.test.tsx > TechPage` (4 à 5 s au calme, 43 à 85 s sous charge), `Timeout waiting for worker to respond`. C'est la raison du passage à `maxForks: 2` le 2026-09-04 (`711f508`) et du budget axe de 60 s sur la page la plus lourde. Trois règles en découlent :
+
+1. Ne rien lancer d'autre pendant la suite : ni serveur de dev, ni onglet du Browser pane, ni `dotnet build`. Un serveur Vite laissé allumé a fait passer la suite de 238 à 332 s et sauter `TechPage`.
+2. Ne pas remettre les tests .NET, le lint ou le format en parallèle de Vitest dans `verify-local.cjs` pour gagner leur minute : c'est exactement le régime qui la rend rouge.
+3. Ne pas baisser `HEAVIEST_PAGE_AXE_BUDGET` (60 000 ms) : la marge de 14× est ce qui garde la suite verte sous contention. Un chiffre pris sous charge a déjà ouvert une dette qui n'existait pas, refermée le 2026-09-10.
+
+Avant d'accuser son diff sur un rouge Vitest, un vrai échec cite un **nom de test** et une assertion ; une famine cite un **nom de fichier**. Comparer les durées test par test avec un run de référence (`git checkout --detach HEAD~1`) : si des pages sans rapport ralentissent du même facteur, c'est la machine.
+
 ---
 
 # Impasses
@@ -413,4 +439,5 @@ Mesuré, sans gain, retiré. Ne pas rejouer sans une raison neuve.
 - **I5 `mongodump --oplog`** pour la cohérence transactionnelle : impose un dump de l'instance entière et des droits supplémentaires.
 - **I7 descendre zizmor au seuil `low`** : 9 constats cosmétiques. Le seuil `medium` est vert et n'attrape que du sérieux.
 - **I10 regrouper les petits modules partagés entre pages en chunks « entries-aware » (rolldown `codeSplitting.groups`, `entriesAware: true`).** Mesuré le 2026-09-14 sur le build, en brotli. Avec un seuil de fusion à 12 Ko : `login` passe de 18 fichiers / 111,7 Ko à 14 fichiers / **141,9 Ko**, parce que les sous-groupes trop petits sont fusionnés avec un voisin chargé par d'autres pages, et la première vague de la coquille passe de 5 à 16 fichiers, soit exactement ce qu'I9 a mesuré perdant. À 3 Ko, `login` redescend à 7 fichiers / 107,7 Ko mais `my-events` prend 14 Ko et `home` 8 Ko. À 0, c'est le découpage automatique. Ce qui a été gardé est le seul geste qui gagne partout : la fermeture statique de `App` capturée dans son chunk (`appShellClosurePlugin`), qui retire 6 à 7 fichiers par page et 3 à 4 Ko à chacune sans rien ajouter à la première vague. Leçon : sous rolldown, le seul regroupement sans perdant est celui qui suit le graphe réel des imports, pas un seuil de taille.
+- **I11 accélérer la suite Vitest elle-même.** Mesuré le 2026-07-17 : 60 % du temps mural est la recréation de l'environnement jsdom par fichier, et l'isolation est obligatoire parce que 19 fichiers utilisent `vi.mock`. Sans effet : plus de forks (les 12 cœurs saturent, forks/10 et forks/3 plus lents que forks/4), `pool: threads`, déplacer la logique pure vers l'environnement `node`. Efficace mais rejeté : `--no-isolate` (5× plus rapide, casse 147 tests) et happy-dom (-30 %, casse 3 tests, et surtout diverge de la CI qui tourne en jsdom sur un projet a11y-first). Le gain de `verify:local` vient de l'ordonnancement des autres portes (C11), pas de la suite. Reste à mesurer au calme, jamais sous charge : `maxForks` 2 vers 4, remis à 2 le 2026-09-04 pour la stabilité.
 - **I8 espacer les workflows planifiés pour économiser des minutes GitHub Actions.** Mesuré au 2026-09-10 sur l'historique des runs : `security-scan.yml` tourne en 45 à 80 s une fois par semaine (≈ 5 min/mois), `registry-cleanup.yml` une fois par mois (≈ 1 min/mois), `backup-mongo.yml` en ≈ 90 s par nuit (≈ 45 min/mois). Total ≈ 51 min/mois, contre ≈ 450 min pour 20 runs de CI : les crons ne sont pas le poste de coût, et le seul qui pèse est le seul filet en cas de perte de données. Espacer la sauvegarde à deux jours économiserait 22 min/mois en doublant le point de restauration acceptable, ce qui est un mauvais échange sur des données personnelles non reconstituables. Ne pas rejouer sans un changement de cadran : soit le quota redevient contraignant après le passage du dépôt en public, soit la sauvegarde grossit assez pour changer l'ordre de grandeur.

@@ -1,6 +1,6 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Notifications;
@@ -22,6 +22,7 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpPost("subscriptions")]
+    [EnableRateLimiting(RateLimitingExtensions.NotificationMutationPolicy)]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -30,8 +31,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] ISubscribePushHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         await handler.HandleAsync(userId, request, ct);
@@ -39,6 +39,7 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpDelete("subscriptions")]
+    [EnableRateLimiting(RateLimitingExtensions.NotificationMutationPolicy)]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -47,8 +48,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] IUnsubscribePushHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         await handler.HandleAsync(userId, request.Endpoint, ct);
@@ -63,8 +63,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] IGetNotificationPreferencesHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(userId, ct);
@@ -72,6 +71,7 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpPatch("preferences")]
+    [EnableRateLimiting(RateLimitingExtensions.NotificationMutationPolicy)]
     [Authorize]
     [ProducesResponseType(typeof(NotificationPreferencesResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -80,8 +80,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] IPatchNotificationPreferencesHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(userId, request, ct);
@@ -98,8 +97,7 @@ public sealed class NotificationsController : ControllerBase
         [FromQuery] int? offset,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(userId, limit, offset, ct);
@@ -107,6 +105,7 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpPost("inbox/read-all")]
+    [EnableRateLimiting(RateLimitingExtensions.NotificationMutationPolicy)]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -114,8 +113,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] IMarkAllReadHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         await handler.HandleAsync(userId, ct);
@@ -123,6 +121,7 @@ public sealed class NotificationsController : ControllerBase
     }
 
     [HttpPost("inbox/{id}/read")]
+    [EnableRateLimiting(RateLimitingExtensions.NotificationMutationPolicy)]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -131,8 +130,7 @@ public sealed class NotificationsController : ControllerBase
         [FromServices] IMarkOneReadHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         await handler.HandleAsync(userId, id, ct);

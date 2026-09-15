@@ -32,7 +32,8 @@ public static class UserDocumentMapper
             LetterboxdLastSyncError = doc.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = doc.LetterboxdPendingReconciliationCount,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
-            UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
+            UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero),
+            Version = doc.Version
         };
 
     public static UserDocument ToDocument(User user) =>
@@ -63,7 +64,8 @@ public static class UserDocumentMapper
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
             CreatedAt = user.CreatedAt.UtcDateTime,
-            UpdatedAt = user.UpdatedAt.UtcDateTime
+            UpdatedAt = user.UpdatedAt.UtcDateTime,
+            Version = user.Version
         };
 
     private static EventTemplate ToTemplateDomain(EventTemplateDocument doc) => new()

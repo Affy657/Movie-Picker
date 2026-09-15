@@ -19,6 +19,7 @@ public sealed class DeleteMovieHandlerTests
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IHostTokenAccessor> _hostToken;
     private readonly Mock<ICurrentUserAccessor> _currentUser;
+    private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly DeleteMovieHandler _sut;
 
     private static Event ActiveEvent() => new()
@@ -51,7 +52,9 @@ public sealed class DeleteMovieHandlerTests
             _seenMarkRepo.Object,
             _participantRepo.Object,
             _hostToken.Object,
-            _currentUser.Object);
+            _currentUser.Object,
+            _unitOfWork,
+            TimeProvider.System);
     }
 
     [Fact]
@@ -118,11 +121,19 @@ public sealed class DeleteMovieHandlerTests
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participantId, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
 
+        var deletesOutsideUnitOfWork = 0;
+        void CountOutside() { if (!_unitOfWork.IsExecuting) deletesOutsideUnitOfWork++; }
+        _voteRepo.Setup(r => r.DeleteByMovieIdAsync("mov1", It.IsAny<CancellationToken>())).Callback(CountOutside).Returns(Task.CompletedTask);
+        _seenMarkRepo.Setup(r => r.DeleteByMovieIdAsync("evt1", "mov1", It.IsAny<CancellationToken>())).Callback(CountOutside).Returns(Task.CompletedTask);
+        _movieRepo.Setup(r => r.DeleteAsync("mov1", It.IsAny<CancellationToken>())).Callback(CountOutside).Returns(Task.CompletedTask);
+
         await _sut.HandleAsync("evt1", "mov1", participantId);
 
         _voteRepo.Verify(r => r.DeleteByMovieIdAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
         _seenMarkRepo.Verify(r => r.DeleteByMovieIdAsync("evt1", "mov1", It.IsAny<CancellationToken>()), Times.Once);
         _movieRepo.Verify(r => r.DeleteAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal(1, _unitOfWork.Executions);
+        Assert.Equal(0, deletesOutsideUnitOfWork);
     }
 
     [Fact]

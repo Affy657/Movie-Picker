@@ -13,17 +13,20 @@ public sealed class ResetWheelHandler : IResetWheelHandler
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ILogger<ResetWheelHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public ResetWheelHandler(
         IEventRepository eventRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
-        ILogger<ResetWheelHandler> logger)
+        ILogger<ResetWheelHandler> logger,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<ResetWheelResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
@@ -35,13 +38,13 @@ public sealed class ResetWheelHandler : IResetWheelHandler
         if (!EventHost.IsHost(evt, token, userId))
             throw new ForbiddenException("Réservé à l'hôte de la soirée");
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
+        if (evt.IsFinished(_clock.GetUtcNow()))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
         if (!evt.HasWinner)
             return new ResetWheelResponse { Message = "Aucun tirage à annuler." };
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         var updated = evt with
         {
             Winners = [],

@@ -61,7 +61,8 @@ public sealed class SetManualWinnerHandlerTests
             _currentUserAccessor.Object,
             _posterStore.Object,
             _winnerAnnouncer.Object,
-            NullLogger<SetManualWinnerHandler>.Instance);
+            NullLogger<SetManualWinnerHandler>.Instance,
+            TimeProvider.System);
     }
 
     [Fact]

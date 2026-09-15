@@ -1,4 +1,4 @@
-import { fetchApi } from '@/shared/api/client';
+import { fetchApi, withHostToken } from '@/shared/api/client';
 import { mapMovieData, type RawMovieData } from '@/shared/api/apiMapping';
 import type { MovieData, MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
 
@@ -182,11 +182,10 @@ export async function removeMovieFromEvent(
   participantId: string,
   hostToken?: string | null
 ): Promise<void> {
-  const suffix = hostToken ? `?host=${encodeURIComponent(hostToken)}` : '';
-  await fetchApi(`/events/${slug}/movies/${movieId}${suffix}`, {
-    method: 'DELETE',
-    body: JSON.stringify({ participantId }),
-  });
+  await fetchApi(
+    `/events/${slug}/movies/${movieId}`,
+    withHostToken(hostToken, { method: 'DELETE', body: JSON.stringify({ participantId }) })
+  );
 }
 
 export async function setMovieWheelExclusion(
@@ -195,11 +194,10 @@ export async function setMovieWheelExclusion(
   excluded: boolean,
   hostToken?: string | null
 ): Promise<void> {
-  const suffix = hostToken ? `?host=${encodeURIComponent(hostToken)}` : '';
-  await fetchApi(`/events/${slug}/movies/${movieId}/wheel-exclusion${suffix}`, {
-    method: 'PUT',
-    body: JSON.stringify({ excluded }),
-  });
+  await fetchApi(
+    `/events/${slug}/movies/${movieId}/wheel-exclusion`,
+    withHostToken(hostToken, { method: 'PUT', body: JSON.stringify({ excluded }) })
+  );
 }
 
 export async function setMoviePitchNote(

@@ -113,7 +113,7 @@ public sealed class MoviePickerExceptionFilterTests
     }
 
     [Fact]
-    public void OnException_ArgumentException_Sets400()
+    public void OnException_ArgumentException_IsAProgrammingError_Returns500()
     {
         var env = new StubHostEnvironment();
         var filter = new MoviePickerExceptionFilter(env);
@@ -123,7 +123,7 @@ public sealed class MoviePickerExceptionFilterTests
 
         Assert.True(context.ExceptionHandled);
         var result = context.Result as JsonResult;
-        Assert.Equal((int)HttpStatusCode.BadRequest, result!.StatusCode);
+        Assert.Equal((int)HttpStatusCode.InternalServerError, result!.StatusCode);
     }
 
     [Fact]

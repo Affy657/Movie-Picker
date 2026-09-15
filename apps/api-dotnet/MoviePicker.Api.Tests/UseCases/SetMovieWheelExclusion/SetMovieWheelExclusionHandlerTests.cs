@@ -51,7 +51,8 @@ public sealed class SetMovieWheelExclusionHandlerTests
             _eventRepo.Object,
             _movieRepo.Object,
             _hostTokenAccessor.Object,
-            _currentUserAccessor.Object);
+            _currentUserAccessor.Object,
+            TimeProvider.System);
     }
 
     [Fact]

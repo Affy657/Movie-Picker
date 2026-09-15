@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AddMovie;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.AddMovie;
@@ -22,6 +23,7 @@ public sealed class AddMovieHandlerTests
     private readonly Mock<IPushNotificationSender> _pushSender;
     private readonly Mock<ICurrentUserAccessor> _currentUser;
     private readonly Mock<ITmdbMovieSearch> _tmdb;
+    private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly AddMovieHandler _sut;
     private static readonly string[] Genres = new[] { "Action" };
     private static readonly int[] GenreIds = new[] { 28, 878 };
@@ -85,7 +87,9 @@ public sealed class AddMovieHandlerTests
             Mock.Of<IUserNotificationRepository>(),
             _currentUser.Object,
             _tmdb.Object,
-            NullLogger<AddMovieHandler>.Instance);
+            _unitOfWork,
+            NullLogger<AddMovieHandler>.Instance,
+            TimeProvider.System);
     }
 
     [Fact]
@@ -268,6 +272,45 @@ public sealed class AddMovieHandlerTests
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", req, null));
         Assert.Contains("posterPath", ex.Message);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PosterFromForeignHost_ThrowsBadRequestException()
+    {
+        var evt = ActiveEvent();
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
+        var req = new AddMovieRequest { TmdbId = 27205, Title = "Inception", Year = "2010", PosterPath = "https://tracker.example/pixel.png", ParticipantId = participant.Id };
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", req, null));
+        Assert.Contains("posterPath", ex.Message);
+        _movieRepo.Verify(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithProposalLimit_LocksTheEventThenCountsAndInsertsInsideTheUnitOfWork()
+    {
+        var evt = ActiveEvent() with { Config = new EventConfig { MaxProposalsPerParticipant = 3 } };
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        var steps = new List<string>();
+        _eventRepo.Setup(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "lock" : "lock-outside")).Returns(Task.CompletedTask);
+        _movieRepo.Setup(r => r.CountByEventAndParticipantAsync(evt.Id, participant.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "count" : "count-outside")).ReturnsAsync(1);
+        _movieRepo.Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "insert" : "insert-outside"))
+            .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
+        var req = new AddMovieRequest { TmdbId = 27205, Title = "Inception", Year = "2010", PosterPath = null, ParticipantId = participant.Id };
+
+        await _sut.HandleAsync("evt1", req, null);
+
+        Assert.Equal(["lock", "count", "insert"], steps);
+        Assert.Equal(1, _unitOfWork.Executions);
     }
 
     [Fact]

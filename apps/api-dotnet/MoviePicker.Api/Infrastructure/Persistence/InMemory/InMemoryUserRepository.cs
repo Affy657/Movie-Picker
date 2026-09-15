@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
 
@@ -97,7 +98,8 @@ public sealed class InMemoryUserRepository : IUserRepository
             _byId[userId] = user with
             {
                 LetterboxdLastSyncAt = syncedAt,
-                LetterboxdLastSyncError = error
+                LetterboxdLastSyncError = error,
+                Version = user.Version + 1
             };
         }
 
@@ -111,7 +113,7 @@ public sealed class InMemoryUserRepository : IUserRepository
     {
         if (_byId.TryGetValue(userId, out var user))
         {
-            _byId[userId] = user with { LetterboxdPendingReconciliationCount = pendingCount };
+            _byId[userId] = user with { LetterboxdPendingReconciliationCount = pendingCount, Version = user.Version + 1 };
         }
 
         return Task.CompletedTask;
@@ -122,7 +124,7 @@ public sealed class InMemoryUserRepository : IUserRepository
         if (!_byId.TryGetValue(userId, out var user) || user.SupporterSince is not null)
             return Task.FromResult(false);
 
-        _byId[userId] = user with { SupporterSince = since, UpdatedAt = since };
+        _byId[userId] = user with { SupporterSince = since, UpdatedAt = since, Version = user.Version + 1 };
         return Task.FromResult(true);
     }
 
@@ -138,7 +140,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             if (!_byId.TryGetValue(userId, out var user) || user.EventTemplates.Count >= maxPerUser)
                 return Task.FromResult(false);
 
-            _byId[userId] = user with { EventTemplates = [.. user.EventTemplates, template], UpdatedAt = now };
+            _byId[userId] = user with { EventTemplates = [.. user.EventTemplates, template], UpdatedAt = now, Version = user.Version + 1 };
             return Task.FromResult(true);
         }
     }
@@ -160,7 +162,7 @@ public sealed class InMemoryUserRepository : IUserRepository
                 return Task.FromResult(false);
 
             next[index] = template;
-            _byId[userId] = user with { EventTemplates = next, UpdatedAt = now };
+            _byId[userId] = user with { EventTemplates = next, UpdatedAt = now, Version = user.Version + 1 };
             return Task.FromResult(true);
         }
     }
@@ -180,7 +182,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             if (next.Count == user.EventTemplates.Count)
                 return Task.FromResult(false);
 
-            _byId[userId] = user with { EventTemplates = next, UpdatedAt = now };
+            _byId[userId] = user with { EventTemplates = next, UpdatedAt = now, Version = user.Version + 1 };
             return Task.FromResult(true);
         }
     }
@@ -211,18 +213,22 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public Task<User> UpdateAsync(User user, CancellationToken ct = default)
     {
-        if (_byId.TryGetValue(user.Id, out var previous))
-        {
-            var prevEmail = Normalize(previous.Email) ?? previous.Email.Trim();
-            _emailToId.TryRemove(prevEmail, out _);
-            var prevHandle = NormalizeHandle(previous.Handle);
-            if (prevHandle is not null)
-                _handleToId.TryRemove(prevHandle, out _);
-        }
+        if (!_byId.TryGetValue(user.Id, out var previous))
+            throw new NotFoundException("Utilisateur introuvable");
+        if (previous.Version != user.Version)
+            throw new ConflictException(
+                "Utilisateur modifié entre-temps. Rechargez la page et réessayez.",
+                ConcurrencyConflict.Reason);
+
+        var prevEmail = Normalize(previous.Email) ?? previous.Email.Trim();
+        _emailToId.TryRemove(prevEmail, out _);
+        var prevHandle = NormalizeHandle(previous.Handle);
+        if (prevHandle is not null)
+            _handleToId.TryRemove(prevHandle, out _);
 
         var email = Normalize(user.Email) ?? user.Email.Trim();
         var handle = NormalizeHandle(user.Handle);
-        var updated = Copy(user, user.Id, email, handle);
+        var updated = Copy(user with { Version = user.Version + 1 }, user.Id, email, handle);
         _byId[user.Id] = updated;
         _emailToId[email] = user.Id;
         if (handle is not null)
@@ -267,7 +273,8 @@ public sealed class InMemoryUserRepository : IUserRepository
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
             CreatedAt = user.CreatedAt,
-            UpdatedAt = user.UpdatedAt
+            UpdatedAt = user.UpdatedAt,
+            Version = user.Version
         };
 
     private static string? Normalize(string? email)

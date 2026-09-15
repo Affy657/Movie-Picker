@@ -22,7 +22,7 @@ public sealed class StructuredHttpRequestLoggingMiddleware(
                 "HTTP {HttpMethod} {Path}{QueryString} → {StatusCode} en {ElapsedMs} ms ({Endpoint}) [kind={ApiRouteKind}]",
                 SingleLine(context.Request.Method),
                 SingleLine(context.Request.Path.Value),
-                SingleLine(context.Request.QueryString.Value),
+                SingleLine(SensitiveQueryRedaction.RedactQueryString(context.Request.QueryString.Value)),
                 context.Response.StatusCode,
                 sw.ElapsedMilliseconds,
                 endpoint ?? "n/a",

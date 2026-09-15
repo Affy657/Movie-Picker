@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -40,8 +39,7 @@ public sealed class EventsController : ControllerBase
         [FromServices] ICreateEventHandler handler,
         CancellationToken ct)
     {
-        var creatorUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(creatorUserId))
+        if (!User.TryGetUserId(out var creatorUserId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(request, creatorUserId, ct);
@@ -60,8 +58,7 @@ public sealed class EventsController : ControllerBase
         [FromQuery] string? q,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(userId, scope, limit, offset, q, ct);
@@ -141,8 +138,7 @@ public sealed class EventsController : ControllerBase
         [FromServices] IJoinEventHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(idOrSlug, request, userId, ct);
@@ -154,6 +150,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpPost("{idOrSlug}/wheel")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(WheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -171,6 +168,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpPost("{idOrSlug}/wheel/announce")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -186,6 +184,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpPost("{idOrSlug}/winner")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(WheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -203,6 +202,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpDelete("{idOrSlug}/winners/{movieId}")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(ResetWheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -218,6 +218,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpDelete("{idOrSlug}/wheel")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(ResetWheelResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -232,6 +233,7 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpPost("{idOrSlug}/close")]
+    [EnableRateLimiting(RateLimitingExtensions.HostActionPolicy)]
     [ProducesResponseType(typeof(CloseEventResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -275,8 +277,7 @@ public sealed class EventsController : ControllerBase
         [FromServices] IGetEligibleFollowsForEventHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(idOrSlug, ct);
@@ -299,8 +300,7 @@ public sealed class EventsController : ControllerBase
         [FromServices] IInviteUserHandler handler,
         CancellationToken ct)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await handler.HandleAsync(idOrSlug, request, ct);

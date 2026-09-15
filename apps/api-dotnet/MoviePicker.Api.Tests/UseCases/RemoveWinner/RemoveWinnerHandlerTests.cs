@@ -23,7 +23,7 @@ public sealed class RemoveWinnerHandlerTests
             _events.Object,
             _hostToken.Object,
             _currentUser.Object,
-            _logger);
+            _logger, TimeProvider.System);
         _events.Setup(e => e.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
     }

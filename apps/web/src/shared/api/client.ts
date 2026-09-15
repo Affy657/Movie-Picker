@@ -23,6 +23,19 @@ const IS_DEV = import.meta.env?.DEV === true;
 
 export const API_VERSION_PREFIX = '/api/v1';
 
+export const HOST_TOKEN_HEADER = 'X-Host-Token';
+
+export function withHostToken(
+  hostToken: string | null | undefined,
+  init: RequestInit = {}
+): RequestInit {
+  if (!hostToken) return init;
+  return {
+    ...init,
+    headers: { ...mergeRequestHeaders(init.headers), [HOST_TOKEN_HEADER]: hostToken },
+  };
+}
+
 export function apiUrl(path: string): string {
   const p = path.startsWith('/') ? path : `/${path}`;
   const base = API_BASE.replace(/\/$/, '');

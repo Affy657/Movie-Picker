@@ -37,6 +37,7 @@ public sealed class EventMoviesController : ControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting(RateLimitingExtensions.MovieMutationPolicy)]
     [ProducesResponseType(typeof(MovieWithScoreResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -53,6 +54,7 @@ public sealed class EventMoviesController : ControllerBase
     }
 
     [HttpDelete("{movieId}")]
+    [EnableRateLimiting(RateLimitingExtensions.MovieMutationPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -164,6 +166,7 @@ public sealed class EventMoviesController : ControllerBase
     }
 
     [HttpPut("{movieId}/wheel-exclusion")]
+    [EnableRateLimiting(RateLimitingExtensions.MovieMutationPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

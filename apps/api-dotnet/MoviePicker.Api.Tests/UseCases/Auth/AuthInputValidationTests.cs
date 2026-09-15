@@ -22,6 +22,18 @@ public sealed class AuthInputValidationTests
     {
         Assert.Null(AuthInputValidation.ValidatePassword("abcd1234"));
         Assert.Null(AuthInputValidation.ValidatePassword("Passw0rd"));
+        Assert.Null(AuthInputValidation.ValidatePassword("a1" + new string('x', AuthInputValidation.PasswordMaxLength - 2)));
+    }
+
+    [Fact]
+    public void ValidatePassword_LongerThanMaxLength_ReturnsMessage()
+    {
+        var tooLong = "a1" + new string('x', AuthInputValidation.PasswordMaxLength - 1);
+
+        var msg = AuthInputValidation.ValidatePassword(tooLong);
+
+        Assert.NotNull(msg);
+        Assert.Contains(AuthInputValidation.PasswordMaxLength.ToString(), msg);
     }
 
     [Theory]

@@ -10,7 +10,10 @@ import type { UserProfile } from '@/features/auth/types';
 
 const mockFetchApi = vi.fn();
 const mockSetStoredParticipant = vi.fn();
-vi.mock('@/shared/api/client', () => ({ fetchApi: (...args: unknown[]) => mockFetchApi(...args) }));
+vi.mock('@/shared/api/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/shared/api/client')>()),
+  fetchApi: (...args: unknown[]) => mockFetchApi(...args),
+}));
 vi.mock('@/features/events/storage', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/events/storage')>();
   return {

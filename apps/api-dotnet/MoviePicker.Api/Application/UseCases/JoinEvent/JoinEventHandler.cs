@@ -14,7 +14,9 @@ public sealed class JoinEventHandler : IJoinEventHandler
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
     private readonly IUserNotificationRepository _notifications;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<JoinEventHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public JoinEventHandler(
         IEventRepository eventRepository,
@@ -23,7 +25,9 @@ public sealed class JoinEventHandler : IJoinEventHandler
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
-        ILogger<JoinEventHandler> logger)
+        IUnitOfWork unitOfWork,
+        ILogger<JoinEventHandler> logger,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _participantRepository = participantRepository;
@@ -31,17 +35,19 @@ public sealed class JoinEventHandler : IJoinEventHandler
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
         _notifications = notifications;
+        _unitOfWork = unitOfWork;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<JoinEventResult> HandleAsync(string idOrSlug, JoinEventRequest request, string authenticatedUserId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(authenticatedUserId))
-            throw new ArgumentException("Un compte est requis pour rejoindre une soirée.", nameof(authenticatedUserId));
+            throw new UnauthorizedException("Un compte est requis pour rejoindre une soirée.");
 
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
+        if (evt.IsFinished(_clock.GetUtcNow()))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
         var userId = authenticatedUserId;
@@ -69,15 +75,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
             };
         }
 
-        if (evt.Config?.MaxParticipants is { } cap && cap > 0)
-        {
-            var currentCount = await _participantRepository.CountByEventIdAsync(evt.Id, ct);
-            if (currentCount >= cap)
-                throw new ConflictException(
-                    $"La soirée est complète ({cap} participants maximum).");
-        }
-
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         var participant = new Participant
         {
             Id = string.Empty,
@@ -88,7 +86,25 @@ public sealed class JoinEventHandler : IJoinEventHandler
             UpdatedAt = now
         };
 
-        var created = await _participantRepository.AddAsync(participant, ct);
+        Participant created = participant;
+        if (evt.Config?.MaxParticipants is { } cap && cap > 0)
+        {
+            await _unitOfWork.ExecuteAsync(
+                async token =>
+                {
+                    await _eventRepository.LockForWriteAsync(evt.Id, token);
+                    var currentCount = await _participantRepository.CountByEventIdAsync(evt.Id, token);
+                    if (currentCount >= cap)
+                        throw new ConflictException(
+                            $"La soirée est complète ({cap} participants maximum).");
+                    created = await _participantRepository.AddAsync(participant, token);
+                },
+                ct);
+        }
+        else
+        {
+            created = await _participantRepository.AddAsync(participant, ct);
+        }
 
         await NotifyHostAsync(evt, pseudo, userId, CancellationToken.None);
 
@@ -138,7 +154,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
                 EventSlug = evt.Slug,
                 EventTitle = evt.Title,
                 IsRead = false,
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = _clock.GetUtcNow()
             }, ct);
         }
         catch (Exception ex)

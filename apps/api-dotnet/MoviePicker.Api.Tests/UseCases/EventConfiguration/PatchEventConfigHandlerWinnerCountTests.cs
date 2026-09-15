@@ -38,7 +38,8 @@ public sealed class PatchEventConfigHandlerWinnerCountTests
             _pushSubRepo.Object,
             _pushSender.Object,
             _notifications.Object,
-            NullLogger<PatchEventConfigHandler>.Instance);
+            NullLogger<PatchEventConfigHandler>.Instance,
+            TimeProvider.System);
     }
 
     private void GivenEvent(Event evt) =>

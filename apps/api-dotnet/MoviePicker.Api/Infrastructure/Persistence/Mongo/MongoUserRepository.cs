@@ -137,7 +137,8 @@ public sealed class MongoUserRepository : IUserRepository
     {
         var update = Builders<UserDocument>.Update
             .Set(x => x.LetterboxdLastSyncAt, syncedAt.UtcDateTime)
-            .Set(x => x.LetterboxdLastSyncError, error);
+            .Set(x => x.LetterboxdLastSyncError, error)
+            .Inc(x => x.Version, 1);
         await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
     }
 
@@ -147,7 +148,8 @@ public sealed class MongoUserRepository : IUserRepository
         CancellationToken ct = default)
     {
         var update = Builders<UserDocument>.Update
-            .Set(x => x.LetterboxdPendingReconciliationCount, pendingCount);
+            .Set(x => x.LetterboxdPendingReconciliationCount, pendingCount)
+            .Inc(x => x.Version, 1);
         await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
     }
 
@@ -161,7 +163,8 @@ public sealed class MongoUserRepository : IUserRepository
             Builders<UserDocument>.Filter.Eq(x => x.SupporterSince, null));
         var update = Builders<UserDocument>.Update
             .Set(x => x.SupporterSince, since.UtcDateTime)
-            .Set(x => x.UpdatedAt, since.UtcDateTime);
+            .Set(x => x.UpdatedAt, since.UtcDateTime)
+            .Inc(x => x.Version, 1);
 
         var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
         return result.ModifiedCount > 0;
@@ -182,7 +185,8 @@ public sealed class MongoUserRepository : IUserRepository
             Builders<UserDocument>.Filter.Exists($"eventTemplates.{maxPerUser - 1}", false));
         var update = Builders<UserDocument>.Update
             .Push(x => x.EventTemplates, UserDocumentMapper.ToTemplateDocument(template))
-            .Set(x => x.UpdatedAt, now.UtcDateTime);
+            .Set(x => x.UpdatedAt, now.UtcDateTime)
+            .Inc(x => x.Version, 1);
 
         var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
         return result.MatchedCount > 0;
@@ -202,7 +206,8 @@ public sealed class MongoUserRepository : IUserRepository
             Builders<UserDocument>.Filter.ElemMatch(x => x.EventTemplates, t => t.Id == template.Id));
         var update = Builders<UserDocument>.Update
             .Set("eventTemplates.$", UserDocumentMapper.ToTemplateDocument(template))
-            .Set(x => x.UpdatedAt, now.UtcDateTime);
+            .Set(x => x.UpdatedAt, now.UtcDateTime)
+            .Inc(x => x.Version, 1);
 
         var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
         return result.MatchedCount > 0;
@@ -222,7 +227,8 @@ public sealed class MongoUserRepository : IUserRepository
             Builders<UserDocument>.Filter.ElemMatch(x => x.EventTemplates, t => t.Id == templateId));
         var update = Builders<UserDocument>.Update
             .PullFilter(x => x.EventTemplates, t => t.Id == templateId)
-            .Set(x => x.UpdatedAt, now.UtcDateTime);
+            .Set(x => x.UpdatedAt, now.UtcDateTime)
+            .Inc(x => x.Version, 1);
 
         var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
         return result.MatchedCount > 0;
@@ -274,14 +280,22 @@ public sealed class MongoUserRepository : IUserRepository
         doc.Email = NormalizeEmail(doc.Email) ?? doc.Email;
         doc.Handle = NormalizeHandle(doc.Handle);
         doc.UpdatedAt = DateTime.UtcNow;
+        doc.Version = user.Version + 1;
+        var filter = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Eq(x => x.Id, user.Id),
+            OptimisticConcurrency.ExpectedVersion<UserDocument>(x => x.Version, user.Version));
+        ReplaceOneResult result;
         try
         {
-            await _collection.ReplaceOneAsync(x => x.Id == user.Id, doc, cancellationToken: ct);
+            result = await _collection.ReplaceOneAsync(filter, doc, cancellationToken: ct);
         }
         catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
         {
             ThrowTypedDuplicateKey(ex);
+            throw;
         }
+        if (result.MatchedCount == 0)
+            await OptimisticConcurrency.ThrowForUnmatchedReplaceAsync(_collection, x => x.Id == user.Id, "Utilisateur", ct);
         return UserDocumentMapper.ToDomain(doc);
     }
 

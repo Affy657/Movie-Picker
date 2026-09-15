@@ -54,7 +54,8 @@ public sealed class LaunchWheelHandlerTests
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
             _posterStore.Object,
-            NullLogger<LaunchWheelHandler>.Instance);
+            NullLogger<LaunchWheelHandler>.Instance,
+            TimeProvider.System);
     }
 
     [Fact]

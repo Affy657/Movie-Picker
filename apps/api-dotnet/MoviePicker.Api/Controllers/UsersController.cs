@@ -189,6 +189,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpPost("me/event-templates")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
     [Authorize]
     [ProducesResponseType(typeof(EventTemplateResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -208,6 +209,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpPut("me/event-templates/{templateId}")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
     [Authorize]
     [ProducesResponseType(typeof(EventTemplateResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -229,6 +231,7 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpDelete("me/event-templates/{templateId}")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -260,8 +263,7 @@ public sealed class UsersController : ControllerBase
         [FromServices] IFollowUserHandler handler,
         CancellationToken ct)
     {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(currentUserId))
+        if (!User.TryGetUserId(out var currentUserId))
             return Unauthorized();
 
         await handler.HandleAsync(currentUserId, handle, ct);
@@ -280,8 +282,7 @@ public sealed class UsersController : ControllerBase
         [FromServices] IUnfollowUserHandler handler,
         CancellationToken ct)
     {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(currentUserId))
+        if (!User.TryGetUserId(out var currentUserId))
             return Unauthorized();
 
         await handler.HandleAsync(currentUserId, handle, ct);

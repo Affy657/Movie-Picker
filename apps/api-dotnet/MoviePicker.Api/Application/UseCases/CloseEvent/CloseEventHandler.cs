@@ -17,6 +17,7 @@ public sealed class CloseEventHandler : ICloseEventHandler
     private readonly IFinishedEventWatchlistPass _watchlistCleanup;
     private readonly IRecurringEventPass _recurringEvents;
     private readonly ILogger<CloseEventHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public CloseEventHandler(
         IEventRepository eventRepository,
@@ -24,7 +25,8 @@ public sealed class CloseEventHandler : ICloseEventHandler
         ICurrentUserAccessor currentUserAccessor,
         IFinishedEventWatchlistPass watchlistCleanup,
         IRecurringEventPass recurringEvents,
-        ILogger<CloseEventHandler> logger)
+        ILogger<CloseEventHandler> logger,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _hostTokenAccessor = hostTokenAccessor;
@@ -32,6 +34,7 @@ public sealed class CloseEventHandler : ICloseEventHandler
         _watchlistCleanup = watchlistCleanup;
         _recurringEvents = recurringEvents;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<CloseEventResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
@@ -48,7 +51,7 @@ public sealed class CloseEventHandler : ICloseEventHandler
             return ToResponse(evt, "Soirée déjà clôturée");
         }
 
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         var updated = evt with { ClosedAt = now, UpdatedAt = now };
 
         var saved = await _eventRepository.UpdateAsync(updated, ct);

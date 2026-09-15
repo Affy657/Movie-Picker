@@ -49,6 +49,26 @@ public sealed class HostTokenAccessorTests
     }
 
     [Fact]
+    public void GetHostToken_FromHeader()
+    {
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Headers["X-Host-Token"] = "hdr123";
+
+        Assert.Equal("hdr123", Build(ctx).GetHostToken());
+    }
+
+    [Fact]
+    public void GetHostToken_HeaderWinsOverQueryAndCookie()
+    {
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Headers["X-Host-Token"] = "fromheader";
+        ctx.Request.QueryString = new QueryString("?host=fromquery");
+        ctx.Request.Headers.Cookie = "moviepicker_host=fromcookie";
+
+        Assert.Equal("fromheader", Build(ctx).GetHostToken());
+    }
+
+    [Fact]
     public void GetHostToken_NothingPresent_ReturnsNull()
     {
         Assert.Null(Build(new DefaultHttpContext()).GetHostToken());

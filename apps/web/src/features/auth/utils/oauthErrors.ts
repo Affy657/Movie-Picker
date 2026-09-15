@@ -5,6 +5,7 @@ const OAUTH_ERROR_KEYS: Record<string, TranslationKey> = {
   external_auth_failed: 'auth.oauth.errors.externalAuthFailed',
   provider_error: 'auth.oauth.errors.providerError',
   email_not_verified: 'auth.oauth.errors.emailNotVerified',
+  account_exists: 'auth.oauth.errors.accountExists',
   identity_taken: 'auth.oauth.errors.identityTaken',
 };
 

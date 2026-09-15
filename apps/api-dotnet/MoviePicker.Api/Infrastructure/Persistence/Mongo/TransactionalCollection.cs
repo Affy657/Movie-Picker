@@ -109,6 +109,15 @@ public sealed class TransactionalCollection<TDocument>
             ? _inner.ReplaceOneAsync(session, filter, replacement, options, cancellationToken)
             : _inner.ReplaceOneAsync(filter, replacement, options, cancellationToken);
 
+    public Task<ReplaceOneResult> ReplaceOneAsync(
+        FilterDefinition<TDocument> filter,
+        TDocument replacement,
+        ReplaceOptions? options = null,
+        CancellationToken cancellationToken = default) =>
+        Session is { } session
+            ? _inner.ReplaceOneAsync(session, filter, replacement, options, cancellationToken)
+            : _inner.ReplaceOneAsync(filter, replacement, options, cancellationToken);
+
     public ReplaceOneResult ReplaceOne(
         Expression<Func<TDocument, bool>> filter,
         TDocument replacement,

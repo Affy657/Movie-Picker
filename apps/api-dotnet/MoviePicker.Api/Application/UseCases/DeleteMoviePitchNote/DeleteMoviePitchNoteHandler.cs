@@ -12,19 +12,22 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
     private readonly IParticipantRepository _participantRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly TimeProvider _clock;
 
     public DeleteMoviePitchNoteHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IParticipantRepository participantRepository,
         IHostTokenAccessor hostTokenAccessor,
-        ICurrentUserAccessor currentUserAccessor)
+        ICurrentUserAccessor currentUserAccessor,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _participantRepository = participantRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
+        _clock = clock;
     }
 
     public async Task HandleAsync(string idOrSlug, string movieId, DeleteMoviePitchNoteRequest request, CancellationToken ct = default)
@@ -34,6 +37,7 @@ public sealed class DeleteMoviePitchNoteHandler : IDeleteMoviePitchNoteHandler
             _movieRepository,
             _hostTokenAccessor,
             _currentUserAccessor,
+            _clock.GetUtcNow(),
             idOrSlug,
             movieId,
             "La roue a déjà été lancée. Lecture seule.",

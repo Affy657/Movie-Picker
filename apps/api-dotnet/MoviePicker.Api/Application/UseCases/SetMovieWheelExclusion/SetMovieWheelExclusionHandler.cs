@@ -11,17 +11,20 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
     private readonly IMovieRepository _movieRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly TimeProvider _clock;
 
     public SetMovieWheelExclusionHandler(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,
         IHostTokenAccessor hostTokenAccessor,
-        ICurrentUserAccessor currentUserAccessor)
+        ICurrentUserAccessor currentUserAccessor,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
+        _clock = clock;
     }
 
     public async Task HandleAsync(
@@ -32,7 +35,7 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
-        if (evt.IsFinished(DateTimeOffset.UtcNow))
+        if (evt.IsFinished(_clock.GetUtcNow()))
             throw new ConflictException("Soirée terminée. Lecture seule.");
 
         var token = _hostTokenAccessor.GetHostToken();

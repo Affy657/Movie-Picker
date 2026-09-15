@@ -42,6 +42,25 @@ public sealed class SentryBeforeSendTests
         Assert.Null(SentryBeforeSend.Prepare(sentryEvent));
     }
 
+    [Fact]
+    public void Prepare_RedactsHostTokenFromRequestUrlAndQueryString()
+    {
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom"))
+        {
+            Request = new SentryRequest
+            {
+                Url = "https://api.test/api/v1/events/abc/wheel?host=SECRET-TOKEN&x=1",
+                QueryString = "host=SECRET-TOKEN&x=1"
+            }
+        };
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        Assert.Equal("https://api.test/api/v1/events/abc/wheel?host=***&x=1", prepared!.Request.Url);
+        Assert.Equal("host=***&x=1", prepared.Request.QueryString);
+    }
+
     [Theory]
     [InlineData("GET /health", 0)]
     [InlineData("GET /health/ready", 0)]

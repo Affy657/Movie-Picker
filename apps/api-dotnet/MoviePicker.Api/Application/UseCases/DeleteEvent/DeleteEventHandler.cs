@@ -21,6 +21,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
     private readonly IUserNotificationRepository _notifications;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteEventHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public DeleteEventHandler(
         IEventRepository eventRepository,
@@ -34,7 +35,8 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
         IUnitOfWork unitOfWork,
-        ILogger<DeleteEventHandler> logger)
+        ILogger<DeleteEventHandler> logger,
+        TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _participantRepository = participantRepository;
@@ -48,6 +50,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _notifications = notifications;
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<DeleteEventResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
@@ -147,7 +150,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
                     ct);
             }
 
-            var now = DateTimeOffset.UtcNow;
+            var now = _clock.GetUtcNow();
             foreach (var userId in notifiableIds)
             {
                 await _notifications.AddAsync(new UserNotification

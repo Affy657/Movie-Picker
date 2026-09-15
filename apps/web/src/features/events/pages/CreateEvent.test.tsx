@@ -8,7 +8,10 @@ import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 import { LocaleProvider } from '@/shared/i18n';
 
 const mockFetchApi = vi.fn();
-vi.mock('@/shared/api/client', () => ({ fetchApi: (...args: unknown[]) => mockFetchApi(...args) }));
+vi.mock('@/shared/api/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/shared/api/client')>()),
+  fetchApi: (...args: unknown[]) => mockFetchApi(...args),
+}));
 vi.mock('@/features/auth/contexts/AuthContext', () => ({
   useAuth: () => ({
     user: { userId: 'u1', displayName: 'Vitest', emailMasked: 'v***@test.local' },
