@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Controllers;
 using Xunit;
@@ -12,6 +13,7 @@ public sealed class SchedulerControllerRecurringEventsTests
 {
     private readonly Mock<ISchedulerTokenValidator> _tokenValidator = new();
     private readonly Mock<IRecurringEventPass> _pass = new();
+    private readonly Mock<IFinishedEventWatchlistPass> _watchlistPass = new();
     private readonly SchedulerController _sut = new SchedulerController().WithContext();
 
     public SchedulerControllerRecurringEventsTests()
@@ -31,6 +33,38 @@ public sealed class SchedulerControllerRecurringEventsTests
             _pass.Object,
             _presentedToken,
             CancellationToken.None);
+
+    [Fact]
+    public async Task RunFinishedEvents_ValidToken_RunsTheWatchlistPassAndReturnsItsResult()
+    {
+        _tokenValidator.Setup(v => v.IsValid("good")).Returns(true);
+        _watchlistPass.Setup(p => p.RunAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new FinishedEventWatchlistPassResult(4, 3));
+
+        var result = await _sut.RunFinishedEvents(
+            _tokenValidator.Object,
+            _watchlistPass.Object,
+            "good",
+            CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        Assert.Equal(new FinishedEventWatchlistPassResult(4, 3), ok.Value);
+    }
+
+    [Fact]
+    public async Task RunFinishedEvents_WrongToken_Returns401AndDoesNotRunThePass()
+    {
+        _tokenValidator.Setup(v => v.IsValid("bad")).Returns(false);
+
+        var result = await _sut.RunFinishedEvents(
+            _tokenValidator.Object,
+            _watchlistPass.Object,
+            "bad",
+            CancellationToken.None);
+
+        Assert.IsType<UnauthorizedResult>(result);
+        _watchlistPass.Verify(p => p.RunAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
 
     [Fact]
     public async Task RunRecurringEvents_TokenNotConfigured_Returns503AndDoesNotRunThePass()

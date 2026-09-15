@@ -164,6 +164,18 @@ public sealed class InMemoryEventRepository : IEventRepository
         return Task.FromResult(result);
     }
 
+    public Task<IReadOnlyList<Event>> ListAwaitingWatchlistCleanupAsync(
+        DateTimeOffset utcNow,
+        int limit,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = _byId.Values
+            .Where(e => e.HasWinner && e.WatchlistCleanedAt is null && e.IsFinished(utcNow))
+            .Take(Math.Max(0, limit))
+            .ToList();
+        return Task.FromResult(result);
+    }
+
     public Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(creatorUserId))

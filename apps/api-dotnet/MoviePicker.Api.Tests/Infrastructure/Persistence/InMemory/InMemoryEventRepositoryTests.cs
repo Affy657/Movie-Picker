@@ -32,6 +32,22 @@ public sealed class InMemoryEventRepositoryTests
         };
 
     [Fact]
+    public async Task ListAwaitingWatchlistCleanupAsync_ReturnsFinishedEventsWithAWinnerNotYetCleaned()
+    {
+        var now = new DateTimeOffset(2030, 6, 1, 12, 0, 0, TimeSpan.Zero);
+        var closed = await _repo.AddAsync(Mk(slug: "closed", winnerMovieId: "m1", closedAt: now.AddDays(-1)));
+        var autoClosed = await _repo.AddAsync(Mk(slug: "auto") with { Date = "2030-05-01", Winners = TestWinners.Won("m2") });
+        await _repo.AddAsync(Mk(slug: "cleaned", winnerMovieId: "m3", closedAt: now.AddDays(-1)) with { WatchlistCleanedAt = now });
+        await _repo.AddAsync(Mk(slug: "no-winner", closedAt: now.AddDays(-1)));
+        await _repo.AddAsync(Mk(slug: "upcoming", winnerMovieId: "m4") with { Date = "2031-01-01" });
+
+        var found = await _repo.ListAwaitingWatchlistCleanupAsync(now, 10);
+
+        Assert.Equal(new HashSet<string> { closed.Id, autoClosed.Id }, found.Select(e => e.Id).ToHashSet());
+        Assert.Single(await _repo.ListAwaitingWatchlistCleanupAsync(now, 1));
+    }
+
+    [Fact]
     public async Task AddAsync_GeneratesId_AndIndexesBySlug()
     {
         var created = await _repo.AddAsync(Mk(slug: "soiree"));

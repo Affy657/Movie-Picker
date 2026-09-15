@@ -1,7 +1,6 @@
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.ListMyEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
@@ -18,7 +17,6 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
     private readonly IUserRepository _userRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
-    private readonly IFinishedEventWatchlistPass _watchlistCleanup;
     private readonly TimeProvider _clock;
 
     public GetEventDetailHandler(
@@ -29,7 +27,6 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         IUserRepository userRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
-        IFinishedEventWatchlistPass watchlistCleanup,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
@@ -39,14 +36,12 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
         _userRepository = userRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
-        _watchlistCleanup = watchlistCleanup;
         _clock = clock;
     }
 
     public async Task<EventDetailResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-        await _watchlistCleanup.RunForEventAsync(evt, ct);
 
         var token = _hostTokenAccessor.GetHostToken();
         var currentUserId = _currentUserAccessor.GetUserId();

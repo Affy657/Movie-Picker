@@ -1,6 +1,7 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -188,6 +189,26 @@ public sealed class MongoEventRepository : IEventRepository
             filter &= builder.Eq(x => x.CreatorUserId, creatorUserId);
 
         var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<Event>> ListAwaitingWatchlistCleanupAsync(
+        DateTimeOffset utcNow,
+        int limit,
+        CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return [];
+
+        var autoClosedStartedBefore = (utcNow - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay).UtcDateTime;
+        var builder = Builders<EventDocument>.Filter;
+        var filter = builder.And(
+            builder.SizeGt(x => x.Winners, 0),
+            builder.Eq(x => x.WatchlistCleanedAt, (DateTime?)null),
+            builder.Or(
+                builder.Ne(x => x.ClosedAt, (DateTime?)null),
+                builder.Lte(x => x.StartAtUtc, autoClosedStartedBefore)));
+        var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 

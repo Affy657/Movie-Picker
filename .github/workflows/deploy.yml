@@ -329,16 +329,16 @@ jobs:
       # Taken from master. Moved after the promotion: the job targets the service URL, so it must
       # only be (re)configured for a revision that is really live. A revision rejected at validation
       # leaves the job pointing at the unchanged production.
-      # The recurring events sweep is only a safety net: closing an event and opening "My events"
-      # already create the next occurrence. One pass per night is therefore enough to catch up
-      # the series nobody reopened.
-      - name: "Event reminders and recurring events: Cloud Scheduler"
+      # Closing an event still creates its next occurrence and cleans the winners out of the
+      # participants' watchlists on the spot; the two nightly sweeps catch up the series nobody
+      # reopened and the events that finished on their own. Reads no longer write (DEBT-029).
+      - name: "Event reminders, recurring and finished events: Cloud Scheduler"
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
           set -eo pipefail
           if ! gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
-            echo "::warning::SCHEDULER_TOKEN secret missing: Cloud Scheduler jobs not configured, event reminders will not leave and recurring events will only be renewed on closing or on opening \"My events\"."
+            echo "::warning::SCHEDULER_TOKEN secret missing: Cloud Scheduler jobs not configured, event reminders will not leave, recurring events will only be renewed on closing and watchlists will only be cleaned on closing."
             exit 0
           fi
           # Second guard, and it cost a red deployment on 2026-09-10: the secret can exist while the
@@ -370,6 +370,7 @@ jobs:
           }
           upsert_job movie-picker-event-reminders "*/30 * * * *" /api/v1/scheduler/event-reminders
           upsert_job movie-picker-recurring-events "15 3 * * *" /api/v1/scheduler/recurring-events
+          upsert_job movie-picker-finished-events "45 3 * * *" /api/v1/scheduler/finished-events
       # The revision is already proven: what is checked here is that the traffic really switched and
       # that the public domain leads to it. A failure is routing, DNS or certificate, not code, hence
       # no rollback. PUBLIC_API_URL derives from VITE_API_URL, the URL the web app is built against:

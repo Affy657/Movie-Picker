@@ -226,6 +226,20 @@ public sealed class FinishedEventWatchlistPassTests
     }
 
     [Fact]
+    public async Task RunAsync_SweepsTheEventsTheRepositoryReportsAsAwaitingCleanup()
+    {
+        GivenWinnerAndParticipants(new Participant { Id = "p1", EventId = "evt1", Pseudo = "Alice", UserId = "u1" });
+        _eventRepo
+            .Setup(r => r.ListAwaitingWatchlistCleanupAsync(Now, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([FinishedWithWinner(), FinishedWithWinner() with { Id = "evt-live", Date = "2030-06-02", Time = "13:30" }]);
+
+        var result = await _sut.RunAsync();
+
+        Assert.Equal(new FinishedEventWatchlistPassResult(2, 1), result);
+        _eventRepo.Verify(r => r.MarkWatchlistCleanedAsync("evt1", Now, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task RunForEventsAsync_OnlyTouchesTheFinishedUncleanedEventsWithAWinner()
     {
         GivenWinnerAndParticipants(new Participant { Id = "p1", EventId = "evt1", Pseudo = "Alice", UserId = "u1" });

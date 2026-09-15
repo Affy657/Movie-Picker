@@ -46,7 +46,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         var conflict = await Assert.ThrowsAsync<ConflictException>(() =>
             WithUsersAsync(users => users.AddAsync(NewUser(Guid.NewGuid().ToString("N")[..8], taken))));
 
-        Assert.Equal("handle_conflict", conflict.Message);
+        Assert.Equal(ErrorCodes.HandleTaken, conflict.Reason);
     }
 
     [MongoFact]
@@ -68,7 +68,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
             WithUsersAsync(users => users.AddAsync(
                 NewUser(Guid.NewGuid().ToString("N")[..8], identities: [identity]))));
 
-        Assert.Equal("identity_conflict", conflict.Message);
+        Assert.Equal(ErrorCodes.IdentityConflict, conflict.Reason);
     }
 
     [MongoFact]
@@ -94,6 +94,6 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         var conflict = await Assert.ThrowsAsync<ConflictException>(() =>
             WithUsersAsync(users => users.UpdateAsync(mover with { Handle = taken })));
 
-        Assert.Equal("handle_conflict", conflict.Message);
+        Assert.Equal(ErrorCodes.HandleTaken, conflict.Reason);
     }
 }

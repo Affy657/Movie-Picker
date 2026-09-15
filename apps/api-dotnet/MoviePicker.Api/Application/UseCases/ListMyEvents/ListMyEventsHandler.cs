@@ -1,8 +1,6 @@
 using System.Linq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.UseCases.FinishedEvents;
-using MoviePicker.Api.Application.UseCases.RecurringEvents;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
@@ -13,23 +11,17 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
     private readonly IEventRepository _eventRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IMovieRepository _movieRepository;
-    private readonly IRecurringEventPass _recurringEvents;
-    private readonly IFinishedEventWatchlistPass _watchlistCleanup;
     private readonly TimeProvider _clock;
 
     public ListMyEventsHandler(
         IEventRepository eventRepository,
         IParticipantRepository participantRepository,
         IMovieRepository movieRepository,
-        IRecurringEventPass recurringEvents,
-        IFinishedEventWatchlistPass watchlistCleanup,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _participantRepository = participantRepository;
         _movieRepository = movieRepository;
-        _recurringEvents = recurringEvents;
-        _watchlistCleanup = watchlistCleanup;
         _clock = clock;
     }
 
@@ -41,15 +33,11 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         var skip = offset is null ? 0 : Math.Max(0, offset.Value);
         var utcNow = _clock.GetUtcNow();
 
-        await _recurringEvents.RunForCreatorAsync(userId, ct);
-
         var created = await _eventRepository.ListAllByCreatorUserIdAsync(userId, ct);
         var joinedIds = await _participantRepository.ListDistinctEventIdsByUserIdAsync(userId, ct);
         var joinedSet = new HashSet<string>(joinedIds);
         var createdIds = new HashSet<string>(created.Select(e => e.Id));
         var onlyJoined = await ListOnlyJoinedAsync(joinedIds, createdIds, ct);
-
-        await _watchlistCleanup.RunForEventsAsync([.. created, .. onlyJoined], ct);
 
         var (merged, winnerMovieIdByEventId) = BuildMergedEvents(created, onlyJoined, joinedSet, utcNow);
 

@@ -3162,7 +3162,7 @@ export const en: Locale = {
       infraRegistrySub: 'one image per commit',
       infraRegistryDetail: 'tagged by SHA, purged',
       infraScheduler: 'Cloud Scheduler',
-      infraSchedulerSub: 'reminders and recurring nights',
+      infraSchedulerSub: 'reminders, recurring and finished nights',
       infraSchedulerDetail: 'created if the token exists',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'managed replica set',

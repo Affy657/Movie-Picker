@@ -3217,7 +3217,7 @@ export const fr = {
       infraRegistrySub: 'une image par commit',
       infraRegistryDetail: 'taguée par SHA, purgée',
       infraScheduler: 'Cloud Scheduler',
-      infraSchedulerSub: 'rappels et soirées récurrentes',
+      infraSchedulerSub: 'rappels, soirées récurrentes et terminées',
       infraSchedulerDetail: 'créé si le jeton existe',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'replica set managé',

@@ -19,7 +19,6 @@ public sealed class GetEventDetailHandlerTests
     private readonly Mock<IUserRepository> _userRepo;
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor;
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor;
-    private readonly Mock<IFinishedEventWatchlistPass> _watchlistCleanup = new();
     private readonly GetEventDetailHandler _sut;
 
     private static Event Event(string hostToken = "ht1") => new()
@@ -70,21 +69,20 @@ public sealed class GetEventDetailHandlerTests
             _userRepo.Object,
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
-            _watchlistCleanup.Object,
             TimeProvider.System);
     }
 
     [Fact]
-    public async Task HandleAsync_HandsTheEventToTheWatchlistCleanup()
+    public async Task HandleAsync_ReadsWithoutMarkingTheWatchlistCleanup()
     {
         var evt = new EventEntityBuilder().WithId("evt-1").Build();
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt-1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
         await _sut.HandleAsync("evt-1");
 
-        _watchlistCleanup.Verify(
-            p => p.RunForEventAsync(It.Is<Event>(e => e.Id == "evt-1"), It.IsAny<CancellationToken>()),
-            Times.Once);
+        _eventRepo.Verify(
+            r => r.MarkWatchlistCleanedAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

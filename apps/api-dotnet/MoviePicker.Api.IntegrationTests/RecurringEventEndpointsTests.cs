@@ -151,7 +151,7 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
     }
 
     [Fact]
-    public async Task ListingMyEvents_MaterialisesAnAbandonedOccurrenceWithoutClosingItByHand()
+    public async Task ListingMyEvents_LeavesAnAbandonedOccurrenceToTheSchedulerSweep()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var start = EventRecurrence.TodayInParis(DateTimeOffset.UtcNow).AddDays(-30);
@@ -162,7 +162,7 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
         var list = await mine.Content.ReadFromJsonAsync<MyEventsListResponse>(JsonOptions);
 
         var future = Iso(EventRecurrence.TodayInParis(DateTimeOffset.UtcNow));
-        Assert.Contains(
+        Assert.DoesNotContain(
             list!.Events,
             e => e.Title == "Ciné-club oublié" && string.CompareOrdinal(e.Date, future) > 0);
     }
@@ -173,6 +173,16 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
         using var client = _factory.CreateClient();
 
         var res = await client.PostAsync("/api/v1/scheduler/recurring-events", null);
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task FinishedEventsSweep_WithoutASchedulerToken_Returns503()
+    {
+        using var client = _factory.CreateClient();
+
+        var res = await client.PostAsync("/api/v1/scheduler/finished-events", null);
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, res.StatusCode);
     }

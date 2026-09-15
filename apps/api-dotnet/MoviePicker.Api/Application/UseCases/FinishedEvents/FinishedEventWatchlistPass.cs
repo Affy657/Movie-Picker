@@ -5,8 +5,12 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.FinishedEvents;
 
+public sealed record FinishedEventWatchlistPassResult(int Candidates, int Cleaned);
+
 public interface IFinishedEventWatchlistPass
 {
+    Task<FinishedEventWatchlistPassResult> RunAsync(CancellationToken ct = default);
+
     Task<bool> RunForEventAsync(Event evt, CancellationToken ct = default);
 
     Task<int> RunForEventsAsync(IReadOnlyList<Event> events, CancellationToken ct = default);
@@ -14,6 +18,8 @@ public interface IFinishedEventWatchlistPass
 
 public sealed class FinishedEventWatchlistPass : IFinishedEventWatchlistPass
 {
+    private const int SweepBatchSize = 200;
+
     private readonly IEventRepository _events;
     private readonly IMovieRepository _movies;
     private readonly IParticipantRepository _participants;
@@ -35,6 +41,13 @@ public sealed class FinishedEventWatchlistPass : IFinishedEventWatchlistPass
         _watchlists = watchlists;
         _clock = clock;
         _logger = logger;
+    }
+
+    public async Task<FinishedEventWatchlistPassResult> RunAsync(CancellationToken ct = default)
+    {
+        var candidates = await _events.ListAwaitingWatchlistCleanupAsync(_clock.GetUtcNow(), SweepBatchSize, ct);
+        var cleaned = await RunForEventsAsync(candidates, ct);
+        return new FinishedEventWatchlistPassResult(candidates.Count, cleaned);
     }
 
     public async Task<int> RunForEventsAsync(IReadOnlyList<Event> events, CancellationToken ct = default)

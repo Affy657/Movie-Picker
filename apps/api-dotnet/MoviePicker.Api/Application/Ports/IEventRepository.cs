@@ -33,6 +33,11 @@ public interface IEventRepository
         string? creatorUserId,
         CancellationToken ct = default);
 
+    Task<IReadOnlyList<Event>> ListAwaitingWatchlistCleanupAsync(
+        DateTimeOffset utcNow,
+        int limit,
+        CancellationToken ct = default);
+
     Task<long> AnonymizeCreatorAsync(string creatorUserId, CancellationToken ct = default);
 
     Task<bool> MarkWatchlistCleanedAsync(string eventId, DateTimeOffset cleanedAt, CancellationToken ct = default);

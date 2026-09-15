@@ -156,6 +156,26 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task ListAwaitingWatchlistCleanup_ReturnsFinishedEventsWithAWinnerNotYetCleaned()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        var winners = new[] { new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now } };
+        var closed = await events.AddAsync(NewEvent("closed-" + marker) with { Winners = winners, ClosedAt = Now });
+        var autoClosed = await events.AddAsync(NewEvent("auto-" + marker) with { Winners = winners, Date = "2020-01-01" });
+        var cleaned = await events.AddAsync(NewEvent("cleaned-" + marker) with { Winners = winners, ClosedAt = Now });
+        Assert.True(await events.MarkWatchlistCleanedAsync(cleaned.Id, Now));
+        await events.AddAsync(NewEvent("no-winner-" + marker) with { ClosedAt = Now });
+        await events.AddAsync(NewEvent("upcoming-" + marker) with { Winners = winners, Date = "2040-01-01" });
+
+        var found = await events.ListAwaitingWatchlistCleanupAsync(Now, 1000);
+
+        var mine = found.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet();
+        Assert.Equal(new HashSet<string> { closed.Id, autoClosed.Id }, mine);
+    }
+
+    [Fact]
     public async Task ListAllByCreatorUserId_ReturnsEveryCreatedEvent_EvenBeyondTwoHundred()
     {
         using var scope = _factory.Services.CreateScope();

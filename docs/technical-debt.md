@@ -16,21 +16,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 ---
 
-## DEBT-001 l'API Cloud Scheduler est désactivée, les rappels et les soirées récurrentes ne partent pas
-
-- state: humain
-- bloque: écritures `gcloud` refusées par le classifieur d'auto-mode ; l'utilisateur doit lancer la commande
-- impact: prod. Les deux routes `POST /api/v1/scheduler/*` répondent 503 faute de planificateur. Aucun rappel J-1, 1 h ni « en suspens » ne part, et le balayage des soirées récurrentes ne tourne pas, celles-ci ne se reconduisent qu'à la clôture ou à l'ouverture de « Mes soirées ». Le 503 est volontaire, préféré à un échec silencieux.
-- ou: `.github/workflows/deploy.yml`, l'étape « Rappels de soirée et soirées récurrentes »
-- verify: `gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)'` ; encore ouvert tant que la sortie est vide
-- fix:
-  ```bash
-  gcloud services enable cloudscheduler.googleapis.com
-  gh workflow run deploy.yml --ref master -f target=api
-  ```
-- fini-quand: les deux jobs Cloud Scheduler existent, `movie-picker-event-reminders` et `movie-picker-recurring-events`, et les deux endpoints ne répondent plus 503
-- piege: **la moitié de l'entrée d'origine était périmée, mesuré le 2026-09-10.** Le secret `SCHEDULER_TOKEN` **existe** depuis le 2026-09-09 17:04, il ne reste que l'activation de l'API. Second piège, payé le 2026-09-10 : l'étape ne gardait que l'existence du secret, donc avec un secret présent et l'API désactivée elle sortait en `SERVICE_DISABLED` et faisait **échouer le déploiement API après que la révision ait pris 100 % du trafic**. Le run affichait rouge alors que l'API était en ligne et servait. Une seconde garde a été posée, une planification absente est désormais un avertissement comme le secret absent. Troisième piège, celui de l'entrée d'origine : aucune IAM à ajouter, le compte de service a déjà `roles/editor` et `roles/secretmanager.secretAccessor` au niveau projet, et une session précédente avait annoncé à tort qu'il fallait `cloudscheduler.admin`.
-
 ## DEBT-002 authentification keyless écrite mais jamais fusionnée
 
 - state: humain
@@ -163,7 +148,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 ## DEBT-015 le compte de service GCP de la CI porte roles/editor
 
 - state: humain
-- bloque: console ou CLI GCP, hors de portée de l'agent (voir DEBT-001, les écritures `gcloud` sont refusées)
+- bloque: console ou CLI GCP, hors de portée de l'agent, les écritures `gcloud` sont refusées au classifieur d'auto-mode
 - impact: le projet n'a qu'un seul compte de service et il porte `roles/editor`. Il déploie, lit tous les secrets et écrit dans le bucket de sauvegarde, là où trois rôles distincts suffiraient.
 - verify: lister les rôles du compte de service de la CI dans la console IAM du projet, ou en CLI avec son adresse relevée là. Encore ouvert tant que `roles/editor` figure dans la liste.
 - fix: rôles au moindre privilège par usage
@@ -190,16 +175,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: `verify` vide, et les listes de clés GCP et AWS ne portent plus que la clé active de 2026-09-15
 - piege: `SONAR_TOKEN` reste volontairement au niveau du dépôt, le job `sonar` tourne sur les PR et les branches `v*`, que la politique de branche de `production` exclurait. Tout job qui lit un secret de déploiement porte `environment: production` ; sans cette ligne il lirait une valeur vide.
 - refs: DEBT-002 et le lot Terraform 5 remplacent ces clés par une fédération d'identité
-
-## DEBT-029 `GET /events/mine` écrit en base
-
-- state: differe
-- declencheur: DEBT-001 réglé, c'est-à-dire Cloud Scheduler qui appelle `POST /api/v1/scheduler/recurring-events` en production
-- impact: une lecture qui écrit. `ListMyEventsHandler` crée les occurrences suivantes des soirées récurrentes et nettoie les watchlists des soirées terminées à chaque affichage de la liste, parce que rien d'autre ne le fait en production tant que le scheduler est coupé. Le coût est payé par l'utilisateur qui ouvre la page, et un GET n'est pas idempotent.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMyEvents/ListMyEventsHandler.cs`, appels à `RunForCreatorAsync` et `RunForEventsAsync` en tête de `HandleAsync`
-- verify: `grep -n "RunForCreatorAsync\|RunForEventsAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/ListMyEvents/ListMyEventsHandler.cs` ; encore ouvert tant que les deux appels sont dans le chemin de lecture
-- fix: retirer les deux appels une fois le scheduler en service, `RecurringEventPass` et `FinishedEventWatchlistPass` restant joués par `SchedulerController`
-- piege: ne pas retirer les appels avant DEBT-001, les soirées récurrentes cesseraient de se renouveler en production sans que rien ne le signale. Depuis le 2026-09-15, le champ `version` du document soirée empêche au moins deux passes concurrentes (lecture et scheduler) de créer deux occurrences.
 
 ## DEBT-030 les captures des suggestions d'idées sont hébergées sur une branche du dépôt public
 
