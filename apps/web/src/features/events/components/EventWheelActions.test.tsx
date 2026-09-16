@@ -186,7 +186,7 @@ describe('EventWheelActions', () => {
   it('remplace la barre par la consigne de retrait en mode retrait', () => {
     renderActions(wheelState({ removalMode: true, canSpin: false, winnerIds: ['m1'] }));
 
-    expect(screen.getByText(/cliquez sur un film gagnant/i)).toBeInTheDocument();
+    expect(screen.getByText(/choisissez le film gagnant à retirer/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /lancer la roue/i })).not.toBeInTheDocument();
   });
 
@@ -204,7 +204,7 @@ describe('EventWheelActions', () => {
   it('affiche la consigne de choix manuel en mode manuel', () => {
     renderActions(wheelState({ manualMode: true, canSpin: false }));
 
-    expect(screen.getByText(/cliquez sur un film pour le désigner gagnant/i)).toBeInTheDocument();
+    expect(screen.getByText(/choisissez le film à désigner gagnant/i)).toBeInTheDocument();
   });
 
   it('ne rend rien pour un participant qui ne peut rien faire', () => {
