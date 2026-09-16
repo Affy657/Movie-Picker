@@ -153,5 +153,5 @@ Les sondes ajoutent environ 138 000 requêtes par mois sur l'API (130 000 pour `
 ## 10. Limites connues
 
 - La **rétention Sentry** est de ~30 jours sur le plan gratuit : les incidents à conserver (post-mortem, dossier) sont archivés hors Sentry.
-- La sonde front vise `web.movie-picker.fr` ; la migration prévue vers `www.movie-picker.fr` ([`../../runbook-migration-domaine-www.md`](../../runbook-migration-domaine-www.md)) imposera de mettre à jour la cible de la sonde.
+- La sonde front vise `web.movie-picker.fr` ; la migration prévue vers `www.movie-picker.fr` ([`../../runbook-migration-domaine-www.md`](../../../../docs/runbook-migration-domaine-www.md)) imposera de mettre à jour la cible de la sonde.
 - MongoDB Atlas n'est pas supervisé directement (métriques internes du cluster) : seule sa joignabilité depuis l'API l'est.

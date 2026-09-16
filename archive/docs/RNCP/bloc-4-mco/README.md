@@ -27,7 +27,7 @@ Ordre des éléments imposé par le règlement : processus de mise à jour des d
 | C4.2.1 | Processus de collecte/consignation des anomalies **+ une fiche de consignation** | ✅ | ✅ [`processus-anomalies.md`](processus-anomalies.md), 5 canaux, gabarit, sévérités, cycle de vie ; fiche = issue #67 |
 | C4.2.2 | Traitement d'une anomalie détectée au cours du projet (via CI/CD) | | ✅ issue #67 + § 6 de [`processus-anomalies.md`](processus-anomalies.md) ; **reste** : captures du pipeline |
 | C4.3.1 | Recommandations argumentées d'amélioration (gains, coût, délai) | | ✅ [`axes-amelioration.md`](axes-amelioration.md), 7 recommandations chiffrées sur indicateurs réels et 7 premières réponses au [`questionnaire`](questionnaire-utilisateurs.md) |
-| C4.3.2 | Exemplaire du journal de version | ✅ | ✅ [`journal-versions.md`](journal-versions.md) + [`CHANGELOG.md`](../../../CHANGELOG.md) + 7 tags et 7 releases, dont **v1.3.2** du 25/07/2026 |
+| C4.3.2 | Exemplaire du journal de version | ✅ | ✅ [`journal-versions.md`](journal-versions.md) + [`CHANGELOG.md`](../../../../CHANGELOG.md) + 7 tags et 7 releases, dont **v1.3.2** du 25/07/2026 |
 | C4.3.3 | Exemple de problème résolu en collaboration avec le support client | | ✅ [`collaboration-support.md`](collaboration-support.md), dispositif + cas #67 + contribution des parties prenantes |
 
 ## Fichiers du dossier

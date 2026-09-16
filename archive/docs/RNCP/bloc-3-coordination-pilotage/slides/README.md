@@ -1,6 +1,6 @@
 # Diapos Slidev, oral Bloc 3 (Movie Picker)
 
-Support de la présentation orale du 16 septembre 2026. Le contenu est dérivé des fichiers de matière du dossier parent (`01-planification.md`, `02-suivi-indicateurs.md` et suivants), qui restent la **source de vérité**. La structure et le minutage sont arrêtés dans [`../00-plan-presentation-orale.md`](../00-plan-presentation-orale.md).
+Support de la présentation orale du 16 septembre 2026, présenté ce jour-là ; l'export final est [`slides-bloc3.pdf`](slides-bloc3.pdf). Le contenu est dérivé des fichiers de matière du dossier parent (`01-planification.md`, `02-suivi-indicateurs.md` et suivants), qui restent la **source de vérité**. La structure et le minutage sont arrêtés dans [`../00-plan-presentation-orale.md`](../00-plan-presentation-orale.md).
 
 ## Lancer en local
 
@@ -26,9 +26,11 @@ Construit le support, le sert, le rend dans un navigateur et signale les diaposi
 ## Exporter
 
 ```bash
-npm run export
+npx slidev export --output slides-export.pdf --timeout 120000 --wait 4000 --wait-until networkidle --per-slide
 ```
 
+> `npm run export` sans options a produit 22 pages blanches (5 Ko) : la capture partait avant le rendu. Les options `--wait`, `--wait-until networkidle` et `--per-slide` donnent le PDF complet, 1,8 Mo avec les polices.
+>
 > Le premier export peut demander d'installer Playwright : `npx playwright install chromium`.
 >
 > ⚠️ L'export **ne corrige rien** : une diapositive coupée à l'écran l'est aussi dans le PDF. Passer `verify:rendu` avant. En revanche l'export **fige les polices**, ce qui met le support à l'abri d'une salle sans réseau, le thème charge sinon Nunito Sans depuis Google Fonts au moment du rendu.

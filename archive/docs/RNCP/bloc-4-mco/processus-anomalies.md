@@ -28,7 +28,7 @@ Les canaux 1, 2 et 4 sont automatiques et notifient par e-mail. Le canal 3 est l
 
 **GitHub Issues**, sur le dépôt du projet. Les issues vierges sont **désactivées** (`blank_issues_enabled: false`) : tout signalement passe obligatoirement par un formulaire structuré, ce qui garantit que les informations nécessaires à la reproduction sont présentes dès la création.
 
-Le gabarit [`bug_report.yml`](../../../.github/ISSUE_TEMPLATE/bug_report.yml) impose six champs, cinq obligatoires, un facultatif :
+Le gabarit [`bug_report.yml`](../../../../.github/ISSUE_TEMPLATE/bug_report.yml) impose six champs, cinq obligatoires, un facultatif :
 
 | Champ | Obligatoire | Pourquoi il est nécessaire |
 |-------|:-----------:|----------------------------|
@@ -75,7 +75,7 @@ Le correctif emprunte le même pipeline que n'importe quelle évolution, aucune 
 3. Fusion sur `master` après revue.
 4. Déploiement automatique : construction et scan de l'image, publication sur Artifact Registry, `gcloud run deploy` pour l'API, synchronisation S3 et invalidation CloudFront pour le front.
 5. **Smoke test post-déploiement** : `GET /health` puis `GET /health/ready`, si la révision déployée ne répond pas ou ne joint pas la base, le déploiement échoue.
-6. En cas d'incident malgré tout : [`rollback.yml`](../../../.github/workflows/rollback.yml) bascule 100 % du trafic vers la révision Cloud Run précédente (ou une révision cible désignée), sans reconstruction.
+6. En cas d'incident malgré tout : [`rollback.yml`](../../../../.github/workflows/rollback.yml) bascule 100 % du trafic vers la révision Cloud Run précédente (ou une révision cible désignée), sans reconstruction.
 
 ## 7. Traçabilité
 

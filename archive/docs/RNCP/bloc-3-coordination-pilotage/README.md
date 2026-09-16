@@ -2,7 +2,7 @@
 
 > Grille officielle : [`../referentiel/bloc-03-coordonner-piloter-projet.md`](../referentiel/bloc-03-coordonner-piloter-projet.md) ; Suivi : [`../suivi-rncp.md`](../suivi-rncp.md)
 
-**État : ✅ support complet et refondu, 7 chapitres de matière, 30 diapositives (23 présentées + 7 annexes), les 14 éléments imposés rattachés et les 3 compétences éliminatoires couvertes. Le support est épuré, ses gros tableaux sont devenus des schémas, et les 30 diapositives sont vérifiées au rendu. Reste la préparation matérielle de la démonstration.** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
+**État : ✅ oral présenté le 16 septembre 2026, support final de 22 diapositives (14 présentées + 8 annexes, [`slides/slides-bloc3.pdf`](slides/slides-bloc3.pdf)). Ce qui suit décrit l'état du dossier avant la refonte finale du support : 7 chapitres de matière, 30 diapositives (23 présentées + 7 annexes), les 14 éléments imposés rattachés et les 3 compétences éliminatoires couvertes. Le support est épuré, ses gros tableaux sont devenus des schémas, et les 30 diapositives sont vérifiées au rendu. Reste la préparation matérielle de la démonstration.** Structure, minutage et mapping des 14 éléments imposés dans [`00-plan-presentation-orale.md`](00-plan-presentation-orale.md).
 
 > 🧭 **Vous reprenez ce dossier ?** Commencez par [`PASSATION.md`](PASSATION.md), il dit comment travailler ici sans casser ce qui existe. Ce qui reste à faire est dans [`RESTE-A-FAIRE.md`](RESTE-A-FAIRE.md).
 

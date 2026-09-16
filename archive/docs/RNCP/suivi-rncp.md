@@ -2,11 +2,11 @@
 
 Carte dédiée aux **livrables documentaires et process** exigés par le titre **Expert en développement logiciel — RNCP 39583** (référentiel : [`referentiel/`](referentiel/)).
 
-> **Périmètre** : tout ce qui n'est **pas du dev produit V1** mais qui est **attendu par le jury** côté **dépôt** (docs versionnées, schémas, ADR, process). Le **dev produit V1** (compte utilisateur, parcours hôte, watch providers, OG, i18n, mot de passe oublié, sécurité CI…) reste dans [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md). Le rapport écrit candidat et la soutenance orale **ne sont pas couverts ici**.
+> **Périmètre** : tout ce qui n'est **pas du dev produit V1** mais qui est **attendu par le jury** côté **dépôt** (docs versionnées, schémas, ADR, process). Le **dev produit V1** (compte utilisateur, parcours hôte, watch providers, OG, i18n, mot de passe oublié, sécurité CI…) reste dans [`livraison-v1.md`](../v1-produit/livraison-v1.md). Le rapport écrit candidat et la soutenance orale **ne sont pas couverts ici**.
 
 **Règle** : ne cocher une case que quand la tâche est **terminée** (fichier mergé sur `master`, lien vérifiable). Un brouillon ou un TODO ne suffit pas.
 
-> **Note de numérotation** : les § 1 à 8 reprennent **à l'identique** les anciennes § 27 à 34 de [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md) (compatibilité historique, renvois préservés). Les § 9 à 20 sont nouveaux et complètent la couverture RNCP (cadrage Bloc 1, pilotage Bloc 3, MCO retours).
+> **Note de numérotation** : les § 1 à 8 reprennent **à l'identique** les anciennes § 27 à 34 de [`livraison-v1.md`](../v1-produit/livraison-v1.md) (compatibilité historique, renvois préservés). Les § 9 à 20 sont nouveaux et complètent la couverture RNCP (cadrage Bloc 1, pilotage Bloc 3, MCO retours).
 
 **Ordre logique conseillé** (différent de l'ordre du sommaire) : cadrage (§ 9-14, 9 *bis*) → pilotage (§ 15-17) → compléments dev (§ 18) → sécurité & qualité ancrées au code (§ 1-3) → process & exploitation (§ 4-8) → MCO retours (§ 19-20).
 
@@ -34,7 +34,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 ### Bloc 2 — Concevoir et développer (compléments documentaires)
 
-> Le code et les tests sont déjà couverts par [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md) (archivé). Restent ici les **livrables documentaires / process**.
+> Le code et les tests sont déjà couverts par [`livraison-v1.md`](../v1-produit/livraison-v1.md) (archivé). Restent ici les **livrables documentaires / process**.
 
 > **⚠️ Mise à jour 2026-07-08** — Plusieurs éléments décrits comme « à faire » dans les sections § 1-8 / § 18 ci-dessous **sont désormais livrés dans le code** : E2E Playwright (`e2e/` + `playwright.config.ts` à la racine + job CI), accessibilité (skip link, focus-visible, couverture `axe` sur 9 vues), pipeline CI/CD complet (4 workflows + actions composites), `CHANGELOG.md` et templates issue/PR. Il reste surtout à **présenter** ces preuves au jury. Le plan de rédaction fait foi : [`bloc-2-conception-developpement/dossier-bloc-2-plan.md`](bloc-2-conception-developpement/dossier-bloc-2-plan.md).
 
@@ -58,7 +58,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 - [x] **C3.3.2** — Évaluation des besoins en compétences — voir § 17
 - [x] **C3.4.1** — Comptes rendus d'activités — voir § 17
 
-> **C3.4.2** ÉLIM (démonstration des fonctionnalités) : livrable **oral** devant jury — hors scope de cette carte.
+> **C3.4.2** ÉLIM (démonstration des fonctionnalités) : livrable **oral** devant jury, présenté le 16/09/2026 sur la production, avec le support [`slides-bloc3.pdf`](bloc-3-coordination-pilotage/slides/slides-bloc3.pdf).
 
 ### Bloc 4 — Maintenir l'application en condition opérationnelle
 
@@ -138,7 +138,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 > **Objectif RNCP — C2.4.1** : « rédiger la documentation technique d'exploitation détaillant le fonctionnement (manuel de déploiement, d'utilisation, de mise à jour) ». À ancrer dans le repo, pas dans un PDF externe.
 
-- [ ] **Manuel de déploiement** — pointeur ou contenu dans [`deploiement-secrets-ci.md`](../../archive/docs/v1-produit/deploiement-secrets-ci.md) (archivé) : prérequis cloud (GCP, AWS, MongoDB Atlas, TMDB), variables/secrets, étapes premier déploiement, rollback ; **mention explicite** du choix « déploiement direct sans canary / bleu-vert » (cf. note C2.2.4 en couverture)
+- [ ] **Manuel de déploiement** — pointeur ou contenu dans [`deploiement-secrets-ci.md`](../v1-produit/deploiement-secrets-ci.md) (archivé) : prérequis cloud (GCP, AWS, MongoDB Atlas, TMDB), variables/secrets, étapes premier déploiement, rollback ; **mention explicite** du choix « déploiement direct sans canary / bleu-vert » (cf. note C2.2.4 en couverture)
 - [ ] **Manuel d'utilisation** — créer **`docs/RNCP/bloc-2-conception-developpement/manuel-utilisation.md`** : parcours hôte (créer / config / lancer roue / clôturer), parcours invité (rejoindre / proposer / voter / déjà vu), captures d'écran clés
 - [ ] **Manuel de mise à jour** — créer **`docs/RNCP/bloc-2-conception-developpement/manuel-mise-a-jour.md`** : décrire **explicitement le processus de mise à jour des dépendances** (couvre **C4.1.1** — exigence de la grille : « **fréquence**, **périmètre logiciel**, **type — automatique / manuel** »), à savoir : Dependabot **mensuel** sur npm + GitHub Actions + NuGet (cf. `.github/dependabot.yml`), `pnpm audit --audit-level=high` à chaque CI (cf. job `lint` dans `.github/workflows/ci-cd.yml`), validation PR humaine avant merge, vérification CI verte, déploiement automatique sur `master`. Compléter avec : process release (tag + Release GitHub via § 6), process correctif urgent (hotfix → release patch)
 - [ ] Lien explicite vers ces 3 manuels depuis le **`README.md`** racine (section « Documentation »)
@@ -199,7 +199,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/01-parties-prenantes.md`** :
   - Tableau **acteur → rôle → niveau d'implication** : commanditaire (Ynov / formateur), développeur (candidat), architecte (candidat), administrateur (candidat — Cloud Run / S3), utilisateurs finaux (créateurs de soirée, invités), acteurs externes (TMDB, GCP, AWS, MongoDB Atlas, Sentry, Dependabot)
-  - **Personas utilisateurs** : « hôte qui organise une soirée ciné », « participant invité rejoignant via lien (compte requis) », « groupe d'amis récurrent ». Caractéristiques : âge, équipement (mobile-first, cf. [`spec.md`](../../archive/docs/spec.md) § 9), contexte d'usage, attentes
+  - **Personas utilisateurs** : « hôte qui organise une soirée ciné », « participant invité rejoignant via lien (compte requis) », « groupe d'amis récurrent ». Caractéristiques : âge, équipement (mobile-first, cf. [`spec.md`](../spec.md) § 9), contexte d'usage, attentes
   - Pour chaque persona : **scénario d'usage** clé en 3-4 lignes
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/02-analyse-demande.md`** (couvre C1.1.2) :
   - **Problématique** : « comment choisir un film à plusieurs sans 30 min de débat improductif ? »
@@ -276,9 +276,9 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/05-charge-jh.md`** :
   - **Outil d'analyse fonctionnelle** : choix justifié (par ex. **MoSCoW** + diagramme de fonctionnalités type **bête à cornes / pieuvre** simplifié) — référencer la convention déjà en place dans le skill `mp-brainstorm-to-features`
   - **Diagramme de fonctionnalités** : visuel (Mermaid `mindmap` ou `flowchart`) listant les features V1 hiérarchisées en **principales** (création soirée, vote, roue, compte), **secondaires** (déjà vu, watch providers, QR code, OG dynamiques), **complémentaires** (i18n EN, mode sombre persisté, rappels in-app)
-  - **Estimation J/H** : tableau feature × estimation (en jours-homme) — granularité section de [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md) § 1-22 (≈ 22 lots) → total V1 ; idem pour MVP en rétrospectif
+  - **Estimation J/H** : tableau feature × estimation (en jours-homme) — granularité section de [`livraison-v1.md`](../v1-produit/livraison-v1.md) § 1-22 (≈ 22 lots) → total V1 ; idem pour MVP en rétrospectif
   - **Couverture technique des besoins fonctionnels** : argumentée (chaque feature → endpoint + écran + tests prévus)
-  - **Expérience utilisateur** : référence à [`spec.md`](../../archive/docs/spec.md) § 9 (Mobile first) et § 8 (Interface et confort)
+  - **Expérience utilisateur** : référence à [`spec.md`](../spec.md) § 9 (Mobile first) et § 8 (Interface et confort)
 
 ---
 
@@ -325,7 +325,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
     - Création soirée : utilisateur connecté → SPA → POST `/api/v1/events` → DB → réponse + redirection `/e/:slug`
     - Lancement roue : hôte → POST `/api/v1/events/{slug}/wheel` → tirage atomique → broadcast (polling) → animation
   - **Légendes** : signification couleurs / formes / flèches explicitée
-  - **Maintenabilité / extensibilité / sécurité** : argumenté (préfixe `/api/v1` versionné, validation centralisée, secrets externes, rate limit configurables, schéma Mongo extensible — cf. [`../roadmap.md`](../roadmap.md))
+  - **Maintenabilité / extensibilité / sécurité** : argumenté (préfixe `/api/v1` versionné, validation centralisée, secrets externes, rate limit configurables, schéma Mongo extensible — cf. [`../roadmap.md`](../../../docs/roadmap.md))
   - **Impact écologique** : Cloud Run scale-to-zero, cache posters (réduction appels TMDB), CloudFront edge cache, image Docker `mcr.microsoft.com/dotnet/aspnet:10.0` (cf. `apps/api-dotnet/MoviePicker.Api/Dockerfile:20`) — **piste d'optimisation** : migration vers `aspnet:10.0-alpine` ou `aspnet:10.0-noble-chiseled` pour réduire la surface d'attaque et l'empreinte image (à arbitrer selon compatibilité ICU / globalisation et stabilité runtime)
 - [ ] Créer **`docs/RNCP/bloc-1-cadrage/10-budget.md`** :
   - **Estimation coût** : charge V1 (ex. 30 J/H × TJM junior 350 € HT = 10 500 € HT — si simulé en agence)
@@ -433,7 +433,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 - [x] **7 annexes** (pages 24 à 30), jamais présentées, appelées sur question : architecture, arbitrages de réserve, budget détaillé, chaîne CI/CD, matrice RACI complète, journal des versions, retours utilisateurs question par question
 - [x] Le support Slidev est **complet** : 30 diapositives, dont 23 présentées, table `REFS` à jour, mention `ANNEXE` sur les pages 24 et suivantes
 
-> **Le Bloc 3 est écrit.** Ce qui reste est matériel et ne peut pas être rédigé : répétitions minutées, jeu de données de démonstration, vidéo de repli, environnement local, tableau GitHub Projects, capture de facturation, export PDF testé sur le matériel de la salle. La liste complète et priorisée est dans [`bloc-3-coordination-pilotage/RESTE-A-FAIRE.md`](bloc-3-coordination-pilotage/RESTE-A-FAIRE.md), et la note de passation pour reprendre le travail dans [`bloc-3-coordination-pilotage/PASSATION.md`](bloc-3-coordination-pilotage/PASSATION.md).
+> **Le Bloc 3 est présenté** : oral tenu le 16 septembre 2026 sur le support final de 22 diapositives (14 présentées, 8 annexes). Ce qui suit est l'état d'avant l'oral, conservé tel quel. Ce qui restait était matériel et ne pouvait pas être rédigé : répétitions minutées, jeu de données de démonstration, vidéo de repli, environnement local, tableau GitHub Projects, capture de facturation, export PDF testé sur le matériel de la salle. La liste complète et priorisée est dans [`bloc-3-coordination-pilotage/RESTE-A-FAIRE.md`](bloc-3-coordination-pilotage/RESTE-A-FAIRE.md), et la note de passation pour reprendre le travail dans [`bloc-3-coordination-pilotage/PASSATION.md`](bloc-3-coordination-pilotage/PASSATION.md).
 
 ---
 
@@ -453,7 +453,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
     - Build API : **.NET SDK 10** (`dotnet build` / `dotnet publish`)
     - Compilation image : **Docker** (image `mcr.microsoft.com/dotnet/aspnet:10.0`)
     - Serveur d'application prod : **GCP Cloud Run** (front : **AWS S3 + CloudFront**)
-  - **Protocole d'intégration continue** (C2.1.2) — séquence sur chaque PR + push `master` (état **cible V1 close** ; les étapes 6 et 7 sont conditionnées au livrable des § 23-25 de [`livraison-v1.md`](../../archive/docs/v1-produit/livraison-v1.md), à la date de rédaction encore non livrées) :
+  - **Protocole d'intégration continue** (C2.1.2) — séquence sur chaque PR + push `master` (état **cible V1 close** ; les étapes 6 et 7 sont conditionnées au livrable des § 23-25 de [`livraison-v1.md`](../v1-produit/livraison-v1.md), à la date de rédaction encore non livrées) :
     1. `pnpm install` (cache pnpm) — **livré**
     2. `pnpm lint` (ESLint + Prettier check) + `pnpm audit --audit-level=high` — **livré**
     3. `dotnet restore` + `dotnet format --verify-no-changes` + `dotnet list package --vulnerable` (cf. `livraison-v1.md` § 24) — **partiel** (vulnerable scan = cible § 24)
@@ -470,7 +470,7 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
     - Couverture tests minimale (à fixer, ex. 70 % API)
     - Sonar gate verte (cf. `livraison-v1.md` § 23)
     - 0 vulnérabilité high/critical (npm + NuGet + image Docker)
-    - Lighthouse front (cf. [`../roadmap.md`](../roadmap.md) § MVP « avant V1 ») non bloquant mais surveillé
+    - Lighthouse front (cf. [`../roadmap.md`](../../../docs/roadmap.md) § MVP « avant V1 ») non bloquant mais surveillé
   - **Schéma unique** : Mermaid `flowchart` PR → CI → merge → CD → prod, lisible en une page
   - Lien explicite depuis `README.md` racine
 
@@ -481,12 +481,12 @@ Carte dédiée aux **livrables documentaires et process** exigés par le titre *
 > **Objectif RNCP — C4.3.1** (non ÉLIM) : « recommandations argumentées d'amélioration permettant d'évaluer les gains (coût, délai) ; recommandations réalistes et réalisables ; renforcent l'attractivité ».
 
 - [ ] Créer **`docs/RNCP/bloc-4-mco/axes-amelioration.md`** :
-  - **Source d'analyse** : indicateurs Sentry (§ 7), uptime check, retours utilisateurs (templates GitHub § 8), backlog produit ([`../roadmap.md`](../roadmap.md) § Backlog)
+  - **Source d'analyse** : indicateurs Sentry (§ 7), uptime check, retours utilisateurs (templates GitHub § 8), backlog produit ([`../roadmap.md`](../../../docs/roadmap.md) § Backlog)
   - **Recommandations** (5 à 10 items) chacune avec **gain attendu** + **coût estimé (J/H)** + **délai** + **réaliste oui/non** :
     - Ex. « Push web rappels » : gain rétention +X %, coût ~5 J/H, délai 1 sprint, dépend consentement RGPD
     - Ex. « Cercles d'amis » : gain rétention forte, coût ~10 J/H, délai 2 sprints, levier produit majeur
     - Ex. « Canary deployment » : gain stabilité prod, coût ~3 J/H, délai 1 sprint, recommandé après premier incident utilisateur
-  - Lien croisé avec les deux backlogs, produit et tech ([`../roadmap.md`](../roadmap.md)) — éviter de dupliquer, **prioriser** ici
+  - Lien croisé avec les deux backlogs, produit et tech ([`../roadmap.md`](../../../docs/roadmap.md)) — éviter de dupliquer, **prioriser** ici
 
 ---
 

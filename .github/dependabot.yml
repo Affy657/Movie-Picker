@@ -70,7 +70,9 @@ updates:
   # .gitignore) to avoid GitHub security updates failing with all_versions_ignored while the
   # lockfile stays vulnerable.
   - package-ecosystem: npm
-    directory: /archive/docs/RNCP/bloc-1-cadrage/slides
+    directories:
+      - /archive/docs/RNCP/bloc-1-cadrage/slides
+      - /archive/docs/RNCP/bloc-3-coordination-pilotage/slides
     schedule:
       interval: monthly
     cooldown:

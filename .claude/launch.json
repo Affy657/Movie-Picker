@@ -65,7 +65,7 @@
     {
       "name": "slides-bloc3",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "docs/RNCP/bloc-3-coordination-pilotage/slides", "run", "preview"],
+      "runtimeArgs": ["--prefix", "archive/docs/RNCP/bloc-3-coordination-pilotage/slides", "run", "preview"],
       "port": 3031
     }
   ]

@@ -10,7 +10,7 @@ Le journal de version repose sur trois supports complémentaires, tous versionn�
 
 | Support | Rôle |
 |---------|------|
-| [`CHANGELOG.md`](../../../CHANGELOG.md) | Journal de référence, à la racine du dépôt, format **Keep a Changelog 1.1.0**, rédigé en français |
+| [`CHANGELOG.md`](../../../../CHANGELOG.md) | Journal de référence, à la racine du dépôt, format **Keep a Changelog 1.1.0**, rédigé en français |
 | **Tags Git** | Un tag annoté `vX.Y.Z` par version publiée, posé sur le commit exact déployé |
 | **Releases GitHub** | Publication lisible des notes de version, adossée au tag |
 
