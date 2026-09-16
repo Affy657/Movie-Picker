@@ -18,6 +18,12 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
         _logger = logger;
     }
 
+    public static void ConfigureHttpClient(HttpClient client)
+    {
+        client.Timeout = TimeSpan.FromSeconds(15);
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
+    }
+
     public async Task<LetterboxdWatchlistSnapshot> GetWatchlistAsync(
         string username,
         CancellationToken ct = default)

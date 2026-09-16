@@ -3,6 +3,10 @@
 #   - Weekly (Monday) + manually triggerable.
 #   - Fails on High/Critical → notification through the scheduled-run failure e-mail.
 #   - No cloud secret required (audits + filesystem scan only).
+# The same cron carries the Letterboxd canary: the real watchlist client reads the witness
+# account named by the LETTERBOXD_CANARY_USERNAME variable, so a markup change on their side
+# opens a ticket here within the week instead of silently killing every sync. The job does not
+# exist while the variable is unset.
 
 name: 🛡️ Security scan (scheduled)
 
@@ -45,3 +49,45 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           cache: true
+
+  letterboxd-canary:
+    name: 🐤 Letterboxd markup canary
+    if: vars.LETTERBOXD_CANARY_USERNAME != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-dotnet-cache
+      - name: Read the witness watchlist through the real client
+        id: canary
+        run: >-
+          dotnet test apps/api-dotnet/MoviePicker.Api.Tests/MoviePicker.Api.Tests.csproj
+          -c Debug --filter Category=Canary
+        env:
+          LETTERBOXD_CANARY_USERNAME: ${{ vars.LETTERBOXD_CANARY_USERNAME }}
+      - name: Open the ticket once, then keep it fed while the markup stays broken
+        if: failure() && steps.canary.outcome == 'failure'
+        run: |
+          gh label create letterboxd-canary --force --color B60205 \
+            --description "The Letterboxd watchlist markup no longer matches the sync client" >/dev/null
+          existing="$(gh issue list --label letterboxd-canary --state open --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Still failing on $(date -u +%F): $RUN_URL"
+          else
+            body="The weekly canary could not read the witness watchlist with the real client, so"
+            body="$body LetterboxdWatchlistClient reads nothing for every user until its GeneratedRegex"
+            body="$body patterns follow the new markup."
+            gh issue create --label letterboxd-canary \
+              --title "Letterboxd watchlist markup changed, every sync now fails" \
+              --body "$(printf '%s\n\nRun: %s\nFile: %s' "$body" "$RUN_URL" \
+                apps/api-dotnet/MoviePicker.Api/Infrastructure/Letterboxd/LetterboxdWatchlistClient.cs)"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

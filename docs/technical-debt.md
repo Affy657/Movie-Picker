@@ -235,13 +235,13 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 ## DEBT-038 la synchronisation Letterboxd lit du HTML par expression régulière, sans canari
 
 - state: humain
-- bloque: choisir le compte Letterboxd public qui sert de témoin (le compte de l'auteur, ou un compte créé pour ça), à poser en variable Actions `LETTERBOXD_CANARY_USERNAME`
-- impact: `LetterboxdWatchlistClient` lit les attributs `data-item-*` de la page watchlist, Letterboxd n'ayant pas d'API publique pour ça. Le garde compteur annoncé / films lus empêche bien une lecture partielle d'effacer une watchlist (`LetterboxdWatchlistIncomplete`), mais un changement de balisage rend 100 % des synchronisations en échec, et le `LogWarning` ne remonte pas dans Sentry : la fonctionnalité meurt jusqu'à ce qu'un utilisateur le dise.
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Letterboxd/LetterboxdWatchlistClient.cs` (`GeneratedRegex`), `.github/workflows/security-scan.yml` (le cron hebdomadaire qui accueillerait le pas)
-- verify: `grep -n "LETTERBOXD_CANARY_USERNAME" .github/workflows/*.yml` ; encore ouvert tant que rien ne sort
-- fix: un test xUnit sous trait `Category=Canary`, exclu par défaut, qui lit la watchlist du compte témoin par le vrai client et échoue si `IsComplete` est faux ou si le nombre de films est nul ; un pas dans `security-scan.yml` qui le lance avec `--filter Category=Canary` quand la variable est posée, et ouvre un ticket GitHub en cas d'échec.
-- fini-quand: le pas tourne chaque semaine et un balisage cassé produit un ticket dans les sept jours
-- piege: le compte témoin doit garder au moins un film dans sa watchlist, sinon le canari est rouge pour une mauvaise raison ; ne pas lancer ce test dans `verify:local` ni dans `ci-cd.yml`, il dépend d'un site tiers.
+- bloque: choisir le compte Letterboxd public qui sert de témoin (le compte de l'auteur, ou un compte créé pour ça, avec au moins un film en watchlist) et le poser en variable Actions. Tout le reste est en place depuis le 2026-09-16.
+- impact: `LetterboxdWatchlistClient` lit les attributs `data-item-*` de la page watchlist, Letterboxd n'ayant pas d'API publique pour ça. Le garde compteur annoncé / films lus empêche bien une lecture partielle d'effacer une watchlist (`LetterboxdWatchlistIncomplete`), mais un changement de balisage rend 100 % des synchronisations en échec, et le `LogWarning` ne remonte pas dans Sentry : la fonctionnalité meurt jusqu'à ce qu'un utilisateur le dise. Tant que la variable manque, le job du canari n'existe pas et rien ne surveille.
+- ou: `apps/api-dotnet/MoviePicker.Api.Tests/Infrastructure/Letterboxd/LetterboxdWatchlistCanaryTests.cs` (`[CanaryFact]`, trait `Category=Canary`, ignoré sans la variable), job `letterboxd-canary` de `.github/workflows/security-scan.yml` (cron du lundi, `if: vars.LETTERBOXD_CANARY_USERNAME != ''`, ouvre ou alimente un ticket `letterboxd-canary` en cas d'échec)
+- verify: `gh variable list --json name --jq '.[].name' | grep -x LETTERBOXD_CANARY_USERNAME` ; encore ouvert tant que rien ne sort
+- fix: `gh variable set LETTERBOXD_CANARY_USERNAME --body <compte>`, puis `gh workflow run security-scan.yml` et vérifier que le job `letterboxd-canary` apparaît et passe. Le test a été joué en local le 2026-09-16 contre un compte public de 577 films : vert en 5 s, et rouge sur un compte à watchlist vide, ce qui est le comportement voulu.
+- fini-quand: la variable est posée, le job a tourné une fois en vert, et l'entrée est supprimée ; ensuite un balisage cassé produit un ticket dans les sept jours sans autre geste
+- piege: le compte témoin doit garder au moins un film dans sa watchlist, sinon le canari est rouge pour une mauvaise raison ; le test ne tourne ni dans `verify:local` ni dans `ci-cd.yml`, il s'ignore lui-même sans la variable, il dépend d'un site tiers. Le ticket n'est ouvert qu'une fois : les échecs suivants le commentent tant qu'il reste ouvert.
 
 ---
 

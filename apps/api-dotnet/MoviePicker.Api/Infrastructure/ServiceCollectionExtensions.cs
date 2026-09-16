@@ -319,11 +319,8 @@ public static class ServiceCollectionExtensions
             return;
         }
 
-        services.AddHttpClient<ILetterboxdWatchlistClient, LetterboxdWatchlistClient>(client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(15);
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("MoviePicker-Api/1.0");
-        });
+        services.AddHttpClient<ILetterboxdWatchlistClient, LetterboxdWatchlistClient>(
+            LetterboxdWatchlistClient.ConfigureHttpClient);
     }
 
     private static void RegisterTmdbSearch(IServiceCollection services, IConfiguration configuration)
