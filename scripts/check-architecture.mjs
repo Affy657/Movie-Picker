@@ -182,7 +182,12 @@ const ALLOWED_MEDIA = new Set([
 
 const SPACING_PROP =
   /(?:^|[;{\n])\s*(padding|margin|gap|row-gap|column-gap)(?:-[a-z-]+)?\s*:\s*([^;{}]+)/g;
-const RAW_LENGTH = /(?<![\w-])\d*\.?\d+rem/;
+const RAW_LENGTH = /(?<![\w.-])-?\d*\.?\d+(?:rem|px)\b/g;
+const CLIP_PATTERN_LENGTHS = new Set(['-1px', '0px']);
+const TOKEN_CALL = /(?:var|env)\([^()]*\)/g;
+const OPACITY_DECL = /(?:^|[;{\n])\s*opacity\s*:\s*([^;{}]+)/g;
+const KEYFRAME_STEP = /^(?:from|to|\d+%)(?:\s*,\s*(?:from|to|\d+%))*$/;
+const CSS_RULE_RE = /([^{}]+)\{([^{}]*)\}/g;
 const RAW_COLOR = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
 const PRIMARY_AS_TEXT = /(?<![\w-])color\s*:\s*var\((--color-primary(?:-hover)?)\)/g;
 const AD_HOC_ROLE_MIX =
@@ -227,10 +232,26 @@ function checkDesignTokens(cssFiles) {
     if (path === FOUNDATION) continue;
 
     for (const [, prop, value] of text.matchAll(SPACING_PROP)) {
-      if (/var\(--space|calc\(|clamp\(|env\(/.test(value)) continue;
-      if (RAW_LENGTH.test(value))
+      if (/calc\(|clamp\(/.test(value)) continue;
+      const literals = [...value.replace(TOKEN_CALL, ' ').matchAll(RAW_LENGTH)]
+        .map(([length]) => length)
+        .filter((length) => !CLIP_PATTERN_LENGTHS.has(length));
+      if (literals.length > 0)
         violations.push(`${path}: ${prop}: ${value.trim()}, use var(--space-*)`);
     }
+
+    if (path.endsWith('.module.css'))
+      for (const [, selector, body] of text.matchAll(CSS_RULE_RE)) {
+        if (KEYFRAME_STEP.test(selector.trim())) continue;
+        for (const [, value] of body.matchAll(OPACITY_DECL)) {
+          const shown = value.trim();
+          if (/^(?:0|1|inherit)$/.test(shown) || /^(?:var\(--opacity-|calc\()/.test(shown))
+            continue;
+          violations.push(
+            `${path}: ${selector.trim().replace(/\s+/g, ' ')} opacity: ${shown}, use var(--opacity-*)`
+          );
+        }
+      }
 
     for (const [, value] of text.matchAll(/font-size\s*:\s*([^;{}]+)/g)) {
       if (/var\(--font-size|clamp\(|inherit|100%/.test(value)) continue;
@@ -274,7 +295,8 @@ function checkDesignTokens(cssFiles) {
       const shown = value.trim().replace(/\s+/g, ' ');
       if (LITERAL_DURATION.test(value))
         violations.push(`${path}: ${prop}: ${shown}, use var(--duration-*)`);
-      if (LITERAL_EASING.test(value)) violations.push(`${path}: ${prop}: ${shown}, use var(--ease-*)`);
+      if (LITERAL_EASING.test(value))
+        violations.push(`${path}: ${prop}: ${shown}, use var(--ease-*)`);
     }
 
     for (const [, prop, value] of text.matchAll(BORDER_WIDTH)) {
@@ -330,7 +352,8 @@ function checkModalPrimitive(files) {
 
 const BUTTON_TSX = 'apps/web/src/shared/components/Button.tsx';
 const BUTTON_CLASS_RE = /className\s*=\s*(?:"[^"]*"|\{(?:[^{}]|\{[^{}]*\})*\})/g;
-const RAW_BUTTON_CLASS = /(?<![\w.-])btn(?:-(?:primary|secondary|danger|ghost|sm|md|lg))?(?![\w-])/;
+const RAW_BUTTON_CLASS =
+  /(?<![\w.-])(?:icon-)?btn(?:-(?:primary|secondary|danger|ghost|sm|md|lg|link|outline))?(?![\w-])/;
 
 function checkButtonPrimitive(files) {
   for (const file of files) {
@@ -340,30 +363,113 @@ function checkButtonPrimitive(files) {
     for (const [attr] of source.matchAll(BUTTON_CLASS_RE)) {
       if (RAW_BUTTON_CLASS.test(attr))
         violations.push(
-          `${path}: hand-written "btn" class, use shared/components/Button (Button component or buttonClass)`
+          `${path}: hand-written "btn" class, use shared/components/Button, IconButton or LinkButton`
         );
     }
   }
 }
 
-const TAP_TARGET_MIN_PX = 44;
-const CSS_RULE_RE = /([^{}]+)\{([^{}]*)\}/g;
-const MIN_HEIGHT_DECL = /min-height:\s*([0-9.]+)(px|rem)/;
+const INLINE_Z_INDEX = /zIndex\s*:\s*-?\d+/g;
+const INLINE_ROLE_MIX =
+  /color-mix\(in srgb, var\(--color-(primary|error|success|warning|text|text-muted|meta|bg|surface|border|border-subtle)\)/g;
 
-function checkTapTargets(cssFiles) {
-  for (const file of cssFiles) {
+function checkInlineStyleTokens(files) {
+  for (const file of files) {
+    if (file.includes('.test.')) continue;
     const path = rel(file);
     const source = readFileSync(file, 'utf8');
-    for (const [, selector, body] of source.matchAll(CSS_RULE_RE)) {
-      if (!/cursor:\s*pointer/.test(body)) continue;
-      const declared = MIN_HEIGHT_DECL.exec(body);
-      if (!declared) continue;
-      const value = Number.parseFloat(declared[1]);
-      const px = declared[2] === 'rem' ? value * 16 : value;
-      if (px >= TAP_TARGET_MIN_PX) continue;
+    for (const [shown] of source.matchAll(INLINE_Z_INDEX))
+      violations.push(`${path}: ${shown} in a style object, use var(--z-*) from the CSS module`);
+    for (const [, role] of source.matchAll(INLINE_ROLE_MIX))
       violations.push(
-        `${path}: ${selector.trim()} is clickable and caps at ${px}px, use var(--tap-target-min)`
+        `${path}: color-mix() on --color-${role} in TypeScript, declare the role in the foundation and consume it from the CSS module`
       );
+  }
+}
+
+const TAP_TARGET_MIN_PX = 44;
+const TAP_TARGET_CSS = 'apps/web/src/shared/components/tapTarget.module.css';
+const SIZE_DECL = /(?:^|[;{\n])\s*(min-height|height|min-width|width)\s*:\s*([^;{}]+)/g;
+const CLICKABLE_TAG_RE =
+  /<(?:button|Button|IconButton|LinkButton|a|Link|NavLink)\b(?:[^>]|=>)*?className=\{([^}]*)\}/g;
+const NATIVE_INPUT_TAG_RE = /<input\b(?:[^>]|=>)*?className=\{([^}]*)\}/g;
+
+function lengthInPx(value, tokens) {
+  const shown = value.trim();
+  const literal = /^(-?\d*\.?\d+)(px|rem)$/.exec(shown);
+  if (literal) return literal[2] === 'rem' ? Number(literal[1]) * 16 : Number(literal[1]);
+  const token = /^var\((--[\w-]+)\)$/.exec(shown);
+  if (token && tokens.has(token[1])) return tokens.get(token[1]);
+  return null;
+}
+
+function sizeTokensOfFoundation() {
+  const tokens = new Map();
+  const text = readFileSync(join(root, FOUNDATION), 'utf8');
+  for (const [, name, value] of text.matchAll(
+    /(--(?:space-[\w-]+|tap-target-min))\s*:\s*([^;]+)/g
+  )) {
+    const px = lengthInPx(value, tokens);
+    if (px !== null) tokens.set(name, px);
+  }
+  return tokens;
+}
+
+function classesOnTags(cssFile, sources, tagRe) {
+  const classes = new Set();
+  for (const [source, text] of sources) {
+    for (const [, defaultName, namespaceName, spec] of text.matchAll(CSS_MODULE_IMPORT_RE)) {
+      if (resolveImport(spec, source) !== cssFile) continue;
+      const binding = defaultName || namespaceName;
+      for (const [, expression] of text.matchAll(tagRe))
+        for (const [, name] of expression.matchAll(new RegExp(`\\b${binding}\\.(\\w+)`, 'g')))
+          classes.add(name);
+    }
+  }
+  return classes;
+}
+
+function subjectClassesOf(selector) {
+  const subject =
+    selector
+      .split(/[\s>+~]+/)
+      .filter(Boolean)
+      .pop() ?? '';
+  return [...subject.matchAll(CLASS_IN_COMPOUND_RE)].map(([, name]) => name);
+}
+
+function hasExpandedHitArea(source) {
+  if (/composes\s*:[^;]*\bfrom\s*['"][^'"]*tapTarget\.module\.css['"]/.test(source)) return true;
+  for (const [, selector, body] of source.matchAll(CSS_RULE_RE))
+    if (/::(?:after|before)/.test(selector) && /var\(--tap-target-min\)/.test(body)) return true;
+  return false;
+}
+
+function checkTapTargets(cssFiles, tsFiles) {
+  const tokens = sizeTokensOfFoundation();
+  const sources = new Map(tsFiles.map((file) => [file, readFileSync(file, 'utf8')]));
+  for (const file of cssFiles) {
+    const path = rel(file);
+    if (path === TAP_TARGET_CSS) continue;
+    const source = readFileSync(file, 'utf8');
+    if (hasExpandedHitArea(source)) continue;
+    const clickable = classesOnTags(file, sources, CLICKABLE_TAG_RE);
+    const nativeInputs = classesOnTags(file, sources, NATIVE_INPUT_TAG_RE);
+    for (const [, selector, body] of source.matchAll(CSS_RULE_RE)) {
+      const shownSelector = selector.trim().replace(/\s+/g, ' ');
+      if (shownSelector.includes('::')) continue;
+      const subject = subjectClassesOf(shownSelector);
+      if (subject.some((name) => nativeInputs.has(name))) continue;
+      const isClickable =
+        /cursor:\s*pointer/.test(body) || subject.some((name) => clickable.has(name));
+      if (!isClickable) continue;
+      for (const [, prop, value] of body.matchAll(SIZE_DECL)) {
+        const px = lengthInPx(value, tokens);
+        if (px === null || px >= TAP_TARGET_MIN_PX) continue;
+        violations.push(
+          `${path}: ${shownSelector} is clickable and its ${prop} caps at ${px}px, use var(--tap-target-min) or compose expanded from shared/components/tapTarget.module.css`
+        );
+      }
     }
   }
 }
@@ -518,7 +624,11 @@ checkUndeclaredTokens(
 );
 checkModalPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
 checkButtonPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
-checkTapTargets(webFiles.filter((f) => f.endsWith('.css')));
+checkTapTargets(
+  webFiles.filter((f) => f.endsWith('.css')),
+  webFiles.filter((f) => f.endsWith('.tsx'))
+);
+checkInlineStyleTokens(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
 const cssModulesExcluded = checkDeadCssClasses(
   webFiles.filter((f) => f.endsWith('.css')),
   webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
