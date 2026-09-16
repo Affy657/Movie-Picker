@@ -14,7 +14,7 @@ test.describe('Social journey (follow, then invite)', () => {
 
       await registerAccount(pageB, 'AmiE2E');
       await pageB.getByRole('button', { name: 'Menu du compte' }).click();
-      await pageB.getByRole('link', { name: 'Voir mon profil public' }).click();
+      await pageB.getByRole('menuitem', { name: 'Voir mon profil public' }).click();
       await pageB.waitForURL(/\/u\/[^/?]+/);
       const profilePath = new URL(pageB.url()).pathname;
 

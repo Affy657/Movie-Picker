@@ -23,7 +23,7 @@ test.describe('Authentication journey', () => {
     await dismissWhatsNewModal(page);
 
     await page.getByRole('button', { name: 'Menu du compte' }).click();
-    await page.getByRole('button', { name: 'Se déconnecter' }).click();
+    await page.getByRole('menuitem', { name: 'Se déconnecter' }).click();
     await expect(page.getByRole('button', { name: 'Menu du compte' })).toBeHidden();
 
     await page.goto('/new');

@@ -38,6 +38,13 @@ test.describe('Event page layout', () => {
     expect(buttonBox.y + buttonBox.height).toBeLessThanOrEqual(searchBox.y + searchBox.height + 1);
     await expect(searchButton).toHaveCSS('position', 'absolute');
 
+    await page
+      .getByRole('heading', { name: /proposer un film/i })
+      .locator('..')
+      .getByRole('button', { name: /^fermer$/i })
+      .click();
+    await expect(search).toBeHidden();
+
     await addStubMovie(page);
 
     await expect(page.getByRole('button', { name: 'Note' })).toBeVisible();
