@@ -5,6 +5,7 @@ import { extractYouTubeId } from '@/shared/utils/youtube';
 import styles from './TrailerModal.module.css';
 import Modal from '@/shared/components/Modal';
 import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface TrailerModalProps {
   open: boolean;
@@ -35,7 +36,7 @@ export default function TrailerModal({
               {movieTitle}
             </h2>
             <IconButton label={t('common.close')} onClick={onClose}>
-              <X aria-hidden size={18} />
+              <X aria-hidden size={ICON_SIZE.lg} />
             </IconButton>
           </div>
           <div className={styles.videoWrap}>

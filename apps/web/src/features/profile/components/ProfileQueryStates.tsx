@@ -5,13 +5,14 @@ import { ROUTES } from '@/app/routes';
 import { ApiError } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
 import { buttonClass } from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export function ProfileNotFoundState() {
   const { t } = useTranslation();
   return (
     <PageLayout className="page--centered page--errorState">
       <span className="errorStateIcon" aria-hidden>
-        <AlertCircle size={32} />
+        <AlertCircle size={ICON_SIZE['4xl']} />
       </span>
       <p className="errorStateMessage" role="alert">
         {t('profile.notFound')}
@@ -28,7 +29,7 @@ export function ProfileLoadErrorState({ error }: Readonly<{ error: unknown }>) {
   return (
     <PageLayout className="page--centered page--errorState">
       <span className="errorStateIcon" aria-hidden>
-        <AlertCircle size={32} />
+        <AlertCircle size={ICON_SIZE['4xl']} />
       </span>
       <p className="errorStateMessage" role="alert">
         {ApiError.is(error) ? error.message : t('profile.loadError')}

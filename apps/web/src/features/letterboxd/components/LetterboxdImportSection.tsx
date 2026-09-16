@@ -22,6 +22,7 @@ import sharedStyles from '@/features/auth/pages/account/AccountShared.module.css
 import styles from './LetterboxdImportSection.module.css';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 function formatSyncDate(iso: string, locale: string): string {
   return new Date(iso).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
@@ -182,7 +183,7 @@ export default function LetterboxdImportSection() {
               loading={savingUsername}
               label={t('auth.account.letterboxd.usernameSave')}
             >
-              <Check size={18} aria-hidden />
+              <Check size={ICON_SIZE.lg} aria-hidden />
             </IconButton>
             {connected && (
               <IconButton
@@ -193,7 +194,7 @@ export default function LetterboxdImportSection() {
                 }}
                 label={t('common.cancel')}
               >
-                <X size={18} aria-hidden />
+                <X size={ICON_SIZE.lg} aria-hidden />
               </IconButton>
             )}
           </form>
@@ -221,14 +222,14 @@ export default function LetterboxdImportSection() {
 
         {connected && lastSyncError && (
           <p className={styles.statusError} role="alert">
-            <AlertTriangle size={14} aria-hidden />
+            <AlertTriangle size={ICON_SIZE.sm} aria-hidden />
             <span className={styles.statusLabel}>{lastSyncError}</span>
           </p>
         )}
 
         {connected && !lastSyncError && (
           <p className={styles.statusOk}>
-            <Check size={14} aria-hidden />
+            <Check size={ICON_SIZE.sm} aria-hidden />
             <span className={styles.statusLabel}>
               {lastSyncAt
                 ? t('auth.account.letterboxd.statusSyncedAt', {
@@ -242,7 +243,7 @@ export default function LetterboxdImportSection() {
 
       {connected && !report && !confirmResult && user.letterboxdPendingReconciliationCount > 0 && (
         <output className={sharedStyles.attention}>
-          <TriangleAlert size={15} aria-hidden />
+          <TriangleAlert size={ICON_SIZE.md} aria-hidden />
           <span className={sharedStyles.attentionText}>
             {pluralizeCount(
               user.letterboxdPendingReconciliationCount,
@@ -288,7 +289,7 @@ export default function LetterboxdImportSection() {
             onClick={() => void handleSync()}
             disabled={syncing}
           >
-            <RefreshCw size={15} aria-hidden />
+            <RefreshCw size={ICON_SIZE.md} aria-hidden />
             <span>
               {syncing
                 ? t('auth.account.letterboxd.syncSubmitting')
@@ -308,7 +309,7 @@ export default function LetterboxdImportSection() {
         <div className={styles.report} role="status" aria-live="polite">
           <span className={styles.reportRow}>
             <span className={styles.reportIconOk}>
-              <Check size={13} aria-hidden />
+              <Check size={ICON_SIZE.sm} aria-hidden />
             </span>
             <span>
               {t('auth.account.letterboxd.reportChanges', {

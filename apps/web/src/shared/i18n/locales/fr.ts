@@ -175,7 +175,6 @@ export const fr = {
       votesOpen: 'Votes ouverts',
       host: 'Léa est l’hôte',
       participants: 'Quatre participants et deux autres',
-      more: '+2',
       spin: 'Lancer la roue',
       noteProposed: 'Sam a proposé',
       noteVoted: 'Inès a voté pour',
@@ -543,6 +542,8 @@ export const fr = {
       avatarLabel: 'Avatar',
       avatarHint: 'Affiché à côté de votre pseudo dans les soirées.',
       avatarOptionAriaLabel: 'Choisir l’avatar {{name}}',
+      avatarCategoryRobots: '🤖 Robots',
+      avatarCategoryEmoji: '😄 Emoji',
       exportDataTitle: 'Exporter mes données',
       exportDataDescription:
         'Profil, notifications, abonnements, soirées et votes, au format JSON.',

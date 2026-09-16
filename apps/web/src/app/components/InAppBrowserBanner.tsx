@@ -8,6 +8,7 @@ import styles from './InAppBrowserBanner.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function InAppBrowserBanner() {
   const { t } = useTranslation();
@@ -35,7 +36,7 @@ export default function InAppBrowserBanner() {
           <p className={styles.description}>{t('inAppBrowser.banner.description')}</p>
         </div>
         <IconButton label={t('common.close')} onClick={() => setDismissed(true)}>
-          <X size={18} aria-hidden />
+          <X size={ICON_SIZE.lg} aria-hidden />
         </IconButton>
       </div>
       <div className={styles.actions}>

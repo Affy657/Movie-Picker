@@ -16,7 +16,9 @@ import TrailerModal from '@/features/movies/components/TrailerModal';
 import dragStyles from '@/shared/components/SheetDrag.module.css';
 import Modal from '@/shared/components/Modal';
 import styles from './MovieDetailsModal.module.css';
+import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type MovieDetailsTabKey = 'soiree' | 'film' | 'dispo';
 export type { MovieDetailsEventContext };
@@ -159,7 +161,7 @@ export default function MovieDetailsModal({
                 <img src={posterSrc} alt="" className={styles.poster} />
               ) : (
                 <div className={styles.posterPlaceholder} aria-hidden>
-                  <Film size={18} />
+                  <Film size={ICON_SIZE.lg} />
                 </div>
               )}
               <div className={styles.headerInfo}>
@@ -173,7 +175,7 @@ export default function MovieDetailsModal({
                 </p>
               </div>
               <IconButton label={t('common.close')} onClick={onClose}>
-                <X aria-hidden size={18} />
+                <X aria-hidden size={ICON_SIZE.lg} />
               </IconButton>
             </div>
           </div>
@@ -230,41 +232,34 @@ export default function MovieDetailsModal({
           {hasFooterActions && eventContext && (
             <div className={styles.footer}>
               {eventContext.onToggleWatchlist && (
-                <button
-                  type="button"
-                  className={styles.footerBtn}
-                  onClick={eventContext.onToggleWatchlist}
-                >
+                <Button size="sm" onClick={eventContext.onToggleWatchlist}>
                   {eventContext.isInWatchlist ? (
-                    <BookmarkCheck aria-hidden size={15} />
+                    <BookmarkCheck aria-hidden size={ICON_SIZE.md} />
                   ) : (
-                    <Bookmark aria-hidden size={15} />
+                    <Bookmark aria-hidden size={ICON_SIZE.md} />
                   )}
                   <span className={styles.footerBtnLabel}>
                     {eventContext.isInWatchlist
                       ? t('watchlist.card.removeAction')
                       : t('watchlist.card.addAction')}
                   </span>
-                </button>
+                </Button>
               )}
               {eventContext.wheelExclusion && (
-                <button
-                  type="button"
-                  className={styles.footerBtn}
-                  onClick={eventContext.wheelExclusion.onToggle}
-                >
+                <Button size="sm" onClick={eventContext.wheelExclusion.onToggle}>
                   {eventContext.wheelExclusion.excluded ? (
-                    <RotateCcw aria-hidden size={15} />
+                    <RotateCcw aria-hidden size={ICON_SIZE.md} />
                   ) : (
-                    <Disc3 aria-hidden size={15} />
+                    <Disc3 aria-hidden size={ICON_SIZE.md} />
                   )}
                   <span className={styles.footerBtnLabel}>{wheelLabel}</span>
-                </button>
+                </Button>
               )}
               {eventContext.canRemove && (
-                <button
-                  type="button"
-                  className={clsx(styles.footerBtn, styles.footerBtnDanger)}
+                <Button
+                  size="sm"
+                  tone="danger"
+                  className={styles.footerBtnDanger}
                   onClick={eventContext.onRemove}
                   aria-label={removeAria}
                   title={
@@ -273,9 +268,9 @@ export default function MovieDetailsModal({
                       : undefined
                   }
                 >
-                  <Trash2 aria-hidden size={15} />
+                  <Trash2 aria-hidden size={ICON_SIZE.md} />
                   <span className={styles.footerBtnLabel}>{t('movies.list.removeButton')}</span>
-                </button>
+                </Button>
               )}
             </div>
           )}

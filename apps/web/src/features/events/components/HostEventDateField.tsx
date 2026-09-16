@@ -1,6 +1,7 @@
 import { AlertCircle } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import styles from './HostEventSettingsPanel.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   value: string;
@@ -42,7 +43,7 @@ export default function HostEventDateField({
       />
       {error ? (
         <p className={styles.fieldError}>
-          <AlertCircle size={12} aria-hidden />
+          <AlertCircle size={ICON_SIZE.xs} aria-hidden />
           <span>{error}</span>
         </p>
       ) : (

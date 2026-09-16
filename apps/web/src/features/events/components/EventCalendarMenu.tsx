@@ -1,8 +1,8 @@
-import { useCallback, useId, useRef, useState } from 'react';
 import { CalendarPlus, Download, ExternalLink } from 'lucide-react';
-import { useClickOutside } from '@/shared/hooks/useClickOutside';
-import { useMenuFocus } from '@/shared/hooks/useMenuFocus';
-import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
+import IconButton from '@/shared/components/IconButton';
+import { MenuItem, MenuPanel } from '@/shared/components/Menu';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useMenuState } from '@/shared/hooks/useMenuState';
 import { useTranslation } from '@/shared/i18n';
 import {
   buildIcsContent,
@@ -11,8 +11,7 @@ import {
   outlookCalendarUrl,
   type CalendarEvent,
 } from '@/shared/utils/icsCalendar';
-import styles from './MenuPanel.module.css';
-import IconButton from '@/shared/components/IconButton';
+import styles from './EventCalendarMenu.module.css';
 
 type EventCalendarMenuProps = {
   title: string;
@@ -28,16 +27,7 @@ export default function EventCalendarMenu({
   url,
 }: Readonly<EventCalendarMenuProps>) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const menuId = useId();
-
-  const close = useCallback(() => setOpen(false), []);
-  useClickOutside(containerRef, close, open);
-  useMenuFocus(open, panelRef, triggerRef);
-  const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
+  const menu = useMenuState();
 
   const calendarEvent: CalendarEvent = {
     title,
@@ -65,60 +55,36 @@ export default function EventCalendarMenu({
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(objectUrl);
-    close();
+    menu.close();
   };
 
+  const externalIcon = <ExternalLink className={styles.icon} size={ICON_SIZE.md} aria-hidden />;
+
   return (
-    <div className={styles.container} ref={containerRef}>
-      <IconButton
-        ref={triggerRef}
-        size="lg"
-        label={t('events.calendar.addButton')}
-        onClick={() => setOpen((prev) => !prev)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-controls={open ? menuId : undefined}
-      >
-        <CalendarPlus size={16} aria-hidden />
+    <div className={styles.container} ref={menu.containerRef}>
+      <IconButton {...menu.triggerProps} size="lg" label={t('events.calendar.addButton')}>
+        <CalendarPlus size={ICON_SIZE.md} aria-hidden />
       </IconButton>
 
-      {open ? (
-        <div
-          ref={panelRef}
-          id={menuId}
-          className={styles.dropdown}
-          role="menu"
-          tabIndex={-1}
-          aria-label={t('events.calendar.menuLabel')}
-          style={fitLeft !== null ? { left: fitLeft, right: 'auto' } : undefined}
+      {menu.open ? (
+        <MenuPanel
+          {...menu.panelProps}
+          label={t('events.calendar.menuLabel')}
+          className={styles.panel}
         >
-          <a
-            className={styles.item}
-            role="menuitem"
-            href={googleHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={close}
+          <MenuItem href={googleHref} external icon={externalIcon} onClick={menu.close}>
+            {t('events.calendar.google')}
+          </MenuItem>
+          <MenuItem href={outlookHref} external icon={externalIcon} onClick={menu.close}>
+            {t('events.calendar.outlook')}
+          </MenuItem>
+          <MenuItem
+            icon={<Download className={styles.icon} size={ICON_SIZE.md} aria-hidden />}
+            onClick={handleDownloadIcs}
           >
-            <ExternalLink className={styles.icon} size={15} aria-hidden />
-            <span className={styles.itemLabel}>{t('events.calendar.google')}</span>
-          </a>
-          <a
-            className={styles.item}
-            role="menuitem"
-            href={outlookHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={close}
-          >
-            <ExternalLink className={styles.icon} size={15} aria-hidden />
-            <span className={styles.itemLabel}>{t('events.calendar.outlook')}</span>
-          </a>
-          <button type="button" role="menuitem" className={styles.item} onClick={handleDownloadIcs}>
-            <Download className={styles.icon} size={15} aria-hidden />
-            <span className={styles.itemLabel}>{t('events.calendar.apple')}</span>
-          </button>
-        </div>
+            {t('events.calendar.apple')}
+          </MenuItem>
+        </MenuPanel>
       ) : null}
     </div>
   );

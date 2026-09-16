@@ -17,6 +17,7 @@ import type { UserProfile } from '@/features/auth/types';
 import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
 import sharedStyles from './AccountShared.module.css';
 import Button from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const PROVIDER_LABELS: Record<string, string> = { google: 'Google', github: 'GitHub' };
 const POST_PASSWORD_CHANGE_REDIRECT_MS = 4000;
@@ -102,7 +103,7 @@ function PasswordRow({ user }: Readonly<{ user: UserProfile }>) {
   if (succeeded) {
     return (
       <div className={sharedStyles.row}>
-        <KeyRound size={19} aria-hidden className={sharedStyles.rowIcon} />
+        <KeyRound size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
         <div className={sharedStyles.rowMain}>
           <p className={sharedStyles.rowLabel}>{t('auth.account.passwordRowLabel')}</p>
           <p className={sharedStyles.rowSub} role="status" aria-live="polite">
@@ -120,7 +121,7 @@ function PasswordRow({ user }: Readonly<{ user: UserProfile }>) {
   if (!expanded) {
     return (
       <div className={sharedStyles.row}>
-        <KeyRound size={19} aria-hidden className={sharedStyles.rowIcon} />
+        <KeyRound size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
         <div className={sharedStyles.rowMain}>
           <p className={sharedStyles.rowLabel}>{t('auth.account.passwordRowLabel')}</p>
           <p className={sharedStyles.rowSub}>
@@ -235,7 +236,7 @@ function DataExportRow() {
 
   return (
     <div className={sharedStyles.row}>
-      <Download size={19} aria-hidden className={sharedStyles.rowIcon} />
+      <Download size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
       <div className={sharedStyles.rowMain}>
         <p className={sharedStyles.rowLabel}>{t('auth.account.exportDataTitle')}</p>
         <p className={sharedStyles.rowSub}>{t('auth.account.exportDataDescription')}</p>
@@ -264,7 +265,7 @@ function LogoutRow() {
 
   return (
     <div className={sharedStyles.row}>
-      <LogOut size={19} aria-hidden className={sharedStyles.rowIcon} />
+      <LogOut size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
       <div className={sharedStyles.rowMain}>
         <p className={sharedStyles.rowLabel}>{t('auth.account.sessionRowLabel')}</p>
         <p className={sharedStyles.rowSub}>{t('auth.account.sessionRowHint')}</p>
@@ -339,7 +340,7 @@ function DeleteAccountZone({ hasPassword }: Readonly<{ hasPassword: boolean }>) 
   return (
     <div className={sharedStyles.dangerZone}>
       <p className={sharedStyles.cardTitle}>
-        <Trash2 size={14} aria-hidden />
+        <Trash2 size={ICON_SIZE.sm} aria-hidden />
         <span>{t('auth.account.deleteAccountSectionTitle')}</span>
       </p>
       <p>{t('auth.account.deleteAccountDescription')}</p>
@@ -404,7 +405,7 @@ export default function AccountSecurityPage({ user }: Readonly<{ user: UserProfi
 
       <div className={sharedStyles.card}>
         <div className={sharedStyles.row}>
-          <Mail size={19} aria-hidden className={sharedStyles.rowIcon} />
+          <Mail size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
           <div className={sharedStyles.rowMain}>
             <p className={sharedStyles.rowLabel}>{t('auth.account.emailLabel')}</p>
             <p className={sharedStyles.rowSub}>{user.email ?? user.emailMasked}</p>

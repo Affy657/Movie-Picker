@@ -12,6 +12,7 @@ import Toggle from '@/shared/components/Toggle';
 import { getErrorMessage } from '@/shared/api/apiError';
 import sharedStyles from '@/features/auth/pages/account/AccountShared.module.css';
 import styles from './NotificationsSection.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface PrefGroup {
   legendKey: TranslationKey;
@@ -131,9 +132,9 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
       <div className={sharedStyles.card}>
         <div className={clsx(sharedStyles.row, sharedStyles.noDivider)}>
           {subscribed ? (
-            <Bell size={18} aria-hidden className={sharedStyles.rowIcon} />
+            <Bell size={ICON_SIZE.lg} aria-hidden className={sharedStyles.rowIcon} />
           ) : (
-            <BellOff size={18} aria-hidden className={sharedStyles.rowIcon} />
+            <BellOff size={ICON_SIZE.lg} aria-hidden className={sharedStyles.rowIcon} />
           )}
           <div className={sharedStyles.rowMain}>
             <p className={sharedStyles.rowLabel}>

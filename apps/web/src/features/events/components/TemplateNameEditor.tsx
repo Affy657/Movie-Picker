@@ -4,6 +4,7 @@ import IconButton from '@/shared/components/IconButton';
 import { useTranslation } from '@/shared/i18n';
 import { MAX_EVENT_TEMPLATE_NAME_LENGTH } from '@/features/events/types';
 import styles from './TemplateNameEditor.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   id: string;
@@ -48,14 +49,14 @@ export default function TemplateNameEditor({
         aria-label={t('events.settings.templates.confirmAriaLabel')}
         onClick={onConfirm}
       >
-        <Check size={16} aria-hidden />
+        <Check size={ICON_SIZE.md} aria-hidden />
       </Button>
       <IconButton
         size="lg"
         label={t('events.settings.templates.cancelAriaLabel')}
         onClick={onCancel}
       >
-        <X size={16} aria-hidden />
+        <X size={ICON_SIZE.md} aria-hidden />
       </IconButton>
     </div>
   );

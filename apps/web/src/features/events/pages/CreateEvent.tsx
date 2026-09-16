@@ -15,7 +15,7 @@ import {
   type ApplicableConfig,
 } from '@/features/events/lib/eventTemplateDraft';
 import NumberInput from '@/shared/components/NumberInput';
-import Toggle from '@/shared/components/Toggle';
+import ToggleRow from '@/shared/components/ToggleRow';
 import PageLayout from '@/shared/components/PageLayout';
 import {
   createEvent as createEventApi,
@@ -43,6 +43,7 @@ import { formatEventTitleDate } from '@/shared/utils/formatMyEventsListDate';
 import styles from './CreateEvent.module.css';
 import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 function getDefaultDate(): string {
   const d = new Date();
@@ -191,7 +192,7 @@ export default function CreateEvent() {
   return (
     <PageLayout className={styles.layout}>
       <Link to={ROUTES.myEvents} className={styles.backLink}>
-        <ArrowLeft size={16} aria-hidden />
+        <ArrowLeft size={ICON_SIZE.md} aria-hidden />
         <span className={styles.backLinkLabel}>{t('nav.myEvents')}</span>
       </Link>
       <Card padding="none" radius="lg" elevation="md" className={styles.card}>
@@ -262,7 +263,7 @@ export default function CreateEvent() {
 
           {reusedFrom !== null && (
             <output className={styles.reused}>
-              <Sparkles size={14} aria-hidden />
+              <Sparkles size={ICON_SIZE.sm} aria-hidden />
               <span className={styles.reusedLabel}>
                 {reusedFrom.length > 0
                   ? t('events.settings.templates.reusedFrom', { title: reusedFrom })
@@ -277,7 +278,7 @@ export default function CreateEvent() {
             onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}
           >
             <summary className={styles.advancedSummary}>
-              <Settings2 size={16} aria-hidden className={styles.advancedIcon} />
+              <Settings2 size={ICON_SIZE.md} aria-hidden className={styles.advancedIcon} />
               <span className={styles.advancedLabel}>{t('events.create.advancedOptions')}</span>
               <span className={styles.advancedChevron} aria-hidden />
             </summary>
@@ -340,36 +341,27 @@ export default function CreateEvent() {
                   {t('events.settings.wheelModeLabel')}
                 </span>
                 <WheelModeField
-                  name="create-wheel-mode"
                   value={wheelMode}
                   labelId={wheelModeLabelId}
                   onChange={setWheelMode}
                 />
               </div>
 
-              <div className={styles.toggleRow}>
-                <span>
-                  <span className={styles.toggleName}>{t('events.settings.allowSeriesLabel')}</span>
-                  <span className={styles.toggleDesc}>{t('events.settings.allowSeriesDesc')}</span>
-                </span>
-                <Toggle
-                  checked={allowSeries}
-                  label={t('events.settings.allowSeriesLabel')}
-                  onChange={() => setAllowSeries((v) => !v)}
-                />
-              </div>
+              <ToggleRow
+                className={styles.toggleRow}
+                title={t('events.settings.allowSeriesLabel')}
+                description={t('events.settings.allowSeriesDesc')}
+                checked={allowSeries}
+                onChange={() => setAllowSeries((v) => !v)}
+              />
 
-              <div className={styles.toggleRow}>
-                <span>
-                  <span className={styles.toggleName}>{t('events.settings.voteLimitLabel')}</span>
-                  <span className={styles.toggleDesc}>{t('events.settings.voteLimitDesc')}</span>
-                </span>
-                <Toggle
-                  checked={voteLimitEnabled}
-                  label={t('events.settings.voteLimitLabel')}
-                  onChange={() => setVoteLimitEnabled((v) => !v)}
-                />
-              </div>
+              <ToggleRow
+                className={styles.toggleRow}
+                title={t('events.settings.voteLimitLabel')}
+                description={t('events.settings.voteLimitDesc')}
+                checked={voteLimitEnabled}
+                onChange={() => setVoteLimitEnabled((v) => !v)}
+              />
               {voteLimitEnabled && (
                 <div className={styles.subField}>
                   <label className="label" htmlFor="create-max-votes">

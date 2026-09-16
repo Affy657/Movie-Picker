@@ -53,15 +53,5 @@
 }
 
 .seenAvatars {
-  display: inline-flex;
-  align-items: center;
-}
-
-.seenAvatar {
-  border: var(--border-width-field) solid var(--mc-surface-ring, var(--on-poster-surface-ring));
-  border-radius: var(--radius-pill);
-}
-
-.seenAvatar:not(:first-child) {
-  margin-left: calc(var(--space-1) * -1);
+  --avatar-stack-ring: var(--mc-surface-ring, var(--on-poster-surface-ring));
 }

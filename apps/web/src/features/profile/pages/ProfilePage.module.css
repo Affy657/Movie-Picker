@@ -11,7 +11,7 @@
 
 .rail {
   position: sticky;
-  top: calc(var(--header-height, 3.5rem) + 1.5rem);
+  top: calc(var(--header-height) + var(--space-6));
 }
 
 .content {
@@ -46,8 +46,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: var(--space-8);
+  height: var(--space-8);
   border-radius: var(--radius-sm);
   color: var(--color-error);
   background: var(--color-error-bg);

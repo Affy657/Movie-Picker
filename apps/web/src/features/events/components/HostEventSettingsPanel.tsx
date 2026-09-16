@@ -15,7 +15,7 @@ import {
   type ApplicableConfig,
 } from '@/features/events/lib/eventTemplateDraft';
 import NumberInput from '@/shared/components/NumberInput';
-import Toggle from '@/shared/components/Toggle';
+import ToggleRow from '@/shared/components/ToggleRow';
 import SegmentedRadioGroup from '@/shared/components/SegmentedRadioGroup';
 import { deleteEvent, patchEventConfig } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -45,6 +45,7 @@ import {
 import { useLocale, useTranslation } from '@/shared/i18n';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type HostEventSettingsPanelProps = {
   slug: string;
@@ -87,7 +88,7 @@ function FieldFeedback({
   if (error)
     return (
       <p id={errorId} className={styles.fieldError}>
-        <AlertCircle size={12} aria-hidden />
+        <AlertCircle size={ICON_SIZE.xs} aria-hidden />
         <span>{error}</span>
       </p>
     );
@@ -512,7 +513,7 @@ export default function HostEventSettingsPanel({
       <div className={dragStyles.grab} {...dragBind}>
         <span className={clsx(dragStyles.handle, dragStyles.handleMobileOnly)} aria-hidden="true" />
         <div className={styles.panelHead}>
-          <Settings size={18} aria-hidden className={styles.summaryIcon} />
+          <Settings size={ICON_SIZE.lg} aria-hidden className={styles.summaryIcon} />
           <h2 id={titleId} className={styles.panelTitle}>
             {t('events.settings.title')}
           </h2>
@@ -521,14 +522,14 @@ export default function HostEventSettingsPanel({
             <span>{saveStatusLabel}</span>
           </span>
           <IconButton size="sm" label={t('common.close')} onClick={onClose}>
-            <X size={16} aria-hidden />
+            <X size={ICON_SIZE.md} aria-hidden />
           </IconButton>
         </div>
       </div>
       <div className={styles.dialogBody}>
         {configLocked ? (
           <output className={styles.lockBanner}>
-            <Lock size={14} aria-hidden />
+            <Lock size={ICON_SIZE.sm} aria-hidden />
             <span className={styles.lockBannerLabel}>{t('events.settings.configLockedHint')}</span>
           </output>
         ) : null}
@@ -559,7 +560,7 @@ export default function HostEventSettingsPanel({
                 />
                 {fieldErrors.title && (
                   <p className={styles.fieldError}>
-                    <AlertCircle size={12} aria-hidden />
+                    <AlertCircle size={ICON_SIZE.xs} aria-hidden />
                     <span>{fieldErrors.title}</span>
                   </p>
                 )}
@@ -696,7 +697,6 @@ export default function HostEventSettingsPanel({
                   {t('events.settings.wheelModeLabel')}
                 </span>
                 <WheelModeField
-                  name="host-cfg-wheel-mode"
                   value={wheelMode}
                   labelId={wheelModeLabelId}
                   onChange={(mode) => {
@@ -707,41 +707,27 @@ export default function HostEventSettingsPanel({
               </div>
 
               <div className={styles.field}>
-                <div className={styles.toggleRow}>
-                  <span>
-                    <span className={styles.toggleName}>
-                      {t('events.settings.allowSeriesLabel')}
-                    </span>
-                    <span className={styles.toggleDesc}>
-                      {t('events.settings.allowSeriesDesc')}
-                    </span>
-                  </span>
-                  <Toggle
-                    checked={allowSeries}
-                    label={t('events.settings.allowSeriesLabel')}
-                    onChange={() => {
-                      setAllowSeries((v) => !v);
-                      scheduleAutoSave(true);
-                    }}
-                  />
-                </div>
+                <ToggleRow
+                  title={t('events.settings.allowSeriesLabel')}
+                  description={t('events.settings.allowSeriesDesc')}
+                  checked={allowSeries}
+                  onChange={() => {
+                    setAllowSeries((v) => !v);
+                    scheduleAutoSave(true);
+                  }}
+                />
               </div>
 
               <div className={styles.field}>
-                <div className={styles.toggleRow}>
-                  <span>
-                    <span className={styles.toggleName}>{t('events.settings.voteLimitLabel')}</span>
-                    <span className={styles.toggleDesc}>{t('events.settings.voteLimitDesc')}</span>
-                  </span>
-                  <Toggle
-                    checked={voteLimitEnabled}
-                    label={t('events.settings.voteLimitLabel')}
-                    onChange={() => {
-                      setVoteLimitEnabled((v) => !v);
-                      scheduleAutoSave(true);
-                    }}
-                  />
-                </div>
+                <ToggleRow
+                  title={t('events.settings.voteLimitLabel')}
+                  description={t('events.settings.voteLimitDesc')}
+                  checked={voteLimitEnabled}
+                  onChange={() => {
+                    setVoteLimitEnabled((v) => !v);
+                    scheduleAutoSave(true);
+                  }}
+                />
                 {voteLimitEnabled && (
                   <div className={styles.subField}>
                     <label className="label" htmlFor="host-cfg-max-votes">
@@ -760,7 +746,7 @@ export default function HostEventSettingsPanel({
                     />
                     {fieldErrors.maxVotes && (
                       <p id={maxVotesErrorId} className={styles.fieldError}>
-                        <AlertCircle size={12} aria-hidden />
+                        <AlertCircle size={ICON_SIZE.xs} aria-hidden />
                         <span>{fieldErrors.maxVotes}</span>
                       </p>
                     )}
@@ -770,21 +756,16 @@ export default function HostEventSettingsPanel({
             </fieldset>
 
             <div className={styles.field}>
-              <div className={styles.toggleRow}>
-                <span>
-                  <span className={styles.toggleName}>{t('events.settings.recurrenceLabel')}</span>
-                  <span className={styles.toggleDesc}>{t('events.settings.recurrenceDesc')}</span>
-                </span>
-                <Toggle
-                  checked={recurrence !== null}
-                  label={t('events.settings.recurrenceLabel')}
-                  disabled={recurrenceLocked}
-                  onChange={() => {
-                    setRecurrence((v) => (v === null ? 'weekly' : null));
-                    scheduleAutoSave(true);
-                  }}
-                />
-              </div>
+              <ToggleRow
+                title={t('events.settings.recurrenceLabel')}
+                description={t('events.settings.recurrenceDesc')}
+                checked={recurrence !== null}
+                disabled={recurrenceLocked}
+                onChange={() => {
+                  setRecurrence((v) => (v === null ? 'weekly' : null));
+                  scheduleAutoSave(true);
+                }}
+              />
               {recurrence !== null && !recurrenceLocked && (
                 <div className={styles.recurrenceRhythm}>
                   <SegmentedRadioGroup
@@ -856,7 +837,7 @@ export default function HostEventSettingsPanel({
               disabled={deleteMutation.isPending}
               data-testid="delete-event-button"
             >
-              <Trash2 size={15} aria-hidden />
+              <Trash2 size={ICON_SIZE.md} aria-hidden />
               <span>
                 {deleteMutation.isPending
                   ? t('events.danger.deleting')

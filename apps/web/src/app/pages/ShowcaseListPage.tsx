@@ -44,6 +44,7 @@ import {
   THEME_LABEL_KEYS,
   type ShowcaseListVariant,
 } from '@/features/movies/showcaseSections';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type { ShowcaseListVariant };
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
@@ -362,7 +363,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   return (
     <PageLayout className={styles.layout}>
       <Link to={ROUTES.home} className={styles.backLink}>
-        <ArrowLeft size={16} aria-hidden />
+        <ArrowLeft size={ICON_SIZE.md} aria-hidden />
         <span>{t('showcase.backToHome')}</span>
       </Link>
 

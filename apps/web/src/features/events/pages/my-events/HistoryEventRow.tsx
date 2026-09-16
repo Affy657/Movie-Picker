@@ -10,6 +10,7 @@ import type { MyEventSummary } from '@/features/events/types';
 import { winnerPosterPaths, winnerTitles } from '@/features/events/utils/eventWinners';
 import styles from './HistoryEventRow.module.css';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface HistoryEventRowProps {
   event: MyEventSummary;
@@ -56,7 +57,7 @@ export default function HistoryEventRow({
           </span>
         ) : (
           <span className={styles.posterFallback} aria-hidden>
-            <Film size={18} />
+            <Film size={ICON_SIZE.lg} />
           </span>
         )}
       </Link>
@@ -68,7 +69,7 @@ export default function HistoryEventRow({
             className={styles.winner}
             aria-label={t('events.myEvents.winnerMoviesLabel', { titles })}
           >
-            <Trophy aria-hidden size={13} />
+            <Trophy aria-hidden size={ICON_SIZE.sm} />
             <span aria-hidden="true">{titles}</span>
           </span>
         ) : (
@@ -90,7 +91,7 @@ export default function HistoryEventRow({
         <span className={styles.date}>{formatMyEventsListDate(event.date, locale)}</span>
         {event.isCreator ? (
           <span className={styles.hostIcon} title={t('events.myEvents.hostBadgeTitle')}>
-            <Crown aria-hidden size={13} />
+            <Crown aria-hidden size={ICON_SIZE.sm} />
           </span>
         ) : (
           <span className={styles.hostIconPlaceholder} aria-hidden />

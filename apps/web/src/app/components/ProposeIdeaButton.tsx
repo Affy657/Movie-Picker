@@ -22,6 +22,7 @@ import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
 import clsx from 'clsx';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const TITLE_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
@@ -192,7 +193,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
           {t('proposeIdea.dialogTitle')}
         </h2>
         <IconButton label={t('common.close')} onClick={onClose}>
-          <X size={18} aria-hidden />
+          <X size={ICON_SIZE.lg} aria-hidden />
         </IconButton>
       </header>
 
@@ -276,7 +277,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={attachments.length >= MAX_ATTACHMENTS}
                 >
-                  <ImagePlus size={16} aria-hidden />
+                  <ImagePlus size={ICON_SIZE.md} aria-hidden />
                   {t('proposeIdea.attachmentsAddButton')}
                 </Button>
                 <p className={`hint ${styles.attachmentsHint}`}>
@@ -293,7 +294,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
                           onClick={() => removeAttachment(a.id)}
                           aria-label={`${t('proposeIdea.attachmentsRemove')} ${index + 1}`}
                         >
-                          <X size={12} aria-hidden />
+                          <X size={ICON_SIZE.xs} aria-hidden />
                         </button>
                       </div>
                     ))}

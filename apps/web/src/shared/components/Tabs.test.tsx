@@ -88,4 +88,23 @@ describe('Tabs', () => {
     expect(panel).toHaveAttribute('aria-labelledby', tab.id);
     expect(tab).toHaveAttribute('aria-controls', panel.id);
   });
+
+  it('an iconOnly tab keeps its label as accessible name without drawing it', () => {
+    render(
+      <Tabs
+        idBase="i"
+        ariaLabel="Onglets"
+        tabs={[
+          { key: 'a', label: 'Alpha' },
+          { key: 'b', label: 'Rechercher', icon: <span data-testid="icon" />, iconOnly: true },
+        ]}
+        active="a"
+        onChange={vi.fn()}
+      />
+    );
+    const tab = screen.getByRole('tab', { name: 'Rechercher' });
+    expect(tab).toHaveAttribute('aria-label', 'Rechercher');
+    expect(tab).not.toHaveTextContent('Rechercher');
+    expect(screen.getByTestId('icon')).toBeInTheDocument();
+  });
 });

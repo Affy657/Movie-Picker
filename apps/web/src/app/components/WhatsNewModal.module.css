@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
+  height: var(--space-1);
   background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-brand-secondary) 100%);
 }
 
@@ -41,8 +41,8 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 1.6rem;
-  height: 1.6rem;
+  width: var(--space-6);
+  height: var(--space-6);
   border-radius: 50%;
   background: var(--category-bg);
   color: var(--category-color);

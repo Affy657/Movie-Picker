@@ -59,7 +59,7 @@
   .btn:not(.primary):not(:disabled):hover {
     border-color: var(--color-primary);
     color: var(--color-primary-text);
-    transform: translateY(-1px);
+    transform: translateY(var(--lift-sm));
     box-shadow: var(--shadow-md);
   }
 
@@ -67,7 +67,7 @@
     background: var(--color-primary-hover);
     border-color: var(--color-primary-hover);
     color: var(--color-primary-contrast);
-    transform: translateY(-1px);
+    transform: translateY(var(--lift-sm));
     box-shadow: var(--shadow-md);
   }
 
@@ -97,26 +97,4 @@
 .btn[aria-busy='true'] {
   opacity: var(--opacity-dimmed);
   cursor: progress;
-}
-
-.spinner {
-  flex: 0 0 auto;
-  width: 1em;
-  height: 1em;
-  border-radius: 50%;
-  border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
-  border-top-color: currentColor;
-  animation: button-spin var(--duration-spin) var(--ease-linear) infinite;
-}
-
-@keyframes button-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spinner {
-    animation: none;
-  }
 }

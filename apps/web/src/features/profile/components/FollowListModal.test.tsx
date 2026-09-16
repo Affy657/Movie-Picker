@@ -44,8 +44,8 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
 
-    expect(await screen.findByRole('button', { name: /2 abonnements/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /5 abonnés/i })).toBeInTheDocument();
+    expect(await screen.findByRole('tab', { name: /2 abonnements/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /5 abonnés/i })).toBeInTheDocument();
   });
 
   it("affiche 'Aucun utilisateur' quand la liste est vide", async () => {
@@ -92,7 +92,7 @@ describe('FollowListModal (MSW)', () => {
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
 
-    await user.click(screen.getByRole('button', { name: /5 abonnés/i }));
+    await user.click(screen.getByRole('tab', { name: /5 abonnés/i }));
 
     expect(await screen.findByText('Carol')).toBeInTheDocument();
   });
@@ -203,7 +203,7 @@ describe('FollowListModal (MSW)', () => {
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
 
-    await user.click(screen.getByRole('button', { name: 'Rechercher' }));
+    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
 
     expect(await screen.findByText('Cherchez un pseudo')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Pseudo ou @handle')).toBeInTheDocument();
@@ -223,7 +223,7 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('button', { name: 'Rechercher' }));
+    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
 
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'm');
 
@@ -253,7 +253,7 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('button', { name: 'Rechercher' }));
+    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
 
     expect(await screen.findByText('Sofia Benali')).toBeInTheDocument();
@@ -289,7 +289,7 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('button', { name: 'Rechercher' }));
+    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
 
     expect(await screen.findByRole('button', { name: 'Suivre @lea_m' })).toBeInTheDocument();
@@ -305,7 +305,7 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('button', { name: 'Rechercher' }));
+    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'zephyrin');
 
     expect(await screen.findByText('Personne ne correspond')).toBeInTheDocument();
@@ -331,11 +331,11 @@ describe('FollowListModal (MSW)', () => {
       renderModal();
 
       expect(
-        await screen.findByRole('button', { name: 'Rechercher des utilisateurs' })
+        await screen.findByRole('tab', { name: 'Rechercher des utilisateurs' })
       ).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Rechercher' })).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /2 abonnements/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /5 abonnés/i })).toBeInTheDocument();
+      expect(screen.queryByRole('tab', { name: 'Rechercher' })).not.toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /2 abonnements/i })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /5 abonnés/i })).toBeInTheDocument();
     } finally {
       vi.unstubAllGlobals();
     }

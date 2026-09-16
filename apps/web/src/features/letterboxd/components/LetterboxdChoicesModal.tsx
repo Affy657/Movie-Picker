@@ -1,6 +1,6 @@
-import { useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useId, useState } from 'react';
 import clsx from 'clsx';
-import { Check, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n';
@@ -18,6 +18,8 @@ import styles from './LetterboxdChoicesModal.module.css';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
+import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface LetterboxdChoicesModalProps {
   open: boolean;
@@ -28,14 +30,7 @@ interface LetterboxdChoicesModalProps {
 
 type Answer = { candidate: LetterboxdCandidate } | 'skip';
 
-function selectedCandidateIndex(
-  answer: Answer | undefined,
-  candidates: LetterboxdCandidate[]
-): number {
-  if (answer === 'skip') return candidates.length;
-  if (answer) return candidates.findIndex((c) => c.tmdbId === answer.candidate.tmdbId);
-  return -1;
-}
+const SKIP_VALUE = 'skip';
 
 function confirmStepLabel(
   confirming: boolean,
@@ -74,7 +69,6 @@ export default function LetterboxdChoicesModal({
 
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, Answer | undefined>>({});
-  const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const total = choices.length;
   const current = choices[index];
@@ -122,42 +116,23 @@ export default function LetterboxdChoicesModal({
 
   const selectNone = () => setAnswers((prev) => ({ ...prev, [current.rowIndex]: 'skip' }));
 
-  const decideLater = () => void runConfirm(answers);
+  const choiceValue =
+    currentAnswer === 'skip'
+      ? SKIP_VALUE
+      : currentAnswer
+        ? String(currentAnswer.candidate.tmdbId)
+        : null;
 
-  const optionCount = current.candidates.length + 1;
-  const selectedOptionIndex = selectedCandidateIndex(currentAnswer, current.candidates);
-
-  const selectOptionAt = (i: number) => {
-    const candidate = current.candidates[i];
-    if (candidate) selectCandidate(candidate);
-    else selectNone();
-    optionRefs.current[i]?.focus();
-  };
-
-  const handleOptionKeyDown = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
-    switch (e.key) {
-      case 'ArrowDown':
-      case 'ArrowRight':
-        e.preventDefault();
-        selectOptionAt((i + 1) % optionCount);
-        break;
-      case 'ArrowUp':
-      case 'ArrowLeft':
-        e.preventDefault();
-        selectOptionAt((i - 1 + optionCount) % optionCount);
-        break;
-      case 'Home':
-        e.preventDefault();
-        selectOptionAt(0);
-        break;
-      case 'End':
-        e.preventDefault();
-        selectOptionAt(optionCount - 1);
-        break;
-      default:
-        break;
+  const selectByValue = (value: string) => {
+    if (value === SKIP_VALUE) {
+      selectNone();
+      return;
     }
+    const candidate = current.candidates.find((c) => String(c.tmdbId) === value);
+    if (candidate) selectCandidate(candidate);
   };
+
+  const decideLater = () => void runConfirm(answers);
 
   return (
     <Modal open={open} onClose={onClose} size="md" column labelledBy={titleId}>
@@ -182,7 +157,7 @@ export default function LetterboxdChoicesModal({
           </span>
         </div>
         <IconButton label={t('common.close')} onClick={onClose}>
-          <X aria-hidden size={18} />
+          <X aria-hidden size={ICON_SIZE.lg} />
         </IconButton>
       </div>
 
@@ -201,75 +176,38 @@ export default function LetterboxdChoicesModal({
         </p>
       )}
 
-      <ul
+      <ChoiceGroup
+        value={choiceValue}
+        onChange={selectByValue}
         className={styles.list}
-        role="radiogroup"
-        aria-label={t('auth.account.letterboxd.choicesRadioGroupAria', { title: current.title })}
+        ariaLabel={t('auth.account.letterboxd.choicesRadioGroupAria', { title: current.title })}
       >
-        {current.candidates.map((candidate, i) => {
+        {current.candidates.map((candidate) => {
           const posterRaw = posterImageSrc(candidate.posterPath);
           const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
           const genresLabel = metaGenresLabel(candidate.genreIds, tmdbLanguage);
           const runtimeLabel = formatRuntimeMinutes(candidate.runtimeMinutes);
           const metaLine = movieMetaLine(candidate.year, genresLabel, runtimeLabel);
-          const selected =
-            currentAnswer !== 'skip' && currentAnswer?.candidate.tmdbId === candidate.tmdbId;
           return (
-            <li key={candidate.tmdbId}>
-              <button
-                type="button"
-                ref={(el) => {
-                  optionRefs.current[i] = el;
-                }}
-                role="radio"
-                aria-checked={selected}
-                tabIndex={
-                  i === selectedOptionIndex || (selectedOptionIndex === -1 && i === 0) ? 0 : -1
-                }
-                className={clsx(styles.choice, selected && styles.choiceSelected)}
-                onClick={() => selectCandidate(candidate)}
-                onKeyDown={(e) => handleOptionKeyDown(e, i)}
-              >
-                <span className={styles.choiceRadio} aria-hidden="true">
-                  {selected && <Check size={12} aria-hidden />}
-                </span>
-                {posterSrc ? (
-                  <img src={posterSrc} alt="" className={styles.choiceThumb} loading="lazy" />
-                ) : (
-                  <span className={styles.choiceThumbPlaceholder} aria-hidden="true" />
-                )}
-                <span className={styles.choiceText}>
-                  <span className={styles.choiceTitle}>{candidate.title}</span>
-                  {metaLine && <span className={styles.choiceMeta}>{metaLine}</span>}
-                </span>
-              </button>
-            </li>
+            <ChoiceCard
+              key={candidate.tmdbId}
+              value={String(candidate.tmdbId)}
+              indicator
+              title={candidate.title}
+              description={metaLine || undefined}
+            >
+              {posterSrc ? (
+                <img src={posterSrc} alt="" className={styles.choiceThumb} loading="lazy" />
+              ) : (
+                <span className={styles.choiceThumbPlaceholder} aria-hidden="true" />
+              )}
+            </ChoiceCard>
           );
         })}
-        <li>
-          <button
-            type="button"
-            ref={(el) => {
-              optionRefs.current[current.candidates.length] = el;
-            }}
-            role="radio"
-            aria-checked={currentAnswer === 'skip'}
-            tabIndex={selectedOptionIndex === current.candidates.length ? 0 : -1}
-            className={clsx(
-              styles.choice,
-              styles.choiceNone,
-              currentAnswer === 'skip' && styles.choiceSelected
-            )}
-            onClick={selectNone}
-            onKeyDown={(e) => handleOptionKeyDown(e, current.candidates.length)}
-          >
-            <span className={styles.choiceRadio} aria-hidden="true">
-              {currentAnswer === 'skip' && <Check size={12} aria-hidden />}
-            </span>
-            <span>{t('auth.account.letterboxd.choicesNoneOption')}</span>
-          </button>
-        </li>
-      </ul>
+        <ChoiceCard value={SKIP_VALUE} indicator dashed>
+          {t('auth.account.letterboxd.choicesNoneOption')}
+        </ChoiceCard>
+      </ChoiceGroup>
 
       <div className={styles.footer}>
         <button

@@ -35,8 +35,8 @@
 .handle {
   align-self: center;
   flex-shrink: 0;
-  width: 2.5rem;
-  height: 0.25rem;
+  width: var(--space-10);
+  height: var(--space-1);
   margin-top: var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--color-border);
@@ -51,7 +51,7 @@
 }
 
 .surface[data-sheet-dragging] .handle {
-  width: 3rem;
+  width: var(--space-12);
   background: var(--color-text-muted);
 }
 

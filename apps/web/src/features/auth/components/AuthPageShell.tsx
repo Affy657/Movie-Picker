@@ -5,6 +5,7 @@ import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import styles from './AuthPageShell.module.css';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type AuthPageShellProps = {
   title: string;
@@ -21,7 +22,7 @@ export default function AuthPageShell({
   return (
     <>
       <Link to={ROUTES.home} className={styles.backLink}>
-        <ArrowLeft size={16} aria-hidden />
+        <ArrowLeft size={ICON_SIZE.md} aria-hidden />
         <span className={styles.backLinkLabel}>{t('nav.home')}</span>
       </Link>
       <Card padding="none" radius="lg" elevation="md" className={styles.card}>

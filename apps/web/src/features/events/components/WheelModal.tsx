@@ -12,6 +12,7 @@ import Modal from '@/shared/components/Modal';
 import styles from './WheelModal.module.css';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const noop = () => {};
 
@@ -201,7 +202,7 @@ export default function WheelModal({
                 {title}
               </h2>
               <IconButton label={t('common.close')} onClick={onClose}>
-                <X size={20} />
+                <X size={ICON_SIZE.xl} />
               </IconButton>
             </div>
 
@@ -210,7 +211,7 @@ export default function WheelModal({
                 <img src={posterSrc} alt={winner.title} className={styles.poster} loading="lazy" />
               ) : (
                 <div className={styles.posterPlaceholder} aria-hidden>
-                  <Film size={28} />
+                  <Film size={ICON_SIZE['3xl']} />
                 </div>
               )}
               <div className={styles.info}>
@@ -237,7 +238,7 @@ export default function WheelModal({
                     {t('events.wheel.modal.finishHereButton')}
                   </Button>
                   <Button type="button" variant="primary" onClick={onRelaunch}>
-                    <Disc3 size={16} aria-hidden />
+                    <Disc3 size={ICON_SIZE.md} aria-hidden />
                     <span className={styles.relaunchLabel}>
                       {t('events.wheel.modalRelaunchButton')}
                     </span>

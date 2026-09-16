@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import type { Translate } from '@/features/movies/types';
 import { deleteMoviePitchNote, setMoviePitchNote } from '@/features/movies/api/moviesApi';
 import styles from './MovieNote.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export const PITCH_MAX = 140;
 const NOTE_PREVIEW_THRESHOLD = 38;
@@ -100,7 +101,7 @@ export function MovieNote({
               onClick={() => onEditingChange(false)}
               disabled={pending}
             >
-              <X aria-hidden size={13} />
+              <X aria-hidden size={ICON_SIZE.sm} />
               <span className={styles.noteBtnLabel}>{t('movies.pitchNote.cancelButton')}</span>
             </button>
             <button
@@ -109,7 +110,7 @@ export function MovieNote({
               onClick={() => void handleSave()}
               disabled={pending || over}
             >
-              <Check aria-hidden size={13} />
+              <Check aria-hidden size={ICON_SIZE.sm} />
               <span className={styles.noteBtnLabel}>{t('movies.pitchNote.saveButton')}</span>
             </button>
           </div>
@@ -127,7 +128,7 @@ export function MovieNote({
   if (isMine) {
     return (
       <div className={styles.note}>
-        <Quote aria-hidden size={13} className={styles.noteQuote} />
+        <Quote aria-hidden size={ICON_SIZE.sm} className={styles.noteQuote} />
         <button
           type="button"
           className={styles.noteEditTrigger}
@@ -142,7 +143,7 @@ export function MovieNote({
   const showExpand = pitchNote.length > NOTE_PREVIEW_THRESHOLD;
   return (
     <div className={styles.note}>
-      <Quote aria-hidden size={13} className={styles.noteQuote} />
+      <Quote aria-hidden size={ICON_SIZE.sm} className={styles.noteQuote} />
       {textNode}
       {showExpand && (
         <button
@@ -152,7 +153,11 @@ export function MovieNote({
           aria-label={expanded ? t('movies.details.toggleHide') : t('movies.details.toggleShow')}
           onClick={() => setExpanded((v) => !v)}
         >
-          {expanded ? <ChevronUp aria-hidden size={14} /> : <ChevronDown aria-hidden size={14} />}
+          {expanded ? (
+            <ChevronUp aria-hidden size={ICON_SIZE.sm} />
+          ) : (
+            <ChevronDown aria-hidden size={ICON_SIZE.sm} />
+          )}
         </button>
       )}
     </div>

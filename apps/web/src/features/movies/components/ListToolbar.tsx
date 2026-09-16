@@ -4,8 +4,10 @@ import clsx from 'clsx';
 import SearchField from '@/shared/components/SearchField';
 import SortControl, { type SortOption } from '@/features/movies/components/SortControl';
 import styles from './ListToolbar.module.css';
+import Button from '@/shared/components/Button';
 import LinkButton from '@/shared/components/LinkButton';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type { SortOption };
 
@@ -75,23 +77,25 @@ export default function ListToolbar<TSortKey extends string>({
       <div className={styles.bottomRow}>
         {onToggleFilters ? (
           <>
-            <button
-              type="button"
-              className={clsx(styles.filterBtn, activeFilterCount > 0 && styles.filterBtnActive)}
+            <Button
+              className={clsx(
+                styles.filterBtn,
+                (activeFilterCount > 0 || filtersOpen) && styles.filterBtnActive
+              )}
               onClick={onToggleFilters}
               aria-expanded={filtersOpen}
               aria-controls={filtersPanelId}
               aria-label={filtersToggleAriaLabel}
               data-filters-toggle
             >
-              <SlidersHorizontal size={15} aria-hidden />
+              <SlidersHorizontal size={ICON_SIZE.md} aria-hidden />
               <span className={styles.filterBtnLabel}>{filtersLabel}</span>
               {activeFilterCount > 0 && (
                 <span className={styles.badgeCount} aria-hidden="true">
                   <span className={styles.badgeCountText}>{activeFilterCount}</span>
                 </span>
               )}
-            </button>
+            </Button>
 
             <span className={styles.divider} aria-hidden="true" />
           </>

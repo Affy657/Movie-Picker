@@ -2,7 +2,9 @@ import clsx from 'clsx';
 import { ChevronDown, Sparkles, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import ThemeField from './ThemeField';
+import Chip from '@/shared/components/Chip';
 import styles from './HostEventSettingsPanel.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   emoji: string;
@@ -18,7 +20,7 @@ type Props = {
 
 function badge(emoji: string, preview: string) {
   if (emoji) return emoji;
-  return preview ? '🎬' : <Sparkles size={18} />;
+  return preview ? '🎬' : <Sparkles size={ICON_SIZE.lg} />;
 }
 
 export default function HostEventThemeField({
@@ -55,20 +57,20 @@ export default function HostEventThemeField({
               {preview ? t('events.settings.themeLabel') : t('events.settings.themeEmptySubtitle')}
             </span>
           </span>
-          <ChevronDown size={18} aria-hidden className={styles.themeChevron} />
+          <ChevronDown size={ICON_SIZE.lg} aria-hidden className={styles.themeChevron} />
         </button>
         {open && (
           <div id={collapseId} className={styles.themeExpanded}>
             {preview && (
-              <button
-                type="button"
+              <Chip
+                size="sm"
+                icon={X}
                 className={styles.clearThemeBtn}
                 onClick={onClear}
-                aria-label={t('events.settings.clearThemeAria')}
+                label={t('events.settings.clearThemeAria')}
               >
-                <X size={11} strokeWidth={2.5} />
-                <span>{t('events.settings.clearThemeButton')}</span>
-              </button>
+                {t('events.settings.clearThemeButton')}
+              </Chip>
             )}
             <ThemeField
               textInputId="host-cfg-theme"

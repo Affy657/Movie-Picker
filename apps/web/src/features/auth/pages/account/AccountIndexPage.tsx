@@ -6,6 +6,7 @@ import type { UserProfile } from '@/features/auth/types';
 import AccountIdentityHeader from './AccountIdentityHeader';
 import { ACCOUNT_RUBRIQUES } from './accountRubriques';
 import styles from './AccountIndexPage.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function AccountIndexPage({ user }: Readonly<{ user: UserProfile }>) {
   const { t } = useTranslation();
@@ -27,7 +28,7 @@ export default function AccountIndexPage({ user }: Readonly<{ user: UserProfile 
           return (
             <li key={rubrique.key}>
               <Link to={rubrique.to} className={styles.navItem}>
-                <Icon size={18} aria-hidden className={styles.navIcon} />
+                <Icon size={ICON_SIZE.lg} aria-hidden className={styles.navIcon} />
                 <span className={styles.navText}>
                   <span className={styles.navLabel}>{t(rubrique.labelKey)}</span>
                   <span className={styles.navSummary}>{t(rubrique.summaryKey)}</span>
@@ -38,7 +39,7 @@ export default function AccountIndexPage({ user }: Readonly<{ user: UserProfile 
                     <span className="visually-hidden">{t('auth.account.attentionSuffix')}</span>
                   </>
                 )}
-                <ChevronRight size={16} aria-hidden className={styles.navChevron} />
+                <ChevronRight size={ICON_SIZE.md} aria-hidden className={styles.navChevron} />
               </Link>
             </li>
           );

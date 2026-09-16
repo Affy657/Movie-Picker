@@ -9,39 +9,15 @@
 }
 
 .tabs {
+  flex: 1;
+  min-width: 0;
+}
+
+.panel {
   display: flex;
-  align-items: stretch;
-  gap: var(--space-1);
-}
-
-.tab,
-.tabActive {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--space-12);
-  padding: 0 var(--space-3);
-  border: none;
-  border-bottom: 2px solid transparent;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  background: transparent;
-  color: var(--color-text-muted);
-  transition:
-    color var(--duration-base),
-    border-color var(--duration-base);
-}
-
-.tabActive {
-  border-bottom-color: var(--color-primary);
-  color: var(--color-text);
-  font-weight: var(--font-weight-bold);
-}
-
-@media (hover: hover) {
-  .tab:hover {
-    color: var(--color-text);
-  }
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .closeButton {
@@ -86,7 +62,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 3.75rem;
+  min-height: var(--space-16);
   padding: var(--space-1) var(--space-4);
 }
 
@@ -133,44 +109,7 @@
   color: var(--color-text-muted);
 }
 
-.followBtn,
-.unfollowBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-  min-height: var(--tap-target-min);
-  padding: 0 var(--space-3-5);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  border: 1px solid transparent;
-  cursor: pointer;
-  flex-shrink: 0;
-  line-height: var(--leading-none);
-  transition:
-    background var(--duration-base),
-    color var(--duration-base);
-}
-
-@media (max-width: 47.9375rem) {
-  .followBtn,
-  .unfollowBtn {
-    min-height: var(--tap-target-min);
-  }
-}
-
-.meBadge {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--space-7);
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-pill);
-  background: var(--color-primary-soft);
-  color: var(--color-primary-text);
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-wide);
+.followBtn {
   flex-shrink: 0;
 }
 
@@ -178,25 +117,6 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.followBtn {
-  background: var(--color-primary);
-  color: var(--color-primary-contrast);
-}
-
-@media (hover: hover) {
-  .followBtn:hover {
-    opacity: var(--opacity-hover);
-  }
-}
-
-.unfollowBtn {
-  background: transparent;
-  border-color: var(--color-border);
-  color: var(--color-text-muted);
-}
-
-@media (hover: hover) {
-  .unfollowBtn:hover {
-    background: var(--color-surface-hover);
-  }
+.meBadge {
+  flex-shrink: 0;
 }

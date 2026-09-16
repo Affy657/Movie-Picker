@@ -142,7 +142,7 @@ a:focus-visible {
   border-radius: var(--radius-md);
   margin-bottom: var(--space-4);
   min-height: var(--tap-target-min);
-  background: var(--color-input-bg, var(--color-surface));
+  background: var(--color-input-bg);
   color: var(--color-text);
   transition:
     border-color var(--duration-base) var(--ease-default),

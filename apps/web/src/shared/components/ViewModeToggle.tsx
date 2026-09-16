@@ -3,6 +3,7 @@ import { LayoutGrid, List } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import styles from './ViewModeToggle.module.css';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type MovieViewMode = 'grid' | 'list';
 
@@ -33,7 +34,7 @@ export default function ViewModeToggle({
         aria-label={t('movies.list.viewListAria')}
         onClick={() => onChange('list')}
       >
-        <List aria-hidden size={15} />
+        <List aria-hidden size={ICON_SIZE.md} />
       </button>
       <button
         type="button"
@@ -42,7 +43,7 @@ export default function ViewModeToggle({
         aria-label={t('movies.list.viewGridAria')}
         onClick={() => onChange('grid')}
       >
-        <LayoutGrid aria-hidden size={15} />
+        <LayoutGrid aria-hidden size={ICON_SIZE.md} />
       </button>
     </Card>
   );

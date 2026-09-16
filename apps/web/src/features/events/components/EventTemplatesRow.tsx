@@ -10,6 +10,7 @@ import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { MAX_EVENT_TEMPLATES, type EventTemplateData } from '@/features/events/types';
 import styles from './EventTemplatesRow.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   templates: EventTemplateData[];
@@ -86,7 +87,7 @@ export default function EventTemplatesRow({
     if (appliedTemplate)
       return (
         <output className={styles.hintApplied}>
-          <Check size={14} aria-hidden />
+          <Check size={ICON_SIZE.sm} aria-hidden />
           <span className={styles.hintLabel}>{t('events.settings.templates.applied')}</span>
         </output>
       );
@@ -102,7 +103,7 @@ export default function EventTemplatesRow({
   return (
     <section className={clsx(styles.row, className)}>
       <div className={styles.header}>
-        <Sparkles size={14} aria-hidden className={styles.headerIcon} />
+        <Sparkles size={ICON_SIZE.sm} aria-hidden className={styles.headerIcon} />
         <span className={styles.headerLabel}>{t('events.settings.templates.title')}</span>
         <Button
           variant="secondary"
@@ -143,7 +144,7 @@ export default function EventTemplatesRow({
                     })}
                     onClick={() => startRename(template)}
                   >
-                    <Pencil size={16} aria-hidden />
+                    <Pencil size={ICON_SIZE.md} aria-hidden />
                   </IconButton>
                   <IconButton
                     size="lg"
@@ -154,7 +155,7 @@ export default function EventTemplatesRow({
                     })}
                     onClick={() => setPendingDeletion(template)}
                   >
-                    <Trash2 size={16} aria-hidden />
+                    <Trash2 size={ICON_SIZE.md} aria-hidden />
                   </IconButton>
                 </>
               )}

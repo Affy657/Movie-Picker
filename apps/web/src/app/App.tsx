@@ -16,6 +16,7 @@ import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { ROUTE_CHUNKS } from '@/app/routeChunks';
 import { useHomeShowcasePrefetch } from '@/features/movies/homeShowcasePrefetch';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const HomePage = lazy(ROUTE_CHUNKS.home);
 const ShowcaseListPage = lazy(ROUTE_CHUNKS.showcaseList);
@@ -98,7 +99,7 @@ export function AppRoutes() {
           path={ROUTES.createEvent}
           element={
             <SessionGate
-              icon={<CalendarPlus size={26} aria-hidden />}
+              icon={<CalendarPlus size={ICON_SIZE['3xl']} aria-hidden />}
               headingKey="nav.createEvent"
               headingHidden
               titleKey="events.create.signedOutTitle"
@@ -125,7 +126,7 @@ export function AppRoutes() {
           path={ROUTES.myEvents}
           element={
             <SessionGate
-              icon={<CalendarPlus size={26} aria-hidden />}
+              icon={<CalendarPlus size={ICON_SIZE['3xl']} aria-hidden />}
               headingKey="events.myEvents.title"
               titleKey="events.myEvents.signedOutTitle"
               messageKey="events.myEvents.signedOutMessage"
@@ -140,7 +141,7 @@ export function AppRoutes() {
           path={ROUTES.watchlist}
           element={
             <SessionGate
-              icon={<Bookmark aria-hidden size={28} />}
+              icon={<Bookmark aria-hidden size={ICON_SIZE['3xl']} />}
               headingKey="watchlist.title"
               titleKey="watchlist.signedOutTitle"
               messageKey="watchlist.signedOutMessage"
@@ -155,7 +156,7 @@ export function AppRoutes() {
           path={ROUTES.notifications}
           element={
             <SessionGate
-              icon={<Inbox size={26} aria-hidden />}
+              icon={<Inbox size={ICON_SIZE['3xl']} aria-hidden />}
               headingKey="notifications.inboxTitle"
               titleKey="notifications.signedOutTitle"
               messageKey="notifications.signedOutMessage"

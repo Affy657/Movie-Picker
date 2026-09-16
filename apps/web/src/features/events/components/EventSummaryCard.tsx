@@ -11,6 +11,7 @@ import EventDateChip from '@/features/events/components/EventDateChip';
 import type { MyEventSummary } from '@/features/events/types';
 import { winnerPosterPaths, winnerTitles } from '@/features/events/utils/eventWinners';
 import styles from './EventSummaryCard.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export { styles as eventSummaryCardStyles };
 
@@ -48,7 +49,7 @@ export function ParticipantStat({
     : pluralize(count, 'events.myEvents.joinedCountOne', 'events.myEvents.joinedCountMany', t);
   return (
     <span className={styles.participantStat}>
-      <Users aria-hidden size={13} />
+      <Users aria-hidden size={ICON_SIZE.sm} />
       <span className={styles.statValue} aria-hidden="true">
         {countStr}
       </span>
@@ -72,7 +73,7 @@ export function MoviesStat({
   );
   return (
     <span className={styles.participantStat}>
-      <Film aria-hidden size={13} />
+      <Film aria-hidden size={ICON_SIZE.sm} />
       <span className={styles.statValue} aria-hidden="true">
         {count}
       </span>
@@ -137,7 +138,7 @@ export function EventSummaryCardBody({
                 />
               ))
             ) : (
-              <Trophy aria-hidden size={13} className={styles.winnerIcon} />
+              <Trophy aria-hidden size={ICON_SIZE.sm} className={styles.winnerIcon} />
             )}
             <span className={styles.winnerTitle} aria-hidden="true">
               {winnersLabel}
@@ -180,9 +181,9 @@ export function EventSummaryCardBody({
           {isLive ? (
             <EventLifecyclePill lifecycle={lifecycle} />
           ) : (
-            <span className={styles.relativeDatePill}>
+            <Chip tone="muted" size="sm">
               {formatRelativeEventDate(event.date, locale)}
-            </span>
+            </Chip>
           )}
           <span className={styles.timeValue}>{formatEventTime(event.time)}</span>
           <span className={clsx(styles.cardStats, styles.listStats)}>

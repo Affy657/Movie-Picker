@@ -5,10 +5,10 @@
 }
 
 .line {
-  height: 0.7rem;
+  height: var(--space-3);
 }
 
 .lineShort {
-  height: 0.7rem;
+  height: var(--space-3);
   width: 55%;
 }

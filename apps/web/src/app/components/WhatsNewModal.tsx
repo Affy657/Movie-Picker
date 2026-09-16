@@ -14,6 +14,7 @@ import {
 import styles from './WhatsNewModal.module.css';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   open: boolean;
@@ -45,7 +46,12 @@ const CATEGORY_ICON: Record<WhatsNewCategory, CategoryIcon> = {
 function EntryChevron() {
   return (
     <span className={styles.entryChevron}>
-      <ChevronRight width={16} height={16} aria-hidden="true" focusable="false" />
+      <ChevronRight
+        width={ICON_SIZE.md}
+        height={ICON_SIZE.md}
+        aria-hidden="true"
+        focusable="false"
+      />
     </span>
   );
 }
@@ -116,7 +122,12 @@ export default function WhatsNewModal({
             <section key={category} className={styles.category} data-category={category}>
               <div className={styles.categoryHeader}>
                 <span className={styles.categoryIcon}>
-                  <Icon width={14} height={14} aria-hidden="true" focusable="false" />
+                  <Icon
+                    width={ICON_SIZE.sm}
+                    height={ICON_SIZE.sm}
+                    aria-hidden="true"
+                    focusable="false"
+                  />
                 </span>
                 <h3 className={styles.categoryTitle}>{t(CATEGORY_TITLE_KEY[category])}</h3>
               </div>

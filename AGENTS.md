@@ -32,7 +32,8 @@ Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactori
 
 | Besoin | Composant | Remarques |
 |---|---|---|
-| Bouton | `Button`, `buttonClass` pour un `<Link>`, `LinkButton` | `variant` `primary` / `secondary` / `ghost`, `tone` `default` / `danger`, `size` `sm` / `md` / `lg`, `loading` |
+| Bouton | `Button`, `buttonClass` pour un `<Link>`, `LinkButton` | `variant` `primary` / `secondary` / `ghost`, `tone` `default` / `danger`, `size` `sm` / `md` / `lg`, `loading` ; un état actif se dit par la variante (`variant={active ? 'primary' : 'secondary'}`), pas par une classe qui redessine le bouton |
+| Attente hors d'un bouton | `Spinner` | `1em`, couleur courante, immobile en `reduced-motion` |
 | Bouton à icône seule | `IconButton` | `tone` `default` / `danger` / `onPoster`, `loading` |
 | Fenêtre modale | `Modal` | seul endroit du projet où `<dialog>` et `::backdrop` sont autorisés |
 | Dialogue déjà câblé | `ConfirmDialog`, `ShareDialog`, `ConsentDialog`, `DialogTitleBar` | bâtis sur `Modal` |
@@ -41,20 +42,26 @@ Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactori
 | Surface de contenu | `Card` | `padding` `none`/`sm`/`md`/`lg`, `radius` `md`/`lg`, `elevation` `none`/`sm`/`md`/`lg`, `interactive` |
 | Champ de formulaire | `Field`, `NumberInput`, `SearchField`, `Toggle` | `Field` câble `label`, `aria-describedby`, message d'erreur |
 | Choix exclusif entre deux à cinq options | `SegmentedRadioGroup` | `role="radiogroup"`, `size` `md` / `sm`, `iconOnly` |
+| Choix exclusif entre des cartes (titre, description, vignette) | `ChoiceGroup` + `ChoiceCard` | `indicator`, `layout` `row` / `tile`, `dashed` ; flèches et roving tabindex fournis |
+| Ligne de réglage avec interrupteur | `ToggleRow` | `title`, `description`, `checked`, `onChange`, `disabled` |
+| Avatars chevauchés | `AvatarStack` | `people`, `max`, `hidden`, `size`, `label` |
 | Gabarit de page | `PageLayout` | |
 | État de page | `EmptyState`, `ErrorState`, `SignedOutState`, `Skeleton`, `ErrorBoundary` | |
-| Menu, onglets, info-bulle | `Menu`, `Dropdown`, `Tabs`, `Tooltip`, `InfoBubble` | |
+| Menu, onglets, info-bulle | `Menu`, `Dropdown`, `Tabs`, `Tooltip`, `InfoBubble` | un déclencheur sur mesure prend `useMenuState()` + `MenuPanel` + `MenuItem` (`to`, `href` + `external`) ; toute liste d'onglets, même deux dans une modale, est un `Tabs` |
 | Divers | `Avatar`, `QrCode`, `EventLifecyclePill`, `ViewModeToggle` | |
 
 Aucune valeur littérale dans les CSS modules, tout passe par les jetons de `apps/web/src/styles/01-foundation.css` :
 
-- espacement : `var(--space-0 … --space-24)`, base 4 px avec demi-pas jusqu'à `--space-3-5` (14 px) ;
+- espacement : `var(--space-0 … --space-24)`, base 4 px avec demi-pas jusqu'à `--space-3-5` (14 px), y compris à l'intérieur d'un `calc()` ou d'un `clamp()` ;
+- tailles : `width`, `height`, `min-*`, `max-*`, `top`, `right`, `bottom`, `left`, `inset` et le `translate` d'un `transform` sous 96 px viennent de `--space-*`, `--icon-*`, `--avatar-*`, `--tap-target-min` ou `--lift-*` ; 1 px et 2 px restent des traits ; au-delà de 96 px (affiche, colonne) la valeur est une dimension de contenu ;
+- icônes : `var(--icon-xs … --icon-4xl)` en CSS, `size={ICON_SIZE.md}` en TSX (`shared/components/iconSize.ts`, miroir vérifié par la porte), jamais `size={16}` ;
 - typographie : `var(--font-size-4xs … --font-size-6xl)`, échelle nommée sans variante « plus » ; graisse `var(--font-weight-regular … --font-weight-extrabold)`, interlignage `var(--leading-*)`, approche `var(--tracking-*)`, famille `var(--font-body)` / `var(--font-mono)` ;
 - rayons : `var(--radius-xs … --radius-pill)` ; bordures : 1 px, 2 px ou `var(--border-width-field)` ;
 - mouvement : `var(--duration-*)` et `var(--ease-*)` dans toute `transition` et `animation` ; une boucle décorative propre à un composant déclare son jeton dans son module ;
 - opacité : `var(--opacity-disabled)` (0,5), `-muted` (0,6), `-hover` (0,8), `-dimmed` (0,85) ; un `opacity` littéral n'est admis que dans une étape de `@keyframes` ;
 - focus : `var(--outline-focus)` ; un `:focus-visible` qui pose `outline: none` pose `box-shadow: var(--ring-focus)` ;
-- profondeur : `var(--z-below … --z-skip-link)`, jamais un nombre ;
+- profondeur : `var(--z-below … --z-skip-link)`, jamais un nombre, ni en CSS ni dans un objet `style` ;
+- gabarit : `--header-height`, `--mobile-nav-height` ; un `var(--jeton, repli)` sur un jeton de la fondation est refusé, le repli est mort ou ment ;
 - largeur de page : `var(--container-xs … --container-3xl)` posé sur `--page-max-width` (défaut `--layout-max`) ;
 - couleur : `var(--color-*)`, `var(--on-poster-*)` pour ce qui se pose sur une affiche ;
 - cible tactile : `var(--tap-target-min)`, 44 px, minimum sur tout élément cliquable ; un dessin plus petit (icône de 32 px, pastille, lien dans une phrase) garde sa taille et étend sa zone par `composes: expanded from '@/shared/components/tapTarget.module.css'`, jamais par un `::after` maison.
@@ -132,7 +139,8 @@ Trois procédures sont rappelées par leur nom plutôt que réexpliquées à cha
 - un `using` interdit dans `Domain/`, `Application/` ou `Controllers/` ;
 - un import de `shared/` vers une feature, ou un cycle d'imports côté front ;
 - en CSS : espacement (`px` comme `rem`, même mêlé à un jeton), `font-size`, `font-weight`, `line-height`, `letter-spacing`, `font-family`, `border-radius`, `z-index`, `opacity` hors `@keyframes`, durée ou courbe de `transition` / `animation`, largeur de bordure hors 1 px / 2 px, en valeur littérale ; couleur littérale ou `color-mix()` maison en module ; `outline: 2px solid var(--color-primary)` écrit à la main ; un `:focus-visible` qui retire le contour sans poser `--ring-focus` ; point de rupture hors échelle ; `<dialog>` ou `::backdrop` écrit hors de `Modal` ;
-- en TypeScript : un `zIndex` numérique ou un `color-mix()` sur un rôle dans un objet `style`, le jeton se pose dans le module CSS ;
+- en CSS toujours : une taille (`width`, `height`, `min-*`, `max-*`, `top`, `right`, `bottom`, `left`, `inset`) ou un `translate` littéral sous 96 px hors 1 px / 2 px ; un espacement littéral à l'intérieur d'un `calc()` ou d'un `clamp()` ; un `var(--jeton, repli)` sur un jeton de la fondation ; un jeton de la fondation que rien ne consomme ;
+- en TypeScript : un `zIndex` numérique, même conditionnel, ou un `color-mix()` sur un rôle dans un objet `style`, le jeton se pose dans le module CSS ; un `size={16}`, `iconSize={16}`, `width={16} height={16}` ou `size = 16` par défaut sur un composant, l'icône prend `ICON_SIZE.<pas>` ; un `ICON_SIZE` qui ne coïncide pas avec les `--icon-*` de la fondation ;
 - une classe `btn`, `btn-*`, `btn-link` ou `icon-btn-*` écrite à la main hors de `Button`, `IconButton` et `LinkButton` ;
 - un élément cliquable (bloc avec `cursor: pointer`, ou classe posée sur un `<button>`, `<a>`, `<Link>`, `Button`, `IconButton`, `LinkButton` en TSX) dont `width`, `height`, `min-width` ou `min-height` plafonne sous 44 px, jeton `--space-*` résolu ; un module qui compose `expanded` de `tapTarget.module.css` est réputé avoir traité sa zone tactile ; une classe posée sur un `<input>` natif est exemptée, son `<label>` est la cible ;
 - une classe déclarée dans un `*.module.css` et utilisée nulle part, ou dans `styles/*.css` et absente de tout fichier TypeScript et de `index.html`. La règle résout le nom local de l'import fichier par fichier, suit les ré-exports (`export { styles as xStyles }`), et compte comme usage un `composes:`, un `:global(...)` et une position descendante (`.footer .btn`). Les modules accédés par crochets (`styles[variable]`) sont inanalysables : ils sont exclus et **listés dans la sortie**, jamais passés en silence.

@@ -19,6 +19,7 @@ import { useMovieCollections } from '@/features/movies/hooks/useMovieShowcase';
 import type { MovieCollection } from '@/features/movies/api/showcaseApi';
 import styles from './ShowcaseListPage.module.css';
 import { collectionDisplayName } from '@/features/movies/utils/collectionName';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const SKELETON_CARDS = 6;
 
@@ -90,7 +91,7 @@ export default function MovieCollectionsPage() {
   return (
     <PageLayout className={styles.layout}>
       <Link to={ROUTES.home} className={styles.backLink}>
-        <ArrowLeft size={16} aria-hidden />
+        <ArrowLeft size={ICON_SIZE.md} aria-hidden />
         <span>{t('showcase.backToHome')}</span>
       </Link>
 
@@ -122,7 +123,7 @@ export default function MovieCollectionsPage() {
 
       {!collections.isPending && !collections.isError && items.length === 0 ? (
         <EmptyState
-          icon={<Film aria-hidden size={28} />}
+          icon={<Film aria-hidden size={ICON_SIZE['3xl']} />}
           title={t('showcase.empty')}
           message={t('showcase.sections.collectionsSubtitle')}
         />
@@ -159,7 +160,7 @@ export default function MovieCollectionsPage() {
 
       {items.length > 0 && visibleItems.length === 0 ? (
         <EmptyState
-          icon={<Film aria-hidden size={28} />}
+          icon={<Film aria-hidden size={ICON_SIZE['3xl']} />}
           title={t('showcase.collectionsToolbar.noMatch')}
           message={t('showcase.collectionsToolbar.noMatchMessage')}
         />

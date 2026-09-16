@@ -13,11 +13,7 @@
   position: relative;
   isolation: isolate;
   background:
-    radial-gradient(
-      120% 90% at 12% 0%,
-      var(--color-primary-border),
-      transparent 58%
-    ),
+    radial-gradient(120% 90% at 12% 0%, var(--color-primary-border), transparent 58%),
     radial-gradient(
       80% 70% at 92% 95%,
       color-mix(in srgb, var(--color-brand-secondary) 20%, transparent),
@@ -112,7 +108,7 @@
 
 .reveal {
   opacity: 0;
-  transform: translateY(16px);
+  transform: translateY(var(--space-4));
 }
 
 .reveal[data-shown='true'] {

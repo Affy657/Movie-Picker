@@ -6,6 +6,7 @@ import DemoPoster from './DemoPoster';
 import { DEMO_WINNER } from './demoContent';
 import shared from './landingShared.module.css';
 import styles from './LandingProblem.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const THREAD = [
   { who: 'Léa', key: 'm1', mine: false, fade: false },
@@ -38,7 +39,7 @@ export default function LandingProblem() {
             className={clsx(styles.panel, styles.panelMuted, shared.reveal)}
           >
             <p className={styles.panelLabel}>
-              <MessageSquare size={15} aria-hidden="true" />
+              <MessageSquare size={ICON_SIZE.md} aria-hidden="true" />
               {t('landing.problem.threadLabel')}
             </p>
             <div className={styles.thread}>
@@ -66,7 +67,7 @@ export default function LandingProblem() {
             className={clsx(styles.panel, shared.reveal)}
           >
             <p className={clsx(styles.panelLabel, styles.panelLabelGood)}>
-              <Check size={15} aria-hidden="true" />
+              <Check size={ICON_SIZE.md} aria-hidden="true" />
               {t('landing.problem.timelineLabel')}
             </p>
             <div className={styles.timeline}>

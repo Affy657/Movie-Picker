@@ -1,5 +1,5 @@
 .dialog {
-  width: min(560px, calc(100vw - 2rem));
+  width: min(560px, calc(100vw - var(--space-8)));
   max-height: min(680px, 90dvh);
   overflow: hidden;
 }
@@ -51,8 +51,8 @@
 }
 
 .saveStatusDot {
-  width: 0.42rem;
-  height: 0.42rem;
+  width: var(--space-1-5);
+  height: var(--space-1-5);
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -172,35 +172,7 @@
 }
 
 .clearThemeBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-muted);
-  background: var(--color-badge-finished-bg);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-pill);
-  padding: var(--space-0-5) var(--space-2) var(--space-0-5) var(--space-1-5);
-  cursor: pointer;
-  line-height: var(--leading-none);
   margin-bottom: var(--space-2-5);
-  transition:
-    background var(--duration-base) var(--ease-default),
-    color var(--duration-base) var(--ease-default),
-    border-color var(--duration-base) var(--ease-default);
-}
-
-.clearThemeBtn span {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-@media (hover: hover) {
-  .clearThemeBtn:hover {
-    background: var(--color-error-bg);
-    color: var(--color-error);
-    border-color: var(--color-error-border);
-  }
 }
 
 .field :global(.input) {
@@ -246,8 +218,8 @@
 }
 
 .notifyCheckbox {
-  width: 0.95rem;
-  height: 0.95rem;
+  width: var(--space-4);
+  height: var(--space-4);
   flex-shrink: 0;
   accent-color: var(--color-primary);
   cursor: pointer;
@@ -294,8 +266,8 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 2.4rem;
-  height: 2.4rem;
+  width: var(--space-10);
+  height: var(--space-10);
   border-radius: 50%;
   background: var(--color-primary-soft-hover);
   color: var(--color-primary-text);
@@ -353,28 +325,6 @@
 
 .recurrenceSegments {
   width: 100%;
-}
-
-.toggleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.toggleName {
-  display: block;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
-}
-
-.toggleDesc {
-  display: block;
-  margin-top: var(--space-0-5);
-  font-size: var(--font-size-2xs);
-  color: var(--color-text-muted);
-  line-height: var(--leading-normal);
 }
 
 .dangerSection {

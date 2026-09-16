@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { ChevronDown } from 'lucide-react';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import styles from './techPage.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export const TECH_SECTIONS = [
   'architecture',
@@ -87,7 +88,12 @@ export default function TechRail() {
             {t(`tech.nav.${visible}` as TranslationKey)}
           </span>
         </span>
-        <ChevronDown className={styles.railChevron} size={16} aria-hidden focusable="false" />
+        <ChevronDown
+          className={styles.railChevron}
+          size={ICON_SIZE.md}
+          aria-hidden
+          focusable="false"
+        />
       </button>
       <ol className={styles.railList} id={listId}>
         {TECH_SECTIONS.map((id) => (

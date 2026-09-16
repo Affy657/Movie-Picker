@@ -19,7 +19,7 @@
 }
 
 .title {
-  height: 2.1rem;
+  height: var(--space-8);
   width: 60%;
   max-width: 22rem;
 }
@@ -31,26 +31,26 @@
 }
 
 .actionPill {
-  height: 2.25rem;
+  height: var(--space-9);
   width: 7rem;
   border-radius: var(--radius-md);
 }
 
 .meta {
-  height: 1.4rem;
+  height: var(--space-6);
   width: 70%;
   max-width: 28rem;
 }
 
 .search {
-  height: 2.9rem;
+  height: var(--space-12);
   width: 100%;
   max-width: 26rem;
   border-radius: var(--radius-md);
 }
 
 .sortBar {
-  height: 1.5rem;
+  height: var(--space-6);
   width: 60%;
   max-width: 24rem;
 }
@@ -84,11 +84,11 @@
 }
 
 .movieMeta {
-  height: 0.9rem;
+  height: var(--space-3-5);
   width: 90%;
 }
 
 .movieMetaShort {
-  height: 0.9rem;
+  height: var(--space-3-5);
   width: 55%;
 }

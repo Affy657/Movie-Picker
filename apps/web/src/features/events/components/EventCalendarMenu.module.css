@@ -1,0 +1,14 @@
+.container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.panel {
+  width: 15rem;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}

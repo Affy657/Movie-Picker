@@ -7,6 +7,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { fetchNotificationInbox } from '@/features/notifications/api/notificationsApi';
 import styles from './InboxBell.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function InboxBell() {
   const { t } = useTranslation();
@@ -31,7 +32,7 @@ export default function InboxBell() {
             : t('notifications.inboxAriaLabel')
         }
       >
-        <Bell size={20} aria-hidden />
+        <Bell size={ICON_SIZE.xl} aria-hidden />
         {unreadCount > 0 && (
           <span className={styles.badge} aria-hidden>
             {displayCount}

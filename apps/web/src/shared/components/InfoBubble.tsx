@@ -4,6 +4,7 @@ import { Info } from 'lucide-react';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useTranslation } from '@/shared/i18n';
 import styles from './InfoBubble.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const PANEL_MAX_WIDTH = 320;
 const VIEWPORT_MARGIN = 8;
@@ -79,7 +80,7 @@ export default function InfoBubble({ label, children }: Readonly<InfoBubbleProps
         aria-label={label}
         onClick={() => setOpen((prev) => !prev)}
       >
-        <Info size={15} aria-hidden focusable="false" />
+        <Info size={ICON_SIZE.md} aria-hidden focusable="false" />
       </button>
       {open && (
         <span

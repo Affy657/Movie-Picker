@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
 import Menu, { MenuItem, MenuLabel, MenuPanel, MenuSeparator } from './Menu';
 
 describe('Menu', () => {
@@ -109,6 +110,33 @@ describe('MenuItem', () => {
     const item = screen.getByRole('menuitem', { name: 'Indisponible' });
     expect(item.tagName).toBe('BUTTON');
     expect(item).toBeDisabled();
+  });
+
+  it('renders an in-app route as a router link', () => {
+    render(
+      <MemoryRouter>
+        <MenuPanel label="Actions">
+          <MenuItem to="/compte">Mon compte</MenuItem>
+        </MenuPanel>
+      </MemoryRouter>
+    );
+    const item = screen.getByRole('menuitem', { name: 'Mon compte' });
+    expect(item.tagName).toBe('A');
+    expect(item).toHaveAttribute('href', '/compte');
+    expect(item).not.toHaveAttribute('target');
+  });
+
+  it('opens an external href in a new tab without leaking the opener', () => {
+    render(
+      <MenuPanel label="Actions">
+        <MenuItem href="https://calendar.google.com" external>
+          Google Agenda
+        </MenuItem>
+      </MenuPanel>
+    );
+    const item = screen.getByRole('menuitem', { name: 'Google Agenda' });
+    expect(item).toHaveAttribute('target', '_blank');
+    expect(item).toHaveAttribute('rel', 'noopener noreferrer');
   });
 });
 

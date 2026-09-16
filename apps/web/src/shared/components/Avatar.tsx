@@ -11,22 +11,13 @@ interface AvatarProps {
 
 const SIZE_PX: Record<NonNullable<AvatarProps['size']>, number> = {
   xs: 20,
-  sm: 26,
+  sm: 28,
   md: 36,
   lg: 56,
   xl: 96,
 };
 
-const INITIALS_COLORS = [
-  '#1D4ED8',
-  '#6D28D9',
-  '#0E7490',
-  '#BE185D',
-  '#C2410C',
-  '#047857',
-  '#B91C1C',
-  '#7E22CE',
-];
+const PALETTE_SIZE = 8;
 
 function getInitials(pseudo: string): string {
   const parts = pseudo.trim().split(/\s+/);
@@ -36,9 +27,8 @@ function getInitials(pseudo: string): string {
   return pseudo.slice(0, 2).toUpperCase();
 }
 
-function initialsColor(pseudo: string): string {
-  const idx = (pseudo.codePointAt(0) ?? 0) % INITIALS_COLORS.length;
-  return INITIALS_COLORS[idx] ?? '#1D4ED8';
+function paletteIndex(pseudo: string): number {
+  return (pseudo.codePointAt(0) ?? 0) % PALETTE_SIZE;
 }
 
 export default function Avatar({
@@ -55,7 +45,7 @@ export default function Avatar({
         <span
           aria-hidden="true"
           className={clsx(styles.avatar, styles.initials, styles[size], className)}
-          style={{ width: px, height: px, background: initialsColor(pseudo) }}
+          data-palette={paletteIndex(pseudo)}
         >
           <span className={styles.initialsText}>{getInitials(pseudo)}</span>
         </span>
@@ -65,7 +55,6 @@ export default function Avatar({
       <span
         aria-hidden="true"
         className={clsx(styles.avatar, styles[size], styles.placeholder, className)}
-        style={{ width: px, height: px }}
       />
     );
   }

@@ -22,6 +22,7 @@ import {
 import type { MovieData } from '@/shared/types/movie';
 import type { MovieWheelExclusion, Translate } from '@/features/movies/types';
 import styles from './MovieCardKebab.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type ExternalLinksMode = 'all' | 'letterboxd';
 
@@ -162,7 +163,7 @@ function ExternalMenuLink({
       onClick={onClose}
       aria-label={label}
     >
-      <ExternalLink aria-hidden size={14} />
+      <ExternalLink aria-hidden size={ICON_SIZE.sm} />
       <span className={kebabLabelClassName(label)}>{label}</span>
     </a>
   );
@@ -305,7 +306,7 @@ export function CardKebab({
         aria-expanded={open}
         aria-label={t('movies.list.moreActionsAria', { title })}
       >
-        <MoreVertical aria-hidden size={18} />
+        <MoreVertical aria-hidden size={ICON_SIZE.lg} />
       </button>
       {open &&
         createPortal(
@@ -332,9 +333,9 @@ export function CardKebab({
                 }}
               >
                 {inWatchlist ? (
-                  <BookmarkCheck aria-hidden size={14} />
+                  <BookmarkCheck aria-hidden size={ICON_SIZE.sm} />
                 ) : (
-                  <Bookmark aria-hidden size={14} />
+                  <Bookmark aria-hidden size={ICON_SIZE.sm} />
                 )}
                 <span className={kebabLabelClassName(watchlistLabel)}>{watchlistLabel}</span>
               </button>
@@ -349,7 +350,7 @@ export function CardKebab({
                   onProposeToEvent();
                 }}
               >
-                <ListPlus aria-hidden size={14} />
+                <ListPlus aria-hidden size={ICON_SIZE.sm} />
                 <span className={kebabLabelClassName(proposeLabel)}>{proposeLabel}</span>
               </button>
             )}
@@ -363,7 +364,7 @@ export function CardKebab({
                   onViewDetails();
                 }}
               >
-                <Info aria-hidden size={14} />
+                <Info aria-hidden size={ICON_SIZE.sm} />
                 <span className={kebabLabelClassName(detailsLabel)}>{detailsLabel}</span>
               </button>
             )}
@@ -378,9 +379,9 @@ export function CardKebab({
                 }}
               >
                 {wheelExclusion.excluded ? (
-                  <RotateCcw aria-hidden size={14} />
+                  <RotateCcw aria-hidden size={ICON_SIZE.sm} />
                 ) : (
-                  <Disc3 aria-hidden size={14} />
+                  <Disc3 aria-hidden size={ICON_SIZE.sm} />
                 )}
                 <span className={kebabLabelClassName(wheelLabel)}>{wheelLabel}</span>
               </button>
@@ -429,7 +430,7 @@ export function CardKebab({
                 aria-label={removeAria}
                 title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
               >
-                <Trash2 aria-hidden size={14} />
+                <Trash2 aria-hidden size={ICON_SIZE.sm} />
                 <span className={kebabLabelClassName(removeLabel)}>{removeLabel}</span>
               </button>
             )}

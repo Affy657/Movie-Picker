@@ -25,10 +25,12 @@ import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useMovieSearchFilters } from '@/features/movies/hooks/useMovieSearchFilters';
 import MovieSearchFiltersPanel from '@/features/movies/components/MovieSearchFiltersPanel';
 import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
+import Chip from '@/shared/components/Chip';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import SearchHistoryDropdown from './SearchHistoryDropdown';
 import styles from './AddMovieForm.module.css';
 import Button from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const SEARCH_DEBOUNCE_MS = 350;
 const SEARCH_MIN_CHARS = 2;
@@ -58,7 +60,7 @@ function PaidAvailabilityChip({
     type === 'rent' ? 'movies.watchProviders.alsoRentAria' : 'movies.watchProviders.alsoBuyAria',
     { count, title }
   );
-  const icon = <ModeIcon type={type} size={13} />;
+  const icon = <ModeIcon type={type} size={ICON_SIZE.sm} />;
   return watchPageUrl ? (
     <a
       href={watchPageUrl}
@@ -391,7 +393,7 @@ export default function AddMovieForm({
               disabled={searching || !searchAllowed}
               aria-label={t('movies.search.searchButton')}
             >
-              <Search size={15} aria-hidden />
+              <Search size={ICON_SIZE.md} aria-hidden />
             </button>
             <input
               ref={searchInputRef}
@@ -419,8 +421,7 @@ export default function AddMovieForm({
               aria-describedby={showMinCharsHint ? minCharsHintId : undefined}
             />
           </div>
-          <button
-            type="button"
+          <Button
             className={clsx(
               styles.filterIconBtn,
               styles.filterIconBtnLabeled,
@@ -449,7 +450,7 @@ export default function AddMovieForm({
                 {activeFiltersCount}
               </span>
             )}
-          </button>
+          </Button>
         </div>
 
         {showHistory && (
@@ -550,7 +551,7 @@ export default function AddMovieForm({
                       <img src={posterSrc} alt="" loading="lazy" decoding="async" />
                     ) : (
                       <div className={styles.posterPlaceholder} aria-hidden>
-                        <Film size={20} />
+                        <Film size={ICON_SIZE.xl} />
                       </div>
                     )}
                   </div>
@@ -559,7 +560,9 @@ export default function AddMovieForm({
                       <span className={styles.resultTitle}>
                         {r.title}
                         {r.mediaType === 'tv' && (
-                          <span className={styles.mediaTypeBadge}>{t('movies.list.tvBadge')}</span>
+                          <Chip tone="primary" size="sm" className={styles.mediaTypeBadge}>
+                            {t('movies.list.tvBadge')}
+                          </Chip>
                         )}
                       </span>
                       {metaLine ? <span className={styles.resultMeta}>{metaLine}</span> : null}

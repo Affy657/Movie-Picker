@@ -6,6 +6,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import styles from './HistoryRecap.module.css';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface HistoryRecapProps {
   totalFinished: number;
@@ -36,7 +37,7 @@ export default function HistoryRecap({ totalFinished }: Readonly<HistoryRecapPro
       <span className={styles.divider} aria-hidden />
       <div className={styles.stat}>
         <span className={styles.valueRow}>
-          <Flame aria-hidden size={16} className={styles.flameIcon} />
+          <Flame aria-hidden size={ICON_SIZE.md} className={styles.flameIcon} />
           <span className={styles.value}>{data?.currentStreakWeeks ?? 0}</span>
         </span>
         <span className={styles.label}>{t('events.myEvents.recapStreakLabel')}</span>

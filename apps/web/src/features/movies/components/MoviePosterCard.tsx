@@ -1,5 +1,6 @@
 import { Film } from 'lucide-react';
 import styles from './MoviePosterCard.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface Props {
   title: string;
@@ -22,7 +23,7 @@ function PosterVisual({
         <img src={posterSrc} alt="" className={styles.poster} loading="lazy" decoding="async" />
       ) : (
         <span className={styles.posterPlaceholder} aria-hidden>
-          <Film size={22} />
+          <Film size={ICON_SIZE['2xl']} />
         </span>
       )}
       {rank != null ? (

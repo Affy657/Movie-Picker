@@ -8,6 +8,7 @@ import AddMovieForm, { type AddMovieFormProps } from '@/features/movies/componen
 import styles from './AddMoviePanel.module.css';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type AddMoviePanelProps = AddMovieFormProps & {
   triggerLabel: string;
@@ -47,7 +48,7 @@ export default function AddMoviePanel({
     <div ref={rootRef} className={styles.root}>
       {!open && !hideTrigger && (
         <Button ref={triggerRef} type="button" variant="primary" onClick={() => setOpen(true)}>
-          <Plus size={16} aria-hidden />
+          <Plus size={ICON_SIZE.md} aria-hidden />
           <span>{triggerLabel}</span>
         </Button>
       )}
@@ -63,7 +64,7 @@ export default function AddMoviePanel({
           <div className={styles.panelHead}>
             <h3 className={styles.panelTitle}>{panelTitle}</h3>
             <IconButton label={t('common.close')} onClick={close}>
-              <X size={16} aria-hidden />
+              <X size={ICON_SIZE.md} aria-hidden />
             </IconButton>
           </div>
           <AddMovieForm {...formProps} />

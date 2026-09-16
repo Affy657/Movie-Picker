@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Button, { buttonClass } from '@/shared/components/Button';
 import styles from '@/shared/components/Button.module.css';
+import spinnerStyles from '@/shared/components/Spinner.module.css';
 
 describe('Button', () => {
   it('is of type button by default and triggers onClick', async () => {
@@ -60,7 +61,7 @@ describe('Button', () => {
     const button = screen.getByRole('button', { name: 'Enregistrement…' });
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute('aria-busy', 'true');
-    expect(button.querySelector(`.${styles.spinner}`)).not.toBeNull();
+    expect(button.querySelector(`.${spinnerStyles.spinner}`)).not.toBeNull();
 
     await userEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();
@@ -71,6 +72,6 @@ describe('Button', () => {
 
     const button = screen.getByRole('button', { name: 'Enregistrer' });
     expect(button).not.toHaveAttribute('aria-busy');
-    expect(button.querySelector(`.${styles.spinner}`)).toBeNull();
+    expect(button.querySelector(`.${spinnerStyles.spinner}`)).toBeNull();
   });
 });

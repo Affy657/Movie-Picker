@@ -2,9 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import MovieDetailsPanel, {
-  MovieDetailsContent,
-} from '@/features/movies/components/MovieDetailsPanel';
+import { MovieDetailsContent } from '@/features/movies/components/MovieDetailsPanel';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 
 vi.mock('@/features/movies/hooks/useMovieDetails', () => ({ useMovieDetails: vi.fn() }));
@@ -31,22 +29,6 @@ const fullData = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockUseMovieDetails.mockReturnValue(state());
-});
-
-describe('MovieDetailsPanel', () => {
-  it('reveals the content section when the toggle is clicked', async () => {
-    mockUseMovieDetails.mockReturnValue(state({ isLoading: true }));
-
-    render(<MovieDetailsPanel tmdbId={27205} />);
-    const toggle = screen.getByRole('button');
-
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
-
-    await userEvent.click(toggle);
-
-    expect(toggle).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('movies.details.loading')).toBeInTheDocument();
-  });
 });
 
 describe('MovieDetailsContent', () => {

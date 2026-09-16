@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import { useTranslation } from '@/shared/i18n';
 import { useRailScroll } from '@/shared/hooks/useRailScroll';
 import styles from './MoviePreviewRow.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type MoviePreviewRowSize = 'sm' | 'md' | 'wide';
 
@@ -41,7 +42,7 @@ export function MoviePreviewRail({ size = 'sm', itemCount, label, children }: Re
             disabled={!canScrollBack}
             aria-label={t('showcase.railScrollBack')}
           >
-            <ChevronLeft size={20} aria-hidden />
+            <ChevronLeft size={ICON_SIZE.xl} aria-hidden />
           </button>
           <button
             type="button"
@@ -50,7 +51,7 @@ export function MoviePreviewRail({ size = 'sm', itemCount, label, children }: Re
             disabled={!canScrollForward}
             aria-label={t('showcase.railScrollForward')}
           >
-            <ChevronRight size={20} aria-hidden />
+            <ChevronRight size={ICON_SIZE.xl} aria-hidden />
           </button>
         </>
       ) : null}

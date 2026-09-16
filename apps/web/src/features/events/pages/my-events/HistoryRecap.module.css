@@ -42,6 +42,6 @@
 
 .divider {
   width: 1px;
-  height: 2.1rem;
+  height: var(--space-8);
   background: var(--color-border-subtle);
 }

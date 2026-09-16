@@ -14,8 +14,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.25rem;
-  height: 3.25rem;
+  width: var(--space-14);
+  height: var(--space-14);
   margin-bottom: var(--space-1-5);
   border-radius: var(--radius-lg);
   background: var(--color-primary-soft);
@@ -55,8 +55,8 @@
 }
 
 .compact .iconWrap {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: var(--space-10);
+  height: var(--space-10);
   margin-bottom: var(--space-1);
 }
 

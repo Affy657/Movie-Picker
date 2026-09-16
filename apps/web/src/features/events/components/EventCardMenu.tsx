@@ -4,6 +4,7 @@ import { useMenuState } from '@/shared/hooks/useMenuState';
 import { MenuPanel, MenuItem } from '@/shared/components/Menu';
 import { useTranslation } from '@/shared/i18n';
 import styles from './EventCardMenu.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface EventCardMenuProps {
   title: string;
@@ -32,13 +33,13 @@ export default function EventCardMenu({
   return (
     <div ref={menu.containerRef} className={clsx(styles.container, className)}>
       <button {...menu.triggerProps} type="button" className={styles.trigger} aria-label={label}>
-        <MoreVertical aria-hidden size={16} />
+        <MoreVertical aria-hidden size={ICON_SIZE.md} />
       </button>
       {menu.open ? (
         <MenuPanel {...menu.panelProps} label={label}>
           {onReuse && (
             <MenuItem
-              icon={<RotateCcw size={14} aria-hidden />}
+              icon={<RotateCcw size={ICON_SIZE.sm} aria-hidden />}
               onClick={() => {
                 menu.close();
                 onReuse();
@@ -50,7 +51,7 @@ export default function EventCardMenu({
           {onDelete && (
             <MenuItem
               tone="danger"
-              icon={<Trash2 size={14} aria-hidden />}
+              icon={<Trash2 size={ICON_SIZE.sm} aria-hidden />}
               onClick={() => {
                 menu.close();
                 onDelete();
@@ -62,7 +63,7 @@ export default function EventCardMenu({
           {onRemove && (
             <MenuItem
               tone="danger"
-              icon={<LogOut size={14} aria-hidden />}
+              icon={<LogOut size={ICON_SIZE.sm} aria-hidden />}
               onClick={() => {
                 menu.close();
                 onRemove();

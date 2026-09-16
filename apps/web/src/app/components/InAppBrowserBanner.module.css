@@ -1,8 +1,8 @@
 .root {
   position: fixed;
-  top: calc(0.75rem + env(safe-area-inset-top, 0px));
-  left: 1rem;
-  right: 1rem;
+  top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
+  left: var(--space-4);
+  right: var(--space-4);
   z-index: var(--z-header);
   display: flex;
   flex-direction: column;
@@ -16,7 +16,7 @@
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    width: min(600px, calc(100vw - 3rem));
+    width: min(600px, calc(100vw - var(--space-12)));
   }
 }
 

@@ -74,6 +74,6 @@ describe('ThemeField', () => {
   it('recognises a theme saved in the other language', () => {
     localStorage.setItem('moviepicker-locale', 'en');
     renderField({ emoji: '🎃', text: 'Horreur' });
-    expect(screen.getByRole('button', { name: /horror/i }).className).toMatch(/presetChipActive/);
+    expect(screen.getByRole('button', { name: /horror/i })).toHaveAttribute('aria-pressed', 'true');
   });
 });

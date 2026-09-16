@@ -1,8 +1,10 @@
 import { forwardRef } from 'react';
+import { Link } from 'react-router';
 import clsx from 'clsx';
 import { Check } from 'lucide-react';
 import { useMenuState } from '@/shared/hooks/useMenuState';
 import styles from './Menu.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface MenuPanelProps {
   id?: string;
@@ -85,9 +87,12 @@ interface MenuItemProps {
   children: React.ReactNode;
   onClick?: () => void;
   href?: string;
+  to?: string;
+  external?: boolean;
   selected?: boolean;
   tone?: MenuItemTone;
   disabled?: boolean;
+  'aria-haspopup'?: 'dialog' | 'menu';
 }
 
 export function MenuItem({
@@ -95,22 +100,45 @@ export function MenuItem({
   children,
   onClick,
   href,
+  to,
+  external = false,
   selected,
   tone = 'default',
   disabled = false,
+  'aria-haspopup': ariaHasPopup,
 }: Readonly<MenuItemProps>) {
   const className = clsx(
     styles.item,
     selected && styles.itemSelected,
     tone === 'danger' && styles.itemDanger
   );
+  const content = (
+    <>
+      {icon}
+      <span className={styles.itemLabel}>{children}</span>
+      {selected ? <Check size={ICON_SIZE.sm} aria-hidden className={styles.itemCheck} /> : null}
+    </>
+  );
+
+  if (to && !disabled) {
+    return (
+      <Link role="menuitem" className={className} to={to} onClick={onClick}>
+        {content}
+      </Link>
+    );
+  }
 
   if (href && !disabled) {
     return (
-      <a role="menuitem" className={className} href={href} onClick={onClick}>
-        {icon}
-        <span className={styles.itemLabel}>{children}</span>
-        {selected ? <Check size={14} aria-hidden className={styles.itemCheck} /> : null}
+      <a
+        role="menuitem"
+        className={className}
+        href={href}
+        onClick={onClick}
+        target={external ? '_blank' : undefined}
+        rel={external ? 'noopener noreferrer' : undefined}
+      >
+        {content}
       </a>
     );
   }
@@ -122,10 +150,9 @@ export function MenuItem({
       className={className}
       onClick={onClick}
       disabled={disabled}
+      aria-haspopup={ariaHasPopup}
     >
-      {icon}
-      <span className={styles.itemLabel}>{children}</span>
-      {selected ? <Check size={14} aria-hidden className={styles.itemCheck} /> : null}
+      {content}
     </button>
   );
 }

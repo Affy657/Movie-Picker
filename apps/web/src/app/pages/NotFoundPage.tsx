@@ -6,6 +6,7 @@ import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useTranslation } from '@/shared/i18n';
 import { buttonClass } from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function NotFoundPage() {
   const { t } = useTranslation();
@@ -13,7 +14,7 @@ export default function NotFoundPage() {
 
   return (
     <ErrorState
-      icon={<Compass size={32} />}
+      icon={<Compass size={ICON_SIZE['4xl']} />}
       code={t('errors.notFoundCode')}
       title={t('errors.notFound')}
       message={t('errors.notFoundMessage')}

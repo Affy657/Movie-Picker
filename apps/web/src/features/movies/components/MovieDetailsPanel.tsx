@@ -1,6 +1,5 @@
-import { useId, useState } from 'react';
 import clsx from 'clsx';
-import { ChevronDown, ChevronUp, Info, PlayCircle } from 'lucide-react';
+import { PlayCircle } from 'lucide-react';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 import { useTranslation } from '@/shared/i18n';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
@@ -8,57 +7,7 @@ import { formatReleaseDate } from '@/shared/utils/formatReleaseDate';
 import { extractYouTubeId } from '@/shared/utils/youtube';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './MovieDetailsPanel.module.css';
-
-interface MovieDetailsPanelProps {
-  tmdbId: number;
-  mediaType?: MovieMediaType;
-}
-
-export default function MovieDetailsPanel({ tmdbId, mediaType }: Readonly<MovieDetailsPanelProps>) {
-  const [open, setOpen] = useState(false);
-  const panelId = useId();
-
-  return (
-    <div>
-      <div className={styles.toggleRow}>
-        <MovieDetailsToggle open={open} onToggle={() => setOpen((v) => !v)} panelId={panelId} />
-      </div>
-      <MovieDetailsContent tmdbId={tmdbId} mediaType={mediaType} open={open} panelId={panelId} />
-    </div>
-  );
-}
-
-interface MovieDetailsToggleProps {
-  open: boolean;
-  onToggle: () => void;
-  panelId: string;
-  className?: string;
-}
-
-export function MovieDetailsToggle({
-  open,
-  onToggle,
-  panelId,
-  className,
-}: Readonly<MovieDetailsToggleProps>) {
-  const { t } = useTranslation();
-  const Icon = open ? ChevronUp : ChevronDown;
-  return (
-    <button
-      type="button"
-      className={clsx(styles.toggleBtn, className)}
-      onClick={onToggle}
-      aria-expanded={open}
-      aria-controls={panelId}
-    >
-      <Info aria-hidden size={14} />
-      <span className={styles.toggleBtnLabel}>
-        {open ? t('movies.details.toggleHide') : t('movies.details.toggleShow')}
-      </span>
-      <Icon aria-hidden size={14} />
-    </button>
-  );
-}
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface MovieDetailsContentProps {
   tmdbId: number;
@@ -151,7 +100,7 @@ function MovieDetailsBody({ data, onPlayTrailer }: Readonly<MovieDetailsBodyProp
               className={styles.trailerLink}
               onClick={() => onPlayTrailer(safeTrailerUrl)}
             >
-              <PlayCircle aria-hidden size={14} />
+              <PlayCircle aria-hidden size={ICON_SIZE.sm} />
               <span className={styles.trailerLinkLabel}>{t('movies.details.trailerLink')}</span>
             </button>
           </div>
@@ -163,7 +112,7 @@ function MovieDetailsBody({ data, onPlayTrailer }: Readonly<MovieDetailsBodyProp
               rel="noopener noreferrer"
               className={styles.trailerLink}
             >
-              <PlayCircle aria-hidden size={14} />
+              <PlayCircle aria-hidden size={ICON_SIZE.sm} />
               <span className={styles.trailerLinkLabel}>{t('movies.details.trailerLink')}</span>
             </a>
           </div>

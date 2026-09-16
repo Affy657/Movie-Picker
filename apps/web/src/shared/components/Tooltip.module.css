@@ -43,27 +43,27 @@
 }
 
 .bubble[data-placement='top'] {
-  bottom: calc(100% + 0.45rem);
+  bottom: calc(100% + var(--space-2));
   left: 50%;
-  transform: translateX(-50%) translateY(0.2rem);
+  transform: translateX(-50%) translateY(var(--space-1));
 }
 
 .bubble[data-placement='bottom'] {
-  top: calc(100% + 0.45rem);
+  top: calc(100% + var(--space-2));
   left: 50%;
-  transform: translateX(-50%) translateY(-0.2rem);
+  transform: translateX(-50%) translateY(calc(-1 * var(--space-1)));
 }
 
 .bubble[data-placement='left'] {
-  right: calc(100% + 0.45rem);
+  right: calc(100% + var(--space-2));
   top: 50%;
-  transform: translateY(-50%) translateX(0.2rem);
+  transform: translateY(-50%) translateX(var(--space-1));
 }
 
 .bubble[data-placement='right'] {
-  left: calc(100% + 0.45rem);
+  left: calc(100% + var(--space-2));
   top: 50%;
-  transform: translateY(-50%) translateX(-0.2rem);
+  transform: translateY(-50%) translateX(calc(-1 * var(--space-1)));
 }
 
 .bubble[data-placement='top'][data-state='visible'],

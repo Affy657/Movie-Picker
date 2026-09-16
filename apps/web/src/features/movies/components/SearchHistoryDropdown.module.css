@@ -11,7 +11,7 @@
 @keyframes historyDropdownIn {
   from {
     opacity: 0;
-    transform: translateY(-0.3rem);
+    transform: translateY(calc(-1 * var(--space-1)));
   }
   to {
     opacity: 1;
@@ -40,27 +40,6 @@
   letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   color: var(--color-text-muted);
-}
-
-.historyClearBtn {
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-muted);
-  background: none;
-  border: none;
-  padding: var(--space-1) var(--space-1-5);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition:
-    color var(--duration-fast) var(--ease-default),
-    background var(--duration-fast) var(--ease-default);
-}
-
-@media (hover: hover) {
-  .historyClearBtn:hover {
-    color: var(--color-primary-text);
-    background: var(--color-primary-soft);
-  }
 }
 
 .historyList {
@@ -123,8 +102,8 @@
 .historyIcon {
   flex-shrink: 0;
   color: var(--color-text-muted);
-  width: 0.95rem;
-  height: 0.95rem;
+  width: var(--space-4);
+  height: var(--space-4);
 }
 
 .historyRemoveBtn {
@@ -133,8 +112,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: var(--space-7);
+  height: var(--space-7);
   margin-right: var(--space-1);
   background: none;
   border: none;

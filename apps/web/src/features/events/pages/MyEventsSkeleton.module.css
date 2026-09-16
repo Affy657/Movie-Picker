@@ -6,7 +6,7 @@
 }
 
 .pageTitle {
-  height: 1.6rem;
+  height: var(--space-6);
   width: 55%;
   max-width: 18rem;
 }
@@ -17,7 +17,7 @@
 }
 
 .tab {
-  height: 2.5rem;
+  height: var(--space-10);
   width: 6.5rem;
   border-radius: var(--radius-sm);
 }
@@ -29,7 +29,7 @@
 }
 
 .sectionTitle {
-  height: 0.85rem;
+  height: var(--space-3-5);
   width: 8rem;
 }
 

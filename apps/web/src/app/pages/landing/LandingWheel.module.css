@@ -65,7 +65,7 @@
 }
 
 .result {
-  min-height: 3.6rem;
+  min-height: var(--space-14);
   display: flex;
   flex-direction: column;
   align-items: center;

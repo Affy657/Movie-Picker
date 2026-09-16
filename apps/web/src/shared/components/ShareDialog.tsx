@@ -13,6 +13,7 @@ import Modal from './Modal';
 import styles from './ShareDialog.module.css';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type ShareSurface = 'event' | 'profile';
 
@@ -71,14 +72,18 @@ function ShareLinkPanel({
       className={clsx(styles.actionBtn, copied && styles.actionCopied)}
       onClick={() => void copyLink()}
     >
-      {copied ? <Check size={15} aria-hidden /> : <Link2 size={15} aria-hidden />}
+      {copied ? (
+        <Check size={ICON_SIZE.md} aria-hidden />
+      ) : (
+        <Link2 size={ICON_SIZE.md} aria-hidden />
+      )}
       <span className={styles.btnLabel}>{copied ? t('share.copied') : t('share.copy')}</span>
     </Button>
   );
 
   const downloadButton = (
     <Button type="button" size="sm" className={styles.actionBtn} onClick={handleDownload}>
-      <Download size={15} aria-hidden />
+      <Download size={ICON_SIZE.md} aria-hidden />
       <span className={styles.btnLabel}>
         {canNativeShare ? t('share.downloadQr') : t('share.download')}
       </span>
@@ -119,7 +124,7 @@ function ShareLinkPanel({
             className={styles.actionBlock}
             onClick={() => void nativeShare()}
           >
-            <Share2 size={16} aria-hidden />
+            <Share2 size={ICON_SIZE.md} aria-hidden />
             <span className={styles.btnLabel}>{t('share.trigger')}</span>
           </Button>
           <div className={styles.actions}>
@@ -247,7 +252,7 @@ export default function ShareDialog({
               {title}
             </h2>
             <IconButton className={styles.closeBtn} label={t('common.close')} onClick={onClose}>
-              <X size={20} aria-hidden />
+              <X size={ICON_SIZE.xl} aria-hidden />
             </IconButton>
           </div>
           {tabsBar}

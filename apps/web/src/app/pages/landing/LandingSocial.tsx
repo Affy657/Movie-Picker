@@ -7,6 +7,7 @@ import DemoPoster from './DemoPoster';
 import { DEMO_LAST_SEEN, DEMO_PROFILE_STATS } from './demoContent';
 import shared from './landingShared.module.css';
 import styles from './LandingSocial.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function LandingSocial() {
   const { t } = useTranslation();
@@ -45,7 +46,7 @@ export default function LandingSocial() {
               <span className={styles.handle}>{t('landing.social.handle')}</span>
             </span>
             <span className={styles.flame}>
-              <Flame size={15} aria-hidden="true" />
+              <Flame size={ICON_SIZE.md} aria-hidden="true" />
               <span>{t('landing.social.streak')}</span>
             </span>
           </div>

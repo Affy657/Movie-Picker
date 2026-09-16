@@ -1,11 +1,14 @@
 import { Link } from 'react-router';
 import { UserCheck, UserPlus } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
+import Button from '@/shared/components/Button';
+import Chip from '@/shared/components/Chip';
 import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import type { FollowUserItem } from '@/features/profile/api/profileApi';
 import HighlightedText from './HighlightedText';
 import styles from './FollowListModal.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   item: FollowUserItem;
@@ -43,9 +46,10 @@ export default function FollowListRow({
         </div>
       </Link>
       {canFollow && (
-        <button
-          type="button"
-          className={followed ? styles.unfollowBtn : styles.followBtn}
+        <Button
+          size="sm"
+          variant={followed ? 'secondary' : 'primary'}
+          className={styles.followBtn}
           disabled={pending}
           onClick={() => onToggleFollow(item)}
           aria-label={
@@ -54,13 +58,21 @@ export default function FollowListRow({
               : t('profile.follow.followAriaLabel', { handle: item.handle })
           }
         >
-          {followed ? <UserCheck size={16} aria-hidden /> : <UserPlus size={16} aria-hidden />}
+          {followed ? (
+            <UserCheck size={ICON_SIZE.md} aria-hidden />
+          ) : (
+            <UserPlus size={ICON_SIZE.md} aria-hidden />
+          )}
           <span className={styles.btnLabel}>
             {followed ? t('profile.follow.unfollow') : t('profile.follow.follow')}
           </span>
-        </button>
+        </Button>
       )}
-      {isMe && <span className={styles.meBadge}>{t('profile.follow.isMeBadge')}</span>}
+      {isMe && (
+        <Chip tone="primary" size="sm" className={styles.meBadge}>
+          {t('profile.follow.isMeBadge')}
+        </Chip>
+      )}
     </li>
   );
 }

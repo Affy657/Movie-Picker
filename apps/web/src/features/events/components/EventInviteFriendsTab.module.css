@@ -40,7 +40,7 @@
 
 .searchIcon {
   position: absolute;
-  left: 0.7rem;
+  left: var(--space-3);
   color: var(--color-text-muted);
   pointer-events: none;
 }

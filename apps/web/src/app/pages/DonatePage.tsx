@@ -13,6 +13,7 @@ import content from './ContentPage.module.css';
 import styles from './DonatePage.module.css';
 import { buttonClass } from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function DonatePage() {
   const { t } = useTranslation();
@@ -38,7 +39,7 @@ export default function DonatePage() {
         aria-labelledby="donate-kofi-heading"
       >
         <span className={styles.kofiIcon} aria-hidden>
-          <HeartHandshake size={28} />
+          <HeartHandshake size={ICON_SIZE['3xl']} />
         </span>
         <h2 id="donate-kofi-heading" className={styles.kofiTitle}>
           {t('donate.kofiTitle')}

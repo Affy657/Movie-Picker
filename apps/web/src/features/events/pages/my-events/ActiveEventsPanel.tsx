@@ -9,6 +9,7 @@ import PendingEventsSection from './PendingEventsSection';
 import UpcomingEventsSection from './UpcomingEventsSection';
 import type { MyEventsActions } from './useMyEventsActions';
 import styles from '@/features/events/pages/MyEventsPage.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface ActiveEventsPanelProps {
   totalActive: number;
@@ -21,7 +22,7 @@ function ActiveEventsEmpty() {
   const { t } = useTranslation();
   return (
     <EmptyState
-      icon={<CalendarPlus size={26} aria-hidden />}
+      icon={<CalendarPlus size={ICON_SIZE['3xl']} aria-hidden />}
       title={t('events.myEvents.activeEmptyTitle')}
       message={t('events.myEvents.activeEmpty')}
       actions={

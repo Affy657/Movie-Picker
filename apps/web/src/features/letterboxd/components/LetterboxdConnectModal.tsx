@@ -19,6 +19,7 @@ import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import styles from './LetterboxdConnectModal.module.css';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface LetterboxdConnectModalProps {
   open: boolean;
@@ -154,7 +155,7 @@ function ConnectFormModal({
             variant="primary"
             disabled={connecting || username.trim().length === 0}
           >
-            <Import size={15} aria-hidden />
+            <Import size={ICON_SIZE.md} aria-hidden />
             <span>
               {connecting
                 ? t('auth.account.letterboxd.connectSubmitting')
@@ -199,7 +200,7 @@ function DoneModal({
           {addedCount > 0 && (
             <span className={styles.reportRow}>
               <span className={styles.reportIconOk}>
-                <Check size={14} aria-hidden />
+                <Check size={ICON_SIZE.sm} aria-hidden />
               </span>
               <span>
                 {addedCount === 1
@@ -211,7 +212,7 @@ function DoneModal({
           {confirmedCount > 0 && (
             <span className={styles.reportRow}>
               <span className={styles.reportIconOk}>
-                <Check size={14} aria-hidden />
+                <Check size={ICON_SIZE.sm} aria-hidden />
               </span>
               <span>
                 {confirmedCount === 1
@@ -223,7 +224,7 @@ function DoneModal({
           {unmatchedCount > 0 && (
             <span className={styles.reportRow}>
               <span className={styles.reportIcon}>
-                <TriangleAlert size={13} aria-hidden />
+                <TriangleAlert size={ICON_SIZE.sm} aria-hidden />
               </span>
               <span>
                 {unmatchedCount === 1
@@ -245,7 +246,7 @@ function DoneModal({
           {undecidedCount > 0 && (
             <span className={styles.reportRow}>
               <span className={styles.reportIcon}>
-                <Clock size={13} aria-hidden />
+                <Clock size={ICON_SIZE.sm} aria-hidden />
               </span>
               <span>
                 {undecidedCount === 1
@@ -270,7 +271,7 @@ function DoneModal({
 
         <div className={styles.footer}>
           <Button type="button" variant="primary" onClick={onClose}>
-            <Eye size={14} aria-hidden />
+            <Eye size={ICON_SIZE.sm} aria-hidden />
             <span>{t('auth.account.letterboxd.doneCta')}</span>
           </Button>
         </div>

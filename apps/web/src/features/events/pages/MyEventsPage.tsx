@@ -19,6 +19,7 @@ import { useMyEventsActions } from '@/features/events/pages/my-events/useMyEvent
 import { useMyEventsLists } from '@/features/events/pages/my-events/useMyEventsLists';
 import styles from './MyEventsPage.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const HISTORY_SEARCH_DEBOUNCE_MS = 300;
 
@@ -38,7 +39,7 @@ function MyEventsLoadError({ error, onRetry }: Readonly<{ error: unknown; onRetr
   return (
     <MyEventsShell>
       <EmptyState
-        icon={<CalendarPlus size={26} aria-hidden />}
+        icon={<CalendarPlus size={ICON_SIZE['3xl']} aria-hidden />}
         title={t('events.myEvents.loadErrorTitle')}
         message={getErrorMessage(error, t('events.myEvents.fallbackError'))}
         actions={
@@ -61,7 +62,7 @@ function MyEventsGloballyEmpty() {
   const { t } = useTranslation();
   return (
     <EmptyState
-      icon={<CalendarPlus size={26} aria-hidden />}
+      icon={<CalendarPlus size={ICON_SIZE['3xl']} aria-hidden />}
       title={t('events.myEvents.emptyTitle')}
       message={t('events.myEvents.emptyDescription')}
       actions={

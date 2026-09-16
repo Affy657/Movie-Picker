@@ -1,0 +1,25 @@
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.text {
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.description {
+  display: block;
+  margin-top: var(--space-0-5);
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+}

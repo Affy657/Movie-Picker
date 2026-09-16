@@ -8,6 +8,7 @@ import {
   tmdbPageUrl,
 } from '@/features/movies/utils/movieExternalLinks';
 import styles from './MovieExternalLinksRow.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface MovieExternalLinksRowProps {
   tmdbId: number;
@@ -59,7 +60,7 @@ export default function MovieExternalLinksRow({
             className={styles.link}
             aria-label={link.aria}
           >
-            <ExternalLink aria-hidden size={13} />
+            <ExternalLink aria-hidden size={ICON_SIZE.sm} />
             <span className={styles.linkLabel}>{link.label}</span>
           </a>
         ))}

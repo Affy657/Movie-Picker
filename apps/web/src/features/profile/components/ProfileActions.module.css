@@ -91,24 +91,3 @@
     color: var(--color-error);
   }
 }
-
-.spinner {
-  width: 0.9375rem;
-  height: 0.9375rem;
-  border-radius: 50%;
-  border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
-  border-top-color: currentColor;
-  animation: profile-actions-spin var(--duration-spin) var(--ease-linear) infinite;
-}
-
-@keyframes profile-actions-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spinner {
-    animation: none;
-  }
-}

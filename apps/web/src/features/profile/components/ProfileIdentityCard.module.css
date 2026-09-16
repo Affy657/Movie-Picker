@@ -10,8 +10,8 @@
 
 @media (max-width: 47.9375rem) {
   .avatar {
-    width: 72px !important;
-    height: 72px !important;
+    width: var(--space-20);
+    height: var(--space-20);
   }
 }
 
@@ -153,18 +153,6 @@
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-semibold);
   color: var(--color-primary-text);
-}
-
-.hiddenPill {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--space-0-5) var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-warning-bg);
-  color: var(--color-warning);
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--leading-tight);
 }
 
 .divider {

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import IconButton from '@/shared/components/IconButton';
 import { useTranslation } from '@/shared/i18n';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   message: string;
@@ -13,7 +14,7 @@ export default function EventActionErrorBanner({ message, onDismiss }: Readonly<
     <div className="error error-dismiss" role="alert">
       <span>{message}</span>
       <IconButton size="sm" tone="danger" label={t('common.close')} onClick={onDismiss}>
-        <X size={16} aria-hidden />
+        <X size={ICON_SIZE.md} aria-hidden />
       </IconButton>
     </div>
   );

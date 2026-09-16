@@ -17,6 +17,7 @@ export interface TabDef<T extends string> {
   key: T;
   label: string;
   icon?: ReactNode;
+  iconOnly?: boolean;
   badge?: number;
   disabled?: boolean;
 }
@@ -93,6 +94,7 @@ export function Tabs<T extends string>({
               aria-controls={tabPanelId(idBase, tab.key)}
               tabIndex={tabIndexFor(tab.key)}
               disabled={tab.disabled}
+              aria-label={tab.iconOnly ? tab.label : undefined}
               className={clsx(
                 styles.tab,
                 isPill && styles.pillTab,
@@ -101,7 +103,7 @@ export function Tabs<T extends string>({
               onClick={() => onChange(tab.key)}
             >
               {tab.icon}
-              <span className={styles.tabLabel}>{tab.label}</span>
+              {tab.iconOnly ? null : <span className={styles.tabLabel}>{tab.label}</span>}
               {tab.badge != null && <span className={styles.tabBadge}>{tab.badge}</span>}
             </button>
           );

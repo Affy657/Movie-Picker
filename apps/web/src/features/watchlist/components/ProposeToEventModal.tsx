@@ -16,6 +16,7 @@ import {
 import styles from './ProposeToEventModal.module.css';
 import Modal from '@/shared/components/Modal';
 import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type RowState = { status: 'idle' | 'pending' | 'done' | 'error'; error?: string };
 
@@ -59,7 +60,7 @@ export default function ProposeToEventModal({
           {t('watchlist.propose.modalTitle', { title: movie.title })}
         </h2>
         <IconButton label={t('common.close')} onClick={onClose}>
-          <X aria-hidden size={18} />
+          <X aria-hidden size={ICON_SIZE.lg} />
         </IconButton>
       </div>
 

@@ -38,6 +38,7 @@ import {
 } from './home/usePersonalRows';
 import styles from './HomePage.module.css';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type GenreTabKey = 'all' | `${number}`;
 
@@ -135,7 +136,7 @@ export default function HomePage() {
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder={t('home.searchPlaceholder')}
-            iconSize={16}
+            iconSize={ICON_SIZE.md}
           />
         </form>
         <p className={styles.examples}>

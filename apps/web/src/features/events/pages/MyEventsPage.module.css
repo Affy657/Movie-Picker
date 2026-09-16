@@ -1,13 +1,13 @@
 ﻿.layout {
   --page-max-width: min(var(--container-xl), 100%);
-  padding-left: max(1.15rem, calc(1rem + env(safe-area-inset-left, 0px)));
-  padding-right: max(1.15rem, calc(1rem + env(safe-area-inset-right, 0px)));
+  padding-left: max(var(--space-5), calc(var(--space-4) + env(safe-area-inset-left, 0px)));
+  padding-right: max(var(--space-5), calc(var(--space-4) + env(safe-area-inset-right, 0px)));
 }
 
 @media (min-width: 40rem) {
   .layout {
-    padding-left: max(1.5rem, calc(1.5rem + env(safe-area-inset-left, 0px)));
-    padding-right: max(1.5rem, calc(1.5rem + env(safe-area-inset-right, 0px)));
+    padding-left: max(var(--space-6), calc(var(--space-6) + env(safe-area-inset-left, 0px)));
+    padding-right: max(var(--space-6), calc(var(--space-6) + env(safe-area-inset-right, 0px)));
   }
 }
 
@@ -21,70 +21,9 @@
 }
 
 .tabs {
-  display: flex;
-  gap: var(--space-1);
-  margin: 0 0 var(--space-6);
-  padding: var(--space-1);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
   width: fit-content;
   max-width: 100%;
-  overflow-x: auto;
-}
-
-.tab {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-muted);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    background var(--duration-base) var(--ease-default),
-    color var(--duration-base) var(--ease-default);
-}
-
-@media (hover: hover) {
-  .tab:hover:not(.tabActive) {
-    color: var(--color-text);
-  }
-}
-
-.tab:focus-visible {
-  outline: var(--outline-focus);
-  outline-offset: 3px;
-}
-
-.tabActive {
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: var(--shadow-sm);
-}
-
-.tabCount {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.3rem;
-  height: 1.3rem;
-  padding: 0 var(--space-1-5);
-  font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-active);
-  color: var(--color-text-muted);
-}
-
-.tabActive .tabCount {
-  background: var(--color-primary-soft-hover);
-  color: var(--color-primary-text);
+  margin-bottom: var(--space-6);
 }
 
 .section {
@@ -129,30 +68,10 @@
 }
 
 .loadMoreBtn {
-  display: block;
+  display: flex;
   width: fit-content;
   max-width: 100%;
-  margin-top: var(--space-2);
-  margin-left: auto;
-  margin-right: auto;
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-muted);
-  background: transparent;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition:
-    color var(--duration-base) var(--ease-default),
-    border-color var(--duration-base) var(--ease-default);
-}
-
-@media (hover: hover) {
-  .loadMoreBtn:hover {
-    color: var(--color-text);
-    border-color: var(--color-border-field);
-  }
+  margin: var(--space-2) auto 0;
 }
 
 .linkWithKebab {
@@ -161,8 +80,8 @@
 
 .itemKebab {
   position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
+  top: var(--space-2-5);
+  right: var(--space-2-5);
   z-index: var(--z-raised);
 }
 

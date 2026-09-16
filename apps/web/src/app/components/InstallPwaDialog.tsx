@@ -7,6 +7,7 @@ import styles from './InstallPwaDialog.module.css';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const GUIDE_COPY: Record<
   PwaInstallGuideMode,
@@ -65,7 +66,7 @@ export default function InstallPwaDialog({ open, mode, onClose }: Readonly<Insta
             {title}
           </h2>
           <IconButton label={t('common.close')} onClick={onClose}>
-            <X size={18} aria-hidden />
+            <X size={ICON_SIZE.lg} aria-hidden />
           </IconButton>
         </header>
         <p className={styles.intro}>{intro}</p>

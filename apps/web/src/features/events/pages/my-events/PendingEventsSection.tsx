@@ -3,6 +3,7 @@ import { useTranslation } from '@/shared/i18n';
 import PendingEventCard from '@/features/events/components/PendingEventCard';
 import type { MyEventSummary } from '@/features/events/types';
 import styles from './PendingEventsSection.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface PendingEventsSectionProps {
   events: MyEventSummary[];
@@ -22,7 +23,7 @@ export default function PendingEventsSection({
   return (
     <section className={styles.section} aria-labelledby="my-events-pending-heading">
       <h2 id="my-events-pending-heading" className={styles.heading}>
-        <AlertTriangle aria-hidden size={14} />
+        <AlertTriangle aria-hidden size={ICON_SIZE.sm} />
         <span>{t('events.myEvents.toBeHandledSection')}</span>
       </h2>
       <div className={styles.list}>

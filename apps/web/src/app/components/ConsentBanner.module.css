@@ -1,10 +1,8 @@
 .root {
   position: fixed;
-  bottom: calc(
-    var(--mobile-nav-height, calc(3.25rem + env(safe-area-inset-bottom, 0px))) + 0.75rem
-  );
-  left: 1rem;
-  right: 1rem;
+  bottom: calc(var(--mobile-nav-height) + var(--space-3));
+  left: var(--space-4);
+  right: var(--space-4);
   z-index: var(--z-header);
   display: flex;
   flex-direction: column;
@@ -15,11 +13,11 @@
 
 @media (min-width: 48rem) {
   .root {
-    bottom: 1.5rem;
+    bottom: var(--space-6);
     left: 50%;
     right: auto;
     transform: translateX(-50%);
-    width: min(600px, calc(100vw - 3rem));
+    width: min(600px, calc(100vw - var(--space-12)));
   }
 }
 

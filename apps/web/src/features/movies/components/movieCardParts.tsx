@@ -23,6 +23,7 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import type { Translate } from '@/features/movies/types';
 import type { RatingScale } from '@/shared/types/theme';
 import styles from './movieCardParts.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export { MovieNote, PITCH_MAX } from './MovieNote';
 export { CardKebab, CardKebabWhenAvailable, MovieCardKebab } from './MovieCardKebab';
@@ -229,7 +230,7 @@ export function VoteBar({
             : `${t('movies.list.voteUp')} ${m.title}`
         }
       >
-        <ThumbsUp aria-hidden size={16} />
+        <ThumbsUp aria-hidden size={ICON_SIZE.md} />
         <span className={styles.voteCount}>{m.up}</span>
       </button>
       <button
@@ -244,7 +245,7 @@ export function VoteBar({
             : `${t('movies.list.voteDown')} ${m.title}`
         }
       >
-        <ThumbsDown aria-hidden size={16} />
+        <ThumbsDown aria-hidden size={ICON_SIZE.md} />
         <span className={styles.voteCount}>{m.down}</span>
       </button>
     </div>
@@ -264,7 +265,7 @@ export function PaidOfferChip({
 }>) {
   return (
     <button type="button" className={styles.paidChip} onClick={onClick} aria-label={ariaLabel}>
-      <ModeIcon type={type} size={13} />
+      <ModeIcon type={type} size={ICON_SIZE.sm} />
       <span className={styles.paidChipCount}>{count}</span>
     </button>
   );
@@ -328,7 +329,7 @@ export function CardProposerFooter({
           aria-label={t('movies.pitchNote.addButton')}
           title={t('movies.pitchNote.addButton')}
         >
-          <MessageSquarePlus aria-hidden size={15} />
+          <MessageSquarePlus aria-hidden size={ICON_SIZE.md} />
         </button>
       )}
     </span>
@@ -356,7 +357,7 @@ export function DetailsInfoButton({
       onClick={onOpen}
       aria-label={t('watchlist.card.openDetailsAria', { title })}
     >
-      <Info aria-hidden size={14} />
+      <Info aria-hidden size={ICON_SIZE.sm} />
     </button>
   );
 }
@@ -390,14 +391,14 @@ export function WinnerRibbon({
   if (compact) {
     return (
       <span className={styles.winnerRibbon} role="img" aria-label={label}>
-        <Trophy aria-hidden size={11} />
+        <Trophy aria-hidden size={ICON_SIZE.xs} />
         {winnerRank ? <span className={styles.winnerRibbonLabel}>{winnerRank}</span> : null}
       </span>
     );
   }
   return (
     <span className={styles.winnerRibbon}>
-      <Trophy aria-hidden size={11} />
+      <Trophy aria-hidden size={ICON_SIZE.xs} />
       <span className={styles.winnerRibbonLabel}>{label}</span>
     </span>
   );
@@ -414,7 +415,7 @@ export function WatchlistBadge({
       role="img"
       aria-label={t('watchlist.card.inWatchlistBadgeAria')}
     >
-      <Bookmark aria-hidden size={11} fill="currentColor" />
+      <Bookmark aria-hidden size={ICON_SIZE.xs} fill="currentColor" />
     </span>
   );
 }

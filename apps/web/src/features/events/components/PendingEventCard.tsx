@@ -14,6 +14,7 @@ import { ROUTES } from '@/app/routes';
 import type { MyEventSummary } from '@/features/events/types';
 import styles from './PendingEventCard.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const LOCALE_TAG: Record<LocaleCode, string> = {
   fr: 'fr-FR',
@@ -55,7 +56,7 @@ export default function PendingEventCard({
         <EventLifecyclePill lifecycle="pending" />
         {event.autoCloseAt ? (
           <span className={styles.autoClose}>
-            <Clock aria-hidden size={12} />
+            <Clock aria-hidden size={ICON_SIZE.xs} />
             <span>
               {t('events.myEvents.pendingAutoCloseIn', {
                 time: formatRelativeTime(event.autoCloseAt, locale),

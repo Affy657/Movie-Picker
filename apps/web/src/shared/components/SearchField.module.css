@@ -7,7 +7,7 @@
 .icon {
   position: absolute;
   top: 50%;
-  left: 0.7rem;
+  left: var(--space-3);
   transform: translateY(-50%);
   color: var(--color-placeholder);
   pointer-events: none;

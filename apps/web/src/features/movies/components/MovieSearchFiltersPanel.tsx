@@ -16,6 +16,7 @@ import {
 } from './movieSearchFilterOptions';
 import styles from './AddMovieForm.module.css';
 import Card from '@/shared/components/Card';
+import Chip from '@/shared/components/Chip';
 
 interface MovieSearchFiltersPanelProps {
   panelId: string;
@@ -60,70 +61,62 @@ export default function MovieSearchFiltersPanel({
       {onToggleGenre && (
         <div className={styles.filterGroup}>
           <span className={styles.filterLabel}>{t('movies.search.filterGenre')}</span>
-          <div className={styles.genreChips}>
+          <div className={styles.chipRow}>
             {MOVIE_GENRE_IDS.map((id) => (
-              <button
+              <Chip
                 key={id}
-                type="button"
-                className={`${styles.genreChip} ${selectedGenres.includes(id) ? styles.genreChipActive : ''}`}
+                selected={selectedGenres.includes(id)}
                 onClick={() => onToggleGenre(id)}
-                aria-pressed={selectedGenres.includes(id)}
               >
                 {genreLabel(id, tmdbLanguage)}
-              </button>
+              </Chip>
             ))}
           </div>
         </div>
       )}
       <div className={styles.filterGroup}>
         <span className={styles.filterLabel}>{t('movies.search.filterYear')}</span>
-        <div className={styles.decadeChips}>
+        <div className={styles.chipRow}>
           {DECADE_OPTIONS.map((decade) => (
-            <button
+            <Chip
               key={decade}
-              type="button"
-              className={`${styles.decadeChip} ${selectedDecade === decade ? styles.decadeChipActive : ''}`}
+              selected={selectedDecade === decade}
               onClick={() => onToggleDecade(decade)}
-              aria-pressed={selectedDecade === decade}
             >
               {decade}s
-            </button>
+            </Chip>
           ))}
         </div>
       </div>
       <div className={styles.filterGroup}>
         <span className={styles.filterLabel}>{t('movies.search.filterVoteMin')}</span>
-        <div className={styles.voteChips}>
+        <div className={styles.chipRow}>
           {VOTE_MIN_OPTIONS.map((opt) => (
-            <button
+            <Chip
               key={opt.tmdb}
-              type="button"
-              className={`${styles.voteChip} ${voteMin === opt.tmdb ? styles.voteChipActive : ''}`}
+              selected={voteMin === opt.tmdb}
               onClick={() => onToggleVoteMin(opt.tmdb)}
-              aria-pressed={voteMin === opt.tmdb}
             >
               ★ {voteMinLabel(opt.tmdb, ratingScale)}+
-            </button>
+            </Chip>
           ))}
         </div>
       </div>
       {onToggleLanguage && (
         <div className={styles.filterGroup}>
           <span className={styles.filterLabel}>{t('movies.search.filterLanguage')}</span>
-          <div className={styles.langChips}>
+          <div className={styles.chipRow}>
             {LANGUAGE_OPTIONS.map((lang) => (
-              <button
+              <Chip
                 key={lang.code}
-                type="button"
-                className={`${styles.langChip} ${selectedLanguage === lang.code ? styles.langChipActive : ''}`}
+                selected={selectedLanguage === lang.code}
                 onClick={() => onToggleLanguage(lang.code)}
-                aria-pressed={selectedLanguage === lang.code}
               >
                 <span className={styles.langCode} aria-hidden="true">
                   <span className={styles.langCodeText}>{lang.code.toUpperCase()}</span>
                 </span>
                 {inFrench ? lang.fr : lang.en}
-              </button>
+              </Chip>
             ))}
           </div>
         </div>
@@ -131,17 +124,15 @@ export default function MovieSearchFiltersPanel({
       {onToggleAvailability && (
         <div className={styles.filterGroup}>
           <span className={styles.filterLabel}>{t('movies.search.filterAvailability')}</span>
-          <div className={styles.availabilityChips}>
+          <div className={styles.chipRow}>
             {AVAILABILITY_OPTIONS.map((opt) => (
-              <button
+              <Chip
                 key={opt.type}
-                type="button"
-                className={`${styles.availabilityChip} ${availabilityFilter === opt.type ? styles.availabilityChipActive : ''}`}
+                selected={availabilityFilter === opt.type}
                 onClick={() => onToggleAvailability(opt.type)}
-                aria-pressed={availabilityFilter === opt.type}
               >
                 {inFrench ? opt.fr : opt.en}
-              </button>
+              </Chip>
             ))}
           </div>
         </div>

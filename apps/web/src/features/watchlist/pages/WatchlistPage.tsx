@@ -43,6 +43,7 @@ import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventM
 import styles from './WatchlistPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Button from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 function itemKey(tmdbId: number, mediaType: MovieMediaType | undefined): string {
   return `${tmdbId}|${mediaType ?? 'movie'}`;
@@ -229,7 +230,7 @@ export default function WatchlistPage() {
                   size="sm"
                   onClick={() => setLetterboxdModalOpen(true)}
                 >
-                  <Import size={14} aria-hidden />
+                  <Import size={ICON_SIZE.sm} aria-hidden />
                   <span>{t('watchlist.letterboxdCtaShort')}</span>
                 </Button>
               )}
@@ -240,7 +241,7 @@ export default function WatchlistPage() {
                 size="sm"
                 onClick={openAddPanel}
               >
-                <Plus size={15} aria-hidden />
+                <Plus size={ICON_SIZE.md} aria-hidden />
                 <span>{t('watchlist.addPanel.triggerShort')}</span>
               </Button>
             </div>
@@ -248,12 +249,12 @@ export default function WatchlistPage() {
             <div className={styles.headerActions}>
               {!user?.letterboxdUsername && (
                 <Button type="button" variant="ghost" onClick={() => setLetterboxdModalOpen(true)}>
-                  <Import size={15} aria-hidden />
+                  <Import size={ICON_SIZE.md} aria-hidden />
                   <span>{t('watchlist.letterboxdCta')}</span>
                 </Button>
               )}
               <Button type="button" ref={addButtonRef} variant="primary" onClick={openAddPanel}>
-                <Plus size={16} aria-hidden />
+                <Plus size={ICON_SIZE.md} aria-hidden />
                 <span>{t('watchlist.addPanel.trigger')}</span>
               </Button>
             </div>
@@ -311,7 +312,7 @@ export default function WatchlistPage() {
         )}
         {!isLoading && !isError && items.length === 0 && (
           <EmptyState
-            icon={<Bookmark aria-hidden size={28} />}
+            icon={<Bookmark aria-hidden size={ICON_SIZE['3xl']} />}
             title={t('watchlist.empty.title')}
             message={t('watchlist.empty.message')}
           />

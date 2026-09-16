@@ -42,8 +42,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: var(--space-8);
+  height: var(--space-8);
   border-radius: var(--radius-md);
   margin-top: var(--space-0-5);
 }

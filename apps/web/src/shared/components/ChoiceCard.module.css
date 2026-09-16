@@ -1,0 +1,92 @@
+.group {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-base) var(--ease-default),
+    background var(--duration-base) var(--ease-default);
+}
+
+@media (hover: hover) {
+  .card:hover {
+    border-color: var(--color-border);
+    background: var(--color-surface-hover);
+  }
+}
+
+.card:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: 2px;
+}
+
+.selected,
+.selected:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.tile {
+  position: relative;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-1);
+  border-width: 2px;
+  border-color: transparent;
+}
+
+.dashed {
+  border-style: dashed;
+  color: var(--color-text-muted);
+}
+
+.indicator {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-md);
+  height: var(--icon-md);
+  border-radius: var(--radius-pill);
+  border: var(--border-width-field) solid var(--color-border);
+  color: var(--color-primary-contrast);
+}
+
+.selected .indicator {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  line-height: var(--leading-snug);
+}
+
+.description {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+}

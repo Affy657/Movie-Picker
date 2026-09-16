@@ -7,7 +7,7 @@ import EventCalendarMenu from '@/features/events/components/EventCalendarMenu';
 import EventThemeBanner from '@/features/events/components/EventThemeBanner';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import ViewModeToggle from '@/shared/components/ViewModeToggle';
-import Avatar from '@/shared/components/Avatar';
+import AvatarStack from '@/shared/components/AvatarStack';
 import type { EventParticipantSummary, MyEventLifecycle } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
@@ -16,6 +16,7 @@ import styles from './EventDetailHeader.module.css';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
 import Tooltip from '@/shared/components/Tooltip';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const MAX_STACKED_AVATARS = 4;
 const STICKY_BAR_MEDIA = '(min-width: 48rem)';
@@ -117,25 +118,17 @@ function ParticipantsStack({
       data-testid={testId}
       data-participants-toggle
     >
-      {participants.length > 0 ? (
-        <span className={styles.avatars} aria-hidden>
-          {participants.map((p, index) => (
-            <Avatar
-              key={p.id}
-              avatarId={p.avatarId}
-              pseudo={p.pseudo}
-              size={index === 0 ? 'sm' : 'xs'}
-            />
-          ))}
-          {hiddenCount > 0 ? <span className={styles.avatarMore}>+{hiddenCount}</span> : null}
-        </span>
-      ) : null}
+      <AvatarStack
+        people={participants.map((p) => ({ key: p.id, avatarId: p.avatarId, pseudo: p.pseudo }))}
+        max={MAX_STACKED_AVATARS}
+        hidden={hiddenCount}
+      />
       {label ? <span className={styles.stackLabel}>{label}</span> : null}
       {bare ? null : (
         <ChevronDown
           className={styles.chevron}
           data-open={open || undefined}
-          size={14}
+          size={ICON_SIZE.sm}
           aria-hidden
         />
       )}
@@ -230,7 +223,7 @@ function HeaderActions({
             onClick={onOpenSettings}
             aria-haspopup="dialog"
           >
-            <Settings size={16} aria-hidden />
+            <Settings size={ICON_SIZE.md} aria-hidden />
           </IconButton>
         ) : null}
       </div>
@@ -319,7 +312,7 @@ function AddMovieButton({ onAddMovie, primary, label, triggerRef }: Readonly<Add
       onClick={onAddMovie}
       aria-label={primary ? undefined : label}
     >
-      <Plus size={16} aria-hidden />
+      <Plus size={ICON_SIZE.md} aria-hidden />
       {primary ? <span className={styles.addMovieLabel}>{label}</span> : null}
     </Button>
   );
@@ -409,7 +402,7 @@ export default function EventDetailHeader({
     <>
       <div className={styles.top}>
         <button type="button" className="back-link back-link-button" onClick={goBack}>
-          <ArrowLeft size={16} aria-hidden />
+          <ArrowLeft size={ICON_SIZE.md} aria-hidden />
           {t('events.detail.backNav')}
         </button>
       </div>
@@ -425,7 +418,7 @@ export default function EventDetailHeader({
             aria-label={t('events.detail.backNav')}
             title={t('events.detail.backNav')}
           >
-            <ArrowLeft size={18} aria-hidden />
+            <ArrowLeft size={ICON_SIZE.lg} aria-hidden />
           </button>
         ) : null}
         <div className={styles.heading}>

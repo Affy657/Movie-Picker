@@ -5,6 +5,7 @@ import { useTranslation } from '@/shared/i18n';
 import type { UserStats } from '@/features/profile/api/profileApi';
 import Card from '@/shared/components/Card';
 import styles from './ProfileStatsSection.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const GenresBar = lazy(() => import('./GenresBar'));
 const ActivityWeeks = lazy(() => import('./ActivityWeeks'));
@@ -59,7 +60,7 @@ export default function ProfileStatsSection({ stats }: Readonly<Props>) {
             {counters.map(({ key, icon: Icon, label, value }) => (
               <Card as="li" key={key} padding="none" className={styles.heroStat}>
                 <span className={styles.heroIcon} aria-hidden>
-                  <Icon size={20} />
+                  <Icon size={ICON_SIZE.xl} />
                 </span>
                 <span className={styles.heroText}>
                   <span className={styles.heroValue}>{value}</span>

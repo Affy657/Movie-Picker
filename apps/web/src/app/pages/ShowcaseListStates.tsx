@@ -7,6 +7,7 @@ import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import type { ShowcaseListVariant } from '@/features/movies/showcaseSections';
 import styles from './ShowcaseListPage.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   variant: ShowcaseListVariant;
@@ -31,7 +32,7 @@ export default function ShowcaseListStates({
   if (!queryEnabled) {
     return (
       <EmptyState
-        icon={<Film aria-hidden size={28} />}
+        icon={<Film aria-hidden size={ICON_SIZE['3xl']} />}
         title={searching ? t('showcase.searchEmptyQuery') : t('showcase.unknownSelection')}
         message={searching ? t('home.intro') : t('showcase.unknownSelectionMessage')}
         actions={
@@ -63,7 +64,7 @@ export default function ShowcaseListStates({
   if (totalCount === 0) {
     return (
       <EmptyState
-        icon={<Film aria-hidden size={28} />}
+        icon={<Film aria-hidden size={ICON_SIZE['3xl']} />}
         title={t('showcase.empty')}
         message={
           variant === 'most-proposed'

@@ -50,8 +50,8 @@
 }
 
 .chipLogo {
-  height: 1.75rem;
-  min-width: 1.75rem;
+  height: var(--space-7);
+  min-width: var(--space-7);
   max-width: var(--chip-max-width, 4rem);
   padding: 0;
   border-radius: var(--radius-xs);
@@ -113,8 +113,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 1.75rem;
-  min-width: 1.75rem;
+  height: var(--space-7);
+  min-width: var(--space-7);
   padding: 0 var(--space-1-5);
   border-radius: var(--radius-xs);
   cursor: pointer;

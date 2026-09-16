@@ -5,6 +5,7 @@ import Sheet from '@/shared/components/Sheet';
 import styles from './FilteredCollectionLayout.module.css';
 import Button from '@/shared/components/Button';
 import LinkButton from '@/shared/components/LinkButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type CollectionToolbarSource<TSort extends string> = {
   search: string;
@@ -92,7 +93,7 @@ export function FilteredEmptyState({
   return (
     <EmptyState
       compact
-      icon={<Search aria-hidden size={22} />}
+      icon={<Search aria-hidden size={ICON_SIZE['2xl']} />}
       title={title}
       message={message}
       actions={

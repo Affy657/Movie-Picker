@@ -8,6 +8,7 @@ import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import type { UserProfile } from '@/features/auth/types';
 import styles from './AccountIdentityHeader.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function AccountIdentityHeader({
   user,
@@ -29,7 +30,7 @@ export default function AccountIdentityHeader({
         >
           <Avatar avatarId={user.avatarId} pseudo={user.displayName} size={avatarSize} />
           <span className={styles.avatarEditOverlay} aria-hidden>
-            <Pencil size={14} />
+            <Pencil size={ICON_SIZE.sm} />
           </span>
         </button>
 
@@ -40,7 +41,7 @@ export default function AccountIdentityHeader({
 
         {user.handle && variant === 'desktop' && (
           <Link to={ROUTES.profile(user.handle)} className={styles.identityLink}>
-            <Globe size={15} aria-hidden />
+            <Globe size={ICON_SIZE.md} aria-hidden />
             <span>{t('profile.settings.viewMyProfile')}</span>
           </Link>
         )}
@@ -58,7 +59,7 @@ export default function AccountIdentityHeader({
 
       {user.handle && variant === 'mobile' && (
         <Link to={ROUTES.profile(user.handle)} className={styles.identityLinkMobile}>
-          <Globe size={15} aria-hidden />
+          <Globe size={ICON_SIZE.md} aria-hidden />
           <span>{t('profile.settings.viewMyProfile')}</span>
         </Link>
       )}

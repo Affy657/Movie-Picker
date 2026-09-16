@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import { Bookmark, ChevronRight, Lock } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
+import Chip from '@/shared/components/Chip';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import ProfileStreakFlame from '@/features/profile/components/ProfileStreakFlame';
@@ -11,6 +12,7 @@ import SupporterBadge from '@/features/profile/components/SupporterBadge';
 import type { PublicProfile } from '@/features/profile/api/profileApi';
 import styles from './ProfileIdentityCard.module.css';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type FollowTab = 'following' | 'followers';
 
@@ -46,7 +48,7 @@ function WatchlistCell({
         className={clsx(styles.statCell, styles.watchlistCell)}
       >
         <Icon
-          size={16}
+          size={ICON_SIZE.md}
           className={clsx(styles.watchlistIcon, hidden && styles.watchlistIconMuted)}
           aria-hidden
         />
@@ -55,7 +57,9 @@ function WatchlistCell({
             {isOwnProfile ? t('profile.watchlist.mine') : t('profile.watchlist.theirs')}
           </span>
           {hidden ? (
-            <span className={styles.hiddenPill}>{t('profile.watchlist.hidden')}</span>
+            <Chip tone="warning" size="sm">
+              {t('profile.watchlist.hidden')}
+            </Chip>
           ) : (
             <span className={styles.watchlistCount}>
               {count === 0
@@ -64,7 +68,7 @@ function WatchlistCell({
             </span>
           )}
         </span>
-        <ChevronRight size={16} className={styles.chevron} aria-hidden />
+        <ChevronRight size={ICON_SIZE.md} className={styles.chevron} aria-hidden />
       </Link>
       {hidden ? (
         <Link to={ROUTES.accountProfile} className={styles.watchlistSettingLink}>
@@ -122,7 +126,7 @@ export default function ProfileIdentityCard({
             <span className={styles.statCellCount}>{profile.followingCount}</span>
             <span className={styles.statCellLabel}>{t('profile.follow.following')}</span>
           </span>
-          <ChevronRight size={16} className={styles.chevron} aria-hidden />
+          <ChevronRight size={ICON_SIZE.md} className={styles.chevron} aria-hidden />
         </button>
         <button
           type="button"
@@ -134,7 +138,7 @@ export default function ProfileIdentityCard({
             <span className={styles.statCellCount}>{profile.followersCount}</span>
             <span className={styles.statCellLabel}>{t('profile.follow.followers')}</span>
           </span>
-          <ChevronRight size={16} className={styles.chevron} aria-hidden />
+          <ChevronRight size={ICON_SIZE.md} className={styles.chevron} aria-hidden />
         </button>
       </div>
 

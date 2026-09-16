@@ -55,8 +55,8 @@
 
 .stepDot {
   flex-shrink: 0;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: var(--space-4);
+  height: var(--space-4);
   border-radius: var(--radius-pill);
   background: var(--color-primary-soft);
   border: 1px solid var(--color-primary);
@@ -85,7 +85,7 @@
 
 .progressTrack {
   position: relative;
-  height: 4px;
+  height: var(--space-1);
   border-radius: var(--radius-pill);
   background: var(--color-border-subtle);
   overflow: hidden;
@@ -173,8 +173,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: var(--space-5);
+  height: var(--space-5);
   flex-shrink: 0;
   border-radius: var(--radius-pill);
   background: var(--color-primary-soft);
@@ -185,8 +185,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: var(--space-5);
+  height: var(--space-5);
   flex-shrink: 0;
   border-radius: var(--radius-pill);
   background: var(--color-success-bg);

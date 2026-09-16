@@ -16,8 +16,8 @@
 
 .flame {
   flex: 0 0 auto;
-  width: 1.375rem;
-  height: 1.625rem;
+  width: var(--space-6);
+  height: var(--space-7);
   display: block;
   filter: drop-shadow(0 5px 12px color-mix(in srgb, var(--color-streak) 50%, transparent));
   --flame-flicker-duration: 3.2s;

@@ -7,6 +7,7 @@ import { MovieCardList } from '@/features/movies/components/MovieCardList';
 import { MovieCardRow, MovieRowHeader } from '@/features/movies/components/MovieCardRow';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import styles from './MovieList.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type MovieRowSortKey =
   'createdAt' | 'voteAverage' | 'duration' | 'score' | 'availability' | 'seen' | 'releaseDate';
@@ -81,7 +82,7 @@ export default function MovieList({
   if (movies.length === 0) {
     return (
       <EmptyState
-        icon={<Film size={26} aria-hidden />}
+        icon={<Film size={ICON_SIZE['3xl']} aria-hidden />}
         title={t('movies.list.emptyTitle')}
         message={t('movies.list.emptyPlaceholder')}
       />

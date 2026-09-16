@@ -39,7 +39,7 @@
 
 @media (hover: hover) {
   .step:hover {
-    transform: translateY(-4px);
+    transform: translateY(var(--lift-lg));
     box-shadow: var(--shadow-md);
     border-color: var(--color-primary-border);
   }
@@ -70,11 +70,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    var(--color-primary-border),
-    transparent
-  );
+  background: linear-gradient(90deg, var(--color-primary-border), transparent);
 }
 
 .title {

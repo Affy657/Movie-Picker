@@ -5,36 +5,36 @@
 }
 
 .avatar {
-  width: 96px;
-  height: 96px;
+  width: var(--space-24);
+  height: var(--space-24);
   margin-bottom: var(--space-4);
 }
 
 .name {
   width: 70%;
-  height: 1.6rem;
+  height: var(--space-6);
 }
 
 .handle {
   width: 50%;
-  height: 1rem;
+  height: var(--space-4);
   margin-top: var(--space-2);
 }
 
 .bioLine {
   width: 100%;
-  height: 0.95rem;
+  height: var(--space-4);
   margin-top: var(--space-3-5);
 }
 
 .bioLineShort {
   width: 60%;
-  height: 0.95rem;
+  height: var(--space-4);
   margin-top: var(--space-1-5);
 }
 
 .streakPill {
-  height: 3rem;
+  height: var(--space-12);
   margin-top: var(--space-3);
   border-radius: var(--radius-md);
 }
@@ -47,12 +47,12 @@
 
 .followCell {
   flex: 1 1 0;
-  height: 44px;
+  height: var(--tap-target-min);
   border-radius: var(--radius-md);
 }
 
 .actionBtn {
-  height: 42px;
+  height: var(--tap-target-min);
   margin-top: var(--space-7);
   border-radius: var(--radius-md);
 }
@@ -76,14 +76,14 @@
   display: flex;
   align-items: center;
   gap: var(--space-3-5);
-  min-height: 76px;
+  min-height: var(--space-20);
   padding: var(--space-3-5) var(--space-4);
 }
 
 .heroIcon {
   flex: 0 0 auto;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: var(--space-10);
+  height: var(--space-10);
 }
 
 .heroText {
@@ -96,12 +96,12 @@
 
 .heroValue {
   width: 40%;
-  height: 1.4rem;
+  height: var(--space-6);
 }
 
 .heroLabel {
   width: 80%;
-  height: 0.75rem;
+  height: var(--space-3);
 }
 
 .panels {
@@ -118,8 +118,8 @@
 
 @media (max-width: 63.9375rem) {
   .avatar {
-    width: 72px;
-    height: 72px;
+    width: var(--space-20);
+    height: var(--space-20);
   }
 }
 

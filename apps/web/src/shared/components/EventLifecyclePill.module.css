@@ -7,8 +7,8 @@
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-semibold);
   line-height: var(--leading-none);
-  padding: calc(0.34rem + var(--text-optical-nudge)) 0.55rem
-    calc(0.34rem - var(--text-optical-nudge));
+  padding: calc(var(--space-1-5) + var(--text-optical-nudge)) var(--space-2)
+    calc(var(--space-1-5) - var(--text-optical-nudge));
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   box-sizing: border-box;
@@ -48,8 +48,8 @@
 }
 
 .pulse {
-  width: 6px;
-  height: 6px;
+  width: var(--space-1-5);
+  height: var(--space-1-5);
   border-radius: var(--radius-pill);
   background: currentColor;
   animation: lifecycleBlip var(--duration-breathe) var(--ease-in-out) infinite;

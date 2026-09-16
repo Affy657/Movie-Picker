@@ -99,9 +99,11 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   useEffect(() => {
     document.documentElement.dataset.theme = resolvedTheme;
-    document
-      .getElementById('theme-color-meta')
-      ?.setAttribute('content', resolvedTheme === 'dark' ? '#0a0f1c' : '#f4f6fa');
+    const background = getComputedStyle(document.documentElement)
+      .getPropertyValue('--color-bg')
+      .trim();
+    if (background)
+      document.getElementById('theme-color-meta')?.setAttribute('content', background);
   }, [resolvedTheme]);
 
   useEffect(() => {

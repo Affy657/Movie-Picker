@@ -16,6 +16,7 @@ import { MenuItem, MenuPanel } from '@/shared/components/Menu';
 import styles from './EventWheelActions.module.css';
 import Button from '@/shared/components/Button';
 import Tooltip from '@/shared/components/Tooltip';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type EventWheelActionsProps = {
   wheel: EventWheelState;
@@ -57,9 +58,9 @@ function SelectionBar({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Transl
   return (
     <output className={clsx(styles.selectionBar, removing && styles.selectionBarRemoving)}>
       {removing ? (
-        <CircleMinus size={16} aria-hidden className={styles.selectionIcon} />
+        <CircleMinus size={ICON_SIZE.md} aria-hidden className={styles.selectionIcon} />
       ) : (
-        <MousePointerClick size={16} aria-hidden className={styles.selectionIcon} />
+        <MousePointerClick size={ICON_SIZE.md} aria-hidden className={styles.selectionIcon} />
       )}
       <span className={styles.manualHint}>
         {removing ? t('events.wheel.removeWinnerHint') : t('events.wheel.manualPickHint')}
@@ -93,13 +94,13 @@ function MoreActionsMenu({
         disabled={wheel.loading}
         aria-label={label}
       >
-        <MoreHorizontal size={16} aria-hidden />
+        <MoreHorizontal size={ICON_SIZE.md} aria-hidden />
       </Button>
       {menu.open ? (
         <MenuPanel {...menu.panelProps} label={label}>
           {wheel.showRemoveWinner ? (
             <MenuItem
-              icon={<CircleMinus size={14} aria-hidden />}
+              icon={<CircleMinus size={ICON_SIZE.sm} aria-hidden />}
               onClick={() => {
                 menu.close();
                 wheel.enterRemovalMode();
@@ -111,7 +112,7 @@ function MoreActionsMenu({
           {wheel.showReset ? (
             <MenuItem
               tone="danger"
-              icon={<RotateCcw size={14} aria-hidden />}
+              icon={<RotateCcw size={ICON_SIZE.sm} aria-hidden />}
               onClick={() => {
                 menu.close();
                 onRequestReset();
@@ -150,7 +151,7 @@ function SpinButton({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translat
       title={wheel.spinDisabledHint ?? (showCount ? remaining : undefined)}
       aria-label={showCount ? `${spinLabel}, ${remaining}` : undefined}
     >
-      <Disc3 size={16} aria-hidden />
+      <Disc3 size={ICON_SIZE.md} aria-hidden />
       <span className={clsx(styles.spinLabel, !spinIsPrimary && styles.iconOnlyLabel)}>
         {wheel.loading ? t('events.wheel.spinning') : spinLabel}
       </span>
@@ -174,7 +175,7 @@ function SpinButton({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translat
 function AllDrawnStatus({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translate }>) {
   return (
     <output className={styles.doneStatus} title={wheel.spinDisabledHint ?? undefined}>
-      <Trophy size={16} aria-hidden className={styles.doneIcon} />
+      <Trophy size={ICON_SIZE.md} aria-hidden className={styles.doneIcon} />
       <span className={styles.doneLabel}>
         {pluralizeCount(
           wheel.winnerCount,
@@ -206,7 +207,7 @@ export default function EventWheelActions({
         <IconAction
           label={t('events.wheel.manualPickButton')}
           hint={wheel.spinDisabledHint}
-          icon={<MousePointerClick size={16} aria-hidden />}
+          icon={<MousePointerClick size={ICON_SIZE.md} aria-hidden />}
           onClick={wheel.enterManualMode}
           disabled={wheel.loading || wheel.spinDisabled}
         />

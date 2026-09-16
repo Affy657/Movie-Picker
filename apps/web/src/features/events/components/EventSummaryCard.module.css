@@ -18,7 +18,7 @@
 
 @media (hover: hover) {
   .card:hover {
-    transform: translateY(-2px);
+    transform: translateY(var(--lift-md));
     border-color: var(--color-primary-border-soft);
     box-shadow: var(--shadow-md);
   }
@@ -116,8 +116,8 @@
 
 .winnerPoster {
   flex-shrink: 0;
-  width: 28px;
-  height: 42px;
+  width: var(--space-7);
+  height: var(--tap-target-min);
   object-fit: cover;
   border-radius: var(--radius-xs);
 }
@@ -187,18 +187,6 @@
 
 .listStats {
   margin-left: auto;
-}
-
-.relativeDatePill {
-  display: inline-flex;
-  align-items: center;
-  line-height: var(--leading-none);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-semibold);
 }
 
 .timeValue {

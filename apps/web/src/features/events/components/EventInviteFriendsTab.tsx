@@ -17,6 +17,7 @@ import {
 import styles from './EventInviteFriendsTab.module.css';
 import Button from '@/shared/components/Button';
 import Chip from '@/shared/components/Chip';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   slug: string;
@@ -96,7 +97,7 @@ export default function EventInviteFriendsTab({ slug, onNavigate }: Readonly<Pro
       {follows.length > 0 && (
         <>
           <div className={styles.searchWrap}>
-            <Search className={styles.searchIcon} size={15} aria-hidden />
+            <Search className={styles.searchIcon} size={ICON_SIZE.md} aria-hidden />
             <input
               type="search"
               className={styles.searchInput}

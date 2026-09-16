@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Check } from 'lucide-react';
 import styles from './Dropdown.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type DropdownOption<V extends string> = {
   value: V;
@@ -186,7 +187,9 @@ export default function Dropdown<V extends string>({
                 }}
               >
                 <span className={styles.optionLabel}>{opt.label}</span>
-                {selected ? <Check size={16} aria-hidden className={styles.optionCheck} /> : null}
+                {selected ? (
+                  <Check size={ICON_SIZE.md} aria-hidden className={styles.optionCheck} />
+                ) : null}
               </li>
             );
           })}

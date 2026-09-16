@@ -13,6 +13,7 @@ import {
   ThumbsUp,
 } from 'lucide-react';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
+import Chip from '@/shared/components/Chip';
 import {
   CardModals,
   CardSelectionOverlay,
@@ -33,6 +34,7 @@ import Tooltip from '@/shared/components/Tooltip';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import cardPartsStyles from './movieCardParts.module.css';
 import styles from './MovieCardRow.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 function formatReleaseYear(isoDate: string | null | undefined): string | null {
   if (!isoDate) return null;
@@ -77,7 +79,7 @@ export function MovieRowHeader({
         onClick={() => onSetSort(key)}
       >
         <span>{byKey[key]}</span>
-        {active ? <DirectionIcon aria-hidden size={12} /> : null}
+        {active ? <DirectionIcon aria-hidden size={ICON_SIZE.xs} /> : null}
       </button>
     );
   }
@@ -121,7 +123,7 @@ function RowPoster({
   if (!src) {
     return (
       <div className={styles.posterPlaceholder} aria-hidden>
-        <Film size={20} />
+        <Film size={ICON_SIZE.xl} />
       </div>
     );
   }
@@ -176,9 +178,9 @@ function ScoreBlock({ m, t }: Readonly<{ m: MovieCardCommonProps['movie']; t: Tr
 function VoteReadonly({ m }: Readonly<{ m: MovieCardCommonProps['movie'] }>) {
   return (
     <span className={styles.voteReadonly}>
-      <ThumbsUp aria-hidden size={14} />
+      <ThumbsUp aria-hidden size={ICON_SIZE.sm} />
       <span>{m.up}</span>
-      <ThumbsDown aria-hidden size={14} />
+      <ThumbsDown aria-hidden size={ICON_SIZE.sm} />
       <span>{m.down}</span>
     </span>
   );
@@ -280,10 +282,10 @@ function VoteErrorBanner({
 }: Readonly<{ voteError: MovieRowVoteError; t: Translate }>) {
   return (
     <li className={styles.errorBanner}>
-      <AlertTriangle aria-hidden size={16} className={styles.errorIcon} />
+      <AlertTriangle aria-hidden size={ICON_SIZE.md} className={styles.errorIcon} />
       <p className={styles.errorMessage}>{voteError.message}</p>
       <button type="button" className={styles.errorRetry} onClick={voteError.onRetry}>
-        <RotateCcw aria-hidden size={13} />
+        <RotateCcw aria-hidden size={ICON_SIZE.sm} />
         <span>{t('movies.list.retryVoteAction')}</span>
       </button>
     </li>
@@ -418,7 +420,7 @@ function MovieCardRowMobile({
             onClick={() => s.openDetails('soiree')}
             aria-label={t('movies.details.toggleShow')}
           >
-            <ChevronRight aria-hidden size={16} />
+            <ChevronRight aria-hidden size={ICON_SIZE.md} />
           </button>
         ) : (
           <span className={styles.disclosure} aria-hidden />
@@ -506,7 +508,9 @@ function MovieCardRowDesktop({
               t={t}
             />
             {isWinner ? (
-              <span className={styles.winnerBadge}>{winnerBadgeLabel(t, winnerRank)}</span>
+              <Chip tone="primary" size="sm" className={styles.winnerBadge}>
+                {winnerBadgeLabel(t, winnerRank)}
+              </Chip>
             ) : null}
           </div>
           <div className={styles.metaRow}>

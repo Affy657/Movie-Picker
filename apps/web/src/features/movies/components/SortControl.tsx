@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import Menu, { MenuItem, MenuLabel, MenuSeparator } from '@/shared/components/Menu';
 import Chip from '@/shared/components/Chip';
 import styles from './SortControl.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export interface SortOption<TSortKey extends string> {
   key: TSortKey;
@@ -42,7 +43,7 @@ export default function SortControl<TSortKey extends string>({
       <span className={clsx(styles.menuWrap, className)}>
         <Menu
           triggerLabel={activeSort?.label ?? ''}
-          triggerIcon={<DirectionIcon size={12} aria-hidden />}
+          triggerIcon={<DirectionIcon size={ICON_SIZE.xs} aria-hidden />}
           triggerClassName={styles.menuTrigger}
           panelClassName={styles.menuPanel}
           panelLabel={sortMenuAriaLabel}
@@ -64,7 +65,7 @@ export default function SortControl<TSortKey extends string>({
               ))}
               <MenuSeparator />
               <MenuItem
-                icon={<DirectionIcon size={13} aria-hidden />}
+                icon={<DirectionIcon size={ICON_SIZE.sm} aria-hidden />}
                 onClick={() => {
                   onSetSort(sortBy);
                   close();

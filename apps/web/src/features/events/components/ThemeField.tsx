@@ -3,7 +3,9 @@ import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import clsx from 'clsx';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 import { t as translate, SUPPORTED_LOCALES, useTranslation } from '@/shared/i18n';
+import Chip from '@/shared/components/Chip';
 import styles from './ThemeField.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export const THEME_EMOJIS = [
   '🎃',
@@ -202,20 +204,16 @@ export default function ThemeField({
           {(presetsExpanded ? THEME_PRESETS : THEME_PRESETS.slice(0, PRESETS_VISIBLE)).map((p) => {
             const presetText = t(`events.settings.themePresets.${p.slug}`);
             return (
-              <button
+              <Chip
                 key={p.slug}
-                type="button"
-                className={clsx(
-                  styles.presetChip,
-                  isPresetSelected(p.slug, p.emoji, emoji, text) && styles.presetChipActive
-                )}
+                selected={isPresetSelected(p.slug, p.emoji, emoji, text)}
                 onClick={() => {
                   onEmojiChange(p.emoji);
                   onTextChange(presetText);
                 }}
               >
                 {p.emoji} {presetText}
-              </button>
+              </Chip>
             );
           })}
           <button
@@ -235,9 +233,9 @@ export default function ThemeField({
             )}
           >
             {presetsExpanded ? (
-              <ChevronUp size={14} aria-hidden />
+              <ChevronUp size={ICON_SIZE.sm} aria-hidden />
             ) : (
-              <MoreHorizontal size={14} aria-hidden />
+              <MoreHorizontal size={ICON_SIZE.sm} aria-hidden />
             )}
           </button>
         </fieldset>

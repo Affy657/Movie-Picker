@@ -7,6 +7,7 @@ import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n';
 import type { AccentColor } from '@/shared/types/theme';
 import styles from './AccentColorPicker.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const PICKER_COLORS = [
   'blue',
@@ -154,7 +155,7 @@ export default function AccentColorPicker({
               onClick={() => commit(color)}
               onKeyDown={(e) => handleKey(e, idx)}
             >
-              {selected ? <Check size={16} className={styles.check} aria-hidden /> : null}
+              {selected ? <Check size={ICON_SIZE.md} className={styles.check} aria-hidden /> : null}
             </button>
           );
         })}

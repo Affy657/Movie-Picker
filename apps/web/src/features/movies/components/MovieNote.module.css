@@ -49,7 +49,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.5rem;
+  min-width: var(--space-6);
   min-height: var(--space-6);
   padding: 0;
   background: none;
@@ -88,7 +88,7 @@
   border: 1px solid var(--mc-icon-muted, var(--on-poster-icon-muted));
   border-radius: var(--radius-sm);
   resize: vertical;
-  min-height: 3.25rem;
+  min-height: var(--space-14);
   box-sizing: border-box;
   outline: none;
 }

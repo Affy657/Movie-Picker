@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { Disc3 } from 'lucide-react';
-import Avatar from '@/shared/components/Avatar';
+import AvatarStack from '@/shared/components/AvatarStack';
 import Card from '@/shared/components/Card';
 import Chip from '@/shared/components/Chip';
 import { buttonClass } from '@/shared/components/Button';
@@ -8,6 +8,9 @@ import { useTranslation } from '@/shared/i18n';
 import DemoPoster from './DemoPoster';
 import { DEMO_EVENT_MOVIES, DEMO_PARTICIPANTS } from './demoContent';
 import styles from './landingDemo.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+
+const DEMO_HIDDEN_PARTICIPANTS = 2;
 
 export default function EventPreviewCard() {
   const { t } = useTranslation();
@@ -38,18 +41,14 @@ export default function EventPreviewCard() {
         </div>
 
         <div className={styles.avatars}>
-          <span
+          <AvatarStack
             className={styles.avatarGroup}
-            role="img"
-            aria-label={t('landing.demo.participants')}
-          >
-            {DEMO_PARTICIPANTS.map((pseudo) => (
-              <Avatar key={pseudo} avatarId={null} pseudo={pseudo} size="sm" />
-            ))}
-            <span className={styles.avatarMore} aria-hidden="true">
-              <span>{t('landing.demo.more')}</span>
-            </span>
-          </span>
+            size="sm"
+            max={DEMO_PARTICIPANTS.length}
+            hidden={DEMO_HIDDEN_PARTICIPANTS}
+            label={t('landing.demo.participants')}
+            people={DEMO_PARTICIPANTS.map((pseudo) => ({ key: pseudo, avatarId: null, pseudo }))}
+          />
           <Chip tone="primary" size="sm">
             {t('landing.demo.host')}
           </Chip>
@@ -74,7 +73,7 @@ export default function EventPreviewCard() {
         ))}
 
         <span className={buttonClass({ variant: 'primary' })} aria-hidden="true">
-          <Disc3 size={17} />
+          <Disc3 size={ICON_SIZE.lg} />
           {t('landing.demo.spin')}
         </span>
       </div>

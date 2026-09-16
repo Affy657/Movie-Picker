@@ -88,6 +88,7 @@ import {
 import { TECH_METRICS } from './tech/generated/techMetrics';
 import shared from './tech/techShared.module.css';
 import styles from './tech/techPage.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type FactIconComponent = ComponentType<{ size?: number }>;
 
@@ -271,7 +272,7 @@ export default function TechPage() {
   ): FactItem[] =>
     keys.map(({ key, Icon }) => ({
       key,
-      icon: <Icon size={16} />,
+      icon: <Icon size={ICON_SIZE.md} />,
       term: t(`tech.${group}.${key}` as TranslationKey),
       detail: values[key] ?? t(`tech.${group}.${key}Value` as TranslationKey),
       hint: hints[key] ?? t(`tech.${group}.${key}Hint` as TranslationKey),
@@ -307,7 +308,7 @@ export default function TechPage() {
             <FactGrid
               items={ARCHITECTURE_SERVICES.map(({ key, Logo }) => ({
                 key,
-                icon: <Logo size={18} />,
+                icon: <Logo size={ICON_SIZE.lg} />,
                 term: t(`tech.architecture.${key}` as TranslationKey),
                 detail: t(`tech.architecture.${key}Value` as TranslationKey),
                 hint: t(`tech.architecture.${key}Hint` as TranslationKey),
@@ -459,7 +460,7 @@ export default function TechPage() {
             <FactGrid
               items={TEST_FAMILIES.map(({ key, Icon, value }) => ({
                 key,
-                icon: <Icon size={16} />,
+                icon: <Icon size={ICON_SIZE.md} />,
                 term: t(`tech.tests.${key}` as TranslationKey),
                 detail: t(`tech.tests.${key}Value` as TranslationKey, {
                   count: formatNumber(value),
@@ -600,7 +601,7 @@ export default function TechPage() {
             <FactGrid
               items={METHOD_CARDS.map(({ key, Icon }) => ({
                 key,
-                icon: <Icon size={16} />,
+                icon: <Icon size={ICON_SIZE.md} />,
                 term: t(`tech.method.${key}Title` as TranslationKey),
                 detail:
                   key === 'arbitration'

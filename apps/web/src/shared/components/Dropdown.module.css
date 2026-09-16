@@ -13,7 +13,7 @@
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-medium);
   text-align: left;
-  background: var(--color-input-bg, var(--color-surface));
+  background: var(--color-input-bg);
   color: var(--color-text);
   border: var(--border-width-field) solid var(--color-border);
   border-radius: var(--radius-md);
@@ -46,8 +46,8 @@
 
 .triggerChevron {
   flex-shrink: 0;
-  width: 0.55rem;
-  height: 0.55rem;
+  width: var(--space-2);
+  height: var(--space-2);
   border-right: 2px solid var(--color-text-muted);
   border-bottom: 2px solid var(--color-text-muted);
   transform: rotate(45deg);
@@ -67,7 +67,7 @@
 .menu {
   composes: card radiusMd elevationLg from './Card.module.css';
   position: absolute;
-  top: calc(100% + 0.35rem);
+  top: calc(100% + var(--space-1-5));
   left: 0;
   right: 0;
   z-index: var(--z-dropdown);

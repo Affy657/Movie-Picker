@@ -1,13 +1,17 @@
 import { useId, useState } from 'react';
-import clsx from 'clsx';
 import { Check, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { BOTTTS_IDS, EMOJI_IDS, avatarUrl } from '@/shared/utils/avatar';
 import Modal from '@/shared/components/Modal';
-import styles from './AvatarPickerModal.module.css';
 import IconButton from '@/shared/components/IconButton';
+import { Tabs } from '@/shared/components/Tabs';
+import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+import styles from './AvatarPickerModal.module.css';
 
 type Category = 'bottts' | 'emoji';
+
+const AVATAR_OPTION_PX = 48;
 
 type Props = {
   open: boolean;
@@ -38,59 +42,53 @@ export default function AvatarPickerModal({
           {t('auth.account.avatarLabel')}
         </h2>
         <IconButton label={t('common.close')} onClick={onClose}>
-          <X size={18} aria-hidden />
+          <X size={ICON_SIZE.lg} aria-hidden />
         </IconButton>
       </div>
 
-      <div className={styles.tabs} role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={category === 'bottts'}
-          className={clsx(styles.tab, category === 'bottts' && styles.tabActive)}
-          onClick={() => setCategory('bottts')}
-        >
-          🤖 Robots
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={category === 'emoji'}
-          className={clsx(styles.tab, category === 'emoji' && styles.tabActive)}
-          onClick={() => setCategory('emoji')}
-        >
-          😄 Emoji
-        </button>
-      </div>
+      <Tabs
+        idBase={`avatar-category-${reactId}`}
+        variant="pill"
+        className={styles.tabs}
+        ariaLabel={t('auth.account.avatarLabel')}
+        active={category}
+        onChange={setCategory}
+        tabs={[
+          { key: 'bottts', label: t('auth.account.avatarCategoryRobots') },
+          { key: 'emoji', label: t('auth.account.avatarCategoryEmoji') },
+        ]}
+      />
 
-      <div role="radiogroup" aria-label={t('auth.account.avatarLabel')} className={styles.grid}>
+      <ChoiceGroup
+        value={currentAvatarId}
+        onChange={onSelect}
+        ariaLabel={t('auth.account.avatarLabel')}
+        className={styles.grid}
+      >
         {ids.map((id) => {
           const selected = id === currentAvatarId;
           return (
-            <button
+            <ChoiceCard
               key={id}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              aria-label={t('auth.account.avatarOptionAriaLabel', { name: id })}
-              className={clsx(styles.option, selected && styles.optionSelected)}
-              onClick={() => onSelect(id)}
+              value={id}
+              layout="tile"
+              label={t('auth.account.avatarOptionAriaLabel', { name: id })}
             >
               <img
                 src={avatarUrl(id)}
                 alt=""
                 aria-hidden="true"
-                width={52}
-                height={52}
+                width={AVATAR_OPTION_PX}
+                height={AVATAR_OPTION_PX}
                 loading="lazy"
                 decoding="async"
                 className={styles.img}
               />
-              {selected && <Check size={14} className={styles.check} aria-hidden />}
-            </button>
+              {selected && <Check size={ICON_SIZE.md} className={styles.check} aria-hidden />}
+            </ChoiceCard>
           );
         })}
-      </div>
+      </ChoiceGroup>
     </Modal>
   );
 }

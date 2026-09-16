@@ -7,6 +7,7 @@ import dragStyles from './SheetDrag.module.css';
 import IconButton from './IconButton';
 import Modal from './Modal';
 import styles from './Sheet.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface SheetProps {
   open: boolean;
@@ -49,7 +50,7 @@ export default function Sheet({
                 {title}
               </h2>
               <IconButton label={t('common.close')} onClick={onClose}>
-                <X aria-hidden size={16} />
+                <X aria-hidden size={ICON_SIZE.md} />
               </IconButton>
             </div>
           </div>

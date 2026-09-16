@@ -13,6 +13,7 @@ import Modal from '@/shared/components/Modal';
 import styles from './SupportReportButton.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type CopyState = 'idle' | 'copied' | 'failed';
 
@@ -90,7 +91,7 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
               {t('support.dialogTitle')}
             </h2>
             <IconButton label={t('common.close')} onClick={() => setOpen(false)}>
-              <X size={18} aria-hidden />
+              <X size={ICON_SIZE.lg} aria-hidden />
             </IconButton>
           </header>
 

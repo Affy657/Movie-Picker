@@ -11,6 +11,7 @@ import {
 } from '@/features/watchlist/hooks/useProposeMovieToEvent';
 import styles from './WatchlistProposeSubmenu.module.css';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type RowState = { status: 'idle' | 'pending' | 'done' | 'error'; error?: string };
 
@@ -94,7 +95,7 @@ export default function WatchlistProposeSubmenu({
         aria-expanded={open}
         aria-label={t('watchlist.card.proposeAction')}
       >
-        <ListPlus aria-hidden size={13} />
+        <ListPlus aria-hidden size={ICON_SIZE.sm} />
         <span className={styles.triggerLabel}>{t('watchlist.card.proposeShortLabel')}</span>
       </button>
       {open && pos && (

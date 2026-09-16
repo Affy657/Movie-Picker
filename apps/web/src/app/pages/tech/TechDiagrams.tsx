@@ -34,6 +34,7 @@ import {
   WebPushLogo,
 } from './TechLogos';
 import styles from './techShared.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const SURFACE = 'var(--color-surface-sunken)';
 const SURFACE_PLAIN = 'var(--color-surface)';
@@ -85,9 +86,9 @@ export function ArchitectureDiagram() {
       </defs>
 
       <rect x="8" y="40" width="182" height="118" rx="12" fill={SURFACE} stroke={BORDER} />
-      <ReactLogo x={66} y={54} size={18} />
-      <TypeScriptLogo x={90} y={54} size={18} />
-      <ViteLogo x={114} y={54} size={18} />
+      <ReactLogo x={66} y={54} size={ICON_SIZE.lg} />
+      <TypeScriptLogo x={90} y={54} size={ICON_SIZE.lg} />
+      <ViteLogo x={114} y={54} size={ICON_SIZE.lg} />
       <text x="99" y="96" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
         {t('tech.diagram.browser')}
       </text>
@@ -125,7 +126,7 @@ export function ArchitectureDiagram() {
       </text>
 
       <rect x="250" y="40" width="210" height="118" rx="12" fill={SURFACE} stroke={BORDER} />
-      <AwsLogo x={345} y={54} size={20} />
+      <AwsLogo x={345} y={54} size={ICON_SIZE.xl} />
       <text x="355" y="96" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
         {t('tech.diagram.cdn')}
       </text>
@@ -137,8 +138,8 @@ export function ArchitectureDiagram() {
       </text>
 
       <rect x="250" y="230" width="210" height="118" rx="12" fill={SURFACE} stroke={BORDER} />
-      <DotNetLogo x={331} y={244} size={20} />
-      <GoogleCloudLogo x={359} y={244} size={20} />
+      <DotNetLogo x={331} y={244} size={ICON_SIZE.xl} />
+      <GoogleCloudLogo x={359} y={244} size={ICON_SIZE.xl} />
       <text x="355" y="286" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
         {t('tech.diagram.api')}
       </text>
@@ -160,7 +161,7 @@ export function ArchitectureDiagram() {
       />
 
       <rect x="520" y="230" width="352" height="118" rx="12" fill={SURFACE} stroke={BORDER} />
-      <MongoLogo x={686} y={244} size={20} />
+      <MongoLogo x={686} y={244} size={ICON_SIZE.xl} />
       <text x="696" y="286" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
         {t('tech.diagram.database')}
       </text>
@@ -204,7 +205,7 @@ export function ArchitectureDiagram() {
         const logoX = firstColumn ? 540 : 706;
         return (
           <g key={service.key}>
-            <service.Logo x={logoX} y={rowY - 12} size={16} />
+            <service.Logo x={logoX} y={rowY - 12} size={ICON_SIZE.md} />
             <text x={logoX + 24} y={rowY} className={styles.svgLabel} fill={MUTED}>
               {service.name}
             </text>
@@ -229,7 +230,7 @@ export function ArchitectureDiagram() {
         const rowY = 292 + index * 28;
         return (
           <g key={caller.key}>
-            <caller.Logo x={26} y={rowY - 12} size={16} />
+            <caller.Logo x={26} y={rowY - 12} size={ICON_SIZE.md} />
             <text x="50" y={rowY} className={styles.svgLabel} fill={MUTED}>
               {caller.name}
             </text>
@@ -331,7 +332,7 @@ export function ContractDiagram() {
       </defs>
 
       <rect x="10" y="46" width="170" height="72" rx="12" fill={SURFACE} stroke={BORDER} />
-      <DotNetLogo x={86} y={58} size={18} />
+      <DotNetLogo x={86} y={58} size={ICON_SIZE.lg} />
       <text x="95" y="92" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
         {t('tech.diagram.contractApi')}
       </text>
@@ -553,7 +554,7 @@ export function CiGraphDiagram() {
       </text>
 
       <rect x="10" y="230" width="112" height="42" rx="10" fill={SURFACE} stroke={BORDER} />
-      <GitHubLogo x={22} y={243} size={16} />
+      <GitHubLogo x={22} y={243} size={ICON_SIZE.md} />
       <text x="46" y="256" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.ciChanges')}
       </text>
@@ -586,7 +587,7 @@ export function CiGraphDiagram() {
                 fill={SURFACE}
                 stroke={BORDER}
               />
-              <job.Logo x={208} y={ciRowTop(bandIndex, row) + 7} size={16} color={META} />
+              <job.Logo x={208} y={ciRowTop(bandIndex, row) + 7} size={ICON_SIZE.md} color={META} />
               <text
                 x="230"
                 y={ciRowCenter(bandIndex, row) + 5}
@@ -629,13 +630,13 @@ export function CiGraphDiagram() {
       </g>
 
       <rect x="446" y="48" width="112" height="44" rx="10" fill={SURFACE} stroke={BORDER} />
-      <Container x={460} y={62} size={16} color={META} />
+      <Container x={460} y={62} size={ICON_SIZE.md} color={META} />
       <text x="484" y="75" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.ciDocker')}
       </text>
 
       <rect x="446" y="124" width="112" height="44" rx="10" fill={SURFACE} stroke={BORDER} />
-      <SonarLogo x={460} y={138} size={16} />
+      <SonarLogo x={460} y={138} size={ICON_SIZE.md} />
       <text x="484" y="151" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.ciSonar')}
       </text>
@@ -656,7 +657,7 @@ export function CiGraphDiagram() {
         stroke={PRIMARY}
         strokeWidth="1.5"
       />
-      <GoogleCloudLogo x={650} y={184} size={16} />
+      <GoogleCloudLogo x={650} y={184} size={ICON_SIZE.md} />
       <text x="674" y="197" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.ciDeployApi')}
       </text>
@@ -671,7 +672,7 @@ export function CiGraphDiagram() {
         stroke={PRIMARY}
         strokeWidth="1.5"
       />
-      <AwsLogo x={650} y={352} size={16} />
+      <AwsLogo x={650} y={352} size={ICON_SIZE.md} />
       <text x="674" y="365" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.ciDeployFront')}
       </text>
@@ -890,7 +891,7 @@ export function ProductFlowDiagram() {
         stroke={PRIMARY}
         strokeWidth="1.5"
       />
-      <AnthropicLogo x={258} y={142} size={20} />
+      <AnthropicLogo x={258} y={142} size={ICON_SIZE.xl} />
       <text x="288" y="150" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.frontierModel')}
       </text>
@@ -1088,7 +1089,7 @@ export function AssistantToolingDiagram() {
               fill={SURFACE}
               stroke={BORDER}
             />
-            <Logo x={skill.column + 14} y={y + 10} size={16} />
+            <Logo x={skill.column + 14} y={y + 10} size={ICON_SIZE.md} />
             <text x={skill.column + 38} y={y + 23} className={styles.svgLabel} fill={TEXT}>
               {skill.command}
             </text>
@@ -1114,7 +1115,7 @@ export function AssistantToolingDiagram() {
         stroke={PRIMARY}
         strokeWidth="1.5"
       />
-      <ClaudeLogo x={386} y={MCP_TOP + 49} size={20} />
+      <ClaudeLogo x={386} y={MCP_TOP + 49} size={ICON_SIZE.xl} />
       <text x="414" y={MCP_TOP + 64} className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.mcpAssistant')}
       </text>
@@ -1139,7 +1140,7 @@ export function AssistantToolingDiagram() {
             fill={SURFACE}
             stroke={BORDER}
           />
-          <tool.Logo x={tool.column + 40} y={MCP_TOP + 108} size={18} />
+          <tool.Logo x={tool.column + 40} y={MCP_TOP + 108} size={ICON_SIZE.lg} />
           <text
             x={tool.column + 49}
             y={MCP_TOP + 142}
@@ -1328,7 +1329,7 @@ export function FrontGraphDiagram() {
             fill={SURFACE}
             stroke={BORDER}
           />
-          {entry.Logo ? <entry.Logo x={entry.x + 12} y={260} size={16} /> : null}
+          {entry.Logo ? <entry.Logo x={entry.x + 12} y={260} size={ICON_SIZE.md} /> : null}
           <text
             x={entry.x + (entry.Logo ? 36 : 14)}
             y="273"
@@ -1597,7 +1598,7 @@ export function LetterboxdFlowDiagram() {
             stroke={BORDER}
             strokeDasharray="3 3"
           />
-          <lane.Logo x={22} y={lane.y - 14} size={16} />
+          <lane.Logo x={22} y={lane.y - 14} size={ICON_SIZE.md} />
           <text x="46" y={lane.y - 1} className={styles.svgSub} fill={META}>
             {t(`tech.diagram.lbxLane${lane.key}` as TranslationKey)}
           </text>
@@ -1733,7 +1734,7 @@ export function InfraDiagram() {
             fill={node.hot ? PRIMARY_SOFT : SURFACE}
             stroke={node.hot ? PRIMARY : BORDER}
           />
-          <node.Logo x={node.x + 12} y={node.y + 11} size={16} color={META} />
+          <node.Logo x={node.x + 12} y={node.y + 11} size={ICON_SIZE.md} color={META} />
           <text x={node.x + 36} y={node.y + 23} className={styles.svgLabel} fill={TEXT}>
             {t(`tech.diagram.infra${node.key}` as TranslationKey)}
           </text>

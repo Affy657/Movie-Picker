@@ -1,5 +1,6 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import clsx from 'clsx';
+import Spinner from './Spinner';
 import styles from './IconButton.module.css';
 
 export type IconButtonSize = 'sm' | 'md' | 'lg';
@@ -60,7 +61,7 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
       aria-busy={loading || undefined}
       {...rest}
     >
-      {loading ? <span className={styles.spinner} aria-hidden="true" /> : children}
+      {loading ? <Spinner /> : children}
     </button>
   );
 });

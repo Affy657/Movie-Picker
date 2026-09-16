@@ -4,7 +4,7 @@
   border: var(--border-width-field) solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--color-input-bg, var(--color-surface));
+  background: var(--color-input-bg);
   transition:
     border-color var(--duration-base) var(--ease-default),
     box-shadow var(--duration-base) var(--ease-default);

@@ -35,14 +35,19 @@ describe('Avatar', () => {
 
     const placeholder = container.firstElementChild;
     expect(placeholder).toHaveClass(styles.placeholder!);
+    expect(placeholder).toHaveClass(styles.xs!);
     expect(placeholder).toHaveAttribute('aria-hidden', 'true');
-    expect(placeholder).toHaveStyle({ width: '20px', height: '20px' });
+    expect(placeholder).not.toHaveAttribute('style');
   });
 
-  it('the colour of the initials only depends on the pseudo', () => {
+  it('the colour of the initials is a palette token that only depends on the pseudo', () => {
     const first = render(<Avatar avatarId={null} pseudo="Alice" />).container.firstElementChild;
     const again = render(<Avatar avatarId={null} pseudo="Alice" />).container.firstElementChild;
+    const other = render(<Avatar avatarId={null} pseudo="Bob" />).container.firstElementChild;
 
-    expect((first as HTMLElement).style.background).toBe((again as HTMLElement).style.background);
+    expect(first).toHaveAttribute('data-palette');
+    expect(first?.getAttribute('data-palette')).toBe(again?.getAttribute('data-palette'));
+    expect(first?.getAttribute('data-palette')).not.toBe(other?.getAttribute('data-palette'));
+    expect(first).not.toHaveAttribute('style');
   });
 });

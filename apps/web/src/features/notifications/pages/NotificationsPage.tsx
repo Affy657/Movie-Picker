@@ -24,7 +24,9 @@ import {
 } from '@/features/notifications/api/notificationsApi';
 import { notifIcon } from '@/features/notifications/utils/notifIcon';
 import { groupInboxItems, type InboxGroup } from '@/features/notifications/utils/groupInboxItems';
+import Button from '@/shared/components/Button';
 import styles from './NotificationsPage.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type TFn = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 
@@ -266,14 +268,14 @@ export default function NotificationsPage() {
       <div className={styles.pageHead}>
         <h1 className={styles.pageTitle}>{t('notifications.inboxTitle')}</h1>
         {unreadCount > 0 && (
-          <button
-            type="button"
+          <Button
+            size="sm"
             className={styles.markAllBtn}
-            disabled={markAllMutation.isPending}
+            loading={markAllMutation.isPending}
             onClick={() => markAllMutation.mutate()}
           >
             {t('notifications.markAllButton')}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -285,7 +287,7 @@ export default function NotificationsPage() {
 
       {groups.length === 0 && !inboxQuery.isLoading ? (
         <EmptyState
-          icon={<Inbox size={26} aria-hidden />}
+          icon={<Inbox size={ICON_SIZE['3xl']} aria-hidden />}
           message={t('notifications.inboxEmpty')}
         />
       ) : (
@@ -303,14 +305,13 @@ export default function NotificationsPage() {
       )}
 
       {inboxQuery.hasNextPage && (
-        <button
-          type="button"
+        <Button
           className={styles.loadMoreBtn}
-          disabled={inboxQuery.isFetchingNextPage}
+          loading={inboxQuery.isFetchingNextPage}
           onClick={() => inboxQuery.fetchNextPage()}
         >
           {t('notifications.loadMoreButton')}
-        </button>
+        </Button>
       )}
     </PageLayout>
   );

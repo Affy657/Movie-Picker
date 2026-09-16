@@ -6,6 +6,7 @@ import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n/t';
 import { isSafeTmdbLogoUrl, tmdbLogoSrcForUi } from '@/shared/utils/tmdbLogo';
 import styles from './WatchProviderChips.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 function monetizationLabel(
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
@@ -81,7 +82,7 @@ function OverflowToggle({
       aria-controls={onMoreClick ? undefined : controls}
       aria-label={label}
     >
-      {expanded ? <ChevronLeft aria-hidden size={14} /> : `+${hidden}`}
+      {expanded ? <ChevronLeft aria-hidden size={ICON_SIZE.sm} /> : `+${hidden}`}
     </button>
   );
 }
@@ -180,7 +181,7 @@ export default function WatchProviderChips({
           <div key={g.type} className={clsx(styles.group, separators && i > 0 && styles.groupSep)}>
             {showTypeIcon ? (
               <dt className={styles.label} aria-label={label} title={label}>
-                <ModeIcon type={g.type} size={compact ? 15 : 17} />
+                <ModeIcon type={g.type} size={compact ? ICON_SIZE.md : ICON_SIZE.lg} />
               </dt>
             ) : null}
             <dd className={styles.logos}>

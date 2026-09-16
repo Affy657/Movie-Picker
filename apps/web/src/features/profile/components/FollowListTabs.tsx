@@ -1,7 +1,11 @@
 import { UserPlus } from 'lucide-react';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+import { Tabs } from '@/shared/components/Tabs';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
 import styles from './FollowListModal.module.css';
+
+export const FOLLOW_LIST_TABS_ID = 'follow-list';
 
 type Tab = 'following' | 'followers' | 'search';
 
@@ -20,24 +24,32 @@ export default function FollowListTabs({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  const classOf = (candidate: Tab) => (candidate === tab ? styles.tabActive : styles.tab);
 
   return (
-    <div className={styles.tabs}>
-      <button type="button" className={classOf('following')} onClick={() => onSelect('following')}>
-        {t('profile.follow.followingCount', { count: String(followingCount) })}
-      </button>
-      <button type="button" className={classOf('followers')} onClick={() => onSelect('followers')}>
-        {t('profile.follow.followersCount', { count: String(followersCount) })}
-      </button>
-      <button
-        type="button"
-        className={classOf('search')}
-        onClick={() => onSelect('search')}
-        aria-label={isMobile ? t('profile.follow.search.tabAriaLabel') : undefined}
-      >
-        {isMobile ? <UserPlus size={16} aria-hidden /> : t('profile.follow.search.tab')}
-      </button>
-    </div>
+    <Tabs
+      idBase={FOLLOW_LIST_TABS_ID}
+      className={styles.tabs}
+      ariaLabel={t('profile.follow.listTitle')}
+      active={tab}
+      onChange={onSelect}
+      tabs={[
+        {
+          key: 'following',
+          label: t('profile.follow.followingCount', { count: String(followingCount) }),
+        },
+        {
+          key: 'followers',
+          label: t('profile.follow.followersCount', { count: String(followersCount) }),
+        },
+        {
+          key: 'search',
+          label: isMobile
+            ? t('profile.follow.search.tabAriaLabel')
+            : t('profile.follow.search.tab'),
+          icon: isMobile ? <UserPlus size={ICON_SIZE.md} aria-hidden /> : undefined,
+          iconOnly: isMobile,
+        },
+      ]}
+    />
   );
 }

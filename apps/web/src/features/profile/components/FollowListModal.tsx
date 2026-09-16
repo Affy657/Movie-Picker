@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import IconButton from '@/shared/components/IconButton';
+import { TabPanel } from '@/shared/components/Tabs';
 import Sheet from '@/shared/components/Sheet';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
@@ -19,10 +20,11 @@ import {
 } from '@/features/profile/api/profileApi';
 import FollowListEmptyState from './FollowListEmptyState';
 import FollowListRow from './FollowListRow';
-import FollowListTabs from './FollowListTabs';
+import FollowListTabs, { FOLLOW_LIST_TABS_ID } from './FollowListTabs';
 import FollowSearchRow, { MIN_SEARCH_LENGTH } from './FollowSearchRow';
 import styles from './FollowListModal.module.css';
 import Modal from '@/shared/components/Modal';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Tab = 'following' | 'followers' | 'search';
 
@@ -175,13 +177,19 @@ export default function FollowListModal({
     </p>
   );
 
+  const panel = (
+    <TabPanel idBase={FOLLOW_LIST_TABS_ID} tabKey={tab} active className={styles.panel}>
+      {searchRow}
+      {errorBanner}
+      {list}
+    </TabPanel>
+  );
+
   if (isMobile) {
     return (
       <Sheet open title={t('profile.follow.sheetTitle')} onClose={onClose}>
         {tabs}
-        {searchRow}
-        {errorBanner}
-        {list}
+        {panel}
       </Sheet>
     );
   }
@@ -191,14 +199,11 @@ export default function FollowListModal({
       <div className={styles.header}>
         {tabs}
         <IconButton className={styles.closeButton} label={t('common.close')} onClick={onClose}>
-          <X size={20} aria-hidden />
+          <X size={ICON_SIZE.xl} aria-hidden />
         </IconButton>
       </div>
 
-      {searchRow}
-      {errorBanner}
-
-      {list}
+      {panel}
     </Modal>
   );
 }

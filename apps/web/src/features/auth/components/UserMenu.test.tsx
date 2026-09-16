@@ -67,17 +67,20 @@ describe('UserMenu', () => {
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
 
     expect(screen.getByText('Alice')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /voir mon profil public/i })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: /voir mon profil public/i })).toHaveAttribute(
       'href',
       '/u/alice'
     );
-    expect(screen.getByRole('link', { name: /paramètres/i })).toHaveAttribute('href', '/settings');
-    expect(screen.getByRole('link', { name: /soutenir le projet/i })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: /paramètres/i })).toHaveAttribute(
+      'href',
+      '/settings'
+    );
+    expect(screen.getByRole('menuitem', { name: /soutenir le projet/i })).toHaveAttribute(
       'href',
       '/soutenir'
     );
-    expect(screen.getByRole('button', { name: /installer l['’]app/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /se déconnecter/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /installer l['’]app/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /se déconnecter/i })).toBeInTheDocument();
   });
 
   it('puts the focus on the first item when opening', async () => {
@@ -87,7 +90,7 @@ describe('UserMenu', () => {
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
 
     await waitFor(() =>
-      expect(screen.getByRole('link', { name: /voir mon profil public/i })).toHaveFocus()
+      expect(screen.getByRole('menuitem', { name: /voir mon profil public/i })).toHaveFocus()
     );
   });
 
@@ -98,7 +101,7 @@ describe('UserMenu', () => {
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
 
     expect(screen.queryByRole('link', { name: /voir mon profil public/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /paramètres/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /paramètres/i })).toBeInTheDocument();
   });
 
   it('closes the menu with Escape and gives the focus back to the trigger', async () => {
@@ -107,7 +110,7 @@ describe('UserMenu', () => {
     const trigger = screen.getByRole('button', { name: /menu du compte/i });
 
     await user.click(trigger);
-    expect(screen.getByRole('button', { name: /se déconnecter/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /se déconnecter/i })).toBeInTheDocument();
 
     await user.keyboard('{Escape}');
 
@@ -122,7 +125,7 @@ describe('UserMenu', () => {
     renderMenu();
 
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
-    await user.click(screen.getByRole('button', { name: /proposer une idée/i }));
+    await user.click(screen.getByRole('menuitem', { name: /proposer une idée/i }));
 
     expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument();
     await waitFor(() => {
@@ -135,7 +138,7 @@ describe('UserMenu', () => {
     renderMenu();
 
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
-    await user.click(screen.getByRole('button', { name: /installer l['’]app/i }));
+    await user.click(screen.getByRole('menuitem', { name: /installer l['’]app/i }));
 
     expect(screen.queryByRole('button', { name: /se déconnecter/i })).not.toBeInTheDocument();
     expect(
@@ -155,7 +158,7 @@ describe('UserMenu', () => {
     renderMenu();
 
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
-    await user.click(screen.getByRole('button', { name: /se déconnecter/i }));
+    await user.click(screen.getByRole('menuitem', { name: /se déconnecter/i }));
 
     await waitFor(() => expect(loggedOut).toBe(true));
   });
@@ -182,7 +185,7 @@ describe('UserMenu', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /menu du compte/i }));
-    await user.click(screen.getByRole('button', { name: /se déconnecter/i }));
+    await user.click(screen.getByRole('menuitem', { name: /se déconnecter/i }));
 
     await waitFor(() => expect(client.getQueryData(queryKeys.auth.me)).toBeNull());
     expect(sessionStorage.getItem('moviepicker_participant_abc')).toBeNull();

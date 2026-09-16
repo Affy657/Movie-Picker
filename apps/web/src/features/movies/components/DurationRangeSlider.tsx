@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import clsx from 'clsx';
 import styles from './DurationRangeSlider.module.css';
 
 interface DurationRangeSliderProps {
@@ -54,8 +55,7 @@ export default function DurationRangeSlider({
           const next = Math.min(Number(e.target.value), valueMax);
           onChange(next, valueMax);
         }}
-        className={styles.thumb}
-        style={{ zIndex: minThumbOnTop ? 5 : 3 }}
+        className={clsx(styles.thumb, minThumbOnTop ? styles.thumbOnTop : styles.thumbBelow)}
       />
       <input
         type="range"
@@ -68,8 +68,7 @@ export default function DurationRangeSlider({
           const next = Math.max(Number(e.target.value), valueMin);
           onChange(valueMin, next);
         }}
-        className={styles.thumb}
-        style={{ zIndex: minThumbOnTop ? 3 : 4 }}
+        className={clsx(styles.thumb, minThumbOnTop ? styles.thumbBelow : styles.thumbOnTop)}
       />
       <div className={styles.labels}>
         <span>{formatLabel(valueMin, 'min')}</span>

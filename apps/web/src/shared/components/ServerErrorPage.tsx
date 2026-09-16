@@ -6,6 +6,7 @@ import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useTranslation } from '@/shared/i18n';
 import Button, { buttonClass } from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type ServerErrorPageProps = {
   error?: Error | null;
@@ -22,7 +23,7 @@ export default function ServerErrorPage({ error, onRetry }: Readonly<ServerError
 
   return (
     <ErrorState
-      icon={<ServerCrash size={32} />}
+      icon={<ServerCrash size={ICON_SIZE['4xl']} />}
       code={t('errors.serverCode')}
       title={t('errors.boundary.title')}
       message={message}

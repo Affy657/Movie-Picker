@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { Layers } from 'lucide-react';
 import styles from './MovieCollectionCard.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface Props {
   to: string;
@@ -23,7 +24,7 @@ export default function MovieCollectionCard({
             <img src={posterSrc} alt="" className={styles.poster} loading="lazy" decoding="async" />
           ) : (
             <span className={styles.posterPlaceholder} aria-hidden>
-              <Layers size={20} />
+              <Layers size={ICON_SIZE.xl} />
             </span>
           )}
         </span>

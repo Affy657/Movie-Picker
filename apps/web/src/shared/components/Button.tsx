@@ -1,5 +1,6 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import clsx from 'clsx';
+import Spinner from './Spinner';
 import styles from './Button.module.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
@@ -70,7 +71,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       aria-busy={loading || undefined}
       {...rest}
     >
-      {loading ? <span className={styles.spinner} aria-hidden="true" /> : null}
+      {loading ? <Spinner /> : null}
       {children}
     </button>
   );

@@ -6,6 +6,7 @@ import type { UiThemePreference } from '@/shared/types/theme';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { isUiThemePreference } from '@/shared/utils/uiThemePreference';
 import SegmentedRadioGroup, { type SegmentedSize } from '@/shared/components/SegmentedRadioGroup';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const THEME_OPTIONS: readonly UiThemePreference[] = ['system', 'light', 'dark'];
 
@@ -48,7 +49,9 @@ export default function ThemeToggle({
         return {
           value: code,
           label: t(LABEL_KEY[code]),
-          icon: iconOnly ? <Icon size={16} strokeWidth={2} aria-hidden focusable={false} /> : null,
+          icon: iconOnly ? (
+            <Icon size={ICON_SIZE.md} strokeWidth={2} aria-hidden focusable={false} />
+          ) : null,
         };
       }),
     [t, iconOnly]

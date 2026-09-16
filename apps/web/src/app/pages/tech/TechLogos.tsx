@@ -1,10 +1,12 @@
+import { ICON_SIZE } from '@/shared/components/iconSize';
+
 type LogoProps = {
   x?: number;
   y?: number;
   size?: number;
 };
 
-const DEFAULT_SIZE = 20;
+const DEFAULT_SIZE = ICON_SIZE.xl;
 
 function LogoFrame({
   x,

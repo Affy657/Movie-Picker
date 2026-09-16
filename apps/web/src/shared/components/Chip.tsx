@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode, SVGProps } from 'react';
 import clsx from 'clsx';
 import { X } from 'lucide-react';
 import styles from './Chip.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type ChipTone =
   'neutral' | 'primary' | 'success' | 'warning' | 'pending' | 'danger' | 'muted';
@@ -48,11 +49,18 @@ export default function Chip({
 
   const content = (
     <>
-      {Icon ? <Icon className={styles.icon} width={12} height={12} aria-hidden="true" /> : null}
+      {Icon ? (
+        <Icon
+          className={styles.icon}
+          width={ICON_SIZE.xs}
+          height={ICON_SIZE.xs}
+          aria-hidden="true"
+        />
+      ) : null}
       <span className={styles.text}>{children}</span>
       {onRemove ? (
         <button type="button" className={styles.remove} onClick={onRemove} aria-label={removeLabel}>
-          <X width={12} height={12} aria-hidden="true" />
+          <X width={ICON_SIZE.xs} height={ICON_SIZE.xs} aria-hidden="true" />
         </button>
       ) : null}
     </>

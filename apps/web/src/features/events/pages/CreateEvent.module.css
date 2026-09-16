@@ -1,13 +1,13 @@
 ﻿.layout {
   --page-max-width: var(--container-sm);
-  padding-top: clamp(1.5rem, 5vh, 3rem);
+  padding-top: clamp(var(--space-6), 5vh, var(--space-12));
 }
 
 .backLink {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
-  margin: 0 0 0.85rem clamp(0.5rem, 2vw, 1rem);
+  margin: 0 0 var(--space-3-5) clamp(var(--space-2), 2vw, var(--space-4));
   padding: var(--space-1-5) var(--space-2-5) var(--space-1-5) var(--space-1-5);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
@@ -33,15 +33,15 @@
 
 .card {
   position: relative;
-  padding: clamp(1.5rem, 4vw, 2.25rem) clamp(1.25rem, 3.5vw, 2rem);
+  padding: clamp(var(--space-6), 4vw, var(--space-9)) clamp(var(--space-5), 3.5vw, var(--space-8));
 }
 
 .cardAccent {
   position: absolute;
   top: 0;
-  left: clamp(1.5rem, 4vw, 2.25rem);
-  right: clamp(1.5rem, 4vw, 2.25rem);
-  height: 3px;
+  left: clamp(var(--space-6), 4vw, var(--space-9));
+  right: clamp(var(--space-6), 4vw, var(--space-9));
+  height: var(--space-1);
   border-radius: 0 0 var(--radius-pill) var(--radius-pill);
   background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-brand-secondary) 100%);
 }
@@ -174,8 +174,8 @@
 
 .advancedChevron {
   flex-shrink: 0;
-  width: 0.55rem;
-  height: 0.55rem;
+  width: var(--space-2);
+  height: var(--space-2);
   border-right: 2px solid var(--color-text-muted);
   border-bottom: 2px solid var(--color-text-muted);
   transform: rotate(-45deg);
@@ -198,24 +198,5 @@
 }
 
 .toggleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
   margin-top: var(--space-4);
-}
-
-.toggleName {
-  display: block;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
-}
-
-.toggleDesc {
-  display: block;
-  margin-top: var(--space-0-5);
-  font-size: var(--font-size-2xs);
-  color: var(--color-text-muted);
-  line-height: var(--leading-normal);
 }

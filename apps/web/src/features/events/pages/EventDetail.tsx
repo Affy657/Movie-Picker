@@ -11,6 +11,7 @@ import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 import EventDetailSession from '@/features/events/pages/event-detail/EventDetailSession';
 import { buttonClass } from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 function getDocumentTitle(
   slug: string | undefined,
@@ -76,7 +77,7 @@ export default function EventDetail() {
     return (
       <PageLayout className="page-event page--centered page--errorState">
         <span className="errorStateIcon" aria-hidden>
-          <AlertCircle size={32} />
+          <AlertCircle size={ICON_SIZE['4xl']} />
         </span>
         <p className="errorStateMessage" role="alert">
           {isNetworkPaused

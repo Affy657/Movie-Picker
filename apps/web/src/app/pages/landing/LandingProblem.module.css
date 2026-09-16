@@ -126,10 +126,10 @@
 .timelineBody::before {
   content: '';
   position: absolute;
-  left: -6px;
+  left: calc(-1 * var(--space-1-5));
   top: var(--space-1-5);
-  width: 10px;
-  height: 10px;
+  width: var(--space-2-5);
+  height: var(--space-2-5);
   border-radius: 50%;
   background: var(--color-primary);
 }
@@ -157,7 +157,7 @@
 }
 
 .winnerPoster {
-  width: 46px;
+  width: var(--space-12);
   flex: none;
 }
 

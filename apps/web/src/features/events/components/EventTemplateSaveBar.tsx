@@ -12,6 +12,7 @@ import {
   type TemplateConfigDraft,
 } from '@/features/events/lib/eventTemplateDraft';
 import styles from './EventTemplateSaveBar.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   draft: TemplateConfigDraft;
@@ -87,7 +88,7 @@ export default function EventTemplateSaveBar({
     <div className={clsx(styles.bar, className)}>
       {justSaved ? (
         <output className={styles.saved}>
-          <BadgeCheck size={15} aria-hidden />
+          <BadgeCheck size={ICON_SIZE.md} aria-hidden />
           <span className={styles.savedLabel}>
             {t('events.settings.templates.savedAs', { name: justSaved.name })}
           </span>
@@ -113,7 +114,7 @@ export default function EventTemplateSaveBar({
               disabled={disabled}
               onClick={() => onUpdate(appliedTemplate)}
             >
-              <RotateCcw size={14} aria-hidden />
+              <RotateCcw size={ICON_SIZE.sm} aria-hidden />
               <span className={styles.actionLabel}>
                 {t('events.settings.templates.updateAction')}
               </span>
@@ -124,7 +125,11 @@ export default function EventTemplateSaveBar({
             disabled={disabled || isFull || justSaved !== null}
             onClick={startNaming}
           >
-            {hasDrifted ? <Plus size={14} aria-hidden /> : <Sparkles size={14} aria-hidden />}
+            {hasDrifted ? (
+              <Plus size={ICON_SIZE.sm} aria-hidden />
+            ) : (
+              <Sparkles size={ICON_SIZE.sm} aria-hidden />
+            )}
             <span className={styles.actionLabel}>
               {hasDrifted ? t('events.settings.templates.saveAsNewAction') : saveLabel}
             </span>

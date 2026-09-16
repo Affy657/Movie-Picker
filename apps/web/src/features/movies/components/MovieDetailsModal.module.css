@@ -1,5 +1,5 @@
 .dialog {
-  width: min(640px, calc(100vw - 2rem));
+  width: min(640px, calc(100vw - var(--space-8)));
   max-height: min(75dvh, 620px);
   margin: max(var(--space-6), env(safe-area-inset-top, 0px)) auto auto;
   overflow: hidden;
@@ -26,7 +26,7 @@
 
 .poster {
   flex: 0 0 3.5rem;
-  height: 5.25rem;
+  height: var(--space-20);
   border-radius: var(--radius-sm);
   object-fit: cover;
   background: var(--color-surface-hover);
@@ -37,7 +37,7 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 3.5rem;
-  height: 5.25rem;
+  height: var(--space-20);
   border-radius: var(--radius-sm);
   background: var(--color-surface-hover);
   color: var(--color-text-muted);
@@ -112,52 +112,18 @@
   border-top: 1px solid var(--color-border-subtle);
 }
 
-.footerBtn {
-  composes: expanded from '@/shared/components/tapTarget.module.css';
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: var(--space-9);
-  padding: 0 var(--space-3-5);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-text);
-  font-family: inherit;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  line-height: var(--leading-none);
-  cursor: pointer;
-  transition:
-    background var(--duration-base) var(--ease-default),
-    border-color var(--duration-base) var(--ease-default);
-}
-
 .footerBtnLabel {
   transform: translateY(var(--text-optical-nudge));
 }
 
-@media (hover: hover) {
-  .footerBtn:hover {
-    border-color: var(--color-text-muted);
-  }
-}
-
-.footerBtn:focus-visible {
-  outline: var(--outline-focus);
-  outline-offset: 2px;
-}
-
 .footerBtnDanger {
   margin-left: auto;
-  color: var(--color-error);
 }
 
 .attribution {
   margin: 0;
   flex-shrink: 0;
-  padding: 0.7rem 1.25rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  padding: var(--space-3) var(--space-5) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
   font-size: var(--font-size-3xs);
   color: var(--color-text-muted);
 }

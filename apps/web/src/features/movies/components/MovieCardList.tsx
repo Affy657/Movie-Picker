@@ -20,6 +20,7 @@ import {
 } from '@/features/movies/components/movieCardParts';
 import cardPartsStyles from './movieCardParts.module.css';
 import styles from './MovieCardList.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 function ListPoster({
   src,
@@ -29,7 +30,7 @@ function ListPoster({
   if (!src) {
     return (
       <div className={styles.posterPlaceholder} aria-hidden>
-        <Film size={28} />
+        <Film size={ICON_SIZE['3xl']} />
       </div>
     );
   }

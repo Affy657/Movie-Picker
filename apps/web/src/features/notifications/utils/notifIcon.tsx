@@ -14,8 +14,9 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
-export function notifIcon(type: string, size = 17): ReactNode {
+export function notifIcon(type: string, size = ICON_SIZE.lg): ReactNode {
   switch (type) {
     case 'newfollower':
       return <UserPlus size={size} aria-hidden />;

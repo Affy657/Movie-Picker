@@ -11,6 +11,7 @@ import { DEMO_WHEEL_MOVIES } from './demoContent';
 import { LANDING_ANCHORS } from './anchors';
 import shared from './landingShared.module.css';
 import styles from './LandingWheel.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const SPIN_SAFETY_MS = WHEEL_SPIN_DURATION_MS + 600;
 const MOUNT_FALLBACK_MS = 1500;
@@ -114,15 +115,15 @@ export default function LandingWheel() {
           <p className={shared.lead}>{t('landing.wheel.lead')}</p>
           <ul className={styles.tags}>
             <li>
-              <Check size={18} className={styles.tagIcon} aria-hidden="true" />
+              <Check size={ICON_SIZE.lg} className={styles.tagIcon} aria-hidden="true" />
               {t('landing.wheel.tag1')}
             </li>
             <li>
-              <Check size={18} className={styles.tagIcon} aria-hidden="true" />
+              <Check size={ICON_SIZE.lg} className={styles.tagIcon} aria-hidden="true" />
               {t('landing.wheel.tag2')}
             </li>
             <li>
-              <Check size={18} className={styles.tagIcon} aria-hidden="true" />
+              <Check size={ICON_SIZE.lg} className={styles.tagIcon} aria-hidden="true" />
               {t('landing.wheel.tag3')}
             </li>
           </ul>

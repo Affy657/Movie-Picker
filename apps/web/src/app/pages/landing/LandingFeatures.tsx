@@ -8,6 +8,7 @@ import { LANDING_ANCHORS } from './anchors';
 import demo from './landingDemo.module.css';
 import shared from './landingShared.module.css';
 import styles from './LandingFeatures.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function LandingFeatures() {
   const { t } = useTranslation();
@@ -35,7 +36,7 @@ export default function LandingFeatures() {
             className={clsx(styles.tile, styles.tileWide, shared.reveal)}
           >
             <span className={styles.icon} aria-hidden="true">
-              <Bookmark size={18} />
+              <Bookmark size={ICON_SIZE.lg} />
             </span>
             <h3 className={shared.h3}>{t('landing.features.watchlist.title')}</h3>
             <p className={styles.text}>{t('landing.features.watchlist.text')}</p>
@@ -60,13 +61,13 @@ export default function LandingFeatures() {
             className={clsx(styles.tile, styles.tileWide, shared.reveal)}
           >
             <span className={styles.icon} aria-hidden="true">
-              <Search size={18} />
+              <Search size={ICON_SIZE.lg} />
             </span>
             <h3 className={shared.h3}>{t('landing.features.details.title')}</h3>
             <p className={styles.text}>{t('landing.features.details.text')}</p>
             <div className={styles.demo} aria-hidden="true">
               <div className={demo.searchBar}>
-                <Search size={15} />
+                <Search size={ICON_SIZE.md} />
                 {t('landing.features.details.query')}
                 <span className={demo.caret} />
               </div>
@@ -98,7 +99,7 @@ export default function LandingFeatures() {
             className={clsx(styles.tile, shared.reveal)}
           >
             <span className={styles.icon} aria-hidden="true">
-              <Bell size={18} />
+              <Bell size={ICON_SIZE.lg} />
             </span>
             <h3 className={shared.h3}>{t('landing.features.notifications.title')}</h3>
             <p className={styles.text}>{t('landing.features.notifications.text')}</p>
@@ -119,7 +120,7 @@ export default function LandingFeatures() {
             className={clsx(styles.tile, shared.reveal)}
           >
             <span className={styles.icon} aria-hidden="true">
-              <CalendarDays size={18} />
+              <CalendarDays size={ICON_SIZE.lg} />
             </span>
             <h3 className={shared.h3}>{t('landing.features.calendar.title')}</h3>
             <p className={styles.text}>{t('landing.features.calendar.text')}</p>
@@ -138,7 +139,7 @@ export default function LandingFeatures() {
             className={clsx(styles.tile, shared.reveal)}
           >
             <span className={styles.icon} aria-hidden="true">
-              <Smartphone size={18} />
+              <Smartphone size={ICON_SIZE.lg} />
             </span>
             <h3 className={shared.h3}>{t('landing.features.pwa.title')}</h3>
             <p className={styles.text}>{t('landing.features.pwa.text')}</p>
@@ -157,7 +158,7 @@ export default function LandingFeatures() {
             className={clsx(styles.tile, shared.reveal)}
           >
             <span className={styles.icon} aria-hidden="true">
-              <Palette size={18} />
+              <Palette size={ICON_SIZE.lg} />
             </span>
             <h3 className={shared.h3}>{t('landing.features.theme.title')}</h3>
             <p className={styles.text}>{t('landing.features.theme.text')}</p>

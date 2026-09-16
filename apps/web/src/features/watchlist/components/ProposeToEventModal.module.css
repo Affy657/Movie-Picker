@@ -54,7 +54,7 @@
 
 .rowDone {
   font-weight: var(--font-weight-semibold);
-  color: var(--color-success, var(--color-primary));
+  color: var(--color-success);
 }
 
 .rowError {

@@ -1,10 +1,11 @@
 import clsx from 'clsx';
 import { Eye } from 'lucide-react';
-import Avatar from '@/shared/components/Avatar';
+import AvatarStack from '@/shared/components/AvatarStack';
 import Tooltip from '@/shared/components/Tooltip';
 import type { Translate } from '@/features/movies/types';
 import type { MovieData } from '@/shared/types/movie';
 import styles from './SeenButton.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export function SeenButton({
   m,
@@ -42,7 +43,7 @@ export function SeenButton({
         }
         title={t('movies.seen.neutralTooltip')}
       >
-        <Eye aria-hidden size={15} />
+        <Eye aria-hidden size={ICON_SIZE.md} />
         <span className={styles.seenLabel}>
           {m.seenCount || alwaysShowCount
             ? t('movies.seen.labelWithCount', { count: m.seenCount ?? 0 })
@@ -51,17 +52,15 @@ export function SeenButton({
       </button>
       {othersHint && others.length > 0 && (
         <Tooltip label={othersHint}>
-          <span className={styles.seenAvatars} role="img" aria-label={othersHint}>
-            {others.slice(0, 3).map((pseudo) => (
-              <Avatar
-                key={pseudo}
-                avatarId={avatarsByPseudo?.[pseudo] ?? ''}
-                pseudo={pseudo}
-                size="xs"
-                className={styles.seenAvatar}
-              />
-            ))}
-          </span>
+          <AvatarStack
+            className={styles.seenAvatars}
+            label={othersHint}
+            people={others.map((pseudo) => ({
+              key: pseudo,
+              avatarId: avatarsByPseudo?.[pseudo] ?? '',
+              pseudo,
+            }))}
+          />
         </Tooltip>
       )}
     </span>

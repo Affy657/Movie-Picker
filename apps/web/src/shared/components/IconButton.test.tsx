@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import IconButton from '@/shared/components/IconButton';
 import styles from '@/shared/components/IconButton.module.css';
+import spinnerStyles from '@/shared/components/Spinner.module.css';
 
 describe('IconButton', () => {
   it('carries its label in aria-label and title, without rendering it visible', () => {
@@ -51,7 +52,7 @@ describe('IconButton', () => {
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute('aria-busy', 'true');
     expect(screen.queryByTestId('icon')).toBeNull();
-    expect(button.querySelector(`.${styles.spinner}`)).not.toBeNull();
+    expect(button.querySelector(`.${spinnerStyles.spinner}`)).not.toBeNull();
 
     await userEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();

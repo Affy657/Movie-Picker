@@ -3,12 +3,15 @@ import { Link } from 'react-router';
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
+import AvatarStack from '@/shared/components/AvatarStack';
 import Tooltip from '@/shared/components/Tooltip';
 import { useLocale } from '@/shared/i18n';
 import type { MovieData } from '@/shared/types/movie';
+import Button from '@/shared/components/Button';
 import SeenButton from '@/features/movies/components/SeenButton';
 import type { Translate } from '@/features/movies/types';
 import styles from './MovieDetailsEventTab.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export interface MovieDetailsEventContext {
   movie: MovieData;
@@ -87,17 +90,14 @@ export default function MovieDetailsEventTab({
       {votersUp.length > 0 && (
         <div className={styles.row}>
           <p className={styles.rowLabel}>{t('movies.details.votersUpLabel')}</p>
-          <span className={styles.avatarStack}>
-            {votersUp.slice(0, 3).map((pseudo) => (
-              <Avatar
-                key={pseudo}
-                avatarId={context.avatarsByPseudo?.[pseudo] ?? ''}
-                pseudo={pseudo}
-                size="xs"
-                className={styles.avatarStackItem}
-              />
-            ))}
-          </span>
+          <AvatarStack
+            className={styles.avatarStack}
+            people={votersUp.map((pseudo) => ({
+              key: pseudo,
+              avatarId: context.avatarsByPseudo?.[pseudo] ?? '',
+              pseudo,
+            }))}
+          />
           <span className={styles.rowHint}>{votersUp.join(', ')}</span>
         </div>
       )}
@@ -106,24 +106,24 @@ export default function MovieDetailsEventTab({
         <div className={styles.row}>
           <p className={styles.rowLabel}>{t('movies.details.myVoteLabel')}</p>
           <span className={styles.voteButtons}>
-            <button
-              type="button"
-              className={clsx(styles.voteBtn, movie.myVote === 1 && styles.voteBtnUpActive)}
+            <Button
+              size="sm"
+              variant={movie.myVote === 1 ? 'primary' : 'secondary'}
               onClick={() => context.onVote(1)}
               aria-pressed={movie.myVote === 1}
             >
-              <ThumbsUp aria-hidden size={16} />
+              <ThumbsUp aria-hidden size={ICON_SIZE.md} />
               <span className={styles.voteBtnLabel}>{t('movies.list.voteUp')}</span>
-            </button>
-            <button
-              type="button"
-              className={clsx(styles.voteBtn, movie.myVote === -1 && styles.voteBtnDownActive)}
+            </Button>
+            <Button
+              size="sm"
+              tone={movie.myVote === -1 ? 'danger' : 'default'}
               onClick={() => context.onVote(-1)}
               aria-pressed={movie.myVote === -1}
             >
-              <ThumbsDown aria-hidden size={16} />
+              <ThumbsDown aria-hidden size={ICON_SIZE.md} />
               <span className={styles.voteBtnLabel}>{t('movies.list.voteDown')}</span>
-            </button>
+            </Button>
           </span>
         </div>
       )}

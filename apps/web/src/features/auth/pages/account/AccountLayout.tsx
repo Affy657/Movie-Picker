@@ -7,6 +7,7 @@ import type { UserProfile } from '@/features/auth/types';
 import AccountIdentityHeader from './AccountIdentityHeader';
 import { ACCOUNT_RUBRIQUES } from './accountRubriques';
 import styles from './AccountLayout.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function AccountLayout({ user }: Readonly<{ user: UserProfile }>) {
   const { t } = useTranslation();
@@ -21,7 +22,7 @@ export default function AccountLayout({ user }: Readonly<{ user: UserProfile }>)
       {isMobile ? (
         <div className={styles.mobileSubHeader}>
           <button type="button" className={styles.back} onClick={() => navigate(ROUTES.account)}>
-            <ChevronLeft size={16} aria-hidden />
+            <ChevronLeft size={ICON_SIZE.md} aria-hidden />
             <span>{t('auth.account.backToAccount')}</span>
           </button>
         </div>
@@ -39,7 +40,7 @@ export default function AccountLayout({ user }: Readonly<{ user: UserProfile }>)
                   isActive ? `${styles.rubric} ${styles.rubricActive}` : styles.rubric
                 }
               >
-                <Icon size={17} aria-hidden />
+                <Icon size={ICON_SIZE.lg} aria-hidden />
                 <span>{t(rubrique.labelKey)}</span>
                 {showDot && (
                   <>

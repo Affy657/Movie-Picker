@@ -39,6 +39,7 @@ import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton
 import styles from './ProfileCollectionPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Button from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export interface ProfileCollectionTexts {
   pageTitle: (name: string) => string;
@@ -161,7 +162,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
   return (
     <PageLayout className={styles.layout}>
       <Link to={ROUTES.profile(profile.handle)} className={styles.backLink}>
-        <ArrowLeft size={16} aria-hidden />
+        <ArrowLeft size={ICON_SIZE.md} aria-hidden />
         <span className={styles.backLinkLabel}>{t('profile.movies.backLink')}</span>
       </Link>
 
@@ -187,12 +188,12 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
       {!itemsQuery.isPending && itemsQuery.isError && (
         <div className={styles.moviesError} role="alert">
           <span className={styles.moviesErrorIcon} aria-hidden>
-            <AlertCircle size={18} />
+            <AlertCircle size={ICON_SIZE.lg} />
           </span>
           <div className={styles.moviesErrorBody}>
             <p className={styles.moviesErrorMessage}>{texts.loadError}</p>
             <Button type="button" size="sm" onClick={() => itemsQuery.refetch()}>
-              <RefreshCw size={15} aria-hidden />
+              <RefreshCw size={ICON_SIZE.md} aria-hidden />
               <span className={styles.btnLabel}>{t('profile.stats.retry')}</span>
             </Button>
           </div>
@@ -200,7 +201,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
       )}
       {!itemsQuery.isPending && !itemsQuery.isError && totalCount === 0 && (
         <EmptyState
-          icon={<Film aria-hidden size={28} />}
+          icon={<Film aria-hidden size={ICON_SIZE['3xl']} />}
           title={texts.emptyTitle}
           message={texts.emptyMessage}
         />
@@ -243,14 +244,14 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
             ))}
           </ul>
           {toolbar.remainingCount > 0 && (
-            <button type="button" className={styles.loadMoreBtn} onClick={toolbar.revealMore}>
+            <Button className={styles.loadMoreBtn} onClick={toolbar.revealMore}>
               {pluralizeCount(
                 toolbar.remainingCount,
                 'profile.movies.loadMoreOne',
                 'profile.movies.loadMore',
                 t
               )}
-            </button>
+            </Button>
           )}
         </MovieListFilteredLayout>
       )}

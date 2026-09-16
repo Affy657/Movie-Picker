@@ -10,6 +10,7 @@ import {
 import type { MyEventSummary } from '@/features/events/types';
 import { useTranslation } from '@/shared/i18n';
 import styles from '@/features/events/pages/MyEventsPage.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface UpcomingEventsSectionProps {
   events: MyEventSummary[];
@@ -50,7 +51,7 @@ export default function UpcomingEventsSection({
         ))}
         <li className={styles.item}>
           <Link to={ROUTES.createEvent} className={styles.ghostCard}>
-            <CalendarPlus aria-hidden size={22} />
+            <CalendarPlus aria-hidden size={ICON_SIZE['2xl']} />
             <span>{t('events.myEvents.createCta')}</span>
           </Link>
         </li>

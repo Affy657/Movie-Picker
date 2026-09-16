@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import styles from './DialogTitleBar.module.css';
 import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function DialogTitleBar({
   titleId,
@@ -20,7 +21,7 @@ export default function DialogTitleBar({
         {title}
       </h2>
       <IconButton label={closeLabel} onClick={onClose}>
-        <X aria-hidden size={18} />
+        <X aria-hidden size={ICON_SIZE.lg} />
       </IconButton>
     </div>
   );

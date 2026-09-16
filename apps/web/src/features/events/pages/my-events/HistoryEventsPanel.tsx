@@ -14,7 +14,9 @@ import HistoryRecap from './HistoryRecap';
 import HistoryToolbar from './HistoryToolbar';
 import type { useHistoryToolbar } from './useHistoryToolbar';
 import type { MyEventsActions } from './useMyEventsActions';
+import Button from '@/shared/components/Button';
 import styles from '@/features/events/pages/MyEventsPage.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const HISTORY_FILTERS_PANEL_ID = 'my-events-history-filters';
 
@@ -87,7 +89,7 @@ function HistoryResults({
     return (
       <EmptyState
         compact
-        icon={<History size={22} aria-hidden />}
+        icon={<History size={ICON_SIZE['2xl']} aria-hidden />}
         title={t('events.myEvents.searchNoResultsTitle')}
         message={t('events.myEvents.searchNoResults', { query: searchQuery })}
       />
@@ -98,7 +100,7 @@ function HistoryResults({
     return (
       <EmptyState
         compact
-        icon={<History size={22} aria-hidden />}
+        icon={<History size={ICON_SIZE['2xl']} aria-hidden />}
         title={t('events.myEvents.searchNoResultsTitle')}
         message={t('events.myEvents.historyNoResultsForFilters')}
       />
@@ -117,14 +119,14 @@ function HistoryResults({
         <HistoryEventList events={toolbar.visibleEvents} {...handlers} />
       )}
       {query.hasNextPage ? (
-        <button
-          type="button"
+        <Button
+          size="sm"
           className={styles.loadMoreBtn}
           onClick={() => query.fetchNextPage()}
-          disabled={query.isFetchingNextPage}
+          loading={query.isFetchingNextPage}
         >
           {loadMoreLabel}
-        </button>
+        </Button>
       ) : null}
     </>
   );
@@ -160,7 +162,7 @@ export default function HistoryEventsPanel({
 
       {totalFinished === 0 ? (
         <EmptyState
-          icon={<History size={26} aria-hidden />}
+          icon={<History size={ICON_SIZE['3xl']} aria-hidden />}
           title={t('events.myEvents.historyEmptyTitle')}
           message={t('events.myEvents.historyEmpty')}
         />

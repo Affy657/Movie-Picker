@@ -1,6 +1,6 @@
 .toolbar {
   position: sticky;
-  top: var(--header-height, 3.5rem);
+  top: var(--header-height);
   z-index: var(--z-sticky);
   display: flex;
   align-items: center;
@@ -22,19 +22,8 @@
 }
 
 .filterBtn {
-  display: inline-flex;
-  align-items: center;
   gap: var(--space-1-5);
-  min-height: var(--tap-target-min);
-  padding: 0 var(--space-3-5);
-  font-family: inherit;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-muted);
-  background: transparent;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  cursor: pointer;
+  padding-inline: var(--space-3-5);
   white-space: nowrap;
 }
 
@@ -43,8 +32,7 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.filterBtnActive,
-.filterBtn[aria-expanded='true'] {
+.filterBtnActive {
   color: var(--color-primary-text);
   background: var(--color-primary-soft);
   border-color: var(--color-primary);
@@ -54,8 +42,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.15rem;
-  height: 1.15rem;
+  min-width: var(--space-5);
+  height: var(--space-5);
   padding: 0 var(--space-1);
   border-radius: var(--radius-pill);
   background: var(--color-primary);

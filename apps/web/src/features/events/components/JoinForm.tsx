@@ -12,6 +12,7 @@ import { JOIN_PROMPT_ANCHOR_ID } from '@/features/events/joinPrompt';
 import styles from './JoinForm.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface JoinFormProps {
   slug: string;
@@ -114,7 +115,7 @@ export default function JoinForm({
       className={styles.root}
     >
       <h2 className={styles.title}>
-        <UserPlus size={18} aria-hidden className={styles.titleIcon} />
+        <UserPlus size={ICON_SIZE.lg} aria-hidden className={styles.titleIcon} />
         <span className={styles.titleLabel}>{t('events.join.title')}</span>
       </h2>
       {body}

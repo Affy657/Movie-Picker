@@ -30,6 +30,7 @@ import {
 } from '@/features/profile/api/profileApi';
 import styles from './ProfilePage.module.css';
 import Button from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
 const ProfileStatsSection = lazy(() => import('@/features/profile/components/ProfileStatsSection'));
@@ -190,12 +191,12 @@ export default function ProfilePage() {
           {statsQuery.isError && (
             <div className={styles.statsError} role="alert">
               <span className={styles.statsErrorIcon} aria-hidden>
-                <AlertCircle size={18} />
+                <AlertCircle size={ICON_SIZE.lg} />
               </span>
               <div className={styles.statsErrorBody}>
                 <p className={styles.statsErrorMessage}>{t('profile.stats.loadError')}</p>
                 <Button type="button" size="sm" onClick={() => statsQuery.refetch()}>
-                  <RefreshCw size={15} aria-hidden />
+                  <RefreshCw size={ICON_SIZE.md} aria-hidden />
                   <span className={styles.btnLabel}>{t('profile.stats.retry')}</span>
                 </Button>
               </div>

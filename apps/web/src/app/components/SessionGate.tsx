@@ -8,6 +8,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { hasSessionHint } from '@/features/auth/session-hint';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import styles from './SessionGate.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type SessionGateProps = {
   icon: ReactNode;
@@ -46,7 +47,7 @@ export default function SessionGate({
       <h1 className={headingHidden ? 'visually-hidden' : styles.title}>{t(headingKey)}</h1>
       {back ? (
         <Link to={back.to} className={styles.backLink}>
-          <ArrowLeft size={16} aria-hidden />
+          <ArrowLeft size={ICON_SIZE.md} aria-hidden />
           <span className={styles.backLinkLabel}>{t(back.labelKey)}</span>
         </Link>
       ) : null}

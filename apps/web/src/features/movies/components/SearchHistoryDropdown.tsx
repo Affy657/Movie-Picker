@@ -1,7 +1,9 @@
 import { forwardRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
+import LinkButton from '@/shared/components/LinkButton';
 import styles from './SearchHistoryDropdown.module.css';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type SearchHistoryDropdownProps = {
   id: string;
@@ -19,9 +21,7 @@ const SearchHistoryDropdown = forwardRef<HTMLDivElement, SearchHistoryDropdownPr
       <div className={styles.historyDropdown} id={id} ref={ref}>
         <div className={styles.historyHeader}>
           <span className={styles.historyTitle}>{t('movies.search.historyTitle')}</span>
-          <button type="button" className={styles.historyClearBtn} onClick={onClear}>
-            {t('movies.search.historyClear')}
-          </button>
+          <LinkButton onClick={onClear}>{t('movies.search.historyClear')}</LinkButton>
         </div>
         <ul className={styles.historyList}>
           {history.map((query) => (
@@ -32,7 +32,7 @@ const SearchHistoryDropdown = forwardRef<HTMLDivElement, SearchHistoryDropdownPr
                 aria-label={t('movies.search.historySelectAria', { query })}
                 onClick={() => onSelect(query)}
               >
-                <Search className={styles.historyIcon} size={14} aria-hidden />
+                <Search className={styles.historyIcon} size={ICON_SIZE.sm} aria-hidden />
                 <span className={styles.historyLabel}>{query}</span>
               </button>
               <button
@@ -41,7 +41,7 @@ const SearchHistoryDropdown = forwardRef<HTMLDivElement, SearchHistoryDropdownPr
                 aria-label={t('movies.search.historyRemoveAria', { query })}
                 onClick={() => onRemove(query)}
               >
-                <X size={12} aria-hidden />
+                <X size={ICON_SIZE.xs} aria-hidden />
               </button>
             </li>
           ))}

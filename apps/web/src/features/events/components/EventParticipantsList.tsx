@@ -4,12 +4,14 @@ import { Link } from 'react-router';
 import { Check, Crown, Settings2, UserPlus, Users, X } from 'lucide-react';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import { useTranslation } from '@/shared/i18n';
+import Chip from '@/shared/components/Chip';
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
 import styles from './EventParticipantsList.module.css';
 import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   participants: EventParticipantSummary[] | undefined;
@@ -63,13 +65,18 @@ export default function EventParticipantsList({
     >
       <div className={styles.headerRow}>
         <h2 id="participants-heading" className={styles.header}>
-          <Users aria-hidden size={18} className={styles.headerIcon} />
+          <Users aria-hidden size={ICON_SIZE.lg} className={styles.headerIcon} />
           <span className={styles.headerLabel}>{t('events.participants.title')}</span>
           <span className={styles.count}>({countLabel})</span>
           {isFull && (
-            <span className={styles.fullBadge} aria-label={t('events.participants.fullBadgeAria')}>
+            <Chip
+              tone="warning"
+              size="sm"
+              className={styles.fullBadge}
+              label={t('events.participants.fullBadgeAria')}
+            >
               {t('events.participants.fullBadge')}
-            </span>
+            </Chip>
           )}
         </h2>
         {canManage && (
@@ -83,12 +90,12 @@ export default function EventParticipantsList({
           >
             {managing ? (
               <>
-                <Check aria-hidden size={14} />
+                <Check aria-hidden size={ICON_SIZE.sm} />
                 <span className={styles.manageBtnLabel}>{t('events.participants.manageDone')}</span>
               </>
             ) : (
               <>
-                <Settings2 aria-hidden size={14} />
+                <Settings2 aria-hidden size={ICON_SIZE.sm} />
                 <span className={styles.manageBtnLabel}>
                   {t('events.participants.manageAction')}
                 </span>
@@ -101,7 +108,7 @@ export default function EventParticipantsList({
       {participants.length === 0 && !onInvite ? (
         <EmptyState
           compact
-          icon={<UserPlus size={22} aria-hidden />}
+          icon={<UserPlus size={ICON_SIZE['2xl']} aria-hidden />}
           message={t('events.participants.empty')}
         />
       ) : (
@@ -142,7 +149,7 @@ export default function EventParticipantsList({
                     aria-label={t('events.participants.hostBadge')}
                     title={t('events.participants.hostBadge')}
                   >
-                    <Crown aria-hidden size={12} />
+                    <Crown aria-hidden size={ICON_SIZE.xs} />
                   </span>
                 )}
                 {managing && canHostRemove && (
@@ -155,7 +162,7 @@ export default function EventParticipantsList({
                     onClick={() => onRemoveParticipant(p.id, p.pseudo)}
                     data-testid={`remove-participant-${p.id}`}
                   >
-                    <X aria-hidden size={14} />
+                    <X aria-hidden size={ICON_SIZE.sm} />
                   </button>
                 )}
               </li>
@@ -163,17 +170,14 @@ export default function EventParticipantsList({
           })}
           {onInvite && (
             <li>
-              <button
-                type="button"
+              <Chip
+                icon={UserPlus}
                 className={styles.inviteChip}
                 onClick={onInvite}
-                aria-label={t('events.participants.inviteAriaLabel')}
+                label={t('events.participants.inviteAriaLabel')}
               >
-                <UserPlus aria-hidden size={14} />
-                <span className={styles.inviteChipLabel}>
-                  {t('events.participants.inviteAction')}
-                </span>
-              </button>
+                {t('events.participants.inviteAction')}
+              </Chip>
             </li>
           )}
         </ul>

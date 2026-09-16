@@ -56,8 +56,8 @@
 }
 
 .navDot {
-  width: 8px;
-  height: 8px;
+  width: var(--space-2);
+  height: var(--space-2);
   border-radius: 50%;
   background: var(--color-warning);
   flex-shrink: 0;

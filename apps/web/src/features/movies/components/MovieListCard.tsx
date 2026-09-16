@@ -8,6 +8,7 @@ import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import type { RatingScale } from '@/shared/types/theme';
 import styles from './MovieListCard.module.css';
 import Card from '@/shared/components/Card';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface MovieListCardProps {
   title: string;
@@ -66,7 +67,7 @@ export default function MovieListCard({
           />
         ) : (
           <div className={styles.posterPlaceholder} aria-hidden>
-            <Film size={22} />
+            <Film size={ICON_SIZE['2xl']} />
           </div>
         )}
 

@@ -49,7 +49,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  min-width: 1.75rem;
+  min-width: var(--space-7);
   min-height: var(--space-7);
   padding: 0;
   background: none;
@@ -78,8 +78,8 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 1.4rem;
-  height: 1.4rem;
+  width: var(--space-6);
+  height: var(--space-6);
   padding: 0;
   border: none;
   border-radius: var(--radius-pill);
@@ -113,15 +113,15 @@
 
 .winnerRibbon {
   position: absolute;
-  bottom: 0.35rem;
-  left: 0.35rem;
+  bottom: var(--space-1-5);
+  left: var(--space-1-5);
   z-index: var(--z-raised);
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  max-width: calc(100% - 0.7rem);
-  padding: calc(0.2rem + var(--text-optical-nudge-caps)) 0.4rem
-    calc(0.2rem - var(--text-optical-nudge-caps));
+  max-width: calc(100% - var(--space-3));
+  padding: calc(var(--space-1) + var(--text-optical-nudge-caps)) var(--space-1-5)
+    calc(var(--space-1) - var(--text-optical-nudge-caps));
   border-radius: var(--radius-sm);
   background: var(--color-primary);
   color: var(--color-primary-contrast);
@@ -141,14 +141,14 @@
 
 .watchlistBadge {
   position: absolute;
-  top: 0.35rem;
-  right: 0.35rem;
+  top: var(--space-1-5);
+  right: var(--space-1-5);
   z-index: var(--z-raised);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: var(--space-5);
+  height: var(--space-5);
   border-radius: var(--radius-pill);
   background: var(--on-poster-scrim-strong);
   color: var(--on-poster-fg);
@@ -206,7 +206,7 @@
 .voteCount {
   font-variant-numeric: tabular-nums;
   font-weight: var(--font-weight-semibold);
-  min-width: 0.9rem;
+  min-width: var(--space-3-5);
   text-align: center;
   transform: translateY(var(--text-optical-nudge));
 }
@@ -217,8 +217,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-0-5);
-  height: 1.75rem;
-  min-width: 1.75rem;
+  height: var(--space-7);
+  min-width: var(--space-7);
   padding: 0 var(--space-1);
   border-radius: var(--radius-xs);
   border: 1px dashed var(--mc-border, var(--on-poster-border));
@@ -343,13 +343,13 @@
     transform: rotate(-0.6deg) translateY(0);
   }
   25% {
-    transform: rotate(0.7deg) translateY(-2px);
+    transform: rotate(0.7deg) translateY(var(--lift-md));
   }
   50% {
     transform: rotate(-0.4deg) translateY(1px);
   }
   75% {
-    transform: rotate(0.5deg) translateY(-1px);
+    transform: rotate(0.5deg) translateY(var(--lift-sm));
   }
 }
 
