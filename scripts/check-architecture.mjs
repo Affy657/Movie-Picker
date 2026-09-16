@@ -184,7 +184,24 @@ const SPACING_PROP =
   /(?:^|[;{\n])\s*(padding|margin|gap|row-gap|column-gap)(?:-[a-z-]+)?\s*:\s*([^;{}]+)/g;
 const RAW_LENGTH = /(?<![\w.-])-?\d*\.?\d+(?:rem|px)\b/g;
 const CLIP_PATTERN_LENGTHS = new Set(['-1px', '0px']);
+const HAIRLINE_LENGTHS = new Set(['1px', '2px', '-2px']);
 const TOKEN_CALL = /(?:var|env)\([^()]*\)/g;
+const SIZE_PROP =
+  /(?:^|[;{\n])\s*(width|height|min-width|max-width|min-height|max-height|top|right|bottom|left|inset(?:-[a-z-]+)?|flex-basis)\s*:\s*([^;{}]+)/g;
+const SIZE_LITERAL = /(?<![\w.-])(-?)(\d*\.?\d+)(rem|px)\b/g;
+const SIZE_SCALE_MAX_PX = 96;
+const TRANSFORM_PROP = /(?:^|[;{\n])\s*transform\s*:\s*([^;{}]+)/g;
+const TRANSLATE_LITERAL = /(translate[XY]?)\((-?)(\d*\.?\d+)(rem|px)\)/g;
+
+function stripTokenCalls(value) {
+  let previous;
+  let stripped = value;
+  do {
+    previous = stripped;
+    stripped = stripped.replace(TOKEN_CALL, ' ');
+  } while (stripped !== previous);
+  return stripped;
+}
 const OPACITY_DECL = /(?:^|[;{\n])\s*opacity\s*:\s*([^;{}]+)/g;
 const KEYFRAME_STEP = /^(?:from|to|\d+%)(?:\s*,\s*(?:from|to|\d+%))*$/;
 const CSS_RULE_RE = /([^{}]+)\{([^{}]*)\}/g;
@@ -209,7 +226,9 @@ const OUTLINE_LITERAL = /(?:^|[;{\n])\s*outline\s*:\s*(\d+px\s+solid\s+var\(--co
 const FOCUS_VISIBLE_RULE = /([^{}]*:focus-visible[^{]*)\{([^}]*)\}/g;
 const PRIMITIVE_IN_MODULE =
   /var\((--(?:blue|green|violet|pink|orange|red|cyan|indigo|amber|emerald|yellow|sky)-\d+)\)/g;
-const DECLARED_TOKEN = /(--[a-z][\w-]*)\s*:/g;
+const DECLARED_TOKEN = /(?:^|[;{\n])\s*(--[a-z][\w-]*)\s*:/g;
+const TOKENS_CONSUMED_INDIRECTLY =
+  /^--(?:(?:blue|green|violet|purple|pink|orange|red|cyan|indigo|amber|emerald|yellow|sky)-\d+|icon-[\w]+)$/;
 const USED_TOKEN = /var\((--[a-z][\w-]*)\)/g;
 const TOKEN_IN_SOURCE = /['"`](--[a-z][\w-]*)['"`]/g;
 
@@ -232,12 +251,35 @@ function checkDesignTokens(cssFiles) {
     if (path === FOUNDATION) continue;
 
     for (const [, prop, value] of text.matchAll(SPACING_PROP)) {
-      if (/calc\(|clamp\(/.test(value)) continue;
-      const literals = [...value.replace(TOKEN_CALL, ' ').matchAll(RAW_LENGTH)]
+      const literals = [...stripTokenCalls(value).matchAll(RAW_LENGTH)]
         .map(([length]) => length)
         .filter((length) => !CLIP_PATTERN_LENGTHS.has(length));
       if (literals.length > 0)
         violations.push(`${path}: ${prop}: ${value.trim()}, use var(--space-*)`);
+    }
+
+    if (path.endsWith('.module.css')) {
+      for (const [, prop, value] of text.matchAll(SIZE_PROP)) {
+        const shown = value.trim().replace(/\s+/g, ' ');
+        for (const [length, sign, number, unit] of stripTokenCalls(value).matchAll(SIZE_LITERAL)) {
+          if (CLIP_PATTERN_LENGTHS.has(length) || HAIRLINE_LENGTHS.has(length)) continue;
+          const px = unit === 'rem' ? Number(number) * 16 : Number(number);
+          if (px === 0 || px > SIZE_SCALE_MAX_PX) continue;
+          violations.push(
+            `${path}: ${prop}: ${shown}, a size under ${SIZE_SCALE_MAX_PX}px is var(--space-*), var(--icon-*), var(--avatar-*) or var(--tap-target-min)`
+          );
+          break;
+        }
+      }
+      for (const [, value] of text.matchAll(TRANSFORM_PROP))
+        for (const [, fn, sign, number, unit] of stripTokenCalls(value).matchAll(
+          TRANSLATE_LITERAL
+        )) {
+          if (HAIRLINE_LENGTHS.has(`${sign}${number}${unit}`)) continue;
+          violations.push(
+            `${path}: transform: ${fn}(${sign}${number}${unit}), a hover lift is var(--lift-*), an offset var(--space-*)`
+          );
+        }
     }
 
     if (path.endsWith('.module.css'))
@@ -325,20 +367,40 @@ function checkDesignTokens(cssFiles) {
   }
 }
 
+const TOKEN_WITH_FALLBACK = /var\((--[a-z][\w-]*)\s*,/g;
+
 function checkUndeclaredTokens(cssFiles, sourceFiles) {
   const declared = new Set();
+  const foundationTokens = new Set();
+  for (const [, name] of readFileSync(join(root, FOUNDATION), 'utf8').matchAll(DECLARED_TOKEN))
+    foundationTokens.add(name);
   for (const file of cssFiles)
     for (const [, name] of readFileSync(file, 'utf8').matchAll(DECLARED_TOKEN)) declared.add(name);
   for (const file of sourceFiles)
     for (const [, name] of readFileSync(file, 'utf8').matchAll(TOKEN_IN_SOURCE)) declared.add(name);
+  const used = new Set();
+  for (const file of [...cssFiles, ...sourceFiles, join(root, 'apps/web/index.html')]) {
+    const text = readFileSync(file, 'utf8');
+    for (const [, name] of text.matchAll(USED_TOKEN)) used.add(name);
+    for (const [, name] of text.matchAll(TOKEN_IN_SOURCE)) used.add(name);
+  }
   for (const file of cssFiles) {
     const path = rel(file);
+    const text = readFileSync(file, 'utf8');
     const missing = new Set();
-    for (const [, name] of readFileSync(file, 'utf8').matchAll(USED_TOKEN))
-      if (!declared.has(name)) missing.add(name);
+    for (const [, name] of text.matchAll(USED_TOKEN)) if (!declared.has(name)) missing.add(name);
     for (const name of missing)
       violations.push(`${path}: var(${name}) is declared nowhere, renamed or removed token?`);
+    if (path === FOUNDATION) continue;
+    for (const [, name] of text.matchAll(TOKEN_WITH_FALLBACK))
+      if (foundationTokens.has(name))
+        violations.push(
+          `${path}: var(${name}, ...) carries a fallback on a foundation token, the fallback is dead or contradicts the token`
+        );
   }
+  for (const name of foundationTokens)
+    if (!used.has(name) && !TOKENS_CONSUMED_INDIRECTLY.test(name))
+      violations.push(`${FOUNDATION}: ${name} is declared and consumed nowhere, delete the token`);
 }
 
 function checkModalPrimitive(files) {
@@ -369,7 +431,12 @@ function checkButtonPrimitive(files) {
   }
 }
 
-const INLINE_Z_INDEX = /zIndex\s*:\s*-?\d+/g;
+const INLINE_Z_INDEX = /zIndex\s*:\s*[^,}\n]*?-?\d+/g;
+const ICON_SIZE_TS = 'apps/web/src/shared/components/iconSize.ts';
+const NUMERIC_ICON_SIZE =
+  /<[A-Z][\w.]*\b(?:[^>]|=>)*?\b(?:size|iconSize)=\{([^{}]*?\b\d+\b[^{}]*)\}/g;
+const NUMERIC_ICON_DIMENSIONS = /<[A-Z][\w.]*\b(?:[^>]|=>)*?\bwidth=\{(\d+)\}\s+height=\{(\d+)\}/g;
+const NUMERIC_ICON_SIZE_DEFAULT = /\b(?:size|iconSize)\s*=\s*(\d+)\b(?=\s*[,)}])/g;
 const INLINE_ROLE_MIX =
   /color-mix\(in srgb, var\(--color-(primary|error|success|warning|text|text-muted|meta|bg|surface|border|border-subtle)\)/g;
 
@@ -380,6 +447,17 @@ function checkInlineStyleTokens(files) {
     const source = readFileSync(file, 'utf8');
     for (const [shown] of source.matchAll(INLINE_Z_INDEX))
       violations.push(`${path}: ${shown} in a style object, use var(--z-*) from the CSS module`);
+    if (path !== ICON_SIZE_TS && path.endsWith('.tsx')) {
+      for (const [, value] of source.matchAll(NUMERIC_ICON_SIZE))
+        violations.push(`${path}: size={${value.trim()}}, an icon size is ICON_SIZE.<step>`);
+      for (const [, w, h] of source.matchAll(NUMERIC_ICON_DIMENSIONS))
+        if (w === h)
+          violations.push(
+            `${path}: width={${w}} height={${h}} on a component, an icon size is ICON_SIZE.<step>`
+          );
+      for (const [, value] of source.matchAll(NUMERIC_ICON_SIZE_DEFAULT))
+        violations.push(`${path}: size = ${value} as a default, an icon size is ICON_SIZE.<step>`);
+    }
     for (const [, role] of source.matchAll(INLINE_ROLE_MIX))
       violations.push(
         `${path}: color-mix() on --color-${role} in TypeScript, declare the role in the foundation and consume it from the CSS module`
@@ -609,6 +687,27 @@ function checkDeadGlobalClasses(cssFiles, sourceFiles) {
   }
 }
 
+function checkIconScale() {
+  const foundation = readFileSync(join(root, FOUNDATION), 'utf8');
+  const tokens = new Map();
+  for (const [, step, value] of foundation.matchAll(/--icon-([\w]+)\s*:\s*([^;]+);/g))
+    tokens.set(step, lengthInPx(value, new Map()));
+  const source = readFileSync(join(root, ICON_SIZE_TS), 'utf8');
+  const constants = new Map();
+  for (const [, step, value] of source.matchAll(/^\s*'?([\w]+)'?\s*:\s*(\d+),/gm))
+    constants.set(step, Number(value));
+  for (const [step, px] of tokens)
+    if (constants.get(step) !== px)
+      violations.push(
+        `${ICON_SIZE_TS}: ICON_SIZE.${step} is ${constants.get(step)}, --icon-${step} is ${px}px in the foundation`
+      );
+  for (const step of constants.keys())
+    if (!tokens.has(step))
+      violations.push(
+        `${ICON_SIZE_TS}: ICON_SIZE.${step} has no --icon-${step} token in the foundation`
+      );
+}
+
 const webFiles = walk(webSrc, ['.ts', '.tsx', '.css']);
 const indexHtml = join(root, 'apps/web/index.html');
 const apiFiles = walk(join(root, 'apps/api-dotnet'), ['.cs']);
@@ -629,6 +728,7 @@ checkTapTargets(
   webFiles.filter((f) => f.endsWith('.tsx'))
 );
 checkInlineStyleTokens(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
+checkIconScale();
 const cssModulesExcluded = checkDeadCssClasses(
   webFiles.filter((f) => f.endsWith('.css')),
   webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
@@ -648,7 +748,7 @@ if (violations.length > 0) {
   process.exit(1);
 }
 console.log(
-  'Architecture: no violation (comments, API layers, shared/ as a leaf, import cycles, design system tokens, Modal and Button primitives, tap targets, dead CSS classes).'
+  'Architecture: no violation (comments, API layers, shared/ as a leaf, import cycles, design system tokens, icon and size scales, Modal and Button primitives, tap targets, dead CSS classes and tokens).'
 );
 if (cssModulesExcluded.length > 0)
   console.log(
