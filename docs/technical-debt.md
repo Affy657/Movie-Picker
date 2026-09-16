@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-039`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-042`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -242,6 +242,42 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: `gh variable set LETTERBOXD_CANARY_USERNAME --body <compte>`, puis `gh workflow run security-scan.yml` et vérifier que le job `letterboxd-canary` apparaît et passe. Le test a été joué en local le 2026-09-16 contre un compte public de 577 films : vert en 5 s, et rouge sur un compte à watchlist vide, ce qui est le comportement voulu.
 - fini-quand: la variable est posée, le job a tourné une fois en vert, et l'entrée est supprimée ; ensuite un balisage cassé produit un ticket dans les sept jours sans autre geste
 - piege: le compte témoin doit garder au moins un film dans sa watchlist, sinon le canari est rouge pour une mauvaise raison ; le test ne tourne ni dans `verify:local` ni dans `ci-cd.yml`, il s'ignore lui-même sans la variable, il dépend d'un site tiers. Le ticket n'est ouvert qu'une fois : les échecs suivants le commentent tant qu'il reste ouvert.
+
+## DEBT-039 le jeton d'accès en lecture TMDB n'existe pas encore dans Secret Manager
+
+- state: humain
+- bloque: créer le secret `TMDB_READ_ACCESS_TOKEN` (le « API Read Access Token » de la page API du compte TMDB) dans Secret Manager et donner `roles/secretmanager.secretAccessor` au compte d'exécution Cloud Run. L'agent ne manipule pas de jeton en clair et les écritures Secret Manager lui sont refusées (`AGENTS.md`, accès outils).
+- impact: depuis le 2026-09-17, `TmdbAuthenticationHandler` envoie le jeton v4 en en-tête `Authorization: Bearer` quand il existe et ne retombe sur la clé v3 en `api_key` dans la query string qu'à défaut. Tant que le secret manque, c'est le repli qui tourne en production : la clé traverse encore l'adresse de chaque requête sortante vers TMDB. `SensitiveQueryRedaction` et `SentryBeforeSend.RedactBreadcrumb` la masquent côté API et Sentry, le risque restant est toute trace hors de l'API (proxy, capture réseau, journal d'un intermédiaire).
+- ou: `.github/workflows/deploy.yml` (le bloc `gcloud secrets describe TMDB_READ_ACCESS_TOKEN`), `apps/api-dotnet/MoviePicker.Api/Infrastructure/Tmdb/TmdbAuthenticationHandler.cs`
+- verify: `gcloud secrets describe TMDB_READ_ACCESS_TOKEN --format='value(name)'` ; encore ouvert tant que la commande échoue
+- fix: relever le jeton dans TMDB, puis, sans jamais le coller dans un fichier ni dans la conversation :
+  ```bash
+  gcloud secrets create TMDB_READ_ACCESS_TOKEN --replication-policy=automatic --data-file=<FICHIER_TEMPORAIRE_SUPPRIME_ENSUITE>
+  gcloud secrets add-iam-policy-binding TMDB_READ_ACCESS_TOKEN --member="serviceAccount:<COMPTE_EXECUTION_CLOUD_RUN>" --role=roles/secretmanager.secretAccessor
+  ```
+  puis `gh workflow run deploy.yml --ref master -f target=api` (geste de l'utilisateur), vérifier que la révision active porte la variable (`gcloud run services describe <SERVICE> --region <REGION> --format=yaml | grep -A2 TMDB_READ_ACCESS_TOKEN`), enfin révoquer la clé v3 côté TMDB et retirer `TMDB_API_KEY` de `deploy.yml` et de Secret Manager. Le code garde le repli `api_key` pour le poste de travail, `.env.example` documente les deux.
+- fini-quand: le secret existe, la révision active le porte, la clé v3 est révoquée et `TMDB_API_KEY` n'apparaît plus dans `deploy.yml`
+- piege: le compte d'exécution se relève par `gcloud run services describe <SERVICE> --region <REGION> --format='value(spec.template.spec.serviceAccountName)'`, ne pas réutiliser le compte de déploiement. Ne pas révoquer la clé v3 avant que la révision qui porte le jeton serve le trafic : `deploy.yml` ne passe le secret que s'il existe au moment du déploiement, une révision antérieure n'a que la clé. Le jeton v4 est accepté par l'API v3 de TMDB, c'est documenté et c'est ce que `TmdbAuthenticationHandlerTests` suppose, mais seul un appel réel le prouve : après le déploiement, une recherche de film dans l'application est la vérification.
+
+## DEBT-040 le seed de développement est compilé dans l'assembly de production
+
+- state: differe
+- declencheur: une feature repasse dans `Infrastructure/Development/` ou dans ses tests. Ne jamais en faire un chantier isolé.
+- impact: `DevelopmentScenarioSeed.cs` (2 050 lignes) et `DevelopmentDataSeedHostedService.cs` (329 lignes) sont publiés dans l'image de production, soit environ 12 % des lignes de l'API pour du code que seul `environment.IsDevelopment()` enregistre. Aucune surface exposée, du poids d'assembly et du temps de compilation ReadyToRun pour rien.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Development/`, enregistrement dans `ServiceCollectionExtensions.AddMoviePicker` sous `environment.IsDevelopment()`
+- verify: `ls apps/api-dotnet/MoviePicker.Api/Infrastructure/Development/` ; encore ouvert tant que le dossier est dans le projet `MoviePicker.Api`
+- fix: sortir le dossier dans un projet `MoviePicker.Api.DevelopmentSeed` que `MoviePicker.Api` référence seulement en `Debug` (`<ProjectReference Condition="'$(Configuration)' == 'Debug'">`), l'enregistrement DI passant par une extension de ce projet appelée derrière `#if DEBUG` ; déplacer `DevelopmentScenarioSeedTests` et la moitié seed de `ServiceCollectionExtensionsBranchTests` dans un projet de tests lui aussi Debug. Mesurer avant et après par `dotnet publish -c Release` et la taille de `MoviePicker.Api.dll`.
+- piege: `verify:local` et la CI compilent et testent en **Release**, et `DevelopmentScenarioSeedTests.cs` comme `ServiceCollectionExtensionsBranchTests.cs` référencent le seed : un simple `<Compile Remove>` conditionnel casse la suite, c'est pour ça que ce n'a pas été fait le 2026-09-17. Le `launchSettings.json`, `playwright.config.ts` et `scripts/verify-local.cjs` lancent l'API en `Development` avec `DevelopmentSeed__Enabled=false` : vérifier qu'un `dotnet run` sans configuration explicite construit bien en Debug, sinon le seed disparaît du poste de travail sans erreur.
+
+## DEBT-041 la date et l'heure d'une soirée sont des chaînes reparsées à chaque lecture
+
+- state: differe
+- declencheur: une feature repasse dans `EventSchedule` ou dans la création et la modification d'une soirée
+- impact: `Event.Date` et `Event.Time` sont des `string` (`"2026-09-20"`, `"20:30"`) que `EventSchedule.TryGetStartUtc` reparse à chaque appel de `Event.Lifecycle()`, donc pour chaque soirée listée et à chaque cycle de sondage. Un format invalide ne se découvre qu'à la lecture, la soirée reste `Upcoming` pour toujours au lieu d'être refusée à l'écriture. C'est de la lisibilité et de la robustesse, pas une lenteur mesurée : le parsing coûte des microsecondes.
+- ou: `apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs`, `Domain/EventSchedule.cs`, `Infrastructure/Persistence/Mongo/EventDocument`, les DTOs et les fichiers qui lisent `.Date` (`grep -rln "\.Date\b" apps/api-dotnet/MoviePicker.Api --include=*.cs`, 14 le 2026-09-17)
+- verify: `grep -n "public string Date\|public string Time" apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` ; encore ouvert tant que les deux lignes sortent
+- fix: `DateOnly Date` et `TimeOnly Time` sur l'entité, ou un `StartUtc` calculé et validé à l'écriture, avec conversion aux frontières (document Mongo, DTO) pour ne changer ni le contrat OpenAPI ni les documents existants ; la validation du format remonte alors dans le handler de création et rend une `Errors.<Cas>()` au lieu d'un `Upcoming` silencieux.
+- piege: les documents de production portent les chaînes : garder la lecture de l'ancien format ou passer par une `IDataMigration`, jamais les deux à moitié. Le seed (`DevelopmentScenarioSeed`, DEBT-040), les fixtures et les tests écrivent ces chaînes en dur : compter les occurrences avant de changer le type, le chantier est plus large qu'il ne paraît depuis `Event.cs`.
 
 ---
 
