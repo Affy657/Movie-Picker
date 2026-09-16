@@ -15,18 +15,40 @@ export function asciiSlug(value: string): string {
   );
 }
 
-export async function fillCreateEventForm(page: Page, title: string): Promise<void> {
+export const STUB_MOVIE = 'Film E2E Stub';
+export const OTHER_STUB_MOVIE = 'Autre film test';
+
+export function isoDateDaysFromNow(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+export async function fillCreateEventForm(
+  page: Page,
+  title: string,
+  date = '2030-12-20'
+): Promise<void> {
   await page.locator('#create-title').fill(title);
-  await page.locator('#create-date').fill('2030-12-20');
+  await page.locator('#create-date').fill(date);
   await page.locator('#create-time').fill('20:30');
   await page.getByRole('button', { name: /créer la soirée/i }).click();
 }
 
-export async function addStubMovie(page: Page): Promise<void> {
+export async function createEvent(page: Page, title: string, date?: string): Promise<string> {
+  await page.goto('/new');
+  await fillCreateEventForm(page, title, date);
+  await expect(page).toHaveURL(/\/e\/[^/?]+/, { timeout: 15_000 });
+  const slug = page.url().match(/\/e\/([^/?]+)/)?.[1];
+  if (!slug) throw new Error('event slug not found in url');
+  return slug;
+}
+
+export async function addStubMovie(page: Page, title: string = STUB_MOVIE): Promise<void> {
   await page.getByRole('button', { name: /proposer un film/i }).click();
   const search = page.getByRole('combobox', { name: /proposer un film/i });
   await search.fill('stub');
-  const result = page.getByRole('listitem').filter({ hasText: /film e2e stub/i });
+  const result = page.getByRole('listitem').filter({ hasText: title });
   await expect(result).toBeVisible({ timeout: 15_000 });
   await result.getByRole('button', { name: /^ajouter « /i }).click();
   await expect(search).toHaveValue('', { timeout: 15_000 });
