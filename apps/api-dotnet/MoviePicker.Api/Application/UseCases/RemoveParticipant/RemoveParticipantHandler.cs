@@ -71,7 +71,6 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             throw Errors.HostOrSelfOnly();
 
         var movieIds = await _movieRepository.ListIdsByEventAndParticipantAsync(evt.Id, participant.Id, ct);
-        var deleted = false;
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
@@ -80,12 +79,11 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
                 await _movieRepository.DeleteByIdsAsync(movieIds, token);
                 await _voteRepository.DeleteByEventAndParticipantAsync(evt.Id, participant.Id, token);
                 await _seenMarkRepository.DeleteByEventAndParticipantAsync(evt.Id, participant.Id, token);
-                deleted = await _participantRepository.DeleteAsync(participant.Id, evt.Id, token);
+                if (!await _participantRepository.DeleteAsync(participant.Id, evt.Id, token))
+                    throw Errors.ParticipantNotFound();
                 await _eventRepository.MarkChangedAsync(evt.Id, token);
             },
             ct);
-        if (!deleted)
-            throw Errors.ParticipantNotFound();
 
         _logger.LogInformation(
             "Participant removed: {ParticipantId} from event {EventId} (byHost={IsHost}, selfConnected={IsSelf}, cascadedMovies={MovieCount})",

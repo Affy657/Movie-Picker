@@ -28,7 +28,7 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
     public async Task<MovieCollectionListResponse> HandleAsync(CancellationToken ct = default)
     {
         var ttl = TimeSpan.FromHours(Math.Clamp(_options.MovieShowcaseCacheHours, 1, 168));
-        var items = await _cache.GetOrLoadAsync(CacheKey, ttl, LoadCollectionsAsync, ct);
+        var items = await _cache.GetOrLoadAsync(CacheKey, ttl, LoadCollectionsAsync, ct: ct);
         return Build(items);
     }
 

@@ -63,7 +63,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         if (eligibleCount == 0)
             throw Errors.AllMoviesExcluded();
 
-        var alreadyPicked = evt.WinnerMovieIds;
+        var alreadyPicked = evt.GetWinnerMovieIds();
         var drawableCount = movies.Count(m => !m.ExcludedFromWheel && !alreadyPicked.Contains(m.Id));
         if (drawableCount == 0)
             throw Errors.NothingLeftToDraw();

@@ -303,6 +303,35 @@ function HeaderRecap({
   );
 }
 
+type AddMovieButtonProps = {
+  onAddMovie: () => void;
+  primary: boolean;
+  label: string;
+  triggerRef?: RefObject<HTMLButtonElement | null>;
+};
+
+function AddMovieButton({ onAddMovie, primary, label, triggerRef }: Readonly<AddMovieButtonProps>) {
+  const button = (
+    <Button
+      ref={triggerRef}
+      type="button"
+      variant={primary ? 'primary' : 'secondary'}
+      className={clsx(styles.addMovieBtn, primary && styles.addMovieBtnPrimary)}
+      onClick={onAddMovie}
+      aria-label={primary ? undefined : label}
+    >
+      <Plus size={16} aria-hidden />
+      {primary ? <span className={styles.addMovieLabel}>{label}</span> : null}
+    </Button>
+  );
+  if (primary) return button;
+  return (
+    <Tooltip label={label} placement="top">
+      {button}
+    </Tooltip>
+  );
+}
+
 export default function EventDetailHeader({
   title,
   dateFormatted,
@@ -368,29 +397,14 @@ export default function EventDetailHeader({
   const isUpcoming = lifecycle === 'upcoming';
   const showLifecyclePill = !isUpcoming || !!countdownLabel;
 
-  const addMovieLabel = t('movies.search.label');
-  const addMovieBtn = onAddMovie ? (
-    <Button
-      ref={addMovieTriggerRef}
-      type="button"
-      variant={addMoviePrimary ? 'primary' : 'secondary'}
-      className={clsx(styles.addMovieBtn, addMoviePrimary && styles.addMovieBtnPrimary)}
-      onClick={onAddMovie}
-      aria-label={addMoviePrimary ? undefined : addMovieLabel}
-    >
-      <Plus size={16} aria-hidden />
-      {addMoviePrimary ? <span className={styles.addMovieLabel}>{addMovieLabel}</span> : null}
-    </Button>
+  const addMovieButton = onAddMovie ? (
+    <AddMovieButton
+      onAddMovie={onAddMovie}
+      primary={addMoviePrimary}
+      label={t('movies.search.label')}
+      triggerRef={addMovieTriggerRef}
+    />
   ) : null;
-
-  const addMovieButton =
-    addMovieBtn && !addMoviePrimary ? (
-      <Tooltip label={addMovieLabel} placement="top">
-        {addMovieBtn}
-      </Tooltip>
-    ) : (
-      addMovieBtn
-    );
 
   return (
     <>

@@ -80,7 +80,7 @@ public sealed class CloseEventHandler : ICloseEventHandler
         Slug = e.Slug,
         Config = EventConfigResponse.FromEvent(e),
         ClosedAt = e.ClosedAt,
-        WinnerMovieIds = e.WinnerMovieIds,
+        WinnerMovieIds = e.GetWinnerMovieIds(),
         CreatedAt = e.CreatedAt,
         UpdatedAt = e.UpdatedAt,
         Message = message

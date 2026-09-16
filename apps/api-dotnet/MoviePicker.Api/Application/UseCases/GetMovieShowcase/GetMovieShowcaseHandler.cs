@@ -46,8 +46,8 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             cacheKey,
             CacheTtl(),
             token => LoadSectionAsync(section, theme, genreIds, query, provider, token),
-            ct,
-            shareAcrossInstances: IsCatalogSection(section, genreIds));
+            IsCatalogSection(section, genreIds),
+            ct);
 
         return BuildResponse(section, theme, items);
     }
@@ -68,7 +68,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         }
     }
 
-    private static bool IsCatalogSection(string section, IReadOnlyList<int> genreIds) =>
+    private static bool IsCatalogSection(string section, List<int> genreIds) =>
         section is not (MovieShowcaseSections.Recommendations or MovieShowcaseSections.Collection)
         && genreIds.Count <= 1;
 

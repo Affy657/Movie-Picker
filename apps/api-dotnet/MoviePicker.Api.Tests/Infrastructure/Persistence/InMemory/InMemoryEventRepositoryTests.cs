@@ -43,7 +43,8 @@ public sealed class InMemoryEventRepositoryTests
 
         var found = await _repo.ListAwaitingWatchlistCleanupAsync(now, 10);
 
-        Assert.Equal(new HashSet<string> { closed.Id, autoClosed.Id }, found.Select(e => e.Id).ToHashSet());
+        HashSet<string> expected = [closed.Id, autoClosed.Id];
+        Assert.Equal(expected, found.Select(e => e.Id).ToHashSet());
         Assert.Single(await _repo.ListAwaitingWatchlistCleanupAsync(now, 1));
     }
 

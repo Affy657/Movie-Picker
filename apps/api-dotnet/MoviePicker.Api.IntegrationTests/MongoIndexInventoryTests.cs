@@ -129,6 +129,33 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
     }
 
     [MongoFact]
+    public async Task DropIfExists_DropsThePresentIndex_AndSkipsTheMissingOne()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+        var collection = "index_plan_scratch_" + ObjectId.GenerateNewId();
+        var indexes = database.GetCollection<BsonDocument>(collection).Indexes;
+        await indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+            Builders<BsonDocument>.IndexKeys.Ascending("legacy"),
+            new CreateIndexOptions { Name = "scratch_legacy" }));
+        try
+        {
+            var plan = new MongoIndexPlan(database);
+            plan.DropIfExists<BsonDocument>(collection, "scratch_legacy");
+
+            await plan.ExecuteAsync(CancellationToken.None);
+            Assert.DoesNotContain("scratch_legacy", (await ListIndexesAsync(collection)).Keys);
+
+            await plan.ExecuteAsync(CancellationToken.None);
+            Assert.DoesNotContain("scratch_legacy", (await ListIndexesAsync(collection)).Keys);
+        }
+        finally
+        {
+            await database.DropCollectionAsync(collection);
+        }
+    }
+
+    [MongoFact]
     public async Task UniqueIndexes_AreDeclaredUnique()
     {
         foreach (var group in Expected.GroupBy(index => index.Collection))

@@ -62,7 +62,7 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
         if (winner.ExcludedFromWheel)
             throw Errors.MovieExcludedFromWheel();
 
-        if (evt.WinnerMovieIds.Contains(winner.Id))
+        if (evt.GetWinnerMovieIds().Contains(winner.Id))
             throw Errors.MovieAlreadyAWinner();
 
         var now = _clock.GetUtcNow();

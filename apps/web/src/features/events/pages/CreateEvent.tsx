@@ -261,14 +261,14 @@ export default function CreateEvent() {
           />
 
           {reusedFrom !== null && (
-            <p className={styles.reused} role="status">
+            <output className={styles.reused}>
               <Sparkles size={14} aria-hidden />
               <span className={styles.reusedLabel}>
                 {reusedFrom.length > 0
                   ? t('events.settings.templates.reusedFrom', { title: reusedFrom })
                   : t('events.settings.templates.reusedFromUnnamed')}
               </span>
-            </p>
+            </output>
           )}
 
           <details

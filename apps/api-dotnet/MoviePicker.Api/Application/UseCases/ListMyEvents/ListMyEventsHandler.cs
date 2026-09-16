@@ -150,7 +150,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         {
             merged[e.Id] = ToDto(e, isCreator: true, isParticipant: joinedSet.Contains(e.Id), utcNow);
             if (e.HasWinner)
-                winnerMovieIdByEventId[e.Id] = e.WinnerMovieIds;
+                winnerMovieIdByEventId[e.Id] = e.GetWinnerMovieIds();
         }
 
         foreach (var e in onlyJoined)
@@ -158,7 +158,7 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             if (!merged.ContainsKey(e.Id))
                 merged[e.Id] = ToDto(e, isCreator: false, isParticipant: true, utcNow);
             if (e.HasWinner)
-                winnerMovieIdByEventId[e.Id] = e.WinnerMovieIds;
+                winnerMovieIdByEventId[e.Id] = e.GetWinnerMovieIds();
         }
 
         return (merged, winnerMovieIdByEventId);

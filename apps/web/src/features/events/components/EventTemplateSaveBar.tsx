@@ -86,12 +86,12 @@ export default function EventTemplateSaveBar({
   return (
     <div className={clsx(styles.bar, className)}>
       {justSaved ? (
-        <p className={styles.saved} role="status">
+        <output className={styles.saved}>
           <BadgeCheck size={15} aria-hidden />
           <span className={styles.savedLabel}>
             {t('events.settings.templates.savedAs', { name: justSaved.name })}
           </span>
-        </p>
+        </output>
       ) : (
         hintLabel !== null && <p className={styles.hint}>{hintLabel}</p>
       )}

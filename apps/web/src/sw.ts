@@ -18,10 +18,10 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
-const PUBLIC_SHOWCASE_PATHS = ['/api/v1/movies/showcase', '/api/v1/movies/collections'];
+const PUBLIC_SHOWCASE_PATHS = new Set(['/api/v1/movies/showcase', '/api/v1/movies/collections']);
 
 registerRoute(
-  ({ url }) => PUBLIC_SHOWCASE_PATHS.includes(url.pathname),
+  ({ url }) => PUBLIC_SHOWCASE_PATHS.has(url.pathname),
   new StaleWhileRevalidate({
     cacheName: 'showcase-cache-v1',
     plugins: [

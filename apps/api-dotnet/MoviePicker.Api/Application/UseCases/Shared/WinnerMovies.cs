@@ -6,7 +6,7 @@ namespace MoviePicker.Api.Application.UseCases.Shared;
 public static class WinnerMovies
 {
     public static Task<IReadOnlyList<Movie>> ListAsync(IMovieRepository movies, Event evt, CancellationToken ct) =>
-        ListAsync(movies, evt, evt.WinnerMovieIds, ct);
+        ListAsync(movies, evt, evt.GetWinnerMovieIds(), ct);
 
     public static async Task<IReadOnlyList<Movie>> ListAsync(
         IMovieRepository movies,

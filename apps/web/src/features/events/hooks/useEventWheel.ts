@@ -62,8 +62,41 @@ type UseEventWheelOptions = {
 };
 
 function lastPick(event: EventData | undefined) {
-  const winners = event?.winners ?? [];
-  return winners.length > 0 ? winners[winners.length - 1]! : null;
+  return event?.winners?.at(-1) ?? null;
+}
+
+type SpinAvailability = {
+  moviesCount: number;
+  noEligibleMovie: boolean;
+  remainingDraws: number;
+  winnerCount: number;
+  drawableCount: number;
+};
+
+function spinDisabledHintOf(
+  s: SpinAvailability,
+  t: ReturnType<typeof useTranslation>['t']
+): string | null {
+  if (s.moviesCount === 0) return t('events.wheel.emptyPlaceholder');
+  if (s.noEligibleMovie) return t('events.wheel.allExcludedHint');
+  if (s.remainingDraws === 0)
+    return pluralizeCount(
+      s.winnerCount,
+      'events.wheel.allDrawnHintOne',
+      'events.wheel.allDrawnHintMany',
+      t
+    );
+  if (s.drawableCount === 0) return t('events.wheel.nothingLeftToDrawHint');
+  return null;
+}
+
+function primaryActionOf(input: {
+  canSpin: boolean;
+  noMovie: boolean;
+  guestCanAdd: boolean;
+}): EventPrimaryAction {
+  if (input.canSpin) return input.noMovie ? 'add' : 'spin';
+  return input.guestCanAdd ? 'add' : null;
 }
 
 export function useEventWheel({
@@ -289,26 +322,24 @@ export function useEventWheel({
   const isOpenForActions = isHost && !!event && !event.isFinished;
   const selecting = manualMode || removalMode;
   const hasWinner = allWinnerIds.length > 0;
+  const canSpin = isOpenForActions && !selecting;
 
-  let spinDisabledHint: string | null = null;
-  if (moviesCount === 0) spinDisabledHint = t('events.wheel.emptyPlaceholder');
-  else if (noEligibleMovie) spinDisabledHint = t('events.wheel.allExcludedHint');
-  else if (remainingDraws === 0)
-    spinDisabledHint = pluralizeCount(
+  const spinDisabledHint = spinDisabledHintOf(
+    {
+      moviesCount,
+      noEligibleMovie,
+      remainingDraws,
       winnerCount,
-      'events.wheel.allDrawnHintOne',
-      'events.wheel.allDrawnHintMany',
-      t
-    );
-  else if (drawableMovies.length === 0) spinDisabledHint = t('events.wheel.nothingLeftToDrawHint');
+      drawableCount: drawableMovies.length,
+    },
+    t
+  );
   const spinDisabled = spinDisabledHint !== null;
-
-  let primaryAction: EventPrimaryAction = null;
-  if (isOpenForActions && !selecting) {
-    primaryAction = spinDisabled && moviesCount === 0 ? 'add' : 'spin';
-  } else if (!isHost && !!event && !event.isFinished && !hasWinner && !selecting) {
-    primaryAction = 'add';
-  }
+  const primaryAction = primaryActionOf({
+    canSpin,
+    noMovie: moviesCount === 0,
+    guestCanAdd: !isHost && !!event && !event.isFinished && !hasWinner && !selecting,
+  });
 
   return {
     isHost,
@@ -320,7 +351,7 @@ export function useEventWheel({
     loading,
     error,
     isModalOpen,
-    canSpin: isOpenForActions && !selecting,
+    canSpin,
     spinDisabled,
     spinDisabledHint,
     remainingDraws,

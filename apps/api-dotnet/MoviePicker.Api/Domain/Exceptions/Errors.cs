@@ -350,7 +350,7 @@ public static class Errors
     public static ServiceUnavailableException SuggestionUnavailable() =>
         new("The suggestion cannot be created right now, please retry in a moment", ErrorCodes.SuggestionUnavailable);
 
-    private static IReadOnlyDictionary<string, object?> Params(params (string Key, object? Value)[] entries)
+    private static Dictionary<string, object?> Params(params (string Key, object? Value)[] entries)
     {
         var dictionary = new Dictionary<string, object?>(entries.Length);
         foreach (var (key, value) in entries)

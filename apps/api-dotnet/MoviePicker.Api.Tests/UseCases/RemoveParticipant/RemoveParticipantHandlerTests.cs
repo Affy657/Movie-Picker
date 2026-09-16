@@ -249,6 +249,9 @@ public sealed class RemoveParticipantHandlerTests
             .ReturnsAsync(false);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "p1"));
+
+        Assert.Equal(1, _unitOfWork.Executions);
+        _eventRepo.Verify(r => r.MarkChangedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

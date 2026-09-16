@@ -135,7 +135,7 @@ public sealed class InMemoryEventRepository : IEventRepository
         if (set.Count == 0)
             return Task.FromResult(0);
 
-        var n = _byId.Values.Count(e => e.WinnerMovieIds.Any(set.Contains));
+        var n = _byId.Values.Count(e => e.GetWinnerMovieIds().Any(set.Contains));
         return Task.FromResult(n);
     }
 

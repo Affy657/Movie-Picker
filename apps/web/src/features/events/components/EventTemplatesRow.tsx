@@ -84,10 +84,10 @@ export default function EventTemplatesRow({
     if (applyLocked) return <p className={styles.hint}>{applyLockedHint}</p>;
     if (appliedTemplate)
       return (
-        <p className={styles.hintApplied} role="status">
+        <output className={styles.hintApplied}>
           <Check size={14} aria-hidden />
           <span className={styles.hintLabel}>{t('events.settings.templates.applied')}</span>
-        </p>
+        </output>
       );
     if (isFull)
       return (

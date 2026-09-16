@@ -93,7 +93,7 @@ public sealed class RemoveWinnerHandlerTests
         await _sut.HandleAsync("evt1", "m2");
 
         Assert.NotNull(saved);
-        Assert.Equal(new[] { "m1", "m3" }, saved!.WinnerMovieIds);
+        Assert.Equal(["m1", "m3"], saved!.GetWinnerMovieIds());
     }
 
     [Fact]

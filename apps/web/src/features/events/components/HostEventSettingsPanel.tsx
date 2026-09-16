@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router';
 import { AlertCircle, Lock, Settings, Trash2, X } from 'lucide-react';
@@ -71,6 +71,27 @@ const SAVE_STATUS_LABEL_KEYS = {
   pending: 'events.settings.saveStatusPending',
   error: 'events.settings.saveStatusError',
 } as const satisfies Record<SaveState, string>;
+
+const SAVE_STATUS_CLASS: Record<SaveState, string | undefined> = {
+  saved: styles.saveStatusSaved,
+  pending: styles.saveStatusPending,
+  error: styles.saveStatusError,
+};
+
+function FieldFeedback({
+  error,
+  errorId,
+  hint,
+}: Readonly<{ error?: string; errorId: string; hint: ReactNode }>) {
+  if (error)
+    return (
+      <p id={errorId} className={styles.fieldError}>
+        <AlertCircle size={12} aria-hidden />
+        <span>{error}</span>
+      </p>
+    );
+  return <p className="hint">{hint}</p>;
+}
 
 function recurrencePatch(
   next: EventRecurrence | null,
@@ -494,14 +515,7 @@ export default function HostEventSettingsPanel({
           <h2 id={titleId} className={styles.panelTitle}>
             {t('events.settings.title')}
           </h2>
-          <span
-            className={clsx(
-              styles.saveStatus,
-              saveState === 'pending' && styles.saveStatusPending,
-              saveState === 'error' && styles.saveStatusError,
-              saveState === 'saved' && styles.saveStatusSaved
-            )}
-          >
+          <span className={clsx(styles.saveStatus, SAVE_STATUS_CLASS[saveState])}>
             <span className={styles.saveStatusDot} aria-hidden />
             <span>{saveStatusLabel}</span>
           </span>
@@ -517,10 +531,10 @@ export default function HostEventSettingsPanel({
       </div>
       <div className={styles.dialogBody}>
         {configLocked ? (
-          <p className={styles.lockBanner} role="status">
+          <output className={styles.lockBanner}>
             <Lock size={14} aria-hidden />
             <span className={styles.lockBannerLabel}>{t('events.settings.configLockedHint')}</span>
-          </p>
+          </output>
         ) : null}
         {saveError && (
           <p className="error" role="alert">
@@ -614,18 +628,13 @@ export default function HostEventSettingsPanel({
                   invalid={!!fieldErrors.maxProposals}
                   ariaDescribedBy={fieldErrors.maxProposals ? maxProposalsErrorId : undefined}
                 />
-                {fieldErrors.maxProposals ? (
-                  <p id={maxProposalsErrorId} className={styles.fieldError}>
-                    <AlertCircle size={12} aria-hidden />
-                    <span>{fieldErrors.maxProposals}</span>
-                  </p>
-                ) : (
-                  <p className="hint">
-                    {t('events.settings.maxProposalsHint', {
-                      max: MAX_PROPOSALS_PER_PARTICIPANT,
-                    })}
-                  </p>
-                )}
+                <FieldFeedback
+                  error={fieldErrors.maxProposals}
+                  errorId={maxProposalsErrorId}
+                  hint={t('events.settings.maxProposalsHint', {
+                    max: MAX_PROPOSALS_PER_PARTICIPANT,
+                  })}
+                />
               </div>
 
               <div className={styles.field}>
@@ -645,23 +654,20 @@ export default function HostEventSettingsPanel({
                   invalid={!!fieldErrors.maxParticipants}
                   ariaDescribedBy={fieldErrors.maxParticipants ? maxParticipantsErrorId : undefined}
                 />
-                {fieldErrors.maxParticipants ? (
-                  <p id={maxParticipantsErrorId} className={styles.fieldError}>
-                    <AlertCircle size={12} aria-hidden />
-                    <span>{fieldErrors.maxParticipants}</span>
-                  </p>
-                ) : (
-                  <p className="hint">
-                    {(event.participantCount ?? 0) === 1
+                <FieldFeedback
+                  error={fieldErrors.maxParticipants}
+                  errorId={maxParticipantsErrorId}
+                  hint={
+                    (event.participantCount ?? 0) === 1
                       ? t('events.settings.maxParticipantsHintOne', {
                           max: MAX_EVENT_PARTICIPANTS,
                         })
                       : t('events.settings.maxParticipantsHintMany', {
                           count: event.participantCount ?? 0,
                           max: MAX_EVENT_PARTICIPANTS,
-                        })}
-                  </p>
-                )}
+                        })
+                  }
+                />
               </div>
 
               <div className={styles.field}>
@@ -680,16 +686,11 @@ export default function HostEventSettingsPanel({
                   invalid={!!fieldErrors.winnerCount}
                   ariaDescribedBy={fieldErrors.winnerCount ? winnerCountErrorId : undefined}
                 />
-                {fieldErrors.winnerCount ? (
-                  <p id={winnerCountErrorId} className={styles.fieldError}>
-                    <AlertCircle size={12} aria-hidden />
-                    <span>{fieldErrors.winnerCount}</span>
-                  </p>
-                ) : (
-                  <p className="hint">
-                    {t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })}
-                  </p>
-                )}
+                <FieldFeedback
+                  error={fieldErrors.winnerCount}
+                  errorId={winnerCountErrorId}
+                  hint={t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })}
+                />
               </div>
             </div>
 

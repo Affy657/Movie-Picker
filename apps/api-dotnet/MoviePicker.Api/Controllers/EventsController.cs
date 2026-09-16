@@ -285,7 +285,7 @@ public sealed class EventsController : ControllerBase
         [FromServices] IGetEligibleFollowsForEventHandler handler,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
+        if (!User.TryGetUserId(out _))
             return Unauthorized();
 
         var result = await handler.HandleAsync(idOrSlug, ct);
@@ -308,7 +308,7 @@ public sealed class EventsController : ControllerBase
         [FromServices] IInviteUserHandler handler,
         CancellationToken ct)
     {
-        if (!User.TryGetUserId(out var userId))
+        if (!User.TryGetUserId(out _))
             return Unauthorized();
 
         var result = await handler.HandleAsync(idOrSlug, request, ct);

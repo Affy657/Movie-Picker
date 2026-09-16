@@ -246,7 +246,8 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var found = await events.ListAwaitingWatchlistCleanupAsync(Now, 1000);
 
         var mine = found.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet();
-        Assert.Equal(new HashSet<string> { closed.Id, autoClosed.Id }, mine);
+        HashSet<string> expected = [closed.Id, autoClosed.Id];
+        Assert.Equal(expected, mine);
     }
 
     [Fact]

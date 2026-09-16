@@ -181,10 +181,10 @@ public sealed class EventTests
     }
 
     [Fact]
-    public void WinnerMovieIds_KeepsTheDrawOrder()
+    public void GetWinnerMovieIds_KeepsTheDrawOrder()
     {
         var evt = new Event { Winners = [Winner("m1"), Winner("m2"), Winner("m3")] };
 
-        Assert.Equal(new[] { "m1", "m2", "m3" }, evt.WinnerMovieIds);
+        Assert.Equal(["m1", "m2", "m3"], evt.GetWinnerMovieIds());
     }
 }

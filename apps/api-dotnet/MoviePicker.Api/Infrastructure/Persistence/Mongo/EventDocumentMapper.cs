@@ -129,7 +129,7 @@ public static class EventDocumentMapper
             _ => null
         };
 
-    private static IReadOnlyList<EventWinner> ToWinners(EventDocument doc) =>
+    private static List<EventWinner> ToWinners(EventDocument doc) =>
         doc.Winners is { Count: > 0 }
             ? doc.Winners
                 .Select(w => new EventWinner

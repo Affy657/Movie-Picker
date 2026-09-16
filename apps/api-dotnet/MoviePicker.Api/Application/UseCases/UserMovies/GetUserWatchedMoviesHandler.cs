@@ -55,7 +55,7 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
 
         var qualifying = events
             .Where(e => e.HasWinner && e.IsFinished(now))
-            .SelectMany(e => e.WinnerMovieIds.Select(id => (MovieId: id, WatchedAt: WatchedAtOf(e))))
+            .SelectMany(e => e.GetWinnerMovieIds().Select(id => (MovieId: id, WatchedAt: WatchedAtOf(e))))
             .OrderByDescending(x => x.WatchedAt)
             .Take(effectiveTake)
             .ToList();

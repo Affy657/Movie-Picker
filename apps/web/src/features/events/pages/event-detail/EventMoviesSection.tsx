@@ -109,6 +109,20 @@ export type EventMoviesSectionProps = {
   winnerMovieIds?: string[];
 };
 
+function lockedVoteQuotaHint(
+  quota: { used: number; max: number } | null,
+  t: ReturnType<typeof useTranslation>['t']
+): string | null {
+  if (!quota || quota.used < quota.max) return null;
+  return pluralizeCount(
+    quota.max,
+    'movies.list.voteQuotaLockedOne',
+    'movies.list.voteQuotaLockedMany',
+    t,
+    { max: quota.max }
+  );
+}
+
 export default function EventMoviesSection({
   slug,
   event,
@@ -199,16 +213,7 @@ export default function EventMoviesSection({
   const votesUsed = useMemo(() => movies.filter((m) => m.myVote != null).length, [movies]);
   const voteQuota =
     maxVotes !== null && participant && !isFinished ? { used: votesUsed, max: maxVotes } : null;
-  const voteQuotaLockedHint =
-    voteQuota && voteQuota.used >= voteQuota.max
-      ? pluralizeCount(
-          voteQuota.max,
-          'movies.list.voteQuotaLockedOne',
-          'movies.list.voteQuotaLockedMany',
-          t,
-          { max: voteQuota.max }
-        )
-      : null;
+  const voteQuotaLockedHint = lockedVoteQuotaHint(voteQuota, t);
 
   const clearVoteError = useCallback((movieId: string) => {
     setVoteErrors((prev) => {

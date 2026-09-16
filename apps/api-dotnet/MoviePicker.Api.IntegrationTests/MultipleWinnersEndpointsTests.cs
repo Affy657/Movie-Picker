@@ -20,7 +20,7 @@ public sealed class MultipleWinnersEndpointsTests : IClassFixture<MoviePickerApp
 
     public MultipleWinnersEndpointsTests(MoviePickerApplicationFactory factory) => _factory = factory;
 
-    private async Task<(string Slug, string ParticipantId)> CreateEventAsync(HttpClient client, string title)
+    private static async Task<(string Slug, string ParticipantId)> CreateEventAsync(HttpClient client, string title)
     {
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
@@ -52,7 +52,7 @@ public sealed class MultipleWinnersEndpointsTests : IClassFixture<MoviePickerApp
         return await res.Content.ReadFromJsonAsync<JsonElement>();
     }
 
-    private static IReadOnlyList<string> WinnerIdsOf(JsonElement detail) =>
+    private static List<string> WinnerIdsOf(JsonElement detail) =>
         detail.GetProperty("winners")
             .EnumerateArray()
             .Select(w => w.GetProperty("movieId").GetString()!)
@@ -186,7 +186,7 @@ public sealed class MultipleWinnersEndpointsTests : IClassFixture<MoviePickerApp
         var list = await mine.Content.ReadFromJsonAsync<MyEventsListResponse>(JsonOptions);
         var summary = Assert.Single(list!.Events, e => e.Slug == slug);
 
-        Assert.Equal(new[] { "The Matrix", "Inception" }, summary.WinnerMovies.Select(w => w.Title));
+        Assert.Equal(["The Matrix", "Inception"], summary.WinnerMovies.Select(w => w.Title));
     }
 
     [Fact]
@@ -224,7 +224,7 @@ public sealed class MultipleWinnersEndpointsTests : IClassFixture<MoviePickerApp
 
         var watchlist = await (await client.GetAsync("/api/v1/watchlist"))
             .Content.ReadFromJsonAsync<WatchlistResponse>(JsonOptions);
-        Assert.Equal(new[] { 550 }, watchlist!.Items.Select(i => i.TmdbId));
+        Assert.Equal([550], watchlist!.Items.Select(i => i.TmdbId));
 
         (await client.PostAsJsonAsync("/api/v1/watchlist", new { tmdbId = 603, title = "The Matrix", year = "2020" }))
             .EnsureSuccessStatusCode();

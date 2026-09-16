@@ -206,6 +206,6 @@ describe('initSentry', () => {
     expect(init).toHaveBeenCalledTimes(1);
     const armed = idle.mock.calls.length;
     window.dispatchEvent(new Event('keydown'));
-    expect(idle.mock.calls.length).toBe(armed);
+    expect(idle.mock.calls).toHaveLength(armed);
   });
 });

@@ -52,7 +52,7 @@ public sealed record Event
 
     public bool HasWinner => Winners.Count > 0;
 
-    public IReadOnlyList<string> WinnerMovieIds => Winners.Select(w => w.MovieId).ToList();
+    public IReadOnlyList<string> GetWinnerMovieIds() => Winners.Select(w => w.MovieId).ToList();
 
     public int TargetWinnerCount => Math.Max(1, Config?.WinnerCount ?? EventConfig.DefaultWinnerCount);
 

@@ -63,7 +63,7 @@ public sealed class GetFollowedWatchedMoviesHandler : IGetFollowedWatchedMoviesH
 
         var watched = events
             .Where(e => e.HasWinner && e.IsFinished(now))
-            .SelectMany(e => e.WinnerMovieIds.Select(id => (MovieId: id, WatchedAt: WatchedAtOf(e))))
+            .SelectMany(e => e.GetWinnerMovieIds().Select(id => (MovieId: id, WatchedAt: WatchedAtOf(e))))
             .GroupBy(x => x.MovieId)
             .Select(g => g.OrderByDescending(x => x.WatchedAt).First())
             .OrderByDescending(x => x.WatchedAt)

@@ -20,8 +20,8 @@ public sealed class SharedCacheReadThrough
         string key,
         TimeSpan ttl,
         Func<CancellationToken, Task<T>> load,
-        CancellationToken ct = default,
-        bool shareAcrossInstances = true)
+        bool shareAcrossInstances = true,
+        CancellationToken ct = default)
         where T : class
     {
         if (_memory.TryGetValue(key, out object? boxed) && boxed is T cached)

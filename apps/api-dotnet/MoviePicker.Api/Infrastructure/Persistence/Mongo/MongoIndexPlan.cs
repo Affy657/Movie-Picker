@@ -48,13 +48,11 @@ public sealed class MongoIndexPlan
         _descriptions.Add($"drop {collection} {indexName}");
         _steps.Add(async ct =>
         {
-            try
-            {
-                await _database.GetCollection<TDocument>(collection).Indexes.DropOneAsync(indexName, ct);
-            }
-            catch (MongoCommandException ex) when (ex.Code == MongoErrorCodes.IndexNotFound)
-            {
-            }
+            var indexes = _database.GetCollection<TDocument>(collection).Indexes;
+            using var cursor = await indexes.ListAsync(ct);
+            var existing = await cursor.ToListAsync(ct);
+            if (existing.Any(index => index["name"].AsString == indexName))
+                await indexes.DropOneAsync(indexName, ct);
         });
     }
 

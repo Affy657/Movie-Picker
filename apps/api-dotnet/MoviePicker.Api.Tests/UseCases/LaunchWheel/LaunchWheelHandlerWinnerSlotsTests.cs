@@ -19,6 +19,7 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IPosterImageStore> _posters = new();
     private readonly LaunchWheelHandler _sut;
+    private static readonly string[] StillDrawable = ["m3", "m4"];
 
     public LaunchWheelHandlerWinnerSlotsTests()
     {
@@ -148,7 +149,7 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
         await _sut.HandleAsync("evt1");
 
         Assert.NotNull(saved);
-        Assert.Equal(new[] { "m1", "m2", "m3" }, saved!.WinnerMovieIds);
+        Assert.Equal(["m1", "m2", "m3"], saved!.GetWinnerMovieIds());
     }
 
     [Fact]
@@ -160,7 +161,7 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
         for (var i = 0; i < 30; i++)
         {
             var result = await _sut.HandleAsync("evt1");
-            Assert.Contains(result.Winner.Id, new[] { "m3", "m4" });
+            Assert.Contains(result.Winner.Id, StillDrawable);
         }
     }
 
