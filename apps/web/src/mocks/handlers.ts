@@ -45,9 +45,10 @@ export function createEventDetailHandlers(opts: MockEventOptions) {
         isFinished: opts.isFinished ?? false,
         lifecycle: opts.lifecycle ?? (opts.isFinished ? 'finished' : 'live'),
         winners: [],
-        participantCount: 3,
+        participantCount: 4,
         movieCount: 2,
         participants: [
+          { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
           { _id: 'p-msw-alice', pseudo: 'Alice' },
           { _id: 'p-msw-bob', pseudo: 'Bob' },
           { _id: 'p-msw-chloe', pseudo: 'Chloé' },

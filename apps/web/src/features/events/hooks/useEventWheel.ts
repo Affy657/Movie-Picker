@@ -285,6 +285,7 @@ export function useEventWheel({
           setPendingRevealId(null);
           setSpinWinner(null);
           setLocallyDrawnIds([]);
+          setRemovalMode(false);
           onWheelDone();
         })
         .catch((err) => setError(getErrorMessage(err, t('events.wheel.removeWinnerError'))))

@@ -515,7 +515,7 @@ describe('EventDetail (MSW)', () => {
   describe('modal chaining (single instance)', () => {
     it('open remove, cancel, open leave: consistent labels', async () => {
       const user = userEvent.setup();
-      setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      setStoredParticipant(slug, 'p-msw-bob', 'Bob');
 
       renderEventDetail(`/e/${slug}?host=host-token`);
       expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();

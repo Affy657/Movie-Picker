@@ -7,7 +7,11 @@ import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import { WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
-import { postEventWheel, postEventWheelAnnounce } from '@/features/events/api/eventsApi';
+import {
+  deleteEventWinner,
+  postEventWheel,
+  postEventWheelAnnounce,
+} from '@/features/events/api/eventsApi';
 
 vi.mock('@/features/events/api/eventsApi', () => ({
   postEventWheel: vi.fn(),
@@ -15,6 +19,7 @@ vi.mock('@/features/events/api/eventsApi', () => ({
   postEventWinner: vi.fn(),
   postEventClose: vi.fn(),
   deleteEventWheel: vi.fn(),
+  deleteEventWinner: vi.fn(),
 }));
 
 const winner = { id: 'mov1', title: 'Dune', tmdbId: 1 } as MovieData;
@@ -159,5 +164,43 @@ describe('useEventWheel: remaining slots', () => {
 
     await waitFor(() => expect(result.current.remainingDraws).toBe(2));
     expect(result.current.drawableMovies.map((m) => m.id)).toEqual(['mov1', 'mov2']);
+  });
+});
+
+describe('useEventWheel: taking a winner out', () => {
+  const drawn = {
+    ...hostEvent,
+    winners: [{ movieId: 'mov1', pickMethod: 'wheel', pickedAt: '2030-06-01T20:00:00Z' }],
+  } as EventData;
+
+  beforeEach(() => {
+    vi.mocked(deleteEventWinner).mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('leaves the removal mode once the winner is out', async () => {
+    const { result } = renderHook(
+      () =>
+        useEventWheel({
+          slug: 'soiree',
+          event: drawn,
+          movies: [winner],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper }
+    );
+
+    act(() => result.current.enterRemovalMode());
+    expect(result.current.removalMode).toBe(true);
+
+    act(() => result.current.removeWinner(winner));
+
+    await waitFor(() => expect(result.current.removalMode).toBe(false));
+    expect(deleteEventWinner).toHaveBeenCalledWith('soiree', 'mov1', 'ht1');
+    expect(result.current.canSpin).toBe(true);
   });
 });

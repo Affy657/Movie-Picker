@@ -5,8 +5,8 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import type { ReactNode } from 'react';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';
-import { TEST_API_V1 } from '@/mocks/handlers';
-import { setStoredParticipant } from '@/features/events/storage';
+import { createEventDetailHandlers, TEST_API_V1 } from '@/mocks/handlers';
+import { getStoredParticipant, setStoredParticipant } from '@/features/events/storage';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 
 const slug = 'soiree-perf';
@@ -63,5 +63,27 @@ describe('useEventDetailPage', () => {
 
     await waitFor(() => expect(result.current.moviesQuery.isSuccess).toBe(true));
     expect(requested.filter((entry) => entry.startsWith('movies:'))).toEqual(['movies:p-42']);
+  });
+
+  it('forgets a remembered participant the movie night no longer lists', async () => {
+    setStoredParticipant(slug, 'p-removed', 'Alice');
+    server.use(...createEventDetailHandlers({ slug }));
+
+    const { result } = renderHook(() => useEventDetailPage(slug), { wrapper });
+
+    await waitFor(() => expect(result.current.event).not.toBeNull());
+    await waitFor(() => expect(result.current.participant).toBeNull());
+    expect(getStoredParticipant(slug)).toBeNull();
+  });
+
+  it('keeps a remembered participant the movie night still lists', async () => {
+    setStoredParticipant(slug, 'p-msw-bob', 'Bob');
+    server.use(...createEventDetailHandlers({ slug }));
+
+    const { result } = renderHook(() => useEventDetailPage(slug), { wrapper });
+
+    await waitFor(() => expect(result.current.event).not.toBeNull());
+    expect(result.current.participant).toEqual({ participantId: 'p-msw-bob', pseudo: 'Bob' });
+    expect(getStoredParticipant(slug)).toEqual({ participantId: 'p-msw-bob', pseudo: 'Bob' });
   });
 });

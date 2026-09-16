@@ -4,13 +4,20 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   getStoredHostToken,
   getStoredParticipant,
+  removeStoredParticipant,
   setStoredHostToken,
   setStoredParticipant,
 } from '@/features/events/storage';
+import type { EventData } from '@/shared/types/event';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useEvent } from '@/features/events/hooks/useEvent';
 import { useMovies } from '@/features/movies/hooks/useMovies';
 import { useEventLive } from '@/features/events/hooks/useEventLive';
+
+function isParticipantGone(participantId: string, event: EventData | null, slug: string): boolean {
+  if (event?.slug !== slug || !event.participants) return false;
+  return !event.participants.some((p) => p.id === participantId);
+}
 
 export function useEventDetailPage(slug: string | undefined) {
   const [searchParams] = useSearchParams();
@@ -46,10 +53,11 @@ export function useEventDetailPage(slug: string | undefined) {
       return;
     }
     const stored = getStoredParticipant(slug);
-    if (stored) {
+    if (stored && !isParticipantGone(stored.participantId, event, slug)) {
       setParticipant(stored);
       return;
     }
+    if (stored) removeStoredParticipant(slug);
     if (event?.slug !== slug) {
       setParticipant(null);
       return;
