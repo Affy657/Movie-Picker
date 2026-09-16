@@ -212,6 +212,24 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task CountByWinnerMovieIds_CountsTheEventsWhoseWinnersListNamesTheMovie()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var movieId = ObjectId.GenerateNewId().ToString();
+        var otherMovieId = ObjectId.GenerateNewId().ToString();
+        EventWinner[] Won(string id) => [new EventWinner { MovieId = id, Method = WinnerPickMethod.Wheel, PickedAt = Now }];
+        await events.AddAsync(NewEvent("won-once") with { Winners = Won(movieId) });
+        await events.AddAsync(NewEvent("won-twice") with { Winners = Won(movieId) });
+        await events.AddAsync(NewEvent("won-other") with { Winners = Won(otherMovieId) });
+        await events.AddAsync(NewEvent("no-winner"));
+
+        Assert.Equal(2, await events.CountByWinnerMovieIdsAsync([movieId]));
+        Assert.Equal(3, await events.CountByWinnerMovieIdsAsync([movieId, otherMovieId]));
+        Assert.Equal(0, await events.CountByWinnerMovieIdsAsync([ObjectId.GenerateNewId().ToString()]));
+    }
+
+    [Fact]
     public async Task ListAwaitingWatchlistCleanup_ReturnsFinishedEventsWithAWinnerNotYetCleaned()
     {
         using var scope = _factory.Services.CreateScope();

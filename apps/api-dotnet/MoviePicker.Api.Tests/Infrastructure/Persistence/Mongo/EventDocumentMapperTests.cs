@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Tests.Builders;
@@ -267,93 +268,37 @@ public sealed class EventDocumentMapperTests
     }
 
     [Fact]
-    public void ToDomain_LegacySingleWinnerFields_BecomeAOneEntryPalmares()
-    {
-        var pickedAt = new DateTime(2026, 5, 1, 18, 0, 0, DateTimeKind.Utc);
-        var doc = new EventDocument
-        {
-            Id = "507f1f77bcf86cd799439011",
-            Title = "Soirée",
-            Date = "2026-05-01",
-            Time = "20:00",
-            HostToken = "ht",
-            Slug = "s",
-            WinnerMovieId = "507f1f77bcf86cd799439012",
-            WinnerPickMethod = "manual",
-            WinnerPickedAt = pickedAt,
-            CreatedAt = pickedAt,
-            UpdatedAt = pickedAt
-        };
-
-        var domain = EventDocumentMapper.ToDomain(doc);
-
-        var winner = Assert.Single(domain.Winners);
-        Assert.Equal("507f1f77bcf86cd799439012", winner.MovieId);
-        Assert.Equal(WinnerPickMethod.Manual, winner.Method);
-        Assert.Equal(new DateTimeOffset(pickedAt, TimeSpan.Zero), winner.PickedAt);
-    }
-
-    [Fact]
-    public void ToDomain_LegacyWinnerWithoutPickedAt_FallsBackToTheUpdateDate()
-    {
-        var updatedAt = new DateTime(2026, 5, 2, 9, 0, 0, DateTimeKind.Utc);
-        var doc = new EventDocument
-        {
-            Id = "507f1f77bcf86cd799439011",
-            Slug = "s",
-            WinnerMovieId = "507f1f77bcf86cd799439012",
-            CreatedAt = updatedAt,
-            UpdatedAt = updatedAt
-        };
-
-        var winner = Assert.Single(EventDocumentMapper.ToDomain(doc).Winners);
-
-        Assert.Equal(new DateTimeOffset(updatedAt, TimeSpan.Zero), winner.PickedAt);
-        Assert.Equal(WinnerPickMethod.Wheel, winner.Method);
-    }
-
-    [Fact]
-    public void ToDomain_WinnersArrayWins_OverTheLegacyFields()
+    public void ToDomain_WithoutAWinnersList_HasNoWinner()
     {
         var doc = new EventDocument
         {
             Id = "507f1f77bcf86cd799439011",
             Slug = "s",
-            WinnerMovieId = "507f1f77bcf86cd799439012",
-            Winners =
-            [
-                new EventWinnerDocument
-                {
-                    MovieId = "507f1f77bcf86cd799439013",
-                    PickMethod = "wheel",
-                    PickedAt = new DateTime(2026, 5, 3, 20, 0, 0, DateTimeKind.Utc)
-                }
-            ],
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        var winner = Assert.Single(EventDocumentMapper.ToDomain(doc).Winners);
-
-        Assert.Equal("507f1f77bcf86cd799439013", winner.MovieId);
+        Assert.Empty(EventDocumentMapper.ToDomain(doc).Winners);
     }
 
     [Fact]
-    public void ToDocument_KeepsTheFirstWinnerInTheLegacyField()
+    public void ToDocument_WritesTheWinnersListOnly_NoLegacyWinnerField()
     {
         var evt = new Event
         {
-            Id = "evt1",
+            Id = "507f1f77bcf86cd799439011",
             Slug = "s",
-            Winners = TestWinners.Won("mov1", "mov2"),
+            Winners = TestWinners.Won("507f1f77bcf86cd799439012", "507f1f77bcf86cd799439013"),
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
 
-        var doc = EventDocumentMapper.ToDocument(evt);
+        var bson = EventDocumentMapper.ToDocument(evt).ToBsonDocument();
 
-        Assert.Equal("mov1", doc.WinnerMovieId);
-        Assert.Equal(2, doc.Winners!.Count);
+        Assert.Equal(2, bson["winners"].AsBsonArray.Count);
+        Assert.False(bson.Contains("winnerMovieId"));
+        Assert.False(bson.Contains("winnerPickMethod"));
+        Assert.False(bson.Contains("winnerPickedAt"));
     }
 
     [Fact]

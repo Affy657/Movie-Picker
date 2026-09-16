@@ -136,9 +136,7 @@ public sealed class MongoEventRepository : IEventRepository
         if (ids.Count == 0)
             return 0;
 
-        var filter = Builders<EventDocument>.Filter.Or(
-            Builders<EventDocument>.Filter.In("winners.movieId", ToObjectIds(ids)),
-            Builders<EventDocument>.Filter.In(x => x.WinnerMovieId, ids));
+        var filter = Builders<EventDocument>.Filter.In("winners.movieId", ToObjectIds(ids));
         var c = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
         return (int)c;
     }

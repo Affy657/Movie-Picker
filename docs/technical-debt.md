@@ -136,19 +136,22 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: poser `[SharedRateLimit]` sur les politiques qui protègent une ressource partagée (webhooks, scheduler, création de soirée), pas sur le sondage
 - piege: le compteur partagé coûte un aller-retour Mongo par requête, ne pas le poser sur les routes sondées toutes les 3,5 s (DEBT-008)
 
-## DEBT-024 le premier gagnant s'écrit encore dans l'ancien champ `winnerMovieId`
+## DEBT-024 les documents de prod portent encore les anciens champs `winnerMovieId`, `winnerPickMethod`, `winnerPickedAt`
 
 - state: differe
-- declencheur: la V1.6 est en prod depuis au moins un cycle de retour arrière possible (`rollback.yml` ne peut plus viser une révision antérieure à la liste `winners`)
-- impact: aucune fonctionnalité en jeu, deux vérités en base. `EventDocumentMapper.ToDocument` recopie `Winners[0]` dans `winnerMovieId` pour qu'une révision antérieure lise encore un gagnant, alors que `winnerPickMethod` et `winnerPickedAt` ne sont plus écrits. Le compteur de soirées gagnées par film doit interroger les deux formes, et tout lecteur futur du document a deux champs à réconcilier.
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/EventDocumentMapper.cs` (`ToDocument`, `ToWinners`), `MongoEventRepository.CountByWinnerMovieIdsAsync`
-- verify: la double écriture est toujours là.
+- declencheur: la révision Cloud Run active sert un commit qui contient `ToDocument_WritesTheWinnersListOnly_NoLegacyWinnerField` (`git log -1 --format=%h -S ToDocument_WritesTheWinnersListOnly_NoLegacyWinnerField` donne le premier ; `SENTRY_RELEASE` de la révision active, `gcloud run revisions describe`, dit lequel sert)
+- impact: aucune fonctionnalité en jeu. Depuis le 2026-09-16 le code ne lit ni n'écrit plus que `winners` : les 22 soirées de prod qui n'avaient qu'un `winnerMovieId` ont reçu leur liste `winners` par reprise (`pickMethod` recopié ou `wheel`, `pickedAt` recopié ou `updatedAt`, exactement ce que le repli de lecture rendait), `EventDocument` n'a plus les trois champs, le compteur de soirées gagnées n'interroge plus que `winners.movieId`. Restent en base les anciens champs sur 28 documents, que la révision active réécrit encore à chaque `ReplaceOne` tant qu'elle sert l'ancien code.
+- ou: base `moviepicker`, collection `events`
+- verify: la commande sort un nombre, encore ouvert tant qu'il n'est pas 0.
   ```bash
-  grep -n "WinnerMovieId" apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/EventDocumentMapper.cs
+  docker run --rm mongo:7 mongosh --quiet "$(gcloud secrets versions access latest --secret=MONGODB_URI)" --eval 'db.getSiblingDB("moviepicker").events.countDocuments({ $or: [ { winnerMovieId: { $exists: true } }, { winnerPickMethod: { $exists: true } }, { winnerPickedAt: { $exists: true } } ] })'
   ```
-- fix: un script de reprise qui copie `winnerMovieId` + `winnerPickMethod` + `winnerPickedAt` dans `winners` sur les documents qui n'ont pas encore la liste, puis retirer la ligne de `ToDocument`, le repli de lecture de `ToWinners`, les trois champs de `EventDocument` et le `Or` du compteur. Le test `ToDocument_KeepsTheFirstWinnerInTheLegacyField` se retourne à ce moment.
-- fini-quand: `EventDocument` ne porte plus que `winners`, et un document de prod pris au hasard n'a plus de champ `winnerMovieId`
-- piege: ne pas retirer la lecture de repli avant la reprise, les soirées terminées avant la V1.6 perdraient leur gagnant dans l'historique. Depuis le 2026-09-15, `UpdateAsync` n'écrit que les champs connus (voir C13) : un retour arrière vers une révision postérieure à cette date n'efface plus `winners`, le déclencheur ne vaut que pour les révisions antérieures.
+- fix: une fois le déclencheur observé, un seul `updateMany` :
+  ```bash
+  docker run --rm mongo:7 mongosh --quiet "$(gcloud secrets versions access latest --secret=MONGODB_URI)" --eval 'db.getSiblingDB("moviepicker").events.updateMany({}, { $unset: { winnerMovieId: "", winnerPickMethod: "", winnerPickedAt: "" } })'
+  ```
+- fini-quand: `verify` rend 0
+- piege: ne pas retirer les champs avant le déclencheur : la révision active les réécrit (`ReplaceOne`, C13 n'y est pas encore), et un retour arrière vers elle continuerait de les lire en repli si `winners` manquait ; il ne manque plus nulle part, mais l'ordre reste le seul qui ne dépende de rien. L'URI de prod ne se colle jamais dans un fichier ni dans la conversation, seulement dans la substitution de commande.
 
 ## DEBT-032 deux modèles d'autorisation hôte coexistent, le jeton porteur et le compte créateur
 

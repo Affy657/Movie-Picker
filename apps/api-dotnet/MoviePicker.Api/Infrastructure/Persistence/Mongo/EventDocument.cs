@@ -37,19 +37,6 @@ public sealed class EventDocument
     [BsonElement("closedAt")]
     public DateTime? ClosedAt { get; set; }
 
-    [BsonElement("winnerMovieId")]
-    [BsonIgnoreIfNull]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string? WinnerMovieId { get; set; }
-
-    [BsonElement("winnerPickMethod")]
-    [BsonIgnoreIfNull]
-    public string? WinnerPickMethod { get; set; }
-
-    [BsonElement("winnerPickedAt")]
-    [BsonIgnoreIfNull]
-    public DateTime? WinnerPickedAt { get; set; }
-
     [BsonElement("winners")]
     [BsonIgnoreIfNull]
     public List<EventWinnerDocument>? Winners { get; set; }

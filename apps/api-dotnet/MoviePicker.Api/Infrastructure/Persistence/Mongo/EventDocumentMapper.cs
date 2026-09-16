@@ -52,7 +52,6 @@ public static class EventDocumentMapper
             CreatorUserId = evt.CreatorUserId,
             Config = config,
             ClosedAt = evt.ClosedAt?.UtcDateTime,
-            WinnerMovieId = evt.Winners.Count > 0 ? evt.Winners[0].MovieId : null,
             Winners = evt.Winners
                 .Select(w => new EventWinnerDocument
                 {
@@ -130,33 +129,17 @@ public static class EventDocumentMapper
             _ => null
         };
 
-    private static IReadOnlyList<EventWinner> ToWinners(EventDocument doc)
-    {
-        if (doc.Winners is { Count: > 0 })
-            return doc.Winners
+    private static IReadOnlyList<EventWinner> ToWinners(EventDocument doc) =>
+        doc.Winners is { Count: > 0 }
+            ? doc.Winners
                 .Select(w => new EventWinner
                 {
                     MovieId = w.MovieId,
                     Method = ParseWinnerPickMethod(w.PickMethod) ?? WinnerPickMethod.Wheel,
                     PickedAt = new DateTimeOffset(w.PickedAt, TimeSpan.Zero)
                 })
-                .ToList();
-
-        if (string.IsNullOrEmpty(doc.WinnerMovieId))
-            return [];
-
-        return
-        [
-            new EventWinner
-            {
-                MovieId = doc.WinnerMovieId,
-                Method = ParseWinnerPickMethod(doc.WinnerPickMethod) ?? WinnerPickMethod.Wheel,
-                PickedAt = doc.WinnerPickedAt.HasValue
-                    ? new DateTimeOffset(doc.WinnerPickedAt.Value, TimeSpan.Zero)
-                    : new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
-            }
-        ];
-    }
+                .ToList()
+            : [];
 
     private static WinnerPickMethod? ParseWinnerPickMethod(string? raw) =>
         raw?.Trim().ToLowerInvariant() switch
