@@ -32,7 +32,7 @@ export default function AvatarPickerModal({
   const ids = category === 'bottts' ? BOTTTS_IDS : EMOJI_IDS;
 
   return (
-    <Modal open={open} onClose={onClose} size="md" padded labelledBy={titleId}>
+    <Modal open={open} onClose={onClose} size="sm" padded labelledBy={titleId}>
       <div className={styles.header}>
         <h2 id={titleId} className={styles.title}>
           {t('auth.account.avatarLabel')}

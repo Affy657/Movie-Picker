@@ -11,9 +11,9 @@
   color: inherit;
   overflow: hidden;
   transition:
-    transform var(--duration-medium) var(--ease-default),
-    box-shadow var(--duration-medium) var(--ease-default),
-    border-color var(--duration-medium) var(--ease-default);
+    transform var(--duration-base) var(--ease-default),
+    box-shadow var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default);
 }
 
 @media (hover: hover) {
@@ -209,23 +209,8 @@
 }
 
 .badgeHost {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
   flex-shrink: 0;
-  line-height: var(--leading-none);
   margin-top: 0.2em;
-  font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
   text-transform: uppercase;
   letter-spacing: var(--tracking-extra);
-  padding: var(--space-1) var(--space-2-5);
-  border-radius: var(--radius-pill);
-  background: var(--color-primary-soft);
-  color: var(--color-primary-text);
-  border: 1px solid var(--color-primary-border);
-}
-
-.badgeHostLabel {
-  transform: translateY(var(--text-optical-nudge));
 }

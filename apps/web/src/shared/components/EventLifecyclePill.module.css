@@ -44,7 +44,7 @@
 
 .detail {
   font-weight: var(--font-weight-medium);
-  opacity: 0.72;
+  opacity: var(--opacity-muted);
 }
 
 .pulse {

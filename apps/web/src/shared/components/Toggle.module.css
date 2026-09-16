@@ -1,5 +1,5 @@
 .toggle {
-  position: relative;
+  composes: expanded from './tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   width: 2.75rem;
@@ -19,7 +19,7 @@
 }
 
 .toggle:disabled {
-  opacity: 0.45;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 

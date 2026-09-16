@@ -35,6 +35,7 @@
 }
 
 .seeAllLink {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
@@ -78,6 +79,7 @@
 }
 
 .railArrow {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   position: absolute;
   top: 50%;
   transform: translateY(calc(-50% - var(--space-5)));

@@ -19,6 +19,7 @@
 }
 
 .link {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);

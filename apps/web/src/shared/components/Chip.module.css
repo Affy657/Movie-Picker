@@ -57,6 +57,7 @@
 }
 
 .interactive {
+  composes: expanded from './tapTarget.module.css';
   cursor: pointer;
   font-family: inherit;
   transition:
@@ -92,6 +93,7 @@
 }
 
 .remove {
+  composes: expanded from './tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -118,6 +120,6 @@
 }
 
 .chip:disabled {
-  opacity: 0.5;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }

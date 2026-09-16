@@ -53,7 +53,7 @@
   transform: rotate(45deg);
   margin-bottom: var(--space-1);
   transition:
-    transform var(--duration-medium) var(--ease-default),
+    transform var(--duration-base) var(--ease-default),
     border-color var(--duration-base) var(--ease-default);
 }
 
@@ -104,6 +104,11 @@
 .optionSelected {
   color: var(--color-primary-text);
   font-weight: var(--font-weight-semibold);
+}
+
+.optionDisabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
 }
 
 .optionSelected.optionActive {

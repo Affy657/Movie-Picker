@@ -80,7 +80,7 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
         <Modal
           open={open}
           onClose={() => setOpen(false)}
-          size="md"
+          size="sm"
           column
           bottomSheetOnMobile
           labelledBy={titleId}

@@ -49,7 +49,7 @@ export default function EventCardMenu({
           )}
           {onDelete && (
             <MenuItem
-              danger
+              tone="danger"
               icon={<Trash2 size={14} aria-hidden />}
               onClick={() => {
                 menu.close();
@@ -61,7 +61,7 @@ export default function EventCardMenu({
           )}
           {onRemove && (
             <MenuItem
-              danger
+              tone="danger"
               icon={<LogOut size={14} aria-hidden />}
               onClick={() => {
                 menu.close();

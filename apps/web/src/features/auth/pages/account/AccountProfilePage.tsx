@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import clsx from 'clsx';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTranslation } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -155,7 +156,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
           )}
         </div>
 
-        <div className={styles.row} style={{ borderTop: 'none', paddingTop: 0 }}>
+        <div className={clsx(styles.row, styles.noDivider, styles.rowFlush)}>
           <div className={styles.rowMain}>
             <p className={styles.rowLabel}>{t('profile.settings.visibilityLabel')}</p>
             {profileUrl && (

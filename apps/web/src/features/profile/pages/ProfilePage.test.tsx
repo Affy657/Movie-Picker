@@ -158,7 +158,8 @@ describe('ProfilePage (MSW)', () => {
     renderProfile('alice');
 
     await screen.findByRole('heading', { name: 'Alice' });
-    expect(screen.getByLabelText(/soutien du projet/i)).toBeInTheDocument();
+    const badge = screen.getByText('Soutien');
+    expect(badge.closest('[aria-describedby]')).toHaveAccessibleDescription(/soutien du projet/i);
   });
 
   it("n'affiche pas le badge soutien sur un profil sans don", async () => {
@@ -172,7 +173,7 @@ describe('ProfilePage (MSW)', () => {
     renderProfile('alice');
 
     await screen.findByRole('heading', { name: 'Alice' });
-    expect(screen.queryByLabelText(/soutien du projet/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Soutien')).not.toBeInTheDocument();
   });
 
   it('affiche les compteurs following/followers cliquables', async () => {

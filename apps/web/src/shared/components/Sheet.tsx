@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import { useTranslation } from '@/shared/i18n';
 import dragStyles from './SheetDrag.module.css';
+import IconButton from './IconButton';
 import Modal from './Modal';
 import styles from './Sheet.module.css';
 
@@ -13,8 +14,10 @@ interface SheetProps {
   onClose: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  size?: 'default' | 'tall';
+  size?: SheetSize;
 }
+
+export type SheetSize = 'md' | 'lg';
 
 export default function Sheet({
   open,
@@ -22,7 +25,7 @@ export default function Sheet({
   onClose,
   children,
   footer,
-  size = 'default',
+  size = 'md',
 }: Readonly<SheetProps>) {
   const { t } = useTranslation();
   const titleId = useId();
@@ -35,7 +38,7 @@ export default function Sheet({
       onClose={onClose}
       labelledBy={titleId}
       dialogRef={dialogRef}
-      className={clsx(styles.dialog, size === 'tall' && styles.dialogTall, dragStyles.surface)}
+      className={clsx(styles.dialog, size === 'lg' && styles.dialogTall, dragStyles.surface)}
     >
       {open && (
         <>
@@ -45,14 +48,9 @@ export default function Sheet({
               <h2 id={titleId} className={styles.title}>
                 {title}
               </h2>
-              <button
-                type="button"
-                className={`icon-btn-outline ${styles.closeBtn}`}
-                onClick={onClose}
-                aria-label={t('common.close')}
-              >
+              <IconButton label={t('common.close')} onClick={onClose}>
                 <X aria-hidden size={16} />
-              </button>
+              </IconButton>
             </div>
           </div>
           <div className={styles.body}>{children}</div>

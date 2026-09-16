@@ -90,12 +90,25 @@ describe('MenuItem', () => {
         <MenuItem icon={<span data-testid="icon" />} selected>
           Sélectionné
         </MenuItem>
-        <MenuItem danger>Retirer</MenuItem>
+        <MenuItem tone="danger">Retirer</MenuItem>
       </MenuPanel>
     );
     expect(screen.getByTestId('icon')).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Sélectionné' }).className).toMatch(/itemSelected/);
     expect(screen.getByRole('menuitem', { name: 'Retirer' }).className).toMatch(/itemDanger/);
+  });
+
+  it('renders a disabled item as a disabled button, even with an href', () => {
+    render(
+      <MenuPanel label="Actions">
+        <MenuItem href="/somewhere" disabled>
+          Indisponible
+        </MenuItem>
+      </MenuPanel>
+    );
+    const item = screen.getByRole('menuitem', { name: 'Indisponible' });
+    expect(item.tagName).toBe('BUTTON');
+    expect(item).toBeDisabled();
   });
 });
 

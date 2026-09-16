@@ -21,6 +21,7 @@ import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import sharedStyles from '@/features/auth/pages/account/AccountShared.module.css';
 import styles from './LetterboxdImportSection.module.css';
 import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 function formatSyncDate(iso: string, locale: string): string {
   return new Date(iso).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
@@ -150,7 +151,7 @@ export default function LetterboxdImportSection() {
         </InfoBubble>
       </p>
 
-      <div className={sharedStyles.field} style={{ borderTop: 'none' }}>
+      <div className={clsx(sharedStyles.field, sharedStyles.noDivider)}>
         {showInput ? (
           <form
             className={styles.editRow}
@@ -175,26 +176,25 @@ export default function LetterboxdImportSection() {
               placeholder={t('auth.account.letterboxd.usernamePlaceholder')}
               maxLength={40}
             />
-            <button
+            <IconButton
               type="submit"
-              className={clsx('icon-btn-outline', styles.iconBtn)}
-              disabled={savingUsername}
-              aria-label={t('auth.account.letterboxd.usernameSave')}
+              size="lg"
+              loading={savingUsername}
+              label={t('auth.account.letterboxd.usernameSave')}
             >
               <Check size={18} aria-hidden />
-            </button>
+            </IconButton>
             {connected && (
-              <button
-                type="button"
-                className={clsx('icon-btn-outline', styles.iconBtn)}
+              <IconButton
+                size="lg"
                 onClick={() => {
                   clearSaveError();
                   setEditing(false);
                 }}
-                aria-label={t('common.cancel')}
+                label={t('common.cancel')}
               >
                 <X size={18} aria-hidden />
-              </button>
+              </IconButton>
             )}
           </form>
         ) : (
@@ -277,7 +277,7 @@ export default function LetterboxdImportSection() {
       {connected && (
         <div className={sharedStyles.row}>
           <div className={sharedStyles.rowMain}>
-            <p className={sharedStyles.rowSub} style={{ margin: 0 }}>
+            <p className={clsx(sharedStyles.rowSub, sharedStyles.rowSubFlush)}>
               {t('auth.account.letterboxd.syncPersistentHint')}
             </p>
           </div>

@@ -12,7 +12,7 @@ import {
   type CalendarEvent,
 } from '@/shared/utils/icsCalendar';
 import styles from './MenuPanel.module.css';
-import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 type EventCalendarMenuProps = {
   title: string;
@@ -70,19 +70,17 @@ export default function EventCalendarMenu({
 
   return (
     <div className={styles.container} ref={containerRef}>
-      <Button
+      <IconButton
         ref={triggerRef}
-        type="button"
-        className={styles.iconTrigger}
+        size="lg"
+        label={t('events.calendar.addButton')}
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
-        aria-label={t('events.calendar.addButton')}
-        title={t('events.calendar.addButton')}
       >
         <CalendarPlus size={16} aria-hidden />
-      </Button>
+      </IconButton>
 
       {open ? (
         <div

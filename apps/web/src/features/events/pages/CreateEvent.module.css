@@ -179,7 +179,7 @@
   border-right: 2px solid var(--color-text-muted);
   border-bottom: 2px solid var(--color-text-muted);
   transform: rotate(-45deg);
-  transition: transform var(--duration-medium) var(--ease-default);
+  transition: transform var(--duration-base) var(--ease-default);
 }
 
 .advanced[open] .advancedChevron {

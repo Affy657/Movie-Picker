@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
-import styles from './ThemeToggle.module.css';
+import styles from './SegmentedRadioGroup.module.css';
 
 export interface SegmentedOption<T extends string> {
   value: T;

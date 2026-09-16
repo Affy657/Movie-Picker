@@ -57,10 +57,15 @@
 }
 
 @media (hover: hover) {
-  .item:hover {
+  .item:not(:disabled):hover {
     background: var(--color-surface-hover);
     outline: none;
   }
+}
+
+.item:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
 }
 
 .itemSelected {

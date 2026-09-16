@@ -41,7 +41,7 @@ export default function MyEventsConfirmDialogs({
           title: historyEvents.find((e) => e.slug === confirmDeleteSlug)?.title ?? '',
         })}
         confirmLabel={t('events.danger.deleteConfirmAction')}
-        busy={deleteMutation.isPending}
+        loading={deleteMutation.isPending}
         onConfirm={() => {
           if (confirmDeleteSlug) deleteMutation.mutate(confirmDeleteSlug);
         }}
@@ -55,7 +55,7 @@ export default function MyEventsConfirmDialogs({
         title={t('events.participants.leaveConfirmTitle')}
         message={t('events.participants.leaveConfirm')}
         confirmLabel={t('events.participants.leaveConfirmAction')}
-        busy={leaveMutation.isPending}
+        loading={leaveMutation.isPending}
         onConfirm={() => {
           if (confirmLeave) leaveMutation.mutate(confirmLeave);
         }}
@@ -71,7 +71,7 @@ export default function MyEventsConfirmDialogs({
           title: confirmHistoryRemove?.title ?? '',
         })}
         confirmLabel={t('events.myEvents.historyRemoveConfirmAction')}
-        busy={historyRemoveMutation.isPending}
+        loading={historyRemoveMutation.isPending}
         onConfirm={() => {
           if (confirmHistoryRemove) historyRemoveMutation.mutate(confirmHistoryRemove);
         }}
@@ -87,7 +87,7 @@ export default function MyEventsConfirmDialogs({
           title: confirmClose?.title ?? '',
         })}
         confirmLabel={t('events.wheel.closeWithoutMovieConfirmAction')}
-        busy={closeMutation.isPending}
+        loading={closeMutation.isPending}
         onConfirm={() => {
           if (confirmClose) closeMutation.mutate(confirmClose.slug);
         }}

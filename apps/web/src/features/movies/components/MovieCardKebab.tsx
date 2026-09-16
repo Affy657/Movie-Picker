@@ -316,10 +316,8 @@ export function CardKebab({
             tabIndex={-1}
             onKeyDown={handleMenuKeyDown}
             style={{
-              position: 'fixed',
               top: `${menuPos.top}px`,
               right: `${menuPos.right}px`,
-              zIndex: 9999,
               visibility: menuPos.ready ? 'visible' : 'hidden',
             }}
           >

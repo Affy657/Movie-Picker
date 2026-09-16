@@ -132,6 +132,7 @@
 }
 
 .removeBtn {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -165,7 +166,7 @@
 }
 
 .removeBtn:disabled {
-  opacity: 0.5;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 

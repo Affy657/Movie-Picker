@@ -89,7 +89,6 @@ export default function SortControl<TSortKey extends string>({
             key={opt.key}
             icon={isActive ? DirectionIcon : undefined}
             selected={isActive}
-            pressed={isActive}
             onClick={() => onSetSort(opt.key)}
           >
             {opt.label}

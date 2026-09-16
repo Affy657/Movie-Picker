@@ -44,6 +44,7 @@
 }
 
 .noteExpand {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -143,7 +144,7 @@
 }
 
 .noteBtn:disabled {
-  opacity: 0.5;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 

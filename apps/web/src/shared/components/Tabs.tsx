@@ -18,6 +18,7 @@ export interface TabDef<T extends string> {
   label: string;
   icon?: ReactNode;
   badge?: number;
+  disabled?: boolean;
 }
 
 function tabButtonId(idBase: string, key: string): string {
@@ -47,7 +48,7 @@ export function Tabs<T extends string>({
   className,
   variant = 'underline',
 }: Readonly<TabsProps<T>>) {
-  const keys = tabs.map((tab) => tab.key);
+  const keys = tabs.filter((tab) => !tab.disabled).map((tab) => tab.key);
   const { onKeyDown, registerTab, tabIndexFor } = useTablistKeyboard(keys, active, onChange);
   const isPill = variant === 'pill';
   const listRef = useRef<HTMLDivElement>(null);
@@ -91,6 +92,7 @@ export function Tabs<T extends string>({
               aria-selected={isActive}
               aria-controls={tabPanelId(idBase, tab.key)}
               tabIndex={tabIndexFor(tab.key)}
+              disabled={tab.disabled}
               className={clsx(
                 styles.tab,
                 isPill && styles.pillTab,

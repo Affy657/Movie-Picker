@@ -134,14 +134,14 @@ function buildConfirmDialogContent({
   busyByKind,
 }: ConfirmDialogInputs) {
   if (!confirmState) return null;
-  const busy = busyByKind[confirmState.kind];
+  const loading = busyByKind[confirmState.kind];
   if (confirmState.kind === 'remove') {
     return {
       title: t('events.participants.removeConfirmTitle'),
       message: t('events.participants.removeConfirm', { pseudo: confirmState.pseudo }),
       confirmLabel: t('events.participants.removeConfirmAction'),
       onConfirm: () => confirmRemove(confirmState.participantId, confirmState.pseudo),
-      busy,
+      loading,
     };
   }
   if (confirmState.kind === 'resetWheel') {
@@ -150,7 +150,7 @@ function buildConfirmDialogContent({
       message: t('events.wheel.resetConfirmMessage'),
       confirmLabel: t('events.wheel.resetConfirmAction'),
       onConfirm: confirmResetWheel,
-      busy,
+      loading,
     };
   }
   if (confirmState.kind === 'removeMovie') {
@@ -165,7 +165,7 @@ function buildConfirmDialogContent({
       ),
       confirmLabel: t('movies.list.removeConfirmAction'),
       onConfirm: () => confirmRemoveMovie(confirmState.movieId),
-      busy,
+      loading,
     };
   }
   return {
@@ -173,7 +173,7 @@ function buildConfirmDialogContent({
     message: t('events.participants.leaveConfirm'),
     confirmLabel: t('events.participants.leaveConfirmAction'),
     onConfirm: confirmLeave,
-    busy,
+    loading,
   };
 }
 
@@ -545,8 +545,7 @@ export default function EventDetailSession({
         title={confirmDialogContent?.title ?? ''}
         message={confirmDialogContent?.message ?? ''}
         confirmLabel={confirmDialogContent?.confirmLabel ?? ''}
-        confirmVariant="danger"
-        busy={confirmDialogContent?.busy ?? false}
+        loading={confirmDialogContent?.loading ?? false}
         onConfirm={confirmDialogContent?.onConfirm ?? closeConfirm}
         onCancel={closeConfirm}
       />

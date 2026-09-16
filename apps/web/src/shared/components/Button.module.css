@@ -43,6 +43,7 @@
 }
 
 .sm {
+  composes: expanded from './tapTarget.module.css';
   padding: var(--space-1-5) var(--space-4);
   font-size: var(--font-size-sm);
   min-height: var(--space-10);
@@ -88,13 +89,13 @@
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
   box-shadow: none;
 }
 
 .btn[aria-busy='true'] {
-  opacity: 0.85;
+  opacity: var(--opacity-dimmed);
   cursor: progress;
 }
 

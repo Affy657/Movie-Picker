@@ -473,7 +473,7 @@ export default function EventMoviesSection({
           { max: maxVotes ?? 0 }
         )}
         confirmLabel={t('movies.list.voteLimitReachedOk')}
-        confirmVariant="primary"
+        confirmTone="default"
         hideCancel
         onConfirm={() => setVoteLimitReached(false)}
         onCancel={() => setVoteLimitReached(false)}

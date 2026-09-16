@@ -19,7 +19,7 @@
 
 @media (hover: hover) {
   .trigger:hover {
-    opacity: 0.8;
+    opacity: var(--opacity-hover);
   }
 }
 
@@ -107,7 +107,7 @@
 }
 
 .item:disabled {
-  opacity: 0.6;
+  opacity: var(--opacity-disabled);
   cursor: progress;
 }
 

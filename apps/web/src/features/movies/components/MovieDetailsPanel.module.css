@@ -138,7 +138,7 @@
 
 @media (hover: hover) {
   .trailerLink:hover {
-    opacity: 0.8;
+    opacity: var(--opacity-hover);
     text-decoration: underline;
   }
 }

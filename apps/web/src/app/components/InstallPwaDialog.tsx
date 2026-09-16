@@ -58,7 +58,7 @@ export default function InstallPwaDialog({ open, mode, onClose }: Readonly<Insta
   const steps = copyKeys.steps.map((key) => t(key));
 
   return (
-    <Modal open={open} onClose={onClose} size="sm" labelledBy={titleId}>
+    <Modal open={open} onClose={onClose} size="xs" labelledBy={titleId}>
       <div className={styles.inner}>
         <header className={styles.header}>
           <h2 id={titleId} className={styles.title}>

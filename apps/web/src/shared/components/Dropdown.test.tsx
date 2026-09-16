@@ -86,6 +86,33 @@ describe('Dropdown', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('skips a disabled option with the arrows and refuses to select it', async () => {
+    const onChange = vi.fn();
+    render(
+      <Dropdown
+        value="a"
+        options={[OPTIONS[0], { ...OPTIONS[1], disabled: true }, OPTIONS[2]]}
+        onChange={onChange}
+        ariaLabel="Choix"
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Choix' }));
+    const listbox = screen.getByRole('listbox');
+    expect(screen.getByRole('option', { name: 'Beta' })).toHaveAttribute('aria-disabled', 'true');
+
+    await userEvent.click(screen.getByRole('option', { name: 'Beta' }));
+    expect(onChange).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(listbox, { key: 'ArrowDown' });
+    fireEvent.keyDown(listbox, { key: 'Enter' });
+    expect(onChange).toHaveBeenCalledWith('c');
+  });
+
+  it('disables the trigger when the whole control is disabled', () => {
+    render(<Dropdown value="a" options={OPTIONS} onChange={vi.fn()} ariaLabel="Choix" disabled />);
+    expect(screen.getByRole('button', { name: 'Choix' })).toBeDisabled();
+  });
+
   it('closes when clicking outside', async () => {
     const { trigger } = setup();
 

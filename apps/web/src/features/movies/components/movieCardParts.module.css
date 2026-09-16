@@ -22,12 +22,12 @@
 }
 
 .proposerLink:focus-visible {
-  opacity: 0.8;
+  opacity: var(--opacity-hover);
 }
 
 @media (hover: hover) {
   .proposerLink:hover {
-    opacity: 0.8;
+    opacity: var(--opacity-hover);
   }
 }
 
@@ -44,6 +44,7 @@
 }
 
 .addNote {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -72,6 +73,7 @@
 }
 
 .infoBtn {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -160,6 +162,7 @@
 }
 
 .voteBtn {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -192,7 +195,7 @@
 }
 
 .votesLocked .voteBtn:disabled {
-  opacity: 0.45;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 
@@ -209,6 +212,7 @@
 }
 
 .paidChip {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -265,7 +269,7 @@
 
 .excluded {
   filter: grayscale(1);
-  opacity: 0.55;
+  opacity: var(--opacity-muted);
 }
 
 .selectable {

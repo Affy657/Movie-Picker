@@ -135,6 +135,7 @@
 }
 
 .thumbnailRemove {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   position: absolute;
   top: 0.2rem;
   right: 0.2rem;

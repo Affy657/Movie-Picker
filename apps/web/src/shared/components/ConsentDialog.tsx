@@ -37,7 +37,7 @@ export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} size="md" padded labelledBy={titleId}>
+    <Modal open={open} onClose={onClose} size="sm" padded labelledBy={titleId}>
       <h2 id={titleId} className={styles.title}>
         {t('consent.dialog.title')}
       </h2>

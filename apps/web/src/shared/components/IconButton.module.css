@@ -15,14 +15,8 @@
     color var(--duration-base) var(--ease-default);
 }
 
-.expandedHitArea::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--tap-target-min);
-  height: var(--tap-target-min);
-  transform: translate(-50%, -50%);
+.expandedHitArea {
+  composes: expanded from './tapTarget.module.css';
 }
 
 .sm {
@@ -63,12 +57,12 @@
 }
 
 .root:disabled {
-  opacity: 0.5;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 
 .root[aria-busy='true'] {
-  opacity: 0.85;
+  opacity: var(--opacity-dimmed);
   cursor: progress;
 }
 

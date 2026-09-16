@@ -162,10 +162,8 @@
   --color-streak-soft: var(--orange-400);
   --gradient-hero: linear-gradient(135deg, #0b1228 0%, #050817 55%, #0a0b1f 100%);
 
-  --duration-instant: 0.1s;
-  --duration-fast: 0.12s;
+  --duration-fast: 0.1s;
   --duration-base: 0.15s;
-  --duration-medium: 0.18s;
   --duration-slow: 0.2s;
   --duration-enter: 0.25s;
   --duration-sheet: 0.32s;
@@ -254,6 +252,11 @@
   --text-optical-nudge: 0.06em;
   --text-optical-nudge-caps: 0.12em;
   --tap-target-min: 2.75rem;
+
+  --opacity-disabled: 0.5;
+  --opacity-muted: 0.6;
+  --opacity-hover: 0.8;
+  --opacity-dimmed: 0.85;
 }
 
 :root,
@@ -308,6 +311,10 @@
   --color-primary-soft-hover: color-mix(in srgb, var(--color-primary) 20%, transparent);
   --color-primary-border: color-mix(in srgb, var(--color-primary) 32%, transparent);
   --color-primary-border-soft: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+  --color-heat-0: var(--color-surface-hover);
+  --color-heat-1: color-mix(in srgb, var(--color-primary) 34%, var(--color-surface));
+  --color-heat-2: color-mix(in srgb, var(--color-primary) 62%, var(--color-surface));
+  --color-heat-3: var(--color-primary);
   --color-error-bg: color-mix(in srgb, var(--color-error) 12%, transparent);
   --color-error-border: color-mix(in srgb, var(--color-error) 30%, transparent);
   --color-success-bg: color-mix(in srgb, var(--color-success) 12%, transparent);
@@ -428,6 +435,10 @@
   --color-primary-soft-hover: color-mix(in srgb, var(--color-primary) 24%, transparent);
   --color-primary-border: color-mix(in srgb, var(--color-primary) 40%, transparent);
   --color-primary-border-soft: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+  --color-heat-0: var(--color-surface-hover);
+  --color-heat-1: color-mix(in srgb, var(--color-primary) 34%, var(--color-surface));
+  --color-heat-2: color-mix(in srgb, var(--color-primary) 62%, var(--color-surface));
+  --color-heat-3: var(--color-primary);
   --color-error-bg: color-mix(in srgb, var(--color-error) 14%, transparent);
   --color-error-border: color-mix(in srgb, var(--color-error) 40%, transparent);
   --color-success-bg: color-mix(in srgb, var(--color-success) 14%, transparent);
@@ -539,6 +550,10 @@
   --color-primary-soft: color-mix(in srgb, var(--color-primary) 30%, transparent);
   --color-primary-soft-hover: color-mix(in srgb, var(--color-primary) 40%, transparent);
   --color-primary-border: color-mix(in srgb, var(--color-primary) 50%, transparent);
+  --color-heat-0: var(--color-surface-hover);
+  --color-heat-1: color-mix(in srgb, var(--color-primary) 34%, var(--color-surface));
+  --color-heat-2: color-mix(in srgb, var(--color-primary) 62%, var(--color-surface));
+  --color-heat-3: var(--color-primary);
   --color-error-bg: color-mix(in srgb, var(--color-error) 14%, transparent);
   --color-error-border: color-mix(in srgb, var(--color-error) 40%, transparent);
   --color-success-bg: color-mix(in srgb, var(--color-success) 14%, transparent);

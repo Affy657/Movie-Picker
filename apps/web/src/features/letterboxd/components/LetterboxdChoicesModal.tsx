@@ -160,7 +160,7 @@ export default function LetterboxdChoicesModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} size="lg" column labelledBy={titleId}>
+    <Modal open={open} onClose={onClose} size="md" column labelledBy={titleId}>
       <div className={styles.header}>
         <div className={styles.headTextGroup}>
           <h2 id={titleId} className={styles.title}>

@@ -63,14 +63,3 @@
   flex-shrink: 0;
   color: var(--color-text-muted);
 }
-
-.iconTrigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  color: var(--color-text-muted);
-}

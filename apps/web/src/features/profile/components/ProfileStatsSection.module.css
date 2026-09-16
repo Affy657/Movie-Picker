@@ -176,7 +176,7 @@
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
   grid-auto-rows: 1.25rem;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .cellSlot {
@@ -193,6 +193,22 @@
   border-radius: var(--radius-xs);
   min-width: 0;
   cursor: default;
+}
+
+.heat0 {
+  background: var(--color-heat-0);
+}
+
+.heat1 {
+  background: var(--color-heat-1);
+}
+
+.heat2 {
+  background: var(--color-heat-2);
+}
+
+.heat3 {
+  background: var(--color-heat-3);
 }
 
 .weekCell:focus-visible {

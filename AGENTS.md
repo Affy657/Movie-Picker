@@ -38,8 +38,9 @@ Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactori
 | Dialogue déjà câblé | `ConfirmDialog`, `ShareDialog`, `ConsentDialog`, `DialogTitleBar` | bâtis sur `Modal` |
 | Feuille mobile | `Sheet` | modale ancrée en bas, glissable |
 | Pastille, badge, filtre | `Chip` | tones `neutral` / `primary` / `success` / `warning` / `pending` / `danger` / `muted`, centrage optique déjà intégré |
-| Surface de contenu | `Card` | `padding` `none`/`sm`/`md`/`lg`, `elevated`, `interactive` |
+| Surface de contenu | `Card` | `padding` `none`/`sm`/`md`/`lg`, `radius` `md`/`lg`, `elevation` `none`/`sm`/`md`/`lg`, `interactive` |
 | Champ de formulaire | `Field`, `NumberInput`, `SearchField`, `Toggle` | `Field` câble `label`, `aria-describedby`, message d'erreur |
+| Choix exclusif entre deux à cinq options | `SegmentedRadioGroup` | `role="radiogroup"`, `size` `md` / `sm`, `iconOnly` |
 | Gabarit de page | `PageLayout` | |
 | État de page | `EmptyState`, `ErrorState`, `SignedOutState`, `Skeleton`, `ErrorBoundary` | |
 | Menu, onglets, info-bulle | `Menu`, `Dropdown`, `Tabs`, `Tooltip`, `InfoBubble` | |
@@ -51,11 +52,12 @@ Aucune valeur littérale dans les CSS modules, tout passe par les jetons de `app
 - typographie : `var(--font-size-4xs … --font-size-6xl)`, échelle nommée sans variante « plus » ; graisse `var(--font-weight-regular … --font-weight-extrabold)`, interlignage `var(--leading-*)`, approche `var(--tracking-*)`, famille `var(--font-body)` / `var(--font-mono)` ;
 - rayons : `var(--radius-xs … --radius-pill)` ; bordures : 1 px, 2 px ou `var(--border-width-field)` ;
 - mouvement : `var(--duration-*)` et `var(--ease-*)` dans toute `transition` et `animation` ; une boucle décorative propre à un composant déclare son jeton dans son module ;
+- opacité : `var(--opacity-disabled)` (0,5), `-muted` (0,6), `-hover` (0,8), `-dimmed` (0,85) ; un `opacity` littéral n'est admis que dans une étape de `@keyframes` ;
 - focus : `var(--outline-focus)` ; un `:focus-visible` qui pose `outline: none` pose `box-shadow: var(--ring-focus)` ;
 - profondeur : `var(--z-below … --z-skip-link)`, jamais un nombre ;
 - largeur de page : `var(--container-xs … --container-3xl)` posé sur `--page-max-width` (défaut `--layout-max`) ;
 - couleur : `var(--color-*)`, `var(--on-poster-*)` pour ce qui se pose sur une affiche ;
-- cible tactile : `var(--tap-target-min)`, 44 px, minimum sur tout élément cliquable.
+- cible tactile : `var(--tap-target-min)`, 44 px, minimum sur tout élément cliquable ; un dessin plus petit (icône de 32 px, pastille, lien dans une phrase) garde sa taille et étend sa zone par `composes: expanded from '@/shared/components/tapTarget.module.css'`, jamais par un `::after` maison.
 
 Les couleurs ont deux niveaux. Les **primitives** (`--blue-600`, `--orange-400`, `--amber-100`…) ne sortent pas de `01-foundation.css` et de `landingPalette.css` : un module CSS ne les référence jamais. Les **rôles** sont ce que les modules consomment, et chaque rôle porte sa déclinaison :
 
@@ -129,9 +131,10 @@ Trois procédures sont rappelées par leur nom plutôt que réexpliquées à cha
 - un commentaire hors directive fonctionnelle ;
 - un `using` interdit dans `Domain/`, `Application/` ou `Controllers/` ;
 - un import de `shared/` vers une feature, ou un cycle d'imports côté front ;
-- en CSS : espacement, `font-size`, `font-weight`, `line-height`, `letter-spacing`, `font-family`, `border-radius`, `z-index`, durée ou courbe de `transition` / `animation`, largeur de bordure hors 1 px / 2 px, en valeur littérale ; couleur littérale ou `color-mix()` maison en module ; `outline: 2px solid var(--color-primary)` écrit à la main ; un `:focus-visible` qui retire le contour sans poser `--ring-focus` ; point de rupture hors échelle ; `<dialog>` ou `::backdrop` écrit hors de `Modal` ;
-- une classe `btn`/`btn-*` écrite à la main hors de `Button` ;
-- un élément cliquable dont la `min-height` plafonne sous 44 px ;
+- en CSS : espacement (`px` comme `rem`, même mêlé à un jeton), `font-size`, `font-weight`, `line-height`, `letter-spacing`, `font-family`, `border-radius`, `z-index`, `opacity` hors `@keyframes`, durée ou courbe de `transition` / `animation`, largeur de bordure hors 1 px / 2 px, en valeur littérale ; couleur littérale ou `color-mix()` maison en module ; `outline: 2px solid var(--color-primary)` écrit à la main ; un `:focus-visible` qui retire le contour sans poser `--ring-focus` ; point de rupture hors échelle ; `<dialog>` ou `::backdrop` écrit hors de `Modal` ;
+- en TypeScript : un `zIndex` numérique ou un `color-mix()` sur un rôle dans un objet `style`, le jeton se pose dans le module CSS ;
+- une classe `btn`, `btn-*`, `btn-link` ou `icon-btn-*` écrite à la main hors de `Button`, `IconButton` et `LinkButton` ;
+- un élément cliquable (bloc avec `cursor: pointer`, ou classe posée sur un `<button>`, `<a>`, `<Link>`, `Button`, `IconButton`, `LinkButton` en TSX) dont `width`, `height`, `min-width` ou `min-height` plafonne sous 44 px, jeton `--space-*` résolu ; un module qui compose `expanded` de `tapTarget.module.css` est réputé avoir traité sa zone tactile ; une classe posée sur un `<input>` natif est exemptée, son `<label>` est la cible ;
 - une classe déclarée dans un `*.module.css` et utilisée nulle part, ou dans `styles/*.css` et absente de tout fichier TypeScript et de `index.html`. La règle résout le nom local de l'import fichier par fichier, suit les ré-exports (`export { styles as xStyles }`), et compte comme usage un `composes:`, un `:global(...)` et une position descendante (`.footer .btn`). Les modules accédés par crochets (`styles[variable]`) sont inanalysables : ils sont exclus et **listés dans la sortie**, jamais passés en silence.
 
 `node apps/web/scripts/prerender.mjs`, dernière étape du build web, prérend les routes de `PRERENDERED_ROUTES` (`apps/web/src/app/prerenderRoutes.ts`) dans `dist/prerendered/`. Il échoue s'il ne trouve plus `#splash` ou `#root` dans `dist/index.html`, si une page ne rend aucun `<h1>`, si une route n'a pas d'entrée dans `PRERENDERED_ROUTE_CHUNKS`, ou si ce nom de chunk est absent de `dist/route-assets.json`. La page d'accueil en est volontairement absente, son titre peint dans la coquille de démarrage étant son élément LCP (Contrainte C2 de `docs/technical-debt.md`).

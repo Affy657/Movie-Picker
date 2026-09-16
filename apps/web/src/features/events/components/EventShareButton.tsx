@@ -1,7 +1,6 @@
 import { Share2 } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
-import styles from './EventShareButton.module.css';
-import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 interface EventShareButtonProps {
   onClick: () => void;
@@ -9,18 +8,10 @@ interface EventShareButtonProps {
 
 export default function EventShareButton({ onClick }: Readonly<EventShareButtonProps>) {
   const { t } = useTranslation();
-  const label = t('share.trigger');
 
   return (
-    <Button
-      type="button"
-      className={styles.trigger}
-      onClick={onClick}
-      aria-haspopup="dialog"
-      aria-label={label}
-      title={label}
-    >
+    <IconButton size="lg" label={t('share.trigger')} onClick={onClick} aria-haspopup="dialog">
       <Share2 size={16} aria-hidden />
-    </Button>
+    </IconButton>
   );
 }

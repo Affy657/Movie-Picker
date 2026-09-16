@@ -31,19 +31,6 @@
   margin-bottom: 0;
 }
 
-.iconBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.875rem;
-  height: 2.875rem;
-  flex-shrink: 0;
-  padding: 0;
-}
-
-@media (hover: hover) {
-}
-
 .status,
 .statusOk,
 .statusError {

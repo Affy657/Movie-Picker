@@ -74,12 +74,7 @@ export default function MovieListFiltersPanel({
         <span className={styles.groupLabel}>{labels.genre}</span>
         <div className={styles.chipRow}>
           {MOVIE_GENRE_IDS.map((id) => (
-            <Chip
-              key={id}
-              onClick={() => onToggleGenre(id)}
-              pressed={selectedGenres.includes(id)}
-              selected={selectedGenres.includes(id)}
-            >
+            <Chip key={id} onClick={() => onToggleGenre(id)} selected={selectedGenres.includes(id)}>
               {genreLabel(id, tmdbLanguage)}
             </Chip>
           ))}
@@ -91,14 +86,12 @@ export default function MovieListFiltersPanel({
         <div className={styles.chipRow}>
           <Chip
             onClick={() => onToggleMediaType('movie')}
-            pressed={selectedMediaTypes.includes('movie')}
             selected={selectedMediaTypes.includes('movie')}
           >
             {labels.typeMovie}
           </Chip>
           <Chip
             onClick={() => onToggleMediaType('tv')}
-            pressed={selectedMediaTypes.includes('tv')}
             selected={selectedMediaTypes.includes('tv')}
           >
             {labels.typeTv}
@@ -113,7 +106,6 @@ export default function MovieListFiltersPanel({
             <Chip
               key={decade}
               onClick={() => onToggleDecade(decade)}
-              pressed={selectedDecade === decade}
               selected={selectedDecade === decade}
             >
               {decade}s
@@ -130,7 +122,6 @@ export default function MovieListFiltersPanel({
               <Chip
                 key={opt.tmdb}
                 onClick={() => onToggleVoteMin(opt.tmdb)}
-                pressed={voteMin === opt.tmdb}
                 selected={voteMin === opt.tmdb}
               >
                 ★ {voteMinLabel(opt.tmdb, ratingScale)}+

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import clsx from 'clsx';
 import { Bell, BellOff } from 'lucide-react';
 import { usePushNotifications } from '@/features/notifications/hooks/usePushNotifications';
 import {
@@ -128,7 +129,7 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
       {permission === 'denied' && <p className="hint">{t('notifications.permissionDenied')}</p>}
 
       <div className={sharedStyles.card}>
-        <div className={sharedStyles.row} style={{ borderTop: 'none' }}>
+        <div className={clsx(sharedStyles.row, sharedStyles.noDivider)}>
           {subscribed ? (
             <Bell size={18} aria-hidden className={sharedStyles.rowIcon} />
           ) : (

@@ -224,7 +224,7 @@ export default function ShareDialog({
 
   if (isMobile) {
     return (
-      <Sheet open={open} title={title} onClose={onClose} size={extraTab ? 'tall' : 'default'}>
+      <Sheet open={open} title={title} onClose={onClose} size={extraTab ? 'lg' : 'md'}>
         {tabsBar}
         {panels}
       </Sheet>
@@ -235,7 +235,7 @@ export default function ShareDialog({
     <Modal
       open={open}
       onClose={onClose}
-      size="sm"
+      size="xs"
       column
       labelledBy={titleId}
       className={clsx(extraTab && styles.dialogWithTabs)}

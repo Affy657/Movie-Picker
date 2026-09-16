@@ -5,7 +5,7 @@ import { useTranslation } from '@/shared/i18n';
 import DialogTitleBar from './DialogTitleBar';
 import styles from './Modal.module.css';
 
-export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
+export type ModalSize = 'xs' | 'sm' | 'md' | 'base' | 'xl';
 
 export type ModalSurface = 'surface' | 'bare' | 'media' | 'borderless';
 
@@ -39,7 +39,7 @@ export default function Modal({
   labelledBy,
   describedBy,
   ariaLabel,
-  size = 'md',
+  size = 'sm',
   surface = 'surface',
   padded = false,
   column = false,

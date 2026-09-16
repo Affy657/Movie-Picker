@@ -98,6 +98,7 @@
 }
 
 .voteBtn {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -171,12 +172,12 @@
 }
 
 .proposerLink:focus-visible {
-  opacity: 0.75;
+  opacity: var(--opacity-hover);
 }
 
 @media (hover: hover) {
   .proposerLink:hover {
-    opacity: 0.75;
+    opacity: var(--opacity-hover);
   }
 }
 

@@ -37,12 +37,7 @@ export default function HistoryFiltersPanel({
         <legend className={styles.groupLabel}>{t('events.myEvents.filtersRoleLabel')}</legend>
         <div className={styles.chipRow}>
           {roleChips.map(([role, label]) => (
-            <Chip
-              key={role}
-              onClick={() => onToggleRole(role)}
-              pressed={roles.has(role)}
-              selected={roles.has(role)}
-            >
+            <Chip key={role} onClick={() => onToggleRole(role)} selected={roles.has(role)}>
               {label}
             </Chip>
           ))}
@@ -56,7 +51,6 @@ export default function HistoryFiltersPanel({
             <Chip
               key={outcome}
               onClick={() => onToggleOutcome(outcome)}
-              pressed={outcomes.has(outcome)}
               selected={outcomes.has(outcome)}
             >
               {label}

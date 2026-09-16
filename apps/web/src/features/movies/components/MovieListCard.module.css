@@ -138,12 +138,14 @@
 
 .badge {
   position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
+  top: var(--space-2);
+  left: var(--space-2);
   z-index: var(--z-raised-above);
   display: inline-flex;
   align-items: center;
-  padding: calc(0.1rem + 0.11em) calc(0.4rem - var(--tracking-wide)) calc(0.1rem - 0.11em) 0.4rem;
+  padding: calc(var(--space-0-5) + var(--text-optical-nudge-caps))
+    calc(var(--space-1-5) - var(--tracking-wide))
+    calc(var(--space-0-5) - var(--text-optical-nudge-caps)) var(--space-1-5);
   border-radius: var(--radius-sm);
   background: var(--on-poster-scrim);
   color: var(--on-poster-badge-fg);

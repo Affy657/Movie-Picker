@@ -3,7 +3,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type { RatingScale } from '@/shared/types/theme';
 import { RATING_SCALES } from '@/shared/types/theme';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
-import SegmentedRadioGroup from './SegmentedRadioGroup';
+import SegmentedRadioGroup from '@/shared/components/SegmentedRadioGroup';
 
 const LABEL_KEY: Record<RatingScale, TranslationKey> = {
   five: 'auth.account.ratingScaleOptions.five',

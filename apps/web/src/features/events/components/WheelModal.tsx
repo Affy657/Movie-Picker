@@ -174,7 +174,7 @@ export default function WheelModal({
       <Modal
         open={open}
         onClose={onClose}
-        size="lg"
+        size="md"
         surface={animDone ? 'surface' : 'bare'}
         strongBackdrop
         labelledBy="wheel-modal-title"

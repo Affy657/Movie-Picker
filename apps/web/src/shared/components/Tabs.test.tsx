@@ -5,7 +5,11 @@ import { Tabs, TabPanel } from '@/shared/components/Tabs';
 
 type Key = 'a' | 'b' | 'c';
 
-function Harness({ active, onChange }: Readonly<{ active: Key; onChange: (key: Key) => void }>) {
+function Harness({
+  active,
+  onChange,
+  disabledKey,
+}: Readonly<{ active: Key; onChange: (key: Key) => void; disabledKey?: Key }>) {
   return (
     <>
       <Tabs
@@ -13,7 +17,7 @@ function Harness({ active, onChange }: Readonly<{ active: Key; onChange: (key: K
         ariaLabel="Onglets de test"
         tabs={[
           { key: 'a', label: 'Alpha' },
-          { key: 'b', label: 'Beta', badge: 3 },
+          { key: 'b', label: 'Beta', badge: 3, disabled: disabledKey === 'b' },
           { key: 'c', label: 'Gamma' },
         ]}
         active={active}
@@ -61,6 +65,20 @@ describe('Tabs', () => {
     screen.getByRole('tab', { name: 'Alpha' }).focus();
     await user.keyboard('{ArrowRight}');
     expect(screen.getByRole('tab', { name: 'Beta3' })).toHaveFocus();
+  });
+
+  it('a disabled tab is skipped by the arrows and cannot be clicked', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Harness active="a" onChange={onChange} disabledKey="b" />);
+    expect(screen.getByRole('tab', { name: 'Beta3' })).toBeDisabled();
+
+    await user.click(screen.getByRole('tab', { name: 'Beta3' }));
+    expect(onChange).not.toHaveBeenCalled();
+
+    screen.getByRole('tab', { name: 'Alpha' }).focus();
+    await user.keyboard('{ArrowRight}');
+    expect(onChange).toHaveBeenCalledWith('c');
   });
 
   it('each panel references its tab through aria-labelledby / id', () => {

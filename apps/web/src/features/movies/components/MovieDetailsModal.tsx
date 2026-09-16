@@ -138,7 +138,7 @@ export default function MovieDetailsModal({
     <Modal
       open={open}
       onClose={onClose}
-      size="xl"
+      size="base"
       surface="borderless"
       bottomSheetOnMobile
       column

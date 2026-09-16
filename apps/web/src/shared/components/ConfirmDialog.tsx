@@ -4,6 +4,8 @@ import Button from './Button';
 import Modal from './Modal';
 import styles from './ConfirmDialog.module.css';
 
+export type ConfirmTone = 'danger' | 'default';
+
 type ConfirmDialogProps = {
   open: boolean;
 
@@ -15,9 +17,9 @@ type ConfirmDialogProps = {
 
   cancelLabel?: string;
 
-  confirmVariant?: 'danger' | 'primary';
+  confirmTone?: ConfirmTone;
 
-  busy?: boolean;
+  loading?: boolean;
 
   hideCancel?: boolean;
   onConfirm: () => void;
@@ -32,8 +34,8 @@ export default function ConfirmDialog({
   message,
   confirmLabel,
   cancelLabel,
-  confirmVariant = 'danger',
-  busy = false,
+  confirmTone = 'danger',
+  loading = false,
   hideCancel = false,
   onConfirm,
   onCancel,
@@ -51,7 +53,7 @@ export default function ConfirmDialog({
     <Modal
       open={open}
       onClose={onCancel}
-      size="sm"
+      size="xs"
       padded
       labelledBy={titleId}
       describedBy={messageId}
@@ -71,10 +73,10 @@ export default function ConfirmDialog({
         )}
         <Button
           size="sm"
-          variant={confirmVariant === 'primary' ? 'primary' : 'secondary'}
-          tone={confirmVariant === 'danger' ? 'danger' : 'default'}
+          variant={confirmTone === 'danger' ? 'secondary' : 'primary'}
+          tone={confirmTone}
           onClick={onConfirm}
-          loading={busy}
+          loading={loading}
           data-testid={`${testId}-confirm`}
           autoFocus
         >

@@ -117,33 +117,6 @@ a:focus-visible {
   border-radius: var(--radius-xs);
 }
 
-.error .btn-link {
-  flex-shrink: 0;
-  width: 1.5rem;
-  height: 1.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  font-size: var(--font-size-lg);
-  line-height: var(--leading-none);
-  color: var(--color-error);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  transition:
-    background var(--duration-base) var(--ease-default),
-    color var(--duration-base) var(--ease-default);
-}
-
-@media (hover: hover) {
-  .error .btn-link:hover {
-    color: var(--color-error-hover);
-    background: var(--color-error-bg);
-  }
-}
-
 .form {
   margin-top: var(--space-2);
 }
@@ -187,26 +160,4 @@ a:focus-visible {
   border-color: var(--color-primary);
   box-shadow: var(--ring-focus);
   background: var(--color-surface);
-}
-
-.icon-btn-outline {
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
-
-.icon-btn-outline:focus-visible {
-  border-color: var(--color-primary);
-  color: var(--color-primary-text);
-  outline: var(--outline-focus);
-  outline-offset: 2px;
-}
-
-@media (hover: hover) {
-  .icon-btn-outline:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary-text);
-  }
 }

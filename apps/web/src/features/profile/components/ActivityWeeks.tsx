@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import Tooltip from '@/shared/components/Tooltip';
@@ -10,11 +11,10 @@ import {
 import styles from './ProfileStatsSection.module.css';
 
 const ROWS_MOBILE = 2;
-const LEVEL_MIX = [0, 34, 62, 100];
+const HEAT_CLASS = [styles.heat0, styles.heat1, styles.heat2, styles.heat3] as const;
 
-function cellColor(level: number): string {
-  if (level === 0) return 'color-mix(in srgb, var(--color-text) 8%, transparent)';
-  return `color-mix(in srgb, var(--color-primary) ${LEVEL_MIX[level]}%, var(--color-surface))`;
+function heatClass(level: number): string | undefined {
+  return HEAT_CLASS[level];
 }
 
 function chunk<T>(items: T[], rows: number): T[][] {
@@ -70,8 +70,7 @@ export default function ActivityWeeks({ points }: Readonly<Props>) {
                     <Tooltip key={week.weekStart} label={label} className={styles.cellSlot}>
                       <button
                         type="button"
-                        className={styles.weekCell}
-                        style={{ background: cellColor(level) }}
+                        className={clsx(styles.weekCell, heatClass(level))}
                         aria-label={label}
                       />
                     </Tooltip>
@@ -100,11 +99,7 @@ export default function ActivityWeeks({ points }: Readonly<Props>) {
       <div className={styles.weekLegend} aria-hidden>
         <span className={styles.legendText}>{t('profile.stats.legendLess')}</span>
         {[0, 1, 2, 3].map((level) => (
-          <span
-            key={level}
-            className={styles.legendSwatch}
-            style={{ background: cellColor(level) }}
-          />
+          <span key={level} className={clsx(styles.legendSwatch, heatClass(level))} />
         ))}
         <span className={styles.legendText}>{t('profile.stats.legendMore')}</span>
       </div>

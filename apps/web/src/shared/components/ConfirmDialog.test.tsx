@@ -90,7 +90,7 @@ describe('ConfirmDialog', () => {
           title="Limite atteinte"
           message="Retirez un vote."
           confirmLabel="Compris"
-          confirmVariant="primary"
+          confirmTone="default"
           hideCancel
           onConfirm={onConfirm}
           onCancel={vi.fn()}
@@ -103,10 +103,10 @@ describe('ConfirmDialog', () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
-  it('disables only Confirm when `busy=true` (Cancel stays active)', () => {
+  it('disables only Confirm when `loading=true` (Cancel stays active)', () => {
     render(
       <AppTestProviders>
-        <ConfirmDialog open title="x" message="y" busy onConfirm={vi.fn()} onCancel={vi.fn()} />
+        <ConfirmDialog open title="x" message="y" loading onConfirm={vi.fn()} onCancel={vi.fn()} />
       </AppTestProviders>
     );
 

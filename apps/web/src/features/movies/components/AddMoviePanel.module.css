@@ -30,12 +30,3 @@
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-snug);
 }
-
-.closeBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-}

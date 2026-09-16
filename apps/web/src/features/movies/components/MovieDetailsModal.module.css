@@ -1,7 +1,7 @@
 .dialog {
   width: min(640px, calc(100vw - 2rem));
   max-height: min(75dvh, 620px);
-  margin: max(1.5rem, env(safe-area-inset-top, 0px)) auto auto;
+  margin: max(var(--space-6), env(safe-area-inset-top, 0px)) auto auto;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -113,6 +113,7 @@
 }
 
 .footerBtn {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   justify-content: center;

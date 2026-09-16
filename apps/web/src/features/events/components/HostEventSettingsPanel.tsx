@@ -16,7 +16,7 @@ import {
 } from '@/features/events/lib/eventTemplateDraft';
 import NumberInput from '@/shared/components/NumberInput';
 import Toggle from '@/shared/components/Toggle';
-import SegmentedRadioGroup from '@/app/components/SegmentedRadioGroup';
+import SegmentedRadioGroup from '@/shared/components/SegmentedRadioGroup';
 import { deleteEvent, patchEventConfig } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -44,6 +44,7 @@ import {
 } from '@/features/events/types';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 type HostEventSettingsPanelProps = {
   slug: string;
@@ -500,7 +501,7 @@ export default function HostEventSettingsPanel({
     <Modal
       open={open}
       onClose={onClose}
-      size="lg"
+      size="md"
       surface="borderless"
       bottomSheetOnMobile
       column
@@ -519,14 +520,9 @@ export default function HostEventSettingsPanel({
             <span className={styles.saveStatusDot} aria-hidden />
             <span>{saveStatusLabel}</span>
           </span>
-          <button
-            type="button"
-            className={styles.panelClose}
-            onClick={onClose}
-            aria-label={t('common.close')}
-          >
+          <IconButton size="sm" label={t('common.close')} onClick={onClose}>
             <X size={16} aria-hidden />
-          </button>
+          </IconButton>
         </div>
       </div>
       <div className={styles.dialogBody}>
@@ -875,8 +871,7 @@ export default function HostEventSettingsPanel({
           title={t('events.danger.deleteConfirmTitle')}
           message={t('events.danger.deleteConfirmMessage', { title: event.title })}
           confirmLabel={t('events.danger.deleteConfirmAction')}
-          confirmVariant="danger"
-          busy={deleteMutation.isPending}
+          loading={deleteMutation.isPending}
           onConfirm={() => deleteMutation.mutate()}
           onCancel={() => setConfirmDeleteOpen(false)}
           testId="delete-event-confirm-dialog"

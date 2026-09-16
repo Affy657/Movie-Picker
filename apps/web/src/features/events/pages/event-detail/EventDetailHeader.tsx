@@ -14,6 +14,7 @@ import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { ROUTES } from '@/app/routes';
 import styles from './EventDetailHeader.module.css';
 import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 import Tooltip from '@/shared/components/Tooltip';
 
 const MAX_STACKED_AVATARS = 4;
@@ -223,16 +224,14 @@ function HeaderActions({
           <EventCalendarMenu title={title} date={rawDate} time={rawTime} url={shareUrl} />
         ) : null}
         {onOpenSettings ? (
-          <Button
-            type="button"
-            className={styles.settingsBtn}
+          <IconButton
+            size="lg"
+            label={t('events.settings.title')}
             onClick={onOpenSettings}
             aria-haspopup="dialog"
-            aria-label={t('events.settings.title')}
-            title={t('events.settings.title')}
           >
             <Settings size={16} aria-hidden />
-          </Button>
+          </IconButton>
         ) : null}
       </div>
     </div>

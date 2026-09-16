@@ -41,7 +41,7 @@
 
 .rubric svg {
   flex-shrink: 0;
-  opacity: 0.85;
+  opacity: var(--opacity-dimmed);
 }
 
 @media (hover: hover) {

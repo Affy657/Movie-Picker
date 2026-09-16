@@ -28,7 +28,7 @@
   height: 9px;
   border-radius: 50%;
   background: var(--color-meta);
-  opacity: 0.5;
+  opacity: var(--opacity-muted);
 }
 
 .appUrl {
@@ -482,7 +482,7 @@
   display: block;
   width: 66px;
   height: 66px;
-  padding: 3px;
+  padding: var(--space-1);
   background: var(--color-fixed-white);
   border-radius: var(--radius-sm);
   margin-inline: auto;

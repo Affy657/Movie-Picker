@@ -5,7 +5,7 @@ import { useTheme } from '@/shared/contexts/ThemeContext';
 import type { UiThemePreference } from '@/shared/types/theme';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { isUiThemePreference } from '@/shared/utils/uiThemePreference';
-import SegmentedRadioGroup, { type SegmentedSize } from './SegmentedRadioGroup';
+import SegmentedRadioGroup, { type SegmentedSize } from '@/shared/components/SegmentedRadioGroup';
 
 const THEME_OPTIONS: readonly UiThemePreference[] = ['system', 'light', 'dark'];
 

@@ -4,6 +4,7 @@
 }
 
 .trigger {
+  composes: expanded from './tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   justify-content: center;

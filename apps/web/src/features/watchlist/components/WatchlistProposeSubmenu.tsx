@@ -105,11 +105,9 @@ export default function WatchlistProposeSubmenu({
           role="menu"
           tabIndex={-1}
           style={{
-            position: 'fixed',
             top: `${pos.top}px`,
             left: `${pos.left}px`,
             width: FLYOUT_WIDTH,
-            zIndex: 10000,
           }}
           onMouseEnter={clearCloseTimer}
           onMouseLeave={scheduleClose}

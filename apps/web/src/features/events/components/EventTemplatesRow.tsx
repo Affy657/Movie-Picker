@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import clsx from 'clsx';
 import { Check, Pencil, Sparkles, Trash2 } from 'lucide-react';
 import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 import Chip from '@/shared/components/Chip';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import TemplateNameEditor from '@/features/events/components/TemplateNameEditor';
@@ -134,28 +135,27 @@ export default function EventTemplatesRow({
               ) : (
                 <>
                   <span className={styles.manageName}>{template.name}</span>
-                  <button
-                    type="button"
-                    className={`icon-btn-outline ${styles.iconSquare}`}
+                  <IconButton
+                    size="lg"
                     disabled={disabled}
-                    aria-label={t('events.settings.templates.renameAriaLabel', {
+                    label={t('events.settings.templates.renameAriaLabel', {
                       name: template.name,
                     })}
                     onClick={() => startRename(template)}
                   >
                     <Pencil size={16} aria-hidden />
-                  </button>
-                  <button
-                    type="button"
-                    className={`icon-btn-outline ${styles.iconSquare} ${styles.iconDanger}`}
+                  </IconButton>
+                  <IconButton
+                    size="lg"
+                    tone="danger"
                     disabled={disabled}
-                    aria-label={t('events.settings.templates.deleteAriaLabel', {
+                    label={t('events.settings.templates.deleteAriaLabel', {
                       name: template.name,
                     })}
                     onClick={() => setPendingDeletion(template)}
                   >
                     <Trash2 size={16} aria-hidden />
-                  </button>
+                  </IconButton>
                 </>
               )}
             </li>
@@ -170,7 +170,6 @@ export default function EventTemplatesRow({
                 key={template.id}
                 tone={applied ? 'primary' : 'neutral'}
                 selected={applied}
-                pressed={applied}
                 icon={applied ? Check : undefined}
                 className={styles.chip}
                 disabled={disabled || applyLocked}
@@ -194,7 +193,7 @@ export default function EventTemplatesRow({
           name: pendingDeletion?.name ?? '',
         })}
         confirmLabel={t('events.settings.templates.deleteConfirmAction')}
-        busy={disabled}
+        loading={disabled}
         onConfirm={() => {
           if (pendingDeletion) onDelete(pendingDeletion);
           setPendingDeletion(null);

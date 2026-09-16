@@ -46,23 +46,6 @@
 
 .closeButton {
   align-self: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  flex-shrink: 0;
-  border-radius: var(--radius-pill);
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: var(--color-text-muted);
-}
-
-@media (hover: hover) {
-  .closeButton:hover {
-    background: var(--color-surface-hover);
-  }
 }
 
 .searchRow {
@@ -202,7 +185,7 @@
 
 @media (hover: hover) {
   .followBtn:hover {
-    opacity: 0.88;
+    opacity: var(--opacity-hover);
   }
 }
 

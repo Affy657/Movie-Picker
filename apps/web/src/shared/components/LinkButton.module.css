@@ -1,4 +1,5 @@
 .root {
+  composes: expanded from './tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
@@ -35,7 +36,7 @@
 }
 
 .root:disabled {
-  opacity: 0.5;
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
   text-decoration: none;
 }

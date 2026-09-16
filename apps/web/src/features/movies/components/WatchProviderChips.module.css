@@ -109,6 +109,7 @@
 }
 
 .more {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   justify-content: center;

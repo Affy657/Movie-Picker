@@ -15,23 +15,23 @@
   backdrop-filter: blur(4px);
 }
 
-.sm {
+.xs {
   --modal-width: var(--container-xs);
 }
 
-.md {
+.sm {
   --modal-width: var(--container-sm);
 }
 
-.lg {
+.md {
   --modal-width: var(--container-md);
 }
 
-.xl {
+.base {
   --modal-width: var(--container-base);
 }
 
-.xxl {
+.xl {
   --modal-width: var(--container-xl);
 }
 

@@ -78,13 +78,16 @@ export default function Menu({
   );
 }
 
+export type MenuItemTone = 'default' | 'danger';
+
 interface MenuItemProps {
   icon?: React.ReactNode;
   children: React.ReactNode;
   onClick?: () => void;
   href?: string;
   selected?: boolean;
-  danger?: boolean;
+  tone?: MenuItemTone;
+  disabled?: boolean;
 }
 
 export function MenuItem({
@@ -93,11 +96,16 @@ export function MenuItem({
   onClick,
   href,
   selected,
-  danger,
+  tone = 'default',
+  disabled = false,
 }: Readonly<MenuItemProps>) {
-  const className = clsx(styles.item, selected && styles.itemSelected, danger && styles.itemDanger);
+  const className = clsx(
+    styles.item,
+    selected && styles.itemSelected,
+    tone === 'danger' && styles.itemDanger
+  );
 
-  if (href) {
+  if (href && !disabled) {
     return (
       <a role="menuitem" className={className} href={href} onClick={onClick}>
         {icon}
@@ -108,7 +116,13 @@ export function MenuItem({
   }
 
   return (
-    <button type="button" role="menuitem" className={className} onClick={onClick}>
+    <button
+      type="button"
+      role="menuitem"
+      className={className}
+      onClick={onClick}
+      disabled={disabled}
+    >
       {icon}
       <span className={styles.itemLabel}>{children}</span>
       {selected ? <Check size={14} aria-hidden className={styles.itemCheck} /> : null}

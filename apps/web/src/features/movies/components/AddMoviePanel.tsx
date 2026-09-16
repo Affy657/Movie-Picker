@@ -7,6 +7,7 @@ import Sheet from '@/shared/components/Sheet';
 import AddMovieForm, { type AddMovieFormProps } from '@/features/movies/components/AddMovieForm';
 import styles from './AddMoviePanel.module.css';
 import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 
 type AddMoviePanelProps = AddMovieFormProps & {
   triggerLabel: string;
@@ -61,14 +62,9 @@ export default function AddMoviePanel({
         <div id={panelId} className={styles.panel}>
           <div className={styles.panelHead}>
             <h3 className={styles.panelTitle}>{panelTitle}</h3>
-            <button
-              type="button"
-              className={`icon-btn-outline ${styles.closeBtn}`}
-              onClick={close}
-              aria-label={t('common.close')}
-            >
+            <IconButton label={t('common.close')} onClick={close}>
               <X size={16} aria-hidden />
-            </button>
+            </IconButton>
           </div>
           <AddMovieForm {...formProps} />
         </div>

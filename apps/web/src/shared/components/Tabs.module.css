@@ -45,7 +45,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
-  height: 2.625rem;
+  height: var(--tap-target-min);
   padding: 0 var(--space-3-5);
   flex-shrink: 0;
   border: none;
@@ -62,8 +62,13 @@
     border-color var(--duration-base) var(--ease-default);
 }
 
+.tab:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
 @media (hover: hover) {
-  .tab:hover {
+  .tab:not(:disabled):hover {
     color: var(--color-text);
   }
 }

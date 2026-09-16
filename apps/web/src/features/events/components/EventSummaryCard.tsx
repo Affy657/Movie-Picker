@@ -5,6 +5,7 @@ import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 import { formatEventTime, formatMyEventsListDate } from '@/shared/utils/formatMyEventsListDate';
 import { formatRelativeEventDate } from '@/shared/utils/formatRelativeEventDate';
+import Chip from '@/shared/components/Chip';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import EventDateChip from '@/features/events/components/EventDateChip';
 import type { MyEventSummary } from '@/features/events/types';
@@ -82,10 +83,9 @@ export function MoviesStat({
 
 export function HostBadge({ t }: Readonly<{ t: (key: TranslationKey) => string }>) {
   return (
-    <span className={styles.badgeHost}>
-      <Crown aria-hidden size={12} />
-      <span className={styles.badgeHostLabel}>{t('events.myEvents.hostBadge')}</span>
-    </span>
+    <Chip tone="primary" size="sm" icon={Crown} className={styles.badgeHost}>
+      {t('events.myEvents.hostBadge')}
+    </Chip>
   );
 }
 

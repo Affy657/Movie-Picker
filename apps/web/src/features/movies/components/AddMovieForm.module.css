@@ -159,6 +159,7 @@
 }
 
 .paidChip {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -239,6 +240,7 @@
 }
 
 .searchIconBtn {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   position: absolute;
   left: 0;
   top: 0;
@@ -263,7 +265,7 @@
 }
 
 .searchIconBtn:disabled {
-  opacity: 0.45;
+  opacity: var(--opacity-disabled);
   cursor: default;
 }
 

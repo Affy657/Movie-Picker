@@ -88,33 +88,6 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.iconSquare {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: var(--tap-target-min);
-  height: var(--tap-target-min);
-  min-height: var(--tap-target-min);
-  padding: 0;
-}
-
-.iconDanger {
-  color: var(--color-error);
-}
-
-@media (hover: hover) {
-  .iconDanger:not(:disabled):hover {
-    border-color: var(--color-error);
-    color: var(--color-error);
-  }
-}
-
-.iconSquare:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
 .hint {
   margin: var(--space-2-5) 0 0;
   font-size: var(--font-size-2xs);

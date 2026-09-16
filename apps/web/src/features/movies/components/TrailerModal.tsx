@@ -27,7 +27,7 @@ export default function TrailerModal({
     : null;
   const visible = open && !!embedUrl;
   return (
-    <Modal open={visible} onClose={onClose} size="xxl" surface="media" labelledBy={titleId}>
+    <Modal open={visible} onClose={onClose} size="xl" surface="media" labelledBy={titleId}>
       {visible && (
         <>
           <div className={styles.header}>

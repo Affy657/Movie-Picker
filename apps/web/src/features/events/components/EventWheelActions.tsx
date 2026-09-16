@@ -110,7 +110,7 @@ function MoreActionsMenu({
           ) : null}
           {wheel.showReset ? (
             <MenuItem
-              danger
+              tone="danger"
               icon={<RotateCcw size={14} aria-hidden />}
               onClick={() => {
                 menu.close();

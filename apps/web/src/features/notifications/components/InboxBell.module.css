@@ -1,4 +1,5 @@
 .bellButton {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: flex;
   align-items: center;
   justify-content: center;

@@ -53,7 +53,7 @@ export default function ProposeToEventModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} size="md" column labelledBy={titleId}>
+    <Modal open={open} onClose={onClose} size="sm" column labelledBy={titleId}>
       <div className={styles.header}>
         <h2 id={titleId} className={styles.title}>
           {t('watchlist.propose.modalTitle', { title: movie.title })}

@@ -186,7 +186,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} size="md" column bottomSheetOnMobile labelledBy={titleId}>
+    <Modal open={open} onClose={onClose} size="sm" column bottomSheetOnMobile labelledBy={titleId}>
       <header className={styles.header}>
         <h2 id={titleId} className={styles.title}>
           {t('proposeIdea.dialogTitle')}

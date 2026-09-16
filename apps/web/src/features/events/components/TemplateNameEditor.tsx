@@ -1,5 +1,6 @@
 import { Check, X } from 'lucide-react';
 import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 import { useTranslation } from '@/shared/i18n';
 import { MAX_EVENT_TEMPLATE_NAME_LENGTH } from '@/features/events/types';
 import styles from './TemplateNameEditor.module.css';
@@ -49,14 +50,13 @@ export default function TemplateNameEditor({
       >
         <Check size={16} aria-hidden />
       </Button>
-      <button
-        type="button"
-        className={`icon-btn-outline ${styles.iconSquare}`}
-        aria-label={t('events.settings.templates.cancelAriaLabel')}
+      <IconButton
+        size="lg"
+        label={t('events.settings.templates.cancelAriaLabel')}
         onClick={onCancel}
       >
         <X size={16} aria-hidden />
-      </button>
+      </IconButton>
     </div>
   );
 }

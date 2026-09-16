@@ -40,7 +40,7 @@
 
 .stepBtn {
   flex-shrink: 0;
-  width: 2.25rem;
+  width: var(--tap-target-min);
   min-height: var(--tap-target-min);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-medium);
@@ -69,7 +69,7 @@
 }
 
 .stepBtn:disabled {
-  opacity: 0.35;
+  opacity: var(--opacity-disabled);
   cursor: default;
 }
 

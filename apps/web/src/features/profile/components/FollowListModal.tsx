@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { X } from 'lucide-react';
+import IconButton from '@/shared/components/IconButton';
 import Sheet from '@/shared/components/Sheet';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
@@ -186,17 +187,12 @@ export default function FollowListModal({
   }
 
   return (
-    <Modal open onClose={onClose} size="md" column ariaLabel={t('profile.follow.listTitle')}>
+    <Modal open onClose={onClose} size="sm" column ariaLabel={t('profile.follow.listTitle')}>
       <div className={styles.header}>
         {tabs}
-        <button
-          type="button"
-          className={styles.closeButton}
-          onClick={onClose}
-          aria-label={t('common.close')}
-        >
+        <IconButton className={styles.closeButton} label={t('common.close')} onClick={onClose}>
           <X size={20} aria-hidden />
-        </button>
+        </IconButton>
       </div>
 
       {searchRow}

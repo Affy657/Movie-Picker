@@ -6,6 +6,7 @@ import styles from './Dropdown.module.css';
 export type DropdownOption<V extends string> = {
   value: V;
   label: string;
+  disabled?: boolean;
 };
 
 interface DropdownProps<V extends string> {
@@ -16,6 +17,20 @@ interface DropdownProps<V extends string> {
 
   ariaLabel?: string;
   className?: string;
+  disabled?: boolean;
+}
+
+function nextEnabledIndex<V extends string>(
+  options: readonly DropdownOption<V>[],
+  from: number,
+  step: 1 | -1
+): number {
+  let index = from;
+  while (index >= 0 && index < options.length) {
+    if (!options[index]?.disabled) return index;
+    index += step;
+  }
+  return from - step;
 }
 
 export default function Dropdown<V extends string>({
@@ -25,6 +40,7 @@ export default function Dropdown<V extends string>({
   onChange,
   ariaLabel,
   className,
+  disabled = false,
 }: Readonly<DropdownProps<V>>) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(() =>
@@ -83,20 +99,20 @@ export default function Dropdown<V extends string>({
     }
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setActiveIndex((i) => Math.min(options.length - 1, i + 1));
+      setActiveIndex((i) => nextEnabledIndex(options, Math.min(options.length - 1, i + 1), 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setActiveIndex((i) => Math.max(0, i - 1));
+      setActiveIndex((i) => nextEnabledIndex(options, Math.max(0, i - 1), -1));
     } else if (e.key === 'Home') {
       e.preventDefault();
-      setActiveIndex(0);
+      setActiveIndex(nextEnabledIndex(options, 0, 1));
     } else if (e.key === 'End') {
       e.preventDefault();
-      setActiveIndex(options.length - 1);
+      setActiveIndex(nextEnabledIndex(options, options.length - 1, -1));
     } else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       const opt = options[activeIndex];
-      if (opt) {
+      if (opt && !opt.disabled) {
         onChange(opt.value);
         close();
       }
@@ -120,6 +136,7 @@ export default function Dropdown<V extends string>({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-label={ariaLabel}
+        disabled={disabled}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={handleKey}
       >
@@ -142,21 +159,27 @@ export default function Dropdown<V extends string>({
                 key={opt.value}
                 role="option"
                 aria-selected={selected}
+                aria-disabled={opt.disabled || undefined}
                 tabIndex={-1}
                 className={clsx(
                   styles.option,
                   selected && styles.optionSelected,
+                  opt.disabled && styles.optionDisabled,
                   idx === activeIndex && styles.optionActive
                 )}
                 onClick={() => {
+                  if (opt.disabled) return;
                   onChange(opt.value);
                   close();
                 }}
-                onMouseEnter={() => setActiveIndex(idx)}
+                onMouseEnter={() => {
+                  if (!opt.disabled) setActiveIndex(idx);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     e.stopPropagation();
+                    if (opt.disabled) return;
                     onChange(opt.value);
                     close();
                   }
