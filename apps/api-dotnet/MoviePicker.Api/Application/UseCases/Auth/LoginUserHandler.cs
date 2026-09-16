@@ -7,7 +7,7 @@ namespace MoviePicker.Api.Application.UseCases.Auth;
 
 public sealed class LoginUserHandler : ILoginUserHandler
 {
-    public const string DecoyPasswordHash =
+    public const string UnknownUserDecoyHash =
         "AQAAAAIAAYagAAAAEO1qf3SK73PS6AINjL/a6odkskuuWmLLZ2dbhGrH4nIlBBAwQH/v47p2HGGY+2q3ng==";
 
     private readonly IUserRepository _users;
@@ -24,7 +24,7 @@ public sealed class LoginUserHandler : ILoginUserHandler
         var user = await _users.GetByEmailAsync(request.Email.Trim(), ct);
         if (user is null || string.IsNullOrEmpty(user.PasswordHash))
         {
-            _passwordHasher.Verify(DecoyPasswordHash, request.Password);
+            _passwordHasher.Verify(UnknownUserDecoyHash, request.Password);
             throw Errors.InvalidCredentials();
         }
 
