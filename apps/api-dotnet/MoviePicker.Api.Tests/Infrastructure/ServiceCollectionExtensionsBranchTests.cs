@@ -9,7 +9,11 @@ using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
 using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Letterboxd;
+using MoviePicker.Api.Infrastructure.Persistence;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Posters;
+using MoviePicker.Api.Infrastructure.Push;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure;
@@ -384,5 +388,63 @@ public sealed class ServiceCollectionExtensionsBranchTests
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<ISchedulerTokenValidator>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IPushNotificationSender>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IPosterImageStore>());
+    }
+
+    [Fact]
+    public void WebPush_SendsThroughANamedPooledHttpClient()
+    {
+        using var provider = Wire([]).BuildServiceProvider();
+
+        var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(WebPushSender.HttpClientName);
+
+        Assert.Equal(TimeSpan.FromSeconds(15), client.Timeout);
+    }
+
+    [Fact]
+    public void ReadinessProbe_WithMongo_IsCached()
+    {
+        var services = Wire(new Dictionary<string, string?> { ["MONGODB_URI"] = DevMongoUri });
+        using var provider = services.BuildServiceProvider();
+
+        Assert.IsType<CachedDatabaseHealthProbe>(provider.GetRequiredService<IDatabaseHealthProbe>());
+    }
+
+    [Fact]
+    public void ReadinessProbe_WithoutMongo_NeedsNoCache()
+    {
+        Assert.Equal(typeof(InMemoryDatabaseHealthProbe), ImplOf<IDatabaseHealthProbe>(Wire([])));
+    }
+
+    [Fact]
+    public void TmdbClient_CarriesTheAuthenticationHandler()
+    {
+        var services = Wire([]);
+
+        Assert.Contains(services, d => d.ServiceType == typeof(TmdbAuthenticationHandler));
+    }
+
+    [Fact]
+    public void TmdbReadAccessToken_IsTrimmedAndBlankReadsAsAbsent()
+    {
+        Assert.Null(OptionsFrom(new Dictionary<string, string?> { ["TMDB_READ_ACCESS_TOKEN"] = "   " }).TmdbReadAccessToken);
+        Assert.Equal(
+            "v4-token",
+            OptionsFrom(new Dictionary<string, string?> { ["TMDB_READ_ACCESS_TOKEN"] = " v4-token " }).TmdbReadAccessToken);
+    }
+
+    [Theory]
+    [InlineData(null, null, false)]
+    [InlineData("v3-key", null, true)]
+    [InlineData(null, "v4-token", true)]
+    [InlineData("v3-key", "v4-token", true)]
+    public void HasTmdbCredentials_AcceptsEitherCredential(string? apiKey, string? readAccessToken, bool expected)
+    {
+        var options = OptionsFrom(new Dictionary<string, string?>
+        {
+            ["TMDB_API_KEY"] = apiKey,
+            ["TMDB_READ_ACCESS_TOKEN"] = readAccessToken
+        });
+
+        Assert.Equal(expected, options.HasTmdbCredentials);
     }
 }

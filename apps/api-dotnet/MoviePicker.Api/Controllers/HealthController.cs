@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Contracts;
+using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
 
@@ -25,7 +27,9 @@ public sealed class HealthController : ControllerBase
     public IActionResult Get() => Ok(new HealthOkResponse("ok", ServiceName));
 
     [HttpGet("ready")]
+    [EnableRateLimiting(RateLimitingExtensions.HealthReadyPolicy)]
     [ProducesResponseType(typeof(HealthReadyResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType(typeof(HealthReadyResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> GetReady(CancellationToken ct)
     {

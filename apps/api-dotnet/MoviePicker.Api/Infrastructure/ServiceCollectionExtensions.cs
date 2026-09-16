@@ -17,6 +17,7 @@ using MoviePicker.Api.Infrastructure.Email;
 using MoviePicker.Api.Infrastructure.GitHub;
 using MoviePicker.Api.Infrastructure.Letterboxd;
 using MoviePicker.Api.Infrastructure.Migrations;
+using MoviePicker.Api.Infrastructure.Persistence;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Posters;
@@ -75,6 +76,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
         services.AddEmailSender(configuration, environment);
+        services.AddHttpClient(WebPushSender.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15));
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
         services.AddSingleton<ISchedulerTokenValidator, SchedulerTokenValidator>();
         services.AddScoped<IEventReminderPass, EventReminderPass>();
@@ -175,6 +177,8 @@ public static class ServiceCollectionExtensions
     {
         var key = cfg["TMDB_API_KEY"];
         opts.TmdbApiKey = string.IsNullOrWhiteSpace(key) ? null : key;
+        var readAccessToken = cfg["TMDB_READ_ACCESS_TOKEN"];
+        opts.TmdbReadAccessToken = string.IsNullOrWhiteSpace(readAccessToken) ? null : readAccessToken.Trim();
         var region = cfg["TMDB_WATCH_REGION"];
         opts.TmdbWatchProvidersRegion = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim();
         if (int.TryParse(cfg["TMDB_ENRICHMENT_CACHE_HOURS"], out var hours) && hours > 0)
@@ -304,7 +308,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IKofiWebhookLogRepository, MongoKofiWebhookLogRepository>();
         services.AddScoped<INotificationDedupRepository, MongoNotificationDedupRepository>();
         services.AddScoped<IRateLimitCounterStore, MongoRateLimitCounterStore>();
-        services.AddSingleton<IDatabaseHealthProbe, MongoDatabaseHealthProbe>();
+        services.AddSingleton<MongoDatabaseHealthProbe>();
+        services.AddSingleton<IDatabaseHealthProbe>(sp => new CachedDatabaseHealthProbe(
+            sp.GetRequiredService<MongoDatabaseHealthProbe>(),
+            sp.GetRequiredService<TimeProvider>()));
         services.AddScoped<IMigrationHistoryRepository, MongoMigrationHistoryRepository>();
         services.AddSingleton<ISharedCache, MongoSharedCache>();
         services.AddHostedService<MongoIndexInitializer>();
@@ -331,12 +338,14 @@ public static class ServiceCollectionExtensions
             return;
         }
 
+        services.AddTransient<TmdbAuthenticationHandler>();
         services.AddHttpClient<ITmdbMovieSearch, TmdbMovieSearch>((sp, client) =>
             {
                 var timeoutSeconds = sp.GetRequiredService<IOptions<MoviePickerOptions>>()
                     .Value.TmdbHttpTimeoutSeconds;
                 client.Timeout = TimeSpan.FromSeconds(Math.Clamp(timeoutSeconds, 1, 30));
             })
+            .AddHttpMessageHandler<TmdbAuthenticationHandler>()
             .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
             {
                 AutomaticDecompression = System.Net.DecompressionMethods.GZip

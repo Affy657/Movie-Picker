@@ -6,7 +6,7 @@ public static class SensitiveQueryRedaction
 {
     public const string Mask = "***";
 
-    private static readonly string[] SensitiveKeys = ["host", "token"];
+    private static readonly string[] SensitiveKeys = ["host", "token", "api_key"];
 
     public static string RedactQueryString(string? queryString)
     {

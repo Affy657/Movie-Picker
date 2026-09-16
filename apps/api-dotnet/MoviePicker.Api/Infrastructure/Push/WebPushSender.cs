@@ -11,7 +11,10 @@ namespace MoviePicker.Api.Infrastructure.Push;
 
 public sealed class WebPushSender : IPushNotificationSender
 {
+    public const string HttpClientName = "web-push";
+
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<WebPushSender> _logger;
     private readonly string? _publicKey;
     private readonly string? _privateKey;
@@ -20,17 +23,17 @@ public sealed class WebPushSender : IPushNotificationSender
     public WebPushSender(
         IOptions<MoviePickerOptions> options,
         IServiceScopeFactory scopeFactory,
+        IHttpClientFactory httpClientFactory,
         ILogger<WebPushSender> logger
     )
     {
         _scopeFactory = scopeFactory;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
         _publicKey = options.Value.VapidPublicKey;
         _privateKey = options.Value.VapidPrivateKey;
         _subject = options.Value.VapidSubject;
     }
-
-    internal HttpClient? HttpClientOverride { get; set; }
 
     public async Task SendAsync(
         PushSubscriptionDomain subscription,
@@ -40,16 +43,14 @@ public sealed class WebPushSender : IPushNotificationSender
     {
         if (string.IsNullOrWhiteSpace(_publicKey) || string.IsNullOrWhiteSpace(_privateKey))
         {
-            _logger.LogDebug("VAPID keys not configured — skipping push notification");
+            _logger.LogDebug("VAPID keys not configured, skipping push notification");
             return;
         }
 
         try
         {
-            var webPushClient =
-                HttpClientOverride is null
-                    ? new WebPushClient()
-                    : new WebPushClient(HttpClientOverride);
+            using var http = _httpClientFactory.CreateClient(HttpClientName);
+            using var webPushClient = new WebPushClient(http);
             webPushClient.SetVapidDetails(_subject, _publicKey, _privateKey);
 
             var pushSubscription = new WebPush.PushSubscription(

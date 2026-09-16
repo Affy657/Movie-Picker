@@ -1,10 +1,13 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Contracts;
 using MoviePicker.Api.Controllers;
+using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Controllers;
@@ -84,5 +87,16 @@ public sealed class HealthControllerTests
         var payload = Assert.IsType<HealthReadyResponse>(response.Value);
         Assert.Equal("ready", payload.Status);
         Assert.Equal("not-configured", Assert.Single(payload.Dependencies).Status);
+    }
+
+    [Fact]
+    public void GetReady_IsRateLimited_BecauseItCostsADatabaseRoundTrip()
+    {
+        var attribute = typeof(HealthController)
+            .GetMethod(nameof(HealthController.GetReady))!
+            .GetCustomAttribute<EnableRateLimitingAttribute>();
+
+        Assert.NotNull(attribute);
+        Assert.Equal(RateLimitingExtensions.HealthReadyPolicy, attribute!.PolicyName);
     }
 }

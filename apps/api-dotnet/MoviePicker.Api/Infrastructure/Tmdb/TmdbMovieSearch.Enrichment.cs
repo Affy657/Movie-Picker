@@ -18,7 +18,7 @@ public sealed partial class TmdbMovieSearch
         string region,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
+        if (!_options.HasTmdbCredentials)
             return null;
 
         var r = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
@@ -75,10 +75,9 @@ public sealed partial class TmdbMovieSearch
         string region,
         CancellationToken ct)
     {
-        var key = Uri.EscapeDataString(_options.TmdbApiKey!);
         var typeSegment = MediaTypeSegment(mediaType);
-        var detailUrl = $"https://api.themoviedb.org/3/{typeSegment}/{tmdbId}?api_key={key}&language=fr-FR";
-        var watchUrl = $"https://api.themoviedb.org/3/{typeSegment}/{tmdbId}/watch/providers?api_key={key}";
+        var detailUrl = $"https://api.themoviedb.org/3/{typeSegment}/{tmdbId}?language=fr-FR";
+        var watchUrl = $"https://api.themoviedb.org/3/{typeSegment}/{tmdbId}/watch/providers";
 
         var detailTask = _http.GetAsync(detailUrl, HttpCompletionOption.ResponseHeadersRead, ct);
         var watchTask = _http.GetAsync(watchUrl, HttpCompletionOption.ResponseHeadersRead, ct);

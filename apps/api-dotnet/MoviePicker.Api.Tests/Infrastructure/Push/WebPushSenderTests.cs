@@ -17,26 +17,28 @@ public sealed class WebPushSenderTests : IDisposable
     private static readonly PushMessage Message = new("Titre", "Corps", Tag: "evt-1", Url: "/e/1");
 
     private readonly InMemoryPushSubscriptionRepository _repository = new();
+    private readonly RecordingHandler _pushService = new();
     private readonly ServiceProvider _provider;
 
     public WebPushSenderTests()
     {
         var services = new ServiceCollection();
         services.AddScoped<IPushSubscriptionRepository>(_ => _repository);
+        services
+            .AddHttpClient(WebPushSender.HttpClientName)
+            .ConfigurePrimaryHttpMessageHandler(() => _pushService);
         _provider = services.BuildServiceProvider();
     }
 
     public void Dispose() => _provider.Dispose();
-
-    private IServiceScopeFactory ScopeFactory =>
-        _provider.GetRequiredService<IServiceScopeFactory>();
 
     private WebPushSender Build(string? publicKey, string? privateKey) =>
         new(
             Options.Create(
                 new MoviePickerOptions { VapidPublicKey = publicKey, VapidPrivateKey = privateKey }
             ),
-            ScopeFactory,
+            _provider.GetRequiredService<IServiceScopeFactory>(),
+            _provider.GetRequiredService<IHttpClientFactory>(),
             NullLogger<WebPushSender>.Instance
         );
 
@@ -102,11 +104,40 @@ public sealed class WebPushSenderTests : IDisposable
 
         var keys = WebPush.VapidHelper.GenerateVapidKeys();
         var sender = Build(keys.PublicKey, keys.PrivateKey);
-        sender.HttpClientOverride = new HttpClient(new GoneHandler());
+        _pushService.StatusCode = HttpStatusCode.Gone;
 
         await sender.SendAsync(subscription, Message);
 
         Assert.Empty(await _repository.ListByUserIdAsync(subscription.UserId));
+    }
+
+    [Fact]
+    public async Task SendAsync_SendsThroughTheNamedHttpClient()
+    {
+        var subscription = Subscription(GenerateClientPublicKey());
+        var keys = WebPush.VapidHelper.GenerateVapidKeys();
+        var sender = Build(keys.PublicKey, keys.PrivateKey);
+
+        await sender.SendAsync(subscription, Message);
+
+        var request = Assert.Single(_pushService.Requests);
+        Assert.Equal(HttpMethod.Post, request.Method);
+        Assert.Equal(subscription.Endpoint, request.RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task SendAsync_RepeatedSends_ReuseTheSamePrimaryHandler()
+    {
+        var subscription = Subscription(GenerateClientPublicKey());
+        var keys = WebPush.VapidHelper.GenerateVapidKeys();
+        var sender = Build(keys.PublicKey, keys.PrivateKey);
+
+        await sender.SendAsync(subscription, Message);
+        await sender.SendAsync(subscription, Message);
+        await sender.SendAsync(subscription, Message);
+
+        Assert.Equal(3, _pushService.Requests.Count);
+        Assert.False(_pushService.Disposed);
     }
 
     private static string GenerateClientPublicKey()
@@ -128,11 +159,27 @@ public sealed class WebPushSenderTests : IDisposable
     private static string Base64UrlEncode(byte[] bytes) =>
         Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
-    private sealed class GoneHandler : HttpMessageHandler
+    private sealed class RecordingHandler : HttpMessageHandler
     {
+        public HttpStatusCode StatusCode { get; set; } = HttpStatusCode.Created;
+
+        public List<HttpRequestMessage> Requests { get; } = [];
+
+        public bool Disposed { get; private set; }
+
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken
-        ) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Gone));
+        )
+        {
+            Requests.Add(request);
+            return Task.FromResult(new HttpResponseMessage(StatusCode));
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            Disposed = true;
+            base.Dispose(disposing);
+        }
     }
 }

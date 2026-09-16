@@ -221,7 +221,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
 
     private void RequireTmdbConfigured()
     {
-        if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
+        if (!_options.HasTmdbCredentials)
             throw Errors.ShowcaseUnavailable();
     }
 

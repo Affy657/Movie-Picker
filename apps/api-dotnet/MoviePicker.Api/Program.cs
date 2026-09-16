@@ -30,6 +30,7 @@ if (!string.IsNullOrWhiteSpace(sentryDsn))
         options.MaxRequestBodySize = RequestSize.None;
         options.AddExceptionFilterForType<AuthenticationFailureException>();
         options.SetBeforeSend(SentryBeforeSend.Prepare);
+        options.SetBeforeBreadcrumb(SentryBeforeSend.RedactBreadcrumb);
         options.TracesSampler = context => SentryBeforeSend.SampleTrace(context.TransactionContext.Name);
         var revision = Environment.GetEnvironmentVariable("K_REVISION");
         if (!string.IsNullOrWhiteSpace(revision))

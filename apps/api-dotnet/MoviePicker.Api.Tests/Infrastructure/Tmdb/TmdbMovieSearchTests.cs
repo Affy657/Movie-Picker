@@ -138,7 +138,7 @@ public sealed class TmdbMovieSearchTests
     }
 
     [Fact]
-    public async Task SearchAsync_RequestUsesCorrectUrlAndKey()
+    public async Task SearchAsync_RequestUsesCorrectUrl_AndLeavesTheCredentialToTheHandler()
     {
         var capturedRequests = new System.Collections.Concurrent.ConcurrentBag<HttpRequestMessage>();
         var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "my-secret-key" });
@@ -158,9 +158,55 @@ public sealed class TmdbMovieSearchTests
         Assert.Equal(HttpMethod.Get, capturedRequest.Method);
         var uri = capturedRequest.RequestUri?.ToString() ?? "";
         Assert.Contains("api.themoviedb.org", uri);
-        Assert.Contains("api_key=my-secret-key", uri);
+        Assert.DoesNotContain("my-secret-key", uri);
+        Assert.DoesNotContain("api_key", uri);
         Assert.Contains("query=matrix", uri);
         Assert.Contains("language=fr-FR", uri);
+    }
+
+    [Fact]
+    public async Task SearchAsync_ThroughTheAuthenticationHandler_ReachesTmdbWithTheKey()
+    {
+        var capturedRequests = new System.Collections.Concurrent.ConcurrentBag<HttpRequestMessage>();
+        var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "my-secret-key" });
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((req, _) => capturedRequests.Add(req))
+            .Returns(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"results\":[]}") }));
+        var client = CreateHttpClient(new TmdbAuthenticationHandler(options) { InnerHandler = mockHandler.Object });
+        var sut = CreateSut(client, options);
+
+        await sut.SearchAsync("matrix", false);
+
+        Assert.All(capturedRequests, request =>
+            Assert.Contains("api_key=my-secret-key", request.RequestUri!.Query));
+    }
+
+    [Fact]
+    public async Task EveryTmdbUrl_LeavesTheCredentialToTheHandler()
+    {
+        var capturedRequests = new System.Collections.Concurrent.ConcurrentBag<HttpRequestMessage>();
+        var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "my-secret-key" });
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((req, _) => capturedRequests.Add(req))
+            .Returns(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"results\":[],\"id\":1,\"parts\":[],\"title\":\"x\",\"name\":\"x\"}") }));
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), options);
+
+        await sut.SearchAsync("Christopher Nolan", true);
+        await sut.DiscoverMoviesAsync(new TmdbDiscoveryCriteria([28], null, null, null, null, null, null), 1);
+        await sut.GetTrendingMoviesAsync(1);
+        await sut.GetNowPlayingMoviesAsync("FR", 1);
+        await sut.GetRecommendationsAsync(550);
+        await sut.GetCollectionAsync(10);
+        await sut.GetDetailsAsync(550, MovieMediaType.Movie);
+        await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
+
+        Assert.NotEmpty(capturedRequests);
+        Assert.All(capturedRequests, request =>
+            Assert.DoesNotContain("my-secret-key", request.RequestUri!.ToString()));
     }
 
     [Fact]

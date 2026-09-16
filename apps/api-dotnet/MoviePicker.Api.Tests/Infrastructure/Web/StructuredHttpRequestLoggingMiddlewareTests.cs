@@ -89,4 +89,15 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
             public void Dispose() { }
         }
     }
+
+    [Theory]
+    [InlineData("?host=SECRET&x=1", "?host=***&x=1")]
+    [InlineData("?token=SECRET", "?token=***")]
+    [InlineData("?api_key=SECRET&language=fr-FR", "?api_key=***&language=fr-FR")]
+    [InlineData("?API_KEY=SECRET", "?API_KEY=***")]
+    [InlineData("?language=fr-FR", "?language=fr-FR")]
+    public void SensitiveQueryRedaction_MasksEverySecretBearingKey(string query, string expected)
+    {
+        Assert.Equal(expected, SensitiveQueryRedaction.RedactQueryString(query));
+    }
 }

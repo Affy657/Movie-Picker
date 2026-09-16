@@ -10,6 +10,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Security
 
+- **La clé TMDB ne circule plus dans l'adresse des requêtes que le serveur envoie à TMDB** : l'API accepte le jeton d'accès en lecture de TMDB, envoyé dans un en-tête, et si l'ancienne clé reste en service elle est masquée dans le suivi d'erreurs comme le jeton d'hôte. La sonde de disponibilité de l'API ne relit plus la base à chaque appel mais au plus toutes les cinq secondes et n'accepte plus que trente appels par minute et par adresse, et toute route sans plafond dédié reçoit un plafond global de neuf cents requêtes par minute et par adresse. Le serveur tourne sur une image minimale sans interpréteur de commandes ni gestionnaire de paquets : dix paquets système au lieu de quatre-vingt-dix-sept, aucune vulnérabilité haute connue au lieu de treize, et il refuse de démarrer si les données de fuseau horaire manquent au lieu de planifier les soirées en UTC.
 - **Le jeton qui donne les commandes de l'hôte ne transite plus dans l'adresse des requêtes** mais dans un en-tête, et il est masqué dans les journaux du serveur et le suivi d'erreurs. Un compte créé avec un mot de passe ne peut plus être rattaché à Google ou GitHub par simple coïncidence d'adresse e-mail : il faut se connecter puis lier le fournisseur depuis les paramètres. L'API impose HTTPS pour deux ans aux navigateurs, un e-mail inconnu au login répond dans le même temps qu'un e-mail connu, les affiches proposées ne peuvent venir que de TMDB, les abonnements aux notifications ne visent que des services push publics et le mot de passe est plafonné à 128 caractères.
 
 ### Changed
@@ -27,6 +28,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
+- **Les notifications push n'ouvrent plus une connexion neuve à chaque envoi** : le serveur créait un client HTTP par notification et ne le libérait jamais, il passe désormais par un pool de connexions partagé.
 - **Revenir à une version précédente de l'API ne perd plus de données** : une ancienne version qui réécrivait une soirée ou un compte effaçait les réglages qu'elle ne connaissait pas encore (gagnants multiples, récurrence, modèles de soirée). Elle ne touche plus qu'aux champs qu'elle connaît.
 - **Avec un accent vert, orange ou cyan, les liens et les textes en couleur restaient sous le seuil de lisibilité** en mode clair (3,3 à 3,7:1 au lieu des 4,5:1 requis). Le texte prend maintenant une teinte plus foncée que les boutons, pour chacun des huit accents. Au passage, le bouton d'aide des champs avait perdu son arrondi et deux étiquettes de la page `/tech` leur petite taille, deux jetons qui n'existaient pas ; une porte de qualité refuse désormais tout jeton fantôme.
 - **Le retrait d'un gagnant journalisait l'identifiant reçu dans la requête** plutôt que celui du film réellement retiré de la soirée, la dernière alerte CodeQL ouverte du dépôt. Les titres d'onglet (« Mes soirées | Movie Picker »), les aperçus de partage, les courriels de réinitialisation et les métadonnées SEO abandonnent aussi le tiret cadratin et le point médian.

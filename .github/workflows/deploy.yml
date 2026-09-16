@@ -292,6 +292,11 @@ jobs:
           TAG="s-${GITHUB_SHA:0:7}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           SECRETS="MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
+          # Optional: once the v4 read access token exists in Secret Manager, the API sends it as a
+          # Bearer header and stops appending TMDB_API_KEY to its outbound URLs.
+          if gcloud secrets describe TMDB_READ_ACCESS_TOKEN >/dev/null 2>&1; then
+            SECRETS="$SECRETS,TMDB_READ_ACCESS_TOKEN=TMDB_READ_ACCESS_TOKEN:latest"
+          fi
           if gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
             SECRETS="$SECRETS,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest"
           else

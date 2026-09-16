@@ -55,4 +55,23 @@ public sealed class ProductionStartupValidationTests
 
         Assert.Contains("MONGODB_URI", ex.Message);
     }
+
+    [Fact]
+    public void EnsureTimeZoneData_RefusesTheUtcFallback()
+    {
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => ProductionStartupValidation.EnsureTimeZoneData(TimeZoneInfo.Utc));
+
+        Assert.Contains("Europe/Paris", ex.Message);
+        Assert.Contains("tzdata", ex.Message);
+    }
+
+    [Fact]
+    public void EnsureTimeZoneData_AcceptsAResolvedParisZone()
+    {
+        var ex = Record.Exception(
+            () => ProductionStartupValidation.EnsureTimeZoneData(TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris")));
+
+        Assert.Null(ex);
+    }
 }

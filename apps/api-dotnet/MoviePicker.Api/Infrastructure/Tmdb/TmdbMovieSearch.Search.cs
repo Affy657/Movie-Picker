@@ -24,8 +24,7 @@ public sealed partial class TmdbMovieSearch
         int? runtimeMax = null,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
-            throw new InvalidOperationException("TMDB_API_KEY manquante");
+        RequireCredentials();
 
         var trimmedQuery = query.Trim();
         var hasText = trimmedQuery.Length > 0;
@@ -36,8 +35,6 @@ public sealed partial class TmdbMovieSearch
         if (!hasText && !hasFilters)
             return [];
 
-        var key = Uri.EscapeDataString(_options.TmdbApiKey);
-
         if (!hasText)
             return await DiscoverMoviesAsync(
                 new TmdbDiscoveryCriteria(genreIds, yearFrom, yearTo, voteMin, originalLanguage, runtimeMin, runtimeMax),
@@ -46,14 +43,14 @@ public sealed partial class TmdbMovieSearch
 
         var q = Uri.EscapeDataString(trimmedQuery);
         var endpoint = allowSeries ? "search/multi" : "search/movie";
-        var url = $"https://api.themoviedb.org/3/{endpoint}?api_key={key}&query={q}&language=fr-FR";
+        var url = $"https://api.themoviedb.org/3/{endpoint}?query={q}&language=fr-FR";
 
         var titleMatchesTask = FetchAndMapResultsAsync(
             url,
             item => TryMapSearchItem(item, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage),
             ct);
         var creditMatchesTask = SearchByPersonCreditsAsync(
-            trimmedQuery, key, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage, ct);
+            trimmedQuery, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage, ct);
 
         await Task.WhenAll(titleMatchesTask, creditMatchesTask);
 
@@ -89,7 +86,6 @@ public sealed partial class TmdbMovieSearch
 
     private async Task<PersonCreditMatches> SearchByPersonCreditsAsync(
         string query,
-        string apiKey,
         bool allowSeries,
         IReadOnlyList<int>? genreIds,
         int? yearFrom,
@@ -104,12 +100,12 @@ public sealed partial class TmdbMovieSearch
 
         try
         {
-            var person = await FindBestMatchingPersonAsync(normalizedQuery, query, apiKey, ct);
+            var person = await FindBestMatchingPersonAsync(normalizedQuery, query, ct);
             if (person is null)
                 return PersonCreditMatches.None;
 
             var credits = await FetchPersonCreditsAsync(
-                person.Id, apiKey, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage, ct);
+                person.Id, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage, ct);
 
             return credits.Count == 0
                 ? PersonCreditMatches.None
@@ -117,7 +113,7 @@ public sealed partial class TmdbMovieSearch
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
         {
-            _logger.LogWarning(ex, "TMDB recherche par personne indisponible");
+            _logger.LogWarning(ex, "TMDB person search unavailable");
             return PersonCreditMatches.None;
         }
     }
@@ -125,11 +121,10 @@ public sealed partial class TmdbMovieSearch
     private async Task<PersonMatch?> FindBestMatchingPersonAsync(
         string normalizedQuery,
         string rawQuery,
-        string apiKey,
         CancellationToken ct)
     {
-        var url = $"https://api.themoviedb.org/3/search/person?api_key={apiKey}"
-            + $"&query={Uri.EscapeDataString(rawQuery)}&language=fr-FR";
+        var url = "https://api.themoviedb.org/3/search/person"
+            + $"?query={Uri.EscapeDataString(rawQuery)}&language=fr-FR";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         res.EnsureSuccessStatusCode();
@@ -177,7 +172,6 @@ public sealed partial class TmdbMovieSearch
 
     private async Task<IReadOnlyList<TmdbSearchItem>> FetchPersonCreditsAsync(
         int personId,
-        string apiKey,
         bool allowSeries,
         IReadOnlyList<int>? genreIds,
         int? yearFrom,
@@ -186,7 +180,7 @@ public sealed partial class TmdbMovieSearch
         string? originalLanguage,
         CancellationToken ct)
     {
-        var url = $"https://api.themoviedb.org/3/person/{personId}/combined_credits?api_key={apiKey}&language=fr-FR";
+        var url = $"https://api.themoviedb.org/3/person/{personId}/combined_credits?language=fr-FR";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         res.EnsureSuccessStatusCode();

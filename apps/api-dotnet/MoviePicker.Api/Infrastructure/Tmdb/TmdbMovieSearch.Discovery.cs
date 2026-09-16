@@ -12,10 +12,10 @@ namespace MoviePicker.Api.Infrastructure.Tmdb;
 
 public sealed partial class TmdbMovieSearch
 {
-    private static string BuildDiscoverUrl(string apiKey, TmdbDiscoveryCriteria criteria, int page)
+    private static string BuildDiscoverUrl(TmdbDiscoveryCriteria criteria, int page)
     {
         var sortBy = string.IsNullOrWhiteSpace(criteria.SortBy) ? "popularity.desc" : criteria.SortBy.Trim();
-        var url = $"https://api.themoviedb.org/3/discover/movie?api_key={apiKey}&language=fr-FR"
+        var url = "https://api.themoviedb.org/3/discover/movie?language=fr-FR"
             + $"&sort_by={Uri.EscapeDataString(sortBy)}&page={page}";
         if (criteria.GenreIds?.Count > 0)
             url += $"&with_genres={string.Join(",", criteria.GenreIds)}";
@@ -48,15 +48,15 @@ public sealed partial class TmdbMovieSearch
         int pages,
         CancellationToken ct = default)
     {
-        var key = RequireApiKey();
-        return FetchPagesAsync(page => BuildDiscoverUrl(key, criteria, page), pages, ct);
+        RequireCredentials();
+        return FetchPagesAsync(page => BuildDiscoverUrl(criteria, page), pages, ct);
     }
 
     public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default)
     {
-        var key = RequireApiKey();
+        RequireCredentials();
         return FetchPagesAsync(
-            page => $"https://api.themoviedb.org/3/trending/movie/week?api_key={key}&language=fr-FR&page={page}",
+            page => $"https://api.themoviedb.org/3/trending/movie/week?language=fr-FR&page={page}",
             pages,
             ct);
     }
@@ -66,10 +66,10 @@ public sealed partial class TmdbMovieSearch
         int pages,
         CancellationToken ct = default)
     {
-        var key = RequireApiKey();
+        RequireCredentials();
         var r = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
         return FetchPagesAsync(
-            page => $"https://api.themoviedb.org/3/movie/now_playing?api_key={key}&language=fr-FR&region={r}&page={page}",
+            page => $"https://api.themoviedb.org/3/movie/now_playing?language=fr-FR&region={r}&page={page}",
             pages,
             ct);
     }
@@ -78,9 +78,9 @@ public sealed partial class TmdbMovieSearch
         int tmdbId,
         CancellationToken ct = default)
     {
-        var key = RequireApiKey();
+        RequireCredentials();
         return FetchPagesAsync(
-            page => $"https://api.themoviedb.org/3/movie/{tmdbId}/recommendations?api_key={key}&language=fr-FR&page={page}",
+            page => $"https://api.themoviedb.org/3/movie/{tmdbId}/recommendations?language=fr-FR&page={page}",
             2,
             ct);
     }
@@ -133,8 +133,8 @@ public sealed partial class TmdbMovieSearch
 
     private async Task<JsonDocument?> FetchCollectionRootAsync(int collectionId, CancellationToken ct)
     {
-        var key = RequireApiKey();
-        var url = $"https://api.themoviedb.org/3/collection/{collectionId}?api_key={key}&language=fr-FR";
+        RequireCredentials();
+        var url = $"https://api.themoviedb.org/3/collection/{collectionId}?language=fr-FR";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         if (!res.IsSuccessStatusCode)

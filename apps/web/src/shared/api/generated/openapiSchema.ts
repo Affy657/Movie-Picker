@@ -3414,6 +3414,17 @@ export interface paths {
                         "text/json": components["schemas"]["HealthReadyResponse"];
                     };
                 };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
                 /** @description Internal Server Error */
                 500: {
                     headers: {

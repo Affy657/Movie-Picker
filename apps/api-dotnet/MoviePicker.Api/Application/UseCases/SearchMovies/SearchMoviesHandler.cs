@@ -32,7 +32,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         MovieSearchFilters? filters = null,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
+        if (!_options.HasTmdbCredentials)
             throw Errors.SearchUnavailable();
 
         var allowSeries = await AllowsSeriesAsync(eventSlug, ct);

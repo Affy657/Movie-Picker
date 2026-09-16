@@ -34,7 +34,7 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
 
     private async Task<IReadOnlyList<MovieCollectionResponse>> LoadCollectionsAsync(CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
+        if (!_options.HasTmdbCredentials)
             throw Errors.ShowcaseUnavailable();
 
         var ids = MovieShowcaseCatalog.CollectionIds;

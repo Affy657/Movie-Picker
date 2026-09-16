@@ -42,6 +42,9 @@ public static class RateLimitingExtensions
     public const string MovieMutationPolicy = "movie-mutation";
     public const string NotificationMutationPolicy = "notification-mutation";
     public const string AuthLogoutPolicy = "auth-logout";
+    public const string HealthReadyPolicy = "health-ready";
+
+    public const int GlobalPermitLimitPerMinute = 900;
 
     private static readonly PolicySpec[] Policies =
     [
@@ -78,7 +81,8 @@ public static class RateLimitingExtensions
         new(HostActionPolicy, 60, 1, false),
         new(MovieMutationPolicy, 60, 1, false),
         new(NotificationMutationPolicy, 60, 1, false),
-        new(AuthLogoutPolicy, 30, 1, false)
+        new(AuthLogoutPolicy, 30, 1, false),
+        new(HealthReadyPolicy, 30, 1, false)
     ];
 
     public static IServiceCollection AddMoviePickerRateLimiter(
@@ -90,6 +94,8 @@ public static class RateLimitingExtensions
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.OnRejected = WriteRejectedAsync;
+            if (!isDevelopment)
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(CreateGlobalPartition);
             foreach (var spec in Policies)
             {
                 var captured = spec;
@@ -135,6 +141,9 @@ public static class RateLimitingExtensions
 
     internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec) =>
         spec.ByUser ? UserOrIpPartitionKey.Get(httpContext) : ClientIpPartitionKey.Get(httpContext);
+
+    internal static RateLimitPartition<string> CreateGlobalPartition(HttpContext httpContext) =>
+        BuildFixedWindow(ClientIpPartitionKey.Get(httpContext), GlobalPermitLimitPerMinute, 1);
 
     internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec)
     {

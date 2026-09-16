@@ -83,7 +83,7 @@ direct au compte de démonstration. En contrepartie les données repartent de z�
 redémarrage, et la recherche de films reste vide faute de clé TMDB.
 
 Pour une vraie base et la recherche de films, copier `.env.example` en `.env` puis renseigner
-`MONGODB_URI` et `TMDB_API_KEY`. Le reste (lancer Mongo en conteneur, identifiants de
+`MONGODB_URI` et `TMDB_READ_ACCESS_TOKEN` (ou `TMDB_API_KEY`). Le reste (lancer Mongo en conteneur, identifiants de
 démonstration, catalogue des scripts, structure du dépôt) est dans
 [`docs/development.md`](docs/development.md).
 

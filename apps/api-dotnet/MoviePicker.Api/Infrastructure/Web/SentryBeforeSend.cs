@@ -13,6 +13,20 @@ internal static class SentryBeforeSend
         return IsAuthenticationNoise(sentryEvent) ? null : sentryEvent;
     }
 
+    internal static Breadcrumb? RedactBreadcrumb(Breadcrumb breadcrumb, SentryHint hint)
+    {
+        if (breadcrumb.Data is null || !breadcrumb.Data.TryGetValue("url", out var url))
+            return breadcrumb;
+
+        var redactedUrl = SensitiveQueryRedaction.RedactUrl(url);
+        if (string.Equals(redactedUrl, url, StringComparison.Ordinal))
+            return breadcrumb;
+
+        var data = new Dictionary<string, string>(breadcrumb.Data) { ["url"] = redactedUrl! };
+        var message = breadcrumb.Message?.Replace(url, redactedUrl, StringComparison.Ordinal) ?? string.Empty;
+        return new Breadcrumb(message, breadcrumb.Type ?? "default", data, breadcrumb.Category, breadcrumb.Level);
+    }
+
     internal static double SampleTrace(string? transactionName)
     {
         if (string.IsNullOrEmpty(transactionName))

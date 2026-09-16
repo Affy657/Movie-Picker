@@ -35,6 +35,25 @@ public sealed class SearchMoviesHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ReadAccessTokenOnly_IsEnoughToSearch()
+    {
+        _tmdb.Setup(t => t.SearchAsync("inception", true, It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new TmdbSearchItem(1, MovieMediaType.Movie, "Inception", "2010", "/p.jpg", 8.4)]);
+        var sut = Build(new MoviePickerOptions
+        {
+            TmdbApiKey = null,
+            TmdbReadAccessToken = "v4-token",
+            TmdbSearchMaxWatchProviderLookups = 0
+        });
+
+        var result = await sut.HandleAsync("inception", SeriesEventSlug);
+
+        Assert.Single(result.Items);
+    }
+
+    [Fact]
     public async Task HandleAsync_TmdbHttpFailure_ThrowsServiceUnavailable()
     {
         _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),

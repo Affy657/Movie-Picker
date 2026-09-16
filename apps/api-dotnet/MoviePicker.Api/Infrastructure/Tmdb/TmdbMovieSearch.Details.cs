@@ -17,8 +17,8 @@ public sealed partial class TmdbMovieSearch
         MovieMediaType mediaType,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
-            throw new HttpRequestException("TMDB_API_KEY manquante");
+        if (!_options.HasTmdbCredentials)
+            throw new HttpRequestException("TMDB credentials are missing: set TMDB_READ_ACCESS_TOKEN or TMDB_API_KEY");
 
         var typeSegment = MediaTypeSegment(mediaType);
         var cacheKey = $"tmdb-details:{typeSegment}:{tmdbId}";
@@ -41,7 +41,7 @@ public sealed partial class TmdbMovieSearch
                 or FormatException)
         {
             _logger.LogWarning(ex, "TMDB details failed for {MediaType} {TmdbId}", typeSegment, tmdbId);
-            throw new HttpRequestException("TMDB indisponible", ex);
+            throw new HttpRequestException("TMDB unavailable", ex);
         }
     }
 
@@ -50,9 +50,8 @@ public sealed partial class TmdbMovieSearch
         MovieMediaType mediaType,
         CancellationToken ct)
     {
-        var key = Uri.EscapeDataString(_options.TmdbApiKey!);
         var typeSegment = MediaTypeSegment(mediaType);
-        var url = $"https://api.themoviedb.org/3/{typeSegment}/{tmdbId}?api_key={key}&language=fr-FR&append_to_response=credits,videos";
+        var url = $"https://api.themoviedb.org/3/{typeSegment}/{tmdbId}?language=fr-FR&append_to_response=credits,videos";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         if (res.StatusCode == System.Net.HttpStatusCode.NotFound)

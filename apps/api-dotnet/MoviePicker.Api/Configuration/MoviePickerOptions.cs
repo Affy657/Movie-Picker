@@ -6,6 +6,11 @@ public sealed class MoviePickerOptions
 
     public string? TmdbApiKey { get; set; }
 
+    public string? TmdbReadAccessToken { get; set; }
+
+    public bool HasTmdbCredentials =>
+        !string.IsNullOrWhiteSpace(TmdbReadAccessToken) || !string.IsNullOrWhiteSpace(TmdbApiKey);
+
     public string TmdbWatchProvidersRegion { get; set; } = "FR";
 
     public int TmdbEnrichmentCacheHours { get; set; } = 24;

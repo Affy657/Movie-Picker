@@ -29,11 +29,61 @@ public sealed class RateLimitingTests
                         app.UseRouting();
                         app.UseRateLimiter();
                         app.UseEndpoints(endpoints =>
-                            endpoints.MapGet("/limited", () => "ok").RequireRateLimiting(policy)
-                        );
+                        {
+                            endpoints.MapGet("/limited", () => "ok").RequireRateLimiting(policy);
+                            endpoints.MapGet("/unlimited", () => "ok");
+                        });
                     })
             )
             .StartAsync();
+
+    [Fact]
+    public async Task GlobalLimiter_CapsARouteWithoutPolicy_PerClient()
+    {
+        using var host = await StartServerAsync(LimitedEnvironment, RateLimitingExtensions.HealthReadyPolicy);
+        var client = host.GetTestClient();
+
+        for (var i = 0; i < RateLimitingExtensions.GlobalPermitLimitPerMinute; i++)
+        {
+            var ok = await client.GetAsync("/unlimited");
+            Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+        }
+
+        var rejected = await client.GetAsync("/unlimited");
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
+        Assert.True(rejected.Headers.Contains("Retry-After"));
+    }
+
+    [Fact]
+    public async Task GlobalLimiter_IsOffInDevelopment()
+    {
+        using var host = await StartServerAsync(Environments.Development, RateLimitingExtensions.HealthReadyPolicy);
+        var client = host.GetTestClient();
+
+        for (var i = 0; i < RateLimitingExtensions.GlobalPermitLimitPerMinute + 5; i++)
+        {
+            var res = await client.GetAsync("/unlimited");
+            Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        }
+    }
+
+    [Fact]
+    public async Task HealthReadyPolicy_Returns429_BeyondItsQuota()
+    {
+        using var host = await StartServerAsync(LimitedEnvironment, RateLimitingExtensions.HealthReadyPolicy);
+        var client = host.GetTestClient();
+
+        for (var i = 0; i < 30; i++)
+        {
+            var ok = await client.GetAsync("/limited");
+            Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+        }
+
+        var rejected = await client.GetAsync("/limited");
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
+    }
 
     [Fact]
     public async Task Policy_Renvoie429_ApresDepassementDuQuota()

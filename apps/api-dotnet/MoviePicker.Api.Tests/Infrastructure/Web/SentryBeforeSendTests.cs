@@ -73,4 +73,49 @@ public sealed class SentryBeforeSendTests
     {
         Assert.Equal(expected, SentryBeforeSend.SampleTrace(name));
     }
+
+    [Fact]
+    public void RedactBreadcrumb_MasksSensitiveQueryKeysInOutboundHttpUrls()
+    {
+        var breadcrumb = new Breadcrumb(
+            "GET https://api.themoviedb.org/3/movie/550?api_key=SECRET&language=fr-FR",
+            "http",
+            new Dictionary<string, string>
+            {
+                ["url"] = "https://api.themoviedb.org/3/movie/550?api_key=SECRET&language=fr-FR",
+                ["method"] = "GET",
+                ["status_code"] = "200"
+            },
+            "http");
+
+        var redacted = SentryBeforeSend.RedactBreadcrumb(breadcrumb, new SentryHint());
+
+        Assert.NotNull(redacted);
+        Assert.Equal("https://api.themoviedb.org/3/movie/550?api_key=***&language=fr-FR", redacted!.Data!["url"]);
+        Assert.Equal("GET https://api.themoviedb.org/3/movie/550?api_key=***&language=fr-FR", redacted.Message);
+        Assert.Equal("GET", redacted.Data["method"]);
+        Assert.Equal("200", redacted.Data["status_code"]);
+        Assert.Equal("http", redacted.Category);
+        Assert.Equal("http", redacted.Type);
+    }
+
+    [Fact]
+    public void RedactBreadcrumb_LeavesACleanBreadcrumbUntouched()
+    {
+        var breadcrumb = new Breadcrumb(
+            "GET https://api.themoviedb.org/3/movie/550?language=fr-FR",
+            "http",
+            new Dictionary<string, string> { ["url"] = "https://api.themoviedb.org/3/movie/550?language=fr-FR" },
+            "http");
+
+        Assert.Same(breadcrumb, SentryBeforeSend.RedactBreadcrumb(breadcrumb, new SentryHint()));
+    }
+
+    [Fact]
+    public void RedactBreadcrumb_WithoutUrlData_IsReturnedAsIs()
+    {
+        var breadcrumb = new Breadcrumb("Started", "info");
+
+        Assert.Same(breadcrumb, SentryBeforeSend.RedactBreadcrumb(breadcrumb, new SentryHint()));
+    }
 }

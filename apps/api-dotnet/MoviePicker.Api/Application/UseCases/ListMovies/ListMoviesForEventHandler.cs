@@ -196,7 +196,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         CancellationToken ct)
     {
         var enrichmentByKey = new ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>();
-        if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
+        if (!_options.HasTmdbCredentials)
             return enrichmentByKey;
 
         var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)

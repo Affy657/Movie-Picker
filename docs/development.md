@@ -37,13 +37,18 @@ M0 suffit, la chaîne de connexion se récupère dans la console.
 
 ### La clé TMDB
 
-Compte gratuit sur [themoviedb.org](https://www.themoviedb.org/), puis Réglages puis API pour
-obtenir une **clé v3**, à poser dans `TMDB_API_KEY`. Sans elle, la recherche de films et les pages
-d'exploration restent vides, le reste de l'application fonctionne.
+Compte gratuit sur [themoviedb.org](https://www.themoviedb.org/), puis Réglages puis API. La page
+donne deux identifiants, l'API accepte l'un ou l'autre : le **jeton d'accès en lecture** (v4), à
+poser dans `TMDB_READ_ACCESS_TOKEN`, est préféré parce qu'il voyage dans un en-tête `Authorization`
+et n'apparaît donc jamais dans l'adresse des requêtes sortantes ; la **clé v3**, dans `TMDB_API_KEY`,
+reste acceptée et l'API la pose elle-même en `api_key` dans la query string quand aucun jeton n'est
+configuré. Sans l'un des deux, la recherche de films et les pages d'exploration restent vides, le
+reste de l'application fonctionne.
 
 ### Le fichier `.env`
 
-Copier `.env.example` en `.env` à la racine et renseigner `MONGODB_URI` et `TMDB_API_KEY`. Toutes
+Copier `.env.example` en `.env` à la racine et renseigner `MONGODB_URI` et `TMDB_READ_ACCESS_TOKEN`
+(ou `TMDB_API_KEY`). Toutes
 les autres variables ont un défaut utilisable en local, `.env.example` documente chacune.
 
 Attention au chargement, il a déjà coûté une séance de débogage. L'API ne lit pas un fichier mais

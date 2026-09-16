@@ -61,10 +61,9 @@ public sealed partial class TmdbMovieSearch : ITmdbMovieSearch
         _logger = logger;
     }
 
-    private string RequireApiKey()
+    private void RequireCredentials()
     {
-        if (string.IsNullOrWhiteSpace(_options.TmdbApiKey))
-            throw new InvalidOperationException("TMDB_API_KEY manquante");
-        return Uri.EscapeDataString(_options.TmdbApiKey);
+        if (!_options.HasTmdbCredentials)
+            throw new InvalidOperationException("TMDB credentials are missing: set TMDB_READ_ACCESS_TOKEN or TMDB_API_KEY");
     }
 }
