@@ -91,9 +91,14 @@ describe('MovieList', () => {
     expect(renderDetailsModal).toHaveBeenCalled();
   });
 
-  it('affiche un placeholder si liste vide', () => {
-    renderWithLocale(<MovieList movies={[]} {...baseProps()} />);
-    expect(screen.getByText(/aucun film proposé/i)).toBeInTheDocument();
+  it('renders the empty state handed by its owner when the list is empty', () => {
+    const { container } = renderWithLocale(<MovieList movies={[]} {...baseProps()} />);
+    expect(container).toBeEmptyDOMElement();
+
+    renderWithLocale(
+      <MovieList movies={[]} {...baseProps()} emptyState={<p>Rien pour l’instant</p>} />
+    );
+    expect(screen.getByText('Rien pour l’instant')).toBeInTheDocument();
   });
 
   describe('vue liste (ligne dense)', () => {

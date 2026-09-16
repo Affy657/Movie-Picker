@@ -403,7 +403,6 @@ function MovieCardRowMobile({
                     others={s.others}
                     othersHint={s.othersHint}
                     avatarsByPseudo={participantAvatarsByPseudo}
-                    alwaysShowCount
                     t={t}
                   />
                 ) : (
@@ -507,11 +506,6 @@ function MovieCardRowDesktop({
               title={m.title}
               t={t}
             />
-            {isWinner ? (
-              <Chip tone="primary" size="sm" className={styles.winnerBadge}>
-                {winnerBadgeLabel(t, winnerRank)}
-              </Chip>
-            ) : null}
           </div>
           <div className={styles.metaRow}>
             <ProposerBadge
@@ -520,6 +514,11 @@ function MovieCardRowDesktop({
               handle={m.proposerHandle}
               t={t}
             />
+            {isWinner ? (
+              <Chip tone="primary" size="sm" className={styles.winnerBadge}>
+                {winnerBadgeLabel(t, winnerRank)}
+              </Chip>
+            ) : null}
           </div>
         </div>
         <span className={styles.cellEnd}>{s.voteLabel}</span>

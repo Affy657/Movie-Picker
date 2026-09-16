@@ -47,6 +47,29 @@ function useWheelActionsHeight(
   }, [wheelActions, wheelActionsRef]);
 }
 
+function useStickyBarHeight(stickyBar: boolean, barRef: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const el = barRef.current;
+    const root = document.documentElement;
+    if (!stickyBar || !el || typeof ResizeObserver !== 'function') return;
+    const sync = () => {
+      const height = el.offsetHeight;
+      if (height > 0) {
+        root.style.setProperty('--event-sticky-bar-height', `${height}px`);
+      } else {
+        root.style.removeProperty('--event-sticky-bar-height');
+      }
+    };
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--event-sticky-bar-height');
+    };
+  }, [stickyBar, barRef]);
+}
+
 function useCondensedStickyBar(
   stickyBar: boolean,
   sentinelRef: RefObject<HTMLDivElement | null>,
@@ -72,7 +95,9 @@ function useCondensedStickyBar(
 }
 
 function useStickyBarMedia(): boolean {
-  const [stickyBar, setStickyBar] = useState(false);
+  const [stickyBar, setStickyBar] = useState(
+    () => globalThis.matchMedia?.(STICKY_BAR_MEDIA).matches ?? false
+  );
   useEffect(() => {
     const query = globalThis.matchMedia?.(STICKY_BAR_MEDIA);
     if (!query) return;
@@ -175,25 +200,7 @@ export type EventDetailHeaderProps = {
   onViewModeChange?: (mode: 'grid' | 'list') => void;
 };
 
-function HeaderActions({
-  wheelActionsRef,
-  addMoviePrimary,
-  addMovieButton,
-  wheelActions,
-  condensed,
-  isFinished,
-  shareUrl,
-  title,
-  rawDate,
-  rawTime,
-  onOpenShare,
-  onOpenSettings,
-  t,
-}: Readonly<{
-  wheelActionsRef: RefObject<HTMLDivElement | null>;
-  addMoviePrimary: boolean;
-  addMovieButton: ReactNode;
-  wheelActions: ReactNode;
+type UtilityActionsProps = {
   condensed: boolean;
   isFinished: boolean;
   shareUrl: string | undefined;
@@ -203,6 +210,51 @@ function HeaderActions({
   onOpenShare: (() => void) | undefined;
   onOpenSettings: (() => void) | undefined;
   t: ReturnType<typeof useTranslation>['t'];
+};
+
+function UtilityActions({
+  condensed,
+  isFinished,
+  shareUrl,
+  title,
+  rawDate,
+  rawTime,
+  onOpenShare,
+  onOpenSettings,
+  t,
+}: Readonly<UtilityActionsProps>) {
+  return (
+    <div className={styles.utilityActions}>
+      {shareUrl && onOpenShare ? <EventShareButton onClick={onOpenShare} /> : null}
+      {!condensed && !isFinished && shareUrl ? (
+        <EventCalendarMenu title={title} date={rawDate} time={rawTime} url={shareUrl} />
+      ) : null}
+      {onOpenSettings ? (
+        <IconButton
+          size="lg"
+          label={t('events.settings.title')}
+          onClick={onOpenSettings}
+          aria-haspopup="dialog"
+        >
+          <Settings size={ICON_SIZE.md} aria-hidden />
+        </IconButton>
+      ) : null}
+    </div>
+  );
+}
+
+function HeaderActions({
+  wheelActionsRef,
+  addMoviePrimary,
+  addMovieButton,
+  wheelActions,
+  utilityActions,
+}: Readonly<{
+  wheelActionsRef: RefObject<HTMLDivElement | null>;
+  addMoviePrimary: boolean;
+  addMovieButton: ReactNode;
+  wheelActions: ReactNode;
+  utilityActions: ReactNode;
 }>) {
   return (
     <div className={styles.actions}>
@@ -211,22 +263,7 @@ function HeaderActions({
         {wheelActions}
         {addMoviePrimary ? null : addMovieButton}
       </div>
-      <div className={styles.utilityActions}>
-        {shareUrl && onOpenShare ? <EventShareButton onClick={onOpenShare} /> : null}
-        {!condensed && !isFinished && shareUrl ? (
-          <EventCalendarMenu title={title} date={rawDate} time={rawTime} url={shareUrl} />
-        ) : null}
-        {onOpenSettings ? (
-          <IconButton
-            size="lg"
-            label={t('events.settings.title')}
-            onClick={onOpenSettings}
-            aria-haspopup="dialog"
-          >
-            <Settings size={ICON_SIZE.md} aria-hidden />
-          </IconButton>
-        ) : null}
-      </div>
+      {utilityActions}
     </div>
   );
 }
@@ -363,6 +400,7 @@ export default function EventDetailHeader({
   const wheelActionsRef = useRef<HTMLDivElement>(null);
   useWheelActionsHeight(wheelActionsRef, wheelActions);
   const stickyBar = useStickyBarMedia();
+  useStickyBarHeight(stickyBar, barRef);
   const condensed = useCondensedStickyBar(stickyBar, sentinelRef, barRef);
 
   const stacked = (participants ?? []).slice(0, MAX_STACKED_AVATARS);
@@ -387,7 +425,7 @@ export default function EventDetailHeader({
     { total: participantCount }
   );
   const isUpcoming = lifecycle === 'upcoming';
-  const showLifecyclePill = !isUpcoming || !!countdownLabel;
+  const showLifecyclePill = lifecycle !== 'pending' && (!isUpcoming || !!countdownLabel);
 
   const addMovieButton = onAddMovie ? (
     <AddMovieButton
@@ -398,18 +436,42 @@ export default function EventDetailHeader({
     />
   ) : null;
 
+  const utilityActions = (
+    <UtilityActions
+      condensed={condensed}
+      isFinished={isFinished}
+      shareUrl={shareUrl}
+      title={title}
+      rawDate={rawDate}
+      rawTime={rawTime}
+      onOpenShare={onOpenShare}
+      onOpenSettings={onOpenSettings}
+      t={t}
+    />
+  );
+
   return (
     <>
       <div className={styles.top}>
-        <button type="button" className="back-link back-link-button" onClick={goBack}>
+        <button
+          type="button"
+          className={clsx('back-link back-link-button', styles.back)}
+          onClick={goBack}
+        >
           <ArrowLeft size={ICON_SIZE.md} aria-hidden />
           {t('events.detail.backNav')}
         </button>
+        {stickyBar ? null : utilityActions}
       </div>
 
       <div ref={sentinelRef} className={styles.sentinel} aria-hidden />
 
-      <header ref={barRef} className={styles.bar} data-condensed={condensed || undefined}>
+      <header
+        ref={barRef}
+        className={styles.bar}
+        data-condensed={condensed || undefined}
+        data-event-sticky-bar={stickyBar || undefined}
+      >
         {condensed ? (
           <button
             type="button"
@@ -449,15 +511,7 @@ export default function EventDetailHeader({
           addMoviePrimary={addMoviePrimary}
           addMovieButton={addMovieButton}
           wheelActions={wheelActions}
-          condensed={condensed}
-          isFinished={isFinished}
-          shareUrl={shareUrl}
-          title={title}
-          rawDate={rawDate}
-          rawTime={rawTime}
-          onOpenShare={onOpenShare}
-          onOpenSettings={onOpenSettings}
-          t={t}
+          utilityActions={stickyBar ? utilityActions : null}
         />
       </header>
 

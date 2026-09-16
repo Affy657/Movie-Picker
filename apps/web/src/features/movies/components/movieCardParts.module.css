@@ -16,6 +16,7 @@
 }
 
 .proposerLink {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   border-radius: var(--radius-sm);
   text-decoration: none;
   transition: opacity var(--duration-base) var(--ease-default);
@@ -361,5 +362,17 @@
   .selectOverlay {
     border-color: var(--color-primary);
     background: var(--color-primary-tint);
+  }
+}
+
+@media (hover: none) {
+  .selectOverlay {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+  }
+
+  .selectOverlayRemove {
+    border-color: var(--color-error);
+    background: var(--color-error-bg);
   }
 }

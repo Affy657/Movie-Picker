@@ -25,12 +25,14 @@ import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMovi
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
 import EventPendingBanner from '@/features/events/components/EventPendingBanner';
 import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
+import EventWinnerSummary from '@/features/events/pages/event-detail/EventWinnerSummary';
 import PageLayout from '@/shared/components/PageLayout';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import {
   removeEventParticipant,
   eventFrontendUrl,
   getEligibleFollows,
+  postEventClose,
 } from '@/features/events/api/eventsApi';
 import { removeMovieFromEvent } from '@/features/movies/api/moviesApi';
 import { removeStoredParticipant } from '@/features/events/storage';
@@ -49,6 +51,8 @@ import { useEverOpened } from '@/shared/hooks/useEverOpened';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
+import styles from './EventDetailSession.module.css';
+import { persistMoviesViewMode, readMoviesViewMode } from '@/features/events/moviesViewMode';
 
 const loadWheelModal = () => import('@/features/events/components/WheelModal');
 const loadHostEventSettingsPanel = () =>
@@ -66,6 +70,7 @@ type ConfirmState =
   | { kind: 'leave' }
   | { kind: 'resetWheel' }
   | { kind: 'removeMovie'; movieId: string; movieTitle: string; voteCount: number }
+  | { kind: 'closeWithoutMovie' }
   | null;
 
 type EventDetailSessionProps = {
@@ -91,22 +96,6 @@ const COUNTDOWN_KEYS = {
   hours: 'events.detail.countdownHours',
 } as const satisfies Record<EventCountdown['unit'], TranslationKey>;
 
-function readMoviesViewMode(): 'grid' | 'list' {
-  try {
-    return localStorage.getItem('movies-view') === 'grid' ? 'grid' : 'list';
-  } catch {
-    return 'list';
-  }
-}
-
-function persistMoviesViewMode(mode: 'grid' | 'list') {
-  try {
-    localStorage.setItem('movies-view', mode);
-  } catch {
-    return;
-  }
-}
-
 function countdownParams(countdown: EventCountdown) {
   if (countdown.unit === 'imminent') return undefined;
   return { count: countdown.count };
@@ -117,20 +106,24 @@ type ConfirmBusyByKind = Record<NonNullable<ConfirmState>['kind'], boolean>;
 type ConfirmDialogInputs = {
   confirmState: ConfirmState;
   t: ReturnType<typeof useTranslation>['t'];
+  eventTitle: string;
   confirmRemove: (participantId: string, pseudo: string) => void;
   confirmLeave: () => void;
   confirmResetWheel: () => void;
   confirmRemoveMovie: (movieId: string) => void;
+  confirmCloseWithoutMovie: () => void;
   busyByKind: ConfirmBusyByKind;
 };
 
 function buildConfirmDialogContent({
   confirmState,
   t,
+  eventTitle,
   confirmRemove,
   confirmLeave,
   confirmResetWheel,
   confirmRemoveMovie,
+  confirmCloseWithoutMovie,
   busyByKind,
 }: ConfirmDialogInputs) {
   if (!confirmState) return null;
@@ -165,6 +158,15 @@ function buildConfirmDialogContent({
       ),
       confirmLabel: t('movies.list.removeConfirmAction'),
       onConfirm: () => confirmRemoveMovie(confirmState.movieId),
+      loading,
+    };
+  }
+  if (confirmState.kind === 'closeWithoutMovie') {
+    return {
+      title: t('events.wheel.closeWithoutMovieConfirmTitle'),
+      message: t('events.wheel.closeWithoutMovieConfirmMessage', { title: eventTitle }),
+      confirmLabel: t('events.wheel.closeWithoutMovieConfirmAction'),
+      onConfirm: confirmCloseWithoutMovie,
       loading,
     };
   }
@@ -262,6 +264,20 @@ export default function EventDetailSession({
     mutationFn: (movieId: string) => {
       if (!participant) return Promise.reject(new Error('No participant'));
       return removeMovieFromEvent(slug, movieId, participant.participantId, hostToken);
+    },
+  });
+
+  const closeWithoutMovieMutation = useMutation({
+    mutationFn: () => postEventClose(slug, hostToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+      refreshAll();
+    },
+    onError: (err) => {
+      setActionError(getErrorMessage(err, t('events.wheel.closeError')));
+    },
+    onSettled: () => {
+      setConfirmState(null);
     },
   });
 
@@ -406,14 +422,25 @@ export default function EventDetailSession({
     }
   }, [resetWheelRequested, wheel.loading]);
 
+  const confirmCloseWithoutMovie = useCallback(() => {
+    setActionError(null);
+    closeWithoutMovieMutation.mutate();
+  }, [closeWithoutMovieMutation, setActionError]);
+
   const confirmBusyByKind: ConfirmBusyByKind = useMemo(
     () => ({
       remove: removeParticipantMutation.isPending,
       leave: removeParticipantMutation.isPending,
       resetWheel: wheel.loading,
       removeMovie: removeMovieMutation.isPending,
+      closeWithoutMovie: closeWithoutMovieMutation.isPending,
     }),
-    [removeParticipantMutation.isPending, wheel.loading, removeMovieMutation.isPending]
+    [
+      removeParticipantMutation.isPending,
+      wheel.loading,
+      removeMovieMutation.isPending,
+      closeWithoutMovieMutation.isPending,
+    ]
   );
 
   const confirmDialogContent = useMemo(
@@ -421,19 +448,23 @@ export default function EventDetailSession({
       buildConfirmDialogContent({
         confirmState,
         t,
+        eventTitle: event.title,
         confirmRemove,
         confirmLeave,
         confirmResetWheel,
         confirmRemoveMovie,
+        confirmCloseWithoutMovie,
         busyByKind: confirmBusyByKind,
       }),
     [
       confirmState,
       t,
+      event.title,
       confirmRemove,
       confirmLeave,
       confirmResetWheel,
       confirmRemoveMovie,
+      confirmCloseWithoutMovie,
       confirmBusyByKind,
     ]
   );
@@ -466,7 +497,8 @@ export default function EventDetailSession({
     ? t(COUNTDOWN_KEYS[countdown.unit], countdownParams(countdown))
     : null;
   const canConfigure = !!event.isHost && !event.isFinished;
-  const canAddMovie = !event.isFinished && !!participant;
+  const emptyStateCarriesAddMovie = moviesQuery.isSuccess && movies.length === 0;
+  const canAddMovie = !event.isFinished && !!participant && !emptyStateCarriesAddMovie;
   const isFull =
     typeof maxParticipants === 'number' &&
     maxParticipants > 0 &&
@@ -497,6 +529,7 @@ export default function EventDetailSession({
         addMovieTriggerRef={addMovieTriggerRef}
         wheel={wheel}
         onRequestResetWheel={() => setConfirmState({ kind: 'resetWheel' })}
+        onRequestCloseWithoutMovie={() => setConfirmState({ kind: 'closeWithoutMovie' })}
         canConfigure={canConfigure}
         canAddMovie={canAddMovie}
         settingsOpen={settingsOpen}
@@ -521,7 +554,6 @@ export default function EventDetailSession({
         setActionError={setActionError}
         refreshAll={refreshAll}
         viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
         selection={selection}
         addMovieOpen={addMovieOpen}
         onAddMovieOpenChange={setAddMovieOpen}
@@ -539,6 +571,7 @@ export default function EventDetailSession({
         removePending={removeParticipantMutation.isPending}
         actionSuccess={actionSuccess}
         wheel={wheel}
+        isFull={isFull}
       />
       <ConfirmDialog
         open={confirmDialogContent !== null}
@@ -690,6 +723,7 @@ function EventDetailSessionChrome({
   addMovieTriggerRef,
   wheel,
   onRequestResetWheel,
+  onRequestCloseWithoutMovie,
   canConfigure,
   canAddMovie,
   settingsOpen,
@@ -725,6 +759,7 @@ function EventDetailSessionChrome({
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
   wheel: WheelApi;
   onRequestResetWheel: () => void;
+  onRequestCloseWithoutMovie: () => void;
   canConfigure: boolean;
   canAddMovie: boolean;
   settingsOpen: boolean;
@@ -765,7 +800,14 @@ function EventDetailSessionChrome({
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
       />
-      {lifecycle === 'pending' ? <EventPendingBanner isHost={!!event.isHost} /> : null}
+      {lifecycle === 'pending' ? (
+        <EventPendingBanner
+          isHost={!!event.isHost}
+          onLaunchWheel={wheel.canSpin && !wheel.spinDisabled ? wheel.launch : undefined}
+          onReschedule={canConfigure ? onOpenSettings : undefined}
+          onCloseWithoutMovie={canConfigure ? onRequestCloseWithoutMovie : undefined}
+        />
+      ) : null}
       <EventDetailSessionOverlays
         slug={slug}
         hostToken={hostToken}
@@ -803,7 +845,6 @@ function EventDetailSessionBody({
   setActionError,
   refreshAll,
   viewMode,
-  onViewModeChange,
   selection,
   addMovieOpen,
   onAddMovieOpenChange,
@@ -821,6 +862,7 @@ function EventDetailSessionBody({
   removePending,
   actionSuccess,
   wheel,
+  isFull,
 }: Readonly<{
   slug: string;
   event: EventData;
@@ -832,7 +874,6 @@ function EventDetailSessionBody({
   setActionError: Dispatch<SetStateAction<string | null>>;
   refreshAll: () => void;
   viewMode: 'grid' | 'list';
-  onViewModeChange: (mode: 'grid' | 'list') => void;
   selection: MovieCardSelection | undefined;
   addMovieOpen: boolean;
   onAddMovieOpenChange: (open: boolean) => void;
@@ -850,8 +891,25 @@ function EventDetailSessionBody({
   removePending: boolean;
   actionSuccess: string | null;
   wheel: WheelApi;
+  isFull: boolean;
 }>) {
   const hostCanInvite = !!event.isHost && !event.isFinished;
+  const winners = useMemo(
+    () =>
+      wheel.winnerIds
+        .map((id) => movies.find((movie) => movie.id === id))
+        .filter((movie): movie is MovieData => movie !== undefined),
+    [wheel.winnerIds, movies]
+  );
+  const participantAvatars = useMemo(
+    () =>
+      Object.fromEntries(
+        (event.participants ?? [])
+          .filter((p) => p.avatarId)
+          .map((p) => [p.id, p.avatarId as string])
+      ),
+    [event.participants]
+  );
   return (
     <>
       {participantsOpen ? (
@@ -898,7 +956,14 @@ function EventDetailSessionBody({
           />
         </Suspense>
       ) : null}
-      <div ref={moviesSectionRef}>
+      {wheel.manualMode || wheel.removalMode ? null : (
+        <EventWinnerSummary
+          winners={winners}
+          isFinished={!!event.isFinished}
+          participantAvatars={participantAvatars}
+        />
+      )}
+      <div ref={moviesSectionRef} className={styles.moviesSection}>
         <EventMoviesSection
           slug={slug}
           event={event}
@@ -912,12 +977,12 @@ function EventDetailSessionBody({
           refreshAll={refreshAll}
           onRequestRemove={onRequestRemoveMovie}
           viewMode={viewMode}
-          onViewModeChange={onViewModeChange}
           selection={selection}
           addMovieOpen={addMovieOpen}
           onAddMovieOpenChange={onAddMovieOpenChange}
           addMovieTriggerRef={addMovieTriggerRef}
           winnerMovieIds={wheel.winnerIds}
+          isFull={isFull}
         />
       </div>
       {event.isFinished && (event.winners?.length ?? 0) === 0 ? (

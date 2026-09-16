@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useId, useMemo, useState, type RefObject } from 'react';
 import clsx from 'clsx';
+import { Film, Plus } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
@@ -15,9 +16,11 @@ import MovieList, { type MovieRowSortKey } from '@/features/movies/components/Mo
 import SortControl from '@/features/movies/components/SortControl';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import EmptyState from '@/shared/components/EmptyState';
+import Button from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
 import { Skeleton } from '@/shared/components/Skeleton';
-import ViewModeToggle from '@/shared/components/ViewModeToggle';
 import {
   useAddToWatchlist,
   useRemoveFromWatchlist,
@@ -101,13 +104,21 @@ export type EventMoviesSectionProps = {
   refreshAll: () => void;
   onRequestRemove: (movie: MovieData) => void;
   viewMode: 'grid' | 'list';
-  onViewModeChange: (mode: 'grid' | 'list') => void;
   selection?: MovieCardSelection;
   addMovieOpen: boolean;
   onAddMovieOpenChange: (open: boolean) => void;
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
   winnerMovieIds?: string[];
+  isFull?: boolean;
 };
+
+function emptyStateMessageKey(input: {
+  isParticipant: boolean;
+  isFull: boolean;
+}): 'movies.list.emptyParticipant' | 'movies.list.emptyVisitor' | 'movies.list.emptyVisitorFull' {
+  if (input.isParticipant) return 'movies.list.emptyParticipant';
+  return input.isFull ? 'movies.list.emptyVisitorFull' : 'movies.list.emptyVisitor';
+}
 
 function lockedVoteQuotaHint(
   quota: { used: number; max: number } | null,
@@ -136,12 +147,12 @@ export default function EventMoviesSection({
   refreshAll,
   onRequestRemove,
   viewMode,
-  onViewModeChange,
   selection,
   addMovieOpen,
   onAddMovieOpenChange,
   addMovieTriggerRef,
   winnerMovieIds,
+  isFull = false,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { track } = useAnalytics();
@@ -149,6 +160,7 @@ export default function EventMoviesSection({
   const ratingScale = user?.ratingScale;
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const layout: 'grid' | 'list' = isMobile ? 'list' : viewMode;
   useIdlePrefetch(ADD_MOVIE_CHUNKS);
   const sectionHeadingId = useId();
   const [sortBy, setSortBy] = useState<MovieRowSortKey>('score');
@@ -248,7 +260,7 @@ export default function EventMoviesSection({
           refreshAll();
           return;
         }
-        if (viewMode === 'list') {
+        if (layout === 'list') {
           const message = getErrorMessage(e, t('movies.list.voteErrorRow'));
           setVoteErrors((prev) => ({ ...prev, [movieId]: { message, value } }));
         } else {
@@ -256,7 +268,7 @@ export default function EventMoviesSection({
         }
       }
     },
-    [slug, participant, movies, setActionError, refreshAll, track, t, viewMode, clearVoteError]
+    [slug, participant, movies, setActionError, refreshAll, track, t, layout, clearVoteError]
   );
 
   const handleRetryVote = useCallback(
@@ -332,6 +344,22 @@ export default function EventMoviesSection({
     { key: 'releaseDate' as const, label: t('movies.list.sortReleaseDate') },
   ];
 
+  const emptyState = isFinished ? null : (
+    <EmptyState
+      icon={<Film size={ICON_SIZE['3xl']} aria-hidden />}
+      title={t('movies.list.emptyTitle')}
+      message={t(emptyStateMessageKey({ isParticipant: !!participant, isFull }))}
+      actions={
+        participant && !addMovieOpen ? (
+          <Button type="button" variant="primary" onClick={() => onAddMovieOpenChange(true)}>
+            <Plus size={ICON_SIZE.md} aria-hidden />
+            {t('movies.search.label')}
+          </Button>
+        ) : null
+      }
+    />
+  );
+
   const sharedListProps = {
     slug,
     participantId: participant?.participantId ?? null,
@@ -346,7 +374,7 @@ export default function EventMoviesSection({
     participantAvatars,
     participantAvatarsByPseudo,
     ratingScale,
-    viewMode,
+    viewMode: layout,
     isMobile,
     isInWatchlist: user ? isInWatchlist : undefined,
     onToggleWatchlist: user ? handleToggleWatchlist : undefined,
@@ -398,9 +426,9 @@ export default function EventMoviesSection({
         </div>
       )}
 
-      {moviesQuery.isSuccess && ((viewMode === 'grid' && movies.length > 1) || isMobile) && (
+      {moviesQuery.isSuccess && (layout === 'grid' || isMobile) && movies.length > 1 && (
         <div className={styles.sectionHeader}>
-          {(viewMode === 'grid' || isMobile) && movies.length > 1 && (
+          {(layout === 'grid' || isMobile) && movies.length > 1 && (
             <SortControl
               sortOptions={sortOptions}
               sortBy={sortBy}
@@ -411,13 +439,6 @@ export default function EventMoviesSection({
               sortDirectionAscLabel={t('events.myEvents.sortDirectionAsc')}
               sortDirectionDescLabel={t('events.myEvents.sortDirectionDesc')}
               isMobile={isMobile}
-            />
-          )}
-          {isMobile && (
-            <ViewModeToggle
-              value={viewMode}
-              onChange={onViewModeChange}
-              className={styles.viewToggleAlign}
             />
           )}
         </div>
@@ -434,11 +455,16 @@ export default function EventMoviesSection({
 
       {moviesQuery.isSuccess && (
         <>
-          <div className={viewMode === 'list' ? styles.movieListBleed : undefined}>
+          <div
+            className={
+              layout === 'list' && inWheelMovies.length > 0 ? styles.movieListBleed : undefined
+            }
+          >
             <MovieList
               movies={inWheelMovies}
               {...sharedListProps}
-              showRank={sortBy === 'score' && sortDir === 'desc'}
+              emptyState={emptyState}
+              showRank={sortBy === 'score' && sortDir === 'desc' && !isFinished}
               showHeader
               sortBy={sortBy}
               sortDir={sortDir}
@@ -454,7 +480,7 @@ export default function EventMoviesSection({
                 <span className={styles.wheelDividerCount}>{excludedMovies.length}</span>
                 <span className={styles.wheelDividerLine} aria-hidden />
               </div>
-              <div className={viewMode === 'list' ? styles.movieListBleed : undefined}>
+              <div className={layout === 'list' ? styles.movieListBleed : undefined}>
                 <MovieList movies={excludedMovies} {...sharedListProps} showHeader={false} />
               </div>
             </>

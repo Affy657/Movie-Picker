@@ -26,7 +26,7 @@ Tous dans `apps/web/src/styles/01-foundation.css`, sauf ceux propres à la page 
 | Sur affiche | `--on-poster-*` | texte, bordures et voiles posés sur une image sombre |
 | Profondeur | `--z-below` à `--z-skip-link` | |
 | Largeurs | `--container-xs` (28 rem) à `--container-3xl` (84 rem) | les tailles de `Modal` portent les mêmes noms |
-| Zone tactile | `shared/components/tapTarget.module.css`, classe `expanded` | `composes: expanded from '@/shared/components/tapTarget.module.css'` pose `position: relative` et un `::after` de 44 px centré ; c'est ce qu'utilisent `Button` `sm`, `IconButton`, `LinkButton`, `Chip` cliquable et sa croix, `Toggle`, `ViewModeToggle`, `SegmentedRadioGroup` et tout contrôle dessiné sous 44 px |
+| Zone tactile | `shared/components/tapTarget.module.css`, classe `expanded` | `composes: expanded from '@/shared/components/tapTarget.module.css'` pose `position: relative` (dans la couche `@layer tap-target`, donc un `position: absolute` écrit dans la classe qui compose garde la main, quel que soit l'ordre d'émission des feuilles) et un `::after` de 44 px centré ; c'est ce qu'utilisent `Button` `sm`, `IconButton`, `LinkButton`, `Chip` cliquable et sa croix, `Toggle`, `ViewModeToggle`, `SegmentedRadioGroup` et tout contrôle dessiné sous 44 px |
 
 Trois portées de thème : `[data-theme='light']`, `[data-theme='dark']` et `.on-dark` (un bloc sombre posé dans une page claire, la carte d'accueil par exemple). Un rôle ajouté au clair se déclare dans les trois.
 

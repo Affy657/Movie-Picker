@@ -35,6 +35,7 @@ export type EventWheelState = {
   primaryAction: EventPrimaryAction;
   showRemoveWinner: boolean;
   showReset: boolean;
+  noMovie: boolean;
   canRelaunchFromModal: boolean;
   launch: () => void;
   reset: () => void;
@@ -359,6 +360,7 @@ export function useEventWheel({
     primaryAction,
     showRemoveWinner: isOpenForActions && hasWinner && !selecting,
     showReset: isOpenForActions && hasWinner && !selecting,
+    noMovie: moviesCount === 0,
     canRelaunchFromModal:
       isOpenForActions && !manualReveal && remainingDraws > 0 && drawableMovies.length > 0,
     launch,

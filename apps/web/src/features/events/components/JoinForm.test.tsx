@@ -135,7 +135,11 @@ describe('JoinForm', () => {
 
   it('shows a dedicated message and hides the form when the movie night is full', () => {
     renderForm(<JoinForm slug="soiree" onJoined={onJoined} isFull maxParticipants={4} />);
-    expect(screen.getByText(/complète \(4 participants maximum\)/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Soirée complète' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Rejoindre la soirée' })).not.toBeInTheDocument();
+    const message = screen.getByText(/complète \(4 participants maximum\)/i);
+    expect(message).toBeInTheDocument();
+    expect(message).not.toHaveAttribute('role', 'alert');
     expect(screen.queryByRole('button', { name: /rejoindre/i })).not.toBeInTheDocument();
   });
 

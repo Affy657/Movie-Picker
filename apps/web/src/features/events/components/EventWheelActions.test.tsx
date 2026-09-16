@@ -39,6 +39,7 @@ function wheelState(overrides: Partial<EventWheelState> = {}): EventWheelState {
     enterRemovalMode: vi.fn(),
     cancelRemovalMode: vi.fn(),
     removeWinner: vi.fn(),
+    noMovie: false,
     ...overrides,
   };
 }
@@ -85,6 +86,38 @@ describe('EventWheelActions', () => {
     renderActions(wheelState({ remainingDraws: 1, winnerCount: 1 }));
 
     expect(screen.getByRole('button', { name: 'Lancer la roue' })).not.toHaveTextContent(/1/);
+  });
+
+  it('hides the draw buttons as long as no movie is proposed', () => {
+    renderActions(
+      wheelState({
+        noMovie: true,
+        primaryAction: 'add',
+        spinDisabled: true,
+        spinDisabledHint: 'Proposez au moins un film pour lancer la roue.',
+      })
+    );
+
+    expect(screen.queryByRole('button', { name: /lancer la roue/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /choisir moi-même/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the designated winners as a status pill, not as a button', () => {
+    renderActions(
+      wheelState({
+        winnerIds: ['m1'],
+        remainingDraws: 0,
+        winnerCount: 1,
+        spinDisabled: true,
+        spinDisabledHint: 'Le film gagnant est déjà désigné.',
+        showRemoveWinner: true,
+        showReset: true,
+      })
+    );
+
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('Film gagnant désigné');
+    expect(status.querySelector('button')).toBeNull();
   });
 
   it('disables the draw and carries the reason in a tooltip', () => {

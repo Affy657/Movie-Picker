@@ -1,5 +1,4 @@
-import { Film } from 'lucide-react';
-import EmptyState from '@/shared/components/EmptyState';
+import type { ReactNode } from 'react';
 import type { MovieData } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
 import { useTranslation } from '@/shared/i18n';
@@ -7,7 +6,6 @@ import { MovieCardList } from '@/features/movies/components/MovieCardList';
 import { MovieCardRow, MovieRowHeader } from '@/features/movies/components/MovieCardRow';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import styles from './MovieList.module.css';
-import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type MovieRowSortKey =
   'createdAt' | 'voteAverage' | 'duration' | 'score' | 'availability' | 'seen' | 'releaseDate';
@@ -43,6 +41,7 @@ interface MovieListProps {
   voteErrors?: Record<string, { message: string }>;
   onRetryVote?: (movieId: string) => void;
   participantCount?: number;
+  emptyState?: ReactNode;
 }
 
 export default function MovieList({
@@ -76,18 +75,11 @@ export default function MovieList({
   voteErrors,
   onRetryVote,
   participantCount,
+  emptyState = null,
 }: Readonly<MovieListProps>) {
   const { t } = useTranslation();
 
-  if (movies.length === 0) {
-    return (
-      <EmptyState
-        icon={<Film size={ICON_SIZE['3xl']} aria-hidden />}
-        title={t('movies.list.emptyTitle')}
-        message={t('movies.list.emptyPlaceholder')}
-      />
-    );
-  }
+  if (movies.length === 0) return emptyState;
 
   const winners = winnerMovieIds ?? [];
   const winnerRankOf = (movieId: string) => {

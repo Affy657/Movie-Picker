@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -81,9 +81,10 @@ function renderSection(
     moviesQuery?: EventMoviesSectionProps['moviesQuery'];
     actionError?: string | null;
     viewMode?: 'grid' | 'list';
-    onViewModeChange?: (mode: 'grid' | 'list') => void;
     winnerMovieIds?: string[];
     onRequestRemove?: (movie: MovieData) => void;
+    participant?: { participantId: string; pseudo: string } | null;
+    onAddMovieOpenChange?: (open: boolean) => void;
   } = {}
 ) {
   return render(
@@ -92,7 +93,11 @@ function renderSection(
         <EventMoviesSection
           slug="soiree-cine"
           event={props.event ?? EVENT}
-          participant={{ participantId: 'p1', pseudo: 'Alice' }}
+          participant={
+            props.participant === undefined
+              ? { participantId: 'p1', pseudo: 'Alice' }
+              : props.participant
+          }
           hostToken={null}
           movies={props.movies ?? [MOVIE]}
           moviesQuery={
@@ -110,9 +115,8 @@ function renderSection(
           refreshAll={props.refreshAll ?? (() => undefined)}
           onRequestRemove={props.onRequestRemove ?? (() => undefined)}
           viewMode={props.viewMode ?? 'grid'}
-          onViewModeChange={props.onViewModeChange ?? (() => undefined)}
           addMovieOpen={false}
-          onAddMovieOpenChange={() => undefined}
+          onAddMovieOpenChange={props.onAddMovieOpenChange ?? (() => undefined)}
           addMovieTriggerRef={{ current: null }}
           winnerMovieIds={props.winnerMovieIds}
         />
@@ -131,6 +135,43 @@ describe('EventMoviesSection (MSW)', () => {
     vi.unstubAllGlobals();
   });
   afterAll(() => server.close());
+
+  describe('empty state', () => {
+    it('invites a participant to propose the first movie, with the button inside', async () => {
+      const user = userEvent.setup();
+      server.use(authedUserHandler, watchlistHandler([]));
+      const onAddMovieOpenChange = vi.fn();
+      renderSection({ movies: [], onAddMovieOpenChange });
+
+      expect(screen.getByText('Aucun film proposé')).toBeInTheDocument();
+      expect(
+        screen.getByText('Proposez le premier film, la roue viendra ensuite.')
+      ).toBeInTheDocument();
+      await user.click(
+        within(screen.getByRole('region', { name: 'Films proposés' })).getByRole('button', {
+          name: 'Proposer un film',
+        })
+      );
+      expect(onAddMovieOpenChange).toHaveBeenCalledWith(true);
+    });
+
+    it('tells a visitor to join first and offers no proposal button', () => {
+      server.use(authedUserHandler, watchlistHandler([]));
+      renderSection({ movies: [], participant: null });
+
+      expect(
+        screen.getByText('Rejoignez la soirée pour proposer le premier film.')
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Proposer un film' })).not.toBeInTheDocument();
+    });
+
+    it('shows nothing for a finished movie night, the closed state speaks instead', () => {
+      server.use(authedUserHandler, watchlistHandler([]));
+      renderSection({ movies: [], event: { ...EVENT, isFinished: true } });
+
+      expect(screen.queryByText('Aucun film proposé')).not.toBeInTheDocument();
+    });
+  });
 
   it('adds a movie to the watchlist with vote/runtime from the movie night page', async () => {
     let addedBody: Record<string, unknown> | null = null;
@@ -279,13 +320,26 @@ describe('EventMoviesSection (MSW)', () => {
     );
   });
 
-  it('affiche la bascule grille/liste en vue mobile uniquement', () => {
+  it('offers no grid/list toggle on mobile and lays the movies out as a list whatever is stored', () => {
     stubMatchMedia(true);
     server.use(authedUserHandler, watchlistHandler([]));
-    const onViewModeChange = vi.fn();
-    renderSection({ movies: [MOVIE], viewMode: 'grid', onViewModeChange });
+    renderSection({ movies: [MOVIE], viewMode: 'grid' });
 
-    expect(screen.getByRole('button', { name: /affichage liste/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /affichage liste/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Détails' })).toBeInTheDocument();
+  });
+
+  it('on mobile, the seen chip shows a count only once someone has seen the movie', () => {
+    stubMatchMedia(true);
+    server.use(authedUserHandler, watchlistHandler([]));
+    renderSection({ movies: [MOVIE, { ...MOVIE, id: 'm2', title: 'Alien', seenCount: 2 }] });
+
+    expect(
+      screen.getByRole('button', { name: /marquer « déjà vu » pour matrix/i })
+    ).toHaveTextContent(/^Déjà vu$/);
+    expect(
+      screen.getByRole('button', { name: /marquer « déjà vu » pour alien/i })
+    ).toHaveTextContent('Déjà vu (2)');
   });
 
   it('does not show the grid/list toggle on desktop (moved to the header)', () => {
@@ -302,7 +356,6 @@ describe('EventMoviesSection (MSW)', () => {
     renderSection({ movies: [MOVIE, second], viewMode: 'list' });
 
     expect(screen.getByRole('button', { name: /votes/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /affichage grille/i })).toBeInTheDocument();
   });
 
   it("n'affiche pas le composant de tri en vue liste sur desktop (colonnes triables au clic)", () => {

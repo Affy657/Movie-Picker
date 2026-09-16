@@ -1,0 +1,107 @@
+.root {
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--color-success-border);
+  background: var(--color-success-bg);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  line-height: var(--leading-none);
+  color: var(--color-success);
+}
+
+.headingLabel {
+  transform: translateY(var(--text-optical-nudge-caps));
+}
+
+.headingIcon {
+  flex: 0 0 auto;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3-5);
+  min-width: 0;
+}
+
+.posterCol {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--space-16);
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-surface-sunken);
+}
+
+.poster {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.posterPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-placeholder);
+}
+
+.rank {
+  position: absolute;
+  top: var(--space-1);
+  left: var(--space-1);
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--space-5);
+  height: var(--space-5);
+  padding-top: var(--text-optical-nudge);
+  border-radius: var(--radius-pill);
+  background: var(--color-success);
+  color: var(--color-primary-contrast);
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-none);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-snug);
+  line-height: var(--leading-compact);
+  color: var(--color-text);
+}
+
+.facts {
+  display: flex;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

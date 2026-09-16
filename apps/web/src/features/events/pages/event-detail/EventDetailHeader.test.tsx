@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
@@ -8,6 +8,32 @@ import EventDetailHeader, {
 } from '@/features/events/pages/event-detail/EventDetailHeader';
 import { LocaleProvider } from '@/shared/i18n';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
+
+function stubDesktopViewport(matches: boolean) {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => ({
+      matches,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }))
+  );
+}
+
+function stubResizeObserver(measuredHeight: number) {
+  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+    configurable: true,
+    get: () => measuredHeight,
+  });
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe() {}
+      disconnect() {}
+    }
+  );
+}
 
 function renderHeader(ui: ReactElement) {
   return render(
@@ -40,6 +66,31 @@ describe('EventDetailHeader', () => {
     localStorage.setItem('moviepicker-locale', 'fr');
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete (HTMLElement.prototype as { offsetHeight?: number }).offsetHeight;
+    document.documentElement.style.removeProperty('--event-sticky-bar-height');
+  });
+
+  it('publishes the sticky bar height on the root so the page can scroll below it', () => {
+    stubDesktopViewport(true);
+    stubResizeObserver(126);
+    const { unmount } = renderHeader(<EventDetailHeader {...baseProps} />);
+    expect(screen.getByRole('banner')).toHaveAttribute('data-event-sticky-bar');
+    expect(document.documentElement.style.getPropertyValue('--event-sticky-bar-height')).toBe(
+      '126px'
+    );
+    unmount();
+    expect(document.documentElement.style.getPropertyValue('--event-sticky-bar-height')).toBe('');
+  });
+
+  it('publishes no sticky bar height on mobile, where the bar scrolls with the page', () => {
+    stubDesktopViewport(false);
+    stubResizeObserver(126);
+    renderHeader(<EventDetailHeader {...baseProps} />);
+    expect(document.documentElement.style.getPropertyValue('--event-sticky-bar-height')).toBe('');
+  });
+
   it('shows the movie night summary and the start countdown', () => {
     renderHeader(<EventDetailHeader {...baseProps} countdownLabel="22 h" />);
     expect(screen.getByRole('heading', { name: 'Soirée ciné' })).toBeInTheDocument();
@@ -60,6 +111,27 @@ describe('EventDetailHeader', () => {
     renderHeader(<EventDetailHeader {...baseProps} lifecycle="live" countdownLabel="22 h" />);
     expect(screen.getByText('En cours')).toBeInTheDocument();
     expect(screen.queryByText('22 h')).not.toBeInTheDocument();
+  });
+
+  it('moves share, calendar and settings next to Back on mobile, keeps them with the actions on desktop', () => {
+    stubDesktopViewport(false);
+    const { unmount } = renderHeader(
+      <EventDetailHeader {...baseProps} onOpenShare={() => {}} onOpenSettings={() => {}} />
+    );
+    const back = screen.getByRole('button', { name: 'Retour' });
+    const share = screen.getByRole('button', { name: /^partager$/i });
+    const settings = screen.getByRole('button', { name: /paramètres de la soirée/i });
+    expect(back.parentElement).toContainElement(share);
+    expect(back.parentElement).toContainElement(settings);
+    unmount();
+
+    stubDesktopViewport(true);
+    renderHeader(
+      <EventDetailHeader {...baseProps} onOpenShare={() => {}} onOpenSettings={() => {}} />
+    );
+    expect(screen.getByRole('button', { name: 'Retour' }).parentElement).not.toContainElement(
+      screen.getByRole('button', { name: /^partager$/i })
+    );
   });
 
   it('shows the Share button and the calendar separately', async () => {

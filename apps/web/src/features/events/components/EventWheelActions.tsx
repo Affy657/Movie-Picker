@@ -16,6 +16,7 @@ import { MenuItem, MenuPanel } from '@/shared/components/Menu';
 import styles from './EventWheelActions.module.css';
 import Button from '@/shared/components/Button';
 import Tooltip from '@/shared/components/Tooltip';
+import Chip from '@/shared/components/Chip';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type EventWheelActionsProps = {
@@ -175,15 +176,14 @@ function SpinButton({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translat
 function AllDrawnStatus({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translate }>) {
   return (
     <output className={styles.doneStatus} title={wheel.spinDisabledHint ?? undefined}>
-      <Trophy size={ICON_SIZE.md} aria-hidden className={styles.doneIcon} />
-      <span className={styles.doneLabel}>
+      <Chip tone="success" icon={Trophy}>
         {pluralizeCount(
           wheel.winnerCount,
           'events.wheel.allDrawnStatusOne',
           'events.wheel.allDrawnStatusMany',
           t
         )}
-      </span>
+      </Chip>
     </output>
   );
 }
@@ -199,6 +199,7 @@ export default function EventWheelActions({
 
   const allDrawn = wheel.remainingDraws === 0;
   const showMenu = wheel.showRemoveWinner || wheel.showReset;
+  if (wheel.noMovie && !showMenu) return null;
 
   return (
     <>

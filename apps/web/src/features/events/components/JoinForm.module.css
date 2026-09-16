@@ -31,13 +31,11 @@
   color: var(--color-text-muted);
 }
 
-.fullMessage {
-  margin: 0;
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-error);
+.intro:last-child {
+  margin-bottom: 0;
 }
 
 .submit {
   width: 100%;
+  max-width: var(--container-xs);
 }

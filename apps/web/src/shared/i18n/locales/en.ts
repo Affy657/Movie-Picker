@@ -658,6 +658,7 @@ export const en: Locale = {
     },
     join: {
       title: 'Join the event',
+      fullTitle: 'Movie night full',
       pseudoLabel: 'Your nickname',
       pseudoPlaceholder: 'E.g. Alice',
       submit: 'Join',
@@ -984,7 +985,7 @@ export const en: Locale = {
       closeError: 'Close failed',
       resetError: 'Reset failed',
       removeWinnerButton: 'Remove a winner',
-      removeWinnerHint: 'Click a winning movie to take it out of the results.',
+      removeWinnerHint: 'Pick the winning movie to take out of the results.',
       removeWinnerCardAria: '{{title}}: take this movie out of the results',
       removeWinnerError: 'Removal failed',
       allDrawnHintOne:
@@ -995,7 +996,7 @@ export const en: Locale = {
         'Every suggested movie has already won. Add one more, or take one out of the results.',
       manualPickButton: 'Pick it myself',
       manualPickCancel: 'Cancel',
-      manualPickHint: 'Click a movie to name it the winner.',
+      manualPickHint: 'Pick the movie to name the winner.',
       manualPickBadge: 'Picked by the host',
       manualPickCardAria: '{{title}}: pick this movie as the winner',
       manualPickError: 'Pick failed',
@@ -1032,10 +1033,15 @@ export const en: Locale = {
       pending: 'Pending',
       finished: 'Finished',
     },
+    winners: {
+      finishedOne: 'The movie of the night',
+      finishedMany: 'The {{count}} movies of the night',
+      upcoming: 'Tonight you are watching',
+    },
     pending: {
       hostText: 'The event time has passed and no movie has been picked yet.',
-      hostMeta:
-        'Spin the wheel, reschedule, or close without a movie. Without action, the event closes automatically in 7 days.',
+      hostMeta: 'Without action on your side, the event closes automatically in 7 days.',
+      rescheduleAction: 'Reschedule',
       participantText: 'The event time has passed, no movie has been picked yet.',
       participantMeta: 'You can still vote and suggest movies while the host decides.',
     },
@@ -1086,8 +1092,9 @@ export const en: Locale = {
     },
     list: {
       emptyTitle: 'No movies suggested yet',
-      emptyPlaceholder:
-        'Add the first movie with the “Suggest a movie” button, then spin the wheel.',
+      emptyParticipant: 'Suggest the first movie, the wheel comes next.',
+      emptyVisitor: 'Join the movie night to suggest the first movie.',
+      emptyVisitorFull: 'The participants have not suggested anything yet.',
       proposedBy: 'Suggested by {{pseudo}}',
       proposedByMeLead: 'Suggested by ',
       proposedByMeSelf: 'you',

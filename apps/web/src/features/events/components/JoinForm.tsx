@@ -1,6 +1,6 @@
 import { useCallback, type ReactNode } from 'react';
 import { Link } from 'react-router';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Users } from 'lucide-react';
 import { joinEvent } from '@/features/events/api/eventsApi';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
@@ -62,11 +62,7 @@ export default function JoinForm({
 
   let body: ReactNode;
   if (isFull) {
-    body = (
-      <p className={styles.fullMessage} role="status" aria-live="polite">
-        {fullMessage}
-      </p>
-    );
+    body = <p className={styles.intro}>{fullMessage}</p>;
   } else if (user) {
     body = (
       <>
@@ -115,8 +111,14 @@ export default function JoinForm({
       className={styles.root}
     >
       <h2 className={styles.title}>
-        <UserPlus size={ICON_SIZE.lg} aria-hidden className={styles.titleIcon} />
-        <span className={styles.titleLabel}>{t('events.join.title')}</span>
+        {isFull ? (
+          <Users size={ICON_SIZE.lg} aria-hidden className={styles.titleIcon} />
+        ) : (
+          <UserPlus size={ICON_SIZE.lg} aria-hidden className={styles.titleIcon} />
+        )}
+        <span className={styles.titleLabel}>
+          {t(isFull ? 'events.join.fullTitle' : 'events.join.title')}
+        </span>
       </h2>
       {body}
     </Card>

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -218,6 +218,58 @@ describe('EventDetail (MSW)', () => {
     await waitFor(() => expect(nameField.closest('dialog')).toHaveAttribute('open'));
   });
 
+  describe('pending movie night (host)', () => {
+    const token = 'host-secret-token';
+
+    function usePendingHandlers() {
+      server.use(
+        ...createEventDetailHandlers({ slug, title: 'Soirée en suspens', lifecycle: 'pending' }),
+        createJoinHandler(slug),
+        ...createSearchAndAddHandlers(slug)
+      );
+    }
+
+    it('puts the three ways out inside the banner and drops the duplicate pill', async () => {
+      usePendingHandlers();
+      renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+      const banner = await screen.findByRole('status', { name: /en suspens/i });
+      expect(within(banner).getByRole('button', { name: /reprogrammer/i })).toBeInTheDocument();
+      expect(
+        within(banner).getByRole('button', { name: /clôturer sans film/i })
+      ).toBeInTheDocument();
+      expect(within(banner).queryByRole('button', { name: /lancer la roue/i })).toBeNull();
+      expect(screen.queryByText('En suspens', { selector: 'span' })).not.toBeInTheDocument();
+    });
+
+    it('closing without a movie asks for confirmation, then posts the closing', async () => {
+      const user = userEvent.setup();
+      usePendingHandlers();
+      let closed = 0;
+      server.use(
+        http.post(`${TEST_API_V1}/events/${slug}/close`, () => {
+          closed += 1;
+          return HttpResponse.json({ message: 'closed' });
+        })
+      );
+      renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+      const banner = await screen.findByRole('status', { name: /en suspens/i });
+      await user.click(within(banner).getByRole('button', { name: /clôturer sans film/i }));
+      const dialog = await screen.findByRole('dialog', { name: /clôturer sans choisir de film/i });
+      expect(closed).toBe(0);
+      await user.click(within(dialog).getByRole('button', { name: /clôturer sans film/i }));
+      await waitFor(() => expect(closed).toBe(1));
+    });
+
+    it('reprogramming opens the settings panel', async () => {
+      const user = userEvent.setup();
+      usePendingHandlers();
+      renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
+      const banner = await screen.findByRole('status', { name: /en suspens/i });
+      await user.click(within(banner).getByRole('button', { name: /reprogrammer/i }));
+      expect(await screen.findByLabelText(/date et heure de la soirée/i)).toBeInTheDocument();
+    });
+  });
+
   it('shows the movies error and Retry when loading the movies fails', async () => {
     server.use(
       http.get(`${TEST_API_V1}/events/:slug/movies`, () =>
@@ -247,7 +299,13 @@ describe('EventDetail (MSW)', () => {
     expect(await screen.findByRole('heading', { name: /rejoindre/i })).toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: /rejoindre/i }));
 
-    await user.click(await screen.findByRole('button', { name: /proposer un film/i }));
+    const emptyState = await screen.findByText('Aucun film proposé');
+    await user.click(
+      within(emptyState.parentElement as HTMLElement).getByRole('button', {
+        name: /proposer un film/i,
+      })
+    );
+    expect(screen.queryByRole('button', { name: /proposer un film/i })).not.toBeInTheDocument();
     expect(await screen.findByPlaceholderText(/ajouter un film/i)).toBeInTheDocument();
     await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Test');
     await user.click(screen.getByRole('button', { name: /^rechercher$/i }));

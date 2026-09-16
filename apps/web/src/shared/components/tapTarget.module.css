@@ -1,5 +1,7 @@
-.expanded {
-  position: relative;
+@layer tap-target {
+  .expanded {
+    position: relative;
+  }
 }
 
 .expanded::after {

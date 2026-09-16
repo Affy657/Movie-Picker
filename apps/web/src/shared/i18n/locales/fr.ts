@@ -667,6 +667,7 @@ export const fr = {
     },
     join: {
       title: 'Rejoindre la soirée',
+      fullTitle: 'Soirée complète',
       pseudoLabel: 'Votre pseudo',
       pseudoPlaceholder: 'Ex: Alice',
       submit: 'Rejoindre',
@@ -674,8 +675,8 @@ export const fr = {
       fallbackError: 'Impossible de rejoindre',
       pseudoRequired: 'Indiquez un pseudo pour rejoindre.',
       fullWithCap:
-        "La soirée est complète ({{max}} participants maximum). Demandez à l'hôte d'augmenter la capacité pour rejoindre.",
-      full: "La soirée est complète. Demandez à l'hôte d'augmenter la capacité pour rejoindre.",
+        "La soirée est complète ({{max}} participants maximum). Demandez à l'hôte d'ouvrir une place pour la rejoindre.",
+      full: "La soirée est complète. Demandez à l'hôte d'ouvrir une place pour la rejoindre.",
       intro: 'Rejoignez la soirée pour proposer des films et voter.',
       signedOutIntro: 'Connectez-vous ou créez un compte pour rejoindre la soirée.',
     },
@@ -1003,7 +1004,7 @@ export const fr = {
       closeError: 'Clôture impossible',
       resetError: 'Remise à zéro impossible',
       removeWinnerButton: 'Retirer un gagnant',
-      removeWinnerHint: 'Cliquez sur un film gagnant pour le retirer du palmarès.',
+      removeWinnerHint: 'Choisissez le film gagnant à retirer du palmarès.',
       removeWinnerCardAria: '{{title}} : retirer ce film du palmarès',
       removeWinnerError: 'Retrait impossible',
       allDrawnHintOne:
@@ -1014,7 +1015,7 @@ export const fr = {
         'Tous les films proposés ont déjà gagné. Proposez un film de plus, ou retirez-en un du palmarès.',
       manualPickButton: 'Choisir moi-même',
       manualPickCancel: 'Annuler',
-      manualPickHint: 'Cliquez sur un film pour le désigner gagnant.',
+      manualPickHint: 'Choisissez le film à désigner gagnant.',
       manualPickBadge: 'Choisi par l’hôte',
       manualPickCardAria: '{{title}} : désigner ce film comme gagnant',
       manualPickError: 'Sélection impossible',
@@ -1051,10 +1052,15 @@ export const fr = {
       pending: 'En suspens',
       finished: 'Terminée',
     },
+    winners: {
+      finishedOne: 'Le film de la soirée',
+      finishedMany: 'Les {{count}} films de la soirée',
+      upcoming: 'Ce soir, vous regardez',
+    },
     pending: {
       hostText: "L'heure de la soirée est passée et aucun film n'a été choisi.",
-      hostMeta:
-        'Relance la roue, reprogramme, ou clôture sans film. Sans action, la soirée se clôture automatiquement dans 7 jours.',
+      hostMeta: 'Sans action de votre part, la soirée se clôture automatiquement dans 7 jours.',
+      rescheduleAction: 'Reprogrammer',
       participantText: "L'heure de la soirée est passée, aucun film n'a encore été choisi.",
       participantMeta:
         "Vous pouvez encore voter et proposer des films en attendant que l'hôte décide.",
@@ -1107,8 +1113,9 @@ export const fr = {
     },
     list: {
       emptyTitle: 'Aucun film proposé',
-      emptyPlaceholder:
-        'Proposez le premier film avec le bouton « Proposer un film », puis lancez la roue.',
+      emptyParticipant: 'Proposez le premier film, la roue viendra ensuite.',
+      emptyVisitor: 'Rejoignez la soirée pour proposer le premier film.',
+      emptyVisitorFull: "Les participants n'ont encore rien proposé.",
       proposedBy: 'Proposé par {{pseudo}}',
       proposedByMeLead: 'Proposé par ',
       proposedByMeSelf: 'moi',
