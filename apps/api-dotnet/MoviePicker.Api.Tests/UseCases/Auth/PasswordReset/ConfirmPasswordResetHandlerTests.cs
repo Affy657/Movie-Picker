@@ -231,6 +231,57 @@ public sealed class ConfirmPasswordResetHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_HappyPath_DropsIdentitiesLinkedBeforeTheReset()
+    {
+        var clock = new FakeTimeProvider(TestEpoch);
+        var user = SampleUser() with
+        {
+            Identities =
+            [
+                new LinkedIdentity { Provider = "github", Subject = "gh-attacker", Email = "neo@example.com", LinkedAt = TestEpoch.AddDays(-1) },
+                new LinkedIdentity { Provider = "google", Subject = "g-1", Email = "neo@example.com", LinkedAt = TestEpoch.AddDays(-1) }
+            ]
+        };
+        var hash = PasswordResetTokenFactory.Hash(PlainToken);
+        var stored = new PasswordResetToken
+        {
+            Id = "tok-1",
+            UserId = user.Id,
+            TokenHash = hash,
+            CreatedAt = TestEpoch,
+            ExpiresAtUtc = TestEpoch.AddMinutes(30),
+            ConsumedAt = null
+        };
+
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        User? capturedUpdate = null;
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) =>
+            {
+                capturedUpdate = u;
+                return u;
+            });
+
+        var tokens = new Mock<IPasswordResetTokenRepository>();
+        tokens.Setup(x => x.GetByTokenHashAsync(hash, It.IsAny<CancellationToken>())).ReturnsAsync(stored);
+
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash("abcd1234")).Returns("NEW_HASH_FROM_HASHER");
+
+        var sessions = new Mock<IAuthSessionInvalidator>();
+        sessions.Setup(x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(0L);
+
+        var handler = CreateHandler(users.Object, tokens.Object, hasher.Object, sessions.Object, clock);
+
+        await handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abcd1234" });
+
+        Assert.NotNull(capturedUpdate);
+        Assert.Empty(capturedUpdate!.Identities);
+    }
+
+    [Fact]
     public async Task HandleAsync_HappyPath_MarksTokenConsumedAndInvalidatesOtherTokens()
     {
         var clock = new FakeTimeProvider(TestEpoch);

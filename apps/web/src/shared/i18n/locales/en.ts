@@ -436,7 +436,8 @@ export const en: Locale = {
       submit: 'Update my password',
       submitting: 'Updating\u2026',
       successTitle: 'Password updated',
-      successMessage: 'You can now log in with your new password.',
+      successMessage:
+        'You can now log in with your new password. Any Google or GitHub account that was linked has been detached: link it again from your settings if needed.',
       goToLogin: 'Go to login',
       requestNewLink: 'Request a new link',
       invalidTokenTitle: 'Invalid or expired link',

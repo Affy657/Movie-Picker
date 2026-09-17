@@ -61,7 +61,7 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
 
         var now = _clock.GetUtcNow();
         var newPasswordHash = _passwordHasher.Hash(request.NewPassword);
-        var updated = user with { PasswordHash = newPasswordHash, UpdatedAt = now };
+        var updated = user with { PasswordHash = newPasswordHash, Identities = [], UpdatedAt = now };
         await _users.UpdateAsync(updated, ct);
 
         await _tokens.MarkConsumedAsync(stored.Id, now, ct);
@@ -70,8 +70,8 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
         var invalidatedSessions = await _sessionInvalidator.InvalidateAllForUserAsync(stored.UserId, ct);
 
         _logger.LogInformation(
-            "PasswordReset.Confirm: success for {EmailMasked} (userId={UserId}, tokenId={TokenId}, invalidatedSessions={Sessions})",
-            EmailMasking.Mask(user.Email), user.Id, stored.Id, invalidatedSessions);
+            "PasswordReset.Confirm: success for {EmailMasked} (userId={UserId}, tokenId={TokenId}, invalidatedSessions={Sessions}, unlinkedIdentities={Identities})",
+            EmailMasking.Mask(user.Email), user.Id, stored.Id, invalidatedSessions, user.Identities.Count);
 
         return new PasswordResetConfirmResponse { Message = SuccessMessage };
     }

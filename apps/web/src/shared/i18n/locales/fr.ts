@@ -437,7 +437,8 @@ export const fr = {
       submit: 'Mettre à jour mon mot de passe',
       submitting: 'Mise à jour\u2026',
       successTitle: 'Mot de passe mis à jour',
-      successMessage: 'Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.',
+      successMessage:
+        'Vous pouvez maintenant vous connecter avec votre nouveau mot de passe. Les comptes Google ou GitHub qui étaient reliés ont été détachés : reliez-les depuis vos paramètres si besoin.',
       goToLogin: 'Aller à la connexion',
       requestNewLink: 'Demander un nouveau lien',
       invalidTokenTitle: 'Lien invalide ou expiré',
