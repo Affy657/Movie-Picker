@@ -96,6 +96,23 @@ describe('WatchlistProposeSubmenu (MSW)', () => {
     expect(trigger).toHaveFocus();
   });
 
+  it('reopens from the keyboard: Enter on the trigger toggles it after an Escape', async () => {
+    server.use(authMeGuestHandler, eligibleEventsHandler);
+    renderSubmenu();
+    const trigger = screen.getByRole('button', { name: /proposer dans une soirée/i });
+    fireEvent.focus(trigger);
+    await screen.findByRole('menu');
+
+    const user = userEvent.setup();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('menu')).toBeInTheDocument();
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+  });
+
   it('shows a message when there is no eligible movie night', async () => {
     server.use(
       authMeGuestHandler,

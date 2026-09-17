@@ -1,12 +1,9 @@
 .root {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  display: block;
 }
 
 .swatches {
-  grid-auto-flow: column;
-  grid-auto-columns: max-content;
+  grid-template-columns: repeat(auto-fill, var(--tap-target-min));
   gap: var(--space-1);
 }
 

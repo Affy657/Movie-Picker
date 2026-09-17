@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router';
 import { ListPlus } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -74,6 +73,16 @@ export default function WatchlistProposeSubmenu({
     closeTimer.current = setTimeout(() => setOpen(false), CLOSE_DELAY_MS);
   };
 
+  const toggleFromTrigger = () => {
+    dismissedByKeyboard.current = false;
+    if (open) {
+      clearCloseTimer();
+      setOpen(false);
+    } else {
+      openNow();
+    }
+  };
+
   useEffect(() => () => clearCloseTimer(), []);
 
   useEffect(() => {
@@ -122,6 +131,7 @@ export default function WatchlistProposeSubmenu({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={t('watchlist.card.proposeAction')}
+        onClick={toggleFromTrigger}
       >
         <ListPlus aria-hidden size={ICON_SIZE.sm} />
         <span className={styles.triggerLabel}>{t('watchlist.card.proposeShortLabel')}</span>
@@ -150,7 +160,7 @@ export default function WatchlistProposeSubmenu({
               const row = rows[e.slug] ?? { status: 'idle' as const };
               const isDone = row.status === 'done';
               return (
-                <div key={e.slug} className={styles.row}>
+                <div key={e.slug} className={styles.row} role="none">
                   <MenuItem
                     onClick={() => handlePropose(e.slug)}
                     disabled={row.status === 'pending' || isDone}
@@ -172,11 +182,7 @@ export default function WatchlistProposeSubmenu({
                 </div>
               );
             })}
-          {hasMore && (
-            <Link to={ROUTES.myEvents} className={styles.viewMoreLink}>
-              {t('watchlist.propose.viewMore')}
-            </Link>
-          )}
+          {hasMore && <MenuItem to={ROUTES.myEvents}>{t('watchlist.propose.viewMore')}</MenuItem>}
         </MenuPanel>
       )}
     </div>

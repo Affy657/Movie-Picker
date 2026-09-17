@@ -112,6 +112,25 @@ describe('MenuPanel', () => {
     expect(first).toHaveFocus();
   });
 
+  it('enters from the panel itself: ArrowDown on the first item, ArrowUp on the last', async () => {
+    const user = userEvent.setup();
+    render(
+      <MenuPanel ariaLabel="Actions">
+        <MenuItem>Premier</MenuItem>
+        <MenuItem>Dernier</MenuItem>
+      </MenuPanel>
+    );
+    const panel = screen.getByRole('menu');
+
+    panel.focus();
+    await user.keyboard('{ArrowUp}');
+    expect(screen.getByRole('menuitem', { name: 'Dernier' })).toHaveFocus();
+
+    panel.focus();
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('menuitem', { name: 'Premier' })).toHaveFocus();
+  });
+
   it('is anchored under its trigger unless told otherwise', () => {
     const { rerender } = render(<MenuPanel ariaLabel="Actions">x</MenuPanel>);
     expect(screen.getByRole('menu').className).toMatch(/anchored/);

@@ -14,7 +14,7 @@ function nextItemIndex(key: string, current: number, count: number): number | nu
     case 'ArrowDown':
       return (current + 1) % count;
     case 'ArrowUp':
-      return (current - 1 + count) % count;
+      return current < 0 ? count - 1 : (current - 1 + count) % count;
     case 'Home':
       return 0;
     case 'End':
@@ -24,7 +24,7 @@ function nextItemIndex(key: string, current: number, count: number): number | nu
   }
 }
 
-export function moveMenuFocus(panel: HTMLElement, event: KeyboardEvent<HTMLElement>): void {
+function moveMenuFocus(panel: HTMLElement, event: KeyboardEvent<HTMLElement>): void {
   const items = Array.from(panel.querySelectorAll<HTMLElement>(ENABLED_ITEM_SELECTOR));
   if (items.length === 0) return;
   const next = nextItemIndex(

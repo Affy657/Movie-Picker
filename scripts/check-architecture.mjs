@@ -217,7 +217,7 @@ const TOKENISED_PROPS = [
   ['border-radius', /var\(--radius-|inherit|^(?:(?:0|50%|100%)\s*)+$/, '--radius-*'],
 ];
 const MOTION_PROP =
-  /(?:^|[;{\n])\s*(transition|animation)(?:-duration|-timing-function)?\s*:\s*([^;{}]+)/g;
+  /(?:^|[;{\n])\s*(transition|animation)(-duration|-timing-function)?\s*:\s*([^;{}]+)/g;
 const LITERAL_DURATION = /(?<![\w-])\d*\.?\d+m?s\b/;
 const LITERAL_EASING = /(?<![\w-])(?:ease(?:-in|-out|-in-out)?|linear|cubic-bezier\(|steps\()/;
 const DURATION_WITHOUT_EASING = /var\(--duration-[\w-]+\)\s*(?:,|$)/;
@@ -333,14 +333,14 @@ function checkDesignTokens(cssFiles) {
         if (!allowed.test(value.replace(/!important/, '').trim()))
           violations.push(`${path}: ${prop}: ${value.trim()}, use var(${tokens})`);
 
-    for (const [, prop, value] of text.matchAll(MOTION_PROP)) {
+    for (const [, prop, suffix, value] of text.matchAll(MOTION_PROP)) {
       if (/^\s*none\s*$/.test(value)) continue;
       const shown = value.trim().replace(/\s+/g, ' ');
       if (LITERAL_DURATION.test(value))
         violations.push(`${path}: ${prop}: ${shown}, use var(--duration-*)`);
       if (LITERAL_EASING.test(value))
         violations.push(`${path}: ${prop}: ${shown}, use var(--ease-*)`);
-      if (prop === 'transition' && DURATION_WITHOUT_EASING.test(value.trim()))
+      if (prop === 'transition' && !suffix && DURATION_WITHOUT_EASING.test(value.trim()))
         violations.push(`${path}: ${prop}: ${shown}, a duration token takes its var(--ease-*)`);
     }
 
@@ -417,7 +417,7 @@ function checkModalPrimitive(files) {
 
 const SHARED_COMPONENTS_DIR = 'apps/web/src/shared/components/';
 const HAND_WRITTEN_ROLE_RE =
-  /role="(menu|menuitem|menubar|listbox|option|radiogroup|radio|tab|tablist|tabpanel|switch|dialog|alertdialog|tooltip)"/g;
+  /(?<=\s)role="(menu|menuitem|menubar|listbox|option|radiogroup|radio|tab|tablist|tabpanel|switch|dialog|alertdialog|tooltip)"/g;
 
 function checkAriaPrimitives(files) {
   for (const file of files) {
