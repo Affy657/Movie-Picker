@@ -2,12 +2,12 @@
   --sheet-drag-progress: 0;
 }
 
-.surface[data-sheet-dragging] {
+.surface[open][data-sheet-dragging] {
   animation: none;
   transition: none;
 }
 
-.surface[data-sheet-settling] {
+.surface[open][data-sheet-settling] {
   animation: none;
 }
 
@@ -15,12 +15,12 @@
   opacity: calc(1 - var(--sheet-drag-progress, 0));
 }
 
-.surface[data-sheet-dragging]::backdrop {
+.surface[open][data-sheet-dragging]::backdrop {
   animation: none;
   transition: none;
 }
 
-.surface[data-sheet-settling]::backdrop {
+.surface[open][data-sheet-settling]::backdrop {
   animation: none;
   transition: opacity var(--duration-sheet) var(--ease-reveal);
 }

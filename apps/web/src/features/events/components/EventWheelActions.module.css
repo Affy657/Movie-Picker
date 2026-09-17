@@ -132,6 +132,11 @@
   .selectionBar {
     flex: 1 1 auto;
   }
+
+  .menuContainer .menuPanel {
+    top: auto;
+    bottom: calc(100% + var(--space-1-5));
+  }
 }
 
 @media (max-width: 29.9375rem) {

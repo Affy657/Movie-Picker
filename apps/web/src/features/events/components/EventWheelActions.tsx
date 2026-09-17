@@ -98,7 +98,7 @@ function MoreActionsMenu({
         <MoreHorizontal size={ICON_SIZE.md} aria-hidden />
       </Button>
       {menu.open ? (
-        <MenuPanel {...menu.panelProps} ariaLabel={label}>
+        <MenuPanel {...menu.panelProps} ariaLabel={label} className={styles.menuPanel}>
           {wheel.showRemoveWinner ? (
             <MenuItem
               icon={<CircleMinus size={ICON_SIZE.sm} aria-hidden />}
