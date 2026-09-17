@@ -49,16 +49,25 @@ function pending(): { waitUntil: ReturnType<typeof vi.fn>; settled: () => Promis
   };
 }
 
+type RegisteredRoute = { matches: RouteMatcher; strategy: unknown };
+
+const installation = {
+  routes: [] as RegisteredRoute[],
+  precacheCalls: 0,
+  cleanupCalls: 0,
+  networkFirstCalls: 0,
+};
+
 function showcaseRouteMatcher(): RouteMatcher {
-  return workbox.registerRoute.mock.calls[0]![0] as RouteMatcher;
+  return installation.routes[0]!.matches;
 }
 
 function tmdbRouteMatcher(): RouteMatcher {
-  return workbox.registerRoute.mock.calls[1]![0] as RouteMatcher;
+  return installation.routes[1]!.matches;
 }
 
 function registeredRouteMatchers(): RouteMatcher[] {
-  return workbox.registerRoute.mock.calls.map((call) => call[0] as RouteMatcher);
+  return installation.routes.map((route) => route.matches);
 }
 
 beforeAll(async () => {
@@ -78,6 +87,13 @@ beforeAll(async () => {
   });
 
   await import('@/sw');
+  installation.routes = workbox.registerRoute.mock.calls.map((call) => ({
+    matches: call[0] as RouteMatcher,
+    strategy: call[1],
+  }));
+  installation.precacheCalls = workbox.precacheAndRoute.mock.calls.length;
+  installation.cleanupCalls = workbox.cleanupOutdatedCaches.mock.calls.length;
+  installation.networkFirstCalls = workbox.NetworkFirst.mock.calls.length;
 });
 
 beforeEach(() => {
@@ -90,8 +106,8 @@ beforeEach(() => {
 
 describe('service worker — mise en cache', () => {
   it('precaches the manifest and purges the stale caches', () => {
-    expect(workbox.precacheAndRoute).toHaveBeenCalledTimes(1);
-    expect(workbox.cleanupOutdatedCaches).toHaveBeenCalledTimes(1);
+    expect(installation.precacheCalls).toBe(1);
+    expect(installation.cleanupCalls).toBe(1);
   });
 
   it('serves the public selections from the cache then refreshes them behind', () => {
@@ -102,7 +118,7 @@ describe('service worker — mise en cache', () => {
     expect(matches({ url: new URL(`${origin()}/api/v1/movies/collections`) })).toBe(true);
     expect(matches({ url: new URL(`${origin()}/api/v1/movies/search?q=heat`) })).toBe(false);
     expect(matches({ url: new URL(`${origin()}/api/v1/events`) })).toBe(false);
-    expect(workbox.registerRoute.mock.calls[0]![1]).toBeInstanceOf(workbox.StaleWhileRevalidate);
+    expect(installation.routes[0]!.strategy).toBeInstanceOf(workbox.StaleWhileRevalidate);
   });
 
   it('never stores an authenticated API response in Cache Storage', () => {
@@ -119,7 +135,7 @@ describe('service worker — mise en cache', () => {
       const url = new URL(`${origin()}${path}`);
       expect(matchers.some((matches) => matches({ url }))).toBe(false);
     }
-    expect(workbox.NetworkFirst).not.toHaveBeenCalled();
+    expect(installation.networkFirstCalls).toBe(0);
   });
 
   it('met en cache les images TMDB', () => {

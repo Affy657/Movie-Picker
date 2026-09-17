@@ -775,39 +775,36 @@ function EventDetailSessionChrome({
 }>) {
   return (
     <>
-      <EventDetailHeader
-        title={event.title}
-        dateFormatted={dateFormatted}
-        rawDate={event.date}
-        rawTime={event.time}
-        isFinished={!!event.isFinished}
-        eventTheme={event.config?.theme}
+      <EventDetailSessionHeader
+        event={event}
         shareUrl={shareUrl}
+        dateFormatted={dateFormatted}
         lifecycle={lifecycle}
         countdownLabel={countdownLabel}
-        participants={event.participants}
         participantCount={participantCount}
         moviesCount={moviesCount}
         votersCount={votersCount}
         participantsOpen={participantsOpen}
         onToggleParticipants={onToggleParticipants}
-        onOpenShare={shareUrl ? () => onOpenShare('link') : undefined}
-        onOpenSettings={canConfigure ? onOpenSettings : undefined}
-        wheelActions={<EventWheelActions wheel={wheel} onRequestReset={onRequestResetWheel} />}
-        onAddMovie={canAddMovie ? onAddMovie : undefined}
-        addMoviePrimary={wheel.primaryAction === 'add'}
+        onOpenShare={onOpenShare}
+        onOpenSettings={onOpenSettings}
+        onAddMovie={onAddMovie}
         addMovieTriggerRef={addMovieTriggerRef}
+        wheel={wheel}
+        onRequestResetWheel={onRequestResetWheel}
+        canConfigure={canConfigure}
+        canAddMovie={canAddMovie}
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
       />
-      {lifecycle === 'pending' ? (
-        <EventPendingBanner
-          isHost={!!event.isHost}
-          onLaunchWheel={wheel.canSpin && !wheel.spinDisabled ? wheel.launch : undefined}
-          onReschedule={canConfigure ? onOpenSettings : undefined}
-          onCloseWithoutMovie={canConfigure ? onRequestCloseWithoutMovie : undefined}
-        />
-      ) : null}
+      <EventPendingBannerGate
+        lifecycle={lifecycle}
+        event={event}
+        wheel={wheel}
+        canConfigure={canConfigure}
+        onOpenSettings={onOpenSettings}
+        onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
+      />
       <EventDetailSessionOverlays
         slug={slug}
         hostToken={hostToken}
@@ -831,6 +828,169 @@ function EventDetailSessionChrome({
         maxParticipants={maxParticipants}
       />
     </>
+  );
+}
+
+function EventDetailSessionHeader({
+  event,
+  shareUrl,
+  dateFormatted,
+  lifecycle,
+  countdownLabel,
+  participantCount,
+  moviesCount,
+  votersCount,
+  participantsOpen,
+  onToggleParticipants,
+  onOpenShare,
+  onOpenSettings,
+  onAddMovie,
+  addMovieTriggerRef,
+  wheel,
+  onRequestResetWheel,
+  canConfigure,
+  canAddMovie,
+  viewMode,
+  onViewModeChange,
+}: Readonly<{
+  event: EventData;
+  shareUrl: string;
+  dateFormatted: string;
+  lifecycle: ReturnType<typeof normalizeMyEventLifecycle>;
+  countdownLabel: string | null;
+  participantCount: number;
+  moviesCount: number;
+  votersCount: number;
+  participantsOpen: boolean;
+  onToggleParticipants: () => void;
+  onOpenShare: (tab?: 'link' | 'friends') => void;
+  onOpenSettings: () => void;
+  onAddMovie: () => void;
+  addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
+  wheel: WheelApi;
+  onRequestResetWheel: () => void;
+  canConfigure: boolean;
+  canAddMovie: boolean;
+  viewMode: 'grid' | 'list';
+  onViewModeChange: (mode: 'grid' | 'list') => void;
+}>) {
+  return (
+    <EventDetailHeader
+      title={event.title}
+      dateFormatted={dateFormatted}
+      rawDate={event.date}
+      rawTime={event.time}
+      isFinished={!!event.isFinished}
+      eventTheme={event.config?.theme}
+      shareUrl={shareUrl}
+      lifecycle={lifecycle}
+      countdownLabel={countdownLabel}
+      participants={event.participants}
+      participantCount={participantCount}
+      moviesCount={moviesCount}
+      votersCount={votersCount}
+      participantsOpen={participantsOpen}
+      onToggleParticipants={onToggleParticipants}
+      onOpenShare={shareUrl ? () => onOpenShare('link') : undefined}
+      onOpenSettings={canConfigure ? onOpenSettings : undefined}
+      wheelActions={<EventWheelActions wheel={wheel} onRequestReset={onRequestResetWheel} />}
+      onAddMovie={canAddMovie ? onAddMovie : undefined}
+      addMoviePrimary={wheel.primaryAction === 'add'}
+      addMovieTriggerRef={addMovieTriggerRef}
+      viewMode={viewMode}
+      onViewModeChange={onViewModeChange}
+    />
+  );
+}
+
+function EventPendingBannerGate({
+  lifecycle,
+  event,
+  wheel,
+  canConfigure,
+  onOpenSettings,
+  onRequestCloseWithoutMovie,
+}: Readonly<{
+  lifecycle: ReturnType<typeof normalizeMyEventLifecycle>;
+  event: EventData;
+  wheel: WheelApi;
+  canConfigure: boolean;
+  onOpenSettings: () => void;
+  onRequestCloseWithoutMovie: () => void;
+}>) {
+  if (lifecycle !== 'pending') return null;
+  return (
+    <EventPendingBanner
+      isHost={!!event.isHost}
+      onLaunchWheel={wheel.canSpin && !wheel.spinDisabled ? wheel.launch : undefined}
+      onReschedule={canConfigure ? onOpenSettings : undefined}
+      onCloseWithoutMovie={canConfigure ? onRequestCloseWithoutMovie : undefined}
+    />
+  );
+}
+
+function EventParticipantsPanel({
+  event,
+  participant,
+  participantsRef,
+  pendingRemovalId,
+  onRemoveParticipant,
+  onInviteFriends,
+  onLeave,
+  canShowLeave,
+  isConnectedSelf,
+  removePending,
+}: Readonly<{
+  event: EventData;
+  participant: ParticipantRef | null;
+  participantsRef: RefObject<HTMLDivElement | null>;
+  pendingRemovalId: string | null;
+  onRemoveParticipant: (participantId: string, pseudo: string) => void;
+  onInviteFriends: () => void;
+  onLeave: () => void;
+  canShowLeave: boolean;
+  isConnectedSelf: boolean;
+  removePending: boolean;
+}>) {
+  const hostCanInvite = !!event.isHost && !event.isFinished;
+  const currentParticipantId = participant?.participantId ?? null;
+  return (
+    <div ref={participantsRef}>
+      <EventParticipantsList
+        participants={event.participants}
+        currentParticipantId={currentParticipantId}
+        maxParticipants={event.config?.maxParticipants ?? null}
+        isHost={!!event.isHost}
+        pendingRemovalId={pendingRemovalId}
+        onRemoveParticipant={event.isFinished ? undefined : onRemoveParticipant}
+        onInvite={hostCanInvite ? onInviteFriends : undefined}
+        onLeave={canShowLeave ? onLeave : undefined}
+        leaveDisabled={
+          isConnectedSelf && removePending && pendingRemovalId === currentParticipantId
+        }
+      />
+    </div>
+  );
+}
+
+function EventWheelModalGate({ wheel }: Readonly<{ wheel: WheelApi }>) {
+  if (!wheel.isModalOpen || wheel.winnerIndex < 0 || !wheel.spinWinner) return null;
+  return (
+    <Suspense fallback={null}>
+      <WheelModal
+        open={wheel.isModalOpen}
+        movies={wheel.spinPool}
+        winnerIndex={wheel.winnerIndex}
+        winner={wheel.spinWinner}
+        wheelKey={wheel.wheelKey}
+        onClose={wheel.dismissModal}
+        onSpinComplete={wheel.revealWinner}
+        onRelaunch={wheel.canRelaunchFromModal ? wheel.launch : undefined}
+        skipSpin={wheel.manualReveal}
+        winnerCount={wheel.winnerCount}
+        remainingDraws={wheel.remainingDraws}
+      />
+    </Suspense>
   );
 }
 
@@ -893,7 +1053,6 @@ function EventDetailSessionBody({
   wheel: WheelApi;
   isFull: boolean;
 }>) {
-  const hostCanInvite = !!event.isHost && !event.isFinished;
   const winners = useMemo(
     () =>
       wheel.winnerIds
@@ -913,21 +1072,18 @@ function EventDetailSessionBody({
   return (
     <>
       {participantsOpen ? (
-        <div ref={participantsRef}>
-          <EventParticipantsList
-            participants={event.participants}
-            currentParticipantId={participant?.participantId ?? null}
-            maxParticipants={event.config?.maxParticipants ?? null}
-            isHost={!!event.isHost}
-            pendingRemovalId={pendingRemovalId}
-            onRemoveParticipant={event.isFinished ? undefined : onRemoveParticipant}
-            onInvite={hostCanInvite ? onInviteFriends : undefined}
-            onLeave={canShowLeave ? onLeave : undefined}
-            leaveDisabled={
-              isConnectedSelf && removePending && pendingRemovalId === participant?.participantId
-            }
-          />
-        </div>
+        <EventParticipantsPanel
+          event={event}
+          participant={participant}
+          participantsRef={participantsRef}
+          pendingRemovalId={pendingRemovalId}
+          onRemoveParticipant={onRemoveParticipant}
+          onInviteFriends={onInviteFriends}
+          onLeave={onLeave}
+          canShowLeave={canShowLeave}
+          isConnectedSelf={isConnectedSelf}
+          removePending={removePending}
+        />
       ) : null}
       {actionSuccess ? (
         <p
@@ -939,23 +1095,7 @@ function EventDetailSessionBody({
           {actionSuccess}
         </p>
       ) : null}
-      {wheel.isModalOpen && wheel.winnerIndex >= 0 && wheel.spinWinner ? (
-        <Suspense fallback={null}>
-          <WheelModal
-            open={wheel.isModalOpen}
-            movies={wheel.spinPool}
-            winnerIndex={wheel.winnerIndex}
-            winner={wheel.spinWinner}
-            wheelKey={wheel.wheelKey}
-            onClose={wheel.dismissModal}
-            onSpinComplete={wheel.revealWinner}
-            onRelaunch={wheel.canRelaunchFromModal ? wheel.launch : undefined}
-            skipSpin={wheel.manualReveal}
-            winnerCount={wheel.winnerCount}
-            remainingDraws={wheel.remainingDraws}
-          />
-        </Suspense>
-      ) : null}
+      <EventWheelModalGate wheel={wheel} />
       {wheel.manualMode || wheel.removalMode ? null : (
         <EventWinnerSummary
           winners={winners}

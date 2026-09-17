@@ -27,10 +27,11 @@ test.describe('Event page layout', () => {
     await page.getByRole('button', { name: /proposer un film/i }).click();
     const search = page.getByRole('combobox', { name: /proposer un film/i });
     await expect(search).toBeVisible({ timeout: 15_000 });
-    await page.waitForTimeout(800);
+    await expect
+      .poll(async () => (await box(search)).y - (await stickyBottom(page)), { timeout: 5_000 })
+      .toBeGreaterThanOrEqual(0);
 
     const searchBox = await box(search);
-    expect(searchBox.y).toBeGreaterThanOrEqual(await stickyBottom(page));
 
     const searchButton = page.getByRole('button', { name: /^rechercher$/i }).first();
     const buttonBox = await box(searchButton);
@@ -53,8 +54,8 @@ test.describe('Event page layout', () => {
     await page.getByRole('button', { name: /choisir moi-même/i }).click();
     const firstPick = page.locator('[data-testid^="manual-pick-"]').first();
     await expect(firstPick).toBeVisible({ timeout: 15_000 });
-    await page.waitForTimeout(800);
-    const pickBox = await box(firstPick);
-    expect(pickBox.y).toBeGreaterThanOrEqual(await stickyBottom(page));
+    await expect
+      .poll(async () => (await box(firstPick)).y - (await stickyBottom(page)), { timeout: 5_000 })
+      .toBeGreaterThanOrEqual(0);
   });
 });
