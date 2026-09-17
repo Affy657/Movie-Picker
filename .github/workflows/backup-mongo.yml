@@ -32,7 +32,16 @@
 #   BACKUP_BUCKET = movie-picker-backups
 #
 # The bucket holds personal data (e-mail addresses, password hashes): public access forbidden,
-# and the archive is never published as a GitHub artifact.
+# and the archive is never published as a GitHub artifact. The run log is public, like every
+# Actions log of this repository: it names the collections, never their document counts.
+#
+# Scheduled at 02:31 UTC, but GitHub starts the scheduled runs of this repository about five
+# hours late, every day (observed 07:36 to 08:03 UTC over a week): the dump is taken around
+# 10:00 Paris, during activity, not at night. Without `--oplog` that is where the consistency
+# limit above bites first. The cron is kept: an earlier one would only shift the delay.
+#
+# Restoring an archive into the production cluster is described in
+# `docs/runbook-mongodb-restore.md`.
 
 name: 💾 MongoDB backup
 
@@ -49,10 +58,12 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  MDB_TOOLS_VERSION: "100.12.0"
-  MDB_TOOLS_SHA256: "012f767812b84947a6378a3fc3be3a4dce19bfae096e1907470d20e5ff613da9"
-  # Pinned by digest: this instance receives a full copy of the production database.
-  MONGO_IMAGE: "mongo@sha256:5211c51171f57ae60842b11664bb244628971b3d35325762a97888337b9bb0db"
+  MDB_TOOLS_VERSION: "100.18.0"
+  MDB_TOOLS_SHA256: "3f23538c421793ecf5b4c44f0cc6ddf4e17ffd492ee616ef58e7b3148afb1d29"
+  # Pinned by digest: this instance receives a full copy of the production database. Same digest
+  # as the MongoDB of the CI test jobs (`ci-cd.yml`), `scripts/check-tool-versions.mjs` keeps
+  # both on the digest `mongo:8` currently resolves to.
+  MONGO_IMAGE: "mongo:8@sha256:5d7043a4ffe02b9ed1b6e0bab057546981af5ca0a79107e9c461e49bc44c0a7b"
 
 jobs:
   backup:
@@ -212,14 +223,12 @@ jobs:
           cat >> "$RUNNER_TEMP/verify.js" <<'JS'
           const target = db.getSiblingDB(EXPECTED_DB);
           const names = target.getCollectionNames();
-          let documents = 0;
+          const empty = names.filter((name) => target.getCollection(name).countDocuments() === 0);
+          print(`${EXPECTED_DB}: ${names.length} collection(s), ${empty.length} empty`);
           for (const name of names) {
-            const n = target.getCollection(name).countDocuments();
-            documents += n;
-            print(`${EXPECTED_DB}.${name}: ${n}`);
+            print(`  ${name}${empty.includes(name) ? " (empty)" : ""}`);
           }
-          print(`TOTAL ${EXPECTED_DB}: ${names.length} collection(s), ${documents} document(s)`);
-          if (names.length === 0 || documents === 0) {
+          if (names.length === 0 || empty.length === names.length) {
             print(`Database ${EXPECTED_DB} is missing or empty in the restored archive.`);
             quit(1);
           }

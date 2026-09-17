@@ -11,6 +11,10 @@
  *
  * No third YAML parsing gate: actionlint returns `could not parse as YAML` on a badly indented
  * file, checked on a test file. It would be redundant.
+ *
+ * The images carry their version tag next to the digest: the digest is what Docker resolves,
+ * the tag is what `scripts/check-tool-versions.mjs` compares with `ACTIONLINT_VERSION` and
+ * `ZIZMOR_VERSION` in `.github/workflows/ci-cd.yml`.
  */
 import { readdirSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -21,9 +25,9 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const workflowsDir = join(root, '.github', 'workflows');
 
 const ACTIONLINT_IMAGE =
-  'rhysd/actionlint@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9';
+  'rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667';
 const ZIZMOR_IMAGE =
-  'ghcr.io/zizmorcore/zizmor@sha256:1ba0035c343f50e85fde29beb0d78e4db448eaa0c762a11a09805d241424ee03';
+  'ghcr.io/zizmorcore/zizmor:1.30.1@sha256:a2eb396d886c053073405c7a980f2139ba2248ec172243cfa3841e57196e8101';
 
 function fail(message) {
   console.error(`\x1b[31m✗\x1b[0m ${message}`);

@@ -24,7 +24,10 @@
 #
 # Security hardening:
 #   - Actions pinned by commit SHA (anti supply-chain); the # vX comment lets Dependabot propose updates.
-#   - Docker images (.NET base + gitleaks) pinned by sha256 digest.
+#   - Docker images (.NET base, gitleaks, MongoDB) pinned by sha256 digest. The tools that no
+#     Dependabot ecosystem follows (gitleaks image, actionlint and zizmor binaries, SonarScanner,
+#     the MongoDB image) are listed by `scripts/check-tool-versions.mjs`, run during the weekly
+#     maintenance pass.
 #   - Least-privilege permissions (deny by default); checkout with persist-credentials: false.
 #   - Secrets passed through env: (never interpolated directly into a run: block).
 #   - Blocking SonarCloud Quality Gate: a red QG fails the job, hence forbids the deployment.
@@ -53,11 +56,15 @@ concurrency:
 
 env:
   NODE_VERSION: "22"
-  DOTNET_VERSION: "10.0.x"
-  ACTIONLINT_VERSION: "1.7.7"
-  ACTIONLINT_SHA256: "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757"
-  ZIZMOR_VERSION: "1.30.0"
-  ZIZMOR_SHA256: "ec8c95cd800845abb9bbc5f377ec7c57d2eb8e2386a00a201d3a74ee4092e5ed"
+  ACTIONLINT_VERSION: "1.7.12"
+  ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+  ZIZMOR_VERSION: "1.30.1"
+  ZIZMOR_SHA256: "e65324f4430c2717591937edcec90ccbefaf14c174f8ec9415e03ca875b46e1a"
+  GITLEAKS_IMAGE: "ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f"
+  SONARSCANNER_VERSION: "11.3.0"
+  # `mongo:8` resolved on 2026-09-17 (8.3.11). A floating tag would let a MongoDB release change
+  # what the transaction and index tests run against without any commit saying so.
+  MONGO_IMAGE: "mongo:8@sha256:5d7043a4ffe02b9ed1b6e0bab057546981af5ca0a79107e9c461e49bc44c0a7b"
 
 jobs:
   # Solo project: no external contribution is accepted, the licence forbids it and
@@ -218,9 +225,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+      - uses: ./.github/actions/setup-web
       - uses: ./.github/actions/setup-dotnet-cache
       - name: Restore API .NET
         run: dotnet restore apps/api-dotnet/MoviePicker.slnx
@@ -233,10 +238,7 @@ jobs:
           SKIP_OPENAPI_BUILD: '1'
         run: node scripts/export-openapi.cjs
       - name: Web types aligned with the OpenAPI contract
-        run: |
-          corepack enable
-          pnpm install --frozen-lockfile
-          node scripts/check-openapi-types.mjs
+        run: node scripts/check-openapi-types.mjs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: openapi-v1
@@ -382,14 +384,14 @@ jobs:
       - name: Start MongoDB as a replica set (transactions)
         run: |
           set -eo pipefail
-          docker run -d --name mongo-it -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
+          docker run -d --name mongo-it -p 27017:27017 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
           for _ in $(seq 1 30); do
             if docker exec mongo-it mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
               break
             fi
             sleep 2
           done
-          docker exec mongo-it mongosh --quiet --eval             'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
+          docker exec mongo-it mongosh --quiet --eval 'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
           for _ in $(seq 1 30); do
             if [ "$(docker exec mongo-it mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
               break
@@ -467,7 +469,7 @@ jobs:
       - name: Start MongoDB as a replica set (transactions)
         run: |
           set -eo pipefail
-          docker run -d --name mongo-e2e -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
+          docker run -d --name mongo-e2e -p 27017:27017 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
           for _ in $(seq 1 30); do
             if docker exec mongo-e2e mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
               break
@@ -528,9 +530,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - uses: ./.github/actions/setup-dotnet-cache
       - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: temurin
@@ -539,12 +539,6 @@ jobs:
         with:
           path: ~/.sonar/cache
           key: sonar-cache-${{ runner.os }}
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('apps/api-dotnet/**/*.csproj', 'apps/api-dotnet/Directory.Build.props') }}
-          restore-keys: |
-            nuget-${{ runner.os }}-
       - name: "Web coverage: download artifact (if test-web ran)"
         if: needs.test-web.result == 'success'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -567,7 +561,7 @@ jobs:
           path: coverage-unit
       - name: Install SonarScanner for .NET
         run: |
-          dotnet tool install --global dotnet-sonarscanner --version 11.2.1
+          dotnet tool install --global dotnet-sonarscanner --version "$SONARSCANNER_VERSION"
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
       # The `dotnet build` must stay between begin and end, that is where the Sonar Roslyn
       # analysers run. The tests only serve the coverage: they are replayed only when the test-api
@@ -621,19 +615,26 @@ jobs:
               --results-directory coverage-unit
           fi
           dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+      # SonarCloud files a pull request analysis under `pullRequest=<number>`, not under its head
+      # branch: queried by branch, the diagnostic answered "No projectStatus" on every red PR.
       - name: "Quality Gate: failing conditions detail"
         if: failure()
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -eo pipefail
           cat > qg-report.mjs <<'NODESCRIPT'
           const token = process.env.SONAR_TOKEN ?? "";
           const branch = process.env.BRANCH_NAME ?? "";
+          const prNumber = process.env.PR_NUMBER ?? "";
+          const scope = prNumber
+            ? "&pullRequest=" + encodeURIComponent(prNumber)
+            : "&branch=" + encodeURIComponent(branch);
           const url =
             "https://sonarcloud.io/api/qualitygates/project_status" +
-            "?projectKey=Affy657_Movie-Picker&branch=" + encodeURIComponent(branch);
+            "?projectKey=Affy657_Movie-Picker" + scope;
 
           const auth = {
             Authorization: "Basic " + Buffer.from(token + ":").toString("base64"),
@@ -674,7 +675,7 @@ jobs:
 
           const treeUrl =
             "https://sonarcloud.io/api/measures/component_tree" +
-            "?component=Affy657_Movie-Picker&branch=" + encodeURIComponent(branch) +
+            "?component=Affy657_Movie-Picker" + scope +
             "&metricKeys=new_duplicated_lines,duplicated_lines,duplicated_lines_density" +
             "&qualifiers=FIL&s=metric&metricSort=duplicated_lines&asc=false&ps=20";
           const treeResponse = await fetch(treeUrl, { headers: auth });

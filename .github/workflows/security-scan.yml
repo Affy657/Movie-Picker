@@ -1,6 +1,8 @@
 # Scheduled security scan: complements Dependabot (monthly updates) by catching the CVEs
 # disclosed between two bumps, on dependencies that are already pinned.
-#   - Weekly (Monday) + manually triggerable.
+#   - Weekly (Monday) + manually triggerable. GitHub starts the scheduled runs of this
+#     repository about five hours late (observed 09:24 to 10:54 UTC for a 04:17 cron): the
+#     delay is the platform's, not a sign that the schedule is broken.
 #   - Fails on High/Critical → notification through the scheduled-run failure e-mail.
 #   - No cloud secret required (audits + filesystem scan only).
 # The same cron carries the Letterboxd canary: the real watchlist client reads the witness

@@ -37,7 +37,7 @@ Récupérer ensuite les issues ouvertes de `master`, **en séparant celles du ne
 
 **6. MongoDB Atlas.** Alertes ouvertes, occupation disque, et surtout le **Performance Advisor** : les index manquants s'accumulent silencieusement à mesure que les requêtes évoluent, et rien d'autre ne les signale.
 
-**7. Socle.** Trois vérifications courtes, invisibles autrement : expiration du certificat, joignabilité des domaines, et dernier statut des workflows planifiés (`security-scan.yml`, `registry-cleanup.yml`). Un job planifié qui échoue ne bloque rien et n'est donc vu par personne.
+**7. Socle.** Quatre vérifications courtes, invisibles autrement : expiration du certificat, joignabilité des domaines, dernier statut des workflows planifiés (`security-scan.yml`, `registry-cleanup.yml`, `backup-mongo.yml`), et les versions des outils épinglés à la main dans les workflows et les scripts (`pnpm run check:tools`). Un job planifié qui échoue ne bloque rien et n'est donc vu par personne ; un outil épinglé à la main n'est suivi par aucun écosystème Dependabot, gitleaks avait six versions de règles de retard le 2026-09-17 sans que rien ne le dise.
 
 **8. Scores Lighthouse.** Télécharger le dernier rapport archivé et lire les scores réels, pas seulement le vert ou le rouge. `accessibility` et `best-practices` sont à 100, donc **sans aucune marge** : lire les scores permet de voir venir la régression avant qu'elle ne bloque `deploy-front`. Le rapport vient du dernier run de `deploy.yml`, pas d'un run master : la porte est passée sur le chemin du déploiement le 2026-09-10. Comme le déploiement est manuel, la mesure peut avoir plusieurs semaines — noter sa date dans le rapport, un score de trois semaines ne dit rien du master d'aujourd'hui.
 
