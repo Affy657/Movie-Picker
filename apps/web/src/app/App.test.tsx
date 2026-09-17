@@ -36,6 +36,7 @@ const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
     emailMasked: 'a***@test.local',
     uiTheme: 'system',
     accentColor: 'default',
+    handle: 'alice',
   })
 );
 
@@ -267,9 +268,18 @@ describe('App (routes)', () => {
         { name: /on regarde ce soir/i, level: 1 },
         { timeout: 20000 }
       );
-      expect(
-        screen.queryAllByRole('navigation', { name: /navigation principale/i }).length
-      ).toBeGreaterThan(0);
+      const navs = screen.getAllByRole('navigation', { name: /navigation principale/i });
+      expect(navs.length).toBeGreaterThan(0);
+      const mobileNav = navs.at(-1);
+      if (!mobileNav) throw new Error('Mobile nav introuvable');
+      const labels = within(mobileNav)
+        .getAllByRole('link')
+        .map((link) => link.textContent?.trim());
+      expect(labels).toEqual(['Explorer', 'Mes soirées', 'Créer', 'Ma liste', 'Se connecter']);
+      expect(within(mobileNav).getByRole('link', { name: /^Se connecter$/i })).toHaveAttribute(
+        'href',
+        '/login'
+      );
     });
 
     it('AppShell : les boutons de connexion et inscription remplacent la cloche et le menu du compte', async () => {
@@ -368,6 +378,14 @@ describe('App (routes)', () => {
       expect(
         within(mobileNav).queryByRole('link', { name: /^Paramètres$/i })
       ).not.toBeInTheDocument();
+      const labels = within(mobileNav)
+        .getAllByRole('link')
+        .map((link) => link.textContent?.trim());
+      expect(labels).toEqual(['Explorer', 'Mes soirées', 'Créer', 'Ma liste', 'Profil']);
+      expect(within(mobileNav).getByRole('link', { name: /^Profil$/i })).toHaveAttribute(
+        'href',
+        '/u/alice'
+      );
     });
 
     it(`AppShell exposes the "What's new" link in the footer for signed-in users`, async () => {

@@ -35,6 +35,8 @@ export const en: Locale = {
     account: 'Settings',
     createEvent: 'New event',
     createEventShort: 'Create',
+    profile: 'Profile',
+    signIn: 'Sign in',
     navLabel: 'Main navigation',
     accountMenu: 'Account menu',
     brandLabel: 'Movie Picker, home',

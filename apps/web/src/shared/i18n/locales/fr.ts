@@ -33,6 +33,8 @@ export const fr = {
     account: 'Paramètres',
     createEvent: 'Nouvelle soirée',
     createEventShort: 'Créer',
+    profile: 'Profil',
+    signIn: 'Se connecter',
     navLabel: 'Navigation principale',
     accountMenu: 'Menu du compte',
     brandLabel: 'Movie Picker, accueil',

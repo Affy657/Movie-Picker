@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { useState, type ComponentType, type SVGProps } from 'react';
-import { Bookmark, CalendarDays, Compass, HelpCircle, Plus } from 'lucide-react';
+import { Bookmark, CalendarDays, Compass, HelpCircle, LogIn, Plus, UserRound } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -187,7 +187,15 @@ export default function AppShell() {
     toNavItem(spec, t(spec.mobileLabelKey ?? spec.labelKey))
   );
 
-  const mobileItems: NavItemDef[] = isAuthenticated ? [exploreItem, ...compactItems] : compactItems;
+  const accountItem: NavItemDef = user
+    ? {
+        to: user.handle ? ROUTES.profile(user.handle) : ROUTES.account,
+        label: t('nav.profile'),
+        Icon: UserRound,
+      }
+    : { to: withReturnTo(ROUTES.login, returnTo), label: t('nav.signIn'), Icon: LogIn };
+
+  const mobileItems: NavItemDef[] = [exploreItem, ...compactItems, accountItem];
 
   const desktopItems: (NavItemDef & { wideOnly?: boolean })[] = isAuthenticated
     ? [exploreItem, ...items]
