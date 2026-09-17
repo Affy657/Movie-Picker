@@ -7,7 +7,7 @@ import { http, HttpResponse } from 'msw';
 import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
-import { TEST_API_V1 } from '@/mocks/handlers';
+import { createWatchlistHandlers, TEST_API_V1 } from '@/mocks/handlers';
 
 function renderPage() {
   return render(
@@ -56,8 +56,8 @@ const TOOLBAR_STORAGE_KEY = 'moviepicker_watchlist_toolbar_u1';
 const KEBAB_A = /plus d.actions.*ancien mais bien noté/i;
 const POSTER_A = /voir les détails de « ancien mais bien noté »/i;
 
-function watchlistHandler(items: unknown[]) {
-  return http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items }));
+function watchlistHandler(items: unknown[], availability: unknown[] = []) {
+  return createWatchlistHandlers(items, availability);
 }
 
 const detailsHandler = http.get(`${TEST_API_V1}/movies/tmdb/200/details`, () =>
@@ -163,7 +163,7 @@ describe('WatchlistPage (MSW)', () => {
   afterAll(() => server.close());
 
   it('affiche un empty state quand la watchlist est vide', async () => {
-    server.use(authedUserHandler, watchlistHandler([]));
+    server.use(authedUserHandler, ...watchlistHandler([]));
 
     renderPage();
 
@@ -171,7 +171,7 @@ describe('WatchlistPage (MSW)', () => {
   });
 
   it('filters the list by minimum rating then resets', async () => {
-    server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
 
     renderPage();
 
@@ -199,7 +199,7 @@ describe('WatchlistPage (MSW)', () => {
   });
 
   it('recherche un titre dans la liste et efface tout depuis le compteur', async () => {
-    server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
 
     renderPage();
 
@@ -227,7 +227,7 @@ describe('WatchlistPage (MSW)', () => {
   });
 
   it('shows no result when the search matches nothing, with a reset button', async () => {
-    server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
 
     renderPage();
 
@@ -246,7 +246,7 @@ describe('WatchlistPage (MSW)', () => {
   });
 
   it('sorts by addition (default), rating and runtime, and reverses the direction on the second click', async () => {
-    server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
 
     renderPage();
 
@@ -289,7 +289,7 @@ describe('WatchlistPage (MSW)', () => {
     let addedBody: Record<string, unknown> | null = null;
     server.use(
       authedUserHandler,
-      watchlistHandler([]),
+      ...watchlistHandler([]),
       http.get(`${TEST_API_V1}/movies/search`, () =>
         HttpResponse.json({
           items: [
@@ -345,7 +345,7 @@ describe('WatchlistPage (MSW)', () => {
     let removeCalled = false;
     server.use(
       authedUserHandler,
-      watchlistHandler([ITEM_A]),
+      ...watchlistHandler([ITEM_A]),
       removeHandler(() => {
         removeCalled = true;
       })
@@ -363,7 +363,7 @@ describe('WatchlistPage (MSW)', () => {
 
   it('hover: the kebab lists details, the watchlist toggle, the proposal and Letterboxd in order', async () => {
     stubHoverCapability();
-    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
 
     renderPage();
     const user = userEvent.setup();
@@ -385,7 +385,7 @@ describe('WatchlistPage (MSW)', () => {
   });
 
   it('shows the details of a movie from the poster', async () => {
-    server.use(authedUserHandler, watchlistHandler([ITEM_A]), detailsHandler);
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]), detailsHandler);
 
     renderPage();
     const user = userEvent.setup();
@@ -401,7 +401,7 @@ describe('WatchlistPage (MSW)', () => {
   });
 
   it('touch: mounts no kebab, the poster trigger opens the details', async () => {
-    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
 
     renderPage();
 
@@ -414,7 +414,7 @@ describe('WatchlistPage (MSW)', () => {
     let proposedBody: Record<string, unknown> | null = null;
     server.use(
       authedUserHandler,
-      watchlistHandler([ITEM_A]),
+      ...watchlistHandler([ITEM_A]),
       detailsHandler,
       ...proposeHandlers((body) => {
         proposedBody = body;
@@ -446,7 +446,7 @@ describe('WatchlistPage (MSW)', () => {
     let removeCalled = false;
     server.use(
       authedUserHandler,
-      watchlistHandler([ITEM_A]),
+      ...watchlistHandler([ITEM_A]),
       detailsHandler,
       removeHandler(() => {
         removeCalled = true;
@@ -470,7 +470,7 @@ describe('WatchlistPage (MSW)', () => {
     let proposedBody: Record<string, unknown> | null = null;
     server.use(
       authedUserHandler,
-      watchlistHandler([ITEM_A]),
+      ...watchlistHandler([ITEM_A]),
       ...proposeHandlers((body) => {
         proposedBody = body;
       })
@@ -497,7 +497,7 @@ describe('WatchlistPage (MSW)', () => {
     stubHoverCapability();
     server.use(
       authedUserHandler,
-      watchlistHandler([ITEM_A]),
+      ...watchlistHandler([ITEM_A]),
       detailsHandler,
       ...proposeHandlers(() => {})
     );
@@ -529,7 +529,7 @@ describe('WatchlistPage (MSW)', () => {
   it('hover, list view: the kebab keeps every action', async () => {
     localStorage.setItem('watchlist-view', 'list');
     stubHoverCapability();
-    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
 
     renderPage();
     const user = userEvent.setup();
@@ -546,7 +546,7 @@ describe('WatchlistPage (MSW)', () => {
   it('list view: a sortable column header replaces the toolbar sort and orders the rows', async () => {
     localStorage.removeItem(TOOLBAR_STORAGE_KEY);
     localStorage.setItem('watchlist-view', 'list');
-    server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
 
     renderPage();
     const user = userEvent.setup();
@@ -573,11 +573,76 @@ describe('WatchlistPage (MSW)', () => {
     expect(screen.getAllByRole('button', { name: 'Sortie' })).toHaveLength(1);
   });
 
+  it('list view: the availability arrives after the rows, fills the Dispo column and the missing runtime', async () => {
+    localStorage.removeItem(TOOLBAR_STORAGE_KEY);
+    localStorage.setItem('watchlist-view', 'list');
+    let releaseAvailability: () => void = () => undefined;
+    const availabilityGate = new Promise<void>((resolve) => {
+      releaseAvailability = resolve;
+    });
+    server.use(
+      authedUserHandler,
+      http.get(`${TEST_API_V1}/watchlist`, () =>
+        HttpResponse.json({ items: [ITEM_A, { ...ITEM_B, runtimeMinutes: null }] })
+      ),
+      http.get(`${TEST_API_V1}/watchlist/availability`, async () => {
+        await availabilityGate;
+        return HttpResponse.json({
+          items: [
+            {
+              tmdbId: 200,
+              mediaType: 'movie',
+              watchProviders: [
+                { providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' },
+                { providerId: 2, name: 'Apple TV', logoPath: null, type: 'rent' },
+                { providerId: 3, name: 'Google Play', logoPath: null, type: 'buy' },
+              ],
+              tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/200/watch?locale=FR',
+              voteAverage: 9.0,
+              runtimeMinutes: 90,
+            },
+            {
+              tmdbId: 201,
+              mediaType: 'movie',
+              watchProviders: [],
+              tmdbWatchPageUrl: null,
+              voteAverage: 3.0,
+              runtimeMinutes: 125,
+            },
+          ],
+        });
+      })
+    );
+
+    renderPage();
+    const user = userEvent.setup();
+
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
+    expect(within(list).queryByText('2h05')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Dispo' })).toBeInTheDocument();
+
+    releaseAvailability();
+
+    expect(await within(list).findByText('Pas en streaming')).toBeInTheDocument();
+    expect(within(list).getByRole('link', { name: /netflix/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('themoviedb.org/movie/200/watch')
+    );
+    expect(within(list).getByText('2h05')).toBeInTheDocument();
+
+    await user.click(within(list).getByRole('button', { name: /2 autres offres/i }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByRole('tab', { name: /où regarder/i })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+  });
+
   it('list view on mobile: no column header, the toolbar keeps its sort menu', async () => {
     localStorage.removeItem(TOOLBAR_STORAGE_KEY);
     localStorage.setItem('watchlist-view', 'list');
     stubMatchMedia(true);
-    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
 
     renderPage();
 
@@ -588,7 +653,7 @@ describe('WatchlistPage (MSW)', () => {
   });
 
   it('offers the Letterboxd import when no username is configured, and opens the connection modal', async () => {
-    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
 
     renderPage();
 
@@ -614,7 +679,7 @@ describe('WatchlistPage (MSW)', () => {
           letterboxdUsername: 'alice_lb',
         })
       ),
-      watchlistHandler([ITEM_A])
+      ...watchlistHandler([ITEM_A])
     );
 
     renderPage();
@@ -627,7 +692,7 @@ describe('WatchlistPage (MSW)', () => {
 
   it('on mobile, shows Import next to Add with a short label', async () => {
     stubMatchMedia(true);
-    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
 
     renderPage();
 

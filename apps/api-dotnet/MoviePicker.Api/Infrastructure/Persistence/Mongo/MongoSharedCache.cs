@@ -40,6 +40,36 @@ public sealed class MongoSharedCache : ISharedCache
         }
     }
 
+    public async Task<IReadOnlyDictionary<string, SharedCacheEntry<T>>> TryGetManyAsync<T>(
+        IReadOnlyCollection<string> keys,
+        CancellationToken ct = default)
+    {
+        var found = new Dictionary<string, SharedCacheEntry<T>>();
+        if (keys.Count == 0)
+            return found;
+        try
+        {
+            var documents = await _collection
+                .Find(Builders<SharedCacheDocument>.Filter.In(entry => entry.Id, keys))
+                .ToListAsync(ct)
+                .ConfigureAwait(false);
+            var now = DateTime.UtcNow;
+            foreach (var document in documents)
+            {
+                if (document.ExpiresAt <= now)
+                    continue;
+                var value = JsonSerializer.Deserialize<T>(document.Payload);
+                if (value is not null)
+                    found[document.Id] = new SharedCacheEntry<T>(value, new DateTimeOffset(document.ExpiresAt, TimeSpan.Zero));
+            }
+        }
+        catch (Exception ex) when (ex is MongoException or TimeoutException or JsonException)
+        {
+            _logger.LogWarning(ex, "Shared cache unreadable for {Count} keys", keys.Count);
+        }
+        return found;
+    }
+
     public async Task SetAsync<T>(string key, T value, TimeSpan ttl, CancellationToken ct = default)
     {
         var document = new SharedCacheDocument

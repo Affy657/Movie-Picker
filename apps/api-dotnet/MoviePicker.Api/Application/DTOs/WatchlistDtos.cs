@@ -63,3 +63,18 @@ public sealed class WatchlistResponse
 
     public bool HasMore { get; init; }
 }
+
+public sealed class WatchlistAvailabilityItemResponse
+{
+    public int TmdbId { get; init; }
+    public MovieMediaType MediaType { get; init; }
+    public IReadOnlyList<WatchProviderOfferResponse> WatchProviders { get; init; } = [];
+    public string? TmdbWatchPageUrl { get; init; }
+    public double? VoteAverage { get; init; }
+    public int? RuntimeMinutes { get; init; }
+}
+
+public sealed class WatchlistAvailabilityResponse
+{
+    public IReadOnlyList<WatchlistAvailabilityItemResponse> Items { get; init; } = [];
+}

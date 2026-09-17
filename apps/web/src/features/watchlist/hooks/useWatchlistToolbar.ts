@@ -9,10 +9,16 @@ import {
 } from '@/features/movies/components/movieSearchFilterOptions';
 import { safeLocalStorageGet, safeLocalStorageSet } from '@/shared/utils/safeStorage';
 import type { RatingScale } from '@/shared/types/theme';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
 import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
 
-export type WatchlistSortKey = 'createdAt' | 'title' | 'voteAverage' | 'duration' | 'year';
+export interface WatchlistEntry extends WatchlistItem {
+  watchProviders?: WatchProviderOffer[];
+  tmdbWatchPageUrl?: string | null;
+}
+
+export type WatchlistSortKey =
+  'createdAt' | 'title' | 'voteAverage' | 'duration' | 'year' | 'availability';
 export type SortDirection = 'asc' | 'desc';
 
 const SORT_KEYS = new Set<WatchlistSortKey>([
@@ -21,6 +27,7 @@ const SORT_KEYS = new Set<WatchlistSortKey>([
   'voteAverage',
   'duration',
   'year',
+  'availability',
 ]);
 
 const DEFAULT_DIRECTION: Record<WatchlistSortKey, SortDirection> = {
@@ -29,6 +36,7 @@ const DEFAULT_DIRECTION: Record<WatchlistSortKey, SortDirection> = {
   voteAverage: 'desc',
   duration: 'asc',
   year: 'desc',
+  availability: 'desc',
 };
 
 interface PersistedState {
@@ -92,7 +100,7 @@ function writePersisted(userId: string, state: PersistedState) {
   safeLocalStorageSet(storageKey(userId), JSON.stringify(state));
 }
 
-function compareItems(a: WatchlistItem, b: WatchlistItem, sortBy: WatchlistSortKey): number {
+function compareItems(a: WatchlistEntry, b: WatchlistEntry, sortBy: WatchlistSortKey): number {
   switch (sortBy) {
     case 'title':
       return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
@@ -108,6 +116,8 @@ function compareItems(a: WatchlistItem, b: WatchlistItem, sortBy: WatchlistSortK
     }
     case 'year':
       return a.year.localeCompare(b.year);
+    case 'availability':
+      return (a.watchProviders?.length ?? 0) - (b.watchProviders?.length ?? 0);
     case 'createdAt':
     default:
       return a.createdAt.localeCompare(b.createdAt);
@@ -153,7 +163,7 @@ export interface ActiveToolbarChip {
 }
 
 interface UseWatchlistToolbarOptions {
-  items: WatchlistItem[];
+  items: WatchlistEntry[];
   userId: string | undefined;
   tmdbLanguage: string;
   ratingScale?: RatingScale;

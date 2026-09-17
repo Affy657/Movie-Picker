@@ -71,6 +71,11 @@ public interface ITmdbMovieSearch
 
     Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CancellationToken ct = default);
 
+    Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> GetEnrichmentsAsync(
+        IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)> keys,
+        string region,
+        CancellationToken ct = default);
+
     Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default);
 
     Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default);

@@ -9,7 +9,11 @@ import type {
   UserStats,
   PublicProfile,
 } from '@/features/profile/api/profileApi';
-import type { WatchlistResponse } from '@/features/watchlist/api/watchlistApi';
+import type {
+  WatchlistAvailabilityItem,
+  WatchlistAvailabilityResponse,
+  WatchlistResponse,
+} from '@/features/watchlist/api/watchlistApi';
 import type { NotificationInbox } from '@/features/notifications/api/notificationsApi';
 import type { MovieSearchListResponse } from '@/features/movies/api/moviesApi';
 import type { UserProfile } from '@/features/auth/types';
@@ -39,11 +43,13 @@ const frontTypesMatchTheOpenApiContract: [
   ServedBy<PublicProfile, ApiSchemas['PublicProfileResponse']>,
   ServedBy<UserProfile, ApiSchemas['UserProfileResponse']>,
   ServedBy<WatchlistResponse, ApiSchemas['WatchlistResponse']>,
+  ServedBy<WatchlistAvailabilityResponse, ApiSchemas['WatchlistAvailabilityResponse']>,
+  ServedBy<WatchlistAvailabilityItem, ApiSchemas['WatchlistAvailabilityItemResponse']>,
   ServedBy<NotificationInbox, ApiSchemas['NotificationInboxResponse']>,
   ServedBy<MovieSearchListResponse, ApiSchemas['MovieSearchListResponse']>,
   ServedBy<EventConfigData, ApiSchemas['EventConfigResponse']>,
   ServedBy<WatchProviderOffer, ApiSchemas['WatchProviderOfferResponse']>,
-] = [true, true, true, true, true, true, true, true, true, true, true, true, true];
+] = [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
 
 const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/auth/register',
@@ -98,6 +104,7 @@ const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/users/{handle}/stats',
   '/api/v1/users/{handle}/watched-movies',
   '/api/v1/watchlist',
+  '/api/v1/watchlist/availability',
   '/api/v1/watchlist/{tmdbId}',
 ];
 

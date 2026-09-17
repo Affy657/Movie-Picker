@@ -6063,6 +6063,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/watchlist/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["WatchlistAvailabilityResponse"];
+                        "application/json": components["schemas"]["WatchlistAvailabilityResponse"];
+                        "text/json": components["schemas"]["WatchlistAvailabilityResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/watchlist/{tmdbId}": {
         parameters: {
             query?: never;
@@ -6983,6 +7049,20 @@ export interface components {
             name?: string | null;
             logoPath?: string | null;
             type?: string | null;
+        };
+        WatchlistAvailabilityItemResponse: {
+            /** Format: int32 */
+            tmdbId?: number;
+            mediaType?: components["schemas"]["MovieMediaType"];
+            watchProviders?: components["schemas"]["WatchProviderOfferResponse"][] | null;
+            tmdbWatchPageUrl?: string | null;
+            /** Format: double */
+            voteAverage?: number | null;
+            /** Format: int32 */
+            runtimeMinutes?: number | null;
+        };
+        WatchlistAvailabilityResponse: {
+            items?: components["schemas"]["WatchlistAvailabilityItemResponse"][] | null;
         };
         WatchlistItemResponse: {
             /** Format: int32 */

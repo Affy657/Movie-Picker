@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import {
   addToWatchlist,
   fetchWatchlist,
+  fetchWatchlistAvailability,
   removeFromWatchlist,
   type AddWatchlistItemBody,
 } from '@/features/watchlist/api/watchlistApi';
@@ -13,6 +14,7 @@ export function invalidateWatchlist(queryClient: QueryClient): Promise<void> {
   const ownHandle = queryClient.getQueryData<UserProfile | null>(queryKeys.auth.me)?.handle;
   return Promise.all([
     queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.availability }),
     ownHandle
       ? queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(ownHandle) })
       : Promise.resolve(),
@@ -24,6 +26,15 @@ export function useWatchlist(options?: { enabled?: boolean }) {
     queryKey: queryKeys.watchlist.list,
     queryFn: ({ signal }) => fetchWatchlist(signal),
     enabled: options?.enabled ?? true,
+  });
+}
+
+export function useWatchlistAvailability(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.watchlist.availability,
+    queryFn: ({ signal }) => fetchWatchlistAvailability(signal),
+    enabled: options?.enabled ?? true,
+    staleTime: 60 * 60 * 1000,
   });
 }
 

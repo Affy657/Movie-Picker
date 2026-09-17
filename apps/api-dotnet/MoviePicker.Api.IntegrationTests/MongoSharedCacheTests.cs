@@ -49,6 +49,23 @@ public sealed class MongoSharedCacheTests : IClassFixture<MoviePickerApplication
     }
 
     [MongoFact]
+    public async Task TryGetManyAsync_ReadsTheLiveKeysInOneQuery_AndSkipsExpiredAndUnknownOnes()
+    {
+        var live = "snapshot:" + Guid.NewGuid().ToString("N");
+        var stale = "snapshot:" + Guid.NewGuid().ToString("N");
+        var missing = "snapshot:" + Guid.NewGuid().ToString("N");
+        await Cache().SetAsync(live, new Snapshot("Heat", 170), TimeSpan.FromMinutes(5));
+        await Cache().SetAsync(stale, new Snapshot("Old", 90), TimeSpan.FromSeconds(-1));
+
+        var found = await Cache().TryGetManyAsync<Snapshot>([live, stale, missing]);
+
+        var entry = Assert.Single(found);
+        Assert.Equal(live, entry.Key);
+        Assert.Equal(new Snapshot("Heat", 170), entry.Value.Value);
+        Assert.InRange(entry.Value.ExpiresAt, DateTimeOffset.UtcNow.AddMinutes(4), DateTimeOffset.UtcNow.AddMinutes(6));
+    }
+
+    [MongoFact]
     public async Task SetAsync_Twice_ReplacesTheEntry()
     {
         var key = "snapshot:" + Guid.NewGuid().ToString("N");

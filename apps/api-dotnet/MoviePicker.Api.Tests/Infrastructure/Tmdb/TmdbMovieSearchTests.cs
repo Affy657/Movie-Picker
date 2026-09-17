@@ -482,4 +482,102 @@ public sealed class TmdbMovieSearchTests
 
         Assert.Null(a);
     }
+
+    private static Mock<HttpMessageHandler> EnrichmentHandler(Func<HttpRequestMessage, string> body)
+    {
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>((req, _) => Task.FromResult(
+                new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body(req)) }));
+        return mockHandler;
+    }
+
+    private static string RuntimeBodyFromPath(HttpRequestMessage req)
+    {
+        var path = req.RequestUri?.AbsolutePath ?? "";
+        if (path.Contains("/watch/providers", StringComparison.Ordinal))
+            return """{"results": {}}""";
+        var id = path.Split('/', StringSplitOptions.RemoveEmptyEntries)[^1];
+        return path.Contains("/tv/", StringComparison.Ordinal)
+            ? $$"""{"vote_average": 7.0, "episode_run_time": [{{id}}] }"""
+            : $$"""{"vote_average": 7.0, "runtime": {{id}} }""";
+    }
+
+    [Fact]
+    public async Task GetEnrichmentsAsync_NoApiKey_ReturnsAnEmptyMap()
+    {
+        var mockHandler = new Mock<HttpMessageHandler>();
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = null }));
+
+        var result = await sut.GetEnrichmentsAsync([(550, MovieMediaType.Movie)], "FR");
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetEnrichmentsAsync_ServesEachKeyFromTheCheapestLayer_AndFetchesTheRest()
+    {
+        var shared = new InMemorySharedCache();
+        await shared.SetAsync("tmdb-enrich-v2:movie:FR:2", new TmdbMovieEnrichment(6.0, [], null, 92), TimeSpan.FromHours(1));
+        var memory = new MemoryCache(new MemoryCacheOptions());
+        memory.Set("tmdb-enrich-v2:movie:FR:1", new TmdbMovieEnrichment(5.0, [], null, 91));
+        var mockHandler = EnrichmentHandler(RuntimeBodyFromPath);
+        var sut = new TmdbMovieSearch(
+            CreateHttpClient(mockHandler.Object),
+            Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbEnrichmentCacheHours = 1 }),
+            memory,
+            shared,
+            NullLogger<TmdbMovieSearch>.Instance);
+
+        var result = await sut.GetEnrichmentsAsync(
+            [(1, MovieMediaType.Movie), (2, MovieMediaType.Movie), (3, MovieMediaType.Movie), (3, MovieMediaType.Movie), (4, MovieMediaType.Tv)],
+            "fr");
+
+        Assert.Equal(4, result.Count);
+        Assert.Equal(91, result[(1, MovieMediaType.Movie)]?.RuntimeMinutes);
+        Assert.Equal(92, result[(2, MovieMediaType.Movie)]?.RuntimeMinutes);
+        Assert.Equal(3, result[(3, MovieMediaType.Movie)]?.RuntimeMinutes);
+        Assert.Equal(4, result[(4, MovieMediaType.Tv)]?.RuntimeMinutes);
+        mockHandler.Protected().Verify(
+            "SendAsync",
+            Times.Exactly(4),
+            ItExpr.IsAny<HttpRequestMessage>(),
+            ItExpr.IsAny<CancellationToken>());
+        Assert.Equal(92, memory.Get<TmdbMovieEnrichment>("tmdb-enrich-v2:movie:FR:2")?.RuntimeMinutes);
+        Assert.Equal(3, (await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v2:movie:FR:3"))?.Value.RuntimeMinutes);
+        Assert.Equal(4, (await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v2:tv:FR:4"))?.Value.RuntimeMinutes);
+    }
+
+    [Fact]
+    public async Task GetEnrichmentsAsync_TmdbFailure_YieldsNullForThatKeyOnly_AndRemembersIt()
+    {
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>((req, _) =>
+            {
+                var path = req.RequestUri?.AbsolutePath ?? "";
+                if (path.Contains("/movie/2", StringComparison.Ordinal))
+                    throw new HttpRequestException("tmdb down");
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(RuntimeBodyFromPath(req))
+                });
+            });
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+
+        var result = await sut.GetEnrichmentsAsync([(1, MovieMediaType.Movie), (2, MovieMediaType.Movie)], "FR");
+        var again = await sut.GetEnrichmentsAsync([(2, MovieMediaType.Movie)], "FR");
+
+        Assert.Equal(1, result[(1, MovieMediaType.Movie)]?.RuntimeMinutes);
+        Assert.True(result.ContainsKey((2, MovieMediaType.Movie)));
+        Assert.Null(result[(2, MovieMediaType.Movie)]);
+        Assert.Null(again[(2, MovieMediaType.Movie)]);
+        mockHandler.Protected().Verify(
+            "SendAsync",
+            Times.Exactly(4),
+            ItExpr.IsAny<HttpRequestMessage>(),
+            ItExpr.IsAny<CancellationToken>());
+    }
 }

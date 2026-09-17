@@ -21,6 +21,7 @@ export interface MovieListRowSorts<K extends string> {
   vote?: MovieTableSort<K>;
   runtime?: MovieTableSort<K>;
   year?: MovieTableSort<K>;
+  availability?: MovieTableSort<K>;
 }
 
 export function MovieListRowHeader<K extends string>({
@@ -41,6 +42,7 @@ export function MovieListRowHeader<K extends string>({
     { sorts: single(sorts.vote), align: 'end' },
     { sorts: single(sorts.runtime), align: 'end' },
     { sorts: single(sorts.year), align: 'end' },
+    { sorts: single(sorts.availability), inset: true },
     {},
   ];
   return (
@@ -63,6 +65,7 @@ interface MovieListRowProps {
   runtimeMinutes?: number | null;
   genres?: string[];
   badge?: ReactNode;
+  dispo?: ReactNode;
   eager?: boolean;
   isMobile?: boolean;
   onOpenDetails: () => void;
@@ -78,6 +81,7 @@ export default function MovieListRow({
   runtimeMinutes,
   genres = [],
   badge,
+  dispo,
   eager = false,
   isMobile = false,
   onOpenDetails,
@@ -123,6 +127,7 @@ export default function MovieListRow({
             {year ? <span>{year}</span> : null}
             {runtimeLabel ? <span>{runtimeLabel}</span> : null}
             {voteLabel ? <span>{voteLabel}</span> : null}
+            {dispo ? <span className={styles.aboveTrigger}>{dispo}</span> : null}
           </div>
           {meta ? <div className={clsx(table.metaRow, styles.mobileMeta)}>{meta}</div> : null}
         </div>
@@ -146,7 +151,8 @@ export default function MovieListRow({
       <span className={table.cellEnd}>{voteLabel}</span>
       <span className={table.cellEnd}>{runtimeLabel}</span>
       <span className={table.cellEnd}>{year}</span>
-      <div className={clsx(table.kebabCol, styles.kebabSlot)}>{kebab}</div>
+      <div className={clsx(table.dispoCol, styles.aboveTrigger)}>{dispo}</div>
+      <div className={clsx(table.kebabCol, styles.aboveTrigger)}>{kebab}</div>
     </li>
   );
 }

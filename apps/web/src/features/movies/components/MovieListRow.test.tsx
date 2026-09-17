@@ -26,7 +26,7 @@ function renderRow(props: Partial<RowProps> = {}) {
   );
 }
 
-type SortKey = 'createdAt' | 'title' | 'voteAverage' | 'duration' | 'year';
+type SortKey = 'createdAt' | 'title' | 'voteAverage' | 'duration' | 'year' | 'availability';
 
 function renderHeader(props: Partial<ComponentProps<typeof MovieListRowHeader<SortKey>>> = {}) {
   const onSetSort = vi.fn();
@@ -41,6 +41,7 @@ function renderHeader(props: Partial<ComponentProps<typeof MovieListRowHeader<So
           vote: { key: 'voteAverage', label: 'Note' },
           runtime: { key: 'duration', label: 'Durée' },
           year: { key: 'year', label: 'Sortie' },
+          availability: { key: 'availability', label: 'Dispo' },
         }}
         sortBy="createdAt"
         sortDir="desc"
@@ -98,6 +99,17 @@ describe('MovieListRow', () => {
     expect(screen.getByText('8.1/10')).toBeInTheDocument();
   });
 
+  it('renders the dispo slot on desktop and among the mobile facts', () => {
+    const desktop = renderRow({ dispo: <span>Netflix</span> });
+    expect(desktop.getByText('Netflix')).toBeInTheDocument();
+    desktop.unmount();
+
+    renderRow({ isMobile: true, dispo: <span>Netflix</span> });
+    expect(
+      screen.getByText('Netflix').closest('span')?.parentElement?.parentElement
+    ).toContainElement(screen.getByText('2021'));
+  });
+
   it('forwards the eager hint to the poster', () => {
     const { container } = renderRow({ eager: true });
     const img = container.querySelector('img');
@@ -117,6 +129,7 @@ describe('MovieListRowHeader', () => {
       'Note',
       'Durée',
       'Sortie',
+      'Dispo',
     ]);
     expect(screen.getByRole('button', { name: 'Ajout' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Titre' })).toHaveAttribute('aria-pressed', 'false');

@@ -23,14 +23,24 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
         return Task.FromResult(list);
     }
 
-    public Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CancellationToken ct = default)
+    private static TmdbMovieEnrichment StubEnrichment()
     {
         var offers = new[]
         {
             new TmdbWatchProviderOffer(8, "Netflix Stub", null, "flatrate"),
         };
-        return Task.FromResult<TmdbMovieEnrichment?>(new TmdbMovieEnrichment(8.0, offers, null, 120));
+        return new TmdbMovieEnrichment(8.0, offers, null, 120);
     }
+
+    public Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CancellationToken ct = default)
+        => Task.FromResult<TmdbMovieEnrichment?>(StubEnrichment());
+
+    public Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> GetEnrichmentsAsync(
+        IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)> keys,
+        string region,
+        CancellationToken ct = default)
+        => Task.FromResult<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>>(
+            keys.Distinct().ToDictionary(key => key, _ => (TmdbMovieEnrichment?)StubEnrichment()));
 
     private static readonly string[] Cast = new[] { "Actrice Stub", "Acteur Stub" };
     private static readonly string[] Genres = new[] { "Science-fiction", "Drame" };

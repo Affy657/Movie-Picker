@@ -1,5 +1,5 @@
 import { fetchApi } from '@/shared/api/client';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
 
 export interface WatchlistItem {
   tmdbId: number;
@@ -17,6 +17,19 @@ export interface WatchlistResponse {
   items: WatchlistItem[];
 }
 
+export interface WatchlistAvailabilityItem {
+  tmdbId: number;
+  mediaType: MovieMediaType;
+  watchProviders: WatchProviderOffer[];
+  tmdbWatchPageUrl: string | null;
+  voteAverage?: number | null;
+  runtimeMinutes?: number | null;
+}
+
+export interface WatchlistAvailabilityResponse {
+  items: WatchlistAvailabilityItem[];
+}
+
 export interface AddWatchlistItemBody {
   tmdbId: number;
   mediaType?: MovieMediaType;
@@ -29,6 +42,16 @@ export interface AddWatchlistItemBody {
 
 export async function fetchWatchlist(signal?: AbortSignal): Promise<WatchlistItem[]> {
   const res = await fetchApi<WatchlistResponse>('/watchlist', signal ? { signal } : undefined);
+  return Array.isArray(res?.items) ? res.items : [];
+}
+
+export async function fetchWatchlistAvailability(
+  signal?: AbortSignal
+): Promise<WatchlistAvailabilityItem[]> {
+  const res = await fetchApi<WatchlistAvailabilityResponse>(
+    '/watchlist/availability',
+    signal ? { signal } : undefined
+  );
   return Array.isArray(res?.items) ? res.items : [];
 }
 

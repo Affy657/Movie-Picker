@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -21,18 +22,11 @@ public sealed partial class TmdbMovieSearch
         if (!_options.HasTmdbCredentials)
             return null;
 
-        var r = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
-        var typeSegment = MediaTypeSegment(mediaType);
-        var cacheKey = $"tmdb-enrich-v2:{typeSegment}:{r}:{tmdbId}";
-        var ttl = TimeSpan.FromHours(Math.Clamp(_options.TmdbEnrichmentCacheHours, 1, 168));
+        var r = NormalizeRegion(region);
+        var cacheKey = EnrichmentCacheKey(tmdbId, mediaType, r);
 
-        if (_cache.TryGetValue(cacheKey, out object? boxed))
-        {
-            if (boxed is TmdbMovieEnrichment cached)
-                return cached;
-            if (boxed is TmdbUnavailableMarker)
-                return null;
-        }
+        if (TryGetEnrichmentFromMemory(cacheKey, out var cached))
+            return cached;
 
         var shared = await _sharedCache.TryGetAsync<TmdbMovieEnrichment>(cacheKey, ct).ConfigureAwait(false);
         if (shared is not null)
@@ -41,9 +35,93 @@ public sealed partial class TmdbMovieSearch
             return shared.Value;
         }
 
+        return await FetchEnrichmentThroughCachesAsync(tmdbId, mediaType, r, cacheKey, ct).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> GetEnrichmentsAsync(
+        IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)> keys,
+        string region,
+        CancellationToken ct = default)
+    {
+        var result = new ConcurrentDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>();
+        if (!_options.HasTmdbCredentials || keys.Count == 0)
+            return result;
+
+        var r = NormalizeRegion(region);
+        var misses = new List<(int TmdbId, MovieMediaType MediaType, string CacheKey)>();
+        foreach (var key in keys.Distinct())
+        {
+            var cacheKey = EnrichmentCacheKey(key.TmdbId, key.MediaType, r);
+            if (TryGetEnrichmentFromMemory(cacheKey, out var cached))
+                result[key] = cached;
+            else
+                misses.Add((key.TmdbId, key.MediaType, cacheKey));
+        }
+        if (misses.Count == 0)
+            return result;
+
+        var shared = await _sharedCache
+            .TryGetManyAsync<TmdbMovieEnrichment>(misses.Select(m => m.CacheKey).ToList(), ct)
+            .ConfigureAwait(false);
+        var toFetch = new List<(int TmdbId, MovieMediaType MediaType, string CacheKey)>();
+        foreach (var miss in misses)
+        {
+            if (shared.TryGetValue(miss.CacheKey, out var entry))
+            {
+                _cache.Set(miss.CacheKey, entry.Value, new MemoryCacheEntryOptions { AbsoluteExpiration = entry.ExpiresAt });
+                result[(miss.TmdbId, miss.MediaType)] = entry.Value;
+            }
+            else
+            {
+                toFetch.Add(miss);
+            }
+        }
+        if (toFetch.Count == 0)
+            return result;
+
+        var parallel = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
+        await Parallel.ForEachAsync(
+                toFetch,
+                new ParallelOptions { MaxDegreeOfParallelism = parallel, CancellationToken = ct },
+                async (miss, c) =>
+                {
+                    result[(miss.TmdbId, miss.MediaType)] = await FetchEnrichmentThroughCachesAsync(
+                        miss.TmdbId, miss.MediaType, r, miss.CacheKey, c).ConfigureAwait(false);
+                })
+            .ConfigureAwait(false);
+        return result;
+    }
+
+    private static string NormalizeRegion(string region) =>
+        string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
+
+    private static string EnrichmentCacheKey(int tmdbId, MovieMediaType mediaType, string region) =>
+        $"tmdb-enrich-v2:{MediaTypeSegment(mediaType)}:{region}:{tmdbId}";
+
+    private bool TryGetEnrichmentFromMemory(string cacheKey, out TmdbMovieEnrichment? enrichment)
+    {
+        enrichment = null;
+        if (!_cache.TryGetValue(cacheKey, out object? boxed))
+            return false;
+        if (boxed is TmdbMovieEnrichment cached)
+        {
+            enrichment = cached;
+            return true;
+        }
+        return boxed is TmdbUnavailableMarker;
+    }
+
+    private async Task<TmdbMovieEnrichment?> FetchEnrichmentThroughCachesAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        string region,
+        string cacheKey,
+        CancellationToken ct)
+    {
+        var ttl = TimeSpan.FromHours(Math.Clamp(_options.TmdbEnrichmentCacheHours, 1, 168));
         try
         {
-            var fresh = await FetchEnrichmentUncachedAsync(tmdbId, mediaType, r, ct).ConfigureAwait(false);
+            var fresh = await FetchEnrichmentUncachedAsync(tmdbId, mediaType, region, ct).ConfigureAwait(false);
             _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
             await _sharedCache.SetAsync(cacheKey, fresh, ttl, ct).ConfigureAwait(false);
             return fresh;
@@ -58,9 +136,9 @@ public sealed partial class TmdbMovieSearch
             _logger.LogWarning(
                 ex,
                 "TMDB enrichment failed for {MediaType} {TmdbId} region {Region}",
-                typeSegment,
+                MediaTypeSegment(mediaType),
                 tmdbId,
-                r);
+                region);
             _cache.Set(
                 cacheKey,
                 TmdbUnavailableMarker.Instance,

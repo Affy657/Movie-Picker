@@ -45,4 +45,18 @@ public sealed class InMemorySharedCacheTests
 
         Assert.Null(await sut.TryGetAsync<string>("k"));
     }
+
+    [Fact]
+    public async Task TryGetManyAsync_ReturnsOnlyTheLiveEntriesOfTheRightType()
+    {
+        var sut = new InMemorySharedCache();
+        await sut.SetAsync("live", "v", TimeSpan.FromMinutes(5));
+        await sut.SetAsync("stale", "old", TimeSpan.FromMilliseconds(-1));
+        await sut.SetAsync("number", 42, TimeSpan.FromMinutes(5));
+
+        var found = await sut.TryGetManyAsync<string>(["live", "stale", "number", "missing"]);
+
+        Assert.Equal("v", Assert.Single(found).Value.Value);
+        Assert.True(found.ContainsKey("live"));
+    }
 }

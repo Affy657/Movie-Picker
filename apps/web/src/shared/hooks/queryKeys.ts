@@ -50,5 +50,6 @@ export const queryKeys = {
   },
   watchlist: {
     list: ['watchlist', 'list'] as const,
+    availability: ['watchlist', 'availability'] as const,
   },
 } as const;

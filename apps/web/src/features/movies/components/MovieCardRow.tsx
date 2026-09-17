@@ -3,15 +3,12 @@ import type { Translate } from '@/features/movies/types';
 import { Fragment, memo } from 'react';
 import clsx from 'clsx';
 import { AlertTriangle, ChevronRight, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
-import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import Chip from '@/shared/components/Chip';
 import {
   CardModals,
   CardSelectionOverlay,
   PosterDetailsTrigger,
   MovieCardKebab,
-  OverflowChip,
-  PaidOfferChip,
   ProposerBadge,
   VoteBar,
   WatchlistBadge,
@@ -23,6 +20,7 @@ import {
 } from '@/features/movies/components/movieCardParts';
 import Tooltip from '@/shared/components/Tooltip';
 import {
+  MovieTableDispo,
   MovieTableHeader,
   MovieTablePoster,
   type MovieTableColumn,
@@ -133,85 +131,6 @@ function VoteReadonly({ m }: Readonly<{ m: MovieCardCommonProps['movie'] }>) {
   );
 }
 
-function RowDispo({
-  flatrateProviders,
-  rentCount,
-  buyCount,
-  watchPageUrl,
-  maxVisible,
-  chipMaxWidth,
-  onMoreClick,
-  emptyLabel,
-  title,
-  t,
-}: Readonly<{
-  flatrateProviders: MovieCardCommonProps['movie']['watchProviders'];
-  rentCount: number;
-  buyCount: number;
-  watchPageUrl?: string | null;
-  maxVisible: number;
-  chipMaxWidth?: string;
-  onMoreClick: () => void;
-  emptyLabel: string;
-  title: string;
-  t: Translate;
-}>) {
-  const total = (flatrateProviders?.length ?? 0) + rentCount + buyCount;
-  if (total === 0) {
-    return <span className={styles.dispoEmpty}>{emptyLabel}</span>;
-  }
-
-  const visibleFlatrate = (flatrateProviders ?? []).slice(0, maxVisible);
-  const hidden = total - visibleFlatrate.length;
-
-  let overflow: React.ReactNode = null;
-  if (hidden > 0) {
-    if (visibleFlatrate.length === 0 && rentCount > 0 && buyCount === 0) {
-      overflow = (
-        <PaidOfferChip
-          type="rent"
-          count={rentCount}
-          onClick={onMoreClick}
-          ariaLabel={t('movies.watchProviders.alsoRentAria', { count: rentCount, title })}
-        />
-      );
-    } else if (visibleFlatrate.length === 0 && buyCount > 0 && rentCount === 0) {
-      overflow = (
-        <PaidOfferChip
-          type="buy"
-          count={buyCount}
-          onClick={onMoreClick}
-          ariaLabel={t('movies.watchProviders.alsoBuyAria', { count: buyCount, title })}
-        />
-      );
-    } else {
-      overflow = (
-        <OverflowChip
-          count={hidden}
-          onClick={onMoreClick}
-          ariaLabel={t('movies.watchProviders.alsoAvailableAria', { count: hidden, title })}
-        />
-      );
-    }
-  }
-
-  return (
-    <span className={styles.dispoRow}>
-      {visibleFlatrate.length > 0 && (
-        <WatchProviderChips
-          providers={visibleFlatrate}
-          variant="compact"
-          className={styles.dispoChips}
-          watchPageUrl={watchPageUrl}
-          chipMaxWidth={chipMaxWidth}
-          showTypeIcon={false}
-        />
-      )}
-      {overflow}
-    </span>
-  );
-}
-
 export interface MovieRowVoteError {
   message: string;
   onRetry: () => void;
@@ -318,7 +237,7 @@ function MovieCardRowMobile({
             {m.year ? <span>{m.year}</span> : null}
             {s.runtimeLabel ? <span>{s.runtimeLabel}</span> : null}
             {s.voteLabel ? <span>{s.voteLabel}</span> : null}
-            <RowDispo
+            <MovieTableDispo
               flatrateProviders={flatrateProviders}
               rentCount={rentCount}
               buyCount={buyCount}
@@ -478,8 +397,8 @@ function MovieCardRowDesktop({
         <span className={table.cellEnd}>{s.voteLabel}</span>
         <span className={table.cellEnd}>{s.runtimeLabel}</span>
         <span className={table.cellEnd}>{releaseDateLabel}</span>
-        <div className={styles.dispoCol}>
-          <RowDispo
+        <div className={table.dispoCol}>
+          <MovieTableDispo
             flatrateProviders={flatrateProviders}
             rentCount={rentCount}
             buyCount={buyCount}

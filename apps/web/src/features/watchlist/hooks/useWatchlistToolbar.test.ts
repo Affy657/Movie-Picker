@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useWatchlistToolbar } from './useWatchlistToolbar';
+import { useWatchlistToolbar, type WatchlistEntry } from './useWatchlistToolbar';
 import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
 
 const MEDIA_TYPE_LABELS = { movie: 'Films', tv: 'Séries' };
@@ -40,7 +40,7 @@ const ITEMS: WatchlistItem[] = [
   item({ tmdbId: 3, title: 'Gamma', year: '2010', voteAverage: 6, runtimeMinutes: 100 }),
 ];
 
-function setup(items: WatchlistItem[] = ITEMS) {
+function setup(items: WatchlistEntry[] = ITEMS) {
   return renderHook(() =>
     useWatchlistToolbar({
       items,
@@ -84,6 +84,21 @@ describe('useWatchlistToolbar', () => {
 
     act(() => result.current.setSortBy('year'));
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Alpha', 'Gamma', 'Beta']);
+  });
+
+  it('sorts by availability, the most offers first, tolerating items without any', () => {
+    const offer = { providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' };
+    const { result } = setup([
+      { ...item({ tmdbId: 1, title: 'Alpha' }), watchProviders: [offer] },
+      item({ tmdbId: 2, title: 'Beta' }),
+      {
+        ...item({ tmdbId: 3, title: 'Gamma' }),
+        watchProviders: [offer, { ...offer, providerId: 9, type: 'rent' }],
+      },
+    ]);
+    act(() => result.current.setSortBy('availability'));
+    expect(result.current.sortDir).toBe('desc');
+    expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Gamma', 'Alpha', 'Beta']);
   });
 
   it('filters by genre while tolerating items without a genre', () => {

@@ -15,6 +15,7 @@ const SORT_LABEL_KEYS: Record<WatchlistSortKey, TranslationKey> = {
   voteAverage: 'watchlist.toolbar.sortVoteAverage',
   duration: 'watchlist.toolbar.sortDuration',
   year: 'watchlist.toolbar.sortYear',
+  availability: 'movies.watchProviders.columnLabel',
 };
 
 function sortOption(key: WatchlistSortKey, t: Translate): SortOption<WatchlistSortKey> {
@@ -31,6 +32,7 @@ export function watchlistRowSorts(t: Translate): MovieListRowSorts<WatchlistSort
     vote: sortOption('voteAverage', t),
     runtime: sortOption('duration', t),
     year: sortOption('year', t),
+    availability: sortOption('availability', t),
   };
 }
 

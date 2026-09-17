@@ -3,10 +3,14 @@ import clsx from 'clsx';
 import MovieListCard from '@/features/movies/components/MovieListCard';
 import MovieListRow from '@/features/movies/components/MovieListRow';
 import styles from '@/features/movies/components/MovieListCard.module.css';
+import rowStyles from '@/features/movies/components/MovieListRow.module.css';
+import { MovieTableDispo } from '@/features/movies/components/MovieTable';
 import { CardKebab } from '@/features/movies/components/movieCardParts';
+import type { Translate } from '@/features/movies/types';
 import Chip from '@/shared/components/Chip';
+import { Skeleton } from '@/shared/components/Skeleton';
 import { useLocale, useTranslation } from '@/shared/i18n';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import badgeStyles from './MovieBrowseCard.module.css';
@@ -24,6 +28,10 @@ export interface MovieBrowseCardItem {
   genreIds?: number[];
 }
 
+export type MovieAvailability =
+  | { status: 'pending' }
+  | { status: 'ready'; providers: WatchProviderOffer[]; watchPageUrl: string | null };
+
 export interface MovieLibraryActions {
   hasHover: boolean;
   isLoggedIn: boolean;
@@ -36,16 +44,56 @@ interface MovieBrowseCardProps {
   item: MovieBrowseCardItem;
   layout?: 'grid' | 'row';
   isMobile?: boolean;
+  availability?: MovieAvailability;
   hasHover: boolean;
   isLoggedIn: boolean;
   inWatchlist: boolean;
   onToggleWatchlist: () => void;
   onProposeToEvent: () => void;
   onOpenDetails: () => void;
+  onOpenAvailability?: () => void;
   leadingBadge?: ReactNode;
   ratingScale?: RatingScale;
   meta?: ReactNode;
   eager?: boolean;
+}
+
+function RowAvailability({
+  availability,
+  title,
+  isMobile,
+  onMore,
+  t,
+}: Readonly<{
+  availability: MovieAvailability;
+  title: string;
+  isMobile: boolean;
+  onMore: () => void;
+  t: Translate;
+}>) {
+  if (availability.status === 'pending') {
+    return (
+      <span className={rowStyles.dispoSkeleton}>
+        <Skeleton className={rowStyles.dispoSkeletonChip} />
+        <Skeleton className={rowStyles.dispoSkeletonChip} />
+      </span>
+    );
+  }
+  const flatrate = availability.providers.filter((p) => p.type === 'flatrate');
+  return (
+    <MovieTableDispo
+      flatrateProviders={flatrate}
+      rentCount={availability.providers.filter((p) => p.type === 'rent').length}
+      buyCount={availability.providers.filter((p) => p.type === 'buy').length}
+      watchPageUrl={availability.watchPageUrl}
+      maxVisible={isMobile ? 1 : 2}
+      chipMaxWidth={isMobile ? undefined : '2.75rem'}
+      onMoreClick={onMore}
+      emptyLabel={t('movies.watchProviders.emptyLabel')}
+      title={title}
+      t={t}
+    />
+  );
 }
 
 function rowGenres(genreIds: number[] | undefined, tmdbLanguage: string): string[] {
@@ -57,12 +105,14 @@ export default function MovieBrowseCard({
   item,
   layout = 'grid',
   isMobile = false,
+  availability,
   hasHover,
   isLoggedIn,
   inWatchlist,
   onToggleWatchlist,
   onProposeToEvent,
   onOpenDetails,
+  onOpenAvailability,
   leadingBadge,
   ratingScale,
   meta,
@@ -105,6 +155,17 @@ export default function MovieBrowseCard({
             <Chip size="sm" tone="muted">
               {t('movies.list.tvBadge')}
             </Chip>
+          ) : undefined
+        }
+        dispo={
+          availability ? (
+            <RowAvailability
+              availability={availability}
+              title={item.title}
+              isMobile={isMobile}
+              onMore={onOpenAvailability ?? onOpenDetails}
+              t={t}
+            />
           ) : undefined
         }
         eager={eager}

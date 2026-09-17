@@ -20,21 +20,34 @@ import FilteredCollectionLayout, {
 import LazyMovieDetailsModal, {
   loadMovieDetailsModal,
 } from '@/features/movies/components/LazyMovieDetailsModal';
+import type { MovieDetailsTabKey } from '@/features/movies/components/MovieDetailsModal';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import LetterboxdConnectModal from '@/features/letterboxd/components/LetterboxdConnectModal';
 import type { MovieMediaType } from '@/shared/types/movie';
-import { useAddToWatchlist, useWatchlist } from '@/features/watchlist/hooks/useWatchlist';
+import {
+  useAddToWatchlist,
+  useWatchlist,
+  useWatchlistAvailability,
+} from '@/features/watchlist/hooks/useWatchlist';
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
-import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
-import { useWatchlistToolbar } from '@/features/watchlist/hooks/useWatchlistToolbar';
+import type {
+  WatchlistAvailabilityItem,
+  WatchlistItem,
+} from '@/features/watchlist/api/watchlistApi';
+import {
+  useWatchlistToolbar,
+  type WatchlistEntry,
+} from '@/features/watchlist/hooks/useWatchlistToolbar';
 import WatchlistToolbar, {
   watchlistRowSorts,
 } from '@/features/watchlist/components/WatchlistToolbar';
 import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
-import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
+import MovieBrowseCard, {
+  type MovieAvailability,
+} from '@/features/movies/components/MovieBrowseCard';
 import { MovieListRowHeader } from '@/features/movies/components/MovieListRow';
 import { MovieTable } from '@/features/movies/components/MovieTable';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
@@ -47,6 +60,25 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 
 function itemKey(tmdbId: number, mediaType: MovieMediaType | undefined): string {
   return `${tmdbId}|${mediaType ?? 'movie'}`;
+}
+
+function mergeAvailability(
+  items: WatchlistItem[],
+  availability: WatchlistAvailabilityItem[] | undefined
+): WatchlistEntry[] {
+  if (!availability) return items;
+  const byKey = new Map(availability.map((a) => [itemKey(a.tmdbId, a.mediaType), a]));
+  return items.map((item) => {
+    const found = byKey.get(itemKey(item.tmdbId, item.mediaType));
+    if (!found) return item;
+    return {
+      ...item,
+      voteAverage: item.voteAverage ?? found.voteAverage,
+      runtimeMinutes: item.runtimeMinutes ?? found.runtimeMinutes,
+      watchProviders: found.watchProviders,
+      tmdbWatchPageUrl: found.tmdbWatchPageUrl,
+    };
+  });
 }
 
 const VIEW_MODE_STORAGE_KEY = 'watchlist-view';
@@ -121,6 +153,11 @@ export default function WatchlistPage() {
   const filtersPanelId = useId();
 
   const { data: items = [], isLoading, isError } = useWatchlist({ enabled: !!user });
+  const availabilityQuery = useWatchlistAvailability({ enabled: !!user && items.length > 0 });
+  const entries = useMemo(
+    () => mergeAvailability(items, availabilityQuery.data),
+    [items, availabilityQuery.data]
+  );
 
   const changeViewMode = (mode: MovieViewMode) => {
     setViewMode(mode);
@@ -128,7 +165,10 @@ export default function WatchlistPage() {
   };
 
   const [proposeTarget, setProposeTarget] = useState<WatchlistItem | null>(null);
-  const [detailsTarget, setDetailsTarget] = useState<WatchlistItem | null>(null);
+  const [detailsTarget, setDetailsTarget] = useState<{
+    entry: WatchlistEntry;
+    tab?: MovieDetailsTabKey;
+  } | null>(null);
   const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [letterboxdModalOpen, setLetterboxdModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<MovieViewMode>(readStoredViewMode);
@@ -160,7 +200,7 @@ export default function WatchlistPage() {
   );
 
   const toolbar = useWatchlistToolbar({
-    items,
+    items: entries,
     userId: user?.userId,
     tmdbLanguage,
     ratingScale: user?.ratingScale,
@@ -195,19 +235,31 @@ export default function WatchlistPage() {
   const subtitle = watchlistSubtitle(items.length, t);
   const openAddPanel = () => setAddPanelOpen(true);
   const listView = viewMode === 'list';
-  const renderItem = (item: WatchlistItem, index: number) => (
+  const availabilityOf = (entry: WatchlistEntry): MovieAvailability | undefined => {
+    if (entry.watchProviders) {
+      return {
+        status: 'ready',
+        providers: entry.watchProviders,
+        watchPageUrl: entry.tmdbWatchPageUrl ?? null,
+      };
+    }
+    return availabilityQuery.isPending ? { status: 'pending' } : undefined;
+  };
+  const renderItem = (item: WatchlistEntry, index: number) => (
     <MovieBrowseCard
       key={itemKey(item.tmdbId, item.mediaType)}
       item={item}
       layout={listView ? 'row' : 'grid'}
       isMobile={isMobile}
+      availability={listView ? availabilityOf(item) : undefined}
       hasHover={hasHover}
       isLoggedIn={!!user}
       inWatchlist
       eager={listView && index < 3}
       onToggleWatchlist={() => watchlistToggle.toggle(item)}
       onProposeToEvent={() => setProposeTarget(item)}
-      onOpenDetails={() => setDetailsTarget(item)}
+      onOpenDetails={() => setDetailsTarget({ entry: item })}
+      onOpenAvailability={() => setDetailsTarget({ entry: item, tab: 'dispo' })}
       ratingScale={user?.ratingScale}
     />
   );
@@ -419,19 +471,22 @@ export default function WatchlistPage() {
       {detailsTarget && (
         <LazyMovieDetailsModal
           open={!!detailsTarget}
-          title={detailsTarget.title}
-          year={detailsTarget.year}
-          tmdbId={detailsTarget.tmdbId}
-          mediaType={detailsTarget.mediaType}
-          posterSrc={posterImageSrc(detailsTarget.posterPath)}
-          voteLabel={formatTmdbVote(detailsTarget.voteAverage, user?.ratingScale)}
-          runtimeLabel={formatRuntimeMinutes(detailsTarget.runtimeMinutes)}
+          title={detailsTarget.entry.title}
+          year={detailsTarget.entry.year}
+          tmdbId={detailsTarget.entry.tmdbId}
+          mediaType={detailsTarget.entry.mediaType}
+          posterSrc={posterImageSrc(detailsTarget.entry.posterPath)}
+          voteLabel={formatTmdbVote(detailsTarget.entry.voteAverage, user?.ratingScale)}
+          runtimeLabel={formatRuntimeMinutes(detailsTarget.entry.runtimeMinutes)}
+          watchProviders={detailsTarget.entry.watchProviders}
+          watchPageUrl={detailsTarget.entry.tmdbWatchPageUrl}
+          initialTab={detailsTarget.tab}
           libraryContext={
             user
               ? {
-                  inWatchlist: watchlistToggle.has(detailsTarget),
-                  onToggleWatchlist: () => watchlistToggle.toggle(detailsTarget),
-                  onProposeToEvent: () => setProposeTarget(detailsTarget),
+                  inWatchlist: watchlistToggle.has(detailsTarget.entry),
+                  onToggleWatchlist: () => watchlistToggle.toggle(detailsTarget.entry),
+                  onProposeToEvent: () => setProposeTarget(detailsTarget.entry),
                 }
               : undefined
           }

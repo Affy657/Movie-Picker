@@ -1,5 +1,5 @@
 .rowGrid {
-  grid-template-columns: 60px minmax(0, 1fr) 56px 60px 56px 44px;
+  grid-template-columns: 60px minmax(0, 1fr) 56px 60px 56px 150px 44px;
 }
 
 @media (hover: hover) {
@@ -23,7 +23,7 @@
   outline-offset: -2px;
 }
 
-.kebabSlot {
+.aboveTrigger {
   position: relative;
   z-index: var(--z-raised-above);
 }
@@ -43,4 +43,14 @@
 
 .mobileMeta {
   margin-top: 0;
+}
+
+.dispoSkeleton {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.dispoSkeletonChip {
+  width: var(--space-7);
+  height: var(--space-7);
 }

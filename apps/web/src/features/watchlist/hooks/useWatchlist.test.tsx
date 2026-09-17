@@ -32,17 +32,19 @@ describe('useWatchlist mutations', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.watchlist.list });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.watchlist.availability });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.profile.public('alice') });
     expect(invalidateSpy).not.toHaveBeenCalledWith({ queryKey: queryKeys.profile.publicAll });
   });
 
-  it('a removal without a cached account only refreshes my list', async () => {
+  it('a removal without a cached account only refreshes my list and its availability', async () => {
     const { result, invalidateSpy } = setup(() => useRemoveFromWatchlist());
 
     act(() => result.current.mutate({ tmdbId: 1 }));
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(invalidateSpy).toHaveBeenCalledTimes(1);
+    expect(invalidateSpy).toHaveBeenCalledTimes(2);
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.watchlist.list });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.watchlist.availability });
   });
 });

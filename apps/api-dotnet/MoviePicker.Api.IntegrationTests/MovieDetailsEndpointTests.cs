@@ -104,6 +104,11 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
         public Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CancellationToken ct = default)
             => Task.FromResult<TmdbMovieEnrichment?>(null);
 
+        public Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> GetEnrichmentsAsync(
+            IReadOnlyCollection<(int TmdbId, MovieMediaType MediaType)> keys, string region, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>>(
+                new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
+
         public Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
         {
             if (ThrowOnDetails)

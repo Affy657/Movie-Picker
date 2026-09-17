@@ -192,6 +192,28 @@
   font-variant-numeric: tabular-nums;
 }
 
+.dispoCol {
+  justify-self: start;
+  padding-left: var(--space-4);
+  min-width: 0;
+}
+
+.dispoRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.dispoChips {
+  margin: 0;
+}
+
+.dispoEmpty {
+  font-size: var(--font-size-3xs);
+  color: var(--color-meta);
+}
+
 .kebabCol {
   justify-self: center;
 }

@@ -35,6 +35,23 @@ public sealed class WatchlistController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("availability")]
+    [EnableRateLimiting(RateLimitingExtensions.WatchlistReadPolicy)]
+    [ProducesResponseType(typeof(WatchlistAvailabilityResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetAvailability(
+        [FromServices] IGetWatchlistAvailabilityHandler handler,
+        [FromServices] ICurrentUserAccessor currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await handler.HandleAsync(userId, ct);
+        return Ok(result);
+    }
+
     [HttpPost]
     [EnableRateLimiting(RateLimitingExtensions.WatchlistMutationPolicy)]
     [ProducesResponseType(typeof(WatchlistItemResponse), StatusCodes.Status201Created)]

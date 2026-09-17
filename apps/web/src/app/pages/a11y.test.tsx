@@ -7,7 +7,7 @@ import { http, HttpResponse } from 'msw';
 import { axe } from 'vitest-axe';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
-import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import { authMeGuestHandler, createWatchlistHandlers, TEST_API_V1 } from '@/mocks/handlers';
 import LandingPage from '@/app/pages/LandingPage';
 import HomePage from '@/app/pages/HomePage';
 import ShowcaseListPage from '@/app/pages/ShowcaseListPage';
@@ -38,10 +38,6 @@ import { ROUTES } from '@/app/routes';
 import { clearSessionHint, resetSessionHintMemoryForTests } from '@/features/auth/session-hint';
 
 vi.setConfig({ testTimeout: 60000, hookTimeout: 60000 });
-
-function watchlistHandler(items: unknown[]) {
-  return http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items }));
-}
 
 const AUTH_USER = {
   userId: 'u-a11y',
@@ -354,22 +350,18 @@ describe('accessibility (axe)', () => {
           ratingScale: 'ten',
         })
       ),
-      http.get(`${TEST_API_V1}/watchlist`, () =>
-        HttpResponse.json({
-          items: [
-            {
-              tmdbId: 200,
-              mediaType: 'movie',
-              title: 'Ancien Mais Bien Noté',
-              year: '2000',
-              posterPath: null,
-              voteAverage: 9.0,
-              runtimeMinutes: 90,
-              createdAt: '2026-01-01T00:00:00Z',
-            },
-          ],
-        })
-      )
+      ...createWatchlistHandlers([
+        {
+          tmdbId: 200,
+          mediaType: 'movie',
+          title: 'Ancien Mais Bien Noté',
+          year: '2000',
+          posterPath: null,
+          voteAverage: 9.0,
+          runtimeMinutes: 90,
+          createdAt: '2026-01-01T00:00:00Z',
+        },
+      ])
     );
     const queryClient = createTestQueryClient();
     const { container } = render(
@@ -396,7 +388,7 @@ describe('accessibility (axe)', () => {
           ratingScale: 'ten',
         })
       ),
-      watchlistHandler([
+      ...createWatchlistHandlers([
         {
           tmdbId: 200,
           mediaType: 'movie',
@@ -582,21 +574,21 @@ describe('accessibility (axe)', () => {
     }
 
     it("vue liste (ligne dense) n'a pas de violations", async () => {
-      server.use(authMeGuestHandler, watchlistHandler([]));
+      server.use(authMeGuestHandler, ...createWatchlistHandlers([]));
       const { container, queryClient } = renderEventSession('list');
       await screen.findByRole('heading', { name: 'Inception' });
       await assertNoViolations(container, queryClient);
     });
 
     it("vue grille n'a pas de violations", async () => {
-      server.use(authMeGuestHandler, watchlistHandler([]));
+      server.use(authMeGuestHandler, ...createWatchlistHandlers([]));
       const { container, queryClient } = renderEventSession('grid');
       await screen.findByRole('heading', { name: 'Inception' });
       await assertNoViolations(container, queryClient);
     });
 
     it('closed movie night with a winner has no violations', async () => {
-      server.use(authMeGuestHandler, watchlistHandler([]));
+      server.use(authMeGuestHandler, ...createWatchlistHandlers([]));
       const { container, queryClient } = renderEventSession('list', {
         ...EVENT,
         isFinished: true,
@@ -614,7 +606,7 @@ describe('accessibility (axe)', () => {
     });
 
     it('closed movie night without a movie has no violations', async () => {
-      server.use(authMeGuestHandler, watchlistHandler([]));
+      server.use(authMeGuestHandler, ...createWatchlistHandlers([]));
       const { container, queryClient } = renderEventSession('list', {
         ...EVENT,
         isFinished: true,
