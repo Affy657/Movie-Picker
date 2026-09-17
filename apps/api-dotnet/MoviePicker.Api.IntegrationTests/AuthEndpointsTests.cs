@@ -56,6 +56,7 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
 
         var me = await client.GetAsync("/api/v1/auth/me");
         Assert.Equal(HttpStatusCode.OK, me.StatusCode);
+        Assert.True(me.Headers.CacheControl?.NoStore);
         var profile = await me.Content.ReadFromJsonAsync<UserProfileResponse>(JsonReadOptions);
         Assert.NotNull(profile);
         Assert.Equal("Intégration", profile.DisplayName);

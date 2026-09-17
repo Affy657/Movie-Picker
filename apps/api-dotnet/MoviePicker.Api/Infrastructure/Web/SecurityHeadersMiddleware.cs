@@ -16,6 +16,7 @@ public sealed class SecurityHeadersMiddleware(RequestDelegate next)
         h.Append(
             "Content-Security-Policy",
             "default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
+        h.CacheControl = "no-store";
         return next(context);
     }
 }

@@ -29,6 +29,32 @@ public sealed class SecurityHeadersMiddlewareTests
     }
 
     [Fact]
+    public async Task InvokeAsync_ForbidsStoringTheResponse_WhenTheEndpointSaysNothing()
+    {
+        var ctx = new DefaultHttpContext();
+        var mw = new SecurityHeadersMiddleware(_ => Task.CompletedTask);
+
+        await mw.InvokeAsync(ctx);
+
+        Assert.Equal("no-store", ctx.Response.Headers.CacheControl.ToString());
+    }
+
+    [Fact]
+    public async Task InvokeAsync_LetsTheEndpointOverrideTheCachePolicy()
+    {
+        var ctx = new DefaultHttpContext();
+        var mw = new SecurityHeadersMiddleware(c =>
+        {
+            c.Response.Headers.CacheControl = "public, max-age=300";
+            return Task.CompletedTask;
+        });
+
+        await mw.InvokeAsync(ctx);
+
+        Assert.Equal("public, max-age=300", ctx.Response.Headers.CacheControl.ToString());
+    }
+
+    [Fact]
     public async Task InvokeAsync_AddsHsts_WhenRequestIsHttps()
     {
         var ctx = new DefaultHttpContext();

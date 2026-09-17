@@ -31,6 +31,7 @@ type ServiceWorkerListener = (event: Record<string, unknown>) => void;
 
 const listeners = new Map<string, ServiceWorkerListener>();
 const skipWaiting = vi.fn();
+const deleteCache = vi.fn(() => Promise.resolve(true));
 const showNotification = vi.fn();
 const openWindow = vi.fn();
 let openClients: Array<{ url: string; focus: ReturnType<typeof vi.fn> }> = [];
@@ -52,18 +53,19 @@ function showcaseRouteMatcher(): RouteMatcher {
   return workbox.registerRoute.mock.calls[0]![0] as RouteMatcher;
 }
 
-function apiRouteMatcher(): RouteMatcher {
+function tmdbRouteMatcher(): RouteMatcher {
   return workbox.registerRoute.mock.calls[1]![0] as RouteMatcher;
 }
 
-function tmdbRouteMatcher(): RouteMatcher {
-  return workbox.registerRoute.mock.calls[2]![0] as RouteMatcher;
+function registeredRouteMatchers(): RouteMatcher[] {
+  return workbox.registerRoute.mock.calls.map((call) => call[0] as RouteMatcher);
 }
 
 beforeAll(async () => {
   Object.assign(globalThis, {
     __WB_MANIFEST: [],
     skipWaiting,
+    caches: { delete: deleteCache },
     registration: { showNotification },
     clients: {
       claim: vi.fn(() => Promise.resolve()),
@@ -80,6 +82,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   skipWaiting.mockClear();
+  deleteCache.mockClear();
   showNotification.mockClear();
   openWindow.mockClear();
   openClients = [];
@@ -102,13 +105,21 @@ describe('service worker — mise en cache', () => {
     expect(workbox.registerRoute.mock.calls[0]![1]).toBeInstanceOf(workbox.StaleWhileRevalidate);
   });
 
-  it('met en cache les appels API mais laisse passer les affiches', () => {
-    const matches = apiRouteMatcher();
-    expect(matches({ url: new URL(`${origin()}/api/v1/events`) })).toBe(true);
-    expect(matches({ url: new URL(`${origin()}/api/v1/users/me`) })).toBe(true);
-    expect(matches({ url: new URL(`${origin()}/api/v1/posters/550`) })).toBe(false);
-    expect(matches({ url: new URL(`${origin()}/assets/app.js`) })).toBe(false);
-    expect(workbox.registerRoute.mock.calls[1]![1]).toBeInstanceOf(workbox.NetworkFirst);
+  it('never stores an authenticated API response in Cache Storage', () => {
+    const matchers = registeredRouteMatchers();
+    const privatePaths = [
+      '/api/v1/auth/me',
+      '/api/v1/auth/me/export',
+      '/api/v1/events/mine',
+      '/api/v1/events/slug/soiree',
+      '/api/v1/notifications/inbox',
+      '/api/v1/posters/550',
+    ];
+    for (const path of privatePaths) {
+      const url = new URL(`${origin()}${path}`);
+      expect(matchers.some((matches) => matches({ url }))).toBe(false);
+    }
+    expect(workbox.NetworkFirst).not.toHaveBeenCalled();
   });
 
   it('met en cache les images TMDB', () => {
@@ -123,6 +134,13 @@ describe('service worker — cycle de vie', () => {
     const event = pending();
     listeners.get('activate')!(event as unknown as Record<string, unknown>);
     expect(event.waitUntil).toHaveBeenCalledTimes(1);
+  });
+
+  it('purges the API cache left behind by earlier versions at activation', async () => {
+    const event = pending();
+    listeners.get('activate')!(event as unknown as Record<string, unknown>);
+    await event.settled();
+    expect(deleteCache).toHaveBeenCalledWith('api-cache-v2');
   });
 
   it('applies the update on explicit request', () => {

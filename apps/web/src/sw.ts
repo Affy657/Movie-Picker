@@ -1,14 +1,18 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { NetworkFirst, CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
 declare const self: ServiceWorkerGlobalScope;
 
+const RETIRED_CACHES = ['api-cache-v2'];
+
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    Promise.all([self.clients.claim(), ...RETIRED_CACHES.map((name) => caches.delete(name))])
+  );
 });
 
 self.addEventListener('message', (event: ExtendableMessageEvent) => {
@@ -26,18 +30,6 @@ registerRoute(
     cacheName: 'showcase-cache-v1',
     plugins: [
       new ExpirationPlugin({ maxEntries: 40, maxAgeSeconds: 60 * 60 * 6 }),
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
-    ],
-  })
-);
-
-registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/v1/') && !url.pathname.startsWith('/api/v1/posters/'),
-  new NetworkFirst({
-    cacheName: 'api-cache-v2',
-    networkTimeoutSeconds: 15,
-    plugins: [
-      new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 }),
       new CacheableResponsePlugin({ statuses: [0, 200] }),
     ],
   })
