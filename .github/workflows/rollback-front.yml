@@ -34,6 +34,12 @@ concurrency:
   group: deploy-production
   cancel-in-progress: false
 
+# Same version as `deploy.yml` and as the `@sentry/cli` of the lockfile, checksum verified: the
+# binary runs in a job holding the AWS deploy role.
+env:
+  SENTRY_CLI_VERSION: "2.58.6"
+  SENTRY_CLI_LINUX_X86_64_BINARY_SHA256: "36b689311b399d9332950d84f4299aee682d2d290a770a77372b30a74f7e7add"
+
 jobs:
   rollback:
     name: ⏪ Republish an archived web build
@@ -147,7 +153,9 @@ jobs:
             echo "SENTRY_AUTH_TOKEN missing, skipped"
             exit 0
           fi
-          curl -sSfL "https://github.com/getsentry/sentry-cli/releases/download/2.58.6/sentry-cli-Linux-x86_64" -o sentry-cli
+          curl -sSfL --retry 3 --retry-all-errors \
+            "https://github.com/getsentry/sentry-cli/releases/download/${SENTRY_CLI_VERSION}/sentry-cli-Linux-x86_64" -o sentry-cli
+          echo "${SENTRY_CLI_LINUX_X86_64_BINARY_SHA256}  sentry-cli" | sha256sum -c -
           chmod +x sentry-cli
           extra=()
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi

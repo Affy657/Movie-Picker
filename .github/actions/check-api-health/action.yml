@@ -12,6 +12,10 @@ inputs:
     description: "true when probing live production: an empty public URL then raises a warning instead of staying silent"
     required: false
     default: "false"
+  expected-release:
+    description: "Release the probed API must report in /health/ready (the SHA the revision was built from); empty to skip the check"
+    required: false
+    default: ""
 runs:
   using: composite
   steps:
@@ -23,6 +27,7 @@ runs:
       shell: bash
       env:
         URL: ${{ inputs.url }}
+        EXPECTED_RELEASE: ${{ inputs.expected-release }}
       run: |
         set -eo pipefail
         BODY="$RUNNER_TEMP/health.json"
@@ -42,12 +47,21 @@ runs:
           echo "::error::/health/ready reports MongoDB as unreachable"
           exit 1
         }
+        if [ -n "$EXPECTED_RELEASE" ]; then
+          SERVED="$(jq -r '.release // ""' "$BODY")"
+          if [ "$SERVED" != "$EXPECTED_RELEASE" ]; then
+            echo "::error::$URL serves release '${SERVED:-none}', expected '$EXPECTED_RELEASE': the traffic did not move to this revision."
+            exit 1
+          fi
+          echo "Served release matches: $SERVED"
+        fi
     # A failure here is routing, DNS or certificate, not code.
     - name: Public domain
       if: inputs.public-url != ''
       shell: bash
       env:
         PUBLIC_URL: ${{ inputs.public-url }}
+        EXPECTED_RELEASE: ${{ inputs.expected-release }}
       run: |
         set -eo pipefail
         BODY="$RUNNER_TEMP/public-health.json"
@@ -57,6 +71,15 @@ runs:
           echo "::error::The public API domain does not return status=ok: DNS, certificate or domain mapping."
           exit 1
         }
+        if [ -n "$EXPECTED_RELEASE" ]; then
+          curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$BODY" "$PUBLIC_URL/health/ready"
+          SERVED="$(jq -r '.release // ""' "$BODY")"
+          if [ "$SERVED" != "$EXPECTED_RELEASE" ]; then
+            echo "::error::$PUBLIC_URL serves release '${SERVED:-none}', expected '$EXPECTED_RELEASE': the public domain does not lead to the promoted revision."
+            exit 1
+          fi
+          echo "Public domain serves release $SERVED"
+        fi
     - name: Public domain not provided
       if: inputs.public-url == '' && inputs.public-url-expected == 'true'
       shell: bash

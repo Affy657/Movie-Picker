@@ -1,6 +1,9 @@
 # API rollback (Cloud Run): routes the traffic to an earlier revision.
 #   - Manually triggered (workflow_dispatch).
-#   - Empty `revision` input → previous revision (2nd most recent).
+#   - Empty `revision` input → the most recent revision created BEFORE the one serving the
+#     traffic. Not "the 2nd most recent": a deployment refused at validation leaves a newer
+#     revision that never served, and the 2nd most recent is then the one already in production,
+#     which a rollback would pin without changing anything.
 #   - Cloud Run keeps the revisions: the rollback redeploys nothing, it routes traffic.
 #   - `--to-revisions` PINS the traffic: while the service is pinned, `gcloud run deploy` no
 #     longer routes anything to new revisions. The next deployment restores `latestRevision`
@@ -62,20 +65,37 @@ jobs:
           INPUT_REV: ${{ inputs.revision }}
         run: |
           set -eo pipefail
+          SERVING="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
+            | jq -r '[.status.traffic[]? | select(.percent == 100) | .revisionName] | first // ""')"
+          if [ -z "$SERVING" ]; then
+            echo "::error::No revision serves 100% of the traffic (split in progress?): give the revision explicitly."
+            exit 1
+          fi
+          echo "Serving revision: $SERVING"
           if [ -n "$INPUT_REV" ]; then
             TARGET="$INPUT_REV"
           else
             TARGET="$(gcloud run revisions list \
               --service "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" \
               --sort-by=~metadata.creationTimestamp \
-              --format='value(metadata.name)' | sed -n '2p')"
+              --format='value(metadata.name)' \
+              | awk -v serving="$SERVING" 'found { print; exit } $0 == serving { found = 1 }')"
           fi
           if [ -z "$TARGET" ]; then
-            echo "::error::No target revision determined."
+            echo "::error::No revision older than $SERVING: nothing to roll back to."
             exit 1
           fi
-          echo "Rolling back to revision: $TARGET"
-          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+          if [ "$TARGET" = "$SERVING" ]; then
+            echo "::error::$TARGET already serves the traffic: a rollback to it would only pin the service."
+            exit 1
+          fi
+          RELEASE="$(gcloud run revisions describe "$TARGET" --region "$GCP_REGION" --format=json \
+            | jq -r '[.spec.containers[0].env[]? | select(.name == "SENTRY_RELEASE") | .value] | first // ""')"
+          echo "Rolling back $SERVING -> $TARGET (release ${RELEASE:-unknown})"
+          {
+            echo "target=$TARGET"
+            echo "release=$RELEASE"
+          } >> "$GITHUB_OUTPUT"
       - name: Route 100% of the traffic
         env:
           TARGET: ${{ steps.target.outputs.target }}
@@ -91,10 +111,12 @@ jobs:
           echo "Service URL: $URL"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
       # Same probes as the deployment, /health/ready included: an earlier revision can answer ok
-      # without being ready, if a secret it expects has disappeared since.
+      # without being ready, if a secret it expects has disappeared since. The release check
+      # proves the traffic really moved to the target, not only that something answers.
       - name: Verify production after the switch
         uses: ./.github/actions/check-api-health
         with:
           url: ${{ steps.service.outputs.url }}
           public-url: ${{ secrets.VITE_API_URL }}
           public-url-expected: "true"
+          expected-release: ${{ steps.target.outputs.release }}

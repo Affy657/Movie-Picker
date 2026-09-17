@@ -20,6 +20,13 @@
 #
 # Rollback: `rollback.yml` for the API (earlier Cloud Run revision), `rollback-front.yml` for the
 # web app (republication of the `front-dist-<sha>` artifact archived by `deploy-front`).
+#
+# Two identities on GCP, never the same one. The workflows impersonate the CI service account
+# (`gcloud-auth`), which can push images, create revisions and manage the Scheduler jobs. The
+# revision itself runs as `movie-picker-api@<project>.iam.gserviceaccount.com`, which can only
+# read the secrets mounted below: an API compromised at runtime cannot redeploy itself, rewrite
+# the Scheduler jobs or read a secret it does not use. `cloud-auth-check.yml` checks that the
+# runtime account exists before a deployment finds out.
 
 name: 🚀 Deploy
 
@@ -51,6 +58,12 @@ env:
   GCP_REGION: europe-west1
   GCP_ARTIFACT_REPO: movie-picker
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
+  API_RUNTIME_SERVICE_ACCOUNT_NAME: movie-picker-api
+  # The web lane runs the CLI from the lockfile (`@sentry/cli`, integrity checked by pnpm); the
+  # jobs without Node download the same version and check its checksum, as the other binaries
+  # of the workflows are: an unverified download would run inside a job holding cloud credentials.
+  SENTRY_CLI_VERSION: "2.58.6"
+  SENTRY_CLI_LINUX_X86_64_BINARY_SHA256: "36b689311b399d9332950d84f4299aee682d2d290a770a77372b30a74f7e7add"
 
 jobs:
   # The only gate of this workflow. It replays nothing: it requires the `ci-cd.yml` run of the
@@ -172,10 +185,14 @@ jobs:
           project-id: ${{ secrets.GCP_PROJECT_ID }}
       - run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      # The context is the solution folder, not the project one: `Directory.Build.props` lives
+      # there, and an image built without it compiles with other analyser and audit settings than
+      # the ones `lint-api` validated. The Dockerfile copies only what the API needs.
       - name: Build API image (buildx + GHA layer cache)
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
-          context: apps/api-dotnet/MoviePicker.Api
+          context: apps/api-dotnet
+          file: apps/api-dotnet/MoviePicker.Api/Dockerfile
           tags: movie-picker-api
           load: true
           cache-from: type=gha
@@ -291,6 +308,7 @@ jobs:
           fi
           TAG="s-${GITHUB_SHA:0:7}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          RUNTIME_SA="${API_RUNTIME_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
           SECRETS="MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
           # Optional: once the v4 read access token exists in Secret Manager, the API sends it as a
           # Bearer header and stops appending TMDB_API_KEY to its outbound URLs.
@@ -308,6 +326,7 @@ jobs:
             --region "$GCP_REGION" \
             --platform managed \
             --allow-unauthenticated \
+            --service-account "$RUNTIME_SA" \
             --cpu-boost \
             --no-traffic \
             --tag "$TAG" \
@@ -327,6 +346,7 @@ jobs:
         uses: ./.github/actions/check-api-health
         with:
           url: ${{ steps.deploy.outputs.tag_url }}
+          expected-release: ${{ github.sha }}
       # --to-latest restores `latestRevision: true`: this is also what unpins the service if a
       # manual rollback had frozen it on a named revision.
       - name: Promote the validated revision
@@ -357,19 +377,22 @@ jobs:
             echo "::warning::Cloud Scheduler API disabled on the project: jobs not configured, same consequences as a missing secret. Run 'gcloud services enable cloudscheduler.googleapis.com' then rerun this deployment."
             exit 0
           fi
-          URL="$(gcloud run services describe ${{ env.CLOUD_RUN_SERVICE_NAME }} --region ${{ env.GCP_REGION }} --format='value(status.url)')"
+          URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
           TOKEN="$(gcloud secrets versions access latest --secret=SCHEDULER_TOKEN)"
+          # Read from Secret Manager, so GitHub does not know it as a secret: registered by hand,
+          # otherwise a gcloud error echoing its arguments would print it in a public log.
+          echo "::add-mask::$TOKEN"
           upsert_job() {
             local job="$1" schedule="$2" path="$3"
             local common=(
-              --location "${{ env.GCP_REGION }}"
+              --location "$GCP_REGION"
               --schedule "$schedule"
               --time-zone "Europe/Paris"
               --uri "$URL$path"
               --http-method POST
               --attempt-deadline 300s
             )
-            if gcloud scheduler jobs describe "$job" --location "${{ env.GCP_REGION }}" >/dev/null 2>&1; then
+            if gcloud scheduler jobs describe "$job" --location "$GCP_REGION" >/dev/null 2>&1; then
               gcloud scheduler jobs update http "$job" "${common[@]}" --update-headers "X-Scheduler-Token=$TOKEN"
             else
               gcloud scheduler jobs create http "$job" "${common[@]}" --headers "X-Scheduler-Token=$TOKEN"
@@ -389,12 +412,16 @@ jobs:
           URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
           echo "Production (Cloud Run URL): $URL"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
+      # `expected-release`: `/health/ready` reports the SHA the revision was built from, so the
+      # probe asserts that the traffic really moved, where a bare `status=ok` is what the
+      # previous revision answers too.
       - name: Verify production after promotion
         uses: ./.github/actions/check-api-health
         with:
           url: ${{ steps.service.outputs.url }}
           public-url: ${{ secrets.VITE_API_URL }}
           public-url-expected: "true"
+          expected-release: ${{ github.sha }}
       # Tags pile up on the service if they are not removed, including those of deployments that
       # failed before promotion.
       - name: Remove the validation tag
@@ -415,12 +442,14 @@ jobs:
             echo "SENTRY_AUTH_TOKEN missing, skipped"
             exit 0
           fi
-          curl -sSfL "https://github.com/getsentry/sentry-cli/releases/download/2.58.6/sentry-cli-Linux-x86_64" -o sentry-cli
+          curl -sSfL --retry 3 --retry-all-errors \
+            "https://github.com/getsentry/sentry-cli/releases/download/${SENTRY_CLI_VERSION}/sentry-cli-Linux-x86_64" -o sentry-cli
+          echo "${SENTRY_CLI_LINUX_X86_64_BINARY_SHA256}  sentry-cli" | sha256sum -c -
           chmod +x sentry-cli
           extra=()
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
           ./sentry-cli "${extra[@]}" releases new "$SENTRY_RELEASE" || true
-          ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "api-${{ github.sha }}"
+          ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "api-${SENTRY_RELEASE}"
 
   deploy-front:
     name: 🚀 Deploy web → S3 & CloudFront
@@ -512,7 +541,7 @@ jobs:
           extra=()
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
           pnpm --filter web exec sentry-cli -- "${extra[@]}" releases new "$SENTRY_RELEASE" || true
-          pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-${{ github.sha }}"
+          pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-${SENTRY_RELEASE}"
 
   # `always()` is essential here and harmless: the job deploys nothing, it only compares what was
   # requested with what left. Without it, a target skipped by a red gate would leave the run green
