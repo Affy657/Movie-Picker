@@ -1,5 +1,7 @@
-# Build from the monorepo root:
-#   docker build -t movie-picker-api-dotnet -f apps/api-dotnet/MoviePicker.Api/Dockerfile apps/api-dotnet/MoviePicker.Api
+# Build from the monorepo root, with the solution folder as context: `Directory.Build.props`
+# lives there and carries the analyser, code-style and NuGet audit settings the CI validates.
+#   docker build -t movie-picker-api-dotnet -f apps/api-dotnet/MoviePicker.Api/Dockerfile apps/api-dotnet
+# The tests and the key tool of the solution folder stay out of the context (see ../.dockerignore).
 #
 # Environment variables (Cloud Run / local run):
 #   MONGODB_URI              (required), on GCP: Secret Manager secret referenced by Cloud Run
@@ -12,11 +14,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:e1ffd2a92ae84c1291bc1b6887501f8af98e6331e7af6d4c8d37168c5e87a64c AS build
 WORKDIR /src
 
-COPY *.csproj ./
-RUN dotnet restore -r linux-x64 -p:PublishReadyToRun=true
+COPY Directory.Build.props ./
+COPY MoviePicker.Api/*.csproj MoviePicker.Api/
+RUN dotnet restore MoviePicker.Api/MoviePicker.Api.csproj -r linux-x64 -p:PublishReadyToRun=true
 
-COPY . .
-RUN dotnet publish -c Release -r linux-x64 --self-contained false -p:PublishReadyToRun=true -o /app/publish --no-restore
+COPY MoviePicker.Api/ MoviePicker.Api/
+RUN dotnet publish MoviePicker.Api/MoviePicker.Api.csproj -c Release -r linux-x64 --self-contained false -p:PublishReadyToRun=true -o /app/publish --no-restore
 
 # Chiseled runtime: no shell, no package manager, non-root by default. The `-extra` variant is
 # required, it ships ICU and tzdata: EventSchedule resolves Europe/Paris and the API talks to TMDB

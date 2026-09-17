@@ -1,14 +1,14 @@
 <Project>
-  <!-- Roadmap § 31 : analyzers SDK + style au build ; EditorConfig dans ce dossier. -->
+  <!-- Roadmap § 31: SDK analysers + code style at build time; EditorConfig in this folder. -->
   <PropertyGroup>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <!-- Async non attendu : erreur de build (bugs subtils). Le reste : EditorConfig + CI -warnaserror. -->
+    <!-- Unawaited async: build error (subtle bugs). The rest: EditorConfig + CI -warnaserror. -->
     <WarningsAsErrors>$(WarningsAsErrors);CS4014</WarningsAsErrors>
   </PropertyGroup>
 
-  <!-- GHSA-6c8g-7p36-r338 (SharpCompress, Moderate, zip-slip) : pas de fix amont,
-       API zip-slip non utilisée par MongoDB.Driver (cf. release note 3.8.1, CSHARP-6037). -->
+  <!-- GHSA-6c8g-7p36-r338 (SharpCompress, Moderate, zip-slip): no upstream fix, and the
+       zip-slip API is not used by MongoDB.Driver (see release note 3.8.1, CSHARP-6037). -->
   <ItemGroup>
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-6c8g-7p36-r338" />
   </ItemGroup>

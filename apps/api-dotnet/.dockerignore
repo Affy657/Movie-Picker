@@ -1,0 +1,17 @@
+**/bin/
+**/obj/
+**/.DS_Store
+*.user
+*.log
+.vs/
+.vscode/
+*.md
+MoviePicker.Api/MoviePicker.Api.http
+MoviePicker.Api.Tests/
+MoviePicker.Api.IntegrationTests/
+ToolGenDpKey/
+MoviePicker.slnx
+dotnet-tools.json
+stryker-config.json
+coverlet.runsettings
+coverlet.integration.runsettings

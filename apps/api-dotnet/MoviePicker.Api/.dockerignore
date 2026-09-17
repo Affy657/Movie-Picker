@@ -1,9 +1,0 @@
-bin/
-obj/
-**/.DS_Store
-*.user
-*.log
-.vs/
-.vscode/
-*.md
-MoviePicker.Api.http
