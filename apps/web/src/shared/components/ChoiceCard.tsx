@@ -48,6 +48,7 @@ function nextIndex(key: string, current: number, count: number): number | null {
 interface ChoiceGroupProps<T extends string> {
   value: T | null;
   onChange: (value: T) => void;
+  onSelect?: (value: T) => void;
   ariaLabel?: string;
   ariaLabelledBy?: string;
   className?: string;
@@ -57,6 +58,7 @@ interface ChoiceGroupProps<T extends string> {
 export function ChoiceGroup<T extends string>({
   value,
   onChange,
+  onSelect,
   ariaLabel,
   ariaLabelledBy,
   className,
@@ -75,7 +77,13 @@ export function ChoiceGroup<T extends string>({
     });
   });
 
-  const select = useCallback((next: string) => onChange(next as T), [onChange]);
+  const select = useCallback(
+    (next: string) => {
+      onChange(next as T);
+      onSelect?.(next as T);
+    },
+    [onChange, onSelect]
+  );
 
   const onRadioKeyDown = useCallback(
     (event: KeyboardEvent<HTMLButtonElement>) => {
