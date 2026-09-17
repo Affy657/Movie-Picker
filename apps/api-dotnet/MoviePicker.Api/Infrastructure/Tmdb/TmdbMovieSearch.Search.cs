@@ -43,7 +43,7 @@ public sealed partial class TmdbMovieSearch
 
         var q = Uri.EscapeDataString(trimmedQuery);
         var endpoint = allowSeries ? "search/multi" : "search/movie";
-        var url = $"https://api.themoviedb.org/3/{endpoint}?query={q}&language=fr-FR";
+        var url = $"{ApiBase}/{endpoint}?query={q}&language=fr-FR";
 
         var titleMatchesTask = FetchAndMapResultsAsync(
             url,
@@ -123,7 +123,7 @@ public sealed partial class TmdbMovieSearch
         string rawQuery,
         CancellationToken ct)
     {
-        var url = "https://api.themoviedb.org/3/search/person"
+        var url = $"{ApiBase}/search/person"
             + $"?query={Uri.EscapeDataString(rawQuery)}&language=fr-FR";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
@@ -180,7 +180,7 @@ public sealed partial class TmdbMovieSearch
         string? originalLanguage,
         CancellationToken ct)
     {
-        var url = $"https://api.themoviedb.org/3/person/{personId}/combined_credits?language=fr-FR";
+        var url = $"{ApiBase}/person/{personId}/combined_credits?language=fr-FR";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
         res.EnsureSuccessStatusCode();

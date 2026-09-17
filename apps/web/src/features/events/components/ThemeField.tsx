@@ -162,6 +162,7 @@ export default function ThemeField({
           {pickerOpen && (
             <div
               ref={emojiGridRef}
+              role="presentation"
               className={styles.emojiPopover}
               style={fitLeft !== null ? { left: fitLeft } : undefined}
               onClick={(event) => {

@@ -3,14 +3,12 @@ import clsx from 'clsx';
 import { Film, Plus } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
-import { clearMovieVote, setMovieWheelExclusion, voteMovie } from '@/features/movies/api/moviesApi';
-import { API_ERROR_REASONS, ApiError, getErrorMessage } from '@/shared/api/apiError';
+import { setMovieWheelExclusion } from '@/features/movies/api/moviesApi';
+import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
-import { promptToJoinEvent } from '@/features/events/joinPrompt';
 import type { MovieData } from '@/shared/types/movie';
 import MovieList, { type MovieRowSortKey } from '@/features/movies/components/MovieList';
 import SortControl from '@/features/movies/components/SortControl';
@@ -21,22 +19,15 @@ import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
 import { Skeleton } from '@/shared/components/Skeleton';
-import {
-  useAddToWatchlist,
-  useRemoveFromWatchlist,
-  useWatchlist,
-} from '@/features/watchlist/hooks/useWatchlist';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { useEventMovieVoting } from './useEventMovieVoting';
+import { useEventWatchlistToggle } from './useEventWatchlistToggle';
 import styles from './EventMoviesSection.module.css';
 
 const loadAddMoviePanel = () => import('@/features/movies/components/AddMoviePanel');
 const AddMoviePanel = lazy(loadAddMoviePanel);
 const ADD_MOVIE_CHUNKS = [loadAddMoviePanel, loadMovieDetailsModal];
-
-function watchlistKey(tmdbId: number, mediaType: MovieData['mediaType']): string {
-  return `${tmdbId}|${mediaType ?? 'movie'}`;
-}
 
 const DEFAULT_SORT_DIRECTION: Record<MovieRowSortKey, 'asc' | 'desc'> = {
   score: 'desc',
@@ -120,6 +111,23 @@ function emptyStateMessageKey(input: {
   return input.isFull ? 'movies.list.emptyVisitorFull' : 'movies.list.emptyVisitor';
 }
 
+function useMovieSort() {
+  const [sortBy, setSortBy] = useState<MovieRowSortKey>('score');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const setSort = useCallback(
+    (key: MovieRowSortKey) => {
+      if (key === sortBy) {
+        setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+        return;
+      }
+      setSortBy(key);
+      setSortDir(DEFAULT_SORT_DIRECTION[key]);
+    },
+    [sortBy]
+  );
+  return { sortBy, sortDir, setSort };
+}
+
 function lockedVoteQuotaHint(
   quota: { used: number; max: number } | null,
   t: ReturnType<typeof useTranslation>['t']
@@ -155,7 +163,6 @@ export default function EventMoviesSection({
   isFull = false,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
-  const { track } = useAnalytics();
   const { user } = useAuth();
   const ratingScale = user?.ratingScale;
   const { t } = useTranslation();
@@ -163,122 +170,15 @@ export default function EventMoviesSection({
   const layout: 'grid' | 'list' = isMobile ? 'list' : viewMode;
   useIdlePrefetch(ADD_MOVIE_CHUNKS);
   const sectionHeadingId = useId();
-  const [sortBy, setSortBy] = useState<MovieRowSortKey>('score');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-
-  const handleSetSort = useCallback(
-    (key: MovieRowSortKey) => {
-      if (key === sortBy) {
-        setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-      } else {
-        setSortBy(key);
-        setSortDir(DEFAULT_SORT_DIRECTION[key]);
-      }
-    },
-    [sortBy]
-  );
-
-  const watchlistQuery = useWatchlist({ enabled: !!user });
-  const watchlistItems = useMemo(() => watchlistQuery.data ?? [], [watchlistQuery.data]);
-  const watchlistKeys = useMemo(
-    () => new Set(watchlistItems.map((i) => watchlistKey(i.tmdbId, i.mediaType))),
-    [watchlistItems]
-  );
-
-  const { mutate: addToWatchlist } = useAddToWatchlist({
-    onError: (e) => setActionError(getErrorMessage(e, t('watchlist.card.addError'))),
-  });
-  const { mutate: removeFromWatchlist } = useRemoveFromWatchlist({
-    onError: (e) => setActionError(getErrorMessage(e, t('watchlist.card.removeError'))),
-  });
-
-  const isInWatchlist = useCallback(
-    (m: MovieData) => watchlistKeys.has(watchlistKey(m.tmdbId, m.mediaType)),
-    [watchlistKeys]
-  );
-
-  const handleToggleWatchlist = useCallback(
-    (m: MovieData) => {
-      setActionError(null);
-      if (watchlistKeys.has(watchlistKey(m.tmdbId, m.mediaType))) {
-        removeFromWatchlist({ tmdbId: m.tmdbId, mediaType: m.mediaType });
-      } else {
-        addToWatchlist({
-          tmdbId: m.tmdbId,
-          mediaType: m.mediaType,
-          title: m.title,
-          year: m.year,
-          posterPath: m.posterPath,
-          voteAverage: m.voteAverage,
-          runtimeMinutes: m.runtimeMinutes,
-        });
-      }
-    },
-    [watchlistKeys, addToWatchlist, removeFromWatchlist, setActionError]
-  );
-
-  const [voteErrors, setVoteErrors] = useState<Record<string, { message: string; value: 1 | -1 }>>(
-    {}
-  );
-  const [voteLimitReached, setVoteLimitReached] = useState(false);
+  const { sortBy, sortDir, setSort: handleSetSort } = useMovieSort();
+  const { isInWatchlist, toggleWatchlist } = useEventWatchlistToggle(!!user, setActionError);
+  const { voteErrors, voteLimitReached, dismissVoteLimit, handleVote, handleRetryVote } =
+    useEventMovieVoting({ slug, participant, movies, layout, setActionError, refreshAll });
   const maxVotes = event.config?.maxVotesPerParticipant ?? null;
   const votesUsed = useMemo(() => movies.filter((m) => m.myVote != null).length, [movies]);
   const voteQuota =
     maxVotes !== null && participant && !isFinished ? { used: votesUsed, max: maxVotes } : null;
   const voteQuotaLockedHint = lockedVoteQuotaHint(voteQuota, t);
-
-  const clearVoteError = useCallback((movieId: string) => {
-    setVoteErrors((prev) => {
-      if (!(movieId in prev)) return prev;
-      const next = { ...prev };
-      delete next[movieId];
-      return next;
-    });
-  }, []);
-
-  const handleVote = useCallback(
-    async (movieId: string, value: 1 | -1) => {
-      if (!participant) {
-        promptToJoinEvent();
-        return;
-      }
-      setActionError(null);
-      clearVoteError(movieId);
-      const current = movies.find((m) => m.id === movieId)?.myVote ?? null;
-      try {
-        if (current === value) {
-          await clearMovieVote(slug, movieId, participant.participantId);
-          track('vote_cast', { value, cleared: true });
-        } else {
-          await voteMovie(slug, movieId, participant.participantId, value);
-          track('vote_cast', { value });
-        }
-        refreshAll();
-      } catch (e) {
-        if (ApiError.is(e) && e.reason === API_ERROR_REASONS.voteLimitReached) {
-          setVoteLimitReached(true);
-          refreshAll();
-          return;
-        }
-        if (layout === 'list') {
-          const message = getErrorMessage(e, t('movies.list.voteErrorRow'));
-          setVoteErrors((prev) => ({ ...prev, [movieId]: { message, value } }));
-        } else {
-          setActionError(getErrorMessage(e, t('movies.list.voteError')));
-        }
-      }
-    },
-    [slug, participant, movies, setActionError, refreshAll, track, t, layout, clearVoteError]
-  );
-
-  const handleRetryVote = useCallback(
-    (movieId: string) => {
-      const pending = voteErrors[movieId];
-      if (!pending) return;
-      void handleVote(movieId, pending.value);
-    },
-    [voteErrors, handleVote]
-  );
 
   const handleToggleWheelExclusion = useCallback(
     (m: MovieData) => {
@@ -344,13 +244,16 @@ export default function EventMoviesSection({
     { key: 'releaseDate' as const, label: t('movies.list.sortReleaseDate') },
   ];
 
+  const showSortControl =
+    moviesQuery.isSuccess && (layout === 'grid' || isMobile) && movies.length > 1;
+  const canAddFromEmptyState = !!participant && !addMovieOpen;
   const emptyState = isFinished ? null : (
     <EmptyState
       icon={<Film size={ICON_SIZE['3xl']} aria-hidden />}
       title={t('movies.list.emptyTitle')}
       message={t(emptyStateMessageKey({ isParticipant: !!participant, isFull }))}
       actions={
-        participant && !addMovieOpen ? (
+        canAddFromEmptyState ? (
           <Button type="button" variant="primary" onClick={() => onAddMovieOpenChange(true)}>
             <Plus size={ICON_SIZE.md} aria-hidden />
             {t('movies.search.label')}
@@ -377,7 +280,7 @@ export default function EventMoviesSection({
     viewMode: layout,
     isMobile,
     isInWatchlist: user ? isInWatchlist : undefined,
-    onToggleWatchlist: user ? handleToggleWatchlist : undefined,
+    onToggleWatchlist: user ? toggleWatchlist : undefined,
     onToggleWheelExclusion: event.isHost && !isFinished ? handleToggleWheelExclusion : undefined,
     voteErrors,
     onRetryVote: handleRetryVote,
@@ -426,21 +329,19 @@ export default function EventMoviesSection({
         </div>
       )}
 
-      {moviesQuery.isSuccess && (layout === 'grid' || isMobile) && movies.length > 1 && (
+      {showSortControl && (
         <div className={styles.sectionHeader}>
-          {(layout === 'grid' || isMobile) && movies.length > 1 && (
-            <SortControl
-              sortOptions={sortOptions}
-              sortBy={sortBy}
-              sortDir={sortDir}
-              onSetSort={handleSetSort}
-              sortLabel={t('movies.list.sortLabel')}
-              sortMenuAriaLabel={t('movies.list.sortLabel')}
-              sortDirectionAscLabel={t('events.myEvents.sortDirectionAsc')}
-              sortDirectionDescLabel={t('events.myEvents.sortDirectionDesc')}
-              isMobile={isMobile}
-            />
-          )}
+          <SortControl
+            sortOptions={sortOptions}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSetSort={handleSetSort}
+            sortLabel={t('movies.list.sortLabel')}
+            sortMenuAriaLabel={t('movies.list.sortLabel')}
+            sortDirectionAscLabel={t('events.myEvents.sortDirectionAsc')}
+            sortDirectionDescLabel={t('events.myEvents.sortDirectionDesc')}
+            isMobile={isMobile}
+          />
         </div>
       )}
 
@@ -501,8 +402,8 @@ export default function EventMoviesSection({
         confirmLabel={t('movies.list.voteLimitReachedOk')}
         confirmTone="default"
         hideCancel
-        onConfirm={() => setVoteLimitReached(false)}
-        onCancel={() => setVoteLimitReached(false)}
+        onConfirm={dismissVoteLimit}
+        onCancel={dismissVoteLimit}
         testId="vote-limit-dialog"
       />
     </section>

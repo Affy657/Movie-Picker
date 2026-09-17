@@ -76,8 +76,8 @@ public sealed partial class TmdbMovieSearch
         CancellationToken ct)
     {
         var typeSegment = MediaTypeSegment(mediaType);
-        var detailUrl = $"https://api.themoviedb.org/3/{typeSegment}/{tmdbId}?language=fr-FR";
-        var watchUrl = $"https://api.themoviedb.org/3/{typeSegment}/{tmdbId}/watch/providers";
+        var detailUrl = $"{ApiBase}/{typeSegment}/{tmdbId}?language=fr-FR";
+        var watchUrl = $"{ApiBase}/{typeSegment}/{tmdbId}/watch/providers";
 
         var detailTask = _http.GetAsync(detailUrl, HttpCompletionOption.ResponseHeadersRead, ct);
         var watchTask = _http.GetAsync(watchUrl, HttpCompletionOption.ResponseHeadersRead, ct);

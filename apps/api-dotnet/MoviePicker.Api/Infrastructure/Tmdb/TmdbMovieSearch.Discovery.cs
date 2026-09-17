@@ -15,7 +15,7 @@ public sealed partial class TmdbMovieSearch
     private static string BuildDiscoverUrl(TmdbDiscoveryCriteria criteria, int page)
     {
         var sortBy = string.IsNullOrWhiteSpace(criteria.SortBy) ? "popularity.desc" : criteria.SortBy.Trim();
-        var url = "https://api.themoviedb.org/3/discover/movie?language=fr-FR"
+        var url = $"{ApiBase}/discover/movie?language=fr-FR"
             + $"&sort_by={Uri.EscapeDataString(sortBy)}&page={page}";
         if (criteria.GenreIds?.Count > 0)
             url += $"&with_genres={string.Join(",", criteria.GenreIds)}";
@@ -56,7 +56,7 @@ public sealed partial class TmdbMovieSearch
     {
         RequireCredentials();
         return FetchPagesAsync(
-            page => $"https://api.themoviedb.org/3/trending/movie/week?language=fr-FR&page={page}",
+            page => $"{ApiBase}/trending/movie/week?language=fr-FR&page={page}",
             pages,
             ct);
     }
@@ -69,7 +69,7 @@ public sealed partial class TmdbMovieSearch
         RequireCredentials();
         var r = string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
         return FetchPagesAsync(
-            page => $"https://api.themoviedb.org/3/movie/now_playing?language=fr-FR&region={r}&page={page}",
+            page => $"{ApiBase}/movie/now_playing?language=fr-FR&region={r}&page={page}",
             pages,
             ct);
     }
@@ -80,7 +80,7 @@ public sealed partial class TmdbMovieSearch
     {
         RequireCredentials();
         return FetchPagesAsync(
-            page => $"https://api.themoviedb.org/3/movie/{tmdbId}/recommendations?language=fr-FR&page={page}",
+            page => $"{ApiBase}/movie/{tmdbId}/recommendations?language=fr-FR&page={page}",
             2,
             ct);
     }
@@ -134,7 +134,7 @@ public sealed partial class TmdbMovieSearch
     private async Task<JsonDocument?> FetchCollectionRootAsync(int collectionId, CancellationToken ct)
     {
         RequireCredentials();
-        var url = $"https://api.themoviedb.org/3/collection/{collectionId}?language=fr-FR";
+        var url = $"{ApiBase}/collection/{collectionId}?language=fr-FR";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         if (!res.IsSuccessStatusCode)

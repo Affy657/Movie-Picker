@@ -32,6 +32,11 @@ type Answer = { candidate: LetterboxdCandidate } | 'skip';
 
 const SKIP_VALUE = 'skip';
 
+function choiceValueOf(answer: Answer | undefined): string | null {
+  if (answer === 'skip') return SKIP_VALUE;
+  return answer ? String(answer.candidate.tmdbId) : null;
+}
+
 function confirmStepLabel(
   confirming: boolean,
   isLast: boolean,
@@ -116,12 +121,7 @@ export default function LetterboxdChoicesModal({
 
   const selectNone = () => setAnswers((prev) => ({ ...prev, [current.rowIndex]: 'skip' }));
 
-  const choiceValue =
-    currentAnswer === 'skip'
-      ? SKIP_VALUE
-      : currentAnswer
-        ? String(currentAnswer.candidate.tmdbId)
-        : null;
+  const choiceValue = choiceValueOf(currentAnswer);
 
   const selectByValue = (value: string) => {
     if (value === SKIP_VALUE) {
