@@ -219,21 +219,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (34 points produit, 17 points tech, 34 restants)
-
-**Objectif** : faire passer la soirée en temps réel et armer l'hôte, avec la sécurité du compte en complément.
-
-- ⬜ `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
-- ⬜ `M` **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
-- ⬜ `L` **Co-hôte** : l'hôte peut désigner un ou plusieurs participants comme co-hôtes ; mêmes droits que l'hôte (lancer la roue, expulser un participant, modifier les paramètres) sauf supprimer la soirée.
-- ⬜ `L` **Synchronisation temps réel** : remplacer le polling par une connexion temps réel ; propositions, votes et arrivées de participants apparaissent sans délai perceptible.
-- ⬜ `M` **Présence sur la page soirée** : avatars des participants actuellement connectés et signal « en train de proposer un film », posés sur la connexion temps réel.
-- ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
-- ⬜ `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
-
----
-
-## 📋 V1.8, planifiée (24 points)
+## 📋 V1.7, planifiée (24 points, 24 restants)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
@@ -244,6 +230,20 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ⬜ `M` **Top 3 films préférés sur le profil** : sélectionner et afficher trois films favoris sur son profil public `/u/:handle` via une recherche TMDB, visibles par tous et modifiables depuis les paramètres.
 - ⬜ `M` **Photo de profil personnalisée** : téléverser une image comme photo de profil, en remplacement de l'avatar généré actuel.
 - ⬜ `S` **Pioche aléatoire dans la watchlist** : bouton qui tire un film au hasard parmi les films à voir de la watchlist, proposable dans une soirée en un clic.
+
+---
+
+## 📋 V1.8, planifiée (34 points)
+
+**Objectif** : faire passer la soirée en temps réel et armer l'hôte, avec la sécurité du compte en complément.
+
+- ⬜ `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
+- ⬜ `M` **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
+- ⬜ `L` **Co-hôte** : l'hôte peut désigner un ou plusieurs participants comme co-hôtes ; mêmes droits que l'hôte (lancer la roue, expulser un participant, modifier les paramètres) sauf supprimer la soirée.
+- ⬜ `L` **Synchronisation temps réel** : remplacer le polling par une connexion temps réel ; propositions, votes et arrivées de participants apparaissent sans délai perceptible.
+- ⬜ `M` **Présence sur la page soirée** : avatars des participants actuellement connectés et signal « en train de proposer un film », posés sur la connexion temps réel.
+- ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
+- ⬜ `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
 
 ---
 
@@ -262,7 +262,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 > **Note V2, application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
-- `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Depend de la synchronisation temps réel (V1.7) et de la consultation hors-ligne (V1.9).
+- `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Depend de la synchronisation temps réel (V1.8) et de la consultation hors-ligne (V1.9).
 - `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion.
 - `M` **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
 - `L` **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
