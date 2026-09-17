@@ -164,13 +164,11 @@ export default function ThemeField({
               ref={emojiGridRef}
               className={styles.emojiPopover}
               style={fitLeft !== null ? { left: fitLeft } : undefined}
-              onClick={(event) => {
-                if ((event.target as HTMLElement).closest('[role="radio"]')) setPickerOpen(false);
-              }}
             >
               <ChoiceGroup
                 value={emoji}
                 onChange={onEmojiChange}
+                onSelect={() => setPickerOpen(false)}
                 ariaLabel={t('events.settings.emojiListLabel')}
                 className={styles.emojiGrid}
               >

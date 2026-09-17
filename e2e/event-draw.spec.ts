@@ -8,6 +8,10 @@ import {
 } from './helpers';
 
 test.describe('Draw (host)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+  });
+
   test('names the winner by hand, then takes it out of the results', async ({ page }) => {
     test.setTimeout(120_000);
     await registerAccount(page, 'HoteChoix');
@@ -18,7 +22,7 @@ test.describe('Draw (host)', () => {
     await expect(page.getByText(/choisissez le film à désigner gagnant/i)).toBeVisible();
     await page
       .getByRole('button', { name: `${STUB_MOVIE} : désigner ce film comme gagnant` })
-      .click({ force: true });
+      .click();
 
     const dialog = page.getByRole('dialog').filter({ hasText: /film choisi par l.hôte/i });
     await expect(dialog).toBeVisible({ timeout: 20_000 });
@@ -38,9 +42,7 @@ test.describe('Draw (host)', () => {
     await page.getByRole('button', { name: 'Autres actions sur le tirage' }).click();
     await page.getByRole('menuitem', { name: 'Retirer un gagnant' }).click();
     await expect(page.getByText(/choisissez le film gagnant à retirer/i)).toBeVisible();
-    await page
-      .getByRole('button', { name: `${STUB_MOVIE} : retirer ce film du palmarès` })
-      .click({ force: true });
+    await page.getByRole('button', { name: `${STUB_MOVIE} : retirer ce film du palmarès` }).click();
 
     await expect(page.getByRole('button', { name: 'Lancer la roue' })).toBeVisible({
       timeout: 15_000,

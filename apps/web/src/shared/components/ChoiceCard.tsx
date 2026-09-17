@@ -1,7 +1,9 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useLayoutEffect,
+  useMemo,
   useRef,
   type ButtonHTMLAttributes,
   type KeyboardEvent,
@@ -15,6 +17,7 @@ import styles from './ChoiceCard.module.css';
 interface ChoiceGroupContextValue {
   value: string | null;
   select: (value: string) => void;
+  onRadioKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
 }
 
 const ChoiceGroupContext = createContext<ChoiceGroupContextValue | null>(null);
@@ -45,6 +48,7 @@ function nextIndex(key: string, current: number, count: number): number | null {
 interface ChoiceGroupProps<T extends string> {
   value: T | null;
   onChange: (value: T) => void;
+  onSelect?: (value: T) => void;
   ariaLabel?: string;
   ariaLabelledBy?: string;
   className?: string;
@@ -54,6 +58,7 @@ interface ChoiceGroupProps<T extends string> {
 export function ChoiceGroup<T extends string>({
   value,
   onChange,
+  onSelect,
   ariaLabel,
   ariaLabelledBy,
   className,
@@ -72,30 +77,44 @@ export function ChoiceGroup<T extends string>({
     });
   });
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const container = containerRef.current;
-    const target = event.target as HTMLElement;
-    if (!container || !target.matches(RADIO_SELECTOR)) return;
-    const radios = radiosOf(container);
-    const next = nextIndex(event.key, radios.indexOf(target as HTMLButtonElement), radios.length);
-    if (next === null) return;
-    event.preventDefault();
-    const radio = radios[next];
-    const nextValue = radio?.dataset.value;
-    if (!radio || nextValue === undefined) return;
-    onChange(nextValue as T);
-    radio.focus();
-  };
+  const select = useCallback(
+    (next: string) => {
+      onChange(next as T);
+      onSelect?.(next as T);
+    },
+    [onChange, onSelect]
+  );
+
+  const onRadioKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLButtonElement>) => {
+      const container = containerRef.current;
+      if (!container) return;
+      const radios = radiosOf(container);
+      const next = nextIndex(event.key, radios.indexOf(event.currentTarget), radios.length);
+      if (next === null) return;
+      event.preventDefault();
+      const radio = radios[next];
+      const nextValue = radio?.dataset.value;
+      if (!radio || nextValue === undefined) return;
+      onChange(nextValue as T);
+      radio.focus();
+    },
+    [onChange]
+  );
+
+  const contextValue = useMemo(
+    () => ({ value, select, onRadioKeyDown }),
+    [value, select, onRadioKeyDown]
+  );
 
   return (
-    <ChoiceGroupContext.Provider value={{ value, select: (next) => onChange(next as T) }}>
+    <ChoiceGroupContext.Provider value={contextValue}>
       <div
         ref={containerRef}
         role="radiogroup"
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
         className={clsx(styles.group, className)}
-        onKeyDown={onKeyDown}
       >
         {children}
       </div>
@@ -105,7 +124,7 @@ export function ChoiceGroup<T extends string>({
 
 type ChoiceCardProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
-  'value' | 'onChange' | 'onClick' | 'role' | 'type' | 'title'
+  'value' | 'onChange' | 'onClick' | 'onKeyDown' | 'role' | 'type' | 'title'
 > & {
   value: string;
   ariaLabel?: string;
@@ -149,6 +168,7 @@ export function ChoiceCard({
         className
       )}
       onClick={() => group.select(value)}
+      onKeyDown={group.onRadioKeyDown}
     >
       {indicator ? (
         <span className={styles.indicator} aria-hidden="true">

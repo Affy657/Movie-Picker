@@ -59,6 +59,27 @@ describe('ChoiceGroup and ChoiceCard', () => {
     expect(onChange).toHaveBeenLastCalledWith('c');
   });
 
+  it('reports an activation through onSelect, not an arrow move', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <ChoiceGroup value="a" onChange={vi.fn()} onSelect={onSelect} ariaLabel="Choix">
+        <ChoiceCard value="a" title="A" />
+        <ChoiceCard value="b" title="B" />
+      </ChoiceGroup>
+    );
+
+    screen.getByRole('radio', { name: 'A' }).focus();
+    await user.keyboard('{ArrowDown}');
+    expect(onSelect).not.toHaveBeenCalled();
+
+    await user.keyboard('{Enter}');
+    expect(onSelect).toHaveBeenLastCalledWith('b');
+
+    await user.click(screen.getByRole('radio', { name: 'A' }));
+    expect(onSelect).toHaveBeenLastCalledWith('a');
+  });
+
   it('renders a disabled card as a disabled radio the arrows skip', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

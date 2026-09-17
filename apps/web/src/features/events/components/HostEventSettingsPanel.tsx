@@ -199,6 +199,16 @@ function validateMaxParticipants(draft: SettingsDraft, t: Translate, errors: Fie
   return value;
 }
 
+function maxParticipantsHintFor(participantCount: number, t: Translate): string {
+  if (participantCount === 1) {
+    return t('events.settings.maxParticipantsHintOne', { max: MAX_EVENT_PARTICIPANTS });
+  }
+  return t('events.settings.maxParticipantsHintMany', {
+    count: participantCount,
+    max: MAX_EVENT_PARTICIPANTS,
+  });
+}
+
 function validateMaxVotes(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
   if (!draft.voteLimitEnabled) return null;
   const value = Number(draft.maxVotes.trim());
@@ -286,6 +296,7 @@ export default function HostEventSettingsPanel({
   useEffect(() => () => clearTimeout(saveTimerRef.current), []);
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const maxParticipantsHint = maxParticipantsHintFor(event.participantCount ?? 0, t);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>('saved');
 
@@ -619,18 +630,7 @@ export default function HostEventSettingsPanel({
                 label={t('events.settings.maxParticipantsLabel')}
                 htmlFor="host-cfg-max-participants"
                 error={fieldErrors.maxParticipants}
-                hint={
-                  fieldErrors.maxParticipants
-                    ? undefined
-                    : (event.participantCount ?? 0) === 1
-                      ? t('events.settings.maxParticipantsHintOne', {
-                          max: MAX_EVENT_PARTICIPANTS,
-                        })
-                      : t('events.settings.maxParticipantsHintMany', {
-                          count: event.participantCount ?? 0,
-                          max: MAX_EVENT_PARTICIPANTS,
-                        })
-                }
+                hint={fieldErrors.maxParticipants ? undefined : maxParticipantsHint}
                 className={styles.field}
               >
                 {({ id, describedBy, invalid }) => (

@@ -12,6 +12,7 @@ namespace MoviePicker.Api.Infrastructure.Tmdb;
 
 public sealed partial class TmdbMovieSearch : ITmdbMovieSearch
 {
+    private const string ApiBase = "https://api.themoviedb.org/3";
     private const string PosterBase = "https://image.tmdb.org/t/p/w154";
     private const string LogoBase = "https://image.tmdb.org/t/p/w45";
     private const string YoutubeWatchBase = "https://www.youtube.com/watch?v=";

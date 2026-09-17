@@ -154,26 +154,24 @@ function PasswordRow({ user }: Readonly<{ user: UserProfile }>) {
         )}
 
         {user.hasPassword && (
-          <>
-            <Field label={t('auth.account.changePasswordCurrentLabel')} htmlFor="change-pw-current">
-              {({ id }) => (
-                <input
-                  id={id}
-                  type="password"
-                  className="input"
-                  autoComplete="current-password"
-                  value={currentPassword}
-                  onChange={(e) => {
-                    setCurrentPassword(e.target.value);
-                    setValidationError(null);
-                    clearError();
-                  }}
-                  required
-                  aria-describedby={errorMsg ? 'change-pw-error' : undefined}
-                />
-              )}
-            </Field>
-          </>
+          <Field label={t('auth.account.changePasswordCurrentLabel')} htmlFor="change-pw-current">
+            {({ id }) => (
+              <input
+                id={id}
+                type="password"
+                className="input"
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(e) => {
+                  setCurrentPassword(e.target.value);
+                  setValidationError(null);
+                  clearError();
+                }}
+                required
+                aria-describedby={errorMsg ? 'change-pw-error' : undefined}
+              />
+            )}
+          </Field>
         )}
 
         <Field
