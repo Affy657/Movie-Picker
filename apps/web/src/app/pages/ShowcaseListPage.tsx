@@ -421,13 +421,9 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 inWatchlist={watchlist.has(item)}
                 onToggleWatchlist={() => watchlist.toggle(item)}
                 onOpenDetails={() => setDetailsTarget(item)}
-                onProposeFallback={() => setProposeTarget(item)}
-                openDetailsAriaLabel={t('profile.movies.card.openDetailsAria', {
-                  title: item.title,
-                })}
+                onProposeToEvent={() => setProposeTarget(item)}
                 ratingScale={user?.ratingScale}
                 leadingBadge={rankBadge(item.rank, t)}
-                t={t}
               />
             ))}
           </ul>
@@ -452,6 +448,15 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
           tmdbId={detailsTarget.tmdbId}
           mediaType={detailsTarget.mediaType}
           posterSrc={posterImageSrc(detailsTarget.posterPath)}
+          libraryContext={
+            isLoggedIn
+              ? {
+                  inWatchlist: watchlist.has(detailsTarget),
+                  onToggleWatchlist: () => watchlist.toggle(detailsTarget),
+                  onProposeToEvent: () => setProposeTarget(detailsTarget),
+                }
+              : undefined
+          }
           onClose={() => setDetailsTarget(null)}
         />
       )}

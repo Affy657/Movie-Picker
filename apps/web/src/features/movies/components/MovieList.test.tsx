@@ -1,10 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MovieList from '@/features/movies/components/MovieList';
 import type { MovieData, WatchProviderOffer } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';
+import { stubHoverCapability } from '@/test-utils/matchMedia';
 
 const renderDetailsModal = vi.fn();
 
@@ -76,6 +77,8 @@ function baseProps() {
 }
 
 describe('MovieList', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
   it('does not mount the movie details modal before its first opening', async () => {
     renderDetailsModal.mockClear();
     renderWithLocale(
@@ -389,11 +392,65 @@ describe('MovieList', () => {
       expect(screen.queryByText(/action/i)).not.toBeInTheDocument();
     });
 
-    it('affiche aussi le menu kebab sur mobile', () => {
+    it('mounts no kebab on a device without hover capability', () => {
+      renderWithLocale(
+        <MovieList movies={[movies[0]!]} {...baseProps()} isMobile viewMode="grid" />
+      );
+      expect(screen.queryByRole('button', { name: /plus d’actions/i })).not.toBeInTheDocument();
+      expect(screen.getByTestId('poster-details-trigger')).toBeInTheDocument();
+    });
+
+    it('mounts the kebab on a hover-capable device, whatever the isMobile prop says', () => {
+      stubHoverCapability();
       renderWithLocale(
         <MovieList movies={[movies[0]!]} {...baseProps()} isMobile viewMode="grid" />
       );
       expect(screen.getByRole('button', { name: /plus d’actions/i })).toBeInTheDocument();
+    });
+
+    it('keeps the kebab without hover for a movie that has no details to open', () => {
+      renderWithLocale(
+        <MovieList
+          movies={[{ ...movies[0]!, tmdbId: 0 }]}
+          {...baseProps()}
+          participantId="p0"
+          participantPseudo="Alice"
+          isHost
+          viewMode="grid"
+        />
+      );
+      expect(screen.getByRole('button', { name: /plus d’actions/i })).toBeInTheDocument();
+    });
+
+    it('kebab menu: lists the items in the unified order for the host', async () => {
+      stubHoverCapability();
+      renderWithLocale(
+        <MovieList
+          movies={[movies[0]!]}
+          {...baseProps()}
+          participantId="p0"
+          participantPseudo="Alice"
+          isHost
+          viewMode="grid"
+          onToggleWatchlist={vi.fn()}
+          onToggleWheelExclusion={vi.fn()}
+        />
+      );
+      await userEvent.click(screen.getByRole('button', { name: /Plus d’actions/ }));
+      const names = screen
+        .getAllByRole('menuitem')
+        .map((el) => el.getAttribute('aria-label') ?? el.textContent);
+      expect(names).toEqual([
+        'Voir les détails',
+        'Ajouter à ma liste',
+        'Exclure du tirage',
+        'Ouvrir sur Letterboxd',
+        'Retirer « Inception » en tant qu’hôte',
+      ]);
+      expect(
+        screen.queryByRole('menuitem', { name: /imdb|allociné|tmdb/i })
+      ).not.toBeInTheDocument();
+      expect(screen.getAllByRole('separator')).toHaveLength(2);
     });
 
     it('vue grille : abonnement seul → chips flatrate, aucune pastille location/achat', () => {
@@ -459,6 +516,7 @@ describe('MovieList', () => {
     });
 
     it('menu kebab : propose « Exclure du tirage » et appelle le callback avec le film', async () => {
+      stubHoverCapability();
       const onToggleWheelExclusion = vi.fn();
       renderWithLocale(
         <MovieList
@@ -477,6 +535,7 @@ describe('MovieList', () => {
     });
 
     it('menu kebab : « Retirer » appelle le callback avec le film, sans le retirer directement', async () => {
+      stubHoverCapability();
       const onRemove = vi.fn();
       renderWithLocale(
         <MovieList
@@ -497,6 +556,7 @@ describe('MovieList', () => {
     });
 
     it('kebab menu: switches to "Put back in the draw" for a movie already excluded', async () => {
+      stubHoverCapability();
       renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, excludedFromWheel: true }]}

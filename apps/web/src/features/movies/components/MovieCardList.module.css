@@ -6,8 +6,17 @@
   transition: box-shadow var(--duration-base) var(--ease-default);
 }
 
+.card:focus-within {
+  --opacity-card-kebab: 1;
+}
+
 @media (hover: hover) {
+  .card {
+    --opacity-card-kebab: 0;
+  }
+
   .card:hover {
+    --opacity-card-kebab: 1;
     box-shadow: var(--shadow-md);
   }
 }

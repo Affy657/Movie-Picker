@@ -1270,7 +1270,6 @@ export const fr = {
     loadError: 'Impossible de charger votre liste.',
     loadingDetail: 'Chargement de votre liste…',
     addError: 'Ajout à la liste impossible.',
-    removeError: 'Retrait de la liste impossible.',
     removeAria: 'Retirer « {{title}} » de ma liste',
     letterboxdCta: 'Importer depuis Letterboxd',
     letterboxdCtaShort: 'Importer',
@@ -1300,7 +1299,6 @@ export const fr = {
       addAction: 'Ajouter à ma liste',
       removeAction: 'Retirer de ma liste',
       proposeAction: 'Proposer dans une soirée',
-      proposeShortLabel: 'Proposer',
       detailsAction: 'Voir les détails',
       openDetailsAria: 'Voir les détails de « {{title}} »',
       inWatchlistBadgeAria: 'Déjà dans votre liste',
@@ -1848,9 +1846,6 @@ export const fr = {
     movies: {
       title: 'Derniers films vus',
       seeAll: 'Tout voir',
-      card: {
-        openDetailsAria: 'Voir les détails de « {{title}} »',
-      },
       backLink: 'Retour au profil',
       pageTitle: 'Les films vus par {{name}}',
       seoDescription:

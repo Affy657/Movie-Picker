@@ -55,5 +55,9 @@ export function useRecommendationSeed(enabled: boolean) {
     enabled,
   });
   const seed = query.data?.items?.[0];
-  return { seedTmdbId: seed?.tmdbId, seedTitle: seed?.title };
+  return {
+    seedTmdbId: seed?.tmdbId,
+    seedTitle: seed?.title,
+    isPending: enabled && query.isPending,
+  };
 }

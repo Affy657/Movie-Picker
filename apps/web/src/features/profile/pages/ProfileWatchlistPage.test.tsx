@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -6,6 +6,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import ProfileWatchlistPage from '@/features/profile/pages/ProfileWatchlistPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { stubHoverCapability } from '@/test-utils/matchMedia';
 import { TEST_API_V1 } from '@/mocks/handlers';
 
 const ALICE_PROFILE = {
@@ -72,7 +73,10 @@ describe('ProfileWatchlistPage (MSW)', () => {
   );
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+    vi.unstubAllGlobals();
+  });
   afterAll(() => server.close());
 
   it('shows the title, the counter and the movies to watch, with a link back to the profile', async () => {
@@ -112,9 +116,45 @@ describe('ProfileWatchlistPage (MSW)', () => {
     renderPage('alice');
     await screen.findByText('Inception');
 
+    expect(screen.queryByRole('button', { name: /plus d.actions/i })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /voir les détails de « inception »/i }));
 
     expect(await screen.findByRole('heading', { name: 'Inception', level: 2 })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
+  });
+
+  it('hover, logged in: the kebab offers the watchlist toggle and the proposal', async () => {
+    stubHoverCapability();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u-me',
+          displayName: 'Bob',
+          emailMasked: 'b***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'ten',
+        })
+      ),
+      http.get(`${TEST_API_V1}/watchlist`, () =>
+        HttpResponse.json({ items: [watchlistItem({ title: 'Inception', year: '2010' })] })
+      )
+    );
+    const user = userEvent.setup();
+    renderPage('alice');
+    await screen.findByText('Inception');
+
+    await user.click(await screen.findByRole('button', { name: /plus d.actions.*inception/i }));
+
+    const names = screen
+      .getAllByRole('menuitem')
+      .map((item) => item.getAttribute('aria-label') ?? item.textContent);
+    expect(names).toEqual([
+      'Voir les détails',
+      'Retirer de ma liste',
+      'Proposer dans une soirée',
+      'Ouvrir sur Letterboxd',
+    ]);
   });
 
   it('shows an empty state when the watchlist contains nothing', async () => {

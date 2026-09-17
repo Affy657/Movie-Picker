@@ -57,7 +57,7 @@
   padding: 0;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 7.5rem;
+  grid-auto-columns: 8.4rem;
   gap: var(--space-3);
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -82,7 +82,7 @@
   composes: expanded from '@/shared/components/tapTarget.module.css';
   position: absolute;
   top: 50%;
-  transform: translateY(calc(-50% - var(--space-5)));
+  transform: translateY(calc(-50% - var(--space-8)));
   z-index: var(--z-raised-above);
   display: inline-flex;
   align-items: center;

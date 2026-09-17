@@ -50,11 +50,6 @@
 
   --color-overlay-backdrop: rgba(0, 0, 0, 0.55);
   --color-overlay-backdrop-strong: rgba(0, 0, 0, 0.82);
-  --on-poster-scrim-gradient: linear-gradient(
-    to top,
-    rgba(6, 10, 20, 0.94) 30%,
-    rgba(6, 10, 20, 0) 100%
-  );
   --color-texture-dot: rgba(255, 255, 255, 0.06);
 
   --on-poster-fg: #e2e8f0;

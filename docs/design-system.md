@@ -182,7 +182,7 @@ Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue,
 
 | Brique | Props | Rôle |
 |---|---|---|
-| `MenuPanel` | `ariaLabel`, `anchored`, attributs natifs de `<div>` | porte lui-même les flèches, Home et End entre ses `menuitem` non désactivés ; `anchored={false}` retire l'ancrage sous le déclencheur, pour un panneau porté par un portail ou posé en `fixed` (le menu des cartes film, le survol « proposer dans une soirée »), qui garde son état d'ouverture local |
+| `MenuPanel` | `ariaLabel`, `anchored`, attributs natifs de `<div>` | porte lui-même les flèches, Home et End entre ses `menuitem` non désactivés ; `anchored={false}` retire l'ancrage sous le déclencheur, pour un panneau porté par un portail ou posé en `fixed` (le menu des cartes film), qui garde son état d'ouverture local |
 | `MenuItem` | `icon`, `href` (lien externe, `external` ouvre un nouvel onglet avec `rel="noopener noreferrer"`), `to` (route interne, rend un `<Link>`), `selected`, `tone` `default` / `danger`, `disabled`, `ariaLabel`, `title`, `aria-haspopup` | `disabled` rend un `<button disabled>` même avec `href` ou `to` ; `ariaLabel` et `title` quand le nom accessible diffère du texte ; `aria-haspopup` quand l'entrée ouvre une boîte de dialogue ; un libellé sans jambage est nudgé comme des petites capitales (`--text-optical-nudge-caps`) |
 | `MenuLabel`, `MenuSeparator` | | titre de groupe et séparateur |
 

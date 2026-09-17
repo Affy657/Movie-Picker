@@ -1,7 +1,9 @@
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
-import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
-import MoviePosterCard from '@/features/movies/components/MoviePosterCard';
+import MovieBrowseCard, {
+  type MovieBrowseCardItem,
+  type MovieLibraryActions,
+} from '@/features/movies/components/MovieBrowseCard';
 import type { MovieMediaType } from '@/shared/types/movie';
 
 export interface PersonalRowItem {
@@ -18,7 +20,19 @@ interface Props {
   seeAllLabel?: string;
   items: PersonalRowItem[];
   isPending: boolean;
+  eagerCount?: number;
+  library: MovieLibraryActions;
   onSelect: (item: PersonalRowItem) => void;
+}
+
+function toCardItem(item: PersonalRowItem): MovieBrowseCardItem {
+  return {
+    tmdbId: item.tmdbId,
+    mediaType: item.mediaType ?? 'movie',
+    title: item.title,
+    year: item.meta,
+    posterPath: item.posterPath,
+  };
 }
 
 export default function HomePersonalRow({
@@ -27,6 +41,8 @@ export default function HomePersonalRow({
   seeAllLabel,
   items,
   isPending,
+  eagerCount = 0,
+  library,
   onSelect,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -36,16 +52,23 @@ export default function HomePersonalRow({
   return (
     <MoviePreviewRow heading={t(headingKey)} seeAllTo={seeAllTo} seeAllLabel={seeAllLabel}>
       <MoviePreviewRail size="md" itemCount={items.length}>
-        {items.map((item) => (
-          <MoviePosterCard
-            key={`${item.tmdbId}|${item.mediaType ?? 'movie'}`}
-            title={item.title}
-            meta={item.meta}
-            posterSrc={tmdbPosterSrcForListDisplay(posterImageSrc(item.posterPath))}
-            onSelect={() => onSelect(item)}
-            selectLabel={item.title}
-          />
-        ))}
+        {items.map((item, index) => {
+          const cardItem = toCardItem(item);
+          return (
+            <MovieBrowseCard
+              key={`${cardItem.tmdbId}|${cardItem.mediaType}`}
+              item={cardItem}
+              meta={item.meta}
+              eager={index < eagerCount}
+              hasHover={library.hasHover}
+              isLoggedIn={library.isLoggedIn}
+              inWatchlist={library.has(cardItem)}
+              onToggleWatchlist={() => library.toggle(cardItem)}
+              onProposeToEvent={() => library.propose(cardItem)}
+              onOpenDetails={() => onSelect(item)}
+            />
+          );
+        })}
       </MoviePreviewRail>
     </MoviePreviewRow>
   );

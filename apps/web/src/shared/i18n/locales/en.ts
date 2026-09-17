@@ -1249,7 +1249,6 @@ export const en: Locale = {
     loadError: 'Could not load your watchlist.',
     loadingDetail: 'Loading your watchlist…',
     addError: 'Could not add to watchlist.',
-    removeError: 'Could not remove from watchlist.',
     removeAria: 'Remove "{{title}}" from my watchlist',
     letterboxdCta: 'Import from Letterboxd',
     letterboxdCtaShort: 'Import',
@@ -1278,7 +1277,6 @@ export const en: Locale = {
       addAction: 'Add to my watchlist',
       removeAction: 'Remove from my watchlist',
       proposeAction: 'Propose in an event',
-      proposeShortLabel: 'Propose',
       detailsAction: 'View details',
       openDetailsAria: 'View details for "{{title}}"',
       inWatchlistBadgeAria: 'Already in your watchlist',
@@ -1815,9 +1813,6 @@ export const en: Locale = {
     movies: {
       title: 'Recently watched movies',
       seeAll: 'See all',
-      card: {
-        openDetailsAria: 'View details for "{{title}}"',
-      },
       backLink: 'Back to profile',
       pageTitle: 'Movies watched by {{name}}',
       seoDescription:

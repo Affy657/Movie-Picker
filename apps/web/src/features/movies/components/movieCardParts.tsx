@@ -26,7 +26,7 @@ import styles from './movieCardParts.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export { MovieNote, PITCH_MAX } from './MovieNote';
-export { CardKebab, CardKebabWhenAvailable, MovieCardKebab } from './MovieCardKebab';
+export { CardKebab, MovieCardKebab } from './MovieCardKebab';
 import { deriveWheelToggle } from './MovieCardKebab';
 export type { MovieWheelExclusion } from '@/features/movies/types';
 

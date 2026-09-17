@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { LocaleProvider } from '@/shared/i18n';
 import MoviePreviewRow, { MoviePreviewRail } from './MoviePreviewRow';
-import MoviePosterCard from './MoviePosterCard';
+import MovieListCard, { MovieRankBadge } from './MovieListCard';
 
 function mockRailMetrics(scrollWidth: number, clientWidth: number) {
   vi.spyOn(HTMLUListElement.prototype, 'scrollWidth', 'get').mockReturnValue(scrollWidth);
@@ -33,11 +33,12 @@ function renderRow(itemCount: number) {
         >
           <MoviePreviewRail size="md" itemCount={itemCount}>
             {Array.from({ length: itemCount }, (_, index) => (
-              <MoviePosterCard
+              <MovieListCard
                 key={index}
                 title={`Film ${index}`}
+                posterPath={null}
                 meta="2024"
-                onSelect={() => undefined}
+                onOpenDetails={() => undefined}
               />
             ))}
           </MoviePreviewRail>
@@ -112,7 +113,13 @@ describe('MoviePreviewRow', () => {
         <MemoryRouter>
           <MoviePreviewRow heading="Les plus proposés">
             <MoviePreviewRail size="md" itemCount={1}>
-              <MoviePosterCard title="Film" meta="2024" rank={1} rankLabel="Rang 1" />
+              <MovieListCard
+                title="Film"
+                posterPath={null}
+                meta="2024"
+                onOpenDetails={() => undefined}
+                badges={<MovieRankBadge rank={1} label="Rang 1" />}
+              />
             </MoviePreviewRail>
           </MoviePreviewRow>
         </MemoryRouter>

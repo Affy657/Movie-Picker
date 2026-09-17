@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
@@ -6,6 +6,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
+import { stubHoverCapability } from '@/test-utils/matchMedia';
 import HomePage from '@/app/pages/HomePage';
 
 function showcaseItems(prefix: string, count: number) {
@@ -37,6 +38,10 @@ const collectionsHandler = http.get(`${TEST_API_V1}/movies/collections`, () =>
     disclaimer: 'TMDB',
     tmdbAttributionUrl: 'https://www.themoviedb.org/',
   })
+);
+
+const detailsHandler = http.get(`${TEST_API_V1}/movies/tmdb/:tmdbId/details`, () =>
+  HttpResponse.json({ tmdbId: 1000, title: 'trending 1', overview: 'Un synopsis.' })
 );
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
@@ -119,8 +124,16 @@ describe('HomePage', () => {
   const server = setupServer();
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+    vi.unstubAllGlobals();
+  });
   afterAll(() => server.close());
+
+  const menuItemNames = () =>
+    screen
+      .getAllByRole('menuitem')
+      .map((item) => item.getAttribute('aria-label') ?? item.textContent?.trim());
 
   it('ouvre sur un titre de niveau un et son introduction', () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
@@ -146,7 +159,184 @@ describe('HomePage', () => {
       screen.getByRole('heading', { name: /sagas et collections/i, level: 2 })
     ).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
-    expect(screen.queryAllByRole('heading', { level: 3 })).toHaveLength(0);
+    expect(
+      await screen.findByRole('heading', { name: 'trending 1', level: 3 })
+    ).toBeInTheDocument();
+  });
+
+  it('renders the unified card in the rails: the poster opens the details', async () => {
+    server.use(authMeGuestHandler, showcaseHandler, collectionsHandler, detailsHandler);
+    renderPage();
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /voir les détails de « trending 1 »/i })
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'trending 1', level: 2 })
+    ).toBeInTheDocument();
+  });
+
+  it('most-proposed row: rank badge and night count as meta instead of the year', async () => {
+    server.use(
+      authMeGuestHandler,
+      collectionsHandler,
+      http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
+        const section = new URL(request.url).searchParams.get('section') ?? 'trending';
+        const items = showcaseItems(section, 3).map((item, index) =>
+          section === 'most-proposed' ? { ...item, rank: index + 1, eventCount: 3 } : item
+        );
+        return HttpResponse.json({
+          section,
+          theme: null,
+          items,
+          disclaimer: '',
+          tmdbAttributionUrl: '',
+        });
+      })
+    );
+    renderPage();
+
+    const rankLabel = await screen.findByText('Rang 1');
+    const card = rankLabel.closest('li');
+    expect(card).not.toBeNull();
+    expect(within(card as HTMLElement).getByText('Dans 3 soirées')).toBeInTheDocument();
+    expect(within(card as HTMLElement).queryByText('2024')).not.toBeInTheDocument();
+    expect(
+      within(card as HTMLElement).getByRole('heading', { name: 'most-proposed 1', level: 3 })
+    ).toBeInTheDocument();
+
+    const trendingCard = screen
+      .getByRole('heading', { name: 'trending 1', level: 3 })
+      .closest('li') as HTMLElement;
+    expect(within(trendingCard).getByText('2024')).toBeInTheDocument();
+  });
+
+  it('signed-in: the details modal offers the watchlist and the proposal', async () => {
+    server.use(
+      authedUserHandler,
+      showcaseHandler,
+      collectionsHandler,
+      detailsHandler,
+      ...personalHandlers,
+      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+    );
+    renderPage();
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /voir les détails de « trending 1 »/i })
+    );
+    await screen.findByRole('heading', { name: 'trending 1', level: 2 });
+    expect(screen.getByRole('button', { name: 'Ajouter à ma liste' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Proposer dans une soirée' }));
+
+    expect(
+      await screen.findByText(/proposer «\s*trending 1\s*» dans une soirée/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'trending 1', level: 2 })).not.toBeInTheDocument();
+    expect(await screen.findByText(/aucune soirée active/i)).toBeInTheDocument();
+  });
+
+  it('visitor: no library footer in the details modal', async () => {
+    server.use(authMeGuestHandler, showcaseHandler, collectionsHandler, detailsHandler);
+    renderPage();
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /voir les détails de « trending 1 »/i })
+    );
+    await screen.findByRole('heading', { name: 'trending 1', level: 2 });
+
+    expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Proposer dans une soirée' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('hover, signed-in: the showcase card carries the library kebab', async () => {
+    stubHoverCapability();
+    server.use(
+      authedUserHandler,
+      showcaseHandler,
+      collectionsHandler,
+      ...personalHandlers,
+      http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+    );
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(
+      await screen.findByRole('button', { name: /plus d’actions pour «\s*trending 1\s*»/i })
+    );
+
+    expect(menuItemNames()).toEqual([
+      'Voir les détails',
+      'Ajouter à ma liste',
+      'Proposer dans une soirée',
+      'Ouvrir sur Letterboxd',
+    ]);
+
+    await user.click(screen.getByRole('menuitem', { name: 'Proposer dans une soirée' }));
+
+    expect(
+      await screen.findByText(/proposer «\s*trending 1\s*» dans une soirée/i)
+    ).toBeInTheDocument();
+  });
+
+  it('hover, signed-in: the watchlist rail card offers to remove the movie from the list', async () => {
+    stubHoverCapability();
+    let removedPath: string | null = null;
+    server.use(
+      authedUserHandler,
+      showcaseHandler,
+      collectionsHandler,
+      ...personalHandlers,
+      http.delete(`${TEST_API_V1}/watchlist/:tmdbId`, ({ request }) => {
+        removedPath = new URL(request.url).pathname;
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(
+      await screen.findByRole('button', {
+        name: /plus d’actions pour «\s*film de ma liste\s*»/i,
+      })
+    );
+
+    expect(menuItemNames()).toEqual([
+      'Voir les détails',
+      'Retirer de ma liste',
+      'Proposer dans une soirée',
+      'Ouvrir sur Letterboxd',
+    ]);
+
+    await user.click(screen.getByRole('menuitem', { name: 'Retirer de ma liste' }));
+
+    await waitFor(() => expect(removedPath).toContain('/watchlist/501'));
+  });
+
+  it('hover, visitor: the kebab keeps only the details and Letterboxd', async () => {
+    stubHoverCapability();
+    server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(
+      await screen.findByRole('button', { name: /plus d’actions pour «\s*trending 1\s*»/i })
+    );
+
+    expect(menuItemNames()).toEqual(['Voir les détails', 'Ouvrir sur Letterboxd']);
+  });
+
+  it('without hover capability: no kebab on the rails', async () => {
+    server.use(authedUserHandler, showcaseHandler, collectionsHandler, ...personalHandlers);
+    renderPage();
+
+    await screen.findByRole('heading', { name: /dans votre liste/i, level: 2 });
+    await screen.findByRole('heading', { name: 'trending 1', level: 3 });
+    expect(screen.queryByRole('button', { name: /plus d’actions/i })).not.toBeInTheDocument();
   });
 
   it('hides an empty row instead of leaving an orphan heading', async () => {
@@ -242,6 +432,69 @@ describe('HomePage', () => {
       await screen.findByRole('heading', { name: /parce que vous avez aimé/i, level: 2 })
     ).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /prochaine soirée/i })).not.toBeInTheDocument();
+  });
+
+  it('eager-loads the first posters of the first rendered rail only', async () => {
+    const posterShowcaseHandler = http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
+      const section = new URL(request.url).searchParams.get('section') ?? 'trending';
+      return HttpResponse.json({
+        section,
+        theme: null,
+        items: showcaseItems(section, 4).map((item) => ({ ...item, posterPath: '/p.jpg' })),
+        disclaimer: 'TMDB',
+        tmdbAttributionUrl: 'https://www.themoviedb.org/',
+      });
+    });
+    let releaseWatchlist: () => void = () => undefined;
+    const watchlistGate = new Promise<void>((resolve) => {
+      releaseWatchlist = resolve;
+    });
+    const posterWatchlistHandler = http.get(`${TEST_API_V1}/watchlist`, async () => {
+      await watchlistGate;
+      return HttpResponse.json({
+        items: [
+          {
+            tmdbId: 501,
+            mediaType: 'movie',
+            title: 'Film de ma liste',
+            year: '2021',
+            posterPath: '/w.jpg',
+            createdAt: '2026-01-01T00:00:00Z',
+          },
+        ],
+      });
+    });
+    const railImages = (heading: RegExp) => {
+      const section = screen.getByRole('heading', { name: heading, level: 2 }).closest('section');
+      return Array.from(section?.querySelectorAll('img') ?? []);
+    };
+    const railLoading = (heading: RegExp) =>
+      railImages(heading).map((img) => img.getAttribute('loading'));
+
+    server.use(
+      authedUserHandler,
+      posterWatchlistHandler,
+      posterShowcaseHandler,
+      collectionsHandler,
+      ...personalHandlers
+    );
+    const { unmount } = renderPage();
+
+    await waitFor(() => expect(railImages(/ce soir en streaming/i)).toHaveLength(4));
+    expect(screen.queryByRole('heading', { name: /dans votre liste/i })).not.toBeInTheDocument();
+    expect(railLoading(/ce soir en streaming/i)).toEqual(['lazy', 'lazy', 'lazy', 'lazy']);
+
+    releaseWatchlist();
+    await screen.findByRole('heading', { name: /dans votre liste/i, level: 2 });
+    expect(railLoading(/dans votre liste/i)).toEqual(['eager']);
+    expect(railLoading(/ce soir en streaming/i)).toEqual(['lazy', 'lazy', 'lazy', 'lazy']);
+    unmount();
+
+    server.use(authMeGuestHandler, posterShowcaseHandler, collectionsHandler);
+    renderPage();
+
+    await waitFor(() => expect(railImages(/ce soir en streaming/i)).toHaveLength(4));
+    expect(railLoading(/ce soir en streaming/i)).toEqual(['eager', 'eager', 'eager', 'lazy']);
   });
 
   it('leads to movie night creation from the bottom band', () => {

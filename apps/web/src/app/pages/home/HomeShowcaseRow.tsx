@@ -4,9 +4,13 @@ import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { Tabs, TabPanel, type TabDef } from '@/shared/components/Tabs';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
-import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
+import type { RatingScale } from '@/shared/types/theme';
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
-import MoviePosterCard from '@/features/movies/components/MoviePosterCard';
+import { MovieRankBadge } from '@/features/movies/components/MovieListCard';
+import MovieBrowseCard, {
+  type MovieBrowseCardItem,
+  type MovieLibraryActions,
+} from '@/features/movies/components/MovieBrowseCard';
 import { useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import type { ShowcaseItem, ShowcaseQuery } from '@/features/movies/api/showcaseApi';
 import styles from './HomeShowcaseRow.module.css';
@@ -27,8 +31,23 @@ interface Props<T extends string> {
   seeAllTo: string;
   query: ShowcaseQuery;
   showRank?: boolean;
-  onSelect?: (item: ShowcaseItem) => void;
+  eagerCount?: number;
+  ratingScale?: RatingScale;
+  library: MovieLibraryActions;
+  onSelect: (item: ShowcaseItem) => void;
   tabConfig?: TabConfig<T>;
+}
+
+function toCardItem(item: ShowcaseItem): MovieBrowseCardItem {
+  return {
+    tmdbId: item.id,
+    mediaType: item.mediaType ?? 'movie',
+    title: item.title,
+    year: item.year,
+    posterPath: item.posterPath,
+    voteAverage: item.voteAverage,
+    runtimeMinutes: item.runtimeMinutes,
+  };
 }
 
 function SkeletonRow({ label }: Readonly<{ label: string }>) {
@@ -38,8 +57,14 @@ function SkeletonRow({ label }: Readonly<{ label: string }>) {
         {Array.from({ length: SKELETON_CARDS }, (_, index) => (
           <li key={index} className={styles.skeletonCard}>
             <Skeleton variant="poster" />
-            <Skeleton variant="text" width="80%" />
-            <Skeleton variant="text" width="40%" />
+            <div className={styles.skeletonBody}>
+              <Skeleton
+                variant="text"
+                width="80%"
+                height="calc(2 * var(--leading-snug) * var(--font-size-sm))"
+              />
+              <Skeleton variant="text" width="40%" height="var(--space-4)" />
+            </div>
           </li>
         ))}
       </ul>
@@ -53,6 +78,9 @@ export default function HomeShowcaseRow<T extends string>({
   seeAllTo,
   query,
   showRank = false,
+  eagerCount = 0,
+  ratingScale,
+  library,
   onSelect,
   tabConfig,
 }: Readonly<Props<T>>) {
@@ -71,24 +99,42 @@ export default function HomeShowcaseRow<T extends string>({
 
   const grid = (
     <MoviePreviewRail size="md" itemCount={previewItems.length}>
-      {previewItems.map((item) => (
-        <MoviePosterCard
-          key={`${item.id}|${item.mediaType ?? 'movie'}`}
-          title={item.title}
-          meta={
-            showRank && item.eventCount != null
-              ? pluralizeCount(item.eventCount, 'showcase.eventCountOne', 'showcase.eventCount', t)
-              : item.year
-          }
-          posterSrc={tmdbPosterSrcForListDisplay(posterImageSrc(item.posterPath))}
-          rank={showRank && item.rank != null ? item.rank : undefined}
-          rankLabel={
-            showRank && item.rank != null ? t('showcase.rank', { rank: item.rank }) : undefined
-          }
-          onSelect={onSelect ? () => onSelect(item) : undefined}
-          selectLabel={item.title}
-        />
-      ))}
+      {previewItems.map((item, index) => {
+        const cardItem = toCardItem(item);
+        return (
+          <MovieBrowseCard
+            key={`${cardItem.tmdbId}|${cardItem.mediaType}`}
+            item={cardItem}
+            ratingScale={ratingScale}
+            meta={
+              showRank && item.eventCount != null
+                ? pluralizeCount(
+                    item.eventCount,
+                    'showcase.eventCountOne',
+                    'showcase.eventCount',
+                    t
+                  )
+                : undefined
+            }
+            eager={index < eagerCount}
+            hasHover={library.hasHover}
+            isLoggedIn={library.isLoggedIn}
+            inWatchlist={library.has(cardItem)}
+            onToggleWatchlist={() => library.toggle(cardItem)}
+            onProposeToEvent={() => library.propose(cardItem)}
+            onOpenDetails={() => onSelect(item)}
+            leadingBadge={
+              showRank && item.rank != null ? (
+                <MovieRankBadge
+                  rank={item.rank}
+                  label={t('showcase.rank', { rank: item.rank })}
+                  stacked
+                />
+              ) : undefined
+            }
+          />
+        );
+      })}
     </MoviePreviewRail>
   );
 

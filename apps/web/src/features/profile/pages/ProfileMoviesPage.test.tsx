@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -6,6 +6,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import ProfileMoviesPage from '@/features/profile/pages/ProfileMoviesPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { stubHoverCapability } from '@/test-utils/matchMedia';
 import { TEST_API_V1 } from '@/mocks/handlers';
 
 const ALICE_PROFILE = {
@@ -65,7 +66,10 @@ describe('ProfileMoviesPage (MSW)', () => {
   );
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+    vi.unstubAllGlobals();
+  });
   afterAll(() => server.close());
 
   it('affiche le titre, le sous-titre et les films vus', async () => {
@@ -99,9 +103,25 @@ describe('ProfileMoviesPage (MSW)', () => {
     renderPage('alice');
     await screen.findByText('Inception');
 
+    expect(screen.queryByRole('button', { name: /plus d.actions/i })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /voir les détails de « inception »/i }));
 
     expect(await screen.findByRole('heading', { name: 'Inception', level: 2 })).toBeInTheDocument();
+  });
+
+  it('hover, visitor: the kebab only offers the details and Letterboxd', async () => {
+    stubHoverCapability();
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })));
+    const user = userEvent.setup();
+    renderPage('alice');
+    await screen.findByText('Inception');
+
+    await user.click(await screen.findByRole('button', { name: /plus d.actions.*inception/i }));
+
+    const names = screen
+      .getAllByRole('menuitem')
+      .map((item) => item.getAttribute('aria-label') ?? item.textContent);
+    expect(names).toEqual(['Voir les détails', 'Ouvrir sur Letterboxd']);
   });
 
   it('shows not found for a private or unknown profile', async () => {

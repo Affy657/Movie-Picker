@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { axe } from 'vitest-axe';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
+import { stubHoverCapability } from '@/test-utils/matchMedia';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import LandingPage from '@/app/pages/LandingPage';
 import HomePage from '@/app/pages/HomePage';
@@ -61,6 +63,7 @@ describe('accessibility (axe)', () => {
   afterEach(() => {
     cleanup();
     server.resetHandlers();
+    vi.unstubAllGlobals();
   });
   afterAll(() => server.close());
 
@@ -378,6 +381,54 @@ describe('accessibility (axe)', () => {
     );
     await screen.findByText('Ancien Mais Bien Noté');
     await assertNoViolations(container, queryClient);
+  });
+
+  it('WatchlistPage with the hover kebab and its open menu has no violations', async () => {
+    stubHoverCapability();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'ten',
+        })
+      ),
+      watchlistHandler([
+        {
+          tmdbId: 200,
+          mediaType: 'movie',
+          title: 'Ancien Mais Bien Noté',
+          year: '2000',
+          posterPath: null,
+          voteAverage: 9.0,
+          runtimeMinutes: 90,
+          createdAt: '2026-01-01T00:00:00Z',
+        },
+      ])
+    );
+    const queryClient = createTestQueryClient();
+    const { container } = render(
+      <AppTestProviders client={queryClient}>
+        <MemoryRouter initialEntries={['/watchlist']}>
+          <WatchlistPage />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+    const kebab = await screen.findByRole('button', {
+      name: /plus d.actions.*ancien mais bien noté/i,
+    });
+    await assertNoViolations(container, queryClient);
+
+    await userEvent.click(kebab);
+    const menu = await screen.findByRole('menu');
+    const menuResults = await axe(menu, { rules: { region: { enabled: false } } });
+    expect(
+      menuResults.violations,
+      menuResults.violations.map((v) => v.description).join('\n')
+    ).toHaveLength(0);
   });
 
   it('NotificationsPage (empty inbox) has no violations', async () => {

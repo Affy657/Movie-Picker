@@ -1,11 +1,12 @@
 import { beforeAll, afterEach, afterAll, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import { TEST_API_V1 } from '@/mocks/handlers';
 
 function renderPage() {
@@ -51,29 +52,113 @@ const ITEM_B = {
   createdAt: '2026-02-01T00:00:00Z',
 };
 
+const KEBAB_A = /plus d.actions.*ancien mais bien noté/i;
+const POSTER_A = /voir les détails de « ancien mais bien noté »/i;
+
 function watchlistHandler(items: unknown[]) {
   return http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items }));
 }
 
+const detailsHandler = http.get(`${TEST_API_V1}/movies/tmdb/200/details`, () =>
+  HttpResponse.json({
+    tmdbId: 200,
+    title: 'Ancien Mais Bien Noté',
+    overview: 'Un synopsis de test.',
+    tagline: null,
+    director: 'Une Réalisatrice',
+    cast: ['Acteur A'],
+    runtimeMinutes: 90,
+    genres: ['Drame'],
+    releaseDate: '2000-01-01',
+    trailerUrl: null,
+    watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
+    tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/200/watch',
+  })
+);
+
+function proposeHandlers(onProposed: (body: Record<string, unknown>) => void) {
+  return [
+    http.get(`${TEST_API_V1}/events/mine`, () =>
+      HttpResponse.json({
+        events: [
+          {
+            id: 'e1',
+            slug: 'ma-soiree',
+            title: 'Chez moi',
+            date: '2035-08-01',
+            time: '22:00',
+            createdAt: '2026-01-01T00:00:00Z',
+            updatedAt: '2026-01-02T00:00:00Z',
+            isCreator: true,
+            isParticipant: true,
+            lifecycle: 'upcoming',
+            participantCount: 1,
+            movieCount: 0,
+          },
+        ],
+      })
+    ),
+    http.get(`${TEST_API_V1}/events/slug/ma-soiree`, () =>
+      HttpResponse.json({
+        _id: 'e1',
+        title: 'Chez moi',
+        date: '2035-08-01',
+        time: '22:00',
+        slug: 'ma-soiree',
+        isFinished: false,
+        myParticipant: { _id: 'p1', pseudo: 'Alice' },
+        participantCount: 1,
+        movieCount: 0,
+        participants: [],
+        config: {},
+      })
+    ),
+    http.post(`${TEST_API_V1}/events/ma-soiree/movies`, async ({ request }) => {
+      onProposed((await request.json()) as Record<string, unknown>);
+      return HttpResponse.json({ _id: 'm1', title: 'Ancien Mais Bien Noté' }, { status: 201 });
+    }),
+  ];
+}
+
+function removeHandler(onRemoved: () => void) {
+  return http.delete(`${TEST_API_V1}/watchlist/200`, () => {
+    onRemoved();
+    return new HttpResponse(null, { status: 204 });
+  });
+}
+
+const previouslyFocused = new WeakMap<HTMLDialogElement, Element | null>();
+const globalShowModal = HTMLDialogElement.prototype.showModal;
+const globalClose = HTMLDialogElement.prototype.close;
+
 beforeAll(() => {
-  if (!HTMLDialogElement.prototype.showModal) {
-    HTMLDialogElement.prototype.showModal = function showModal() {
-      this.setAttribute('open', '');
-    };
-  }
-  if (!HTMLDialogElement.prototype.close) {
-    HTMLDialogElement.prototype.close = function close() {
-      this.removeAttribute('open');
-      this.dispatchEvent(new Event('close'));
-    };
-  }
+  HTMLDialogElement.prototype.showModal = function showModal() {
+    previouslyFocused.set(this, document.activeElement);
+    this.setAttribute('open', '');
+  };
+  HTMLDialogElement.prototype.close = function close() {
+    this.removeAttribute('open');
+    const previous = previouslyFocused.get(this);
+    previouslyFocused.delete(this);
+    if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
+    this.dispatchEvent(new Event('close'));
+  };
+});
+
+afterAll(() => {
+  HTMLDialogElement.prototype.showModal = globalShowModal;
+  HTMLDialogElement.prototype.close = globalClose;
 });
 
 describe('WatchlistPage (MSW)', () => {
   const server = setupServer();
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+    vi.unstubAllGlobals();
+    localStorage.removeItem('watchlist-view');
+  });
   afterAll(() => server.close());
 
   it('affiche un empty state quand la watchlist est vide', async () => {
@@ -254,14 +339,14 @@ describe('WatchlistPage (MSW)', () => {
     );
   });
 
-  it('retire un film via le menu kebab', async () => {
+  it('hover: removes a movie from the kebab through the watchlist toggle', async () => {
+    stubHoverCapability();
     let removeCalled = false;
     server.use(
       authedUserHandler,
       watchlistHandler([ITEM_A]),
-      http.delete(`${TEST_API_V1}/watchlist/200`, () => {
+      removeHandler(() => {
         removeCalled = true;
-        return new HttpResponse(null, { status: 204 });
       })
     );
 
@@ -269,41 +354,43 @@ describe('WatchlistPage (MSW)', () => {
     const user = userEvent.setup();
 
     await screen.findByText('Ancien Mais Bien Noté');
-    await user.click(
-      screen.getByRole('button', { name: /plus d.actions.*ancien mais bien noté/i })
-    );
-    await user.click(screen.getByRole('menuitem', { name: /retirer/i }));
+    await user.click(screen.getByRole('button', { name: KEBAB_A }));
+    await user.click(screen.getByRole('menuitem', { name: /retirer de ma liste/i }));
 
     await waitFor(() => expect(removeCalled).toBe(true));
   });
 
-  it('shows the details of a movie', async () => {
-    server.use(
-      authedUserHandler,
-      watchlistHandler([ITEM_A]),
-      http.get(`${TEST_API_V1}/movies/tmdb/200/details`, () =>
-        HttpResponse.json({
-          tmdbId: 200,
-          title: 'Ancien Mais Bien Noté',
-          overview: 'Un synopsis de test.',
-          tagline: null,
-          director: 'Une Réalisatrice',
-          cast: ['Acteur A'],
-          runtimeMinutes: 90,
-          genres: ['Drame'],
-          releaseDate: '2000-01-01',
-          trailerUrl: null,
-          watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
-          tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/200/watch',
-        })
-      )
-    );
+  it('hover: the kebab lists details, the watchlist toggle, the proposal and Letterboxd in order', async () => {
+    stubHoverCapability();
+    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
 
     renderPage();
     const user = userEvent.setup();
 
     await screen.findByText('Ancien Mais Bien Noté');
-    await user.click(screen.getByRole('button', { name: /détails/i }));
+    await user.click(screen.getByRole('button', { name: KEBAB_A }));
+
+    const names = screen
+      .getAllByRole('menuitem')
+      .map((item) => item.getAttribute('aria-label') ?? item.textContent?.trim());
+    expect(names).toEqual([
+      'Voir les détails',
+      'Retirer de ma liste',
+      'Proposer dans une soirée',
+      'Ouvrir sur Letterboxd',
+    ]);
+    expect(screen.queryByRole('menuitem', { name: /^retirer$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /imdb|allociné|tmdb/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the details of a movie from the poster', async () => {
+    server.use(authedUserHandler, watchlistHandler([ITEM_A]), detailsHandler);
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText('Ancien Mais Bien Noté');
+    await user.click(screen.getByRole('button', { name: POSTER_A }));
 
     expect(await screen.findByText('Une Réalisatrice')).toBeInTheDocument();
     expect(screen.getByText(/un synopsis de test/i)).toBeInTheDocument();
@@ -312,49 +399,24 @@ describe('WatchlistPage (MSW)', () => {
     expect(await screen.findByText('Netflix')).toBeInTheDocument();
   });
 
-  it('proposes a movie to a movie night from the modal (touch fallback)', async () => {
+  it('touch: mounts no kebab, the poster trigger opens the details', async () => {
+    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    await screen.findByText('Ancien Mais Bien Noté');
+    expect(screen.queryByRole('button', { name: /plus d.actions/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: POSTER_A })).toBeInTheDocument();
+  });
+
+  it('touch: proposes from the details modal footer, after the details dialog closed', async () => {
     let proposedBody: Record<string, unknown> | null = null;
     server.use(
       authedUserHandler,
       watchlistHandler([ITEM_A]),
-      http.get(`${TEST_API_V1}/events/mine`, () =>
-        HttpResponse.json({
-          events: [
-            {
-              id: 'e1',
-              slug: 'ma-soiree',
-              title: 'Chez moi',
-              date: '2035-08-01',
-              time: '22:00',
-              createdAt: '2026-01-01T00:00:00Z',
-              updatedAt: '2026-01-02T00:00:00Z',
-              isCreator: true,
-              isParticipant: true,
-              lifecycle: 'upcoming',
-              participantCount: 1,
-              movieCount: 0,
-            },
-          ],
-        })
-      ),
-      http.get(`${TEST_API_V1}/events/slug/ma-soiree`, () =>
-        HttpResponse.json({
-          _id: 'e1',
-          title: 'Chez moi',
-          date: '2035-08-01',
-          time: '22:00',
-          slug: 'ma-soiree',
-          isFinished: false,
-          myParticipant: { _id: 'p1', pseudo: 'Alice' },
-          participantCount: 1,
-          movieCount: 0,
-          participants: [],
-          config: {},
-        })
-      ),
-      http.post(`${TEST_API_V1}/events/ma-soiree/movies`, async ({ request }) => {
-        proposedBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ _id: 'm1', title: 'Ancien Mais Bien Noté' }, { status: 201 });
+      detailsHandler,
+      ...proposeHandlers((body) => {
+        proposedBody = body;
       })
     );
 
@@ -362,9 +424,64 @@ describe('WatchlistPage (MSW)', () => {
     const user = userEvent.setup();
 
     await screen.findByText('Ancien Mais Bien Noté');
-    await user.click(
-      screen.getByRole('button', { name: /plus d.actions.*ancien mais bien noté/i })
+    await user.click(screen.getByRole('button', { name: POSTER_A }));
+    await screen.findByRole('heading', { name: 'Ancien Mais Bien Noté', level: 2 });
+
+    await user.click(screen.getByRole('button', { name: 'Proposer dans une soirée' }));
+
+    await screen.findByText(/proposer «\s*ancien mais bien noté\s*» dans une soirée/i);
+    expect(
+      screen.queryByRole('heading', { name: 'Ancien Mais Bien Noté', level: 2 })
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /chez moi/i }));
+
+    await waitFor(() => expect(proposedBody).not.toBeNull());
+    expect(proposedBody).toMatchObject({ tmdbId: 200, participantId: 'p1' });
+    expect(await screen.findByText(/^proposé$/i)).toBeInTheDocument();
+  });
+
+  it('touch: the details modal footer removes the movie from the watchlist', async () => {
+    let removeCalled = false;
+    server.use(
+      authedUserHandler,
+      watchlistHandler([ITEM_A]),
+      detailsHandler,
+      removeHandler(() => {
+        removeCalled = true;
+      })
     );
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText('Ancien Mais Bien Noté');
+    await user.click(screen.getByRole('button', { name: POSTER_A }));
+    await screen.findByRole('heading', { name: 'Ancien Mais Bien Noté', level: 2 });
+
+    await user.click(screen.getByRole('button', { name: 'Retirer de ma liste' }));
+
+    await waitFor(() => expect(removeCalled).toBe(true));
+  });
+
+  it('hover: proposes from the kebab through the modal, the flyout is gone', async () => {
+    stubHoverCapability();
+    let proposedBody: Record<string, unknown> | null = null;
+    server.use(
+      authedUserHandler,
+      watchlistHandler([ITEM_A]),
+      ...proposeHandlers((body) => {
+        proposedBody = body;
+      })
+    );
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText('Ancien Mais Bien Noté');
+    expect(screen.queryByRole('button', { name: /^proposer$/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: KEBAB_A }));
     await user.click(screen.getByRole('menuitem', { name: /proposer dans une soirée/i }));
 
     await screen.findByText(/proposer «\s*ancien mais bien noté\s*» dans une soirée/i);
@@ -375,79 +492,54 @@ describe('WatchlistPage (MSW)', () => {
     expect(await screen.findByText(/^proposé$/i)).toBeInTheDocument();
   });
 
-  it('propose un film via le sous-menu au survol (desktop)', async () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn((query: string) => ({
-        matches: true,
-        media: query,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }))
-    );
-
-    let proposedBody: Record<string, unknown> | null = null;
+  it('hover: closing the propose modal reached from the details footer lands the focus back on the kebab', async () => {
+    stubHoverCapability();
     server.use(
       authedUserHandler,
       watchlistHandler([ITEM_A]),
-      http.get(`${TEST_API_V1}/events/mine`, () =>
-        HttpResponse.json({
-          events: [
-            {
-              id: 'e1',
-              slug: 'ma-soiree',
-              title: 'Chez moi',
-              date: '2035-08-01',
-              time: '22:00',
-              createdAt: '2026-01-01T00:00:00Z',
-              updatedAt: '2026-01-02T00:00:00Z',
-              isCreator: true,
-              isParticipant: true,
-              lifecycle: 'upcoming',
-              participantCount: 1,
-              movieCount: 0,
-            },
-          ],
-        })
-      ),
-      http.get(`${TEST_API_V1}/events/slug/ma-soiree`, () =>
-        HttpResponse.json({
-          _id: 'e1',
-          title: 'Chez moi',
-          date: '2035-08-01',
-          time: '22:00',
-          slug: 'ma-soiree',
-          isFinished: false,
-          myParticipant: { _id: 'p1', pseudo: 'Alice' },
-          participantCount: 1,
-          movieCount: 0,
-          participants: [],
-          config: {},
-        })
-      ),
-      http.post(`${TEST_API_V1}/events/ma-soiree/movies`, async ({ request }) => {
-        proposedBody = (await request.json()) as Record<string, unknown>;
-        return HttpResponse.json({ _id: 'm1', title: 'Ancien Mais Bien Noté' }, { status: 201 });
-      })
+      detailsHandler,
+      ...proposeHandlers(() => {})
     );
 
     renderPage();
-    await screen.findByText('Ancien Mais Bien Noté');
+    const user = userEvent.setup();
 
+    await screen.findByText('Ancien Mais Bien Noté');
+    await user.click(screen.getByRole('button', { name: KEBAB_A }));
+    await user.click(screen.getByRole('menuitem', { name: 'Voir les détails' }));
+    await screen.findByRole('heading', { name: 'Ancien Mais Bien Noté', level: 2 });
+
+    await user.click(screen.getByRole('button', { name: 'Proposer dans une soirée' }));
+    await screen.findByText(/proposer «\s*ancien mais bien noté\s*» dans une soirée/i);
     expect(
-      screen.queryByRole('menuitem', { name: /proposer dans une soirée/i })
+      screen.queryByRole('heading', { name: 'Ancien Mais Bien Noté', level: 2 })
     ).not.toBeInTheDocument();
 
-    fireEvent.mouseEnter(screen.getByRole('button', { name: /proposer dans une soirée/i }));
-    const eventButton = await screen.findByText('Chez moi');
+    await user.click(screen.getByRole('button', { name: /fermer/i }));
 
+    await waitFor(() =>
+      expect(
+        screen.queryByText(/proposer «\s*ancien mais bien noté\s*» dans une soirée/i)
+      ).not.toBeInTheDocument()
+    );
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: KEBAB_A }));
+  });
+
+  it('hover, list view: the kebab keeps every action', async () => {
+    localStorage.setItem('watchlist-view', 'list');
+    stubHoverCapability();
+    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
+
+    renderPage();
     const user = userEvent.setup();
-    await user.click(eventButton);
 
-    await waitFor(() => expect(proposedBody).not.toBeNull());
-    expect(proposedBody).toMatchObject({ tmdbId: 200, participantId: 'p1' });
+    await screen.findByText('Ancien Mais Bien Noté');
+    await user.click(screen.getByRole('button', { name: KEBAB_A }));
 
-    vi.unstubAllGlobals();
+    expect(screen.getByRole('menuitem', { name: 'Voir les détails' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Retirer de ma liste' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Proposer dans une soirée' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /letterboxd/i })).toBeInTheDocument();
   });
 
   it('offers the Letterboxd import when no username is configured, and opens the connection modal', async () => {
@@ -489,16 +581,7 @@ describe('WatchlistPage (MSW)', () => {
   });
 
   it('on mobile, shows Import next to Add with a short label', async () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn((query: string) => ({
-        matches: true,
-        media: query,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }))
-    );
-
+    stubMatchMedia(true);
     server.use(authedUserHandler, watchlistHandler([ITEM_A]));
 
     renderPage();
@@ -507,7 +590,5 @@ describe('WatchlistPage (MSW)', () => {
     const addBtn = screen.getByRole('button', { name: 'Ajouter' });
     expect(importBtn.parentElement).toBe(addBtn.parentElement);
     expect(screen.queryByText('Importer depuis Letterboxd')).not.toBeInTheDocument();
-
-    vi.unstubAllGlobals();
   });
 });

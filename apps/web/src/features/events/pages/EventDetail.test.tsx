@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import EventDetail from '@/features/events/pages/EventDetail';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { stubHoverCapability } from '@/test-utils/matchMedia';
 import { onlineManager, QueryClient } from '@tanstack/react-query';
 import {
   TEST_API_V1,
@@ -69,6 +70,7 @@ describe('EventDetail (MSW)', () => {
   afterEach(() => {
     server.resetHandlers();
     sessionStorage.clear();
+    vi.unstubAllGlobals();
   });
   afterAll(() => server.close());
 
@@ -567,6 +569,7 @@ describe('EventDetail (MSW)', () => {
     it('confirming the modal: DELETE called and the movie disappears from the list', async () => {
       const user = userEvent.setup();
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      stubHoverCapability();
       let deleteCalled = false;
       let removed = false;
       server.use(
@@ -600,6 +603,7 @@ describe('EventDetail (MSW)', () => {
     it('cancelling the modal: no DELETE sent, the movie stays', async () => {
       const user = userEvent.setup();
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      stubHoverCapability();
       let deleteCalled = false;
       server.use(
         movieHandler(() => false),

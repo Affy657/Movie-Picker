@@ -6,6 +6,10 @@
   min-width: 0;
 }
 
+.card:focus-within {
+  --opacity-card-kebab: 1;
+}
+
 .posterRegion {
   position: relative;
   aspect-ratio: 2 / 3;
@@ -17,6 +21,14 @@
 }
 
 @media (hover: hover) {
+  .card {
+    --opacity-card-kebab: 0;
+  }
+
+  .card:hover {
+    --opacity-card-kebab: 1;
+  }
+
   .card:hover .posterRegion {
     border-color: var(--color-primary);
   }
@@ -63,35 +75,6 @@
   z-index: var(--z-raised-above);
 }
 
-.overlay {
-  position: absolute;
-  inset: 0;
-  z-index: var(--z-raised);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: var(--space-1-5);
-  padding: var(--space-2-5);
-  background: var(--on-poster-scrim-gradient);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--duration-base) var(--ease-default);
-}
-
-.overlay > * {
-  pointer-events: auto;
-}
-
-.posterRegion:focus-within .overlay {
-  opacity: 1;
-}
-
-@media (hover: hover) {
-  .posterRegion:hover .overlay {
-    opacity: 1;
-  }
-}
-
 .cardBody {
   display: flex;
   flex-direction: column;
@@ -136,11 +119,21 @@
   justify-self: end;
 }
 
+.metaText {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: var(--leading-none);
+}
+
 .badge {
   position: absolute;
   top: var(--space-2);
   left: var(--space-2);
   z-index: var(--z-raised-above);
+  pointer-events: none;
   display: inline-flex;
   align-items: center;
   padding: calc(var(--space-0-5) + var(--text-optical-nudge-caps))
@@ -192,10 +185,6 @@
   align-items: center;
   flex: 0 0 auto;
   padding-right: var(--space-2);
-}
-
-.cardAsRow .overlay {
-  display: none;
 }
 
 .cardAsRow .cardBody {

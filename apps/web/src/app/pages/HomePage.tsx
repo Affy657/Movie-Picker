@@ -14,6 +14,8 @@ import LazyMovieDetailsModal, {
   loadMovieDetailsModal,
 } from '@/features/movies/components/LazyMovieDetailsModal';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
+import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
+import type { MovieLibraryActions } from '@/features/movies/components/MovieBrowseCard';
 import type {
   ShowcaseItem,
   ShowcaseProvider,
@@ -27,6 +29,8 @@ import {
   TRENDING_GENRE_IDS,
 } from '@/features/movies/showcaseSections';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
+import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
 import type { MovieMediaType } from '@/shared/types/movie';
 import HomeShowcaseRow from './home/HomeShowcaseRow';
 import HomeCollectionsRow from './home/HomeCollectionsRow';
@@ -48,11 +52,33 @@ interface SelectedMovie {
   tmdbId: number;
   mediaType: MovieMediaType;
   title: string;
-  year?: string;
+  year: string;
   posterPath: string | null;
+  voteAverage?: number | null;
+  runtimeMinutes?: number | null;
 }
 
 const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
+const FIRST_RAIL_EAGER_COUNT = 3;
+
+type HomeRail = 'watchlist' | 'recommendations' | 'friends' | 'provider';
+
+function resolveFirstRail(
+  personalRowsPending: boolean,
+  hasWatchlist: boolean,
+  hasRecommendations: boolean,
+  hasFriends: boolean
+): HomeRail | null {
+  if (personalRowsPending) return null;
+  if (hasWatchlist) return 'watchlist';
+  if (hasRecommendations) return 'recommendations';
+  if (hasFriends) return 'friends';
+  return 'provider';
+}
+
+function eagerCountFor(rail: HomeRail, firstRail: HomeRail | null): number {
+  return rail === firstRail ? FIRST_RAIL_EAGER_COUNT : 0;
+}
 
 export default function HomePage() {
   const { t } = useTranslation();
@@ -65,6 +91,7 @@ export default function HomePage() {
   const [themeTab, setThemeTab] = useState<ShowcaseTheme>(THEME_KEYS[0]);
   const [providerTab, setProviderTab] = useState<ShowcaseProvider>(PROVIDER_KEYS[0]);
   const [selected, setSelected] = useState<SelectedMovie | null>(null);
+  const [proposeTarget, setProposeTarget] = useState<SelectedMovie | null>(null);
 
   usePageSeo({
     title: APP_DOCUMENT_TITLE,
@@ -86,9 +113,24 @@ export default function HomePage() {
   const providerTabs = PROVIDER_KEYS.map((key) => ({ key, label: t(PROVIDER_LABEL_KEYS[key]) }));
 
   const isAuthenticated = !!user;
+  const hasHover = useHasHoverCapability();
+  const watchlist = useWatchlistToggle(isAuthenticated);
+  const library: MovieLibraryActions = {
+    hasHover,
+    isLoggedIn: isAuthenticated,
+    has: watchlist.has,
+    toggle: watchlist.toggle,
+    propose: setProposeTarget,
+  };
   const watchlistRow = useWatchlistRow(isAuthenticated);
   const friendsRow = useFriendsWatchedRow(isAuthenticated);
-  const { seedTmdbId, seedTitle } = useRecommendationSeed(isAuthenticated);
+  const { seedTmdbId, seedTitle, isPending: seedPending } = useRecommendationSeed(isAuthenticated);
+  const firstRail = resolveFirstRail(
+    watchlistRow.isPending || friendsRow.isPending || seedPending,
+    watchlistRow.items.length > 0,
+    !!seedTmdbId,
+    friendsRow.items.length > 0
+  );
 
   const openPersonalDetails = (item: PersonalRowItem) =>
     setSelected({
@@ -108,6 +150,8 @@ export default function HomePage() {
       title: item.title,
       year: item.year,
       posterPath: item.posterPath,
+      voteAverage: item.voteAverage,
+      runtimeMinutes: item.runtimeMinutes,
     });
 
   const runSearch = (term: string) => {
@@ -154,12 +198,20 @@ export default function HomePage() {
         </p>
       </div>
 
+      {watchlist.error ? (
+        <p className="error" role="alert">
+          {watchlist.error}
+        </p>
+      ) : null}
+
       <HomePersonalRow
         headingKey="showcase.sections.watchlistTitle"
         items={watchlistRow.items}
         isPending={watchlistRow.isPending}
         seeAllTo={ROUTES.watchlist}
         seeAllLabel={t('showcase.seeWatchlist')}
+        eagerCount={eagerCountFor('watchlist', firstRail)}
+        library={library}
         onSelect={openPersonalDetails}
       />
       {seedTmdbId ? (
@@ -167,7 +219,10 @@ export default function HomePage() {
           headingKey="showcase.sections.recommendationsTitle"
           seeAllTo={ROUTES.showcaseRecommendations(seedTmdbId)}
           query={{ section: 'recommendations', seedTmdbId }}
+          library={library}
           onSelect={openDetails}
+          eagerCount={eagerCountFor('recommendations', firstRail)}
+          ratingScale={user?.ratingScale}
           subtitle={seedTitle}
         />
       ) : null}
@@ -175,13 +230,18 @@ export default function HomePage() {
         headingKey="showcase.sections.friendsTitle"
         items={friendsRow.items}
         isPending={friendsRow.isPending}
+        eagerCount={eagerCountFor('friends', firstRail)}
+        library={library}
         onSelect={openPersonalDetails}
       />
       <HomeShowcaseRow
         headingKey="showcase.sections.providerTitle"
         seeAllTo={ROUTES.showcaseProvider(providerTab)}
         query={{ section: 'provider', provider: providerTab }}
+        library={library}
         onSelect={openDetails}
+        eagerCount={eagerCountFor('provider', firstRail)}
+        ratingScale={user?.ratingScale}
         tabConfig={{
           ariaLabel: t('showcase.providerLabel'),
           tabs: providerTabs,
@@ -193,7 +253,9 @@ export default function HomePage() {
         headingKey="showcase.sections.trendingTitle"
         seeAllTo={ROUTES.showcaseTrendingForGenre(selectedGenreIds?.[0])}
         query={{ section: 'trending', genreIds: selectedGenreIds }}
+        library={library}
         onSelect={openDetails}
+        ratingScale={user?.ratingScale}
         tabConfig={{
           ariaLabel: t('showcase.genreLabel'),
           tabs: genreTabs,
@@ -205,13 +267,17 @@ export default function HomePage() {
         headingKey="showcase.sections.nowPlayingTitle"
         seeAllTo={ROUTES.showcaseNowPlaying}
         query={{ section: 'now-playing' }}
+        library={library}
         onSelect={openDetails}
+        ratingScale={user?.ratingScale}
       />
       <HomeShowcaseRow
         headingKey="showcase.sections.themeTitle"
         seeAllTo={ROUTES.showcaseTheme(themeTab)}
         query={{ section: 'theme', theme: themeTab }}
+        library={library}
         onSelect={openDetails}
+        ratingScale={user?.ratingScale}
         tabConfig={{
           ariaLabel: t('showcase.themeLabel'),
           tabs: themeTabs,
@@ -225,7 +291,9 @@ export default function HomePage() {
         seeAllTo={ROUTES.showcaseMostProposed}
         query={{ section: 'most-proposed' }}
         showRank
+        library={library}
         onSelect={openDetails}
+        ratingScale={user?.ratingScale}
       />
 
       <Card
@@ -254,8 +322,21 @@ export default function HomePage() {
           title={selected.title}
           year={selected.year}
           posterSrc={posterImageSrc(selected.posterPath)}
+          libraryContext={
+            user
+              ? {
+                  inWatchlist: watchlist.has(selected),
+                  onToggleWatchlist: () => watchlist.toggle(selected),
+                  onProposeToEvent: () => setProposeTarget(selected),
+                }
+              : undefined
+          }
           onClose={() => setSelected(null)}
         />
+      ) : null}
+
+      {proposeTarget ? (
+        <ProposeToEventModal open movie={proposeTarget} onClose={() => setProposeTarget(null)} />
       ) : null}
     </PageLayout>
   );

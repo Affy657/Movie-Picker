@@ -229,17 +229,13 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
               <MovieBrowseCard
                 key={itemKey(item)}
                 item={item}
-                openDetailsAriaLabel={t('profile.movies.card.openDetailsAria', {
-                  title: item.title,
-                })}
                 ratingScale={user?.ratingScale}
                 hasHover={hasHover}
                 isLoggedIn={isLoggedIn}
                 inWatchlist={watchlist.has(item)}
                 onToggleWatchlist={() => watchlist.toggle(item)}
+                onProposeToEvent={() => setProposeTarget(item)}
                 onOpenDetails={() => setDetailsTarget(item)}
-                onProposeFallback={() => setProposeTarget(item)}
-                t={t}
               />
             ))}
           </ul>
@@ -264,6 +260,15 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
           tmdbId={detailsTarget.tmdbId}
           mediaType={detailsTarget.mediaType}
           posterSrc={posterImageSrc(detailsTarget.posterPath)}
+          libraryContext={
+            isLoggedIn
+              ? {
+                  inWatchlist: watchlist.has(detailsTarget),
+                  onToggleWatchlist: () => watchlist.toggle(detailsTarget),
+                  onProposeToEvent: () => setProposeTarget(detailsTarget),
+                }
+              : undefined
+          }
           onClose={() => setDetailsTarget(null)}
         />
       )}

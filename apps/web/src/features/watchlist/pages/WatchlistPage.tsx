@@ -2,7 +2,6 @@ import { useId, useMemo, useRef, useState } from 'react';
 import { Bookmark, Import, Plus } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
-import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
@@ -27,16 +26,13 @@ import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import LetterboxdConnectModal from '@/features/letterboxd/components/LetterboxdConnectModal';
 import type { MovieMediaType } from '@/shared/types/movie';
-import {
-  useAddToWatchlist,
-  useRemoveFromWatchlist,
-  useWatchlist,
-} from '@/features/watchlist/hooks/useWatchlist';
+import { useAddToWatchlist, useWatchlist } from '@/features/watchlist/hooks/useWatchlist';
+import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
 import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
 import { useWatchlistToolbar } from '@/features/watchlist/hooks/useWatchlistToolbar';
 import WatchlistToolbar from '@/features/watchlist/components/WatchlistToolbar';
 import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
-import WatchlistMovieCard from '@/features/watchlist/components/WatchlistMovieCard';
+import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import ViewModeToggle, { type MovieViewMode } from '@/shared/components/ViewModeToggle';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
@@ -127,7 +123,6 @@ export default function WatchlistPage() {
     persistViewMode(mode);
   };
 
-  const [removeError, setRemoveError] = useState<string | null>(null);
   const [proposeTarget, setProposeTarget] = useState<WatchlistItem | null>(null);
   const [detailsTarget, setDetailsTarget] = useState<WatchlistItem | null>(null);
   const [addPanelOpen, setAddPanelOpen] = useState(false);
@@ -175,19 +170,12 @@ export default function WatchlistPage() {
   );
 
   const addMutation = useAddToWatchlist();
-  const removeMutation = useRemoveFromWatchlist({
-    onError: (err) => setRemoveError(getErrorMessage(err, t('watchlist.removeError'))),
-  });
+  const watchlistToggle = useWatchlistToggle(!!user);
 
   const inWatchlistKeys = useMemo(
     () => new Set(items.map((i) => itemKey(i.tmdbId, i.mediaType))),
     [items]
   );
-
-  const handleRemove = (tmdbId: number, mediaType: MovieMediaType) => {
-    setRemoveError(null);
-    removeMutation.mutate({ tmdbId, mediaType });
-  };
 
   const activeFilterCount = toolbar.activeFilterChips.length;
   const filtersPanel = (
@@ -296,9 +284,9 @@ export default function WatchlistPage() {
       <section className="section">
         <h2 className="visually-hidden">{t('watchlist.listAria')}</h2>
 
-        {removeError ? (
+        {watchlistToggle.error ? (
           <p className="error" role="alert">
-            {removeError}
+            {watchlistToggle.error}
           </p>
         ) : null}
 
@@ -378,16 +366,17 @@ export default function WatchlistPage() {
               aria-label={t('watchlist.listAria')}
             >
               {toolbar.visibleItems.map((item) => (
-                <WatchlistMovieCard
+                <MovieBrowseCard
                   key={itemKey(item.tmdbId, item.mediaType)}
                   item={item}
-                  hasHover={hasHover}
-                  ratingScale={user?.ratingScale}
-                  t={t}
-                  onRemove={() => handleRemove(item.tmdbId, item.mediaType)}
-                  onOpenDetails={() => setDetailsTarget(item)}
-                  onProposeFallback={() => setProposeTarget(item)}
                   layout={viewMode === 'list' ? 'row' : 'grid'}
+                  hasHover={hasHover}
+                  isLoggedIn={!!user}
+                  inWatchlist
+                  onToggleWatchlist={() => watchlistToggle.toggle(item)}
+                  onProposeToEvent={() => setProposeTarget(item)}
+                  onOpenDetails={() => setDetailsTarget(item)}
+                  ratingScale={user?.ratingScale}
                 />
               ))}
             </ul>
@@ -413,6 +402,15 @@ export default function WatchlistPage() {
           posterSrc={posterImageSrc(detailsTarget.posterPath)}
           voteLabel={formatTmdbVote(detailsTarget.voteAverage, user?.ratingScale)}
           runtimeLabel={formatRuntimeMinutes(detailsTarget.runtimeMinutes)}
+          libraryContext={
+            user
+              ? {
+                  inWatchlist: watchlistToggle.has(detailsTarget),
+                  onToggleWatchlist: () => watchlistToggle.toggle(detailsTarget),
+                  onProposeToEvent: () => setProposeTarget(detailsTarget),
+                }
+              : undefined
+          }
           onClose={() => setDetailsTarget(null)}
         />
       )}

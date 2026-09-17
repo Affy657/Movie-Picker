@@ -12,24 +12,17 @@ import {
   Trash2,
 } from 'lucide-react';
 import type { MovieDetailsTabKey } from '@/features/movies/components/MovieDetailsModal';
-import {
-  allocineUrl,
-  imdbUrl,
-  letterboxdUrl,
-  tmdbPageUrl,
-} from '@/features/movies/utils/movieExternalLinks';
+import { letterboxdUrl } from '@/features/movies/utils/movieExternalLinks';
 import type { MovieData } from '@/shared/types/movie';
 import type { MovieWheelExclusion, Translate } from '@/features/movies/types';
+import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import styles from './MovieCardKebab.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { MenuItem, MenuPanel, MenuSeparator } from '@/shared/components/Menu';
 import { MENU_ANCHOR_GAP_PX, MENU_VIEWPORT_MARGIN_PX } from '@/shared/components/menuGeometry';
 
-export type ExternalLinksMode = 'all' | 'letterboxd';
-
-interface CardKebabProps {
+export interface CardKebabProps {
   title: string;
-  year?: string;
   tmdbId: number;
   mediaType?: 'movie' | 'tv';
   isMine: boolean;
@@ -40,35 +33,34 @@ interface CardKebabProps {
   onToggleWatchlist?: () => void;
   onProposeToEvent?: () => void;
   onViewDetails?: () => void;
-  externalLinks?: ExternalLinksMode;
   wheelExclusion?: MovieWheelExclusion;
   t: Translate;
 }
 
-export function CardKebabWhenAvailable({
-  slotClassName,
+export function kebabHasActions({
+  tmdbId,
   canRemove,
   onToggleWatchlist,
-  onToggleWheelExclusion,
-  ...kebabProps
+  onProposeToEvent,
+  onViewDetails,
+  wheelExclusion,
 }: Readonly<
-  CardKebabProps & {
-    slotClassName: string;
-    onToggleWatchlist?: () => void;
-    onToggleWheelExclusion?: () => void;
-  }
->) {
-  if (!canRemove && !onToggleWatchlist && !onToggleWheelExclusion && !kebabProps.onViewDetails)
-    return null;
+  Pick<
+    CardKebabProps,
+    | 'tmdbId'
+    | 'canRemove'
+    | 'onToggleWatchlist'
+    | 'onProposeToEvent'
+    | 'onViewDetails'
+    | 'wheelExclusion'
+  >
+>): boolean {
   return (
-    <div className={slotClassName}>
-      <CardKebab
-        {...kebabProps}
-        canRemove={canRemove}
-        onToggleWatchlist={onToggleWatchlist}
-        wheelExclusion={kebabProps.wheelExclusion}
-      />
-    </div>
+    !!onToggleWatchlist ||
+    !!onProposeToEvent ||
+    (!!onViewDetails && tmdbId > 0) ||
+    !!wheelExclusion ||
+    canRemove
   );
 }
 
@@ -109,30 +101,42 @@ export function MovieCardKebab({
   onToggleWheelExclusion?: (movie: MovieData) => void;
   t: Translate;
 }>) {
+  const hasHover = useHasHoverCapability();
   const { excluded, toggleWatchlist, toggleExclusion } = deriveWheelToggle(
     movie,
     onToggleWatchlist,
     onToggleWheelExclusion
   );
+  const wheelExclusion = toggleExclusion ? { excluded, onToggle: toggleExclusion } : undefined;
+  const onViewDetails = card.hasDetails ? () => card.openDetails('soiree') : undefined;
+  if (
+    !kebabHasActions({
+      tmdbId: movie.tmdbId,
+      canRemove: card.canRemove,
+      onToggleWatchlist: toggleWatchlist,
+      onViewDetails,
+      wheelExclusion,
+    })
+  )
+    return null;
+  if (!hasHover && card.hasDetails) return null;
   return (
-    <CardKebabWhenAvailable
-      slotClassName={slotClassName}
-      title={movie.title}
-      year={movie.year}
-      tmdbId={movie.tmdbId}
-      mediaType={movie.mediaType}
-      externalLinks="letterboxd"
-      isMine={card.isMine}
-      isHost={isHost}
-      canRemove={card.canRemove}
-      onRemove={() => onRemove(movie)}
-      inWatchlist={isInWatchlist}
-      onToggleWatchlist={toggleWatchlist}
-      onToggleWheelExclusion={toggleExclusion}
-      onViewDetails={card.hasDetails ? () => card.openDetails('soiree') : undefined}
-      wheelExclusion={toggleExclusion ? { excluded, onToggle: toggleExclusion } : undefined}
-      t={t}
-    />
+    <div className={slotClassName}>
+      <CardKebab
+        title={movie.title}
+        tmdbId={movie.tmdbId}
+        mediaType={movie.mediaType}
+        isMine={card.isMine}
+        isHost={isHost}
+        canRemove={card.canRemove}
+        onRemove={() => onRemove(movie)}
+        inWatchlist={isInWatchlist}
+        onToggleWatchlist={toggleWatchlist}
+        onViewDetails={onViewDetails}
+        wheelExclusion={wheelExclusion}
+        t={t}
+      />
+    </div>
   );
 }
 
@@ -159,7 +163,6 @@ function ExternalMenuLink({
 
 export function CardKebab({
   title,
-  year,
   tmdbId,
   mediaType,
   isMine,
@@ -170,7 +173,6 @@ export function CardKebab({
   onToggleWatchlist,
   onProposeToEvent,
   onViewDetails,
-  externalLinks = 'all',
   wheelExclusion,
   t,
 }: Readonly<CardKebabProps>) {
@@ -234,6 +236,23 @@ export function CardKebab({
     firstItem?.focus();
   }, [open, menuPos.ready]);
 
+  const showDetails = !!onViewDetails && tmdbId > 0;
+  const hasPrimaryGroup =
+    !!onToggleWatchlist || !!onProposeToEvent || showDetails || !!wheelExclusion;
+  const hasLinksGroup = tmdbId > 0;
+
+  if (
+    !kebabHasActions({
+      tmdbId,
+      canRemove,
+      onToggleWatchlist,
+      onProposeToEvent,
+      onViewDetails,
+      wheelExclusion,
+    })
+  )
+    return null;
+
   const handleToggle = () => {
     if (!open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
@@ -251,18 +270,11 @@ export function CardKebab({
     : t('movies.list.removeAsHostAria', { title });
 
   const lbUrl = letterboxdUrl(tmdbId, mediaType, title);
-  const imdbHref = imdbUrl(title, year);
-  const allocineHref = allocineUrl(title);
-  const tmdbHref = tmdbPageUrl(tmdbId, mediaType);
-
-  const hasPrimaryGroup =
-    !!onToggleWatchlist || !!onProposeToEvent || !!onViewDetails || !!wheelExclusion;
-  const hasLinksGroup = tmdbId > 0;
-  const showAllExternalLinks = externalLinks === 'all';
 
   const menuLabel = t('movies.list.moreActionsAria', { title });
   const pick = (action: () => void) => () => {
     setOpen(false);
+    btnRef.current?.focus();
     action();
   };
 
@@ -292,6 +304,14 @@ export function CardKebab({
               visibility: menuPos.ready ? 'visible' : 'hidden',
             }}
           >
+            {showDetails && onViewDetails && (
+              <MenuItem
+                icon={<Info aria-hidden size={ICON_SIZE.sm} />}
+                onClick={pick(onViewDetails)}
+              >
+                {t('watchlist.card.detailsAction')}
+              </MenuItem>
+            )}
             {onToggleWatchlist && (
               <MenuItem
                 icon={
@@ -314,14 +334,6 @@ export function CardKebab({
                 {t('watchlist.card.proposeAction')}
               </MenuItem>
             )}
-            {onViewDetails && (
-              <MenuItem
-                icon={<Info aria-hidden size={ICON_SIZE.sm} />}
-                onClick={pick(onViewDetails)}
-              >
-                {t('watchlist.card.detailsAction')}
-              </MenuItem>
-            )}
             {wheelExclusion && (
               <MenuItem
                 icon={
@@ -340,32 +352,11 @@ export function CardKebab({
             )}
             {hasPrimaryGroup && hasLinksGroup && <MenuSeparator />}
             {hasLinksGroup && (
-              <>
-                <ExternalMenuLink
-                  href={lbUrl}
-                  label={t('movies.list.letterboxdButton')}
-                  onClose={close}
-                />
-                {showAllExternalLinks ? (
-                  <>
-                    <ExternalMenuLink
-                      href={imdbHref}
-                      label={t('movies.list.imdbButton')}
-                      onClose={close}
-                    />
-                    <ExternalMenuLink
-                      href={allocineHref}
-                      label={t('movies.list.allocineButton')}
-                      onClose={close}
-                    />
-                    <ExternalMenuLink
-                      href={tmdbHref}
-                      label={t('movies.list.tmdbButton')}
-                      onClose={close}
-                    />
-                  </>
-                ) : null}
-              </>
+              <ExternalMenuLink
+                href={lbUrl}
+                label={t('movies.list.letterboxdButton')}
+                onClose={close}
+              />
             )}
             {canRemove && (hasPrimaryGroup || hasLinksGroup) && <MenuSeparator />}
             {canRemove && (

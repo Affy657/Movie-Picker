@@ -113,7 +113,18 @@
 }
 
 .footerBtnLabel {
+  white-space: nowrap;
   transform: translateY(var(--text-optical-nudge));
+}
+
+@media (max-width: 47.9375rem) {
+  .footer {
+    flex-wrap: wrap;
+  }
+
+  .footer > * {
+    flex: 1 1 auto;
+  }
 }
 
 .footerBtnDanger {

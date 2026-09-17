@@ -15,7 +15,14 @@
   background: var(--mc-kebab-bg, var(--on-poster-kebab-bg));
   color: var(--mc-kebab-fg, var(--on-poster-kebab-fg));
   cursor: pointer;
-  transition: background var(--duration-base) var(--ease-default);
+  opacity: var(--opacity-card-kebab, 1);
+  transition:
+    background var(--duration-base) var(--ease-default),
+    opacity var(--duration-base) var(--ease-default);
+}
+
+.kebabBtn[aria-expanded='true'] {
+  opacity: 1;
 }
 
 .kebabBtn:focus-visible {
@@ -31,6 +38,7 @@
 }
 
 .kebabBtn:focus-visible {
+  opacity: 1;
   outline: var(--outline-focus);
   outline-offset: 2px;
 }

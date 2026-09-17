@@ -1,6 +1,6 @@
 import { useEffect, useId, useState, useRef } from 'react';
 import clsx from 'clsx';
-import { Bookmark, BookmarkCheck, Disc3, Film, RotateCcw, Trash2, X } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Disc3, Film, ListPlus, RotateCcw, Trash2, X } from 'lucide-react';
 import { Tabs, TabPanel } from '@/shared/components/Tabs';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
@@ -23,6 +23,12 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 export type MovieDetailsTabKey = 'soiree' | 'film' | 'dispo';
 export type { MovieDetailsEventContext };
 
+export interface MovieDetailsLibraryContext {
+  inWatchlist?: boolean;
+  onToggleWatchlist?: () => void;
+  onProposeToEvent?: () => void;
+}
+
 interface MovieDetailsModalProps {
   open: boolean;
   title: string;
@@ -36,6 +42,7 @@ interface MovieDetailsModalProps {
   watchPageUrl?: string | null;
   initialTab?: MovieDetailsTabKey;
   eventContext?: MovieDetailsEventContext;
+  libraryContext?: MovieDetailsLibraryContext;
   onClose: () => void;
 }
 
@@ -89,6 +96,14 @@ function hasEventFooterActions(eventContext: MovieDetailsModalProps['eventContex
   );
 }
 
+function hasLibraryFooterActions(
+  eventContext: MovieDetailsModalProps['eventContext'],
+  libraryContext: MovieDetailsModalProps['libraryContext']
+) {
+  if (eventContext || !libraryContext) return false;
+  return !!libraryContext.onToggleWatchlist || !!libraryContext.onProposeToEvent;
+}
+
 export default function MovieDetailsModal({
   open,
   title,
@@ -102,6 +117,7 @@ export default function MovieDetailsModal({
   watchPageUrl,
   initialTab,
   eventContext,
+  libraryContext,
   onClose,
 }: Readonly<MovieDetailsModalProps>) {
   const { t } = useTranslation();
@@ -135,6 +151,7 @@ export default function MovieDetailsModal({
   const wheelLabel = t(wheelActionKey(eventContext));
   const removeAria = removeAriaLabel(eventContext, title, t);
   const hasFooterActions = hasEventFooterActions(eventContext);
+  const hasLibraryFooter = hasLibraryFooterActions(eventContext, libraryContext);
 
   return (
     <Modal
@@ -270,6 +287,37 @@ export default function MovieDetailsModal({
                 >
                   <Trash2 aria-hidden size={ICON_SIZE.md} />
                   <span className={styles.footerBtnLabel}>{t('movies.list.removeButton')}</span>
+                </Button>
+              )}
+            </div>
+          )}
+
+          {hasLibraryFooter && libraryContext && (
+            <div className={styles.footer}>
+              {libraryContext.onToggleWatchlist && (
+                <Button size="sm" onClick={libraryContext.onToggleWatchlist}>
+                  {libraryContext.inWatchlist ? (
+                    <BookmarkCheck aria-hidden size={ICON_SIZE.md} />
+                  ) : (
+                    <Bookmark aria-hidden size={ICON_SIZE.md} />
+                  )}
+                  <span className={styles.footerBtnLabel}>
+                    {libraryContext.inWatchlist
+                      ? t('watchlist.card.removeAction')
+                      : t('watchlist.card.addAction')}
+                  </span>
+                </Button>
+              )}
+              {libraryContext.onProposeToEvent && (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    onClose();
+                    libraryContext.onProposeToEvent?.();
+                  }}
+                >
+                  <ListPlus aria-hidden size={ICON_SIZE.md} />
+                  <span className={styles.footerBtnLabel}>{t('watchlist.card.proposeAction')}</span>
                 </Button>
               )}
             </div>

@@ -238,9 +238,112 @@ describe('MovieDetailsModal', () => {
     expect(onRemove).toHaveBeenCalledTimes(1);
   });
 
-  it('footer: no action shown without a movie night context', () => {
+  it('footer: nothing without any context', () => {
     renderWithLocale(<MovieDetailsModal open title="Inception" tmdbId={27205} onClose={vi.fn()} />);
     expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Proposer dans une soirée' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('library footer: toggles the watchlist', async () => {
+    const onToggleWatchlist = vi.fn();
+    const { rerender } = renderWithLocale(
+      <MovieDetailsModal
+        open
+        title="Inception"
+        tmdbId={27205}
+        libraryContext={{ inWatchlist: false, onToggleWatchlist }}
+        onClose={vi.fn()}
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Ajouter à ma liste' }));
+    expect(onToggleWatchlist).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <LocaleProvider>
+        <MovieDetailsModal
+          open
+          title="Inception"
+          tmdbId={27205}
+          libraryContext={{ inWatchlist: true, onToggleWatchlist }}
+          onClose={vi.fn()}
+        />
+      </LocaleProvider>
+    );
+    expect(screen.getByRole('button', { name: 'Retirer de ma liste' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
+  });
+
+  it('library footer: proposing closes the modal first', async () => {
+    const onProposeToEvent = vi.fn();
+    const onClose = vi.fn();
+    renderWithLocale(
+      <MovieDetailsModal
+        open
+        title="Inception"
+        tmdbId={27205}
+        libraryContext={{ onProposeToEvent }}
+        onClose={onClose}
+      />
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Proposer dans une soirée' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onProposeToEvent).toHaveBeenCalledTimes(1);
+    expect(onClose.mock.invocationCallOrder[0]).toBeLessThan(
+      onProposeToEvent.mock.invocationCallOrder[0]!
+    );
+  });
+
+  it('library footer: only the provided actions', () => {
+    const { rerender } = renderWithLocale(
+      <MovieDetailsModal
+        open
+        title="Inception"
+        tmdbId={27205}
+        libraryContext={{ onToggleWatchlist: vi.fn() }}
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Ajouter à ma liste' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Proposer dans une soirée' })
+    ).not.toBeInTheDocument();
+
+    rerender(
+      <LocaleProvider>
+        <MovieDetailsModal
+          open
+          title="Inception"
+          tmdbId={27205}
+          libraryContext={{}}
+          onClose={vi.fn()}
+        />
+      </LocaleProvider>
+    );
+    expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Proposer dans une soirée' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('event context wins over the library context', () => {
+    const onToggleWatchlist = vi.fn();
+    renderWithLocale(
+      <MovieDetailsModal
+        open
+        title="Inception"
+        tmdbId={27205}
+        eventContext={eventContext({ onToggleWatchlist, isInWatchlist: false })}
+        libraryContext={{ onToggleWatchlist: vi.fn(), onProposeToEvent: vi.fn() }}
+        onClose={vi.fn()}
+      />
+    );
+    expect(
+      screen.queryByRole('button', { name: 'Proposer dans une soirée' })
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Ajouter à ma liste' })).toHaveLength(1);
+    expect(screen.getByRole('button', { name: /^Retirer Inception$/ })).toBeInTheDocument();
   });
 
   it('without provided watchProviders (e.g. from the watchlist): fetches the availability through useMovieDetails', () => {

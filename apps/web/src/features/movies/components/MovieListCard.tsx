@@ -17,13 +17,26 @@ interface MovieListCardProps {
   voteAverage?: number | null;
   ratingScale?: RatingScale;
   runtimeMinutes?: number | null;
+  meta?: ReactNode;
+  eager?: boolean;
   onOpenDetails: () => void;
-  openDetailsAriaLabel: string;
   badges?: ReactNode;
   kebab?: ReactNode;
-  overlay?: ReactNode;
   className?: string;
   layout?: 'grid' | 'row';
+}
+
+export function MovieRankBadge({
+  rank,
+  label,
+  stacked,
+}: Readonly<{ rank: number; label: string; stacked?: boolean }>) {
+  return (
+    <span className={clsx(styles.badge, stacked && styles.badgeStacked)}>
+      <span className="visually-hidden">{label}</span>
+      <span aria-hidden>{rank}</span>
+    </span>
+  );
 }
 
 export default function MovieListCard({
@@ -33,11 +46,11 @@ export default function MovieListCard({
   voteAverage,
   ratingScale,
   runtimeMinutes,
+  meta,
+  eager = false,
   onOpenDetails,
-  openDetailsAriaLabel,
   badges,
   kebab,
-  overlay,
   className,
   layout = 'grid',
 }: Readonly<MovieListCardProps>) {
@@ -53,7 +66,7 @@ export default function MovieListCard({
         type="button"
         className={styles.cardTrigger}
         onClick={onOpenDetails}
-        aria-label={openDetailsAriaLabel}
+        aria-label={t('watchlist.card.openDetailsAria', { title })}
       />
 
       <div className={styles.posterRegion}>
@@ -61,7 +74,8 @@ export default function MovieListCard({
           <img
             src={posterSrc}
             alt=""
-            loading="lazy"
+            loading={eager ? 'eager' : 'lazy'}
+            fetchPriority={eager ? 'high' : 'auto'}
             decoding="async"
             className={styles.posterImg}
           />
@@ -74,23 +88,27 @@ export default function MovieListCard({
         {badges}
 
         {kebab && layout === 'grid' && <div className={styles.kebabSlot}>{kebab}</div>}
-
-        {overlay && <div className={styles.overlay}>{overlay}</div>}
       </div>
 
       <div className={styles.cardBody}>
         <h3 className={styles.cardTitle}>{title}</h3>
         <span className={styles.cardMeta}>
-          {year && <span className={styles.metaStart}>{year}</span>}
-          {voteLabel && (
-            <span className={styles.metaCenter} title={t('movies.list.tmdbVoteTitle')}>
-              {voteLabel}
-            </span>
-          )}
-          {runtimeLabel && (
-            <span className={styles.metaEnd} title={t('movies.list.runtimeTitle')}>
-              {runtimeLabel}
-            </span>
+          {meta != null ? (
+            <span className={styles.metaText}>{meta}</span>
+          ) : (
+            <>
+              {year && <span className={styles.metaStart}>{year}</span>}
+              {voteLabel && (
+                <span className={styles.metaCenter} title={t('movies.list.tmdbVoteTitle')}>
+                  {voteLabel}
+                </span>
+              )}
+              {runtimeLabel && (
+                <span className={styles.metaEnd} title={t('movies.list.runtimeTitle')}>
+                  {runtimeLabel}
+                </span>
+              )}
+            </>
           )}
         </span>
       </div>

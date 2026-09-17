@@ -12,6 +12,20 @@
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
+.row:focus-within {
+  --opacity-card-kebab: 1;
+}
+
+@media (hover: hover) {
+  .row {
+    --opacity-card-kebab: 0;
+  }
+
+  .row:hover {
+    --opacity-card-kebab: 1;
+  }
+}
+
 .row:last-child {
   border-bottom: none;
 }

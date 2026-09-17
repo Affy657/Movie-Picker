@@ -13,6 +13,7 @@ vi.mock('@/shared/hooks/useAnalytics', () => ({
 
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
@@ -30,18 +31,6 @@ const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
 
 function watchlistHandler(items: unknown[]) {
   return http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items }));
-}
-
-function stubMatchMedia(matches: boolean) {
-  vi.stubGlobal(
-    'matchMedia',
-    vi.fn((query: string) => ({
-      matches,
-      media: query,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }))
-  );
 }
 
 const EVENT: EventData = {
@@ -174,6 +163,7 @@ describe('EventMoviesSection (MSW)', () => {
   });
 
   it('adds a movie to the watchlist with vote/runtime from the movie night page', async () => {
+    stubHoverCapability();
     let addedBody: Record<string, unknown> | null = null;
     server.use(
       authedUserHandler,
@@ -202,6 +192,7 @@ describe('EventMoviesSection (MSW)', () => {
   });
 
   it('removes a movie from the watchlist from the movie night page', async () => {
+    stubHoverCapability();
     let removeCalled = false;
     server.use(
       authedUserHandler,
@@ -230,6 +221,7 @@ describe('EventMoviesSection (MSW)', () => {
     await waitFor(() => expect(removeCalled).toBe(true));
   });
   it('the host excludes a movie from the draw through the card menu', async () => {
+    stubHoverCapability();
     let excludedBody: Record<string, unknown> | null = null;
     const refreshAll = vi.fn();
     server.use(
@@ -254,7 +246,8 @@ describe('EventMoviesSection (MSW)', () => {
     await waitFor(() => expect(refreshAll).toHaveBeenCalled());
   });
 
-  it('retirer un film depuis le menu de la carte demande confirmation au lieu de le retirer directement', async () => {
+  it('removing a movie from the card menu asks for confirmation instead of removing it directly', async () => {
+    stubHoverCapability();
     let removeCalled = false;
     server.use(
       authedUserHandler,
@@ -277,6 +270,7 @@ describe('EventMoviesSection (MSW)', () => {
   });
 
   it('a non-host participant has no exclusion action', async () => {
+    stubHoverCapability();
     server.use(authedUserHandler, watchlistHandler([]));
 
     renderSection();
@@ -284,6 +278,53 @@ describe('EventMoviesSection (MSW)', () => {
 
     await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
     expect(screen.queryByRole('menuitem', { name: /tirage/i })).not.toBeInTheDocument();
+  });
+
+  it('without hover capability: no kebab, the poster still opens the details', async () => {
+    server.use(
+      authedUserHandler,
+      watchlistHandler([]),
+      http.get(`${TEST_API_V1}/movies/tmdb/42/details`, () =>
+        HttpResponse.json({ tmdbId: 42, watchProviders: [] })
+      )
+    );
+    renderSection();
+    const user = userEvent.setup();
+
+    expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /plus d.actions.*matrix/i })
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /voir les détails de « matrix »/i }));
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ajouter à ma liste' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Proposer dans une soirée' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('hover, host: the kebab lists the items in the unified order', async () => {
+    stubHoverCapability();
+    server.use(authedUserHandler, watchlistHandler([]));
+    renderSection({ event: { ...EVENT, isHost: true } });
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
+    const names = screen
+      .getAllByRole('menuitem')
+      .map((item) => item.getAttribute('aria-label') ?? item.textContent);
+    expect(names).toEqual([
+      'Voir les détails',
+      'Ajouter à ma liste',
+      'Exclure du tirage',
+      'Ouvrir sur Letterboxd',
+      'Retirer Matrix',
+    ]);
+    expect(
+      screen.queryByRole('menuitem', { name: /proposer dans une soirée/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /imdb|allociné|tmdb/i })).not.toBeInTheDocument();
   });
 
   it('affiche le chargement et le bandeau d’erreur', () => {
