@@ -445,7 +445,7 @@
   flex: 0 0 2.25rem;
   border: none;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-text);
   cursor: pointer;
 }
 

@@ -8,8 +8,8 @@ import {
   CardModals,
   CardProposerFooter,
   CardSelectionOverlay,
-  DetailsInfoButton,
   MovieNote,
+  PosterDetailsTrigger,
   PaidOfferChip,
   VoteBar,
   WatchlistBadge,
@@ -125,6 +125,12 @@ export const MovieCardList = memo(function MovieCardList({
       ) : null}
       <div className={styles.posterCol} inert={selecting}>
         <ListPoster src={s.posterSrc} srcSet={s.posterSrcSet} eager={eager} />
+        <PosterDetailsTrigger
+          hasDetails={s.hasDetails}
+          onOpen={() => s.openDetails('soiree')}
+          title={m.title}
+          t={t}
+        />
         {m.mediaType === 'tv' && <span className={styles.tvBadge}>{t('movies.list.tvBadge')}</span>}
         <WatchlistBadge inWatchlist={isInWatchlist} t={t} />
         <WinnerRibbon isWinner={isWinner} winnerRank={winnerRank} t={t} />
@@ -233,12 +239,6 @@ export const MovieCardList = memo(function MovieCardList({
 
           <div className={styles.proposerRow}>
             <CardProposerFooter s={s} m={m} t={t} />
-            <DetailsInfoButton
-              hasDetails={s.hasDetails}
-              onOpen={() => s.openDetails('soiree')}
-              title={m.title}
-              t={t}
-            />
           </div>
         </div>
       </div>

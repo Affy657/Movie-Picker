@@ -1,7 +1,7 @@
 import { useCallback, useId, useState } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
-import { Bookmark, Info, MessageSquarePlus, ThumbsDown, ThumbsUp, Trophy } from 'lucide-react';
+import { Bookmark, MessageSquarePlus, ThumbsDown, ThumbsUp, Trophy } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import Tooltip from '@/shared/components/Tooltip';
@@ -336,29 +336,26 @@ export function CardProposerFooter({
   );
 }
 
-export function DetailsInfoButton({
+export function PosterDetailsTrigger({
   hasDetails,
   onOpen,
   title,
-  className,
   t,
 }: Readonly<{
   hasDetails: boolean;
   onOpen: () => void;
   title: string;
-  className?: string;
   t: Translate;
 }>) {
   if (!hasDetails) return null;
   return (
     <button
       type="button"
-      className={clsx(styles.infoBtn, className)}
+      className={styles.posterTrigger}
       onClick={onOpen}
       aria-label={t('watchlist.card.openDetailsAria', { title })}
-    >
-      <Info aria-hidden size={ICON_SIZE.sm} />
-    </button>
+      data-testid="poster-details-trigger"
+    />
   );
 }
 

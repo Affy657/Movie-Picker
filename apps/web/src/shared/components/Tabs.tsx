@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import clsx from 'clsx';
 import { useTablistKeyboard } from '@/shared/hooks/useTablistKeyboard';
 import { useRailScroll } from '@/shared/hooks/useRailScroll';
@@ -20,6 +20,25 @@ export interface TabDef<T extends string> {
   iconOnly?: boolean;
   badge?: number;
   disabled?: boolean;
+}
+
+function useWheelToHorizontal(listRef: RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const onWheel = (event: WheelEvent) => {
+      if (event.deltaY === 0 || event.deltaX !== 0) return;
+      const maxScroll = list.scrollWidth - list.clientWidth;
+      if (maxScroll <= 0) return;
+      const atStart = event.deltaY < 0 && list.scrollLeft <= 0;
+      const atEnd = event.deltaY > 0 && list.scrollLeft >= maxScroll;
+      if (atStart || atEnd) return;
+      event.preventDefault();
+      list.scrollBy({ left: event.deltaY, behavior: 'instant' });
+    };
+    list.addEventListener('wheel', onWheel, { passive: false });
+    return () => list.removeEventListener('wheel', onWheel);
+  }, [listRef]);
 }
 
 function tabButtonId(idBase: string, key: string): string {
@@ -54,6 +73,7 @@ export function Tabs<T extends string>({
   const isPill = variant === 'pill';
   const listRef = useRef<HTMLDivElement>(null);
   const { canScrollBack, canScrollForward } = useRailScroll(listRef, tabs.length);
+  useWheelToHorizontal(listRef);
 
   useEffect(() => {
     const list = listRef.current;

@@ -118,25 +118,21 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-text-muted);
+  color: var(--color-text);
   border-radius: var(--radius-sm);
-  opacity: var(--opacity-muted);
   transition:
-    opacity var(--duration-fast) var(--ease-default),
     color var(--duration-fast) var(--ease-default),
     background var(--duration-fast) var(--ease-default);
 }
 
 @media (hover: hover) {
   .historyRemoveBtn:hover {
-    opacity: 1;
     color: var(--color-error);
     background: var(--color-error-bg);
   }
 }
 
 .historyRemoveBtn:focus-visible {
-  opacity: 1;
   outline: var(--outline-focus);
   outline-offset: -2px;
 }

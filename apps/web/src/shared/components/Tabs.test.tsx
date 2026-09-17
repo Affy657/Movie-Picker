@@ -89,6 +89,41 @@ describe('Tabs', () => {
     expect(tab).toHaveAttribute('aria-controls', panel.id);
   });
 
+  it('a vertical wheel scrolls the overflowing list sideways and stops at its edges', () => {
+    render(<Harness active="a" onChange={vi.fn()} />);
+    const list = screen.getByRole('tablist');
+    Object.defineProperty(list, 'scrollWidth', { configurable: true, value: 600 });
+    Object.defineProperty(list, 'clientWidth', { configurable: true, value: 200 });
+    let scrollLeft = 0;
+    Object.defineProperty(list, 'scrollLeft', {
+      configurable: true,
+      get: () => scrollLeft,
+      set: (value: number) => {
+        scrollLeft = value;
+      },
+    });
+    const scrollBy = vi.fn(({ left }: ScrollToOptions) => {
+      scrollLeft += left ?? 0;
+    });
+    list.scrollBy = scrollBy as typeof list.scrollBy;
+
+    const backAtStart = new WheelEvent('wheel', { deltaY: -40, cancelable: true, bubbles: true });
+    list.dispatchEvent(backAtStart);
+    expect(backAtStart.defaultPrevented).toBe(false);
+    expect(scrollBy).not.toHaveBeenCalled();
+
+    const forward = new WheelEvent('wheel', { deltaY: 40, cancelable: true, bubbles: true });
+    list.dispatchEvent(forward);
+    expect(forward.defaultPrevented).toBe(true);
+    expect(scrollBy).toHaveBeenCalledWith({ left: 40, behavior: 'instant' });
+
+    scrollLeft = 400;
+    const forwardAtEnd = new WheelEvent('wheel', { deltaY: 40, cancelable: true, bubbles: true });
+    list.dispatchEvent(forwardAtEnd);
+    expect(forwardAtEnd.defaultPrevented).toBe(false);
+    expect(scrollBy).toHaveBeenCalledTimes(1);
+  });
+
   it('an iconOnly tab keeps its label as accessible name without drawing it', () => {
     render(
       <Tabs

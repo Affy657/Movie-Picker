@@ -17,7 +17,7 @@ import Chip from '@/shared/components/Chip';
 import {
   CardModals,
   CardSelectionOverlay,
-  DetailsInfoButton,
+  PosterDetailsTrigger,
   MovieCardKebab,
   OverflowChip,
   PaidOfferChip,
@@ -352,6 +352,12 @@ function MovieCardRowMobile({
         ) : null}
         <div className={styles.mobilePosterCol} inert={selecting}>
           <RowPoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
+          <PosterDetailsTrigger
+            hasDetails={s.hasDetails}
+            onOpen={() => s.openDetails('soiree')}
+            title={m.title}
+            t={t}
+          />
           <WatchlistBadge inWatchlist={!!isInWatchlist} t={t} />
           <WinnerRibbon isWinner={isWinner} winnerRank={winnerRank} compact t={t} />
         </div>
@@ -493,6 +499,12 @@ function MovieCardRowDesktop({
         </span>
         <div className={styles.posterCol} inert={selecting}>
           <RowPoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
+          <PosterDetailsTrigger
+            hasDetails={s.hasDetails}
+            onOpen={() => s.openDetails('soiree')}
+            title={m.title}
+            t={t}
+          />
           <WatchlistBadge inWatchlist={!!isInWatchlist} t={t} />
         </div>
         <div className={styles.titleCol} inert={selecting}>
@@ -500,12 +512,6 @@ function MovieCardRowDesktop({
             <h3 className={styles.title} title={m.title}>
               {m.title}
             </h3>
-            <DetailsInfoButton
-              hasDetails={s.hasDetails}
-              onOpen={() => s.openDetails('soiree')}
-              title={m.title}
-              t={t}
-            />
           </div>
           <div className={styles.metaRow}>
             <ProposerBadge

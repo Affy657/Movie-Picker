@@ -285,7 +285,6 @@
   min-width: var(--tap-target-min);
   padding: 0 var(--space-2-5);
   gap: var(--space-1);
-  color: var(--color-text-muted);
 }
 
 .filterIconBtnLabeled {
