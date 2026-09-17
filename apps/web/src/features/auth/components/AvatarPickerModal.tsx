@@ -36,12 +36,12 @@ export default function AvatarPickerModal({
   const ids = category === 'bottts' ? BOTTTS_IDS : EMOJI_IDS;
 
   return (
-    <Modal open={open} onClose={onClose} size="sm" padded labelledBy={titleId}>
+    <Modal open={open} onClose={onClose} size="sm" padded ariaLabelledBy={titleId}>
       <div className={styles.header}>
         <h2 id={titleId} className={styles.title}>
           {t('auth.account.avatarLabel')}
         </h2>
-        <IconButton label={t('common.close')} onClick={onClose}>
+        <IconButton ariaLabel={t('common.close')} onClick={onClose}>
           <X size={ICON_SIZE.lg} aria-hidden />
         </IconButton>
       </div>
@@ -72,7 +72,7 @@ export default function AvatarPickerModal({
               key={id}
               value={id}
               layout="tile"
-              label={t('auth.account.avatarOptionAriaLabel', { name: id })}
+              ariaLabel={t('auth.account.avatarOptionAriaLabel', { name: id })}
             >
               <img
                 src={avatarUrl(id)}

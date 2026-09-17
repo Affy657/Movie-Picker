@@ -9,7 +9,7 @@ function renderGroup(value: string | null, onChange = vi.fn()) {
     <ChoiceGroup value={value} onChange={onChange} ariaLabel="Mode">
       <ChoiceCard value="a" title="Pondérée" description="Les votes comptent" indicator />
       <ChoiceCard value="b" title="Aléatoire" indicator />
-      <ChoiceCard value="c" label="Aucun" dashed>
+      <ChoiceCard value="c" ariaLabel="Aucun" dashed>
         Aucun
       </ChoiceCard>
     </ChoiceGroup>
@@ -57,6 +57,24 @@ describe('ChoiceGroup and ChoiceCard', () => {
     expect(onChange).toHaveBeenLastCalledWith('a');
     await user.keyboard('{End}');
     expect(onChange).toHaveBeenLastCalledWith('c');
+  });
+
+  it('renders a disabled card as a disabled radio the arrows skip', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <ChoiceGroup value="a" onChange={onChange} ariaLabel="Choix">
+        <ChoiceCard value="a" title="A" />
+        <ChoiceCard value="b" title="B" disabled />
+        <ChoiceCard value="c" title="C" />
+      </ChoiceGroup>
+    );
+    expect(screen.getByRole('radio', { name: 'B' })).toBeDisabled();
+
+    screen.getByRole('radio', { name: 'A' }).focus();
+    await user.keyboard('{ArrowDown}');
+    expect(onChange).toHaveBeenLastCalledWith('c');
+    expect(screen.getByRole('radio', { name: 'C' })).toHaveFocus();
   });
 
   it('shows the title, the description and the dashed variant', () => {

@@ -274,21 +274,24 @@
 }
 
 .selectable {
+  --card-shake-stagger-2: -0.18s;
+  --card-shake-stagger-3: -0.31s;
+  --card-shake-stagger-5: -0.42s;
   position: relative;
   cursor: pointer;
   animation: cardShake var(--duration-reveal) var(--ease-default) infinite;
 }
 
 .selectable:nth-child(2n) {
-  animation-delay: -0.18s;
+  animation-delay: var(--card-shake-stagger-2);
 }
 
 .selectable:nth-child(3n) {
-  animation-delay: -0.31s;
+  animation-delay: var(--card-shake-stagger-3);
 }
 
 .selectable:nth-child(5n) {
-  animation-delay: -0.42s;
+  animation-delay: var(--card-shake-stagger-5);
 }
 
 .selectOverlay {

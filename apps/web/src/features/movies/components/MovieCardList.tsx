@@ -19,6 +19,7 @@ import {
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
 import cardPartsStyles from './movieCardParts.module.css';
+import Card from '@/shared/components/Card';
 import styles from './MovieCardList.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
@@ -107,7 +108,10 @@ export const MovieCardList = memo(function MovieCardList({
   const selecting = isSelectable(m, selection) && !excluded;
 
   return (
-    <li
+    <Card
+      as="li"
+      padding="none"
+      elevation="sm"
       className={clsx(
         styles.card,
         isWinner && styles.cardWinner,
@@ -251,6 +255,6 @@ export const MovieCardList = memo(function MovieCardList({
         avatarsByPseudo={participantAvatarsByPseudo}
         participantCount={participantCount}
       />
-    </li>
+    </Card>
   );
 });

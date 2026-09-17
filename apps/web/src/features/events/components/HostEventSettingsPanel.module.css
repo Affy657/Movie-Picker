@@ -175,7 +175,7 @@
   margin-bottom: var(--space-2-5);
 }
 
-.field :global(.input) {
+.form .field {
   margin-bottom: 0;
 }
 
@@ -192,15 +192,6 @@
 .field :global(.hint) {
   margin-top: var(--space-1);
   margin-bottom: 0;
-}
-
-.fieldError {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-1-5);
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-2xs);
-  color: var(--color-error);
 }
 
 .notifyRow {

@@ -24,7 +24,7 @@ export default function EventDateChip({ date, live = false }: Readonly<EventDate
   const month = new Intl.DateTimeFormat(LOCALE_TAG[locale], { month: 'short' }).format(parsed);
 
   return (
-    <span className={clsx(styles.chip, live && styles.chipLive)} aria-hidden>
+    <span className={clsx(styles.tile, live && styles.tileLive)} aria-hidden>
       <span className={styles.month}>{month}</span>
       <span className={styles.day}>{d}</span>
     </span>

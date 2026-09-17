@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 import { t as translate, SUPPORTED_LOCALES, useTranslation } from '@/shared/i18n';
 import Chip from '@/shared/components/Chip';
+import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
 import styles from './ThemeField.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
@@ -114,18 +115,33 @@ export default function ThemeField({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [presetsExpanded, setPresetsExpanded] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const emojiGridRef = useRef<HTMLDivElement>(null);
   const fitLeft = useMenuHorizontalFit(pickerOpen, pickerRef, emojiGridRef, 'left');
 
   useEffect(() => {
     if (!pickerOpen) return;
-    const close = (e: MouseEvent) => {
+    const closeOnPointerOutside = (e: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
         setPickerOpen(false);
       }
     };
-    document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
+    const closeOnEscape = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setPickerOpen(false);
+      emojiButtonRef.current?.focus();
+    };
+    document.addEventListener('mousedown', closeOnPointerOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('mousedown', closeOnPointerOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [pickerOpen]);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    emojiGridRef.current?.querySelector<HTMLElement>('[role="radio"][tabindex="0"]')?.focus();
   }, [pickerOpen]);
 
   return (
@@ -133,6 +149,7 @@ export default function ThemeField({
       <div className={styles.inputRow}>
         <div className={styles.pickerWrap} ref={pickerRef}>
           <button
+            ref={emojiButtonRef}
             type="button"
             className={styles.emojiBtn}
             onClick={() => setPickerOpen((o) => !o)}
@@ -145,43 +162,30 @@ export default function ThemeField({
           {pickerOpen && (
             <div
               ref={emojiGridRef}
-              className={styles.emojiGrid}
-              role="listbox"
-              aria-label={t('events.settings.emojiListLabel')}
+              className={styles.emojiPopover}
               style={fitLeft !== null ? { left: fitLeft } : undefined}
+              onClick={() => setPickerOpen(false)}
             >
-              <button
-                type="button"
-                role="option"
-                aria-selected={emoji === ''}
-                aria-label={t('events.settings.emojiNoneLabel')}
-                className={clsx(
-                  styles.emojiOpt,
-                  styles.emojiOptNone,
-                  emoji === '' && styles.emojiOptSelected
-                )}
-                onClick={() => {
-                  onEmojiChange('');
-                  setPickerOpen(false);
-                }}
+              <ChoiceGroup
+                value={emoji}
+                onChange={onEmojiChange}
+                ariaLabel={t('events.settings.emojiListLabel')}
+                className={styles.emojiGrid}
               >
-                ✕
-              </button>
-              {THEME_EMOJIS.map((e) => (
-                <button
-                  key={e}
-                  type="button"
-                  role="option"
-                  aria-selected={e === emoji}
-                  className={clsx(styles.emojiOpt, e === emoji && styles.emojiOptSelected)}
-                  onClick={() => {
-                    onEmojiChange(e);
-                    setPickerOpen(false);
-                  }}
+                <ChoiceCard
+                  value=""
+                  layout="tile"
+                  ariaLabel={t('events.settings.emojiNoneLabel')}
+                  className={clsx(styles.emojiOpt, styles.emojiOptNone)}
                 >
-                  {e}
-                </button>
-              ))}
+                  ✕
+                </ChoiceCard>
+                {THEME_EMOJIS.map((e) => (
+                  <ChoiceCard key={e} value={e} layout="tile" className={styles.emojiOpt}>
+                    {e}
+                  </ChoiceCard>
+                ))}
+              </ChoiceGroup>
             </div>
           )}
         </div>

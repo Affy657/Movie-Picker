@@ -68,6 +68,18 @@ describe('SegmentedRadioGroup', () => {
     expect(screen.getByRole('radio', { name: 'Liste' })).toHaveTextContent('Liste');
   });
 
+  it('disables every option at once and ignores clicks and arrows meanwhile', async () => {
+    const user = userEvent.setup();
+    const { onChange } = setup({ disabled: true });
+    const list = screen.getByRole('radio', { name: 'Liste' });
+    expect(list).toBeDisabled();
+
+    await user.click(list);
+    screen.getByRole('radio', { name: 'Grille' }).focus();
+    await user.keyboard('{ArrowRight}');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it('applies the compact size classes', () => {
     setup({ size: 'sm' });
     expect(screen.getByRole('radiogroup').className).toContain(styles.rootSm);

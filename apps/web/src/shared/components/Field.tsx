@@ -1,5 +1,7 @@
 import { useId, type ReactNode } from 'react';
 import clsx from 'clsx';
+import { AlertCircle } from 'lucide-react';
+import { ICON_SIZE } from './iconSize';
 import styles from './Field.module.css';
 
 type FieldRenderArgs = {
@@ -39,7 +41,8 @@ export default function Field({
       {children({ id, describedBy, invalid: Boolean(error) })}
       {error ? (
         <p id={errorId} className={styles.error} role="alert">
-          {error}
+          <AlertCircle size={ICON_SIZE.xs} aria-hidden className={styles.errorIcon} />
+          <span>{error}</span>
         </p>
       ) : null}
       {hint ? (

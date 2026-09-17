@@ -19,6 +19,7 @@ import AccountSecurityPage from '@/features/auth/pages/account/AccountSecurityPa
 import AccountLoadingSkeleton from '@/features/auth/pages/account/AccountLoadingSkeleton';
 import styles from './AccountPage.module.css';
 import { buttonClass } from '@/shared/components/Button';
+import Field from '@/shared/components/Field';
 
 function GuestPreferencesSection() {
   const { t } = useTranslation();
@@ -27,20 +28,23 @@ function GuestPreferencesSection() {
     <section className="section section--panel" aria-labelledby="preferences-heading">
       <h2 id="preferences-heading">{t('auth.account.preferencesTitle')}</h2>
       <div className="form">
-        <label className="label" htmlFor="account-language">
-          {t('auth.account.languageLabel')}
-        </label>
-        <LanguageSelector id="account-language" />
+        <Field label={t('auth.account.languageLabel')} htmlFor="account-language">
+          {({ id }) => <LanguageSelector id={id} />}
+        </Field>
 
-        <label className="label" htmlFor="account-theme">
-          {t('auth.account.themeLabel')}
-        </label>
-        <ThemeToggle id="account-theme" />
+        <div className={styles.groupField}>
+          <span className="label" id="account-theme-label">
+            {t('auth.account.themeLabel')}
+          </span>
+          <ThemeToggle id="account-theme" ariaLabelledBy="account-theme-label" />
+        </div>
 
-        <label className="label" htmlFor="account-accent">
-          {t('auth.account.accentColorLabel')}
-        </label>
-        <AccentColorPicker id="account-accent" />
+        <div className={styles.groupField}>
+          <span className="label" id="account-accent-label">
+            {t('auth.account.accentColorLabel')}
+          </span>
+          <AccentColorPicker id="account-accent" ariaLabelledBy="account-accent-label" />
+        </div>
       </div>
     </section>
   );

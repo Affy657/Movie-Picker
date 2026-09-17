@@ -1,4 +1,4 @@
-﻿.layout {
+.layout {
   --page-max-width: var(--container-xs);
   padding-top: clamp(var(--space-6), 5vh, var(--space-12));
 }

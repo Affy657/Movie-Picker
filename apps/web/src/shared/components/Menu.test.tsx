@@ -75,19 +75,60 @@ describe('Menu', () => {
 describe('MenuPanel', () => {
   it('renders on its own, without trigger nor opening logic', () => {
     render(
-      <MenuPanel label="Actions">
+      <MenuPanel ariaLabel="Actions">
         <MenuItem>Un choix</MenuItem>
       </MenuPanel>
     );
     expect(screen.getByRole('menu', { name: 'Actions' })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Un choix' })).toBeInTheDocument();
   });
+
+  it('moves focus between enabled items with the arrows, Home and End, wrapping around', async () => {
+    const user = userEvent.setup();
+    render(
+      <MenuPanel ariaLabel="Actions">
+        <MenuItem>Premier</MenuItem>
+        <MenuItem disabled>Grisé</MenuItem>
+        <MenuItem>Deuxième</MenuItem>
+        <MenuItem>Dernier</MenuItem>
+      </MenuPanel>
+    );
+    const first = screen.getByRole('menuitem', { name: 'Premier' });
+    const second = screen.getByRole('menuitem', { name: 'Deuxième' });
+    const last = screen.getByRole('menuitem', { name: 'Dernier' });
+
+    first.focus();
+    await user.keyboard('{ArrowDown}');
+    expect(second).toHaveFocus();
+    await user.keyboard('{ArrowUp}');
+    expect(first).toHaveFocus();
+    await user.keyboard('{ArrowUp}');
+    expect(last).toHaveFocus();
+    await user.keyboard('{ArrowDown}');
+    expect(first).toHaveFocus();
+    await user.keyboard('{End}');
+    expect(last).toHaveFocus();
+    await user.keyboard('{Home}');
+    expect(first).toHaveFocus();
+  });
+
+  it('is anchored under its trigger unless told otherwise', () => {
+    const { rerender } = render(<MenuPanel ariaLabel="Actions">x</MenuPanel>);
+    expect(screen.getByRole('menu').className).toMatch(/anchored/);
+
+    rerender(
+      <MenuPanel ariaLabel="Actions" anchored={false}>
+        x
+      </MenuPanel>
+    );
+    expect(screen.getByRole('menu').className).not.toMatch(/anchored/);
+  });
 });
 
 describe('MenuItem', () => {
   it('shows the provided icon and marks the selected and danger variants', () => {
     render(
-      <MenuPanel label="Actions">
+      <MenuPanel ariaLabel="Actions">
         <MenuItem icon={<span data-testid="icon" />} selected>
           Sélectionné
         </MenuItem>
@@ -99,9 +140,33 @@ describe('MenuItem', () => {
     expect(screen.getByRole('menuitem', { name: 'Retirer' }).className).toMatch(/itemDanger/);
   });
 
+  it('takes an accessible name and a title that differ from its visible text', () => {
+    render(
+      <MenuPanel ariaLabel="Actions">
+        <MenuItem ariaLabel="Retirer Alien" title="Vous êtes hôte">
+          Retirer
+        </MenuItem>
+      </MenuPanel>
+    );
+    const item = screen.getByRole('menuitem', { name: 'Retirer Alien' });
+    expect(item).toHaveAttribute('title', 'Vous êtes hôte');
+    expect(item).toHaveTextContent('Retirer');
+  });
+
+  it('nudges a text label without descenders like small capitals', () => {
+    render(
+      <MenuPanel ariaLabel="Actions">
+        <MenuItem>Retirer</MenuItem>
+        <MenuItem>Partager</MenuItem>
+      </MenuPanel>
+    );
+    expect(screen.getByText('Retirer').className).toMatch(/itemLabelCaps/);
+    expect(screen.getByText('Partager').className).not.toMatch(/itemLabelCaps/);
+  });
+
   it('renders a disabled item as a disabled button, even with an href', () => {
     render(
-      <MenuPanel label="Actions">
+      <MenuPanel ariaLabel="Actions">
         <MenuItem href="/somewhere" disabled>
           Indisponible
         </MenuItem>
@@ -115,7 +180,7 @@ describe('MenuItem', () => {
   it('renders an in-app route as a router link', () => {
     render(
       <MemoryRouter>
-        <MenuPanel label="Actions">
+        <MenuPanel ariaLabel="Actions">
           <MenuItem to="/compte">Mon compte</MenuItem>
         </MenuPanel>
       </MemoryRouter>
@@ -128,7 +193,7 @@ describe('MenuItem', () => {
 
   it('opens an external href in a new tab without leaking the opener', () => {
     render(
-      <MenuPanel label="Actions">
+      <MenuPanel ariaLabel="Actions">
         <MenuItem href="https://calendar.google.com" external>
           Google Agenda
         </MenuItem>

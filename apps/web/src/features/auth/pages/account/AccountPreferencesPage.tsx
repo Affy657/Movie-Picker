@@ -7,6 +7,7 @@ import RatingScaleToggle from '@/app/components/RatingScaleToggle';
 import AccountSavedChip from './AccountSavedChip';
 import { useSavedFlash } from './useSavedFlash';
 import styles from './AccountShared.module.css';
+import Field from '@/shared/components/Field';
 
 export default function AccountPreferencesPage() {
   const { t } = useTranslation();
@@ -24,10 +25,9 @@ export default function AccountPreferencesPage() {
 
       <div className={styles.card}>
         <div className={styles.field}>
-          <label className="label" htmlFor="account-language">
-            {t('auth.account.languageLabel')}
-          </label>
-          <LanguageSelector id="account-language" />
+          <Field label={t('auth.account.languageLabel')} htmlFor="account-language">
+            {({ id }) => <LanguageSelector id={id} />}
+          </Field>
         </div>
 
         <div className={styles.field}>

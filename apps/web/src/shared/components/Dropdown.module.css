@@ -1,4 +1,4 @@
-﻿.root {
+.root {
   position: relative;
   width: 100%;
 }
@@ -104,6 +104,11 @@
 .optionSelected {
   color: var(--color-primary-text);
   font-weight: var(--font-weight-semibold);
+}
+
+.trigger:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
 }
 
 .optionDisabled {

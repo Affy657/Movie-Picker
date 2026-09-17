@@ -19,7 +19,7 @@ const TONE_CLASS: Record<IconButtonTone, string | null> = {
 };
 
 type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'aria-label'> & {
-  label: string;
+  ariaLabel: string;
   size?: IconButtonSize;
   tone?: IconButtonTone;
   showTitle?: boolean;
@@ -30,7 +30,7 @@ type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'aria-label
 
 const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
   {
-    label,
+    ariaLabel,
     size = 'md',
     tone = 'default',
     showTitle = true,
@@ -48,8 +48,8 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
     <button
       ref={ref}
       type={type}
-      aria-label={label}
-      title={showTitle ? label : undefined}
+      aria-label={ariaLabel}
+      title={showTitle ? ariaLabel : undefined}
       className={clsx(
         styles.root,
         SIZE_CLASS[size],

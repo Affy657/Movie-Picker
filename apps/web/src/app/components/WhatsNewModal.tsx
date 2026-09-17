@@ -104,7 +104,7 @@ export default function WhatsNewModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} size="sm" column labelledBy={titleId}>
+    <Modal open={open} onClose={onClose} size="sm" column ariaLabelledBy={titleId}>
       <div className={styles.accent} aria-hidden="true" />
 
       <div className={styles.body}>

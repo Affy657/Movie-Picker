@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router';
-import { AlertCircle, Lock, Settings, Trash2, X } from 'lucide-react';
+import { Lock, Settings, Trash2, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import HostEventDateField from './HostEventDateField';
 import HostEventThemeField from './HostEventThemeField';
@@ -15,6 +15,7 @@ import {
   type ApplicableConfig,
 } from '@/features/events/lib/eventTemplateDraft';
 import NumberInput from '@/shared/components/NumberInput';
+import Field from '@/shared/components/Field';
 import ToggleRow from '@/shared/components/ToggleRow';
 import SegmentedRadioGroup from '@/shared/components/SegmentedRadioGroup';
 import { deleteEvent, patchEventConfig } from '@/features/events/api/eventsApi';
@@ -79,21 +80,6 @@ const SAVE_STATUS_CLASS: Record<SaveState, string | undefined> = {
   pending: styles.saveStatusPending,
   error: styles.saveStatusError,
 };
-
-function FieldFeedback({
-  error,
-  errorId,
-  hint,
-}: Readonly<{ error?: string; errorId: string; hint: ReactNode }>) {
-  if (error)
-    return (
-      <p id={errorId} className={styles.fieldError}>
-        <AlertCircle size={ICON_SIZE.xs} aria-hidden />
-        <span>{error}</span>
-      </p>
-    );
-  return <p className="hint">{hint}</p>;
-}
 
 function recurrencePatch(
   next: EventRecurrence | null,
@@ -340,12 +326,7 @@ export default function HostEventSettingsPanel({
 
   const titleId = useId();
   const themeCollapseId = useId();
-  const dateHintId = useId();
-  const maxProposalsErrorId = useId();
-  const maxParticipantsErrorId = useId();
-  const maxVotesErrorId = useId();
   const wheelModeLabelId = useId();
-  const winnerCountErrorId = useId();
 
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dragBind = useSheetDrag(dialogRef, onClose, open);
@@ -506,7 +487,7 @@ export default function HostEventSettingsPanel({
       surface="borderless"
       bottomSheetOnMobile
       column
-      labelledBy={titleId}
+      ariaLabelledBy={titleId}
       dialogRef={dialogRef}
       className={clsx(styles.dialog, dragStyles.surface)}
     >
@@ -521,7 +502,7 @@ export default function HostEventSettingsPanel({
             <span className={styles.saveStatusDot} aria-hidden />
             <span>{saveStatusLabel}</span>
           </span>
-          <IconButton size="sm" label={t('common.close')} onClick={onClose}>
+          <IconButton size="sm" ariaLabel={t('common.close')} onClick={onClose}>
             <X size={ICON_SIZE.md} aria-hidden />
           </IconButton>
         </div>
@@ -541,36 +522,34 @@ export default function HostEventSettingsPanel({
         <form className={`form ${styles.form}`}>
           <div className={styles.section}>
             <fieldset className={styles.lockable} disabled={configLocked}>
-              <div className={styles.field}>
-                <label className="label" htmlFor="host-cfg-title">
-                  {t('events.settings.titleLabel')}
-                </label>
-                <input
-                  id="host-cfg-title"
-                  className="input"
-                  type="text"
-                  value={eventTitle}
-                  onChange={(e) => {
-                    setEventTitle(e.target.value);
-                    scheduleAutoSave();
-                  }}
-                  maxLength={200}
-                  placeholder={t('events.settings.titlePlaceholder')}
-                  aria-invalid={!!fieldErrors.title || undefined}
-                />
-                {fieldErrors.title && (
-                  <p className={styles.fieldError}>
-                    <AlertCircle size={ICON_SIZE.xs} aria-hidden />
-                    <span>{fieldErrors.title}</span>
-                  </p>
+              <Field
+                label={t('events.settings.titleLabel')}
+                htmlFor="host-cfg-title"
+                error={fieldErrors.title}
+                className={styles.field}
+              >
+                {({ id, describedBy, invalid }) => (
+                  <input
+                    id={id}
+                    className="input"
+                    type="text"
+                    value={eventTitle}
+                    onChange={(e) => {
+                      setEventTitle(e.target.value);
+                      scheduleAutoSave();
+                    }}
+                    maxLength={200}
+                    placeholder={t('events.settings.titlePlaceholder')}
+                    aria-invalid={invalid || undefined}
+                    aria-describedby={describedBy}
+                  />
                 )}
-              </div>
+              </Field>
 
               <HostEventDateField
                 value={eventDateLocal}
                 error={fieldErrors.date}
                 relativeDateLabel={relativeDateLabel}
-                hintId={dateHintId}
                 showNotifyRow={dateWasEdited && !fieldErrors.date}
                 notifyDateChange={notifyDateChange}
                 onValueChange={(v) => {
@@ -608,54 +587,42 @@ export default function HostEventSettingsPanel({
             <h3 className={styles.sectionTitle}>{t('events.settings.sectionFlow')}</h3>
 
             <div className={styles.counterGrid}>
-              <div className={styles.field}>
-                <label className="label" htmlFor="host-cfg-max">
-                  {t('events.settings.maxProposalsLabel')}
-                </label>
-                <NumberInput
-                  id="host-cfg-max"
-                  value={maxProp}
-                  onChange={(v) => {
-                    setMaxProp(v);
-                    scheduleAutoSave();
-                  }}
-                  min={1}
-                  max={MAX_PROPOSALS_PER_PARTICIPANT}
-                  disabled={configLocked}
-                  invalid={!!fieldErrors.maxProposals}
-                  ariaDescribedBy={fieldErrors.maxProposals ? maxProposalsErrorId : undefined}
-                />
-                <FieldFeedback
-                  error={fieldErrors.maxProposals}
-                  errorId={maxProposalsErrorId}
-                  hint={t('events.settings.maxProposalsHint', {
-                    max: MAX_PROPOSALS_PER_PARTICIPANT,
-                  })}
-                />
-              </div>
+              <Field
+                label={t('events.settings.maxProposalsLabel')}
+                htmlFor="host-cfg-max"
+                error={fieldErrors.maxProposals}
+                hint={
+                  fieldErrors.maxProposals
+                    ? undefined
+                    : t('events.settings.maxProposalsHint', { max: MAX_PROPOSALS_PER_PARTICIPANT })
+                }
+                className={styles.field}
+              >
+                {({ id, describedBy, invalid }) => (
+                  <NumberInput
+                    id={id}
+                    value={maxProp}
+                    onChange={(v) => {
+                      setMaxProp(v);
+                      scheduleAutoSave();
+                    }}
+                    min={1}
+                    max={MAX_PROPOSALS_PER_PARTICIPANT}
+                    disabled={configLocked}
+                    invalid={invalid}
+                    ariaDescribedBy={describedBy}
+                  />
+                )}
+              </Field>
 
-              <div className={styles.field}>
-                <label className="label" htmlFor="host-cfg-max-participants">
-                  {t('events.settings.maxParticipantsLabel')}
-                </label>
-                <NumberInput
-                  id="host-cfg-max-participants"
-                  value={maxParticipants}
-                  onChange={(v) => {
-                    setMaxParticipants(v);
-                    scheduleAutoSave();
-                  }}
-                  min={1}
-                  max={MAX_EVENT_PARTICIPANTS}
-                  disabled={configLocked}
-                  invalid={!!fieldErrors.maxParticipants}
-                  ariaDescribedBy={fieldErrors.maxParticipants ? maxParticipantsErrorId : undefined}
-                />
-                <FieldFeedback
-                  error={fieldErrors.maxParticipants}
-                  errorId={maxParticipantsErrorId}
-                  hint={
-                    (event.participantCount ?? 0) === 1
+              <Field
+                label={t('events.settings.maxParticipantsLabel')}
+                htmlFor="host-cfg-max-participants"
+                error={fieldErrors.maxParticipants}
+                hint={
+                  fieldErrors.maxParticipants
+                    ? undefined
+                    : (event.participantCount ?? 0) === 1
                       ? t('events.settings.maxParticipantsHintOne', {
                           max: MAX_EVENT_PARTICIPANTS,
                         })
@@ -663,32 +630,52 @@ export default function HostEventSettingsPanel({
                           count: event.participantCount ?? 0,
                           max: MAX_EVENT_PARTICIPANTS,
                         })
-                  }
-                />
-              </div>
+                }
+                className={styles.field}
+              >
+                {({ id, describedBy, invalid }) => (
+                  <NumberInput
+                    id={id}
+                    value={maxParticipants}
+                    onChange={(v) => {
+                      setMaxParticipants(v);
+                      scheduleAutoSave();
+                    }}
+                    min={1}
+                    max={MAX_EVENT_PARTICIPANTS}
+                    disabled={configLocked}
+                    invalid={invalid}
+                    ariaDescribedBy={describedBy}
+                  />
+                )}
+              </Field>
 
-              <div className={styles.field}>
-                <label className="label" htmlFor="host-cfg-winner-count">
-                  {t('events.settings.winnerCountLabel')}
-                </label>
-                <NumberInput
-                  id="host-cfg-winner-count"
-                  value={winnerCount}
-                  onChange={(v) => {
-                    setWinnerCount(v);
-                    scheduleAutoSave();
-                  }}
-                  min={Math.max(1, drawnWinnerCount)}
-                  max={MAX_WINNERS_PER_EVENT}
-                  invalid={!!fieldErrors.winnerCount}
-                  ariaDescribedBy={fieldErrors.winnerCount ? winnerCountErrorId : undefined}
-                />
-                <FieldFeedback
-                  error={fieldErrors.winnerCount}
-                  errorId={winnerCountErrorId}
-                  hint={t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })}
-                />
-              </div>
+              <Field
+                label={t('events.settings.winnerCountLabel')}
+                htmlFor="host-cfg-winner-count"
+                error={fieldErrors.winnerCount}
+                hint={
+                  fieldErrors.winnerCount
+                    ? undefined
+                    : t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })
+                }
+                className={styles.field}
+              >
+                {({ id, describedBy, invalid }) => (
+                  <NumberInput
+                    id={id}
+                    value={winnerCount}
+                    onChange={(v) => {
+                      setWinnerCount(v);
+                      scheduleAutoSave();
+                    }}
+                    min={Math.max(1, drawnWinnerCount)}
+                    max={MAX_WINNERS_PER_EVENT}
+                    invalid={invalid}
+                    ariaDescribedBy={describedBy}
+                  />
+                )}
+              </Field>
             </div>
 
             <fieldset className={styles.lockable} disabled={configLocked}>
@@ -729,28 +716,26 @@ export default function HostEventSettingsPanel({
                   }}
                 />
                 {voteLimitEnabled && (
-                  <div className={styles.subField}>
-                    <label className="label" htmlFor="host-cfg-max-votes">
-                      {t('events.settings.maxVotesLabel')}
-                    </label>
-                    <NumberInput
-                      id="host-cfg-max-votes"
-                      value={maxVotes}
-                      onChange={(v) => {
-                        setMaxVotes(v);
-                        scheduleAutoSave();
-                      }}
-                      min={1}
-                      invalid={!!fieldErrors.maxVotes}
-                      ariaDescribedBy={fieldErrors.maxVotes ? maxVotesErrorId : undefined}
-                    />
-                    {fieldErrors.maxVotes && (
-                      <p id={maxVotesErrorId} className={styles.fieldError}>
-                        <AlertCircle size={ICON_SIZE.xs} aria-hidden />
-                        <span>{fieldErrors.maxVotes}</span>
-                      </p>
+                  <Field
+                    label={t('events.settings.maxVotesLabel')}
+                    htmlFor="host-cfg-max-votes"
+                    error={fieldErrors.maxVotes}
+                    className={styles.subField}
+                  >
+                    {({ id, describedBy, invalid }) => (
+                      <NumberInput
+                        id={id}
+                        value={maxVotes}
+                        onChange={(v) => {
+                          setMaxVotes(v);
+                          scheduleAutoSave();
+                        }}
+                        min={1}
+                        invalid={invalid}
+                        ariaDescribedBy={describedBy}
+                      />
                     )}
-                  </div>
+                  </Field>
                 )}
               </div>
             </fieldset>

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import clsx from 'clsx';
 import {
   Bookmark,
   BookmarkCheck,
@@ -23,6 +22,8 @@ import type { MovieData } from '@/shared/types/movie';
 import type { MovieWheelExclusion, Translate } from '@/features/movies/types';
 import styles from './MovieCardKebab.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { MenuItem, MenuPanel, MenuSeparator } from '@/shared/components/Menu';
+import { MENU_ANCHOR_GAP_PX, MENU_VIEWPORT_MARGIN_PX } from '@/shared/components/menuGeometry';
 
 export type ExternalLinksMode = 'all' | 'letterboxd';
 
@@ -135,15 +136,6 @@ export function MovieCardKebab({
   );
 }
 
-const DESCENDER_CHARS = /[gjpqy]/;
-const KEBAB_MENU_VIEWPORT_MARGIN = 8;
-
-function kebabLabelClassName(label: string): string | undefined {
-  return DESCENDER_CHARS.test(label)
-    ? styles.kebabItemLabel
-    : clsx(styles.kebabItemLabel, styles.kebabItemLabelCaps);
-}
-
 function ExternalMenuLink({
   href,
   label,
@@ -154,18 +146,14 @@ function ExternalMenuLink({
   onClose: () => void;
 }>) {
   return (
-    <a
-      role="menuitem"
-      className={styles.kebabItem}
+    <MenuItem
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      external
+      icon={<ExternalLink aria-hidden size={ICON_SIZE.sm} />}
       onClick={onClose}
-      aria-label={label}
     >
-      <ExternalLink aria-hidden size={ICON_SIZE.sm} />
-      <span className={kebabLabelClassName(label)}>{label}</span>
-    </a>
+      {label}
+    </MenuItem>
   );
 }
 
@@ -203,12 +191,12 @@ export function CardKebab({
     const menuRect = menuRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - btnRect.bottom;
     const top =
-      spaceBelow >= menuRect.height + KEBAB_MENU_VIEWPORT_MARGIN
-        ? btnRect.bottom + 4
-        : Math.max(KEBAB_MENU_VIEWPORT_MARGIN, btnRect.top - menuRect.height - 4);
+      spaceBelow >= menuRect.height + MENU_VIEWPORT_MARGIN_PX
+        ? btnRect.bottom + MENU_ANCHOR_GAP_PX
+        : Math.max(MENU_VIEWPORT_MARGIN_PX, btnRect.top - menuRect.height - MENU_ANCHOR_GAP_PX);
     const right = Math.min(
-      Math.max(window.innerWidth - btnRect.right, KEBAB_MENU_VIEWPORT_MARGIN),
-      window.innerWidth - menuRect.width - KEBAB_MENU_VIEWPORT_MARGIN
+      Math.max(window.innerWidth - btnRect.right, MENU_VIEWPORT_MARGIN_PX),
+      window.innerWidth - menuRect.width - MENU_VIEWPORT_MARGIN_PX
     );
     setMenuPos({ top, right, ready: true });
   }, []);
@@ -246,27 +234,14 @@ export function CardKebab({
     firstItem?.focus();
   }, [open, menuPos.ready]);
 
-  const handleMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
-    e.preventDefault();
-    const items = Array.from(
-      menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []
-    );
-    if (items.length === 0) return;
-    const currentIndex = items.indexOf(document.activeElement as HTMLElement);
-    let nextIndex = currentIndex;
-    if (e.key === 'ArrowDown') nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
-    else if (e.key === 'ArrowUp')
-      nextIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
-    else if (e.key === 'Home') nextIndex = 0;
-    else if (e.key === 'End') nextIndex = items.length - 1;
-    items[nextIndex]?.focus();
-  };
-
   const handleToggle = () => {
     if (!open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
-      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right, ready: false });
+      setMenuPos({
+        top: rect.bottom + MENU_ANCHOR_GAP_PX,
+        right: window.innerWidth - rect.right,
+        ready: false,
+      });
     }
     setOpen((v) => !v);
   };
@@ -285,15 +260,11 @@ export function CardKebab({
   const hasLinksGroup = tmdbId > 0;
   const showAllExternalLinks = externalLinks === 'all';
 
-  const watchlistLabel = inWatchlist
-    ? t('watchlist.card.removeAction')
-    : t('watchlist.card.addAction');
-  const proposeLabel = t('watchlist.card.proposeAction');
-  const detailsLabel = t('watchlist.card.detailsAction');
-  const wheelLabel = wheelExclusion?.excluded
-    ? t('movies.list.includeInWheelAction')
-    : t('movies.list.excludeFromWheelAction');
-  const removeLabel = t('movies.list.removeButton');
+  const menuLabel = t('movies.list.moreActionsAria', { title });
+  const pick = (action: () => void) => () => {
+    setOpen(false);
+    action();
+  };
 
   return (
     <div className={styles.kebab} ref={rootRef}>
@@ -304,18 +275,17 @@ export function CardKebab({
         onClick={handleToggle}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={t('movies.list.moreActionsAria', { title })}
+        aria-label={menuLabel}
       >
         <MoreVertical aria-hidden size={ICON_SIZE.lg} />
       </button>
       {open &&
         createPortal(
-          <div
+          <MenuPanel
             ref={menuRef}
+            ariaLabel={menuLabel}
+            anchored={false}
             className={styles.kebabMenu}
-            role="menu"
-            tabIndex={-1}
-            onKeyDown={handleMenuKeyDown}
             style={{
               top: `${menuPos.top}px`,
               right: `${menuPos.right}px`,
@@ -323,70 +293,52 @@ export function CardKebab({
             }}
           >
             {onToggleWatchlist && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  onToggleWatchlist();
-                }}
+              <MenuItem
+                icon={
+                  inWatchlist ? (
+                    <BookmarkCheck aria-hidden size={ICON_SIZE.sm} />
+                  ) : (
+                    <Bookmark aria-hidden size={ICON_SIZE.sm} />
+                  )
+                }
+                onClick={pick(onToggleWatchlist)}
               >
-                {inWatchlist ? (
-                  <BookmarkCheck aria-hidden size={ICON_SIZE.sm} />
-                ) : (
-                  <Bookmark aria-hidden size={ICON_SIZE.sm} />
-                )}
-                <span className={kebabLabelClassName(watchlistLabel)}>{watchlistLabel}</span>
-              </button>
+                {inWatchlist ? t('watchlist.card.removeAction') : t('watchlist.card.addAction')}
+              </MenuItem>
             )}
             {onProposeToEvent && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  onProposeToEvent();
-                }}
+              <MenuItem
+                icon={<ListPlus aria-hidden size={ICON_SIZE.sm} />}
+                onClick={pick(onProposeToEvent)}
               >
-                <ListPlus aria-hidden size={ICON_SIZE.sm} />
-                <span className={kebabLabelClassName(proposeLabel)}>{proposeLabel}</span>
-              </button>
+                {t('watchlist.card.proposeAction')}
+              </MenuItem>
             )}
             {onViewDetails && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  onViewDetails();
-                }}
+              <MenuItem
+                icon={<Info aria-hidden size={ICON_SIZE.sm} />}
+                onClick={pick(onViewDetails)}
               >
-                <Info aria-hidden size={ICON_SIZE.sm} />
-                <span className={kebabLabelClassName(detailsLabel)}>{detailsLabel}</span>
-              </button>
+                {t('watchlist.card.detailsAction')}
+              </MenuItem>
             )}
             {wheelExclusion && (
-              <button
-                type="button"
-                role="menuitem"
-                className={styles.kebabItem}
-                onClick={() => {
-                  setOpen(false);
-                  wheelExclusion.onToggle();
-                }}
+              <MenuItem
+                icon={
+                  wheelExclusion.excluded ? (
+                    <RotateCcw aria-hidden size={ICON_SIZE.sm} />
+                  ) : (
+                    <Disc3 aria-hidden size={ICON_SIZE.sm} />
+                  )
+                }
+                onClick={pick(wheelExclusion.onToggle)}
               >
-                {wheelExclusion.excluded ? (
-                  <RotateCcw aria-hidden size={ICON_SIZE.sm} />
-                ) : (
-                  <Disc3 aria-hidden size={ICON_SIZE.sm} />
-                )}
-                <span className={kebabLabelClassName(wheelLabel)}>{wheelLabel}</span>
-              </button>
+                {wheelExclusion.excluded
+                  ? t('movies.list.includeInWheelAction')
+                  : t('movies.list.excludeFromWheelAction')}
+              </MenuItem>
             )}
-            {hasPrimaryGroup && hasLinksGroup && <hr className={styles.kebabDivider} />}
+            {hasPrimaryGroup && hasLinksGroup && <MenuSeparator />}
             {hasLinksGroup && (
               <>
                 <ExternalMenuLink
@@ -415,26 +367,19 @@ export function CardKebab({
                 ) : null}
               </>
             )}
-            {canRemove && (hasPrimaryGroup || hasLinksGroup) && (
-              <hr className={styles.kebabDivider} />
-            )}
+            {canRemove && (hasPrimaryGroup || hasLinksGroup) && <MenuSeparator />}
             {canRemove && (
-              <button
-                type="button"
-                role="menuitem"
-                className={clsx(styles.kebabItem, styles.kebabItemDanger)}
-                onClick={() => {
-                  setOpen(false);
-                  onRemove();
-                }}
-                aria-label={removeAria}
+              <MenuItem
+                tone="danger"
+                icon={<Trash2 aria-hidden size={ICON_SIZE.sm} />}
+                onClick={pick(onRemove)}
+                ariaLabel={removeAria}
                 title={!isMine && isHost ? t('movies.list.removeAsHostTitle') : undefined}
               >
-                <Trash2 aria-hidden size={ICON_SIZE.sm} />
-                <span className={kebabLabelClassName(removeLabel)}>{removeLabel}</span>
-              </button>
+                {t('movies.list.removeButton')}
+              </MenuItem>
             )}
-          </div>,
+          </MenuPanel>,
           document.body
         )}
     </div>

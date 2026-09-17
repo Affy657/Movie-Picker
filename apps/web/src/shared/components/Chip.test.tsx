@@ -5,7 +5,7 @@ import Chip from '@/shared/components/Chip';
 
 describe('Chip', () => {
   it('renders a non-interactive element by default', () => {
-    render(<Chip testId="c">Comédie</Chip>);
+    render(<Chip data-testid="c">Comédie</Chip>);
 
     expect(screen.queryByRole('button')).toBeNull();
     expect(screen.getByTestId('c').textContent).toBe('Comédie');
@@ -46,7 +46,7 @@ describe('Chip', () => {
     const onRemove = vi.fn();
     const onClick = vi.fn();
     render(
-      <Chip onClick={onClick} onRemove={onRemove} removeLabel="Retirer Comédie" testId="c">
+      <Chip onClick={onClick} onRemove={onRemove} removeLabel="Retirer Comédie" data-testid="c">
         Comédie
       </Chip>
     );

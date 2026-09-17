@@ -35,7 +35,7 @@ export default function InAppBrowserBanner() {
           <p className={styles.title}>{t('inAppBrowser.banner.title')}</p>
           <p className={styles.description}>{t('inAppBrowser.banner.description')}</p>
         </div>
-        <IconButton label={t('common.close')} onClick={() => setDismissed(true)}>
+        <IconButton ariaLabel={t('common.close')} onClick={() => setDismissed(true)}>
           <X size={ICON_SIZE.lg} aria-hidden />
         </IconButton>
       </div>

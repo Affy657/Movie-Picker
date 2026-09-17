@@ -1,6 +1,5 @@
 import { useLayoutEffect, useState, type RefObject } from 'react';
-
-const VIEWPORT_MARGIN = 8;
+import { MENU_VIEWPORT_MARGIN_PX } from '@/shared/components/menuGeometry';
 
 export function useMenuHorizontalFit(
   open: boolean,
@@ -25,11 +24,11 @@ export function useMenuHorizontalFit(
       const naturalViewportLeft =
         align === 'right' ? containerRect.right - panelWidth : containerRect.left;
       const maxViewportLeft = Math.max(
-        VIEWPORT_MARGIN,
-        window.innerWidth - panelWidth - VIEWPORT_MARGIN
+        MENU_VIEWPORT_MARGIN_PX,
+        window.innerWidth - panelWidth - MENU_VIEWPORT_MARGIN_PX
       );
       const clampedViewportLeft = Math.min(
-        Math.max(naturalViewportLeft, VIEWPORT_MARGIN),
+        Math.max(naturalViewportLeft, MENU_VIEWPORT_MARGIN_PX),
         maxViewportLeft
       );
       setLeft(clampedViewportLeft - containerRect.left);

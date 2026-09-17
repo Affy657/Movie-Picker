@@ -178,7 +178,7 @@ export default function WheelModal({
         size="md"
         surface={animDone ? 'surface' : 'bare'}
         strongBackdrop
-        labelledBy="wheel-modal-title"
+        ariaLabelledBy="wheel-modal-title"
         className={animDone ? styles.dialogDone : undefined}
       >
         {!animDone && (
@@ -201,7 +201,7 @@ export default function WheelModal({
               <h2 id="wheel-modal-title" className={styles.title}>
                 {title}
               </h2>
-              <IconButton label={t('common.close')} onClick={onClose}>
+              <IconButton ariaLabel={t('common.close')} onClick={onClose}>
                 <X size={ICON_SIZE.xl} />
               </IconButton>
             </div>

@@ -23,6 +23,7 @@ import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
 import clsx from 'clsx';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import Field from '@/shared/components/Field';
 
 const TITLE_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
@@ -187,12 +188,19 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} size="sm" column bottomSheetOnMobile labelledBy={titleId}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="sm"
+      column
+      bottomSheetOnMobile
+      ariaLabelledBy={titleId}
+    >
       <header className={styles.header}>
         <h2 id={titleId} className={styles.title}>
           {t('proposeIdea.dialogTitle')}
         </h2>
-        <IconButton label={t('common.close')} onClick={onClose}>
+        <IconButton ariaLabel={t('common.close')} onClick={onClose}>
           <X size={ICON_SIZE.lg} aria-hidden />
         </IconButton>
       </header>
@@ -209,48 +217,54 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
       ) : (
         <form className={styles.form} onSubmit={(e) => void handleSubmit(e)}>
           <div className={styles.body}>
-            <label className="label" htmlFor={categoryFieldId}>
-              {t('proposeIdea.categoryLabel')}
-            </label>
-            <Dropdown
-              id={categoryFieldId}
-              value={category}
-              options={categoryOptions}
-              onChange={setCategory}
-              className={styles.categoryDropdown}
-            />
+            <Field label={t('proposeIdea.categoryLabel')} htmlFor={categoryFieldId}>
+              {({ id }) => (
+                <Dropdown
+                  id={id}
+                  value={category}
+                  options={categoryOptions}
+                  onChange={setCategory}
+                  className={styles.categoryDropdown}
+                />
+              )}
+            </Field>
 
-            <label className="label" htmlFor={titleFieldId}>
-              {t('proposeIdea.titleLabel')}
-            </label>
-            <input
-              id={titleFieldId}
-              type="text"
-              className="input"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              maxLength={TITLE_MAX_LENGTH}
-              required
-            />
+            <Field label={t('proposeIdea.titleLabel')} htmlFor={titleFieldId}>
+              {({ id }) => (
+                <input
+                  id={id}
+                  type="text"
+                  className="input"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  maxLength={TITLE_MAX_LENGTH}
+                  required
+                />
+              )}
+            </Field>
 
-            <label className="label" htmlFor={descriptionFieldId}>
-              {t('proposeIdea.descriptionLabel')}
-            </label>
-            <textarea
-              id={descriptionFieldId}
-              className={`input ${styles.descriptionInput}`}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              onPaste={handlePaste}
-              maxLength={DESCRIPTION_MAX_LENGTH}
-              rows={5}
-              required
-            />
-            <p className={`hint ${styles.descriptionHint}`}>
-              {t('proposeIdea.descriptionHint', {
+            <Field
+              label={t('proposeIdea.descriptionLabel')}
+              htmlFor={descriptionFieldId}
+              hint={t('proposeIdea.descriptionHint', {
                 count: String(DESCRIPTION_MAX_LENGTH - description.length),
               })}
-            </p>
+              className={styles.descriptionField}
+            >
+              {({ id, describedBy }) => (
+                <textarea
+                  id={id}
+                  className={`input ${styles.descriptionInput}`}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  onPaste={handlePaste}
+                  maxLength={DESCRIPTION_MAX_LENGTH}
+                  rows={5}
+                  required
+                  aria-describedby={describedBy}
+                />
+              )}
+            </Field>
 
             <fieldset className={styles.attachmentsSection}>
               <legend className={clsx('label', styles.attachmentsLegend)}>

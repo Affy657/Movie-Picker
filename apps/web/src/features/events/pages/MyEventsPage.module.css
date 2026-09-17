@@ -1,4 +1,4 @@
-﻿.layout {
+.layout {
   --page-max-width: min(var(--container-xl), 100%);
   padding-left: max(var(--space-5), calc(var(--space-4) + env(safe-area-inset-left, 0px)));
   padding-right: max(var(--space-5), calc(var(--space-4) + env(safe-area-inset-right, 0px)));

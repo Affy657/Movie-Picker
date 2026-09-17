@@ -23,7 +23,7 @@ describe('AvatarStack', () => {
     expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
     expect(screen.queryByText(/^\+/)).toBeNull();
 
-    rerender(<AvatarStack people={PEOPLE.slice(0, 2)} label="Alice et Bob" />);
+    rerender(<AvatarStack people={PEOPLE.slice(0, 2)} ariaLabel="Alice et Bob" />);
     expect(screen.getByRole('img', { name: 'Alice et Bob' })).toBeInTheDocument();
   });
 

@@ -135,7 +135,7 @@ export default function LetterboxdChoicesModal({
   const decideLater = () => void runConfirm(answers);
 
   return (
-    <Modal open={open} onClose={onClose} size="md" column labelledBy={titleId}>
+    <Modal open={open} onClose={onClose} size="md" column ariaLabelledBy={titleId}>
       <div className={styles.header}>
         <div className={styles.headTextGroup}>
           <h2 id={titleId} className={styles.title}>
@@ -156,7 +156,7 @@ export default function LetterboxdChoicesModal({
             ))}
           </span>
         </div>
-        <IconButton label={t('common.close')} onClick={onClose}>
+        <IconButton ariaLabel={t('common.close')} onClick={onClose}>
           <X aria-hidden size={ICON_SIZE.lg} />
         </IconButton>
       </div>

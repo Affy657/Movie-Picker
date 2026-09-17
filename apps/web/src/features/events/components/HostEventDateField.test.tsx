@@ -10,7 +10,6 @@ function renderField(relativeDateLabel: string | null) {
         value="2026-09-14T23:30"
         error={undefined}
         relativeDateLabel={relativeDateLabel}
-        hintId="date-hint"
         showNotifyRow={false}
         notifyDateChange={false}
         onValueChange={vi.fn()}
@@ -28,9 +27,8 @@ describe('HostEventDateField', () => {
     expect(hint.textContent).toBe(
       'Soirée prévue aujourd’hui. Les participants seront prévenus si vous modifiez la date.'
     );
-    expect(screen.getByLabelText('Date et heure de la soirée')).toHaveAttribute(
-      'aria-describedby',
-      'date-hint'
+    expect(screen.getByLabelText('Date et heure de la soirée')).toHaveAccessibleDescription(
+      hint.textContent ?? ''
     );
   });
 

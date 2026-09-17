@@ -44,6 +44,7 @@ import styles from './CreateEvent.module.css';
 import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import Field from '@/shared/components/Field';
 
 function getDefaultDate(): string {
   const d = new Date();
@@ -206,48 +207,51 @@ export default function CreateEvent() {
             </p>
           )}
 
-          <label className="label" htmlFor="create-title">
-            {t('events.create.titleLabel')}
-          </label>
-          <input
-            id="create-title"
-            type="text"
-            className="input"
-            value={title}
-            onChange={(e) => {
-              titleEdited.current = true;
-              setTitle(e.target.value);
-            }}
-            required
-            maxLength={200}
-            placeholder={t('events.create.titlePlaceholder')}
-          />
+          <Field label={t('events.create.titleLabel')} htmlFor="create-title">
+            {({ id }) => (
+              <input
+                id={id}
+                type="text"
+                className="input"
+                value={title}
+                onChange={(e) => {
+                  titleEdited.current = true;
+                  setTitle(e.target.value);
+                }}
+                required
+                maxLength={200}
+                placeholder={t('events.create.titlePlaceholder')}
+              />
+            )}
+          </Field>
           <div className={styles.fieldGrid}>
             <div>
-              <label className="label" htmlFor="create-date">
-                {t('events.create.dateLabel')}
-              </label>
-              <input
-                id="create-date"
-                type="date"
-                className="input"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
+              <Field label={t('events.create.dateLabel')} htmlFor="create-date">
+                {({ id }) => (
+                  <input
+                    id={id}
+                    type="date"
+                    className="input"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    required
+                  />
+                )}
+              </Field>
             </div>
             <div>
-              <label className="label" htmlFor="create-time">
-                {t('events.create.timeLabel')}
-              </label>
-              <input
-                id="create-time"
-                type="time"
-                className="input"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                required
-              />
+              <Field label={t('events.create.timeLabel')} htmlFor="create-time">
+                {({ id }) => (
+                  <input
+                    id={id}
+                    type="time"
+                    className="input"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    required
+                  />
+                )}
+              </Field>
             </div>
           </div>
 
@@ -283,56 +287,68 @@ export default function CreateEvent() {
               <span className={styles.advancedChevron} aria-hidden />
             </summary>
             <div className={styles.advancedBody}>
-              <label className="label" htmlFor="create-theme">
-                {t('events.settings.themeLabel')}
-              </label>
-              <ThemeField
-                textInputId="create-theme"
-                emoji={themeEmoji}
-                text={themeText}
-                onEmojiChange={setThemeEmoji}
-                onTextChange={setThemeText}
-              />
+              <Field label={t('events.settings.themeLabel')} htmlFor="create-theme">
+                {({ id }) => (
+                  <ThemeField
+                    textInputId={id}
+                    emoji={themeEmoji}
+                    text={themeText}
+                    onEmojiChange={setThemeEmoji}
+                    onTextChange={setThemeText}
+                  />
+                )}
+              </Field>
 
               <div className={clsx(styles.fieldGrid, styles.counterGrid)}>
                 <div>
-                  <label className="label" htmlFor="create-max-proposals">
-                    {t('events.settings.maxProposalsLabel')}
-                  </label>
-                  <NumberInput
-                    id="create-max-proposals"
-                    value={maxProposals}
-                    onChange={setMaxProposals}
-                    min={1}
-                    max={MAX_PROPOSALS_PER_PARTICIPANT}
-                  />
+                  <Field
+                    label={t('events.settings.maxProposalsLabel')}
+                    htmlFor="create-max-proposals"
+                  >
+                    {({ id }) => (
+                      <NumberInput
+                        id={id}
+                        value={maxProposals}
+                        onChange={setMaxProposals}
+                        min={1}
+                        max={MAX_PROPOSALS_PER_PARTICIPANT}
+                      />
+                    )}
+                  </Field>
                 </div>
                 <div>
-                  <label className="label" htmlFor="create-max-participants">
-                    {t('events.settings.maxParticipantsLabel')}
-                  </label>
-                  <NumberInput
-                    id="create-max-participants"
-                    value={maxParticipants}
-                    onChange={setMaxParticipants}
-                    min={1}
-                    max={MAX_EVENT_PARTICIPANTS}
-                  />
+                  <Field
+                    label={t('events.settings.maxParticipantsLabel')}
+                    htmlFor="create-max-participants"
+                  >
+                    {({ id }) => (
+                      <NumberInput
+                        id={id}
+                        value={maxParticipants}
+                        onChange={setMaxParticipants}
+                        min={1}
+                        max={MAX_EVENT_PARTICIPANTS}
+                      />
+                    )}
+                  </Field>
                 </div>
                 <div>
-                  <label className="label" htmlFor="create-winner-count">
-                    {t('events.settings.winnerCountLabel')}
-                  </label>
-                  <NumberInput
-                    id="create-winner-count"
-                    value={winnerCount}
-                    onChange={setWinnerCount}
-                    min={1}
-                    max={MAX_WINNERS_PER_EVENT}
-                  />
-                  <p className="hint">
-                    {t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })}
-                  </p>
+                  <Field
+                    label={t('events.settings.winnerCountLabel')}
+                    htmlFor="create-winner-count"
+                    hint={t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })}
+                  >
+                    {({ id, describedBy }) => (
+                      <NumberInput
+                        id={id}
+                        value={winnerCount}
+                        onChange={setWinnerCount}
+                        min={1}
+                        max={MAX_WINNERS_PER_EVENT}
+                        ariaDescribedBy={describedBy}
+                      />
+                    )}
+                  </Field>
                 </div>
               </div>
 
@@ -364,15 +380,11 @@ export default function CreateEvent() {
               />
               {voteLimitEnabled && (
                 <div className={styles.subField}>
-                  <label className="label" htmlFor="create-max-votes">
-                    {t('events.settings.maxVotesLabel')}
-                  </label>
-                  <NumberInput
-                    id="create-max-votes"
-                    value={maxVotes}
-                    onChange={setMaxVotes}
-                    min={1}
-                  />
+                  <Field label={t('events.settings.maxVotesLabel')} htmlFor="create-max-votes">
+                    {({ id }) => (
+                      <NumberInput id={id} value={maxVotes} onChange={setMaxVotes} min={1} />
+                    )}
+                  </Field>
                 </div>
               )}
 

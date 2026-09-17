@@ -13,7 +13,7 @@ export default function EventActionErrorBanner({ message, onDismiss }: Readonly<
   return (
     <div className="error error-dismiss" role="alert">
       <span>{message}</span>
-      <IconButton size="sm" tone="danger" label={t('common.close')} onClick={onDismiss}>
+      <IconButton size="sm" tone="danger" ariaLabel={t('common.close')} onClick={onDismiss}>
         <X size={ICON_SIZE.md} aria-hidden />
       </IconButton>
     </div>

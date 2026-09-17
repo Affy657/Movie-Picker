@@ -140,10 +140,13 @@ export default function WatchProviderChips({
       hasLogo && p.logoPath ? (
         <img src={tmdbLogoSrcForUi(p.logoPath)} alt="" className={styles.logoImg} loading="lazy" />
       ) : (
-        <span className={styles.chipName}>{p.name}</span>
+        <span className={styles.providerName}>{p.name}</span>
       );
 
-    const chipClass = clsx(styles.chip, hasLogo ? styles.chipLogo : styles.chipText);
+    const providerClass = clsx(
+      styles.provider,
+      hasLogo ? styles.providerLogo : styles.providerText
+    );
     const href = safeWatchHref;
     const key = `${p.providerId}-${p.type}`;
 
@@ -151,7 +154,7 @@ export default function WatchProviderChips({
       <a
         key={key}
         href={href}
-        className={clsx(chipClass, styles.chipLink)}
+        className={clsx(providerClass, styles.providerLink)}
         aria-label={ariaLink}
         target="_blank"
         rel="noreferrer noopener"
@@ -159,7 +162,7 @@ export default function WatchProviderChips({
         {chipInner}
       </a>
     ) : (
-      <span key={key} className={chipClass} role="img" aria-label={ariaStatic}>
+      <span key={key} className={providerClass} role="img" aria-label={ariaStatic}>
         {chipInner}
       </span>
     );

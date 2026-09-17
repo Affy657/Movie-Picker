@@ -18,8 +18,9 @@ Tous dans `apps/web/src/styles/01-foundation.css`, sauf ceux propres à la page 
 | Rayons | `--radius-xs` (4 px), `-sm` (6 px), `-md` (12 px), `-lg` (18 px), `-pill` | |
 | Bordures | `--border-width-field` (1,5 px) | tout autre trait fait 1 px ou 2 px |
 | Focus | `--outline-focus` (contour), `--ring-focus` (halo pour les champs) | un `:focus-visible` qui retire le contour pose le halo, jamais un simple fond |
+| Géométrie des menus | `MENU_VIEWPORT_MARGIN_PX` (8), `MENU_ANCHOR_GAP_PX` (6) dans `shared/components/menuGeometry.ts` | les seuls pixels écrits en TypeScript pour positionner un panneau flottant ; ils recopient `--space-2` et `--space-1-5` |
 | Ombres | `--shadow-sm/md/lg`, `--shadow-nav`, `--shadow-hero-card`, `--shadow-wheel` | en sombre l'élévation se lit sur `--color-surface-raised`, pas sur l'ombre ; `--shadow-nav` change de valeur en sombre |
-| Mouvement | `--duration-fast` (0,10 s), `--duration-base` (0,15 s), `--duration-slow` (0,20 s), `--duration-enter` (0,25 s), `--duration-sheet` (0,32 s), `--duration-reveal` (0,6 s), `--duration-spin` (0,8 s), `--duration-pulse` (1,2 s), `--duration-shimmer` (1,4 s), `--duration-breathe` (2,4 s) ; `--ease-default/in-out/out/linear/reveal/spring` | une boucle décorative propre à un composant déclare son propre jeton dans son module (`--flame-flicker-duration`) |
+| Mouvement | `--duration-fast` (0,10 s), `--duration-base` (0,15 s), `--duration-slow` (0,20 s), `--duration-enter` (0,25 s), `--duration-sheet` (0,32 s), `--duration-reveal` (0,6 s), `--duration-spin` (0,8 s), `--duration-pulse` (1,2 s), `--duration-shimmer` (1,4 s), `--duration-breathe` (2,4 s) ; `--ease-default/in-out/out/linear/reveal/spring` | chaque étape de `transition` porte sa durée et sa courbe ; une boucle décorative propre à un composant déclare son propre jeton dans son module (`--flame-flicker-duration`), un décalage de phase aussi (`--card-shake-stagger-*`, `--demo-float-offset`) |
 | Opacité | `--opacity-disabled` (0,5), `--opacity-muted` (0,6), `--opacity-hover` (0,8), `--opacity-dimmed` (0,85) | état désactivé, contenu secondaire, fondu au survol, `aria-busy` ; un littéral n'est admis que dans une étape de `@keyframes` |
 | Couleurs | primitives `--blue-600`… réservées à la fondation ; rôles `--color-*` consommés par les modules ; `--color-heat-0` à `-3` pour la carte d'activité | voir le tableau des rôles dans `AGENTS.md` |
 | Teintes de surface | `--color-surface-hover` (6 %), `-hover-strong` (10 %), `-active` (12 %), `-sunken`, `-translucent`, `--color-bg-tint`, `--color-bg-translucent` | remplacent tout `color-mix()` maison sur le texte, le fond ou la surface |
@@ -34,7 +35,14 @@ Un `var(--jeton, repli)` sur un jeton de la fondation est refusé : le repli est
 
 ## Composants
 
-Sauf mention, chaque composant accepte `className` et transmet les attributs HTML natifs à son élément racine.
+Sauf mention, chaque composant accepte `className` et transmet les attributs HTML natifs à son élément racine. `Sheet`, `InfoBubble`, `Toggle`, `ConfirmDialog` et `ShareDialog` ne prennent pas de `className` : leur surface est la leur.
+
+Conventions de nommage des props, les mêmes partout :
+
+- `ariaLabel`, `ariaLabelledBy`, `ariaDescribedBy` pour le nom et la description accessibles ; `label` est toujours un texte visible ;
+- `data-testid` sur les composants qui étalent les attributs natifs, accepté aussi par `Chip` et `Modal` ; `ConfirmDialog` garde `testId`, préfixe dont il dérive `-cancel` et `-confirm` ;
+- `onChange(value)` remonte la valeur, y compris `Toggle` et `ToggleRow` (`onChange(checked)`) ;
+- un module qui exporte une paire (`ChoiceGroup` + `ChoiceCard`, `Tabs` + `TabPanel`, `Skeleton` + `SkeletonScreen`) n'a que des exports nommés, les autres un export par défaut.
 
 ### Button
 
@@ -48,15 +56,15 @@ Le bouton du produit. `buttonClass()` donne la même composition de classes à u
 | `loading` | `boolean` | `false` | désactive, pose `aria-busy` et un `Spinner` devant le libellé ; le libellé reste |
 | `type` | | `button` | à poser à `submit` explicitement |
 
-États : repos, survol (sous `(hover: hover)`), focus (`--outline-focus`), désactivé (`--opacity-disabled`), chargement (`--opacity-dimmed`). Hauteur minimale `--tap-target-min` ; `sm` dessine 40 px et étend sa zone tactile à 44 px.
+États : repos, survol (sous `(hover: hover)`, soulèvement `--lift-sm` annulé sous `prefers-reduced-motion`), focus (`--outline-focus`), désactivé (`--opacity-disabled`), chargement (`--opacity-dimmed`). Hauteur minimale `--tap-target-min` ; `sm` dessine 40 px et étend sa zone tactile à 44 px.
 
 ### IconButton
 
-Bouton à icône seule. `label` est obligatoire et devient `aria-label` et, sauf `showTitle={false}`, `title`.
+Bouton à icône seule. `ariaLabel` est obligatoire et devient `aria-label` et, sauf `showTitle={false}`, `title`.
 
 | Prop | Type | Défaut |
 |---|---|---|
-| `label` | `string` | requis |
+| `ariaLabel` | `string` | requis |
 | `size` | `sm` / `md` / `lg` | `md` |
 | `tone` | `default` / `danger` / `onPoster` | `default` |
 | `expandHitArea` | `boolean` | `true`, compose `expanded` de `tapTarget.module.css` : 44 px de zone tactile sans changer le dessin |
@@ -82,9 +90,9 @@ Pastille, badge, filtre ou étiquette d'état.
 | `onClick` | | rend un `<button>` |
 | `selected` | `boolean` | style plein et `aria-pressed` ; laissé `undefined`, le bouton est une action, pas un interrupteur |
 | `onRemove`, `removeLabel` | | ajoute la croix de retrait, zone tactile de 44 px |
-| `label` | `string` | `aria-label` du bouton quand le contenu visible ne suffit pas |
+| `ariaLabel` | `string` | `aria-label` du bouton quand le contenu visible ne suffit pas |
 | `disabled` | `boolean` | bouton seulement |
-| `testId` | `string` | `data-testid` |
+| `data-testid` | `string` | |
 
 Les tones sémantiques consomment les rôles (`--color-success-bg`…) ; `pending` garde son jeton propre `--color-badge-pending-*`. Le centrage optique du texte est intégré (`--text-optical-nudge`).
 
@@ -99,7 +107,7 @@ Surface de contenu. `as` change la balise (`section`, `li`…).
 | `elevation` | `none` / `sm` / `md` / `lg` | `none` ; `md` et `lg` posent `--color-surface-raised` |
 | `interactive` | `boolean` | survol et focus visibles, pour une carte cliquable |
 
-`Modal` et `Dropdown` composent `Card` (`elevationLg`).
+`Modal` et `Dropdown` composent `Card` (`elevationLg`). Une surface de carte locale (soirée en attente, carte film en liste, groupe de notifications) rend `<Card padding="none" elevation="sm" as=…>` avec sa classe, elle ne redessine ni le fond ni la bordure.
 
 ### Modal
 
@@ -108,19 +116,20 @@ Seul endroit du projet où `<dialog>` et `::backdrop` sont écrits. Fermeture pa
 | Prop | Type | Note |
 |---|---|---|
 | `open`, `onClose` | requis | |
-| `title`, `titleId`, `labelledBy`, `describedBy`, `ariaLabel` | | un des trois nommages est requis |
+| `title`, `titleId`, `ariaLabelledBy`, `ariaDescribedBy`, `ariaLabel` | | un des trois nommages est requis |
 | `size` | `xs` / `sm` / `md` / `base` / `xl` | `--container-<size>`, `sm` par défaut |
 | `surface` | `surface` / `bare` / `media` / `borderless` | `media` pour une bande-annonce |
 | `padded`, `column`, `anchoredTop`, `bottomSheetOnMobile`, `strongBackdrop` | `boolean` | |
 | `closeLabel` | `string` | |
 
-`testId` pose `data-testid` sur le `<dialog>`, `dialogRef` en donne la référence à l'appelant.
+`data-testid` se pose sur le `<dialog>`, `dialogRef` en donne la référence à l'appelant.
 
 Dialogues déjà câblés dessus :
 
 - `ConfirmDialog` : `title`, `message`, `onConfirm`, `onCancel`, `confirmLabel`, `cancelLabel`, `confirmTone` `danger` par défaut ou `default` pour une confirmation non destructive, `loading` met le bouton en chargement, `hideCancel` pour un accusé de lecture, `testId`.
 - `ShareDialog` : `title`, `url`, `qrHint`, `fileSlug` (nom du PNG téléchargé), `preview` (`avatarId`, `name`, `meta`), `surface` `event` / `profile` (analytics), `shareText`, `initialTab`, `extraTab` pour un onglet propre à l'appelant.
-- `ConsentDialog`, `DialogTitleBar` (`titleId`, `title`, `onClose`, `closeLabel`).
+- `ConsentDialog` : `open`, `onClose` ; la modale de consentement lit et écrit `useConsent()` elle-même.
+- `DialogTitleBar` (`titleId`, `title`, `onClose`, `closeLabel`).
 
 ### Sheet
 
@@ -128,13 +137,15 @@ Feuille ancrée en bas, glissable (`SheetDrag.module.css` porte le geste). `open
 
 ### Field
 
-Câble `label`, `hint`, `error` et `aria-describedby` autour d'un champ rendu par la fonction enfant : `children({ id, describedBy, invalid })`. L'erreur porte `role="alert"`. `htmlFor` impose l'identifiant du champ quand l'appelant le connaît déjà.
+Câble `label`, `hint`, `error` et `aria-describedby` autour d'un champ rendu par la fonction enfant : `children({ id, describedBy, invalid })`. L'erreur porte `role="alert"` et son icône `AlertCircle` ; quand une erreur et une aide sont données, l'erreur passe en premier. `htmlFor` impose l'identifiant du champ quand l'appelant le connaît déjà. Tout `<label>` de formulaire du produit passe par là : un `<label className="label">` écrit à la main perd le câblage de l'aide. Un groupe (radiogroup, interrupteur) prend un `<span className="label" id>` et `ariaLabelledBy` à la place.
 
-`NumberInput` (`value` chaîne, `min`, `max`, `step`, `placeholder`, `invalid`, `ariaDescribedBy`), `SearchField` (`type="search"`, `placeholder`, `ariaLabel`, `ariaDescribedBy`, `iconSize` dans `ICON_SIZE`, `inputClassName`, icône décorative) et `Toggle` (`role="switch"`, `checked`, `label` ou `labelledBy`) s'y insèrent.
+Le skin de champ est la classe globale `.input` de `02-forms-and-content.css` : bordure `--color-border-field`, corps `--font-size-md`, survol, `:focus` en `--ring-focus`, `:disabled` en `--opacity-disabled`. `SearchField` et `NumberInput` la portent, ils n'en redessinent rien.
+
+`NumberInput` (`value` chaîne, `min`, `max`, `step`, `placeholder`, `invalid`, `disabled`, `ariaDescribedBy`), `SearchField` (`type="search"`, `placeholder`, `ariaLabel`, `ariaDescribedBy`, `iconSize` dans `ICON_SIZE`, `disabled`, icône décorative) et `Toggle` (`role="switch"`, `checked`, `onChange(checked)`, `ariaLabel` ou `ariaLabelledBy`) s'y insèrent.
 
 ### ToggleRow
 
-Une ligne de réglage : un titre, une description et un `Toggle` à droite, nommé par le titre (`aria-labelledby`). `title`, `description`, `checked`, `onChange`, `disabled`. C'est la ligne « Autoriser les séries » ou « Limiter les votes » des paramètres de soirée.
+Une ligne de réglage : un titre, une description et un `Toggle` à droite, nommé par le titre (`aria-labelledby`). `title`, `description`, `checked`, `onChange(checked)`, `disabled`. C'est la ligne « Autoriser les séries » ou « Limiter les votes » des paramètres de soirée.
 
 ### ChoiceGroup et ChoiceCard
 
@@ -148,17 +159,18 @@ Un choix exclusif entre des cartes, quand `SegmentedRadioGroup` est trop étroit
 | `indicator` | `boolean` | dessine la puce ronde cochée |
 | `layout` | `row` / `tile` | `tile` centre le contenu et porte le cadre de 2 px des grilles d'images |
 | `dashed` | `boolean` | la carte « aucun de ces choix » |
-| `label` | `string` | `aria-label` quand le contenu ne nomme pas la carte |
+| `ariaLabel` | `string` | `aria-label` quand le contenu ne nomme pas la carte |
+| `disabled` | `boolean` | `--opacity-disabled`, les flèches la sautent |
 
-Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue, les candidats Letterboxd et la grille d'avatars.
+Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue, les candidats Letterboxd, la grille d'avatars, la grille d'emojis du thème (`tile`, 44 px, le clic ferme le sélecteur, les flèches changent l'emoji sans le fermer) et les pastilles de couleur d'accent (`tile` rond de 44 px autour d'un disque de 28 px).
 
 ### Menu, Dropdown, Tabs, Tooltip, InfoBubble
 
-- `Menu` : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte et celui de l'agenda. `MenuItem` : `icon`, `href` (lien externe, `external` ouvre un nouvel onglet avec `rel="noopener noreferrer"`), `to` (route interne, rend un `<Link>`), `selected`, `tone` `default` / `danger`, `disabled` rend un `<button disabled>` même avec `href` ou `to`, `aria-haspopup` quand l'entrée ouvre une boîte de dialogue. `MenuLabel`, `MenuSeparator`. Navigation aux flèches, Échap ferme, focus visible en contour interne.
-- `Dropdown` : `value`, `options` (`{ value, label, disabled? }`), `onChange`, `ariaLabel`, `disabled` ; liste déroulante maison avec `role="listbox"`, une option désactivée porte `aria-disabled`, les flèches la sautent.
+- `Menu` : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte et celui de l'agenda. `MenuPanel` (`ariaLabel`, `anchored`, attributs natifs de `<div>`) porte lui-même les flèches, Home et End entre ses `menuitem` non désactivés ; `anchored={false}` retire l'ancrage sous le déclencheur, pour un panneau porté par un portail ou posé en `fixed` : le menu des cartes film et le survol « proposer dans une soirée », qui gardent leur état d'ouverture local et ferment sur Échap en rendant le focus à leur déclencheur. `MenuItem` : `icon`, `href` (lien externe, `external` ouvre un nouvel onglet avec `rel="noopener noreferrer"`), `to` (route interne, rend un `<Link>`), `selected`, `tone` `default` / `danger`, `disabled` rend un `<button disabled>` même avec `href` ou `to`, `ariaLabel` et `title` quand le nom accessible diffère du texte, `aria-haspopup` quand l'entrée ouvre une boîte de dialogue ; un libellé texte sans jambage est nudgé comme des petites capitales (`--text-optical-nudge-caps`). `MenuLabel`, `MenuSeparator`. Échap ferme, focus visible en contour interne.
+- `Dropdown` : `id`, `value`, `options` (`{ value, label, disabled? }`), `onChange`, `ariaLabel`, `disabled` (le déclencheur passe en `--opacity-disabled`) ; liste déroulante maison avec `role="listbox"`, une option désactivée porte `aria-disabled`, les flèches la sautent.
 - `Tabs` : `idBase`, `tabs` (`{ key, label, icon?, iconOnly?, badge?, disabled? }`), `active`, `onChange`, `ariaLabel`, `variant` `underline` / `pill` ; `TabPanel` (`tabKey`, `active`). `iconOnly` garde `label` comme nom accessible sans le dessiner. Flèches et Home/End gérées en sautant les onglets désactivés, défilement horizontal avec fondus, onglet de 44 px. Toute liste d'onglets du produit passe par là, y compris les deux onglets d'une modale.
-- `SegmentedRadioGroup` : `options` (`{ value, label, icon? }`), `value`, `onChange`, `ariaLabel` ou `ariaLabelledBy`, `size` `md` / `sm`, `iconOnly` (le libellé devient `aria-label`). `role="radiogroup"`, flèches, Home et End, seule l'option cochée est tabulable. C'est le sélecteur de thème, d'échelle de note et de mode de roue.
-- `Tooltip` : `label`, `placement` `top` / `bottom` / `left` / `right`, `delayMs`, `focusable`. Apparaît au survol et au focus, jamais seul vecteur d'une information.
+- `SegmentedRadioGroup` : `id`, `options` (`{ value, label, icon? }`), `value`, `onChange`, `ariaLabel` ou `ariaLabelledBy`, `size` `md` / `sm`, `iconOnly` (le libellé devient `aria-label`), `disabled` (toutes les options, `--opacity-disabled`, clavier inerte). `role="radiogroup"`, flèches, Home et End, seule l'option cochée est tabulable. C'est le sélecteur de thème, d'échelle de note et de mode de roue.
+- `Tooltip` : `label` (le texte de la bulle), `placement` `top` / `bottom` / `left` / `right`, `delayMs`, `focusable`, `disabled` (ne rend pas la bulle). Apparaît au survol et au focus, jamais seul vecteur d'une information.
 - `InfoBubble` : `label` (nom du bouton d'aide), contenu en enfants.
 
 ### États de page
@@ -168,13 +180,13 @@ Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue,
 - `ErrorState` : page entière (`PageLayout`) avec `code`, `title` en `h1`, `message` (`messageRole` `alert` / `status`), `actions`.
 - `SignedOutState` : `EmptyState` avec connexion et inscription qui reviennent sur `returnTo` ; trace `signed_out_cta_clicked`.
 - `ServerErrorPage` : `ErrorState` 500, `onRetry` optionnel, message d'erreur masqué en production.
-- `Skeleton` (`variant` `text` / `circle` / `poster` / `block`, `width`, `height`) et `SkeletonScreen` (`label`, `role="status"`, `aria-busy`).
+- `Skeleton` (`variant` `text` / `circle` / `poster` / `block`, `width`, `height`, `style`) et `SkeletonScreen` (`label`, texte masqué visuellement, `role="status"`, `aria-busy`, `style`).
 - `ErrorBoundary` : attrape les erreurs de rendu et affiche `ServerErrorPage`.
 
 ### Divers
 
 - `Avatar` : `avatarId`, `pseudo`, `size` `xs` / `sm` / `md` / `lg` / `xl` (`--avatar-*`). Sans identifiant, initiales sur l'une des huit couleurs `--color-avatar-*`, choisie par le pseudo ; sans pseudo, pastille vide. Toujours décoratif (`aria-hidden`), le nom est porté par le texte voisin. Les tailles sont déclarées en `:where()` : un module qui doit redimensionner un avatar pose `width` et `height` sur sa propre classe, sans `!important`.
-- `AvatarStack` : `people` (`{ key, avatarId, pseudo }`), `max` (3), `hidden` quand la liste n'est qu'un échantillon, `size` `xs` / `sm`, `label`. Avatars chevauchés d'un quart, anneau `--avatar-stack-ring` (le fond de page par défaut, la surface ou l'anneau d'affiche via une classe), pastille « +N » pour le reste. Décoratif sans `label`, `role="img"` avec.
+- `AvatarStack` : `people` (`{ key, avatarId, pseudo }`), `max` (3), `hidden` quand la liste n'est qu'un échantillon, `size` `xs` / `sm`, `ariaLabel`. Avatars chevauchés d'un quart, anneau `--avatar-stack-ring` (le fond de page par défaut, la surface ou l'anneau d'affiche via une classe), pastille « +N » pour le reste. Décoratif sans `ariaLabel`, `role="img"` avec.
 - `EventLifecyclePill` : `lifecycle` `upcoming` / `live` / `pending` / `finished`, `label`, `detail` ; seul `live` pulse. Seul consommateur légitime de `--color-badge-*` avec `Chip` `pending`.
 - `ViewModeToggle` : barre d'outils grille / liste, `aria-pressed` sur le mode courant, boutons de 30 px à zone tactile étendue.
 - `QrCode` : `value`, `title` ; SVG de 240 px.

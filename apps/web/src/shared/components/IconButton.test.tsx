@@ -8,7 +8,7 @@ import spinnerStyles from '@/shared/components/Spinner.module.css';
 describe('IconButton', () => {
   it('carries its label in aria-label and title, without rendering it visible', () => {
     render(
-      <IconButton label="Fermer">
+      <IconButton ariaLabel="Fermer">
         <svg aria-hidden />
       </IconButton>
     );
@@ -21,7 +21,7 @@ describe('IconButton', () => {
 
   it('peut retirer le title tout en gardant le nom accessible', () => {
     render(
-      <IconButton label="Partager" showTitle={false}>
+      <IconButton ariaLabel="Partager" showTitle={false}>
         <svg aria-hidden />
       </IconButton>
     );
@@ -31,7 +31,7 @@ describe('IconButton', () => {
 
   it('turns size, tone and enlarged tap area into classes', () => {
     render(
-      <IconButton label="Supprimer" size="lg" tone="danger">
+      <IconButton ariaLabel="Supprimer" size="lg" tone="danger">
         <svg aria-hidden />
       </IconButton>
     );
@@ -43,7 +43,7 @@ describe('IconButton', () => {
   it('while loading, replaces the icon with the spinner and disables itself', async () => {
     const onClick = vi.fn();
     render(
-      <IconButton label="Envoyer" loading onClick={onClick}>
+      <IconButton ariaLabel="Envoyer" loading onClick={onClick}>
         <svg data-testid="icon" aria-hidden />
       </IconButton>
     );

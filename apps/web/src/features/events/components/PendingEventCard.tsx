@@ -12,6 +12,7 @@ import { useLocale, useTranslation } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
 import { ROUTES } from '@/app/routes';
 import type { MyEventSummary } from '@/features/events/types';
+import Card from '@/shared/components/Card';
 import styles from './PendingEventCard.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -51,7 +52,7 @@ export default function PendingEventCard({
   const dateTimeLabel = formatLongDateWithTime(event.date, event.time, locale);
 
   return (
-    <article className={styles.card}>
+    <Card as="article" padding="none" elevation="sm" className={styles.card}>
       <div className={styles.head}>
         <EventLifecyclePill lifecycle="pending" />
         {event.autoCloseAt ? (
@@ -117,6 +118,6 @@ export default function PendingEventCard({
           )}
         </div>
       </div>
-    </article>
+    </Card>
   );
 }

@@ -53,7 +53,7 @@ export default function TemplateNameEditor({
       </Button>
       <IconButton
         size="lg"
-        label={t('events.settings.templates.cancelAriaLabel')}
+        ariaLabel={t('events.settings.templates.cancelAriaLabel')}
         onClick={onCancel}
       >
         <X size={ICON_SIZE.md} aria-hidden />

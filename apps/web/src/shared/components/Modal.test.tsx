@@ -22,7 +22,7 @@ describe('Modal', () => {
   it('only opens the dialog when `open` turns true', () => {
     const { rerender } = render(
       <AppTestProviders>
-        <Modal open={false} onClose={vi.fn()} testId="m" ariaLabel="Fenêtre">
+        <Modal open={false} onClose={vi.fn()} data-testid="m" ariaLabel="Fenêtre">
           <p>Contenu</p>
         </Modal>
       </AppTestProviders>
@@ -32,7 +32,7 @@ describe('Modal', () => {
 
     rerender(
       <AppTestProviders>
-        <Modal open onClose={vi.fn()} testId="m" ariaLabel="Fenêtre">
+        <Modal open onClose={vi.fn()} data-testid="m" ariaLabel="Fenêtre">
           <p>Contenu</p>
         </Modal>
       </AppTestProviders>
@@ -45,7 +45,7 @@ describe('Modal', () => {
     const onClose = vi.fn();
     render(
       <AppTestProviders>
-        <Modal open onClose={onClose} title="Paramètres" closeLabel="Fermer" testId="m">
+        <Modal open onClose={onClose} title="Paramètres" closeLabel="Fermer" data-testid="m">
           <p>Contenu</p>
         </Modal>
       </AppTestProviders>
@@ -62,7 +62,7 @@ describe('Modal', () => {
   it('relaie labelledBy et describedBy quand le contenu porte son propre titre', () => {
     render(
       <AppTestProviders>
-        <Modal open onClose={vi.fn()} labelledBy="t" describedBy="d" testId="m">
+        <Modal open onClose={vi.fn()} ariaLabelledBy="t" ariaDescribedBy="d" data-testid="m">
           <h2 id="t">Titre local</h2>
           <p id="d">Description</p>
         </Modal>
@@ -79,7 +79,7 @@ describe('Modal', () => {
     const onClose = vi.fn();
     render(
       <AppTestProviders>
-        <Modal open onClose={onClose} ariaLabel="Fenêtre" testId="m">
+        <Modal open onClose={onClose} ariaLabel="Fenêtre" data-testid="m">
           <p>Contenu</p>
         </Modal>
       </AppTestProviders>

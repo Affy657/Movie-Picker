@@ -31,6 +31,7 @@ async function openKebab(externalLinks?: 'all' | 'letterboxd') {
     </LocaleProvider>
   );
   await user.click(screen.getByRole('button', { name: /plus d’actions/i }));
+  return user;
 }
 
 describe('CardKebab', () => {
@@ -48,5 +49,28 @@ describe('CardKebab', () => {
 
     expect(screen.getByRole('menuitem', { name: /letterboxd/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /imdb/i })).toBeInTheDocument();
+  });
+
+  it('is a shared menu: the arrows walk the items, Escape closes and gives the focus back', async () => {
+    const user = await openKebab('letterboxd');
+    const menu = screen.getByRole('menu', { name: /plus d’actions/i });
+    const items = screen.getAllByRole('menuitem');
+    expect(menu).toContainElement(items[0]!);
+
+    items[0]!.focus();
+    await user.keyboard('{ArrowDown}');
+    expect(items[1]).toHaveFocus();
+    await user.keyboard('{End}');
+    expect(items[items.length - 1]).toHaveFocus();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /plus d’actions/i })).toHaveFocus();
+  });
+
+  it('separates the groups and names the removal after the movie', async () => {
+    await openKebab('letterboxd');
+    expect(screen.getAllByRole('separator')).toHaveLength(2);
+    expect(screen.getByRole('menuitem', { name: /retirer.*dune/i })).toBeInTheDocument();
   });
 });

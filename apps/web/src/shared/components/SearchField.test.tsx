@@ -23,6 +23,12 @@ describe('SearchField', () => {
     expect(input).toHaveAttribute('id', 'q');
     expect(input).toHaveAttribute('placeholder', 'Chercher un film');
     expect(input).toHaveAccessibleDescription('Titre ou année');
+    expect(input).toHaveClass('input');
+  });
+
+  it('can be disabled', () => {
+    render(<SearchField value="" onChange={vi.fn()} placeholder="Chercher" disabled />);
+    expect(screen.getByRole('searchbox')).toBeDisabled();
   });
 
   it('reports every keystroke with the full value', async () => {

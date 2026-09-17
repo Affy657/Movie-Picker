@@ -161,3 +161,8 @@ a:focus-visible {
   box-shadow: var(--ring-focus);
   background: var(--color-surface);
 }
+
+.input:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}

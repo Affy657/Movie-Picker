@@ -1,44 +1,48 @@
-﻿.root {
+.root {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
   align-items: center;
 }
 
+.swatches {
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: var(--space-1);
+}
+
 .swatch {
-  --swatch-size: 2.2rem;
-  position: relative;
-  width: var(--swatch-size);
-  height: var(--swatch-size);
-  border-radius: var(--radius-pill);
-  border: 2px solid transparent;
+  width: var(--tap-target-min);
+  height: var(--tap-target-min);
   padding: 0;
-  cursor: pointer;
-  background: var(--swatch-color, var(--color-primary));
+  border-radius: var(--radius-pill);
+}
+
+.disc {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: var(--icon-3xl);
+  height: var(--icon-3xl);
+  border-radius: var(--radius-pill);
+  background: var(--swatch-color, var(--color-primary));
   color: var(--color-primary-contrast);
-  transition:
-    transform var(--duration-fast) var(--ease-default),
-    border-color var(--duration-fast) var(--ease-default),
-    box-shadow var(--duration-fast) var(--ease-default);
+  transition: transform var(--duration-fast) var(--ease-default);
 }
+
 @media (hover: hover) {
-  .swatch:hover {
+  .swatch:hover .disc {
     transform: scale(1.06);
   }
 }
 
-.swatch:focus-visible {
-  outline: none;
-  border-color: var(--color-text);
-  box-shadow: var(--ring-focus);
-}
+@media (prefers-reduced-motion: reduce) {
+  .disc {
+    transition: none;
+  }
 
-.swatchSelected {
-  border-color: var(--color-text);
-  box-shadow: var(--ring-surface);
+  .swatch:hover .disc {
+    transform: none;
+  }
 }
 
 .check {

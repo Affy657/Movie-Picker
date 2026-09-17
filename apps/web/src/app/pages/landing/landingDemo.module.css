@@ -224,7 +224,7 @@
 .floatNoteB {
   bottom: var(--space-0);
   left: var(--space-0);
-  animation-delay: -2.6s;
+  animation-delay: var(--demo-float-offset);
 }
 
 @media (max-width: 47.9375rem) {

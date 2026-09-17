@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { TabPanel } from '@/shared/components/Tabs';
 import { History } from 'lucide-react';
 import EmptyState from '@/shared/components/EmptyState';
 import type { MyEventSummary } from '@/features/events/types';
@@ -148,7 +149,7 @@ export default function HistoryEventsPanel({
   };
 
   return (
-    <div role="tabpanel" id="myevents-panel-history" aria-labelledby="myevents-tab-history">
+    <TabPanel idBase="myevents" tabKey="history" active>
       {actions.deleteError ? (
         <p className="error" role="alert">
           {actions.deleteError}
@@ -203,6 +204,6 @@ export default function HistoryEventsPanel({
           />
         </div>
       )}
-    </div>
+    </TabPanel>
   );
 }

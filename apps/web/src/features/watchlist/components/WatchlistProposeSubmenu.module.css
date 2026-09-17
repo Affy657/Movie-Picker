@@ -42,7 +42,6 @@
 .flyout {
   position: fixed;
   z-index: var(--z-popover);
-  padding: var(--space-2);
   max-height: min(70vh, 420px);
   overflow-y: auto;
   box-sizing: border-box;
@@ -55,44 +54,9 @@
   font-style: italic;
 }
 
-.list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.row {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-}
-
-.eventRow {
-  width: 100%;
-  padding: var(--space-2) var(--space-2-5);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  text-align: left;
-  cursor: pointer;
-  transition: background var(--duration-base) var(--ease-default);
-}
-
-.eventRow:focus-visible {
-  background: var(--color-surface-hover-strong);
-  outline: var(--outline-focus);
-  outline-offset: -2px;
-}
-
-@media (hover: hover) {
-  .eventRow:hover:not(:disabled) {
-    background: var(--color-surface-hover-strong);
-    outline: none;
-  }
-}
-
-.eventRow:disabled {
-  opacity: var(--opacity-disabled);
-  cursor: default;
 }
 
 .rowStatus,

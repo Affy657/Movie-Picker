@@ -37,7 +37,7 @@ export default function Sheet({
     <Modal
       open={open}
       onClose={onClose}
-      labelledBy={titleId}
+      ariaLabelledBy={titleId}
       dialogRef={dialogRef}
       className={clsx(styles.dialog, size === 'lg' && styles.dialogTall, dragStyles.surface)}
     >
@@ -49,7 +49,7 @@ export default function Sheet({
               <h2 id={titleId} className={styles.title}>
                 {title}
               </h2>
-              <IconButton label={t('common.close')} onClick={onClose}>
+              <IconButton ariaLabel={t('common.close')} onClick={onClose}>
                 <X aria-hidden size={ICON_SIZE.md} />
               </IconButton>
             </div>

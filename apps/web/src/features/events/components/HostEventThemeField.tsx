@@ -67,7 +67,7 @@ export default function HostEventThemeField({
                 icon={X}
                 className={styles.clearThemeBtn}
                 onClick={onClear}
-                label={t('events.settings.clearThemeAria')}
+                ariaLabel={t('events.settings.clearThemeAria')}
               >
                 {t('events.settings.clearThemeButton')}
               </Chip>

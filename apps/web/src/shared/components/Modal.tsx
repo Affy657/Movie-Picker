@@ -14,8 +14,8 @@ type ModalProps = {
   onClose: () => void;
   title?: ReactNode;
   titleId?: string;
-  labelledBy?: string;
-  describedBy?: string;
+  ariaLabelledBy?: string;
+  ariaDescribedBy?: string;
   ariaLabel?: string;
   size?: ModalSize;
   surface?: ModalSurface;
@@ -26,7 +26,7 @@ type ModalProps = {
   strongBackdrop?: boolean;
   closeLabel?: string;
   className?: string;
-  testId?: string;
+  'data-testid'?: string;
   dialogRef?: RefObject<HTMLDialogElement | null>;
   children: ReactNode;
 };
@@ -36,8 +36,8 @@ export default function Modal({
   onClose,
   title,
   titleId,
-  labelledBy,
-  describedBy,
+  ariaLabelledBy,
+  ariaDescribedBy,
   ariaLabel,
   size = 'sm',
   surface = 'surface',
@@ -48,7 +48,7 @@ export default function Modal({
   strongBackdrop = false,
   closeLabel,
   className,
-  testId,
+  'data-testid': testId,
   dialogRef: externalRef,
   children,
 }: Readonly<ModalProps>) {
@@ -73,9 +73,9 @@ export default function Modal({
         strongBackdrop && styles.strongBackdrop,
         className
       )}
-      aria-labelledby={title ? resolvedTitleId : labelledBy}
-      aria-label={title || labelledBy ? undefined : ariaLabel}
-      aria-describedby={describedBy}
+      aria-labelledby={title ? resolvedTitleId : ariaLabelledBy}
+      aria-label={title || ariaLabelledBy ? undefined : ariaLabel}
+      aria-describedby={ariaDescribedBy}
       data-testid={testId}
     >
       {title ? (

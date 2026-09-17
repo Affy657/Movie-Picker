@@ -232,7 +232,7 @@ function UtilityActions({
       {onOpenSettings ? (
         <IconButton
           size="lg"
-          label={t('events.settings.title')}
+          ariaLabel={t('events.settings.title')}
           onClick={onOpenSettings}
           aria-haspopup="dialog"
         >

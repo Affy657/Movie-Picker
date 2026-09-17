@@ -20,7 +20,7 @@ export default function DialogTitleBar({
       <h2 id={titleId} className={styles.title}>
         {title}
       </h2>
-      <IconButton label={closeLabel} onClick={onClose}>
+      <IconButton ariaLabel={closeLabel} onClick={onClose}>
         <X aria-hidden size={ICON_SIZE.lg} />
       </IconButton>
     </div>

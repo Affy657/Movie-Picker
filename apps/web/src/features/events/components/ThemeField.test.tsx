@@ -48,13 +48,31 @@ describe('ThemeField', () => {
     const { onEmojiChange, onTextChange } = renderField();
 
     await user.click(screen.getByRole('button', { name: 'Choisir un emoji' }));
-    expect(screen.getByRole('listbox', { name: 'Emojis' })).toBeInTheDocument();
-    await user.click(screen.getByRole('option', { name: 'Sans emoji' }));
+    expect(screen.getByRole('radiogroup', { name: 'Emojis' })).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: 'Sans emoji' }));
     expect(onEmojiChange).toHaveBeenCalledWith('');
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /horreur/i }));
     expect(onEmojiChange).toHaveBeenCalledWith('🎃');
     expect(onTextChange).toHaveBeenCalledWith('Horreur');
+  });
+
+  it('walks the emojis with the arrows without closing, and closes on Escape', async () => {
+    const user = userEvent.setup();
+    const { onEmojiChange } = renderField({ emoji: '🎃' });
+
+    const opener = screen.getByRole('button', { name: 'Choisir un emoji' });
+    await user.click(opener);
+    expect(screen.getByRole('radio', { name: '🎃' })).toHaveFocus();
+
+    await user.keyboard('{ArrowRight}');
+    expect(onEmojiChange).toHaveBeenLastCalledWith('😂');
+    expect(screen.getByRole('radiogroup')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
   });
 
   it('unfolds the list of suggested themes', async () => {

@@ -1,4 +1,5 @@
 import { CalendarPlus } from 'lucide-react';
+import { TabPanel } from '@/shared/components/Tabs';
 import { Link } from 'react-router';
 import { ROUTES } from '@/app/routes';
 import EmptyState from '@/shared/components/EmptyState';
@@ -48,7 +49,7 @@ export default function ActiveEventsPanel({
   const closingSlug = actions.closeMutation.isPending ? (actions.confirmClose?.slug ?? null) : null;
 
   return (
-    <div role="tabpanel" id="myevents-panel-active" aria-labelledby="myevents-tab-active">
+    <TabPanel idBase="myevents" tabKey="active" active>
       {actions.leaveError ? (
         <p className="error" role="alert">
           {actions.leaveError}
@@ -75,6 +76,6 @@ export default function ActiveEventsPanel({
           <UpcomingEventsSection events={upcomingEvents} onLeave={actions.handleLeaveEvent} />
         </div>
       )}
-    </div>
+    </TabPanel>
   );
 }

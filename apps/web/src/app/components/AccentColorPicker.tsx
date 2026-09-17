@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Check } from 'lucide-react';
+import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTheme } from '@/shared/contexts/ThemeContext';
 import { useTranslation } from '@/shared/i18n';
@@ -113,52 +114,39 @@ export default function AccentColorPicker({
     [effectiveSelection, setAccent, user, patchProfile, onSaved, t]
   );
 
-  const handleKey = (e: React.KeyboardEvent, idx: number) => {
-    const last = PICKER_COLORS.length - 1;
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-      e.preventDefault();
-      commit(PICKER_COLORS[idx === last ? 0 : idx + 1]!);
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      commit(PICKER_COLORS[idx === 0 ? last : idx - 1]!);
-    } else if (e.key === 'Home') {
-      e.preventDefault();
-      commit(PICKER_COLORS[0]);
-    } else if (e.key === 'End') {
-      e.preventDefault();
-      commit(PICKER_COLORS[last]!);
-    }
-  };
-
   return (
     <>
-      <div
-        id={id}
-        role="radiogroup"
-        aria-label={ariaLabelledBy ? undefined : t('auth.account.accentColorLabel')}
-        aria-labelledby={ariaLabelledBy}
-        className={clsx(styles.root, className || undefined)}
-      >
-        {PICKER_COLORS.map((color, idx) => {
-          const selected = color === effectiveSelection;
-          return (
-            <button
-              key={color}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              aria-label={t(ACCENT_LABEL_KEY[color])}
-              tabIndex={selected ? 0 : -1}
-              className={clsx(styles.swatch, selected && styles.swatchSelected)}
-              data-accent={color}
-              style={{ ['--swatch-color' as string]: SWATCH_COLORS[color] }}
-              onClick={() => commit(color)}
-              onKeyDown={(e) => handleKey(e, idx)}
-            >
-              {selected ? <Check size={ICON_SIZE.md} className={styles.check} aria-hidden /> : null}
-            </button>
-          );
-        })}
+      <div id={id} className={clsx(styles.root, className || undefined)}>
+        <ChoiceGroup
+          value={effectiveSelection}
+          onChange={commit}
+          ariaLabel={ariaLabelledBy ? undefined : t('auth.account.accentColorLabel')}
+          ariaLabelledBy={ariaLabelledBy}
+          className={styles.swatches}
+        >
+          {PICKER_COLORS.map((color) => {
+            const selected = color === effectiveSelection;
+            return (
+              <ChoiceCard
+                key={color}
+                value={color}
+                layout="tile"
+                ariaLabel={t(ACCENT_LABEL_KEY[color])}
+                className={styles.swatch}
+                data-accent={color}
+              >
+                <span
+                  className={styles.disc}
+                  style={{ ['--swatch-color' as string]: SWATCH_COLORS[color] }}
+                >
+                  {selected ? (
+                    <Check size={ICON_SIZE.md} className={styles.check} aria-hidden />
+                  ) : null}
+                </span>
+              </ChoiceCard>
+            );
+          })}
+        </ChoiceGroup>
       </div>
       {error && (
         <p className="error" role="alert">

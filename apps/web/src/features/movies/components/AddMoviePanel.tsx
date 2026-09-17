@@ -63,7 +63,7 @@ export default function AddMoviePanel({
         <div id={panelId} className={styles.panel}>
           <div className={styles.panelHead}>
             <h3 className={styles.panelTitle}>{panelTitle}</h3>
-            <IconButton label={t('common.close')} onClick={close}>
+            <IconButton ariaLabel={t('common.close')} onClick={close}>
               <X size={ICON_SIZE.md} aria-hidden />
             </IconButton>
           </div>

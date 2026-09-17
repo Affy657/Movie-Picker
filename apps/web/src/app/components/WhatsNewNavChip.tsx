@@ -14,7 +14,7 @@ export default function WhatsNewNavChip({ onOpen }: Readonly<Props>) {
     <Chip
       tone="primary"
       icon={Sparkles}
-      label={t('nav.whatsNewAria')}
+      ariaLabel={t('nav.whatsNewAria')}
       onClick={onOpen}
       className={styles.chip}
     >

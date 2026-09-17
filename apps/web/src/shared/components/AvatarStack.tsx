@@ -13,7 +13,7 @@ interface AvatarStackProps {
   max?: number;
   hidden?: number;
   size?: 'xs' | 'sm';
-  label?: string;
+  ariaLabel?: string;
   className?: string;
 }
 
@@ -22,7 +22,7 @@ export default function AvatarStack({
   max = 3,
   hidden: hiddenOverride,
   size = 'xs',
-  label,
+  ariaLabel,
   className,
 }: Readonly<AvatarStackProps>) {
   if (people.length === 0) return null;
@@ -32,9 +32,9 @@ export default function AvatarStack({
   return (
     <span
       className={clsx(styles.stack, size === 'sm' && styles.sm, className)}
-      role={label ? 'img' : undefined}
-      aria-label={label}
-      aria-hidden={label ? undefined : true}
+      role={ariaLabel ? 'img' : undefined}
+      aria-label={ariaLabel}
+      aria-hidden={ariaLabel ? undefined : true}
     >
       {shown.map((person) => (
         <Avatar

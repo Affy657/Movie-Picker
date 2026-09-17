@@ -242,7 +242,7 @@ export default function ShareDialog({
       onClose={onClose}
       size="xs"
       column
-      labelledBy={titleId}
+      ariaLabelledBy={titleId}
       className={clsx(extraTab && styles.dialogWithTabs)}
     >
       {open && (
@@ -251,7 +251,7 @@ export default function ShareDialog({
             <h2 id={titleId} className={styles.title}>
               {title}
             </h2>
-            <IconButton className={styles.closeBtn} label={t('common.close')} onClick={onClose}>
+            <IconButton className={styles.closeBtn} ariaLabel={t('common.close')} onClick={onClose}>
               <X size={ICON_SIZE.xl} aria-hidden />
             </IconButton>
           </div>

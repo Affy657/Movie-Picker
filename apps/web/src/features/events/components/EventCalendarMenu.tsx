@@ -62,14 +62,14 @@ export default function EventCalendarMenu({
 
   return (
     <div className={styles.container} ref={menu.containerRef}>
-      <IconButton {...menu.triggerProps} size="lg" label={t('events.calendar.addButton')}>
+      <IconButton {...menu.triggerProps} size="lg" ariaLabel={t('events.calendar.addButton')}>
         <CalendarPlus size={ICON_SIZE.md} aria-hidden />
       </IconButton>
 
       {menu.open ? (
         <MenuPanel
           {...menu.panelProps}
-          label={t('events.calendar.menuLabel')}
+          ariaLabel={t('events.calendar.menuLabel')}
           className={styles.panel}
         >
           <MenuItem href={googleHref} external icon={externalIcon} onClick={menu.close}>

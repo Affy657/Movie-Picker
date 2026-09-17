@@ -46,7 +46,7 @@ export default function EventPreviewCard() {
             size="sm"
             max={DEMO_PARTICIPANTS.length}
             hidden={DEMO_HIDDEN_PARTICIPANTS}
-            label={t('landing.demo.participants')}
+            ariaLabel={t('landing.demo.participants')}
             people={DEMO_PARTICIPANTS.map((pseudo) => ({ key: pseudo, avatarId: null, pseudo }))}
           />
           <Chip tone="primary" size="sm">

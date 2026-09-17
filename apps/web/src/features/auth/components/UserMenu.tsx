@@ -70,7 +70,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
       </button>
 
       {menu.open ? (
-        <MenuPanel {...menu.panelProps} label={t('nav.accountMenu')} className={styles.panel}>
+        <MenuPanel {...menu.panelProps} ariaLabel={t('nav.accountMenu')} className={styles.panel}>
           <p className={styles.heading}>{user.displayName}</p>
           <MenuSeparator />
           {user.handle ? (

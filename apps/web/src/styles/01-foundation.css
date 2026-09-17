@@ -36,7 +36,6 @@
   --z-skip-link: 80;
 
   --ring-focus: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
-  --ring-surface: 0 0 0 2px var(--color-surface);
   --outline-focus: 2px solid var(--color-primary);
   --border-width-field: 1.5px;
 

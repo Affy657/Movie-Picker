@@ -28,14 +28,14 @@ export default function TrailerModal({
     : null;
   const visible = open && !!embedUrl;
   return (
-    <Modal open={visible} onClose={onClose} size="xl" surface="media" labelledBy={titleId}>
+    <Modal open={visible} onClose={onClose} size="xl" surface="media" ariaLabelledBy={titleId}>
       {visible && (
         <>
           <div className={styles.header}>
             <h2 id={titleId} className={styles.title}>
               {movieTitle}
             </h2>
-            <IconButton label={t('common.close')} onClick={onClose}>
+            <IconButton ariaLabel={t('common.close')} onClick={onClose}>
               <X aria-hidden size={ICON_SIZE.lg} />
             </IconButton>
           </div>

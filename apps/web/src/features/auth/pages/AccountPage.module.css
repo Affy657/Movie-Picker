@@ -18,3 +18,7 @@
   line-height: var(--leading-tight);
   color: var(--color-text);
 }
+
+.groupField {
+  margin-bottom: var(--space-4);
+}

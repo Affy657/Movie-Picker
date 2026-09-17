@@ -54,12 +54,12 @@ export default function ProposeToEventModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} size="sm" column labelledBy={titleId}>
+    <Modal open={open} onClose={onClose} size="sm" column ariaLabelledBy={titleId}>
       <div className={styles.header}>
         <h2 id={titleId} className={styles.title}>
           {t('watchlist.propose.modalTitle', { title: movie.title })}
         </h2>
-        <IconButton label={t('common.close')} onClick={onClose}>
+        <IconButton ariaLabel={t('common.close')} onClick={onClose}>
           <X aria-hidden size={ICON_SIZE.lg} />
         </IconButton>
       </div>

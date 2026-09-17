@@ -19,7 +19,7 @@ interface ChoiceGroupContextValue {
 
 const ChoiceGroupContext = createContext<ChoiceGroupContextValue | null>(null);
 
-const RADIO_SELECTOR = '[role="radio"]';
+const RADIO_SELECTOR = '[role="radio"]:not([disabled])';
 
 function radiosOf(container: HTMLElement): HTMLButtonElement[] {
   return Array.from(container.querySelectorAll<HTMLButtonElement>(RADIO_SELECTOR));
@@ -108,7 +108,7 @@ type ChoiceCardProps = Omit<
   'value' | 'onChange' | 'onClick' | 'role' | 'type' | 'title'
 > & {
   value: string;
-  label?: string;
+  ariaLabel?: string;
   title?: ReactNode;
   description?: ReactNode;
   indicator?: boolean;
@@ -119,7 +119,7 @@ type ChoiceCardProps = Omit<
 
 export function ChoiceCard({
   value,
-  label,
+  ariaLabel,
   title,
   description,
   indicator = false,
@@ -139,7 +139,7 @@ export function ChoiceCard({
       type="button"
       role="radio"
       aria-checked={selected}
-      aria-label={label}
+      aria-label={ariaLabel}
       data-value={value}
       className={clsx(
         styles.card,

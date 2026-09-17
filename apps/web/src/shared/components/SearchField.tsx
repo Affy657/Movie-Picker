@@ -12,7 +12,7 @@ export interface SearchFieldProps {
   ariaDescribedBy?: string;
   iconSize?: number;
   className?: string;
-  inputClassName?: string;
+  disabled?: boolean;
 }
 
 export default function SearchField({
@@ -24,7 +24,7 @@ export default function SearchField({
   ariaDescribedBy,
   iconSize = ICON_SIZE.md,
   className,
-  inputClassName,
+  disabled,
 }: Readonly<SearchFieldProps>) {
   return (
     <span className={clsx(styles.wrap, className)}>
@@ -32,10 +32,11 @@ export default function SearchField({
       <input
         id={id}
         type="search"
-        className={clsx(styles.input, inputClassName)}
+        className={clsx('input', styles.input)}
         placeholder={placeholder}
         aria-label={ariaLabel}
         aria-describedby={ariaDescribedBy}
+        disabled={disabled}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />

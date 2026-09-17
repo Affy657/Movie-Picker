@@ -10,6 +10,7 @@ import { ROUTES } from '@/app/routes';
 import { postPasswordResetConfirm } from '@/features/auth/api/authApi';
 import { API_ERROR_REASONS, ApiError } from '@/shared/api/apiError';
 import Button, { buttonClass } from '@/shared/components/Button';
+import Field from '@/shared/components/Field';
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -112,38 +113,43 @@ export default function ResetPasswordPage() {
               {error}
             </p>
           )}
-          <label className="label" htmlFor="reset-new-password">
-            {t('auth.resetPassword.newPasswordLabel')}
-          </label>
-          <input
-            id="reset-new-password"
-            type="password"
-            className="input"
-            autoComplete="new-password"
-            minLength={PASSWORD_MIN_LENGTH}
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-            aria-invalid={error ? true : undefined}
-            aria-describedby="reset-pwd-hint"
-          />
+          <Field label={t('auth.resetPassword.newPasswordLabel')} htmlFor="reset-new-password">
+            {({ id }) => (
+              <input
+                id={id}
+                type="password"
+                className="input"
+                autoComplete="new-password"
+                minLength={PASSWORD_MIN_LENGTH}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                aria-invalid={error ? true : undefined}
+                aria-describedby="reset-pwd-hint"
+              />
+            )}
+          </Field>
           <p className="hint" id="reset-pwd-hint">
             {t('auth.resetPassword.newPasswordHint')}
           </p>
-          <label className="label" htmlFor="reset-confirm-password">
-            {t('auth.resetPassword.confirmPasswordLabel')}
-          </label>
-          <input
-            id="reset-confirm-password"
-            type="password"
-            className="input"
-            autoComplete="new-password"
-            minLength={PASSWORD_MIN_LENGTH}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            aria-invalid={error ? true : undefined}
-          />
+          <Field
+            label={t('auth.resetPassword.confirmPasswordLabel')}
+            htmlFor="reset-confirm-password"
+          >
+            {({ id }) => (
+              <input
+                id={id}
+                type="password"
+                className="input"
+                autoComplete="new-password"
+                minLength={PASSWORD_MIN_LENGTH}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                aria-invalid={error ? true : undefined}
+              />
+            )}
+          </Field>
           <Button type="submit" variant="primary" loading={loading}>
             {loading ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
           </Button>

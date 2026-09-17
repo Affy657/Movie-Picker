@@ -25,6 +25,7 @@ import {
 import { notifIcon } from '@/features/notifications/utils/notifIcon';
 import { groupInboxItems, type InboxGroup } from '@/features/notifications/utils/groupInboxItems';
 import Button from '@/shared/components/Button';
+import Card from '@/shared/components/Card';
 import styles from './NotificationsPage.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
@@ -173,9 +174,9 @@ function NotifCard({
       for (const supersededId of group.supersededIds) onRead(supersededId);
     };
     return (
-      <div className={styles.card}>
+      <Card padding="none" elevation="sm" className={styles.card}>
         <NotifRow item={group.item} t={t} locale={locale} onRead={readSingle} />
-      </div>
+      </Card>
     );
   }
 
@@ -183,7 +184,7 @@ function NotifCard({
   const hidden = group.items.length - visible.length;
 
   return (
-    <div className={styles.card}>
+    <Card padding="none" elevation="sm" className={styles.card}>
       <p className={styles.cardHead}>{group.eventTitle}</p>
       {visible.map((item) => (
         <NotifRow
@@ -200,7 +201,7 @@ function NotifCard({
           {pluralizeCount(hidden, 'notifications.seeMoreGroupOne', 'notifications.seeMoreGroup', t)}
         </button>
       )}
-    </div>
+    </Card>
   );
 }
 

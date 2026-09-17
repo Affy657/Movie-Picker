@@ -13,18 +13,7 @@
   pointer-events: none;
 }
 
-.input {
-  width: 100%;
-  min-height: var(--tap-target-min);
-  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-9);
-  font-family: inherit;
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  background: var(--color-input-bg);
-  border: var(--border-width-field) solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.input::placeholder {
-  color: var(--color-placeholder);
+.wrap .input {
+  margin-bottom: 0;
+  padding-left: var(--space-9);
 }

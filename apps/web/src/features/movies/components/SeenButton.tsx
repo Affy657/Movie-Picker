@@ -54,7 +54,7 @@ export function SeenButton({
         <Tooltip label={othersHint}>
           <AvatarStack
             className={styles.seenAvatars}
-            label={othersHint}
+            ariaLabel={othersHint}
             people={others.map((pseudo) => ({
               key: pseudo,
               avatarId: avatarsByPseudo?.[pseudo] ?? '',

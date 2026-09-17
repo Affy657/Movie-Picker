@@ -82,6 +82,20 @@ describe('WatchlistProposeSubmenu (MSW)', () => {
     expect(await screen.findByText('Chez moi')).toBeInTheDocument();
   });
 
+  it('is a menu: the rows are menu items, Escape closes it and gives the focus back', async () => {
+    server.use(authMeGuestHandler, eligibleEventsHandler);
+    renderSubmenu();
+    const trigger = screen.getByRole('button', { name: /proposer dans une soirée/i });
+    fireEvent.focus(trigger);
+    const row = await screen.findByRole('menuitem', { name: 'Chez moi' });
+    expect(screen.getByRole('menu')).toContainElement(row);
+
+    const user = userEvent.setup();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+    expect(trigger).toHaveFocus();
+  });
+
   it('shows a message when there is no eligible movie night', async () => {
     server.use(
       authMeGuestHandler,

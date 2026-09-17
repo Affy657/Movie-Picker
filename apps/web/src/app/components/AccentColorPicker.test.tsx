@@ -102,6 +102,16 @@ describe('AccentColorPicker', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
   });
 
+  it('is a choice group: only the current swatch is tabbable', () => {
+    configure('blue');
+    render(<AccentColorPicker />);
+    expect(screen.getByRole('radiogroup')).toBeInTheDocument();
+    expect(
+      screen.getByRole('radio', { name: 'auth.account.accentColorOptions.blue' })
+    ).toHaveAttribute('tabindex', '0');
+    expect(green()).toHaveAttribute('tabindex', '-1');
+  });
+
   it('moves to the next swatch with ArrowRight', () => {
     configure('blue');
 

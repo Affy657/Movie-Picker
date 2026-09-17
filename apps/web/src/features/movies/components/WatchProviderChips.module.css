@@ -42,14 +42,14 @@
   gap: var(--space-1) var(--space-2);
 }
 
-.chip {
+.provider {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
 }
 
-.chipLogo {
+.providerLogo {
   height: var(--space-7);
   min-width: var(--space-7);
   max-width: var(--chip-max-width, 4rem);
@@ -59,7 +59,7 @@
   border: 1px solid var(--color-border-subtle);
 }
 
-.chipText {
+.providerText {
   gap: var(--space-1);
   padding: var(--space-0-5) var(--space-1-5);
   border-radius: var(--radius-xs);
@@ -69,7 +69,7 @@
   color: var(--color-text-muted);
 }
 
-.compact .chipText {
+.compact .providerText {
   font-size: var(--font-size-3xs);
 }
 
@@ -83,27 +83,27 @@
   border-radius: var(--radius-xs);
 }
 
-.chipName {
+.providerName {
   max-width: 8rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.chipLink {
+.providerLink {
   text-decoration: none;
   color: inherit;
   cursor: pointer;
 }
 
 @media (hover: hover) {
-  .chipLink:hover {
+  .providerLink:hover {
     filter: brightness(1.06);
     border-color: var(--color-primary-border-soft);
   }
 }
 
-.chipLink:focus-visible {
+.providerLink:focus-visible {
   outline: var(--outline-focus);
   outline-offset: 2px;
 }

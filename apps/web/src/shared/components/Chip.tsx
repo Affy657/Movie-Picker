@@ -17,10 +17,10 @@ type ChipProps = {
   onClick?: () => void;
   onRemove?: () => void;
   removeLabel?: string;
-  label?: string;
+  ariaLabel?: string;
   disabled?: boolean;
   className?: string;
-  testId?: string;
+  'data-testid'?: string;
   children: ReactNode;
 };
 
@@ -32,10 +32,10 @@ export default function Chip({
   onClick,
   onRemove,
   removeLabel,
-  label,
+  ariaLabel,
   disabled = false,
   className,
-  testId,
+  'data-testid': testId,
   children,
 }: Readonly<ChipProps>) {
   const classes = clsx(
@@ -72,7 +72,7 @@ export default function Chip({
         type="button"
         className={classes}
         onClick={onClick}
-        aria-label={label}
+        aria-label={ariaLabel}
         aria-pressed={selected}
         disabled={disabled}
         data-testid={testId}

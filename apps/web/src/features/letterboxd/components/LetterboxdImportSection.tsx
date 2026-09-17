@@ -181,7 +181,7 @@ export default function LetterboxdImportSection() {
               type="submit"
               size="lg"
               loading={savingUsername}
-              label={t('auth.account.letterboxd.usernameSave')}
+              ariaLabel={t('auth.account.letterboxd.usernameSave')}
             >
               <Check size={ICON_SIZE.lg} aria-hidden />
             </IconButton>
@@ -192,7 +192,7 @@ export default function LetterboxdImportSection() {
                   clearSaveError();
                   setEditing(false);
                 }}
-                label={t('common.cancel')}
+                ariaLabel={t('common.cancel')}
               >
                 <X size={ICON_SIZE.lg} aria-hidden />
               </IconButton>

@@ -18,6 +18,7 @@ import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
 import sharedStyles from './AccountShared.module.css';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import Field from '@/shared/components/Field';
 
 const PROVIDER_LABELS: Record<string, string> = { google: 'Google', github: 'GitHub' };
 const POST_PASSWORD_CHANGE_REDIRECT_MS = 4000;
@@ -154,63 +155,70 @@ function PasswordRow({ user }: Readonly<{ user: UserProfile }>) {
 
         {user.hasPassword && (
           <>
-            <label className="label" htmlFor="change-pw-current">
-              {t('auth.account.changePasswordCurrentLabel')}
-            </label>
-            <input
-              id="change-pw-current"
-              type="password"
-              className="input"
-              autoComplete="current-password"
-              value={currentPassword}
-              onChange={(e) => {
-                setCurrentPassword(e.target.value);
-                setValidationError(null);
-                clearError();
-              }}
-              required
-              aria-describedby={errorMsg ? 'change-pw-error' : undefined}
-            />
+            <Field label={t('auth.account.changePasswordCurrentLabel')} htmlFor="change-pw-current">
+              {({ id }) => (
+                <input
+                  id={id}
+                  type="password"
+                  className="input"
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    setValidationError(null);
+                    clearError();
+                  }}
+                  required
+                  aria-describedby={errorMsg ? 'change-pw-error' : undefined}
+                />
+              )}
+            </Field>
           </>
         )}
 
-        <label className="label" htmlFor="change-pw-new">
-          {t('auth.account.changePasswordNewLabel')}
-        </label>
-        <input
-          id="change-pw-new"
-          type="password"
-          className="input"
-          autoComplete="new-password"
-          value={newPassword}
-          onChange={(e) => {
-            setNewPassword(e.target.value);
-            setValidationError(null);
-          }}
-          required
-          aria-describedby="change-pw-new-hint"
-        />
-        <p id="change-pw-new-hint" className="hint">
-          {t('auth.account.changePasswordNewHint')}
-        </p>
+        <Field
+          label={t('auth.account.changePasswordNewLabel')}
+          htmlFor="change-pw-new"
+          hint={t('auth.account.changePasswordNewHint')}
+        >
+          {({ id, describedBy }) => (
+            <input
+              id={id}
+              type="password"
+              className="input"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                setValidationError(null);
+              }}
+              required
+              aria-describedby={describedBy}
+            />
+          )}
+        </Field>
 
-        <label className="label" htmlFor="change-pw-confirm">
-          {t('auth.account.changePasswordConfirmLabel')}
-        </label>
-        <input
-          id="change-pw-confirm"
-          type="password"
-          className="input"
-          autoComplete="new-password"
-          value={confirmPassword}
-          onChange={(e) => {
-            setConfirmPassword(e.target.value);
-            setValidationError(null);
-          }}
-          required
-        />
-
-        <p className="hint">{t('auth.account.passwordChangeLogoutWarning')}</p>
+        <Field
+          label={t('auth.account.changePasswordConfirmLabel')}
+          htmlFor="change-pw-confirm"
+          hint={t('auth.account.passwordChangeLogoutWarning')}
+        >
+          {({ id, describedBy }) => (
+            <input
+              id={id}
+              type="password"
+              className="input"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setValidationError(null);
+              }}
+              required
+              aria-describedby={describedBy}
+            />
+          )}
+        </Field>
 
         <div className="nav-actions">
           <Button type="submit" variant="primary" disabled={changing}>
@@ -356,26 +364,30 @@ function DeleteAccountZone({ hasPassword }: Readonly<{ hasPassword: boolean }>) 
               {errorMsg}
             </p>
           )}
-          <label className="label" htmlFor="delete-account-value">
-            {t(
+          <Field
+            label={t(
               hasPassword
                 ? 'auth.account.deleteAccountPasswordLabel'
                 : 'auth.account.deleteAccountConfirmationLabel'
             )}
-          </label>
-          <input
-            id="delete-account-value"
-            type={hasPassword ? 'password' : 'text'}
-            className="input"
-            autoComplete={hasPassword ? 'current-password' : 'off'}
-            value={value}
-            onChange={(e) => {
-              setValue(e.target.value);
-              setValidationError(null);
-              clearError();
-            }}
-            aria-describedby={errorMsg ? 'delete-account-error' : undefined}
-          />
+            htmlFor="delete-account-value"
+          >
+            {({ id }) => (
+              <input
+                id={id}
+                type={hasPassword ? 'password' : 'text'}
+                className="input"
+                autoComplete={hasPassword ? 'current-password' : 'off'}
+                value={value}
+                onChange={(e) => {
+                  setValue(e.target.value);
+                  setValidationError(null);
+                  clearError();
+                }}
+                aria-describedby={errorMsg ? 'delete-account-error' : undefined}
+              />
+            )}
+          </Field>
           <div className="nav-actions">
             <Button type="submit" tone="danger" loading={deleting}>
               {deleting

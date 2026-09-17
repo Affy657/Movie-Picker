@@ -139,7 +139,7 @@ export default function EventTemplatesRow({
                   <IconButton
                     size="lg"
                     disabled={disabled}
-                    label={t('events.settings.templates.renameAriaLabel', {
+                    ariaLabel={t('events.settings.templates.renameAriaLabel', {
                       name: template.name,
                     })}
                     onClick={() => startRename(template)}
@@ -150,7 +150,7 @@ export default function EventTemplatesRow({
                     size="lg"
                     tone="danger"
                     disabled={disabled}
-                    label={t('events.settings.templates.deleteAriaLabel', {
+                    ariaLabel={t('events.settings.templates.deleteAriaLabel', {
                       name: template.name,
                     })}
                     onClick={() => setPendingDeletion(template)}

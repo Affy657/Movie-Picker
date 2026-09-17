@@ -40,14 +40,14 @@ Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactori
 | Feuille mobile | `Sheet` | modale ancrée en bas, glissable |
 | Pastille, badge, filtre | `Chip` | tones `neutral` / `primary` / `success` / `warning` / `pending` / `danger` / `muted`, centrage optique déjà intégré |
 | Surface de contenu | `Card` | `padding` `none`/`sm`/`md`/`lg`, `radius` `md`/`lg`, `elevation` `none`/`sm`/`md`/`lg`, `interactive` |
-| Champ de formulaire | `Field`, `NumberInput`, `SearchField`, `Toggle` | `Field` câble `label`, `aria-describedby`, message d'erreur |
-| Choix exclusif entre deux à cinq options | `SegmentedRadioGroup` | `role="radiogroup"`, `size` `md` / `sm`, `iconOnly` |
-| Choix exclusif entre des cartes (titre, description, vignette) | `ChoiceGroup` + `ChoiceCard` | `indicator`, `layout` `row` / `tile`, `dashed` ; flèches et roving tabindex fournis |
+| Champ de formulaire | `Field`, `NumberInput`, `SearchField`, `Toggle` | tout `<label>` + champ passe par `Field`, qui câble `label`, `hint`, `error` et `aria-describedby` ; un `<label className="label">` écrit à la main est une erreur ; un groupe (radiogroup, interrupteur) prend un `<span className="label" id>` et `ariaLabelledBy` |
+| Choix exclusif entre deux à cinq options | `SegmentedRadioGroup` | `role="radiogroup"`, `size` `md` / `sm`, `iconOnly`, `disabled` |
+| Choix exclusif entre des cartes (titre, description, vignette, emoji, pastille de couleur) | `ChoiceGroup` + `ChoiceCard` | `indicator`, `layout` `row` / `tile`, `dashed`, `disabled` ; flèches et roving tabindex fournis ; c'est aussi le sélecteur d'emoji et celui de la couleur d'accent |
 | Ligne de réglage avec interrupteur | `ToggleRow` | `title`, `description`, `checked`, `onChange`, `disabled` |
-| Avatars chevauchés | `AvatarStack` | `people`, `max`, `hidden`, `size`, `label` |
+| Avatars chevauchés | `AvatarStack` | `people`, `max`, `hidden`, `size`, `ariaLabel` |
 | Gabarit de page | `PageLayout` | |
 | État de page | `EmptyState`, `ErrorState`, `SignedOutState`, `Skeleton`, `ErrorBoundary` | |
-| Menu, onglets, info-bulle | `Menu`, `Dropdown`, `Tabs`, `Tooltip`, `InfoBubble` | un déclencheur sur mesure prend `useMenuState()` + `MenuPanel` + `MenuItem` (`to`, `href` + `external`) ; toute liste d'onglets, même deux dans une modale, est un `Tabs` |
+| Menu, onglets, info-bulle | `Menu`, `Dropdown`, `Tabs`, `Tooltip`, `InfoBubble` | un déclencheur sur mesure prend `useMenuState()` + `MenuPanel` + `MenuItem` (`to`, `href` + `external`) ; un menu porté par un portail ou positionné en `fixed` garde son état local et compose `MenuPanel anchored={false}` + `MenuItem`, jamais un `role="menu"` à la main ; toute liste d'onglets, même deux dans une modale, est un `Tabs`, et chaque panneau un `TabPanel` |
 | Divers | `Avatar`, `QrCode`, `EventLifecyclePill`, `ViewModeToggle` | |
 
 Aucune valeur littérale dans les CSS modules, tout passe par les jetons de `apps/web/src/styles/01-foundation.css` :
@@ -81,12 +81,14 @@ Deux règles, vérifiées par `check:architecture` :
 
 Un `var(--jeton)` sans repli doit être déclaré quelque part (fondation, module, ou posé en `style={{ '--jeton': … }}` côté TypeScript) : la même porte refuse les jetons fantômes, qui rendent la propriété invalide sans erreur. Les surfaces flottantes (menus, feuilles, modales, infobulles, cartes `elevation="md"|"lg"`) posent `--color-surface-raised` : en sombre l'élévation se lit par un ton plus clair, pas par une ombre.
 
-Points de rupture, échelle fermée : `24.9375rem`, `29.9375rem`, `39.9375rem`, `47.9375rem`, `63.9375rem` en `max-width` ; `30rem`, `40rem`, `48rem`, `64rem`, `80rem` en `min-width`. Toute autre valeur est refusée. `(hover: hover)`, `(hover: none)` et `(prefers-reduced-motion: reduce)` sont les seules autres requêtes média admises.
+Points de rupture, échelle fermée : `24.9375rem`, `29.9375rem`, `39.9375rem`, `47.9375rem`, `63.9375rem` en `max-width` ; `30rem`, `40rem`, `48rem`, `64rem`, `80rem` en `min-width`. Toute autre valeur est refusée. `(hover: hover)`, `(hover: none)`, `(pointer: fine)`, `(pointer: coarse)` et `(prefers-reduced-motion: reduce)` sont les seules autres requêtes média admises.
+
+Les props d'accessibilité portent le préfixe `aria` en camelCase sur toutes les primitives : `ariaLabel`, `ariaLabelledBy`, `ariaDescribedBy`. `label` désigne toujours un texte visible (`Field`, `Tabs`, `Dropdown`, `InfoBubble`, `Tooltip`). Un composant qui étale les attributs natifs prend `data-testid` ; `Chip` et `Modal` l'acceptent aussi ; `ConfirmDialog` garde `testId` parce qu'il en dérive trois identifiants. Un `onChange` remonte toujours la valeur, `Toggle` et `ToggleRow` compris (`onChange(checked)`).
 
 Deux règles de comportement, non outillées, à tenir à la main :
 
 1. tout bloc `:hover` vit dans `@media (hover: hover)`, sinon l'état reste collé après un tap sur mobile ;
-2. toute `animation` a son pendant `@media (prefers-reduced-motion: reduce)`.
+2. toute `animation` a son pendant `@media (prefers-reduced-motion: reduce)`, et une `transition` qui déplace (`transform`) aussi.
 
 ## Centrage vertical du texte
 
@@ -142,6 +144,8 @@ Trois procédures sont rappelées par leur nom plutôt que réexpliquées à cha
 - en CSS toujours : une taille (`width`, `height`, `min-*`, `max-*`, `top`, `right`, `bottom`, `left`, `inset`) ou un `translate` littéral sous 96 px hors 1 px / 2 px ; un espacement littéral à l'intérieur d'un `calc()` ou d'un `clamp()` ; un `var(--jeton, repli)` sur un jeton de la fondation ; un jeton de la fondation que rien ne consomme ;
 - en TypeScript : un `zIndex` numérique, même conditionnel, ou un `color-mix()` sur un rôle dans un objet `style`, le jeton se pose dans le module CSS ; un `size={16}`, `iconSize={16}`, `width={16} height={16}` ou `size = 16` par défaut sur un composant, l'icône prend `ICON_SIZE.<pas>` ; un `ICON_SIZE` qui ne coïncide pas avec les `--icon-*` de la fondation ;
 - une classe `btn`, `btn-*`, `btn-link` ou `icon-btn-*` écrite à la main hors de `Button`, `IconButton` et `LinkButton` ;
+- un `role="menu"`, `menuitem`, `listbox`, `option`, `radiogroup`, `radio`, `tab`, `tablist`, `tabpanel`, `switch`, `dialog` ou `tooltip` écrit hors de `shared/components/` : la primitive existe et porte déjà le clavier ;
+- une étape de `transition` qui pose `var(--duration-*)` sans `var(--ease-*)` ;
 - un élément cliquable (bloc avec `cursor: pointer`, ou classe posée sur un `<button>`, `<a>`, `<Link>`, `Button`, `IconButton`, `LinkButton` en TSX) dont `width`, `height`, `min-width` ou `min-height` plafonne sous 44 px, jeton `--space-*` résolu ; un module qui compose `expanded` de `tapTarget.module.css` est réputé avoir traité sa zone tactile ; une classe posée sur un `<input>` natif est exemptée, son `<label>` est la cible ;
 - une classe déclarée dans un `*.module.css` et utilisée nulle part, ou dans `styles/*.css` et absente de tout fichier TypeScript et de `index.html`. La règle résout le nom local de l'import fichier par fichier, suit les ré-exports (`export { styles as xStyles }`), et compte comme usage un `composes:`, un `:global(...)` et une position descendante (`.footer .btn`). Les modules accédés par crochets (`styles[variable]`) sont inanalysables : ils sont exclus et **listés dans la sortie**, jamais passés en silence.
 

@@ -11,7 +11,7 @@ export default function EventShareButton({ onClick }: Readonly<EventShareButtonP
   const { t } = useTranslation();
 
   return (
-    <IconButton size="lg" label={t('share.trigger')} onClick={onClick} aria-haspopup="dialog">
+    <IconButton size="lg" ariaLabel={t('share.trigger')} onClick={onClick} aria-haspopup="dialog">
       <Share2 size={ICON_SIZE.md} aria-hidden />
     </IconButton>
   );

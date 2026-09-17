@@ -198,7 +198,7 @@ export default function FollowListModal({
     <Modal open onClose={onClose} size="sm" column ariaLabel={t('profile.follow.listTitle')}>
       <div className={styles.header}>
         {tabs}
-        <IconButton className={styles.closeButton} label={t('common.close')} onClick={onClose}>
+        <IconButton className={styles.closeButton} ariaLabel={t('common.close')} onClick={onClose}>
           <X size={ICON_SIZE.xl} aria-hidden />
         </IconButton>
       </div>

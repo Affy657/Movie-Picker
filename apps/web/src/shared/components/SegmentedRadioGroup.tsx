@@ -20,6 +20,7 @@ export default function SegmentedRadioGroup<T extends string>({
   id,
   size = 'md',
   iconOnly = false,
+  disabled = false,
 }: Readonly<{
   options: readonly SegmentedOption<T>[];
   value: T;
@@ -30,8 +31,10 @@ export default function SegmentedRadioGroup<T extends string>({
   id?: string;
   size?: SegmentedSize;
   iconOnly?: boolean;
+  disabled?: boolean;
 }>) {
   const handleKey = (e: React.KeyboardEvent, idx: number) => {
+    if (disabled) return;
     const last = options.length - 1;
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
       e.preventDefault();
@@ -69,6 +72,7 @@ export default function SegmentedRadioGroup<T extends string>({
             aria-checked={selected}
             aria-label={showIconAlone ? opt.label : undefined}
             tabIndex={selected ? 0 : -1}
+            disabled={disabled}
             className={clsx(
               styles.option,
               compact && styles.optionSm,

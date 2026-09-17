@@ -73,7 +73,7 @@ export default function EventParticipantsList({
               tone="warning"
               size="sm"
               className={styles.fullBadge}
-              label={t('events.participants.fullBadgeAria')}
+              ariaLabel={t('events.participants.fullBadgeAria')}
             >
               {t('events.participants.fullBadge')}
             </Chip>
@@ -174,7 +174,7 @@ export default function EventParticipantsList({
                 icon={UserPlus}
                 className={styles.inviteChip}
                 onClick={onInvite}
-                label={t('events.participants.inviteAriaLabel')}
+                ariaLabel={t('events.participants.inviteAriaLabel')}
               >
                 {t('events.participants.inviteAction')}
               </Chip>

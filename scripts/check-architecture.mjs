@@ -220,6 +220,7 @@ const MOTION_PROP =
   /(?:^|[;{\n])\s*(transition|animation)(?:-duration|-timing-function)?\s*:\s*([^;{}]+)/g;
 const LITERAL_DURATION = /(?<![\w-])\d*\.?\d+m?s\b/;
 const LITERAL_EASING = /(?<![\w-])(?:ease(?:-in|-out|-in-out)?|linear|cubic-bezier\(|steps\()/;
+const DURATION_WITHOUT_EASING = /var\(--duration-[\w-]+\)\s*(?:,|$)/;
 const BORDER_WIDTH =
   /(?:^|[;{\n])\s*(border(?:-(?:top|right|bottom|left|inline|block)(?:-(?:start|end))?)?(?:-width)?)\s*:\s*([^;{}]+)/g;
 const OUTLINE_LITERAL = /(?:^|[;{\n])\s*outline\s*:\s*(\d+px\s+solid\s+var\(--color-primary\))/g;
@@ -339,6 +340,8 @@ function checkDesignTokens(cssFiles) {
         violations.push(`${path}: ${prop}: ${shown}, use var(--duration-*)`);
       if (LITERAL_EASING.test(value))
         violations.push(`${path}: ${prop}: ${shown}, use var(--ease-*)`);
+      if (prop === 'transition' && DURATION_WITHOUT_EASING.test(value.trim()))
+        violations.push(`${path}: ${prop}: ${shown}, a duration token takes its var(--ease-*)`);
     }
 
     for (const [, prop, value] of text.matchAll(BORDER_WIDTH)) {
@@ -409,6 +412,21 @@ function checkModalPrimitive(files) {
     if (path === MODAL_TSX || file.includes('.test.')) continue;
     if (readFileSync(file, 'utf8').includes('<dialog'))
       violations.push(`${path}: hand-written <dialog>, use shared/components/Modal`);
+  }
+}
+
+const SHARED_COMPONENTS_DIR = 'apps/web/src/shared/components/';
+const HAND_WRITTEN_ROLE_RE =
+  /role="(menu|menuitem|menubar|listbox|option|radiogroup|radio|tab|tablist|tabpanel|switch|dialog|alertdialog|tooltip)"/g;
+
+function checkAriaPrimitives(files) {
+  for (const file of files) {
+    const path = rel(file);
+    if (path.startsWith(SHARED_COMPONENTS_DIR) || file.includes('.test.')) continue;
+    for (const [, role] of readFileSync(file, 'utf8').matchAll(HAND_WRITTEN_ROLE_RE))
+      violations.push(
+        `${path}: hand-written role="${role}", the primitives of shared/components/ already carry it (Menu, Dropdown, ChoiceGroup, SegmentedRadioGroup, Tabs, Toggle, Modal, Tooltip)`
+      );
   }
 }
 
@@ -722,6 +740,7 @@ checkUndeclaredTokens(
   webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
 );
 checkModalPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
+checkAriaPrimitives(webFiles.filter((f) => f.endsWith('.tsx')));
 checkButtonPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
 checkTapTargets(
   webFiles.filter((f) => f.endsWith('.css')),
@@ -748,7 +767,7 @@ if (violations.length > 0) {
   process.exit(1);
 }
 console.log(
-  'Architecture: no violation (comments, API layers, shared/ as a leaf, import cycles, design system tokens, icon and size scales, Modal and Button primitives, tap targets, dead CSS classes and tokens).'
+  'Architecture: no violation (comments, API layers, shared/ as a leaf, import cycles, design system tokens, icon and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes and tokens).'
 );
 if (cssModulesExcluded.length > 0)
   console.log(

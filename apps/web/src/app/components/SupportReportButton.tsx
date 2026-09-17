@@ -84,13 +84,13 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
           size="sm"
           column
           bottomSheetOnMobile
-          labelledBy={titleId}
+          ariaLabelledBy={titleId}
         >
           <header className={styles.header}>
             <h2 id={titleId} className={styles.title}>
               {t('support.dialogTitle')}
             </h2>
-            <IconButton label={t('common.close')} onClick={() => setOpen(false)}>
+            <IconButton ariaLabel={t('common.close')} onClick={() => setOpen(false)}>
               <X size={ICON_SIZE.lg} aria-hidden />
             </IconButton>
           </header>

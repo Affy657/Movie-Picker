@@ -52,7 +52,7 @@
   background: var(--color-surface);
 }
 
-.descriptionHint {
+.descriptionField :global(.hint) {
   text-align: right;
 }
 

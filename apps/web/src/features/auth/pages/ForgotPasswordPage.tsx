@@ -10,6 +10,7 @@ import { ROUTES, withReturnTo } from '@/app/routes';
 import { safeReturnTo } from '@/shared/utils/returnTo';
 import { postPasswordResetRequest } from '@/features/auth/api/authApi';
 import Button from '@/shared/components/Button';
+import Field from '@/shared/components/Field';
 
 export default function ForgotPasswordPage() {
   const { t, locale } = useTranslation();
@@ -66,19 +67,20 @@ export default function ForgotPasswordPage() {
               {error}
             </p>
           )}
-          <label className="label" htmlFor="forgot-email">
-            {t('auth.forgotPassword.emailLabel')}
-          </label>
-          <input
-            id="forgot-email"
-            type="email"
-            className="input"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            aria-invalid={error ? true : undefined}
-          />
+          <Field label={t('auth.forgotPassword.emailLabel')} htmlFor="forgot-email">
+            {({ id }) => (
+              <input
+                id={id}
+                type="email"
+                className="input"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                aria-invalid={error ? true : undefined}
+              />
+            )}
+          </Field>
           <Button type="submit" variant="primary" loading={loading}>
             {loading ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
           </Button>

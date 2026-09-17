@@ -98,3 +98,14 @@
   opacity: var(--opacity-dimmed);
   cursor: progress;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+
+  .btn:not(.primary):not(:disabled):hover,
+  .primary:not(:disabled):hover {
+    transform: none;
+  }
+}

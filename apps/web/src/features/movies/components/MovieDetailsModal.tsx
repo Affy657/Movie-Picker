@@ -145,7 +145,7 @@ export default function MovieDetailsModal({
       bottomSheetOnMobile
       column
       anchoredTop
-      labelledBy={titleId}
+      ariaLabelledBy={titleId}
       dialogRef={dialogRef}
       className={clsx(styles.dialog, dragStyles.surface)}
     >
@@ -174,7 +174,7 @@ export default function MovieDetailsModal({
                   {voteLabel ? <span>{voteLabel}</span> : null}
                 </p>
               </div>
-              <IconButton label={t('common.close')} onClick={onClose}>
+              <IconButton ariaLabel={t('common.close')} onClick={onClose}>
                 <X aria-hidden size={ICON_SIZE.lg} />
               </IconButton>
             </div>

@@ -7,7 +7,7 @@ interface ToggleRowProps {
   title: string;
   description?: string;
   checked: boolean;
-  onChange: () => void;
+  onChange: (checked: boolean) => void;
   disabled?: boolean;
   className?: string;
 }
@@ -30,7 +30,7 @@ export default function ToggleRow({
         </span>
         {description ? <span className={styles.description}>{description}</span> : null}
       </span>
-      <Toggle checked={checked} onChange={onChange} disabled={disabled} labelledBy={titleId} />
+      <Toggle checked={checked} onChange={onChange} disabled={disabled} ariaLabelledBy={titleId} />
     </div>
   );
 }

@@ -36,7 +36,7 @@ export default function EventCardMenu({
         <MoreVertical aria-hidden size={ICON_SIZE.md} />
       </button>
       {menu.open ? (
-        <MenuPanel {...menu.panelProps} label={label}>
+        <MenuPanel {...menu.panelProps} ariaLabel={label}>
           {onReuse && (
             <MenuItem
               icon={<RotateCcw size={ICON_SIZE.sm} aria-hidden />}

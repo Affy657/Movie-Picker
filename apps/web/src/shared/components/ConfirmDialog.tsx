@@ -55,9 +55,9 @@ export default function ConfirmDialog({
       onClose={onCancel}
       size="xs"
       padded
-      labelledBy={titleId}
-      describedBy={messageId}
-      testId={testId}
+      ariaLabelledBy={titleId}
+      ariaDescribedBy={messageId}
+      data-testid={testId}
     >
       <h2 id={titleId} className={styles.title}>
         {title}

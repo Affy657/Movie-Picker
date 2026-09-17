@@ -145,7 +145,9 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
             checked={subscribed}
             disabled={pushLoading || permission === 'denied'}
             onChange={togglePush}
-            label={subscribed ? t('notifications.disableButton') : t('notifications.enableButton')}
+            ariaLabel={
+              subscribed ? t('notifications.disableButton') : t('notifications.enableButton')
+            }
           />
         </div>
       </div>
@@ -162,7 +164,7 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
                   </span>
                   <Toggle
                     checked={prefs[type] ?? true}
-                    labelledBy={`notif-pref-${type}`}
+                    ariaLabelledBy={`notif-pref-${type}`}
                     disabled={savingPref === type}
                     onChange={() => handleTogglePref(type)}
                   />

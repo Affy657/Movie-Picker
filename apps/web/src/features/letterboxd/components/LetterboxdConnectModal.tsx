@@ -63,7 +63,7 @@ function ConnectFormModal({
   };
 
   return (
-    <Modal open onClose={onClose} size="sm" column labelledBy={titleId}>
+    <Modal open onClose={onClose} size="sm" column ariaLabelledBy={titleId}>
       <DialogTitleBar
         titleId={titleId}
         title={
@@ -187,7 +187,7 @@ function DoneModal({
   const undecidedCount = undecidedTitles.length;
 
   return (
-    <Modal open onClose={onClose} size="sm" column labelledBy={titleId}>
+    <Modal open onClose={onClose} size="sm" column ariaLabelledBy={titleId}>
       <DialogTitleBar
         titleId={titleId}
         title={t('auth.account.letterboxd.doneTitle')}

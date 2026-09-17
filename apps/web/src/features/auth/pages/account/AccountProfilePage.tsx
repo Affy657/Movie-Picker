@@ -9,6 +9,7 @@ import type { UserProfile } from '@/features/auth/types';
 import AccountSavedChip from './AccountSavedChip';
 import { useSavedFlash } from './useSavedFlash';
 import styles from './AccountShared.module.css';
+import Field from '@/shared/components/Field';
 
 const BIO_MAX_LENGTH = 140;
 const BIO_HINT_THRESHOLD = 20;
@@ -112,43 +113,45 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
 
       <div className={styles.card}>
         <div className={styles.field}>
-          <label className="label" htmlFor="profile-displayName">
-            {t('auth.account.pseudoLabel')}
-          </label>
-          <input
-            id="profile-displayName"
-            type="text"
-            className="input"
-            autoComplete="nickname"
-            value={displayName}
-            onChange={(e) => {
-              setDisplayName(e.target.value);
-              scheduleSave();
-            }}
-            onBlur={() => void flush()}
-            required
-            maxLength={80}
-            aria-describedby={pseudoError ? 'profile-displayName-error' : undefined}
-          />
+          <Field label={t('auth.account.pseudoLabel')} htmlFor="profile-displayName">
+            {({ id }) => (
+              <input
+                id={id}
+                type="text"
+                className="input"
+                autoComplete="nickname"
+                value={displayName}
+                onChange={(e) => {
+                  setDisplayName(e.target.value);
+                  scheduleSave();
+                }}
+                onBlur={() => void flush()}
+                required
+                maxLength={80}
+                aria-describedby={pseudoError ? 'profile-displayName-error' : undefined}
+              />
+            )}
+          </Field>
         </div>
 
         <div className={styles.field}>
-          <label className="label" htmlFor="profile-bio">
-            {t('profile.settings.bioLabel')}
-          </label>
-          <textarea
-            id="profile-bio"
-            className="input"
-            value={bio}
-            onChange={(e) => {
-              setBio(e.target.value);
-              scheduleSave();
-            }}
-            onBlur={() => void flush()}
-            maxLength={BIO_MAX_LENGTH}
-            rows={2}
-            aria-describedby={showBioHint ? 'profile-bio-hint' : undefined}
-          />
+          <Field label={t('profile.settings.bioLabel')} htmlFor="profile-bio">
+            {({ id }) => (
+              <textarea
+                id={id}
+                className="input"
+                value={bio}
+                onChange={(e) => {
+                  setBio(e.target.value);
+                  scheduleSave();
+                }}
+                onBlur={() => void flush()}
+                maxLength={BIO_MAX_LENGTH}
+                rows={2}
+                aria-describedby={showBioHint ? 'profile-bio-hint' : undefined}
+              />
+            )}
+          </Field>
           {showBioHint && (
             <p id="profile-bio-hint" className="hint" aria-live="polite">
               {t('profile.settings.bioHint', { count: String(bioCharsLeft) })}
@@ -167,7 +170,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
           </div>
           <Toggle
             checked={isPublic}
-            label={t('profile.settings.visibilityLabel')}
+            ariaLabel={t('profile.settings.visibilityLabel')}
             onChange={() => {
               const next = !isPublic;
               setIsPublic(next);
@@ -188,7 +191,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
           <Toggle
             checked={isWatchlistPublic}
             disabled={!isPublic}
-            label={t('profile.settings.watchlistVisibilityLabel')}
+            ariaLabel={t('profile.settings.watchlistVisibilityLabel')}
             onChange={() => {
               const next = !isWatchlistPublic;
               setIsWatchlistPublic(next);
