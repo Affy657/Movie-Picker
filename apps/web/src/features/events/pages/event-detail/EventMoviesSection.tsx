@@ -1,4 +1,14 @@
-import { lazy, Suspense, useCallback, useId, useMemo, useState, type RefObject } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useId,
+  useMemo,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import clsx from 'clsx';
 import { Film, Plus } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
@@ -128,6 +138,55 @@ function useMovieSort() {
   return { sortBy, sortDir, setSort };
 }
 
+type SharedMovieListProps = Omit<
+  ComponentProps<typeof MovieList>,
+  'movies' | 'emptyState' | 'showRank' | 'showHeader' | 'sortBy' | 'sortDir' | 'onSetSort'
+>;
+
+type VoteQuota = { used: number; max: number } | null;
+
+function voteQuotaFor(
+  maxVotes: number | null,
+  hasParticipant: boolean,
+  isFinished: boolean,
+  used: number
+): VoteQuota {
+  if (maxVotes === null || !hasParticipant || isFinished) return null;
+  return { used, max: maxVotes };
+}
+
+function wheelExclusionErrorKey(excluded: boolean) {
+  return excluded ? 'movies.list.excludeFromWheelError' : 'movies.list.includeInWheelError';
+}
+
+function VoteLimitDialog({
+  open,
+  maxVotes,
+  onClose,
+}: Readonly<{ open: boolean; maxVotes: number | null; onClose: () => void }>) {
+  const { t } = useTranslation();
+  const max = maxVotes ?? 0;
+  return (
+    <ConfirmDialog
+      open={open}
+      title={t('movies.list.voteLimitReachedTitle')}
+      message={pluralizeCount(
+        max,
+        'movies.list.voteLimitReachedOne',
+        'movies.list.voteLimitReachedMany',
+        t,
+        { max }
+      )}
+      confirmLabel={t('movies.list.voteLimitReachedOk')}
+      confirmTone="default"
+      hideCancel
+      onConfirm={onClose}
+      onCancel={onClose}
+      testId="vote-limit-dialog"
+    />
+  );
+}
+
 function lockedVoteQuotaHint(
   quota: { used: number; max: number } | null,
   t: ReturnType<typeof useTranslation>['t']
@@ -176,8 +235,7 @@ export default function EventMoviesSection({
     useEventMovieVoting({ slug, participant, movies, layout, setActionError, refreshAll });
   const maxVotes = event.config?.maxVotesPerParticipant ?? null;
   const votesUsed = useMemo(() => movies.filter((m) => m.myVote != null).length, [movies]);
-  const voteQuota =
-    maxVotes !== null && participant && !isFinished ? { used: votesUsed, max: maxVotes } : null;
+  const voteQuota = voteQuotaFor(maxVotes, !!participant, isFinished, votesUsed);
   const voteQuotaLockedHint = lockedVoteQuotaHint(voteQuota, t);
 
   const handleToggleWheelExclusion = useCallback(
@@ -187,14 +245,7 @@ export default function EventMoviesSection({
       void setMovieWheelExclusion(slug, m.id, excluded, hostToken)
         .then(refreshAll)
         .catch((e: unknown) => {
-          setActionError(
-            getErrorMessage(
-              e,
-              excluded
-                ? t('movies.list.excludeFromWheelError')
-                : t('movies.list.includeInWheelError')
-            )
-          );
+          setActionError(getErrorMessage(e, t(wheelExclusionErrorKey(excluded))));
         });
     },
     [slug, hostToken, setActionError, refreshAll, t]
@@ -263,7 +314,7 @@ export default function EventMoviesSection({
     />
   );
 
-  const sharedListProps = {
+  const sharedListProps: SharedMovieListProps = {
     slug,
     participantId: participant?.participantId ?? null,
     canVote: !isFinished,
@@ -355,57 +406,73 @@ export default function EventMoviesSection({
       ) : null}
 
       {moviesQuery.isSuccess && (
-        <>
-          <div
-            className={
-              layout === 'list' && inWheelMovies.length > 0 ? styles.movieListBleed : undefined
-            }
-          >
-            <MovieList
-              movies={inWheelMovies}
-              {...sharedListProps}
-              emptyState={emptyState}
-              showRank={sortBy === 'score' && sortDir === 'desc' && !isFinished}
-              showHeader
-              sortBy={sortBy}
-              sortDir={sortDir}
-              onSetSort={handleSetSort}
-            />
-          </div>
-          {excludedMovies.length > 0 && (
-            <>
-              <div className={styles.wheelDivider}>
-                <span className={styles.wheelDividerLabel}>
-                  {t('movies.list.excludedGroupLabel')}
-                </span>
-                <span className={styles.wheelDividerCount}>{excludedMovies.length}</span>
-                <span className={styles.wheelDividerLine} aria-hidden />
-              </div>
-              <div className={layout === 'list' ? styles.movieListBleed : undefined}>
-                <MovieList movies={excludedMovies} {...sharedListProps} showHeader={false} />
-              </div>
-            </>
-          )}
-        </>
+        <EventMovieLists
+          layout={layout}
+          inWheelMovies={inWheelMovies}
+          excludedMovies={excludedMovies}
+          listProps={sharedListProps}
+          emptyState={emptyState}
+          showRank={sortBy === 'score' && sortDir === 'desc' && !isFinished}
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSetSort={handleSetSort}
+        />
       )}
 
-      <ConfirmDialog
-        open={voteLimitReached}
-        title={t('movies.list.voteLimitReachedTitle')}
-        message={pluralizeCount(
-          maxVotes ?? 0,
-          'movies.list.voteLimitReachedOne',
-          'movies.list.voteLimitReachedMany',
-          t,
-          { max: maxVotes ?? 0 }
-        )}
-        confirmLabel={t('movies.list.voteLimitReachedOk')}
-        confirmTone="default"
-        hideCancel
-        onConfirm={dismissVoteLimit}
-        onCancel={dismissVoteLimit}
-        testId="vote-limit-dialog"
-      />
+      <VoteLimitDialog open={voteLimitReached} maxVotes={maxVotes} onClose={dismissVoteLimit} />
     </section>
+  );
+}
+
+function EventMovieLists({
+  layout,
+  inWheelMovies,
+  excludedMovies,
+  listProps,
+  emptyState,
+  showRank,
+  sortBy,
+  sortDir,
+  onSetSort,
+}: Readonly<{
+  layout: 'grid' | 'list';
+  inWheelMovies: MovieData[];
+  excludedMovies: MovieData[];
+  listProps: SharedMovieListProps;
+  emptyState: ReactNode;
+  showRank: boolean;
+  sortBy: MovieRowSortKey;
+  sortDir: 'asc' | 'desc';
+  onSetSort: (key: MovieRowSortKey) => void;
+}>) {
+  const { t } = useTranslation();
+  const bleed = layout === 'list' ? styles.movieListBleed : undefined;
+  return (
+    <>
+      <div className={inWheelMovies.length > 0 ? bleed : undefined}>
+        <MovieList
+          movies={inWheelMovies}
+          {...listProps}
+          emptyState={emptyState}
+          showRank={showRank}
+          showHeader
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSetSort={onSetSort}
+        />
+      </div>
+      {excludedMovies.length > 0 && (
+        <>
+          <div className={styles.wheelDivider}>
+            <span className={styles.wheelDividerLabel}>{t('movies.list.excludedGroupLabel')}</span>
+            <span className={styles.wheelDividerCount}>{excludedMovies.length}</span>
+            <span className={styles.wheelDividerLine} aria-hidden />
+          </div>
+          <div className={bleed}>
+            <MovieList movies={excludedMovies} {...listProps} showHeader={false} />
+          </div>
+        </>
+      )}
+    </>
   );
 }
