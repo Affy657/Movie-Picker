@@ -61,8 +61,10 @@ jobs:
             echo "::error::'$COMMIT' is not a commit SHA (7 to 40 hexadecimal characters)."
             exit 1
           fi
+          # Artifacts live 30 days, so deploy runs older than that cannot own an eligible archive.
+          since="$(date -u -d '31 days ago' +%Y-%m-%d)"
           deploy_runs="$(gh api --paginate \
-            "repos/$GITHUB_REPOSITORY/actions/workflows/deploy.yml/runs?branch=master&per_page=100" \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/deploy.yml/runs?branch=master&created=%3E%3D$since&per_page=100" \
             --jq '.workflow_runs[] | select(.head_repository.fork | not) | .id' | jq -sc '.')"
           all="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
             | jq -r --argjson deploy_runs "$deploy_runs" '.artifacts[]

@@ -33,6 +33,8 @@ public sealed class PostersControllerTests
         var result = await controller.Get(ValidKey, store.Object, CancellationToken.None);
 
         Assert.IsType<NotFoundResult>(result);
+        Assert.Equal("no-store", controller.Response.Headers.CacheControl);
+        Assert.False(controller.Response.Headers.ContainsKey("ETag"));
     }
 
     [Fact]

@@ -34,7 +34,7 @@ public sealed class PostersController : ControllerBase
         var blob = await store.GetByKeyAsync(k, ct);
         if (blob is null)
         {
-            Response.Headers.Remove("Cache-Control");
+            Response.Headers.CacheControl = "no-store";
             Response.Headers.Remove("ETag");
             return NotFound();
         }
