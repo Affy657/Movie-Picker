@@ -10,7 +10,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 - **MVP** : parcours minimal utilisable côté utilisateur.
 - **V1, V1.1, V1.2** : releases produit progressives sur la spec complète, sans casser le cœur métier.
-- **V1.3 à V1.8** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
+- **V1.3 à V1.9** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
 - **Backlog** : idées et sujets non planifiés sur une date de release, triés régulièrement. Un backlog produit et un backlog tech, séparés, à la fin du fichier.
 - **Une branche par version** : chaque version se développe sur une branche qui porte son nom (`v1.6`, `v1.7`, …). Toutes les features de la version sont livrées sur cette branche, et elle n'est fusionnée dans `master` qu'une fois la version complète. Sur cette branche, la CI GitHub Actions n'est pas bloquante ; la production part à la fusion.
 - **Tailles t-shirt** : chaque item porte une estimation de charge, indépendante de sa valeur produit, pour comparer les versions autrement qu'au nombre de tickets. Échelle calibrée sur l'empreinte réelle des features déjà livrées.
@@ -233,33 +233,32 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
 - ⬜ `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
 
-**Tech**
-
-- ✅ ⚙️ `M` **Cache partagé des sélections** : les rangées de la home, les collections et l'enrichissement TMDB gardent un second niveau de cache dans Mongo, relu par toute instance Cloud Run neuve au lieu de refaire jusqu'à 290 appels TMDB (6 à 10 s par requête mesurées dans les logs). Les requêtes simultanées sur une même clé partagent un seul chargement, les réponses JSON sont compressées et les endpoints publics portent un cache navigateur. L'image API part en ReadyToRun.
-- ✅ ⚙️ `M` **Démarrage du front sans Sentry sur le chemin critique** : React monte avant le SDK, qui se charge au premier temps libre et rejoue les erreurs capturées entre-temps ; la porte Lighthouse construit désormais avec un DSN pour mesurer ce que la production reçoit. Le découpage du bundle passe par `codeSplitting` de rolldown, l'option héritée de Rollup étant ignorée sous Vite 8, et la coquille embarque sa fermeture statique : 7 requêtes de moins par page.
-- ✅ ⚙️ `S` **Page soirée allégée** : la liste des films part sans attendre la réponse de la soirée, les fenêtres (partage, paramètres, roue, proposition) se chargent à la première ouverture et se préchargent au premier temps libre, la roue dessine son disque une fois puis le fait tourner. 22 fichiers JS au lieu de 37 et 35 Ko brotli de moins pour un invité qui ouvre un lien.
-- ✅ 🔒 `L` **Audit du back** : jeton d'hôte en en-tête et masqué dans les logs et Sentry, liaison OAuth refusée sur un compte à mot de passe, HSTS, hachage factice au login, affiches et endpoints push restreints. Versions optimistes sur soirées et utilisateurs, cascades transactionnelles, plafonds de participants, propositions et votes vérifiés sous verrou d'écriture en transaction. Champ `startAtUtc` indexé, index créés une fois par spécification, sessions en cache, quotas sur toutes les mutations, une seule horloge, tests de contrat des dépôts joués en mémoire et sur Mongo.
-- ✅ ⚙️ `S` **Home plus tôt** : les rangées de sélections sont demandées dès le montage de la coquille, avant le chunk de la page, et le service worker les sert depuis son cache en rafraîchissant derrière. PostHog attend le premier temps libre, et les pages de la navigation se préchargent au survol ou au focus.
-- ✅ 🏗️ `S` **Audit système** : le pool de connexions de l'API tient dans le budget du cluster quel que soit le nombre d'instances, le cache d'affiches (97 % des données) se purge de lui-même, et un retour arrière de l'API ne perd plus ce qu'une version plus récente a écrit.
-
 
 ---
 
 ---
 
-## 📋 V1.8 – Planifiée (39 points)
+## 📋 V1.8 – Planifiée (24 points)
 
-**Objectif** : ce que chacun garde de ses soirées, des notes aux films vus, et le confort personnel au quotidien.
+**Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
-- ⬜ `M` **Note d'un film vu** : noter un film qu'on vient de voir directement dans Movie Picker, sur l'échelle choisie dans les paramètres de compte. Un bouton renvoie vers sa fiche Letterboxd ou IMDb pour l'y noter aussi.
-- ⬜ `L` **Import des films vus depuis Letterboxd** : reprendre les films déjà vus d'un compte Letterboxd avec la note posée sur chacun, qui alimentent le marqueur « déjà vu » et les notes Movie Picker. Complète la synchronisation de watchlist livrée en V1.4.
-- ⬜ `L` **Partage de soirée en story** : carte recap partageable après la soirée, avec le ou les films gagnants, les participants et les notes de chacun, au format des stories des réseaux sociaux.
-- ⬜ `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation ; recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème.
+- ⬜ `M` **Note d'un film vu** : une fois la soirée terminée, chaque participant note le film choisi sur l'échelle réglée dans ses paramètres, depuis la page soirée. Un bouton renvoie vers sa fiche Letterboxd ou IMDb pour l'y noter aussi.
+- ⬜ `M` **Relance du lendemain** : le lendemain de la soirée, chaque participant qui n'a pas encore noté reçoit une notification push et in-app qui ouvre directement la note du film vu. C'est le premier contact avec un invité venu par lien une fois la soirée passée.
+- ⬜ `M` **Page recap publique de soirée** : une page en lecture seule, accessible sans compte, résume le ou les films choisis, les participants et leurs notes, avec un aperçu Open Graph. Un visiteur y trouve un bouton « Organise la tienne » qui mène à la création de compte et de soirée.
+- ⬜ `L` **Partage de soirée en story** : image au format des stories des réseaux sociaux générée depuis le recap, avec le lien de la page recap, envoyée par le partage natif du téléphone ou téléchargée depuis la page soirée.
 - ⬜ `M` **Top 3 films préférés sur le profil** : sélectionner et afficher trois films favoris sur son profil public `/u/:handle` via une recherche TMDB, visibles par tous et modifiables depuis les paramètres.
 - ⬜ `M` **Photo de profil personnalisée** : téléverser une image comme photo de profil, en remplacement de l'avatar généré actuel.
-- ⬜ `M` **Consultation hors-ligne de la dernière soirée** : la dernière vue soirée reste lisible sans réseau, avec une bannière « Données en cache, reconnexion en cours ». Lecture seule : les actions attendent le retour du réseau.
-- ⬜ `S` **Détail des films vus** : le compteur « films vus » des statistiques du profil devient cliquable et ouvre la liste des films marqués « déjà vu ».
 - ⬜ `S` **Pioche aléatoire dans la watchlist** : bouton qui tire un film au hasard parmi les films à voir de la watchlist, proposable dans une soirée en un clic.
+
+---
+
+## 📋 V1.9 – Planifiée (20 points)
+
+**Objectif** : la bibliothèque personnelle et le confort au quotidien.
+
+- ⬜ `L` **Import des films vus depuis Letterboxd** : reprendre les films déjà vus d'un compte Letterboxd avec la note posée sur chacun, qui alimentent le marqueur « déjà vu » et les notes Movie Picker. Complète la synchronisation de watchlist livrée en V1.4.
+- ⬜ `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation ; recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème.
+- ⬜ `M` **Consultation hors-ligne de la dernière soirée** : la dernière vue soirée reste lisible sans réseau, avec une bannière « Données en cache, reconnexion en cours ». Lecture seule : les actions attendent le retour du réseau.
 - ⬜ `S` **Écart watchlist Movie Picker / Letterboxd** : pour les comptes synchronisés, badge sur les films de la watchlist Movie Picker absents de celle de Letterboxd, typiquement ceux ajoutés depuis une soirée.
 
 ---
@@ -268,7 +267,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 > **Note V2, application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
-- `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Depend de la synchronisation temps réel (V1.7) et de la consultation hors-ligne (V1.8).
+- `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Depend de la synchronisation temps réel (V1.7) et de la consultation hors-ligne (V1.9).
 - `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion.
 - `M` **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
 - `L` **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
