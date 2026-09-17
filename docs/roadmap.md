@@ -1,6 +1,4 @@
-# Movie Picker – Roadmap
-
-**Nom du projet : Movie Picker.**
+# Roadmap de Movie Picker
 
 Découpage par version, côté **métier / utilisateur** puis côté **plateforme**. Chaque version liste d'abord ses features, puis une section **Tech** pour le travail transverse.
 
@@ -12,7 +10,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 - **V1, V1.1, V1.2** : releases produit progressives sur la spec complète, sans casser le cœur métier.
 - **V1.3 à V1.9** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
 - **Backlog** : idées et sujets non planifiés sur une date de release, triés régulièrement. Un backlog produit et un backlog tech, séparés, à la fin du fichier.
-- **Une branche par version** : chaque version se développe sur une branche qui porte son nom (`v1.6`, `v1.7`, …). Toutes les features de la version sont livrées sur cette branche, et elle n'est fusionnée dans `master` qu'une fois la version complète. Sur cette branche, la CI GitHub Actions n'est pas bloquante ; la production part à la fusion.
+- **Une branche par version** : chaque version se développe sur une branche qui porte son nom (`v1.6`, `v1.7`, …). Toutes les features de la version sont livrées sur cette branche, et elle n'est fusionnée dans `master` qu'une fois la version complète. Sur cette branche, la CI GitHub Actions n'est pas bloquante ; la fusion dans `master` rend la version déployable, et le déploiement reste un geste manuel (`deploy.yml`, voir `AGENTS.md`).
 - **Tailles t-shirt** : chaque item porte une estimation de charge, indépendante de sa valeur produit, pour comparer les versions autrement qu'au nombre de tickets. Échelle calibrée sur l'empreinte réelle des features déjà livrées.
   - `S` : moins de 800 lignes, une seule couche (front ou API), pas de changement de modèle.
   - `M` : 800 à 2000 lignes, front et API, au plus un champ ajouté au modèle.
@@ -26,7 +24,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 ---
 
-## ✅ MVP – Livré (32 points produit, 34 points tech)
+## ✅ MVP, livré (32 points produit, 34 points tech)
 
 **Objectif** : application démoable avec le parcours Movie Picker minimal.
 
@@ -50,7 +48,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 ---
 
-## ✅ V1 – Livré (42 points produit, 26 points tech)
+## ✅ V1, livrée (42 points produit, 26 points tech)
 
 **Objectif** : compte utilisateur, config hôte, marqueur « déjà vu », confort de partage, enrichissement film léger.
 
@@ -81,7 +79,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 ---
 
-## ✅ V1.1 – Livré (23 points produit, 3 points tech)
+## ✅ V1.1, livrée (23 points produit, 3 points tech)
 
 **Objectif** : contenu film riche, options de soirée, historique, UX avancée.
 
@@ -100,7 +98,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 ---
 
-## ✅ V1.2 – Livré (23 points produit, 7 points tech)
+## ✅ V1.2, livrée (23 points produit, 7 points tech)
 
 **Objectif** : vie sociale de l'app, identité utilisateur et engagement.
 
@@ -121,7 +119,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 ---
 
-## ✅ V1.3 – Livré (28 points produit, 4 points tech)
+## ✅ V1.3, livrée (28 points produit, 4 points tech)
 
 **Objectif** : polish et qualité perçue, avec roue visuelle, finitions UX, conformité légale et enrichissement des données film.
 
@@ -144,7 +142,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 ---
 
-## ✅ V1.4 – Livré (49 points produit, 3 points tech)
+## ✅ V1.4, livrée (49 points produit, 3 points tech)
 
 **Objectif** : outils hôte avancés, bibliothèque personnelle, engagement utilisateur et ouverture de la plateforme, avec watchlist, intégration Letterboxd, sélection manuelle, streak de soirées, connexion sociale, dons, bouton pour proposer une idée et modale de nouveautés.
 
@@ -165,7 +163,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 ---
 
-## ✅ V1.5 – Livré (36 points)
+## ✅ V1.5, livrée (36 points)
 
 **Objectif** : home page inspirationnelle, qui transforme l'accueil en vrai point d'entrée du produit, accessible sans compte et enrichi une fois connecté.
 
@@ -199,7 +197,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## ✅ V1.6 – Livré (26 points produit, 12 points tech)
+## ✅ V1.6, livrée (26 points produit, 12 points tech)
 
 **Objectif** : compléter la boucle sociale entamée en V1.2 et ritualiser la soirée. Items classés par valeur utilisateur décroissante.
 
@@ -221,7 +219,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7 – Planifiée (34 points, 34 restants)
+## 📋 V1.7, planifiée (34 points produit, 17 points tech, 34 restants)
 
 **Objectif** : faire passer la soirée en temps réel et armer l'hôte, avec la sécurité du compte en complément.
 
@@ -233,12 +231,9 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
 - ⬜ `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
 
-
 ---
 
----
-
-## 📋 V1.8 – Planifiée (24 points)
+## 📋 V1.8, planifiée (24 points)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
@@ -252,7 +247,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.9 – Planifiée (20 points)
+## 📋 V1.9, planifiée (20 points)
 
 **Objectif** : la bibliothèque personnelle et le confort au quotidien.
 

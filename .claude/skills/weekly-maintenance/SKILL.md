@@ -27,7 +27,7 @@ Sources indépendantes, à interroger en parallèle.
 
 **2. Alertes de sécurité GitHub.** Dependabot alerts et code scanning. Croiser avec la source 1 : une alerte déjà couverte par une PR ouverte n'est pas une ligne de plus.
 
-**3. SonarCloud.** Vérifier **d'abord la date de la dernière analyse réussie** : un Quality Gate vert ne prouve pas que l'analyse a tourné, au plafond des 50 000 lignes elle échoue côté serveur et la main reste verte sur une photo périmée. Si elle est plus ancienne que le dernier commit de master, c'est le premier point à traiter et le reste des chiffres ne veut rien dire.
+**3. SonarCloud.** Vérifier **d'abord la date de la dernière analyse réussie** : un Quality Gate vert ne prouve pas que l'analyse a tourné, elle peut échouer côté serveur (c'est arrivé au plafond de lignes du palier gratuit, levé depuis que le projet est public) et la main reste verte sur une photo périmée. Si elle est plus ancienne que le dernier commit de master, c'est le premier point à traiter et le reste des chiffres ne veut rien dire.
 
 Récupérer ensuite les issues ouvertes de `master`, **en séparant celles du new code period du reste** : ce sont elles qui pilotent le Quality Gate, et c'est cette distinction qui rend le volume traitable.
 
@@ -39,7 +39,7 @@ Récupérer ensuite les issues ouvertes de `master`, **en séparant celles du ne
 
 **7. Socle.** Quatre vérifications courtes, invisibles autrement : expiration du certificat, joignabilité des domaines, dernier statut des workflows planifiés (`security-scan.yml`, `registry-cleanup.yml`, `backup-mongo.yml`), et les versions des outils épinglés à la main dans les workflows et les scripts (`pnpm run check:tools`). Un job planifié qui échoue ne bloque rien et n'est donc vu par personne ; un outil épinglé à la main n'est suivi par aucun écosystème Dependabot, gitleaks avait six versions de règles de retard le 2026-09-17 sans que rien ne le dise.
 
-**8. Scores Lighthouse.** Télécharger le dernier rapport archivé et lire les scores réels, pas seulement le vert ou le rouge. `accessibility` et `best-practices` sont à 100, donc **sans aucune marge** : lire les scores permet de voir venir la régression avant qu'elle ne bloque `deploy-front`. Le rapport vient du dernier run de `deploy.yml`, pas d'un run master : la porte est passée sur le chemin du déploiement le 2026-09-10. Comme le déploiement est manuel, la mesure peut avoir plusieurs semaines — noter sa date dans le rapport, un score de trois semaines ne dit rien du master d'aujourd'hui.
+**8. Scores Lighthouse.** Télécharger le dernier rapport archivé et lire les scores réels, pas seulement le vert ou le rouge. `accessibility` et `best-practices` sont à 100, donc **sans aucune marge** : lire les scores permet de voir venir la régression avant qu'elle ne bloque `deploy-front`. Le rapport vient du dernier run de `deploy.yml`, pas d'un run master : la porte est passée sur le chemin du déploiement le 2026-09-10. Comme le déploiement est manuel, la mesure peut avoir plusieurs semaines : noter sa date dans le rapport, un score de trois semaines ne dit rien du master d'aujourd'hui.
 
 **9. Bug reports et état de la prod.** Issues `bug` ouvertes, les 3 derniers runs de master, et **l'écart entre `master` et ce qui est déployé** : le déploiement étant manuel, la prod est en retard par défaut et personne ne le signale. Comparer le SHA de la révision Cloud Run active à `git rev-parse origin/master`. Une prod déjà en retard avant la passe se traite en premier.
 
@@ -104,7 +104,7 @@ Attendre que les checks de la PR soient verts : ce sont eux que le déploiement 
 
 ## Étape 6 : déclencher le déploiement
 
-**Merger ne déploie rien.** Le déploiement est manuel depuis le 2026-09-10, pour tenir le quota de minutes GitHub Actions. Attendre que le run `ci-cd.yml` du commit de merge soit **terminé et vert** — le workflow de déploiement le vérifie et refusera de partir sinon — puis :
+**Merger ne déploie rien.** Le déploiement est manuel depuis le 2026-09-10, héritage du temps où les minutes GitHub Actions étaient facturées, gardé pour grouper les livraisons. Attendre que le run `ci-cd.yml` du commit de merge soit **terminé et vert** (le workflow de déploiement le vérifie et refuse de partir sinon), puis :
 
 ```bash
 rtk gh workflow run deploy.yml --ref master -f target=all

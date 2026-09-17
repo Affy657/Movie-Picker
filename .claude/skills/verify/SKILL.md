@@ -1,62 +1,40 @@
 ---
 name: verify
-description: How to build/launch/drive Movie Picker (web + api-dotnet) for runtime verification of a change.
+description: Lancer et piloter Movie Picker (web + api-dotnet) pour vérifier un changement à l'exécution, dans le Browser pane ou par l'API directement. Déclenché avec « /verify ».
 ---
 
-# Verifying a change in this repo
+# Vérifier un changement à l'exécution
 
-Monorepo: `apps/web` (Vite/React/TS) + `apps/api-dotnet` (.NET). CI is
-`verify:local`, but that's tests/typecheck — for runtime verification, run
-the actual app.
+Monorepo : `apps/web` (Vite, React, TypeScript) et `apps/api-dotnet` (.NET). `verify:local` joue les tests et le typage ; pour voir un changement fonctionner, il faut lancer la vraie application.
 
-## Launch
+## Lancer
 
-Use `.claude/launch.json` configs via `preview_start`:
-- `web` — `pnpm --filter web dev`, port 5173 (autoPort).
-- `api` — `dotnet run --project apps/api-dotnet/MoviePicker.Api`, port 4000.
-- `full` — both via `pnpm run dev:full`.
+Les configurations de [.claude/launch.json](../../launch.json) se démarrent par `preview_start` :
 
-If port 4000/5173 is already taken by another session's server, **do not
-kill it** — start your own isolated instance instead (see below).
+| Nom | Commande | Port |
+|---|---|---|
+| `web` | `pnpm --filter web dev` | 5173 (`autoPort`) |
+| `api` | `dotnet run --project apps/api-dotnet/MoviePicker.Api` | 4000 |
+| `full` | `pnpm run dev:full`, les deux ensemble | 5173 et 4000 |
+| `web-b`, `api-b`, `full-b` | seconde paire pour un second agent ou worktree, même base `moviepicker_dev` | 5273 et 4100 |
 
-## Auth in dev
+Si 4000 ou 5173 est déjà pris par le serveur d'une autre session, **ne pas le tuer** : démarrer une instance isolée (voir plus bas) ou la paire `-b`.
 
-`POST /api/v1/auth/login` with the seeded dev account:
-`{"email":"dev@test.local","password":"DevTest123!"}` (from
-`apps/web/src/features/auth/devQuickLoginCredentials.ts`). Sets a session
-cookie. The login page also has a "Connexion rapide compte développeur"
-button that does the same thing client-side.
+## Se connecter en développement
 
-## Gotcha: the Browser pane sandboxes credentialed cross-origin fetches
+`POST /api/v1/auth/login` avec le compte de démonstration : `{"email":"dev@test.local","password":"DevTest123!"}` (source : `apps/web/src/features/auth/devQuickLoginCredentials.ts`). La réponse pose un cookie de session. La page de connexion a aussi un bouton « Connexion rapide compte développeur » qui fait la même chose côté client.
 
-If you run your own API instance on a port other than the one `VITE_API_URL`
-points at (e.g. to avoid clashing with another session's server), the web
-app's cross-origin `fetch(..., { credentials: 'include' })` calls **fail
-silently in the Claude Browser pane** ("Failed to fetch"), even when the
-server's CORS headers are perfectly correct (verified independently via
-`curl -i -H "Origin: ..."` — proper `Access-Control-Allow-Origin` +
-`Allow-Credentials`). A plain uncredentialed `fetch` to the same origin
-*does* succeed — only the credentialed cross-origin case is blocked. This
-reproduced identically whether the API was a raw background process or
-registered via `preview_start` with a `url`-only config (attach mode).
-Root cause looks like a deliberate sandbox restriction on the Browser pane
-tool itself (preventing an agent-driven page from sending cookies
-cross-origin to an arbitrary host), not an app bug.
+## Piège : le Browser pane bloque les `fetch` authentifiés entre origines
 
-Note: `apps/web/src/shared/api/client.ts` also has `ensureApiIsNotFrontOrigin`,
-which explicitly throws if `VITE_API_URL` origin equals the page's own
-origin — so pointing the web app at itself + a dev proxy to dodge this is
-not an option without patching that guard.
+Si l'API tourne sur un autre port que celui de `VITE_API_URL` (pour ne pas heurter le serveur d'une autre session), les appels `fetch(..., { credentials: 'include' })` du front **échouent en silence dans le Browser pane** (« Failed to fetch »), même quand les en-têtes CORS du serveur sont corrects, ce qu'un `curl -i -H "Origin: ..."` confirme indépendamment (`Access-Control-Allow-Origin` et `Allow-Credentials` présents). Un `fetch` sans identifiants vers la même origine passe : seul le cas authentifié entre origines est bloqué. Reproduit à l'identique que l'API soit un processus de fond brut ou enregistrée par `preview_start` avec une configuration `url` seule. La cause ressemble à une restriction volontaire du bac à sable du Browser pane (empêcher une page pilotée par l'agent d'envoyer des cookies vers un hôte arbitraire), pas à un bug de l'application.
 
-**Consequence**: a live, browser-driven, *authenticated* GUI flow can only
-be verified through the Browser pane when the API is reachable at the
-`VITE_API_URL` the web app already expects (normally the one true dev API
-on :4000). If that's occupied by another session, GUI verification of an
-auth-gated flow is blocked — fall back to driving the API surface directly.
+`apps/web/src/shared/api/client.ts` porte aussi `ensureApiIsNotFrontOrigin`, qui lève si l'origine de `VITE_API_URL` est celle de la page : pointer le front sur lui-même avec un proxy de dev pour contourner le blocage demanderait de toucher ce garde-fou, ce qui n'est pas une option.
 
-## Driving the API surface directly (curl)
+**Conséquence** : un parcours authentifié dans l'interface ne se vérifie dans le Browser pane que si l'API répond à l'adresse que le front attend déjà (`VITE_API_URL`, normalement l'API de dev sur `:4000`). Si ce port est occupé par une autre session, la vérification graphique d'un parcours authentifié est bloquée : passer par l'API directement.
 
-Works reliably and exercises the real running code:
+## Piloter l'API directement (curl)
+
+Fiable, et ça exerce le vrai code qui tourne :
 
 ```bash
 cookiejar=$(mktemp)
@@ -67,8 +45,7 @@ curl -s -b "$cookiejar" -X POST http://localhost:<port>/api/v1/<endpoint> \
   -H "Content-Type: application/json" --data-binary @payload.json -w "\n%{http_code}\n"
 ```
 
-Build in `-c Release` to avoid file-lock conflicts with another session's
-Debug build holding `bin/Debug/**` open:
+Construire en `-c Release` pour éviter le verrou de fichier d'un build Debug tenu par une autre session (`bin/Debug/**` ouvert) :
 
 ```bash
 cd apps/api-dotnet && dotnet build MoviePicker.Api/MoviePicker.Api.csproj -c Release
@@ -76,17 +53,11 @@ ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://localhost:<port> \
   dotnet run --project MoviePicker.Api -c Release --no-launch-profile
 ```
 
-`.env` at repo root is loaded by `EnvLoader` but only fills vars **not
-already set** in the process environment — so passing `GITHUB_TOKEN=...` /
-`GITHUB_REPO_OWNER=...` / `GITHUB_REPO_NAME=...` inline on the launch
-command safely overrides real secrets for a dry-run against a feature that
-calls the real GitHub API (e.g. idea-suggestion issue creation): use an
-obviously-invalid token + a nonexistent owner/repo so any real outbound
-call to `api.github.com` fails with 401/404 and can never actually write
-anything, while still exercising the real HTTP call shape/URLs/logging.
+Le `.env` de la racine est lu par `EnvLoader`, qui ne remplit que les variables **absentes** de l'environnement du processus : passer `GITHUB_TOKEN=...`, `GITHUB_REPO_OWNER=...` et `GITHUB_REPO_NAME=...` en ligne sur la commande de lancement remplace donc les vrais secrets pour une répétition à blanc d'une fonctionnalité qui appelle l'API GitHub (la création de ticket depuis « Proposer une idée », par exemple). Un jeton visiblement invalide et un dépôt inexistant font échouer tout appel réel à `api.github.com` en 401 ou 404, donc rien ne peut être écrit, tout en exerçant la forme de l'appel HTTP, ses URL et sa journalisation.
 
-## Cleanup after an isolated verification run
+## Nettoyer après une vérification isolée
 
-- Stop the extra dotnet process: `powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort <port> -State Listen | Select-Object -ExpandProperty OwningProcess"` then `Stop-Process -Id <pid> -Force`.
-- Remove any temporary `apps/web/.env.local` you created.
-- Revert any temporary `.claude/launch.json` entries added just to register a port with `preview_start`.
+- Arrêter le processus dotnet supplémentaire : `powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort <port> -State Listen | Select-Object -ExpandProperty OwningProcess"` puis `Stop-Process -Id <pid> -Force`.
+- Supprimer un `apps/web/.env.local` temporaire.
+- Retirer les entrées temporaires ajoutées à `.claude/launch.json` pour enregistrer un port auprès de `preview_start`.
+- Laisser tourner les serveurs de dev que l'utilisateur va utiliser pour tester lui-même : ne pas `preview_stop` après sa propre vérification.

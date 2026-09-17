@@ -76,20 +76,10 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: extraire par responsabilité vers les primitives partagées existantes avant d'écrire du local
 - piege: un troisième fichier, `movieCardParts.tsx`, figurait ici sur la foi d'un relevé à 1096 lignes. Il en fait 436 depuis l'extraction des briques de listes. Mesurer avant de croire un relevé de cette liste.
 
-## DEBT-026 le flou de fond des barres collantes n'a jamais été mesuré au défilement
-
-- state: differe
-- declencheur: un signalement de défilement saccadé sur mobile, ou une mesure de fluidité posée sur un Android milieu de gamme
-- impact: `backdrop-filter: blur(12px)` sur la barre de `AppShell` et `blur(10px)` sur `EventDetailHeader` recomposent la zone floutée à chaque image pendant le défilement ; c'est le premier suspect connu de saccades sur mobile, sans preuve ici
-- ou: `apps/web/src/app/components/AppShell.module.css:54`, `apps/web/src/features/events/pages/event-detail/EventDetailHeader.module.css:346`
-- verify: `grep -rn "backdrop-filter" apps/web/src --include=*.css`
-- fix: mesurer d'abord (Performance panel, frames longues au défilement) ; si confirmé, fond opaque légèrement translucide sans flou, ou flou réservé à `(hover: hover)`
-- piege: ne pas retirer le flou sur une intuition, c'est un choix visuel de l'utilisateur. Mesure avant geste.
-
 ## DEBT-014 le domaine www ne répond pas
 
 - state: humain
-- bloque: la bascule enchaîne un CNAME chez OVH (manager, pas de CLI ; faisable par l'extension Chrome de l'utilisateur), un déploiement des deux lanes (geste de l'utilisateur) et une décision assumée : les liens `/e/:slug` déjà partagés et les courriels de réinitialisation déjà envoyés vers `web.` meurent, sauf à poser une redirection `web` → `www` chez OVH, non prévue par le runbook
+- bloque: la bascule enchaîne un CNAME chez OVH (manager, pas de CLI ; faisable par l'extension Chrome de l'utilisateur), un déploiement des deux lanes (geste de l'utilisateur) et une décision assumée : les liens `/e/:slug` déjà partagés et les courriels de réinitialisation déjà envoyés vers `web.` meurent, sauf à poser une redirection de `web` vers `www` chez OVH, non prévue par le runbook
 - impact: un visiteur qui tape `www.movie-picker.fr` n'obtient rien. Le front live est sur `web.movie-picker.fr`, et `www` pointe vers une redirection OVH morte (A `213.186.33.5`).
 - ou: `docs/runbook-migration-domaine-www.md`, écrit le 2026-07-16, exécuté jusqu'aux étapes sans impact
 - verify: encore ouvert si la commande échoue ou ne renvoie pas 200.
@@ -101,12 +91,39 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - piege: les smoke tests de la CI ne référencent aucun de ces hôtes en dur, l'API vient de `secrets.VITE_API_URL` et le front de la première entrée de `vars.ALLOWED_ORIGINS` : ils restent justes après la migration tant que `www` n'est pas mis en première position avant que le DNS ne pointe. Pointer le CNAME avant de déployer donne un `www` à moitié vivant : le front se charge, l'API refuse l'origine (CORS injecté au déploiement, pas à chaud).
 - refs: le lot Terraform 4 de `roadmap.md` fait la même bascule DNS en décommissionnant AWS. Si ce lot est engagé, traiter la dette ici serait du travail jeté.
 
+## DEBT-024 les documents de prod portent encore les anciens champs `winnerMovieId`, `winnerPickMethod`, `winnerPickedAt`
+
+- state: differe
+- declencheur: la révision Cloud Run active sert un commit qui contient `ToDocument_WritesTheWinnersListOnly_NoLegacyWinnerField` (`git log -1 --format=%h -S ToDocument_WritesTheWinnersListOnly_NoLegacyWinnerField` donne le premier ; `SENTRY_RELEASE` de la révision active, `gcloud run revisions describe`, dit lequel sert)
+- impact: aucune fonctionnalité en jeu. Depuis le 2026-09-16 le code ne lit ni n'écrit plus que `winners` : les 22 soirées de prod qui n'avaient qu'un `winnerMovieId` ont reçu leur liste `winners` par reprise (`pickMethod` recopié ou `wheel`, `pickedAt` recopié ou `updatedAt`, exactement ce que le repli de lecture rendait), `EventDocument` n'a plus les trois champs, le compteur de soirées gagnées n'interroge plus que `winners.movieId`. Restent en base les anciens champs sur 28 documents, que la révision active réécrit encore à chaque `ReplaceOne` tant qu'elle sert l'ancien code.
+- ou: base `moviepicker`, collection `events`
+- verify: la commande sort un nombre, encore ouvert tant qu'il n'est pas 0.
+  ```bash
+  docker run --rm mongo:7 mongosh --quiet "$(gcloud secrets versions access latest --secret=MONGODB_URI)" --eval 'db.getSiblingDB("moviepicker").events.countDocuments({ $or: [ { winnerMovieId: { $exists: true } }, { winnerPickMethod: { $exists: true } }, { winnerPickedAt: { $exists: true } } ] })'
+  ```
+- fix: une fois le déclencheur observé, un seul `updateMany` :
+  ```bash
+  docker run --rm mongo:7 mongosh --quiet "$(gcloud secrets versions access latest --secret=MONGODB_URI)" --eval 'db.getSiblingDB("moviepicker").events.updateMany({}, { $unset: { winnerMovieId: "", winnerPickMethod: "", winnerPickedAt: "" } })'
+  ```
+- fini-quand: `verify` rend 0
+- piege: ne pas retirer les champs avant le déclencheur : la révision active les réécrit (`ReplaceOne`, C13 n'y est pas encore), et un retour arrière vers elle continuerait de les lire en repli si `winners` manquait ; il ne manque plus nulle part, mais l'ordre reste le seul qui ne dépende de rien. L'URI de prod ne se colle jamais dans un fichier ni dans la conversation, seulement dans la substitution de commande.
+
+## DEBT-026 le flou de fond des barres collantes n'a jamais été mesuré au défilement
+
+- state: differe
+- declencheur: un signalement de défilement saccadé sur mobile, ou une mesure de fluidité posée sur un Android milieu de gamme
+- impact: `backdrop-filter: blur(12px)` sur la barre de `AppShell` et `blur(10px)` sur `EventDetailHeader` recomposent la zone floutée à chaque image pendant le défilement ; c'est le premier suspect connu de saccades sur mobile, sans preuve ici
+- ou: `apps/web/src/app/components/AppShell.module.css:54`, `apps/web/src/features/events/pages/event-detail/EventDetailHeader.module.css:346`
+- verify: `grep -rn "backdrop-filter" apps/web/src --include=*.css`
+- fix: mesurer d'abord (Performance panel, frames longues au défilement) ; si confirmé, fond opaque légèrement translucide sans flou, ou flou réservé à `(hover: hover)`
+- piege: ne pas retirer le flou sur une intuition, c'est un choix visuel de l'utilisateur. Mesure avant geste.
+
 ## DEBT-027 `SENTRY_AUTH_TOKEN` est encore un secret de dépôt
 
 - state: humain
-- bloque: un jeton d'organisation Sentry ne se crée que dans son interface (Settings → Auth Tokens), l'API MCP ne l'expose pas ; et la valeur d'un secret GitHub ne se relit pas, donc il faut le ressaisir. L'agent ne manipule pas de jeton en clair, le geste entier est humain.
+- bloque: un jeton d'organisation Sentry ne se crée que dans son interface (`Settings / Auth Tokens`), l'API MCP ne l'expose pas ; et la valeur d'un secret GitHub ne se relit pas, donc il faut le ressaisir. L'agent ne manipule pas de jeton en clair, le geste entier est humain.
 - impact: c'est le seul secret de déploiement lisible par n'importe quel workflow sur n'importe quelle branche, tout le reste vit dans l'environnement `production` depuis le 2026-09-15 (politique de branche `master`). Portée du jeton : créer des releases et des deploys Sentry, pas de lecture de données.
-- ou: Settings → Secrets and variables → Actions, secret de dépôt `SENTRY_AUTH_TOKEN` ; jobs `deploy-api`, `deploy-front` de `deploy.yml` et `rollback` de `rollback-front.yml`
+- ou: `Settings / Secrets and variables / Actions`, secret de dépôt `SENTRY_AUTH_TOKEN` ; jobs `deploy-api`, `deploy-front` de `deploy.yml` et `rollback` de `rollback-front.yml`
 - verify: `gh secret list --json name --jq '[.[].name] | join(",")'` rend `SENTRY_AUTH_TOKEN,SONAR_TOKEN`. Réglé quand il ne rend plus que `SONAR_TOKEN`.
 - fix: créer un nouveau jeton d'organisation Sentry (scopes `project:releases` et `org:read`), puis :
   ```bash
@@ -136,23 +153,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: poser `[SharedRateLimit]` sur les politiques qui protègent une ressource partagée (webhooks, scheduler, création de soirée), pas sur le sondage
 - piege: le compteur partagé coûte un aller-retour Mongo par requête, ne pas le poser sur les routes sondées toutes les 3,5 s (DEBT-008)
 
-## DEBT-024 les documents de prod portent encore les anciens champs `winnerMovieId`, `winnerPickMethod`, `winnerPickedAt`
-
-- state: differe
-- declencheur: la révision Cloud Run active sert un commit qui contient `ToDocument_WritesTheWinnersListOnly_NoLegacyWinnerField` (`git log -1 --format=%h -S ToDocument_WritesTheWinnersListOnly_NoLegacyWinnerField` donne le premier ; `SENTRY_RELEASE` de la révision active, `gcloud run revisions describe`, dit lequel sert)
-- impact: aucune fonctionnalité en jeu. Depuis le 2026-09-16 le code ne lit ni n'écrit plus que `winners` : les 22 soirées de prod qui n'avaient qu'un `winnerMovieId` ont reçu leur liste `winners` par reprise (`pickMethod` recopié ou `wheel`, `pickedAt` recopié ou `updatedAt`, exactement ce que le repli de lecture rendait), `EventDocument` n'a plus les trois champs, le compteur de soirées gagnées n'interroge plus que `winners.movieId`. Restent en base les anciens champs sur 28 documents, que la révision active réécrit encore à chaque `ReplaceOne` tant qu'elle sert l'ancien code.
-- ou: base `moviepicker`, collection `events`
-- verify: la commande sort un nombre, encore ouvert tant qu'il n'est pas 0.
-  ```bash
-  docker run --rm mongo:7 mongosh --quiet "$(gcloud secrets versions access latest --secret=MONGODB_URI)" --eval 'db.getSiblingDB("moviepicker").events.countDocuments({ $or: [ { winnerMovieId: { $exists: true } }, { winnerPickMethod: { $exists: true } }, { winnerPickedAt: { $exists: true } } ] })'
-  ```
-- fix: une fois le déclencheur observé, un seul `updateMany` :
-  ```bash
-  docker run --rm mongo:7 mongosh --quiet "$(gcloud secrets versions access latest --secret=MONGODB_URI)" --eval 'db.getSiblingDB("moviepicker").events.updateMany({}, { $unset: { winnerMovieId: "", winnerPickMethod: "", winnerPickedAt: "" } })'
-  ```
-- fini-quand: `verify` rend 0
-- piege: ne pas retirer les champs avant le déclencheur : la révision active les réécrit (`ReplaceOne`, C13 n'y est pas encore), et un retour arrière vers elle continuerait de les lire en repli si `winners` manquait ; il ne manque plus nulle part, mais l'ordre reste le seul qui ne dépende de rien. L'URI de prod ne se colle jamais dans un fichier ni dans la conversation, seulement dans la substitution de commande.
-
 ## DEBT-032 deux modèles d'autorisation hôte coexistent, le jeton porteur et le compte créateur
 
 - state: humain
@@ -177,8 +177,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: le plafond est aligné sur une mesure réelle du mode de synchronisation en place
 - piege: quatre choses cassent SSE sur Cloud Run sans le dire. `timeoutSeconds` est à 300 sur le service, donc chaque flux tombe toutes les 5 minutes et `EventSource` reconnecte, ce qui est acceptable, ou le monter à 3 600. `UseResponseCompression` met en tampon : exclure `text/event-stream` explicitement. Un flux ouvert compte comme une requête en cours, donc l'instance reste vivante et facturée tant qu'un client écoute, environ 0,09 $ par heure au-delà du palier gratuit, à relire sur la grille europe-west1 : c'est le coût du temps réel, à annoncer, pas à découvrir sur la facture. Enfin C12 devient bloquant avant ce chantier, des flux ouverts maintiennent plus d'instances debout que le trafic seul. Garder le sondage en repli après 15 s sans battement.
 
----
-
 ## DEBT-034 cinq briques d'interface vivent encore à côté des primitives
 
 - state: differe
@@ -193,8 +191,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: `IconButton` pour les sept boutons nus, puis supprimer la classe globale ; `SkeletonScreen` + `Skeleton` pour la page compte ; `loading` sur le bouton suivre ; pour la pastille participant et le badge sur affiche, ajouter à `Chip` un `as` et un tone `onPoster` seulement si un second consommateur apparaît, sinon les laisser.
 - fini-quand: les deux commandes de `verify` ne sortent rien et `docs/design-system.md` ne mentionne plus ces exceptions
 - piege: `Chip` enveloppe ses enfants dans un span décalé par `--text-optical-nudge` ; un avatar posé dedans serait décalé aussi, c'est pour ça que la pastille participant n'a pas été migrée.
-
----
 
 ## DEBT-035 la diffusion push se fait dans la requête, sans file ni reprise
 
@@ -378,7 +374,7 @@ La bascule est **faite**. Ce qu'elle a rendu lisible, c'est **chaque commit jama
 
 Deux pièges d'énumération, payés une fois : `approval_policy` n'accepte que des valeurs **en minuscules** (`all_external_contributors`), et le ruleset ne demande **aucun contrôle de statut**, en exiger un casserait le workflow de poussée directe, un commit tout juste poussé n'ayant encore aucun run attaché.
 
-**Il reste un geste, sans API : passer le projet SonarCloud en public.** C'est lui qui supprime le plafond de 50 000 lignes, donc la cause de l'exclusion de `TechPage.tsx` et de `app/pages/tech/` posée le 2026-09-09, ~3 000 lignes rendues à l'analyse, et la contrainte de marge de DEBT-021. Le palier gratuit est annoncé illimité sur un projet public, à relire sur la page de tarification avant d'en dépendre. Contrepartie : les constats deviennent publics.
+**Le projet SonarCloud est public depuis le même jour**, geste sans API fait dans son interface. C'est ce qui a levé le plafond de 50 000 lignes du palier gratuit, donc l'exclusion de `TechPage.tsx` et de `app/pages/tech/` posée le 2026-09-09 (~3 000 lignes rendues à l'analyse). Contrepartie assumée : les constats sont publics.
 
 **Deux limites à connaître, qui ne se règlent pas :**
 
@@ -438,8 +434,6 @@ L'instrumentation des routes (`wrapReactRouterRouting`) a disparu avec ce change
 
 Avant d'accuser son diff sur un rouge Vitest, un vrai échec cite un **nom de test** et une assertion ; une famine cite un **nom de fichier**. Comparer les durées test par test avec un run de référence (`git checkout --detach HEAD~1`) : si des pages sans rapport ralentissent du même facteur, c'est la machine.
 
----
-
 ## C12 pool Mongo × instances Cloud Run ≤ connexions du cluster
 
 Trois nombres se tiennent et aucun n'est posé au même endroit : le pool est de 20 connexions par instance (`DefaultMaxConnectionPoolSize` dans `ServiceCollectionExtensions.cs`, gardé par `AddMoviePicker_MongoClientPool_FitsEveryCloudRunInstanceUnderTheClusterConnectionCap`), `maxScale` est à 20 sur le service Cloud Run (annotation du service, jamais écrite par `deploy.yml`, elle survit aux déploiements), et le cluster accepte 500 connexions, dont une centaine à laisser aux opérateurs, à la sauvegarde nocturne et à la dev qui partage le cluster. Monter l'un sans baisser l'autre casse en silence : les instances au-delà du budget échouent à se connecter, la readiness passe rouge et l'alerte « base injoignable » part alors que la base va bien, précisément le jour de charge.
@@ -454,6 +448,17 @@ Piège découvert en posant le test, le 2026-09-15 : `MongoUrl.MaxConnectionPool
 
 `AuthTicketCache` (`Infrastructure/Web/CachedAuthTicketStore.cs`) garde chaque ticket de session 30 s en mémoire d'instance pour ne pas relire `auth_sessions` à chaque requête, et `MongoAuthSessionInvalidator` n'invalide que la génération de l'instance qui traite la révocation. « Déconnecter partout », un changement de mot de passe ou la suppression du compte laissent donc une fenêtre d'au plus 30 s pendant laquelle un cookie déjà présenté à une **autre** instance y passe encore. C'est accepté, et c'est écrit dans `SECURITY.md` comme hors périmètre : la lecture Mongo par requête est exactement ce que le cache évite, et une génération partagée en base coûterait cette lecture. Ne pas « corriger » en allongeant le TTL (la fenêtre suit) ni en le supprimant (retour au coût d'avant le 2026-09-12) ; si la fenêtre devient inacceptable, la seule voie propre est un compteur de génération par utilisateur lu depuis le cache partagé (`ISharedCache`), au prix d'un aller-retour par requête authentifiée.
 
+## C15 le prérendu sert l'indexation et le premier rendu, et deux choses le rendent muet
+
+Le prérendu (`apps/web/scripts/prerender.mjs`, règles de déclaration dans `AGENTS.md`) sert deux choses distinctes : l'indexation, et le premier rendu. Une route en `noindex` n'en tire que la seconde et le déclare dans `PRERENDERED_FOR_FIRST_PAINT_ONLY` ; `/mentions-legales` et `/politique-de-confidentialite` sont dans ce cas depuis le 2026-09-10. Le prérendu **renforce** d'ailleurs leur `noindex` : sans lui, un robot qui n'exécute pas le JavaScript reçoit la coquille SPA, qui ne porte aucune balise `robots`.
+
+**Le document prérendu porte les styles de sa route, en ligne**, lus dans `dist/route-assets.json` (publié par le plugin de build, voir C4). Sans eux le contenu prérendu peint sans styles, se remet en page quand le chunk de la route arrive, et Chrome retient ce **second** rendu comme LCP : le prérendu ne rapporte alors rien, ce qui s'est mesuré le 2026-09-10 (`/soutenir`, `elementRenderDelay` de 585 ms sur un document déjà complet). En ligne et non liés : la version liée a été mesurée sur le runner et coûte 1 point à `donate` comme à `privacy`. Les feuilles sont concaténées de la plus profonde à la plus superficielle, la coquille avant la page, comme le fait le chargement par JavaScript.
+
+`scripts/lighthouse-run.mjs` réécrit ces routes vers leur fichier prérendu, parce que la production les sert comme des clés S3 exactes : sans la réécriture, `serve` rend la coquille SPA et la porte mesure une page que personne ne reçoit. `serve-handler` applique ses réécritures **en cascade**, donc un repli `**` final rattrape la destination déjà réécrite et la renvoie sur `index.html` ; le repli est écrit en négation, et `--single` n'est pas passé parce qu'il insère son propre `**` en tête de liste.
+
+
+---
+
 # Impasses
 
 Mesuré, sans gain, retiré. Ne pas rejouer sans une raison neuve.
@@ -462,10 +467,10 @@ Mesuré, sans gain, retiré. Ne pas rejouer sans une raison neuve.
 - **I2 précharger le chunk de la route d'accueil sur `/`.** 0 point. L'hypothèse était fausse : le LCP n'attend pas les 9 Ko du chunk, il attend React.
 - **I3 découper le bundle pour sauver le LCP.** Les 185 Ko d'i18n retirés du chemin critique n'ont rendu qu'**un** point, parce que ce sont des chaînes de caractères et pas du code : un objet littéral s'analyse bien plus vite que de l'exécutable à poids égal. Le mur est `react-vendor` (220 Ko, 665 ms de bootup) et il ne se contourne pas par le bundling. Le seul levier est de sortir le plus grand élément du rendu React, voir C2.
 - **I4 desserrer la porte Lighthouse** (baisser un seuil global, retirer une page, la repasser non bloquante). Le déficit est réel et mesuré ; c'est cette porte qui a détecté que la production ne se déployait plus.
-- **I9 annoncer d'avance la fermeture des imports statiques de la coquille** (un `modulepreload` sur chaque dépendance statique de l'entrée et de `App`, six chunks de plus que ceux que Vite pose). Retire bien une vague réseau avant le montage de React, et ne gagne que 0,15 s de LCP en local. Sur le runner, l'échange est perdant : les douze pages dont le plus grand élément vient du rendu React gagnent 1 point, et les **deux** dont il n'en vient pas en perdent 2 et 8, `home` parce que son titre est peint depuis le document (C2) et `profile` parce que son LCP est adossé à une image. Six requêtes prioritaires de plus dans la première vague passent devant cet élément-là. Mesuré dans les deux sens : en la retirant, `profile` repasse de 88 à 97 et les douze autres ne perdent rien, elles gagnent même 1 point de plus. Leçon générale : **avant d'ajouter quoi que ce soit à la première vague, regarder les pages dont le LCP n'attend pas React**, ce sont les seules que ça peut faire reculer, et elles sont aussi les seules instables d'un run à l'autre.
 - **I5 `mongodump --oplog`** pour la cohérence transactionnelle : impose un dump de l'instance entière et des droits supplémentaires.
 - **I7 descendre zizmor au seuil `low`** : 9 constats cosmétiques. Le seuil `medium` est vert et n'attrape que du sérieux.
+- **I8 espacer les workflows planifiés pour économiser des minutes GitHub Actions.** Mesuré au 2026-09-10 sur l'historique des runs : `security-scan.yml` tourne en 45 à 80 s une fois par semaine (≈ 5 min/mois), `registry-cleanup.yml` une fois par mois (≈ 1 min/mois), `backup-mongo.yml` en ≈ 90 s par nuit (≈ 45 min/mois). Total ≈ 51 min/mois, contre ≈ 450 min pour 20 runs de CI : les crons ne sont pas le poste de coût, et le seul qui pèse est le seul filet en cas de perte de données. Espacer la sauvegarde à deux jours économiserait 22 min/mois en doublant le point de restauration acceptable, ce qui est un mauvais échange sur des données personnelles non reconstituables. Ne pas rejouer sans un changement de cadran : soit le quota redevient contraignant après le passage du dépôt en public, soit la sauvegarde grossit assez pour changer l'ordre de grandeur.
+- **I9 annoncer d'avance la fermeture des imports statiques de la coquille** (un `modulepreload` sur chaque dépendance statique de l'entrée et de `App`, six chunks de plus que ceux que Vite pose). Retire bien une vague réseau avant le montage de React, et ne gagne que 0,15 s de LCP en local. Sur le runner, l'échange est perdant : les douze pages dont le plus grand élément vient du rendu React gagnent 1 point, et les **deux** dont il n'en vient pas en perdent 2 et 8, `home` parce que son titre est peint depuis le document (C2) et `profile` parce que son LCP est adossé à une image. Six requêtes prioritaires de plus dans la première vague passent devant cet élément-là. Mesuré dans les deux sens : en la retirant, `profile` repasse de 88 à 97 et les douze autres ne perdent rien, elles gagnent même 1 point de plus. Leçon générale : **avant d'ajouter quoi que ce soit à la première vague, regarder les pages dont le LCP n'attend pas React**, ce sont les seules que ça peut faire reculer, et elles sont aussi les seules instables d'un run à l'autre.
 - **I10 regrouper les petits modules partagés entre pages en chunks « entries-aware » (rolldown `codeSplitting.groups`, `entriesAware: true`).** Mesuré le 2026-09-14 sur le build, en brotli. Avec un seuil de fusion à 12 Ko : `login` passe de 18 fichiers / 111,7 Ko à 14 fichiers / **141,9 Ko**, parce que les sous-groupes trop petits sont fusionnés avec un voisin chargé par d'autres pages, et la première vague de la coquille passe de 5 à 16 fichiers, soit exactement ce qu'I9 a mesuré perdant. À 3 Ko, `login` redescend à 7 fichiers / 107,7 Ko mais `my-events` prend 14 Ko et `home` 8 Ko. À 0, c'est le découpage automatique. Ce qui a été gardé est le seul geste qui gagne partout : la fermeture statique de `App` capturée dans son chunk (`appShellClosurePlugin`), qui retire 6 à 7 fichiers par page et 3 à 4 Ko à chacune sans rien ajouter à la première vague. Leçon : sous rolldown, le seul regroupement sans perdant est celui qui suit le graphe réel des imports, pas un seuil de taille.
 - **I11 accélérer la suite Vitest elle-même.** Mesuré le 2026-07-17 : 60 % du temps mural est la recréation de l'environnement jsdom par fichier, et l'isolation est obligatoire parce que 19 fichiers utilisent `vi.mock`. Sans effet : plus de forks (les 12 cœurs saturent, forks/10 et forks/3 plus lents que forks/4), `pool: threads`, déplacer la logique pure vers l'environnement `node`. Efficace mais rejeté : `--no-isolate` (5× plus rapide, casse 147 tests) et happy-dom (-30 %, casse 3 tests, et surtout diverge de la CI qui tourne en jsdom sur un projet a11y-first). Le gain de `verify:local` vient de l'ordonnancement des autres portes (C11), pas de la suite. Reste à mesurer au calme, jamais sous charge : `maxForks` 2 vers 4, remis à 2 le 2026-09-04 pour la stabilité.
 - **I12 rapprocher le cluster Atlas de Cloud Run.** Le cluster est chez AWS en eu-west-1 (Irlande), l'API sur GCP en europe-west1 (Belgique). Mesuré le 2026-09-15 sur 60 sondes `/health/ready` de la production, un aller-retour Mongo chacune : p50 6 ms, p90 9 ms, max 175 ms sur pool froid. Un cluster sur GCP dans la même région ramènerait l'aller-retour à 1 ou 2 ms, soit au plus 5 ms par opération et environ 30 ms sur un cycle de sondage complet dont les 15 allers-retours sont en partie parallèles, contre une migration de cluster avec bascule de chaîne de connexion et interruption. Ce n'est pas là que va le temps : la page soirée attend TMDB (DEBT-005) et le nombre d'allers-retours (DEBT-008), pas leur longueur. Ne pas rejouer sans un changement de région de Cloud Run ou un palier Atlas qui n'existe que sur GCP.
-- **I8 espacer les workflows planifiés pour économiser des minutes GitHub Actions.** Mesuré au 2026-09-10 sur l'historique des runs : `security-scan.yml` tourne en 45 à 80 s une fois par semaine (≈ 5 min/mois), `registry-cleanup.yml` une fois par mois (≈ 1 min/mois), `backup-mongo.yml` en ≈ 90 s par nuit (≈ 45 min/mois). Total ≈ 51 min/mois, contre ≈ 450 min pour 20 runs de CI : les crons ne sont pas le poste de coût, et le seul qui pèse est le seul filet en cas de perte de données. Espacer la sauvegarde à deux jours économiserait 22 min/mois en doublant le point de restauration acceptable, ce qui est un mauvais échange sur des données personnelles non reconstituables. Ne pas rejouer sans un changement de cadran : soit le quota redevient contraignant après le passage du dépôt en public, soit la sauvegarde grossit assez pour changer l'ordre de grandeur.

@@ -8,26 +8,38 @@ Tous dans `apps/web/src/styles/01-foundation.css`, sauf ceux propres à la page 
 
 | Famille | Jetons | Note |
 |---|---|---|
-| Espacement | `--space-0` à `--space-24`, demi-pas jusqu'à `--space-3-5` | base 4 px ; `--tap-target-min` (44 px) est la seule taille qui n'appartient pas à la grille |
-| Tailles | toute `width`, `height`, `min-*`, `max-*`, `top`, `left`, `right`, `bottom`, `inset` sous 96 px vient de `--space-*`, `--icon-*`, `--avatar-*` ou `--tap-target-min` | 1 px et 2 px restent des traits ; au-delà de 96 px (affiches, colonnes) la valeur est une dimension de contenu, pas un jeton |
+| Espacement | `--space-0` à `--space-24`, demi-pas jusqu'à `--space-3-5` (14 px) | base 4 px, y compris à l'intérieur d'un `calc()` ou d'un `clamp()` ; `--tap-target-min` (44 px) est la seule taille qui n'appartient pas à la grille |
+| Tailles | toute `width`, `height`, `min-*`, `max-*`, `top`, `left`, `right`, `bottom`, `inset`, et le `translate` d'un `transform`, sous 96 px, vient de `--space-*`, `--icon-*`, `--avatar-*`, `--tap-target-min` ou `--lift-*` | 1 px et 2 px restent des traits ; au-delà de 96 px (affiches, colonnes) la valeur est une dimension de contenu, pas un jeton |
 | Icônes | `--icon-xs` (12) `-sm` (14) `-md` (16) `-lg` (18) `-xl` (20) `-2xl` (24) `-3xl` (28) `-4xl` (32) ; miroir TypeScript `ICON_SIZE` dans `shared/components/iconSize.ts` | une icône Lucide prend `size={ICON_SIZE.md}`, jamais un nombre ; la porte vérifie que les deux échelles coïncident |
 | Avatars | `--avatar-xs` (20) `-sm` (28) `-md` (36) `-lg` (56) `-xl` (96) ; `--color-avatar-0` à `-7` pour les initiales | la palette des initiales est choisie par `data-palette` sur l'élément, jamais par une couleur en dur |
 | Soulèvement | `--lift-sm` (-1 px), `-md` (-2 px), `-lg` (-4 px), `-xl` (-8 px) | le `translateY` d'un survol ; `Button` et `Card` prennent `-sm` |
 | Gabarit | `--header-height` (3,5 rem), `--mobile-nav-height` (4 rem + zone sûre) | posés dans la fondation, consommés sans repli |
-| Typographie | `--font-size-4xs` à `--font-size-6xl`, `--font-weight-regular/medium/semibold/bold/extrabold`, `--leading-*`, `--tracking-*`, `--font-body`, `--font-mono` | aucune valeur littérale de graisse, d'interlignage ou d'approche dans un module |
+| Typographie | `--font-size-4xs` à `--font-size-6xl`, `--font-weight-regular/medium/semibold/bold/extrabold`, `--leading-*`, `--tracking-*`, `--font-body`, `--font-mono` | échelle nommée sans variante « plus » ; aucune valeur littérale de graisse, d'interlignage ou d'approche dans un module |
 | Rayons | `--radius-xs` (4 px), `-sm` (6 px), `-md` (12 px), `-lg` (18 px), `-pill` | |
-| Bordures | `--border-width-field` (1,5 px) | tout autre trait fait 1 px ou 2 px |
+| Bordures | `--border-width-field` (1,5 px) | tout autre trait fait 1 px ou 2 px, en littéral |
 | Focus | `--outline-focus` (contour), `--ring-focus` (halo pour les champs) | un `:focus-visible` qui retire le contour pose le halo, jamais un simple fond |
 | Géométrie des menus | `MENU_VIEWPORT_MARGIN_PX` (8), `MENU_ANCHOR_GAP_PX` (6) dans `shared/components/menuGeometry.ts` | les seuls pixels écrits en TypeScript pour positionner un panneau flottant ; ils recopient `--space-2` et `--space-1-5` |
 | Ombres | `--shadow-sm/md/lg`, `--shadow-nav`, `--shadow-hero-card`, `--shadow-wheel` | en sombre l'élévation se lit sur `--color-surface-raised`, pas sur l'ombre ; `--shadow-nav` change de valeur en sombre |
 | Mouvement | `--duration-fast` (0,10 s), `--duration-base` (0,15 s), `--duration-slow` (0,20 s), `--duration-enter` (0,25 s), `--duration-sheet` (0,32 s), `--duration-reveal` (0,6 s), `--duration-spin` (0,8 s), `--duration-pulse` (1,2 s), `--duration-shimmer` (1,4 s), `--duration-breathe` (2,4 s) ; `--ease-default/in-out/out/linear/reveal/spring` | chaque étape de `transition` porte sa durée et sa courbe ; une boucle décorative propre à un composant déclare son propre jeton dans son module (`--flame-flicker-duration`), un décalage de phase aussi (`--card-shake-stagger-*`, `--demo-float-offset`) |
 | Opacité | `--opacity-disabled` (0,5), `--opacity-muted` (0,6), `--opacity-hover` (0,8), `--opacity-dimmed` (0,85) | état désactivé, contenu secondaire, fondu au survol, `aria-busy` ; un littéral n'est admis que dans une étape de `@keyframes` |
-| Couleurs | primitives `--blue-600`… réservées à la fondation ; rôles `--color-*` consommés par les modules ; `--color-heat-0` à `-3` pour la carte d'activité | voir le tableau des rôles dans `AGENTS.md` |
+| Couleurs | primitives `--blue-600`… réservées à la fondation et à `landingPalette.css` ; rôles `--color-*` consommés par les modules ; `--color-heat-0` à `-3` pour la carte d'activité | tableau des rôles ci-dessous |
 | Teintes de surface | `--color-surface-hover` (6 %), `-hover-strong` (10 %), `-active` (12 %), `-sunken`, `-translucent`, `--color-bg-tint`, `--color-bg-translucent` | remplacent tout `color-mix()` maison sur le texte, le fond ou la surface |
 | Sur affiche | `--on-poster-*` | texte, bordures et voiles posés sur une image sombre |
-| Profondeur | `--z-below` à `--z-skip-link` | |
-| Largeurs | `--container-xs` (28 rem) à `--container-3xl` (84 rem) | les tailles de `Modal` portent les mêmes noms |
+| Profondeur | `--z-below` à `--z-skip-link` | jamais un nombre, ni en CSS ni dans un objet `style` |
+| Largeurs | `--container-xs` (28 rem) à `--container-3xl` (84 rem), posés sur `--page-max-width` (défaut `--layout-max`) | les tailles de `Modal` portent les mêmes noms |
 | Zone tactile | `shared/components/tapTarget.module.css`, classe `expanded` | `composes: expanded from '@/shared/components/tapTarget.module.css'` pose `position: relative` (dans la couche `@layer tap-target`, donc un `position: absolute` écrit dans la classe qui compose garde la main, quel que soit l'ordre d'émission des feuilles) et un `::after` de 44 px centré ; c'est ce qu'utilisent `Button` `sm`, `IconButton`, `LinkButton`, `Chip` cliquable et sa croix, `Toggle`, `ViewModeToggle`, `SegmentedRadioGroup` et tout contrôle dessiné sous 44 px |
+
+### Rôles de couleur
+
+Chaque rôle porte sa déclinaison, en clair, en sombre et sous `.on-dark` ; un module consomme le jeton de la déclinaison, jamais un `color-mix()` maison (règle vérifiée par `check:architecture`, voir `AGENTS.md`).
+
+| Rôle | Surface | Texte | Fond léger | Bordure |
+|---|---|---|---|---|
+| primaire (accent choisi par l'utilisateur) | `--color-primary`, `-hover` | `--color-primary-text`, `-text-hover` | `--color-primary-tint`, `-soft`, `-soft-hover` | `--color-primary-border`, `-border-soft` |
+| erreur, succès, avertissement | `--color-error`, `--color-success`, `--color-warning` | idem | `--color-<rôle>-bg` | `--color-<rôle>-border` |
+| teintes neutres | `--color-surface-hover` (6 %), `-hover-strong` (10 %), `-active` (12 %), `-sunken`, `-translucent`, `--color-bg-tint`, `--color-bg-translucent` | | | |
+
+`--color-primary-text` existe parce que `--color-primary` colore des surfaces : pour du texte ou un lien, chaque accent garantit 4,5:1 sur fond clair par sa déclinaison texte, ce que le vert, l'orange et le cyan de la surface ne tiennent pas.
 
 Trois portées de thème : `[data-theme='light']`, `[data-theme='dark']` et `.on-dark` (un bloc sombre posé dans une page claire, la carte d'accueil par exemple). Un rôle ajouté au clair se déclare dans les trois.
 
@@ -164,14 +176,59 @@ Un choix exclusif entre des cartes, quand `SegmentedRadioGroup` est trop étroit
 
 Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue, les candidats Letterboxd, la grille d'avatars, la grille d'emojis du thème (`tile`, 44 px, le clic ferme le sélecteur, les flèches changent l'emoji sans le fermer) et les pastilles de couleur d'accent (`tile` rond de 44 px autour d'un disque de 28 px).
 
-### Menu, Dropdown, Tabs, Tooltip, InfoBubble
+### Menu
 
-- `Menu` : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte et celui de l'agenda. `MenuPanel` (`ariaLabel`, `anchored`, attributs natifs de `<div>`) porte lui-même les flèches, Home et End entre ses `menuitem` non désactivés ; `anchored={false}` retire l'ancrage sous le déclencheur, pour un panneau porté par un portail ou posé en `fixed` : le menu des cartes film et le survol « proposer dans une soirée », qui gardent leur état d'ouverture local et ferment sur Échap en rendant le focus à leur déclencheur. `MenuItem` : `icon`, `href` (lien externe, `external` ouvre un nouvel onglet avec `rel="noopener noreferrer"`), `to` (route interne, rend un `<Link>`), `selected`, `tone` `default` / `danger`, `disabled` rend un `<button disabled>` même avec `href` ou `to`, `ariaLabel` et `title` quand le nom accessible diffère du texte, `aria-haspopup` quand l'entrée ouvre une boîte de dialogue ; un libellé texte sans jambage est nudgé comme des petites capitales (`--text-optical-nudge-caps`). `MenuLabel`, `MenuSeparator`. Échap ferme, focus visible en contour interne.
-- `Dropdown` : `id`, `value`, `options` (`{ value, label, disabled? }`), `onChange`, `ariaLabel`, `disabled` (le déclencheur passe en `--opacity-disabled`) ; liste déroulante maison avec `role="listbox"`, une option désactivée porte `aria-disabled`, les flèches la sautent.
-- `Tabs` : `idBase`, `tabs` (`{ key, label, icon?, iconOnly?, badge?, disabled? }`), `active`, `onChange`, `ariaLabel`, `variant` `underline` / `pill` ; `TabPanel` (`tabKey`, `active`). `iconOnly` garde `label` comme nom accessible sans le dessiner. Flèches et Home/End gérées en sautant les onglets désactivés, défilement horizontal avec fondus, onglet de 44 px. Toute liste d'onglets du produit passe par là, y compris les deux onglets d'une modale.
-- `SegmentedRadioGroup` : `id`, `options` (`{ value, label, icon? }`), `value`, `onChange`, `ariaLabel` ou `ariaLabelledBy`, `size` `md` / `sm`, `iconOnly` (le libellé devient `aria-label`), `disabled` (toutes les options, `--opacity-disabled`, clavier inerte). `role="radiogroup"`, flèches, Home et End, seule l'option cochée est tabulable. C'est le sélecteur de thème, d'échelle de note et de mode de roue.
-- `Tooltip` : `label` (le texte de la bulle), `placement` `top` / `bottom` / `left` / `right`, `delayMs`, `focusable`, `disabled` (ne rend pas la bulle). Apparaît au survol et au focus, jamais seul vecteur d'une information.
-- `InfoBubble` : `label` (nom du bouton d'aide), contenu en enfants.
+`Menu` rend un déclencheur et son panneau : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte et celui de l'agenda. Échap ferme et rend le focus au déclencheur, focus visible en contour interne.
+
+| Brique | Props | Rôle |
+|---|---|---|
+| `MenuPanel` | `ariaLabel`, `anchored`, attributs natifs de `<div>` | porte lui-même les flèches, Home et End entre ses `menuitem` non désactivés ; `anchored={false}` retire l'ancrage sous le déclencheur, pour un panneau porté par un portail ou posé en `fixed` (le menu des cartes film, le survol « proposer dans une soirée »), qui garde son état d'ouverture local |
+| `MenuItem` | `icon`, `href` (lien externe, `external` ouvre un nouvel onglet avec `rel="noopener noreferrer"`), `to` (route interne, rend un `<Link>`), `selected`, `tone` `default` / `danger`, `disabled`, `ariaLabel`, `title`, `aria-haspopup` | `disabled` rend un `<button disabled>` même avec `href` ou `to` ; `ariaLabel` et `title` quand le nom accessible diffère du texte ; `aria-haspopup` quand l'entrée ouvre une boîte de dialogue ; un libellé sans jambage est nudgé comme des petites capitales (`--text-optical-nudge-caps`) |
+| `MenuLabel`, `MenuSeparator` | | titre de groupe et séparateur |
+
+### Dropdown
+
+Liste déroulante maison avec `role="listbox"`.
+
+| Prop | Type | Rôle |
+|---|---|---|
+| `id`, `value`, `onChange` | | requis |
+| `options` | `{ value, label, disabled? }[]` | une option désactivée porte `aria-disabled`, les flèches la sautent |
+| `ariaLabel` | `string` | |
+| `disabled` | `boolean` | le déclencheur passe en `--opacity-disabled` |
+
+### Tabs et TabPanel
+
+Toute liste d'onglets du produit passe par là, y compris deux onglets dans une modale. Flèches et Home/End sautent les onglets désactivés, défilement horizontal avec fondus, onglet de 44 px.
+
+| Prop | Type | Rôle |
+|---|---|---|
+| `idBase`, `active`, `onChange` | | requis |
+| `tabs` | `{ key, label, icon?, iconOnly?, badge?, disabled? }[]` | `iconOnly` garde `label` comme nom accessible sans le dessiner |
+| `ariaLabel` | `string` | |
+| `variant` | `underline` / `pill` | |
+
+`TabPanel` (`tabKey`, `active`) rend le panneau associé.
+
+### SegmentedRadioGroup
+
+Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches, Home et End, seule l'option cochée est tabulable. C'est le sélecteur de thème, d'échelle de note et de mode de roue.
+
+| Prop | Type | Rôle |
+|---|---|---|
+| `id`, `value`, `onChange` | | requis |
+| `options` | `{ value, label, icon? }[]` | |
+| `ariaLabel` ou `ariaLabelledBy` | `string` | l'un des deux |
+| `size` | `md` / `sm` | |
+| `iconOnly` | `boolean` | le libellé devient `aria-label` |
+| `disabled` | `boolean` | toutes les options, `--opacity-disabled`, clavier inerte |
+
+### Tooltip et InfoBubble
+
+| Composant | Props | Rôle |
+|---|---|---|
+| `Tooltip` | `label` (le texte de la bulle), `placement` `top` / `bottom` / `left` / `right`, `delayMs`, `focusable`, `disabled` (ne rend pas la bulle) | apparaît au survol et au focus, jamais seul vecteur d'une information |
+| `InfoBubble` | `label` (nom du bouton d'aide), contenu en enfants | l'aide contextuelle d'un champ ou d'un réglage |
 
 ### États de page
 

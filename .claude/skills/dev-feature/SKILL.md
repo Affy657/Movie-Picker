@@ -72,8 +72,8 @@ Le test est écrit avant le code, et le compte rendu de l'étape 3 dit lesquels 
 ## Étape 6. Lancer front + back pour test manuel
 
 Démarrer les deux serveurs en tâche de fond (config dans [.claude/launch.json](../../launch.json), procédure et pièges dans `/verify`) :
-- **web** → `pnpm --filter web dev` (http://localhost:5173)
-- **api** → `dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj` (http://localhost:4000)
+- **web** : `pnpm --filter web dev` (http://localhost:5173)
+- **api** : `dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj` (http://localhost:4000)
 
 Vérifier que les deux démarrent sans erreur (logs), puis **tester la feature à la main avant de rendre la main**, dans le Browser pane avec le compte `dev@test.local`, sur PC puis sur mobile (`resize_window`), et ne passer à l'utilisateur qu'après avoir contrôlé les quatre points :
 1. **rien d'oublié** : reprendre les critères d'acceptation du compte rendu un par un et jouer chacun, cas à la marge compris, pas seulement le parcours nominal ;
@@ -97,7 +97,7 @@ Dans cet ordre, et seulement une fois le go de l'utilisateur obtenu à l'étape 
 
 - Arrêter les serveurs de dev et fermer l'onglet du Browser pane avant de lancer les suites : les laisser tourner sature le CPU, provoque de faux échecs par timeout, et le binaire verrouillé fait mourir le build API (MSB3027).
 - `pnpm run verify:local` et corriger toute erreur **avant** de push (obligatoire, cf. AGENTS.md). Jamais skip les hooks. Dans un worktree neuf, `pnpm install --frozen-lockfile` d'abord. Playwright n'en fait pas partie : `pnpm run test:e2e:ci` en plus si un spec de `e2e/` a été ajouté ou touché.
-- Commit sur la branche de version `v1.x` (code, tests et roadmap en un seul commit, message en français au format `feat(<scope>): …`), puis push. Depuis une branche de worktree : `git push origin HEAD:v1.x`, en prévenant que la référence locale `v1.x` reste en arrière.
+- Commit sur la branche de version `v1.x` (code, tests et roadmap en un seul commit, message en anglais au format Conventional Commits `feat(<scope>): …` d'AGENTS.md), puis push. Depuis une branche de worktree : `git push origin HEAD:v1.x`, en prévenant que la référence locale `v1.x` reste en arrière.
 - Sur une branche de version, la CI GitHub Actions n'est pas bloquante : la signaler en une ligne si elle échoue et passer à la suite. Elle redevient une porte à la fusion dans `master`.
 - Relancer les serveurs avant de rendre la main.
 

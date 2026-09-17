@@ -158,9 +158,12 @@ veille de vulnérabilités.
 | [Dossier technique](https://web.movie-picker.fr/tech) | La version longue de tout ce qui précède, publiée dans l'application |
 | [`AGENTS.md`](AGENTS.md) | Règles du dépôt : conventions, design system, portes de qualité, workflow |
 | [`docs/development.md`](docs/development.md) | Installation détaillée, seed, scripts, tests, structure |
+| [`docs/design-system.md`](docs/design-system.md) | Jetons et composants partagés du front, props, états et garanties d'accessibilité |
 | [`CHANGELOG.md`](CHANGELOG.md) | Journal des versions, Keep a Changelog et SemVer |
 | [`docs/roadmap.md`](docs/roadmap.md) | Roadmap produit et tech, version par version |
 | [`docs/technical-debt.md`](docs/technical-debt.md) | Dette technique, contraintes et impasses connues |
+| [`docs/runbook-mongodb-restore.md`](docs/runbook-mongodb-restore.md) | Remettre une sauvegarde MongoDB dans le cluster de production |
+| [`docs/runbook-migration-domaine-www.md`](docs/runbook-migration-domaine-www.md) | Bascule du front de `web.` vers `www.movie-picker.fr`, en cours |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Projet solo : ce qui est accepté, ce qui ne l'est pas, où signaler |
 | [`SECURITY.md`](SECURITY.md) | Signaler une faille, par un canal privé |
 

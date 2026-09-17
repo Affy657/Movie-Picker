@@ -104,7 +104,7 @@ Le cluster dev et le cluster prod sont encore partagés (dette connue) : bien v�
 
 ## Domaine et certificat
 
-Le front est sur **`web.movie-picker.fr`**, l'API sur **`api.movie-picker.fr`**. Ni `movie-picker.fr` ni `www.movie-picker.fr` ne servent l'application : ils pointent encore sur OVH, la bascule décrite dans [docs/runbook-migration-domaine-www.md](../../../../docs/runbook-migration-domaine-www.md) n'a jamais été exécutée. Viser un de ces deux hôtes donne un `curl` à 000 et fait conclure à tort que la prod est morte.
+Le front est sur **`web.movie-picker.fr`**, l'API sur **`api.movie-picker.fr`**. Ni `movie-picker.fr` ni `www.movie-picker.fr` ne servent l'application : ils pointent encore sur OVH, la bascule décrite dans [docs/runbook-migration-domaine-www.md](../../../../docs/runbook-migration-domaine-www.md) est en cours et DEBT-014 porte son état d'avancement. Viser un de ces deux hôtes donne un `curl` à 000 et fait conclure à tort que la prod est morte.
 
 ```bash
 for host in web.movie-picker.fr api.movie-picker.fr; do
@@ -115,7 +115,7 @@ curl -sS -o /dev/null -w "front %{http_code}\n" --max-time 15 https://web.movie-
 curl -sS -o /dev/null -w "api %{http_code}\n" --max-time 15 https://api.movie-picker.fr/health
 ```
 
-Le smoke test front du pipeline ne tourne jamais : il est gardé par `vars.AWS_CLOUDFRONT_DISTRIBUTION_ID`, absente des variables Actions du dépôt. C'est ce `curl` qui en tient lieu.
+Le smoke test front de `deploy.yml` fait la même vérification au moment du déploiement ; entre deux déploiements, c'est ce `curl` qui en tient lieu.
 
 ## SonarCloud
 

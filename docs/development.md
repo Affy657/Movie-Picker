@@ -8,8 +8,11 @@ respecter en écrivant du code sont dans [`AGENTS.md`](../AGENTS.md).
 
 - **Node.js** 20.19+, 22.13+ ou 24+, et **pnpm** 10.
 - **SDK .NET 10** pour l'API.
-- **MongoDB**, en conteneur local ou sur Atlas. **Docker** est également requis pour les tests
-  d'intégration et pour l'étape d'audit de `verify:local`.
+- **Docker**, pour les tests d'intégration contre MongoDB et pour la voie docker de `verify:local`
+  (lint des workflows, Gitleaks, Trivy).
+
+MongoDB n'est pas un prérequis : sans configuration l'API tourne en mémoire, la section suivante dit
+quand et comment brancher une vraie base.
 
 Contrôle rapide : `node scripts/check-prereqs.js` et `dotnet --version`.
 
