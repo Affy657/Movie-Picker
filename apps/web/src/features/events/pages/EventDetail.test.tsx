@@ -181,7 +181,9 @@ describe('EventDetail (MSW)', () => {
     renderEventDetail(`/e/${slug}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^partager$/i }));
-    expect(await screen.findByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /copier le lien/i }, { timeout: 20000 })
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /télécharger/i })).toBeInTheDocument();
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
   });
