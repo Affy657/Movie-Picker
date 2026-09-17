@@ -1314,6 +1314,7 @@ export const en: Locale = {
       sortTitle: 'Title',
       sortVoteAverage: 'Rating',
       sortDuration: 'Duration',
+      sortYear: 'Release',
       sortDirectionAsc: 'Ascending',
       sortDirectionDesc: 'Descending',
       filterGenre: 'Genre',

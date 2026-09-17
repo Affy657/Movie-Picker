@@ -1,33 +1,3 @@
-.table {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  overflow: clip;
-  --mc-fg: var(--color-text);
-  --mc-fg-strong: var(--color-text);
-  --mc-fg-muted: var(--color-text-muted);
-  --mc-fg-soft: var(--color-text-muted);
-  --mc-fg-subtle: var(--color-text-muted);
-  --mc-icon-muted: var(--color-text-muted);
-  --mc-border: var(--color-border-subtle);
-  --mc-surface-ring: var(--color-surface);
-  --mc-overlay-hover: var(--color-surface-hover-strong);
-  --mc-overlay-active: var(--color-surface-active);
-  --mc-overlay-hover-soft: var(--color-surface-hover);
-  --mc-active-bg: var(--color-surface-hover);
-  --mc-input-bg: var(--color-input-bg);
-  --mc-kebab-bg: transparent;
-  --mc-kebab-bg-hover: var(--color-surface-hover);
-  --mc-kebab-fg: var(--color-text-muted);
-  --mc-kebab-fg-hover: var(--color-text);
-}
-
-.rows {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
 .grid {
   list-style: none;
   margin: 0;

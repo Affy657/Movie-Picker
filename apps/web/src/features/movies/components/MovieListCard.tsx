@@ -7,7 +7,6 @@ import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import type { RatingScale } from '@/shared/types/theme';
 import styles from './MovieListCard.module.css';
-import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface MovieListCardProps {
@@ -23,7 +22,6 @@ interface MovieListCardProps {
   badges?: ReactNode;
   kebab?: ReactNode;
   className?: string;
-  layout?: 'grid' | 'row';
 }
 
 export function MovieRankBadge({
@@ -52,7 +50,6 @@ export default function MovieListCard({
   badges,
   kebab,
   className,
-  layout = 'grid',
 }: Readonly<MovieListCardProps>) {
   const { t } = useTranslation();
   const posterRaw = posterImageSrc(posterPath);
@@ -87,7 +84,7 @@ export default function MovieListCard({
 
         {badges}
 
-        {kebab && layout === 'grid' && <div className={styles.kebabSlot}>{kebab}</div>}
+        {kebab && <div className={styles.kebabSlot}>{kebab}</div>}
       </div>
 
       <div className={styles.cardBody}>
@@ -112,23 +109,8 @@ export default function MovieListCard({
           )}
         </span>
       </div>
-
-      {kebab && layout === 'row' && <div className={styles.rowKebabSlot}>{kebab}</div>}
     </>
   );
-
-  if (layout === 'row') {
-    return (
-      <Card
-        as="li"
-        padding="none"
-        elevation="sm"
-        className={clsx(styles.card, styles.cardAsRow, className)}
-      >
-        {body}
-      </Card>
-    );
-  }
 
   return <li className={clsx(styles.card, className)}>{body}</li>;
 }

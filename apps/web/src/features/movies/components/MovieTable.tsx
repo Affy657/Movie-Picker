@@ -1,0 +1,122 @@
+import type { ReactNode } from 'react';
+import clsx from 'clsx';
+import { ArrowDown, ArrowUp, Film } from 'lucide-react';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+import styles from './MovieTable.module.css';
+
+export function MovieTable({
+  header,
+  listLabel,
+  className,
+  children,
+}: Readonly<{
+  header?: ReactNode;
+  listLabel?: string;
+  className?: string;
+  children: ReactNode;
+}>) {
+  return (
+    <div className={clsx(styles.table, className)}>
+      {header}
+      <ul className={styles.rows} aria-label={listLabel}>
+        {children}
+      </ul>
+    </div>
+  );
+}
+
+export interface MovieTableSort<K extends string> {
+  key: K;
+  label: string;
+}
+
+export interface MovieTableColumn<K extends string> {
+  sorts?: MovieTableSort<K>[];
+  align?: 'start' | 'end' | 'center';
+  inset?: boolean;
+}
+
+const ALIGN_CLASS = {
+  start: styles.colHeaderStart,
+  end: styles.colHeaderEnd,
+  center: styles.colHeaderCenter,
+} as const;
+
+export function MovieTableHeader<K extends string>({
+  columns,
+  sortBy,
+  sortDir,
+  onSetSort,
+  gridClassName,
+}: Readonly<{
+  columns: MovieTableColumn<K>[];
+  sortBy: K;
+  sortDir: 'asc' | 'desc';
+  onSetSort: (key: K) => void;
+  gridClassName?: string;
+}>) {
+  const DirectionIcon = sortDir === 'asc' ? ArrowUp : ArrowDown;
+
+  return (
+    <div className={clsx(styles.headerRow, gridClassName)}>
+      {columns.map((column, index) => {
+        const sorts = column.sorts ?? [];
+        if (sorts.length === 0) return <span key={index} />;
+        return (
+          <span
+            key={index}
+            className={clsx(
+              styles.colHeaderCell,
+              ALIGN_CLASS[column.align ?? 'start'],
+              column.inset && styles.colHeaderInset
+            )}
+          >
+            {sorts.map((sort) => {
+              const active = sortBy === sort.key;
+              return (
+                <button
+                  key={sort.key}
+                  type="button"
+                  className={clsx(styles.colHeaderBtn, active && styles.colHeaderBtnActive)}
+                  aria-pressed={active}
+                  onClick={() => onSetSort(sort.key)}
+                >
+                  <span>{sort.label}</span>
+                  {active ? <DirectionIcon aria-hidden size={ICON_SIZE.xs} /> : null}
+                </button>
+              );
+            })}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+export function MovieTablePoster({
+  src,
+  srcSet,
+  eager,
+}: Readonly<{ src: string | null | undefined; srcSet?: string; eager: boolean }>) {
+  if (!src) {
+    return (
+      <div className={styles.posterPlaceholder} aria-hidden>
+        <Film size={ICON_SIZE.xl} />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      srcSet={srcSet}
+      sizes="(max-width: 767px) 85px, 60px"
+      alt=""
+      className={styles.poster}
+      width={60}
+      height={90}
+      loading={eager ? 'eager' : 'lazy'}
+      fetchPriority={eager ? 'high' : 'auto'}
+      decoding="async"
+    />
+  );
+}

@@ -76,6 +76,16 @@ describe('useWatchlistToolbar', () => {
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);
   });
 
+  it('sorts by release year, most recent first, then oldest first', () => {
+    const { result } = setup();
+    act(() => result.current.setSortBy('year'));
+    expect(result.current.sortDir).toBe('desc');
+    expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Beta', 'Gamma', 'Alpha']);
+
+    act(() => result.current.setSortBy('year'));
+    expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Alpha', 'Gamma', 'Beta']);
+  });
+
   it('filters by genre while tolerating items without a genre', () => {
     const { result } = setup();
     act(() => result.current.toggleGenre(12));

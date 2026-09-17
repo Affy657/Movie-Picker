@@ -2,16 +2,7 @@ import SeenButton from '@/features/movies/components/SeenButton';
 import type { Translate } from '@/features/movies/types';
 import { Fragment, memo } from 'react';
 import clsx from 'clsx';
-import {
-  AlertTriangle,
-  ArrowDown,
-  ArrowUp,
-  ChevronRight,
-  Film,
-  RotateCcw,
-  ThumbsDown,
-  ThumbsUp,
-} from 'lucide-react';
+import { AlertTriangle, ChevronRight, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import Chip from '@/shared/components/Chip';
 import {
@@ -31,8 +22,14 @@ import {
   type MovieCardCommonProps,
 } from '@/features/movies/components/movieCardParts';
 import Tooltip from '@/shared/components/Tooltip';
+import {
+  MovieTableHeader,
+  MovieTablePoster,
+  type MovieTableColumn,
+} from '@/features/movies/components/MovieTable';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import cardPartsStyles from './movieCardParts.module.css';
+import table from './MovieTable.module.css';
 import styles from './MovieCardRow.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
@@ -67,78 +64,28 @@ export function MovieRowHeader({
     RowSortKey,
     string
   >;
-
-  function headerButton(key: RowSortKey) {
-    const active = sortBy === key;
-    const DirectionIcon = sortDir === 'asc' ? ArrowUp : ArrowDown;
-    return (
-      <button
-        type="button"
-        className={clsx(styles.colHeaderBtn, active && styles.colHeaderBtnActive)}
-        aria-pressed={active}
-        onClick={() => onSetSort(key)}
-      >
-        <span>{byKey[key]}</span>
-        {active ? <DirectionIcon aria-hidden size={ICON_SIZE.xs} /> : null}
-      </button>
-    );
-  }
+  const sort = (key: RowSortKey) => [{ key, label: byKey[key] }];
+  const layout: MovieTableColumn<RowSortKey>[] = [
+    {},
+    {},
+    { sorts: sort('createdAt'), inset: true },
+    { sorts: sort('voteAverage'), align: 'end' },
+    { sorts: sort('duration'), align: 'end' },
+    { sorts: sort('releaseDate'), align: 'end' },
+    { sorts: sort('availability'), inset: true },
+    {},
+    { sorts: sort('seen'), align: 'center' },
+    { sorts: sort('score'), align: 'end' },
+    {},
+  ];
 
   return (
-    <div className={clsx(styles.row, styles.headerRow)}>
-      <span />
-      <span />
-      <span className={clsx(styles.colHeaderCell, styles.colHeaderStart)}>
-        {headerButton('createdAt')}
-      </span>
-      <span className={clsx(styles.colHeaderCell, styles.colHeaderEnd)}>
-        {headerButton('voteAverage')}
-      </span>
-      <span className={clsx(styles.colHeaderCell, styles.colHeaderEnd)}>
-        {headerButton('duration')}
-      </span>
-      <span className={clsx(styles.colHeaderCell, styles.colHeaderEnd)}>
-        {headerButton('releaseDate')}
-      </span>
-      <span className={clsx(styles.colHeaderCell, styles.colHeaderStart, styles.colHeaderDispo)}>
-        {headerButton('availability')}
-      </span>
-      <span />
-      <span className={clsx(styles.colHeaderCell, styles.colHeaderCenter)}>
-        {headerButton('seen')}
-      </span>
-      <span className={clsx(styles.colHeaderCell, styles.colHeaderEnd)}>
-        {headerButton('score')}
-      </span>
-      <span />
-    </div>
-  );
-}
-
-function RowPoster({
-  src,
-  srcSet,
-  eager,
-}: Readonly<{ src: string | null | undefined; srcSet?: string; eager: boolean }>) {
-  if (!src) {
-    return (
-      <div className={styles.posterPlaceholder} aria-hidden>
-        <Film size={ICON_SIZE.xl} />
-      </div>
-    );
-  }
-  return (
-    <img
-      src={src}
-      srcSet={srcSet}
-      sizes="(max-width: 767px) 85px, 60px"
-      alt=""
-      className={styles.poster}
-      width={60}
-      height={90}
-      loading={eager ? 'eager' : 'lazy'}
-      fetchPriority={eager ? 'high' : 'auto'}
-      decoding="async"
+    <MovieTableHeader
+      columns={layout}
+      sortBy={sortBy}
+      sortDir={sortDir}
+      onSetSort={onSetSort}
+      gridClassName={styles.rowGrid}
     />
   );
 }
@@ -337,7 +284,7 @@ function MovieCardRowMobile({
     <Fragment>
       <li
         className={clsx(
-          styles.mobileRow,
+          table.mobileRow,
           isWinner && styles.rowWinner,
           !!voteError && styles.rowError,
           excluded && cardPartsStyles.excluded,
@@ -350,8 +297,8 @@ function MovieCardRowMobile({
         {selecting && selection ? (
           <CardSelectionOverlay movie={m} selection={selection} t={t} />
         ) : null}
-        <div className={styles.mobilePosterCol} inert={selecting}>
-          <RowPoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
+        <div className={table.mobilePosterCol} inert={selecting}>
+          <MovieTablePoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
           <PosterDetailsTrigger
             hasDetails={s.hasDetails}
             onOpen={() => s.openDetails('soiree')}
@@ -361,13 +308,13 @@ function MovieCardRowMobile({
           <WatchlistBadge inWatchlist={!!isInWatchlist} t={t} />
           <WinnerRibbon isWinner={isWinner} winnerRank={winnerRank} compact t={t} />
         </div>
-        <div className={styles.mobileContent} inert={selecting}>
-          <div className={styles.mobileTitleRow}>
-            <h3 className={styles.title} title={m.title}>
+        <div className={table.mobileContent} inert={selecting}>
+          <div className={table.mobileTitleRow}>
+            <h3 className={table.title} title={m.title}>
               {m.title}
             </h3>
           </div>
-          <div className={styles.mobileFacts}>
+          <div className={table.mobileFacts}>
             {m.year ? <span>{m.year}</span> : null}
             {s.runtimeLabel ? <span>{s.runtimeLabel}</span> : null}
             {s.voteLabel ? <span>{s.voteLabel}</span> : null}
@@ -421,14 +368,14 @@ function MovieCardRowMobile({
         {s.hasDetails ? (
           <button
             type="button"
-            className={styles.disclosure}
+            className={table.disclosure}
             onClick={() => s.openDetails('soiree')}
             aria-label={t('movies.details.toggleShow')}
           >
             <ChevronRight aria-hidden size={ICON_SIZE.md} />
           </button>
         ) : (
-          <span className={styles.disclosure} aria-hidden />
+          <span className={table.disclosure} aria-hidden />
         )}
         <CardModals
           s={s}
@@ -481,7 +428,8 @@ function MovieCardRowDesktop({
     <Fragment>
       <li
         className={clsx(
-          styles.row,
+          table.row,
+          styles.rowGrid,
           isWinner && styles.rowWinner,
           !!voteError && styles.rowError,
           excluded && cardPartsStyles.excluded,
@@ -497,8 +445,8 @@ function MovieCardRowDesktop({
         <span className={styles.rank} data-testid="movie-rank">
           {rank ?? ''}
         </span>
-        <div className={styles.posterCol} inert={selecting}>
-          <RowPoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
+        <div className={table.posterCol} inert={selecting}>
+          <MovieTablePoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
           <PosterDetailsTrigger
             hasDetails={s.hasDetails}
             onOpen={() => s.openDetails('soiree')}
@@ -507,13 +455,13 @@ function MovieCardRowDesktop({
           />
           <WatchlistBadge inWatchlist={!!isInWatchlist} t={t} />
         </div>
-        <div className={styles.titleCol} inert={selecting}>
-          <div className={styles.titleRow}>
-            <h3 className={styles.title} title={m.title}>
+        <div className={table.titleCol} inert={selecting}>
+          <div className={table.titleRow}>
+            <h3 className={table.title} title={m.title}>
               {m.title}
             </h3>
           </div>
-          <div className={styles.metaRow}>
+          <div className={table.metaRow}>
             <ProposerBadge
               avatarId={s.proposerAvatarId}
               pseudo={m.proposerPseudo}
@@ -527,9 +475,9 @@ function MovieCardRowDesktop({
             ) : null}
           </div>
         </div>
-        <span className={styles.cellEnd}>{s.voteLabel}</span>
-        <span className={styles.cellEnd}>{s.runtimeLabel}</span>
-        <span className={styles.cellEnd}>{releaseDateLabel}</span>
+        <span className={table.cellEnd}>{s.voteLabel}</span>
+        <span className={table.cellEnd}>{s.runtimeLabel}</span>
+        <span className={table.cellEnd}>{releaseDateLabel}</span>
         <div className={styles.dispoCol}>
           <RowDispo
             flatrateProviders={flatrateProviders}
@@ -573,7 +521,7 @@ function MovieCardRowDesktop({
         <MovieCardKebab
           movie={m}
           card={s}
-          slotClassName={styles.kebabCol ?? ''}
+          slotClassName={table.kebabCol ?? ''}
           isHost={isHost}
           isInWatchlist={isInWatchlist}
           onRemove={onRemove}

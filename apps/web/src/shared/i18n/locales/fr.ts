@@ -1336,6 +1336,7 @@ export const fr = {
       sortTitle: 'Titre',
       sortVoteAverage: 'Note',
       sortDuration: 'Durée',
+      sortYear: 'Sortie',
       sortDirectionAsc: 'Croissant',
       sortDirectionDesc: 'Décroissant',
       filterGenre: 'Genre',

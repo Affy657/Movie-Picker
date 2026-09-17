@@ -1,0 +1,46 @@
+.rowGrid {
+  grid-template-columns: 60px minmax(0, 1fr) 56px 60px 56px 44px;
+}
+
+@media (hover: hover) {
+  .rowHoverable:hover {
+    background: var(--color-surface-hover);
+  }
+}
+
+.rowTrigger {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-base);
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.rowTrigger:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: -2px;
+}
+
+.kebabSlot {
+  position: relative;
+  z-index: var(--z-raised-above);
+}
+
+.badge {
+  flex-shrink: 0;
+}
+
+.genres {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  color: var(--color-meta);
+}
+
+.mobileMeta {
+  margin-top: 0;
+}

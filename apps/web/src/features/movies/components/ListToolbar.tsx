@@ -35,6 +35,7 @@ export interface ListToolbarProps<TSortKey extends string> {
   clearAllLabel: string;
   onClearAll: () => void;
   isMobile: boolean;
+  hideSort?: boolean;
   trailing?: ReactNode;
 }
 
@@ -62,6 +63,7 @@ export default function ListToolbar<TSortKey extends string>({
   clearAllLabel,
   onClearAll,
   isMobile,
+  hideSort = false,
   trailing,
 }: Readonly<ListToolbarProps<TSortKey>>) {
   return (
@@ -97,21 +99,23 @@ export default function ListToolbar<TSortKey extends string>({
               )}
             </Button>
 
-            <span className={styles.divider} aria-hidden="true" />
+            {hideSort ? null : <span className={styles.divider} aria-hidden="true" />}
           </>
         ) : null}
 
-        <SortControl
-          sortOptions={sortOptions}
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSetSort={onSetSort}
-          sortLabel={sortLabel}
-          sortMenuAriaLabel={sortMenuAriaLabel}
-          sortDirectionAscLabel={sortDirectionAscLabel}
-          sortDirectionDescLabel={sortDirectionDescLabel}
-          isMobile={isMobile}
-        />
+        {hideSort ? null : (
+          <SortControl
+            sortOptions={sortOptions}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSetSort={onSetSort}
+            sortLabel={sortLabel}
+            sortMenuAriaLabel={sortMenuAriaLabel}
+            sortDirectionAscLabel={sortDirectionAscLabel}
+            sortDirectionDescLabel={sortDirectionDescLabel}
+            isMobile={isMobile}
+          />
+        )}
 
         {isFiltered ? (
           <span className={styles.resultCount}>

@@ -4,6 +4,7 @@ import type { RatingScale } from '@/shared/types/theme';
 import { useTranslation } from '@/shared/i18n';
 import { MovieCardList } from '@/features/movies/components/MovieCardList';
 import { MovieCardRow, MovieRowHeader } from '@/features/movies/components/MovieCardRow';
+import { MovieTable } from '@/features/movies/components/MovieTable';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import styles from './MovieList.module.css';
 
@@ -125,42 +126,43 @@ export default function MovieList({
 
   if (viewMode === 'list') {
     return (
-      <div className={styles.table}>
-        {!isMobile && showHeader && sortBy && sortDir && onSetSort ? (
-          <MovieRowHeader
-            columns={[
-              { key: 'createdAt', label: t('movies.list.columnAddedAt') },
-              { key: 'voteAverage', label: t('movies.list.columnTmdbVote') },
-              { key: 'duration', label: t('movies.list.columnDuration') },
-              { key: 'releaseDate', label: t('movies.list.columnReleaseDate') },
-              { key: 'availability', label: t('movies.watchProviders.columnLabel') },
-              { key: 'seen', label: t('movies.seen.columnLabel') },
-              { key: 'score', label: t('movies.list.columnScore') },
-            ]}
-            sortBy={sortBy}
-            sortDir={sortDir}
-            onSetSort={onSetSort}
-          />
-        ) : null}
-        <ul className={styles.rows}>
-          {movies.map((m, i) => {
-            const rowError = voteErrors?.[m.id];
-            return (
-              <MovieCardRow
-                key={m.id}
-                {...commonCardProps(m)}
-                eager={i < 3}
-                rank={showRank ? listRanks.get(m.id) : undefined}
-                voteError={
-                  rowError
-                    ? { message: rowError.message, onRetry: () => onRetryVote?.(m.id) }
-                    : undefined
-                }
-              />
-            );
-          })}
-        </ul>
-      </div>
+      <MovieTable
+        header={
+          !isMobile && showHeader && sortBy && sortDir && onSetSort ? (
+            <MovieRowHeader
+              columns={[
+                { key: 'createdAt', label: t('movies.list.columnAddedAt') },
+                { key: 'voteAverage', label: t('movies.list.columnTmdbVote') },
+                { key: 'duration', label: t('movies.list.columnDuration') },
+                { key: 'releaseDate', label: t('movies.list.columnReleaseDate') },
+                { key: 'availability', label: t('movies.watchProviders.columnLabel') },
+                { key: 'seen', label: t('movies.seen.columnLabel') },
+                { key: 'score', label: t('movies.list.columnScore') },
+              ]}
+              sortBy={sortBy}
+              sortDir={sortDir}
+              onSetSort={onSetSort}
+            />
+          ) : null
+        }
+      >
+        {movies.map((m, i) => {
+          const rowError = voteErrors?.[m.id];
+          return (
+            <MovieCardRow
+              key={m.id}
+              {...commonCardProps(m)}
+              eager={i < 3}
+              rank={showRank ? listRanks.get(m.id) : undefined}
+              voteError={
+                rowError
+                  ? { message: rowError.message, onRetry: () => onRetryVote?.(m.id) }
+                  : undefined
+              }
+            />
+          );
+        })}
+      </MovieTable>
     );
   }
 

@@ -12,16 +12,23 @@ import type { RatingScale } from '@/shared/types/theme';
 import type { MovieMediaType } from '@/shared/types/movie';
 import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
 
-export type WatchlistSortKey = 'createdAt' | 'title' | 'voteAverage' | 'duration';
+export type WatchlistSortKey = 'createdAt' | 'title' | 'voteAverage' | 'duration' | 'year';
 export type SortDirection = 'asc' | 'desc';
 
-const SORT_KEYS = new Set<WatchlistSortKey>(['createdAt', 'title', 'voteAverage', 'duration']);
+const SORT_KEYS = new Set<WatchlistSortKey>([
+  'createdAt',
+  'title',
+  'voteAverage',
+  'duration',
+  'year',
+]);
 
 const DEFAULT_DIRECTION: Record<WatchlistSortKey, SortDirection> = {
   createdAt: 'desc',
   title: 'asc',
   voteAverage: 'desc',
   duration: 'asc',
+  year: 'desc',
 };
 
 interface PersistedState {
@@ -99,6 +106,8 @@ function compareItems(a: WatchlistItem, b: WatchlistItem, sortBy: WatchlistSortK
       const rb = b.runtimeMinutes ?? Infinity;
       return ra - rb;
     }
+    case 'year':
+      return a.year.localeCompare(b.year);
     case 'createdAt':
     default:
       return a.createdAt.localeCompare(b.createdAt);

@@ -68,22 +68,13 @@ describe('MovieListCard', () => {
     expect(screen.getByRole('heading', { name: 'Dune', level: 3 })).toBeInTheDocument();
   });
 
-  it('places the kebab in the poster region in grid layout and after the body in row layout', () => {
-    const grid = renderCard({ kebab: <button type="button">kebab</button> });
-    const gridHeading = grid.getByRole('heading', { name: 'Dune' });
-    const gridKebab = grid.getByRole('button', { name: 'kebab' });
-    expect(gridKebab.compareDocumentPosition(gridHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+  it('places the kebab in the poster region, before the title', () => {
+    renderCard({ kebab: <button type="button">kebab</button> });
+    const heading = screen.getByRole('heading', { name: 'Dune' });
+    const kebab = screen.getByRole('button', { name: 'kebab' });
+    expect(kebab.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING
     );
-    grid.unmount();
-
-    const row = renderCard({ layout: 'row', kebab: <button type="button">kebab</button> });
-    const rowHeading = row.getByRole('heading', { name: 'Dune' });
-    const rowKebab = row.getByRole('button', { name: 'kebab' });
-    expect(rowHeading.compareDocumentPosition(rowKebab) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING
-    );
-    expect(row.getByRole('listitem')).toBeInTheDocument();
   });
 
   it('renders the badges slot over the poster', () => {

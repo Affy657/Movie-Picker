@@ -52,6 +52,7 @@ const ITEM_B = {
   createdAt: '2026-02-01T00:00:00Z',
 };
 
+const TOOLBAR_STORAGE_KEY = 'moviepicker_watchlist_toolbar_u1';
 const KEBAB_A = /plus d.actions.*ancien mais bien noté/i;
 const POSTER_A = /voir les détails de « ancien mais bien noté »/i;
 
@@ -540,6 +541,50 @@ describe('WatchlistPage (MSW)', () => {
     expect(screen.getByRole('menuitem', { name: 'Retirer de ma liste' })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Proposer dans une soirée' })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /letterboxd/i })).toBeInTheDocument();
+  });
+
+  it('list view: a sortable column header replaces the toolbar sort and orders the rows', async () => {
+    localStorage.removeItem(TOOLBAR_STORAGE_KEY);
+    localStorage.setItem('watchlist-view', 'list');
+    server.use(authedUserHandler, watchlistHandler([ITEM_A, ITEM_B]));
+
+    renderPage();
+    const user = userEvent.setup();
+
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
+    expect(screen.queryByRole('toolbar', { name: /trier par/i })).not.toBeInTheDocument();
+    const header = screen.getByRole('button', { name: 'Ajout' });
+    expect(header).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Sortie' })).toBeInTheDocument();
+    const titles = () =>
+      within(list)
+        .getAllByRole('heading', { level: 3 })
+        .map((h) => h.textContent);
+    expect(titles()).toEqual(['Recent Mais Mal Noté', 'Ancien Mais Bien Noté']);
+    expect(within(list).getByText('1h30')).toBeInTheDocument();
+    expect(within(list).getByText('9.0/10')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Note' }));
+    expect(titles()).toEqual(['Ancien Mais Bien Noté', 'Recent Mais Mal Noté']);
+
+    await user.click(screen.getByRole('button', { name: /affichage grille/i }));
+    const sortToolbar = screen.getByRole('toolbar', { name: /trier par/i });
+    expect(within(sortToolbar).getByRole('button', { name: 'Sortie' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Sortie' })).toHaveLength(1);
+  });
+
+  it('list view on mobile: no column header, the toolbar keeps its sort menu', async () => {
+    localStorage.removeItem(TOOLBAR_STORAGE_KEY);
+    localStorage.setItem('watchlist-view', 'list');
+    stubMatchMedia(true);
+    server.use(authedUserHandler, watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    await screen.findByRole('list', { name: /films de ma liste/i });
+    expect(screen.queryByRole('button', { name: 'Note' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^ajout$/i })).toHaveAttribute('aria-haspopup');
+    expect(screen.getByRole('button', { name: POSTER_A })).toBeInTheDocument();
   });
 
   it('offers the Letterboxd import when no username is configured, and opens the connection modal', async () => {

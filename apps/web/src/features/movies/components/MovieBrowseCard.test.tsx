@@ -107,6 +107,29 @@ describe('MovieBrowseCard', () => {
     expect(screen.getByRole('listitem')).toBeInTheDocument();
   });
 
+  it('row layout on mobile: no kebab even with hover, the row still opens the details', async () => {
+    const handlers = renderCard({
+      layout: 'row',
+      isMobile: true,
+      hasHover: true,
+      isLoggedIn: true,
+    });
+
+    expect(screen.queryByRole('button', { name: /plus d’actions/i })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Voir les détails de « Dune »' }));
+    expect(handlers.onOpenDetails).toHaveBeenCalledTimes(1);
+  });
+
+  it('row layout translates the genre ids, keeps three at most, and flags a series', () => {
+    renderCard({
+      layout: 'row',
+      item: { ...dune, mediaType: 'tv', genreIds: [18, 53, 18, 878, 28] },
+    });
+
+    expect(screen.getByText('Drame, Thriller, Science-fiction')).toBeInTheDocument();
+    expect(screen.getByText('Série')).toBeInTheDocument();
+  });
+
   it('stacks the leading badge and the TV badge over the poster', () => {
     renderCard({
       item: { ...dune, mediaType: 'tv' },

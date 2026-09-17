@@ -30,9 +30,13 @@ import { useAddToWatchlist, useWatchlist } from '@/features/watchlist/hooks/useW
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
 import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
 import { useWatchlistToolbar } from '@/features/watchlist/hooks/useWatchlistToolbar';
-import WatchlistToolbar from '@/features/watchlist/components/WatchlistToolbar';
+import WatchlistToolbar, {
+  watchlistRowSorts,
+} from '@/features/watchlist/components/WatchlistToolbar';
 import MovieListFiltersPanel from '@/features/movies/components/MovieListFiltersPanel';
 import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
+import { MovieListRowHeader } from '@/features/movies/components/MovieListRow';
+import { MovieTable } from '@/features/movies/components/MovieTable';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import ViewModeToggle, { type MovieViewMode } from '@/shared/components/ViewModeToggle';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
@@ -190,6 +194,23 @@ export default function WatchlistPage() {
   );
   const subtitle = watchlistSubtitle(items.length, t);
   const openAddPanel = () => setAddPanelOpen(true);
+  const listView = viewMode === 'list';
+  const renderItem = (item: WatchlistItem, index: number) => (
+    <MovieBrowseCard
+      key={itemKey(item.tmdbId, item.mediaType)}
+      item={item}
+      layout={listView ? 'row' : 'grid'}
+      isMobile={isMobile}
+      hasHover={hasHover}
+      isLoggedIn={!!user}
+      inWatchlist
+      eager={listView && index < 3}
+      onToggleWatchlist={() => watchlistToggle.toggle(item)}
+      onProposeToEvent={() => setProposeTarget(item)}
+      onOpenDetails={() => setDetailsTarget(item)}
+      ratingScale={user?.ratingScale}
+    />
+  );
 
   if (authLoading) {
     return (
@@ -314,6 +335,7 @@ export default function WatchlistPage() {
                   activeFilterCount,
                   isMobile,
                 })}
+                hideSort={listView && !isMobile}
                 trailing={<ViewModeToggle value={viewMode} onChange={changeViewMode} />}
               />
             }
@@ -361,25 +383,27 @@ export default function WatchlistPage() {
               ) : null
             }
           >
-            <ul
-              className={viewMode === 'list' ? styles.rows : styles.grid}
-              aria-label={t('watchlist.listAria')}
-            >
-              {toolbar.visibleItems.map((item) => (
-                <MovieBrowseCard
-                  key={itemKey(item.tmdbId, item.mediaType)}
-                  item={item}
-                  layout={viewMode === 'list' ? 'row' : 'grid'}
-                  hasHover={hasHover}
-                  isLoggedIn={!!user}
-                  inWatchlist
-                  onToggleWatchlist={() => watchlistToggle.toggle(item)}
-                  onProposeToEvent={() => setProposeTarget(item)}
-                  onOpenDetails={() => setDetailsTarget(item)}
-                  ratingScale={user?.ratingScale}
-                />
-              ))}
-            </ul>
+            {listView ? (
+              <MovieTable
+                listLabel={t('watchlist.listAria')}
+                header={
+                  isMobile ? null : (
+                    <MovieListRowHeader
+                      sorts={watchlistRowSorts(t)}
+                      sortBy={toolbar.sortBy}
+                      sortDir={toolbar.sortDir}
+                      onSetSort={toolbar.setSortBy}
+                    />
+                  )
+                }
+              >
+                {toolbar.visibleItems.map(renderItem)}
+              </MovieTable>
+            ) : (
+              <ul className={styles.grid} aria-label={t('watchlist.listAria')}>
+                {toolbar.visibleItems.map(renderItem)}
+              </ul>
+            )}
           </FilteredCollectionLayout>
         )}
       </section>
