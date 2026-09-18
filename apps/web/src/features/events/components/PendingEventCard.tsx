@@ -4,37 +4,17 @@ import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import {
   ParticipantStat,
   MoviesStat,
-  HostBadge,
+  EventCardMeta,
 } from '@/features/events/components/EventSummaryCard';
-import { formatEventTime } from '@/shared/utils/formatMyEventsListDate';
+import EventDateChip from '@/features/events/components/EventDateChip';
 import { formatRelativeTime } from '@/shared/utils/formatRelativeTime';
 import { useLocale, useTranslation } from '@/shared/i18n';
-import type { LocaleCode } from '@/shared/i18n/locales';
 import { ROUTES } from '@/app/routes';
 import type { MyEventSummary } from '@/features/events/types';
 import Card from '@/shared/components/Card';
 import styles from './PendingEventCard.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-
-const LOCALE_TAG: Record<LocaleCode, string> = {
-  fr: 'fr-FR',
-  en: 'en-GB',
-};
-
-function formatLongDateWithTime(date: string, time: string, locale: LocaleCode): string {
-  const parts = date.split('-').map((p) => Number.parseInt(p, 10));
-  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return date;
-  const [y, m, d] = parts as [number, number, number];
-  const parsed = new Date(y, m - 1, d);
-  if (Number.isNaN(parsed.getTime())) return date;
-  const datePart = new Intl.DateTimeFormat(LOCALE_TAG[locale], {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'short',
-  }).format(parsed);
-  return `${datePart}, ${formatEventTime(time)}`;
-}
 
 interface PendingEventCardProps {
   event: MyEventSummary;
@@ -49,7 +29,6 @@ export default function PendingEventCard({
 }: Readonly<PendingEventCardProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
-  const dateTimeLabel = formatLongDateWithTime(event.date, event.time, locale);
 
   return (
     <Card as="article" padding="none" elevation="sm" className={styles.card}>
@@ -67,23 +46,20 @@ export default function PendingEventCard({
         ) : null}
       </div>
 
-      <div className={styles.titleRow}>
-        <div className={styles.titleBlock}>
+      <div className={styles.row}>
+        <EventDateChip date={event.date} time={event.time} tone="pending" />
+        <div className={styles.body}>
           <h3 className={styles.title}>{event.title}</h3>
-          <span className={styles.meta}>
-            <span>{dateTimeLabel}</span>
-            {event.theme ? <span className={styles.theme}>{event.theme}</span> : null}
-          </span>
+          {event.theme ? <span className={styles.theme}>{event.theme}</span> : null}
+          <p className={styles.description}>
+            {t(event.isCreator ? 'events.pending.hostText' : 'events.pending.participantText')}
+          </p>
         </div>
-        {event.isCreator ? <HostBadge t={t} /> : null}
       </div>
-
-      <p className={styles.description}>
-        {t(event.isCreator ? 'events.pending.hostText' : 'events.pending.participantText')}
-      </p>
 
       <div className={styles.footer}>
         <span className={styles.stats}>
+          <EventCardMeta event={event} lifecycle="pending" />
           <ParticipantStat
             count={event.participantCount ?? 0}
             maxParticipants={event.maxParticipants}

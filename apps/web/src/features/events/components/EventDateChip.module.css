@@ -4,17 +4,28 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-0-5);
-  width: var(--space-12);
-  height: var(--space-12);
+  min-width: var(--space-14);
+  padding: var(--space-2) var(--space-1) var(--space-1-5);
   flex-shrink: 0;
+  align-self: flex-start;
   border-radius: var(--radius-md);
   background: var(--color-bg);
   border: 1px solid var(--color-border-subtle);
 }
 
+.tileSoon {
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary-border);
+}
+
 .tileLive {
   background: var(--color-success-bg);
   border-color: var(--color-success-border);
+}
+
+.tilePending {
+  background: var(--color-warning-bg);
+  border-color: var(--color-warning-border);
 }
 
 .month {
@@ -26,8 +37,16 @@
   line-height: var(--leading-none);
 }
 
+.tileSoon .month {
+  color: var(--color-primary-text);
+}
+
 .tileLive .month {
   color: var(--color-success);
+}
+
+.tilePending .month {
+  color: var(--color-warning);
 }
 
 .day {
@@ -36,4 +55,20 @@
   letter-spacing: var(--tracking-tight);
   color: var(--color-text);
   line-height: var(--leading-none);
+}
+
+.time {
+  margin-top: var(--space-0-5);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-text);
+  line-height: var(--leading-none);
+}
+
+.tileLive .time {
+  color: var(--color-success);
+}
+
+.tilePending .time {
+  color: var(--color-warning);
 }

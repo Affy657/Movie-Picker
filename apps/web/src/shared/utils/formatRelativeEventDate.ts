@@ -14,15 +14,29 @@ function parseIsoDateParts(isoDate: string): [number, number, number] | null {
   return [parts[0]!, parts[1]!, parts[2]!];
 }
 
-export function formatRelativeEventDate(isoDate: string, locale: LocaleCode): string {
+function parseEventDay(isoDate: string): Date | null {
   const parts = parseIsoDateParts(isoDate);
-  if (!parts) return isoDate;
+  if (!parts) return null;
   const [y, m, d] = parts;
   const eventDay = new Date(y, m - 1, d);
-  if (Number.isNaN(eventDay.getTime())) return isoDate;
+  return Number.isNaN(eventDay.getTime()) ? null : eventDay;
+}
 
+function startOfToday(): Date {
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+export function daysUntilEventDate(isoDate: string): number | null {
+  const eventDay = parseEventDay(isoDate);
+  if (!eventDay) return null;
+  return Math.round((eventDay.getTime() - startOfToday().getTime()) / 86_400_000);
+}
+
+export function formatRelativeEventDate(isoDate: string, locale: LocaleCode): string {
+  const eventDay = parseEventDay(isoDate);
+  if (!eventDay) return isoDate;
+  const today = startOfToday();
   const dayDiff = Math.round((eventDay.getTime() - today.getTime()) / 86_400_000);
 
   const rtf = new Intl.RelativeTimeFormat(LOCALE_TAG[locale], { numeric: 'auto' });

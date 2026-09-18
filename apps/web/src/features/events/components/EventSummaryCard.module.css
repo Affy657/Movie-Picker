@@ -35,17 +35,23 @@
   }
 }
 
-.rowTop {
+.row {
   display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-1-5) var(--space-3);
-  flex-shrink: 0;
+  gap: var(--space-3-5);
+  width: 100%;
+  flex: 1;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  flex: 1;
+  min-width: 0;
+  text-align: left;
 }
 
 .title {
-  flex: 1;
   min-width: 0;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
@@ -56,7 +62,6 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
-  text-align: left;
 }
 
 .cardTheme {
@@ -90,6 +95,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  margin-left: auto;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-muted);
@@ -105,7 +111,6 @@
   background: var(--color-primary-soft);
   border: 1px solid var(--color-primary-border);
   overflow: hidden;
-  margin-top: auto;
   line-height: var(--leading-none);
 }
 
@@ -134,49 +139,7 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-.linkFooter {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-3);
-  margin-top: auto;
-  padding-top: var(--space-3);
-}
-
-.linkFooterAfterWinner {
-  margin-top: 0;
-}
-
-.metaRight {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1-5);
-}
-
-.meta {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-muted);
-}
-
-.listRow {
-  display: flex;
-  gap: var(--space-3-5);
-  width: 100%;
-  flex: 1;
-}
-
-.listBody {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1-5);
-  flex: 1;
-  min-width: 0;
-}
-
-.listFooter {
+.footer {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -185,20 +148,60 @@
   padding-top: var(--space-1-5);
 }
 
-.listStats {
-  margin-left: auto;
+.metaGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  min-width: 0;
 }
 
-.timeValue {
-  font-size: var(--font-size-sm);
+.when {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+  color: var(--color-text-muted);
   line-height: var(--leading-none);
+  white-space: nowrap;
 }
 
-.badgeHost {
+.when svg {
   flex-shrink: 0;
-  margin-top: 0.2em;
+}
+
+.whenSoon {
+  color: var(--color-primary-text);
+}
+
+.whenText {
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.metaSeparator {
+  width: 1px;
+  height: var(--space-3);
+  background: var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+.role {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  letter-spacing: var(--tracking-extra);
+  color: var(--color-meta);
+  line-height: var(--leading-none);
+  white-space: nowrap;
+}
+
+.role svg {
+  flex-shrink: 0;
+}
+
+.roleText {
+  transform: translateY(var(--text-optical-nudge-caps));
 }
