@@ -12,14 +12,29 @@ namespace MoviePicker.Api.Tests.UseCases.Sitemap;
 public sealed class GetSitemapXmlHandlerTests
 {
     private static readonly XNamespace Ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
+    private static readonly DateTimeOffset GenerationDay = new(2026, 9, 18, 8, 30, 0, TimeSpan.Zero);
+
+    private sealed class FakeTimeProvider(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
 
     private readonly Mock<IUserRepository> _users = new();
 
     private GetSitemapXmlHandler CreateSut(string webBase = "https://web.example")
     {
         var opts = Options.Create(new MoviePickerOptions { PublicWebBaseUrl = webBase });
-        return new GetSitemapXmlHandler(_users.Object, opts, NullLogger<GetSitemapXmlHandler>.Instance);
+        return new GetSitemapXmlHandler(
+            _users.Object,
+            opts,
+            NullLogger<GetSitemapXmlHandler>.Instance,
+            new FakeTimeProvider(GenerationDay));
     }
+
+    private static string? LastmodOf(string xml, string loc) =>
+        XDocument.Parse(xml).Descendants(Ns + "url")
+            .Single(u => u.Element(Ns + "loc")!.Value == loc)
+            .Element(Ns + "lastmod")?.Value;
 
     private void SetupProfiles(params PublicProfileRef[] profiles) =>
         _users.Setup(r => r.ListPublicProfilesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -66,6 +81,33 @@ public sealed class GetSitemapXmlHandlerTests
     }
 
     [Fact]
+    public async Task BuildXmlAsync_IncludesThePublicFilmLists()
+    {
+        SetupProfiles();
+        var xml = await CreateSut().BuildXmlAsync();
+
+        var locs = Locs(xml);
+        Assert.Contains("https://web.example/films/tendances", locs);
+        Assert.Contains("https://web.example/films/au-cinema", locs);
+        Assert.Contains("https://web.example/films/les-plus-proposes", locs);
+        Assert.Contains("https://web.example/films/collections", locs);
+    }
+
+    [Fact]
+    public async Task BuildXmlAsync_DatesTheDailyListsFromTheClockAndLeavesStaticPagesUndated()
+    {
+        SetupProfiles();
+        var xml = await CreateSut().BuildXmlAsync();
+
+        Assert.Equal("2026-09-18", LastmodOf(xml, "https://web.example/"));
+        Assert.Equal("2026-09-18", LastmodOf(xml, "https://web.example/films/tendances"));
+        Assert.Equal("2026-09-18", LastmodOf(xml, "https://web.example/films/au-cinema"));
+        Assert.Null(LastmodOf(xml, "https://web.example/decouvrir"));
+        Assert.Null(LastmodOf(xml, "https://web.example/films/collections"));
+        Assert.Null(LastmodOf(xml, "https://web.example/tech"));
+    }
+
+    [Fact]
     public async Task BuildXmlAsync_IncludesPublicProfileUrls()
     {
         SetupProfiles(
@@ -99,6 +141,6 @@ public sealed class GetSitemapXmlHandlerTests
         var root = XDocument.Parse(xml).Root;
         Assert.NotNull(root);
         Assert.Equal(Ns + "urlset", root!.Name);
-        Assert.Equal(5, root.Elements(Ns + "url").Count());
+        Assert.Equal(9, root.Elements(Ns + "url").Count());
     }
 }

@@ -57,6 +57,7 @@ export const en: Locale = {
     ctaRegister: 'Create an account',
     title: 'What are we watching tonight?',
     intro: 'Search for a film or browse the selections.',
+    seoTitle: "Movie Picker: pick the night's film, together",
     seoDescription:
       'Search for a film, browse trending titles, cinema releases and themed selections, then create the movie night that goes with it.',
     ctaBand: {

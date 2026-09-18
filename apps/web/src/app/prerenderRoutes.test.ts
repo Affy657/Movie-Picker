@@ -39,6 +39,18 @@ describe('PRERENDERED_ROUTES', () => {
     expect(PRERENDERED_ROUTES).not.toContain(ROUTES.home);
   });
 
+  it('prerenders the public film lists, which share the showcase chunk', () => {
+    for (const route of [
+      ROUTES.showcaseTrending,
+      ROUTES.showcaseNowPlaying,
+      ROUTES.showcaseMostProposed,
+    ]) {
+      expect(PRERENDERED_ROUTES).toContain(route);
+      expect(PRERENDERED_ROUTE_CHUNKS[route]).toBe('ShowcaseListPage');
+    }
+    expect(PRERENDERED_ROUTE_CHUNKS[ROUTES.movieCollections]).toBe('MovieCollectionsPage');
+  });
+
   it('ne contient aucun doublon', () => {
     expect(new Set(PRERENDERED_ROUTES).size).toBe(PRERENDERED_ROUTES.length);
   });

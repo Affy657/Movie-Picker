@@ -15,5 +15,7 @@ Disallow: /register
 Disallow: /forgot-password
 Disallow: /reset
 Disallow: /auth/
+# Résultats de recherche interne : jamais indexés, et sans fin par la requête.
+Disallow: /films/recherche
 
 Sitemap: https://web.movie-picker.fr/sitemap.xml

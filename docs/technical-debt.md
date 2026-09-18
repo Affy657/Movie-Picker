@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-042`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-044`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -277,6 +277,37 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 ---
 
+## DEBT-042 les aperçus de partage d'une soirée sont génériques, l'option « aperçu riche » n'a plus d'effet
+
+- state: humain
+- bloque: un comportement CloudFront de plus (origine API pour `/e/*` quand l'user agent est un robot d'aperçu, ou une CloudFront Function qui réécrit la requête), geste sur la distribution ; le code de l'API est déjà là
+- impact: le lien partagé est `https://<front>/e/<slug>` et CloudFront lui répond la coquille SPA, donc WhatsApp, Messenger, Discord et consorts affichent le titre et l'image génériques du site quelle que soit la soirée. L'endpoint `GET /api/v1/events/slug/{slug}/share-preview`, qui rend le HTML Open Graph de la soirée, n'est plus appelé par personne depuis `9a1ecc87` (2026-06-01, le lien de partage est passé de l'URL API à l'URL front) : `eventSharePreviewUrl` dans `apps/web/src/features/events/api/eventsApi.ts` n'a aucun appelant et le réglage `richSharePreview` de la soirée ne change rien pour l'utilisateur.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventSharePreview/GetEventSharePreviewHtmlHandler.cs`, `apps/web/src/features/events/api/eventsApi.ts`, distribution CloudFront (`AWS_CLOUDFRONT_DISTRIBUTION_ID` dans les variables Actions)
+- verify: encore ouvert tant que la commande ne renvoie pas une balise `og:title` propre à la soirée (la coquille rend le titre du site).
+  ```bash
+  curl -sS -A "facebookexternalhit/1.1" https://web.movie-picker.fr/e/<SLUG_PUBLIC> | grep -o '<meta property="og:title" content="[^"]*"'
+  ```
+- fix: router les robots d'aperçu (`facebookexternalhit`, `WhatsApp`, `Discordbot`, `Twitterbot`, `Slackbot`, `LinkedInBot`, `TelegramBot`) sur `/e/*` vers l'endpoint `share-preview` de l'API, par un comportement CloudFront avec origine API et une CloudFront Function de sélection sur l'user agent ; les humains gardent la coquille. À défaut, supprimer l'endpoint, `eventSharePreviewUrl` et le réglage `richSharePreview` pour ne pas promettre un aperçu qui n'existe pas.
+- piege: `robots.txt` interdit `/e/` : un robot d'indexation n'y va pas, seuls les robots d'aperçu (qui ignorent `robots.txt`) sont concernés. Ne pas servir le HTML de l'API aux navigateurs, il n'a ni style ni application.
+
+---
+
+## DEBT-043 toute adresse inconnue répond 200, et une route prérendue avec barre finale sert la coquille
+
+- state: humain
+- bloque: une CloudFront Function ou une réponse d'erreur personnalisée sur la distribution, geste sur l'infrastructure
+- impact: `/page-inexistante` et `/e/<slug-inconnu>` répondent `200` avec la coquille SPA, le `noindex` de `NotFoundPage` n'est posé qu'en JavaScript : un moteur qui n'exécute pas le rendu peut indexer une page vide (mesuré le 2026-09-18, une `/films/collection/…` indexée avec la coquille brute). `/decouvrir/` avec barre finale sert la coquille et non le document prérendu, chaque page prérendue existe donc en deux versions.
+- ou: distribution CloudFront (réponses d'erreur 403 et 404 renvoyées vers `/index.html` en 200), `.github/actions/publish-front/action.yml` pour les clés prérendues
+- verify: encore ouvert tant que l'une des deux commandes affiche `200` pour la première ou un `Content-Length` de la coquille (environ 30 Ko) pour la seconde.
+  ```bash
+  curl -sS -o /dev/null -w '%{http_code}\n' https://web.movie-picker.fr/page-inexistante
+  curl -sSI https://web.movie-picker.fr/decouvrir/ | grep -i content-length
+  ```
+- fix: une CloudFront Function en requête visiteur qui retire la barre finale des routes prérendues (redirection 301 vers la clé exacte) et, pour les chemins qui ne correspondent à aucune route de `apps/web/src/app/routes.ts`, renvoie la coquille avec le statut 404 (`X-Robots-Tag: noindex` en réponse) ; le repli 200 reste pour les routes connues.
+- piege: `/u/<handle>` et `/e/<slug>` sont des gabarits valides même quand la ressource n'existe pas, le 404 côté edge ne peut pas les juger : leur `noindex` reste posé par l'application.
+
+---
+
 # Contraintes
 
 Ce qui casse en silence si on y touche sans savoir. Aucune n'est une tâche, ne jamais les « traiter ».
@@ -302,7 +333,9 @@ Les trois préchargements de police portent `fetchpriority="low"` depuis le 2026
 
 ## C3 deux duplications volontaires, gardées par un test
 
-La configuration de build ne peut pas importer `src/`, donc `apps/web/vite.config.ts` réécrit à la main la clé de stockage `moviepicker-locale`, la liste des langues et la règle de détection dans `activeLocalePreloadScript`. Le titre de l'accueil est dupliqué dans `index.html` pour la même raison. `apps/web/src/startShell.test.ts` compare les chaînes en dur à `fr.home.title` et `en.home.title` et échoue si l'une dérive. Si `preferredLocale()` change, changer aussi `activeLocalePreloadScript`.
+La configuration de build ne peut pas importer `src/`, donc `apps/web/vite.config.ts` réécrit à la main la clé de stockage `moviepicker-locale`, la liste des langues et la langue par défaut dans `activeLocalePreloadScript`, et `index.html` refait le même choix pour `<html lang>`. Le titre de l'accueil et son titre de document (`home.seoTitle`) sont dupliqués dans `index.html` pour la même raison. `apps/web/src/startShell.test.ts` compare les chaînes en dur à `fr.home.title`, `en.home.title` et `fr.home.seoTitle` et échoue si l'une dérive. Si `preferredLocale()` change, changer aussi `activeLocalePreloadScript` et le script de `index.html`.
+
+La langue ne se lit **jamais** dans `navigator.language` : sans choix mémorisé, l'application est en français, l'anglais s'obtient par le sélecteur du pied de page ou des paramètres. Mesuré le 2026-09-18 : Googlebot rend le JavaScript avec `navigator.language = en-US`, et la détection faisait indexer la page d'accueil et les profils en anglais (« Traduire cette page » sur un produit français), en contradiction avec le prérendu, `og:locale` et le sitemap. Rétablir une détection par navigateur referait basculer l'index en anglais.
 
 ## C4 ne pas renommer les chunks que le préchargement cherche
 
@@ -449,6 +482,8 @@ Piège découvert en posant le test, le 2026-09-15 : `MongoUrl.MaxConnectionPool
 `AuthTicketCache` (`Infrastructure/Web/CachedAuthTicketStore.cs`) garde chaque ticket de session 30 s en mémoire d'instance pour ne pas relire `auth_sessions` à chaque requête, et `MongoAuthSessionInvalidator` n'invalide que la génération de l'instance qui traite la révocation. « Déconnecter partout », un changement de mot de passe ou la suppression du compte laissent donc une fenêtre d'au plus 30 s pendant laquelle un cookie déjà présenté à une **autre** instance y passe encore. C'est accepté, et c'est écrit dans `SECURITY.md` comme hors périmètre : la lecture Mongo par requête est exactement ce que le cache évite, et une génération partagée en base coûterait cette lecture. Ne pas « corriger » en allongeant le TTL (la fenêtre suit) ni en le supprimant (retour au coût d'avant le 2026-09-12) ; si la fenêtre devient inacceptable, la seule voie propre est un compteur de génération par utilisateur lu depuis le cache partagé (`ISharedCache`), au prix d'un aller-retour par requête authentifiée.
 
 ## C15 le prérendu sert l'indexation et le premier rendu, et deux choses le rendent muet
+
+Le prérendu ne touche jamais le réseau : `scripts/prerender.mjs` remplace `fetch` par une promesse qui ne se règle pas, donc une page qui interroge l'API (`/films/tendances`, `/films/au-cinema`, `/films/les-plus-proposes`, `/films/collections`, prérendues depuis le 2026-09-18) livre son en-tête, son `<h1>` et son état de chargement, identiques d'un build à l'autre, et le client charge la vraie liste au démarrage. Prérendre les données elles-mêmes demanderait un protocole de « page prête » par route et rendrait le build dépendant de l'API de production.
 
 Le prérendu (`apps/web/scripts/prerender.mjs`, règles de déclaration dans `AGENTS.md`) sert deux choses distinctes : l'indexation, et le premier rendu. Une route en `noindex` n'en tire que la seconde et le déclare dans `PRERENDERED_FOR_FIRST_PAINT_ONLY` ; `/mentions-legales` et `/politique-de-confidentialite` sont dans ce cas depuis le 2026-09-10. Le prérendu **renforce** d'ailleurs leur `noindex` : sans lui, un robot qui n'exécute pas le JavaScript reçoit la coquille SPA, qui ne porte aucune balise `robots`.
 

@@ -17,7 +17,7 @@
       content="Movie Picker, organisez une soirée cinéma : créez un événement, partagez le lien, proposez des films (TMDB), votez et tirez au sort le film gagnant."
     />
     <meta property="og:site_name" content="Movie Picker" />
-    <meta property="og:title" content="Movie Picker" />
+    <meta property="og:title" content="Movie Picker : choisir le film de la soirée, ensemble" />
     <meta
       property="og:description"
       content="Créez une soirée film, invitez vos amis, votez et lancez la roue pour choisir le film."
@@ -33,7 +33,7 @@
       content="Movie Picker : choisissez le film de la soirée ensemble"
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Movie Picker" />
+    <meta name="twitter:title" content="Movie Picker : choisir le film de la soirée, ensemble" />
     <meta
       name="twitter:description"
       content="Créez une soirée film, invitez vos amis, votez et lancez la roue pour choisir le film."
@@ -44,7 +44,7 @@
       content="Movie Picker : choisissez le film de la soirée ensemble"
     />
     <link rel="canonical" href="https://web.movie-picker.fr/" />
-    <title>Movie Picker</title>
+    <title>Movie Picker : choisir le film de la soirée, ensemble</title>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -93,9 +93,7 @@
         try {
           stored = localStorage.getItem('moviepicker-locale');
         } catch {}
-        var browser = (navigator.language || '').toLowerCase();
-        document.documentElement.lang =
-          stored === 'fr' || stored === 'en' ? stored : browser.indexOf('en') === 0 ? 'en' : 'fr';
+        document.documentElement.lang = stored === 'en' ? 'en' : 'fr';
         if (location.pathname === '/') document.documentElement.dataset.startRoute = 'home';
       })();
     </script>

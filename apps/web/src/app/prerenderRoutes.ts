@@ -2,6 +2,10 @@ import { ROUTES } from '@/app/routes';
 
 export const PRERENDERED_ROUTES = [
   ROUTES.howItWorks,
+  ROUTES.showcaseTrending,
+  ROUTES.showcaseNowPlaying,
+  ROUTES.showcaseMostProposed,
+  ROUTES.movieCollections,
   ROUTES.donate,
   ROUTES.tech,
   ROUTES.legalNotice,
@@ -10,6 +14,10 @@ export const PRERENDERED_ROUTES = [
 
 export const PRERENDERED_ROUTE_CHUNKS: Record<string, string> = {
   [ROUTES.howItWorks]: 'LandingPage',
+  [ROUTES.showcaseTrending]: 'ShowcaseListPage',
+  [ROUTES.showcaseNowPlaying]: 'ShowcaseListPage',
+  [ROUTES.showcaseMostProposed]: 'ShowcaseListPage',
+  [ROUTES.movieCollections]: 'MovieCollectionsPage',
   [ROUTES.donate]: 'DonatePage',
   [ROUTES.tech]: 'TechPage',
   [ROUTES.legalNotice]: 'LegalNoticePage',

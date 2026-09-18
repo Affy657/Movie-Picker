@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router';
 import PageLayout from '@/shared/components/PageLayout';
 import { buttonClass } from '@/shared/components/Button';
 import SearchField from '@/shared/components/SearchField';
-import { APP_DOCUMENT_TITLE } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation } from '@/shared/i18n';
@@ -84,7 +83,7 @@ export default function HomePage() {
   const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
 
   usePageSeo({
-    title: APP_DOCUMENT_TITLE,
+    title: t('home.seoTitle'),
     description: t('home.seoDescription'),
     canonical: absoluteUrl(ROUTES.home),
     ogType: 'website',

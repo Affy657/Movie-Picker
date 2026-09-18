@@ -55,6 +55,7 @@ export const fr = {
     ctaRegister: 'Créer un compte',
     title: "Qu'est-ce qu'on regarde ce soir ?",
     intro: 'Cherchez un film ou parcourez les sélections.',
+    seoTitle: 'Movie Picker : choisir le film de la soirée, ensemble',
     seoDescription:
       'Cherchez un film, parcourez les tendances, les sorties en salles et les sélections thématiques, puis créez la soirée qui va avec.',
     ctaBand: {

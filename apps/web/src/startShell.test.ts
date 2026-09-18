@@ -15,8 +15,14 @@ describe('coquille de demarrage', () => {
     expect(indexHtml).toContain("location.pathname === '/'");
   });
 
-  it('reprend la cle de stockage et la detection de langue de preferredLocale', () => {
+  it('reprend la cle de stockage et la langue par defaut de preferredLocale', () => {
     expect(indexHtml).toContain("localStorage.getItem('moviepicker-locale')");
-    expect(indexHtml).toContain("browser.indexOf('en') === 0 ? 'en' : 'fr'");
+    expect(indexHtml).toContain("stored === 'en' ? 'en' : 'fr'");
+    expect(indexHtml).not.toContain('navigator.language');
+  });
+
+  it('titre la coquille comme la page d accueil, en francais', () => {
+    expect(indexHtml).toContain(`<title>${fr.home.seoTitle}</title>`);
+    expect(indexHtml).toContain(`<meta property="og:title" content="${fr.home.seoTitle}" />`);
   });
 });

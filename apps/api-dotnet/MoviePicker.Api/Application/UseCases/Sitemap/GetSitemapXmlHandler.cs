@@ -15,15 +15,18 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
     private readonly IUserRepository _users;
     private readonly MoviePickerOptions _options;
     private readonly ILogger<GetSitemapXmlHandler> _logger;
+    private readonly TimeProvider _clock;
 
     public GetSitemapXmlHandler(
         IUserRepository users,
         IOptions<MoviePickerOptions> options,
-        ILogger<GetSitemapXmlHandler> logger)
+        ILogger<GetSitemapXmlHandler> logger,
+        TimeProvider clock)
     {
         _users = users;
         _options = options.Value;
         _logger = logger;
+        _clock = clock;
     }
 
     public async Task<string> BuildXmlAsync(CancellationToken ct = default)
@@ -42,8 +45,13 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
         var sb = new StringBuilder();
         sb.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.Append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
-        AppendUrl(sb, $"{webBase}/", null, "weekly", "1.0");
+        var today = _clock.GetUtcNow();
+        AppendUrl(sb, $"{webBase}/", today, "daily", "1.0");
         AppendUrl(sb, $"{webBase}/decouvrir", null, "monthly", "0.8");
+        AppendUrl(sb, $"{webBase}/films/tendances", today, "daily", "0.8");
+        AppendUrl(sb, $"{webBase}/films/au-cinema", today, "weekly", "0.8");
+        AppendUrl(sb, $"{webBase}/films/les-plus-proposes", today, "weekly", "0.7");
+        AppendUrl(sb, $"{webBase}/films/collections", null, "monthly", "0.6");
         AppendUrl(sb, $"{webBase}/tech", null, "monthly", "0.5");
         AppendUrl(sb, $"{webBase}/soutenir", null, "monthly", "0.3");
         foreach (var profile in profiles)

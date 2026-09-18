@@ -2,7 +2,8 @@
 <!--
   Sitemap de secours (fallback). En déploiement, `deploy-front` régénère ce fichier
   via `scripts/generate-sitemap.mjs` (GET {API}/sitemap.xml) pour y ajouter les profils
-  publics `/u/:handle`. Ce fichier statique ne sert qu'en cas d'échec de génération.
+  publics `/u/:handle` et dater les listes de films. Ce fichier statique ne sert qu'en cas
+  d'échec de génération.
   Domaine canonique aligné sur `MoviePickerOptions.PublicWebBaseUrl`
   (`https://web.movie-picker.fr`) et `apps/web/index.html`.
   Les routes privées (`/e/*`, `/my-events`, `/settings`) sont bloquées via `robots.txt`.
@@ -10,9 +11,38 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://web.movie-picker.fr/</loc>
-    <lastmod>2026-08-24</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://web.movie-picker.fr/decouvrir</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://web.movie-picker.fr/films/tendances</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://web.movie-picker.fr/films/au-cinema</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://web.movie-picker.fr/films/les-plus-proposes</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://web.movie-picker.fr/films/collections</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://web.movie-picker.fr/tech</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://web.movie-picker.fr/soutenir</loc>

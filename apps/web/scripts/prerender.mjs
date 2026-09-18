@@ -112,9 +112,13 @@ if (!globalThis.matchMedia)
     addEventListener() {},
     removeEventListener() {},
   });
-// Language detection reads storage first: seeding it makes the prerender deterministic, where
-// jsdom's `navigator.language` is en-US and would produce English pages.
+// The stored language is the only one read at boot, the prerender pins it to the site language.
 globalThis.localStorage.setItem('moviepicker-locale', 'fr');
+
+// The film lists query the API at mount. The prerender never reaches a network: their request
+// stays pending and the document carries the page head, its heading and its loading state,
+// the same for every build wherever it runs. The client fetches the real list at boot.
+globalThis.fetch = () => new Promise(() => {});
 
 // The route list comes out of the SSR bundle, not from a copy here: it derives from `ROUTES` in
 // `src/app/prerenderRoutes.ts`, so a route rename breaks the build instead of silently producing

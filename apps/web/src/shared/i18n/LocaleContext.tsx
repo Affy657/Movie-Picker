@@ -26,20 +26,15 @@ const TMDB_LANGUAGE_MAP: Record<LocaleCode, string> = {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
-function detectBrowserLocale(): LocaleCode {
-  if (typeof navigator === 'undefined') return 'fr';
-  const lang = navigator.language?.toLowerCase() ?? '';
-  if (lang.startsWith('en')) return 'en';
-  return 'fr';
-}
+const DEFAULT_LOCALE: LocaleCode = 'fr';
 
 export function preferredLocale(): LocaleCode {
-  if (globalThis.window === undefined) return 'fr';
+  if (globalThis.window === undefined) return DEFAULT_LOCALE;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored != null && isLocaleCode(stored)) return stored;
   } catch {}
-  return detectBrowserLocale();
+  return DEFAULT_LOCALE;
 }
 
 function persistLocale(code: LocaleCode): void {

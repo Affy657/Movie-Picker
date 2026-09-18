@@ -58,9 +58,7 @@ function activeLocalePreloadScript(chunkByCode: Record<string, string>): string 
     '(function(){try{',
     `var c=${JSON.stringify(chunkByCode)};`,
     `var s=localStorage.getItem(${JSON.stringify(LOCALE_STORAGE_KEY)});`,
-    "var l=c[s]?s:((navigator.language||'').toLowerCase().indexOf('en')===0?'en':",
-    `${JSON.stringify(DEFAULT_LOCALE)});`,
-    'var h=c[l];if(!h)return;',
+    `var h=c[c[s]?s:${JSON.stringify(DEFAULT_LOCALE)}];if(!h)return;`,
     "var e=document.createElement('link');e.rel='modulepreload';e.crossOrigin='';",
     "e.href='/'+h;document.head.appendChild(e);",
     '}catch(_){}})()',
@@ -168,6 +166,7 @@ function staticGraphClosure(
 }
 
 const ROUTE_ASSETS_MANIFEST = 'route-assets.json';
+const TEMPLATE_CHARSET_META = /[ \t]*<meta charset="UTF-8" \/>\r?\n/;
 
 /**
  * Remplace la feuille de style globale par son contenu en ligne.
@@ -198,23 +197,32 @@ function preloadCriticalAssetsPlugin(): Plugin {
     apply: 'build',
     enforce: 'post',
     transformIndexHtml(html, ctx) {
+      const withoutTemplateCharset = html.replace(TEMPLATE_CHARSET_META, '');
+      if (withoutTemplateCharset === html) {
+        throw new Error(
+          'index.html: <meta charset="UTF-8" /> not found, it cannot be moved to the top of <head>'
+        );
+      }
       const files = Object.keys(ctx.bundle ?? {});
-      const tags: Array<HtmlTagDescriptor> = CRITICAL_FONT_BASES.map((base) =>
-        files.find((file) => file.includes(base) && file.endsWith('.woff2'))
-      )
-        .filter((file): file is string => Boolean(file))
-        .map((file) => ({
-          tag: 'link',
-          attrs: {
-            rel: 'preload',
-            href: '/' + file,
-            as: 'font',
-            type: 'font/woff2',
-            crossorigin: '',
-            fetchpriority: 'low',
-          },
-          injectTo: 'head-prepend',
-        }));
+      const tags: Array<HtmlTagDescriptor> = [
+        { tag: 'meta', attrs: { charset: 'UTF-8' }, injectTo: 'head-prepend' },
+        ...CRITICAL_FONT_BASES.map((base) =>
+          files.find((file) => file.includes(base) && file.endsWith('.woff2'))
+        )
+          .filter((file): file is string => Boolean(file))
+          .map((file): HtmlTagDescriptor => ({
+            tag: 'link',
+            attrs: {
+              rel: 'preload',
+              href: '/' + file,
+              as: 'font',
+              type: 'font/woff2',
+              crossorigin: '',
+              fetchpriority: 'low',
+            },
+            injectTo: 'head-prepend',
+          })),
+      ];
 
       const bundle = (ctx.bundle ?? {}) as unknown as OutputBundleInfo;
       const appChunk = files.find((file) => APP_SHELL_CHUNK.test(file));
@@ -248,7 +256,7 @@ function preloadCriticalAssetsPlugin(): Plugin {
         });
       }
 
-      return { html: inlineBlockingStyles(html, bundle, entryChunk), tags };
+      return { html: inlineBlockingStyles(withoutTemplateCharset, bundle, entryChunk), tags };
     },
     /**
      * Publie, pour chaque page chargee a la demande, la fermeture de ses imports statiques.
