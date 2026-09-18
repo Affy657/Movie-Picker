@@ -27,7 +27,7 @@ import MovieSearchFiltersPanel from '@/features/movies/components/MovieSearchFil
 import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
 import Chip from '@/shared/components/Chip';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
-import SearchHistoryDropdown from './SearchHistoryDropdown';
+import SearchHistoryDropdown, { HISTORY_ITEM_SELECTOR } from './SearchHistoryDropdown';
 import styles from './AddMovieForm.module.css';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -125,6 +125,7 @@ export default function AddMovieForm({
 
   const [query, setQuery] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
+  const [historyDismissed, setHistoryDismissed] = useState(false);
   const [results, setResults] = useState<MovieSearchItem[]>([]);
   const [searchMeta, setSearchMeta] = useState<Pick<
     MovieSearchListResponse,
@@ -144,7 +145,6 @@ export default function AddMovieForm({
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const immediateSearchRef = useRef(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const historyDropdownRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const filtersPanelRef = useRef<HTMLDivElement | null>(null);
 
@@ -296,9 +296,37 @@ export default function AddMovieForm({
 
   const selectHistoryItem = useCallback((q: string) => {
     immediateSearchRef.current = true;
-    setInputFocused(false);
+    setHistoryDismissed(true);
     setQuery(q);
   }, []);
+
+  const dismissHistory = useCallback(() => setHistoryDismissed(true), []);
+
+  const historyAvailable = !trimmedForSearch && history.length > 0;
+  const showHistory = inputFocused && !historyDismissed && historyAvailable;
+  const pendingHistoryFocusRef = useRef<'first' | 'last' | null>(null);
+
+  const focusHistoryEntry = (position: 'first' | 'last') => {
+    const items = containerRef.current?.querySelectorAll<HTMLElement>(HISTORY_ITEM_SELECTOR);
+    if (!items?.length) return;
+    items[position === 'first' ? 0 : items.length - 1]?.focus();
+  };
+
+  const focusHistoryItem = (position: 'first' | 'last') => {
+    if (showHistory) {
+      focusHistoryEntry(position);
+      return;
+    }
+    pendingHistoryFocusRef.current = position;
+    setHistoryDismissed(false);
+  };
+
+  useEffect(() => {
+    const position = pendingHistoryFocusRef.current;
+    if (!position || !showHistory) return;
+    pendingHistoryFocusRef.current = null;
+    focusHistoryEntry(position);
+  });
 
   const displayedResults = useMemo(
     () =>
@@ -322,16 +350,6 @@ export default function AddMovieForm({
     el.addEventListener('focusout', onFocusOut);
     return () => el.removeEventListener('focusout', onFocusOut);
   }, [disabled]);
-
-  useEffect(() => {
-    const dropdownVisible = inputFocused && !trimmedForSearch && history.length > 0;
-    if (!dropdownVisible) return;
-    const el = historyDropdownRef.current;
-    if (!el) return;
-    const onMouseDown = (e: MouseEvent) => e.preventDefault();
-    el.addEventListener('mousedown', onMouseDown);
-    return () => el.removeEventListener('mousedown', onMouseDown);
-  }, [inputFocused, trimmedForSearch, history]);
 
   const addMovie = async (r: MovieSearchItem) => {
     setError(null);
@@ -363,7 +381,6 @@ export default function AddMovieForm({
   if (disabled) return null;
 
   const trimmed = trimmedForSearch;
-  const showHistory = inputFocused && !trimmed && history.length > 0;
   const showMinCharsHint = trimmed.length > 0 && trimmed.length < SEARCH_MIN_CHARS;
   const showNoResultsBlock =
     !searching &&
@@ -402,21 +419,29 @@ export default function AddMovieForm({
               className="input"
               aria-label={searchAriaLabel ?? t('movies.search.label')}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setHistoryDismissed(false);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
                   search();
-                } else if (e.key === 'Escape') {
-                  setInputFocused(false);
+                } else if (e.key === 'Escape' && showHistory) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  dismissHistory();
+                } else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && historyAvailable) {
+                  e.preventDefault();
+                  focusHistoryItem(e.key === 'ArrowDown' ? 'first' : 'last');
                 }
               }}
-              onFocus={() => setInputFocused(true)}
+              onFocus={() => {
+                setInputFocused(true);
+                setHistoryDismissed(false);
+              }}
               placeholder={searchPlaceholder ?? t('movies.search.placeholder')}
               autoComplete="off"
-              role="combobox"
-              aria-expanded={showHistory}
-              aria-controls="add-movie-history"
               aria-busy={searching}
               aria-describedby={showMinCharsHint ? minCharsHintId : undefined}
             />
@@ -455,12 +480,12 @@ export default function AddMovieForm({
 
         {showHistory && (
           <SearchHistoryDropdown
-            id="add-movie-history"
-            ref={historyDropdownRef}
             history={history}
+            inputRef={searchInputRef}
             onSelect={selectHistoryItem}
             onRemove={removeFromHistory}
             onClear={clearHistory}
+            onClose={dismissHistory}
           />
         )}
       </div>

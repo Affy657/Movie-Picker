@@ -171,6 +171,52 @@ describe('AddMovieForm (MSW)', () => {
     expect(screen.queryByText(/recherches recentes|recherches r/i)).not.toBeInTheDocument();
   });
 
+  it('the down arrow enters the history from the field and Enter runs that search', async () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(['inception', 'matrix']));
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    const input = screen.getByPlaceholderText(/ajouter un film/i);
+    await user.click(input);
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('button', { name: /Rechercher.*inception/i })).toHaveFocus();
+    await user.keyboard('{ArrowDown}{Enter}');
+    expect(input).toHaveFocus();
+    expect(input).toHaveValue('matrix');
+    expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.queryByText(/recherches r/i)).not.toBeInTheDocument();
+  });
+
+  it('Escape hides the history until the field is left or edited', async () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(['inception']));
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    const input = screen.getByPlaceholderText(/ajouter un film/i);
+    await user.click(input);
+    expect(screen.getByText(/recherches r/i)).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByText(/recherches r/i)).not.toBeInTheDocument();
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('button', { name: /Rechercher.*inception/i })).toHaveFocus();
+    await user.keyboard('{Escape}');
+    expect(input).toHaveFocus();
+    expect(screen.queryByText(/recherches r/i)).not.toBeInTheDocument();
+    await user.keyboard('x{Backspace}');
+    expect(screen.getByText(/recherches r/i)).toBeInTheDocument();
+  });
+
+  it('the history comes back once a selected search is erased from the field', async () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(['inception']));
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    const input = screen.getByPlaceholderText(/ajouter un film/i);
+    await user.click(input);
+    await user.click(screen.getByRole('button', { name: /Rechercher.*inception/i }));
+    expect(input).toHaveValue('inception');
+    expect(screen.queryByText(/recherches r/i)).not.toBeInTheDocument();
+    await user.clear(input);
+    expect(screen.getByText(/recherches r/i)).toBeInTheDocument();
+  });
+
   it('the result cards show the subscription in detail, rental and purchase as a plain counter', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>

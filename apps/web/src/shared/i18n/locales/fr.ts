@@ -1093,7 +1093,7 @@ export const fr = {
       resultsListAria: 'Résultats de la recherche',
       historyTitle: 'Recherches récentes',
       historyClear: 'Effacer tout',
-      historyRemoveAria: 'Supprimer « {{query}} » de l’historique',
+      historyRemoveAria: 'Supprimer « {{query}} » de l’historique',
       historySelectAria: 'Rechercher « {{query}} »',
       filtersToggle: 'Filtres avancés',
       filtersClearAll: 'Effacer les filtres',

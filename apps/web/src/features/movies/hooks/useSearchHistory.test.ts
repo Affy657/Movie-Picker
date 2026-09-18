@@ -34,6 +34,15 @@ describe('useSearchHistory', () => {
     expect(result.current.history).toEqual([]);
   });
 
+  it('keeps only trimmed, distinct strings from a tampered store, five at most', () => {
+    localStorage.setItem(
+      KEY,
+      JSON.stringify([' matrix ', 42, null, 'Matrix', '', 'a', 'b', 'c', 'd', 'e'])
+    );
+    const { result } = renderHook(() => useSearchHistory(USER_ID));
+    expect(result.current.history).toEqual(['matrix', 'a', 'b', 'c', 'd']);
+  });
+
   it('retourne un historique vide si userId est undefined', () => {
     localStorage.setItem(KEY, JSON.stringify(['matrix']));
     const { result } = renderHook(() => useSearchHistory(undefined));
@@ -86,6 +95,35 @@ describe('useSearchHistory', () => {
       const { result } = renderHook(() => useSearchHistory(undefined));
       act(() => result.current.addToHistory('inception'));
       expect(result.current.history).toEqual([]);
+    });
+
+    it('treats a different casing as the same search and keeps the newest spelling', () => {
+      localStorage.setItem(KEY, JSON.stringify(['inception', 'matrix']));
+      const { result } = renderHook(() => useSearchHistory(USER_ID));
+      act(() => result.current.addToHistory('Matrix'));
+      expect(result.current.history).toEqual(['Matrix', 'inception']);
+    });
+
+    it('drops the partial spellings typed on the way to the full search', () => {
+      localStorage.setItem(KEY, JSON.stringify(['incep', 'dune', 'inc']));
+      const { result } = renderHook(() => useSearchHistory(USER_ID));
+      act(() => result.current.addToHistory('Inception'));
+      expect(result.current.history).toEqual(['Inception', 'dune']);
+    });
+
+    it('ignores a prefix of the latest search, left by a backspace', () => {
+      localStorage.setItem(KEY, JSON.stringify(['inception', 'dune']));
+      const { result } = renderHook(() => useSearchHistory(USER_ID));
+      act(() => result.current.addToHistory('incep'));
+      expect(result.current.history).toEqual(['inception', 'dune']);
+      expect(JSON.parse(localStorage.getItem(KEY)!)).toEqual(['inception', 'dune']);
+    });
+
+    it('still records a search that only prefixes an older entry', () => {
+      localStorage.setItem(KEY, JSON.stringify(['dune', 'upgrade']));
+      const { result } = renderHook(() => useSearchHistory(USER_ID));
+      act(() => result.current.addToHistory('up'));
+      expect(result.current.history).toEqual(['up', 'dune', 'upgrade']);
     });
 
     it('honours the limit of 5 entries', () => {

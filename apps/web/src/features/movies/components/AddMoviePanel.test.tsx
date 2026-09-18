@@ -89,6 +89,27 @@ describe('AddMoviePanel', () => {
     expect(screen.getByRole('button', { name: 'Ajouter un film' })).toBeInTheDocument();
   });
 
+  it('a first Escape only closes the search history, the next one closes the panel', async () => {
+    stubMatchMedia(false);
+    localStorage.setItem('moviepicker_search_history_test-user', JSON.stringify(['inception']));
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByRole('button', { name: 'Ajouter un film' }));
+    const input = screen.getByPlaceholderText(/ajouter un film/i);
+    await user.click(input);
+    expect(screen.getByRole('group', { name: /recherches récentes/i })).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('group', { name: /recherches récentes/i })).not.toBeInTheDocument();
+    expect(screen.getByText('Ajouter un film à ma liste')).toBeInTheDocument();
+    expect(input).toHaveFocus();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByText('Ajouter un film à ma liste')).not.toBeInTheDocument();
+    localStorage.removeItem('moviepicker_search_history_test-user');
+  });
+
   it('gives the focus back to the trigger after closing', async () => {
     stubMatchMedia(false);
     const user = userEvent.setup();
