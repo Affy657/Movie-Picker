@@ -94,6 +94,23 @@ Pour toute nouvelle barre sticky dont le contenu change de hauteur :
 1. garder la hauteur de la barre constante entre les deux états (sortir le contenu variable de la barre elle-même) ;
 2. poser `overflow-anchor: none` sur le conteneur de page concerné en filet de sécurité.
 
+## Compatibilité iPhone et iPad
+
+Toute feature qui touche l'interface se vérifie dans WebKit avant d'être rendue à l'utilisateur, en plus de Chromium : Safari est le seul moteur sur iPhone et iPad, quel que soit le navigateur installé, et ni le Browser pane ni `resize_window` n'en montrent quoi que ce soit. Le passage se fait avec Playwright (`pnpm exec playwright install webkit` une fois), dans un script jetable `scripts/_<nom>_tmp.mjs` supprimé après coup, contexte `devices['iPhone 13']`, connexion par `POST /api/v1/auth/login` avec le compte de démonstration, puis `localStorage` `mp.session-hint` à `1` et `moviepicker_whats_new_seen_<userId>` à la version courante pour ne pas buter sur « Quoi de neuf ». Une capture WebKit de chaque écran mobile touché fait partie du compte rendu, et ce que WebKit de bureau ne reproduit pas (défilement de la page derrière une feuille, clavier, partage natif, retour dans l'app installée après une connexion Google) se signale comme « à confirmer sur un téléphone », jamais comme vérifié.
+
+Pièges déjà rencontrés, à passer en revue sur tout code nouveau :
+
+- **Corps défilant d'une modale en colonne** (`Modal` `column`, feuilles mobiles) : `flex: 1 1 auto; min-height: 0`, jamais `flex: 1`. La hauteur du conteneur étant indéfinie (`max-height`), Safari résout la base `0%` à zéro et le corps disparaît : la feuille n'affiche plus que son en-tête et son pied.
+- **Champ de saisie sous 16 px** : Safari iOS zoome la page au focus. Tout `input`, `textarea` ou `select` dont la taille est réduite reprend `var(--font-size-md)` sous `@media (pointer: coarse)` ; la classe globale `input` est déjà à 16 px.
+- **Détection par user agent** : l'app installée sur l'écran d'accueil porte l'user agent d'un WKWebView nu, sans `Safari`. Toute heuristique (navigateur intégré, guide d'installation) interroge d'abord `isStandaloneRuntime()` et `isIosRuntime()` de `shared/hooks/usePwaInstall.ts`.
+- **Notifications push** : `PushManager` n'existe que dans l'app installée (iOS 16.4 et plus). Un écran qui dépend du push propose l'ajout à l'écran d'accueil (`usePwaInstallClick`) plutôt qu'un simple « non disponible ».
+- **Téléchargement d'un blob** : passer par `shared/utils/downloadBlob.ts`, qui révoque l'URL une minute après le clic ; révoquée tout de suite, Safari n'a pas encore lu le blob.
+- **Gestes tactiles** : la fondation pose `touch-action: manipulation` sur les éléments interactifs, sinon un double tap rapide zoome la page ; une surface glissable pose `touch-action: none` (poignée de `SheetDrag`) ; une image sous un geste de glisser prend `pointer-events: none` et `-webkit-user-drag: none`.
+- **Préfixes `-webkit-`** : le build n'autopréfixe pas. `backdrop-filter`, `user-select` et `user-drag` s'écrivent en double, la version préfixée après la version standard.
+- **Barres fixes et feuilles** : hauteurs en `dvh`, marges de sécurité en `env(safe-area-inset-*)` (`--mobile-nav-height` inclut déjà celle du bas), sur le pied des feuilles et l'attribution compris.
+- **API navigateur** : `requestIdleCallback`, `navigator.share`, `navigator.clipboard` et `Notification` ont chacun un repli ; `share` et `writeText` s'appellent dans le geste utilisateur, sans `await` avant eux, sinon Safari les refuse.
+- **Champ de recherche** : `type="search"` avec `enterKeyHint="search"` et `autoCorrect="off"`, pour la touche Rechercher du clavier iOS et des titres que l'autocorrection ne réécrit pas.
+
 ## Workflow
 
 **Le test est écrit avant le code.** Pour une fonctionnalité comme pour un correctif : d'abord un test qui échoue et qui décrit le comportement attendu, ensuite l'implémentation qui le fait passer. Sur un bug, le test doit reproduire le symptôme avant toute correction, sinon rien ne prouve que la cause a été traitée.

@@ -75,11 +75,12 @@ Démarrer les deux serveurs en tâche de fond (config dans [.claude/launch.json]
 - **web** : `pnpm --filter web dev` (http://localhost:5173)
 - **api** : `dotnet run --project apps/api-dotnet/MoviePicker.Api/MoviePicker.Api.csproj` (http://localhost:4000)
 
-Vérifier que les deux démarrent sans erreur (logs), puis **tester la feature à la main avant de rendre la main**, dans le Browser pane avec le compte `dev@test.local`, sur PC puis sur mobile (`resize_window`), et ne passer à l'utilisateur qu'après avoir contrôlé les quatre points :
+Vérifier que les deux démarrent sans erreur (logs), puis **tester la feature à la main avant de rendre la main**, dans le Browser pane avec le compte `dev@test.local`, sur PC puis sur mobile (`resize_window`), et ne passer à l'utilisateur qu'après avoir contrôlé les cinq points :
 1. **rien d'oublié** : reprendre les critères d'acceptation du compte rendu un par un et jouer chacun, cas à la marge compris, pas seulement le parcours nominal ;
 2. **conforme à la maquette** : mêmes écrans, mêmes états, mêmes libellés, mêmes positions, capture à l'appui sur les écrans qui ont été maquettés ;
 3. **pas d'affichage bizarre** : texte coupé ou débordant, élément décalé ou mal centré, espace vide, défilement horizontal, état de survol collé sur mobile, thème sombre, et console du navigateur sans erreur ;
-4. **composants de l'app** : relire le diff front et vérifier que chaque bouton, pastille, champ, modale, menu ou état de page passe par la primitive de `apps/web/src/shared/components/` (tableau dans AGENTS.md) ou par un composant existant de la feature, pas par un équivalent local réécrit pour l'occasion. Un composant parallèle se remplace avant de rendre la main.
+4. **composants de l'app** : relire le diff front et vérifier que chaque bouton, pastille, champ, modale, menu ou état de page passe par la primitive de `apps/web/src/shared/components/` (tableau dans AGENTS.md) ou par un composant existant de la feature, pas par un équivalent local réécrit pour l'occasion. Un composant parallèle se remplace avant de rendre la main ;
+5. **iPhone** : rejouer chaque écran mobile touché dans WebKit avec Playwright, capture à l'appui, comme le décrit AGENTS.md § Compatibilité iPhone et iPad, et passer sa liste de pièges sur le diff. Le Browser pane ne montre que Chromium.
 
 Corriger ce qui sort de ces contrôles (par un test d'abord quand c'est du comportement), puis donner les URLs à l'utilisateur, lui dire ce qu'il y a à tester et laisser les serveurs allumés.
 
@@ -87,7 +88,7 @@ Corriger ce qui sort de ces contrôles (par un test d'abord quand c'est du compo
 
 ## Étape 7. Revue et roadmap
 
-- Invoquer `engineering:code-review` (bugs de correctness) puis `/simplify` (réutilisation, simplification) ; `/security-review` en plus dès que la feature touche l'authentification, les droits, un nouvel endpoint ou une entrée utilisateur. Appliquer les retours pertinents (un bug relevé en revue passe par un test qui le reproduit d'abord), relancer les tests ciblés, et rejouer les quatre contrôles de l'étape 6 si le diff a bougé de façon notable ; si le comportement visible a changé, redonner la main à l'utilisateur pour re-tester, avec STOP, avant de continuer.
+- Invoquer `engineering:code-review` (bugs de correctness) puis `/simplify` (réutilisation, simplification) ; `/security-review` en plus dès que la feature touche l'authentification, les droits, un nouvel endpoint ou une entrée utilisateur. Appliquer les retours pertinents (un bug relevé en revue passe par un test qui le reproduit d'abord), relancer les tests ciblés, et rejouer les cinq contrôles de l'étape 6 si le diff a bougé de façon notable ; si le comportement visible a changé, redonner la main à l'utilisateur pour re-tester, avec STOP, avant de continuer.
 - Marquer la feature livrée dans `docs/roadmap.md` : `⬜` devient `✅`, la version s'ajoute après le titre (`**Titre** (V1.6)`), et le compte « N restants » du titre de la version baisse du poids de l'item (`S` 1, `M` 3, `L` 8, `XL` 20). Une entrée venue du backlog rejoint la section de sa version, poids compris.
 - Une dette repérée en route va dans `docs/technical-debt.md`, jamais dans la roadmap ni en mémoire.
 
