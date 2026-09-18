@@ -1,50 +1,29 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useRef } from 'react';
 import clsx from 'clsx';
-import { useNavigate } from 'react-router';
-import { Lock, Settings, Trash2, X } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Lock, Settings, X } from 'lucide-react';
 import HostEventDateField from './HostEventDateField';
 import HostEventThemeField from './HostEventThemeField';
 import WheelModeField from './WheelModeField';
 import EventTemplateSaveBar from './EventTemplateSaveBar';
 import EventTemplatesRow from './EventTemplatesRow';
-import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
-import {
-  buildTemplateDraft,
-  configToFields,
-  type ApplicableConfig,
-} from '@/features/events/lib/eventTemplateDraft';
+import HostEventDangerZone from './HostEventDangerZone';
+import { useHostEventSettingsDraft } from './useHostEventSettingsDraft';
+import type { SaveState } from './hostEventSettingsDraft';
 import NumberInput from '@/shared/components/NumberInput';
 import Field from '@/shared/components/Field';
 import ToggleRow from '@/shared/components/ToggleRow';
 import SegmentedRadioGroup from '@/shared/components/SegmentedRadioGroup';
-import { deleteEvent, patchEventConfig } from '@/features/events/api/eventsApi';
-import { getErrorMessage } from '@/shared/api/apiError';
-import { queryKeys } from '@/shared/hooks/queryKeys';
-import { ROUTES } from '@/app/routes';
-import { clearStoredHostToken, removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
-import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import dragStyles from '@/shared/components/SheetDrag.module.css';
 import Modal from '@/shared/components/Modal';
 import styles from './HostEventSettingsPanel.module.css';
-import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
-import { formatRelativeEventDate } from '@/shared/utils/formatRelativeEventDate';
-import type {
-  EventConfigData,
-  EventConfigPatchPayload,
-  EventData,
-  EventRecurrence,
-  WheelMode,
-} from '@/features/events/types';
+import type { EventData } from '@/features/events/types';
 import {
-  DEFAULT_EVENT_CONFIG,
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
   MAX_WINNERS_PER_EVENT,
 } from '@/features/events/types';
-import { useLocale, useTranslation } from '@/shared/i18n';
-import Button from '@/shared/components/Button';
+import { useTranslation } from '@/shared/i18n';
 import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
@@ -58,17 +37,6 @@ type HostEventSettingsPanelProps = {
   onClose: () => void;
 };
 
-type FieldErrors = {
-  title?: string;
-  date?: string;
-  maxProposals?: string;
-  maxParticipants?: string;
-  maxVotes?: string;
-  winnerCount?: string;
-};
-
-type SaveState = 'saved' | 'pending' | 'error';
-
 const SAVE_STATUS_LABEL_KEYS = {
   saved: 'events.settings.saveStatusSaved',
   pending: 'events.settings.saveStatusPending',
@@ -81,183 +49,6 @@ const SAVE_STATUS_CLASS: Record<SaveState, string | undefined> = {
   error: styles.saveStatusError,
 };
 
-function recurrencePatch(
-  next: EventRecurrence | null,
-  current: EventRecurrence | null
-): Partial<EventConfigPatchPayload> {
-  if (next === current) return {};
-  return next === null ? { clearRecurrence: true } : { recurrence: next };
-}
-
-function titlePatch(next: string, current: string): Partial<EventConfigPatchPayload> {
-  return next !== current ? { title: next } : {};
-}
-
-function dateTimePatch(
-  parsed: ReturnType<typeof splitDateTimeLocal>,
-  edited: boolean,
-  notifyParticipants: boolean
-): Partial<EventConfigPatchPayload> {
-  if (!parsed || !edited) return {};
-  return {
-    date: parsed.date,
-    time: parsed.time,
-    notifyParticipantsOfDateChange: notifyParticipants,
-  };
-}
-
-function isCreatorParticipant(
-  myParticipant: HostEventSettingsPanelProps['event']['myParticipant'],
-  participants: HostEventSettingsPanelProps['event']['participants']
-): boolean {
-  if (!myParticipant) return false;
-  const myId = myParticipant.id;
-  return !!participants?.find((p) => p.id === myId)?.isCreator;
-}
-
-function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
-  return {
-    theme: c?.theme ?? DEFAULT_EVENT_CONFIG.theme,
-    maxProposalsPerParticipant: c?.maxProposalsPerParticipant ?? MAX_PROPOSALS_PER_PARTICIPANT,
-    maxParticipants: c?.maxParticipants ?? MAX_EVENT_PARTICIPANTS,
-    maxVotesPerParticipant: c?.maxVotesPerParticipant ?? null,
-    wheelMode: c?.wheelMode ?? DEFAULT_EVENT_CONFIG.wheelMode,
-    richSharePreview: c?.richSharePreview ?? DEFAULT_EVENT_CONFIG.richSharePreview,
-    allowSeries: c?.allowSeries ?? DEFAULT_EVENT_CONFIG.allowSeries,
-    recurrence: c?.recurrence ?? null,
-    hasNextOccurrence: c?.hasNextOccurrence ?? false,
-    winnerCount: c?.winnerCount ?? DEFAULT_EVENT_CONFIG.winnerCount,
-  };
-}
-
-type Translate = ReturnType<typeof useTranslation>['t'];
-
-type SettingsDraft = {
-  eventTitle: string;
-  eventDateLocal: string;
-  maxProp: string;
-  maxParticipants: string;
-  voteLimitEnabled: boolean;
-  maxVotes: string;
-  winnerCount: string;
-  currentParticipantCount: number;
-  drawnWinnerCount: number;
-};
-
-function validateTitle(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
-  if (!draft.eventTitle.trim()) errors.title = t('events.settings.titleRequired');
-}
-
-function validateDate(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
-  const trimmed = draft.eventDateLocal.trim();
-  if (!trimmed) {
-    errors.date = t('events.settings.dateRequired');
-    return null;
-  }
-  const parsed = splitDateTimeLocal(draft.eventDateLocal);
-  if (!parsed) errors.date = t('events.settings.dateInvalid');
-  return parsed;
-}
-
-function validateMaxProposals(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
-  const value = Number(draft.maxProp);
-  const valid =
-    draft.maxProp.trim() !== '' &&
-    Number.isInteger(value) &&
-    value >= 1 &&
-    value <= MAX_PROPOSALS_PER_PARTICIPANT;
-  if (valid) return value;
-  errors.maxProposals = t('events.settings.maxProposalsInvalid', {
-    max: MAX_PROPOSALS_PER_PARTICIPANT,
-  });
-  return MAX_PROPOSALS_PER_PARTICIPANT;
-}
-
-function validateMaxParticipants(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
-  const value = Number(draft.maxParticipants);
-  const withinBounds =
-    draft.maxParticipants.trim() !== '' &&
-    Number.isInteger(value) &&
-    value >= 1 &&
-    value <= MAX_EVENT_PARTICIPANTS;
-
-  if (!withinBounds) {
-    errors.maxParticipants = t('events.settings.maxParticipantsInvalid', {
-      max: MAX_EVENT_PARTICIPANTS,
-    });
-    return MAX_EVENT_PARTICIPANTS;
-  }
-
-  if (value < draft.currentParticipantCount) {
-    errors.maxParticipants = t('events.settings.maxParticipantsBelowCurrent', {
-      value,
-      count: draft.currentParticipantCount,
-    });
-    return MAX_EVENT_PARTICIPANTS;
-  }
-
-  return value;
-}
-
-function maxParticipantsHintFor(participantCount: number, t: Translate): string {
-  if (participantCount === 1) {
-    return t('events.settings.maxParticipantsHintOne', { max: MAX_EVENT_PARTICIPANTS });
-  }
-  return t('events.settings.maxParticipantsHintMany', {
-    count: participantCount,
-    max: MAX_EVENT_PARTICIPANTS,
-  });
-}
-
-function validateMaxVotes(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
-  if (!draft.voteLimitEnabled) return null;
-  const value = Number(draft.maxVotes.trim());
-  if (draft.maxVotes.trim() !== '' && Number.isInteger(value) && value >= 1) return value;
-  errors.maxVotes = t('events.settings.maxVotesInvalid');
-  return null;
-}
-
-function validateWinnerCount(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
-  const value = Number(draft.winnerCount);
-  const withinBounds =
-    draft.winnerCount.trim() !== '' &&
-    Number.isInteger(value) &&
-    value >= 1 &&
-    value <= MAX_WINNERS_PER_EVENT;
-
-  if (!withinBounds) {
-    errors.winnerCount = t('events.settings.winnerCountInvalid', { max: MAX_WINNERS_PER_EVENT });
-    return null;
-  }
-
-  if (value < draft.drawnWinnerCount) {
-    errors.winnerCount = t('events.settings.winnerCountLockedHint', {
-      count: draft.drawnWinnerCount,
-    });
-    return null;
-  }
-
-  return value;
-}
-
-function validateSettingsDraft(draft: SettingsDraft, t: Translate) {
-  const errors: FieldErrors = {};
-  validateTitle(draft, t, errors);
-  const eventDateTime = validateDate(draft, t, errors);
-  const maxProposalsPerParticipant = validateMaxProposals(draft, t, errors);
-  const maxParticipantsValue = validateMaxParticipants(draft, t, errors);
-  const maxVotesPerParticipant = validateMaxVotes(draft, t, errors);
-  const winnerCount = validateWinnerCount(draft, t, errors);
-  return {
-    errors,
-    maxProposalsPerParticipant,
-    maxParticipantsValue,
-    maxVotesPerParticipant,
-    winnerCount,
-    eventDateTime,
-  };
-}
-
 export default function HostEventSettingsPanel({
   slug,
   hostToken,
@@ -266,74 +57,50 @@ export default function HostEventSettingsPanel({
   onClose,
 }: Readonly<HostEventSettingsPanelProps>) {
   const { t } = useTranslation();
-  const { locale } = useLocale();
-  const queryClient = useQueryClient();
-  const cfg = normalizeConfig(event.config);
-  const drawnWinnerCount = event.winners?.length ?? 0;
-  const initialFields = configToFields(cfg);
-
-  const [eventTitle, setEventTitle] = useState(event.title);
-  const [themeEmoji, setThemeEmoji] = useState(initialFields.themeEmoji);
-  const [themeText, setThemeText] = useState(initialFields.themeText);
-  const [themeOpen, setThemeOpen] = useState(false);
-  const [eventDateLocal, setEventDateLocal] = useState(
-    eventDateTimeToLocal(event.date, event.time)
-  );
-  const initialDateLocalRef = useRef(eventDateTimeToLocal(event.date, event.time));
-  const [notifyDateChange, setNotifyDateChange] = useState(true);
-  const [maxProp, setMaxProp] = useState(initialFields.maxProposals);
-  const [maxParticipants, setMaxParticipants] = useState(initialFields.maxParticipants);
-  const [voteLimitEnabled, setVoteLimitEnabled] = useState(initialFields.voteLimitEnabled);
-  const [maxVotes, setMaxVotes] = useState(initialFields.maxVotes);
-  const [wheelMode, setWheelMode] = useState<WheelMode>(initialFields.wheelMode);
-  const [allowSeries, setAllowSeries] = useState(initialFields.allowSeries);
-  const [richSharePreview, setRichSharePreview] = useState(initialFields.richSharePreview);
-  const [recurrence, setRecurrence] = useState<EventRecurrence | null>(cfg.recurrence ?? null);
-  const [winnerCount, setWinnerCount] = useState(initialFields.winnerCount);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const performSaveRef = useRef<() => void>(() => {});
-
-  useEffect(() => () => clearTimeout(saveTimerRef.current), []);
-
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const maxParticipantsHint = maxParticipantsHintFor(event.participantCount ?? 0, t);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveState, setSaveState] = useState<SaveState>('saved');
-
-  const navigate = useNavigate();
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const isConnectedCreator = useMemo(
-    () => isCreatorParticipant(event.myParticipant, event.participants),
-    [event.myParticipant, event.participants]
-  );
-
-  const templateDraft = buildTemplateDraft({
+  const {
+    eventTitle,
+    setEventTitle,
     themeEmoji,
+    setThemeEmoji,
     themeText,
-    maxProposals: maxProp,
+    setThemeText,
+    themeOpen,
+    setThemeOpen,
+    themePreview,
+    eventDateLocal,
+    setEventDateLocal,
+    relativeDateLabel,
+    dateWasEdited,
+    notifyDateChange,
+    setNotifyDateChange,
+    maxProp,
+    setMaxProp,
     maxParticipants,
+    setMaxParticipants,
+    maxParticipantsHint,
     voteLimitEnabled,
+    setVoteLimitEnabled,
     maxVotes,
+    setMaxVotes,
     wheelMode,
-    richSharePreview,
+    setWheelMode,
     allowSeries,
+    setAllowSeries,
+    recurrence,
+    setRecurrence,
     winnerCount,
-  });
-
-  const applyFields = useCallback((config: ApplicableConfig) => {
-    const next = configToFields(config);
-    setThemeEmoji(next.themeEmoji);
-    setThemeText(next.themeText);
-    setMaxProp(next.maxProposals);
-    setMaxParticipants(next.maxParticipants);
-    setVoteLimitEnabled(next.voteLimitEnabled);
-    setMaxVotes(next.maxVotes);
-    setWheelMode(next.wheelMode);
-    setAllowSeries(next.allowSeries);
-    setRichSharePreview(next.richSharePreview);
-    setWinnerCount(next.winnerCount);
-  }, []);
+    setWinnerCount,
+    drawnWinnerCount,
+    configLocked,
+    recurrenceLocked,
+    fieldErrors,
+    saveError,
+    saveState,
+    scheduleAutoSave,
+    templateDraft,
+    eventTemplates,
+    isConnectedCreator,
+  } = useHostEventSettingsDraft({ slug, hostToken, event, open });
 
   const titleId = useId();
   const themeCollapseId = useId();
@@ -342,136 +109,6 @@ export default function HostEventSettingsPanel({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dragBind = useSheetDrag(dialogRef, onClose, open);
 
-  const mutation = useMutation({
-    mutationFn: (body: EventConfigPatchPayload) => patchEventConfig(slug, hostToken, body),
-    onSuccess: async (_config, body) => {
-      if (body.date && body.time)
-        initialDateLocalRef.current = eventDateTimeToLocal(body.date, body.time);
-      setSaveState('saved');
-      setSaveError(null);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
-    },
-    onError: (e) => {
-      setSaveState('error');
-      setSaveError(getErrorMessage(e, t('events.settings.fallbackError')));
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteEvent(slug),
-    onSuccess: async () => {
-      removeStoredParticipant(slug);
-      clearStoredHostToken(slug);
-      queryClient.removeQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
-      navigate(ROUTES.myEvents);
-    },
-    onError: (e) => {
-      setDeleteError(getErrorMessage(e, t('events.danger.deleteError')));
-    },
-    onSettled: () => {
-      setConfirmDeleteOpen(false);
-    },
-  });
-
-  const scheduleAutoSave = useCallback((immediate = false) => {
-    setSaveState('pending');
-    clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => performSaveRef.current(), immediate ? 0 : 600);
-  }, []);
-
-  const eventTemplates = useEventTemplates(open && isConnectedCreator, {
-    draft: templateDraft,
-    onError: setSaveError,
-    onApply: (template) => {
-      applyFields(template);
-      scheduleAutoSave(true);
-    },
-  });
-  const forgetAppliedTemplate = eventTemplates.forget;
-
-  const hydrateFromEvent = useCallback(() => {
-    setEventTitle(event.title);
-    applyFields(normalizeConfig(event.config));
-    setThemeOpen(false);
-    const nextDateLocal = eventDateTimeToLocal(event.date, event.time);
-    setEventDateLocal(nextDateLocal);
-    initialDateLocalRef.current = nextDateLocal;
-    setNotifyDateChange(true);
-    setRecurrence(event.config?.recurrence ?? null);
-    forgetAppliedTemplate();
-    setFieldErrors({});
-    setSaveError(null);
-    setSaveState('saved');
-  }, [event.title, event.config, event.date, event.time, applyFields, forgetAppliedTemplate]);
-
-  const wasOpenRef = useRef(false);
-  useEffect(() => {
-    if (open && !wasOpenRef.current) hydrateFromEvent();
-    wasOpenRef.current = open;
-  }, [open, hydrateFromEvent]);
-
-  performSaveRef.current = () => {
-    const {
-      errors,
-      maxProposalsPerParticipant,
-      maxParticipantsValue,
-      maxVotesPerParticipant,
-      winnerCount: winnerCountValue,
-      eventDateTime,
-    } = validateSettingsDraft(
-      {
-        eventTitle,
-        eventDateLocal,
-        maxProp,
-        maxParticipants,
-        voteLimitEnabled,
-        maxVotes,
-        winnerCount,
-        currentParticipantCount: event.participantCount ?? 0,
-        drawnWinnerCount,
-      },
-      t
-    );
-
-    setFieldErrors(errors);
-
-    if (Object.keys(errors).length > 0) {
-      setSaveState('error');
-      return;
-    }
-
-    const theme = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
-
-    mutation.mutate({
-      ...titlePatch(eventTitle.trim(), event.title),
-      ...(theme !== (cfg.theme ?? '') ? { theme } : {}),
-      ...(maxProposalsPerParticipant !== cfg.maxProposalsPerParticipant
-        ? { maxProposalsPerParticipant }
-        : {}),
-      ...(maxParticipantsValue !== cfg.maxParticipants
-        ? { maxParticipants: maxParticipantsValue }
-        : {}),
-      ...(maxVotesPerParticipant !== (cfg.maxVotesPerParticipant ?? null)
-        ? { maxVotesPerParticipant: maxVotesPerParticipant ?? 0 }
-        : {}),
-      ...(wheelMode !== cfg.wheelMode ? { wheelMode } : {}),
-      ...(allowSeries !== (cfg.allowSeries ?? false) ? { allowSeries } : {}),
-      ...(richSharePreview !== (cfg.richSharePreview ?? true) ? { richSharePreview } : {}),
-      ...(winnerCountValue !== null && winnerCountValue !== cfg.winnerCount
-        ? { winnerCount: winnerCountValue }
-        : {}),
-      ...recurrencePatch(recurrence, cfg.recurrence ?? null),
-      ...dateTimePatch(
-        eventDateTime,
-        eventDateLocal !== initialDateLocalRef.current,
-        notifyDateChange
-      ),
-    });
-  };
-
-  const configLocked = drawnWinnerCount > 0;
-  const recurrenceLocked = cfg.hasNextOccurrence ?? false;
   const recurrenceOptions = useMemo(
     () => [
       { value: 'weekly' as const, label: t('events.settings.recurrenceWeekly') },
@@ -480,13 +117,6 @@ export default function HostEventSettingsPanel({
     ],
     [t]
   );
-
-  const liveDateTime = eventDateLocal.trim() ? splitDateTimeLocal(eventDateLocal) : null;
-  const relativeDateLabel = liveDateTime
-    ? formatRelativeEventDate(liveDateTime.date, locale)
-    : null;
-  const dateWasEdited = eventDateLocal !== initialDateLocalRef.current;
-  const themePreview = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
 
   const saveStatusLabel = t(SAVE_STATUS_LABEL_KEYS[saveState]);
 
@@ -801,47 +431,8 @@ export default function HostEventSettingsPanel({
         </form>
 
         {isConnectedCreator && (
-          <div className={styles.dangerSection} data-testid="host-danger-zone">
-            <h3 className={clsx(styles.sectionTitle, styles.dangerTitle)}>
-              {t('events.danger.sectionTitle')}
-            </h3>
-            <p className={styles.dangerLead}>{t('events.danger.sectionDescription')}</p>
-            {deleteError && (
-              <p className="error" role="alert">
-                {deleteError}
-              </p>
-            )}
-            <Button
-              type="button"
-              tone="danger"
-              className={styles.deleteBtn}
-              onClick={() => {
-                setDeleteError(null);
-                setConfirmDeleteOpen(true);
-              }}
-              disabled={deleteMutation.isPending}
-              data-testid="delete-event-button"
-            >
-              <Trash2 size={ICON_SIZE.md} aria-hidden />
-              <span>
-                {deleteMutation.isPending
-                  ? t('events.danger.deleting')
-                  : t('events.danger.deleteButton')}
-              </span>
-            </Button>
-          </div>
+          <HostEventDangerZone slug={slug} hostToken={hostToken} eventTitle={event.title} />
         )}
-
-        <ConfirmDialog
-          open={confirmDeleteOpen}
-          title={t('events.danger.deleteConfirmTitle')}
-          message={t('events.danger.deleteConfirmMessage', { title: event.title })}
-          confirmLabel={t('events.danger.deleteConfirmAction')}
-          loading={deleteMutation.isPending}
-          onConfirm={() => deleteMutation.mutate()}
-          onCancel={() => setConfirmDeleteOpen(false)}
-          testId="delete-event-confirm-dialog"
-        />
       </div>
     </Modal>
   );

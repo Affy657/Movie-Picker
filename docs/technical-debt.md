@@ -66,16 +66,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: le palier est lu et le mot « présumé » retiré de DEBT-008 et DEBT-033
 - piege: sans le MCP, tout ce que le cluster dit de lui-même se lit par `mongosh` sans rien installer : `docker run --rm mongo:7 mongosh --quiet "$MONGODB_URI" --eval 'db.serverStatus().connections'`, et `db.stats()` par base pour les tailles. Le palier lui-même ne se lit que dans la console, `serverStatus` ne le dit pas.
 
-## DEBT-010 deux composants trop chargés
-
-- state: differe
-- declencheur: une feature repasse dans le fichier concerné. Ne jamais en faire un chantier isolé.
-- impact: densité d'état qui rend chaque modification risquée
-- ou: `apps/web/src/features/events/pages/event-detail/EventDetailSession.tsx` (924 lignes) et `apps/web/src/features/events/components/HostEventSettingsPanel.tsx` (624 lignes)
-- verify: `wc -l apps/web/src/features/events/pages/event-detail/EventDetailSession.tsx apps/web/src/features/events/components/HostEventSettingsPanel.tsx` ; cette commande sort toujours quelque chose, lire les nombres : encore ouvert tant qu'un des deux dépasse 600 lignes
-- fix: extraire par responsabilité vers les primitives partagées existantes avant d'écrire du local
-- piege: un troisième fichier, `movieCardParts.tsx`, figurait ici sur la foi d'un relevé à 1096 lignes. Il en fait 436 depuis l'extraction des briques de listes. Mesurer avant de croire un relevé de cette liste.
-
 ## DEBT-014 le domaine www ne répond pas
 
 - state: humain
