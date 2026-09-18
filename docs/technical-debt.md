@@ -81,23 +81,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - piege: les smoke tests de la CI ne référencent aucun de ces hôtes en dur, l'API vient de `secrets.VITE_API_URL` et le front de la première entrée de `vars.ALLOWED_ORIGINS` : ils restent justes après la migration tant que `www` n'est pas mis en première position avant que le DNS ne pointe. Pointer le CNAME avant de déployer donne un `www` à moitié vivant : le front se charge, l'API refuse l'origine (CORS injecté au déploiement, pas à chaud).
 - refs: le lot Terraform 4 de `roadmap.md` fait la même bascule DNS en décommissionnant AWS. Si ce lot est engagé, traiter la dette ici serait du travail jeté.
 
-## DEBT-024 les documents de prod portent encore les anciens champs `winnerMovieId`, `winnerPickMethod`, `winnerPickedAt`
-
-- state: differe
-- declencheur: la révision Cloud Run active sert un commit qui contient `ToDocument_WritesTheWinnersListOnly_NoLegacyWinnerField` (`git log -1 --format=%h -S ToDocument_WritesTheWinnersListOnly_NoLegacyWinnerField` donne le premier ; `SENTRY_RELEASE` de la révision active, `gcloud run revisions describe`, dit lequel sert)
-- impact: aucune fonctionnalité en jeu. Depuis le 2026-09-16 le code ne lit ni n'écrit plus que `winners` : les 22 soirées de prod qui n'avaient qu'un `winnerMovieId` ont reçu leur liste `winners` par reprise (`pickMethod` recopié ou `wheel`, `pickedAt` recopié ou `updatedAt`, exactement ce que le repli de lecture rendait), `EventDocument` n'a plus les trois champs, le compteur de soirées gagnées n'interroge plus que `winners.movieId`. Restent en base les anciens champs sur 28 documents, que la révision active réécrit encore à chaque `ReplaceOne` tant qu'elle sert l'ancien code.
-- ou: base `moviepicker`, collection `events`
-- verify: la commande sort un nombre, encore ouvert tant qu'il n'est pas 0.
-  ```bash
-  docker run --rm mongo:7 mongosh --quiet "$(gcloud secrets versions access latest --secret=MONGODB_URI)" --eval 'db.getSiblingDB("moviepicker").events.countDocuments({ $or: [ { winnerMovieId: { $exists: true } }, { winnerPickMethod: { $exists: true } }, { winnerPickedAt: { $exists: true } } ] })'
-  ```
-- fix: une fois le déclencheur observé, un seul `updateMany` :
-  ```bash
-  docker run --rm mongo:7 mongosh --quiet "$(gcloud secrets versions access latest --secret=MONGODB_URI)" --eval 'db.getSiblingDB("moviepicker").events.updateMany({}, { $unset: { winnerMovieId: "", winnerPickMethod: "", winnerPickedAt: "" } })'
-  ```
-- fini-quand: `verify` rend 0
-- piege: ne pas retirer les champs avant le déclencheur : la révision active les réécrit (`ReplaceOne`, C13 n'y est pas encore), et un retour arrière vers elle continuerait de les lire en repli si `winners` manquait ; il ne manque plus nulle part, mais l'ordre reste le seul qui ne dépende de rien. L'URI de prod ne se colle jamais dans un fichier ni dans la conversation, seulement dans la substitution de commande.
-
 ## DEBT-026 le flou de fond des barres collantes n'a jamais été mesuré au défilement
 
 - state: differe
