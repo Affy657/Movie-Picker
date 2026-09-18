@@ -31,6 +31,7 @@ public sealed class EventsController : ControllerBase
     [HttpPost]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.CreateEventPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.CreateEventPolicy)]
     [ProducesResponseType(typeof(CreateEventResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

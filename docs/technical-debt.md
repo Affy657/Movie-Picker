@@ -133,16 +133,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: soit retirer les pièces jointes du formulaire de suggestion, soit les héberger hors dépôt (bucket privé, lien signé dans le ticket)
 - fini-quand: aucune écriture du serveur dans le dépôt GitHub ne vient d'un utilisateur
 
-## DEBT-031 le limiteur de débit en mémoire est par instance
-
-- state: differe
-- declencheur: la mise à l'échelle devient routinière au lieu d'être exceptionnelle, même déclencheur que DEBT-006
-- impact: chaque politique `[EnableRateLimiting]` compte par instance Cloud Run, donc un plafond de 60 par minute vaut jusqu'à 20 fois plus en pic. Seules les politiques d'authentification doublent leur compte dans Mongo par `[SharedRateLimit]`.
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` (politiques), `SharedRateLimitFilter.cs` (compteur partagé)
-- verify: `grep -c "SharedRateLimit(" apps/api-dotnet/MoviePicker.Api/Controllers/*.cs` ; encore ouvert tant que seul `AuthController` porte l'attribut
-- fix: poser `[SharedRateLimit]` sur les politiques qui protègent une ressource partagée (webhooks, scheduler, création de soirée), pas sur le sondage
-- piege: le compteur partagé coûte un aller-retour Mongo par requête, ne pas le poser sur les routes sondées toutes les 3,5 s (DEBT-008)
-
 ## DEBT-032 deux modèles d'autorisation hôte coexistent, le jeton porteur et le compte créateur
 
 - state: humain

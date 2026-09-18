@@ -17,6 +17,7 @@ public sealed class IdeaSuggestionsController : ControllerBase
 {
     [HttpPost]
     [EnableRateLimiting(RateLimitingExtensions.IdeaSuggestionPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.IdeaSuggestionPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
