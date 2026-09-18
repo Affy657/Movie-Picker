@@ -6,7 +6,7 @@ import Chip from '@/shared/components/Chip';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
@@ -59,7 +59,7 @@ function buildDetailsTabs(
   hasEventContext: boolean,
   isTv: boolean,
   providerCount: number,
-  t: ReturnType<typeof useTranslation>['t']
+  t: Translate
 ) {
   const eventTab = hasEventContext
     ? [{ key: 'event' as const, label: t('movies.details.tabEvent') }]
@@ -96,7 +96,7 @@ function wheelActionKey(eventContext: MovieDetailsModalProps['eventContext']) {
 function removeAriaLabel(
   eventContext: MovieDetailsModalProps['eventContext'],
   title: string,
-  t: ReturnType<typeof useTranslation>['t']
+  t: Translate
 ) {
   if (eventContext?.isMine) return `${t('movies.list.removeButton')} ${title}`;
   return t('movies.list.removeAsHostAria', { title });

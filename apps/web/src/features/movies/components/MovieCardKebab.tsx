@@ -16,12 +16,13 @@ import clsx from 'clsx';
 import type { MovieDetailsTabKey } from '@/features/movies/components/MovieDetailsModal';
 import { letterboxdUrl } from '@/features/movies/utils/movieExternalLinks';
 import type { MovieData } from '@/shared/types/movie';
-import type { MovieWheelExclusion, Translate } from '@/features/movies/types';
+import type { MovieWheelExclusion } from '@/features/movies/types';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import styles from './MovieCardKebab.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { MenuItem, MenuPanel, MenuSeparator } from '@/shared/components/Menu';
 import { MENU_ANCHOR_GAP_PX, MENU_VIEWPORT_MARGIN_PX } from '@/shared/components/menuGeometry';
+import type { Translate } from '@/shared/i18n';
 
 export type CardKebabTrigger = 'dots' | 'disclosure';
 

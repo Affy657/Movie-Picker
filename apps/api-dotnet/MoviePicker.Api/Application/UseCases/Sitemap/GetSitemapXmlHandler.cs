@@ -49,8 +49,8 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
         AppendUrl(sb, $"{webBase}/", today, "daily", "1.0");
         AppendUrl(sb, $"{webBase}/decouvrir", null, "monthly", "0.8");
         AppendUrl(sb, $"{webBase}/films/tendances", today, "daily", "0.8");
-        AppendUrl(sb, $"{webBase}/films/au-cinema", today, "weekly", "0.8");
-        AppendUrl(sb, $"{webBase}/films/les-plus-proposes", today, "weekly", "0.7");
+        AppendUrl(sb, $"{webBase}/films/au-cinema", null, "weekly", "0.8");
+        AppendUrl(sb, $"{webBase}/films/les-plus-proposes", null, "weekly", "0.7");
         AppendUrl(sb, $"{webBase}/films/collections", null, "monthly", "0.6");
         AppendUrl(sb, $"{webBase}/tech", null, "monthly", "0.5");
         AppendUrl(sb, $"{webBase}/soutenir", null, "monthly", "0.3");

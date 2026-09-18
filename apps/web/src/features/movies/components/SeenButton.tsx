@@ -2,10 +2,10 @@ import clsx from 'clsx';
 import { Eye } from 'lucide-react';
 import AvatarStack from '@/shared/components/AvatarStack';
 import Tooltip from '@/shared/components/Tooltip';
-import type { Translate } from '@/features/movies/types';
 import type { MovieData } from '@/shared/types/movie';
 import styles from './SeenButton.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import type { Translate } from '@/shared/i18n';
 
 export function SeenButton({
   m,

@@ -5,8 +5,9 @@ namespace MoviePicker.Api.Application.UseCases.Watchlist;
 
 public sealed class GetWatchlistHandler : IGetWatchlistHandler
 {
-    private const int DefaultTake = 500;
-    private const int MaxTake = 500;
+    public const int MaxTake = 500;
+
+    private const int DefaultTake = MaxTake;
 
     private readonly IWatchlistRepository _watchlist;
 

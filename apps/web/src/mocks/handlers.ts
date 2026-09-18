@@ -21,7 +21,9 @@ export const authMeGuestHandler = http.get(`${V1}/auth/me`, () =>
 export function createWatchlistHandlers(items: unknown[], availability: unknown[] = []) {
   return [
     http.get(`${V1}/watchlist`, () => HttpResponse.json({ items })),
-    http.get(`${V1}/watchlist/availability`, () => HttpResponse.json({ items: availability })),
+    http.get(`${V1}/watchlist/availability`, () =>
+      HttpResponse.json({ items: availability, partial: false })
+    ),
   ];
 }
 

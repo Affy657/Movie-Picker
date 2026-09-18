@@ -1,4 +1,4 @@
-export { t, type TranslationKey } from './t';
+export { t, type Translate, type TranslationKey } from './t';
 export {
   type Locale,
   type LocaleCode,

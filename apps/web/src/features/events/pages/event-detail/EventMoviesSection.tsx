@@ -29,7 +29,7 @@ import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
 import { Skeleton } from '@/shared/components/Skeleton';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useEventMovieVoting } from './useEventMovieVoting';
 import { useEventWatchlistToggle } from './useEventWatchlistToggle';
@@ -189,7 +189,7 @@ function VoteLimitDialog({
 
 function lockedVoteQuotaHint(
   quota: { used: number; max: number } | null,
-  t: ReturnType<typeof useTranslation>['t']
+  t: Translate
 ): string | null {
   if (!quota || quota.used < quota.max) return null;
   return pluralizeCount(

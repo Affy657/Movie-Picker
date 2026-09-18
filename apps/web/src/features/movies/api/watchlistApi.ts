@@ -28,6 +28,7 @@ export interface WatchlistAvailabilityItem {
 
 export interface WatchlistAvailabilityResponse {
   items: WatchlistAvailabilityItem[];
+  partial: boolean;
 }
 
 export interface AddWatchlistItemBody {
@@ -47,12 +48,12 @@ export async function fetchWatchlist(signal?: AbortSignal): Promise<WatchlistIte
 
 export async function fetchWatchlistAvailability(
   signal?: AbortSignal
-): Promise<WatchlistAvailabilityItem[]> {
-  const res = await fetchApi<WatchlistAvailabilityResponse>(
+): Promise<WatchlistAvailabilityResponse> {
+  const res = await fetchApi<Partial<WatchlistAvailabilityResponse> | null>(
     '/watchlist/availability',
     signal ? { signal } : undefined
   );
-  return Array.isArray(res?.items) ? res.items : [];
+  return { items: Array.isArray(res?.items) ? res.items : [], partial: res?.partial === true };
 }
 
 export async function addToWatchlist(body: AddWatchlistItemBody): Promise<void> {

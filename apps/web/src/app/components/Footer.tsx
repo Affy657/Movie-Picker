@@ -7,7 +7,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
 import ProposeIdeaButton from './ProposeIdeaButton';
 import SupportReportButton from './SupportReportButton';
-import InstallPwaDialog from './InstallPwaDialog';
+import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import styles from './Footer.module.css';

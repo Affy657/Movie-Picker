@@ -94,14 +94,15 @@ public sealed class GetSitemapXmlHandlerTests
     }
 
     [Fact]
-    public async Task BuildXmlAsync_DatesTheDailyListsFromTheClockAndLeavesStaticPagesUndated()
+    public async Task BuildXmlAsync_DatesTheDailyListsFromTheClockAndLeavesTheOthersUndated()
     {
         SetupProfiles();
         var xml = await CreateSut().BuildXmlAsync();
 
         Assert.Equal("2026-09-18", LastmodOf(xml, "https://web.example/"));
         Assert.Equal("2026-09-18", LastmodOf(xml, "https://web.example/films/tendances"));
-        Assert.Equal("2026-09-18", LastmodOf(xml, "https://web.example/films/au-cinema"));
+        Assert.Null(LastmodOf(xml, "https://web.example/films/au-cinema"));
+        Assert.Null(LastmodOf(xml, "https://web.example/films/les-plus-proposes"));
         Assert.Null(LastmodOf(xml, "https://web.example/decouvrir"));
         Assert.Null(LastmodOf(xml, "https://web.example/films/collections"));
         Assert.Null(LastmodOf(xml, "https://web.example/tech"));

@@ -9,7 +9,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { APP_DOCUMENT_TITLE, pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
-import { useLocale, useTranslation } from '@/shared/i18n';
+import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import ProfileIdentityCard from '@/features/profile/components/ProfileIdentityCard';
@@ -44,10 +44,7 @@ function formatMemberSince(iso: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date);
 }
 
-function buildProfileDescription(
-  profile: PublicProfile,
-  t: ReturnType<typeof useTranslation>['t']
-): string {
+function buildProfileDescription(profile: PublicProfile, t: Translate): string {
   const bio = profile.bio?.trim();
   if (bio) return bio;
   return t('profile.seoDescription', { name: profile.displayName, handle: profile.handle });

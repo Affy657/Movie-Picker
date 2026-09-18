@@ -34,7 +34,7 @@ vi.mock('@/shared/hooks/usePwaInstall', () => ({
   isStandaloneRuntime: vi.fn(() => false),
 }));
 
-vi.mock('@/app/components/InstallPwaDialog', () => ({
+vi.mock('@/shared/components/InstallPwaDialog', () => ({
   default: ({ mode }: { mode: string }) => <div role="dialog">guide:{mode}</div>,
 }));
 

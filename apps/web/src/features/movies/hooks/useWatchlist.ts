@@ -29,12 +29,16 @@ export function useWatchlist(options?: { enabled?: boolean }) {
   });
 }
 
+export const AVAILABILITY_PARTIAL_REFETCH_MS = 1500;
+
 export function useWatchlistAvailability(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.watchlist.availability,
     queryFn: ({ signal }) => fetchWatchlistAvailability(signal),
     enabled: options?.enabled ?? true,
     staleTime: 60 * 60 * 1000,
+    refetchInterval: (query) =>
+      query.state.data?.partial ? AVAILABILITY_PARTIAL_REFETCH_MS : false,
   });
 }
 

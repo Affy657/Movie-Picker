@@ -174,6 +174,10 @@ Une ligne de réglage : un titre, une description et un `Toggle` à droite, nomm
 
 Les boutons y prennent leurs tailles et tons de `Button`, la feuille n'en redéfinit aucun.
 
+### Fiche film depuis une liste
+
+`features/watchlist/components/LibraryMovieDetails.tsx` ouvre `MovieDetailsModal` pour un titre d'une liste (Ma liste, accueil, listes publiques, profil). `useLibraryMovieDetails` lit la cible dans l'URL (`?film=<id>` ou `?serie=<id>`, en `replace`, sans reset du défilement) et garde en mémoire la graine passée à `open` (titre, affiche, plateformes) pour peindre la fiche avant sa requête ; un lien profond sans graine charge tout depuis l'API. La cible venant de l'URL, **une page ne monte qu'un seul `LibraryMovieDetails`** : un second lirait la même cible et ouvrirait une seconde fiche.
+
 ### ChoiceGroup et ChoiceCard
 
 Un choix exclusif entre des cartes, quand `SegmentedRadioGroup` est trop étroit (une carte porte un titre, une description, une vignette). `ChoiceGroup` (`value`, `onChange`, `ariaLabel` ou `ariaLabelledBy`) rend le `role="radiogroup"` et pilote flèches, Home et End ; seule la carte cochée est tabulable, la première quand rien ne l'est. `onSelect` (optionnel) est appelé quand une carte est activée, au clic ou par Entrée et Espace, jamais lors d'un déplacement par flèche : c'est ce qui ferme un popover (`ThemeField`) sans poser de gestionnaire de clic sur un conteneur.
@@ -262,6 +266,7 @@ Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches
 - `AvatarStack` : `people` (`{ key, avatarId, pseudo }`), `max` (3), `hidden` quand la liste n'est qu'un échantillon, `size` `xs` / `sm`, `ariaLabel`. Avatars chevauchés d'un quart, anneau `--avatar-stack-ring` (le fond de page par défaut, la surface ou l'anneau d'affiche via une classe), pastille « +N » pour le reste. Décoratif sans `ariaLabel`, `role="img"` avec.
 - `EventLifecyclePill` : `lifecycle` `upcoming` / `live` / `pending` / `finished`, `label`, `detail` ; seul `live` pulse. Seul consommateur légitime de `--color-badge-*` avec `Chip` `pending`.
 - `ViewModeToggle` : barre d'outils grille / liste, `aria-pressed` sur le mode courant, boutons de 30 px à zone tactile étendue.
+- `InstallPwaDialog` : `open`, `mode` `ios` / `in_app` / `generic`, `onClose` ; le guide d'ajout à l'écran d'accueil qu'ouvre `usePwaInstallClick`, depuis le pied de page, le menu du compte et la section notifications.
 - `QrCode` : `value`, `title` ; SVG de 240 px.
 
 ## Tests

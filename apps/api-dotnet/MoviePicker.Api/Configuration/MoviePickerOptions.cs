@@ -27,6 +27,8 @@ public sealed class MoviePickerOptions
 
     public int TmdbListEnrichmentMaxParallelism { get; set; } = 8;
 
+    public int TmdbBatchEnrichmentMaxFetch { get; set; } = 40;
+
     public bool PosterCacheEnabled { get; set; } = true;
 
     public int PosterCacheTtlDays { get; set; } = 30;

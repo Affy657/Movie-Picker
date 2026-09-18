@@ -9,7 +9,7 @@ import {
 import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import type { EventWheelState } from '@/features/events/hooks/useEventWheel';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useMenuState } from '@/shared/hooks/useMenuState';
 import { MenuItem, MenuPanel } from '@/shared/components/Menu';
@@ -23,8 +23,6 @@ type EventWheelActionsProps = {
   wheel: EventWheelState;
   onRequestReset: () => void;
 };
-
-type Translate = ReturnType<typeof useTranslation>['t'];
 
 function IconAction({
   label,

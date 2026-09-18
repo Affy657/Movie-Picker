@@ -5,11 +5,10 @@ import { ROUTES } from '@/app/routes';
 import Avatar from '@/shared/components/Avatar';
 import AvatarStack from '@/shared/components/AvatarStack';
 import Tooltip from '@/shared/components/Tooltip';
-import { useLocale } from '@/shared/i18n';
+import { useLocale, type Translate } from '@/shared/i18n';
 import type { MovieData } from '@/shared/types/movie';
 import Button from '@/shared/components/Button';
 import SeenButton from '@/features/movies/components/SeenButton';
-import type { Translate } from '@/features/movies/types';
 import styles from './MovieDetailsEventTab.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 

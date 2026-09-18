@@ -21,7 +21,6 @@ import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { markMovieAsSeen, unmarkMovieAsSeen } from '@/features/movies/api/moviesApi';
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
-import type { Translate } from '@/features/movies/types';
 import type { RatingScale } from '@/shared/types/theme';
 import styles from './movieCardParts.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -29,6 +28,7 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 export { MovieNote, PITCH_MAX } from './MovieNote';
 export { CardKebab, MovieCardKebab } from './MovieCardKebab';
 import { deriveWheelToggle } from './MovieCardKebab';
+import type { Translate } from '@/shared/i18n';
 export type { MovieWheelExclusion } from '@/features/movies/types';
 
 export interface MovieCardSelection {

@@ -10,8 +10,7 @@ import {
 } from '@/features/movies/api/moviesApi';
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
-import { useLocale, useTranslation } from '@/shared/i18n';
-import type { Translate } from '@/features/movies/types';
+import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { metaGenresLabel, movieMetaLine } from '@/shared/utils/movieMetaLine';

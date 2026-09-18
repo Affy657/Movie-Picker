@@ -3,11 +3,11 @@ import clsx from 'clsx';
 import { ArrowDown, ArrowUp, Film } from 'lucide-react';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { OverflowChip, PaidOfferChip } from '@/features/movies/components/movieCardParts';
-import type { Translate } from '@/features/movies/types';
 import type { WatchProviderOffer } from '@/shared/types/movie';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Card from '@/shared/components/Card';
 import styles from './MovieTable.module.css';
+import type { Translate } from '@/shared/i18n';
 
 export function MovieTable({
   header,

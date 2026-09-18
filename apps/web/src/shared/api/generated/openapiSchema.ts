@@ -7071,6 +7071,7 @@ export interface components {
         };
         WatchlistAvailabilityResponse: {
             items?: components["schemas"]["WatchlistAvailabilityItemResponse"][] | null;
+            partial?: boolean;
         };
         WatchlistItemResponse: {
             /** Format: int32 */

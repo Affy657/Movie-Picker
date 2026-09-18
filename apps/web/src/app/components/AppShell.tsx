@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { useState, type ComponentType, type SVGProps } from 'react';
 import { Bookmark, CalendarDays, Compass, HelpCircle, LogIn, Plus, UserRound } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
-import { useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxdAutoSync';
 import { useWhatsNew } from '@/shared/hooks/useWhatsNew';
@@ -112,7 +112,7 @@ function HeaderNavActions({
   user: ReturnType<typeof useAuth>['user'];
   returnTo: string;
   onOpenWhatsNew: () => void;
-  t: ReturnType<typeof useTranslation>['t'];
+  t: Translate;
 }>) {
   if (isLoading || (!isAuthenticated && isOnAuthRoute)) {
     return <div className={styles.navActions} />;

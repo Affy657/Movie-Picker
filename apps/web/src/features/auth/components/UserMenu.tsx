@@ -18,7 +18,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useMenuState } from '@/shared/hooks/useMenuState';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
-import InstallPwaDialog from '@/app/components/InstallPwaDialog';
+import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
 import type { UserProfile } from '@/features/auth/types';
 import styles from './UserMenu.module.css';
 

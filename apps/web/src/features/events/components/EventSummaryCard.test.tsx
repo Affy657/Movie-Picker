@@ -52,13 +52,16 @@ describe('EventSummaryCardBody', () => {
     vi.useRealTimers();
   });
 
-  it('puts the day and the time in the date tile, and the title takes the full width', () => {
-    const { container } = renderCard(event());
+  it('puts the day and the time in the date tile, reads the full date to a screen reader, and the title takes the full width', () => {
+    renderCard(event());
 
-    const tile = container.querySelector('[aria-hidden="true"]');
+    const spokenDate = screen.getByText('vendredi 19 juin à 20h30');
+    expect(spokenDate).toHaveClass('visually-hidden');
+    const tile = spokenDate.parentElement!;
     expect(tile).toHaveTextContent('juin');
     expect(tile).toHaveTextContent('19');
     expect(tile).toHaveTextContent('20h30');
+    expect(tile.querySelectorAll('[aria-hidden="true"]')).toHaveLength(3);
     expect(screen.getByText('Ciné-club du mercredi')).toBeInTheDocument();
     expect(screen.getByText('Halloween')).toBeInTheDocument();
   });

@@ -1,4 +1,4 @@
-import type { Translate } from '@/features/movies/types';
+import type { Translate } from '@/shared/i18n';
 
 export function othersAlreadySeenHint(
   seenByPseudos: readonly string[] | undefined,

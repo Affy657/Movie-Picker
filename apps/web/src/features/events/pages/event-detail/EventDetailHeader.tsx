@@ -9,7 +9,7 @@ import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import ViewModeToggle from '@/shared/components/ViewModeToggle';
 import AvatarStack from '@/shared/components/AvatarStack';
 import type { EventParticipantSummary, MyEventLifecycle } from '@/shared/types/event';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { ROUTES } from '@/app/routes';
 import styles from './EventDetailHeader.module.css';
@@ -209,7 +209,7 @@ type UtilityActionsProps = {
   rawTime: string;
   onOpenShare: (() => void) | undefined;
   onOpenSettings: (() => void) | undefined;
-  t: ReturnType<typeof useTranslation>['t'];
+  t: Translate;
 };
 
 function UtilityActions({

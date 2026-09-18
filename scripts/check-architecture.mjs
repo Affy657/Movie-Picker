@@ -47,10 +47,16 @@ function checkComments(files) {
 }
 
 const IMPORT_RE = /^\s*(?:import|export)[^'"]*from\s*['"]([^'"]+)['"]/gm;
+const DYNAMIC_IMPORT_RE = /\bimport\(\s*['"]([^'"]+)['"]\s*\)/g;
 
 function importsOf(file) {
   const text = readFileSync(file, 'utf8');
   return [...text.matchAll(IMPORT_RE)].map((m) => m[1]);
+}
+
+function dynamicImportsOf(file) {
+  const text = readFileSync(file, 'utf8');
+  return [...text.matchAll(DYNAMIC_IMPORT_RE)].map((m) => m[1]);
 }
 
 function resolveImport(spec, from) {
@@ -107,7 +113,7 @@ function checkFeatureLayers(files) {
       );
       continue;
     }
-    for (const spec of importsOf(file)) {
+    for (const spec of [...importsOf(file), ...dynamicImportsOf(file)]) {
       const to = FEATURE_SPEC.exec(spec)?.[1];
       if (!to || to === from || allowed.includes(to)) continue;
       violations.push(

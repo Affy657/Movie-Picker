@@ -54,6 +54,7 @@ describe('PendingEventCard', () => {
     expect(screen.getByText('En suspens')).toBeInTheDocument();
     expect(screen.getByText('Clôture automatique dans 4 jours')).toBeInTheDocument();
     expect(screen.getByText('20h30').parentElement).toHaveTextContent('juin10');
+    expect(screen.getByText('mercredi 10 juin à 20h30')).toHaveClass('visually-hidden');
     expect(screen.getByText('il y a 5 jours')).toBeInTheDocument();
     expect(screen.getByText('Hôte')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Choisir le film' })).toBeInTheDocument();

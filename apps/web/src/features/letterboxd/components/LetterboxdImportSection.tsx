@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { AlertTriangle, Check, RefreshCw, TriangleAlert, X } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { API_ERROR_REASONS } from '@/shared/api/apiError';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -29,10 +29,7 @@ function formatSyncDate(iso: string, locale: string): string {
   return new Date(iso).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
 }
 
-function translateStoredSyncError(
-  stored: string | null,
-  t: ReturnType<typeof useTranslation>['t']
-): string | null {
+function translateStoredSyncError(stored: string | null, t: Translate): string | null {
   if (stored === API_ERROR_REASONS.letterboxdWatchlistIncomplete) {
     return t('apiErrors.letterboxd_watchlist_incomplete');
   }

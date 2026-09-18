@@ -8,8 +8,6 @@ namespace MoviePicker.Api.Application.UseCases.Watchlist;
 
 public sealed class GetWatchlistAvailabilityHandler : IGetWatchlistAvailabilityHandler
 {
-    private const int MaxItems = 500;
-
     private readonly IWatchlistRepository _watchlist;
     private readonly ITmdbMovieSearch _tmdbMovieSearch;
     private readonly MoviePickerOptions _options;
@@ -29,7 +27,7 @@ public sealed class GetWatchlistAvailabilityHandler : IGetWatchlistAvailabilityH
         if (!_options.HasTmdbCredentials)
             return new WatchlistAvailabilityResponse();
 
-        var items = await _watchlist.ListPageByUserIdAsync(userId, 0, MaxItems, ct);
+        var items = await _watchlist.ListPageByUserIdAsync(userId, 0, GetWatchlistHandler.MaxTake, ct);
         if (items.Count == 0)
             return new WatchlistAvailabilityResponse();
 
@@ -38,18 +36,17 @@ public sealed class GetWatchlistAvailabilityHandler : IGetWatchlistAvailabilityH
             : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
         var keys = items.Select(item => (item.TmdbId, item.MediaType)).Distinct().ToList();
         var enrichments = await _tmdbMovieSearch.GetEnrichmentsAsync(keys, region, ct);
+        var resolved = items.Where(item => enrichments.ContainsKey((item.TmdbId, item.MediaType))).ToList();
 
         return new WatchlistAvailabilityResponse
         {
-            Items = items.Select(item => ToResponse(item, enrichments)).ToList()
+            Items = resolved.Select(item => ToResponse(item, enrichments[(item.TmdbId, item.MediaType)])).ToList(),
+            Partial = resolved.Count < items.Count
         };
     }
 
-    private static WatchlistAvailabilityItemResponse ToResponse(
-        WatchlistItem item,
-        IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?> enrichments)
+    private static WatchlistAvailabilityItemResponse ToResponse(WatchlistItem item, TmdbMovieEnrichment? enrichment)
     {
-        enrichments.TryGetValue((item.TmdbId, item.MediaType), out var enrichment);
         return new WatchlistAvailabilityItemResponse
         {
             TmdbId = item.TmdbId,

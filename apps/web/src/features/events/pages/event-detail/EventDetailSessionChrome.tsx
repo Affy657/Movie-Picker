@@ -1,4 +1,4 @@
-import { Suspense, type Dispatch, type RefObject, type SetStateAction } from 'react';
+import { Suspense } from 'react';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import JoinForm from '@/features/events/components/JoinForm';
 import EventDetailHeader from '@/features/events/pages/event-detail/EventDetailHeader';
@@ -14,50 +14,40 @@ import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import type { MyEventLifecycle } from '@/shared/types/event';
 import { EventShareDialog, HostEventSettingsPanel } from './eventDetailOverlays';
-import type { MoviesViewMode, ParticipantRef, ShareTab, WheelApi } from './eventDetailSessionTypes';
+import type {
+  AddMovieEntry,
+  EventCounts,
+  EventDateLabels,
+  JoinGate,
+  MoviesViewMode,
+  ParticipantsToggle,
+  SettingsOverlay,
+  ShareOverlay,
+  WheelApi,
+} from './eventDetailSessionTypes';
 
 function EventDetailSessionOverlays({
   slug,
   hostToken,
   event,
-  canConfigure,
-  settingsOpen,
-  onCloseSettings,
-  wheelError,
-  shareOpen,
-  shareInitialTab,
-  onCloseShare,
-  shareUrl,
-  dateFormatted,
-  timeFormatted,
-  dateLabel,
+  settings,
+  share,
+  dates,
   participantCount,
   moviesQuery,
-  needsJoin,
-  setParticipant,
-  isFull,
-  maxParticipants,
+  join,
+  wheelError,
 }: Readonly<{
   slug: string;
   hostToken: string | null;
   event: EventData;
-  canConfigure: boolean;
-  settingsOpen: boolean;
-  onCloseSettings: () => void;
-  wheelError: string | null;
-  shareOpen: boolean;
-  shareInitialTab: ShareTab;
-  onCloseShare: () => void;
-  shareUrl: string;
-  dateFormatted: string;
-  timeFormatted: string;
-  dateLabel: string;
+  settings: SettingsOverlay;
+  share: ShareOverlay;
+  dates: EventDateLabels;
   participantCount: number;
   moviesQuery: UseQueryResult<MovieData[]>;
-  needsJoin: boolean;
-  setParticipant: Dispatch<SetStateAction<ParticipantRef | null>>;
-  isFull: boolean;
-  maxParticipants: number | null;
+  join: JoinGate;
+  wheelError: string | null;
 }>) {
   const { t } = useTranslation();
   const hostCanInvite = !!event.isHost && !event.isFinished;
@@ -74,19 +64,19 @@ function EventDetailSessionOverlays({
     t
   );
 
-  const settingsEverOpened = useEverOpened(settingsOpen);
-  const shareEverOpened = useEverOpened(shareOpen);
+  const settingsEverOpened = useEverOpened(settings.open);
+  const shareEverOpened = useEverOpened(share.open);
 
   return (
     <>
-      {canConfigure && settingsEverOpened ? (
+      {settings.canConfigure && settingsEverOpened ? (
         <Suspense fallback={null}>
           <HostEventSettingsPanel
             slug={slug}
             hostToken={hostToken}
             event={event}
-            open={settingsOpen}
-            onClose={onCloseSettings}
+            open={settings.open}
+            onClose={settings.onClose}
           />
         </Suspense>
       ) : null}
@@ -98,16 +88,16 @@ function EventDetailSessionOverlays({
       {shareEverOpened ? (
         <Suspense fallback={null}>
           <EventShareDialog
-            open={shareOpen}
-            onClose={onCloseShare}
+            open={share.open}
+            onClose={share.onClose}
             slug={slug}
             event={event}
-            shareUrl={shareUrl}
-            dateFormatted={dateFormatted}
-            timeFormatted={timeFormatted}
-            dateLabel={dateLabel}
+            shareUrl={share.url}
+            dateFormatted={dates.dateFormatted}
+            timeFormatted={dates.timeFormatted}
+            dateLabel={dates.dateLabel}
             participantsLabel={participantsLabel}
-            initialTab={shareInitialTab}
+            initialTab={share.initialTab}
             hostCanInvite={hostCanInvite}
             friendsBadge={eligibleFollowsQuery.data?.follows.length}
           />
@@ -116,12 +106,12 @@ function EventDetailSessionOverlays({
       {moviesQuery.isError ? (
         <EventMoviesLoadError error={moviesQuery.error} onRetry={() => moviesQuery.refetch()} />
       ) : null}
-      {needsJoin ? (
+      {join.needsJoin ? (
         <JoinForm
           slug={slug}
-          onJoined={(participantId, pseudo) => setParticipant({ participantId, pseudo })}
-          isFull={isFull}
-          maxParticipants={maxParticipants}
+          onJoined={(participantId, pseudo) => join.setParticipant({ participantId, pseudo })}
+          isFull={join.isFull}
+          maxParticipants={join.maxParticipants}
         />
       ) : null}
     </>
@@ -133,35 +123,18 @@ export default function EventDetailSessionChrome({
   hostToken,
   event,
   moviesQuery,
-  setParticipant,
-  shareUrl,
-  dateFormatted,
-  timeFormatted,
-  dateLabel,
   lifecycle,
   countdownLabel,
-  participantCount,
-  moviesCount,
-  votersCount,
-  participantsOpen,
-  onToggleParticipants,
-  onOpenShare,
-  onOpenSettings,
-  onAddMovie,
-  addMovieTriggerRef,
+  counts,
+  dates,
+  share,
+  settings,
+  participants,
+  addMovie,
+  join,
   wheel,
   onRequestResetWheel,
   onRequestCloseWithoutMovie,
-  canConfigure,
-  canAddMovie,
-  settingsOpen,
-  onCloseSettings,
-  shareOpen,
-  shareInitialTab,
-  onCloseShare,
-  needsJoin,
-  isFull,
-  maxParticipants,
   viewMode,
   onViewModeChange,
 }: Readonly<{
@@ -169,190 +142,68 @@ export default function EventDetailSessionChrome({
   hostToken: string | null;
   event: EventData;
   moviesQuery: UseQueryResult<MovieData[]>;
-  setParticipant: Dispatch<SetStateAction<ParticipantRef | null>>;
-  shareUrl: string;
-  dateFormatted: string;
-  timeFormatted: string;
-  dateLabel: string;
   lifecycle: MyEventLifecycle;
   countdownLabel: string | null;
-  participantCount: number;
-  moviesCount: number;
-  votersCount: number;
-  participantsOpen: boolean;
-  onToggleParticipants: () => void;
-  onOpenShare: (tab?: ShareTab) => void;
-  onOpenSettings: () => void;
-  onAddMovie: () => void;
-  addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
+  counts: EventCounts;
+  dates: EventDateLabels;
+  share: ShareOverlay;
+  settings: SettingsOverlay;
+  participants: ParticipantsToggle;
+  addMovie: AddMovieEntry;
+  join: JoinGate;
   wheel: WheelApi;
   onRequestResetWheel: () => void;
   onRequestCloseWithoutMovie: () => void;
-  canConfigure: boolean;
-  canAddMovie: boolean;
-  settingsOpen: boolean;
-  onCloseSettings: () => void;
-  shareOpen: boolean;
-  shareInitialTab: ShareTab;
-  onCloseShare: () => void;
-  needsJoin: boolean;
-  isFull: boolean;
-  maxParticipants: number | null;
   viewMode: MoviesViewMode;
   onViewModeChange: (mode: MoviesViewMode) => void;
 }>) {
   return (
     <>
-      <EventDetailSessionHeader
-        event={event}
-        shareUrl={shareUrl}
-        dateFormatted={dateFormatted}
+      <EventDetailHeader
+        title={event.title}
+        dateFormatted={dates.dateFormatted}
+        rawDate={event.date}
+        rawTime={event.time}
+        isFinished={!!event.isFinished}
+        eventTheme={event.config?.theme}
+        shareUrl={share.url}
         lifecycle={lifecycle}
         countdownLabel={countdownLabel}
-        participantCount={participantCount}
-        moviesCount={moviesCount}
-        votersCount={votersCount}
-        participantsOpen={participantsOpen}
-        onToggleParticipants={onToggleParticipants}
-        onOpenShare={onOpenShare}
-        onOpenSettings={onOpenSettings}
-        onAddMovie={onAddMovie}
-        addMovieTriggerRef={addMovieTriggerRef}
-        wheel={wheel}
-        onRequestResetWheel={onRequestResetWheel}
-        canConfigure={canConfigure}
-        canAddMovie={canAddMovie}
+        participants={event.participants}
+        participantCount={counts.participants}
+        moviesCount={counts.movies}
+        votersCount={counts.voters}
+        participantsOpen={participants.open}
+        onToggleParticipants={participants.onToggle}
+        onOpenShare={share.url ? () => share.onOpen('link') : undefined}
+        onOpenSettings={settings.canConfigure ? settings.onOpen : undefined}
+        wheelActions={<EventWheelActions wheel={wheel} onRequestReset={onRequestResetWheel} />}
+        onAddMovie={addMovie.canAdd ? addMovie.onOpen : undefined}
+        addMoviePrimary={wheel.primaryAction === 'add'}
+        addMovieTriggerRef={addMovie.triggerRef}
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
       />
-      <EventPendingBannerGate
-        lifecycle={lifecycle}
-        event={event}
-        wheel={wheel}
-        canConfigure={canConfigure}
-        onOpenSettings={onOpenSettings}
-        onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
-      />
+      {lifecycle === 'pending' ? (
+        <EventPendingBanner
+          isHost={!!event.isHost}
+          onLaunchWheel={wheel.canSpin && !wheel.spinDisabled ? wheel.launch : undefined}
+          onReschedule={settings.canConfigure ? settings.onOpen : undefined}
+          onCloseWithoutMovie={settings.canConfigure ? onRequestCloseWithoutMovie : undefined}
+        />
+      ) : null}
       <EventDetailSessionOverlays
         slug={slug}
         hostToken={hostToken}
         event={event}
-        canConfigure={canConfigure}
-        settingsOpen={settingsOpen}
-        onCloseSettings={onCloseSettings}
-        wheelError={wheel.error}
-        shareOpen={shareOpen}
-        shareInitialTab={shareInitialTab}
-        onCloseShare={onCloseShare}
-        shareUrl={shareUrl}
-        dateFormatted={dateFormatted}
-        timeFormatted={timeFormatted}
-        dateLabel={dateLabel}
-        participantCount={participantCount}
+        settings={settings}
+        share={share}
+        dates={dates}
+        participantCount={counts.participants}
         moviesQuery={moviesQuery}
-        needsJoin={needsJoin}
-        setParticipant={setParticipant}
-        isFull={isFull}
-        maxParticipants={maxParticipants}
+        join={join}
+        wheelError={wheel.error}
       />
     </>
-  );
-}
-
-function EventDetailSessionHeader({
-  event,
-  shareUrl,
-  dateFormatted,
-  lifecycle,
-  countdownLabel,
-  participantCount,
-  moviesCount,
-  votersCount,
-  participantsOpen,
-  onToggleParticipants,
-  onOpenShare,
-  onOpenSettings,
-  onAddMovie,
-  addMovieTriggerRef,
-  wheel,
-  onRequestResetWheel,
-  canConfigure,
-  canAddMovie,
-  viewMode,
-  onViewModeChange,
-}: Readonly<{
-  event: EventData;
-  shareUrl: string;
-  dateFormatted: string;
-  lifecycle: MyEventLifecycle;
-  countdownLabel: string | null;
-  participantCount: number;
-  moviesCount: number;
-  votersCount: number;
-  participantsOpen: boolean;
-  onToggleParticipants: () => void;
-  onOpenShare: (tab?: ShareTab) => void;
-  onOpenSettings: () => void;
-  onAddMovie: () => void;
-  addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
-  wheel: WheelApi;
-  onRequestResetWheel: () => void;
-  canConfigure: boolean;
-  canAddMovie: boolean;
-  viewMode: MoviesViewMode;
-  onViewModeChange: (mode: MoviesViewMode) => void;
-}>) {
-  return (
-    <EventDetailHeader
-      title={event.title}
-      dateFormatted={dateFormatted}
-      rawDate={event.date}
-      rawTime={event.time}
-      isFinished={!!event.isFinished}
-      eventTheme={event.config?.theme}
-      shareUrl={shareUrl}
-      lifecycle={lifecycle}
-      countdownLabel={countdownLabel}
-      participants={event.participants}
-      participantCount={participantCount}
-      moviesCount={moviesCount}
-      votersCount={votersCount}
-      participantsOpen={participantsOpen}
-      onToggleParticipants={onToggleParticipants}
-      onOpenShare={shareUrl ? () => onOpenShare('link') : undefined}
-      onOpenSettings={canConfigure ? onOpenSettings : undefined}
-      wheelActions={<EventWheelActions wheel={wheel} onRequestReset={onRequestResetWheel} />}
-      onAddMovie={canAddMovie ? onAddMovie : undefined}
-      addMoviePrimary={wheel.primaryAction === 'add'}
-      addMovieTriggerRef={addMovieTriggerRef}
-      viewMode={viewMode}
-      onViewModeChange={onViewModeChange}
-    />
-  );
-}
-
-function EventPendingBannerGate({
-  lifecycle,
-  event,
-  wheel,
-  canConfigure,
-  onOpenSettings,
-  onRequestCloseWithoutMovie,
-}: Readonly<{
-  lifecycle: MyEventLifecycle;
-  event: EventData;
-  wheel: WheelApi;
-  canConfigure: boolean;
-  onOpenSettings: () => void;
-  onRequestCloseWithoutMovie: () => void;
-}>) {
-  if (lifecycle !== 'pending') return null;
-  return (
-    <EventPendingBanner
-      isHost={!!event.isHost}
-      onLaunchWheel={wheel.canSpin && !wheel.spinDisabled ? wheel.launch : undefined}
-      onReschedule={canConfigure ? onOpenSettings : undefined}
-      onCloseWithoutMovie={canConfigure ? onRequestCloseWithoutMovie : undefined}
-    />
   );
 }

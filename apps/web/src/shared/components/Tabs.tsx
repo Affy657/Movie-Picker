@@ -22,6 +22,16 @@ export interface TabDef<T extends string> {
   disabled?: boolean;
 }
 
+const LINE_SCROLL_PX = 16;
+const DOM_DELTA_LINE = 1;
+const DOM_DELTA_PAGE = 2;
+
+function wheelDistance(event: WheelEvent, pageWidth: number): number {
+  if (event.deltaMode === DOM_DELTA_LINE) return event.deltaY * LINE_SCROLL_PX;
+  if (event.deltaMode === DOM_DELTA_PAGE) return event.deltaY * pageWidth;
+  return event.deltaY;
+}
+
 function useWheelToHorizontal(listRef: RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const list = listRef.current;
@@ -34,7 +44,7 @@ function useWheelToHorizontal(listRef: RefObject<HTMLDivElement | null>) {
       const atEnd = event.deltaY > 0 && list.scrollLeft >= maxScroll;
       if (atStart || atEnd) return;
       event.preventDefault();
-      list.scrollBy({ left: event.deltaY, behavior: 'instant' });
+      list.scrollBy({ left: wheelDistance(event, list.clientWidth), behavior: 'instant' });
     };
     list.addEventListener('wheel', onWheel, { passive: false });
     return () => list.removeEventListener('wheel', onWheel);

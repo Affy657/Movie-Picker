@@ -72,7 +72,8 @@ public sealed class GetWatchlistAvailabilityHandlerTests
         var result = await Build(region: " be ").HandleAsync("u1");
 
         Assert.Equal([(1, MovieMediaType.Movie), (2, MovieMediaType.Tv), (3, MovieMediaType.Movie)], requested!.ToArray());
-        Assert.Equal(3, result.Items.Count);
+        Assert.Equal(2, result.Items.Count);
+        Assert.True(result.Partial);
 
         var first = result.Items[0];
         Assert.Equal(1, first.TmdbId);
@@ -87,10 +88,23 @@ public sealed class GetWatchlistAvailabilityHandlerTests
         Assert.Equal(MovieMediaType.Tv, failed.MediaType);
         Assert.Empty(failed.WatchProviders);
         Assert.Null(failed.RuntimeMinutes);
+    }
 
-        var missing = result.Items[2];
-        Assert.Equal(3, missing.TmdbId);
-        Assert.Empty(missing.WatchProviders);
+    [Fact]
+    public async Task HandleAsync_EveryTitleResolved_IsNotPartial()
+    {
+        ListReturns(Item(1), Item(2));
+        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
+            {
+                [(1, MovieMediaType.Movie)] = new TmdbMovieEnrichment(7.5, [], null, 112),
+                [(2, MovieMediaType.Movie)] = null
+            });
+
+        var result = await Build().HandleAsync("u1");
+
+        Assert.Equal(2, result.Items.Count);
+        Assert.False(result.Partial);
     }
 
     [Fact]
@@ -98,11 +112,15 @@ public sealed class GetWatchlistAvailabilityHandlerTests
     {
         ListReturns(Item(1), Item(1));
         _tmdb.Setup(t => t.GetEnrichmentsAsync(It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(k => k.Count == 1), "FR", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
+            .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
+            {
+                [(1, MovieMediaType.Movie)] = null
+            });
 
         var result = await Build().HandleAsync("u1");
 
         Assert.Equal(2, result.Items.Count);
+        Assert.False(result.Partial);
         _tmdb.Verify(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CancellationToken>()), Times.Once);
     }
 }

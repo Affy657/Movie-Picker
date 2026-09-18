@@ -1,6 +1,6 @@
 import { PlayCircle } from 'lucide-react';
 import type { MovieDetails } from '@/features/movies/api/moviesApi';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { formatReleaseDate } from '@/shared/utils/formatReleaseDate';
@@ -61,10 +61,7 @@ export function MovieDetailsContent({
   );
 }
 
-function episodesLabel(
-  data: MovieDetailsFacts,
-  t: ReturnType<typeof useTranslation>['t']
-): string | null {
+function episodesLabel(data: MovieDetailsFacts, t: Translate): string | null {
   const count = data.episodeCount
     ? pluralizeCount(
         data.episodeCount,

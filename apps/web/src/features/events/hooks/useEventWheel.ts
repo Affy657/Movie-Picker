@@ -9,7 +9,7 @@ import {
 import { getErrorMessage } from '@/shared/api/apiError';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { remainingWheelRevealDelayMs, WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
@@ -74,10 +74,7 @@ type SpinAvailability = {
   drawableCount: number;
 };
 
-function spinDisabledHintOf(
-  s: SpinAvailability,
-  t: ReturnType<typeof useTranslation>['t']
-): string | null {
+function spinDisabledHintOf(s: SpinAvailability, t: Translate): string | null {
   if (s.moviesCount === 0) return t('events.wheel.emptyPlaceholder');
   if (s.noEligibleMovie) return t('events.wheel.allExcludedHint');
   if (s.remainingDraws === 0)

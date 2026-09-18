@@ -1,10 +1,10 @@
-import type { TranslationKey } from '@/shared/i18n';
+import type { Translate, TranslationKey } from './t';
 
 export function pluralizeCount(
   count: number,
   oneKey: TranslationKey,
   manyKey: TranslationKey,
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+  t: Translate,
   extraVars?: Record<string, string | number>
 ) {
   if (count === 1) return t(oneKey, extraVars);

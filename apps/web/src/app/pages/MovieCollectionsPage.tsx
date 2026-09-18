@@ -54,7 +54,7 @@ export default function MovieCollectionsPage() {
 
   usePageSeo({
     title: pageTitle(t('showcase.sections.collectionsTitle')),
-    description: t('showcase.sections.collectionsSubtitle'),
+    description: t('showcase.seo.collectionsDescription'),
     canonical: absoluteUrl(ROUTES.movieCollections),
   });
 

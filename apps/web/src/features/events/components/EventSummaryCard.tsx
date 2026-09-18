@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { Clock, Crown, Film, Trophy, Users } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
-import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useLocale, useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import type { MyEventLifecycle } from '@/shared/types/event';
@@ -26,13 +26,11 @@ function pluralize(
   count: number,
   oneKey: TranslationKey,
   manyKey: TranslationKey,
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
+  t: Translate,
   vars?: Record<string, string | number>
 ): string {
   return count === 1 ? t(oneKey, vars) : t(manyKey, { count, ...vars });
 }
-
-type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 
 export function formatCountdownCompact(isoDate: string, t: Translate): string {
   const distance = relativeEventDistance(isoDate);
@@ -87,7 +85,7 @@ export function ParticipantStat({
 }: Readonly<{
   count: number;
   maxParticipants: number | null | undefined;
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+  t: Translate;
 }>) {
   const hasCap = typeof maxParticipants === 'number' && maxParticipants > 0;
   const countStr = hasCap ? `${count} / ${maxParticipants}` : String(count);
@@ -118,7 +116,7 @@ export function MoviesStat({
   t,
 }: Readonly<{
   count: number;
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+  t: Translate;
 }>) {
   const a11yLabel = pluralize(
     count,

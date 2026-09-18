@@ -34,6 +34,10 @@ public sealed partial class TmdbMovieSearch
                 _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
             return fresh;
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception ex) when (
             ex is TaskCanceledException
                 or JsonException

@@ -1,54 +1,46 @@
-import { Suspense, useMemo, type Dispatch, type RefObject, type SetStateAction } from 'react';
+import { Suspense, useMemo, type Dispatch, type SetStateAction } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import EventParticipantsList from '@/features/events/components/EventParticipantsList';
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
 import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
 import EventWinnerSummary from '@/features/events/pages/event-detail/EventWinnerSummary';
-import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import styles from './EventDetailSession.module.css';
 import { WheelModal } from './eventDetailOverlays';
-import type { MoviesViewMode, ParticipantRef, WheelApi } from './eventDetailSessionTypes';
+import type {
+  MoviesSectionState,
+  ParticipantRef,
+  ParticipantsPanelState,
+  WheelApi,
+} from './eventDetailSessionTypes';
 
 function EventParticipantsPanel({
   event,
   participant,
-  participantsRef,
-  pendingRemovalId,
-  onRemoveParticipant,
-  onInviteFriends,
-  onLeave,
-  canShowLeave,
-  isConnectedSelf,
-  removePending,
+  panel,
 }: Readonly<{
   event: EventData;
   participant: ParticipantRef | null;
-  participantsRef: RefObject<HTMLDivElement | null>;
-  pendingRemovalId: string | null;
-  onRemoveParticipant: (participantId: string, pseudo: string) => void;
-  onInviteFriends: () => void;
-  onLeave: () => void;
-  canShowLeave: boolean;
-  isConnectedSelf: boolean;
-  removePending: boolean;
+  panel: ParticipantsPanelState;
 }>) {
   const hostCanInvite = !!event.isHost && !event.isFinished;
   const currentParticipantId = participant?.participantId ?? null;
   return (
-    <div ref={participantsRef}>
+    <div ref={panel.ref}>
       <EventParticipantsList
         participants={event.participants}
         currentParticipantId={currentParticipantId}
         maxParticipants={event.config?.maxParticipants ?? null}
         isHost={!!event.isHost}
-        pendingRemovalId={pendingRemovalId}
-        onRemoveParticipant={event.isFinished ? undefined : onRemoveParticipant}
-        onInvite={hostCanInvite ? onInviteFriends : undefined}
-        onLeave={canShowLeave ? onLeave : undefined}
+        pendingRemovalId={panel.pendingRemovalId}
+        onRemoveParticipant={event.isFinished ? undefined : panel.onRemove}
+        onInvite={hostCanInvite ? panel.onInviteFriends : undefined}
+        onLeave={panel.canShowLeave ? panel.onLeave : undefined}
         leaveDisabled={
-          isConnectedSelf && removePending && pendingRemovalId === currentParticipantId
+          panel.isConnectedSelf &&
+          panel.removePending &&
+          panel.pendingRemovalId === currentParticipantId
         }
       />
     </div>
@@ -86,25 +78,10 @@ export default function EventDetailSessionBody({
   actionError,
   setActionError,
   refreshAll,
-  viewMode,
-  selection,
-  addMovieOpen,
-  onAddMovieOpenChange,
-  addMovieTriggerRef,
-  moviesSectionRef,
-  participantsOpen,
-  participantsRef,
-  pendingRemovalId,
-  onRemoveParticipant,
-  onRequestRemoveMovie,
-  onInviteFriends,
-  onLeave,
-  canShowLeave,
-  isConnectedSelf,
-  removePending,
   actionSuccess,
   wheel,
-  isFull,
+  participantsPanel,
+  moviesSection,
 }: Readonly<{
   slug: string;
   event: EventData;
@@ -115,25 +92,10 @@ export default function EventDetailSessionBody({
   actionError: string | null;
   setActionError: Dispatch<SetStateAction<string | null>>;
   refreshAll: () => void;
-  viewMode: MoviesViewMode;
-  selection: MovieCardSelection | undefined;
-  addMovieOpen: boolean;
-  onAddMovieOpenChange: (open: boolean) => void;
-  addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
-  moviesSectionRef: RefObject<HTMLDivElement | null>;
-  participantsOpen: boolean;
-  participantsRef: RefObject<HTMLDivElement | null>;
-  pendingRemovalId: string | null;
-  onRemoveParticipant: (participantId: string, pseudo: string) => void;
-  onRequestRemoveMovie: (movie: MovieData) => void;
-  onInviteFriends: () => void;
-  onLeave: () => void;
-  canShowLeave: boolean;
-  isConnectedSelf: boolean;
-  removePending: boolean;
   actionSuccess: string | null;
   wheel: WheelApi;
-  isFull: boolean;
+  participantsPanel: ParticipantsPanelState;
+  moviesSection: MoviesSectionState;
 }>) {
   const winners = useMemo(
     () =>
@@ -153,19 +115,8 @@ export default function EventDetailSessionBody({
   );
   return (
     <>
-      {participantsOpen ? (
-        <EventParticipantsPanel
-          event={event}
-          participant={participant}
-          participantsRef={participantsRef}
-          pendingRemovalId={pendingRemovalId}
-          onRemoveParticipant={onRemoveParticipant}
-          onInviteFriends={onInviteFriends}
-          onLeave={onLeave}
-          canShowLeave={canShowLeave}
-          isConnectedSelf={isConnectedSelf}
-          removePending={removePending}
-        />
+      {participantsPanel.open ? (
+        <EventParticipantsPanel event={event} participant={participant} panel={participantsPanel} />
       ) : null}
       {actionSuccess ? (
         <p
@@ -185,7 +136,7 @@ export default function EventDetailSessionBody({
           participantAvatars={participantAvatars}
         />
       )}
-      <div ref={moviesSectionRef} className={styles.moviesSection}>
+      <div ref={moviesSection.ref} className={styles.moviesSection}>
         <EventMoviesSection
           slug={slug}
           event={event}
@@ -197,14 +148,14 @@ export default function EventDetailSessionBody({
           onDismissActionError={() => setActionError(null)}
           setActionError={setActionError}
           refreshAll={refreshAll}
-          onRequestRemove={onRequestRemoveMovie}
-          viewMode={viewMode}
-          selection={selection}
-          addMovieOpen={addMovieOpen}
-          onAddMovieOpenChange={onAddMovieOpenChange}
-          addMovieTriggerRef={addMovieTriggerRef}
+          onRequestRemove={moviesSection.onRequestRemove}
+          viewMode={moviesSection.viewMode}
+          selection={moviesSection.selection}
+          addMovieOpen={moviesSection.addMovieOpen}
+          onAddMovieOpenChange={moviesSection.onAddMovieOpenChange}
+          addMovieTriggerRef={moviesSection.addMovieTriggerRef}
           winnerMovieIds={wheel.winnerIds}
-          isFull={isFull}
+          isFull={moviesSection.isFull}
         />
       </div>
       {event.isFinished && (event.winners?.length ?? 0) === 0 ? (

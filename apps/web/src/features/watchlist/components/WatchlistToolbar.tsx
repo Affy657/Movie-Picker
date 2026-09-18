@@ -2,8 +2,7 @@ import type { ReactNode } from 'react';
 import CollectionToolbar from '@/features/movies/components/CollectionToolbar';
 import type { SortOption } from '@/features/movies/components/ListToolbar';
 import type { LibraryMovieRowSorts } from '@/features/movies/components/LibraryMovieRow';
-import type { Translate } from '@/features/movies/types';
-import { useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
 import type {
   WatchlistSortKey,
   SortDirection,

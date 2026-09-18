@@ -13,7 +13,7 @@ import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
-import { useLocale, useTranslation } from '@/shared/i18n';
+import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
@@ -67,7 +67,7 @@ interface ProfileCollectionPageProps<T extends MovieListItemLike> {
 function collectionSeo(
   profile: PublicProfile | undefined,
   isNotFound: boolean,
-  t: ReturnType<typeof useTranslation>['t'],
+  t: Translate,
   texts: ProfileCollectionTexts,
   canonicalPath: (handle: string) => string
 ) {

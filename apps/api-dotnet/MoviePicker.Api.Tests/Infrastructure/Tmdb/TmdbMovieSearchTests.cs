@@ -550,6 +550,53 @@ public sealed class TmdbMovieSearchTests
     }
 
     [Fact]
+    public async Task GetEnrichmentsAsync_FetchesTheBudgetOnly_AndLeavesTheRestForTheNextCall()
+    {
+        var mockHandler = EnrichmentHandler(RuntimeBodyFromPath);
+        var sut = CreateSut(
+            CreateHttpClient(mockHandler.Object),
+            Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbBatchEnrichmentMaxFetch = 1 }));
+
+        var first = await sut.GetEnrichmentsAsync([(1, MovieMediaType.Movie), (2, MovieMediaType.Movie)], "FR");
+        var second = await sut.GetEnrichmentsAsync([(1, MovieMediaType.Movie), (2, MovieMediaType.Movie)], "FR");
+
+        var only = Assert.Single(first);
+        Assert.Equal((1, MovieMediaType.Movie), only.Key);
+        Assert.Equal(2, second.Count);
+        Assert.Equal(2, second[(2, MovieMediaType.Movie)]?.RuntimeMinutes);
+        mockHandler.Protected().Verify(
+            "SendAsync",
+            Times.Exactly(4),
+            ItExpr.IsAny<HttpRequestMessage>(),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetEnrichmentAsync_ClientCancellation_Propagates_AndRemembersNoFailure()
+    {
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>((req, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(RuntimeBodyFromPath(req))
+                });
+            });
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+        using var aborted = new CancellationTokenSource();
+        aborted.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", aborted.Token));
+        var afterwards = await sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
+
+        Assert.Equal(7, afterwards?.RuntimeMinutes);
+    }
+
+    [Fact]
     public async Task GetEnrichmentsAsync_TmdbFailure_YieldsNullForThatKeyOnly_AndRemembersIt()
     {
         var mockHandler = new Mock<HttpMessageHandler>();

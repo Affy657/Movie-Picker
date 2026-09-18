@@ -1,10 +1,10 @@
-import type { useTranslation } from '@/shared/i18n';
+import type { Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { ConfirmBusyByKind, ConfirmState } from './eventDetailSessionTypes';
 
 type ConfirmDialogInputs = {
   confirmState: ConfirmState;
-  t: ReturnType<typeof useTranslation>['t'];
+  t: Translate;
   eventTitle: string;
   confirmRemove: (participantId: string, pseudo: string) => void;
   confirmLeave: () => void;

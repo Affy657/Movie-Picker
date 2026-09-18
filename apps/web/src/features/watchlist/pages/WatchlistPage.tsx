@@ -2,7 +2,7 @@ import { useId, useMemo, useRef, useState } from 'react';
 import { Bookmark, Import, Plus } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
-import { useLocale, useTranslation } from '@/shared/i18n';
+import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
@@ -94,7 +94,7 @@ function persistViewMode(mode: MovieViewMode) {
   }
 }
 
-function watchlistSubtitle(count: number, t: ReturnType<typeof useTranslation>['t']) {
+function watchlistSubtitle(count: number, t: Translate) {
   if (count === 1) return t('watchlist.header.subtitleOne', { count: 1 });
   return t('watchlist.header.subtitle', { count });
 }
@@ -149,15 +149,12 @@ export default function WatchlistPage() {
 
   const { data: items = [], isLoading, isError } = useWatchlist({ enabled: !!user });
   const availabilityQuery = useWatchlistAvailability({ enabled: !!user && items.length > 0 });
+  const availabilityItems = availabilityQuery.data?.items;
+  const availabilityPending = availabilityQuery.isPending || !!availabilityQuery.data?.partial;
   const entries = useMemo(
-    () => mergeAvailability(items, availabilityQuery.data),
-    [items, availabilityQuery.data]
+    () => mergeAvailability(items, availabilityItems),
+    [items, availabilityItems]
   );
-
-  const changeViewMode = (mode: MovieViewMode) => {
-    setViewMode(mode);
-    persistViewMode(mode);
-  };
 
   const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
   const details = useLibraryMovieDetails();
@@ -170,6 +167,10 @@ export default function WatchlistPage() {
   const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [letterboxdModalOpen, setLetterboxdModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<MovieViewMode>(readStoredViewMode);
+  const changeViewMode = (mode: MovieViewMode) => {
+    setViewMode(mode);
+    persistViewMode(mode);
+  };
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const filtersPanelRef = useRef<HTMLDivElement>(null);
 
@@ -241,7 +242,7 @@ export default function WatchlistPage() {
         watchPageUrl: entry.tmdbWatchPageUrl ?? null,
       };
     }
-    return availabilityQuery.isPending ? { status: 'pending' } : undefined;
+    return availabilityPending ? { status: 'pending' } : undefined;
   };
   const renderItem = (item: WatchlistEntry, index: number) => (
     <MovieBrowseCard

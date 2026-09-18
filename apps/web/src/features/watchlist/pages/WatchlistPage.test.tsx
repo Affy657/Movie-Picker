@@ -638,6 +638,49 @@ describe('WatchlistPage (MSW)', () => {
     );
   });
 
+  it('list view: a partial availability keeps the missing rows on their skeleton and asks again until complete', async () => {
+    localStorage.removeItem(TOOLBAR_STORAGE_KEY);
+    localStorage.setItem('watchlist-view', 'list');
+    const netflix = {
+      tmdbId: 200,
+      mediaType: 'movie',
+      watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
+      tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/200/watch?locale=FR',
+      voteAverage: 9.0,
+      runtimeMinutes: 90,
+    };
+    const nowhere = {
+      tmdbId: 201,
+      mediaType: 'movie',
+      watchProviders: [],
+      tmdbWatchPageUrl: null,
+      voteAverage: 3.0,
+      runtimeMinutes: 200,
+    };
+    let calls = 0;
+    server.use(
+      authedUserHandler,
+      http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items: [ITEM_A, ITEM_B] })),
+      http.get(`${TEST_API_V1}/watchlist/availability`, () => {
+        calls += 1;
+        return calls === 1
+          ? HttpResponse.json({ items: [netflix], partial: true })
+          : HttpResponse.json({ items: [netflix, nowhere], partial: false });
+      })
+    );
+
+    renderPage();
+
+    const list = await screen.findByRole('list', { name: /films de ma liste/i });
+    expect(await within(list).findByRole('link', { name: /netflix/i })).toBeInTheDocument();
+    expect(within(list).queryByText('Pas en streaming')).not.toBeInTheDocument();
+
+    expect(
+      await within(list).findByText('Pas en streaming', {}, { timeout: 5000 })
+    ).toBeInTheDocument();
+    expect(calls).toBe(2);
+  });
+
   it('list view on mobile: no column header, the toolbar keeps its sort menu', async () => {
     localStorage.removeItem(TOOLBAR_STORAGE_KEY);
     localStorage.setItem('watchlist-view', 'list');

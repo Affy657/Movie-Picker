@@ -124,6 +124,26 @@ describe('Tabs', () => {
     expect(scrollBy).toHaveBeenCalledTimes(1);
   });
 
+  it('a wheel counting in lines or in pages scrolls a legible distance', () => {
+    render(<Harness active="a" onChange={vi.fn()} />);
+    const list = screen.getByRole('tablist');
+    Object.defineProperty(list, 'scrollWidth', { configurable: true, value: 600 });
+    Object.defineProperty(list, 'clientWidth', { configurable: true, value: 200 });
+    Object.defineProperty(list, 'scrollLeft', { configurable: true, value: 100 });
+    const scrollBy = vi.fn();
+    list.scrollBy = scrollBy as typeof list.scrollBy;
+
+    list.dispatchEvent(
+      new WheelEvent('wheel', { deltaY: 3, deltaMode: 1, cancelable: true, bubbles: true })
+    );
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: 48, behavior: 'instant' });
+
+    list.dispatchEvent(
+      new WheelEvent('wheel', { deltaY: 1, deltaMode: 2, cancelable: true, bubbles: true })
+    );
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: 200, behavior: 'instant' });
+  });
+
   it('an iconOnly tab keeps its label as accessible name without drawing it', () => {
     render(
       <Tabs

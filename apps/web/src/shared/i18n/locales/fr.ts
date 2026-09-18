@@ -69,6 +69,16 @@ export const fr = {
   },
 
   showcase: {
+    seo: {
+      trendingDescription:
+        'Les films dont tout le monde parle cette semaine, avec leur note, leur durée et les plateformes où les regarder. Mise à jour chaque jour.',
+      nowPlayingDescription:
+        'Les films encore à l’affiche dans les cinémas en France, avec leur note et leur durée, pour choisir la séance de la soirée.',
+      mostProposedDescription:
+        'Le classement des films les plus proposés dans les soirées Movie Picker : ceux que les groupes d’amis choisissent vraiment.',
+      collectionsDescription:
+        'Les sagas et collections de films en une liste : toute une franchise à proposer d’un coup à votre soirée, dans l’ordre.',
+    },
     railScrollBack: 'Faire défiler vers la gauche',
     railScrollForward: 'Faire défiler vers la droite',
     seeAllMovies: 'Voir les {{count}} films',

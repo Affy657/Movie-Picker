@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import InstallPwaDialog from '@/app/components/InstallPwaDialog';
+import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 
 function renderDialog(mode: 'ios' | 'in_app' | 'generic', onClose = vi.fn()) {

@@ -77,4 +77,5 @@ public sealed class WatchlistAvailabilityItemResponse
 public sealed class WatchlistAvailabilityResponse
 {
     public IReadOnlyList<WatchlistAvailabilityItemResponse> Items { get; init; } = [];
+    public bool Partial { get; init; }
 }

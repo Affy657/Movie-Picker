@@ -11,7 +11,7 @@ import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useLocale, useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { renderWithBold } from '@/shared/utils/renderWithBold';
@@ -28,8 +28,6 @@ import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import styles from './NotificationsPage.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-
-type TFn = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 
 const GROUP_PREVIEW_COUNT = 3;
 
@@ -87,7 +85,7 @@ const NOTIFICATION_TEXT_KEYS = {
   Record<UserNotificationItem['type'], { plain: TranslationKey; grouped?: TranslationKey }>
 >;
 
-function notifText(item: UserNotificationItem, t: TFn, withinEventGroup = false): string {
+function notifText(item: UserNotificationItem, t: Translate, withinEventGroup = false): string {
   const keys = NOTIFICATION_TEXT_KEYS[item.type as keyof typeof NOTIFICATION_TEXT_KEYS] as
     { plain: TranslationKey; grouped?: TranslationKey } | undefined;
   if (!keys) return '';
@@ -108,7 +106,7 @@ function NotifRow({
   withinEventGroup = false,
 }: Readonly<{
   item: UserNotificationItem;
-  t: TFn;
+  t: Translate;
   locale: LocaleCode;
   onRead: (id: string) => void;
   withinEventGroup?: boolean;
@@ -162,7 +160,7 @@ function NotifCard({
   onRead,
 }: Readonly<{
   group: InboxGroup;
-  t: TFn;
+  t: Translate;
   locale: LocaleCode;
   onRead: (id: string) => void;
 }>) {

@@ -46,7 +46,7 @@ export async function createEvent(page: Page, title: string, date?: string): Pro
 
 export async function addStubMovie(page: Page, title: string = STUB_MOVIE): Promise<void> {
   await page.getByRole('button', { name: /proposer un film/i }).click();
-  const search = page.getByRole('combobox', { name: /proposer un film/i });
+  const search = page.getByRole('searchbox', { name: /proposer un film/i });
   await search.fill('stub');
   const result = page.getByRole('listitem').filter({ hasText: title });
   await expect(result).toBeVisible({ timeout: 15_000 });

@@ -1,5 +1,4 @@
 import SeenButton from '@/features/movies/components/SeenButton';
-import type { Translate } from '@/features/movies/types';
 import { Fragment, memo } from 'react';
 import clsx from 'clsx';
 import { AlertTriangle, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
@@ -26,16 +25,12 @@ import {
   type MovieTableColumn,
 } from '@/features/movies/components/MovieTable';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
+import { yearFromDate } from '@/shared/utils/formatReleaseDate';
 import cardPartsStyles from './movieCardParts.module.css';
 import table from './MovieTable.module.css';
 import styles from './EventMovieRow.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-
-function formatReleaseYear(isoDate: string | null | undefined): string | null {
-  if (!isoDate) return null;
-  const year = isoDate.slice(0, 4);
-  return /^\d{4}$/.test(year) ? year : null;
-}
+import type { Translate } from '@/shared/i18n';
 
 type RowSortKey =
   'createdAt' | 'voteAverage' | 'duration' | 'score' | 'availability' | 'seen' | 'releaseDate';
@@ -165,7 +160,7 @@ type EventMovieRowView = EventMovieRowProps & {
   flatrateProviders: EventMovieRowProps['movie']['watchProviders'];
   rentCount: number;
   buyCount: number;
-  releaseDateLabel: string | null;
+  releaseDateLabel: string | undefined;
   excluded: boolean;
   selecting: boolean;
   emptyAvailabilityLabel: string;
@@ -515,7 +510,7 @@ export const EventMovieRow = memo(function EventMovieRow({
   const flatrateProviders = s.providers.filter((p) => p.type === 'flatrate');
   const rentCount = s.providers.filter((p) => p.type === 'rent').length;
   const buyCount = s.providers.filter((p) => p.type === 'buy').length;
-  const releaseDateLabel = formatReleaseYear(m.releaseDate);
+  const releaseDateLabel = yearFromDate(m.releaseDate);
   const excluded = !!m.excludedFromWheel;
   const selecting = isSelectable(m, selection) && !excluded;
   const emptyAvailabilityLabel = t('movies.watchProviders.emptyLabel');

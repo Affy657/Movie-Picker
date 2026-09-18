@@ -13,7 +13,7 @@ import {
   isStandaloneRuntime,
   usePwaInstallClick,
 } from '@/shared/hooks/usePwaInstall';
-import InstallPwaDialog from '@/app/components/InstallPwaDialog';
+import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
 import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import Toggle from '@/shared/components/Toggle';

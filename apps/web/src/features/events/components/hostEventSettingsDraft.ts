@@ -1,5 +1,5 @@
 import { splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
-import type { useTranslation } from '@/shared/i18n';
+import type { Translate } from '@/shared/i18n';
 import type {
   EventConfigData,
   EventConfigPatchPayload,
@@ -72,8 +72,6 @@ export function normalizeConfig(c: EventConfigData | undefined): EventConfigData
     winnerCount: c?.winnerCount ?? DEFAULT_EVENT_CONFIG.winnerCount,
   };
 }
-
-type Translate = ReturnType<typeof useTranslation>['t'];
 
 export type SettingsDraft = {
   eventTitle: string;

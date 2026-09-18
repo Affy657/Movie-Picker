@@ -112,7 +112,7 @@ describe('Dropdown', () => {
   it('inline, gives up the full width of its container', () => {
     render(<Dropdown value="a" options={OPTIONS} onChange={vi.fn()} ariaLabel="Choix" inline />);
 
-    expect(screen.getByRole('button', { name: 'Choix' }).parentElement).toHaveClass(styles.inline);
+    expect(screen.getByRole('button', { name: 'Choix' }).parentElement).toHaveClass(styles.inline!);
   });
 
   it('disables the trigger when the whole control is disabled', () => {

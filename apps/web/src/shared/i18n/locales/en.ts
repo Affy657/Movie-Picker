@@ -71,6 +71,16 @@ export const en: Locale = {
   },
 
   showcase: {
+    seo: {
+      trendingDescription:
+        'The films everyone is talking about this week, with their rating, their runtime and the platforms where they stream. Updated every day.',
+      nowPlayingDescription:
+        'The films still showing in French cinemas, with their rating and their runtime, to pick the screening of the night.',
+      mostProposedDescription:
+        'The ranking of the films most often proposed at Movie Picker nights: the ones groups of friends really pick.',
+      collectionsDescription:
+        'Film sagas and collections in one list: a whole franchise to propose to your night at once, in order.',
+    },
     railScrollBack: 'Scroll left',
     railScrollForward: 'Scroll right',
     seeAllMovies: 'See all {{count}} films',

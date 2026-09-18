@@ -97,6 +97,10 @@ export function useEventDetailActions({
       setConfirmState(null);
     },
   });
+  const removeParticipant = removeParticipantMutation.mutate;
+  const removeMovie = removeMovieMutation.mutate;
+  const closeWithoutMovie = closeWithoutMovieMutation.mutate;
+  const resetWheel = wheel.reset;
 
   const handleRemoveParticipant = useCallback((participantId: string, pseudo: string) => {
     setConfirmState({ kind: 'remove', participantId, pseudo });
@@ -123,7 +127,7 @@ export function useEventDetailActions({
   const confirmRemove = useCallback(
     (participantId: string, pseudo: string) => {
       setActionError(null);
-      removeParticipantMutation.mutate(
+      removeParticipant(
         { participantId },
         {
           onSuccess: () => {
@@ -138,14 +142,14 @@ export function useEventDetailActions({
         }
       );
     },
-    [removeParticipantMutation, setActionError, t]
+    [removeParticipant, setActionError, t]
   );
 
   const confirmRemoveMovie = useCallback(
     (movieId: string) => {
       if (!participant) return;
       setActionError(null);
-      removeMovieMutation.mutate(movieId, {
+      removeMovie(movieId, {
         onSuccess: () => {
           track('movie_removed');
           refreshAll();
@@ -158,14 +162,14 @@ export function useEventDetailActions({
         },
       });
     },
-    [participant, removeMovieMutation, setActionError, track, refreshAll, t]
+    [participant, removeMovie, setActionError, track, refreshAll, t]
   );
 
   const confirmLeave = useCallback(() => {
     if (!participant) return;
     setActionError(null);
 
-    removeParticipantMutation.mutate(
+    removeParticipant(
       { participantId: participant.participantId },
       {
         onSuccess: () => {
@@ -181,14 +185,14 @@ export function useEventDetailActions({
         },
       }
     );
-  }, [slug, participant, removeParticipantMutation, setActionError, setParticipant, navigate, t]);
+  }, [slug, participant, removeParticipant, setActionError, setParticipant, navigate, t]);
 
   const [resetWheelRequested, setResetWheelRequested] = useState(false);
 
   const confirmResetWheel = useCallback(() => {
     setResetWheelRequested(true);
-    wheel.reset();
-  }, [wheel]);
+    resetWheel();
+  }, [resetWheel]);
 
   useEffect(() => {
     if (resetWheelRequested && !wheel.loading) {
@@ -199,8 +203,8 @@ export function useEventDetailActions({
 
   const confirmCloseWithoutMovie = useCallback(() => {
     setActionError(null);
-    closeWithoutMovieMutation.mutate();
-  }, [closeWithoutMovieMutation, setActionError]);
+    closeWithoutMovie();
+  }, [closeWithoutMovie, setActionError]);
 
   const confirmBusyByKind: ConfirmBusyByKind = useMemo(
     () => ({

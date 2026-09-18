@@ -79,9 +79,10 @@ public sealed partial class TmdbMovieSearch
         if (toFetch.Count == 0)
             return result;
 
+        var budget = Math.Clamp(_options.TmdbBatchEnrichmentMaxFetch, 1, MaxBatchEnrichmentFetch);
         var parallel = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
         await Parallel.ForEachAsync(
-                toFetch,
+                toFetch.Take(budget),
                 new ParallelOptions { MaxDegreeOfParallelism = parallel, CancellationToken = ct },
                 async (miss, c) =>
                 {
@@ -91,6 +92,8 @@ public sealed partial class TmdbMovieSearch
             .ConfigureAwait(false);
         return result;
     }
+
+    private const int MaxBatchEnrichmentFetch = 500;
 
     private static string NormalizeRegion(string region) =>
         string.IsNullOrWhiteSpace(region) ? "FR" : region.Trim().ToUpperInvariant();
@@ -125,6 +128,10 @@ public sealed partial class TmdbMovieSearch
             _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
             await _sharedCache.SetAsync(cacheKey, fresh, ttl, ct).ConfigureAwait(false);
             return fresh;
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex) when (
             ex is HttpRequestException

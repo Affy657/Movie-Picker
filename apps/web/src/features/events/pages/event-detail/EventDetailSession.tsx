@@ -218,35 +218,37 @@ export default function EventDetailSession({
         hostToken={hostToken}
         event={event}
         moviesQuery={moviesQuery}
-        setParticipant={setParticipant}
-        shareUrl={shareUrl}
-        dateFormatted={dateFormatted}
-        timeFormatted={timeFormatted}
-        dateLabel={dateLabel}
         lifecycle={lifecycle}
         countdownLabel={countdownLabel}
-        participantCount={participantCount}
-        moviesCount={moviesCount}
-        votersCount={votersCount}
-        participantsOpen={participantsOpen}
-        onToggleParticipants={() => setParticipantsOpen((value) => !value)}
-        onOpenShare={openShare}
-        onOpenSettings={() => setSettingsOpen(true)}
-        onAddMovie={() => setAddMovieOpen(true)}
-        addMovieTriggerRef={addMovieTriggerRef}
+        counts={{ participants: participantCount, movies: moviesCount, voters: votersCount }}
+        dates={{ dateFormatted, timeFormatted, dateLabel }}
+        share={{
+          open: shareOpen,
+          initialTab: shareInitialTab,
+          url: shareUrl,
+          onOpen: openShare,
+          onClose: () => setShareOpen(false),
+        }}
+        settings={{
+          open: settingsOpen,
+          canConfigure,
+          onOpen: () => setSettingsOpen(true),
+          onClose: () => setSettingsOpen(false),
+        }}
+        participants={{
+          open: participantsOpen,
+          count: participantCount,
+          onToggle: () => setParticipantsOpen((value) => !value),
+        }}
+        addMovie={{
+          canAdd: canAddMovie,
+          onOpen: () => setAddMovieOpen(true),
+          triggerRef: addMovieTriggerRef,
+        }}
+        join={{ needsJoin, isFull, maxParticipants, setParticipant }}
         wheel={wheel}
         onRequestResetWheel={requestResetWheel}
         onRequestCloseWithoutMovie={requestCloseWithoutMovie}
-        canConfigure={canConfigure}
-        canAddMovie={canAddMovie}
-        settingsOpen={settingsOpen}
-        onCloseSettings={() => setSettingsOpen(false)}
-        shareOpen={shareOpen}
-        shareInitialTab={shareInitialTab}
-        onCloseShare={() => setShareOpen(false)}
-        needsJoin={!!needsJoin}
-        isFull={isFull}
-        maxParticipants={maxParticipants}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
       />
@@ -260,25 +262,29 @@ export default function EventDetailSession({
         actionError={actionError}
         setActionError={setActionError}
         refreshAll={refreshAll}
-        viewMode={viewMode}
-        selection={selection}
-        addMovieOpen={addMovieOpen}
-        onAddMovieOpenChange={setAddMovieOpen}
-        addMovieTriggerRef={addMovieTriggerRef}
-        moviesSectionRef={moviesSectionRef}
-        participantsOpen={participantsOpen}
-        participantsRef={participantsRef}
-        pendingRemovalId={pendingRemovalId}
-        onRemoveParticipant={handleRemoveParticipant}
-        onRequestRemoveMovie={handleRequestRemoveMovie}
-        onInviteFriends={() => openShare('friends')}
-        onLeave={handleLeaveEvent}
-        canShowLeave={canShowLeave}
-        isConnectedSelf={isConnectedSelf}
-        removePending={removePending}
         actionSuccess={actionSuccess}
         wheel={wheel}
-        isFull={isFull}
+        participantsPanel={{
+          open: participantsOpen,
+          ref: participantsRef,
+          pendingRemovalId,
+          removePending,
+          canShowLeave,
+          isConnectedSelf,
+          onRemove: handleRemoveParticipant,
+          onInviteFriends: () => openShare('friends'),
+          onLeave: handleLeaveEvent,
+        }}
+        moviesSection={{
+          ref: moviesSectionRef,
+          viewMode,
+          selection,
+          addMovieOpen,
+          onAddMovieOpenChange: setAddMovieOpen,
+          addMovieTriggerRef,
+          isFull,
+          onRequestRemove: handleRequestRemoveMovie,
+        }}
       />
       <ConfirmDialog
         open={confirmDialogContent !== null}

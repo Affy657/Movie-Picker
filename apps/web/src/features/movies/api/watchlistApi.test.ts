@@ -4,6 +4,7 @@ import { fetchApi } from '@/shared/api/client';
 import {
   addToWatchlist,
   fetchWatchlist,
+  fetchWatchlistAvailability,
   removeFromWatchlist,
 } from '@/features/movies/api/watchlistApi';
 
@@ -40,6 +41,29 @@ describe('fetchWatchlist', () => {
 
     mockFetchApi.mockResolvedValue(null);
     expect(await fetchWatchlist()).toEqual([]);
+  });
+});
+
+describe('fetchWatchlistAvailability', () => {
+  it('returns the items and whether the answer is partial, passing the abort signal', async () => {
+    mockFetchApi.mockResolvedValue({ items: [{ tmdbId: 1, watchProviders: [] }], partial: true });
+    const controller = new AbortController();
+
+    const res = await fetchWatchlistAvailability(controller.signal);
+
+    expect(mockFetchApi).toHaveBeenCalledWith('/watchlist/availability', {
+      signal: controller.signal,
+    });
+    expect(res).toEqual({ items: [{ tmdbId: 1, watchProviders: [] }], partial: true });
+  });
+
+  it('reads an empty or malformed answer as complete and empty', async () => {
+    mockFetchApi.mockResolvedValue({});
+    expect(await fetchWatchlistAvailability()).toEqual({ items: [], partial: false });
+
+    mockFetchApi.mockResolvedValue(null);
+    expect(await fetchWatchlistAvailability()).toEqual({ items: [], partial: false });
+    expect(mockFetchApi).toHaveBeenLastCalledWith('/watchlist/availability', undefined);
   });
 });
 

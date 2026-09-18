@@ -13,6 +13,8 @@ type NestedKeys<T, Prefix extends string = ''> =
 
 export type TranslationKey = NestedKeys<Locale>;
 
+export type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
+
 export function t(
   key: TranslationKey,
   vars?: Record<string, string | number>,

@@ -187,6 +187,8 @@ public static class ServiceCollectionExtensions
             opts.TmdbSearchMaxWatchProviderLookups = maxLp;
         if (int.TryParse(cfg["TMDB_LIST_ENRICHMENT_MAX_PARALLEL"], out var par) && par > 0)
             opts.TmdbListEnrichmentMaxParallelism = Math.Min(par, 16);
+        if (int.TryParse(cfg["TMDB_BATCH_ENRICHMENT_MAX_FETCH"], out var batch) && batch > 0)
+            opts.TmdbBatchEnrichmentMaxFetch = Math.Min(batch, 500);
         if (int.TryParse(cfg["TMDB_HTTP_TIMEOUT_SECONDS"], out var timeout) && timeout > 0)
             opts.TmdbHttpTimeoutSeconds = timeout;
         if (int.TryParse(cfg["TMDB_FAILURE_CACHE_MINUTES"], out var failTtl) && failTtl > 0)

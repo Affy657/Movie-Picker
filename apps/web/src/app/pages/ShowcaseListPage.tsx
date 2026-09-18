@@ -12,7 +12,7 @@ import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
-import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
+import { useLocale, useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -88,6 +88,12 @@ const SUBTITLE_KEYS: Record<ShowcaseListVariant, TranslationKey> = {
   provider: 'showcase.sections.providerSubtitle',
   recommendations: 'showcase.sections.recommendationsSubtitle',
   search: 'showcase.sections.searchSubtitle',
+};
+
+const SEO_DESCRIPTION_KEYS: Partial<Record<ShowcaseListVariant, TranslationKey>> = {
+  trending: 'showcase.seo.trendingDescription',
+  'now-playing': 'showcase.seo.nowPlayingDescription',
+  'most-proposed': 'showcase.seo.mostProposedDescription',
 };
 
 const CANONICAL_PATHS: Partial<Record<ShowcaseListVariant, string>> = {
@@ -177,8 +183,6 @@ function toShowcaseListItems(rows: readonly ShowcaseRow[]): ShowcaseListItem[] {
     rank: 'rank' in row && row.rank != null ? row.rank : null,
   }));
 }
-
-type Translate = ReturnType<typeof useTranslation>['t'];
 
 function resolveHeading({
   variant,
@@ -352,7 +356,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
   const canonicalPath = CANONICAL_PATHS[variant];
   usePageSeo({
     title: pageTitle(headingText),
-    description: t(SUBTITLE_KEYS[variant]),
+    description: t(SEO_DESCRIPTION_KEYS[variant] ?? SUBTITLE_KEYS[variant]),
     canonical: canonicalPath ? absoluteUrl(canonicalPath) : undefined,
     noindex: canonicalPath == null,
   });

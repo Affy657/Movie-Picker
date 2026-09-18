@@ -25,7 +25,7 @@ test.describe('Event page layout', () => {
     await expect(page).toHaveURL(/\/e\/[^/?]+/, { timeout: 15_000 });
 
     await page.getByRole('button', { name: /proposer un film/i }).click();
-    const search = page.getByRole('combobox', { name: /proposer un film/i });
+    const search = page.getByRole('searchbox', { name: /proposer un film/i });
     await expect(search).toBeVisible({ timeout: 15_000 });
     await expect
       .poll(async () => (await box(search)).y - (await stickyBottom(page)), { timeout: 5_000 })
