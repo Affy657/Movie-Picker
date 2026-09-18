@@ -177,21 +177,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: le plafond est aligné sur une mesure réelle du mode de synchronisation en place
 - piege: quatre choses cassent SSE sur Cloud Run sans le dire. `timeoutSeconds` est à 300 sur le service, donc chaque flux tombe toutes les 5 minutes et `EventSource` reconnecte, ce qui est acceptable, ou le monter à 3 600. `UseResponseCompression` met en tampon : exclure `text/event-stream` explicitement. Un flux ouvert compte comme une requête en cours, donc l'instance reste vivante et facturée tant qu'un client écoute, environ 0,09 $ par heure au-delà du palier gratuit, à relire sur la grille europe-west1 : c'est le coût du temps réel, à annoncer, pas à découvrir sur la facture. Enfin C12 devient bloquant avant ce chantier, des flux ouverts maintiennent plus d'instances debout que le trafic seul. Garder le sondage en repli après 15 s sans battement.
 
-## DEBT-034 cinq briques d'interface vivent encore à côté des primitives
-
-- state: differe
-- declencheur: une feature repasse dans le fichier concerné. Ne jamais en faire un chantier isolé.
-- impact: reliquat de l'audit du design system du 2026-09-15. Cinq endroits rendent à la main ce qu'une primitive de `shared/components/` sait faire, donc un changement de la primitive ne les suit pas : la classe globale `.icon-btn-outline` posée sur des `<button>` nus là où `IconButton` existe ; le squelette de la page compte (`AccountLoadingSkeleton`) qui dessine son propre miroitement au lieu de composer `Skeleton` ; le spinner du bouton suivre (`ProfileActions`) alors que `Button` et `IconButton` portent `loading` ; la pastille participant (`EventParticipantsList.chip`), un `<li>` avec avatar, lien et retrait, que `Chip` ne sait pas rendre ; le badge sur affiche (`MovieListCard.badge`, capitales, rayon carré) que `Chip` n'a pas en tone.
-- ou: `apps/web/src/styles/02-forms-and-content.css` (`.icon-btn-outline`), `apps/web/src/features/auth/pages/account/AccountLoadingSkeleton.tsx`, `apps/web/src/features/profile/components/ProfileActions.module.css` (`.spinner`), `apps/web/src/features/events/components/EventParticipantsList.module.css` (`.chip`), `apps/web/src/features/movies/components/MovieListCard.module.css` (`.badge`)
-- verify: chaque commande liste ce qui reste à rapatrier.
-  ```bash
-  grep -rln "icon-btn-outline" apps/web/src --include=*.tsx
-  grep -n "spinner|shimmer" apps/web/src/features/profile/components/ProfileActions.module.css apps/web/src/features/auth/pages/account/AccountLoadingSkeleton.module.css
-  ```
-- fix: `IconButton` pour les sept boutons nus, puis supprimer la classe globale ; `SkeletonScreen` + `Skeleton` pour la page compte ; `loading` sur le bouton suivre ; pour la pastille participant et le badge sur affiche, ajouter à `Chip` un `as` et un tone `onPoster` seulement si un second consommateur apparaît, sinon les laisser.
-- fini-quand: les deux commandes de `verify` ne sortent rien et `docs/design-system.md` ne mentionne plus ces exceptions
-- piege: `Chip` enveloppe ses enfants dans un span décalé par `--text-optical-nudge` ; un avatar posé dedans serait décalé aussi, c'est pour ça que la pastille participant n'a pas été migrée.
-
 ## DEBT-035 la diffusion push se fait dans la requête, sans file ni reprise
 
 - state: differe
@@ -275,8 +260,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fix: `DateOnly Date` et `TimeOnly Time` sur l'entité, ou un `StartUtc` calculé et validé à l'écriture, avec conversion aux frontières (document Mongo, DTO) pour ne changer ni le contrat OpenAPI ni les documents existants ; la validation du format remonte alors dans le handler de création et rend une `Errors.<Cas>()` au lieu d'un `Upcoming` silencieux.
 - piege: les documents de production portent les chaînes : garder la lecture de l'ancien format ou passer par une `IDataMigration`, jamais les deux à moitié. Le seed (`DevelopmentScenarioSeed`, DEBT-040), les fixtures et les tests écrivent ces chaînes en dur : compter les occurrences avant de changer le type, le chantier est plus large qu'il ne paraît depuis `Event.cs`.
 
----
-
 ## DEBT-042 les aperçus de partage d'une soirée sont génériques, l'option « aperçu riche » n'a plus d'effet
 
 - state: humain
@@ -289,8 +272,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   ```
 - fix: router les robots d'aperçu (`facebookexternalhit`, `WhatsApp`, `Discordbot`, `Twitterbot`, `Slackbot`, `LinkedInBot`, `TelegramBot`) sur `/e/*` vers l'endpoint `share-preview` de l'API, par un comportement CloudFront avec origine API et une CloudFront Function de sélection sur l'user agent ; les humains gardent la coquille. À défaut, supprimer l'endpoint, `eventSharePreviewUrl` et le réglage `richSharePreview` pour ne pas promettre un aperçu qui n'existe pas.
 - piege: `robots.txt` interdit `/e/` : un robot d'indexation n'y va pas, seuls les robots d'aperçu (qui ignorent `robots.txt`) sont concernés. Ne pas servir le HTML de l'API aux navigateurs, il n'a ni style ni application.
-
----
 
 ## DEBT-043 toute adresse inconnue répond 200, et une route prérendue avec barre finale sert la coquille
 
