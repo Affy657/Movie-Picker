@@ -5,7 +5,7 @@ import styles from './Button.module.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 
-export type ButtonTone = 'default' | 'danger';
+export type ButtonTone = 'default' | 'danger' | 'warning';
 
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
@@ -18,6 +18,7 @@ const VARIANT_CLASS: Record<ButtonVariant, string | undefined> = {
 const TONE_CLASS: Record<ButtonTone, string | undefined> = {
   default: undefined,
   danger: styles.danger,
+  warning: styles.warning,
 };
 
 const SIZE_CLASS: Record<ButtonSize, string | undefined> = {

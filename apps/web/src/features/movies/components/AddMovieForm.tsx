@@ -11,7 +11,7 @@ import {
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation } from '@/shared/i18n';
-import type { TranslationKey } from '@/shared/i18n/t';
+import type { Translate } from '@/features/movies/types';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { metaGenresLabel, movieMetaLine } from '@/shared/utils/movieMetaLine';
@@ -54,7 +54,7 @@ function PaidAvailabilityChip({
   count: number;
   title: string;
   watchPageUrl: string | null;
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+  t: Translate;
 }>) {
   const ariaLabel = t(
     type === 'rent' ? 'movies.watchProviders.alsoRentAria' : 'movies.watchProviders.alsoBuyAria',

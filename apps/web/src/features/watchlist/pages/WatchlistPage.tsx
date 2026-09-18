@@ -39,7 +39,7 @@ import MovieListFiltersPanel from '@/features/movies/components/MovieListFilters
 import MovieBrowseCard, {
   type MovieAvailability,
 } from '@/features/movies/components/MovieBrowseCard';
-import { MovieListRowHeader } from '@/features/movies/components/MovieListRow';
+import { LibraryMovieRowHeader } from '@/features/movies/components/LibraryMovieRow';
 import { MovieTable } from '@/features/movies/components/MovieTable';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import ViewModeToggle, { type MovieViewMode } from '@/shared/components/ViewModeToggle';
@@ -257,7 +257,7 @@ export default function WatchlistPage() {
       onToggleWatchlist={() => watchlistToggle.toggle(item)}
       onProposeToEvent={() => setProposeTarget(item)}
       onOpenDetails={() => details.open(item)}
-      onOpenAvailability={() => details.open(item, 'dispo')}
+      onOpenAvailability={() => details.open(item, 'availability')}
       ratingScale={user?.ratingScale}
     />
   );
@@ -438,7 +438,7 @@ export default function WatchlistPage() {
                 listLabel={t('watchlist.listAria')}
                 header={
                   isMobile ? null : (
-                    <MovieListRowHeader
+                    <LibraryMovieRowHeader
                       sorts={watchlistRowSorts(t)}
                       sortBy={toolbar.sortBy}
                       sortDir={toolbar.sortDir}

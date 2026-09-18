@@ -3,6 +3,11 @@
   width: 100%;
 }
 
+.inline,
+.inline .trigger {
+  width: auto;
+}
+
 .trigger {
   display: flex;
   align-items: center;

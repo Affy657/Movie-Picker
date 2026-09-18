@@ -42,6 +42,11 @@
   border-color: var(--color-error);
 }
 
+.warning {
+  color: var(--color-warning);
+  border-color: var(--color-warning-border);
+}
+
 .sm {
   composes: expanded from './tapTarget.module.css';
   padding: var(--space-1-5) var(--space-4);
@@ -80,6 +85,11 @@
   .btn.danger:not(:disabled):hover {
     color: var(--color-error);
     border-color: var(--color-error);
+  }
+
+  .btn.warning:not(:disabled):hover {
+    color: var(--color-warning);
+    border-color: var(--color-warning);
   }
 }
 

@@ -11,10 +11,11 @@ import {
 export default function LanguageSelector({
   className = '',
   id,
+  inline = false,
 }: Readonly<{
   className?: string;
-
   id?: string;
+  inline?: boolean;
 }>) {
   const { locale, setLocale } = useLocale();
   const { t } = useTranslation();
@@ -38,6 +39,7 @@ export default function LanguageSelector({
       }}
       ariaLabel={id ? undefined : t('common.languageLabel')}
       className={className || undefined}
+      inline={inline}
     />
   );
 }

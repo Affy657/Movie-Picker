@@ -614,13 +614,15 @@ function checkTapTargets(cssFiles, tsFiles) {
  * 3. Bracket access: `styles[variable]` makes the module unanalysable, so it is excluded and
  *    **listed** in the output, so that the exclusion is a visible choice, not a silent false negative.
  * 4. CSS-only usage: a class in descendant position (`.footer .btn`), the target of a `composes:`
- *    or inside a `:global(...)` is really used without appearing in TypeScript.
+ *    (from the same module or, with `from '...'`, from another one) or inside a `:global(...)` is
+ *    really used without appearing in TypeScript.
  */
 const CSS_MODULE_IMPORT_RE =
   /import\s+(?:(\w+)|\*\s+as\s+(\w+))\s+from\s*['"]([^'"]+\.module\.css)['"]/g;
 const CLASS_IN_COMPOUND_RE = /\.(-?[A-Za-z_][\w-]*)/g;
 const GLOBAL_SELECTOR_RE = /:global\s*\(([^)]*)\)/g;
 const COMPOSES_RE = /composes\s*:\s*([^;}]+)/g;
+const COMPOSES_FROM_RE = /composes\s*:\s*([^;}]+?)\s+from\s*['"]([^'"]+)['"]/g;
 
 function selectorsOf(text) {
   const selectors = [];
@@ -662,12 +664,27 @@ function classesOfCssModule(text) {
   return { leading, usedInCss };
 }
 
+function classesComposedFromOtherModules(cssFiles) {
+  const composed = new Map();
+  for (const file of cssFiles) {
+    if (!file.endsWith('.module.css')) continue;
+    for (const [, names, spec] of readFileSync(file, 'utf8').matchAll(COMPOSES_FROM_RE)) {
+      const target = resolveImport(spec, file);
+      if (!target || target === file) continue;
+      if (!composed.has(target)) composed.set(target, new Set());
+      for (const name of names.trim().split(/\s+/)) composed.get(target).add(name);
+    }
+  }
+  return composed;
+}
+
 function checkDeadCssClasses(cssFiles, tsFiles) {
   const modules = new Map();
   for (const file of cssFiles) {
     if (!file.endsWith('.module.css')) continue;
     modules.set(file, { bindingsByFile: new Map(), aliases: new Set() });
   }
+  const composedFromOutside = classesComposedFromOtherModules(cssFiles);
 
   const sources = new Map(tsFiles.map((file) => [file, readFileSync(file, 'utf8')]));
 
@@ -710,6 +727,7 @@ function checkDeadCssClasses(cssFiles, tsFiles) {
     }
 
     const { leading, usedInCss } = classesOfCssModule(readFileSync(file, 'utf8'));
+    for (const name of composedFromOutside.get(file) ?? []) usedInCss.add(name);
     for (const name of leading) {
       if (usedInCss.has(name) || names.has(name)) continue;
       const camel = name.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());

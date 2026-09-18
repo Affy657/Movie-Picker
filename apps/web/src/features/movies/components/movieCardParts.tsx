@@ -145,7 +145,7 @@ export function useMovieCardState({
     open: openDetailsParam,
     close: closeDetails,
   } = useMovieDetailsParam();
-  const [detailsInitialTab, setDetailsInitialTab] = useState<MovieDetailsTabKey>('soiree');
+  const [detailsInitialTab, setDetailsInitialTab] = useState<MovieDetailsTabKey>('event');
   const [noteEditing, setNoteEditing] = useState(false);
   const detailsPanelId = useId();
   const hasDetails = m.tmdbId > 0;
@@ -154,7 +154,7 @@ export function useMovieCardState({
   const showAddNote = canAct && isMine && !m.pitchNote && !noteEditing;
 
   const openDetails = useCallback(
-    (tab: MovieDetailsTabKey = 'soiree') => {
+    (tab: MovieDetailsTabKey = 'event') => {
       if (!hasDetails) return;
       setDetailsInitialTab(tab);
       openDetailsParam(m.tmdbId, mediaType);
@@ -362,7 +362,7 @@ export function PosterDetailsTrigger({
       type="button"
       className={styles.posterTrigger}
       onClick={onOpen}
-      aria-label={t('watchlist.card.openDetailsAria', { title })}
+      aria-label={t('movies.card.openDetailsAria', { title })}
       data-testid="poster-details-trigger"
     />
   );

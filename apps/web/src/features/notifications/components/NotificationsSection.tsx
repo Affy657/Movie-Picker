@@ -15,6 +15,7 @@ import {
 } from '@/shared/hooks/usePwaInstall';
 import InstallPwaDialog from '@/app/components/InstallPwaDialog';
 import Button from '@/shared/components/Button';
+import Card from '@/shared/components/Card';
 import Toggle from '@/shared/components/Toggle';
 import { getErrorMessage } from '@/shared/api/apiError';
 import sharedStyles from '@/shared/components/SettingsSection.module.css';
@@ -156,7 +157,7 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
 
       {permission === 'denied' && <p className="hint">{t('notifications.permissionDenied')}</p>}
 
-      <div className={sharedStyles.card}>
+      <Card padding="none" elevation="sm" className={sharedStyles.card}>
         <div className={clsx(sharedStyles.row, sharedStyles.noDivider)}>
           {subscribed ? (
             <Bell size={ICON_SIZE.lg} aria-hidden className={sharedStyles.rowIcon} />
@@ -177,10 +178,10 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
             }
           />
         </div>
-      </div>
+      </Card>
 
       {prefs && (
-        <div className={sharedStyles.card}>
+        <Card padding="none" elevation="sm" className={sharedStyles.card}>
           {PREF_GROUPS.map((group) => (
             <fieldset className={styles.prefGroup} key={group.legendKey}>
               <legend className={styles.prefGroupLegend}>{t(group.legendKey)}</legend>
@@ -199,7 +200,7 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
               ))}
             </fieldset>
           ))}
-        </div>
+        </Card>
       )}
     </>
   );

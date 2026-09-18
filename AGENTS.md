@@ -46,6 +46,7 @@ Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactori
 | Choix exclusif entre deux à cinq options | `SegmentedRadioGroup` | `role="radiogroup"`, `size` `md` / `sm`, `iconOnly`, `disabled` |
 | Choix exclusif entre des cartes (titre, description, vignette, emoji, pastille de couleur) | `ChoiceGroup` + `ChoiceCard` | `indicator`, `layout` `row` / `tile`, `dashed`, `disabled` ; flèches et roving tabindex fournis ; c'est aussi le sélecteur d'emoji et celui de la couleur d'accent |
 | Ligne de réglage avec interrupteur | `ToggleRow` | `title`, `description`, `checked`, `onChange`, `disabled` |
+| Page de réglages (compte, notifications, import Letterboxd) | `SettingsSection.module.css` | feuille partagée sans composant : `panelHead`, `card` (sur `<Card>`), `field`, `row` + `rowMain` / `rowLabel` / `rowSub`, `attention`, `dangerZone` ; les boutons y gardent les tailles et tons de `Button` |
 | Avatars chevauchés | `AvatarStack` | `people`, `max`, `hidden`, `size`, `ariaLabel` |
 | Gabarit de page | `PageLayout` | |
 | État de page | `EmptyState`, `ErrorState`, `SignedOutState`, `Skeleton`, `ErrorBoundary` | |

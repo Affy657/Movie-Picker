@@ -1,5 +1,8 @@
 .rowGrid {
-  grid-template-columns: 36px 60px minmax(0, 1fr) 56px 60px 56px 150px 92px 150px 72px 44px;
+  grid-template-columns:
+    var(--space-9) var(--table-col-poster) minmax(0, 1fr) var(--table-col-vote)
+    var(--table-col-runtime) var(--table-col-year) var(--table-col-availability) 92px 150px 72px
+    var(--table-col-kebab);
 }
 
 .rowWinner {

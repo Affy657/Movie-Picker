@@ -20,7 +20,7 @@ import {
 } from '@/features/movies/components/movieCardParts';
 import cardPartsStyles from './movieCardParts.module.css';
 import Card from '@/shared/components/Card';
-import styles from './MovieCardList.module.css';
+import styles from './EventMovieCard.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 function ListPoster({
@@ -58,7 +58,7 @@ function ListPoster({
   );
 }
 
-export const MovieCardList = memo(function MovieCardList({
+export const EventMovieCard = memo(function EventMovieCard({
   movie: m,
   slug,
   participantId,
@@ -127,7 +127,7 @@ export const MovieCardList = memo(function MovieCardList({
         <ListPoster src={s.posterSrc} srcSet={s.posterSrcSet} eager={eager} />
         <PosterDetailsTrigger
           hasDetails={s.hasDetails}
-          onOpen={() => s.openDetails('soiree')}
+          onOpen={() => s.openDetails('event')}
           title={m.title}
           t={t}
         />
@@ -171,14 +171,14 @@ export const MovieCardList = memo(function MovieCardList({
                 className={styles.cardProviders}
                 watchPageUrl={m.tmdbWatchPageUrl}
                 maxVisible={3}
-                onMoreClick={() => s.openDetails('dispo')}
+                onMoreClick={() => s.openDetails('availability')}
               />
             )}
             {rentCount > 0 && (
               <PaidOfferChip
                 type="rent"
                 count={rentCount}
-                onClick={() => s.openDetails('dispo')}
+                onClick={() => s.openDetails('availability')}
                 ariaLabel={t('movies.watchProviders.alsoRentAria', {
                   count: rentCount,
                   title: m.title,
@@ -189,7 +189,7 @@ export const MovieCardList = memo(function MovieCardList({
               <PaidOfferChip
                 type="buy"
                 count={buyCount}
-                onClick={() => s.openDetails('dispo')}
+                onClick={() => s.openDetails('availability')}
                 ariaLabel={t('movies.watchProviders.alsoBuyAria', {
                   count: buyCount,
                   title: m.title,

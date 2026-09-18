@@ -118,7 +118,7 @@ export function MovieCardKebab({
     onToggleWheelExclusion
   );
   const wheelExclusion = toggleExclusion ? { excluded, onToggle: toggleExclusion } : undefined;
-  const onViewDetails = card.hasDetails ? () => card.openDetails('soiree') : undefined;
+  const onViewDetails = card.hasDetails ? () => card.openDetails('event') : undefined;
   if (
     !kebabHasActions({
       tmdbId: movie.tmdbId,

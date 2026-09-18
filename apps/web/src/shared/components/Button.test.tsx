@@ -33,6 +33,7 @@ describe('Button', () => {
   it('exposes the same class composition to links through buttonClass', () => {
     expect(buttonClass()).toBe(styles.btn);
     expect(buttonClass({ tone: 'danger' })).toBe(`${styles.btn} ${styles.danger}`);
+    expect(buttonClass({ tone: 'warning' })).toBe(`${styles.btn} ${styles.warning}`);
     expect(buttonClass({ variant: 'ghost', size: 'lg' })).toBe(
       `${styles.btn} ${styles.ghost} ${styles.lg}`
     );

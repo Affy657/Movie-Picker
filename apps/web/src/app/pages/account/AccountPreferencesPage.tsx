@@ -1,4 +1,5 @@
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import Card from '@/shared/components/Card';
 import { useTranslation } from '@/shared/i18n';
 import ThemeToggle from '@/app/components/ThemeToggle';
 import LanguageSelector from '@/app/components/LanguageSelector';
@@ -23,7 +24,7 @@ export default function AccountPreferencesPage() {
         <AccountSavedChip visible={saved} />
       </div>
 
-      <div className={styles.card}>
+      <Card padding="none" elevation="sm" className={styles.card}>
         <div className={styles.field}>
           <Field label={t('auth.account.languageLabel')} htmlFor="account-language">
             {({ id }) => <LanguageSelector id={id} />}
@@ -65,7 +66,7 @@ export default function AccountPreferencesPage() {
             />
           </div>
         )}
-      </div>
+      </Card>
     </>
   );
 }

@@ -62,7 +62,7 @@ function Harness({
   return (
     <>
       <span data-testid="search">{location.search}</span>
-      <button type="button" onClick={() => details.open(seedOnOpen ?? SEED, 'dispo')}>
+      <button type="button" onClick={() => details.open(seedOnOpen ?? SEED, 'availability')}>
         ouvrir
       </button>
       <LibraryMovieDetails

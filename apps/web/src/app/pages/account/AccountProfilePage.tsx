@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Card from '@/shared/components/Card';
 import clsx from 'clsx';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTranslation } from '@/shared/i18n';
@@ -111,7 +112,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
         </p>
       )}
 
-      <div className={styles.card}>
+      <Card padding="none" elevation="sm" className={styles.card}>
         <div className={styles.field}>
           <Field label={t('auth.account.pseudoLabel')} htmlFor="profile-displayName">
             {({ id }) => (
@@ -199,7 +200,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
             }}
           />
         </div>
-      </div>
+      </Card>
     </>
   );
 }

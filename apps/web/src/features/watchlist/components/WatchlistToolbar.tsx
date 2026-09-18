@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import CollectionToolbar from '@/features/movies/components/CollectionToolbar';
 import type { SortOption } from '@/features/movies/components/ListToolbar';
-import type { MovieListRowSorts } from '@/features/movies/components/MovieListRow';
+import type { LibraryMovieRowSorts } from '@/features/movies/components/LibraryMovieRow';
 import type { Translate } from '@/features/movies/types';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import type {
@@ -26,7 +26,7 @@ export function watchlistSortOptions(t: Translate): SortOption<WatchlistSortKey>
   return (Object.keys(SORT_LABEL_KEYS) as WatchlistSortKey[]).map((key) => sortOption(key, t));
 }
 
-export function watchlistRowSorts(t: Translate): MovieListRowSorts<WatchlistSortKey> {
+export function watchlistRowSorts(t: Translate): LibraryMovieRowSorts<WatchlistSortKey> {
   return {
     title: [sortOption('createdAt', t), sortOption('title', t)],
     vote: sortOption('voteAverage', t),

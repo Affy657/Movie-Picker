@@ -5,7 +5,7 @@ import type { ComponentProps } from 'react';
 import MovieBrowseCard, {
   type MovieBrowseCardItem,
 } from '@/features/movies/components/MovieBrowseCard';
-import { MovieRankBadge } from '@/features/movies/components/MovieListCard';
+import { MovieRankBadge } from '@/features/movies/components/ShowcaseMovieCard';
 import { LocaleProvider } from '@/shared/i18n';
 
 type CardProps = ComponentProps<typeof MovieBrowseCard>;

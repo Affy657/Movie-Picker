@@ -227,7 +227,7 @@ describe('MovieDetailsModal', () => {
         open
         title="Inception"
         tmdbId={27205}
-        initialTab="dispo"
+        initialTab="availability"
         eventContext={eventContext()}
         onClose={vi.fn()}
       />
@@ -245,7 +245,7 @@ describe('MovieDetailsModal', () => {
         title="Inception"
         year="2010"
         tmdbId={27205}
-        initialTab="film"
+        initialTab="movie"
         onClose={vi.fn()}
       />
     );
@@ -467,7 +467,7 @@ describe('MovieDetailsModal', () => {
         open
         title="Inception"
         tmdbId={27205}
-        initialTab="dispo"
+        initialTab="availability"
         onClose={vi.fn()}
       />
     );
@@ -491,7 +491,7 @@ describe('MovieDetailsModal', () => {
         open
         title="Inception"
         tmdbId={27205}
-        initialTab="dispo"
+        initialTab="availability"
         watchProviders={[]}
         onClose={vi.fn()}
       />

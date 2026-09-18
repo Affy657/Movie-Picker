@@ -24,7 +24,7 @@ import CollectionToolbar, {
 import { toCollectionToolbarProps } from '@/features/movies/components/FilteredCollectionLayout';
 import MovieListFilteredLayout from '@/features/movies/components/MovieListFilteredLayout';
 import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
-import listCardStyles from '@/features/movies/components/MovieListCard.module.css';
+import listCardStyles from '@/features/movies/components/ShowcaseMovieCard.module.css';
 import { useMovieListToolbar } from '@/features/movies/hooks/useMovieListToolbar';
 import { useMovieCollections, useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import { searchMovies } from '@/features/movies/api/moviesApi';

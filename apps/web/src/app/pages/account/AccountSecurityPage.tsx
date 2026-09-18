@@ -17,6 +17,7 @@ import type { UserProfile } from '@/features/auth/types';
 import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
 import sharedStyles from '@/shared/components/SettingsSection.module.css';
 import Button from '@/shared/components/Button';
+import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Field from '@/shared/components/Field';
 
@@ -413,7 +414,7 @@ export default function AccountSecurityPage({ user }: Readonly<{ user: UserProfi
         </h2>
       </div>
 
-      <div className={sharedStyles.card}>
+      <Card padding="none" elevation="sm" className={sharedStyles.card}>
         <div className={sharedStyles.row}>
           <Mail size={ICON_SIZE.xl} aria-hidden className={sharedStyles.rowIcon} />
           <div className={sharedStyles.rowMain}>
@@ -425,7 +426,7 @@ export default function AccountSecurityPage({ user }: Readonly<{ user: UserProfi
         <PasswordRow user={user} />
         <DataExportRow />
         <LogoutRow />
-      </div>
+      </Card>
 
       <DeleteAccountZone hasPassword={user.hasPassword} />
     </>

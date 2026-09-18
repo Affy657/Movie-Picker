@@ -18,6 +18,7 @@ interface DropdownProps<V extends string> {
 
   ariaLabel?: string;
   className?: string;
+  inline?: boolean;
   disabled?: boolean;
 }
 
@@ -41,6 +42,7 @@ export default function Dropdown<V extends string>({
   onChange,
   ariaLabel,
   className,
+  inline = false,
   disabled = false,
 }: Readonly<DropdownProps<V>>) {
   const [open, setOpen] = useState(false);
@@ -127,7 +129,7 @@ export default function Dropdown<V extends string>({
   }, [activeIndex, open]);
 
   return (
-    <div ref={rootRef} className={clsx(styles.root, className)}>
+    <div ref={rootRef} className={clsx(styles.root, inline && styles.inline, className)}>
       <button
         ref={buttonRef}
         type="button"

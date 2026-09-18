@@ -2,16 +2,16 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
-import MovieListCard, { MovieRankBadge } from '@/features/movies/components/MovieListCard';
+import ShowcaseMovieCard, { MovieRankBadge } from '@/features/movies/components/ShowcaseMovieCard';
 import { LocaleProvider } from '@/shared/i18n';
 
-type CardProps = ComponentProps<typeof MovieListCard>;
+type CardProps = ComponentProps<typeof ShowcaseMovieCard>;
 
 function renderCard(props: Partial<CardProps> = {}) {
   return render(
     <LocaleProvider>
       <ul>
-        <MovieListCard
+        <ShowcaseMovieCard
           title="Dune"
           year="2021"
           posterPath="/dune.jpg"
@@ -23,7 +23,7 @@ function renderCard(props: Partial<CardProps> = {}) {
   );
 }
 
-describe('MovieListCard', () => {
+describe('ShowcaseMovieCard', () => {
   it('shows the year, the vote and the runtime by default', () => {
     renderCard({ voteAverage: 8.1, runtimeMinutes: 155 });
 

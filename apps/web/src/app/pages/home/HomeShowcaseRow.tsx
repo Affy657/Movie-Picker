@@ -6,7 +6,7 @@ import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { RatingScale } from '@/shared/types/theme';
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
-import { MovieRankBadge } from '@/features/movies/components/MovieListCard';
+import { MovieRankBadge } from '@/features/movies/components/ShowcaseMovieCard';
 import MovieBrowseCard, {
   type MovieBrowseCardItem,
   type MovieLibraryActions,

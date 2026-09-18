@@ -28,7 +28,7 @@ import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
-export type MovieDetailsTabKey = 'soiree' | 'film' | 'dispo';
+export type MovieDetailsTabKey = 'event' | 'movie' | 'availability';
 export type { MovieDetailsEventContext };
 
 export interface MovieDetailsLibraryContext {
@@ -62,14 +62,17 @@ function buildDetailsTabs(
   t: ReturnType<typeof useTranslation>['t']
 ) {
   const eventTab = hasEventContext
-    ? [{ key: 'soiree' as const, label: t('movies.details.tabSoiree') }]
+    ? [{ key: 'event' as const, label: t('movies.details.tabEvent') }]
     : [];
   return [
     ...eventTab,
-    { key: 'film' as const, label: t(isTv ? 'movies.details.tabShow' : 'movies.details.tabFilm') },
     {
-      key: 'dispo' as const,
-      label: t('movies.details.tabDispo'),
+      key: 'movie' as const,
+      label: t(isTv ? 'movies.details.tabShow' : 'movies.details.tabMovie'),
+    },
+    {
+      key: 'availability' as const,
+      label: t('movies.details.tabAvailability'),
       badge: providerCount > 0 ? providerCount : undefined,
     },
   ];
@@ -79,9 +82,9 @@ function effectiveInitialTab(
   initialTab: MovieDetailsTabKey | undefined,
   hasEventContext: boolean
 ): MovieDetailsTabKey {
-  if (initialTab === 'soiree' && !hasEventContext) return 'film';
+  if (initialTab === 'event' && !hasEventContext) return 'movie';
   if (initialTab) return initialTab;
-  return hasEventContext ? 'soiree' : 'film';
+  return hasEventContext ? 'event' : 'movie';
 }
 
 function wheelActionKey(eventContext: MovieDetailsModalProps['eventContext']) {
@@ -289,12 +292,12 @@ export default function MovieDetailsModal({
 
           <div className={styles.body}>
             {eventContext && (
-              <TabPanel idBase={idBase} tabKey="soiree" active={activeTab === 'soiree'}>
+              <TabPanel idBase={idBase} tabKey="event" active={activeTab === 'event'}>
                 <MovieDetailsEventTab movie={eventContext.movie} context={eventContext} t={t} />
               </TabPanel>
             )}
 
-            <TabPanel idBase={idBase} tabKey="film" active={activeTab === 'film'}>
+            <TabPanel idBase={idBase} tabKey="movie" active={activeTab === 'movie'}>
               <MovieDetailsContent
                 query={detailsQuery}
                 mediaType={mediaType}
@@ -311,7 +314,7 @@ export default function MovieDetailsModal({
               )}
             </TabPanel>
 
-            <TabPanel idBase={idBase} tabKey="dispo" active={activeTab === 'dispo'}>
+            <TabPanel idBase={idBase} tabKey="availability" active={activeTab === 'availability'}>
               {providers.length > 0 ? (
                 <WatchProviderChips
                   providers={providers}
@@ -320,7 +323,7 @@ export default function MovieDetailsModal({
                   labelStyle="text"
                 />
               ) : (
-                <p className={styles.dispoEmpty}>{t('movies.watchProviders.emptyLabel')}</p>
+                <p className={styles.availabilityEmpty}>{t('movies.watchProviders.emptyLabel')}</p>
               )}
             </TabPanel>
           </div>

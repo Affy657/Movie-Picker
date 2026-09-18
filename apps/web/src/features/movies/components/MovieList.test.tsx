@@ -387,7 +387,7 @@ describe('MovieList', () => {
       const items = screen.getAllByRole('menuitem').map((item) => item.textContent);
       expect(items[0]).toBe('Voir les détails');
       await user.click(screen.getByRole('menuitem', { name: 'Voir les détails' }));
-      expect(screen.getByTestId('details-modal-open')).toHaveAttribute('data-tab', 'soiree');
+      expect(screen.getByTestId('details-modal-open')).toHaveAttribute('data-tab', 'event');
     });
   });
 
@@ -493,7 +493,7 @@ describe('MovieList', () => {
       await userEvent.click(rentBtn);
       const modal = await screen.findByTestId('details-modal-open');
       expect(modal).toBeInTheDocument();
-      expect(modal).toHaveAttribute('data-tab', 'dispo');
+      expect(modal).toHaveAttribute('data-tab', 'availability');
       expect(buyBtn).toBeInTheDocument();
     });
 

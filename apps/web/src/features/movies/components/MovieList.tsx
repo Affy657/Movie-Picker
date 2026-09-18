@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import type { MovieData } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
 import { useTranslation } from '@/shared/i18n';
-import { MovieCardList } from '@/features/movies/components/MovieCardList';
-import { MovieCardRow, MovieRowHeader } from '@/features/movies/components/MovieCardRow';
+import { EventMovieCard } from '@/features/movies/components/EventMovieCard';
+import { EventMovieRow, EventMovieRowHeader } from '@/features/movies/components/EventMovieRow';
 import { MovieTable } from '@/features/movies/components/MovieTable';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import styles from './MovieList.module.css';
@@ -129,7 +129,7 @@ export default function MovieList({
       <MovieTable
         header={
           !isMobile && showHeader && sortBy && sortDir && onSetSort ? (
-            <MovieRowHeader
+            <EventMovieRowHeader
               columns={[
                 { key: 'createdAt', label: t('movies.list.columnAddedAt') },
                 { key: 'voteAverage', label: t('movies.list.columnTmdbVote') },
@@ -149,7 +149,7 @@ export default function MovieList({
         {movies.map((m, i) => {
           const rowError = voteErrors?.[m.id];
           return (
-            <MovieCardRow
+            <EventMovieRow
               key={m.id}
               {...commonCardProps(m)}
               eager={i < 3}
@@ -169,7 +169,7 @@ export default function MovieList({
   return (
     <ul className={styles.grid}>
       {movies.map((m, i) => (
-        <MovieCardList key={m.id} {...commonCardProps(m)} eager={i < 3} />
+        <EventMovieCard key={m.id} {...commonCardProps(m)} eager={i < 3} />
       ))}
     </ul>
   );

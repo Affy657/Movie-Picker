@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import Card from '@/shared/components/Card';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
@@ -58,7 +59,7 @@ export default function AccountIntegrationsPage({ user }: Readonly<{ user: UserP
       <LetterboxdImportSection />
 
       {(availableProviders.length > 0 || linked.length > 0) && (
-        <div className={sharedStyles.card}>
+        <Card padding="none" elevation="sm" className={sharedStyles.card}>
           <p className={sharedStyles.cardTitle}>
             <span>{t('auth.account.connectionsTitle')}</span>
           </p>
@@ -143,7 +144,7 @@ export default function AccountIntegrationsPage({ user }: Readonly<{ user: UserP
           {linked.length > 0 && user.hasPassword && (
             <p className="hint">{t('auth.account.connectionsUnlinkSafeHint')}</p>
           )}
-        </div>
+        </Card>
       )}
     </>
   );

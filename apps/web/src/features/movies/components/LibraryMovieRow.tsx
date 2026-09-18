@@ -14,9 +14,9 @@ import {
 } from '@/features/movies/components/MovieTable';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import table from './MovieTable.module.css';
-import styles from './MovieListRow.module.css';
+import styles from './LibraryMovieRow.module.css';
 
-export interface MovieListRowSorts<K extends string> {
+export interface LibraryMovieRowSorts<K extends string> {
   title: MovieTableSort<K>[];
   vote?: MovieTableSort<K>;
   runtime?: MovieTableSort<K>;
@@ -24,13 +24,13 @@ export interface MovieListRowSorts<K extends string> {
   availability?: MovieTableSort<K>;
 }
 
-export function MovieListRowHeader<K extends string>({
+export function LibraryMovieRowHeader<K extends string>({
   sorts,
   sortBy,
   sortDir,
   onSetSort,
 }: Readonly<{
-  sorts: MovieListRowSorts<K>;
+  sorts: LibraryMovieRowSorts<K>;
   sortBy: K;
   sortDir: 'asc' | 'desc';
   onSetSort: (key: K) => void;
@@ -56,7 +56,7 @@ export function MovieListRowHeader<K extends string>({
   );
 }
 
-interface MovieListRowProps {
+interface LibraryMovieRowProps {
   title: string;
   year?: string;
   posterPath: string | null;
@@ -65,14 +65,14 @@ interface MovieListRowProps {
   runtimeMinutes?: number | null;
   genres?: string[];
   badge?: ReactNode;
-  dispo?: ReactNode;
+  availability?: ReactNode;
   eager?: boolean;
   isMobile?: boolean;
   onOpenDetails: () => void;
   kebab?: ReactNode;
 }
 
-export default function MovieListRow({
+export default function LibraryMovieRow({
   title,
   year,
   posterPath,
@@ -81,12 +81,12 @@ export default function MovieListRow({
   runtimeMinutes,
   genres = [],
   badge,
-  dispo,
+  availability,
   eager = false,
   isMobile = false,
   onOpenDetails,
   kebab,
-}: Readonly<MovieListRowProps>) {
+}: Readonly<LibraryMovieRowProps>) {
   const { t } = useTranslation();
   const posterSrc = posterImageSrc(posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
@@ -99,7 +99,7 @@ export default function MovieListRow({
       type="button"
       className={styles.rowTrigger}
       onClick={onOpenDetails}
-      aria-label={t('watchlist.card.openDetailsAria', { title })}
+      aria-label={t('movies.card.openDetailsAria', { title })}
     />
   );
   const heading = (
@@ -127,7 +127,7 @@ export default function MovieListRow({
             {year ? <span>{year}</span> : null}
             {runtimeLabel ? <span>{runtimeLabel}</span> : null}
             {voteLabel ? <span>{voteLabel}</span> : null}
-            {dispo ? <span className={styles.aboveTrigger}>{dispo}</span> : null}
+            {availability ? <span className={styles.aboveTrigger}>{availability}</span> : null}
           </div>
           {meta ? <div className={clsx(table.metaRow, styles.mobileMeta)}>{meta}</div> : null}
         </div>
@@ -151,7 +151,7 @@ export default function MovieListRow({
       <span className={table.cellEnd}>{voteLabel}</span>
       <span className={table.cellEnd}>{runtimeLabel}</span>
       <span className={table.cellEnd}>{year}</span>
-      <div className={clsx(table.dispoCol, styles.aboveTrigger)}>{dispo}</div>
+      <div className={clsx(table.availabilityCol, styles.aboveTrigger)}>{availability}</div>
       <div className={clsx(table.kebabCol, styles.aboveTrigger)}>{kebab}</div>
     </li>
   );

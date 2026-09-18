@@ -2,16 +2,18 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
-import MovieListRow, { MovieListRowHeader } from '@/features/movies/components/MovieListRow';
+import LibraryMovieRow, {
+  LibraryMovieRowHeader,
+} from '@/features/movies/components/LibraryMovieRow';
 import { LocaleProvider } from '@/shared/i18n';
 
-type RowProps = ComponentProps<typeof MovieListRow>;
+type RowProps = ComponentProps<typeof LibraryMovieRow>;
 
 function renderRow(props: Partial<RowProps> = {}) {
   return render(
     <LocaleProvider>
       <ul>
-        <MovieListRow
+        <LibraryMovieRow
           title="Dune"
           year="2021"
           posterPath="/dune.jpg"
@@ -28,11 +30,11 @@ function renderRow(props: Partial<RowProps> = {}) {
 
 type SortKey = 'createdAt' | 'title' | 'voteAverage' | 'duration' | 'year' | 'availability';
 
-function renderHeader(props: Partial<ComponentProps<typeof MovieListRowHeader<SortKey>>> = {}) {
+function renderHeader(props: Partial<ComponentProps<typeof LibraryMovieRowHeader<SortKey>>> = {}) {
   const onSetSort = vi.fn();
   render(
     <LocaleProvider>
-      <MovieListRowHeader<SortKey>
+      <LibraryMovieRowHeader<SortKey>
         sorts={{
           title: [
             { key: 'createdAt', label: 'Ajout' },
@@ -53,7 +55,7 @@ function renderHeader(props: Partial<ComponentProps<typeof MovieListRowHeader<So
   return onSetSort;
 }
 
-describe('MovieListRow', () => {
+describe('LibraryMovieRow', () => {
   it('lays the title, the vote, the runtime and the year out as table cells', () => {
     renderRow();
 
@@ -99,12 +101,12 @@ describe('MovieListRow', () => {
     expect(screen.getByText('8.1/10')).toBeInTheDocument();
   });
 
-  it('renders the dispo slot on desktop and among the mobile facts', () => {
-    const desktop = renderRow({ dispo: <span>Netflix</span> });
+  it('renders the availability slot on desktop and among the mobile facts', () => {
+    const desktop = renderRow({ availability: <span>Netflix</span> });
     expect(desktop.getByText('Netflix')).toBeInTheDocument();
     desktop.unmount();
 
-    renderRow({ isMobile: true, dispo: <span>Netflix</span> });
+    renderRow({ isMobile: true, availability: <span>Netflix</span> });
     expect(
       screen.getByText('Netflix').closest('span')?.parentElement?.parentElement
     ).toContainElement(screen.getByText('2021'));
@@ -118,7 +120,7 @@ describe('MovieListRow', () => {
   });
 });
 
-describe('MovieListRowHeader', () => {
+describe('LibraryMovieRowHeader', () => {
   it('renders one sort button per column, the active one pressed', () => {
     renderHeader();
 

@@ -21,6 +21,7 @@ import LetterboxdChoicesModal from './LetterboxdChoicesModal';
 import sharedStyles from '@/shared/components/SettingsSection.module.css';
 import styles from './LetterboxdImportSection.module.css';
 import Button from '@/shared/components/Button';
+import Card from '@/shared/components/Card';
 import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
@@ -142,7 +143,7 @@ export default function LetterboxdImportSection() {
   const showInput = editing || !connected;
 
   return (
-    <div className={sharedStyles.card}>
+    <Card padding="none" elevation="sm" className={sharedStyles.card}>
       <p className={sharedStyles.cardTitle}>
         <span>{t('auth.account.letterboxd.title')}</span>
         <InfoBubble label={t('auth.account.letterboxd.helpTitle')}>
@@ -202,13 +203,13 @@ export default function LetterboxdImportSection() {
           <div className={styles.connectionRow}>
             <span className={styles.usernameValue}>{savedUsername}</span>
             <div className={styles.connectionActions}>
-              <Button type="button" className={sharedStyles.smallBtn} onClick={startEditing}>
+              <Button type="button" size="sm" onClick={startEditing}>
                 {t('auth.account.letterboxd.usernameEdit')}
               </Button>
               <Button
                 type="button"
                 tone="danger"
-                className={sharedStyles.smallBtn}
+                size="sm"
                 onClick={() => void runDisconnect()}
                 disabled={disconnecting}
               >
@@ -254,7 +255,8 @@ export default function LetterboxdImportSection() {
           </span>
           <Button
             type="button"
-            className={sharedStyles.attentionBtn}
+            size="sm"
+            tone="warning"
             onClick={() => void handleSync()}
             disabled={syncing}
           >
@@ -370,6 +372,6 @@ export default function LetterboxdImportSection() {
           onConfirmed={handleConfirmed}
         />
       )}
-    </div>
+    </Card>
   );
 }

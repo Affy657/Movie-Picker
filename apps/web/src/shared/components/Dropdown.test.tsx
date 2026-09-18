@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import Dropdown from '@/shared/components/Dropdown';
+import styles from '@/shared/components/Dropdown.module.css';
 
 const OPTIONS = [
   { value: 'a', label: 'Alpha' },
@@ -106,6 +107,12 @@ describe('Dropdown', () => {
     fireEvent.keyDown(listbox, { key: 'ArrowDown' });
     fireEvent.keyDown(listbox, { key: 'Enter' });
     expect(onChange).toHaveBeenCalledWith('c');
+  });
+
+  it('inline, gives up the full width of its container', () => {
+    render(<Dropdown value="a" options={OPTIONS} onChange={vi.fn()} ariaLabel="Choix" inline />);
+
+    expect(screen.getByRole('button', { name: 'Choix' }).parentElement).toHaveClass(styles.inline);
   });
 
   it('disables the trigger when the whole control is disabled', () => {

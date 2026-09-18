@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
-import MovieListCard from '@/features/movies/components/MovieListCard';
-import MovieListRow from '@/features/movies/components/MovieListRow';
-import styles from '@/features/movies/components/MovieListCard.module.css';
-import rowStyles from '@/features/movies/components/MovieListRow.module.css';
-import { MovieTableDispo } from '@/features/movies/components/MovieTable';
+import ShowcaseMovieCard from '@/features/movies/components/ShowcaseMovieCard';
+import LibraryMovieRow from '@/features/movies/components/LibraryMovieRow';
+import styles from '@/features/movies/components/ShowcaseMovieCard.module.css';
+import rowStyles from '@/features/movies/components/LibraryMovieRow.module.css';
+import { MovieTableAvailability } from '@/features/movies/components/MovieTable';
 import { CardKebab } from '@/features/movies/components/movieCardParts';
 import type { Translate } from '@/features/movies/types';
 import Chip from '@/shared/components/Chip';
@@ -73,15 +73,15 @@ function RowAvailability({
 }>) {
   if (availability.status === 'pending') {
     return (
-      <span className={rowStyles.dispoSkeleton}>
-        <Skeleton className={rowStyles.dispoSkeletonChip} />
-        <Skeleton className={rowStyles.dispoSkeletonChip} />
+      <span className={rowStyles.availabilitySkeleton}>
+        <Skeleton className={rowStyles.availabilitySkeletonChip} />
+        <Skeleton className={rowStyles.availabilitySkeletonChip} />
       </span>
     );
   }
   const flatrate = availability.providers.filter((p) => p.type === 'flatrate');
   return (
-    <MovieTableDispo
+    <MovieTableAvailability
       flatrateProviders={flatrate}
       rentCount={availability.providers.filter((p) => p.type === 'rent').length}
       buyCount={availability.providers.filter((p) => p.type === 'buy').length}
@@ -142,7 +142,7 @@ export default function MovieBrowseCard({
 
   if (layout === 'row') {
     return (
-      <MovieListRow
+      <LibraryMovieRow
         title={item.title}
         year={item.year}
         posterPath={item.posterPath}
@@ -157,7 +157,7 @@ export default function MovieBrowseCard({
             </Chip>
           ) : undefined
         }
-        dispo={
+        availability={
           availability ? (
             <RowAvailability
               availability={availability}
@@ -177,7 +177,7 @@ export default function MovieBrowseCard({
   }
 
   return (
-    <MovieListCard
+    <ShowcaseMovieCard
       title={item.title}
       year={item.year}
       posterPath={item.posterPath}

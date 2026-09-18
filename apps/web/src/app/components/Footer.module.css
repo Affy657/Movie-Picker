@@ -181,11 +181,6 @@
   flex-shrink: 0;
 }
 
-.languageSelect,
-.languageSelect > button {
-  width: auto;
-}
-
 .tmdb {
   font-size: var(--font-size-2xs);
   color: var(--color-meta);

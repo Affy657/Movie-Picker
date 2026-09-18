@@ -3,15 +3,12 @@ import clsx from 'clsx';
 import { ChevronLeft, Euro, Film, PlayCircle, Tag } from 'lucide-react';
 import type { WatchProviderOffer } from '@/shared/types/movie';
 import { useTranslation } from '@/shared/i18n';
-import type { TranslationKey } from '@/shared/i18n/t';
+import type { Translate } from '@/features/movies/types';
 import { isSafeTmdbLogoUrl, tmdbLogoSrcForUi } from '@/shared/utils/tmdbLogo';
 import styles from './WatchProviderChips.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
-function monetizationLabel(
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string,
-  type: string
-): string {
+function monetizationLabel(t: Translate, type: string): string {
   switch (type) {
     case 'flatrate':
       return t('movies.watchProviders.typeFlatrate');
@@ -59,7 +56,7 @@ type OverflowToggleProps = {
   controls: string;
   onMoreClick?: () => void;
   onToggle: () => void;
-  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+  t: Translate;
 };
 
 function OverflowToggle({

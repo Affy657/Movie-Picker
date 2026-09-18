@@ -43,7 +43,7 @@ Chaque rôle porte sa déclinaison, en clair, en sombre et sous `.on-dark` ; un 
 
 Trois portées de thème : `[data-theme='light']`, `[data-theme='dark']` et `.on-dark` (un bloc sombre posé dans une page claire, la carte d'accueil par exemple). Un rôle ajouté au clair se déclare dans les trois.
 
-Un `var(--jeton, repli)` sur un jeton de la fondation est refusé : le repli est mort tant que la fondation charge, et quand il diverge du jeton (`var(--radius-sm, 4px)` pour un jeton à 6 px) il ment. Le repli n'a de sens que sur un jeton local à un module (`--mc-*` des cartes film, `--details-font-size`). Un jeton de la fondation que personne ne consomme est refusé aussi.
+Un `var(--jeton, repli)` sur un jeton de la fondation est refusé : le repli est mort tant que la fondation charge, et quand il diverge du jeton (`var(--radius-sm, 4px)` pour un jeton à 6 px) il ment. Le repli n'a de sens que sur un jeton local à un module (`--mc-*` des cartes film, `--details-font-size`). Un tel thème local se déclare une fois : la classe `onSurface` de `movieCardParts.module.css` porte les dix-sept `--mc-*` d'une carte posée sur une surface, et les modules qui en ont besoin la `composes`, ils ne recopient pas le bloc. Un jeton de la fondation que personne ne consomme est refusé aussi.
 
 ## Composants
 
@@ -63,7 +63,7 @@ Le bouton du produit. `buttonClass()` donne la même composition de classes à u
 | Prop | Type | Défaut | Rôle |
 |---|---|---|---|
 | `variant` | `primary` / `secondary` / `ghost` | `secondary` | hiérarchie : plein, contour, sans fond |
-| `tone` | `default` / `danger` | `default` | couleur sémantique, cumulable avec la variante |
+| `tone` | `default` / `danger` / `warning` | `default` | couleur sémantique, cumulable avec la variante ; `warning` pour l'action qui répond à une alerte (confirmer les films Letterboxd non identifiés) |
 | `size` | `sm` / `md` / `lg` | `md` | `lg` pour les appels à l'action de la page d'accueil |
 | `loading` | `boolean` | `false` | désactive, pose `aria-busy` et un `Spinner` devant le libellé ; le libellé reste |
 | `type` | | `button` | à poser à `submit` explicitement |
@@ -119,7 +119,7 @@ Surface de contenu. `as` change la balise (`section`, `li`…).
 | `elevation` | `none` / `sm` / `md` / `lg` | `none` ; `md` et `lg` posent `--color-surface-raised` |
 | `interactive` | `boolean` | survol et focus visibles, pour une carte cliquable |
 
-`Modal` et `Dropdown` composent `Card` (`elevationLg`). Une surface de carte locale (soirée en attente, carte film en liste, groupe de notifications) rend `<Card padding="none" elevation="sm" as=…>` avec sa classe, elle ne redessine ni le fond ni la bordure.
+`Modal` et `Dropdown` composent `Card` (`elevationLg`). Une surface de carte locale (soirée en attente, carte film en liste, groupe de réglages, table des films) rend `<Card padding="none" elevation="sm" as=…>` avec sa classe, elle ne redessine ni le fond ni la bordure.
 
 ### Modal
 
@@ -159,6 +159,21 @@ Le skin de champ est la classe globale `.input` de `02-forms-and-content.css` : 
 
 Une ligne de réglage : un titre, une description et un `Toggle` à droite, nommé par le titre (`aria-labelledby`). `title`, `description`, `checked`, `onChange(checked)`, `disabled`. C'est la ligne « Autoriser les séries » ou « Limiter les votes » des paramètres de soirée.
 
+### Section de réglages
+
+`shared/components/SettingsSection.module.css` est une feuille sans composant : l'anatomie commune des pages du compte (`app/pages/account/`), de la section notifications et de l'import Letterboxd. Un consommateur l'importe à côté de son propre module et n'y ajoute rien : une classe qui manque se déclare ici.
+
+| Classe | Rôle |
+|---|---|
+| `panelHead`, `panelHeading`, `saved` | en-tête du panneau : titre et pastille « Enregistré » (`AccountSavedChip`) |
+| `card`, `cardTitle` | groupe de réglages, rendu par `<Card padding="none" elevation="sm">` avec la classe ; `cardTitle` est le libellé en capitales du groupe |
+| `field` | un champ (`Field`) séparé du précédent par un trait |
+| `row`, `rowMain`, `rowLabel`, `rowSub`, `rowIcon`, `rowFlush`, `rowSubFlush`, `noDivider` | une ligne libellé + sous-titre, icône facultative à gauche, action (`Button`, lien, `Toggle`) poussée à droite |
+| `attention`, `attentionText` | bandeau d'alerte `--color-warning-*` dans un groupe, son action est un `Button size="sm" tone="warning"` |
+| `dangerZone` | bloc `--color-error-*` des actions irréversibles, en bas de page |
+
+Les boutons y prennent leurs tailles et tons de `Button`, la feuille n'en redéfinit aucun.
+
 ### ChoiceGroup et ChoiceCard
 
 Un choix exclusif entre des cartes, quand `SegmentedRadioGroup` est trop étroit (une carte porte un titre, une description, une vignette). `ChoiceGroup` (`value`, `onChange`, `ariaLabel` ou `ariaLabelledBy`) rend le `role="radiogroup"` et pilote flèches, Home et End ; seule la carte cochée est tabulable, la première quand rien ne l'est. `onSelect` (optionnel) est appelé quand une carte est activée, au clic ou par Entrée et Espace, jamais lors d'un déplacement par flèche : c'est ce qui ferme un popover (`ThemeField`) sans poser de gestionnaire de clic sur un conteneur.
@@ -195,6 +210,7 @@ Liste déroulante maison avec `role="listbox"`.
 | `id`, `value`, `onChange` | | requis |
 | `options` | `{ value, label, disabled? }[]` | une option désactivée porte `aria-disabled`, les flèches la sautent |
 | `ariaLabel` | `string` | |
+| `inline` | `boolean` | renonce à la pleine largeur du conteneur, pour un sélecteur posé dans une ligne (la langue du pied de page) |
 | `disabled` | `boolean` | le déclencheur passe en `--opacity-disabled` |
 
 ### Tabs et TabPanel

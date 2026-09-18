@@ -6,6 +6,7 @@ import { OverflowChip, PaidOfferChip } from '@/features/movies/components/movieC
 import type { Translate } from '@/features/movies/types';
 import type { WatchProviderOffer } from '@/shared/types/movie';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import Card from '@/shared/components/Card';
 import styles from './MovieTable.module.css';
 
 export function MovieTable({
@@ -20,12 +21,12 @@ export function MovieTable({
   children: ReactNode;
 }>) {
   return (
-    <div className={clsx(styles.table, className)}>
+    <Card padding="none" className={clsx(styles.table, className)}>
       {header}
       <ul className={styles.rows} aria-label={listLabel}>
         {children}
       </ul>
-    </div>
+    </Card>
   );
 }
 
@@ -113,11 +114,11 @@ export function MovieTablePoster({
     <img
       src={src}
       srcSet={srcSet}
-      sizes="(max-width: 767px) 85px, 60px"
+      sizes="(max-width: 767px) 80px, 64px"
       alt=""
       className={styles.poster}
-      width={60}
-      height={90}
+      width={64}
+      height={96}
       loading={eager ? 'eager' : 'lazy'}
       fetchPriority={eager ? 'high' : 'auto'}
       decoding="async"
@@ -125,7 +126,7 @@ export function MovieTablePoster({
   );
 }
 
-export function MovieTableDispo({
+export function MovieTableAvailability({
   flatrateProviders,
   rentCount,
   buyCount,
@@ -150,7 +151,7 @@ export function MovieTableDispo({
 }>) {
   const total = (flatrateProviders?.length ?? 0) + rentCount + buyCount;
   if (total === 0) {
-    return <span className={styles.dispoEmpty}>{emptyLabel}</span>;
+    return <span className={styles.availabilityEmpty}>{emptyLabel}</span>;
   }
 
   const visibleFlatrate = (flatrateProviders ?? []).slice(0, maxVisible);
@@ -188,12 +189,12 @@ export function MovieTableDispo({
   }
 
   return (
-    <span className={styles.dispoRow}>
+    <span className={styles.availabilityRow}>
       {visibleFlatrate.length > 0 && (
         <WatchProviderChips
           providers={visibleFlatrate}
           variant="compact"
-          className={styles.dispoChips}
+          className={styles.availabilityChips}
           watchPageUrl={watchPageUrl}
           chipMaxWidth={chipMaxWidth}
           showTypeIcon={false}

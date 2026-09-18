@@ -6,10 +6,10 @@ import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/post
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import type { RatingScale } from '@/shared/types/theme';
-import styles from './MovieListCard.module.css';
+import styles from './ShowcaseMovieCard.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
-interface MovieListCardProps {
+interface ShowcaseMovieCardProps {
   title: string;
   year?: string;
   posterPath: string | null;
@@ -37,7 +37,7 @@ export function MovieRankBadge({
   );
 }
 
-export default function MovieListCard({
+export default function ShowcaseMovieCard({
   title,
   year,
   posterPath,
@@ -50,7 +50,7 @@ export default function MovieListCard({
   badges,
   kebab,
   className,
-}: Readonly<MovieListCardProps>) {
+}: Readonly<ShowcaseMovieCardProps>) {
   const { t } = useTranslation();
   const posterRaw = posterImageSrc(posterPath);
   const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
@@ -63,7 +63,7 @@ export default function MovieListCard({
         type="button"
         className={styles.cardTrigger}
         onClick={onOpenDetails}
-        aria-label={t('watchlist.card.openDetailsAria', { title })}
+        aria-label={t('movies.card.openDetailsAria', { title })}
       />
 
       <div className={styles.posterRegion}>

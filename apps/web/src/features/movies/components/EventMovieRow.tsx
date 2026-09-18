@@ -20,7 +20,7 @@ import {
 } from '@/features/movies/components/movieCardParts';
 import Tooltip from '@/shared/components/Tooltip';
 import {
-  MovieTableDispo,
+  MovieTableAvailability,
   MovieTableHeader,
   MovieTablePoster,
   type MovieTableColumn,
@@ -28,7 +28,7 @@ import {
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import cardPartsStyles from './movieCardParts.module.css';
 import table from './MovieTable.module.css';
-import styles from './MovieCardRow.module.css';
+import styles from './EventMovieRow.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 function formatReleaseYear(isoDate: string | null | undefined): string | null {
@@ -40,24 +40,24 @@ function formatReleaseYear(isoDate: string | null | undefined): string | null {
 type RowSortKey =
   'createdAt' | 'voteAverage' | 'duration' | 'score' | 'availability' | 'seen' | 'releaseDate';
 
-export interface MovieRowHeaderColumn {
+export interface EventMovieRowHeaderColumn {
   key: RowSortKey;
   label: string;
 }
 
-export interface MovieRowHeaderProps {
-  columns: MovieRowHeaderColumn[];
+export interface EventMovieRowHeaderProps {
+  columns: EventMovieRowHeaderColumn[];
   sortBy: RowSortKey;
   sortDir: 'asc' | 'desc';
   onSetSort: (key: RowSortKey) => void;
 }
 
-export function MovieRowHeader({
+export function EventMovieRowHeader({
   columns,
   sortBy,
   sortDir,
   onSetSort,
-}: Readonly<MovieRowHeaderProps>) {
+}: Readonly<EventMovieRowHeaderProps>) {
   const byKey = Object.fromEntries(columns.map((c) => [c.key, c.label])) as Record<
     RowSortKey,
     string
@@ -136,7 +136,7 @@ export interface MovieRowVoteError {
   onRetry: () => void;
 }
 
-export interface MovieCardRowProps extends MovieCardCommonProps {
+export interface EventMovieRowProps extends MovieCardCommonProps {
   isMobile: boolean;
   rank?: number;
   voteError?: MovieRowVoteError;
@@ -158,21 +158,21 @@ function VoteErrorBanner({
   );
 }
 
-type MovieCardRowView = MovieCardRowProps & {
+type EventMovieRowView = EventMovieRowProps & {
   s: ReturnType<typeof useMovieCardState>;
   posterSrc: string | undefined;
   posterSrcSet: string | undefined;
-  flatrateProviders: MovieCardRowProps['movie']['watchProviders'];
+  flatrateProviders: EventMovieRowProps['movie']['watchProviders'];
   rentCount: number;
   buyCount: number;
   releaseDateLabel: string | null;
   excluded: boolean;
   selecting: boolean;
-  emptyDispoLabel: string;
-  m: MovieCardRowProps['movie'];
+  emptyAvailabilityLabel: string;
+  m: EventMovieRowProps['movie'];
 };
 
-function MovieCardRowMobile({
+function EventMovieRowMobile({
   s,
   posterSrc,
   posterSrcSet,
@@ -181,7 +181,7 @@ function MovieCardRowMobile({
   buyCount,
   excluded,
   selecting,
-  emptyDispoLabel,
+  emptyAvailabilityLabel,
   m,
   isHost,
   onVote,
@@ -198,7 +198,7 @@ function MovieCardRowMobile({
   voteLockedHint,
   voteError,
   participantCount,
-}: Readonly<MovieCardRowView>) {
+}: Readonly<EventMovieRowView>) {
   return (
     <Fragment>
       <li
@@ -220,7 +220,7 @@ function MovieCardRowMobile({
           <MovieTablePoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
           <PosterDetailsTrigger
             hasDetails={s.hasDetails}
-            onOpen={() => s.openDetails('soiree')}
+            onOpen={() => s.openDetails('event')}
             title={m.title}
             t={t}
           />
@@ -237,14 +237,14 @@ function MovieCardRowMobile({
             {m.year ? <span>{m.year}</span> : null}
             {s.runtimeLabel ? <span>{s.runtimeLabel}</span> : null}
             {s.voteLabel ? <span>{s.voteLabel}</span> : null}
-            <MovieTableDispo
+            <MovieTableAvailability
               flatrateProviders={flatrateProviders}
               rentCount={rentCount}
               buyCount={buyCount}
               watchPageUrl={m.tmdbWatchPageUrl}
               maxVisible={1}
-              onMoreClick={() => s.openDetails('dispo')}
-              emptyLabel={emptyDispoLabel}
+              onMoreClick={() => s.openDetails('availability')}
+              emptyLabel={emptyAvailabilityLabel}
               title={m.title}
               t={t}
             />
@@ -315,7 +315,7 @@ function MovieCardRowMobile({
   );
 }
 
-function MovieCardRowDesktop({
+function EventMovieRowDesktop({
   s,
   posterSrc,
   posterSrcSet,
@@ -325,7 +325,7 @@ function MovieCardRowDesktop({
   releaseDateLabel,
   excluded,
   selecting,
-  emptyDispoLabel,
+  emptyAvailabilityLabel,
   m,
   isHost,
   onVote,
@@ -343,7 +343,7 @@ function MovieCardRowDesktop({
   rank,
   voteError,
   participantCount,
-}: Readonly<MovieCardRowView>) {
+}: Readonly<EventMovieRowView>) {
   return (
     <Fragment>
       <li
@@ -369,7 +369,7 @@ function MovieCardRowDesktop({
           <MovieTablePoster src={posterSrc} srcSet={posterSrcSet} eager={!!eager} />
           <PosterDetailsTrigger
             hasDetails={s.hasDetails}
-            onOpen={() => s.openDetails('soiree')}
+            onOpen={() => s.openDetails('event')}
             title={m.title}
             t={t}
           />
@@ -398,16 +398,16 @@ function MovieCardRowDesktop({
         <span className={table.cellEnd}>{s.voteLabel}</span>
         <span className={table.cellEnd}>{s.runtimeLabel}</span>
         <span className={table.cellEnd}>{releaseDateLabel}</span>
-        <div className={table.dispoCol}>
-          <MovieTableDispo
+        <div className={table.availabilityCol}>
+          <MovieTableAvailability
             flatrateProviders={flatrateProviders}
             rentCount={rentCount}
             buyCount={buyCount}
             watchPageUrl={m.tmdbWatchPageUrl}
             maxVisible={2}
             chipMaxWidth="2.75rem"
-            onMoreClick={() => s.openDetails('dispo')}
-            emptyLabel={emptyDispoLabel}
+            onMoreClick={() => s.openDetails('availability')}
+            emptyLabel={emptyAvailabilityLabel}
             title={m.title}
             t={t}
           />
@@ -467,7 +467,7 @@ function MovieCardRowDesktop({
   );
 }
 
-export const MovieCardRow = memo(function MovieCardRow({
+export const EventMovieRow = memo(function EventMovieRow({
   movie: m,
   slug,
   participantId,
@@ -495,7 +495,7 @@ export const MovieCardRow = memo(function MovieCardRow({
   rank,
   voteError,
   participantCount,
-}: Readonly<MovieCardRowProps>) {
+}: Readonly<EventMovieRowProps>) {
   const s = useMovieCardState({
     movie: m,
     slug,
@@ -518,9 +518,9 @@ export const MovieCardRow = memo(function MovieCardRow({
   const releaseDateLabel = formatReleaseYear(m.releaseDate);
   const excluded = !!m.excludedFromWheel;
   const selecting = isSelectable(m, selection) && !excluded;
-  const emptyDispoLabel = t('movies.watchProviders.emptyLabel');
+  const emptyAvailabilityLabel = t('movies.watchProviders.emptyLabel');
 
-  const view: MovieCardRowView = {
+  const view: EventMovieRowView = {
     ...({
       movie: m,
       slug,
@@ -549,7 +549,7 @@ export const MovieCardRow = memo(function MovieCardRow({
       rank,
       voteError,
       participantCount,
-    } as MovieCardRowProps),
+    } as EventMovieRowProps),
     s,
     posterSrc,
     posterSrcSet,
@@ -559,10 +559,10 @@ export const MovieCardRow = memo(function MovieCardRow({
     releaseDateLabel,
     excluded,
     selecting,
-    emptyDispoLabel,
+    emptyAvailabilityLabel,
     m,
   };
 
-  if (isMobile) return <MovieCardRowMobile {...view} />;
-  return <MovieCardRowDesktop {...view} />;
+  if (isMobile) return <EventMovieRowMobile {...view} />;
+  return <EventMovieRowDesktop {...view} />;
 });

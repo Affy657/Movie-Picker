@@ -1,25 +1,12 @@
 .table {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
+  composes: onSurface from './movieCardParts.module.css';
   overflow: clip;
-  --mc-fg: var(--color-text);
-  --mc-fg-strong: var(--color-text);
-  --mc-fg-muted: var(--color-text-muted);
-  --mc-fg-soft: var(--color-text-muted);
-  --mc-fg-subtle: var(--color-text-muted);
-  --mc-icon-muted: var(--color-text-muted);
-  --mc-border: var(--color-border-subtle);
-  --mc-surface-ring: var(--color-surface);
-  --mc-overlay-hover: var(--color-surface-hover-strong);
-  --mc-overlay-active: var(--color-surface-active);
-  --mc-overlay-hover-soft: var(--color-surface-hover);
-  --mc-active-bg: var(--color-surface-hover);
-  --mc-input-bg: var(--color-input-bg);
-  --mc-kebab-bg: transparent;
-  --mc-kebab-bg-hover: var(--color-surface-hover);
-  --mc-kebab-fg: var(--color-text-muted);
-  --mc-kebab-fg-hover: var(--color-text);
+  --table-col-poster: var(--space-16);
+  --table-col-vote: 56px;
+  --table-col-runtime: 60px;
+  --table-col-year: 56px;
+  --table-col-availability: 150px;
+  --table-col-kebab: var(--tap-target-min);
 }
 
 .rows {
@@ -64,6 +51,7 @@
 }
 
 .colHeaderBtn {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
@@ -125,7 +113,7 @@
 
 .posterCol {
   position: relative;
-  width: var(--space-16);
+  width: var(--table-col-poster);
   height: var(--space-24);
   overflow: hidden;
   background: var(--color-poster-placeholder);
@@ -192,24 +180,24 @@
   font-variant-numeric: tabular-nums;
 }
 
-.dispoCol {
+.availabilityCol {
   justify-self: start;
   padding-left: var(--space-4);
   min-width: 0;
 }
 
-.dispoRow {
+.availabilityRow {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   min-width: 0;
 }
 
-.dispoChips {
+.availabilityChips {
   margin: 0;
 }
 
-.dispoEmpty {
+.availabilityEmpty {
   font-size: var(--font-size-3xs);
   color: var(--color-meta);
 }
@@ -222,7 +210,7 @@
   position: relative;
   display: flex;
   align-items: stretch;
-  min-height: 128px;
+  min-height: calc(var(--space-20) * 3 / 2);
   border-bottom: 1px solid var(--color-border-subtle);
   overflow-anchor: none;
 }
@@ -233,7 +221,7 @@
 
 .mobilePosterCol {
   position: relative;
-  flex: 0 0 85px;
+  flex: 0 0 var(--space-20);
   overflow: hidden;
   background: var(--color-poster-placeholder);
 }
@@ -257,28 +245,25 @@
 
 .mobileFacts {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
-  overflow: hidden;
+  gap: var(--space-1) var(--space-2);
   font-size: var(--font-size-sm);
   color: var(--color-meta);
   font-variant-numeric: tabular-nums;
 }
 
 .mobileFacts > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
   white-space: nowrap;
-  min-width: 0;
-  flex-shrink: 1;
 }
 
 .disclosure {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 2.25rem;
+  flex: 0 0 var(--space-9);
   border: none;
   background: transparent;
   color: var(--color-text);
@@ -286,21 +271,6 @@
 }
 
 .disclosure:focus-visible {
-  color: var(--color-text);
   outline: var(--outline-focus);
   outline-offset: 2px;
-}
-
-@media (hover: hover) {
-  .disclosure:hover {
-    color: var(--color-text);
-    outline: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .row,
-  .mobileRow {
-    transition: none;
-  }
 }
