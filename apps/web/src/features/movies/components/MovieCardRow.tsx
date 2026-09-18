@@ -2,7 +2,7 @@ import SeenButton from '@/features/movies/components/SeenButton';
 import type { Translate } from '@/features/movies/types';
 import { Fragment, memo } from 'react';
 import clsx from 'clsx';
-import { AlertTriangle, ChevronRight, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { AlertTriangle, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
 import Chip from '@/shared/components/Chip';
 import {
   CardModals,
@@ -284,18 +284,19 @@ function MovieCardRowMobile({
             </div>
           </div>
         </div>
-        {s.hasDetails ? (
-          <button
-            type="button"
-            className={table.disclosure}
-            onClick={() => s.openDetails('soiree')}
-            aria-label={t('movies.details.toggleShow')}
-          >
-            <ChevronRight aria-hidden size={ICON_SIZE.md} />
-          </button>
-        ) : (
-          <span className={table.disclosure} aria-hidden />
-        )}
+        <MovieCardKebab
+          movie={m}
+          card={s}
+          slotClassName={styles.mobileMenuSlot ?? ''}
+          isHost={isHost}
+          isInWatchlist={isInWatchlist}
+          onRemove={onRemove}
+          onToggleWatchlist={onToggleWatchlist}
+          onToggleWheelExclusion={onToggleWheelExclusion}
+          trigger="disclosure"
+          triggerClassName={table.disclosure}
+          t={t}
+        />
         <CardModals
           s={s}
           m={m}

@@ -390,7 +390,10 @@ describe('EventMoviesSection (MSW)', () => {
     renderSection({ movies: [MOVIE], viewMode: 'grid' });
 
     expect(screen.queryByRole('button', { name: /affichage liste/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Détails' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /plus d.actions.*matrix/i })).toHaveAttribute(
+      'aria-haspopup',
+      'menu'
+    );
   });
 
   it('on mobile, the seen chip shows a count only once someone has seen the movie', () => {

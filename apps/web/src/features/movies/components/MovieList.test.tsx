@@ -371,7 +371,8 @@ describe('MovieList', () => {
       expect(onRetryVote).toHaveBeenCalledWith('m1');
     });
 
-    it('mobile row: switches to a disclosure chevron, no three-dot menu', () => {
+    it('mobile row: the chevron opens the same menu as the kebab, details first', async () => {
+      const user = userEvent.setup();
       renderWithLocale(
         <MovieList
           movies={[{ ...movies[0]!, tmdbId: 27205 }]}
@@ -380,7 +381,13 @@ describe('MovieList', () => {
           viewMode="list"
         />
       );
-      expect(screen.queryByRole('button', { name: /plus d’actions/i })).not.toBeInTheDocument();
+      const chevron = screen.getByRole('button', { name: /plus d’actions/i });
+      expect(chevron).toHaveAttribute('aria-haspopup', 'menu');
+      await user.click(chevron);
+      const items = screen.getAllByRole('menuitem').map((item) => item.textContent);
+      expect(items[0]).toBe('Voir les détails');
+      await user.click(screen.getByRole('menuitem', { name: 'Voir les détails' }));
+      expect(screen.getByTestId('details-modal-open')).toHaveAttribute('data-tab', 'soiree');
     });
   });
 

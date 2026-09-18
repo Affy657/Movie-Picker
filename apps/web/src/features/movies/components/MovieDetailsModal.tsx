@@ -206,9 +206,14 @@ export default function MovieDetailsModal({
     >
       {open && (
         <>
-          <div className={dragStyles.grab} {...dragBind}>
+          <div className={clsx(dragStyles.grab, styles.grab)} {...dragBind}>
             <span
-              className={clsx(dragStyles.handle, dragStyles.handleMobileOnly)}
+              className={clsx(
+                dragStyles.handle,
+                dragStyles.handleMobileOnly,
+                styles.handle,
+                backdropSrc && styles.handleOnBackdrop
+              )}
               aria-hidden="true"
             />
             <div className={clsx(styles.header, backdropSrc && styles.headerWithBackdrop)}>

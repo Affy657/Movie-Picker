@@ -2,6 +2,15 @@
   position: relative;
 }
 
+.kebabFill {
+  display: flex;
+  align-self: stretch;
+}
+
+.kebabFill > button {
+  height: 100%;
+}
+
 .kebabBtn {
   composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;

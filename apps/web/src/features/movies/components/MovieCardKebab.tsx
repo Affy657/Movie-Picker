@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   Bookmark,
   BookmarkCheck,
+  ChevronRight,
   Disc3,
   ExternalLink,
   Info,
@@ -11,6 +12,7 @@ import {
   RotateCcw,
   Trash2,
 } from 'lucide-react';
+import clsx from 'clsx';
 import type { MovieDetailsTabKey } from '@/features/movies/components/MovieDetailsModal';
 import { letterboxdUrl } from '@/features/movies/utils/movieExternalLinks';
 import type { MovieData } from '@/shared/types/movie';
@@ -20,6 +22,8 @@ import styles from './MovieCardKebab.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { MenuItem, MenuPanel, MenuSeparator } from '@/shared/components/Menu';
 import { MENU_ANCHOR_GAP_PX, MENU_VIEWPORT_MARGIN_PX } from '@/shared/components/menuGeometry';
+
+export type CardKebabTrigger = 'dots' | 'disclosure';
 
 export interface CardKebabProps {
   title: string;
@@ -34,6 +38,8 @@ export interface CardKebabProps {
   onProposeToEvent?: () => void;
   onViewDetails?: () => void;
   wheelExclusion?: MovieWheelExclusion;
+  trigger?: CardKebabTrigger;
+  triggerClassName?: string;
   t: Translate;
 }
 
@@ -84,6 +90,8 @@ export function MovieCardKebab({
   onRemove,
   onToggleWatchlist,
   onToggleWheelExclusion,
+  trigger = 'dots',
+  triggerClassName,
   t,
 }: Readonly<{
   movie: MovieData;
@@ -99,6 +107,8 @@ export function MovieCardKebab({
   onRemove: (movie: MovieData) => void;
   onToggleWatchlist?: (movie: MovieData) => void;
   onToggleWheelExclusion?: (movie: MovieData) => void;
+  trigger?: CardKebabTrigger;
+  triggerClassName?: string;
   t: Translate;
 }>) {
   const hasHover = useHasHoverCapability();
@@ -119,7 +129,7 @@ export function MovieCardKebab({
     })
   )
     return null;
-  if (!hasHover && card.hasDetails) return null;
+  if (trigger === 'dots' && !hasHover && card.hasDetails) return null;
   return (
     <div className={slotClassName}>
       <CardKebab
@@ -134,6 +144,8 @@ export function MovieCardKebab({
         onToggleWatchlist={toggleWatchlist}
         onViewDetails={onViewDetails}
         wheelExclusion={wheelExclusion}
+        trigger={trigger}
+        triggerClassName={triggerClassName}
         t={t}
       />
     </div>
@@ -174,6 +186,8 @@ export function CardKebab({
   onProposeToEvent,
   onViewDetails,
   wheelExclusion,
+  trigger = 'dots',
+  triggerClassName,
   t,
 }: Readonly<CardKebabProps>) {
   const [open, setOpen] = useState(false);
@@ -279,17 +293,21 @@ export function CardKebab({
   };
 
   return (
-    <div className={styles.kebab} ref={rootRef}>
+    <div className={clsx(styles.kebab, trigger === 'disclosure' && styles.kebabFill)} ref={rootRef}>
       <button
         ref={btnRef}
         type="button"
-        className={styles.kebabBtn}
+        className={clsx(trigger === 'dots' && styles.kebabBtn, triggerClassName)}
         onClick={handleToggle}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={menuLabel}
       >
-        <MoreVertical aria-hidden size={ICON_SIZE.lg} />
+        {trigger === 'disclosure' ? (
+          <ChevronRight aria-hidden size={ICON_SIZE.md} />
+        ) : (
+          <MoreVertical aria-hidden size={ICON_SIZE.lg} />
+        )}
       </button>
       {open &&
         createPortal(
