@@ -120,6 +120,54 @@ describe('Dropdown', () => {
     expect(screen.getByRole('button', { name: 'Choix' })).toBeDisabled();
   });
 
+  it('opens upward when the placement says so', async () => {
+    render(
+      <Dropdown value="a" options={OPTIONS} onChange={vi.fn()} ariaLabel="Choix" placement="top" />
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Choix' }));
+
+    expect(screen.getByRole('listbox')).toHaveClass(styles.menuUp!);
+  });
+
+  it('auto placement opens downward when the menu fits below the trigger', async () => {
+    const { trigger } = setup();
+
+    await userEvent.click(trigger);
+
+    expect(screen.getByRole('listbox')).not.toHaveClass(styles.menuUp!);
+  });
+
+  it('auto placement flips upward when the menu would end below the viewport', async () => {
+    const innerHeight = vi.spyOn(globalThis, 'innerHeight', 'get').mockReturnValue(800);
+    const rects = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: HTMLElement) {
+        const menu = this.getAttribute('role') === 'listbox';
+        return {
+          top: menu ? 780 : 740,
+          bottom: menu ? 900 : 780,
+          height: menu ? 120 : 40,
+          left: 0,
+          right: 200,
+          width: 200,
+          x: 0,
+          y: menu ? 780 : 740,
+          toJSON: () => ({}),
+        } as DOMRect;
+      });
+    try {
+      const { trigger } = setup();
+
+      await userEvent.click(trigger);
+
+      expect(screen.getByRole('listbox')).toHaveClass(styles.menuUp!);
+    } finally {
+      rects.mockRestore();
+      innerHeight.mockRestore();
+    }
+  });
+
   it('closes when clicking outside', async () => {
     const { trigger } = setup();
 

@@ -1,6 +1,8 @@
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.UserMovies;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
@@ -19,6 +21,7 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
     private readonly Mock<IParticipantRepository> _participants = new();
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IMovieRepository> _movies = new();
+    private readonly Mock<ITmdbMovieSearch> _tmdb = new();
     private readonly DateTimeOffset _now = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
 
     private static Participant Part(string id, string eventId, string userId) => new()
@@ -72,14 +75,85 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
-    private GetFollowedWatchedMoviesHandler Build() =>
-        new(
+    private GetFollowedWatchedMoviesHandler Build(string? tmdbApiKey = "key")
+    {
+        _tmdb.Setup(s => s.GetEnrichmentsAsync(
+                It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
+        return new GetFollowedWatchedMoviesHandler(
             _follows.Object,
             _users.Object,
             _participants.Object,
             _events.Object,
             _movies.Object,
+            _tmdb.Object,
+            Options.Create(new MoviePickerOptions { TmdbApiKey = tmdbApiKey }),
             new FixedTimeProvider(_now));
+    }
+
+    private void FollowedFriendWatched(params Movie[] movies)
+    {
+        _follows.Setup(r => r.GetFollowingIdsAsync("me", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["friend"]);
+        _users.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([Usr("friend")]);
+        _participants.Setup(r => r.ListByUserIdsAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(movies.Select((_, index) => Part($"p{index}", $"e{index}", "friend")).ToList());
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(movies.Select((movie, index) => Evt($"e{index}", $"2026-06-0{index + 1}", movie.Id)).ToList());
+        _movies.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(movies);
+    }
+
+    [Fact]
+    public async Task CarriesTheTmdbRatingAndRuntime_AndLeavesAnUnresolvedTitleWithoutThem()
+    {
+        FollowedFriendWatched(Mov("m1", 111), Mov("m2", 222));
+        var handler = Build();
+        _tmdb.Setup(s => s.GetEnrichmentsAsync(
+                It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(keys => keys.Count == 2),
+                "FR",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
+            {
+                [(111, MovieMediaType.Movie)] = new TmdbMovieEnrichment(7.4, [], null, 128),
+                [(222, MovieMediaType.Movie)] = null,
+            });
+
+        var result = await handler.HandleAsync("me", 20);
+
+        var first = Assert.Single(result.Items, item => item.TmdbId == 111);
+        Assert.Equal(7.4, first.VoteAverage);
+        Assert.Equal(128, first.RuntimeMinutes);
+        Assert.Equal("Film 111", first.Title);
+        Assert.Equal("2024", first.Year);
+        var second = Assert.Single(result.Items, item => item.TmdbId == 222);
+        Assert.Null(second.VoteAverage);
+        Assert.Null(second.RuntimeMinutes);
+    }
+
+    [Fact]
+    public async Task WithoutTmdbCredentials_SkipsTheEnrichment()
+    {
+        FollowedFriendWatched(Mov("m1", 111));
+        var handler = Build(tmdbApiKey: null);
+
+        var result = await handler.HandleAsync("me", 20);
+
+        Assert.Single(result.Items);
+        Assert.Null(result.Items[0].VoteAverage);
+        _tmdb.Verify(
+            s => s.GetEnrichmentsAsync(
+                It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 
     [Fact]
     public async Task NoUser_ReturnsEmpty()

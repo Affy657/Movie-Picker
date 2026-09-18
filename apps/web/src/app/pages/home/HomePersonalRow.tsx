@@ -5,13 +5,17 @@ import MovieBrowseCard, {
   type MovieLibraryActions,
 } from '@/features/movies/components/MovieBrowseCard';
 import type { MovieMediaType } from '@/shared/types/movie';
+import type { RatingScale } from '@/shared/types/theme';
 
 export interface PersonalRowItem {
   tmdbId: number;
   mediaType?: MovieMediaType;
   title: string;
-  meta: string;
+  year: string;
   posterPath: string | null;
+  voteAverage?: number | null;
+  runtimeMinutes?: number | null;
+  genreIds?: number[];
 }
 
 interface Props {
@@ -21,6 +25,7 @@ interface Props {
   items: PersonalRowItem[];
   isPending: boolean;
   eagerCount?: number;
+  ratingScale?: RatingScale;
   library: MovieLibraryActions;
   onSelect: (item: PersonalRowItem) => void;
 }
@@ -30,8 +35,11 @@ function toCardItem(item: PersonalRowItem): MovieBrowseCardItem {
     tmdbId: item.tmdbId,
     mediaType: item.mediaType ?? 'movie',
     title: item.title,
-    year: item.meta,
+    year: item.year,
     posterPath: item.posterPath,
+    voteAverage: item.voteAverage,
+    runtimeMinutes: item.runtimeMinutes,
+    genreIds: item.genreIds,
   };
 }
 
@@ -42,6 +50,7 @@ export default function HomePersonalRow({
   items,
   isPending,
   eagerCount = 0,
+  ratingScale,
   library,
   onSelect,
 }: Readonly<Props>) {
@@ -58,7 +67,7 @@ export default function HomePersonalRow({
             <MovieBrowseCard
               key={`${cardItem.tmdbId}|${cardItem.mediaType}`}
               item={cardItem}
-              meta={item.meta}
+              ratingScale={ratingScale}
               eager={index < eagerCount}
               hasHover={library.hasHover}
               isLoggedIn={library.isLoggedIn}

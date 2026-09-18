@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Check } from 'lucide-react';
 import styles from './Dropdown.module.css';
@@ -10,6 +10,8 @@ export type DropdownOption<V extends string> = {
   disabled?: boolean;
 };
 
+export type DropdownPlacement = 'auto' | 'bottom' | 'top';
+
 interface DropdownProps<V extends string> {
   id?: string;
   value: V;
@@ -20,6 +22,7 @@ interface DropdownProps<V extends string> {
   className?: string;
   inline?: boolean;
   disabled?: boolean;
+  placement?: DropdownPlacement;
 }
 
 function nextEnabledIndex<V extends string>(
@@ -35,6 +38,20 @@ function nextEnabledIndex<V extends string>(
   return from - step;
 }
 
+function opensUpward(
+  placement: DropdownPlacement,
+  trigger: HTMLElement | null,
+  menu: HTMLElement | null
+): boolean {
+  if (placement !== 'auto') return placement === 'top';
+  if (!trigger || !menu) return false;
+  const menuRect = menu.getBoundingClientRect();
+  const triggerRect = trigger.getBoundingClientRect();
+  const overflowsBelow = menuRect.bottom > globalThis.innerHeight;
+  const fitsAbove = triggerRect.top - menuRect.height >= 0;
+  return overflowsBelow && fitsAbove;
+}
+
 export default function Dropdown<V extends string>({
   id,
   value,
@@ -44,8 +61,10 @@ export default function Dropdown<V extends string>({
   className,
   inline = false,
   disabled = false,
+  placement = 'auto',
 }: Readonly<DropdownProps<V>>) {
   const [open, setOpen] = useState(false);
+  const [upward, setUpward] = useState(false);
   const [activeIndex, setActiveIndex] = useState(() =>
     Math.max(
       0,
@@ -64,6 +83,11 @@ export default function Dropdown<V extends string>({
     setOpen(false);
     if (focusButton) buttonRef.current?.focus();
   }, []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    setUpward(opensUpward(placement, buttonRef.current, listRef.current));
+  }, [open, placement]);
 
   useEffect(() => {
     if (!open) return;
@@ -151,7 +175,7 @@ export default function Dropdown<V extends string>({
           ref={listRef}
           id={listId}
           role="listbox"
-          className={styles.menu}
+          className={clsx(styles.menu, upward && styles.menuUp)}
           tabIndex={-1}
           onKeyDown={handleKey}
         >

@@ -13,6 +13,8 @@ public sealed class UserWatchedMovieItem
     public string Title { get; init; } = string.Empty;
     public string Year { get; init; } = string.Empty;
     public string? PosterPath { get; init; }
+    public double? VoteAverage { get; init; }
+    public int? RuntimeMinutes { get; init; }
     public IReadOnlyList<int> GenreIds { get; init; } = [];
     public MovieMediaType MediaType { get; init; } = MovieMediaType.Movie;
     public DateTimeOffset WatchedAt { get; init; }

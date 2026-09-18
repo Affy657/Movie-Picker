@@ -26,8 +26,11 @@ export function useWatchlistRow(enabled: boolean) {
       tmdbId: movie.tmdbId,
       mediaType: movie.mediaType,
       title: movie.title,
-      meta: movie.year,
+      year: movie.year,
       posterPath: movie.posterPath,
+      voteAverage: movie.voteAverage,
+      runtimeMinutes: movie.runtimeMinutes,
+      genreIds: movie.genreIds,
     }));
   return { items, isPending: enabled && watchlist.isPending };
 }
@@ -42,8 +45,11 @@ export function useFriendsWatchedRow(enabled: boolean) {
     tmdbId: movie.tmdbId,
     mediaType: movie.mediaType,
     title: movie.title,
-    meta: movie.year,
+    year: movie.year,
     posterPath: movie.posterPath,
+    voteAverage: movie.voteAverage,
+    runtimeMinutes: movie.runtimeMinutes,
+    genreIds: movie.genreIds,
   }));
   return { items, isPending: enabled && query.isPending };
 }

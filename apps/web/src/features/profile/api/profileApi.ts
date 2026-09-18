@@ -67,6 +67,8 @@ export interface UserWatchedMovieItem {
   title: string;
   year: string;
   posterPath: string | null;
+  voteAverage?: number | null;
+  runtimeMinutes?: number | null;
   genreIds: number[];
   mediaType: MovieMediaType;
   watchedAt: string;

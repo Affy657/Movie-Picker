@@ -126,8 +126,10 @@ export default function HomePage() {
       tmdbId: item.tmdbId,
       mediaType: item.mediaType ?? 'movie',
       title: item.title,
-      year: item.meta,
+      year: item.year,
       posterPath: item.posterPath,
+      voteAverage: item.voteAverage,
+      runtimeMinutes: item.runtimeMinutes,
     });
 
   const selectedGenreIds = genreTab === 'all' ? undefined : [Number(genreTab)];
@@ -200,6 +202,7 @@ export default function HomePage() {
         seeAllTo={ROUTES.watchlist}
         seeAllLabel={t('showcase.seeWatchlist')}
         eagerCount={eagerCountFor('watchlist', firstRail)}
+        ratingScale={user?.ratingScale}
         library={library}
         onSelect={openPersonalDetails}
       />
@@ -220,6 +223,7 @@ export default function HomePage() {
         items={friendsRow.items}
         isPending={friendsRow.isPending}
         eagerCount={eagerCountFor('friends', firstRail)}
+        ratingScale={user?.ratingScale}
         library={library}
         onSelect={openPersonalDetails}
       />
