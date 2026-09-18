@@ -2,11 +2,14 @@ import clsx from 'clsx';
 import { Clock, Crown, Film, Trophy, Users } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import type { MyEventLifecycle } from '@/shared/types/event';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
 import {
   daysUntilEventDate,
   formatRelativeEventDate,
+  relativeEventDistance,
 } from '@/shared/utils/formatRelativeEventDate';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import EventDateChip, { type EventDateChipTone } from '@/features/events/components/EventDateChip';
@@ -27,6 +30,42 @@ function pluralize(
   vars?: Record<string, string | number>
 ): string {
   return count === 1 ? t(oneKey, vars) : t(manyKey, { count, ...vars });
+}
+
+type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
+
+export function formatCountdownCompact(isoDate: string, t: Translate): string {
+  const distance = relativeEventDistance(isoDate);
+  if (!distance) return isoDate;
+  const { unit, value } = distance;
+  const count = Math.abs(value);
+  if (unit === 'day') {
+    if (value === 0) return t('events.myEvents.countdown.today');
+    if (value === 1) return t('events.myEvents.countdown.tomorrow');
+    if (value === -1) return t('events.myEvents.countdown.yesterday');
+    return t(value > 0 ? 'events.myEvents.countdown.inDays' : 'events.myEvents.countdown.daysAgo', {
+      count,
+    });
+  }
+  if (unit === 'month') {
+    return t(
+      value > 0 ? 'events.myEvents.countdown.inMonths' : 'events.myEvents.countdown.monthsAgo',
+      { count }
+    );
+  }
+  return value > 0
+    ? pluralizeCount(
+        count,
+        'events.myEvents.countdown.inYearOne',
+        'events.myEvents.countdown.inYearMany',
+        t
+      )
+    : pluralizeCount(
+        count,
+        'events.myEvents.countdown.yearsAgoOne',
+        'events.myEvents.countdown.yearsAgoMany',
+        t
+      );
 }
 
 export function isEventSoon(date: string, lifecycle: MyEventLifecycle): boolean {
@@ -98,11 +137,16 @@ export function MoviesStat({
   );
 }
 
-export function HostBadge({ t }: Readonly<{ t: (key: TranslationKey) => string }>) {
+export function HostBadge({
+  t,
+  compact = false,
+}: Readonly<{ t: (key: TranslationKey) => string; compact?: boolean }>) {
   return (
     <span className={styles.role} title={t('events.myEvents.hostBadgeTitle')}>
       <Crown aria-hidden size={ICON_SIZE.xs} />
-      <span className={styles.roleText}>{t('events.myEvents.hostBadge')}</span>
+      <span className={compact ? 'visually-hidden' : styles.roleText}>
+        {t('events.myEvents.hostBadge')}
+      </span>
     </span>
   );
 }
@@ -110,10 +154,14 @@ export function HostBadge({ t }: Readonly<{ t: (key: TranslationKey) => string }
 export function EventCardMeta({
   event,
   lifecycle,
-}: Readonly<{ event: MyEventSummary; lifecycle: MyEventLifecycle }>) {
+  compact = false,
+}: Readonly<{ event: MyEventSummary; lifecycle: MyEventLifecycle; compact?: boolean }>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const soon = isEventSoon(event.date, lifecycle);
+  const countdown = compact
+    ? formatCountdownCompact(event.date, t)
+    : formatRelativeEventDate(event.date, locale);
   return (
     <span className={styles.metaGroup}>
       {lifecycle === 'live' ? (
@@ -121,13 +169,13 @@ export function EventCardMeta({
       ) : (
         <span className={clsx(styles.when, soon && styles.whenSoon)}>
           <Clock aria-hidden size={ICON_SIZE.xs} />
-          <span className={styles.whenText}>{formatRelativeEventDate(event.date, locale)}</span>
+          <span className={styles.whenText}>{countdown}</span>
         </span>
       )}
       {event.isCreator ? (
         <>
           <span className={styles.metaSeparator} aria-hidden />
-          <HostBadge t={t} />
+          <HostBadge t={t} compact={compact} />
         </>
       ) : null}
     </span>
@@ -175,6 +223,7 @@ function WinnerRow({ event }: Readonly<{ event: MyEventSummary }>) {
 
 export function EventSummaryCardBody({ event }: Readonly<{ event: MyEventSummary }>) {
   const { t } = useTranslation();
+  const compact = useIsMobile();
   const lifecycle = normalizeMyEventLifecycle(event.lifecycle);
 
   return (
@@ -189,7 +238,7 @@ export function EventSummaryCardBody({ event }: Readonly<{ event: MyEventSummary
         {event.theme ? <span className={styles.cardTheme}>{event.theme}</span> : null}
         <WinnerRow event={event} />
         <div className={styles.footer}>
-          <EventCardMeta event={event} lifecycle={lifecycle} />
+          <EventCardMeta event={event} lifecycle={lifecycle} compact={compact} />
           <span className={styles.cardStats}>
             <ParticipantStat
               count={event.participantCount ?? 0}

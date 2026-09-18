@@ -4,9 +4,13 @@ import { LocaleProvider } from '@/shared/i18n';
 import {
   EventSummaryCardBody,
   eventDateChipTone,
+  formatCountdownCompact,
   isEventSoon,
 } from '@/features/events/components/EventSummaryCard';
 import type { MyEventSummary } from '@/features/events/types';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
+
+vi.mock('@/shared/hooks/useIsMobile', () => ({ useIsMobile: vi.fn(() => false) }));
 
 function event(overrides: Partial<MyEventSummary> = {}): MyEventSummary {
   return {
@@ -39,6 +43,7 @@ function renderCard(ev: MyEventSummary) {
 describe('EventSummaryCardBody', () => {
   beforeEach(() => {
     localStorage.setItem('moviepicker-locale', 'fr');
+    vi.mocked(useIsMobile).mockReturnValue(false);
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date(2026, 5, 15, 12, 0, 0));
   });
@@ -86,11 +91,54 @@ describe('EventSummaryCardBody', () => {
     expect(screen.queryByText('aujourd’hui')).not.toBeInTheDocument();
   });
 
+  it('on mobile, shortens the countdown and keeps the host as an icon only', () => {
+    vi.mocked(useIsMobile).mockReturnValue(true);
+    renderCard(event());
+
+    expect(screen.getByText('4 j')).toBeInTheDocument();
+    expect(screen.queryByText('dans 4 jours')).not.toBeInTheDocument();
+    expect(screen.getByText('Hôte')).toHaveClass('visually-hidden');
+    expect(screen.getByText('Hôte').closest('[title]')).toHaveAttribute(
+      'title',
+      'Vous organisez cette soirée'
+    );
+  });
+
   it('lists the winners already drawn', () => {
     renderCard(event({ winnerMovies: [{ title: 'Matrix', posterPath: null }] }));
 
     expect(screen.getByLabelText('Gagnants : Matrix')).toBeInTheDocument();
     expect(screen.getByText('Matrix')).toBeInTheDocument();
+  });
+});
+
+describe('formatCountdownCompact', () => {
+  const t = (key: string, vars?: Record<string, string | number>) =>
+    vars ? `${key}(${Object.values(vars).join('|')})` : key;
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 5, 15, 12, 0, 0));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('names today, tomorrow and yesterday, then counts days, months and years', () => {
+    const compact = (iso: string) => formatCountdownCompact(iso, t as never);
+    expect(compact('2026-06-15')).toBe('events.myEvents.countdown.today');
+    expect(compact('2026-06-16')).toBe('events.myEvents.countdown.tomorrow');
+    expect(compact('2026-06-14')).toBe('events.myEvents.countdown.yesterday');
+    expect(compact('2026-06-19')).toBe('events.myEvents.countdown.inDays(4)');
+    expect(compact('2026-06-10')).toBe('events.myEvents.countdown.daysAgo(5)');
+    expect(compact('2027-02-20')).toBe('events.myEvents.countdown.inMonths(8)');
+    expect(compact('2025-11-20')).toBe('events.myEvents.countdown.monthsAgo(7)');
+    expect(compact('2027-07-20')).toBe('events.myEvents.countdown.inYearOne');
+    expect(compact('2035-03-01')).toBe('events.myEvents.countdown.inYearMany(9)');
+    expect(compact('2025-05-01')).toBe('events.myEvents.countdown.yearsAgoOne');
+    expect(compact('2020-01-01')).toBe('events.myEvents.countdown.yearsAgoMany(6)');
+    expect(compact('nope')).toBe('nope');
   });
 });
 

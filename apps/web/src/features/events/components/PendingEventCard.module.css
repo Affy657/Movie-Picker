@@ -29,6 +29,23 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
+@media (max-width: 47.9375rem) {
+  .head {
+    flex-wrap: nowrap;
+  }
+
+  .autoClose span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .stats {
+    flex-wrap: nowrap;
+    gap: var(--space-3);
+  }
+}
+
 .row {
   display: flex;
   gap: var(--space-3-5);

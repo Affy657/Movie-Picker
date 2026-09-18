@@ -8,6 +8,7 @@ import {
 } from '@/features/events/components/EventSummaryCard';
 import EventDateChip from '@/features/events/components/EventDateChip';
 import { formatRelativeTime } from '@/shared/utils/formatRelativeTime';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import type { MyEventSummary } from '@/features/events/types';
@@ -29,6 +30,7 @@ export default function PendingEventCard({
 }: Readonly<PendingEventCardProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
+  const compact = useIsMobile();
 
   return (
     <Card as="article" padding="none" elevation="sm" className={styles.card}>
@@ -38,9 +40,12 @@ export default function PendingEventCard({
           <span className={styles.autoClose}>
             <Clock aria-hidden size={ICON_SIZE.xs} />
             <span>
-              {t('events.myEvents.pendingAutoCloseIn', {
-                time: formatRelativeTime(event.autoCloseAt, locale),
-              })}
+              {t(
+                compact
+                  ? 'events.myEvents.pendingAutoCloseInShort'
+                  : 'events.myEvents.pendingAutoCloseIn',
+                { time: formatRelativeTime(event.autoCloseAt, locale) }
+              )}
             </span>
           </span>
         ) : null}
@@ -59,7 +64,7 @@ export default function PendingEventCard({
 
       <div className={styles.footer}>
         <span className={styles.stats}>
-          <EventCardMeta event={event} lifecycle="pending" />
+          <EventCardMeta event={event} lifecycle="pending" compact={compact} />
           <ParticipantStat
             count={event.participantCount ?? 0}
             maxParticipants={event.maxParticipants}

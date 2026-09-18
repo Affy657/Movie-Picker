@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { daysUntilEventDate, formatRelativeEventDate } from './formatRelativeEventDate';
+import {
+  daysUntilEventDate,
+  formatRelativeEventDate,
+  relativeEventDistance,
+} from './formatRelativeEventDate';
 
 describe('formatRelativeEventDate', () => {
   beforeEach(() => {
@@ -47,6 +51,14 @@ describe('formatRelativeEventDate', () => {
 
   it('returns the raw string when the date is invalid', () => {
     expect(formatRelativeEventDate('not-a-date', 'fr')).toBe('not-a-date');
+  });
+
+  it('measures the distance in days, then months, then years', () => {
+    expect(relativeEventDistance('2026-06-19')).toEqual({ unit: 'day', value: 4 });
+    expect(relativeEventDistance('2026-06-10')).toEqual({ unit: 'day', value: -5 });
+    expect(relativeEventDistance('2027-02-20')).toEqual({ unit: 'month', value: 8 });
+    expect(relativeEventDistance('2035-03-01')).toEqual({ unit: 'year', value: 9 });
+    expect(relativeEventDistance('nope')).toBeNull();
   });
 
   it('counts the days until a date, negative once it is past', () => {

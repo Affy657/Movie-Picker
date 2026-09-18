@@ -205,3 +205,37 @@
 .roleText {
   transform: translateY(var(--text-optical-nudge-caps));
 }
+
+@media (max-width: 47.9375rem) {
+  .card {
+    padding: var(--space-3-5) var(--space-4);
+  }
+
+  .row {
+    gap: var(--space-3);
+  }
+
+  .footer {
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+  }
+
+  .metaGroup {
+    flex: 1;
+    gap: var(--space-1-5);
+  }
+
+  .cardStats {
+    gap: var(--space-1-5);
+  }
+
+  .when {
+    min-width: 0;
+  }
+
+  .whenText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

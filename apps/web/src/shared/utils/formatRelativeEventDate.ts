@@ -33,19 +33,25 @@ export function daysUntilEventDate(isoDate: string): number | null {
   return Math.round((eventDay.getTime() - startOfToday().getTime()) / 86_400_000);
 }
 
-export function formatRelativeEventDate(isoDate: string, locale: LocaleCode): string {
+export type RelativeEventDistance = { unit: 'day' | 'month' | 'year'; value: number };
+
+export function relativeEventDistance(isoDate: string): RelativeEventDistance | null {
   const eventDay = parseEventDay(isoDate);
-  if (!eventDay) return isoDate;
+  if (!eventDay) return null;
   const today = startOfToday();
   const dayDiff = Math.round((eventDay.getTime() - today.getTime()) / 86_400_000);
-
-  const rtf = new Intl.RelativeTimeFormat(LOCALE_TAG[locale], { numeric: 'auto' });
-
-  if (Math.abs(dayDiff) < 31) return rtf.format(dayDiff, 'day');
+  if (Math.abs(dayDiff) < 31) return { unit: 'day', value: dayDiff };
 
   const monthDiff =
     (eventDay.getFullYear() - today.getFullYear()) * 12 + (eventDay.getMonth() - today.getMonth());
-  if (Math.abs(monthDiff) < 12) return rtf.format(monthDiff, 'month');
+  if (Math.abs(monthDiff) < 12) return { unit: 'month', value: monthDiff };
 
-  return rtf.format(Math.round(monthDiff / 12), 'year');
+  return { unit: 'year', value: Math.round(monthDiff / 12) };
+}
+
+export function formatRelativeEventDate(isoDate: string, locale: LocaleCode): string {
+  const distance = relativeEventDistance(isoDate);
+  if (!distance) return isoDate;
+  const rtf = new Intl.RelativeTimeFormat(LOCALE_TAG[locale], { numeric: 'auto' });
+  return rtf.format(distance.value, distance.unit);
 }

@@ -153,6 +153,14 @@
   gap: var(--space-1-5);
 }
 
+.settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3) var(--space-6);
+}
+
 .appearance {
   display: flex;
   flex-wrap: wrap;
@@ -171,6 +179,11 @@
 
 .appearanceToggle {
   flex-shrink: 0;
+}
+
+.languageSelect,
+.languageSelect > button {
+  width: auto;
 }
 
 .tmdb {

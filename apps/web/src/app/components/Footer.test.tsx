@@ -48,6 +48,21 @@ beforeEach(() => {
   localStorage.removeItem('mp.session-hint');
 });
 
+describe('Footer language', () => {
+  it('switches the interface language from the footer', async () => {
+    const user = userEvent.setup();
+    renderFooter();
+
+    expect(screen.getByText('Langue')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Langue' }));
+    await user.click(screen.getByRole('option', { name: 'English' }));
+
+    expect(screen.getByText('Language')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Language' })).toHaveTextContent('English');
+    expect(localStorage.getItem('moviepicker-locale')).toBe('en');
+  });
+});
+
 describe('Footer PWA install', () => {
   it('affiche le bouton d’installation sous le slogan', () => {
     renderFooter();

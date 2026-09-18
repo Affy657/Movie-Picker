@@ -8,6 +8,7 @@ import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
 import ProposeIdeaButton from './ProposeIdeaButton';
 import SupportReportButton from './SupportReportButton';
 import InstallPwaDialog from './InstallPwaDialog';
+import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import styles from './Footer.module.css';
 
@@ -219,17 +220,25 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
           </p>
         </div>
 
-        <div className={styles.appearance}>
-          <span className={styles.appearanceLabel} id="footer-theme-label">
-            {t('footer.appearanceTitle')}
-          </span>
-          <ThemeToggle
-            id="footer-theme"
-            ariaLabelledBy="footer-theme-label"
-            size="sm"
-            iconOnly
-            className={styles.appearanceToggle}
-          />
+        <div className={styles.settings}>
+          <div className={styles.appearance}>
+            <span className={styles.appearanceLabel} id="footer-language-label">
+              {t('footer.languageTitle')}
+            </span>
+            <LanguageSelector className={styles.languageSelect} />
+          </div>
+          <div className={styles.appearance}>
+            <span className={styles.appearanceLabel} id="footer-theme-label">
+              {t('footer.appearanceTitle')}
+            </span>
+            <ThemeToggle
+              id="footer-theme"
+              ariaLabelledBy="footer-theme-label"
+              size="sm"
+              iconOnly
+              className={styles.appearanceToggle}
+            />
+          </div>
         </div>
       </div>
       {installGuideOpen ? (
