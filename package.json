@@ -20,6 +20,8 @@
     "lint:eslint": "eslint \"apps/web/src/**/*.{ts,tsx}\"",
     "check:architecture": "node scripts/check-architecture.mjs",
     "check:workflows": "node scripts/check-workflows.mjs",
+    "check:terraform": "node scripts/check-terraform.mjs",
+    "terraform": "node scripts/terraform.mjs",
     "check:tools": "node scripts/check-tool-versions.mjs",
     "format": "prettier --write --cache \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:check": "prettier --check --cache \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",

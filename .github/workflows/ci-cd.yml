@@ -5,8 +5,8 @@
 # is not green, so the conclusion of a master run is what production consumes; keeping it honest
 # is the reason this file exists.
 #
-# Path filtering: the "changes" job (dorny/paths-filter) computes 3 outputs web/api/e2e; each job
-# only runs when its lane is affected (skipped otherwise). workflow_dispatch forces the 3 lanes,
+# Path filtering: the "changes" job (dorny/paths-filter) computes 4 outputs web/api/e2e/infra; each
+# job only runs when its lane is affected (skipped otherwise). workflow_dispatch forces the 4 lanes,
 # and **so does master**: a commit touching neither `apps/` nor `scripts/` skipped the 9 test jobs
 # and concluded `success` in 12 s, yet `deploy.yml` reads only that conclusion. A red code commit
 # followed by a documentation commit gave a green run, hence an authorised deployment of code that
@@ -15,6 +15,7 @@
 # hold for the whole tree, not just the diff of the commit.
 #   - Web lane: lint-web, test-web.
 #   - API lane: lint-api, test-api, test-api-mongo.
+#   - Infra lane: lint-terraform (fmt + validate on `infra/terraform/`).
 #   - Cross-cutting: gitleaks (always), lint-workflows (always), npm/NuGet audit,
 #     sonar (global analysis + blocking Quality Gate).
 #   - E2E Playwright: blocking job + local run.
@@ -62,6 +63,9 @@ env:
   ZIZMOR_SHA256: "e65324f4430c2717591937edcec90ccbefaf14c174f8ec9415e03ca875b46e1a"
   GITLEAKS_IMAGE: "ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f"
   SONARSCANNER_VERSION: "11.3.0"
+  # Same Terraform as `scripts/terraform.mjs` (image tag) and as `required_version` in the root
+  # modules of `infra/terraform/environments/`: `scripts/check-tool-versions.mjs` compares the three.
+  TERRAFORM_VERSION: "1.16.3"
   # `mongo:8` resolved on 2026-09-17 (8.3.11). A floating tag would let a MongoDB release change
   # what the transaction and index tests run against without any commit saying so.
   MONGO_IMAGE: "mongo:8@sha256:5d7043a4ffe02b9ed1b6e0bab057546981af5ca0a79107e9c461e49bc44c0a7b"
@@ -85,6 +89,7 @@ jobs:
       web: ${{ steps.filter.outputs.web == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
       api: ${{ steps.filter.outputs.api == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
       e2e: ${{ steps.filter.outputs.e2e == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
+      infra: ${{ steps.filter.outputs.infra == 'true' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master' }}
     steps:
       # fetch-depth: 0 required: on push, paths-filter diffs against the previous commit through
       # git; without the full history it would have to fetch, which fails with
@@ -127,6 +132,9 @@ jobs:
               - 'scripts/**'
               - '.github/workflows/ci-cd.yml'
               - '.github/actions/**'
+            infra:
+              - 'infra/terraform/**'
+              - '.github/workflows/ci-cd.yml'
 
   gitleaks:
     name: 🔑 Secret scan (Gitleaks)
@@ -188,6 +196,53 @@ jobs:
           echo "${ZIZMOR_SHA256}  $RUNNER_TEMP/zizmor.tgz" | sha256sum -c -
           tar xzf "$RUNNER_TEMP/zizmor.tgz" -C "$RUNNER_TEMP" zizmor
           "$RUNNER_TEMP/zizmor" --offline --no-progress --min-severity medium --format plain .github/
+
+  # The infrastructure description (`infra/terraform/`, roadmap Terraform lots) is read by nothing
+  # else in this workflow: without this job a malformed or invalid root module would only be
+  # discovered at the next `plan`. `fmt -check` on the whole tree, then `init -backend=false` and
+  # `validate` on every root module of `infra/terraform/environments/`, discovered by glob so that
+  # a second environment cannot be forgotten. `-lockfile=readonly`: a provider bumped in
+  # `versions.tf` without its checksums in `.terraform.lock.hcl` fails here rather than letting two
+  # machines validate against two provider builds. No backend, no credentials: the job never
+  # reaches GCP. `scripts/check-terraform.mjs` replays it locally in `verify:local`, through the
+  # Docker image pinned in `scripts/terraform.mjs`, at the version of `TERRAFORM_VERSION`.
+  lint-terraform:
+    name: 🧹 Lint Terraform (fmt + validate)
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      TF_IN_AUTOMATION: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+      - name: Provider cache directory
+        run: |
+          mkdir -p "$HOME/.terraform.d/plugin-cache"
+          echo "TF_PLUGIN_CACHE_DIR=$HOME/.terraform.d/plugin-cache" >> "$GITHUB_ENV"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: terraform-providers-${{ runner.os }}-${{ hashFiles('infra/terraform/**/.terraform.lock.hcl') }}
+      - name: terraform fmt
+        run: terraform fmt -check -diff -recursive infra/terraform
+      - name: terraform validate (every root module)
+        run: |
+          set -eo pipefail
+          for root in infra/terraform/environments/*/; do
+            echo "::group::${root}"
+            terraform -chdir="$root" init -backend=false -input=false -lockfile=readonly -no-color
+            terraform -chdir="$root" validate -no-color
+            echo "::endgroup::"
+          done
 
   lint-web:
     name: 🧹 Lint web (tsc + eslint + prettier)

@@ -17,6 +17,7 @@
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ENVIRONMENTS_DIR, listRoots } from './terraform.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -29,7 +30,10 @@ function capture(path, pattern) {
   return match ? match[1] : null;
 }
 
-const githubHeaders = { Accept: 'application/vnd.github+json', 'User-Agent': 'movie-picker-check-tools' };
+const githubHeaders = {
+  Accept: 'application/vnd.github+json',
+  'User-Agent': 'movie-picker-check-tools',
+};
 const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
 if (token) githubHeaders.Authorization = `Bearer ${token}`;
 
@@ -124,7 +128,10 @@ const tools = [
     name: 'mongo image (tag 8)',
     pins: [
       { file: '.github/workflows/ci-cd.yml', pattern: /MONGO_IMAGE: "mongo:8@(sha256:[0-9a-f]+)"/ },
-      { file: '.github/workflows/backup-mongo.yml', pattern: /MONGO_IMAGE: "mongo:8@(sha256:[0-9a-f]+)"/ },
+      {
+        file: '.github/workflows/backup-mongo.yml',
+        pattern: /MONGO_IMAGE: "mongo:8@(sha256:[0-9a-f]+)"/,
+      },
     ],
     latest: () => dockerHubDigest('library/mongo', '8'),
   },
@@ -132,6 +139,20 @@ const tools = [
     name: 'trivy (local gate)',
     pins: [{ file: 'scripts/verify-local.cjs', pattern: /aquasec\/trivy:([^@']+)@/ }],
     latest: () => latestGithubRelease('aquasecurity/trivy'),
+  },
+  // The providers are Dependabot's (terraform ecosystem); the binary is pinned in three places,
+  // the CI, the local image and every root module, which must agree.
+  {
+    name: 'terraform',
+    pins: [
+      { file: '.github/workflows/ci-cd.yml', pattern: /TERRAFORM_VERSION: "([^"]+)"/ },
+      { file: 'scripts/terraform.mjs', pattern: /hashicorp\/terraform:([^@']+)@/ },
+      ...listRoots().map((rootName) => ({
+        file: `${ENVIRONMENTS_DIR}/${rootName}/versions.tf`,
+        pattern: /required_version = "([^"]+)"/,
+      })),
+    ],
+    latest: () => latestGithubRelease('hashicorp/terraform'),
   },
 ];
 
@@ -146,7 +167,9 @@ for (const tool of tools) {
   const unreadable = pinned.filter((pin) => pin.value === null);
   if (unreadable.length > 0) {
     failures += 1;
-    console.log(`unreadable  ${tool.name}: pin not found in ${unreadable.map((p) => p.file).join(', ')}`);
+    console.log(
+      `unreadable  ${tool.name}: pin not found in ${unreadable.map((p) => p.file).join(', ')}`
+    );
     continue;
   }
   const values = [...new Set(pinned.map((pin) => pin.value))];
@@ -169,7 +192,9 @@ for (const tool of tools) {
   if (latest === current) {
     console.log(`ok          ${tool.name} ${short(current)} (${files})`);
   } else if (tool.informationalLatest) {
-    console.log(`ok          ${tool.name} ${current} (${files}), latest release ${latest}, follows the lockfile`);
+    console.log(
+      `ok          ${tool.name} ${current} (${files}), latest release ${latest}, follows the lockfile`
+    );
   } else {
     failures += 1;
     console.log(`behind      ${tool.name} ${short(current)} -> ${short(latest)} (${files})`);
@@ -177,7 +202,9 @@ for (const tool of tools) {
 }
 
 if (failures > 0) {
-  console.log(`\n${failures} tool(s) to bring up to date: edit the files named above, digest or checksum included.`);
+  console.log(
+    `\n${failures} tool(s) to bring up to date: edit the files named above, digest or checksum included.`
+  );
   process.exit(1);
 }
 console.log('\nEvery hand-pinned tool is at its latest published version.');
