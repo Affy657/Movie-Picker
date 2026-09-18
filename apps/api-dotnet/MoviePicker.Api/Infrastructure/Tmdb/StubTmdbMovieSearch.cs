@@ -59,7 +59,12 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
             Genres,
             GenreIds,
             "2024-01-01",
-            null);
+            null,
+            7.3,
+            null,
+            null,
+            mediaType == MovieMediaType.Tv ? 2 : null,
+            mediaType == MovieMediaType.Tv ? 16 : null);
         return Task.FromResult<TmdbMovieDetails?>(details);
     }
 

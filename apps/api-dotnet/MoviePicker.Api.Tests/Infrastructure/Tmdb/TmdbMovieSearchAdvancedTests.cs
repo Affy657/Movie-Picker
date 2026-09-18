@@ -216,6 +216,9 @@ public sealed class TmdbMovieSearchAdvancedTests
               "tagline":"Le premier regle.",
               "runtime":139,
               "release_date":"1999-10-15",
+              "vote_average":8.438,
+              "poster_path":"/fight-club.jpg",
+              "backdrop_path":"/fight-club-wide.jpg",
               "genres":[{"id":18,"name":"Drame"},{"id":53,"name":"Thriller"}],
               "credits":{
                 "crew":[{"job":"Editor","name":"Someone"},{"job":"Director","name":"David Fincher"}],
@@ -240,6 +243,11 @@ public sealed class TmdbMovieSearchAdvancedTests
         Assert.Equal("David Fincher", details.Director);
         Assert.Equal(FightClubCast, details.Cast);
         Assert.Equal("https://www.youtube.com/watch?v=abc123", details.TrailerUrl);
+        Assert.Equal(8.438, details.VoteAverage);
+        Assert.Equal("https://image.tmdb.org/t/p/w154/fight-club.jpg", details.PosterUrl);
+        Assert.Equal("https://image.tmdb.org/t/p/w780/fight-club-wide.jpg", details.BackdropUrl);
+        Assert.Null(details.SeasonCount);
+        Assert.Null(details.EpisodeCount);
     }
 
     [Fact]
@@ -279,6 +287,46 @@ public sealed class TmdbMovieSearchAdvancedTests
         Assert.Null(details.Director);
         Assert.Empty(details.Cast);
         Assert.Null(details.TrailerUrl);
+        Assert.Null(details.VoteAverage);
+        Assert.Null(details.BackdropUrl);
+        Assert.Null(details.SeasonCount);
+    }
+
+    [Fact]
+    public async Task GetDetailsAsync_Tv_ReadsCreatorsSeasonsAndEpisodes()
+    {
+        var json = """
+            {
+              "id":1399,"name":"Game of Thrones","first_air_date":"2011-04-17",
+              "number_of_seasons":8,"number_of_episodes":73,"vote_average":8.5,
+              "created_by":[{"name":"David Benioff"},{"name":"D. B. Weiss"}],
+              "credits":{"crew":[{"job":"Producer","name":"Someone"}],"cast":[]}
+            }
+            """;
+        var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
+
+        var details = await sut.GetDetailsAsync(1399, MovieMediaType.Tv);
+
+        Assert.Equal("David Benioff, D. B. Weiss", details!.Director);
+        Assert.Equal(8, details.SeasonCount);
+        Assert.Equal(73, details.EpisodeCount);
+        Assert.Equal(8.5, details.VoteAverage);
+    }
+
+    [Fact]
+    public async Task GetDetailsAsync_Movie_IgnoresSeasonCountersAndEmptyImagePaths()
+    {
+        var json = """
+            {"id":2,"title":"T","number_of_seasons":3,"number_of_episodes":30,"poster_path":"","backdrop_path":null}
+            """;
+        var sut = CreateSut(CreateHttpClient(AlwaysReturns(json).Object));
+
+        var details = await sut.GetDetailsAsync(2, MovieMediaType.Movie);
+
+        Assert.Null(details!.SeasonCount);
+        Assert.Null(details.EpisodeCount);
+        Assert.Null(details.PosterUrl);
+        Assert.Null(details.BackdropUrl);
     }
 
     [Fact]

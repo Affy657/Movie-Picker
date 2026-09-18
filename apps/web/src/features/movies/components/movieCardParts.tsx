@@ -11,6 +11,7 @@ import type {
   MovieDetailsTabKey,
 } from '@/features/movies/components/MovieDetailsModal';
 import { useEverOpened } from '@/shared/hooks/useEverOpened';
+import { useMovieDetailsParam } from '@/features/movies/hooks/useMovieDetailsParam';
 import { ModeIcon } from '@/features/movies/components/WatchProviderChips';
 import type { MovieData } from '@/shared/types/movie';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
@@ -136,22 +137,29 @@ export function useMovieCardState({
   const posterSrc = posterImageSrc(m.posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
   const providers = m.watchProviders ?? [];
+  const mediaType = m.mediaType ?? 'movie';
 
   const [seenPending, setSeenPending] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const {
+    target: detailsTarget,
+    open: openDetailsParam,
+    close: closeDetails,
+  } = useMovieDetailsParam();
   const [detailsInitialTab, setDetailsInitialTab] = useState<MovieDetailsTabKey>('soiree');
   const [noteEditing, setNoteEditing] = useState(false);
   const detailsPanelId = useId();
   const hasDetails = m.tmdbId > 0;
+  const detailsOpen =
+    hasDetails && detailsTarget?.tmdbId === m.tmdbId && detailsTarget.mediaType === mediaType;
   const showAddNote = canAct && isMine && !m.pitchNote && !noteEditing;
 
   const openDetails = useCallback(
     (tab: MovieDetailsTabKey = 'soiree') => {
       if (!hasDetails) return;
       setDetailsInitialTab(tab);
-      setDetailsOpen(true);
+      openDetailsParam(m.tmdbId, mediaType);
     },
-    [hasDetails]
+    [hasDetails, openDetailsParam, m.tmdbId, mediaType]
   );
 
   const handleToggleSeen = async () => {
@@ -182,12 +190,13 @@ export function useMovieCardState({
     othersHint,
     voteLabel,
     runtimeLabel,
+    ratingScale,
     posterSrc,
     posterSrcSet,
     providers,
     seenPending,
     detailsOpen,
-    setDetailsOpen,
+    closeDetails,
     detailsInitialTab,
     openDetails,
     detailsPanelId,
@@ -466,7 +475,7 @@ export function CardModals({
     isMine: s.isMine,
     isHost,
     onRemove: () => {
-      s.setDetailsOpen(false);
+      s.closeDetails();
       onRemove(m);
     },
   };
@@ -480,14 +489,15 @@ export function CardModals({
           year={m.year}
           tmdbId={m.tmdbId}
           mediaType={m.mediaType}
-          posterSrc={s.posterSrc}
-          voteLabel={s.voteLabel}
-          runtimeLabel={s.runtimeLabel}
+          posterPath={m.posterPath}
+          voteAverage={m.voteAverage}
+          runtimeMinutes={m.runtimeMinutes}
+          ratingScale={s.ratingScale}
           watchProviders={s.providers}
           watchPageUrl={m.tmdbWatchPageUrl}
           initialTab={s.detailsInitialTab}
           eventContext={eventContext}
-          onClose={() => s.setDetailsOpen(false)}
+          onClose={s.closeDetails}
         />
       )}
     </>

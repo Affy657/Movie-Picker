@@ -6631,6 +6631,14 @@ export interface components {
             genres?: string[] | null;
             releaseDate?: string | null;
             trailerUrl?: string | null;
+            /** Format: double */
+            voteAverage?: number | null;
+            posterPath?: string | null;
+            backdropPath?: string | null;
+            /** Format: int32 */
+            seasonCount?: number | null;
+            /** Format: int32 */
+            episodeCount?: number | null;
             watchProviders?: components["schemas"]["WatchProviderOfferResponse"][] | null;
             tmdbWatchPageUrl?: string | null;
         };

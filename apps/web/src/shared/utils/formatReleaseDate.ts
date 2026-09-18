@@ -20,3 +20,8 @@ export function formatReleaseDate(isoDate: string, locale: LocaleCode): string {
     year: 'numeric',
   }).format(date);
 }
+
+export function yearFromDate(isoDate: string | null | undefined): string | undefined {
+  const match = /^\s*(\d{4})/.exec(isoDate ?? '');
+  return match?.[1];
+}

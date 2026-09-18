@@ -79,10 +79,58 @@ public sealed partial class TmdbMovieSearch
             director = ReadDirector(creditsEl);
             cast = ReadTopCast(creditsEl);
         }
+        if (mediaType == MovieMediaType.Tv)
+            director ??= ReadCreators(root);
 
         var trailerUrl = ExtractTrailerUrl(root);
 
-        return new TmdbMovieDetails(tmdbId, title, overview, tagline, director, cast, runtime, genres, genreIds, releaseDate, trailerUrl);
+        return new TmdbMovieDetails(
+            tmdbId,
+            title,
+            overview,
+            tagline,
+            director,
+            cast,
+            runtime,
+            genres,
+            genreIds,
+            releaseDate,
+            trailerUrl,
+            ReadVoteAverage(root),
+            ReadPosterUrl(root),
+            ReadBackdropUrl(root),
+            mediaType == MovieMediaType.Tv ? ReadPositiveInt(root, "number_of_seasons") : null,
+            mediaType == MovieMediaType.Tv ? ReadPositiveInt(root, "number_of_episodes") : null);
+    }
+
+    private static string? ReadBackdropUrl(JsonElement root)
+    {
+        if (!root.TryGetProperty("backdrop_path", out var bp) || bp.ValueKind != JsonValueKind.String)
+            return null;
+        var path = bp.GetString();
+        return string.IsNullOrEmpty(path) ? null : BackdropBase + path;
+    }
+
+    private static int? ReadPositiveInt(JsonElement root, string name)
+    {
+        if (!root.TryGetProperty(name, out var el) || el.ValueKind != JsonValueKind.Number)
+            return null;
+        var value = el.GetInt32();
+        return value > 0 ? value : null;
+    }
+
+    private static string? ReadCreators(JsonElement root)
+    {
+        if (!root.TryGetProperty("created_by", out var creators) || creators.ValueKind != JsonValueKind.Array)
+            return null;
+        var names = new List<string>();
+        foreach (var creator in creators.EnumerateArray())
+        {
+            var name = creator.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null;
+            if (!string.IsNullOrEmpty(name))
+                names.Add(name);
+        }
+        return names.Count == 0 ? null : string.Join(", ", names);
     }
 
     private static (List<string> Names, List<int> Ids) ReadGenres(JsonElement root)

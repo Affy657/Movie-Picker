@@ -107,10 +107,10 @@ function LocationProbe() {
   return <span data-testid="location">{`${location.pathname}${location.search}`}</span>;
 }
 
-function renderPage() {
+function renderPage(initialEntry = '/') {
   return render(
     <AppTestProviders>
-      <MemoryRouter initialEntries={['/']}>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/films/recherche" element={<LocationProbe />} />
@@ -236,6 +236,33 @@ describe('HomePage', () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'trending 1', level: 2 })).not.toBeInTheDocument();
     expect(await screen.findByText(/aucune soirée active/i)).toBeInTheDocument();
+  });
+
+  it('a ?film address opens the details from TMDB alone, even for a title outside the rails', async () => {
+    server.use(
+      authMeGuestHandler,
+      showcaseHandler,
+      collectionsHandler,
+      http.get(`${TEST_API_V1}/movies/tmdb/238/details`, () =>
+        HttpResponse.json({
+          tmdbId: 238,
+          title: 'Le Parrain',
+          releaseDate: '1972-03-14',
+          runtimeMinutes: 175,
+          voteAverage: 8.7,
+          genres: ['Drame', 'Crime'],
+          backdropPath: 'https://image.tmdb.org/t/p/w780/parrain-wide.jpg',
+        })
+      )
+    );
+    renderPage('/?film=238');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Le Parrain', level: 2 })
+    ).toBeInTheDocument();
+    expect(screen.getByText('1972')).toBeInTheDocument();
+    expect(screen.getByText('2h55')).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Genres' })).toHaveTextContent('DrameCrime');
   });
 
   it('visitor: no library footer in the details modal', async () => {

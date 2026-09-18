@@ -16,11 +16,8 @@ import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import LazyMovieDetailsModal, {
-  loadMovieDetailsModal,
-} from '@/features/movies/components/LazyMovieDetailsModal';
+import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
 import CollectionToolbar, {
   type CollectionToolbarLabels,
 } from '@/features/movies/components/CollectionToolbar';
@@ -49,6 +46,10 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 export type { ShowcaseListVariant };
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
+import LibraryMovieDetails, {
+  useLibraryMovieDetails,
+  type LibraryMovieSeed,
+} from '@/features/watchlist/components/LibraryMovieDetails';
 import ShowcaseListStates from './ShowcaseListStates';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './ShowcaseListPage.module.css';
@@ -327,8 +328,8 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
   const toolbar = useMovieListToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
 
-  const [detailsTarget, setDetailsTarget] = useState<ShowcaseListItem | null>(null);
-  const [proposeTarget, setProposeTarget] = useState<ShowcaseListItem | null>(null);
+  const details = useLibraryMovieDetails();
+  const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
   const watchlist = useWatchlistToggle(isLoggedIn);
 
   const headingText = resolveHeading({
@@ -420,7 +421,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
                 isLoggedIn={isLoggedIn}
                 inWatchlist={watchlist.has(item)}
                 onToggleWatchlist={() => watchlist.toggle(item)}
-                onOpenDetails={() => setDetailsTarget(item)}
+                onOpenDetails={() => details.open(item)}
                 onProposeToEvent={() => setProposeTarget(item)}
                 ratingScale={user?.ratingScale}
                 leadingBadge={rankBadge(item.rank, t)}
@@ -440,26 +441,13 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
         </MovieListFilteredLayout>
       ) : null}
 
-      {detailsTarget && (
-        <LazyMovieDetailsModal
-          open={!!detailsTarget}
-          title={detailsTarget.title}
-          year={detailsTarget.year}
-          tmdbId={detailsTarget.tmdbId}
-          mediaType={detailsTarget.mediaType}
-          posterSrc={posterImageSrc(detailsTarget.posterPath)}
-          libraryContext={
-            isLoggedIn
-              ? {
-                  inWatchlist: watchlist.has(detailsTarget),
-                  onToggleWatchlist: () => watchlist.toggle(detailsTarget),
-                  onProposeToEvent: () => setProposeTarget(detailsTarget),
-                }
-              : undefined
-          }
-          onClose={() => setDetailsTarget(null)}
-        />
-      )}
+      <LibraryMovieDetails
+        target={details.target}
+        seed={details.seed}
+        watchlist={watchlist}
+        onPropose={setProposeTarget}
+        onClose={details.close}
+      />
 
       {proposeTarget && (
         <ProposeToEventModal

@@ -63,6 +63,7 @@ const MOVIE: MovieData = {
 
 function renderSection(
   props: {
+    initialEntry?: string;
     movies?: MovieData[];
     watchlistItems?: unknown[];
     event?: EventData;
@@ -78,7 +79,7 @@ function renderSection(
 ) {
   return render(
     <AppTestProviders>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[props.initialEntry ?? '/e/soiree-cine']}>
         <EventMoviesSection
           slug="soiree-cine"
           event={props.event ?? EVENT}
@@ -302,6 +303,28 @@ describe('EventMoviesSection (MSW)', () => {
     expect(
       screen.queryByRole('button', { name: 'Proposer dans une soirée' })
     ).not.toBeInTheDocument();
+  });
+
+  it('a ?film address opens the details of that movie of the night, and closing clears it', async () => {
+    server.use(
+      authedUserHandler,
+      watchlistHandler([]),
+      http.get(`${TEST_API_V1}/movies/tmdb/42/details`, () =>
+        HttpResponse.json({ tmdbId: 42, title: 'Matrix', watchProviders: [] })
+      )
+    );
+    renderSection({ initialEntry: '/e/soiree-cine?film=42' });
+    const user = userEvent.setup();
+
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByRole('heading', { name: 'Matrix', level: 2 })).toBeInTheDocument();
+    expect(within(dialog).getByRole('tab', { name: /la soirée/i })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+
+    await user.click(within(dialog).getByRole('button', { name: /fermer/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('hover, host: the kebab lists the items in the unified order', async () => {

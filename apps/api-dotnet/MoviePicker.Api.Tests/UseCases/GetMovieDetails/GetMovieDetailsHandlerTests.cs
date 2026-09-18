@@ -58,7 +58,10 @@ public sealed class GetMovieDetailsHandlerTests
             Genres: Genres,
             GenreIds: GenreIds,
             ReleaseDate: "2010-07-16",
-            TrailerUrl: "https://www.youtube.com/watch?v=abc");
+            TrailerUrl: "https://www.youtube.com/watch?v=abc",
+            VoteAverage: 8.4,
+            PosterUrl: "https://image.tmdb.org/t/p/w154/inception.jpg",
+            BackdropUrl: "https://image.tmdb.org/t/p/w780/inception-wide.jpg");
         tmdb.Setup(t => t.GetDetailsAsync(27205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
             .ReturnsAsync(details);
         var enrichment = new TmdbMovieEnrichment(
@@ -82,6 +85,11 @@ public sealed class GetMovieDetailsHandlerTests
         Assert.Equal(Genres, result.Genres);
         Assert.Equal("2010-07-16", result.ReleaseDate);
         Assert.Equal("https://www.youtube.com/watch?v=abc", result.TrailerUrl);
+        Assert.Equal(8.4, result.VoteAverage);
+        Assert.Equal("https://image.tmdb.org/t/p/w154/inception.jpg", result.PosterPath);
+        Assert.Equal("https://image.tmdb.org/t/p/w780/inception-wide.jpg", result.BackdropPath);
+        Assert.Null(result.SeasonCount);
+        Assert.Null(result.EpisodeCount);
         Assert.Single(result.WatchProviders);
         Assert.Equal("Netflix", result.WatchProviders[0].Name);
         Assert.Equal("https://www.themoviedb.org/movie/27205/watch", result.TmdbWatchPageUrl);

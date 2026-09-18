@@ -8,11 +8,8 @@ import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { ROUTES } from '@/app/routes';
-import LazyMovieDetailsModal, {
-  loadMovieDetailsModal,
-} from '@/features/movies/components/LazyMovieDetailsModal';
+import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import type { MovieLibraryActions } from '@/features/movies/components/MovieBrowseCard';
@@ -31,7 +28,10 @@ import {
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
-import type { MovieMediaType } from '@/shared/types/movie';
+import LibraryMovieDetails, {
+  useLibraryMovieDetails,
+  type LibraryMovieSeed,
+} from '@/features/watchlist/components/LibraryMovieDetails';
 import HomeShowcaseRow from './home/HomeShowcaseRow';
 import HomeCollectionsRow from './home/HomeCollectionsRow';
 import HomePersonalRow, { type PersonalRowItem } from './home/HomePersonalRow';
@@ -47,16 +47,6 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 type GenreTabKey = 'all' | `${number}`;
 
 const SEARCH_EXAMPLES = ['Dune', 'Bong Joon-ho'];
-
-interface SelectedMovie {
-  tmdbId: number;
-  mediaType: MovieMediaType;
-  title: string;
-  year: string;
-  posterPath: string | null;
-  voteAverage?: number | null;
-  runtimeMinutes?: number | null;
-}
 
 const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
 const FIRST_RAIL_EAGER_COUNT = 3;
@@ -90,8 +80,8 @@ export default function HomePage() {
   const [genreTab, setGenreTab] = useState<GenreTabKey>('all');
   const [themeTab, setThemeTab] = useState<ShowcaseTheme>(THEME_KEYS[0]);
   const [providerTab, setProviderTab] = useState<ShowcaseProvider>(PROVIDER_KEYS[0]);
-  const [selected, setSelected] = useState<SelectedMovie | null>(null);
-  const [proposeTarget, setProposeTarget] = useState<SelectedMovie | null>(null);
+  const details = useLibraryMovieDetails();
+  const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
 
   usePageSeo({
     title: APP_DOCUMENT_TITLE,
@@ -133,7 +123,7 @@ export default function HomePage() {
   );
 
   const openPersonalDetails = (item: PersonalRowItem) =>
-    setSelected({
+    details.open({
       tmdbId: item.tmdbId,
       mediaType: item.mediaType ?? 'movie',
       title: item.title,
@@ -144,7 +134,7 @@ export default function HomePage() {
   const selectedGenreIds = genreTab === 'all' ? undefined : [Number(genreTab)];
 
   const openDetails = (item: ShowcaseItem) =>
-    setSelected({
+    details.open({
       tmdbId: item.id,
       mediaType: item.mediaType ?? 'movie',
       title: item.title,
@@ -314,26 +304,13 @@ export default function HomePage() {
         </Link>
       </Card>
 
-      {selected ? (
-        <LazyMovieDetailsModal
-          open
-          tmdbId={selected.tmdbId}
-          mediaType={selected.mediaType}
-          title={selected.title}
-          year={selected.year}
-          posterSrc={posterImageSrc(selected.posterPath)}
-          libraryContext={
-            user
-              ? {
-                  inWatchlist: watchlist.has(selected),
-                  onToggleWatchlist: () => watchlist.toggle(selected),
-                  onProposeToEvent: () => setProposeTarget(selected),
-                }
-              : undefined
-          }
-          onClose={() => setSelected(null)}
-        />
-      ) : null}
+      <LibraryMovieDetails
+        target={details.target}
+        seed={details.seed}
+        watchlist={watchlist}
+        onPropose={setProposeTarget}
+        onClose={details.close}
+      />
 
       {proposeTarget ? (
         <ProposeToEventModal open movie={proposeTarget} onClose={() => setProposeTarget(null)} />

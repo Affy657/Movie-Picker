@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import MovieList from '@/features/movies/components/MovieList';
 import type { MovieData, WatchProviderOffer } from '@/shared/types/movie';
@@ -18,9 +19,11 @@ vi.mock('@/features/movies/components/MovieDetailsModal', () => ({
 
 function renderWithLocale(ui: React.ReactElement) {
   return render(
-    <QueryClientWrapper>
-      <LocaleProvider>{ui}</LocaleProvider>
-    </QueryClientWrapper>
+    <MemoryRouter>
+      <QueryClientWrapper>
+        <LocaleProvider>{ui}</LocaleProvider>
+      </QueryClientWrapper>
+    </MemoryRouter>
   );
 }
 
@@ -120,11 +123,13 @@ describe('MovieList', () => {
       expect(screen.getAllByTestId('movie-rank').every((el) => el.textContent === '')).toBe(true);
 
       rerender(
-        <QueryClientWrapper>
-          <LocaleProvider>
-            <MovieList movies={movies} {...baseProps()} viewMode="list" showRank />
-          </LocaleProvider>
-        </QueryClientWrapper>
+        <MemoryRouter>
+          <QueryClientWrapper>
+            <LocaleProvider>
+              <MovieList movies={movies} {...baseProps()} viewMode="list" showRank />
+            </LocaleProvider>
+          </QueryClientWrapper>
+        </MemoryRouter>
       );
       const ranks = screen.getAllByTestId('movie-rank');
       expect(ranks.map((el) => el.textContent)).toEqual(['1', '2']);

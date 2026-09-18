@@ -50,6 +50,7 @@ interface WatchProviderChipsProps {
   separators?: boolean;
   chipMaxWidth?: string;
   showTypeIcon?: boolean;
+  labelStyle?: 'icon' | 'text';
 }
 
 type OverflowToggleProps = {
@@ -97,6 +98,7 @@ export default function WatchProviderChips({
   separators = false,
   chipMaxWidth,
   showTypeIcon = true,
+  labelStyle = 'icon',
 }: Readonly<WatchProviderChipsProps>) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -156,13 +158,20 @@ export default function WatchProviderChips({
         href={href}
         className={clsx(providerClass, styles.providerLink)}
         aria-label={ariaLink}
+        title={hasLogo ? p.name : undefined}
         target="_blank"
         rel="noreferrer noopener"
       >
         {chipInner}
       </a>
     ) : (
-      <span key={key} className={providerClass} role="img" aria-label={ariaStatic}>
+      <span
+        key={key}
+        className={providerClass}
+        role="img"
+        aria-label={ariaStatic}
+        title={hasLogo ? p.name : undefined}
+      >
         {chipInner}
       </span>
     );
@@ -181,8 +190,20 @@ export default function WatchProviderChips({
         const limited = collapsed && maxVisible ? g.items.slice(0, maxVisible) : g.items;
         const hidden = g.items.length - limited.length;
         return (
-          <div key={g.type} className={clsx(styles.group, separators && i > 0 && styles.groupSep)}>
-            {showTypeIcon ? (
+          <div
+            key={g.type}
+            className={clsx(
+              styles.group,
+              labelStyle === 'text' && styles.groupStacked,
+              separators && i > 0 && styles.groupSep
+            )}
+          >
+            {labelStyle === 'text' ? (
+              <dt className={styles.labelText}>
+                <ModeIcon type={g.type} size={ICON_SIZE.sm} />
+                <span>{label}</span>
+              </dt>
+            ) : showTypeIcon ? (
               <dt className={styles.label} aria-label={label} title={label}>
                 <ModeIcon type={g.type} size={compact ? ICON_SIZE.md : ICON_SIZE.lg} />
               </dt>

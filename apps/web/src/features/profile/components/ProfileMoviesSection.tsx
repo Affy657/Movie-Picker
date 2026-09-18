@@ -4,17 +4,16 @@ import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
 import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
-import LazyMovieDetailsModal from '@/features/movies/components/LazyMovieDetailsModal';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
-import {
-  fetchUserWatchedMovies,
-  type UserWatchedMovieItem,
-} from '@/features/profile/api/profileApi';
+import LibraryMovieDetails, {
+  useLibraryMovieDetails,
+  type LibraryMovieSeed,
+} from '@/features/watchlist/components/LibraryMovieDetails';
+import { fetchUserWatchedMovies } from '@/features/profile/api/profileApi';
 import Card from '@/shared/components/Card';
 
 const PREVIEW_TAKE = 6;
@@ -29,8 +28,8 @@ export default function ProfileMoviesSection({ handle }: Readonly<Props>) {
     queryKey: queryKeys.profile.watchedMovies(handle, PREVIEW_TAKE),
     queryFn: ({ signal }) => fetchUserWatchedMovies(handle, PREVIEW_TAKE, signal),
   });
-  const [detailsTarget, setDetailsTarget] = useState<UserWatchedMovieItem | null>(null);
-  const [proposeTarget, setProposeTarget] = useState<UserWatchedMovieItem | null>(null);
+  const details = useLibraryMovieDetails();
+  const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
   const { user } = useAuth();
   const isLoggedIn = !!user;
   const hasHover = useHasHoverCapability();
@@ -62,33 +61,20 @@ export default function ProfileMoviesSection({ handle }: Readonly<Props>) {
                 inWatchlist={watchlist.has(item)}
                 onToggleWatchlist={() => watchlist.toggle(item)}
                 onProposeToEvent={() => setProposeTarget(item)}
-                onOpenDetails={() => setDetailsTarget(item)}
+                onOpenDetails={() => details.open(item)}
               />
             ))}
           </MoviePreviewRail>
         </MoviePreviewRow>
       </Card>
 
-      {detailsTarget ? (
-        <LazyMovieDetailsModal
-          open
-          title={detailsTarget.title}
-          year={detailsTarget.year}
-          tmdbId={detailsTarget.tmdbId}
-          mediaType={detailsTarget.mediaType}
-          posterSrc={posterImageSrc(detailsTarget.posterPath)}
-          libraryContext={
-            isLoggedIn
-              ? {
-                  inWatchlist: watchlist.has(detailsTarget),
-                  onToggleWatchlist: () => watchlist.toggle(detailsTarget),
-                  onProposeToEvent: () => setProposeTarget(detailsTarget),
-                }
-              : undefined
-          }
-          onClose={() => setDetailsTarget(null)}
-        />
-      ) : null}
+      <LibraryMovieDetails
+        target={details.target}
+        seed={details.seed}
+        watchlist={watchlist}
+        onPropose={setProposeTarget}
+        onClose={details.close}
+      />
 
       {proposeTarget ? (
         <ProposeToEventModal open movie={proposeTarget} onClose={() => setProposeTarget(null)} />

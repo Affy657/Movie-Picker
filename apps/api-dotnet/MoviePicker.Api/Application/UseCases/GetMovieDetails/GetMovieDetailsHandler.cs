@@ -55,6 +55,11 @@ public sealed class GetMovieDetailsHandler : IGetMovieDetailsHandler
             Genres = details.Genres,
             ReleaseDate = details.ReleaseDate,
             TrailerUrl = details.TrailerUrl,
+            VoteAverage = details.VoteAverage,
+            PosterPath = details.PosterUrl,
+            BackdropPath = details.BackdropUrl,
+            SeasonCount = details.SeasonCount,
+            EpisodeCount = details.EpisodeCount,
             WatchProviders = enrichment is null
                 ? Array.Empty<WatchProviderOfferResponse>()
                 : WatchProviderMapping.ToDto(enrichment.WatchProviders),

@@ -1,94 +1,134 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { MovieDetailsContent } from '@/features/movies/components/MovieDetailsPanel';
-import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
+import {
+  MovieDetailsContent,
+  type MovieDetailsFacts,
+  type MovieDetailsQueryState,
+} from '@/features/movies/components/MovieDetailsPanel';
 
-vi.mock('@/features/movies/hooks/useMovieDetails', () => ({ useMovieDetails: vi.fn() }));
 vi.mock('@/shared/i18n', () => ({
-  useTranslation: () => ({ t: (key: string) => key, locale: 'fr' }),
+  useTranslation: () => ({
+    t: (key: string, vars?: Record<string, string | number>) =>
+      vars ? `${key}(${Object.values(vars).join('|')})` : key,
+    locale: 'fr',
+  }),
 }));
 
-const mockUseMovieDetails = vi.mocked(useMovieDetails);
+const state = (overrides: Partial<MovieDetailsQueryState> = {}): MovieDetailsQueryState => ({
+  data: undefined,
+  isLoading: false,
+  isError: false,
+  ...overrides,
+});
 
-const state = (overrides: Record<string, unknown> = {}) =>
-  ({ data: undefined, isLoading: false, isError: false, ...overrides }) as never;
-
-const fullData = {
+const fullData: MovieDetailsFacts = {
   overview: 'Un rêve dans un rêve.',
   tagline: 'Ta pensée est-elle vraiment la tienne ?',
   director: 'Christopher Nolan',
   cast: ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8'],
   runtimeMinutes: 148,
-  genres: ['Action', 'Sci-Fi'],
   releaseDate: '2010-07-16',
   trailerUrl: 'https://www.youtube.com/watch?v=YoHD9XEInc0',
+  episodeCount: null,
 };
 
-beforeEach(() => {
-  vi.clearAllMocks();
-  mockUseMovieDetails.mockReturnValue(state());
-});
-
 describe('MovieDetailsContent', () => {
-  it('renders nothing while closed', () => {
-    const { container } = render(<MovieDetailsContent tmdbId={1} open={false} panelId="p" />);
-
-    expect(container).toBeEmptyDOMElement();
-  });
-
   it('shows the loading state', () => {
-    mockUseMovieDetails.mockReturnValue(state({ isLoading: true }));
-
-    render(<MovieDetailsContent tmdbId={1} open panelId="p" />);
+    render(<MovieDetailsContent query={state({ isLoading: true })} panelId="p" />);
 
     expect(screen.getByText('movies.details.loading')).toBeInTheDocument();
   });
 
   it('shows the error state', () => {
-    mockUseMovieDetails.mockReturnValue(state({ isError: true }));
-
-    render(<MovieDetailsContent tmdbId={1} open panelId="p" />);
+    render(<MovieDetailsContent query={state({ isError: true })} panelId="p" />);
 
     expect(screen.getByText('movies.details.error')).toBeInTheDocument();
   });
 
-  it('renders the facts, tagline and overview from data', () => {
-    mockUseMovieDetails.mockReturnValue(state({ data: fullData }));
+  it('renders the tagline, the overview and the facts that are not already in the header', () => {
+    render(<MovieDetailsContent query={state({ data: fullData })} panelId="p" />);
 
-    render(<MovieDetailsContent tmdbId={1} open panelId="p" />);
-
+    expect(screen.getByText('movies.details.directorLabel')).toBeInTheDocument();
     expect(screen.getByText('Christopher Nolan')).toBeInTheDocument();
     expect(screen.getByText('A1, A2, A3, A4, A5, A6')).toBeInTheDocument();
-    expect(screen.getByText('Action, Sci-Fi')).toBeInTheDocument();
+    expect(screen.getByText('movies.details.releasedLabel')).toBeInTheDocument();
     expect(screen.getByText('16 juillet 2010')).toBeInTheDocument();
     expect(screen.queryByText('2010-07-16')).not.toBeInTheDocument();
+    expect(screen.queryByText('2h28')).not.toBeInTheDocument();
+    expect(screen.queryByText('movies.details.episodesLabel')).not.toBeInTheDocument();
     expect(screen.getByText(/Un rêve dans un rêve/)).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'movies.details.regionLabel' })).toBeInTheDocument();
+  });
+
+  it('a series names its creators, its episodes and its first air date', () => {
+    render(
+      <MovieDetailsContent
+        query={state({
+          data: {
+            ...fullData,
+            director: 'David Benioff, D. B. Weiss',
+            episodeCount: 73,
+            runtimeMinutes: 57,
+          },
+        })}
+        mediaType="tv"
+        panelId="p"
+      />
+    );
+
+    expect(screen.getByText('movies.details.creatorLabel')).toBeInTheDocument();
+    expect(screen.getByText('movies.details.episodesLabel')).toBeInTheDocument();
+    expect(
+      screen.getByText('movies.details.episodesWithRuntime(movies.details.episodesMany(73)|57min)')
+    ).toBeInTheDocument();
+    expect(screen.getByText('movies.details.firstAiredLabel')).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: 'movies.details.regionLabelShow' })
+    ).toBeInTheDocument();
+  });
+
+  it('a series with a single known episode length shows it alone', () => {
+    render(
+      <MovieDetailsContent
+        query={state({ data: { ...fullData, episodeCount: null, runtimeMinutes: 45 } })}
+        mediaType="tv"
+        panelId="p"
+      />
+    );
+
+    expect(screen.getByText('movies.details.episodeRuntime(45min)')).toBeInTheDocument();
   });
 
   it('keeps a release date it cannot parse as is', () => {
-    mockUseMovieDetails.mockReturnValue(state({ data: { ...fullData, releaseDate: '2010' } }));
-
-    render(<MovieDetailsContent tmdbId={1} open panelId="p" />);
+    render(
+      <MovieDetailsContent
+        query={state({ data: { ...fullData, releaseDate: '2010' } })}
+        panelId="p"
+      />
+    );
 
     expect(screen.getByText('2010')).toBeInTheDocument();
   });
 
   it('renders a trailer link that calls onPlayTrailer', async () => {
-    mockUseMovieDetails.mockReturnValue(state({ data: fullData }));
     const onPlayTrailer = vi.fn();
 
-    render(<MovieDetailsContent tmdbId={1} open panelId="p" onPlayTrailer={onPlayTrailer} />);
+    render(
+      <MovieDetailsContent
+        query={state({ data: fullData })}
+        panelId="p"
+        onPlayTrailer={onPlayTrailer}
+      />
+    );
     await userEvent.click(screen.getByRole('button', { name: /trailerLink/ }));
 
     expect(onPlayTrailer).toHaveBeenCalledWith('https://www.youtube.com/watch?v=YoHD9XEInc0');
   });
 
   it('renders a trailer anchor when no onPlayTrailer is provided', () => {
-    mockUseMovieDetails.mockReturnValue(state({ data: fullData }));
-
-    render(<MovieDetailsContent tmdbId={1} open panelId="p" />);
+    render(<MovieDetailsContent query={state({ data: fullData })} panelId="p" />);
 
     expect(screen.getByRole('link', { name: /trailerLink/ })).toHaveAttribute(
       'href',
@@ -97,32 +137,34 @@ describe('MovieDetailsContent', () => {
   });
 
   it('omits the trailer for a non-YouTube url', () => {
-    mockUseMovieDetails.mockReturnValue(
-      state({ data: { ...fullData, trailerUrl: 'https://vimeo.com/123' } })
+    render(
+      <MovieDetailsContent
+        query={state({ data: { ...fullData, trailerUrl: 'https://vimeo.com/123' } })}
+        panelId="p"
+      />
     );
-
-    render(<MovieDetailsContent tmdbId={1} open panelId="p" />);
 
     expect(screen.queryByText('movies.details.trailerLink')).not.toBeInTheDocument();
   });
 
   it('shows the empty state when data has no content', () => {
-    mockUseMovieDetails.mockReturnValue(
-      state({
-        data: {
-          overview: null,
-          tagline: null,
-          director: null,
-          cast: [],
-          runtimeMinutes: null,
-          genres: [],
-          releaseDate: null,
-          trailerUrl: null,
-        },
-      })
+    render(
+      <MovieDetailsContent
+        query={state({
+          data: {
+            overview: null,
+            tagline: null,
+            director: null,
+            cast: [],
+            runtimeMinutes: null,
+            releaseDate: null,
+            trailerUrl: null,
+            episodeCount: null,
+          },
+        })}
+        panelId="p"
+      />
     );
-
-    render(<MovieDetailsContent tmdbId={1} open panelId="p" />);
 
     expect(screen.getByText('movies.details.empty')).toBeInTheDocument();
   });

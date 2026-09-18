@@ -32,7 +32,12 @@ public sealed record TmdbMovieDetails(
     IReadOnlyList<string> Genres,
     IReadOnlyList<int> GenreIds,
     string? ReleaseDate,
-    string? TrailerUrl = null);
+    string? TrailerUrl = null,
+    double? VoteAverage = null,
+    string? PosterUrl = null,
+    string? BackdropUrl = null,
+    int? SeasonCount = null,
+    int? EpisodeCount = null);
 
 public sealed record TmdbDiscoveryCriteria(
     IReadOnlyList<int>? GenreIds = null,

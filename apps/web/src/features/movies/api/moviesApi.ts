@@ -88,6 +88,11 @@ export interface MovieDetails {
   genres: string[];
   releaseDate: string | null;
   trailerUrl?: string | null;
+  voteAverage: number | null;
+  posterPath: string | null;
+  backdropPath: string | null;
+  seasonCount: number | null;
+  episodeCount: number | null;
   watchProviders: WatchProviderOffer[];
   tmdbWatchPageUrl: string | null;
 }
@@ -104,6 +109,11 @@ interface RawMovieDetailsResponse {
   genres?: string[] | null;
   releaseDate?: string | null;
   trailerUrl?: string | null;
+  voteAverage?: number | null;
+  posterPath?: string | null;
+  backdropPath?: string | null;
+  seasonCount?: number | null;
+  episodeCount?: number | null;
   watchProviders?: WatchProviderOffer[] | null;
   tmdbWatchPageUrl?: string | null;
 }
@@ -131,6 +141,11 @@ export async function fetchMovieDetails(
     genres: Array.isArray(raw.genres) ? raw.genres : [],
     releaseDate: raw.releaseDate ?? null,
     trailerUrl: raw.trailerUrl ?? null,
+    voteAverage: raw.voteAverage ?? null,
+    posterPath: raw.posterPath ?? null,
+    backdropPath: raw.backdropPath ?? null,
+    seasonCount: raw.seasonCount ?? null,
+    episodeCount: raw.episodeCount ?? null,
     watchProviders: Array.isArray(raw.watchProviders) ? raw.watchProviders : [],
     tmdbWatchPageUrl: raw.tmdbWatchPageUrl ?? null,
   };

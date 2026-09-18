@@ -15,11 +15,8 @@ import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import LazyMovieDetailsModal, {
-  loadMovieDetailsModal,
-} from '@/features/movies/components/LazyMovieDetailsModal';
+import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { toCollectionToolbarProps } from '@/features/movies/components/FilteredCollectionLayout';
 import MovieListFilteredLayout from '@/features/movies/components/MovieListFilteredLayout';
 import {
@@ -35,6 +32,10 @@ import ProfileCollectionToolbar from '@/features/profile/components/ProfileColle
 import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
+import LibraryMovieDetails, {
+  useLibraryMovieDetails,
+  type LibraryMovieSeed,
+} from '@/features/watchlist/components/LibraryMovieDetails';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import styles from './ProfileCollectionPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
@@ -134,8 +135,8 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
 
   const toolbar = useMovieListToolbar({ items, tmdbLanguage, mediaTypeLabels, comparePrimary });
 
-  const [detailsTarget, setDetailsTarget] = useState<T | null>(null);
-  const [proposeTarget, setProposeTarget] = useState<T | null>(null);
+  const details = useLibraryMovieDetails();
+  const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
   const watchlist = useWatchlistToggle(isLoggedIn);
 
   usePageSeo(collectionSeo(profile, isNotFound, t, texts, canonicalPath));
@@ -235,7 +236,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
                 inWatchlist={watchlist.has(item)}
                 onToggleWatchlist={() => watchlist.toggle(item)}
                 onProposeToEvent={() => setProposeTarget(item)}
-                onOpenDetails={() => setDetailsTarget(item)}
+                onOpenDetails={() => details.open(item)}
               />
             ))}
           </ul>
@@ -252,26 +253,13 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
         </MovieListFilteredLayout>
       )}
 
-      {detailsTarget && (
-        <LazyMovieDetailsModal
-          open={!!detailsTarget}
-          title={detailsTarget.title}
-          year={detailsTarget.year}
-          tmdbId={detailsTarget.tmdbId}
-          mediaType={detailsTarget.mediaType}
-          posterSrc={posterImageSrc(detailsTarget.posterPath)}
-          libraryContext={
-            isLoggedIn
-              ? {
-                  inWatchlist: watchlist.has(detailsTarget),
-                  onToggleWatchlist: () => watchlist.toggle(detailsTarget),
-                  onProposeToEvent: () => setProposeTarget(detailsTarget),
-                }
-              : undefined
-          }
-          onClose={() => setDetailsTarget(null)}
-        />
-      )}
+      <LibraryMovieDetails
+        target={details.target}
+        seed={details.seed}
+        watchlist={watchlist}
+        onPropose={setProposeTarget}
+        onClose={details.close}
+      />
 
       {proposeTarget && (
         <ProposeToEventModal

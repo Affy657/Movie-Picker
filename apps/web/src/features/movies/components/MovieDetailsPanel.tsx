@@ -1,7 +1,7 @@
-import clsx from 'clsx';
 import { PlayCircle } from 'lucide-react';
-import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
+import type { MovieDetails } from '@/features/movies/api/moviesApi';
 import { useTranslation } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { formatReleaseDate } from '@/shared/utils/formatReleaseDate';
 import { extractYouTubeId } from '@/shared/utils/youtube';
@@ -9,35 +9,51 @@ import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './MovieDetailsPanel.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
+const MAX_CAST = 6;
+
+export type MovieDetailsFacts = Pick<
+  MovieDetails,
+  | 'overview'
+  | 'tagline'
+  | 'director'
+  | 'cast'
+  | 'runtimeMinutes'
+  | 'releaseDate'
+  | 'trailerUrl'
+  | 'episodeCount'
+>;
+
+export interface MovieDetailsQueryState {
+  data?: MovieDetailsFacts;
+  isLoading: boolean;
+  isError: boolean;
+}
+
 interface MovieDetailsContentProps {
-  tmdbId: number;
+  query: MovieDetailsQueryState;
   mediaType?: MovieMediaType;
-  open: boolean;
   panelId: string;
-  className?: string;
   onPlayTrailer?: (url: string) => void;
 }
 
 export function MovieDetailsContent({
-  tmdbId,
+  query,
   mediaType,
-  open,
   panelId,
-  className,
   onPlayTrailer,
 }: Readonly<MovieDetailsContentProps>) {
   const { t } = useTranslation();
-  const { data, isLoading, isError } = useMovieDetails(tmdbId, open, mediaType);
-  if (!open) return null;
+  const { data, isLoading, isError } = query;
+  const isTv = mediaType === 'tv';
   return (
     <section
       id={panelId}
-      className={clsx(styles.panel, className)}
-      aria-label={t('movies.details.regionLabel')}
+      className={styles.panel}
+      aria-label={t(isTv ? 'movies.details.regionLabelShow' : 'movies.details.regionLabel')}
     >
       {isLoading && <p className={styles.status}>{t('movies.details.loading')}</p>}
       {isError && <p className={styles.error}>{t('movies.details.error')}</p>}
-      {data && <MovieDetailsBody data={data} onPlayTrailer={onPlayTrailer} />}
+      {data && <MovieDetailsBody data={data} isTv={isTv} onPlayTrailer={onPlayTrailer} />}
       {!isLoading && !isError && !data && (
         <p className={styles.status}>{t('movies.details.empty')}</p>
       )}
@@ -45,21 +61,33 @@ export function MovieDetailsContent({
   );
 }
 
-interface MovieDetailsBodyProps {
-  data: {
-    overview: string | null;
-    tagline: string | null;
-    director: string | null;
-    cast: string[];
-    runtimeMinutes: number | null;
-    genres: string[];
-    releaseDate: string | null;
-    trailerUrl?: string | null;
-  };
-  onPlayTrailer?: (url: string) => void;
+function episodesLabel(
+  data: MovieDetailsFacts,
+  t: ReturnType<typeof useTranslation>['t']
+): string | null {
+  const count = data.episodeCount
+    ? pluralizeCount(
+        data.episodeCount,
+        'movies.details.episodesOne',
+        'movies.details.episodesMany',
+        t
+      )
+    : null;
+  const runtime = formatRuntimeMinutes(data.runtimeMinutes);
+  if (count && runtime) return t('movies.details.episodesWithRuntime', { count, runtime });
+  if (count) return count;
+  return runtime ? t('movies.details.episodeRuntime', { runtime }) : null;
 }
 
-function MovieDetailsBody({ data, onPlayTrailer }: Readonly<MovieDetailsBodyProps>) {
+function MovieDetailsBody({
+  data,
+  isTv,
+  onPlayTrailer,
+}: Readonly<{
+  data: MovieDetailsFacts;
+  isTv: boolean;
+  onPlayTrailer?: (url: string) => void;
+}>) {
   const { t, locale } = useTranslation();
   const facts: Array<[string, string]> = [];
   const trailerYtId = extractYouTubeId(data.trailerUrl);
@@ -67,14 +95,20 @@ function MovieDetailsBody({ data, onPlayTrailer }: Readonly<MovieDetailsBodyProp
     ? `https://www.youtube.com/watch?v=${encodeURIComponent(trailerYtId)}`
     : null;
 
-  if (data.director) facts.push([t('movies.details.directorLabel'), data.director]);
+  if (data.director)
+    facts.push([
+      t(isTv ? 'movies.details.creatorLabel' : 'movies.details.directorLabel'),
+      data.director,
+    ]);
   if (data.cast.length > 0)
-    facts.push([t('movies.details.castLabel'), data.cast.slice(0, 6).join(', ')]);
-  const runtimeLabel = formatRuntimeMinutes(data.runtimeMinutes);
-  if (runtimeLabel) facts.push([t('movies.details.runtimeLabel'), runtimeLabel]);
-  if (data.genres.length > 0) facts.push([t('movies.details.genresLabel'), data.genres.join(', ')]);
+    facts.push([t('movies.details.castLabel'), data.cast.slice(0, MAX_CAST).join(', ')]);
+  const episodes = isTv ? episodesLabel(data, t) : null;
+  if (episodes) facts.push([t('movies.details.episodesLabel'), episodes]);
   if (data.releaseDate)
-    facts.push([t('movies.details.releasedLabel'), formatReleaseDate(data.releaseDate, locale)]);
+    facts.push([
+      t(isTv ? 'movies.details.firstAiredLabel' : 'movies.details.releasedLabel'),
+      formatReleaseDate(data.releaseDate, locale),
+    ]);
 
   const hasContent = !!data.overview || !!data.tagline || facts.length > 0;
   if (!hasContent) {

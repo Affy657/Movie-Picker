@@ -2,10 +2,18 @@ import { useEffect, useId, useState, useRef } from 'react';
 import clsx from 'clsx';
 import { Bookmark, BookmarkCheck, Disc3, Film, ListPlus, RotateCcw, Trash2, X } from 'lucide-react';
 import { Tabs, TabPanel } from '@/shared/components/Tabs';
+import Chip from '@/shared/components/Chip';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTranslation } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
+import type { RatingScale } from '@/shared/types/theme';
+import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
+import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
+import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
+import { yearFromDate } from '@/shared/utils/formatReleaseDate';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import MovieExternalLinksRow from '@/features/movies/components/MovieExternalLinksRow';
 import MovieDetailsEventTab, {
@@ -31,13 +39,14 @@ export interface MovieDetailsLibraryContext {
 
 interface MovieDetailsModalProps {
   open: boolean;
-  title: string;
-  year?: string;
   tmdbId: number;
   mediaType?: MovieMediaType;
-  posterSrc?: string | null;
-  voteLabel?: string | null;
-  runtimeLabel?: string | null;
+  title?: string;
+  year?: string;
+  posterPath?: string | null;
+  voteAverage?: number | null;
+  runtimeMinutes?: number | null;
+  ratingScale?: RatingScale;
   watchProviders?: WatchProviderOffer[];
   watchPageUrl?: string | null;
   initialTab?: MovieDetailsTabKey;
@@ -48,6 +57,7 @@ interface MovieDetailsModalProps {
 
 function buildDetailsTabs(
   hasEventContext: boolean,
+  isTv: boolean,
   providerCount: number,
   t: ReturnType<typeof useTranslation>['t']
 ) {
@@ -56,7 +66,7 @@ function buildDetailsTabs(
     : [];
   return [
     ...eventTab,
-    { key: 'film' as const, label: t('movies.details.tabFilm') },
+    { key: 'film' as const, label: t(isTv ? 'movies.details.tabShow' : 'movies.details.tabFilm') },
     {
       key: 'dispo' as const,
       label: t('movies.details.tabDispo'),
@@ -106,13 +116,14 @@ function hasLibraryFooterActions(
 
 export default function MovieDetailsModal({
   open,
-  title,
-  year,
   tmdbId,
   mediaType,
-  posterSrc,
-  voteLabel,
-  runtimeLabel,
+  title: titleProp,
+  year: yearProp,
+  posterPath: posterPathProp,
+  voteAverage: voteAverageProp,
+  runtimeMinutes: runtimeMinutesProp,
+  ratingScale: ratingScaleProp,
   watchProviders,
   watchPageUrl,
   initialTab,
@@ -121,12 +132,14 @@ export default function MovieDetailsModal({
   onClose,
 }: Readonly<MovieDetailsModalProps>) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dragBind = useSheetDrag(dialogRef, onClose, open);
   const titleId = useId();
   const idBase = useId();
   const filmPanelId = useId();
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
+  const [backdropLoaded, setBackdropLoaded] = useState(false);
 
   const startingTab = effectiveInitialTab(initialTab, !!eventContext);
   const [activeTab, setActiveTab] = useState<MovieDetailsTabKey>(startingTab);
@@ -137,16 +150,41 @@ export default function MovieDetailsModal({
   }, [open]);
 
   useEffect(() => {
-    if (!open) setTrailerUrl(null);
+    if (!open) {
+      setTrailerUrl(null);
+      setBackdropLoaded(false);
+    }
   }, [open]);
 
-  const needsProviderFetch = watchProviders === undefined;
-  const providerDetailsQuery = useMovieDetails(tmdbId, open && needsProviderFetch, mediaType);
-  const providers = watchProviders ?? providerDetailsQuery.data?.watchProviders ?? [];
-  const resolvedWatchPageUrl = needsProviderFetch
-    ? (providerDetailsQuery.data?.tmdbWatchPageUrl ?? null)
-    : watchPageUrl;
-  const tabs = buildDetailsTabs(!!eventContext, providers.length, t);
+  const detailsQuery = useMovieDetails(tmdbId, open, mediaType);
+  const details = detailsQuery.data;
+  const isTv = mediaType === 'tv';
+
+  const title = titleProp ?? details?.title ?? '';
+  const year = yearProp ?? yearFromDate(details?.releaseDate);
+  const posterSrc = posterImageSrc(posterPathProp ?? details?.posterPath);
+  const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
+  const backdropSrc = details?.backdropPath ?? null;
+  const genres = details?.genres ?? [];
+  const voteLabel = formatTmdbVote(
+    voteAverageProp ?? details?.voteAverage,
+    ratingScaleProp ?? user?.ratingScale
+  );
+  const lengthLabel =
+    isTv && details?.seasonCount
+      ? pluralizeCount(
+          details.seasonCount,
+          'movies.details.seasonsOne',
+          'movies.details.seasonsMany',
+          t
+        )
+      : formatRuntimeMinutes(runtimeMinutesProp ?? details?.runtimeMinutes);
+  const facts = [year, lengthLabel, voteLabel].filter((fact): fact is string => !!fact);
+
+  const providers = watchProviders ?? details?.watchProviders ?? [];
+  const resolvedWatchPageUrl =
+    watchProviders === undefined ? (details?.tmdbWatchPageUrl ?? null) : watchPageUrl;
+  const tabs = buildDetailsTabs(!!eventContext, isTv, providers.length, t);
 
   const wheelLabel = t(wheelActionKey(eventContext));
   const removeAria = removeAriaLabel(eventContext, title, t);
@@ -173,27 +211,64 @@ export default function MovieDetailsModal({
               className={clsx(dragStyles.handle, dragStyles.handleMobileOnly)}
               aria-hidden="true"
             />
-            <div className={styles.header}>
-              {posterSrc ? (
-                <img src={posterSrc} alt="" className={styles.poster} />
-              ) : (
-                <div className={styles.posterPlaceholder} aria-hidden>
-                  <Film size={ICON_SIZE.lg} />
+            <div className={clsx(styles.header, backdropSrc && styles.headerWithBackdrop)}>
+              {backdropSrc ? (
+                <div className={styles.backdrop} aria-hidden="true">
+                  <img
+                    src={backdropSrc}
+                    alt=""
+                    decoding="async"
+                    className={clsx(styles.backdropImg, backdropLoaded && styles.backdropImgLoaded)}
+                    onLoad={() => setBackdropLoaded(true)}
+                  />
                 </div>
-              )}
-              <div className={styles.headerInfo}>
-                <h2 id={titleId} className={styles.title}>
-                  {title}
-                </h2>
-                <p className={styles.facts}>
-                  {year ? <span>{year}</span> : null}
-                  {runtimeLabel ? <span>{runtimeLabel}</span> : null}
-                  {voteLabel ? <span>{voteLabel}</span> : null}
-                </p>
-              </div>
-              <IconButton ariaLabel={t('common.close')} onClick={onClose}>
+              ) : null}
+              <IconButton
+                className={styles.close}
+                tone={backdropSrc ? 'onPoster' : 'default'}
+                ariaLabel={t('common.close')}
+                onClick={onClose}
+              >
                 <X aria-hidden size={ICON_SIZE.lg} />
               </IconButton>
+              <div className={styles.headerRow}>
+                {posterSrc ? (
+                  <img
+                    src={posterSrc}
+                    srcSet={posterSrcSet}
+                    sizes="80px"
+                    alt=""
+                    className={styles.poster}
+                  />
+                ) : (
+                  <div className={styles.posterPlaceholder} aria-hidden>
+                    <Film size={ICON_SIZE.xl} />
+                  </div>
+                )}
+                <div className={styles.headerInfo}>
+                  <h2 id={titleId} className={styles.title}>
+                    {title}
+                  </h2>
+                  {facts.length > 0 ? (
+                    <p className={styles.facts}>
+                      {facts.map((fact) => (
+                        <span key={fact}>{fact}</span>
+                      ))}
+                    </p>
+                  ) : null}
+                  {genres.length > 0 ? (
+                    <ul className={styles.genres} aria-label={t('movies.details.genresLabel')}>
+                      {genres.map((genre) => (
+                        <li key={genre}>
+                          <Chip size="sm" tone="muted">
+                            {genre}
+                          </Chip>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -216,11 +291,9 @@ export default function MovieDetailsModal({
 
             <TabPanel idBase={idBase} tabKey="film" active={activeTab === 'film'}>
               <MovieDetailsContent
-                tmdbId={tmdbId}
+                query={detailsQuery}
                 mediaType={mediaType}
-                open={activeTab === 'film'}
                 panelId={filmPanelId}
-                className={styles.details}
                 onPlayTrailer={(url) => setTrailerUrl(url)}
               />
               {tmdbId > 0 && (
@@ -239,6 +312,7 @@ export default function MovieDetailsModal({
                   providers={providers}
                   watchPageUrl={resolvedWatchPageUrl}
                   separators
+                  labelStyle="text"
                 />
               ) : (
                 <p className={styles.dispoEmpty}>{t('movies.watchProviders.emptyLabel')}</p>

@@ -17,14 +17,8 @@ import FilteredCollectionLayout, {
   FilteredEmptyState,
   toCollectionToolbarProps,
 } from '@/features/movies/components/FilteredCollectionLayout';
-import LazyMovieDetailsModal, {
-  loadMovieDetailsModal,
-} from '@/features/movies/components/LazyMovieDetailsModal';
-import type { MovieDetailsTabKey } from '@/features/movies/components/MovieDetailsModal';
+import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
-import { posterImageSrc } from '@/shared/utils/posterUrl';
-import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
-import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import LetterboxdConnectModal from '@/features/letterboxd/components/LetterboxdConnectModal';
 import type { MovieMediaType } from '@/shared/types/movie';
 import {
@@ -53,6 +47,10 @@ import { MovieTable } from '@/features/movies/components/MovieTable';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import ViewModeToggle, { type MovieViewMode } from '@/shared/components/ViewModeToggle';
 import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
+import LibraryMovieDetails, {
+  useLibraryMovieDetails,
+  type LibraryMovieSeed,
+} from '@/features/watchlist/components/LibraryMovieDetails';
 import styles from './WatchlistPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Button from '@/shared/components/Button';
@@ -164,11 +162,14 @@ export default function WatchlistPage() {
     persistViewMode(mode);
   };
 
-  const [proposeTarget, setProposeTarget] = useState<WatchlistItem | null>(null);
-  const [detailsTarget, setDetailsTarget] = useState<{
-    entry: WatchlistEntry;
-    tab?: MovieDetailsTabKey;
-  } | null>(null);
+  const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
+  const details = useLibraryMovieDetails();
+  const detailsEntry = details.target
+    ? entries.find(
+        (entry) =>
+          entry.tmdbId === details.target?.tmdbId && entry.mediaType === details.target.mediaType
+      )
+    : undefined;
   const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [letterboxdModalOpen, setLetterboxdModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<MovieViewMode>(readStoredViewMode);
@@ -258,8 +259,8 @@ export default function WatchlistPage() {
       eager={listView && index < 3}
       onToggleWatchlist={() => watchlistToggle.toggle(item)}
       onProposeToEvent={() => setProposeTarget(item)}
-      onOpenDetails={() => setDetailsTarget({ entry: item })}
-      onOpenAvailability={() => setDetailsTarget({ entry: item, tab: 'dispo' })}
+      onOpenDetails={() => details.open(item)}
+      onOpenAvailability={() => details.open(item, 'dispo')}
       ratingScale={user?.ratingScale}
     />
   );
@@ -468,31 +469,14 @@ export default function WatchlistPage() {
         />
       )}
 
-      {detailsTarget && (
-        <LazyMovieDetailsModal
-          open={!!detailsTarget}
-          title={detailsTarget.entry.title}
-          year={detailsTarget.entry.year}
-          tmdbId={detailsTarget.entry.tmdbId}
-          mediaType={detailsTarget.entry.mediaType}
-          posterSrc={posterImageSrc(detailsTarget.entry.posterPath)}
-          voteLabel={formatTmdbVote(detailsTarget.entry.voteAverage, user?.ratingScale)}
-          runtimeLabel={formatRuntimeMinutes(detailsTarget.entry.runtimeMinutes)}
-          watchProviders={detailsTarget.entry.watchProviders}
-          watchPageUrl={detailsTarget.entry.tmdbWatchPageUrl}
-          initialTab={detailsTarget.tab}
-          libraryContext={
-            user
-              ? {
-                  inWatchlist: watchlistToggle.has(detailsTarget.entry),
-                  onToggleWatchlist: () => watchlistToggle.toggle(detailsTarget.entry),
-                  onProposeToEvent: () => setProposeTarget(detailsTarget.entry),
-                }
-              : undefined
-          }
-          onClose={() => setDetailsTarget(null)}
-        />
-      )}
+      <LibraryMovieDetails
+        target={details.target}
+        seed={detailsEntry ?? details.seed}
+        initialTab={details.initialTab}
+        watchlist={watchlistToggle}
+        onPropose={setProposeTarget}
+        onClose={details.close}
+      />
 
       {letterboxdModalOpen && (
         <LetterboxdConnectModal open onClose={() => setLetterboxdModalOpen(false)} />

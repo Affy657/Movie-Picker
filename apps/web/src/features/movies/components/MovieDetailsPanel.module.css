@@ -1,41 +1,29 @@
 .panel {
-  margin-top: var(--space-2-5);
-  padding: var(--space-4) var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-sunken);
-  border: 1px solid var(--color-border-subtle);
-  font-size: var(--details-font-size, var(--font-size-sm));
-  color: var(--color-text);
   display: flex;
   flex-direction: column;
-  gap: var(--details-gap, var(--space-2));
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
 }
 
 .tagline {
   margin: 0;
   font-style: italic;
   color: var(--color-text-muted);
-  font-size: var(--tagline-font-size, var(--font-size-sm));
 }
 
 .overview {
   margin: 0;
   line-height: var(--leading-base);
-  color: var(--color-text);
-  display: -webkit-box;
-  -webkit-line-clamp: var(--overview-clamp, 99);
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .factList {
   margin: 0;
   padding: 0;
-  list-style: none;
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--fact-row-gap, var(--space-1)) var(--fact-col-gap, var(--space-2-5));
-  font-size: var(--fact-font-size, var(--font-size-xs));
+  grid-template-columns: var(--details-label-width) minmax(0, 1fr);
+  gap: var(--space-1-5) var(--space-2-5);
+  font-size: var(--font-size-xs);
 }
 
 .factLabel {
@@ -44,6 +32,7 @@
 }
 
 .factValue {
+  margin: 0;
   color: var(--color-text);
   overflow-wrap: break-word;
 }

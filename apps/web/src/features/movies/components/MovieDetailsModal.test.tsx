@@ -5,10 +5,14 @@ import MovieDetailsModal, {
   type MovieDetailsEventContext,
 } from '@/features/movies/components/MovieDetailsModal';
 import { useMovieDetails } from '@/features/movies/hooks/useMovieDetails';
+import type { MovieDetails } from '@/features/movies/api/moviesApi';
 import type { MovieData } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
 
 vi.mock('@/features/movies/hooks/useMovieDetails', () => ({ useMovieDetails: vi.fn() }));
+vi.mock('@/features/auth/contexts/AuthContext', () => ({
+  useAuth: () => ({ user: { userId: 'u1', ratingScale: 'ten' }, isLoading: false }),
+}));
 
 const mockUseMovieDetails = vi.mocked(useMovieDetails);
 
@@ -34,6 +38,29 @@ const movie: MovieData = {
   votersUpPseudos: ['Alice', 'Bob', 'Tom'],
   createdAt: '2026-08-20T10:00:00.000Z',
 };
+
+function details(overrides: Partial<MovieDetails> = {}): MovieDetails {
+  return {
+    tmdbId: 27205,
+    title: 'Inception',
+    overview: null,
+    tagline: null,
+    director: null,
+    cast: [],
+    runtimeMinutes: null,
+    genres: [],
+    releaseDate: null,
+    trailerUrl: null,
+    voteAverage: null,
+    posterPath: null,
+    backdropPath: null,
+    seasonCount: null,
+    episodeCount: null,
+    watchProviders: [],
+    tmdbWatchPageUrl: null,
+    ...overrides,
+  };
+}
 
 function eventContext(overrides: Partial<MovieDetailsEventContext> = {}): MovieDetailsEventContext {
   return {
@@ -72,22 +99,101 @@ describe('MovieDetailsModal', () => {
     expect(container.querySelector('[role="tablist"]')).not.toBeInTheDocument();
   });
 
-  it('shows the header with title, year, runtime and rating', () => {
+  it('shows the header with title, year, runtime and the rating on the account scale', () => {
     renderWithLocale(
       <MovieDetailsModal
         open
         title="Inception"
         year="2010"
         tmdbId={27205}
-        runtimeLabel="2h28"
-        voteLabel="3,6/5"
+        runtimeMinutes={148}
+        voteAverage={8.8}
         onClose={vi.fn()}
       />
     );
     expect(screen.getByRole('heading', { name: 'Inception' })).toBeInTheDocument();
     expect(screen.getByText('2010')).toBeInTheDocument();
     expect(screen.getByText('2h28')).toBeInTheDocument();
-    expect(screen.getByText('3,6/5')).toBeInTheDocument();
+    expect(screen.getByText('8.8/10')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  it('completes the header from TMDB when the page only knows the id: title, year, poster, facts, genres and backdrop', () => {
+    mockUseMovieDetails.mockReturnValue({
+      data: details({
+        title: 'Le Parrain',
+        releaseDate: '1972-03-14',
+        runtimeMinutes: 175,
+        voteAverage: 8.7,
+        genres: ['Drame', 'Crime'],
+        posterPath: 'https://image.tmdb.org/t/p/w154/parrain.jpg',
+        backdropPath: 'https://image.tmdb.org/t/p/w780/parrain-wide.jpg',
+      }),
+      isLoading: false,
+      isError: false,
+    } as never);
+    const { container } = renderWithLocale(
+      <MovieDetailsModal open tmdbId={238} onClose={vi.fn()} />
+    );
+    expect(screen.getByRole('heading', { name: 'Le Parrain' })).toBeInTheDocument();
+    expect(screen.getByText('1972')).toBeInTheDocument();
+    expect(screen.getByText('2h55')).toBeInTheDocument();
+    expect(screen.getByText('8.7/10')).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Genres' })).toHaveTextContent('DrameCrime');
+    const images = Array.from(container.querySelectorAll('img')).map((img) =>
+      img.getAttribute('src')
+    );
+    expect(images).toContain('https://image.tmdb.org/t/p/w780/parrain-wide.jpg');
+    expect(images).toContain('https://image.tmdb.org/t/p/w154/parrain.jpg');
+  });
+
+  it('what the page passes wins over TMDB for the facts', () => {
+    mockUseMovieDetails.mockReturnValue({
+      data: details({
+        title: 'Autre',
+        releaseDate: '1999-01-01',
+        runtimeMinutes: 90,
+        voteAverage: 5,
+      }),
+      isLoading: false,
+      isError: false,
+    } as never);
+    renderWithLocale(
+      <MovieDetailsModal
+        open
+        title="Inception"
+        year="2010"
+        tmdbId={27205}
+        runtimeMinutes={148}
+        voteAverage={8.8}
+        ratingScale="five"
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('heading', { name: 'Inception' })).toBeInTheDocument();
+    expect(screen.getByText('2010')).toBeInTheDocument();
+    expect(screen.getByText('2h28')).toBeInTheDocument();
+    expect(screen.getByText('4.4/5')).toBeInTheDocument();
+  });
+
+  it('a series shows its seasons instead of a runtime and names its tab accordingly', () => {
+    mockUseMovieDetails.mockReturnValue({
+      data: details({
+        title: 'Game of Thrones',
+        seasonCount: 8,
+        episodeCount: 73,
+        runtimeMinutes: 57,
+      }),
+      isLoading: false,
+      isError: false,
+    } as never);
+    renderWithLocale(
+      <MovieDetailsModal open tmdbId={1399} mediaType="tv" year="2011" onClose={vi.fn()} />
+    );
+    expect(screen.getByText('8 saisons')).toBeInTheDocument();
+    expect(screen.queryByText('57min')).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /La série/ })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: /Le film/ })).not.toBeInTheDocument();
   });
 
   it('without a movie night context: only two tabs, opened on "The movie"', () => {
@@ -348,19 +454,10 @@ describe('MovieDetailsModal', () => {
 
   it('without provided watchProviders (e.g. from the watchlist): fetches the availability through useMovieDetails', () => {
     mockUseMovieDetails.mockReturnValue({
-      data: {
-        tmdbId: 27205,
-        overview: null,
-        tagline: null,
-        director: null,
-        cast: [],
-        runtimeMinutes: null,
-        genres: [],
-        releaseDate: null,
-        trailerUrl: null,
+      data: details({
         watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
         tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/27205/watch',
-      },
+      }),
       isLoading: false,
       isError: false,
     } as never);
@@ -381,19 +478,10 @@ describe('MovieDetailsModal', () => {
 
   it('with provided watchProviders (e.g. an already enriched movie night card): ignores useMovieDetails', () => {
     mockUseMovieDetails.mockReturnValue({
-      data: {
-        tmdbId: 27205,
-        overview: null,
-        tagline: null,
-        director: null,
-        cast: [],
-        runtimeMinutes: null,
-        genres: [],
-        releaseDate: null,
-        trailerUrl: null,
+      data: details({
         watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
         tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/27205/watch',
-      },
+      }),
       isLoading: false,
       isError: false,
     } as never);

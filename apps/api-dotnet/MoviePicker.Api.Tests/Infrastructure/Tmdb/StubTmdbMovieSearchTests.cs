@@ -50,5 +50,16 @@ public sealed class StubTmdbMovieSearchTests
         Assert.Equal("Réalisateur Stub", details.Director);
         Assert.Equal(2, details.Cast.Count);
         Assert.Equal([878, 18], details.GenreIds);
+        Assert.Equal(7.3, details.VoteAverage);
+        Assert.Null(details.SeasonCount);
+    }
+
+    [Fact]
+    public async Task GetDetailsAsync_Tv_ReturnsSeasonAndEpisodeCounts()
+    {
+        var details = await _sut.GetDetailsAsync(42, MovieMediaType.Tv);
+
+        Assert.Equal(2, details!.SeasonCount);
+        Assert.Equal(16, details.EpisodeCount);
     }
 }

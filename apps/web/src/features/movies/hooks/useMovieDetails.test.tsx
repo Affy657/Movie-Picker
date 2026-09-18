@@ -51,6 +51,11 @@ describe('useMovieDetails', () => {
       runtimeMinutes: null,
       genres: [],
       releaseDate: null,
+      voteAverage: null,
+      posterPath: null,
+      backdropPath: null,
+      seasonCount: null,
+      episodeCount: null,
       watchProviders: [],
       tmdbWatchPageUrl: null,
     });

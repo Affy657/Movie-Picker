@@ -31,8 +31,9 @@
 
 .rowLabel {
   margin: 0;
-  flex: 0 0 6.25rem;
+  flex: 0 0 var(--details-label-width);
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-muted);
 }
 
