@@ -14,8 +14,8 @@ vi.mock('@/shared/api/client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/shared/api/client')>()),
   fetchApi: (...args: unknown[]) => mockFetchApi(...args),
 }));
-vi.mock('@/features/events/storage', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/features/events/storage')>();
+vi.mock('@/shared/utils/eventIdentityStorage', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/shared/utils/eventIdentityStorage')>();
   return {
     ...actual,
     setStoredParticipant: (...args: unknown[]) => mockSetStoredParticipant(...args),

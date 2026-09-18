@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { CalendarPlus, Film, Trophy, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
-import type { UserStats } from '@/features/profile/api/profileApi';
+import type { UserStats } from '@/features/events/api/userStatsApi';
 import Card from '@/shared/components/Card';
 import styles from './ProfileStatsSection.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';

@@ -6,7 +6,7 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { createTestQueryClient, withQueryClient } from '@/test-utils/queryWrapper';
 import type { ReactNode } from 'react';
 
-vi.mock('@/features/watchlist/api/watchlistApi', () => ({
+vi.mock('@/features/movies/api/watchlistApi', () => ({
   fetchWatchlist: vi.fn(),
   addToWatchlist: vi.fn().mockResolvedValue(undefined),
   removeFromWatchlist: vi.fn().mockResolvedValue(undefined),

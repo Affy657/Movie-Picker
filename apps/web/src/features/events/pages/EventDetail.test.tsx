@@ -16,7 +16,7 @@ import {
 } from '@/mocks/handlers';
 import { http, HttpResponse } from 'msw';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
-import { setStoredParticipant, getStoredParticipant } from '@/features/events/storage';
+import { setStoredParticipant, getStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { JOIN_PROMPT_ANCHOR_ID } from '@/features/events/joinPrompt';
 
 beforeAll(() => {

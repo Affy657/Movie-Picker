@@ -16,7 +16,7 @@ import CreateEvent from '@/features/events/pages/CreateEvent';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import RegisterPage from '@/features/auth/pages/RegisterPage';
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
-import AccountPage from '@/features/auth/pages/AccountPage';
+import AccountPage from '@/app/pages/account/AccountPage';
 import MyEventsPage from '@/features/events/pages/MyEventsPage';
 import NotFoundPage from '@/app/pages/NotFoundPage';
 import DonatePage from '@/app/pages/DonatePage';

@@ -15,7 +15,7 @@ import {
 } from '@/features/auth/api/authApi';
 import type { UserProfile } from '@/features/auth/types';
 import { isRegisterPasswordCompliant } from '@/shared/utils/authPasswordRules';
-import sharedStyles from './AccountShared.module.css';
+import sharedStyles from '@/shared/components/SettingsSection.module.css';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Field from '@/shared/components/Field';

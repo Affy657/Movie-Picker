@@ -31,7 +31,7 @@ import { fetchPublicProfile, type PublicProfile } from '@/features/profile/api/p
 import ProfileCollectionToolbar from '@/features/profile/components/ProfileCollectionToolbar';
 import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
-import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
+import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
 import LibraryMovieDetails, {
   useLibraryMovieDetails,
   type LibraryMovieSeed,

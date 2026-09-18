@@ -5,7 +5,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { invalidateWatchlist } from '@/features/watchlist/hooks/useWatchlist';
+import { invalidateWatchlist } from '@/features/movies/hooks/useWatchlist';
 import DialogTitleBar from '@/shared/components/DialogTitleBar';
 import InfoBubble from '@/shared/components/InfoBubble';
 import {

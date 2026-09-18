@@ -5,7 +5,7 @@ import { joinEvent } from '@/features/events/api/eventsApi';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { setStoredParticipant } from '@/features/events/storage';
+import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES, withReturnTo } from '@/app/routes';
 import { JOIN_PROMPT_ANCHOR_ID } from '@/features/events/joinPrompt';

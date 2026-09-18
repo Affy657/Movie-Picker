@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useWatchlistToolbar, type WatchlistEntry } from './useWatchlistToolbar';
-import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
+import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
 
 const MEDIA_TYPE_LABELS = { movie: 'Films', tv: 'Séries' };
 

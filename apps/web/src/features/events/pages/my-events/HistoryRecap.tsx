@@ -1,6 +1,6 @@
 import { Flame } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchUserStats } from '@/features/profile/api/profileApi';
+import { fetchUserStats } from '@/features/events/api/userStatsApi';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';

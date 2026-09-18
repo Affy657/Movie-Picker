@@ -26,7 +26,7 @@ import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { setStoredParticipant } from '@/features/events/storage';
+import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { ROUTES } from '@/app/routes';
 import {
   DEFAULT_EVENT_CONFIG,

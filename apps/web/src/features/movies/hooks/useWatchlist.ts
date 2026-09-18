@@ -5,7 +5,7 @@ import {
   fetchWatchlistAvailability,
   removeFromWatchlist,
   type AddWatchlistItemBody,
-} from '@/features/watchlist/api/watchlistApi';
+} from '@/features/movies/api/watchlistApi';
 import type { MovieMediaType } from '@/shared/types/movie';
 import type { UserProfile } from '@/features/auth/types';
 import { queryKeys } from '@/shared/hooks/queryKeys';

@@ -7,7 +7,7 @@ import MyEventsPage from '@/features/events/pages/MyEventsPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
-import { setStoredParticipant } from '@/features/events/storage';
+import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 
 function clearGuestParticipantKeys() {
   const toRemove: string[] = [];

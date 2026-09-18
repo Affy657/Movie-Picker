@@ -25,12 +25,9 @@ import {
   useAddToWatchlist,
   useWatchlist,
   useWatchlistAvailability,
-} from '@/features/watchlist/hooks/useWatchlist';
+} from '@/features/movies/hooks/useWatchlist';
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
-import type {
-  WatchlistAvailabilityItem,
-  WatchlistItem,
-} from '@/features/watchlist/api/watchlistApi';
+import type { WatchlistAvailabilityItem, WatchlistItem } from '@/features/movies/api/watchlistApi';
 import {
   useWatchlistToolbar,
   type WatchlistEntry,
@@ -46,7 +43,7 @@ import { MovieListRowHeader } from '@/features/movies/components/MovieListRow';
 import { MovieTable } from '@/features/movies/components/MovieTable';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import ViewModeToggle, { type MovieViewMode } from '@/shared/components/ViewModeToggle';
-import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
+import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
 import LibraryMovieDetails, {
   useLibraryMovieDetails,
   type LibraryMovieSeed,

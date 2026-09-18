@@ -32,29 +32,6 @@ export interface FollowListResponse {
   items: FollowUserItem[];
 }
 
-export interface GenreCount {
-  genreId: number;
-  count: number;
-}
-
-export interface DailyActivityPoint {
-  date: string;
-  count: number;
-}
-
-export interface UserStats {
-  eventsCreated: number;
-  eventsJoined: number;
-  moviesProposed: number;
-  votesCast: number;
-  winningProposals: number;
-  moviesSeen: number;
-  currentStreakWeeks: number;
-  bestStreakWeeks: number;
-  favoriteGenres: GenreCount[];
-  dailyActivity: DailyActivityPoint[];
-}
-
 export async function fetchPublicProfile(handle: string): Promise<PublicProfile> {
   return fetchApi<PublicProfile>(`/users/${encodeURIComponent(handle)}`);
 }
@@ -83,10 +60,6 @@ export async function fetchFollowers(handle: string): Promise<FollowListResponse
 
 export async function searchUsers(query: string): Promise<FollowListResponse> {
   return fetchApi<FollowListResponse>(`/users/search?q=${encodeURIComponent(query)}`);
-}
-
-export async function fetchUserStats(handle: string, signal?: AbortSignal): Promise<UserStats> {
-  return fetchApi<UserStats>(`/users/${encodeURIComponent(handle)}/stats`, { signal });
 }
 
 export interface UserWatchedMovieItem {

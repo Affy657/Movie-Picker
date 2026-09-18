@@ -5,7 +5,7 @@ import {
   setStoredHostToken,
   getStoredParticipant,
   setStoredParticipant,
-} from '@/features/events/storage';
+} from '@/shared/utils/eventIdentityStorage';
 
 describe('event storage', () => {
   const slug = 'test-slug';

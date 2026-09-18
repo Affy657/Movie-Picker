@@ -17,7 +17,7 @@ import InstallPwaDialog from '@/app/components/InstallPwaDialog';
 import Button from '@/shared/components/Button';
 import Toggle from '@/shared/components/Toggle';
 import { getErrorMessage } from '@/shared/api/apiError';
-import sharedStyles from '@/features/auth/pages/account/AccountShared.module.css';
+import sharedStyles from '@/shared/components/SettingsSection.module.css';
 import styles from './NotificationsSection.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 

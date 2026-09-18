@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import Tooltip from '@/shared/components/Tooltip';
-import type { DailyActivityPoint } from '@/features/profile/api/profileApi';
+import type { DailyActivityPoint } from '@/features/events/api/userStatsApi';
 import {
   aggregateWeeklyActivity,
   monthMarkers,

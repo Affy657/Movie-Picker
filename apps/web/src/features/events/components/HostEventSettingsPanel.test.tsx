@@ -14,7 +14,7 @@ import {
   setStoredParticipant,
   getStoredParticipant,
   getStoredHostToken,
-} from '@/features/events/storage';
+} from '@/shared/utils/eventIdentityStorage';
 
 beforeAll(() => {
   if (!HTMLDialogElement.prototype.showModal) {

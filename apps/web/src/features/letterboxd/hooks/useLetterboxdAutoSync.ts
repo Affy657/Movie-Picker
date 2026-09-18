@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { invalidateWatchlist } from '@/features/watchlist/hooks/useWatchlist';
+import { invalidateWatchlist } from '@/features/movies/hooks/useWatchlist';
 import { syncLetterboxd } from '@/features/letterboxd/api/letterboxdApi';
 
 export function useLetterboxdAutoSync(): void {

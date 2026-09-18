@@ -2,7 +2,11 @@ import { useMemo, useState } from 'react';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
 import type { MovieMediaType } from '@/shared/types/movie';
-import { useAddToWatchlist, useRemoveFromWatchlist, useWatchlist } from './useWatchlist';
+import {
+  useAddToWatchlist,
+  useRemoveFromWatchlist,
+  useWatchlist,
+} from '@/features/movies/hooks/useWatchlist';
 
 export interface WatchlistToggleItem {
   tmdbId: number;

@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
-import styles from './AccountShared.module.css';
+import styles from '@/shared/components/SettingsSection.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export default function AccountSavedChip({ visible }: Readonly<{ visible: boolean }>) {

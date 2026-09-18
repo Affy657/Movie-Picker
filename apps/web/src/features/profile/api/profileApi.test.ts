@@ -6,11 +6,11 @@ import {
   fetchFollowers,
   fetchFollowing,
   fetchPublicProfile,
-  fetchUserStats,
   fetchUserWatchlist,
   followUser,
   unfollowUser,
 } from '@/features/profile/api/profileApi';
+import { fetchUserStats } from '@/features/events/api/userStatsApi';
 
 vi.mock('@/shared/api/client', () => ({ fetchApi: vi.fn() }));
 

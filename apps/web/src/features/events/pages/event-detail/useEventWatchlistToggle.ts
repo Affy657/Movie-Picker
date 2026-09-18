@@ -5,7 +5,7 @@ import {
   useAddToWatchlist,
   useRemoveFromWatchlist,
   useWatchlist,
-} from '@/features/watchlist/hooks/useWatchlist';
+} from '@/features/movies/hooks/useWatchlist';
 import { useTranslation } from '@/shared/i18n';
 
 function watchlistKey(tmdbId: number, mediaType: MovieData['mediaType']): string {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { LocaleProvider } from '@/shared/i18n';
-import AccountLoadingSkeleton from '@/features/auth/pages/account/AccountLoadingSkeleton';
+import AccountLoadingSkeleton from '@/app/pages/account/AccountLoadingSkeleton';
 import { fr } from '@/shared/i18n/locales/fr';
 
 describe('AccountLoadingSkeleton', () => {

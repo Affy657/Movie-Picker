@@ -6,7 +6,7 @@ import { setupServer } from 'msw/node';
 import type { ReactNode } from 'react';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 import { createEventDetailHandlers, TEST_API_V1 } from '@/mocks/handlers';
-import { getStoredParticipant, setStoredParticipant } from '@/features/events/storage';
+import { getStoredParticipant, setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 
 const slug = 'soiree-perf';

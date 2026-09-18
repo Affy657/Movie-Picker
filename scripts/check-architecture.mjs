@@ -84,6 +84,39 @@ function checkSharedIsALeaf(files) {
   }
 }
 
+const FEATURE_EDGES = {
+  auth: [],
+  movies: ['auth'],
+  events: ['movies', 'auth'],
+  letterboxd: ['movies', 'auth'],
+  watchlist: ['letterboxd', 'events', 'movies', 'auth'],
+  profile: ['watchlist', 'events', 'movies', 'auth'],
+  notifications: ['auth'],
+};
+const FEATURE_OF = /^apps\/web\/src\/features\/([a-z]+)\//;
+const FEATURE_SPEC = /^@\/features\/([a-z]+)\//;
+
+function checkFeatureLayers(files) {
+  for (const file of files) {
+    const from = FEATURE_OF.exec(rel(file))?.[1];
+    if (!from) continue;
+    const allowed = FEATURE_EDGES[from];
+    if (!allowed) {
+      violations.push(
+        `${rel(file)}: feature "${from}" is not in FEATURE_EDGES of scripts/check-architecture.mjs, declare what it may import`
+      );
+      continue;
+    }
+    for (const spec of importsOf(file)) {
+      const to = FEATURE_SPEC.exec(spec)?.[1];
+      if (!to || to === from || allowed.includes(to)) continue;
+      violations.push(
+        `${rel(file)} imports ${spec}: feature "${from}" may only import ${allowed.length ? allowed.join(', ') : 'no other feature'}`
+      );
+    }
+  }
+}
+
 function checkNoImportCycles(files) {
   const graph = new Map();
   for (const file of files) {
@@ -733,6 +766,7 @@ const e2eFiles = walk(join(root, 'e2e'), ['.ts']);
 
 checkComments([...webFiles, ...apiFiles, ...e2eFiles]);
 checkSharedIsALeaf(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
+checkFeatureLayers(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
 checkNoImportCycles(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
 checkDesignTokens(webFiles.filter((f) => f.endsWith('.css')));
 checkUndeclaredTokens(
@@ -767,7 +801,7 @@ if (violations.length > 0) {
   process.exit(1);
 }
 console.log(
-  'Architecture: no violation (comments, API layers, shared/ as a leaf, import cycles, design system tokens, icon and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes and tokens).'
+  'Architecture: no violation (comments, API layers, shared/ as a leaf, feature layers, import cycles, design system tokens, icon and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes and tokens).'
 );
 if (cssModulesExcluded.length > 0)
   console.log(

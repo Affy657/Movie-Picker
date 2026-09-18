@@ -1,4 +1,4 @@
-import type { DailyActivityPoint } from '@/features/profile/api/profileApi';
+import type { DailyActivityPoint } from '@/features/events/api/userStatsApi';
 
 const DAYS_PER_WEEK = 7;
 

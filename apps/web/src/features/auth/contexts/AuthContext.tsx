@@ -8,7 +8,7 @@ import {
   postAuthRegister,
   type ProfilePatch,
 } from '@/features/auth/api/authApi';
-import { clearStoredEventIdentities } from '@/features/events/storage';
+import { clearStoredEventIdentities } from '@/shared/utils/eventIdentityStorage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import type { UserProfile } from '@/features/auth/types';

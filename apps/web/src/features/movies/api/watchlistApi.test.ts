@@ -5,7 +5,7 @@ import {
   addToWatchlist,
   fetchWatchlist,
   removeFromWatchlist,
-} from '@/features/watchlist/api/watchlistApi';
+} from '@/features/movies/api/watchlistApi';
 
 vi.mock('@/shared/api/client', () => ({ fetchApi: vi.fn() }));
 

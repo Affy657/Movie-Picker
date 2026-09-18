@@ -23,11 +23,11 @@ import {
 } from '@/features/profile/components/ProfileQueryStates';
 import {
   fetchPublicProfile,
-  fetchUserStats,
   followUser,
   unfollowUser,
   type PublicProfile,
 } from '@/features/profile/api/profileApi';
+import { fetchUserStats } from '@/features/events/api/userStatsApi';
 import styles from './ProfilePage.module.css';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';

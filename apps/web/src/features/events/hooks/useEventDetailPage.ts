@@ -7,7 +7,7 @@ import {
   removeStoredParticipant,
   setStoredHostToken,
   setStoredParticipant,
-} from '@/features/events/storage';
+} from '@/shared/utils/eventIdentityStorage';
 import type { EventData } from '@/shared/types/event';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useEvent } from '@/features/events/hooks/useEvent';

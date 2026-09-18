@@ -8,11 +8,11 @@ import {
   EventSummaryCardBody,
   eventSummaryCardStyles,
 } from '@/features/events/components/EventSummaryCard';
-import { useEligibleEventsForPropose } from '@/features/watchlist/hooks/useEligibleEventsForPropose';
+import { useEligibleEventsForPropose } from '@/features/events/hooks/useEligibleEventsForPropose';
 import {
   useProposeMovieToEvent,
   type ProposableMovie,
-} from '@/features/watchlist/hooks/useProposeMovieToEvent';
+} from '@/features/events/hooks/useProposeMovieToEvent';
 import styles from './ProposeToEventModal.module.css';
 import Modal from '@/shared/components/Modal';
 import IconButton from '@/shared/components/IconButton';

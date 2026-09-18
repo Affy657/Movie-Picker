@@ -6,7 +6,7 @@ import {
   postEventClose,
   removeEventParticipant,
 } from '@/features/events/api/eventsApi';
-import { getStoredParticipant, removeStoredParticipant } from '@/features/events/storage';
+import { getStoredParticipant, removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';

@@ -6,7 +6,7 @@ import AccentColorPicker from '@/app/components/AccentColorPicker';
 import RatingScaleToggle from '@/app/components/RatingScaleToggle';
 import AccountSavedChip from './AccountSavedChip';
 import { useSavedFlash } from './useSavedFlash';
-import styles from './AccountShared.module.css';
+import styles from '@/shared/components/SettingsSection.module.css';
 import Field from '@/shared/components/Field';
 
 export default function AccountPreferencesPage() {

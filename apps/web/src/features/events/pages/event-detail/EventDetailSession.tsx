@@ -35,7 +35,7 @@ import {
   postEventClose,
 } from '@/features/events/api/eventsApi';
 import { removeMovieFromEvent } from '@/features/movies/api/moviesApi';
-import { removeStoredParticipant } from '@/features/events/storage';
+import { removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';

@@ -1,5 +1,5 @@
 import { useLocale, useTranslation } from '@/shared/i18n';
-import type { GenreCount } from '@/features/profile/api/profileApi';
+import type { GenreCount } from '@/features/events/api/userStatsApi';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import styles from './ProfileStatsSection.module.css';
 

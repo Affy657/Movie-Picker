@@ -8,7 +8,7 @@ import { useTranslation } from '@/shared/i18n';
 import { API_ERROR_REASONS } from '@/shared/api/apiError';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { queryKeys } from '@/shared/hooks/queryKeys';
-import { invalidateWatchlist } from '@/features/watchlist/hooks/useWatchlist';
+import { invalidateWatchlist } from '@/features/movies/hooks/useWatchlist';
 import InfoBubble from '@/shared/components/InfoBubble';
 import {
   syncLetterboxd,
@@ -18,7 +18,7 @@ import {
 } from '@/features/letterboxd/api/letterboxdApi';
 import type { UserProfile } from '@/features/auth/types';
 import LetterboxdChoicesModal from './LetterboxdChoicesModal';
-import sharedStyles from '@/features/auth/pages/account/AccountShared.module.css';
+import sharedStyles from '@/shared/components/SettingsSection.module.css';
 import styles from './LetterboxdImportSection.module.css';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';

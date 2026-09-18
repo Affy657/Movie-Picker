@@ -4,10 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
-import ProposeToEventModal from '@/features/watchlist/components/ProposeToEventModal';
+import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
-import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
+import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
 
 const MOVIE: WatchlistItem = {
   tmdbId: 200,

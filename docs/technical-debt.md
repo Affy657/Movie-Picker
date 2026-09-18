@@ -188,20 +188,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: aucun handler de mutation n'attend le service push, et une panne push d'une heure se rattrape sans perte
 - piege: ne pas remplacer l'attente par un `_ = SendAsync(...)`, c'est exactement le tire-et-oublie que Cloud Run ne reprend jamais (règle 2 des contraintes Cloud Run). Le rappel de soirée (`EventReminderPass`) est déjà hors requête, il ne fait pas partie du périmètre.
 
-## DEBT-036 le graphe des features front est une maille, pas des couches
-
-- state: differe
-- declencheur: une feature repasse dans un des fichiers concernés, ou une nouvelle feature s'ajoute à `apps/web/src/features/`
-- impact: six paires de features s'importent mutuellement, mesuré le 2026-09-15 : `auth ↔ events` (`auth` lit `events/storage`), `auth ↔ letterboxd` et `auth ↔ notifications` (la page compte compose `LetterboxdImportSection` et `NotificationsSection`), `events ↔ watchlist` (`useWatchlist` d'un côté, `eventsApi` et `EventSummaryCard` de l'autre), `movies ↔ watchlist`, `letterboxd ↔ watchlist`. Aucune feature n'est retirable ni chargeable seule, la fermeture statique d'`App` grossit par transitivité (C4), et une modification de `watchlist` peut casser `events` sans qu'un test de `watchlist` le dise. `check:architecture` ne voit que les cycles de **fichiers** et `shared → feature`.
-- ou: `scripts/check-architecture.mjs` (règles d'import), `apps/web/src/features/*`
-- verify: liste les arêtes sortantes de chaque feature ; encore ouvert tant qu'une paire apparaît dans les deux sens.
-  ```bash
-  for f in auth events letterboxd movies notifications profile watchlist; do echo "$f -> $(grep -rhoE "from '@/features/[a-z]+" apps/web/src/features/$f --include=*.ts --include=*.tsx | grep -v "features/$f'" | sort -u | sed "s#from '@/features/##" | tr '\n' ' ')"; done
-  ```
-- fix: d'abord la règle, ensuite le démêlage. Dans `check-architecture.mjs`, une liste d'arêtes autorisées entre features (`auth` en feuille, `movies → auth`, `events → movies, auth`, `watchlist → movies, auth`, `profile → movies, watchlist, auth`, `letterboxd → watchlist, auth`, `notifications → auth`), toute autre arête étant une violation ; la porte reste rouge jusqu'au démêlage, donc poser la règle et le démêlage dans le même commit. Le démêlage : la page compte sort de `auth` vers `app/pages/account/` qui compose les sections des autres features ; `events/storage` (jeton d'hôte) descend dans `shared/` ou disparaît avec DEBT-032 ; la carte de soirée de la watchlist et `useWatchlist` côté soirée se règlent en déplaçant la brique commune dans `movies`, qui est déjà la couche partagée par `events`, `watchlist` et `profile`.
-- fini-quand: `verify` ne montre plus aucune paire dans les deux sens, et `check:architecture` refuse une arête hors liste
-- piege: déplacer une page renomme son chunk : vérifier `PRERENDERED_ROUTE_CHUNKS` et `route-assets.json` (C4) avant de croire un build vert, et remesurer `login` et `home` après, ce sont les pages que tout regroupement fait reculer (I1, I9).
-
 ## DEBT-037 les passes planifiées s'authentifient par un secret statique là où Cloud Scheduler sait signer
 
 - state: differe

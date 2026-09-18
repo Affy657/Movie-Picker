@@ -22,7 +22,7 @@ import { deleteEvent, patchEventConfig } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { ROUTES } from '@/app/routes';
-import { clearStoredHostToken, removeStoredParticipant } from '@/features/events/storage';
+import { clearStoredHostToken, removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import dragStyles from '@/shared/components/SheetDrag.module.css';

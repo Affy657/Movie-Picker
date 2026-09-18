@@ -10,7 +10,7 @@ import {
 import { safeLocalStorageGet, safeLocalStorageSet } from '@/shared/utils/safeStorage';
 import type { RatingScale } from '@/shared/types/theme';
 import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
-import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
+import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
 
 export interface WatchlistEntry extends WatchlistItem {
   watchProviders?: WatchProviderOffer[];

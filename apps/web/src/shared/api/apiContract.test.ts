@@ -4,16 +4,13 @@ import type {
   RemoveParticipantResponse,
   DeleteEventResponse,
 } from '@/features/events/api/eventsApi';
-import type {
-  FollowListResponse,
-  UserStats,
-  PublicProfile,
-} from '@/features/profile/api/profileApi';
+import type { FollowListResponse, PublicProfile } from '@/features/profile/api/profileApi';
+import type { UserStats } from '@/features/events/api/userStatsApi';
 import type {
   WatchlistAvailabilityItem,
   WatchlistAvailabilityResponse,
   WatchlistResponse,
-} from '@/features/watchlist/api/watchlistApi';
+} from '@/features/movies/api/watchlistApi';
 import type { NotificationInbox } from '@/features/notifications/api/notificationsApi';
 import type { MovieSearchListResponse } from '@/features/movies/api/moviesApi';
 import type { UserProfile } from '@/features/auth/types';

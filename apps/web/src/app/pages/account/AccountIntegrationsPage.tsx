@@ -10,7 +10,7 @@ import { resolveOAuthErrorKey } from '@/features/auth/utils/oauthErrors';
 import type { UserProfile } from '@/features/auth/types';
 import LetterboxdImportSection from '@/features/letterboxd/components/LetterboxdImportSection';
 import { ROUTES } from '@/app/routes';
-import sharedStyles from './AccountShared.module.css';
+import sharedStyles from '@/shared/components/SettingsSection.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
 
 const PROVIDER_LABELS: Record<string, string> = { google: 'Google', github: 'GitHub' };

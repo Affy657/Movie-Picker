@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import ProfileStatsSection from './ProfileStatsSection';
-import type { UserStats } from '@/features/profile/api/profileApi';
+import type { UserStats } from '@/features/events/api/userStatsApi';
 
 const EMPTY_STATS: UserStats = {
   eventsCreated: 0,

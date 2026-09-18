@@ -3,8 +3,8 @@ import {
   fetchFollowingWatchedMovies,
   fetchMyWatchedMovies,
 } from '@/features/profile/api/profileApi';
-import { useWatchlist } from '@/features/watchlist/hooks/useWatchlist';
-import type { WatchlistItem } from '@/features/watchlist/api/watchlistApi';
+import { useWatchlist } from '@/features/movies/hooks/useWatchlist';
+import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
 import type { PersonalRowItem } from './HomePersonalRow';
 
 const FRIENDS_TAKE = 20;

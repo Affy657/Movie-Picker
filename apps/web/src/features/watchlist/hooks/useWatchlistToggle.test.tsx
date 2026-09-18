@@ -3,10 +3,10 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { act, type ReactNode } from 'react';
 import { LocaleProvider } from '@/shared/i18n';
 import { createTestQueryClient, withQueryClient } from '@/test-utils/queryWrapper';
-import { addToWatchlist, removeFromWatchlist } from '@/features/watchlist/api/watchlistApi';
+import { addToWatchlist, removeFromWatchlist } from '@/features/movies/api/watchlistApi';
 import { useWatchlistToggle } from './useWatchlistToggle';
 
-vi.mock('@/features/watchlist/api/watchlistApi', () => ({
+vi.mock('@/features/movies/api/watchlistApi', () => ({
   fetchWatchlist: vi
     .fn()
     .mockResolvedValue([
