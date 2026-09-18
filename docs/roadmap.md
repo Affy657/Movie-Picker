@@ -219,7 +219,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (24 points, 24 restants)
+## 📋 V1.7, planifiée (24 points produit, 23 points tech, 47 restants)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
@@ -230,6 +230,21 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ⬜ `M` **Top 3 films préférés sur le profil** : sélectionner et afficher trois films favoris sur son profil public `/u/:handle` via une recherche TMDB, visibles par tous et modifiables depuis les paramètres.
 - ⬜ `M` **Photo de profil personnalisée** : téléverser une image comme photo de profil, en remplacement de l'avatar généré actuel.
 - ⬜ `S` **Pioche aléatoire dans la watchlist** : bouton qui tire un film au hasard parmi les films à voir de la watchlist, proposable dans une soirée en un clic.
+
+**Tech**
+
+> **Note, découpage du chantier Terraform** : l'item `XL` d'origine est coupé en huit lots livrables un par un, dans leur ordre de dépendance. Les lots 3 et 4 sortent le front d'AWS avant les lots d'identité et de CI : décrire puis outiller un hébergement qu'on s'apprête à supprimer serait du travail jeté. Le gain visé est la consolidation, pas l'économie.
+
+- ⬜ 🏗️ `S` **Terraform 1, socle et état distant** : arborescence dédiée, versions épinglées, état distant versionné et verrouillé, `fmt` et `validate` ajoutés à la vérification locale et à la CI. Aucune ressource décrite à ce stade.
+- ⬜ 🏗️ `M` **Terraform 2, prod GCP décrite et importée** : registre d'images, service Cloud Run et entrées Secret Manager décrits puis **importés**, jamais recréés. Le lot est fini quand `terraform plan` revient vide sur la prod en service.
+- ⬜ 🏗️ `M` **Terraform 3, front hébergé sur GCP** : cible GCP décrite avec parité stricte sur le repli SPA, les en-têtes de sécurité et les trois paliers de cache de CloudFront. Publiée en parallèle et vérifiée sur un sous-domaine temporaire, sans impact utilisateur.
+- ⬜ 🏗️ `S` **Terraform 4, bascule DNS et sortie d'AWS** : élargir les origines autorisées, repointer le CNAME chez OVH, observer les sondes, puis supprimer distribution, bucket, certificat et utilisateur IAM. Le certificat est un wildcard : vérifier qu'aucun autre sous-domaine ne s'en sert.
+- ⬜ 🔒 `M` **Terraform 5, IAM décrit et clés longue durée retirées** : comptes de service au moindre privilège pour l'exécution comme pour le pipeline, et la fédération d'identité GitHub (pool GCP, rôle AWS, en place à la main depuis le 2026-09-15) décrite puis importée.
+- ⬜ ⚙️ `S` **Terraform 6, plan en PR et apply sur master** : job dédié, `plan` publié en commentaire de PR, `apply` derrière l'environnement de production. Une dérive de configuration se voit alors en revue plutôt qu'en incident.
+- ⬜ 📊 `M` **Terraform 7, supervision décrite en IaC** : les trois sondes de disponibilité, les six politiques d'alerte (cinq d'incident sur métriques, une notification de nouveau compte basée sur les journaux de l'API), le canal de notification et le tableau de bord, aujourd'hui créés par appels d'API et non versionnés.
+- ⬜ 🏗️ `L` **Terraform 8, environnement de recette** : seconde instanciation des modules des lots 2, 3 et 5, avec son entrée DNS et un déploiement qui passe par la recette avant la prod. Son coût dépend entièrement des lots précédents.
+
+> **Note, cible d'hébergement du front (lot 3)** : Firebase Hosting plutôt que Cloud Storage et Cloud CDN, dont la règle de transfert coûte près de 18 $ par mois avant le premier octet servi et ferait sortir le projet du « 0 €/mois » suivi comme indicateur. Seul point à surveiller : 360 Mo par jour, loin du trafic mesuré.
 
 ---
 
@@ -294,17 +309,6 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## Backlog tech (non priorisé sur une release) (23 points)
+## Backlog tech (non priorisé sur une release) (0 point)
 
-> **Note, découpage du chantier Terraform** : l'item `XL` d'origine est coupé en huit lots livrables un par un, dans leur ordre de dépendance. Les lots 3 et 4 sortent le front d'AWS avant les lots d'identité et de CI : décrire puis outiller un hébergement qu'on s'apprête à supprimer serait du travail jeté. Le gain visé est la consolidation, pas l'économie.
-
-- ⬜ 🏗️ `S` **Terraform 1, socle et état distant** : arborescence dédiée, versions épinglées, état distant versionné et verrouillé, `fmt` et `validate` ajoutés à la vérification locale et à la CI. Aucune ressource décrite à ce stade.
-- ⬜ 🏗️ `M` **Terraform 2, prod GCP décrite et importée** : registre d'images, service Cloud Run et entrées Secret Manager décrits puis **importés**, jamais recréés. Le lot est fini quand `terraform plan` revient vide sur la prod en service.
-- ⬜ 🏗️ `M` **Terraform 3, front hébergé sur GCP** : cible GCP décrite avec parité stricte sur le repli SPA, les en-têtes de sécurité et les trois paliers de cache de CloudFront. Publiée en parallèle et vérifiée sur un sous-domaine temporaire, sans impact utilisateur.
-- ⬜ 🏗️ `S` **Terraform 4, bascule DNS et sortie d'AWS** : élargir les origines autorisées, repointer le CNAME chez OVH, observer les sondes, puis supprimer distribution, bucket, certificat et utilisateur IAM. Le certificat est un wildcard : vérifier qu'aucun autre sous-domaine ne s'en sert.
-- ⬜ 🔒 `M` **Terraform 5, IAM décrit et clés longue durée retirées** : comptes de service au moindre privilège pour l'exécution comme pour le pipeline, et la fédération d'identité GitHub (pool GCP, rôle AWS, en place à la main depuis le 2026-09-15) décrite puis importée.
-- ⬜ ⚙️ `S` **Terraform 6, plan en PR et apply sur master** : job dédié, `plan` publié en commentaire de PR, `apply` derrière l'environnement de production. Une dérive de configuration se voit alors en revue plutôt qu'en incident.
-- ⬜ 📊 `M` **Terraform 7, supervision décrite en IaC** : les trois sondes de disponibilité, les six politiques d'alerte (cinq d'incident sur métriques, une notification de nouveau compte basée sur les journaux de l'API), le canal de notification et le tableau de bord, aujourd'hui créés par appels d'API et non versionnés.
-- ⬜ 🏗️ `L` **Terraform 8, environnement de recette** : seconde instanciation des modules des lots 2, 3 et 5, avec son entrée DNS et un déploiement qui passe par la recette avant la prod. Son coût dépend entièrement des lots précédents.
-
-> **Note, cible d'hébergement du front (lot 3)** : Firebase Hosting plutôt que Cloud Storage et Cloud CDN, dont la règle de transfert coûte près de 18 $ par mois avant le premier octet servi et ferait sortir le projet du « 0 €/mois » suivi comme indicateur. Seul point à surveiller : 360 Mo par jour, loin du trafic mesuré.
+Vide : les huit lots Terraform sont planifiés en V1.7.
