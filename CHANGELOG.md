@@ -10,7 +10,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Added
 
-- **L'infrastructure commence à s'écrire en code** : une arborescence Terraform dédiée, aux versions épinglées, avec un état distant versionné et verrouillé, et une porte `fmt` + `validate` jouée dans la vérification locale comme dans la CI. Aucune ressource n'y est encore décrite : la production reste appliquée à la main jusqu'aux lots suivants.
+- **L'infrastructure commence à s'écrire en code** : une arborescence Terraform dédiée, aux versions épinglées, avec un état distant versionné et verrouillé, et une porte `fmt` + `validate` jouée dans la vérification locale comme dans la CI.
+- **La production GCP est décrite et importée** : le registre d'images et sa rétention, le service qui sert l'API avec son domaine, et les quatorze secrets avec le droit de les lire, en trois modules réutilisables, sans qu'aucune ressource n'ait été recréée. Le workflow mensuel qui reposait la rétention du registre disparaît, la description la porte.
 
 ### Security
 

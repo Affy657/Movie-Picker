@@ -219,7 +219,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (24 points produit, 23 points tech, 46 restants)
+## 📋 V1.7, planifiée (24 points produit, 23 points tech, 43 restants)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
@@ -236,7 +236,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 > **Note, découpage du chantier Terraform** : l'item `XL` d'origine est coupé en huit lots livrables un par un, dans leur ordre de dépendance. Les lots 3 et 4 sortent le front d'AWS avant les lots d'identité et de CI : décrire puis outiller un hébergement qu'on s'apprête à supprimer serait du travail jeté. Le gain visé est la consolidation, pas l'économie.
 
 - ✅ 🏗️ `S` **Terraform 1, socle et état distant** : arborescence dédiée, versions épinglées, état distant versionné et verrouillé, `fmt` et `validate` ajoutés à la vérification locale et à la CI. Aucune ressource décrite à ce stade.
-- ⬜ 🏗️ `M` **Terraform 2, prod GCP décrite et importée** : registre d'images, service Cloud Run et entrées Secret Manager décrits puis **importés**, jamais recréés. Le lot est fini quand `terraform plan` revient vide sur la prod en service.
+- ✅ 🏗️ `M` **Terraform 2, prod GCP décrite et importée** : registre d'images et sa rétention, service Cloud Run avec son domaine et son invocation publique, les quatorze secrets et leur droit de lecture, décrits en trois modules puis **importés**, jamais recréés : 32 ressources, `terraform plan` vide sur la prod en service. Le pipeline garde l'image et le conteneur.
 - ⬜ 🏗️ `M` **Terraform 3, front hébergé sur GCP** : cible GCP décrite avec parité stricte sur le repli SPA, les en-têtes de sécurité et les trois paliers de cache de CloudFront. Publiée en parallèle et vérifiée sur un sous-domaine temporaire, sans impact utilisateur.
 - ⬜ 🏗️ `S` **Terraform 4, bascule DNS et sortie d'AWS** : élargir les origines autorisées, repointer le CNAME chez OVH, observer les sondes, puis supprimer distribution, bucket, certificat et utilisateur IAM. Le certificat est un wildcard : vérifier qu'aucun autre sous-domaine ne s'en sert.
 - ⬜ 🔒 `M` **Terraform 5, IAM décrit et clés longue durée retirées** : comptes de service au moindre privilège pour l'exécution comme pour le pipeline, et la fédération d'identité GitHub (pool GCP, rôle AWS, en place à la main depuis le 2026-09-15) décrite puis importée.

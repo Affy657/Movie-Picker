@@ -176,7 +176,7 @@ movie-picker/
 ├─ configs/           tsconfig et Prettier partagés, exclusions Sonar
 ├─ docs/              Roadmap, dette technique, ce guide
 ├─ e2e/               Parcours Playwright
-├─ infra/             Terraform (infra/terraform/), politiques IAM, CloudFront et rétention de registre
+├─ infra/             Terraform (infra/terraform/), politiques IAM et CloudFront encore appliquées à la main
 └─ scripts/           verify:local, lint des workflows, Terraform, prérequis, export OpenAPI, seuils de couverture
 ```
 

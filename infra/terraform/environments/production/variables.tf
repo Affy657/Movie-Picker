@@ -8,3 +8,9 @@ variable "region" {
   type        = string
   default     = "europe-west1"
 }
+
+variable "api_runtime_service_account_name" {
+  description = "Account id of the identity the API revisions run under, the same value as API_RUNTIME_SERVICE_ACCOUNT_NAME in deploy.yml."
+  type        = string
+  default     = "movie-picker-api"
+}

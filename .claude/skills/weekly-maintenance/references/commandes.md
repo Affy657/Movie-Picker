@@ -18,10 +18,9 @@ Workflows planifiés, dernier statut :
 
 ```bash
 rtk gh run list --repo Affy657/Movie-Picker --workflow security-scan.yml --limit 1 --json conclusion,createdAt
-rtk gh run list --repo Affy657/Movie-Picker --workflow registry-cleanup.yml --limit 1 --json conclusion,createdAt
 ```
 
-`security-scan.yml` tourne le lundi à 04:17 UTC, `registry-cleanup.yml` le 1er du mois à 05:00 UTC, `backup-mongo.yml` tous les jours à 02:31 UTC. GitHub démarre les runs planifiés de ce dépôt avec environ cinq heures de retard, c'est constant et ce n'est pas une panne.
+`security-scan.yml` tourne le lundi à 04:17 UTC, `backup-mongo.yml` tous les jours à 02:31 UTC. GitHub démarre les runs planifiés de ce dépôt avec environ cinq heures de retard, c'est constant et ce n'est pas une panne.
 
 Outils épinglés à la main (gitleaks, actionlint, zizmor, SonarScanner, sentry-cli, mongo tools, images MongoDB et Trivy) contre leur dernière version publiée :
 

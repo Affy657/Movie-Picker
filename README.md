@@ -148,8 +148,8 @@ Trois choix structurent la mise en production :
 Workflows annexes : `backup-mongo.yml` sauvegarde la base chaque nuit et restaure l'archive pour la
 vérifier avant de la publier, `rollback.yml` et `rollback-front.yml` sont les portes manuelles de
 retour arrière (révision Cloud Run antérieure, build front archivé republié avec les mêmes passes S3
-que le déploiement), `registry-cleanup.yml` et `security-scan.yml` tiennent la rétention et la
-veille de vulnérabilités.
+que le déploiement), `security-scan.yml` tient la veille de vulnérabilités ; la rétention du registre
+d'images est décrite en Terraform (`infra/terraform/`).
 
 ## Documentation
 

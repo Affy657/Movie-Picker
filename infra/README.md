@@ -6,7 +6,6 @@ Deux choses vivent ici : la description Terraform de l'infrastructure, construit
 |---|---|---|
 | `iam-github-actions-deploy-policy.json` | politique au moindre privilège du rôle que `deploy-front` assume par OIDC | console IAM, ou `aws iam attach-role-policy` |
 | `cloudfront-response-headers-policy.json` | en-têtes de sécurité servis par CloudFront | [`../scripts/apply-cloudfront-headers.sh`](../scripts/apply-cloudfront-headers.sh) |
-| `artifact-registry-cleanup-policy.json` | rétention des images de l'API | [`../.github/workflows/registry-cleanup.yml`](../.github/workflows/registry-cleanup.yml) |
 
 ## Les identifiants sont des espaces réservés
 
@@ -28,11 +27,24 @@ Les secrets de déploiement (`GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCO
 
 ```
 infra/terraform/
+├─ modules/
+│  ├─ artifact-registry/   dépôt Docker des images de l'API et sa rétention (10 versions gardées, purge à 30 jours)
+│  ├─ secrets/             les secrets de l'API dans Secret Manager, conteneurs seuls, et le droit de lecture de l'identité d'exécution
+│  └─ cloud-run-api/       le service Cloud Run de l'API, son invocation publique et son domaine
 └─ environments/
-   └─ production/     module racine : versions.tf, backend.tf, providers.tf, variables.tf, .terraform.lock.hcl
+   └─ production/          module racine : main.tf (les trois modules), versions.tf, backend.tf, providers.tf, variables.tf, outputs.tf, .terraform.lock.hcl
 ```
 
-Un module racine par environnement, un état distant par module racine (préfixe `environments/<nom>` dans le bucket d'état). Les ressources partagées entre environnements iront dans `infra/terraform/modules/` à partir du lot 2, et la recette (lot 8) sera un second dossier sous `environments/`. Rien n'est écrit dans les fichiers `.tf` qui identifie le projet : l'identifiant du projet est une variable, le nom du bucket d'état est fourni à `init`.
+Un module racine par environnement, un état distant par module racine (préfixe `environments/<nom>` dans le bucket d'état) ; la recette (lot 8) sera un second dossier sous `environments/` qui instancie les mêmes modules. Rien n'est écrit dans les fichiers `.tf` qui identifie le projet : l'identifiant du projet est une variable, le nom du bucket d'état est fourni à `init`.
+
+### Ce que Terraform décrit, ce que le pipeline garde
+
+La production a été **importée** le 2026-09-18 (lot 2 : 32 ressources, `plan` vide depuis), jamais recréée. Le partage avec `deploy.yml`, qui continue de déployer :
+
+- **Terraform décrit la forme** : dépôt d'images et sa rétention, les quatorze secrets et le droit `secretAccessor` de l'identité d'exécution sur chacun, le service Cloud Run (identité, ingress, plafond d'instances, CPU et mémoire, concurrence, délai, port), son invocation par `allUsers` et son domaine `api.movie-picker.fr`.
+- **Le pipeline garde le conteneur** : l'image, les variables d'environnement et les secrets montés (`--set-secrets`, `--set-env-vars`, dont `ALLOWED_ORIGINS`, variable GitHub, et `SENTRY_RELEASE`, qui change à chaque déploiement), le trafic (`--no-traffic` puis promotion, épinglage par `rollback.yml`) et les marqueurs `client` / `client_version` posés par gcloud. Le module `cloud-run-api` les écrit à la création d'un service (recette) puis les ignore (`lifecycle.ignore_changes`) : un `plan` reste vide après un déploiement ou un retour arrière. Les faire passer sous Terraform demande d'abord que la version voyage dans l'image plutôt qu'en variable, c'est le lot 6.
+- **Les versions des secrets ne passent jamais par Terraform** (`gcloud secrets versions add`), sinon leur valeur finirait dans l'état. Les secrets et le service portent `deletion_protection` : retirer un secret de la liste ou détruire le service demande d'abord de lever ce verrou dans le code.
+- Le montage d'un secret dans le service reste décrit à deux endroits, la liste `SECRETS` de `deploy.yml` et `api_secret_names` dans `main.tf`, le premier faisant foi jusqu'au lot 6 : ajouter un secret, c'est le créer ici (`apply`), lui ajouter une version à la main, puis l'ajouter à `deploy.yml`.
 
 ### Lancer Terraform
 
