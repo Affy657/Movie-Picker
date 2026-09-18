@@ -666,6 +666,16 @@ textarea {
   font-family: inherit;
 }
 
+a,
+button,
+input,
+label,
+select,
+summary,
+textarea {
+  touch-action: manipulation;
+}
+
 .page {
   padding: var(--space-6) var(--space-4) var(--space-4);
   max-width: var(--page-max-width, var(--layout-max));

@@ -14,6 +14,12 @@
   font-size: var(--font-size-2xs);
 }
 
+@media (pointer: coarse) {
+  .input {
+    font-size: var(--font-size-md);
+  }
+}
+
 .iconSquare {
   display: inline-flex;
   flex-shrink: 0;

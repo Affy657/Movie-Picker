@@ -213,6 +213,7 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   animation: bob var(--demo-float-duration) var(--ease-in-out) infinite;
 }
 

@@ -93,6 +93,12 @@
   outline: none;
 }
 
+@media (pointer: coarse) {
+  .noteTextarea {
+    font-size: var(--font-size-md);
+  }
+}
+
 .noteTextarea::placeholder {
   color: var(--mc-icon-muted, var(--on-poster-icon-muted));
 }

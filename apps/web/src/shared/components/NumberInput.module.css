@@ -60,6 +60,7 @@
     background var(--duration-fast) var(--ease-default),
     color var(--duration-fast) var(--ease-default);
   user-select: none;
+  -webkit-user-select: none;
 }
 
 @media (hover: hover) {

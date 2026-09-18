@@ -1548,6 +1548,8 @@ export const fr = {
   notifications: {
     title: 'Notifications',
     unsupported: 'Les notifications push ne sont pas disponibles sur ce navigateur.',
+    unsupportedIos:
+      'Sur iPhone et iPad, les notifications ne fonctionnent que depuis l’app ajoutée à l’écran d’accueil.',
     permissionDenied:
       'Les notifications ont été bloquées. Modifiez les permissions du navigateur pour les réactiver.',
     enabledLabel: 'Notifications push activées',

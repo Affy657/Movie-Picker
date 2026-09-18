@@ -1520,6 +1520,8 @@ export const en: Locale = {
   notifications: {
     title: 'Notifications',
     unsupported: 'Push notifications are not available on this browser.',
+    unsupportedIos:
+      'On iPhone and iPad, notifications only work from the app added to the Home Screen.',
     permissionDenied:
       'Notifications are blocked. Change your browser permissions to re-enable them.',
     enabledLabel: 'Push notifications enabled',

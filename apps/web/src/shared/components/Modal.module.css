@@ -13,6 +13,7 @@
 .dialog::backdrop {
   background: var(--color-overlay-backdrop);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .xs {

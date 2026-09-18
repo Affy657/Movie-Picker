@@ -1,4 +1,5 @@
 import { apiUrl, fetchApi } from '@/shared/api/client';
+import { downloadBlob } from '@/shared/utils/downloadBlob';
 import { ApiError } from '@/shared/api/apiError';
 import type { AccentColor, RatingScale, UiThemePreference } from '@/shared/types/theme';
 import type { UserProfile } from '@/features/auth/types';
@@ -132,23 +133,11 @@ function buildExportFilename(): string {
   return `movie-picker-mes-donnees-${date}.json`;
 }
 
-function triggerBlobDownload(blob: Blob, filename: string): void {
-  if (typeof URL.createObjectURL !== 'function') return;
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
-}
-
 export async function downloadMyDataExport(): Promise<void> {
   const data = await fetchApi<unknown>('/auth/me/export');
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
-  triggerBlobDownload(blob, buildExportFilename());
+  downloadBlob(blob, buildExportFilename());
 }
 
 export async function deleteAccount(payload: {

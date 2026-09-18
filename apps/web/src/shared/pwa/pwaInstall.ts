@@ -1,6 +1,6 @@
 export type PwaInstallMode = 'native' | 'ios' | 'in_app' | 'generic';
 export type PwaInstallGuideMode = 'ios' | 'in_app' | 'generic';
-export type PwaInstallSurface = 'footer' | 'user_menu';
+export type PwaInstallSurface = 'footer' | 'user_menu' | 'notifications';
 
 export type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;

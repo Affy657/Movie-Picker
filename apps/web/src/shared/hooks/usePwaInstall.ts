@@ -65,7 +65,7 @@ if (typeof window !== 'undefined') {
   startPwaInstallRuntime();
 }
 
-function readStandalone(): boolean {
+export function isStandaloneRuntime(): boolean {
   if (typeof window === 'undefined') return false;
   const nav = navigator as NavigatorWithPwa;
   return isStandaloneDisplayMode({
@@ -74,7 +74,7 @@ function readStandalone(): boolean {
   });
 }
 
-function readIsIos(): boolean {
+export function isIosRuntime(): boolean {
   if (typeof navigator === 'undefined') return false;
   return isIosDevice({
     userAgent: navigator.userAgent,
@@ -89,7 +89,7 @@ export function usePwaInstall(): {
   promptInstall: () => Promise<PromptOutcome>;
 } {
   const [canNativePrompt, setCanNativePrompt] = useState(() => deferredPrompt !== null);
-  const [isStandalone, setIsStandalone] = useState(readStandalone);
+  const [isStandalone, setIsStandalone] = useState(isStandaloneRuntime);
   const [isInstalledRelatedApp, setIsInstalledRelatedApp] = useState(false);
   const [appInstalled, setAppInstalled] = useState(false);
 
@@ -115,7 +115,7 @@ export function usePwaInstall(): {
   useEffect(() => {
     const standaloneQuery = window.matchMedia('(display-mode: standalone)');
     const overlayQuery = window.matchMedia('(display-mode: window-controls-overlay)');
-    const syncStandalone = () => setIsStandalone(readStandalone());
+    const syncStandalone = () => setIsStandalone(isStandaloneRuntime());
     syncStandalone();
     standaloneQuery.addEventListener('change', syncStandalone);
     overlayQuery.addEventListener('change', syncStandalone);
@@ -145,7 +145,7 @@ export function usePwaInstall(): {
     isInstalledRelatedApp,
     isInAppBrowser: isKnownInAppBrowser(navigator.userAgent),
     canNativePrompt,
-    isIos: readIsIos(),
+    isIos: isIosRuntime(),
   });
 
   const promptInstall = useCallback(async (): Promise<PromptOutcome> => {

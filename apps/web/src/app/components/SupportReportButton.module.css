@@ -67,6 +67,12 @@
   line-height: var(--leading-normal);
 }
 
+@media (pointer: coarse) {
+  .report {
+    font-size: var(--font-size-md);
+  }
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

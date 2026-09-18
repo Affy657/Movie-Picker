@@ -416,6 +416,8 @@ export default function AddMovieForm({
               ref={searchInputRef}
               id="add-movie-search"
               type="search"
+              enterKeyHint="search"
+              autoCorrect="off"
               className="input"
               aria-label={searchAriaLabel ?? t('movies.search.label')}
               value={query}

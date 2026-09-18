@@ -32,6 +32,8 @@ export default function SearchField({
       <input
         id={id}
         type="search"
+        enterKeyHint="search"
+        autoCorrect="off"
         className={clsx('input', styles.input)}
         placeholder={placeholder}
         aria-label={ariaLabel}

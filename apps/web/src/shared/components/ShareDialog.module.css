@@ -126,6 +126,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   user-select: all;
+  -webkit-user-select: all;
 }
 
 .actionsStack {

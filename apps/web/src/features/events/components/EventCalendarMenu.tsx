@@ -11,6 +11,7 @@ import {
   outlookCalendarUrl,
   type CalendarEvent,
 } from '@/shared/utils/icsCalendar';
+import { downloadBlob } from '@/shared/utils/downloadBlob';
 import styles from './EventCalendarMenu.module.css';
 
 type EventCalendarMenuProps = {
@@ -45,16 +46,9 @@ export default function EventCalendarMenu({
 
   const handleDownloadIcs = () => {
     const content = buildIcsContent(calendarEvent);
-    if (!content || typeof URL.createObjectURL !== 'function') return;
+    if (!content) return;
     const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
-    const objectUrl = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = objectUrl;
-    anchor.download = calendarFileName(calendarEvent);
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(objectUrl);
+    if (!downloadBlob(blob, calendarFileName(calendarEvent))) return;
     menu.close();
   };
 

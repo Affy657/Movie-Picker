@@ -8,6 +8,13 @@ import {
   type NotificationTypeKey,
 } from '@/features/notifications/api/notificationsApi';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
+import {
+  isIosRuntime,
+  isStandaloneRuntime,
+  usePwaInstallClick,
+} from '@/shared/hooks/usePwaInstall';
+import InstallPwaDialog from '@/app/components/InstallPwaDialog';
+import Button from '@/shared/components/Button';
 import Toggle from '@/shared/components/Toggle';
 import { getErrorMessage } from '@/shared/api/apiError';
 import sharedStyles from '@/features/auth/pages/account/AccountShared.module.css';
@@ -51,6 +58,28 @@ const PREF_GROUPS: readonly PrefGroup[] = [
     ],
   },
 ];
+
+function NotificationsUnsupported() {
+  const { t } = useTranslation();
+  const install = usePwaInstallClick('notifications');
+  const needsHomeScreen = isIosRuntime() && !isStandaloneRuntime();
+
+  if (!needsHomeScreen) return <p className="hint">{t('notifications.unsupported')}</p>;
+
+  return (
+    <div className={styles.unsupportedIos}>
+      <p className="hint">{t('notifications.unsupportedIos')}</p>
+      {install.shouldShow ? (
+        <Button type="button" size="sm" onClick={() => void install.onClick()}>
+          {t('pwaInstall.trigger')}
+        </Button>
+      ) : null}
+      {install.guideOpen ? (
+        <InstallPwaDialog open mode={install.guideMode} onClose={install.closeGuide} />
+      ) : null}
+    </div>
+  );
+}
 
 export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: () => void }> = {}) {
   const { t } = useTranslation();
@@ -109,9 +138,7 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
     void (subscribed ? unsubscribe() : subscribe());
   };
 
-  if (!supported) {
-    return <p className="hint">{t('notifications.unsupported')}</p>;
-  }
+  if (!supported) return <NotificationsUnsupported />;
 
   return (
     <>

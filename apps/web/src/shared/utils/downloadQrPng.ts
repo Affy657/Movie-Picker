@@ -1,3 +1,5 @@
+import { downloadBlob } from '@/shared/utils/downloadBlob';
+
 const QR_EXPORT_SIZE = 240;
 const QR_EXPORT_SCALE = 4;
 const QR_BG_COLOR = '#ffffff';
@@ -21,13 +23,7 @@ export function downloadQrPng(container: HTMLElement | null, filename: string): 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
-      if (!blob) return;
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      link.click();
-      URL.revokeObjectURL(blobUrl);
+      if (blob) downloadBlob(blob, filename);
     }, 'image/png');
   };
   img.src = svgUrl;

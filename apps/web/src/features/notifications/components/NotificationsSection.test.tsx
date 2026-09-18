@@ -5,6 +5,11 @@ import userEvent from '@testing-library/user-event';
 import NotificationsSection from '@/features/notifications/components/NotificationsSection';
 import { usePushNotifications } from '@/features/notifications/hooks/usePushNotifications';
 import {
+  isIosRuntime,
+  isStandaloneRuntime,
+  usePwaInstallClick,
+} from '@/shared/hooks/usePwaInstall';
+import {
   fetchNotificationPreferences,
   patchNotificationPreferences,
   type NotificationPreferences,
@@ -23,7 +28,27 @@ vi.mock('@/features/notifications/api/notificationsApi', () => ({
   patchNotificationPreferences: vi.fn(),
 }));
 
+vi.mock('@/shared/hooks/usePwaInstall', () => ({
+  usePwaInstallClick: vi.fn(),
+  isIosRuntime: vi.fn(() => false),
+  isStandaloneRuntime: vi.fn(() => false),
+}));
+
+vi.mock('@/app/components/InstallPwaDialog', () => ({
+  default: ({ mode }: { mode: string }) => <div role="dialog">guide:{mode}</div>,
+}));
+
 const mockUsePush = vi.mocked(usePushNotifications);
+const mockInstallClick = vi.mocked(usePwaInstallClick);
+const installState = (overrides: Partial<ReturnType<typeof usePwaInstallClick>> = {}) => ({
+  shouldShow: true,
+  mode: 'ios' as const,
+  guideOpen: false,
+  guideMode: 'ios' as const,
+  onClick: vi.fn().mockResolvedValue(undefined),
+  closeGuide: vi.fn(),
+  ...overrides,
+});
 const mockFetchPrefs = vi.mocked(fetchNotificationPreferences);
 const mockPatchPrefs = vi.mocked(patchNotificationPreferences);
 
@@ -57,6 +82,9 @@ const allPrefs: NotificationPreferences = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockInstallClick.mockReturnValue(installState());
+  vi.mocked(isIosRuntime).mockReturnValue(false);
+  vi.mocked(isStandaloneRuntime).mockReturnValue(false);
 });
 
 afterEach(() => {
@@ -71,6 +99,43 @@ describe('NotificationsSection', () => {
 
     expect(screen.getByText('notifications.unsupported')).toBeInTheDocument();
     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+  });
+
+  it('on an iPhone in Safari, points to the home screen and opens the install guide', async () => {
+    mockUsePush.mockReturnValue(pushState({ supported: false, permission: 'unsupported' }));
+    vi.mocked(isIosRuntime).mockReturnValue(true);
+    const install = installState();
+    mockInstallClick.mockReturnValue(install);
+    const user = userEvent.setup();
+
+    render(<NotificationsSection />);
+
+    expect(screen.getByText('notifications.unsupportedIos')).toBeInTheDocument();
+    expect(screen.queryByText('notifications.unsupported')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'pwaInstall.trigger' }));
+    expect(install.onClick).toHaveBeenCalledTimes(1);
+    expect(mockInstallClick).toHaveBeenCalledWith('notifications');
+  });
+
+  it('on an iPhone in Safari, shows the guide once it is open', () => {
+    mockUsePush.mockReturnValue(pushState({ supported: false, permission: 'unsupported' }));
+    vi.mocked(isIosRuntime).mockReturnValue(true);
+    mockInstallClick.mockReturnValue(installState({ guideOpen: true }));
+
+    render(<NotificationsSection />);
+
+    expect(screen.getByRole('dialog')).toHaveTextContent('guide:ios');
+  });
+
+  it('keeps the generic hint in the app installed on an iPhone that cannot push', () => {
+    mockUsePush.mockReturnValue(pushState({ supported: false, permission: 'unsupported' }));
+    vi.mocked(isIosRuntime).mockReturnValue(true);
+    vi.mocked(isStandaloneRuntime).mockReturnValue(true);
+
+    render(<NotificationsSection />);
+
+    expect(screen.getByText('notifications.unsupported')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'pwaInstall.trigger' })).not.toBeInTheDocument();
   });
 
   it('loads and renders the 12 preference toggles even when not subscribed to push', async () => {

@@ -17,6 +17,7 @@
   line-height: var(--leading-none);
   color: var(--color-fixed-white);
   user-select: none;
+  -webkit-user-select: none;
   letter-spacing: var(--tracking-wide);
 }
 
