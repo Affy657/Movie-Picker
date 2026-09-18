@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "The developer's own environment file, ignored by git, is never part of what ships"
+paths = ['''(^|/)\.env$''']
