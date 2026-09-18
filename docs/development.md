@@ -8,8 +8,9 @@ respecter en écrivant du code sont dans [`AGENTS.md`](../AGENTS.md).
 
 - **Node.js** 20.19+, 22.13+ ou 24+, et **pnpm** 10.
 - **SDK .NET 10** pour l'API.
-- **Docker**, pour les tests d'intégration contre MongoDB et pour la voie docker de `verify:local`
-  (lint des workflows, Gitleaks, Trivy).
+- **Docker**, pour les tests d'intégration contre MongoDB, pour la voie docker de `verify:local`
+  (lint des workflows, Terraform, Gitleaks, Trivy) et pour lancer Terraform, qui n'est pas installé
+  sur le poste (voir [`infra/README.md`](../infra/README.md)).
 
 MongoDB n'est pas un prérequis : sans configuration l'API tourne en mémoire, la section suivante dit
 quand et comment brancher une vraie base.
@@ -129,6 +130,8 @@ Tous se lancent à la racine du dépôt.
 | `pnpm lint`, `pnpm run lint:eslint` | Types et règles côté front |
 | `pnpm run check:architecture` | Règles d'architecture, aussi jouées au pre-push |
 | `pnpm run check:workflows` | actionlint (+ shellcheck) et zizmor sur `.github/workflows/`, par Docker |
+| `pnpm run check:terraform` | `terraform fmt -check` puis `validate` sur chaque module racine de `infra/terraform/`, par Docker |
+| `pnpm run terraform -- <commande>` | Terraform depuis son image épinglée, bucket d'état et jeton GCP fournis par l'enveloppe, voir `infra/README.md` |
 | `pnpm format`, `pnpm format:check` | Prettier |
 | `pnpm run format:dotnet`, `pnpm run format:dotnet:check` | Style C#, après `dotnet restore` |
 | `pnpm test`, `pnpm run test:coverage` | Tests front, Vitest |
@@ -139,7 +142,7 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run openapi:export`, `pnpm run openapi:types:check` | Contrat OpenAPI et dérive des types |
 | `pnpm --filter web prerender` | Prérendu des routes publiques indexables, à lancer après un build |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
-| `pnpm run verify:local` | La chaîne complète, quinze étapes en trois voies concurrentes puis la suite front seule, durées affichées en fin de run |
+| `pnpm run verify:local` | La chaîne complète, seize étapes en trois voies concurrentes puis la suite front seule, durées affichées en fin de run |
 
 ## Tests
 
@@ -173,8 +176,8 @@ movie-picker/
 ├─ configs/           tsconfig et Prettier partagés, exclusions Sonar
 ├─ docs/              Roadmap, dette technique, ce guide
 ├─ e2e/               Parcours Playwright
-├─ infra/             Politiques IAM, CloudFront et rétention de registre
-└─ scripts/           verify:local, lint des workflows, prérequis, export OpenAPI, seuils de couverture
+├─ infra/             Terraform (infra/terraform/), politiques IAM, CloudFront et rétention de registre
+└─ scripts/           verify:local, lint des workflows, Terraform, prérequis, export OpenAPI, seuils de couverture
 ```
 
 L'API suit un découpage hexagonal : `Domain` porte les entités et les règles sans dépendance au

@@ -1,8 +1,8 @@
 /**
  * Local verification aligned with the CI **lint** + **test-web** + **test-api** jobs
  * (.github/workflows/ci-cd.yml). Run from the repository root after `pnpm install`, with the
- * .NET SDK installed. Docker (running daemon) is required for the workflows, gitleaks and
- * npm audit steps (Trivy filesystem scan, see commit 26c9163).
+ * .NET SDK installed. Docker (running daemon) is required for the workflows, Terraform, gitleaks
+ * and npm audit steps (Trivy filesystem scan, see commit 26c9163).
  *
  * Every gate but the Vitest suite runs in three concurrent lanes (node, dotnet, docker): the
  * gates are independent and the sequential chain cost 11 minutes at rest, 17 under load
@@ -181,6 +181,7 @@ const dockerLane = () =>
   sequence([
     () =>
       run('Workflows (actionlint + shellcheck + zizmor)', 'node', ['scripts/check-workflows.mjs']),
+    () => run('Terraform (fmt + validate)', 'node', ['scripts/check-terraform.mjs']),
     () =>
       run('Secrets (Gitleaks, working tree)', 'docker', [
         'run',

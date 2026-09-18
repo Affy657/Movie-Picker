@@ -52,6 +52,23 @@ blob-report/
 # Docker
 .docker/
 
+# Terraform (the lock file .terraform.lock.hcl is versioned, the state and the credentials never)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfbackend
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
 # Misc
 *.local
 tmp-swagger.json
