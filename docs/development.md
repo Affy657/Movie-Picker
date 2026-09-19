@@ -177,7 +177,7 @@ movie-picker/
 ├─ docs/              Roadmap, dette technique, ce guide
 ├─ e2e/               Parcours Playwright
 ├─ infra/             Terraform (infra/terraform/), politiques IAM et CloudFront encore appliquées à la main
-└─ scripts/           verify:local, lint des workflows, Terraform, prérequis, export OpenAPI, seuils de couverture
+└─ scripts/           verify:local, lint des workflows, Terraform, publication Firebase Hosting, prérequis, export OpenAPI, seuils de couverture
 ```
 
 L'API suit un découpage hexagonal : `Domain` porte les entités et les règles sans dépendance au

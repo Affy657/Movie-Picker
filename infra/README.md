@@ -6,6 +6,7 @@ Deux choses vivent ici : la description Terraform de l'infrastructure, construit
 |---|---|---|
 | `iam-github-actions-deploy-policy.json` | politique au moindre privilège du rôle que `deploy-front` assume par OIDC | console IAM, ou `aws iam attach-role-policy` |
 | `cloudfront-response-headers-policy.json` | en-têtes de sécurité servis par CloudFront | [`../scripts/apply-cloudfront-headers.sh`](../scripts/apply-cloudfront-headers.sh) |
+| `firebase-hosting.json` | configuration de service du site Firebase Hosting (repli SPA, en-têtes, paliers de cache), miroir des deux précédents | envoyée avec chaque version par [`../scripts/publish-front-firebase.mjs`](../scripts/publish-front-firebase.mjs), section Hosting ci-dessous |
 
 ## Les identifiants sont des espaces réservés
 
@@ -30,10 +31,13 @@ infra/terraform/
 ├─ modules/
 │  ├─ artifact-registry/   dépôt Docker des images de l'API et sa rétention (10 versions gardées, purge à 30 jours)
 │  ├─ secrets/             les secrets de l'API dans Secret Manager, conteneurs seuls, et le droit de lecture de l'identité d'exécution
-│  └─ cloud-run-api/       le service Cloud Run de l'API, son invocation publique et son domaine
+│  ├─ cloud-run-api/       le service Cloud Run de l'API, son invocation publique et son domaine
+│  └─ web-hosting/         le site Firebase Hosting du front (provider google-beta)
 └─ environments/
-   └─ production/          module racine : main.tf (les trois modules), versions.tf, backend.tf, providers.tf, variables.tf, outputs.tf, .terraform.lock.hcl
+   └─ production/          module racine : main.tf (les modules, l'activation de Firebase), versions.tf, backend.tf, providers.tf, variables.tf, outputs.tf, .terraform.lock.hcl
 ```
+
+Les providers portent `user_project_override` et `billing_project` : les API Firebase refusent un jeton utilisateur sans projet de quota, et c'est un jeton utilisateur (`gcloud auth print-access-token`) que l'enveloppe fournit. Activer Firebase sur le projet (`google_firebase_project`) a demandé une fois d'accepter les conditions Firebase dans la console avec le compte propriétaire, l'API répond 403 avant : la ressource a été importée, pas créée.
 
 Un module racine par environnement, un état distant par module racine (préfixe `environments/<nom>` dans le bucket d'état) ; la recette (lot 8) sera un second dossier sous `environments/` qui instancie les mêmes modules. Rien n'est écrit dans les fichiers `.tf` qui identifie le projet : l'identifiant du projet est une variable, le nom du bucket d'état est fourni à `init`.
 
@@ -86,6 +90,15 @@ GCP_PROJECT_ID=<PROJET_GCP>
 ```
 
 La règle de cycle de vie ne supprime que les versions non courantes de plus de 90 jours ; la version courante de l'état ne s'efface jamais d'elle-même. L'état porte tout ce que les ressources exposent, valeurs de secrets comprises quand Terraform les lit : accès public interdit, accès uniforme au niveau du bucket, et seuls le compte propriétaire du projet et, au lot 6, le compte de service du pipeline y lisent et y écrivent.
+
+### Front sur Firebase Hosting (lot 3, en parallèle de CloudFront)
+
+Le site `movie-picker-web` (module `web-hosting`) reçoit chaque déploiement du front après les passes S3, dans `deploy-front` de `deploy.yml`, et se vérifie sur `https://movie-picker-web.web.app` ; les visiteurs lisent toujours CloudFront, l'étape est en `continue-on-error` jusqu'à la bascule DNS du lot 4, qui en fera le déploiement et retirera S3.
+
+- **Publication** : [`../scripts/publish-front-firebase.mjs`](../scripts/publish-front-firebase.mjs) parle à l'API REST Hosting (version créée avec la configuration, fichiers gzippés et hachés, envoi des seuls inconnus, finalisation, release), sans `firebase-tools`, avec le même jeton que le reste du pipeline. En local : `GCP_PROJECT_ID=<PROJET_GCP> node scripts/publish-front-firebase.mjs --site movie-picker-web` après `pnpm --filter web build` (`--dry-run` liste les fichiers sans rien envoyer). Chaque version est immuable et les releases restent listées : le retour arrière du lot 4 sera une release qui repointe l'ancienne version, sans archive.
+- **Parité avec CloudFront**, vérifiée le 2026-09-19 en-tête par en-tête sur `/`, une route prérendue, un chemin inconnu, un actif haché, `sw.js`, le manifeste, `sitemap.xml`, `robots.txt` et une icône : mêmes six en-têtes de sécurité, mêmes trois paliers (`immutable` un an sur `assets/`, `icons/`, `avatars/`, les images et `robots.txt` ; une heure sur `sitemap.xml` ; `no-cache, must-revalidate` partout ailleurs, `no-store` en plus sur `sw.js`), même repli SPA en 200. Trois écarts, tous dans le bon sens : Hosting impose son propre `Strict-Transport-Security` (`max-age=31556926; includeSubDomains; preload`, plus strict que celui de la configuration, qu'il remplace) ; `/decouvrir/` répond `301` vers `/decouvrir` au lieu de servir la coquille (DEBT-043) ; les scripts partent en `text/javascript` et le sitemap en `application/xml` sans charset, deux libellés équivalents.
+- **Ce que la configuration encode** (`firebase-hosting.json`) : les routes prérendues sont publiées comme `<route>/index.html`, que Hosting sert à l'adresse de la route (`trailingSlashBehavior: REMOVE`), là où S3 demandait une clé sans extension ; `cleanUrls` reste faux ; le repli `**` vers `/index.html` ne joue que pour les chemins sans fichier. Pour les en-têtes, quand plusieurs règles s'appliquent à un chemin, **la dernière règle du fichier l'emporte** sur une clé dupliquée, vérifié : la règle `**` pose la base et les règles suivantes la précisent, garder cet ordre.
+- **Identité du pipeline** : le compte de service CI porte `roles/firebasehosting.admin` sur le projet, posé à la main le 2026-09-19 ; le lot 5 le décrit. Les appels envoient `x-goog-user-project`, exigé avec un jeton utilisateur et sans effet avec celui du compte de service.
 
 ### Portes
 

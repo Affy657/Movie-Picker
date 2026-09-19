@@ -59,6 +59,9 @@ env:
   GCP_ARTIFACT_REPO: movie-picker
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
   API_RUNTIME_SERVICE_ACCOUNT_NAME: movie-picker-api
+  # Firebase Hosting site of the web app (`infra/terraform`, module `web`): published in parallel
+  # of S3 and CloudFront and verified on its web.app address until the DNS moves (Terraform lot 4).
+  FIREBASE_HOSTING_SITE: movie-picker-web
   # The web lane runs the CLI from the lockfile (`@sentry/cli`, integrity checked by pnpm); the
   # jobs without Node download the same version and check its checksum, as the other binaries
   # of the workflows are: an unverified download would run inside a job holding cloud credentials.
@@ -542,6 +545,33 @@ jobs:
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
           pnpm --filter web exec sentry-cli -- "${extra[@]}" releases new "$SENTRY_RELEASE" || true
           pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-${SENTRY_RELEASE}"
+      # Parallel target (Terraform lot 3): the same build goes to Firebase Hosting, the future home
+      # of the web app, and is checked on its web.app address. Users still read CloudFront, so a
+      # failure here is a warning, not a stale production: `continue-on-error` until lot 4 moves
+      # the DNS, where this step becomes the deployment and the S3 passes leave.
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Publish the build to Firebase Hosting (parallel target, verified on web.app)
+        id: firebase
+        continue-on-error: true
+        run: |
+          set -eo pipefail
+          node scripts/publish-front-firebase.mjs --site "$FIREBASE_HOSTING_SITE" --dist apps/web/dist
+          URL="https://${FIREBASE_HOSTING_SITE}.web.app"
+          code="$(curl -sS -o "$RUNNER_TEMP/fb.html" -D "$RUNNER_TEMP/fb.headers" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$URL/")"
+          echo "GET $URL/ -> $code"
+          test "$code" = "200"
+          ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' apps/web/dist/index.html | head -1)"
+          grep -qF "$ENTRY" "$RUNNER_TEMP/fb.html"
+          grep -qi '^x-frame-options: DENY' "$RUNNER_TEMP/fb.headers"
+          grep -qi '^cache-control: no-cache, must-revalidate' "$RUNNER_TEMP/fb.headers"
+          echo "Firebase Hosting serves $ENTRY with the expected headers."
+      - name: Firebase Hosting publication failed (warning until lot 4)
+        if: steps.firebase.outcome == 'failure'
+        run: echo "::warning::The parallel publication to Firebase Hosting failed; production (CloudFront) is unaffected. Read the step above before the DNS switch of Terraform lot 4."
 
   # `always()` is essential here and harmless: the job deploys nothing, it only compares what was
   # requested with what left. Without it, a target skipped by a red gate would leave the run green

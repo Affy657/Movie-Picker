@@ -232,7 +232,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   curl -sS -o /dev/null -w '%{http_code}\n' https://web.movie-picker.fr/page-inexistante
   curl -sSI https://web.movie-picker.fr/decouvrir/ | grep -i content-length
   ```
-- fix: une CloudFront Function en requête visiteur qui retire la barre finale des routes prérendues (redirection 301 vers la clé exacte) et, pour les chemins qui ne correspondent à aucune route de `apps/web/src/app/routes.ts`, renvoie la coquille avec le statut 404 (`X-Robots-Tag: noindex` en réponse) ; le repli 200 reste pour les routes connues.
+- fix: la moitié « barre finale » tombe avec la bascule du front sur Firebase Hosting (lot Terraform 4) : la cible publiée en parallèle au lot 3 répond déjà `301 /decouvrir` à `/decouvrir/` (`trailingSlashBehavior: REMOVE` dans `infra/firebase-hosting.json`, routes prérendues servies comme `<route>/index.html`). Ne pas écrire de CloudFront Function pour ça. Reste l'autre moitié, sur Hosting comme sur CloudFront : pour les chemins qui ne correspondent à aucune route de `apps/web/src/app/routes.ts`, renvoyer la coquille avec le statut 404 (`X-Robots-Tag: noindex`), ce qu'un hébergement statique ne sait pas faire seul ; le repli 200 reste pour les routes connues.
 - piege: `/u/<handle>` et `/e/<slug>` sont des gabarits valides même quand la ressource n'existe pas, le 404 côté edge ne peut pas les juger : leur `noindex` reste posé par l'application.
 
 ---
@@ -290,6 +290,8 @@ Le chantier Terraform de `roadmap.md` sort le front d'AWS (lots 3 et 4). Deux ci
 
 - **Cloud Storage + Cloud CDN derrière un load balancer applicatif externe** est l'équivalent direct de S3 + CloudFront, mais sa règle de transfert est facturée à l'heure **sans palier gratuit** : ≈ 18 $/mois avant le moindre octet servi.
 - **Firebase Hosting** reste dans le gratuit (10 Go stockés, 360 Mo/jour transférés), porte nativement le repli SPA, les en-têtes personnalisés et le domaine sur mesure avec son certificat, et se décrit en Terraform (`google_firebase_hosting_site`, `google_firebase_hosting_custom_domain`, provider `google-beta`). **C'est la cible recommandée.** Seul point à surveiller, les 360 Mo/jour : le trafic mesuré (≈ 500 requêtes/jour) en est loin, et un dépassement bascule sur la facturation à l'octet, pas sur une coupure.
+
+Le lot 3 est livré le 2026-09-19 : la cible Firebase Hosting existe (`infra/terraform`, module `web-hosting`), reçoit chaque déploiement du front en parallèle de S3 et sert la parité vérifiée sur son adresse `web.app`, à lire dans `infra/README.md`. Le lot 4 ne fait plus que la bascule DNS et le retrait d'AWS.
 
 Deux corollaires sur l'ordre des lots, qui ne se lisent pas dans leur numérotation :
 

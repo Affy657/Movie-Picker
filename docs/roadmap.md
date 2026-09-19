@@ -219,7 +219,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (24 points produit, 23 points tech, 43 restants)
+## 📋 V1.7, planifiée (24 points produit, 23 points tech, 40 restants)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
@@ -237,7 +237,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 - ✅ 🏗️ `S` **Terraform 1, socle et état distant** : arborescence dédiée, versions épinglées, état distant versionné et verrouillé, `fmt` et `validate` ajoutés à la vérification locale et à la CI. Aucune ressource décrite à ce stade.
 - ✅ 🏗️ `M` **Terraform 2, prod GCP décrite et importée** : registre d'images et sa rétention, service Cloud Run avec son domaine et son invocation publique, les quatorze secrets et leur droit de lecture, décrits en trois modules puis **importés**, jamais recréés : 32 ressources, `terraform plan` vide sur la prod en service. Le pipeline garde l'image et le conteneur.
-- ⬜ 🏗️ `M` **Terraform 3, front hébergé sur GCP** : cible GCP décrite avec parité stricte sur le repli SPA, les en-têtes de sécurité et les trois paliers de cache de CloudFront. Publiée en parallèle et vérifiée sur un sous-domaine temporaire, sans impact utilisateur.
+- ✅ 🏗️ `M` **Terraform 3, front hébergé sur GCP** : site Firebase Hosting décrit et créé, avec parité vérifiée sur le repli SPA, les six en-têtes de sécurité et les trois paliers de cache de CloudFront ; chaque déploiement du front y est publié en parallèle par l'API Hosting et vérifié sur l'adresse `web.app` du site, sans impact utilisateur.
 - ⬜ 🏗️ `S` **Terraform 4, bascule DNS et sortie d'AWS** : élargir les origines autorisées, repointer le CNAME chez OVH, observer les sondes, puis supprimer distribution, bucket, certificat et utilisateur IAM. Le certificat est un wildcard : vérifier qu'aucun autre sous-domaine ne s'en sert.
 - ⬜ 🔒 `M` **Terraform 5, IAM décrit et clés longue durée retirées** : comptes de service au moindre privilège pour l'exécution comme pour le pipeline, et la fédération d'identité GitHub (pool GCP, rôle AWS, en place à la main depuis le 2026-09-15) décrite puis importée.
 - ⬜ ⚙️ `S` **Terraform 6, plan en PR et apply sur master** : job dédié, `plan` publié en commentaire de PR, `apply` derrière l'environnement de production. Une dérive de configuration se voit alors en revue plutôt qu'en incident.

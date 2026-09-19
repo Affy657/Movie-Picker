@@ -50,3 +50,25 @@ module "api" {
     EMAIL_PROVIDER     = "resend"
   }
 }
+
+resource "google_project_service" "firebase" {
+  for_each = toset(["firebase.googleapis.com", "firebasehosting.googleapis.com"])
+
+  project            = var.project_id
+  service            = each.value
+  disable_on_destroy = false
+}
+
+resource "google_firebase_project" "this" {
+  provider = google-beta
+
+  project    = var.project_id
+  depends_on = [google_project_service.firebase]
+}
+
+module "web" {
+  source = "../../modules/web-hosting"
+
+  project_id = google_firebase_project.this.project
+  site_id    = "movie-picker-web"
+}
