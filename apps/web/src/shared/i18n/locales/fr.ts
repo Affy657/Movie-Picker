@@ -684,8 +684,6 @@ export const fr = {
       pastDateHint: 'Cette date est déjà passée.',
       sectionTheme: 'Ambiance',
       themeLabel: 'Thème',
-      sectionParticipants: 'Participants et films',
-      sectionDraw: 'Vote et tirage',
       resetOptions: 'Réinitialiser les options',
       configNotSaved:
         'La soirée est créée, mais ses options n’ont pas été enregistrées. Réglez-les depuis les paramètres de la soirée.',
@@ -897,7 +895,9 @@ export const fr = {
     },
     settings: {
       title: 'Paramètres de la soirée',
-      sectionFlow: 'Le déroulé',
+      sectionParticipants: 'Participants et films',
+      sectionDraw: 'Vote et tirage',
+      sectionAfter: 'Après la soirée',
       titleLabel: 'Nom de la soirée',
       titlePlaceholder: 'Ex : Soirée film du vendredi',
       titleRequired: 'Le nom de la soirée est requis.',

@@ -93,6 +93,9 @@ test.describe('Event management', () => {
       await settings.locator('#host-cfg-title').fill('Soirée renommée E2E');
       await expect(settings.getByText('Enregistrement…')).toBeVisible();
       await expect(saved).toBeVisible({ timeout: 15_000 });
+      await settings.getByRole('switch', { name: 'Limiter le nombre de participants' }).click();
+      await expect(settings.getByText('Enregistrement…')).toBeVisible();
+      await expect(saved).toBeVisible({ timeout: 15_000 });
       await settings.locator('#host-cfg-max-participants').fill('1');
       await expect(settings.getByText('Enregistrement…')).toBeVisible();
       await expect(saved).toBeVisible({ timeout: 15_000 });

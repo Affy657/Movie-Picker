@@ -365,7 +365,7 @@ export default function CreateEvent() {
               </section>
 
               <section className={styles.group}>
-                <h2 className={styles.groupTitle}>{t('events.create.sectionParticipants')}</h2>
+                <h2 className={styles.groupTitle}>{t('events.settings.sectionParticipants')}</h2>
                 <div>
                   <ToggleRow
                     title={t('events.settings.participantLimitLabel')}
@@ -457,7 +457,7 @@ export default function CreateEvent() {
               </section>
 
               <section className={styles.group}>
-                <h2 className={styles.groupTitle}>{t('events.create.sectionDraw')}</h2>
+                <h2 className={styles.groupTitle}>{t('events.settings.sectionDraw')}</h2>
                 <div>
                   <ToggleRow
                     title={t('events.settings.voteLimitLabel')}

@@ -155,14 +155,8 @@
   margin-bottom: 0;
 }
 
-.counterGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: var(--space-3-5) var(--space-3);
-}
-
-.counterGrid .field {
-  min-width: 0;
+.counterField > div {
+  max-width: 12rem;
 }
 
 .field :global(.hint) {

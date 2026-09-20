@@ -179,7 +179,7 @@
   border-left: 2px solid var(--color-border-subtle);
 }
 
-.counterField {
+.counterField > div {
   max-width: 12rem;
 }
 

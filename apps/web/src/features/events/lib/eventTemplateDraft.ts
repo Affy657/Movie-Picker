@@ -58,8 +58,12 @@ function parseLimit(raw: string): number | null {
   return value;
 }
 
-function isBelowCap(value: number | null | undefined, cap: number): value is number {
-  return value != null && value > 0 && value < cap;
+export function limitBelowCap(value: number | null | undefined, cap: number): number | null {
+  return value != null && value > 0 && value < cap ? value : null;
+}
+
+function isBelowCap(value: number | null | undefined, cap: number): boolean {
+  return limitBelowCap(value, cap) !== null;
 }
 
 function parseCappedLimit(
