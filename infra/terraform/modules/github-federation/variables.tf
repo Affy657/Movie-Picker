@@ -26,6 +26,6 @@ variable "github_repository_id" {
 }
 
 variable "github_environments" {
-  description = "GitHub environments a job must run in to be trusted: the only subjects the provider accepts. Which identity each subject may assume is bound on the identity itself."
-  type        = set(string)
+  description = "GitHub environments a job must run in to be trusted, each with the git ref its jobs must carry (refs/heads/master for a deployment, an empty string for a pull request review, whose ref is refs/pull/<n>/merge): the only subjects the provider accepts. Which identity each subject may assume is bound on the identity itself."
+  type        = map(string)
 }

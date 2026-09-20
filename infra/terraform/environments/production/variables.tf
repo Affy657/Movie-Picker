@@ -15,8 +15,14 @@ variable "api_runtime_service_account_name" {
   default     = "movie-picker-api"
 }
 
+variable "scheduler_service_account_name" {
+  description = "Account id of the identity Cloud Scheduler signs its OIDC tokens with, the same value as SCHEDULER_SERVICE_ACCOUNT_NAME in deploy.yml."
+  type        = string
+  default     = "movie-picker-scheduler"
+}
+
 variable "backup_bucket" {
-  description = "Bucket the MongoDB backups are written to, the same value as BACKUP_BUCKET in backup-mongo.yml. Its lifecycle is not described here."
+  description = "Bucket the MongoDB backups are written to, the same value as the BACKUP_BUCKET repository variable of GitHub; described and imported, never recreated."
   type        = string
   default     = "movie-picker-backups"
 }
@@ -30,4 +36,11 @@ variable "alert_email" {
   description = "Address the alert policies notify, TF_VAR_alert_email: ALERT_EMAIL locally (.env), the ALERT_EMAIL secret in GitHub."
   type        = string
   sensitive   = true
+}
+
+variable "alert_sms_number" {
+  description = "Phone number the alert policies also notify by SMS, in E.164 form, TF_VAR_alert_sms_number: ALERT_SMS_NUMBER locally (.env), the ALERT_SMS_NUMBER secret in GitHub. Empty, the default, means no SMS channel."
+  type        = string
+  sensitive   = true
+  default     = ""
 }

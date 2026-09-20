@@ -18,18 +18,14 @@
 #
 # The URI is read from Secret Manager rather than duplicated as a GitHub secret: a single source.
 #
-# Prerequisites, once and for all:
-#   gcloud storage buckets create gs://movie-picker-backups --location=europe-west1 \
-#     --uniform-bucket-level-access --public-access-prevention
-#   gcloud storage buckets update gs://movie-picker-backups --versioning
-#   printf '{"rule":[{"action":{"type":"Delete"},"condition":{"age":30}}]}' > /tmp/lifecycle.json
-#   gcloud storage buckets update gs://movie-picker-backups --lifecycle-file=/tmp/lifecycle.json
-#   gcloud secrets add-iam-policy-binding MONGODB_URI --member="serviceAccount:<SA_CI>" \
-#     --role=roles/secretmanager.secretAccessor
-#   gcloud storage buckets add-iam-policy-binding gs://movie-picker-backups \
-#     --member="serviceAccount:<SA_CI>" --role=roles/storage.objectAdmin
-# then GitHub → Settings → Secrets and variables → Actions → Variables:
-#   BACKUP_BUCKET = movie-picker-backups
+# The job runs in the `backup` environment, whose identity (`module "backup"` of the production
+# root module of `infra/terraform`) can read that one secret and write that one bucket, and
+# nothing else: the deployment identity no longer reads the database, and a compromised
+# deployment cannot dump it. The bucket, its versioning and its two retention rules (30 days for
+# the daily archives and the pending area, 400 days for the monthly copies under `monthly/`) are
+# described there too. What remains by hand is the `BACKUP_BUCKET` repository variable
+# (Settings / Secrets and variables / Actions / Variables) and the environment itself, with the
+# `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT` secrets.
 #
 # The bucket holds personal data (e-mail addresses, password hashes): public access forbidden,
 # and the archive is never published as a GitHub artifact. The run log is public, like every
@@ -70,8 +66,9 @@ jobs:
     name: 💾 Dump, verify by restoring, then publish
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    # Talks to GCP: `production` environment, whose branch policy is what the federation trusts.
-    environment: production
+    # Talks to GCP: `backup` environment, whose branch policy is what the federation trusts, and
+    # whose identity is the only one that can read the database URI.
+    environment: backup
     permissions:
       contents: read
       id-token: write
@@ -236,15 +233,25 @@ jobs:
           docker cp "$RUNNER_TEMP/verify.js" mongo-verify:/verify.js
           docker exec mongo-verify mongosh --quiet --file /verify.js
 
+      # The first verified archive of each month is copied under `monthly/`, where the bucket
+      # keeps it 400 days: the daily archives leave after 30 days, and a corruption noticed later
+      # than that would otherwise have no clean copy left to go back to.
       - name: Publish the verified archive
         env:
           PENDING: ${{ steps.upload.outputs.pending }}
           FINAL: ${{ steps.upload.outputs.final }}
+          STAMP: ${{ steps.dump.outputs.stamp }}
+          BACKUP_BUCKET: ${{ vars.BACKUP_BUCKET }}
         run: |
           set -eo pipefail
           gcloud storage mv "$PENDING" "$FINAL"
           gcloud storage ls -l "$FINAL"
           echo "Backup of the day: $FINAL"
+          if [ "${STAMP:6:2}" = "01" ]; then
+            MONTHLY="gs://${BACKUP_BUCKET}/monthly/${FINAL##*/}"
+            gcloud storage cp "$FINAL" "$MONTHLY"
+            echo "Monthly copy: $MONTHLY"
+          fi
 
       # An archive that failed the restore must not stay in the bucket: it would be the most
       # recent file there, the one grabbed during an incident.

@@ -20,8 +20,9 @@
  *     skips it, that is what the local gate and the CI use;
  *   - `TF_VAR_project_id`, from `GCP_PROJECT_ID` (environment, else `.env`), else the active
  *     gcloud project, `TF_VAR_state_bucket` from the same `TF_STATE_BUCKET` (the root module
- *     grants the bucket to the identities that plan and apply from GitHub) and
- *     `TF_VAR_alert_email` from `ALERT_EMAIL` (the address the alert policies notify);
+ *     grants the bucket to the identities that plan and apply from GitHub), `TF_VAR_alert_email`
+ *     from `ALERT_EMAIL` (the address the alert policies notify) and `TF_VAR_alert_sms_number`
+ *     from `ALERT_SMS_NUMBER` (the optional SMS channel, empty when unset);
  *   - `GOOGLE_OAUTH_ACCESS_TOKEN`, from `gcloud auth print-access-token`, for every command that
  *     reaches GCP. No key file and no application-default credentials on the machine; the token
  *     is passed by name to Docker, never on its command line.
@@ -155,6 +156,9 @@ export function terraform(args, { rootName = 'production', isolatedDataDir = fal
     if (!env.TF_VAR_alert_email) {
       env.TF_VAR_alert_email = setting('ALERT_EMAIL') || '';
     }
+    if (!env.TF_VAR_alert_sms_number) {
+      env.TF_VAR_alert_sms_number = setting('ALERT_SMS_NUMBER') || '';
+    }
     if (!env.GOOGLE_OAUTH_ACCESS_TOKEN) {
       env.GOOGLE_OAUTH_ACCESS_TOKEN = gcloud(['auth', 'print-access-token']);
       if (!env.GOOGLE_OAUTH_ACCESS_TOKEN) {
@@ -168,6 +172,8 @@ export function terraform(args, { rootName = 'production', isolatedDataDir = fal
       'TF_VAR_state_bucket',
       '-e',
       'TF_VAR_alert_email',
+      '-e',
+      'TF_VAR_alert_sms_number',
       '-e',
       'GOOGLE_OAUTH_ACCESS_TOKEN'
     );

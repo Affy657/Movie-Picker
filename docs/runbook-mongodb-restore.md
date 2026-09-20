@@ -27,7 +27,7 @@ gcloud storage ls -l "gs://<BUCKET_SAUVEGARDE>/mongodb/<AAAA>/<MM>/"
 gcloud storage cp "gs://<BUCKET_SAUVEGARDE>/mongodb/<AAAA>/<MM>/moviepicker-<HORODATAGE>.archive.gz" ./restore.archive.gz
 ```
 
-Prendre la dernière archive **antérieure** à l'incident, pas la plus récente. Un objet supprimé du bucket se retrouve avec `gcloud storage ls -a` (versioning) pendant 30 jours.
+Prendre la dernière archive **antérieure** à l'incident, pas la plus récente. Un objet supprimé du bucket se retrouve avec `gcloud storage ls -a` (versioning) pendant 30 jours. Les archives quotidiennes ne restent que 30 jours ; pour un incident plus ancien, `gs://<BUCKET_SAUVEGARDE>/monthly/` garde la première archive vérifiée de chaque mois pendant 400 jours.
 
 ## 2. Vérifier l'archive sur un MongoDB jetable
 

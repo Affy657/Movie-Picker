@@ -17,6 +17,10 @@ inputs:
     description: "Address the alert policies notify (ALERT_EMAIL secret); read by the production root only, the others ignore it"
     required: false
     default: ""
+  alert-sms-number:
+    description: "Phone number the alert policies also notify by SMS (ALERT_SMS_NUMBER secret, optional); read by the production root only, empty means no SMS channel"
+    required: false
+    default: ""
   lock:
     description: "false to plan without taking the state lock, what a read-only review does"
     required: false
@@ -63,12 +67,14 @@ runs:
         TF_VAR_project_id: ${{ inputs.project-id }}
         TF_VAR_state_bucket: ${{ inputs.state-bucket }}
         ALERT_EMAIL: ${{ inputs.alert-email }}
+        ALERT_SMS_NUMBER: ${{ inputs.alert-sms-number }}
         LOCK: ${{ inputs.lock }}
         APPLY: ${{ inputs.apply }}
       run: |
         # Exported only when given: an empty TF_VAR is a value, and the production root would plan
         # its notification channel on an empty address.
         if [ -n "$ALERT_EMAIL" ]; then export TF_VAR_alert_email="$ALERT_EMAIL"; fi
+        if [ -n "$ALERT_SMS_NUMBER" ]; then export TF_VAR_alert_sms_number="$ALERT_SMS_NUMBER"; fi
         export TF_PLUGIN_CACHE_DIR="$HOME/.terraform.d/plugin-cache"
         args=(-input=false -no-color -detailed-exitcode "-lock=$LOCK")
         if [ "$APPLY" = "true" ]; then args+=(-out=tfplan); fi

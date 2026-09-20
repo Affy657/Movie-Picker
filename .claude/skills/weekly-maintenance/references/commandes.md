@@ -30,6 +30,14 @@ rtk pnpm run check:tools
 
 Une ligne par outil, `ok` ou `behind`, code de sortie 1 dès qu'un outil est en retard. La montée se fait dans les fichiers que le script cite, digest ou somme de contrôle compris, puis `pnpm run check:workflows` et la porte gitleaks de `verify:local` rejouent les nouvelles versions en local.
 
+Liaisons IAM hors de ce que `infra/terraform` décrit (projet, buckets, secrets, comptes de service, dépôt d'images, services Cloud Run), clés de compte de service, comptes non décrits encore actifs, et secrets dont la dernière version a plus d'un an :
+
+```bash
+rtk pnpm run check:iam
+```
+
+Une ligne par constat, code de sortie 1 dès qu'il y en a un. Une liaison de trop se retire à la main (`gcloud <ressource> remove-iam-policy-binding`), jamais en la décrivant pour la faire taire ; un secret trop vieux se fait tourner dans la console du fournisseur puis `gcloud secrets versions add`.
+
 Merge d'une PR Dependabot :
 
 ```bash

@@ -10,5 +10,5 @@ output "provider_name" {
 
 output "subjects" {
   description = "Subject of a job of each trusted environment, keyed by environment."
-  value       = { for environment in var.github_environments : environment => "repo:${var.github_repository}:environment:${environment}" }
+  value       = local.subjects
 }

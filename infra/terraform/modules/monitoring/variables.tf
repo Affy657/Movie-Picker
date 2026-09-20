@@ -9,6 +9,13 @@ variable "alert_email" {
   sensitive   = true
 }
 
+variable "alert_sms_number" {
+  description = "Phone number every alert policy also notifies by SMS, in E.164 form; empty means no SMS channel. An e-mail waits to be read, a text message does not. Kept out of the repository like the address: TF_VAR_alert_sms_number."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "api_host" {
   description = "Public host of the API, probed by the two API checks."
   type        = string

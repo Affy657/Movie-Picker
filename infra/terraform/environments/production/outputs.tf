@@ -33,8 +33,18 @@ output "terraform_plan_service_account_email" {
   value       = module.terraform_plan.email
 }
 
+output "backup_service_account_email" {
+  description = "Identity the backup workflow assumes, the GCP_SERVICE_ACCOUNT secret of the backup environment."
+  value       = module.backup.email
+}
+
+output "scheduler_service_account_email" {
+  description = "Identity Cloud Scheduler signs its OIDC tokens with, the one deploy.yml gives the jobs and the SCHEDULER_OIDC_SERVICE_ACCOUNT variable of the API."
+  value       = google_service_account.scheduler.email
+}
+
 output "workload_identity_provider" {
-  description = "Provider the workflows exchange their OIDC token with, the GCP_WORKLOAD_IDENTITY_PROVIDER secret of both GitHub environments."
+  description = "Provider the workflows exchange their OIDC token with, the GCP_WORKLOAD_IDENTITY_PROVIDER secret of every GitHub environment."
   value       = module.github.provider_name
 }
 
