@@ -20,11 +20,11 @@
       "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
     },
     {
-      "glob": "/@(favicon.svg|logo.svg|og-image.png|robots.txt)",
-      "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
+      "glob": "/@(favicon.svg|logo.svg|og-image.png)",
+      "headers": { "Cache-Control": "public, max-age=86400, must-revalidate" }
     },
     {
-      "glob": "/sitemap.xml",
+      "glob": "/@(robots.txt|sitemap.xml)",
       "headers": { "Cache-Control": "public, max-age=3600, must-revalidate" }
     },
     {
