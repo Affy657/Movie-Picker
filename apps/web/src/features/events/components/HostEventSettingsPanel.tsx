@@ -74,8 +74,12 @@ export default function HostEventSettingsPanel({
     dateWasEdited,
     notifyDateChange,
     setNotifyDateChange,
+    proposalLimitEnabled,
+    toggleProposalLimit,
     maxProp,
     setMaxProp,
+    participantLimitEnabled,
+    toggleParticipantLimit,
     maxParticipants,
     setMaxParticipants,
     maxParticipantsHint,
@@ -226,102 +230,87 @@ export default function HostEventSettingsPanel({
           </div>
 
           <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>{t('events.settings.sectionFlow')}</h3>
-
-            <div className={styles.counterGrid}>
-              <Field
-                label={t('events.settings.maxProposalsLabel')}
-                htmlFor="host-cfg-max"
-                error={fieldErrors.maxProposals}
-                hint={
-                  fieldErrors.maxProposals
-                    ? undefined
-                    : t('events.settings.maxProposalsHint', { max: MAX_PROPOSALS_PER_PARTICIPANT })
-                }
-                className={styles.field}
-              >
-                {({ id, describedBy, invalid }) => (
-                  <NumberInput
-                    id={id}
-                    value={maxProp}
-                    onChange={(v) => {
-                      setMaxProp(v);
-                      scheduleAutoSave();
-                    }}
-                    min={1}
-                    max={MAX_PROPOSALS_PER_PARTICIPANT}
-                    disabled={configLocked}
-                    invalid={invalid}
-                    ariaDescribedBy={describedBy}
-                  />
-                )}
-              </Field>
-
-              <Field
-                label={t('events.settings.maxParticipantsLabel')}
-                htmlFor="host-cfg-max-participants"
-                error={fieldErrors.maxParticipants}
-                hint={fieldErrors.maxParticipants ? undefined : maxParticipantsHint}
-                className={styles.field}
-              >
-                {({ id, describedBy, invalid }) => (
-                  <NumberInput
-                    id={id}
-                    value={maxParticipants}
-                    onChange={(v) => {
-                      setMaxParticipants(v);
-                      scheduleAutoSave();
-                    }}
-                    min={1}
-                    max={MAX_EVENT_PARTICIPANTS}
-                    disabled={configLocked}
-                    invalid={invalid}
-                    ariaDescribedBy={describedBy}
-                  />
-                )}
-              </Field>
-
-              <Field
-                label={t('events.settings.winnerCountLabel')}
-                htmlFor="host-cfg-winner-count"
-                error={fieldErrors.winnerCount}
-                hint={
-                  fieldErrors.winnerCount
-                    ? undefined
-                    : t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })
-                }
-                className={styles.field}
-              >
-                {({ id, describedBy, invalid }) => (
-                  <NumberInput
-                    id={id}
-                    value={winnerCount}
-                    onChange={(v) => {
-                      setWinnerCount(v);
-                      scheduleAutoSave();
-                    }}
-                    min={Math.max(1, drawnWinnerCount)}
-                    max={MAX_WINNERS_PER_EVENT}
-                    invalid={invalid}
-                    ariaDescribedBy={describedBy}
-                  />
-                )}
-              </Field>
-            </div>
+            <h3 className={styles.sectionTitle}>{t('events.settings.sectionParticipants')}</h3>
 
             <fieldset className={styles.lockable} disabled={configLocked}>
               <div className={styles.field}>
-                <span className="label" id={wheelModeLabelId}>
-                  {t('events.settings.wheelModeLabel')}
-                </span>
-                <WheelModeField
-                  value={wheelMode}
-                  labelId={wheelModeLabelId}
-                  onChange={(mode) => {
-                    setWheelMode(mode);
-                    scheduleAutoSave(true);
-                  }}
+                <ToggleRow
+                  title={t('events.settings.participantLimitLabel')}
+                  description={t('events.settings.participantLimitDesc', {
+                    max: MAX_EVENT_PARTICIPANTS,
+                  })}
+                  checked={participantLimitEnabled}
+                  disabled={configLocked}
+                  onChange={toggleParticipantLimit}
                 />
+                {participantLimitEnabled && (
+                  <Field
+                    label={t('events.settings.maxParticipantsLabel')}
+                    htmlFor="host-cfg-max-participants"
+                    error={fieldErrors.maxParticipants}
+                    hint={fieldErrors.maxParticipants ? undefined : maxParticipantsHint}
+                    className={clsx(styles.subField, styles.counterField)}
+                  >
+                    {({ id, describedBy, invalid }) => (
+                      <NumberInput
+                        id={id}
+                        value={maxParticipants}
+                        onChange={(v) => {
+                          setMaxParticipants(v);
+                          scheduleAutoSave();
+                        }}
+                        min={1}
+                        max={MAX_EVENT_PARTICIPANTS}
+                        disabled={configLocked}
+                        invalid={invalid}
+                        ariaDescribedBy={describedBy}
+                      />
+                    )}
+                  </Field>
+                )}
+              </div>
+
+              <div className={styles.field}>
+                <ToggleRow
+                  title={t('events.settings.proposalLimitLabel')}
+                  description={t('events.settings.proposalLimitDesc', {
+                    max: MAX_PROPOSALS_PER_PARTICIPANT,
+                  })}
+                  checked={proposalLimitEnabled}
+                  disabled={configLocked}
+                  onChange={toggleProposalLimit}
+                />
+                {proposalLimitEnabled && (
+                  <Field
+                    label={t('events.settings.maxProposalsLabel')}
+                    htmlFor="host-cfg-max"
+                    error={fieldErrors.maxProposals}
+                    hint={
+                      fieldErrors.maxProposals
+                        ? undefined
+                        : t('events.settings.maxProposalsHint', {
+                            max: MAX_PROPOSALS_PER_PARTICIPANT,
+                          })
+                    }
+                    className={clsx(styles.subField, styles.counterField)}
+                  >
+                    {({ id, describedBy, invalid }) => (
+                      <NumberInput
+                        id={id}
+                        value={maxProp}
+                        onChange={(v) => {
+                          setMaxProp(v);
+                          scheduleAutoSave();
+                        }}
+                        min={1}
+                        max={MAX_PROPOSALS_PER_PARTICIPANT}
+                        disabled={configLocked}
+                        invalid={invalid}
+                        ariaDescribedBy={describedBy}
+                      />
+                    )}
+                  </Field>
+                )}
               </div>
 
               <div className={styles.field}>
@@ -335,7 +324,13 @@ export default function HostEventSettingsPanel({
                   }}
                 />
               </div>
+            </fieldset>
+          </div>
 
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>{t('events.settings.sectionDraw')}</h3>
+
+            <fieldset className={styles.lockable} disabled={configLocked}>
               <div className={styles.field}>
                 <ToggleRow
                   title={t('events.settings.voteLimitLabel')}
@@ -351,7 +346,7 @@ export default function HostEventSettingsPanel({
                     label={t('events.settings.maxVotesLabel')}
                     htmlFor="host-cfg-max-votes"
                     error={fieldErrors.maxVotes}
-                    className={styles.subField}
+                    className={clsx(styles.subField, styles.counterField)}
                   >
                     {({ id, describedBy, invalid }) => (
                       <NumberInput
@@ -369,7 +364,52 @@ export default function HostEventSettingsPanel({
                   </Field>
                 )}
               </div>
+
+              <div className={styles.field}>
+                <span className="label" id={wheelModeLabelId}>
+                  {t('events.settings.wheelModeLabel')}
+                </span>
+                <WheelModeField
+                  value={wheelMode}
+                  labelId={wheelModeLabelId}
+                  onChange={(mode) => {
+                    setWheelMode(mode);
+                    scheduleAutoSave(true);
+                  }}
+                />
+              </div>
             </fieldset>
+
+            <Field
+              label={t('events.settings.winnerCountLabel')}
+              htmlFor="host-cfg-winner-count"
+              error={fieldErrors.winnerCount}
+              hint={
+                fieldErrors.winnerCount
+                  ? undefined
+                  : t('events.settings.winnerCountHint', { max: MAX_WINNERS_PER_EVENT })
+              }
+              className={clsx(styles.field, styles.counterField)}
+            >
+              {({ id, describedBy, invalid }) => (
+                <NumberInput
+                  id={id}
+                  value={winnerCount}
+                  onChange={(v) => {
+                    setWinnerCount(v);
+                    scheduleAutoSave();
+                  }}
+                  min={Math.max(1, drawnWinnerCount)}
+                  max={MAX_WINNERS_PER_EVENT}
+                  invalid={invalid}
+                  ariaDescribedBy={describedBy}
+                />
+              )}
+            </Field>
+          </div>
+
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>{t('events.settings.sectionAfter')}</h3>
 
             <div className={styles.field}>
               <ToggleRow

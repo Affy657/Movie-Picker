@@ -12,6 +12,7 @@ import {
   MAX_PROPOSALS_PER_PARTICIPANT,
   MAX_WINNERS_PER_EVENT,
 } from '@/features/events/types';
+import { limitBelowCap } from '@/features/events/lib/eventTemplateDraft';
 
 export type FieldErrors = {
   title?: string;
@@ -61,8 +62,11 @@ export function isCreatorParticipant(
 export function normalizeConfig(c: EventConfigData | undefined): EventConfigData {
   return {
     theme: c?.theme ?? DEFAULT_EVENT_CONFIG.theme,
-    maxProposalsPerParticipant: c?.maxProposalsPerParticipant ?? MAX_PROPOSALS_PER_PARTICIPANT,
-    maxParticipants: c?.maxParticipants ?? MAX_EVENT_PARTICIPANTS,
+    maxProposalsPerParticipant: limitBelowCap(
+      c?.maxProposalsPerParticipant,
+      MAX_PROPOSALS_PER_PARTICIPANT
+    ),
+    maxParticipants: limitBelowCap(c?.maxParticipants, MAX_EVENT_PARTICIPANTS),
     maxVotesPerParticipant: c?.maxVotesPerParticipant ?? null,
     wheelMode: c?.wheelMode ?? DEFAULT_EVENT_CONFIG.wheelMode,
     richSharePreview: c?.richSharePreview ?? DEFAULT_EVENT_CONFIG.richSharePreview,
@@ -76,7 +80,9 @@ export function normalizeConfig(c: EventConfigData | undefined): EventConfigData
 export type SettingsDraft = {
   eventTitle: string;
   eventDateLocal: string;
+  proposalLimitEnabled: boolean;
   maxProp: string;
+  participantLimitEnabled: boolean;
   maxParticipants: string;
   voteLimitEnabled: boolean;
   maxVotes: string;
@@ -100,44 +106,49 @@ function validateDate(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
   return parsed;
 }
 
-function validateMaxProposals(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
-  const value = Number(draft.maxProp);
-  const valid =
-    draft.maxProp.trim() !== '' &&
-    Number.isInteger(value) &&
-    value >= 1 &&
-    value <= MAX_PROPOSALS_PER_PARTICIPANT;
-  if (valid) return value;
+function isWholeNumberWithin(raw: string, max: number): boolean {
+  const value = Number(raw);
+  return raw.trim() !== '' && Number.isInteger(value) && value >= 1 && value <= max;
+}
+
+function validateMaxProposals(
+  draft: SettingsDraft,
+  t: Translate,
+  errors: FieldErrors
+): number | null {
+  if (!draft.proposalLimitEnabled) return null;
+  if (isWholeNumberWithin(draft.maxProp, MAX_PROPOSALS_PER_PARTICIPANT)) {
+    return limitBelowCap(Number(draft.maxProp), MAX_PROPOSALS_PER_PARTICIPANT);
+  }
   errors.maxProposals = t('events.settings.maxProposalsInvalid', {
     max: MAX_PROPOSALS_PER_PARTICIPANT,
   });
-  return MAX_PROPOSALS_PER_PARTICIPANT;
+  return null;
 }
 
-function validateMaxParticipants(draft: SettingsDraft, t: Translate, errors: FieldErrors) {
-  const value = Number(draft.maxParticipants);
-  const withinBounds =
-    draft.maxParticipants.trim() !== '' &&
-    Number.isInteger(value) &&
-    value >= 1 &&
-    value <= MAX_EVENT_PARTICIPANTS;
-
-  if (!withinBounds) {
+function validateMaxParticipants(
+  draft: SettingsDraft,
+  t: Translate,
+  errors: FieldErrors
+): number | null {
+  if (!draft.participantLimitEnabled) return null;
+  if (!isWholeNumberWithin(draft.maxParticipants, MAX_EVENT_PARTICIPANTS)) {
     errors.maxParticipants = t('events.settings.maxParticipantsInvalid', {
       max: MAX_EVENT_PARTICIPANTS,
     });
-    return MAX_EVENT_PARTICIPANTS;
+    return null;
   }
 
+  const value = Number(draft.maxParticipants);
   if (value < draft.currentParticipantCount) {
     errors.maxParticipants = t('events.settings.maxParticipantsBelowCurrent', {
       value,
       count: draft.currentParticipantCount,
     });
-    return MAX_EVENT_PARTICIPANTS;
+    return null;
   }
 
-  return value;
+  return limitBelowCap(value, MAX_EVENT_PARTICIPANTS);
 }
 
 export function maxParticipantsHintFor(participantCount: number, t: Translate): string {

@@ -675,8 +675,6 @@ export const en: Locale = {
       pastDateHint: 'This date is already in the past.',
       sectionTheme: 'Mood',
       themeLabel: 'Theme',
-      sectionParticipants: 'Participants and movies',
-      sectionDraw: 'Vote and draw',
       resetOptions: 'Reset the options',
       configNotSaved:
         'The movie night is created, but its options could not be saved. Set them from the movie night settings.',
@@ -883,7 +881,9 @@ export const en: Locale = {
     },
     settings: {
       title: 'Event settings',
-      sectionFlow: 'The flow',
+      sectionParticipants: 'Participants and movies',
+      sectionDraw: 'Vote and draw',
+      sectionAfter: 'After the night',
       titleLabel: 'Event name',
       titlePlaceholder: 'E.g. Friday movie night',
       titleRequired: 'Event name is required.',
