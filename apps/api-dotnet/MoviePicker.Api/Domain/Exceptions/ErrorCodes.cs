@@ -67,6 +67,11 @@ public static class ErrorCodes
     public const string HostOrSelfOnly = "host_or_self_only";
     public const string SeenMarkOwnOnly = "seen_mark_own_only";
     public const string SeenMarkOwnParticipationOnly = "seen_mark_own_participation_only";
+    public const string RatingOwnParticipationOnly = "rating_own_participation_only";
+    public const string RatingOnlyAfterEvent = "rating_only_after_event";
+    public const string RatingOnlyChosenMovie = "rating_only_chosen_movie";
+    public const string RatingOutOfRange = "rating_out_of_range";
+    public const string RatingNotFound = "rating_not_found";
     public const string VoteOwnOnly = "vote_own_only";
     public const string VoteOwnParticipationOnly = "vote_own_participation_only";
 

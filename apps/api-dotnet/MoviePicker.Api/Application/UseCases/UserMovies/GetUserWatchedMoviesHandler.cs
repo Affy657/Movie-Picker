@@ -16,6 +16,7 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
     private readonly IParticipantRepository _participants;
     private readonly IEventRepository _events;
     private readonly IMovieRepository _movies;
+    private readonly IMovieRatingRepository _ratings;
     private readonly TimeProvider _clock;
 
     public GetUserWatchedMoviesHandler(
@@ -23,12 +24,14 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
         IParticipantRepository participants,
         IEventRepository events,
         IMovieRepository movies,
+        IMovieRatingRepository ratings,
         TimeProvider clock)
     {
         _users = users;
         _participants = participants;
         _events = events;
         _movies = movies;
+        _ratings = ratings;
         _clock = clock;
     }
 
@@ -64,8 +67,14 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
             return new UserWatchedMoviesResponse { Items = [] };
 
         var winnerMovieIds = qualifying.Select(x => x.MovieId).Distinct().ToList();
-        var movies = await _movies.ListByIdsAsync(winnerMovieIds, ct);
+        var moviesTask = _movies.ListByIdsAsync(winnerMovieIds, ct);
+        var ratingsTask = _ratings.ListByParticipantIdsAsync(participants.Select(p => p.Id).ToList(), ct);
+        await Task.WhenAll(moviesTask, ratingsTask);
+        var movies = await moviesTask;
         var movieById = movies.ToDictionary(m => m.Id);
+        var myRatingByMovie = (await ratingsTask)
+            .GroupBy(r => r.MovieId)
+            .ToDictionary(g => g.Key, g => g.First().Value);
 
         var items = qualifying
             .Select(x => (x.WatchedAt, Movie: movieById.GetValueOrDefault(x.MovieId)))
@@ -79,6 +88,7 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
                 GenreIds = x.Movie.GenreIds,
                 MediaType = x.Movie.MediaType,
                 WatchedAt = x.WatchedAt,
+                MyRating = myRatingByMovie.TryGetValue(x.Movie.Id, out var myRating) ? myRating : null,
             })
             .ToList();
 

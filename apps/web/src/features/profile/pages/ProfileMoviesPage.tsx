@@ -11,6 +11,8 @@ import {
 import ProfileCollectionPage, {
   type ProfileCollectionTexts,
 } from '@/features/profile/components/ProfileCollectionPage';
+import OwnerRatingBadge from '@/features/profile/components/OwnerRatingBadge';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 
 const MOVIES_TAKE = 200;
 
@@ -30,6 +32,8 @@ function watchedKey(item: UserWatchedMovieItem): string {
 export default function ProfileMoviesPage() {
   const { handle } = useParams<{ handle: string }>();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const scale = user?.ratingScale ?? 'five';
 
   const texts = useMemo<ProfileCollectionTexts>(
     () => ({
@@ -59,6 +63,11 @@ export default function ProfileMoviesPage() {
       itemKey={watchedKey}
       canonicalPath={ROUTES.profileMovies}
       texts={texts}
+      leadingBadge={(item, ownerHandle) =>
+        item.myRating != null ? (
+          <OwnerRatingBadge handle={ownerHandle} value={item.myRating} scale={scale} />
+        ) : undefined
+      }
     />
   );
 }

@@ -1,0 +1,11 @@
+.badge {
+  gap: var(--space-1);
+  text-transform: none;
+  letter-spacing: var(--tracking-slight);
+}
+
+.star {
+  flex: 0 0 auto;
+  fill: var(--color-rating);
+  color: var(--color-rating);
+}

@@ -15,7 +15,8 @@ import type { NotificationInbox } from '@/features/notifications/api/notificatio
 import type { MovieSearchListResponse } from '@/features/movies/api/moviesApi';
 import type { UserProfile } from '@/features/auth/types';
 import type { EventConfigData } from '@/shared/types/event';
-import type { WatchProviderOffer } from '@/shared/types/movie';
+import type { MovieRating, WatchProviderOffer } from '@/shared/types/movie';
+import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
 
 export type ApiSchemas = components['schemas'];
 
@@ -46,7 +47,27 @@ const frontTypesMatchTheOpenApiContract: [
   ServedBy<MovieSearchListResponse, ApiSchemas['MovieSearchListResponse']>,
   ServedBy<EventConfigData, ApiSchemas['EventConfigResponse']>,
   ServedBy<WatchProviderOffer, ApiSchemas['WatchProviderOfferResponse']>,
-] = [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
+  ServedBy<MovieRating, ApiSchemas['MovieRatingResponse']>,
+  ServedBy<UserWatchedMovieItem, ApiSchemas['UserWatchedMovieItem']>,
+] = [
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+];
 
 const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/auth/register',
@@ -72,6 +93,7 @@ const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/events/{idOrSlug}/movies',
   '/api/v1/events/{idOrSlug}/movies/{movieId}',
   '/api/v1/events/{idOrSlug}/movies/{movieId}/note',
+  '/api/v1/events/{idOrSlug}/movies/{movieId}/rating',
   '/api/v1/events/{idOrSlug}/movies/{movieId}/seen',
   '/api/v1/events/{idOrSlug}/movies/{movieId}/vote',
   '/api/v1/events/{idOrSlug}/movies/{movieId}/wheel-exclusion',

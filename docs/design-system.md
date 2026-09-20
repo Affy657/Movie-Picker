@@ -38,6 +38,7 @@ Chaque rôle porte sa déclinaison, en clair, en sombre et sous `.on-dark` ; un 
 | primaire (accent choisi par l'utilisateur) | `--color-primary`, `-hover` | `--color-primary-text`, `-text-hover` | `--color-primary-tint`, `-soft`, `-soft-hover` | `--color-primary-border`, `-border-soft` |
 | erreur, succès, avertissement | `--color-error`, `--color-success`, `--color-warning` | idem | `--color-<rôle>-bg` | `--color-<rôle>-border` |
 | teintes neutres | `--color-surface-hover` (6 %), `-hover-strong` (10 %), `-active` (12 %), `-sunken`, `-translucent`, `--color-bg-tint`, `--color-bg-translucent` | | | |
+| note d'un film (étoiles pleines, pastille de note) | `--color-rating` (ambre, identique en clair, en sombre et sous `.on-dark`) | | | |
 
 `--color-primary-text` existe parce que `--color-primary` colore des surfaces : pour du texte ou un lien, chaque accent garantit 4,5:1 sur fond clair par sa déclinaison texte, ce que le vert, l'orange et le cyan de la surface ne tiennent pas.
 
@@ -242,6 +243,17 @@ Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches
 | `size` | `md` / `sm` | |
 | `iconOnly` | `boolean` | le libellé devient `aria-label` |
 | `disabled` | `boolean` | toutes les options, `--opacity-disabled`, clavier inerte |
+
+### StarRating
+
+Cinq étoiles à demi-pas pour noter un film vu, valeur entière sur 10 (`1` à `10`, une demi-étoile vaut un point), `role="group"`. Un tap donne l'étoile pleine, un second tap sur la même étoile la passe en demie ; à la souris, la moitié gauche de l'étoile prévisualise et choisit la demie ; les flèches déplacent d'une demi-étoile, bornées à 1 et 10. La valeur s'affiche à côté par `formatRating` (`shared/utils/formatRating.ts`), dans l'échelle du lecteur (`3,5/5` ou `7/10`) et sa langue.
+
+| Prop | Type | Rôle |
+|---|---|---|
+| `value`, `onChange` | `number \| null`, `(value: number) => void` | requis |
+| `ariaLabel` | `string` | nom du groupe |
+| `starLabel` | `(stars: number) => string` | nom de chaque bouton |
+| `size` | `md` / `lg` | `lg` (fenêtre de notation) porte des cellules de 44 px, `md` étend sa zone tactile |
 
 ### Tooltip et InfoBubble
 

@@ -14,6 +14,7 @@ import LibraryMovieDetails, {
   type LibraryMovieSeed,
 } from '@/features/watchlist/components/LibraryMovieDetails';
 import { fetchUserWatchedMovies } from '@/features/profile/api/profileApi';
+import OwnerRatingBadge from '@/features/profile/components/OwnerRatingBadge';
 import Card from '@/shared/components/Card';
 
 const PREVIEW_TAKE = 6;
@@ -62,6 +63,15 @@ export default function ProfileMoviesSection({ handle }: Readonly<Props>) {
                 onToggleWatchlist={() => watchlist.toggle(item)}
                 onProposeToEvent={() => setProposeTarget(item)}
                 onOpenDetails={() => details.open(item)}
+                leadingBadge={
+                  item.myRating != null ? (
+                    <OwnerRatingBadge
+                      handle={handle}
+                      value={item.myRating}
+                      scale={user?.ratingScale ?? 'five'}
+                    />
+                  ) : undefined
+                }
               />
             ))}
           </MoviePreviewRail>

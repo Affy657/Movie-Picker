@@ -44,9 +44,12 @@ public sealed class DeleteEventHandlerNotificationTests
         _movieRepo.Setup(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(0L);
         _participantRepo.Setup(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(0L);
 
+        var ratingRepo = new Mock<IMovieRatingRepository>();
+        ratingRepo.Setup(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(0L);
+
         _sut = new DeleteEventHandler(
             _eventRepo.Object, _participantRepo.Object, _movieRepo.Object, _voteRepo.Object,
-            _seenMarkRepo.Object, _currentUser.Object, _userRepo.Object, _pushSubRepo.Object,
+            _seenMarkRepo.Object, ratingRepo.Object, _currentUser.Object, _userRepo.Object, _pushSubRepo.Object,
             _pushSender.Object, _notifications.Object, new InMemoryUnitOfWork(),
             NullLogger<DeleteEventHandler>.Instance,
             TimeProvider.System);

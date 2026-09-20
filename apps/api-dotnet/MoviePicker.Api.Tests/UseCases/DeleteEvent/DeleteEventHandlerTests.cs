@@ -17,6 +17,7 @@ public sealed class DeleteEventHandlerTests
     private readonly Mock<IMovieRepository> _movieRepo = new();
     private readonly Mock<IVoteRepository> _voteRepo = new();
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo = new();
+    private readonly Mock<IMovieRatingRepository> _ratingRepo = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IUserRepository> _userRepo = new();
     private readonly Mock<IPushSubscriptionRepository> _pushSubRepo = new();
@@ -29,6 +30,9 @@ public sealed class DeleteEventHandlerTests
             .Setup(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0L);
         _seenMarkRepo
+            .Setup(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0L);
+        _ratingRepo
             .Setup(r => r.DeleteByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0L);
         _movieRepo
@@ -50,6 +54,7 @@ public sealed class DeleteEventHandlerTests
             _movieRepo.Object,
             _voteRepo.Object,
             _seenMarkRepo.Object,
+            _ratingRepo.Object,
             _currentUser.Object,
             _userRepo.Object,
             _pushSubRepo.Object,
@@ -155,6 +160,7 @@ public sealed class DeleteEventHandlerTests
         var seq = new MockSequence();
         _voteRepo.Verify(r => r.DeleteByEventIdAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
         _seenMarkRepo.Verify(r => r.DeleteByEventIdAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
+        _ratingRepo.Verify(r => r.DeleteByEventIdAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
         _movieRepo.Verify(r => r.DeleteByEventIdAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
         _participantRepo.Verify(r => r.DeleteByEventIdAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
         _eventRepo.Verify(r => r.DeleteAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);

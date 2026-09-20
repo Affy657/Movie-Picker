@@ -1907,6 +1907,213 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{idOrSlug}/movies/{movieId}/rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    idOrSlug: string;
+                    movieId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetMovieRatingRequest"];
+                    "text/json": components["schemas"]["SetMovieRatingRequest"];
+                    "application/*+json": components["schemas"]["SetMovieRatingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MovieRatingResponse"];
+                        "application/json": components["schemas"]["MovieRatingResponse"];
+                        "text/json": components["schemas"]["MovieRatingResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    idOrSlug: string;
+                    movieId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DeleteMovieRatingRequest"];
+                    "text/json": components["schemas"]["DeleteMovieRatingRequest"];
+                    "application/*+json": components["schemas"]["DeleteMovieRatingRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events": {
         parameters: {
             query?: never;
@@ -6294,9 +6501,14 @@ export interface components {
             removedVotes?: number;
             /** Format: int64 */
             removedSeenMarks?: number;
+            /** Format: int64 */
+            removedRatings?: number;
         };
         DeleteMoviePitchNoteRequest: {
             participantId?: string | null;
+        };
+        DeleteMovieRatingRequest: {
+            participantId: string;
         };
         DeleteMovieRequest: {
             participantId: string;
@@ -6431,6 +6643,7 @@ export interface components {
             joinedAt?: string;
             votes?: components["schemas"]["ExportedVote"][] | null;
             seenMarks?: components["schemas"]["ExportedSeenMark"][] | null;
+            ratings?: components["schemas"]["ExportedRating"][] | null;
         };
         ExportedProfile: {
             userId?: string | null;
@@ -6459,6 +6672,13 @@ export interface components {
             endpoint?: string | null;
             /** Format: date-time */
             createdAt?: string;
+        };
+        ExportedRating: {
+            movieId?: string | null;
+            /** Format: int32 */
+            value?: number;
+            /** Format: date-time */
+            updatedAt?: string;
         };
         ExportedSeenMark: {
             movieId?: string | null;
@@ -6644,6 +6864,13 @@ export interface components {
         };
         /** @enum {string} */
         MovieMediaType: "movie" | "tv";
+        MovieRatingResponse: {
+            participantId?: string | null;
+            /** Format: int32 */
+            value?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         MovieSearchItemResponse: {
             /** Format: int32 */
             id?: number;
@@ -6720,6 +6947,7 @@ export interface components {
             seenCount?: number;
             seenByPseudos?: string[] | null;
             votersUpPseudos?: string[] | null;
+            ratings?: components["schemas"]["MovieRatingResponse"][] | null;
             /** Format: double */
             voteAverage?: number | null;
             watchProviders?: components["schemas"]["WatchProviderOfferResponse"][] | null;
@@ -6933,6 +7161,11 @@ export interface components {
             participantId: string;
             pitchNote: string;
         };
+        SetMovieRatingRequest: {
+            participantId: string;
+            /** Format: int32 */
+            value?: number;
+        };
         SetMovieWheelExclusionRequest: {
             excluded: boolean;
         };
@@ -7030,6 +7263,8 @@ export interface components {
             mediaType?: components["schemas"]["MovieMediaType"];
             /** Format: date-time */
             watchedAt?: string;
+            /** Format: int32 */
+            myRating?: number | null;
         };
         UserWatchedMoviesResponse: {
             items?: components["schemas"]["UserWatchedMovieItem"][] | null;

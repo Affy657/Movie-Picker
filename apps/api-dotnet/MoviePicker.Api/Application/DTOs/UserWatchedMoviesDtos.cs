@@ -16,4 +16,5 @@ public sealed class UserWatchedMovieItem
     public IReadOnlyList<int> GenreIds { get; init; } = [];
     public MovieMediaType MediaType { get; init; } = MovieMediaType.Movie;
     public DateTimeOffset WatchedAt { get; init; }
+    public int? MyRating { get; init; }
 }

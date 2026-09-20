@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.UseCases.ListMovies;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.ListMovies;
@@ -16,6 +17,7 @@ public sealed class ListMoviesForEventHandlerTests
     private readonly Mock<IVoteRepository> _voteRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo;
+    private readonly Mock<IMovieRatingRepository> _ratingRepo;
     private readonly Mock<IUserRepository> _userRepo;
     private readonly Mock<ITmdbMovieSearch> _tmdb;
     private readonly Mock<IPosterImageStore> _posterStore;
@@ -44,6 +46,7 @@ public sealed class ListMoviesForEventHandlerTests
         _voteRepo = new Mock<IVoteRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
         _seenMarkRepo = new Mock<ISeenMarkRepository>();
+        _ratingRepo = new Mock<IMovieRatingRepository>();
         _userRepo = new Mock<IUserRepository>();
         _tmdb = new Mock<ITmdbMovieSearch>();
         _posterStore = new Mock<IPosterImageStore>();
@@ -62,6 +65,9 @@ public sealed class ListMoviesForEventHandlerTests
         _participantRepo
             .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Participant>());
+        _ratingRepo
+            .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<MovieRating>());
         _userRepo
             .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<User>());
@@ -72,6 +78,7 @@ public sealed class ListMoviesForEventHandlerTests
             _voteRepo.Object,
             _participantRepo.Object,
             _seenMarkRepo.Object,
+            _ratingRepo.Object,
             _userRepo.Object,
             _tmdb.Object,
             _posterStore.Object,
@@ -280,6 +287,57 @@ public sealed class ListMoviesForEventHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_AttachesTheRatingsOfEachMovie()
+    {
+        var evt = ActiveEvent() with { Winners = TestWinners.Won("mov1") };
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Film A", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
+            new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "Film B", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        var updatedAt = new DateTimeOffset(2030, 6, 2, 9, 0, 0, TimeSpan.Zero);
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+        _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string>());
+        _ratingRepo
+            .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<MovieRating>
+            {
+                new() { Id = "r1", EventId = evt.Id, MovieId = "mov1", ParticipantId = "p1", Value = 7, CreatedAt = updatedAt, UpdatedAt = updatedAt },
+                new() { Id = "r2", EventId = evt.Id, MovieId = "mov1", ParticipantId = "p2", Value = 9, CreatedAt = updatedAt, UpdatedAt = updatedAt }
+            });
+
+        var result = await _sut.HandleAsync("evt1");
+
+        var a = result.First(m => m.Id == "mov1");
+        Assert.Collection(
+            a.Ratings,
+            r => { Assert.Equal("p1", r.ParticipantId); Assert.Equal(7, r.Value); Assert.Equal(updatedAt, r.UpdatedAt); },
+            r => { Assert.Equal("p2", r.ParticipantId); Assert.Equal(9, r.Value); });
+        Assert.Empty(result.First(m => m.Id == "mov2").Ratings);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoWinnerDrawnYet_DoesNotLookForRatings()
+    {
+        var evt = ActiveEvent();
+        var movies = new List<Movie>
+        {
+            new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Film A", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
+        };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
+        _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+        _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string>());
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Empty(Assert.Single(result).Ratings);
+        _ratingRepo.Verify(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_NoMovies_ReturnsEmptyList()
     {
         var evt = ActiveEvent();
@@ -330,6 +388,7 @@ public sealed class ListMoviesForEventHandlerTests
             _voteRepo.Object,
             _participantRepo.Object,
             _seenMarkRepo.Object,
+            _ratingRepo.Object,
             _userRepo.Object,
             _tmdb.Object,
             _posterStore.Object,

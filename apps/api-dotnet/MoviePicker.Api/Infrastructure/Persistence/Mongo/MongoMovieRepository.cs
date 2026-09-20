@@ -38,6 +38,8 @@ public sealed class MongoMovieRepository : IMovieRepository
 
     public async Task<Movie?> GetByIdAndEventIdAsync(string movieId, string eventId, CancellationToken ct = default)
     {
+        if (!ObjectId.TryParse(movieId, out _))
+            return null;
         var doc = await _collection.Find(x => x.Id == movieId && x.EventId == eventId).FirstOrDefaultAsync(ct);
         return doc is null ? null : MovieMapper.ToDomain(doc);
     }

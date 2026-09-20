@@ -70,6 +70,7 @@ public sealed record ExportedParticipation
     public DateTimeOffset JoinedAt { get; init; }
     public IReadOnlyList<ExportedVote> Votes { get; init; } = Array.Empty<ExportedVote>();
     public IReadOnlyList<ExportedSeenMark> SeenMarks { get; init; } = Array.Empty<ExportedSeenMark>();
+    public IReadOnlyList<ExportedRating> Ratings { get; init; } = Array.Empty<ExportedRating>();
 }
 
 public sealed record ExportedVote
@@ -83,6 +84,13 @@ public sealed record ExportedSeenMark
 {
     public string MovieId { get; init; } = string.Empty;
     public DateTimeOffset CreatedAt { get; init; }
+}
+
+public sealed record ExportedRating
+{
+    public string MovieId { get; init; } = string.Empty;
+    public int Value { get; init; }
+    public DateTimeOffset UpdatedAt { get; init; }
 }
 
 public sealed record ExportedPushSubscription

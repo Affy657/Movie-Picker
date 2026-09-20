@@ -29,6 +29,9 @@ public static class Errors
     public static NotFoundException SeenMarkNotFound() =>
         new("Seen mark not found", ErrorCodes.SeenMarkNotFound);
 
+    public static NotFoundException RatingNotFound() =>
+        new("Rating not found", ErrorCodes.RatingNotFound);
+
     public static NotFoundException EventTemplateNotFound() =>
         new("Movie night template not found", ErrorCodes.EventTemplateNotFound);
 
@@ -169,6 +172,18 @@ public static class Errors
 
     public static ForbiddenException SeenMarkOwnParticipationOnly() =>
         new("You can only mark a movie as seen for your own participation", ErrorCodes.SeenMarkOwnParticipationOnly);
+
+    public static ForbiddenException RatingOwnParticipationOnly() =>
+        new("You can only rate a movie for your own participation", ErrorCodes.RatingOwnParticipationOnly);
+
+    public static ConflictException RatingOnlyAfterEvent() =>
+        new("A movie can only be rated once the movie night is over", ErrorCodes.RatingOnlyAfterEvent);
+
+    public static ConflictException RatingOnlyChosenMovie() =>
+        new("Only the chosen movies of the night can be rated", ErrorCodes.RatingOnlyChosenMovie);
+
+    public static BadRequestException RatingOutOfRange() =>
+        new("The rating must be between 1 and 10", ErrorCodes.RatingOutOfRange);
 
     public static ForbiddenException VoteOwnOnly() =>
         new("You can only change your own vote", ErrorCodes.VoteOwnOnly);

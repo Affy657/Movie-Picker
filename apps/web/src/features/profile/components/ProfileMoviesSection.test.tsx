@@ -115,6 +115,43 @@ describe('ProfileMoviesSection (MSW)', () => {
     );
   });
 
+  it("wears the owner's rating on the poster, in the reader's scale, and nothing without one", async () => {
+    server.use(
+      authedBobHandler,
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              tmdbId: 27205,
+              title: 'Inception',
+              year: '2010',
+              posterPath: null,
+              genreIds: [28],
+              mediaType: 'movie',
+              watchedAt: '2026-06-01T00:00:00Z',
+              myRating: 7,
+            },
+            {
+              tmdbId: 157336,
+              title: 'Interstellar',
+              year: '2014',
+              posterPath: null,
+              genreIds: [],
+              mediaType: 'movie',
+              watchedAt: '2026-05-01T00:00:00Z',
+              myRating: null,
+            },
+          ],
+        })
+      )
+    );
+
+    renderSection('alice');
+
+    expect(await screen.findByText('Note de @alice : 7/10')).toBeInTheDocument();
+    expect(screen.queryAllByText(/^Note de @alice/)).toHaveLength(1);
+  });
+
   it('renders one unified card per movie with its title as a level-three heading and the year', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>

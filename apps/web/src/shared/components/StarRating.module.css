@@ -1,0 +1,77 @@
+.root {
+  --star-size: var(--icon-2xl);
+  --star-cell: var(--space-9);
+  --star-color: var(--color-rating);
+  --star-empty: var(--color-border-field);
+  display: inline-flex;
+  align-items: center;
+  margin-left: calc((var(--star-cell) - var(--star-size)) / -2);
+}
+
+.lg {
+  --star-size: var(--space-9);
+  --star-cell: var(--tap-target-min);
+}
+
+.star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--star-cell);
+  height: var(--star-cell);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--star-color);
+  cursor: pointer;
+}
+
+.star:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: 2px;
+}
+
+.glyph {
+  position: relative;
+  display: inline-flex;
+  width: var(--star-size);
+  height: var(--star-size);
+}
+
+.glyph svg {
+  width: 100%;
+  height: 100%;
+}
+
+.outline {
+  color: var(--star-empty);
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  fill: currentcolor;
+  color: var(--star-color);
+  transition: clip-path var(--duration-fast) var(--ease-out);
+}
+
+.half {
+  clip-path: inset(0 50% 0 0);
+}
+
+.hidden {
+  clip-path: inset(0 100% 0 0);
+}
+
+@media (hover: hover) {
+  .star:hover {
+    background: var(--color-surface-hover);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill {
+    transition: none;
+  }
+}

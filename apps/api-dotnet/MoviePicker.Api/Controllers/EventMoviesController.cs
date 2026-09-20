@@ -8,6 +8,7 @@ using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.DeleteMoviePitchNote;
 using MoviePicker.Api.Application.UseCases.EventViewTag;
 using MoviePicker.Api.Application.UseCases.ListMovies;
+using MoviePicker.Api.Application.UseCases.MovieRatings;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Application.UseCases.SetMoviePitchNote;
 using MoviePicker.Api.Application.UseCases.SetMovieWheelExclusion;
@@ -188,6 +189,43 @@ public sealed class EventMoviesController : ControllerBase
         CancellationToken ct)
     {
         await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        return NoContent();
+    }
+
+    [HttpPut("{movieId}/rating")]
+    [EnableRateLimiting(RateLimitingExtensions.RatingMutationPolicy)]
+    [ProducesResponseType(typeof(MovieRatingResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> SetRating(
+        string idOrSlug,
+        string movieId,
+        [FromBody] SetMovieRatingRequest request,
+        [FromServices] ISetMovieRatingHandler handler,
+        CancellationToken ct)
+    {
+        var res = await handler.HandleAsync(idOrSlug, movieId, request, ct);
+        return Ok(res);
+    }
+
+    [HttpDelete("{movieId}/rating")]
+    [EnableRateLimiting(RateLimitingExtensions.RatingMutationPolicy)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> DeleteRating(
+        string idOrSlug,
+        string movieId,
+        [FromBody] DeleteMovieRatingRequest request,
+        [FromServices] IDeleteMovieRatingHandler handler,
+        CancellationToken ct)
+    {
+        await handler.HandleAsync(idOrSlug, movieId, request.ParticipantId, ct);
         return NoContent();
     }
 

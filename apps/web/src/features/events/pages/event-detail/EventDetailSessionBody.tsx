@@ -3,7 +3,11 @@ import type { UseQueryResult } from '@tanstack/react-query';
 import EventParticipantsList from '@/features/events/components/EventParticipantsList';
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
 import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
-import EventWinnerSummary from '@/features/events/pages/event-detail/EventWinnerSummary';
+import EventWinnerSummary, {
+  type WinnerRatingContext,
+} from '@/features/events/pages/event-detail/EventWinnerSummary';
+import { useEventMovieRating } from '@/features/events/pages/event-detail/useEventMovieRating';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import styles from './EventDetailSession.module.css';
@@ -113,6 +117,17 @@ export default function EventDetailSessionBody({
       ),
     [event.participants]
   );
+  const { user } = useAuth();
+  const movieRating = useEventMovieRating({ slug, participant, refreshAll });
+  const rating: WinnerRatingContext = {
+    scale: user?.ratingScale ?? 'five',
+    participants: event.participants ?? [],
+    currentParticipantId: participant?.participantId ?? null,
+    saving: movieRating.saving,
+    error: movieRating.error,
+    onSave: movieRating.save,
+    onClear: movieRating.clear,
+  };
   return (
     <>
       {participantsPanel.open ? (
@@ -134,6 +149,7 @@ export default function EventDetailSessionBody({
           winners={winners}
           isFinished={!!event.isFinished}
           participantAvatars={participantAvatars}
+          rating={rating}
         />
       )}
       <div ref={moviesSection.ref} className={styles.moviesSection}>

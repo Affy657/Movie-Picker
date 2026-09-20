@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Film, RefreshCw, AlertCircle } from 'lucide-react';
@@ -62,6 +62,7 @@ interface ProfileCollectionPageProps<T extends MovieListItemLike> {
   itemKey: (item: T) => string;
   canonicalPath: (handle: string) => string;
   texts: ProfileCollectionTexts;
+  leadingBadge?: (item: T, handle: string) => ReactNode;
 }
 
 function collectionSeo(
@@ -93,6 +94,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
   itemKey,
   canonicalPath,
   texts,
+  leadingBadge,
 }: Readonly<ProfileCollectionPageProps<T>>) {
   const { t } = useTranslation();
   useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
@@ -237,6 +239,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
                 onToggleWatchlist={() => watchlist.toggle(item)}
                 onProposeToEvent={() => setProposeTarget(item)}
                 onOpenDetails={() => details.open(item)}
+                leadingBadge={leadingBadge && handle ? leadingBadge(item, handle) : undefined}
               />
             ))}
           </ul>

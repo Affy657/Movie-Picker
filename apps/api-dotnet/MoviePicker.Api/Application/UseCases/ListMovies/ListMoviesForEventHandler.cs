@@ -18,6 +18,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
     private readonly IVoteRepository _voteRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
+    private readonly IMovieRatingRepository _ratingRepository;
     private readonly IUserRepository _userRepository;
     private readonly ITmdbMovieSearch _tmdbMovieSearch;
     private readonly IPosterImageStore _posterImageStore;
@@ -30,6 +31,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         IVoteRepository voteRepository,
         IParticipantRepository participantRepository,
         ISeenMarkRepository seenMarkRepository,
+        IMovieRatingRepository ratingRepository,
         IUserRepository userRepository,
         ITmdbMovieSearch tmdbMovieSearch,
         IPosterImageStore posterImageStore,
@@ -41,6 +43,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         _voteRepository = voteRepository;
         _participantRepository = participantRepository;
         _seenMarkRepository = seenMarkRepository;
+        _ratingRepository = ratingRepository;
         _userRepository = userRepository;
         _tmdbMovieSearch = tmdbMovieSearch;
         _posterImageStore = posterImageStore;
@@ -104,11 +107,17 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         var seenAggTask = _seenMarkRepository.AggregateByMovieIdsAsync(evt.Id, movieIds, ct);
         var upVotersAggTask = _voteRepository.AggregateUpVotersByMovieIdsAsync(movieIds, ct);
         var eventParticipantsTask = _participantRepository.ListByEventIdAsync(evt.Id, ct);
-        await Task.WhenAll(scoresTask, seenAggTask, upVotersAggTask, eventParticipantsTask);
+        var ratingsTask = evt.HasWinner
+            ? _ratingRepository.ListByEventIdAsync(evt.Id, ct)
+            : Task.FromResult<IReadOnlyList<MovieRating>>(Array.Empty<MovieRating>());
+        await Task.WhenAll(scoresTask, seenAggTask, upVotersAggTask, eventParticipantsTask, ratingsTask);
         var scores = await scoresTask;
         var seenAgg = await seenAggTask;
         var upVotersAgg = await upVotersAggTask;
         var eventParticipants = await eventParticipantsTask;
+        var ratingsByMovie = (await ratingsTask)
+            .GroupBy(r => r.MovieId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<MovieRatingResponse>)g.Select(MovieRatingResponse.FromDomain).ToList());
 
         IReadOnlyDictionary<string, int> myVotes = IsCallersOwnParticipant(participantId, eventParticipants)
             ? await _voteRepository.GetParticipantVotesByEventAsync(evt.Id, participantId!, ct)
@@ -180,6 +189,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                     SeenCount = seenCount,
                     SeenByPseudos = seenByPseudos,
                     VotersUpPseudos = votersUpPseudos,
+                    Ratings = ratingsByMovie.TryGetValue(m.Id, out var ratings) ? ratings : Array.Empty<MovieRatingResponse>(),
                     VoteAverage = enr?.VoteAverage,
                     WatchProviders = enr is null ? Array.Empty<WatchProviderOfferResponse>() : WatchProviderMapping.ToDto(enr.WatchProviders),
                     TmdbWatchPageUrl = enr?.TmdbWatchPageUrl,

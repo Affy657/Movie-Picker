@@ -252,6 +252,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
             services.AddSingleton<IVoteRepository, InMemoryVoteRepository>();
             services.AddSingleton<ISeenMarkRepository, InMemorySeenMarkRepository>();
+            services.AddSingleton<IMovieRatingRepository, InMemoryMovieRatingRepository>();
             services.AddSingleton<IAuthSessionInvalidator, InMemoryAuthSessionInvalidator>();
             services.AddSingleton<IPushSubscriptionRepository, InMemoryPushSubscriptionRepository>();
             services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
@@ -302,6 +303,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMovieRepository, MongoMovieRepository>();
         services.AddScoped<IVoteRepository, MongoVoteRepository>();
         services.AddScoped<ISeenMarkRepository, MongoSeenMarkRepository>();
+        services.AddScoped<IMovieRatingRepository, MongoMovieRatingRepository>();
         services.AddScoped<IAuthSessionInvalidator, MongoAuthSessionInvalidator>();
         services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
         services.AddScoped<IFollowRepository, MongoFollowRepository>();

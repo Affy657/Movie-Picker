@@ -25,6 +25,7 @@ public static class RateLimitingExtensions
     public const string VoteMutationPolicy = "vote-mutation";
     public const string SeenMarksMutationPolicy = "seen-marks-mutation";
     public const string NoteMutationPolicy = "note-mutation";
+    public const string RatingMutationPolicy = "rating-mutation";
     public const string RemoveParticipantPolicy = "remove-participant";
     public const string DeleteEventPolicy = "delete-event";
     public const string PostersPolicy = "posters-get";
@@ -65,6 +66,7 @@ public static class RateLimitingExtensions
         new(VoteMutationPolicy, 120, 1, false),
         new(SeenMarksMutationPolicy, 120, 1, false),
         new(NoteMutationPolicy, 60, 1, false),
+        new(RatingMutationPolicy, 60, 1, false),
         new(RemoveParticipantPolicy, 40, 1, false),
         new(DeleteEventPolicy, 10, 1, false),
         new(PostersPolicy, 300, 1, false),

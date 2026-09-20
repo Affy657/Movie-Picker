@@ -7,6 +7,12 @@ export interface WatchProviderOffer {
 
 export type MovieMediaType = 'movie' | 'tv';
 
+export interface MovieRating {
+  participantId: string;
+  value: number;
+  updatedAt: string;
+}
+
 export interface MovieData {
   id: string;
   eventId: string;
@@ -41,6 +47,8 @@ export interface MovieData {
   seenByPseudos?: string[];
 
   votersUpPseudos?: string[];
+
+  ratings?: MovieRating[];
 }
 
 export interface ParticipantData {

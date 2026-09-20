@@ -52,6 +52,8 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
 
         new("seen_marks", "seen_marks_event_movie_participant_unique", Unique: true),
         new("seen_marks", "seen_marks_movieId"),
+        new("movie_ratings", "movie_ratings_event_movie_participant_unique", Unique: true),
+        new("movie_ratings", "movie_ratings_participantId"),
 
         new("push_subscriptions", "push_subscriptions_userId_endpoint_unique", Unique: true),
         new("push_subscriptions", "push_subscriptions_userId"),

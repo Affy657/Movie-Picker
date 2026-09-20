@@ -394,4 +394,44 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var stored = await ReadRawAsync("users", created.Id);
         Assert.False(stored.Contains("bio"));
     }
+
+    [Fact]
+    public async Task MovieRatingUpsert_ReplacesTheValueAndKeepsOneDocumentPerParticipant()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var ratings = scope.ServiceProvider.GetRequiredService<IMovieRatingRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        var movieId = ObjectId.GenerateNewId().ToString();
+        var participantId = ObjectId.GenerateNewId().ToString();
+        var rating = new MovieRating { EventId = eventId, MovieId = movieId, ParticipantId = participantId, Value = 6 };
+
+        var first = await ratings.UpsertAsync(rating);
+        var second = await ratings.UpsertAsync(rating with { Value = 9 });
+
+        Assert.Equal(first.Id, second.Id);
+        Assert.Equal(9, second.Value);
+        Assert.Equal(first.CreatedAt, second.CreatedAt);
+        var listed = Assert.Single(await ratings.ListByEventIdAsync(eventId));
+        Assert.Equal(9, listed.Value);
+        Assert.Equal(participantId, Assert.Single(await ratings.ListByParticipantIdsAsync([participantId])).ParticipantId);
+
+        Assert.True(await ratings.DeleteAsync(eventId, movieId, participantId));
+        Assert.False(await ratings.DeleteAsync(eventId, movieId, participantId));
+        Assert.Empty(await ratings.ListByEventIdAsync(eventId));
+    }
+
+    [Fact]
+    public async Task MalformedObjectIds_ReadAsAbsent_InsteadOfThrowing()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var participants = scope.ServiceProvider.GetRequiredService<IParticipantRepository>();
+        var ratings = scope.ServiceProvider.GetRequiredService<IMovieRatingRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        var participantId = ObjectId.GenerateNewId().ToString();
+
+        Assert.Null(await movies.GetByIdAndEventIdAsync("not-an-id", eventId));
+        Assert.Null(await participants.FindByIdAndEventIdAsync(new string('z', 24), eventId));
+        Assert.False(await ratings.DeleteAsync(eventId, "not-an-id", participantId));
+    }
 }

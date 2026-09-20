@@ -4,11 +4,13 @@ import { fetchApi } from '@/shared/api/client';
 import {
   addMovieToEvent,
   clearMovieVote,
+  deleteMovieRating,
   fetchEventMovies,
   fetchMovieDetails,
   markMovieAsSeen,
   removeMovieFromEvent,
   searchMovies,
+  setMovieRating,
   setMovieWheelExclusion,
   unmarkMovieAsSeen,
   voteMovie,
@@ -229,6 +231,23 @@ describe('movie mutations', () => {
 
     await unmarkMovieAsSeen('soiree', 'm1', 'p1');
     expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/seen', {
+      method: 'DELETE',
+      body: JSON.stringify({ participantId: 'p1' }),
+    });
+  });
+
+  it('setMovieRating puts the value, deleteMovieRating deletes it', async () => {
+    mockFetchApi.mockResolvedValueOnce({ participantId: 'p1', value: 7, updatedAt: 'now' });
+
+    const saved = await setMovieRating('soiree', 'm1', 'p1', 7);
+    expect(saved.value).toBe(7);
+    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/rating', {
+      method: 'PUT',
+      body: JSON.stringify({ participantId: 'p1', value: 7 }),
+    });
+
+    await deleteMovieRating('soiree', 'm1', 'p1');
+    expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies/m1/rating', {
       method: 'DELETE',
       body: JSON.stringify({ participantId: 'p1' }),
     });

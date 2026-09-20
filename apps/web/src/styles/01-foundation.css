@@ -315,6 +315,7 @@
   --color-badge-finished-text: #475569;
   --color-badge-upcoming-bg: var(--amber-100);
   --color-badge-upcoming-text: var(--amber-800);
+  --color-rating: var(--amber-400);
   --color-badge-live-bg: var(--emerald-100);
   --color-badge-live-text: var(--emerald-800);
   --color-badge-pending-bg: #ffe1c2;
@@ -436,6 +437,7 @@
   --color-badge-finished-text: #cbd5e1;
   --color-badge-upcoming-bg: #2a1e08;
   --color-badge-upcoming-text: var(--amber-400);
+  --color-rating: var(--amber-400);
   --color-badge-live-bg: #0e2818;
   --color-badge-live-text: var(--green-400);
   --color-badge-pending-bg: #3a1a08;
@@ -554,6 +556,7 @@
   --color-badge-finished-text: #cbd5e1;
   --color-badge-upcoming-bg: #2a1e08;
   --color-badge-upcoming-text: var(--amber-400);
+  --color-rating: var(--amber-400);
   --color-badge-live-bg: #0e2818;
   --color-badge-live-text: var(--green-400);
   --color-badge-pending-bg: #3a1a08;

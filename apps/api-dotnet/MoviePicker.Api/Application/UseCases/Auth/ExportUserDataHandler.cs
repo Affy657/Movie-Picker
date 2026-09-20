@@ -16,6 +16,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     private readonly IParticipantRepository _participants;
     private readonly IVoteRepository _votes;
     private readonly ISeenMarkRepository _seenMarks;
+    private readonly IMovieRatingRepository _ratings;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IWatchlistRepository _watchlist;
     private readonly TimeProvider _clock;
@@ -28,6 +29,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         IParticipantRepository participants,
         IVoteRepository votes,
         ISeenMarkRepository seenMarks,
+        IMovieRatingRepository ratings,
         IPushSubscriptionRepository pushSubscriptions,
         IWatchlistRepository watchlist,
         TimeProvider clock)
@@ -39,6 +41,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         _participants = participants;
         _votes = votes;
         _seenMarks = seenMarks;
+        _ratings = ratings;
         _pushSubscriptions = pushSubscriptions;
         _watchlist = watchlist;
         _clock = clock;
@@ -60,6 +63,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var participantIds = participations.Select(p => p.Id).ToList();
         var votes = await _votes.ListByParticipantIdsAsync(participantIds, ct);
         var seenMarks = await _seenMarks.ListByParticipantIdsAsync(participantIds, ct);
+        var ratings = await _ratings.ListByParticipantIdsAsync(participantIds, ct);
         var pushSubscriptions = await _pushSubscriptions.ListByUserIdAsync(userId, ct);
 
         var participationEventIds = participations.Select(p => p.EventId).Distinct().ToList();
@@ -74,6 +78,9 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var seenByParticipant = seenMarks
             .GroupBy(s => s.ParticipantId)
             .ToDictionary(g => g.Key, g => g.ToList());
+        var ratingsByParticipant = ratings
+            .GroupBy(r => r.ParticipantId)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         return new UserDataExportResponse
         {
@@ -84,7 +91,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
             Followers = MapConnections(followerUsers),
             CreatedEvents = createdEvents.Select(MapCreatedEvent).ToList(),
             Participations = participations
-                .Select(p => MapParticipation(p, eventTitleById, votesByParticipant, seenByParticipant))
+                .Select(p => MapParticipation(p, eventTitleById, votesByParticipant, seenByParticipant, ratingsByParticipant))
                 .ToList(),
             PushSubscriptions = pushSubscriptions
                 .Select(s => new ExportedPushSubscription { Endpoint = s.Endpoint, CreatedAt = s.CreatedAt })
@@ -154,10 +161,12 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         Participant p,
         Dictionary<string, string> eventTitleById,
         Dictionary<string, List<Vote>> votesByParticipant,
-        Dictionary<string, List<SeenMark>> seenByParticipant)
+        Dictionary<string, List<SeenMark>> seenByParticipant,
+        Dictionary<string, List<MovieRating>> ratingsByParticipant)
     {
         var votes = votesByParticipant.TryGetValue(p.Id, out var v) ? v : [];
         var seen = seenByParticipant.TryGetValue(p.Id, out var s) ? s : [];
+        var ratings = ratingsByParticipant.TryGetValue(p.Id, out var r) ? r : [];
         return new ExportedParticipation
         {
             EventId = p.EventId,
@@ -169,6 +178,9 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
                 .ToList(),
             SeenMarks = seen
                 .Select(x => new ExportedSeenMark { MovieId = x.MovieId, CreatedAt = x.CreatedAt })
+                .ToList(),
+            Ratings = ratings
+                .Select(x => new ExportedRating { MovieId = x.MovieId, Value = x.Value, UpdatedAt = x.UpdatedAt })
                 .ToList()
         };
     }

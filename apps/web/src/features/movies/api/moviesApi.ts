@@ -1,6 +1,11 @@
 import { fetchApi, withHostToken } from '@/shared/api/client';
 import { mapMovieData, type RawMovieData } from '@/shared/api/apiMapping';
-import type { MovieData, MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
+import type {
+  MovieData,
+  MovieMediaType,
+  MovieRating,
+  WatchProviderOffer,
+} from '@/shared/types/movie';
 
 export async function fetchEventMovies(
   slug: string,
@@ -255,6 +260,29 @@ export async function unmarkMovieAsSeen(
   participantId: string
 ): Promise<void> {
   await fetchApi(`/events/${slug}/movies/${movieId}/seen`, {
+    method: 'DELETE',
+    body: JSON.stringify({ participantId }),
+  });
+}
+
+export async function setMovieRating(
+  slug: string,
+  movieId: string,
+  participantId: string,
+  value: number
+): Promise<MovieRating> {
+  return fetchApi<MovieRating>(`/events/${slug}/movies/${movieId}/rating`, {
+    method: 'PUT',
+    body: JSON.stringify({ participantId, value }),
+  });
+}
+
+export async function deleteMovieRating(
+  slug: string,
+  movieId: string,
+  participantId: string
+): Promise<void> {
+  await fetchApi(`/events/${slug}/movies/${movieId}/rating`, {
     method: 'DELETE',
     body: JSON.stringify({ participantId }),
   });

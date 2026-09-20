@@ -26,6 +26,7 @@ public sealed class ExportUserDataHandlerTests
         public InMemoryParticipantRepository Participants { get; } = new();
         public InMemoryVoteRepository Votes { get; } = new();
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
+        public InMemoryMovieRatingRepository Ratings { get; } = new();
         public InMemoryPushSubscriptionRepository Push { get; } = new();
         public InMemoryWatchlistRepository Watchlist { get; } = new();
 
@@ -38,6 +39,7 @@ public sealed class ExportUserDataHandlerTests
                 Participants,
                 Votes,
                 SeenMarks,
+                Ratings,
                 Push,
                 Watchlist,
                 new FakeTimeProvider(TestEpoch));
@@ -84,6 +86,7 @@ public sealed class ExportUserDataHandlerTests
         });
         await f.Votes.UpsertAsync(new Vote { EventId = joined.Id, MovieId = "movie-1", ParticipantId = participant.Id, Value = 1 });
         await f.SeenMarks.AddAsync(new SeenMark { EventId = joined.Id, MovieId = "movie-2", ParticipantId = participant.Id });
+        await f.Ratings.UpsertAsync(new MovieRating { EventId = joined.Id, MovieId = "movie-1", ParticipantId = participant.Id, Value = 8 });
         await f.Notifications.AddAsync(new UserNotification
         {
             UserId = user.Id,
@@ -117,6 +120,9 @@ public sealed class ExportUserDataHandlerTests
         Assert.Equal("Soirée amie", participation.EventTitle);
         Assert.Single(participation.Votes);
         Assert.Single(participation.SeenMarks);
+        var rating = Assert.Single(participation.Ratings);
+        Assert.Equal("movie-1", rating.MovieId);
+        Assert.Equal(8, rating.Value);
 
         var following = Assert.Single(export.Following);
         Assert.Equal("trinity", following.Handle);

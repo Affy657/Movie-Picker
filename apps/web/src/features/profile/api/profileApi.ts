@@ -70,6 +70,7 @@ export interface UserWatchedMovieItem {
   genreIds: number[];
   mediaType: MovieMediaType;
   watchedAt: string;
+  myRating?: number | null;
 }
 
 export interface UserWatchedMoviesResponse {

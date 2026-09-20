@@ -14,6 +14,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IVoteRepository _voteRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
+    private readonly IMovieRatingRepository _ratingRepository;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IUserRepository _userRepository;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
@@ -29,6 +30,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         IMovieRepository movieRepository,
         IVoteRepository voteRepository,
         ISeenMarkRepository seenMarkRepository,
+        IMovieRatingRepository ratingRepository,
         ICurrentUserAccessor currentUserAccessor,
         IUserRepository userRepository,
         IPushSubscriptionRepository pushSubscriptions,
@@ -43,6 +45,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _movieRepository = movieRepository;
         _voteRepository = voteRepository;
         _seenMarkRepository = seenMarkRepository;
+        _ratingRepository = ratingRepository;
         _currentUserAccessor = currentUserAccessor;
         _userRepository = userRepository;
         _pushSubscriptions = pushSubscriptions;
@@ -73,6 +76,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
 
         long removedVotes = 0;
         long removedSeenMarks = 0;
+        long removedRatings = 0;
         long removedMovies = 0;
         long removedParticipants = 0;
         var deleted = false;
@@ -82,6 +86,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             {
                 removedVotes = await _voteRepository.DeleteByEventIdAsync(evt.Id, token);
                 removedSeenMarks = await _seenMarkRepository.DeleteByEventIdAsync(evt.Id, token);
+                removedRatings = await _ratingRepository.DeleteByEventIdAsync(evt.Id, token);
                 removedMovies = await _movieRepository.DeleteByEventIdAsync(evt.Id, token);
                 removedParticipants = await _participantRepository.DeleteByEventIdAsync(evt.Id, token);
                 await _notifications.DeleteByEventIdAsync(evt.Id, token);
@@ -117,7 +122,8 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             RemovedParticipants = removedParticipants,
             RemovedMovies = removedMovies,
             RemovedVotes = removedVotes,
-            RemovedSeenMarks = removedSeenMarks
+            RemovedSeenMarks = removedSeenMarks,
+            RemovedRatings = removedRatings
         };
     }
 

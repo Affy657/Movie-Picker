@@ -20,6 +20,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
     private readonly Mock<IParticipantRepository> _participants = new();
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IMovieRepository> _movies = new();
+    private readonly Mock<IMovieRatingRepository> _ratings = new();
     private readonly DateTimeOffset _now = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
 
     private static User PublicUser(bool isPublic = true) => new()
@@ -84,11 +85,14 @@ public sealed class GetUserWatchedMoviesHandlerTests
             .ReturnsAsync(Array.Empty<Participant>());
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Event>());
+        _ratings.Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<MovieRating>());
         return new GetUserWatchedMoviesHandler(
             _users.Object,
             _participants.Object,
             _events.Object,
             _movies.Object,
+            _ratings.Object,
             new FixedTimeProvider(_now));
     }
 
@@ -173,6 +177,35 @@ public sealed class GetUserWatchedMoviesHandlerTests
         Assert.Equal(2, res.Items.Count);
         Assert.Equal(20, res.Items[0].TmdbId);
         Assert.Equal(10, res.Items[1].TmdbId);
+    }
+
+    [Fact]
+    public async Task CarriesTheOwnersRatingOfEachWatchedMovie()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Part("p1", "A"), Part("p2", "B") });
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Evt("A", date: "2026-01-01", winnerMovieId: "m-rated"),
+                Evt("B", date: "2026-05-01", winnerMovieId: "m-unrated"),
+            });
+        _movies.Setup(m => m.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Mov("m-rated", tmdbId: 10), Mov("m-unrated", tmdbId: 20) });
+        _ratings.Setup(r => r.ListByParticipantIdsAsync(
+                It.Is<IReadOnlyCollection<string>>(ids => ids.Contains("p1") && ids.Contains("p2")),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new MovieRating { Id = "r1", EventId = "A", MovieId = "m-rated", ParticipantId = "p1", Value = 7, CreatedAt = _now, UpdatedAt = _now }
+            });
+
+        var res = await handler.HandleAsync("alice", 6);
+
+        Assert.Null(res.Items.Single(i => i.TmdbId == 20).MyRating);
+        Assert.Equal(7, res.Items.Single(i => i.TmdbId == 10).MyRating);
     }
 
     [Fact]

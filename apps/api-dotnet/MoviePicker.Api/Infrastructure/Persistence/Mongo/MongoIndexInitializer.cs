@@ -63,6 +63,7 @@ public sealed class MongoIndexInitializer : IHostedService
         EnsureVoteIndexes(plan);
         EnsureAuthSessionIndexes(plan);
         EnsureSeenMarkIndexes(plan);
+        EnsureMovieRatingIndexes(plan);
         EnsurePasswordResetTokenIndexes(plan);
         EnsurePushSubscriptionIndexes(plan);
         EnsureFollowIndexes(plan);
@@ -214,6 +215,24 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<SeenMarkDocument>.IndexKeys.Ascending(x => x.MovieId),
             new CreateIndexOptions { Name = "seen_marks_movieId" });
         plan.Create("seen_marks", unique, byMovie);
+    }
+
+    private static void EnsureMovieRatingIndexes(MongoIndexPlan plan)
+    {
+        var unique = new CreateIndexModel<MovieRatingDocument>(
+            Builders<MovieRatingDocument>.IndexKeys
+                .Ascending(x => x.EventId)
+                .Ascending(x => x.MovieId)
+                .Ascending(x => x.ParticipantId),
+            new CreateIndexOptions<MovieRatingDocument>
+            {
+                Name = "movie_ratings_event_movie_participant_unique",
+                Unique = true
+            });
+        var byParticipant = new CreateIndexModel<MovieRatingDocument>(
+            Builders<MovieRatingDocument>.IndexKeys.Ascending(x => x.ParticipantId),
+            new CreateIndexOptions { Name = "movie_ratings_participantId" });
+        plan.Create("movie_ratings", unique, byParticipant);
     }
 
     private static void EnsurePushSubscriptionIndexes(MongoIndexPlan plan)

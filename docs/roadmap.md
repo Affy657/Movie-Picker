@@ -219,11 +219,11 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (24 points produit, 23 points tech, 46 restants)
+## 📋 V1.7, planifiée (24 points produit, 23 points tech, 43 restants)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
-- ⬜ `M` **Note d'un film vu** : une fois la soirée terminée, chaque participant note le film choisi sur l'échelle réglée dans ses paramètres, depuis la page soirée. Un bouton renvoie vers sa fiche Letterboxd ou IMDb pour l'y noter aussi.
+- ✅ `M` **Note d'un film vu** (V1.7) : une fois la soirée terminée, chaque participant note le ou les films choisis depuis la carte « Les films de la soirée », par étoiles à demi-pas, dans l'échelle réglée dans ses paramètres ; la note se modifie et s'efface sans limite de temps. Tout le monde, visiteur compris, voit les notes de chacun et la moyenne, et la note de l'auteur s'affiche sur ses films vus du profil public. Le renvoi vers Letterboxd ou IMDb est remis au backlog.
 - ⬜ `M` **Relance du lendemain** : le lendemain de la soirée, chaque participant qui n'a pas encore noté reçoit une notification push et in-app qui ouvre directement la note du film vu. C'est le premier contact avec un invité venu par lien une fois la soirée passée.
 - ⬜ `M` **Page recap publique de soirée** : une page en lecture seule, accessible sans compte, résume le ou les films choisis, les participants et leurs notes, avec un aperçu Open Graph. Un visiteur y trouve un bouton « Organise la tienne » qui mène à la création de compte et de soirée.
 - ⬜ `L` **Partage de soirée en story** : image au format des stories des réseaux sociaux générée depuis le recap, avec le lien de la page recap, envoyée par le partage natif du téléphone ou téléchargée depuis la page soirée.
@@ -273,10 +273,11 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## Backlog produit (non priorisé sur une release) (160 points, 1 non estimé)
+## Backlog produit (non priorisé sur une release) (161 points, 1 non estimé)
 
 > **Note V2, application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
+- `S` **Noter aussi sur Letterboxd ou IMDb** : depuis la note d'un film vu, un bouton ouvre la fiche du film sur Letterboxd ou IMDb pour y reporter sa note.
 - `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Depend de la synchronisation temps réel (V1.8) et de la consultation hors-ligne (V1.9).
 - `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion.
 - `M` **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
