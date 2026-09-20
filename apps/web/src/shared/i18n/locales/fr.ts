@@ -2402,10 +2402,7 @@ export const fr = {
         'Le cache des fiches TMDB vit dans la mémoire de chaque instance : deux instances refont le même appel, et un redémarrage repart à froid. Un cache commun corrigerait les deux.',
       containerTwice: 'Le conteneur décrit à deux endroits',
       containerTwiceHint:
-        'Les secrets montés et les variables du serveur vivent dans la chaîne de déploiement et dans Terraform ; tant que la version voyage en variable plutôt que dans l’image, la chaîne fait foi et la description suit.',
-      schedulerToken: 'Planificateur authentifié par secret',
-      schedulerTokenHint:
-        'Les routes appelées à heure fixe vérifient un jeton statique, là où Cloud Scheduler sait signer chaque appel avec une identité : le remplacer supprimerait un secret.',
+        'Les secrets montés, les variables du serveur et les trois jobs planifiés vivent dans la chaîne de déploiement et dans Terraform ; tant que la version voyage en variable plutôt que dans l’image, la chaîne fait foi et la description suit.',
       sentryToken: 'Un jeton de dépôt reste',
       sentryTokenHint:
         'Tout le reste est sans clé ; le jeton qui envoie les source maps à Sentry est encore un secret de dépôt, à ranger derrière un environnement.',
@@ -3314,7 +3311,7 @@ export const fr = {
       infraRegistryDetail: 'taguée par SHA, purgée',
       infraScheduler: 'Cloud Scheduler',
       infraSchedulerSub: 'rappels, soirées récurrentes et terminées',
-      infraSchedulerDetail: 'créé si le jeton existe',
+      infraSchedulerDetail: 'jeton OIDC signé par une identité',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'replica set managé',
       infraAtlasDetail: 'transactions disponibles',

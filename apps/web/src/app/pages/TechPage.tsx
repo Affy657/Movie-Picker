@@ -213,7 +213,7 @@ const INFRA_KEYS = [
   { key: 'identities', Icon: IdCard },
 ] as const;
 
-const OPEN_TECH_WORK = ['sharedCache', 'containerTwice', 'schedulerToken', 'sentryToken'] as const;
+const OPEN_TECH_WORK = ['sharedCache', 'containerTwice', 'sentryToken'] as const;
 
 const QUALITY_BLOCKING_KEYS = [
   { key: 'coverage', Icon: FlaskConical },

@@ -2362,10 +2362,7 @@ export const en: Locale = {
         'The TMDB entry cache lives in the memory of each instance: two instances repeat the same call, and a restart starts cold. A shared cache would fix both.',
       containerTwice: 'The container described in two places',
       containerTwiceHint:
-        'The mounted secrets and the server variables live in the deployment pipeline and in Terraform; as long as the version travels as a variable rather than in the image, the pipeline rules and the description follows.',
-      schedulerToken: 'Scheduler authenticated by a secret',
-      schedulerTokenHint:
-        'The routes called on a schedule check a static token, where Cloud Scheduler can sign every call with an identity: replacing it would remove a secret.',
+        'The mounted secrets, the server variables and the three scheduled jobs live in the deployment pipeline and in Terraform; as long as the version travels as a variable rather than in the image, the pipeline rules and the description follows.',
       sentryToken: 'One repository token remains',
       sentryTokenHint:
         'Everything else is keyless; the token that uploads source maps to Sentry is still a repository secret, to be moved behind an environment.',
@@ -3260,7 +3257,7 @@ export const en: Locale = {
       infraRegistryDetail: 'tagged by SHA, purged',
       infraScheduler: 'Cloud Scheduler',
       infraSchedulerSub: 'reminders, recurring and finished nights',
-      infraSchedulerDetail: 'created if the token exists',
+      infraSchedulerDetail: 'OIDC token signed by an identity',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'managed replica set',
       infraAtlasDetail: 'transactions available',

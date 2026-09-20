@@ -61,7 +61,7 @@ describe('TechPage', () => {
       ).toBeGreaterThan(0);
     }
     expect(
-      screen.getByRole('heading', { name: new RegExp(String(TECH_METRICS.ciJobs)) })
+      screen.getByRole('heading', { name: new RegExp(`(^|\\D)${TECH_METRICS.ciJobs}(\\D|$)`) })
     ).toBeInTheDocument();
   });
 
@@ -630,12 +630,7 @@ describe('TechPage', () => {
       .map((node) => node.textContent?.trim())
       .filter(Boolean);
 
-    for (const work of [
-      'sharedCache',
-      'containerTwice',
-      'schedulerToken',
-      'sentryToken',
-    ] as const) {
+    for (const work of ['sharedCache', 'containerTwice', 'sentryToken'] as const) {
       expect(tags).toContain(fr.tech.trajectory[work]);
     }
     expect(tags.join(' ')).not.toMatch(
