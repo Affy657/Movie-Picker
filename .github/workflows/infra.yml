@@ -97,8 +97,11 @@ jobs:
           echo "exitcode=$code" >> "$GITHUB_OUTPUT"
           test "$code" != "1"
       # One comment per root module, found again by its first line and edited in place: a PR that
-      # is pushed ten times keeps one plan, the current one. Truncated when GitHub's limit is near,
-      # the full text stays in the job log.
+      # is pushed ten times keeps one plan, the current one. The refresh lines are dropped and the
+      # identifiers the repository keeps out of its files (project id and number, state bucket)
+      # are replaced by their placeholders, as `infra/README.md` names them: the comment is as
+      # public as the repository. Truncated when GitHub's limit is near, the full text stays in
+      # the job log, where the secrets are masked.
       - name: Publish the plan on the pull request
         if: always() && steps.plan.outcome != 'skipped'
         env:
@@ -108,6 +111,8 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           EXITCODE: ${{ steps.plan.outputs.exitcode }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
         run: |
           set -eo pipefail
           marker="<!-- terraform-plan:${TERRAFORM_ROOT} -->"
@@ -116,8 +121,11 @@ jobs:
             2) verdict="Changes: this branch would change the infrastructure, read the plan before merging." ;;
             *) verdict="Plan failed: read the [job log]($RUN_URL) before merging." ;;
           esac
-          plan="$(head -c 60000 "$RUNNER_TEMP/plan.txt")"
-          if [ "$(wc -c < "$RUNNER_TEMP/plan.txt")" -gt 60000 ]; then
+          grep -v -E 'Refreshing state\.\.\.|^[a-z_.]+: (Reading\.\.\.|Read complete)' "$RUNNER_TEMP/plan.txt" \
+            | sed -e "s#$GCP_PROJECT_ID#<PROJET_GCP>#g" -e "s#$TF_STATE_BUCKET#<BUCKET_TFSTATE>#g" -e 's#projects/[0-9]\{6,\}#projects/<NUMERO_PROJET>#g' \
+            > "$RUNNER_TEMP/plan.public.txt" || true
+          plan="$(head -c 60000 "$RUNNER_TEMP/plan.public.txt")"
+          if [ "$(wc -c < "$RUNNER_TEMP/plan.public.txt")" -gt 60000 ]; then
             plan="$plan"$'\n'"... (truncated, the full plan is in the job log)"
           fi
           {
