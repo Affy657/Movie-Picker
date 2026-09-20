@@ -69,6 +69,8 @@ resource "google_firebase_project" "this" {
 module "web" {
   source = "../../modules/web-hosting"
 
-  project_id = google_firebase_project.this.project
-  site_id    = "movie-picker-web"
+  project_id       = google_firebase_project.this.project
+  site_id          = "movie-picker-web"
+  custom_domain    = "web.movie-picker.fr"
+  redirect_domains = ["www.movie-picker.fr", "movie-picker.fr"]
 }

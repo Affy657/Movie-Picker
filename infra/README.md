@@ -100,6 +100,19 @@ Le site `movie-picker-web` (module `web-hosting`) reçoit chaque déploiement du
 - **Ce que la configuration encode** (`firebase-hosting.json`) : les routes prérendues sont publiées comme `<route>/index.html`, que Hosting sert à l'adresse de la route (`trailingSlashBehavior: REMOVE`), là où S3 demandait une clé sans extension ; `cleanUrls` reste faux ; le repli `**` vers `/index.html` ne joue que pour les chemins sans fichier. Pour les en-têtes, quand plusieurs règles s'appliquent à un chemin, **la dernière règle du fichier l'emporte** sur une clé dupliquée, vérifié : la règle `**` pose la base et les règles suivantes la précisent, garder cet ordre.
 - **Identité du pipeline** : le compte de service CI porte `roles/firebasehosting.admin` sur le projet, posé à la main le 2026-09-19 ; le lot 5 le décrit. Les appels envoient `x-goog-user-project`, exigé avec un jeton utilisateur et sans effet avec celui du compte de service.
 
+### Bascule du domaine (lot 4)
+
+Le module `web-hosting` décrit trois domaines : `web.movie-picker.fr`, servi, et `www.movie-picker.fr` plus l'apex, qui répondent `301` vers `web` (`redirect_target`), là où l'apex passait par la redirection HTTP d'OVH et où `www` ne répondait pas en HTTPS (DEBT-014). Le DNS est chez OVH, sans CLI : chaque enregistrement se pose à la main, et `pnpm run terraform -- output web_dns` dit pour chaque domaine son état (`host_state`, `ownership_state`, `cert_state`) et les enregistrements que Hosting attend encore. Un `hostState` à `HOST_MISMATCH` avec un certificat `CERT_VALIDATING` est l'état normal avant la bascule.
+
+Ordre, sans coupure pour `web` :
+
+1. **Propriété** : TXT `hosting-site=<site>` sur l'apex, qui couvre les trois domaines ; les TXT existants (SPF, vérification Google, redirection OVH) restent.
+2. **Certificat avant le trafic** : Hosting propose un défi ACME par TXT `_acme-challenge.web.movie-picker.fr` ou par HTTP sur le site en service (`cert.verification.http` dans l'API : chemin `/.well-known/acme-challenge/<jeton>` et contenu attendu). Le défi HTTP se sert depuis le bucket actuel avec `aws s3 cp --content-type text/plain`, sans toucher au DNS, et le certificat passe `CERT_ACTIVE` avant que le CNAME ne bouge. Le certificat `TEMPORARY` affiché avant cela ne couvre pas le domaine.
+3. **Bascule** : le CNAME `web` passe de la distribution CloudFront à `<site>.web.app` ; vérifier que `https://web.movie-picker.fr/` répond depuis Hosting (`x-served-by`, `Vary: x-fh-requested-host`), que le point d'entrée du build est celui attendu et que l'application parle à l'API (même origine, `ALLOWED_ORIGINS` inchangé).
+4. **Redirections** : `www` passe d'un A vers la redirection OVH à un CNAME `<site>.web.app`, l'apex d'un A vers la redirection OVH à un A `199.36.158.100` ; leur certificat est émis après, ces deux hôtes ne servaient pas de HTTPS avant.
+5. **Pipeline** : Hosting devient la cible de `deploy-front`, bloquante, et les passes S3 partent ; `rollback-front.yml` repointe une release Hosting.
+6. **AWS** : après observation, distribution (désactivée puis supprimée), bucket, certificat wildcard (il ne sert que cette distribution, vérifié par `aws acm describe-certificate`), politique d'en-têtes, WAF, rôle et fournisseur OIDC, puis les secrets et variables `AWS_*` de l'environnement `production` et `ALLOWED_ORIGINS` sans le domaine CloudFront.
+
 ### Portes
 
 `pnpm run check:terraform` ([`../scripts/check-terraform.mjs`](../scripts/check-terraform.mjs)) joue `terraform fmt -check -diff -recursive` sur tout `infra/terraform/`, puis `init -backend=false -lockfile=readonly` et `validate` sur chaque module racine de `environments/`, découverts par lecture du dossier. Ni bucket ni identifiants : la porte ne parle jamais à GCP. Elle est jouée dans `verify:local` (voie docker) et rejouée par le job `lint-terraform` de `ci-cd.yml`, à la même version de Terraform, avec le binaire de `hashicorp/setup-terraform`.

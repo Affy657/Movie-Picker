@@ -8,6 +8,11 @@ output "api_images_registry" {
   value       = module.api_images.registry_uri
 }
 
+output "web_dns" {
+  description = "State of each custom domain of the web app and the DNS records Hosting still asks for."
+  value       = module.web.required_dns_updates
+}
+
 output "web_default_url" {
   description = "Address of the web app on Firebase Hosting before the custom domain, where the parallel publication is verified."
   value       = module.web.default_url
