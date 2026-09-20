@@ -17,3 +17,13 @@ output "web_default_url" {
   description = "Address of the web app on Firebase Hosting before the custom domain, where the parallel publication is verified."
   value       = module.web.default_url
 }
+
+output "ci_service_account_email" {
+  description = "Identity the workflows assume, the GCP_SERVICE_ACCOUNT secret of the production environment."
+  value       = module.ci.service_account_email
+}
+
+output "ci_workload_identity_provider" {
+  description = "Provider the workflows exchange their OIDC token with, the GCP_WORKLOAD_IDENTITY_PROVIDER secret of the production environment."
+  value       = module.ci.workload_identity_provider
+}

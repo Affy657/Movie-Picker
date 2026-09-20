@@ -16,6 +16,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Security
 
+- **La chaîne de déploiement s'identifie avec un compte dédié au moindre privilège** : chaque droit est celui d'une commande du pipeline et vise la ressource qu'elle touche (une seule identité sous laquelle déployer, un seul dépôt d'images, deux secrets lisibles sur quatorze, un seul bucket), la fédération avec GitHub et l'identité d'exécution de l'API sont décrites en Terraform, aucune clé n'existe, et le compte par défaut du projet, qui portait tout, n'a plus aucun droit.
 - **La clé TMDB ne circule plus dans l'adresse des requêtes que le serveur envoie à TMDB** : l'API accepte le jeton d'accès en lecture de TMDB, envoyé dans un en-tête, et si l'ancienne clé reste en service elle est masquée dans le suivi d'erreurs comme le jeton d'hôte.
 - **La sonde de disponibilité de l'API ne relit plus la base à chaque appel** mais au plus toutes les cinq secondes, et n'accepte plus que trente appels par minute et par adresse ; toute route sans plafond dédié reçoit un plafond global de neuf cents requêtes par minute et par adresse.
 - **Le serveur tourne sur une image minimale** sans interpréteur de commandes ni gestionnaire de paquets : dix paquets système au lieu de quatre-vingt-dix-sept, aucune vulnérabilité haute connue au lieu de treize, et il refuse de démarrer si les données de fuseau horaire manquent au lieu de planifier les soirées en UTC.

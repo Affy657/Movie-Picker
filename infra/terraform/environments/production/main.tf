@@ -1,5 +1,5 @@
 locals {
-  api_runtime_service_account_email = "${var.api_runtime_service_account_name}@${var.project_id}.iam.gserviceaccount.com"
+  api_runtime_service_account_email = google_service_account.api_runtime.email
 
   api_secret_names = toset([
     "AUTH_DATAPROTECTION_KEYRING",
@@ -17,6 +17,52 @@ locals {
     "VAPID_PRIVATE_KEY",
     "VAPID_PUBLIC_KEY",
   ])
+}
+
+resource "google_project_service" "platform" {
+  for_each = toset([
+    "artifactregistry.googleapis.com",
+    "cloudscheduler.googleapis.com",
+    "iam.googleapis.com",
+    "iamcredentials.googleapis.com",
+    "run.googleapis.com",
+    "secretmanager.googleapis.com",
+  ])
+
+  project            = var.project_id
+  service            = each.value
+  disable_on_destroy = false
+}
+
+resource "google_service_account" "api_runtime" {
+  project      = var.project_id
+  account_id   = var.api_runtime_service_account_name
+  display_name = "Movie Picker API runtime"
+  description  = "Runtime identity of the Cloud Run revisions: reads the secrets mounted by deploy.yml, nothing else"
+}
+
+module "ci" {
+  source = "../../modules/ci-identity"
+
+  project_id         = var.project_id
+  github_repository  = "Affy657/Movie-Picker"
+  github_environment = "production"
+
+  project_roles = [
+    "roles/run.developer",
+    "roles/cloudscheduler.admin",
+    "roles/firebasehosting.admin",
+    "roles/secretmanager.viewer",
+    "roles/serviceusage.serviceUsageConsumer",
+  ]
+  acts_as_service_accounts = [google_service_account.api_runtime.name]
+  image_repositories = {
+    api = { location = var.region, repository_id = module.api_images.repository_id }
+  }
+  readable_secrets     = ["SCHEDULER_TOKEN", "MONGODB_URI"]
+  object_admin_buckets = [var.backup_bucket]
+
+  depends_on = [google_project_service.platform, module.api_secrets]
 }
 
 module "api_images" {
