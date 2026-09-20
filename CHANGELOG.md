@@ -16,6 +16,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Security
 
+- **La supervision est décrite en code** : les trois sondes de disponibilité, les six politiques d'alerte avec la conduite à tenir que reçoit l'e-mail, le canal et le tableau de bord sont versionnés et appliqués par le même chemin que le reste de l'infrastructure ; la sonde du front vise le domaine canonique et le tableau de bord la lit à nouveau.
 - **L'infrastructure ne change plus que par une revue** : un changement de `infra/terraform/` est planifié contre la production et publié en commentaire de sa pull request, puis appliqué sur `master` derrière l'environnement de production, par deux identités sans clé dont l'une ne sait que lire.
 - **La chaîne de déploiement s'identifie avec un compte dédié au moindre privilège** : chaque droit est celui d'une commande du pipeline et vise la ressource qu'elle touche (une seule identité sous laquelle déployer, un seul dépôt d'images, deux secrets lisibles sur quatorze, un seul bucket), la fédération avec GitHub et l'identité d'exécution de l'API sont décrites en Terraform, aucune clé n'existe, et le compte par défaut du projet, qui portait tout, n'a plus aucun droit.
 - **La clé TMDB ne circule plus dans l'adresse des requêtes que le serveur envoie à TMDB** : l'API accepte le jeton d'accès en lecture de TMDB, envoyé dans un en-tête, et si l'ancienne clé reste en service elle est masquée dans le suivi d'erreurs comme le jeton d'hôte.

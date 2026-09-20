@@ -19,8 +19,9 @@
  *     (environment, else `.env`): the repository is public and names no bucket. `-backend=false`
  *     skips it, that is what the local gate and the CI use;
  *   - `TF_VAR_project_id`, from `GCP_PROJECT_ID` (environment, else `.env`), else the active
- *     gcloud project, and `TF_VAR_state_bucket` from the same `TF_STATE_BUCKET`: the root module
- *     grants the bucket to the identities that plan and apply from GitHub;
+ *     gcloud project, `TF_VAR_state_bucket` from the same `TF_STATE_BUCKET` (the root module
+ *     grants the bucket to the identities that plan and apply from GitHub) and
+ *     `TF_VAR_alert_email` from `ALERT_EMAIL` (the address the alert policies notify);
  *   - `GOOGLE_OAUTH_ACCESS_TOKEN`, from `gcloud auth print-access-token`, for every command that
  *     reaches GCP. No key file and no application-default credentials on the machine; the token
  *     is passed by name to Docker, never on its command line.
@@ -151,6 +152,9 @@ export function terraform(args, { rootName = 'production', isolatedDataDir = fal
     if (!env.TF_VAR_state_bucket) {
       env.TF_VAR_state_bucket = setting('TF_STATE_BUCKET') || '';
     }
+    if (!env.TF_VAR_alert_email) {
+      env.TF_VAR_alert_email = setting('ALERT_EMAIL') || '';
+    }
     if (!env.GOOGLE_OAUTH_ACCESS_TOKEN) {
       env.GOOGLE_OAUTH_ACCESS_TOKEN = gcloud(['auth', 'print-access-token']);
       if (!env.GOOGLE_OAUTH_ACCESS_TOKEN) {
@@ -162,6 +166,8 @@ export function terraform(args, { rootName = 'production', isolatedDataDir = fal
       'TF_VAR_project_id',
       '-e',
       'TF_VAR_state_bucket',
+      '-e',
+      'TF_VAR_alert_email',
       '-e',
       'GOOGLE_OAUTH_ACCESS_TOKEN'
     );

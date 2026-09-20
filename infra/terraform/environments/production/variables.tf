@@ -25,3 +25,9 @@ variable "state_bucket" {
   description = "Bucket that holds this state, the same value as TF_STATE_BUCKET: the identities that plan and apply from GitHub read or write it. The bucket itself is not described."
   type        = string
 }
+
+variable "alert_email" {
+  description = "Address the alert policies notify, TF_VAR_alert_email: ALERT_EMAIL locally (.env), the ALERT_EMAIL secret in GitHub."
+  type        = string
+  sensitive   = true
+}

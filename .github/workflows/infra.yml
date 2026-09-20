@@ -12,8 +12,9 @@
 # only by a job of the `production` environment, which the branch policy reserves to master.
 # The identifiers of both live as secrets of their environment (and, for the plan job, as
 # Dependabot secrets, otherwise a provider bump would run without them): `GCP_PROJECT_ID`,
-# `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` / `GCP_TERRAFORM_SERVICE_ACCOUNT` and
-# `TF_STATE_BUCKET`, the same names `scripts/terraform.mjs` reads locally from `.env`.
+# `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` / `GCP_TERRAFORM_SERVICE_ACCOUNT`,
+# `TF_STATE_BUCKET` and `ALERT_EMAIL`, the same names `scripts/terraform.mjs` reads locally from
+# `.env`.
 #
 # `fmt` and `validate` stay in `ci-cd.yml` (`lint-terraform`), without credentials: this workflow
 # only runs when there is something to plan. The binary version is pinned here, in `ci-cd.yml`,
@@ -93,6 +94,7 @@ jobs:
         env:
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_state_bucket: ${{ secrets.TF_STATE_BUCKET }}
+          TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
         run: |
           set -o pipefail
           code=0
@@ -194,6 +196,7 @@ jobs:
         env:
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_state_bucket: ${{ secrets.TF_STATE_BUCKET }}
+          TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
         run: |
           set -o pipefail
           code=0
@@ -212,6 +215,7 @@ jobs:
         env:
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_state_bucket: ${{ secrets.TF_STATE_BUCKET }}
+          TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
         run: terraform -chdir="$TERRAFORM_ROOT" apply -input=false -no-color tfplan
       - name: Nothing to apply
         if: steps.plan.outputs.exitcode == '0'
