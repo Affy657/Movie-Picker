@@ -103,14 +103,14 @@ Le cluster dev et le cluster prod sont encore partagés (dette connue) : bien v�
 
 ## Domaine et certificat
 
-Le front est sur **`web.movie-picker.fr`**, l'API sur **`api.movie-picker.fr`**. Ni `movie-picker.fr` ni `www.movie-picker.fr` ne servent l'application : ils pointent encore sur OVH, la bascule décrite dans [docs/runbook-migration-domaine-www.md](../../../../docs/runbook-migration-domaine-www.md) est en cours et DEBT-014 porte son état d'avancement. Viser un de ces deux hôtes donne un `curl` à 000 et fait conclure à tort que la prod est morte.
+Le front est sur **`www.movie-picker.fr`** (Firebase Hosting), l'API sur **`api.movie-picker.fr`** (Cloud Run). `movie-picker.fr` et `web.movie-picker.fr` répondent `301` vers `www` depuis le 2026-09-20 : un `curl -I` sur ces deux hôtes doit rendre une redirection, pas un 200 ni un 000.
 
 ```bash
-for host in web.movie-picker.fr api.movie-picker.fr; do
+for host in www.movie-picker.fr api.movie-picker.fr; do
   echo | openssl s_client -connect "$host:443" -servername "$host" 2>/dev/null \
     | openssl x509 -noout -enddate -subject
 done
-curl -sS -o /dev/null -w "front %{http_code}\n" --max-time 15 https://web.movie-picker.fr/
+curl -sS -o /dev/null -w "front %{http_code}\n" --max-time 15 https://www.movie-picker.fr/
 curl -sS -o /dev/null -w "api %{http_code}\n" --max-time 15 https://api.movie-picker.fr/health
 ```
 

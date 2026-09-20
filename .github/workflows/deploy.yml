@@ -1,4 +1,4 @@
-# Movie Picker deployment: Vite/React web app → S3+CloudFront; .NET API → Cloud Run.
+# Movie Picker deployment: Vite/React web app → Firebase Hosting; .NET API → Cloud Run.
 #
 # **Manual, never automatic.** A push to master no longer deploys: it only runs the gates of
 # `ci-cd.yml`. Production leaves when this workflow is triggered by hand, which allows grouping
@@ -19,7 +19,7 @@
 # gate was measured without gain).
 #
 # Rollback: `rollback.yml` for the API (earlier Cloud Run revision), `rollback-front.yml` for the
-# web app (republication of the `front-dist-<sha>` artifact archived by `deploy-front`).
+# web app (a Hosting release pointed back at a version `deploy-front` built).
 #
 # Two identities on GCP, never the same one. The workflows impersonate the CI service account
 # (`gcloud-auth`), which can push images, create revisions and manage the Scheduler jobs. The
@@ -46,9 +46,9 @@ on:
 permissions:
   contents: read
 
-# Two simultaneous deployments would step on each other on S3 as on Cloud Run. Never cancel
-# mid-way: a deployment interrupted between the S3 upload and the CloudFront invalidation leaves an
-# inconsistent state.
+# Two simultaneous deployments would step on each other on Hosting as on Cloud Run. Never cancel
+# mid-way: a deployment interrupted between the revision and its promotion leaves an inconsistent
+# state.
 concurrency:
   group: deploy-production
   cancel-in-progress: false
@@ -59,8 +59,8 @@ env:
   GCP_ARTIFACT_REPO: movie-picker
   CLOUD_RUN_SERVICE_NAME: movie-picker-api
   API_RUNTIME_SERVICE_ACCOUNT_NAME: movie-picker-api
-  # Firebase Hosting site of the web app (`infra/terraform`, module `web`): published in parallel
-  # of S3 and CloudFront and verified on its web.app address until the DNS moves (Terraform lot 4).
+  # Firebase Hosting site of the web app (`infra/terraform`, module `web`), served on
+  # www.movie-picker.fr and verified on its web.app address as well.
   FIREBASE_HOSTING_SITE: movie-picker-web
   # The web lane runs the CLI from the lockfile (`@sentry/cli`, integrity checked by pnpm); the
   # jobs without Node download the same version and check its checksum, as the other binaries
@@ -162,7 +162,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-  # `environment: production` on every job talking to GCP or AWS: both clouds trust the GitHub OIDC
+  # `environment: production` on every job talking to GCP: the federation trusts the GitHub OIDC
   # token only when its subject is this environment, whose branch policy restricts it to `master`.
   # No long-lived cloud credential exists in the repository secrets any more.
   docker-api:
@@ -455,7 +455,7 @@ jobs:
           ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "api-${SENTRY_RELEASE}"
 
   deploy-front:
-    name: 🚀 Deploy web → S3 & CloudFront
+    name: 🚀 Deploy web → Firebase Hosting
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Same reasoning as `deploy-api`: the long list of gates is replaced by `verify-ci`, which
@@ -476,8 +476,8 @@ jobs:
             echo "::error::VITE_API_URL (secret) is empty."
             exit 1
           fi
-          if echo "$VITE_API_URL" | grep -qE 'cloudfront\.net|amazonaws'; then
-            echo "::error::VITE_API_URL must be the API URL (Cloud Run)."
+          if echo "$VITE_API_URL" | grep -qE 'web\.app|firebaseapp\.com|//(www|web)\.movie-picker\.fr'; then
+            echo "::error::VITE_API_URL must be the API URL (Cloud Run), not the web app's."
             exit 1
           fi
           pnpm --filter web build
@@ -494,37 +494,22 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: node apps/web/scripts/generate-sitemap.mjs
-      - uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6
+      - uses: ./.github/actions/gcloud-auth
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
-      # The five S3 passes live in `publish-front`, shared with `rollback-front.yml`: the pass order
-      # and the cache headers are written once, so that the rollback does not replay a procedure
-      # full of traps from memory.
-      - name: Publish the build to S3 (immutable assets, then no-cache, index.html last)
-        uses: ./.github/actions/publish-front
-        with:
-          dist: apps/web/dist
-          bucket: ${{ secrets.AWS_S3_BUCKET }}
-      # The web app has no rollback on the hosting side: `aws s3 sync` overwrites and the previous
-      # build no longer exists anywhere. Archiving the dist makes a rollback possible without
-      # replaying the whole gate chain, that is what `rollback-front.yml` republishes. Placed AFTER
-      # the S3 upload: a convenience archive must never be able to prevent a deployment.
-      # `overwrite` because a "Re-run failed jobs" replays the step in the same run, where the
-      # artifact name already exists.
-      - name: Archive the web build (makes a rollback possible)
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: front-dist-${{ github.sha }}
-          path: apps/web/dist
-          if-no-files-found: error
-          overwrite: true
-          retention-days: 30
-      - name: Invalidate CloudFront and verify the served web build
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      # One immutable Hosting version per deployment, labelled with the commit and this run, then a
+      # release: the cache tiers and the security headers travel with it
+      # (`infra/firebase-hosting.json`), and the previous versions stay listed, which is what
+      # `rollback-front.yml` points back to. No archive to keep: Hosting keeps the versions itself.
+      - name: Publish the build to Firebase Hosting (version, upload, release)
+        run: node scripts/publish-front-firebase.mjs --site "$FIREBASE_HOSTING_SITE" --dist apps/web/dist
+      - name: Verify the served web build
         uses: ./.github/actions/verify-front
         with:
           dist: apps/web/dist
-          distribution-id: ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+          hosting-url: https://${{ env.FIREBASE_HOSTING_SITE }}.web.app
           # The public origin is read from ALLOWED_ORIGINS, the one the API accepts, hence the web
           # app's by construction, rather than rewritten here: one more value to keep up to date
           # would be one more value to forget during a domain migration.
@@ -545,33 +530,6 @@ jobs:
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
           pnpm --filter web exec sentry-cli -- "${extra[@]}" releases new "$SENTRY_RELEASE" || true
           pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-${SENTRY_RELEASE}"
-      # Parallel target (Terraform lot 3): the same build goes to Firebase Hosting, the future home
-      # of the web app, and is checked on its web.app address. Users still read CloudFront, so a
-      # failure here is a warning, not a stale production: `continue-on-error` until lot 4 moves
-      # the DNS, where this step becomes the deployment and the S3 passes leave.
-      - uses: ./.github/actions/gcloud-auth
-        with:
-          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-          project-id: ${{ secrets.GCP_PROJECT_ID }}
-      - name: Publish the build to Firebase Hosting (parallel target, verified on web.app)
-        id: firebase
-        continue-on-error: true
-        run: |
-          set -eo pipefail
-          node scripts/publish-front-firebase.mjs --site "$FIREBASE_HOSTING_SITE" --dist apps/web/dist
-          URL="https://${FIREBASE_HOSTING_SITE}.web.app"
-          code="$(curl -sS -o "$RUNNER_TEMP/fb.html" -D "$RUNNER_TEMP/fb.headers" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$URL/")"
-          echo "GET $URL/ -> $code"
-          test "$code" = "200"
-          ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' apps/web/dist/index.html | head -1)"
-          grep -qF "$ENTRY" "$RUNNER_TEMP/fb.html"
-          grep -qi '^x-frame-options: DENY' "$RUNNER_TEMP/fb.headers"
-          grep -qi '^cache-control: no-cache, must-revalidate' "$RUNNER_TEMP/fb.headers"
-          echo "Firebase Hosting serves $ENTRY with the expected headers."
-      - name: Firebase Hosting publication failed (warning until lot 4)
-        if: steps.firebase.outcome == 'failure'
-        run: echo "::warning::The parallel publication to Firebase Hosting failed; production (CloudFront) is unaffected. Read the step above before the DNS switch of Terraform lot 4."
 
   # `always()` is essential here and harmless: the job deploys nothing, it only compares what was
   # requested with what left. Without it, a target skipped by a red gate would leave the run green

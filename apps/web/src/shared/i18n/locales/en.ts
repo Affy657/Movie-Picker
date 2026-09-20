@@ -3202,7 +3202,7 @@ export const en: Locale = {
       infraZoneAws: 'AWS, eu-west-1',
       infraZoneGcp: 'Google Cloud, europe-west1',
       infraDns: 'Domain',
-      infraDnsSub: 'web.movie-picker.fr',
+      infraDnsSub: 'www.movie-picker.fr',
       infraDnsDetail: 'managed TLS certificate',
       infraCdn: 'CloudFront',
       infraCdnSub: 'cache and headers',

@@ -15,8 +15,8 @@
 #     chain cannot see: a regression noticed afterwards, a precise revision to target, an incident
 #     unrelated to a deployment.
 #
-# NB: the web rollback is `rollback-front.yml`, which republishes a `front-dist-<sha>` artifact
-#     archived by deploy-front with the same S3 passes as the deployment.
+# NB: the web rollback is `rollback-front.yml`, which points a Hosting release back at a version
+#     deploy-front built.
 
 name: ⏪ Rollback API (Cloud Run)
 

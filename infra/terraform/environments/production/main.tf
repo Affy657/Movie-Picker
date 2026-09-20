@@ -71,6 +71,6 @@ module "web" {
 
   project_id       = google_firebase_project.this.project
   site_id          = "movie-picker-web"
-  custom_domain    = "web.movie-picker.fr"
-  redirect_domains = ["www.movie-picker.fr", "movie-picker.fr"]
+  custom_domain    = "www.movie-picker.fr"
+  redirect_domains = ["web.movie-picker.fr", "movie-picker.fr"]
 }

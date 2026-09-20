@@ -268,9 +268,9 @@ public sealed class ServiceCollectionExtensionsBranchTests
     [Fact]
     public void PublicWebBaseUrl_BlankKeepsTheDefault()
     {
-        Assert.Equal("https://web.movie-picker.fr", OptionsFrom([]).PublicWebBaseUrl);
+        Assert.Equal("https://www.movie-picker.fr", OptionsFrom([]).PublicWebBaseUrl);
         Assert.Equal(
-            "https://web.movie-picker.fr",
+            "https://www.movie-picker.fr",
             OptionsFrom(new Dictionary<string, string?> { ["PUBLIC_WEB_BASE_URL"] = "  " }).PublicWebBaseUrl);
     }
 

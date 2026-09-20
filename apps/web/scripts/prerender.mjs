@@ -58,7 +58,7 @@ if (ssrEntries.length !== 1) {
 const ssrEntry = pathToFileURL(join(ssrOut, 'assets', ssrEntries[0])).href;
 
 const dom = new JSDOM('<!doctype html><html lang="fr"><head></head><body></body></html>', {
-  url: 'https://web.movie-picker.fr/',
+  url: 'https://www.movie-picker.fr/',
   pretendToBeVisual: true,
 });
 // jsdom does not implement `matchMedia` and several components call it unguarded, including

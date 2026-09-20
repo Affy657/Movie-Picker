@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://web.movie-picker.fr';
+export const SITE_URL = 'https://www.movie-picker.fr';
 
 export const SITE_NAME = 'Movie Picker';
 

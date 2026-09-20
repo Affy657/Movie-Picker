@@ -1,13 +1,13 @@
-name: "Invalidate CloudFront and verify the served web build"
-description: "Invalidates the distribution, checks that CloudFront answers, then that the public domain serves the entry point of the build that was just published. Shared by the deployment and the rollback."
+name: "Verify the served web build"
+description: "Checks that Firebase Hosting answers on the site address with the expected headers, then that the public domain serves the entry point of the build that was just released. Shared by the deployment and the rollback."
 inputs:
   dist:
-    description: "Folder of the build that was just published, to compare its index.html with the one the domain serves"
-    required: true
-  distribution-id:
-    description: "CloudFront distribution id (AWS_CLOUDFRONT_DISTRIBUTION_ID variable); empty to skip the invalidation"
+    description: "Folder of the build that was just released, to compare its index.html with the one the domain serves; empty to only check that the public domain answers"
     required: false
     default: ""
+  hosting-url:
+    description: "Address of the Hosting site (https://<site>.web.app), probed before the public domain"
+    required: true
   public-origins:
     description: "Public web origins, comma-separated as in ALLOWED_ORIGINS; the first one is probed, empty to skip"
     required: false
@@ -15,40 +15,25 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: CloudFront invalidation
-      if: inputs.distribution-id != ''
+    # -o file rather than /dev/null: with --retry, curl cannot rewind /dev/null and exits with 23
+    # without ever writing the HTTP code. The headers are the ones `infra/firebase-hosting.json`
+    # declares: a version released without its config would answer 200 all the same.
+    - name: Web smoke test (Hosting site)
       shell: bash
       env:
-        DISTRIBUTION_ID: ${{ inputs.distribution-id }}
+        HOSTING_URL: ${{ inputs.hosting-url }}
       run: |
         set -eo pipefail
-        INV_ID=$(aws cloudfront create-invalidation \
-          --distribution-id "$DISTRIBUTION_ID" \
-          --paths "/*" \
-          --query 'Invalidation.Id' --output text)
-        aws cloudfront wait invalidation-completed \
-          --distribution-id "$DISTRIBUTION_ID" \
-          --id "$INV_ID"
-    - name: Web smoke test (CloudFront)
-      if: inputs.distribution-id != ''
-      shell: bash
-      env:
-        DISTRIBUTION_ID: ${{ inputs.distribution-id }}
-      run: |
-        set -eo pipefail
-        DOMAIN="$(aws cloudfront get-distribution --id "$DISTRIBUTION_ID" --query 'Distribution.DomainName' --output text)"
-        echo "CloudFront domain: $DOMAIN"
-        # -o file rather than /dev/null: with --retry, curl cannot rewind /dev/null and exits
-        # with 23 without ever writing the HTTP code.
-        code="$(curl -sS -o "$RUNNER_TEMP/cf.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "https://$DOMAIN/")"
-        echo "GET / -> $code"
+        code="$(curl -sS -o "$RUNNER_TEMP/hosting.html" -D "$RUNNER_TEMP/hosting.headers" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$HOSTING_URL/")"
+        echo "GET $HOSTING_URL/ -> $code"
         test "$code" = "200"
-    # The previous smoke test queries the CloudFront domain: it says nothing about the public
-    # domain served to users, whose DNS, certificate or alias can be broken while the distribution
-    # answers perfectly.
-    # A 200 does not say which version is served: without invalidation, the CDN answers 200 with
-    # the old index.html and the publication looks fine. So the hashed entry point of the build
-    # that was just uploaded is compared with the one the public domain really serves.
+        grep -qi '^x-frame-options: DENY' "$RUNNER_TEMP/hosting.headers"
+        grep -qi '^cache-control: no-cache, must-revalidate' "$RUNNER_TEMP/hosting.headers"
+        echo "Hosting answers with the expected headers."
+    # The previous smoke test queries the site address: it says nothing about the public domain
+    # served to users, whose DNS or certificate can be broken while the site answers perfectly.
+    # A 200 does not say which version is served either: the hashed entry point of the build that
+    # was just released is compared with the one the public domain really serves.
     - name: Web smoke test (public domain + served version)
       shell: bash
       env:
@@ -65,8 +50,12 @@ runs:
         code="$(curl -sS -o "$RUNNER_TEMP/pub.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$PUBLIC_WEB_URL/")"
         echo "GET $PUBLIC_WEB_URL/ -> $code"
         if [ "$code" != "200" ]; then
-          echo "::error::$PUBLIC_WEB_URL does not answer 200: DNS, certificate or alias of the web hosting."
+          echo "::error::$PUBLIC_WEB_URL does not answer 200: DNS, certificate or custom domain of the web hosting."
           exit 1
+        fi
+        if [ -z "$DIST" ]; then
+          echo "No local build to compare with: the public domain answers, version not checked."
+          exit 0
         fi
         ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' "$DIST/index.html" | head -1)"
         if [ -z "$ENTRY" ]; then
@@ -75,6 +64,6 @@ runs:
         fi
         echo "Expected entry point: $ENTRY"
         if ! grep -qF "$ENTRY" "$RUNNER_TEMP/pub.html"; then
-          echo "::error::$PUBLIC_WEB_URL serves an index.html that does not reference $ENTRY: stale build in cache (CDN invalidation missing or incomplete)."
+          echo "::error::$PUBLIC_WEB_URL serves an index.html that does not reference $ENTRY: the release did not reach the public domain."
           exit 1
         fi

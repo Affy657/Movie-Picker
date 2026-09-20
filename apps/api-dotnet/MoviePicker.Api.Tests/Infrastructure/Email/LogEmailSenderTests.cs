@@ -16,8 +16,8 @@ public class LogEmailSenderTests
             ToEmail: "alice.smith@example.com",
             ToName: "Alice",
             Subject: "Test subject",
-            HtmlBody: "<a href=\"https://web.movie-picker.fr/reset?token=abc123\">link</a>",
-            TextBody: "Open https://web.movie-picker.fr/reset?token=abc123",
+            HtmlBody: "<a href=\"https://www.movie-picker.fr/reset?token=abc123\">link</a>",
+            TextBody: "Open https://www.movie-picker.fr/reset?token=abc123",
             Tag: "password-reset");
 
         await sender.SendAsync(msg);
@@ -28,7 +28,7 @@ public class LogEmailSenderTests
         Assert.Contains("password-reset", entry.Message);
         Assert.Contains("a***@example.com", entry.Message);
         Assert.Contains("Test subject", entry.Message);
-        Assert.Contains("https://web.movie-picker.fr/reset?token=abc123", entry.Message);
+        Assert.Contains("https://www.movie-picker.fr/reset?token=abc123", entry.Message);
     }
 
     [Fact]

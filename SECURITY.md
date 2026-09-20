@@ -27,4 +27,4 @@ Je demande de ne pas divulguer publiquement avant qu'un correctif soit en produc
 
 ## Versions couvertes
 
-Seule la version en production sur `https://web.movie-picker.fr` est corrigée. Le dépôt n'a pas de branche de maintenance : un correctif part de `master`.
+Seule la version en production sur `https://www.movie-picker.fr` est corrigée. Le dépôt n'a pas de branche de maintenance : un correctif part de `master`.

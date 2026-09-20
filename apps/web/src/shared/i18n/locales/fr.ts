@@ -3257,7 +3257,7 @@ export const fr = {
       infraZoneAws: 'AWS, eu-west-1',
       infraZoneGcp: 'Google Cloud, europe-west1',
       infraDns: 'Domaine',
-      infraDnsSub: 'web.movie-picker.fr',
+      infraDnsSub: 'www.movie-picker.fr',
       infraDnsDetail: 'certificat TLS géré',
       infraCdn: 'CloudFront',
       infraCdnSub: 'cache et en-têtes',

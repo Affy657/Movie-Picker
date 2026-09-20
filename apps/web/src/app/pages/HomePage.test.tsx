@@ -560,7 +560,7 @@ describe('HomePage', () => {
 
     expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
       'href',
-      'https://web.movie-picker.fr/'
+      'https://www.movie-picker.fr/'
     );
   });
 

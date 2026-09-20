@@ -66,21 +66,6 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - fini-quand: le palier est lu et le mot « présumé » retiré de DEBT-008 et DEBT-033
 - piege: sans le MCP, tout ce que le cluster dit de lui-même se lit par `mongosh` sans rien installer : `docker run --rm mongo:7 mongosh --quiet "$MONGODB_URI" --eval 'db.serverStatus().connections'`, et `db.stats()` par base pour les tailles. Le palier lui-même ne se lit que dans la console, `serverStatus` ne le dit pas.
 
-## DEBT-014 le domaine www ne répond pas
-
-- state: humain
-- bloque: la bascule enchaîne un CNAME chez OVH (manager, pas de CLI ; faisable par l'extension Chrome de l'utilisateur), un déploiement des deux lanes (geste de l'utilisateur) et une décision assumée : les liens `/e/:slug` déjà partagés et les courriels de réinitialisation déjà envoyés vers `web.` meurent, sauf à poser une redirection de `web` vers `www` chez OVH, non prévue par le runbook
-- impact: un visiteur qui tape `www.movie-picker.fr` n'obtient rien. Le front live est sur `web.movie-picker.fr`, et `www` pointe vers une redirection OVH morte (A `213.186.33.5`).
-- ou: `docs/runbook-migration-domaine-www.md`, écrit le 2026-07-16, exécuté jusqu'aux étapes sans impact
-- verify: encore ouvert si la commande échoue ou ne renvoie pas 200.
-  ```bash
-  curl -sS -o /dev/null -w '%{http_code}' --max-time 10 https://www.movie-picker.fr
-  ```
-- fix: suivre le runbook à partir de son étape 1. **Déjà fait le 2026-09-15, ne pas refaire** : étape 2, l'alias `www.movie-picker.fr` est attaché à la distribution CloudFront (le certificat wildcard le couvre) ; étape 4, `ALLOWED_ORIGINS` porte `web`, `www` et le domaine CloudFront, `web` en première position parce que le smoke test du front lit la première entrée ; étape 10 est sans objet, Search Console porte une propriété de domaine `movie-picker.fr` qui couvre tous les sous-domaines, seule l'URL du sitemap soumise (`https://web.movie-picker.fr/sitemap.xml`) sera à remplacer. Ordre restant : littéraux du dépôt (étape 1, dont le README et le bandeau `apps/web/public/og-image.png` à régénérer par `node apps/web/scripts/generate-og-image.mjs`), CNAME `www` chez OVH (étape 3), déploiement `target=all` (étape 5), PostHog (6), vérifications (7), retrait de `web` chez OVH, CloudFront et `ALLOWED_ORIGINS` (8 et 9), puis supprimer le runbook.
-- fini-quand: `www.movie-picker.fr` sert le front, plus aucun littéral `web.movie-picker.fr` hors `archive/`, et `docs/runbook-migration-domaine-www.md` est supprimé, il n'a plus d'objet
-- piege: les smoke tests de la CI ne référencent aucun de ces hôtes en dur, l'API vient de `secrets.VITE_API_URL` et le front de la première entrée de `vars.ALLOWED_ORIGINS` : ils restent justes après la migration tant que `www` n'est pas mis en première position avant que le DNS ne pointe. Pointer le CNAME avant de déployer donne un `www` à moitié vivant : le front se charge, l'API refuse l'origine (CORS injecté au déploiement, pas à chaud).
-- refs: le lot Terraform 4 de `roadmap.md` fait la même bascule DNS en décommissionnant AWS. Si ce lot est engagé, traiter la dette ici serait du travail jeté.
-
 ## DEBT-026 le flou de fond des barres collantes n'a jamais été mesuré au défilement
 
 - state: differe
@@ -211,28 +196,28 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 ## DEBT-042 les aperçus de partage d'une soirée sont génériques, l'option « aperçu riche » n'a plus d'effet
 
 - state: humain
-- bloque: un comportement CloudFront de plus (origine API pour `/e/*` quand l'user agent est un robot d'aperçu, ou une CloudFront Function qui réécrit la requête), geste sur la distribution ; le code de l'API est déjà là
+- bloque: une décision sur la route `/e/*` : Firebase Hosting ne route pas selon l'user agent, la réécriture `/e/**` vers Cloud Run enverrait humains et robots à l'API, qui devrait servir la coquille aux premiers ; le code de l'aperçu est déjà là
 - impact: le lien partagé est `https://<front>/e/<slug>` et CloudFront lui répond la coquille SPA, donc WhatsApp, Messenger, Discord et consorts affichent le titre et l'image génériques du site quelle que soit la soirée. L'endpoint `GET /api/v1/events/slug/{slug}/share-preview`, qui rend le HTML Open Graph de la soirée, n'est plus appelé par personne depuis `9a1ecc87` (2026-06-01, le lien de partage est passé de l'URL API à l'URL front) : `eventSharePreviewUrl` dans `apps/web/src/features/events/api/eventsApi.ts` n'a aucun appelant et le réglage `richSharePreview` de la soirée ne change rien pour l'utilisateur.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventSharePreview/GetEventSharePreviewHtmlHandler.cs`, `apps/web/src/features/events/api/eventsApi.ts`, distribution CloudFront (`AWS_CLOUDFRONT_DISTRIBUTION_ID` dans les variables Actions)
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventSharePreview/GetEventSharePreviewHtmlHandler.cs`, `apps/web/src/features/events/api/eventsApi.ts`, `infra/firebase-hosting.json` (réécritures)
 - verify: encore ouvert tant que la commande ne renvoie pas une balise `og:title` propre à la soirée (la coquille rend le titre du site).
   ```bash
-  curl -sS -A "facebookexternalhit/1.1" https://web.movie-picker.fr/e/<SLUG_PUBLIC> | grep -o '<meta property="og:title" content="[^"]*"'
+  curl -sS -A "facebookexternalhit/1.1" https://www.movie-picker.fr/e/<SLUG_PUBLIC> | grep -o '<meta property="og:title" content="[^"]*"'
   ```
-- fix: router les robots d'aperçu (`facebookexternalhit`, `WhatsApp`, `Discordbot`, `Twitterbot`, `Slackbot`, `LinkedInBot`, `TelegramBot`) sur `/e/*` vers l'endpoint `share-preview` de l'API, par un comportement CloudFront avec origine API et une CloudFront Function de sélection sur l'user agent ; les humains gardent la coquille. À défaut, supprimer l'endpoint, `eventSharePreviewUrl` et le réglage `richSharePreview` pour ne pas promettre un aperçu qui n'existe pas.
+- fix: une réécriture Hosting `{ "glob": "/e/**", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } }` dans `infra/firebase-hosting.json`, l'API servant l'aperçu aux robots (`facebookexternalhit`, `WhatsApp`, `Discordbot`, `Twitterbot`, `Slackbot`, `LinkedInBot`, `TelegramBot`) et la coquille `index.html` aux humains, lue depuis Hosting ou embarquée ; le 404 des soirées inconnues (DEBT-043) vient avec. À défaut, supprimer l'endpoint, `eventSharePreviewUrl` et le réglage `richSharePreview` pour ne pas promettre un aperçu qui n'existe pas.
 - piege: `robots.txt` interdit `/e/` : un robot d'indexation n'y va pas, seuls les robots d'aperçu (qui ignorent `robots.txt`) sont concernés. Ne pas servir le HTML de l'API aux navigateurs, il n'a ni style ni application.
 
 ## DEBT-043 toute adresse inconnue répond 200, et une route prérendue avec barre finale sert la coquille
 
-- state: humain
-- bloque: une CloudFront Function ou une réponse d'erreur personnalisée sur la distribution, geste sur l'infrastructure
+- state: differe
+- declencheur: la réécriture Hosting `/e/**` vers Cloud Run de DEBT-042, ou une page de la coquille vue indexée dans Search Console
 - impact: `/page-inexistante` et `/e/<slug-inconnu>` répondent `200` avec la coquille SPA, le `noindex` de `NotFoundPage` n'est posé qu'en JavaScript : un moteur qui n'exécute pas le rendu peut indexer une page vide (mesuré le 2026-09-18, une `/films/collection/…` indexée avec la coquille brute). `/decouvrir/` avec barre finale sert la coquille et non le document prérendu, chaque page prérendue existe donc en deux versions.
-- ou: distribution CloudFront (réponses d'erreur 403 et 404 renvoyées vers `/index.html` en 200), `.github/actions/publish-front/action.yml` pour les clés prérendues
+- ou: `infra/firebase-hosting.json` (repli `**` vers `/index.html` en 200), `scripts/publish-front-firebase.mjs` pour les routes prérendues
 - verify: encore ouvert tant que l'une des deux commandes affiche `200` pour la première ou un `Content-Length` de la coquille (environ 30 Ko) pour la seconde.
   ```bash
-  curl -sS -o /dev/null -w '%{http_code}\n' https://web.movie-picker.fr/page-inexistante
-  curl -sSI https://web.movie-picker.fr/decouvrir/ | grep -i content-length
+  curl -sS -o /dev/null -w '%{http_code}\n' https://www.movie-picker.fr/page-inexistante
+  curl -sSI https://www.movie-picker.fr/decouvrir/ | grep -i content-length
   ```
-- fix: la moitié « barre finale » tombe avec la bascule du front sur Firebase Hosting (lot Terraform 4) : la cible publiée en parallèle au lot 3 répond déjà `301 /decouvrir` à `/decouvrir/` (`trailingSlashBehavior: REMOVE` dans `infra/firebase-hosting.json`, routes prérendues servies comme `<route>/index.html`). Ne pas écrire de CloudFront Function pour ça. Reste l'autre moitié, sur Hosting comme sur CloudFront : pour les chemins qui ne correspondent à aucune route de `apps/web/src/app/routes.ts`, renvoyer la coquille avec le statut 404 (`X-Robots-Tag: noindex`), ce qu'un hébergement statique ne sait pas faire seul ; le repli 200 reste pour les routes connues.
+- fix: la moitié « barre finale » est tombée avec le passage du front sur Firebase Hosting le 2026-09-20 : `/decouvrir/` répond `301 /decouvrir` (`trailingSlashBehavior: REMOVE` dans `infra/firebase-hosting.json`, routes prérendues servies comme `<route>/index.html`). Reste l'autre moitié : pour les chemins qui ne correspondent à aucune route de `apps/web/src/app/routes.ts`, renvoyer la coquille avec le statut 404 (`X-Robots-Tag: noindex`), ce qu'un hébergement statique ne sait pas faire seul ; une réécriture Hosting `/e/**` vers Cloud Run (DEBT-042) réglerait au moins les soirées inconnues, le reste demande une fonction devant le site.
 - piege: `/u/<handle>` et `/e/<slug>` sont des gabarits valides même quand la ressource n'existe pas, le 404 côté edge ne peut pas les juger : leur `noindex` reste posé par l'application.
 
 ---
@@ -291,7 +276,7 @@ Le chantier Terraform de `roadmap.md` sort le front d'AWS (lots 3 et 4). Deux ci
 - **Cloud Storage + Cloud CDN derrière un load balancer applicatif externe** est l'équivalent direct de S3 + CloudFront, mais sa règle de transfert est facturée à l'heure **sans palier gratuit** : ≈ 18 $/mois avant le moindre octet servi.
 - **Firebase Hosting** reste dans le gratuit (10 Go stockés, 360 Mo/jour transférés), porte nativement le repli SPA, les en-têtes personnalisés et le domaine sur mesure avec son certificat, et se décrit en Terraform (`google_firebase_hosting_site`, `google_firebase_hosting_custom_domain`, provider `google-beta`). **C'est la cible recommandée.** Seul point à surveiller, les 360 Mo/jour : le trafic mesuré (≈ 500 requêtes/jour) en est loin, et un dépassement bascule sur la facturation à l'octet, pas sur une coupure.
 
-Le lot 3 est livré le 2026-09-19 : la cible Firebase Hosting existe (`infra/terraform`, module `web-hosting`), reçoit chaque déploiement du front en parallèle de S3 et sert la parité vérifiée sur son adresse `web.app`, à lire dans `infra/README.md`. Le lot 4 ne fait plus que la bascule DNS et le retrait d'AWS.
+Le lot 3 est livré le 2026-09-19 (site Firebase Hosting, module `web-hosting`) et la bascule du lot 4 a eu lieu le 2026-09-20 : le front est servi sur `www.movie-picker.fr` par Hosting, `web.movie-picker.fr` et l'apex y répondent `301`, `deploy-front` ne publie plus que sur Hosting. Ce qui reste du lot 4 est le retrait d'AWS lui-même, ci-dessous.
 
 Deux corollaires sur l'ordre des lots, qui ne se lisent pas dans leur numérotation :
 

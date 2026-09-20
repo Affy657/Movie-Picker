@@ -22,7 +22,10 @@
  * the CloudFront policy they mirror, and a change there is reviewed as infrastructure.
  *
  * Nothing here is deleted or overwritten: a version is immutable, a release points the site at
- * it, and the previous release stays listed, which is what a rollback will use.
+ * it, and the previous release stays listed, which is what `rollback-front-firebase.mjs` uses.
+ * In the pipeline the version is labelled with the commit and the run that built it
+ * (`GITHUB_SHA`, `GITHUB_RUN_ID`): that is how a rollback names a version by commit, and how the
+ * provenance of what is served stays readable in the Hosting console.
  */
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -149,7 +152,13 @@ if (dryRun) {
 const token = accessToken();
 const project = quotaProject();
 if (!project) fail('No quota project: set GCP_PROJECT_ID or configure a gcloud project.');
-const version = await call('POST', `${API}/sites/${site}/versions`, { config }, token);
+const labels = Object.fromEntries(
+  [
+    ['commit', process.env.GITHUB_SHA],
+    ['run_id', process.env.GITHUB_RUN_ID],
+  ].filter(([, value]) => value)
+);
+const version = await call('POST', `${API}/sites/${site}/versions`, { config, labels }, token);
 console.log(`Version ${version.name}`);
 
 const uploadRequired = new Set();

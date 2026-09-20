@@ -12,7 +12,7 @@ body:
     attributes:
       label: Contexte
       description: URL concernée, navigateur, système d'exploitation, version de l'application (visible dans Sentry / le pied de page).
-      placeholder: "ex. https://web.movie-picker.fr/e/soiree-cine, Chrome 130 / Windows 11, build a1b2c3d"
+      placeholder: "ex. https://www.movie-picker.fr/e/soiree-cine, Chrome 130 / Windows 11, build a1b2c3d"
     validations:
       required: true
   - type: textarea

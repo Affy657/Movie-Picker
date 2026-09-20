@@ -97,7 +97,7 @@ public sealed class RequestPasswordResetHandlerTests
             users.Object,
             tokens.Object,
             emailSender.Object,
-            ConfigureOptions("https://web.movie-picker.fr"),
+            ConfigureOptions("https://www.movie-picker.fr"),
             clock,
             new CapturingLogger<RequestPasswordResetHandler>());
 
@@ -161,7 +161,7 @@ public sealed class RequestPasswordResetHandlerTests
         IEmailSender emailSender,
         TimeProvider clock,
         ILogger<RequestPasswordResetHandler> logger,
-        string publicWebBaseUrl = "https://web.movie-picker.fr") =>
+        string publicWebBaseUrl = "https://www.movie-picker.fr") =>
         new(users, tokens, emailSender, ConfigureOptions(publicWebBaseUrl), clock, logger);
 
     [Fact]
@@ -384,7 +384,7 @@ public sealed class RequestPasswordResetHandlerTests
     [Fact]
     public async Task HandleAsync_BuildsResetUrlWithPublicWebBaseUrl()
     {
-        const string baseUrl = "https://web.movie-picker.fr";
+        const string baseUrl = "https://www.movie-picker.fr";
         var clock = new FakeTimeProvider(TestEpoch);
         var user = SampleUser();
 

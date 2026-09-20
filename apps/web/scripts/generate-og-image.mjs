@@ -47,7 +47,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${
   <text x="${WIDTH / 2}" y="360" text-anchor="middle" font-family="Arial, 'DejaVu Sans', Helvetica, sans-serif" font-size="94" font-weight="800" fill="#f8fafc" letter-spacing="-2">Movie Picker</text>
   <text x="${WIDTH / 2}" y="424" text-anchor="middle" font-family="Arial, 'DejaVu Sans', Helvetica, sans-serif" font-size="34" fill="#94a3b8">Choisissez le film de la soir&#233;e ensemble.</text>
   <text x="${WIDTH / 2}" y="470" text-anchor="middle" font-family="Arial, 'DejaVu Sans', Helvetica, sans-serif" font-size="34" fill="#94a3b8">Votez, et laissez la roue trancher.</text>
-  <text x="${WIDTH / 2}" y="556" text-anchor="middle" font-family="Arial, 'DejaVu Sans', Helvetica, sans-serif" font-size="28" font-weight="700" fill="#93c5fd" letter-spacing="1">web.movie-picker.fr</text>
+  <text x="${WIDTH / 2}" y="556" text-anchor="middle" font-family="Arial, 'DejaVu Sans', Helvetica, sans-serif" font-size="28" font-weight="700" fill="#93c5fd" letter-spacing="1">www.movie-picker.fr</text>
 </svg>`;
 
 await sharp(Buffer.from(svg)).png().toFile(outFile);

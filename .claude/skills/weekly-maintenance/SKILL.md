@@ -122,7 +122,7 @@ rtk gh workflow run deploy.yml --ref master -f target=all
 
 **3. La production sert bien le SHA de master.** Côté API, le signal qui fait foi est l'image de la révision Cloud Run active : elle est taguée par le SHA du commit, à comparer avec `git rev-parse origin/master`.
 
-Côté front, `vars.AWS_CLOUDFRONT_DISTRIBUTION_ID` est posée depuis le 2026-09-08, donc l'invalidation CloudFront et les deux smoke tests tournent vraiment au lieu de sortir en `skipped`. Lire ces trois étapes une par une plutôt que la conclusion du job, et en particulier le smoke test « domaine public + version servie », qui est le seul à comparer le point d'entrée haché envoyé à celui que `web.movie-picker.fr` sert réellement.
+Côté front, lire les deux smoke tests de `verify-front` une par une plutôt que la conclusion du job, et en particulier « domaine public + version servie », le seul à comparer le point d'entrée haché de la version publiée sur Hosting à celui que `www.movie-picker.fr` sert réellement.
 
 Le pipeline enregistre aussi une release Sentry par déploiement, nommée d'après le SHA. Elle corrobore, elle ne prouve pas : les deux étapes qui la publient sont en `continue-on-error: true` et sortent sans rien faire quand `SENTRY_AUTH_TOKEN` est absent. Une release manquante ne veut donc pas dire que le déploiement a échoué.
 

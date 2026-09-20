@@ -161,7 +161,7 @@ jobs:
   #     delegates `run:` blocks to shellcheck, preinstalled on GitHub runners. It only reads
   #     workflows, not composite actions.
   #   - zizmor: security audit of the workflows **and of the composite actions** in
-  #     `.github/actions/`, where the S3 passes, the health probes and the GCP authentication now
+  #     `.github/actions/`, where the web smoke tests, the health probes and the GCP authentication now
   #     live. `medium` threshold: the repository is at 0 medium and 0 high, so the gate is green
   #     today and only catches serious findings (injection from an untrusted context, exposed
   #     secrets). Going down to `low` would mean handling 9 cosmetic findings. `--offline` so that
