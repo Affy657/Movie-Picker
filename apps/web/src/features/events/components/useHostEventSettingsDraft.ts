@@ -86,7 +86,9 @@ export function useHostEventSettingsDraft({
   const templateDraft = buildTemplateDraft({
     themeEmoji,
     themeText,
+    proposalLimitEnabled: true,
     maxProposals: maxProp,
+    participantLimitEnabled: true,
     maxParticipants,
     voteLimitEnabled,
     maxVotes,

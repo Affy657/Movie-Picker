@@ -33,10 +33,15 @@ beforeAll(() => {
   }
 });
 
-function renderEventDetail(initialPath: string, client?: QueryClient) {
+function renderEventDetail(
+  initialPath: string,
+  client?: QueryClient,
+  state?: Record<string, unknown>
+) {
+  const [pathname, search] = initialPath.split('?');
   return render(
     <AppTestProviders client={client}>
-      <MemoryRouter initialEntries={[initialPath]}>
+      <MemoryRouter initialEntries={[{ pathname, search: search ? `?${search}` : '', state }]}>
         <Routes>
           <Route path="/e/:slug" element={<EventDetail />} />
           <Route path="/my-events" element={<div data-testid="route-my-events" />} />
@@ -199,6 +204,20 @@ describe('EventDetail (MSW)', () => {
     await user.click(screen.getByRole('button', { name: /^partager$/i }));
     expect(await screen.findByRole('button', { name: /copier le lien/i })).toBeInTheDocument();
     expect(screen.queryByText('Votre lien hôte (ne pas partager)')).not.toBeInTheDocument();
+  });
+
+  it('as the host arriving from the creation, warns when the options could not be saved', async () => {
+    const user = userEvent.setup();
+    renderEventDetail(`/e/${slug}?host=host-secret-token`, undefined, {
+      justCreated: true,
+      configNotSaved: true,
+    });
+
+    expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+    const warning = screen.getByRole('alert');
+    expect(warning).toHaveTextContent(/ses options n’ont pas été enregistrées/);
+    await user.click(within(warning).getByRole('button', { name: /fermer/i }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('as the host, shows the theme banner and the settings panel', async () => {

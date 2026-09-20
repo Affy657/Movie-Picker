@@ -1,0 +1,23 @@
+.section .row {
+  margin-bottom: 0;
+}
+
+.section .row:not(:last-child) {
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.section .saveBar {
+  margin-top: 0;
+  padding: var(--space-3-5);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+}
+
+.section .row + .saveBar {
+  border-top-style: dashed;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}

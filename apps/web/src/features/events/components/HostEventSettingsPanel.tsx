@@ -17,6 +17,7 @@ import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 import dragStyles from '@/shared/components/SheetDrag.module.css';
 import Modal from '@/shared/components/Modal';
 import styles from './HostEventSettingsPanel.module.css';
+import templatesStyles from './EventTemplatesSection.module.css';
 import type { EventData } from '@/features/events/types';
 import {
   MAX_EVENT_PARTICIPANTS,
@@ -404,9 +405,9 @@ export default function HostEventSettingsPanel({
           </div>
 
           {isConnectedCreator && (
-            <section className={styles.templatesSection} data-testid="event-templates-section">
+            <section className={templatesStyles.section} data-testid="event-templates-section">
               <EventTemplatesRow
-                className={styles.templatesRow}
+                className={templatesStyles.row}
                 templates={eventTemplates.templates}
                 appliedTemplate={eventTemplates.matchingTemplate}
                 disabled={eventTemplates.isBusy}
@@ -416,7 +417,7 @@ export default function HostEventSettingsPanel({
                 onDelete={eventTemplates.remove}
               />
               <EventTemplateSaveBar
-                className={styles.templatesSaveBar}
+                className={templatesStyles.saveBar}
                 variant="event"
                 draft={templateDraft}
                 templates={eventTemplates.templates}
