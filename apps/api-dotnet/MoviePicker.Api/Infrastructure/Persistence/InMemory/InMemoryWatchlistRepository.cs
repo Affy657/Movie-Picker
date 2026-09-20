@@ -120,21 +120,28 @@ public sealed class InMemoryWatchlistRepository : IWatchlistRepository
         return Task.FromResult(result);
     }
 
-    public Task UpdateRuntimeAsync(string itemId, int runtimeMinutes, CancellationToken ct = default)
+    public Task UpdateFactsAsync(string itemId, int runtimeMinutes, double? voteAverage, CancellationToken ct = default)
     {
         var entry = _store.FirstOrDefault(kv => kv.Value.Id == itemId);
         if (entry.Key is not null)
-            _store.TryUpdate(entry.Key, entry.Value with { RuntimeMinutes = runtimeMinutes }, entry.Value);
+        {
+            var updated = entry.Value with
+            {
+                RuntimeMinutes = runtimeMinutes,
+                VoteAverage = voteAverage ?? entry.Value.VoteAverage
+            };
+            _store.TryUpdate(entry.Key, updated, entry.Value);
+        }
         return Task.CompletedTask;
     }
 
-    public Task<IReadOnlyList<WatchlistItem>> ListMissingRuntimeAsync(int limit, CancellationToken ct = default)
+    public Task<IReadOnlyList<WatchlistItem>> ListMissingFactsAsync(int limit, CancellationToken ct = default)
     {
         if (limit <= 0)
             return Task.FromResult<IReadOnlyList<WatchlistItem>>([]);
 
         IReadOnlyList<WatchlistItem> result = _store.Values
-            .Where(x => x.RuntimeMinutes == null)
+            .Where(x => x.RuntimeMinutes is null or 0 || x.VoteAverage is null)
             .Take(limit)
             .ToList();
         return Task.FromResult(result);

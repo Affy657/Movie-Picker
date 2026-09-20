@@ -33,16 +33,20 @@ public sealed class AddToWatchlistHandlerTests
             NullLogger<AddToWatchlistHandler>.Instance);
     }
 
-    private static AddWatchlistItemRequest Request() => new()
+    private static AddWatchlistItemRequest Request(double? voteAverage = 8.3, int? runtimeMinutes = 136) => new()
     {
         TmdbId = 42,
         MediaType = MovieMediaType.Movie,
         Title = "Matrix",
         Year = "1999",
         PosterPath = null,
-        VoteAverage = 8.3,
-        RuntimeMinutes = 136
+        VoteAverage = voteAverage,
+        RuntimeMinutes = runtimeMinutes
     };
+
+    private static TmdbMovieDetails MatrixDetails(int? runtime, double? voteAverage = null) =>
+        new(42, "Matrix", null, null, null, [], runtime, [], GenreIds, "1999-03-31", VoteAverage: voteAverage);
+
 
     [Fact]
     public async Task HandleAsync_NewItem_Persists_AndReturnsIt()
@@ -139,5 +143,75 @@ public sealed class AddToWatchlistHandlerTests
         Assert.NotNull(inserted);
         Assert.Empty(inserted!.GenreIds);
         Assert.Equal(42, result.TmdbId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RequestWithoutFacts_TakesRuntimeAndVoteFromTmdbDetails()
+    {
+        WatchlistItem? inserted = null;
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MatrixDetails(136, 8.2));
+        _watchlist
+            .Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
+            .Callback<WatchlistItem, CancellationToken>((i, _) => inserted = i)
+            .ReturnsAsync(true);
+
+        var result = await _sut.HandleAsync(UserId, Request(voteAverage: null, runtimeMinutes: null));
+
+        Assert.Equal(136, inserted!.RuntimeMinutes);
+        Assert.Equal(8.2, inserted.VoteAverage);
+        Assert.Equal(136, result.RuntimeMinutes);
+        Assert.Equal(8.2, result.VoteAverage);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RequestWithFacts_KeepsThemOverTmdbDetails()
+    {
+        WatchlistItem? inserted = null;
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MatrixDetails(150, 7.0));
+        _watchlist
+            .Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
+            .Callback<WatchlistItem, CancellationToken>((i, _) => inserted = i)
+            .ReturnsAsync(true);
+
+        await _sut.HandleAsync(UserId, Request());
+
+        Assert.Equal(136, inserted!.RuntimeMinutes);
+        Assert.Equal(8.3, inserted.VoteAverage);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ZeroRuntimeInRequest_IsReplacedByTmdbRuntime()
+    {
+        WatchlistItem? inserted = null;
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MatrixDetails(136));
+        _watchlist
+            .Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
+            .Callback<WatchlistItem, CancellationToken>((i, _) => inserted = i)
+            .ReturnsAsync(true);
+
+        await _sut.HandleAsync(UserId, Request(runtimeMinutes: 0));
+
+        Assert.Equal(136, inserted!.RuntimeMinutes);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbWithoutFacts_LeavesTheRequestValues()
+    {
+        WatchlistItem? inserted = null;
+        _watchlist
+            .Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
+            .Callback<WatchlistItem, CancellationToken>((i, _) => inserted = i)
+            .ReturnsAsync(true);
+
+        await _sut.HandleAsync(UserId, Request(voteAverage: null, runtimeMinutes: null));
+
+        Assert.Null(inserted!.RuntimeMinutes);
+        Assert.Null(inserted.VoteAverage);
     }
 }

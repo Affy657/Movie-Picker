@@ -32,7 +32,7 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
     public async Task<WatchlistItemResponse> HandleAsync(string userId, AddWatchlistItemRequest request, CancellationToken ct = default)
     {
         var poster = await ResolvePosterAsync(request.PosterPath, ct);
-        var genreIds = await FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, ct);
+        var details = await FetchDetailsBestEffortAsync(request.TmdbId, request.MediaType, ct);
 
         var item = new WatchlistItem
         {
@@ -43,12 +43,12 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
             Title = request.Title.Trim(),
             Year = request.Year,
             PosterPath = poster,
-            VoteAverage = request.VoteAverage,
-            RuntimeMinutes = request.RuntimeMinutes,
+            VoteAverage = request.VoteAverage ?? details?.VoteAverage,
+            RuntimeMinutes = KnownRuntime(request.RuntimeMinutes) ?? KnownRuntime(details?.Runtime) ?? request.RuntimeMinutes,
             LetterboxdSlug = string.IsNullOrWhiteSpace(request.LetterboxdSlug)
                 ? null
                 : request.LetterboxdSlug.Trim(),
-            GenreIds = genreIds,
+            GenreIds = details?.GenreIds ?? [],
             CreatedAt = _clock.GetUtcNow()
         };
 
@@ -81,17 +81,18 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
         return TmdbPosterUrlNormalizer.TryParsePosterKey(p, out _);
     }
 
-    private async Task<IReadOnlyList<int>> FetchGenreIdsBestEffortAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
+    private static int? KnownRuntime(int? runtimeMinutes) => runtimeMinutes is > 0 ? runtimeMinutes : null;
+
+    private async Task<TmdbMovieDetails?> FetchDetailsBestEffortAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
     {
         try
         {
-            var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
-            return details?.GenreIds ?? [];
+            return await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "TMDB genre lookup failed for {TmdbId}, item added to the watchlist without genres", tmdbId);
-            return [];
+            _logger.LogWarning(ex, "TMDB details lookup failed for {TmdbId}, item added to the watchlist without genres nor facts", tmdbId);
+            return null;
         }
     }
 }
