@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-051`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-052`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -293,6 +293,16 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - verify: `gcloud projects describe <PROJECT_ID> --format='value(parent.type)'` ; encore ouvert tant que la commande ne rend rien
 - fix: d'abord le compte (passkeys, deux options de récupération vérifiées, revue des sessions et des applications tierces), puis une organisation Cloud Identity Free sur `movie-picker.fr`, la migration du projet sous elle, les deux politiques d'organisation ci-dessus, une deny policy sur le projet qui refuse `secretmanager.googleapis.com/versions.access` à `movie-picker-terraform@` et `movie-picker-terraform-plan@` quels que soient leurs rôles (`roles/iam.denyAdmin` ne se pose que sur une organisation : `gcloud` répond « not supported for this resource » et la console, sur « Créer une stratégie de refus », donne « Ressource cible : Organisation »), un second propriétaire ou un rôle de récupération sur un compte distinct, et la liaison anti-suppression déjà en place reste.
 - piege: la migration d'un projet sous une organisation change le `parent` que Terraform ne décrit pas mais que les rôles personnalisés et la fédération d'identité citent par numéro de projet, inchangé ; rejouer `infra.yml` après la migration pour prouver un plan vide, et `cloud-auth-check.yml` pour les cinq environnements. Une politique `allowedPolicyMemberDomains` bloque `allUsers` sur les deux services Cloud Run tant qu'elle n'est pas assouplie pour le projet.
+
+## DEBT-051 le poste de développement porte la clé TMDB de production
+
+- state: humain
+- bloque: une seconde clé TMDB se crée dans le compte TMDB de l'utilisateur (Settings / API), et le `.env` du poste est le sien.
+- impact: le `.env` du checkout principal porte `TMDB_API_KEY` à sa valeur de production (constaté par l'audit du 2026-09-21, qui a tourné le même jour l'URI Mongo et les clés VAPID que le poste partageait aussi avec la production). Une fuite du poste ou d'une transcription de session est une fuite de production, et les essais locaux consomment le quota de la production.
+- ou: `C:\ynov\movie-picker\.env` (hors dépôt), `.env.example` (le nom), Secret Manager (`TMDB_API_KEY`)
+- verify: `[ "$(grep -E '^TMDB_API_KEY=' .env | cut -d= -f2- | tr -d '"')" = "$(gcloud secrets versions access latest --secret=TMDB_API_KEY)" ] && echo shared` depuis le checkout principal ; encore ouvert tant que la commande imprime `shared`
+- fix: une clé TMDB de développement dans `.env`, rien d'autre : la clé de production reste où elle est.
+- piege: ne pas tourner la clé de production « au passage » sans redéploiement : la révision active la lit au démarrage de chaque instance (`TMDB_API_KEY:latest`), une clé révoquée avant le déploiement coupe les recherches de films.
 
 ---
 
