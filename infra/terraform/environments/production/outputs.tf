@@ -19,11 +19,21 @@ output "web_default_url" {
 }
 
 output "ci_service_account_email" {
-  description = "Identity the workflows assume, the GCP_SERVICE_ACCOUNT secret of the production environment."
-  value       = module.ci.service_account_email
+  description = "Identity the deployment workflows assume, the GCP_SERVICE_ACCOUNT secret of the production environment."
+  value       = module.ci.email
 }
 
-output "ci_workload_identity_provider" {
-  description = "Provider the workflows exchange their OIDC token with, the GCP_WORKLOAD_IDENTITY_PROVIDER secret of the production environment."
-  value       = module.ci.workload_identity_provider
+output "terraform_service_account_email" {
+  description = "Identity the Terraform workflow assumes on master, the GCP_TERRAFORM_SERVICE_ACCOUNT secret of the production environment."
+  value       = module.terraform.email
+}
+
+output "terraform_plan_service_account_email" {
+  description = "Identity the Terraform workflow assumes on a pull request, the GCP_SERVICE_ACCOUNT secret of the infra-plan environment."
+  value       = module.terraform_plan.email
+}
+
+output "workload_identity_provider" {
+  description = "Provider the workflows exchange their OIDC token with, the GCP_WORKLOAD_IDENTITY_PROVIDER secret of both GitHub environments."
+  value       = module.github.provider_name
 }

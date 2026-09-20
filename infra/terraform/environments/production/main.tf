@@ -1,5 +1,8 @@
 locals {
   api_runtime_service_account_email = google_service_account.api_runtime.email
+  github_repository                 = "Affy657/Movie-Picker"
+  secrets_operator_role_id          = "secretsOperator"
+  bucket_iam_editor_role_id         = "bucketIamEditor"
 
   api_secret_names = toset([
     "AUTH_DATAPROTECTION_KEYRING",
@@ -41,12 +44,23 @@ resource "google_service_account" "api_runtime" {
   description  = "Runtime identity of the Cloud Run revisions: reads the secrets mounted by deploy.yml, nothing else"
 }
 
+module "github" {
+  source = "../../modules/github-federation"
+
+  project_id          = var.project_id
+  github_repository   = local.github_repository
+  github_environments = ["production", "infra-plan"]
+}
+
 module "ci" {
-  source = "../../modules/ci-identity"
+  source = "../../modules/workload-identity"
 
   project_id         = var.project_id
-  github_repository  = "Affy657/Movie-Picker"
-  github_environment = "production"
+  service_account_id = "movie-picker-ci"
+  display_name       = "GitHub Actions deploy"
+  description        = "Identity the deployment workflows assume through the GitHub OIDC federation. No key exists for it."
+  pool_name          = module.github.pool_name
+  subject            = module.github.subjects["production"]
 
   project_roles = [
     "roles/run.developer",
@@ -59,10 +73,105 @@ module "ci" {
   image_repositories = {
     api = { location = var.region, repository_id = module.api_images.repository_id }
   }
-  readable_secrets     = ["SCHEDULER_TOKEN", "MONGODB_URI"]
-  object_admin_buckets = [var.backup_bucket]
+  readable_secrets = ["SCHEDULER_TOKEN", "MONGODB_URI"]
+  bucket_roles = {
+    backups = { bucket = var.backup_bucket, role = "roles/storage.objectAdmin" }
+  }
 
   depends_on = [google_project_service.platform, module.api_secrets]
+}
+
+resource "google_project_iam_custom_role" "secrets_operator" {
+  project     = var.project_id
+  role_id     = local.secrets_operator_role_id
+  title       = "Secret Manager operator, payloads excluded"
+  description = "Creates, describes and shares secrets without ever reading a version: what Terraform needs, and nothing a leak of the identity could turn into a secret value."
+  permissions = [
+    "secretmanager.locations.get",
+    "secretmanager.locations.list",
+    "secretmanager.secrets.create",
+    "secretmanager.secrets.delete",
+    "secretmanager.secrets.get",
+    "secretmanager.secrets.getIamPolicy",
+    "secretmanager.secrets.list",
+    "secretmanager.secrets.setIamPolicy",
+    "secretmanager.secrets.update",
+    "secretmanager.versions.get",
+    "secretmanager.versions.list",
+  ]
+}
+
+resource "google_project_iam_custom_role" "bucket_iam_editor" {
+  project     = var.project_id
+  role_id     = local.bucket_iam_editor_role_id
+  title       = "Bucket IAM editor, objects excluded"
+  description = "Reads and writes the IAM policy of a bucket without access to its objects: how Terraform grants a bucket to an identity."
+  permissions = [
+    "storage.buckets.get",
+    "storage.buckets.getIamPolicy",
+    "storage.buckets.setIamPolicy",
+  ]
+}
+
+module "terraform" {
+  source = "../../modules/workload-identity"
+
+  project_id         = var.project_id
+  service_account_id = "movie-picker-terraform"
+  display_name       = "Terraform apply (GitHub Actions)"
+  description        = "Identity the Terraform workflow assumes on master to apply infra/terraform. It manages every resource described there, hence its reach; only a job of the production environment can assume it."
+  pool_name          = module.github.pool_name
+  subject            = module.github.subjects["production"]
+
+  project_roles = [
+    "roles/artifactregistry.admin",
+    "roles/firebase.viewer",
+    "roles/firebasehosting.admin",
+    "roles/iam.roleAdmin",
+    "roles/iam.serviceAccountAdmin",
+    "roles/iam.workloadIdentityPoolAdmin",
+    "roles/resourcemanager.projectIamAdmin",
+    "roles/run.admin",
+    "roles/serviceusage.serviceUsageAdmin",
+    "projects/${var.project_id}/roles/${local.secrets_operator_role_id}",
+  ]
+  acts_as_service_accounts = [google_service_account.api_runtime.name]
+  bucket_roles = {
+    state          = { bucket = var.state_bucket, role = "roles/storage.objectAdmin" }
+    state_policy   = { bucket = var.state_bucket, role = "projects/${var.project_id}/roles/${local.bucket_iam_editor_role_id}" }
+    backups_policy = { bucket = var.backup_bucket, role = "projects/${var.project_id}/roles/${local.bucket_iam_editor_role_id}" }
+  }
+
+  depends_on = [
+    google_project_service.platform,
+    google_project_iam_custom_role.secrets_operator,
+    google_project_iam_custom_role.bucket_iam_editor,
+  ]
+}
+
+module "terraform_plan" {
+  source = "../../modules/workload-identity"
+
+  project_id         = var.project_id
+  service_account_id = "movie-picker-terraform-plan"
+  display_name       = "Terraform plan (GitHub Actions)"
+  description        = "Read-only identity the Terraform workflow assumes on a pull request to plan infra/terraform against production, without the lock."
+  pool_name          = module.github.pool_name
+  subject            = module.github.subjects["infra-plan"]
+
+  project_roles = [
+    "roles/viewer",
+    "roles/iam.securityReviewer",
+    "roles/iam.workloadIdentityPoolViewer",
+    "roles/secretmanager.viewer",
+    "roles/firebase.viewer",
+    "roles/serviceusage.serviceUsageConsumer",
+  ]
+  bucket_roles = {
+    state = { bucket = var.state_bucket, role = "roles/storage.objectViewer" }
+  }
+
+  depends_on = [google_project_service.platform]
 }
 
 module "api_images" {

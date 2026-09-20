@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-044`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-045`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -219,6 +219,19 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
   ```
 - fix: la moitié « barre finale » est tombée avec le passage du front sur Firebase Hosting le 2026-09-20 : `/decouvrir/` répond `301 /decouvrir` (`trailingSlashBehavior: REMOVE` dans `infra/firebase-hosting.json`, routes prérendues servies comme `<route>/index.html`). Reste l'autre moitié : pour les chemins qui ne correspondent à aucune route de `apps/web/src/app/routes.ts`, renvoyer la coquille avec le statut 404 (`X-Robots-Tag: noindex`), ce qu'un hébergement statique ne sait pas faire seul ; une réécriture Hosting `/e/**` vers Cloud Run (DEBT-042) réglerait au moins les soirées inconnues, le reste demande une fonction devant le site.
 - piege: `/u/<handle>` et `/e/<slug>` sont des gabarits valides même quand la ressource n'existe pas, le 404 côté edge ne peut pas les juger : leur `noindex` reste posé par l'application.
+
+## DEBT-044 le conteneur de l'API est décrit à deux endroits, le pipeline et Terraform
+
+- state: differe
+- declencheur: un secret ajouté à `api_secret_names` sans l'être à `deploy.yml` (ou l'inverse), ou le lot Terraform 8 quand la recette instancie le module sans pipeline dédié
+- impact: le module `cloud-run-api` écrit l'image, les variables et les secrets montés à la création d'un service puis les ignore (`lifecycle.ignore_changes`) ; `deploy.yml` fait foi (`SECRETS`, `--set-env-vars`). La liste des secrets montés vit donc deux fois, et `SENTRY_RELEASE` (le SHA du déploiement) comme `ALLOWED_ORIGINS` (variable GitHub) n'ont pas de place dans Terraform tant que la version est une variable d'environnement plutôt qu'une donnée de l'image.
+- ou: `infra/terraform/modules/cloud-run-api/main.tf` (`ignore_changes`), `infra/terraform/environments/production/main.tf` (`api_secret_names`), `.github/workflows/deploy.yml` (`SECRETS`, `--set-env-vars`)
+- verify: encore ouvert tant que les deux listes existent ; la commande montre leurs écarts (un secret que `deploy.yml` ne monte que s'il existe peut manquer côté Terraform tant que sa propre dette n'est pas réglée).
+  ```bash
+  diff <(grep -oE '^\s+"[A-Z_]+",' infra/terraform/environments/production/main.tf | tr -d ' ",' | sort) <(grep -oE '[A-Z_]+=[A-Z_]+:latest' .github/workflows/deploy.yml | cut -d= -f1 | sort)
+  ```
+- fix: faire voyager la version dans l'image (`SENTRY_RELEASE` lu d'un fichier ou d'une étiquette de l'image plutôt que d'une variable), passer `ALLOWED_ORIGINS` en variable Terraform, retirer `env` et `secret_env` de `ignore_changes`, et réduire `deploy.yml` à l'image et au trafic. Le retour arrière et la promotion sans trafic restent au pipeline.
+- piege: retirer `ignore_changes` sur `env` avant que le pipeline ne cesse d'écrire les variables ferait remettre l'ancien environnement à chaque `apply`, entre deux déploiements.
 
 ---
 

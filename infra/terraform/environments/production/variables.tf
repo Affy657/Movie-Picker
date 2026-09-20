@@ -20,3 +20,8 @@ variable "backup_bucket" {
   type        = string
   default     = "movie-picker-backups"
 }
+
+variable "state_bucket" {
+  description = "Bucket that holds this state, the same value as TF_STATE_BUCKET: the identities that plan and apply from GitHub read or write it. The bucket itself is not described."
+  type        = string
+}

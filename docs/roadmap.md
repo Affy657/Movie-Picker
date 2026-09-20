@@ -219,7 +219,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (24 points produit, 23 points tech, 36 restants)
+## 📋 V1.7, planifiée (24 points produit, 23 points tech, 35 restants)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
@@ -240,7 +240,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ✅ 🏗️ `M` **Terraform 3, front hébergé sur GCP** : site Firebase Hosting décrit et créé, avec parité vérifiée sur le repli SPA, les six en-têtes de sécurité et les trois paliers de cache de CloudFront ; chaque déploiement du front y est publié en parallèle par l'API Hosting et vérifié sur l'adresse `web.app` du site, sans impact utilisateur.
 - ✅ 🏗️ `S` **Terraform 4, bascule DNS et sortie d'AWS** : le site s'appelle `www.movie-picker.fr`, servi par Firebase Hosting, `web` et l'adresse nue y renvoient en gardant la page ; la sonde de disponibilité suit le domaine ; distribution, bucket, certificat, rôle et fournisseur OIDC supprimés, le compte AWS est vide.
 - ✅ 🔒 `M` **Terraform 5, IAM décrit et clés longue durée retirées** : un compte dédié au pipeline, dont chaque droit est relevé commande par commande et lié à la ressource qu'il touche, l'identité d'exécution et la fédération GitHub décrites puis importées ; aucune clé sur aucun compte, et le compte Compute par défaut n'a plus rien.
-- ⬜ ⚙️ `S` **Terraform 6, plan en PR et apply sur master** : job dédié, `plan` publié en commentaire de PR, `apply` derrière l'environnement de production. Une dérive de configuration se voit alors en revue plutôt qu'en incident.
+- ✅ ⚙️ `S` **Terraform 6, plan en PR et apply sur master** : un workflow dédié, `plan` en lecture seule publié en commentaire de PR (un seul, réédité à chaque push), `apply` sur `master` derrière l'environnement de production ; deux identités sans clé, une par environnement, une dérive se voit en revue plutôt qu'en incident.
 - ⬜ 📊 `M` **Terraform 7, supervision décrite en IaC** : les trois sondes de disponibilité, les six politiques d'alerte (cinq d'incident sur métriques, une notification de nouveau compte basée sur les journaux de l'API), le canal de notification et le tableau de bord, aujourd'hui créés par appels d'API et non versionnés.
 - ⬜ 🏗️ `L` **Terraform 8, environnement de recette** : seconde instanciation des modules des lots 2, 3 et 5, avec son entrée DNS et un déploiement qui passe par la recette avant la prod. Son coût dépend entièrement des lots précédents.
 
