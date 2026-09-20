@@ -5,6 +5,12 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <!-- Unawaited async: build error (subtle bugs). The rest: EditorConfig + CI -warnaserror. -->
     <WarningsAsErrors>$(WarningsAsErrors);CS4014</WarningsAsErrors>
+    <!-- packages.lock.json next to each project, the NuGet counterpart of pnpm-lock.yaml: the
+         resolved graph and the content hash of every package. Locked on the CI runners (CI=true)
+         and in the Dockerfile (- -locked-mode): a restore that would need another version or
+         another hash fails instead of resolving silently. Dependabot updates the lock files. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(CI)' == 'true'">true</RestoreLockedMode>
   </PropertyGroup>
 
   <!-- GHSA-6c8g-7p36-r338 (SharpCompress, Moderate, zip-slip): no upstream fix, and the

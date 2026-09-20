@@ -15,8 +15,10 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:2fa828c68761b1b8c23d7662dc134421b9
 WORKDIR /src
 
 COPY Directory.Build.props ./
-COPY MoviePicker.Api/*.csproj MoviePicker.Api/
-RUN dotnet restore MoviePicker.Api/MoviePicker.Api.csproj -r linux-x64 -p:PublishReadyToRun=true
+COPY MoviePicker.Api/*.csproj MoviePicker.Api/packages.lock.json MoviePicker.Api/
+# --locked-mode: the graph and the hashes of packages.lock.json, or nothing (RestorePackagesWithLockFile
+# in Directory.Build.props). A package republished upstream under the same version does not get in.
+RUN dotnet restore MoviePicker.Api/MoviePicker.Api.csproj -r linux-x64 -p:PublishReadyToRun=true --locked-mode
 
 COPY MoviePicker.Api/ MoviePicker.Api/
 RUN dotnet publish MoviePicker.Api/MoviePicker.Api.csproj -c Release -r linux-x64 --self-contained false -p:PublishReadyToRun=true -o /app/publish --no-restore
