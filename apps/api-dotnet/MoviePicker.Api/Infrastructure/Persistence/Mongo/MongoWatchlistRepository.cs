@@ -143,20 +143,25 @@ public sealed class MongoWatchlistRepository : IWatchlistRepository
         return docs.ConvertAll(ToDomain);
     }
 
-    public async Task UpdateRuntimeAsync(string itemId, int runtimeMinutes, CancellationToken ct = default)
+    public async Task UpdateFactsAsync(string itemId, int runtimeMinutes, double? voteAverage, CancellationToken ct = default)
     {
         var update = Builders<WatchlistItemDocument>.Update.Set(x => x.RuntimeMinutes, runtimeMinutes);
+        if (voteAverage is not null)
+            update = update.Set(x => x.VoteAverage, voteAverage);
         await _collection.UpdateOneAsync(x => x.Id == itemId, update, cancellationToken: ct);
     }
 
-    public async Task<IReadOnlyList<WatchlistItem>> ListMissingRuntimeAsync(int limit, CancellationToken ct = default)
+    public async Task<IReadOnlyList<WatchlistItem>> ListMissingFactsAsync(int limit, CancellationToken ct = default)
     {
         if (limit <= 0)
             return [];
 
         var filter = Builders<WatchlistItemDocument>.Filter.Or(
             Builders<WatchlistItemDocument>.Filter.Exists(x => x.RuntimeMinutes, false),
-            Builders<WatchlistItemDocument>.Filter.Eq(x => x.RuntimeMinutes, null));
+            Builders<WatchlistItemDocument>.Filter.Eq(x => x.RuntimeMinutes, null),
+            Builders<WatchlistItemDocument>.Filter.Eq(x => x.RuntimeMinutes, 0),
+            Builders<WatchlistItemDocument>.Filter.Exists(x => x.VoteAverage, false),
+            Builders<WatchlistItemDocument>.Filter.Eq(x => x.VoteAverage, null));
         var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
         return docs.ConvertAll(ToDomain);
     }

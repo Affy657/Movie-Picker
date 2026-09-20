@@ -55,6 +55,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
+- **Sur un téléphone, « Mes soirées » ne se coupe plus en « Mes soir… » dans la barre du bas** : les cinq libellés tiennent sur une ligne, même sur un écran de 320 px.
+- **L'historique des soirées se lit sur un téléphone** : le titre et le film gagnant prennent toute la largeur au lieu d'être coupés après cinq lettres, la date, les participants, les films et la couronne d'hôte passent en dessous, le récapitulatif tient sur trois colonnes, et la barre de recherche défile avec la page comme sur Ma liste.
+- **Un film ajouté à Ma liste sans durée ni note les reçoit de TMDB au moment de l'ajout**, et ceux déjà ajoutés sans elles sont complétés au démarrage suivant : « Dans votre liste » sur l'accueil et la liste publique du profil lisent désormais la même ligne année, note, durée que Ma liste.
+- **Les derniers films vus du profil lisent la note sur l'échelle du compte** (sur 5 ou sur 10), comme toutes les autres cartes.
 - **Les notifications push n'ouvrent plus une connexion neuve à chaque envoi** : le serveur créait un client HTTP par notification et ne le libérait jamais, il passe désormais par un pool de connexions partagé.
 - **Revenir à une version précédente de l'API ne perd plus de données** : une ancienne version qui réécrivait une soirée ou un compte effaçait les réglages qu'elle ne connaissait pas encore (gagnants multiples, récurrence, modèles de soirée). Elle ne touche plus qu'aux champs qu'elle connaît.
 - **« Mes soirées » n'oublie plus les soirées créées au-delà de la deux-centième.**
