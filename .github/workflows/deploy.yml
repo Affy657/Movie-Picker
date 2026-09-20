@@ -17,7 +17,9 @@
 #
 # Accepted trade-off: production is stale by default between two triggers. The final guard
 # therefore checks that every requested target really left, not the run colour: a deployment job
-# skipped by a red `needs:` does not show up as a failure.
+# skipped by a red `needs:` does not show up as a failure. A partial target (`front` or `api`) is
+# refused by `verify-ci` when the other lane changed since the release the stage serves: the two
+# lanes of a stage stay built from compatible commits, or `all` is asked for.
 #
 # The quality gates are not bypassed, they are *consumed*: `verify-ci` refuses to deploy a commit
 # whose `ci-cd.yml` run is not green (gitleaks, lint, tests, E2E, Sonar Quality Gate). Replaying
@@ -95,11 +97,14 @@ env:
   # production root module): the jobs carry it, the API checks it. Production only, the staging
   # has no job.
   SCHEDULER_SERVICE_ACCOUNT_NAME: movie-picker-scheduler
-  # Public addresses of the staging, read by the production gate (both are public, like every
-  # domain of the project), and the staging service, whose serving revision production redeploys.
+  # Public addresses of both stages (public, like every domain of the project): the production
+  # gate reads the staging ones, and the partial-target guard reads the other lane of the stage
+  # being deployed. The staging service is the one whose serving revision production redeploys.
   STAGING_WEB_URL: https://staging.movie-picker.fr
   STAGING_API_URL: https://api.staging.movie-picker.fr
   STAGING_CLOUD_RUN_SERVICE_NAME: movie-picker-api-staging
+  PRODUCTION_WEB_URL: https://www.movie-picker.fr
+  PRODUCTION_API_URL: https://api.movie-picker.fr
   # The web build runs the CLI from the lockfile (`@sentry/cli`, integrity checked by pnpm); the
   # jobs holding cloud credentials download the same version and check its checksum, as the other
   # binaries of the workflows are: an unverified download would run next to an OIDC token.
@@ -165,6 +170,56 @@ jobs:
             exit 1
           fi
           echo "CI gates green on $GITHUB_SHA."
+      # A web app alone on a commit that also changed the API leaves the stage serving pages built
+      # against routes its API does not have yet: on 2026-09-20 production got the front of a
+      # commit whose API enrichment was still in master only, and the cards lost their year,
+      # rating and runtime for a morning. The reverse breaks the same way when the API drops a
+      # field. `all` says nothing about the other lane; `front` or `api` is accepted only when
+      # nothing of the other lane changed between the release the stage serves and this commit,
+      # compared by GitHub, no checkout needed. The way out is always `all`.
+      - name: Refuse a partial target that leaves the other lane behind
+        if: inputs.target != 'all'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET: ${{ inputs.target }}
+          STAGE: ${{ inputs.stage }}
+        run: |
+          set -eo pipefail
+          if [ "$STAGE" = "production" ]; then
+            api_url="$PRODUCTION_API_URL"; web_url="$PRODUCTION_WEB_URL"
+          else
+            api_url="$STAGING_API_URL"; web_url="$STAGING_WEB_URL"
+          fi
+          if [ "$TARGET" = "front" ]; then
+            other="API"; lane="apps/api-dotnet/"
+            body="$RUNNER_TEMP/other-ready.json"
+            curl -sS --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$body" "$api_url/health/ready" || true
+            served="$(jq -r '.release // ""' "$body" 2>/dev/null || true)"
+          else
+            other="web app"; lane="apps/web/"
+            page="$RUNNER_TEMP/other-index.html"
+            curl -sS --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$page" "$web_url/" || true
+            served="$(grep -oE '<meta name="release" content="[0-9a-f]{40}"' "$page" 2>/dev/null | grep -oE '[0-9a-f]{40}' | head -1 || true)"
+          fi
+          if ! printf '%s' "$served" | grep -qE '^[0-9a-f]{40}$'; then
+            echo "::error::The $STAGE $other reports no release: whether this $TARGET fits it cannot be checked. Deploy target=all."
+            exit 1
+          fi
+          if [ "$served" = "$GITHUB_SHA" ]; then
+            echo "The $STAGE $other already serves $GITHUB_SHA: $TARGET alone fits it."
+            exit 0
+          fi
+          if ! changed="$(gh api --paginate "repos/$GITHUB_REPOSITORY/compare/${served}...${GITHUB_SHA}?per_page=100" \
+              --jq "[.files[]? | .filename | select(startswith(\"$lane\"))] | length" \
+              | awk '{ total += $1 } END { print total + 0 }')"; then
+            echo "::error::GitHub could not compare $served (the release the $STAGE $other serves) with $GITHUB_SHA. Deploy target=all."
+            exit 1
+          fi
+          if [ "$changed" != "0" ]; then
+            echo "::error::$changed file(s) under $lane changed between $served, the release the $STAGE $other serves, and $GITHUB_SHA: a $TARGET alone would leave the $STAGE $other behind. Deploy target=all."
+            exit 1
+          fi
+          echo "Nothing under $lane changed since the $STAGE $other release $served: $TARGET alone fits it."
       # Read on the public addresses, as a user would: the API reports the SHA it was built from
       # in `/health/ready`, the web app writes it in a `<meta name="release">` of its index.html
       # (`apps/web/vite.config.ts`). A staging that serves another commit, or nothing, refuses
@@ -726,6 +781,7 @@ jobs:
           # would be one more value to forget during a domain migration.
           public-origins: ${{ vars.ALLOWED_ORIGINS }}
           noindex: ${{ inputs.stage != 'production' && 'true' || 'false' }}
+          expected-release: ${{ github.sha }}
       # The same checked binary as the API job: this job installs nothing from the lockfile.
       - name: Record the Sentry deploy (web)
         continue-on-error: true

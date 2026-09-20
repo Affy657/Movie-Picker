@@ -73,12 +73,16 @@ jobs:
           args=()
           if [ -n "$COMMIT" ]; then args+=(--commit "$COMMIT"); fi
           node scripts/rollback-front-firebase.mjs --site "$FIREBASE_HOSTING_SITE" "${args[@]}"
+      # The version released again names its commit in its index.html: the probe reads it on the
+      # site address and on the public domain, where a 200 alone would also be answered by the
+      # version the rollback was meant to withdraw.
       - name: Verify the served web build
         uses: ./.github/actions/verify-front
         with:
           hosting-url: https://${{ env.FIREBASE_HOSTING_SITE }}.web.app
           public-origins: ${{ vars.ALLOWED_ORIGINS }}
           noindex: ${{ inputs.stage != 'production' && 'true' || 'false' }}
+          expected-release: ${{ steps.release.outputs.sha }}
       # The version served again carries the release of its original commit: Sentry must know it is
       # live again, otherwise the errors that follow read as a regression of the release that was
       # just withdrawn.

@@ -16,6 +16,10 @@ inputs:
     description: "true when the site must answer with X-Robots-Tag noindex (the staging), false when it must not (production): a header published on the wrong site fails here"
     required: false
     default: "false"
+  expected-release:
+    description: "Commit the served index.html must name in its <meta name=\"release\"> (written at build time by apps/web/vite.config.ts), read on the site address and on the public domain; empty to skip. A version built before that meta existed cannot pass it: the rollback then reports the mismatch, the release itself is done"
+    required: false
+    default: ""
 runs:
   using: composite
   steps:
@@ -27,6 +31,7 @@ runs:
       env:
         HOSTING_URL: ${{ inputs.hosting-url }}
         NOINDEX: ${{ inputs.noindex }}
+        EXPECTED_RELEASE: ${{ inputs.expected-release }}
       run: |
         set -eo pipefail
         code="$(curl -sS -o "$RUNNER_TEMP/hosting.html" -D "$RUNNER_TEMP/hosting.headers" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$HOSTING_URL/")"
@@ -44,6 +49,14 @@ runs:
           exit 1
         fi
         echo "Hosting answers with the expected headers."
+        if [ -n "$EXPECTED_RELEASE" ]; then
+          served="$(grep -oE '<meta name="release" content="[0-9a-f]{40}"' "$RUNNER_TEMP/hosting.html" | grep -oE '[0-9a-f]{40}' | head -1 || true)"
+          if [ "$served" != "$EXPECTED_RELEASE" ]; then
+            echo "::error::$HOSTING_URL serves release '${served:-none}', expected '$EXPECTED_RELEASE': the site does not serve the version that was just released."
+            exit 1
+          fi
+          echo "Hosting serves release $served."
+        fi
     # The previous smoke test queries the site address: it says nothing about the public domain
     # served to users, whose DNS or certificate can be broken while the site answers perfectly.
     # A 200 does not say which version is served either: the hashed entry point of the build that
@@ -53,6 +66,7 @@ runs:
       env:
         DIST: ${{ inputs.dist }}
         ALLOWED_ORIGINS: ${{ inputs.public-origins }}
+        EXPECTED_RELEASE: ${{ inputs.expected-release }}
       run: |
         set -eo pipefail
         PUBLIC_WEB_URL="${ALLOWED_ORIGINS%%,*}"
@@ -67,8 +81,16 @@ runs:
           echo "::error::$PUBLIC_WEB_URL does not answer 200: DNS, certificate or custom domain of the web hosting."
           exit 1
         fi
+        if [ -n "$EXPECTED_RELEASE" ]; then
+          served="$(grep -oE '<meta name="release" content="[0-9a-f]{40}"' "$RUNNER_TEMP/pub.html" | grep -oE '[0-9a-f]{40}' | head -1 || true)"
+          if [ "$served" != "$EXPECTED_RELEASE" ]; then
+            echo "::error::$PUBLIC_WEB_URL serves release '${served:-none}', expected '$EXPECTED_RELEASE': the public domain does not serve the version that was just released."
+            exit 1
+          fi
+          echo "Public domain serves release $served."
+        fi
         if [ -z "$DIST" ]; then
-          echo "No local build to compare with: the public domain answers, version not checked."
+          echo "No local build to compare with: the public domain answers, version checked by its release only."
           exit 0
         fi
         ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' "$DIST/index.html" | head -1 || true)"
