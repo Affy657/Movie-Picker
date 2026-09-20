@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-048`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-051`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -262,6 +262,37 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - verify: `grep -c startup_probe infra/terraform/modules/cloud-run-api/main.tf` ; encore ouvert tant que la commande rend 0
 - fix: `startup_probe { http_get { path = "/health" port = 8080 } period_seconds = 5 failure_threshold = 12 }` dans le module, appliqué en recette d'abord.
 - piege: un changement du gabarit par Terraform crée une révision qui prend le trafic sans passer par la validation de `deploy.yml` (`traffic` est ignoré, le service est en `latestRevision`) ; l'appliquer juste avant un déploiement, et en recette d'abord, jamais un soir de soirée.
+
+
+## DEBT-048 la zone DNS n'a pas de CAA et sa politique DMARC n'observe rien
+
+- state: humain
+- bloque: la zone vit chez OVH, hors Terraform et sans CLI (`infra/README.md`, section Domaines) : chaque enregistrement se pose dans le manager, et le mode automatique de l'agent refuse toute modification DNS dans un navigateur (tentative du 2026-09-20, classée « DNS / Domain / Cert Changes » à chaque clic). Le geste est humain, une minute.
+- impact: sans CAA, n'importe quelle autorité peut émettre un certificat pour `movie-picker.fr` ; `_dmarc` vaut `v=DMARC1; p=none;` sans `rua=`, donc un courriel usurpant l'expéditeur du domaine arrive en boîte de réception comme avant et personne ne le sait. SPF, DKIM et le chemin de retour Resend sont en place côté zone, seule la politique manque.
+- ou: manager OVH, zone DNS de `movie-picker.fr` (« Ajouter une entrée », sous-domaine vide pour les CAA, `_dmarc` pour le TXT à modifier) ; `SECURITY.md` pour l'adresse de rapport
+- verify: `curl -s -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=movie-picker.fr&type=CAA' | grep -c '"Answer"'` puis `curl -s -H 'accept: application/dns-json' 'https://cloudflare-dns.com/dns-query?name=_dmarc.movie-picker.fr&type=TXT' | grep -c 'rua='` ; encore ouvert tant que l'une des deux commandes rend 0
+- fix: deux CAA sur l'apex, indicateur `0`, étiquette `issue`, cibles `pki.goog` (Google Trust Services, qui émet pour Hosting et Cloud Run) et `letsencrypt.org` (le secours que Hosting sait demander) ; `_dmarc` en `v=DMARC1; p=none; rua=mailto:contact@movie-picker.fr`, puis `p=quarantine` après quelques semaines de rapports sans faux positif. Une fois posés, les noter dans `infra/README.md` à côté des enregistrements que Hosting dicte.
+- piege: l'adresse de rapport doit être sur la zone elle-même : un `rua=` vers un autre domaine exige un TXT d'autorisation `movie-picker.fr._report._dmarc.<autre domaine>` chez ce domaine, que Gmail ne publie pas, donc Google n'y livrerait aucun rapport. `contact@` est l'adresse publique de `SECURITY.md` et l'apex a des MX. Durcir vers `p=quarantine` puis `p=reject` seulement après avoir lu les rapports : les seuls émetteurs alignés sont Resend (signature DKIM sur le domaine, chemin de retour `send.`) et les serveurs de messagerie OVH (SPF de l'apex) ; un « envoyer en tant que » depuis Gmail ou tout autre relais passerait en indésirable puis serait rejeté.
+
+## DEBT-049 les alertes n'ont qu'un canal, une boîte de réception
+
+- state: humain
+- bloque: le canal SMS existe dans le module `monitoring` mais n'est créé que si `alert_sms_number` est renseigné, et seul le propriétaire du numéro peut le choisir ; l'agent ne le devine ni ne le relève ailleurs.
+- impact: les sept politiques (API et front indisponibles, erreurs, latence, nouveau compte, échec d'une passe planifiée) n'atteignent qu'une adresse e-mail. Une nuit de soirée sans lecture de la boîte, c'est une panne vue le lendemain.
+- ou: `infra/terraform/modules/monitoring/main.tf` (`google_monitoring_notification_channel.sms`, `count` sur la variable vide), `infra/terraform/environments/production/variables.tf` (`alert_sms_number`), `scripts/terraform.mjs` (`ALERT_SMS_NUMBER`), `.github/actions/terraform-plan/action.yml` (`alert-sms-number`)
+- verify: `gh secret list --env infra-apply | grep -c ALERT_SMS_NUMBER` ; encore ouvert tant que la commande rend 0
+- fix: un numéro en E.164 dans `.env` (`ALERT_SMS_NUMBER`) et dans les secrets des environnements GitHub `infra-apply` et `infra-plan` ainsi que Dependabot, puis `apply` par `infra.yml` : la ressource se crée, les sept politiques la prennent par `local.channels`.
+- piege: le numéro est une donnée personnelle : la variable est `sensitive`, il ne va ni dans un `.tf`, ni dans un `tfvars` suivi, ni dans ce fichier. Le canal SMS de Cloud Monitoring demande une vérification du numéro après création (console, section Canaux de notification) : tant qu'elle n'est pas faite, le canal existe et ne sonne pas.
+
+## DEBT-050 le projet vit hors organisation, sous un seul compte personnel
+
+- state: humain
+- bloque: créer une organisation Cloud Identity gratuite demande de prouver la propriété du domaine et de migrer le projet depuis la console, sous le compte propriétaire ; les réglages du compte lui-même (passkeys, options de récupération) ne se font qu'en session humaine.
+- impact: sans organisation, ni politique d'organisation (`iam.disableServiceAccountKeyCreation`, `iam.allowedPolicyMemberDomains`) ni deny policy ne sont possibles : `pnpm run check:iam` reste le seul filet contre une clé de compte de service ou une liaison posée à la main. Le projet n'a qu'un propriétaire, un compte Google personnel : sa compromission ou sa perte est celle de toute l'infrastructure, et rien d'autre ne peut la récupérer.
+- ou: `gcloud projects describe <PROJECT_ID>`, `scripts/check-iam.mjs`, `infra/README.md` (Identités)
+- verify: `gcloud projects describe <PROJECT_ID> --format='value(parent.type)'` ; encore ouvert tant que la commande ne rend rien
+- fix: d'abord le compte (passkeys, deux options de récupération vérifiées, revue des sessions et des applications tierces), puis une organisation Cloud Identity Free sur `movie-picker.fr`, la migration du projet sous elle, les deux politiques d'organisation ci-dessus, un second propriétaire ou un rôle de récupération sur un compte distinct, et la liaison anti-suppression déjà en place reste.
+- piege: la migration d'un projet sous une organisation change le `parent` que Terraform ne décrit pas mais que les rôles personnalisés et la fédération d'identité citent par numéro de projet, inchangé ; rejouer `infra.yml` après la migration pour prouver un plan vide, et `cloud-auth-check.yml` pour les cinq environnements. Une politique `allowedPolicyMemberDomains` bloque `allUsers` sur les deux services Cloud Run tant qu'elle n'est pas assouplie pour le projet.
 
 ---
 
