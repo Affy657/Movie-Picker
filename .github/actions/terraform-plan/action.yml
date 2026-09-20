@@ -1,5 +1,5 @@
 name: "Terraform init, plan and apply"
-description: "Installs the pinned Terraform, initialises one root module of infra/terraform/environments/ on its remote state and plans it. The plan text is left in $RUNNER_TEMP/plan.txt and the exit code of -detailed-exitcode is the output, so that the caller can post it; with apply, the plan is saved, summarised in the job summary and applied when it holds changes. Shared by the pull request plan and the master apply of infra.yml."
+description: "Installs the pinned Terraform, initialises one root module of infra/terraform/environments/ on its remote state and plans it. The plan text is left in $RUNNER_TEMP/plan.txt, its public form (refresh lines dropped, project id, project number and state bucket replaced by placeholders) in $RUNNER_TEMP/plan.public.txt, and the exit code of -detailed-exitcode is the output, so that the caller can post it; with summary, the public form goes to the job summary; with apply, the plan is saved and applied when it holds changes. Shared by the pull request plan, the master plan and the master apply of infra.yml."
 inputs:
   root:
     description: "Root module to plan, relative to the repository (infra/terraform/environments/<name>)"
@@ -25,8 +25,12 @@ inputs:
     description: "false to plan without taking the state lock, what a read-only review does"
     required: false
     default: "true"
+  summary:
+    description: "true to write the public form of the plan to the job summary, where the runner masks the secrets and this action the project number; false for a plan the caller posts itself"
+    required: false
+    default: "false"
   apply:
-    description: "true to save the plan (tfplan, in the root module), write it to the job summary and apply that very file when its exit code is 2; false for a plan that is only read"
+    description: "true to save the plan (tfplan, in the root module) and apply that very file when its exit code is 2; false for a plan that is only read"
     required: false
     default: "false"
 outputs:
@@ -82,22 +86,43 @@ runs:
         terraform -chdir="$TERRAFORM_ROOT" plan "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/plan.txt" || code=$?
         echo "exitcode=$code" >> "$GITHUB_OUTPUT"
         test "$code" != "1"
-    # The saved plan is what is applied: exactly what the summary shows, not a second plan computed
-    # a minute later. The pull request has its comment instead, identifiers masked (infra.yml).
+    # The public form of the plan, the one a comment or a summary may show: the repository names
+    # no project, no project number and no bucket, and the runner masks the secrets in the logs and
+    # in the summaries but knows nothing of the project number, which the resource names carry.
+    # Written whatever the exit code, an error is worth reading too.
+    - name: Public form of the plan
+      if: always() && steps.plan.outcome != 'skipped'
+      shell: bash
+      env:
+        GCP_PROJECT_ID: ${{ inputs.project-id }}
+        TF_STATE_BUCKET: ${{ inputs.state-bucket }}
+      run: |
+        grep -v -E 'Refreshing state\.\.\.|^[a-z_.]+: (Reading\.\.\.|Read complete)' "$RUNNER_TEMP/plan.txt" \
+          | sed -e "s#$GCP_PROJECT_ID#<PROJET_GCP>#g" -e "s#$TF_STATE_BUCKET#<BUCKET_TFSTATE>#g" -e 's#projects/[0-9]\{6,\}#projects/<NUMERO_PROJET>#g' \
+          > "$RUNNER_TEMP/plan.public.txt" || true
     - name: Plan summary
-      if: inputs.apply == 'true'
+      if: always() && inputs.summary == 'true' && steps.plan.outcome != 'skipped'
       shell: bash
       env:
         TERRAFORM_ROOT: ${{ inputs.root }}
         EXITCODE: ${{ steps.plan.outputs.exitcode }}
       run: |
+        case "$EXITCODE" in
+          0) verdict="No change: the infrastructure already matches this commit." ;;
+          2) verdict="Changes: this commit changes the infrastructure." ;;
+          *) verdict="Plan failed: read the job log." ;;
+        esac
         {
-          echo "### Terraform plan, \`$TERRAFORM_ROOT\` (exit code $EXITCODE)"
+          echo "### Terraform plan, \`$TERRAFORM_ROOT\`"
+          echo
+          echo "$verdict"
           echo
           echo '```'
-          head -c 60000 "$RUNNER_TEMP/plan.txt"
+          head -c 60000 "$RUNNER_TEMP/plan.public.txt"
           echo '```'
         } >> "$GITHUB_STEP_SUMMARY"
+    # The saved plan is what is applied: exactly what the summary shows, not a second plan computed
+    # a minute later.
     - name: terraform apply
       if: inputs.apply == 'true' && steps.plan.outputs.exitcode == '2'
       shell: bash

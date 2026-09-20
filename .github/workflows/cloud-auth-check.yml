@@ -1,7 +1,7 @@
 # Proves that the keyless authentication of the workflows still works, without touching anything:
 # the GitHub OIDC token is exchanged, on GCP (Workload Identity Federation), for the identity of
-# each environment a workflow runs in (the two deployment stages, the backup, the Terraform apply),
-# which then answers read-only calls within its own reach. Run it after any change to the
+# each environment a workflow runs in (the two deployment stages, the backup, the Terraform apply
+# and the Terraform plan), which then answers read-only calls within its own reach. Run it after any change to the
 # federation (pool, provider, service account binding, environment name) before relying on a
 # deployment, a backup or an apply to find out.
 
@@ -108,3 +108,30 @@ jobs:
           gcloud auth list --filter=status:ACTIVE --format='value(account)'
           gcloud storage ls "gs://${TF_STATE_BUCKET}/environments/" >/dev/null
           echo "GCP federation OK for the Terraform apply, states readable"
+
+  # The read-only Terraform identity of the pull request plans, also used by the plan that
+  # precedes the apply on master: the only subject the federation accepts from any ref.
+  probe-infra-plan:
+    name: 🔐 Exchange the OIDC token on GCP (infra-plan)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: infra-plan
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: GCP, read-only calls as the Terraform plan service account
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+        run: |
+          gcloud auth list --filter=status:ACTIVE --format='value(account)'
+          gcloud storage ls "gs://${TF_STATE_BUCKET}/environments/" >/dev/null
+          echo "GCP federation OK for the Terraform plan, states readable"
