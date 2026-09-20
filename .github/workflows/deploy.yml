@@ -40,6 +40,12 @@
 # API compromised at runtime cannot redeploy itself, rewrite the Scheduler jobs or read a secret it
 # does not use. `cloud-auth-check.yml` checks that the runtime accounts exist before a deployment
 # finds out.
+#
+# The OIDC token a job can mint (`id-token: write`) is what the federation exchanges for the
+# identity of its environment: only the steps that talk to GCP run in such a job. The web build
+# (Vite and its plugins, code from the lockfile) runs in `build-front`, a job of the same
+# environment without that permission, and hands its output over as an artifact; the API image is
+# built inside BuildKit, which never sees the runner's token request variables.
 
 name: 🚀 Deploy
 
@@ -85,14 +91,18 @@ env:
   # Firebase Hosting site of the web app (`infra/terraform`, module `web`), served on its custom
   # domain and verified on its web.app address as well.
   FIREBASE_HOSTING_SITE: ${{ inputs.stage == 'production' && 'movie-picker-web' || 'movie-picker-web-staging' }}
+  # Identity Cloud Scheduler signs its OIDC tokens with (`google_service_account.scheduler` in the
+  # production root module): the jobs carry it, the API checks it. Production only, the staging
+  # has no job.
+  SCHEDULER_SERVICE_ACCOUNT_NAME: movie-picker-scheduler
   # Public addresses of the staging, read by the production gate (both are public, like every
   # domain of the project), and the staging service, whose serving revision production redeploys.
   STAGING_WEB_URL: https://staging.movie-picker.fr
   STAGING_API_URL: https://api.staging.movie-picker.fr
   STAGING_CLOUD_RUN_SERVICE_NAME: movie-picker-api-staging
-  # The web lane runs the CLI from the lockfile (`@sentry/cli`, integrity checked by pnpm); the
-  # jobs without Node download the same version and check its checksum, as the other binaries
-  # of the workflows are: an unverified download would run inside a job holding cloud credentials.
+  # The web build runs the CLI from the lockfile (`@sentry/cli`, integrity checked by pnpm); the
+  # jobs holding cloud credentials download the same version and check its checksum, as the other
+  # binaries of the workflows are: an unverified download would run next to an OIDC token.
   SENTRY_CLI_VERSION: "2.58.6"
   SENTRY_CLI_LINUX_X86_64_BINARY_SHA256: "36b689311b399d9332950d84f4299aee682d2d290a770a77372b30a74f7e7add"
 
@@ -411,7 +421,15 @@ jobs:
       # The secrets mounted are the ones `infra/terraform` describes for the stage. The staging
       # mounts its own database and OAuth clients (`STAGING_*`) and, under their production name,
       # the shared keys it uses; it mounts neither the data protection keyring (unused once MongoDB
-      # holds the keys, DEBT-045) nor the scheduler token (no Scheduler job targets the staging).
+      # holds the keys, DEBT-045) nor a scheduler configuration (no Scheduler job targets the
+      # staging, its `/scheduler/*` routes answer 503).
+      #
+      # The scheduled passes authenticate by a Google OIDC token: the jobs sign it with
+      # `movie-picker-scheduler@` (step below) and the API checks the issuer, the audience (the
+      # public API URL) and that e-mail, `SCHEDULER_OIDC_AUDIENCE` and
+      # `SCHEDULER_OIDC_SERVICE_ACCOUNT`. No shared secret travels any more: `SCHEDULER_TOKEN`
+      # is not mounted, the transition path of the API that still reads the header stays inert
+      # until its removal (DEBT-037).
       - name: Deploy without traffic (GCP secrets + CORS)
         id: deploy
         env:
@@ -421,6 +439,7 @@ jobs:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           IMAGE_DIGEST: ${{ needs.image.outputs.image_digest }}
           STAGE: ${{ inputs.stage }}
+          PUBLIC_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           set -eo pipefail
           CORS="${ALLOWED_ORIGINS_VARS:-$ALLOWED_ORIGINS_SECRET}"
@@ -439,6 +458,7 @@ jobs:
           TAG="s-${GITHUB_SHA:0:7}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           RUNTIME_SA="${API_RUNTIME_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
+          SCHEDULER_ENV=""
           if [ "$STAGE" = "production" ]; then
             SECRETS="MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
             # Optional: once the v4 read access token exists in Secret Manager, the API sends it as
@@ -446,11 +466,11 @@ jobs:
             if gcloud secrets describe TMDB_READ_ACCESS_TOKEN >/dev/null 2>&1; then
               SECRETS="$SECRETS,TMDB_READ_ACCESS_TOKEN=TMDB_READ_ACCESS_TOKEN:latest"
             fi
-            if gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
-              SECRETS="$SECRETS,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest"
-            else
-              echo "::warning::SCHEDULER_TOKEN secret missing from Secret Manager. The API starts without it, but the POST /api/v1/scheduler/* routes will answer 503: neither event reminders nor the recurring events sweep will run. Create the secret then rerun this deployment."
+            if [ -z "$PUBLIC_API_URL" ]; then
+              echo "::error::VITE_API_URL (secret) is empty: it is the audience of the Cloud Scheduler OIDC tokens."
+              exit 1
             fi
+            SCHEDULER_ENV="##SCHEDULER_OIDC_AUDIENCE=${PUBLIC_API_URL%/}##SCHEDULER_OIDC_SERVICE_ACCOUNT=${SCHEDULER_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
           else
             SECRETS="MONGODB_URI=STAGING_MONGODB_URI:latest,OAUTH_GOOGLE_CLIENT_ID=STAGING_OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=STAGING_OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=STAGING_OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=STAGING_OAUTH_GITHUB_CLIENT_SECRET:latest,TMDB_API_KEY=TMDB_API_KEY:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
           fi
@@ -465,7 +485,7 @@ jobs:
             --no-traffic \
             --tag "$TAG" \
             --set-secrets "$SECRETS" \
-            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=$STAGE##SENTRY_RELEASE=${GITHUB_SHA}##EMAIL_PROVIDER=resend"
+            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=$STAGE##SENTRY_RELEASE=${GITHUB_SHA}##EMAIL_PROVIDER=resend${SCHEDULER_ENV}"
           TAG_URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
             | jq -r --arg t "$TAG" '[.status.traffic[]? | select(.tag == $t) | .url] | first // ""')"
           if [ -z "$TAG_URL" ]; then
@@ -495,30 +515,31 @@ jobs:
       # reopened and the events that finished on their own. Reads no longer write (DEBT-029).
       # Production only: the staging has no Scheduler job, its scheduler routes answer 503, and
       # three more jobs would leave the free tier of Cloud Scheduler.
+      # The jobs sign a Google OIDC token with `movie-picker-scheduler@` for the audience the
+      # revision just promoted was given (`SCHEDULER_OIDC_AUDIENCE`, the public API URL): the
+      # switch from the shared header to the token is made here, on a revision that already
+      # accepts it, never on one that does not. `--clear-headers` drops the header of the jobs
+      # created before this step existed. Attaching the identity needs `iam.serviceAccountUser`
+      # on it, granted to the CI account in `infra/terraform` (`acts_as_service_accounts`).
       - name: "Event reminders, recurring and finished events: Cloud Scheduler"
         if: inputs.stage == 'production'
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          PUBLIC_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           set -eo pipefail
-          if ! gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
-            echo "::warning::SCHEDULER_TOKEN secret missing: Cloud Scheduler jobs not configured, event reminders will not leave, recurring events will only be renewed on closing and watchlists will only be cleaned on closing."
-            exit 0
-          fi
-          # Second guard, and it cost a red deployment on 2026-09-10: the secret can exist while the
-          # Cloud Scheduler API is disabled on the project. `gcloud scheduler jobs describe` then
-          # exits with SERVICE_DISABLED, and without this guard the step failed the job **after**
-          # the revision had taken 100% of the traffic. A missing schedule is a warning, like the
-          # missing secret: it says nothing about the health of the deployed API.
+          # This guard cost a red deployment on 2026-09-10: the Cloud Scheduler API can be disabled
+          # on the project. `gcloud scheduler jobs describe` then exits with SERVICE_DISABLED, and
+          # without it the step failed the job **after** the revision had taken 100% of the
+          # traffic. A missing schedule is a warning: it says nothing about the health of the
+          # deployed API.
           if ! gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)' | grep -q cloudscheduler; then
-            echo "::warning::Cloud Scheduler API disabled on the project: jobs not configured, same consequences as a missing secret. Run 'gcloud services enable cloudscheduler.googleapis.com' then rerun this deployment."
+            echo "::warning::Cloud Scheduler API disabled on the project: jobs not configured, event reminders will not leave, recurring events will only be renewed on closing and watchlists will only be cleaned on closing. Run 'gcloud services enable cloudscheduler.googleapis.com' then rerun this deployment."
             exit 0
           fi
           URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
-          TOKEN="$(gcloud secrets versions access latest --secret=SCHEDULER_TOKEN)"
-          # Read from Secret Manager, so GitHub does not know it as a secret: registered by hand,
-          # otherwise a gcloud error echoing its arguments would print it in a public log.
-          echo "::add-mask::$TOKEN"
+          SCHEDULER_SA="${SCHEDULER_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
+          AUDIENCE="${PUBLIC_API_URL%/}"
           upsert_job() {
             local job="$1" schedule="$2" path="$3"
             local common=(
@@ -528,11 +549,13 @@ jobs:
               --uri "$URL$path"
               --http-method POST
               --attempt-deadline 300s
+              --oidc-service-account-email "$SCHEDULER_SA"
+              --oidc-token-audience "$AUDIENCE"
             )
             if gcloud scheduler jobs describe "$job" --location "$GCP_REGION" >/dev/null 2>&1; then
-              gcloud scheduler jobs update http "$job" "${common[@]}" --update-headers "X-Scheduler-Token=$TOKEN"
+              gcloud scheduler jobs update http "$job" "${common[@]}" --clear-headers
             else
-              gcloud scheduler jobs create http "$job" "${common[@]}" --headers "X-Scheduler-Token=$TOKEN"
+              gcloud scheduler jobs create http "$job" "${common[@]}"
             fi
           }
           upsert_job movie-picker-event-reminders "*/30 * * * *" /api/v1/scheduler/event-reminders
@@ -589,8 +612,12 @@ jobs:
           ./sentry-cli "${extra[@]}" releases new "$SENTRY_RELEASE" || true
           ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e "$STAGE" -n "api-${SENTRY_RELEASE}"
 
-  deploy-front:
-    name: 🚀 Deploy web → Firebase Hosting
+  # The build reads the `VITE_*` secrets of the stage, hence the environment, but it mints no OIDC
+  # token: `id-token` is not granted here, so nothing the build runs (Vite, its plugins, the
+  # dependencies of the lockfile) can be exchanged for the identity of the stage. The output goes
+  # to `deploy-front` as an artifact, the way the archive-based rollback once travelled.
+  build-front:
+    name: 🧱 Build web
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Same reasoning as `deploy-api`: the long list of gates is replaced by `verify-ci`, which
@@ -609,7 +636,6 @@ jobs:
     environment: ${{ inputs.stage }}
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -639,6 +665,38 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: node apps/web/scripts/generate-sitemap.mjs
+      # The source maps went to Sentry during the build (`@sentry/vite-plugin`) and are not
+      # published: `publish-front-firebase.mjs` skips them, the artifact carries the whole folder.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: web-dist-${{ inputs.stage }}
+          path: apps/web/dist
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy-front:
+    name: 🚀 Deploy web → Firebase Hosting
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # A bare `needs:`: a build that did not succeed, or was skipped, skips the publication, and
+    # the final guard reports it. The publication script runs on Node alone, without any
+    # dependency of the lockfile: nothing is installed in this job, which holds the identity.
+    needs: build-front
+    environment: ${{ inputs.stage }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: web-dist-${{ inputs.stage }}
+          path: apps/web/dist
       - uses: ./.github/actions/gcloud-auth
         with:
           workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -668,6 +726,7 @@ jobs:
           # would be one more value to forget during a domain migration.
           public-origins: ${{ vars.ALLOWED_ORIGINS }}
           noindex: ${{ inputs.stage != 'production' && 'true' || 'false' }}
+      # The same checked binary as the API job: this job installs nothing from the lockfile.
       - name: Record the Sentry deploy (web)
         continue-on-error: true
         env:
@@ -681,10 +740,14 @@ jobs:
             echo "SENTRY_AUTH_TOKEN missing, skipped"
             exit 0
           fi
+          curl -sSfL --retry 3 --retry-all-errors \
+            "https://github.com/getsentry/sentry-cli/releases/download/${SENTRY_CLI_VERSION}/sentry-cli-Linux-x86_64" -o sentry-cli
+          echo "${SENTRY_CLI_LINUX_X86_64_BINARY_SHA256}  sentry-cli" | sha256sum -c -
+          chmod +x sentry-cli
           extra=()
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
-          pnpm --filter web exec sentry-cli -- "${extra[@]}" releases new "$SENTRY_RELEASE" || true
-          pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e "$STAGE" -n "front-${SENTRY_RELEASE}"
+          ./sentry-cli "${extra[@]}" releases new "$SENTRY_RELEASE" || true
+          ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e "$STAGE" -n "front-${SENTRY_RELEASE}"
 
   # `always()` is essential here and harmless: the job deploys nothing, it only compares what was
   # requested with what left. Without it, a target skipped by a red gate would leave the run green
