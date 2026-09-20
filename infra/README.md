@@ -1,28 +1,21 @@
 # infra
 
-Deux choses vivent ici : la description Terraform de l'infrastructure, construite lot par lot (chantier Terraform de [`../docs/roadmap.md`](../docs/roadmap.md)), et les documents de configuration encore appliqués à la main sur les fournisseurs, en attendant le lot qui les absorbe. Aucun des seconds n'est appliqué par la CI.
+Deux choses vivent ici : la description Terraform de l'infrastructure, construite lot par lot (chantier Terraform de [`../docs/roadmap.md`](../docs/roadmap.md)), et la configuration de service du site Firebase Hosting, que le pipeline envoie avec chaque version.
 
 | Fichier | Ce qu'il décrit | Comment il s'applique |
 |---|---|---|
-| `iam-github-actions-deploy-policy.json` | politique au moindre privilège du rôle que `deploy-front` assume par OIDC | console IAM, ou `aws iam attach-role-policy` |
-| `cloudfront-response-headers-policy.json` | en-têtes de sécurité servis par CloudFront | [`../scripts/apply-cloudfront-headers.sh`](../scripts/apply-cloudfront-headers.sh) |
-| `firebase-hosting.json` | configuration de service du site Firebase Hosting (repli SPA, en-têtes, paliers de cache), miroir des deux précédents | envoyée avec chaque version par [`../scripts/publish-front-firebase.mjs`](../scripts/publish-front-firebase.mjs), section Hosting ci-dessous |
+| `firebase-hosting.json` | configuration de service du site Firebase Hosting (repli SPA, en-têtes de sécurité, paliers de cache) | envoyée avec chaque version par [`../scripts/publish-front-firebase.mjs`](../scripts/publish-front-firebase.mjs), section Hosting ci-dessous |
 
 ## Les identifiants sont des espaces réservés
 
-Le dépôt est public : aucun identifiant de compte, de bucket ou de distribution n'y est écrit. Les fichiers portent des gabarits `<COMME_CECI>`, **à substituer avant d'appliquer**, jamais à committer remplis.
+Le dépôt est public : aucun identifiant de projet ni de bucket n'y est écrit. Les fichiers portent des gabarits `<COMME_CECI>`, **à substituer avant d'appliquer**, jamais à committer remplis.
 
 | Gabarit | Où se relève la valeur |
 |---|---|
-| `<COMPTE_AWS>` | `aws sts get-caller-identity --query Account --output text` |
-| `<BUCKET_FRONT>` | secret Actions `AWS_S3_BUCKET`, ou `aws s3 ls` |
-| `<ID_DISTRIBUTION_CLOUDFRONT>` | variable Actions `AWS_CLOUDFRONT_DISTRIBUTION_ID`, ou `aws cloudfront list-distributions` |
-| `<DOMAINE_CLOUDFRONT>` | `aws cloudfront list-distributions --query 'DistributionList.Items[].DomainName'`, la cible du CNAME du front chez OVH |
-| `<ID_CERTIFICAT_ACM>` | `aws acm list-certificates --region us-east-1` |
 | `<PROJET_GCP>` | `gcloud config get-value project` |
 | `<BUCKET_TFSTATE>` | `TF_STATE_BUCKET` du `.env` local, ou `gcloud storage buckets list` |
 
-Les secrets de déploiement (`GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `GCP_PROJECT_ID`, `AWS_DEPLOY_ROLE_ARN`, `AWS_S3_BUCKET`, `VITE_*`) vivent dans l'environnement GitHub **production** (`Settings / Environments`), réservé à la branche `master` ; seuls `SONAR_TOKEN` et `SENTRY_AUTH_TOKEN` (DEBT-027) sont encore des secrets de dépôt (`Settings / Secrets and variables / Actions`), où vivent aussi les variables. Un secret ne se relit pas après sa création, seulement se remplacer : `gh secret set <NOM> --env production`.
+Les secrets de déploiement (`GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `GCP_PROJECT_ID`, `VITE_*`) vivent dans l'environnement GitHub **production** (`Settings / Environments`), réservé à la branche `master` ; seuls `SONAR_TOKEN` et `SENTRY_AUTH_TOKEN` (DEBT-027) sont encore des secrets de dépôt (`Settings / Secrets and variables / Actions`), où vivent aussi les variables. Un secret ne se relit pas après sa création, seulement se remplacer : `gh secret set <NOM> --env production`.
 
 ## Terraform
 
@@ -106,7 +99,7 @@ Le module `web-hosting` décrit trois domaines : `www.movie-picker.fr`, canoniqu
 
 Ce qui a permis la bascule sans coupure, à rejouer pour un domaine déjà servi ailleurs : Hosting expose dans `cert.verification` de l'API un défi ACME par TXT (`_acme-challenge.<hôte>`) ou par HTTP (chemin `/.well-known/acme-challenge/<jeton>` sur le site en service). Le défi HTTP servi depuis l'ancien hébergement fait passer le certificat `CERT_ACTIVE` avant que le DNS ne bouge ; le certificat `TEMPORARY` affiché avant cela ne couvre pas le domaine. Un `hostState` à `HOST_MISMATCH` avec un certificat `CERT_VALIDATING` est l'état normal d'un domaine décrit dont le DNS n'a pas encore bougé.
 
-Ce qui reste du lot 4 est le retrait d'AWS : distribution (désactivée puis supprimée), bucket, certificat wildcard (il ne servait que cette distribution, vérifié par `aws acm describe-certificate`), politique d'en-têtes, WAF, rôle et fournisseur OIDC, puis les secrets et variables `AWS_*` de l'environnement `production` et `ALLOWED_ORIGINS` sans le domaine CloudFront.
+AWS est vide depuis le 2026-09-20 : distribution (désactivée, puis supprimée une fois déployée), bucket, certificat wildcard (il ne servait que cette distribution, vérifié par `aws acm describe-certificate`), politique d'en-têtes, WAF, contrôle d'accès à l'origine, rôle et fournisseur OIDC supprimés ; les secrets et variables `AWS_*` retirés de GitHub et `ALLOWED_ORIGINS` réduit aux deux domaines servis. Ne reste que l'utilisateur IAM `movie-picker-ops` de la CLI locale, qui ne sert plus qu'à fermer le compte. La sonde de disponibilité du front (Cloud Monitoring) vise `www` : un `monitoredResource` ne se modifie pas, la sonde a été recréée et la politique « Front indisponible » repointée sur son `check_id`.
 
 ### Portes
 

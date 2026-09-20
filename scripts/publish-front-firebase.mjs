@@ -12,14 +12,13 @@
  * with a user token the Hosting API refuses every call without it, as the Firebase APIs do under
  * Terraform (`user_project_override` in providers.tf).
  *
- * What is published is what `.github/actions/publish-front` sends to S3, laid out for Hosting:
+ * What is published, laid out for Hosting:
  *   - every file of the build but the source maps, `route-assets.json` and the prerender manifest;
  *   - each prerendered route as `<route>/index.html`: Hosting serves that file for the route
- *     itself (`trailingSlashBehavior: REMOVE` in the config redirects the slashed form to it), where the S3
- *     origin needed an extensionless key. The generic shell keeps answering every other path
- *     through the `**` rewrite.
- * The cache tiers and the security headers are the config's, not the script's: they live next to
- * the CloudFront policy they mirror, and a change there is reviewed as infrastructure.
+ *     itself (`trailingSlashBehavior: REMOVE` in the config redirects the slashed form to it). The
+ *     generic shell keeps answering every other path through the `**` rewrite.
+ * The cache tiers and the security headers are the config's, not the script's: they live in
+ * `infra/`, and a change there is reviewed as infrastructure.
  *
  * Nothing here is deleted or overwritten: a version is immutable, a release points the site at
  * it, and the previous release stays listed, which is what `rollback-front-firebase.mjs` uses.

@@ -41,7 +41,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 - state: differe
 - declencheur: la ligne de sortie réseau devient visible sur la facture GCP
-- impact: chaque affiche traverse Cloud Run au lieu d'un CDN. CloudFront ne couvre que le front, pas `api.movie-picker.fr`.
+- impact: chaque affiche traverse Cloud Run au lieu d'un CDN. Firebase Hosting ne couvre que le front, pas `api.movie-picker.fr`.
 - ou: `apps/api-dotnet/MoviePicker.Api/Controllers/PostersController.cs`
 - verify: `grep -n 'return File(' apps/api-dotnet/MoviePicker.Api/Controllers/PostersController.cs` ; encore ouvert tant que la ligne sort, le binaire part de la base à travers Cloud Run
 - fix: stockage objet plus CDN devant
@@ -197,7 +197,7 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 
 - state: humain
 - bloque: une décision sur la route `/e/*` : Firebase Hosting ne route pas selon l'user agent, la réécriture `/e/**` vers Cloud Run enverrait humains et robots à l'API, qui devrait servir la coquille aux premiers ; le code de l'aperçu est déjà là
-- impact: le lien partagé est `https://<front>/e/<slug>` et CloudFront lui répond la coquille SPA, donc WhatsApp, Messenger, Discord et consorts affichent le titre et l'image génériques du site quelle que soit la soirée. L'endpoint `GET /api/v1/events/slug/{slug}/share-preview`, qui rend le HTML Open Graph de la soirée, n'est plus appelé par personne depuis `9a1ecc87` (2026-06-01, le lien de partage est passé de l'URL API à l'URL front) : `eventSharePreviewUrl` dans `apps/web/src/features/events/api/eventsApi.ts` n'a aucun appelant et le réglage `richSharePreview` de la soirée ne change rien pour l'utilisateur.
+- impact: le lien partagé est `https://<front>/e/<slug>` et Hosting lui répond la coquille SPA, donc WhatsApp, Messenger, Discord et consorts affichent le titre et l'image génériques du site quelle que soit la soirée. L'endpoint `GET /api/v1/events/slug/{slug}/share-preview`, qui rend le HTML Open Graph de la soirée, n'est plus appelé par personne depuis `9a1ecc87` (2026-06-01, le lien de partage est passé de l'URL API à l'URL front) : `eventSharePreviewUrl` dans `apps/web/src/features/events/api/eventsApi.ts` n'a aucun appelant et le réglage `richSharePreview` de la soirée ne change rien pour l'utilisateur.
 - ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventSharePreview/GetEventSharePreviewHtmlHandler.cs`, `apps/web/src/features/events/api/eventsApi.ts`, `infra/firebase-hosting.json` (réécritures)
 - verify: encore ouvert tant que la commande ne renvoie pas une balise `og:title` propre à la soirée (la coquille rend le titre du site).
   ```bash
@@ -271,22 +271,23 @@ Le bucket de sauvegarde MongoDB (europe-west1, versioning actif, suppression à 
 
 ## C6 sortir le front d'AWS engage le budget et suit un ordre imposé
 
-Le chantier Terraform de `roadmap.md` sort le front d'AWS (lots 3 et 4). Deux cibles GCP sont possibles et **une des deux fait sortir le projet du « 0 €/mois, tous les services dans leur palier gratuit »**, indicateur suivi au Bloc 3, sans qu'aucune alerte ne le dise avant la facture.
+Le chantier Terraform de `roadmap.md` a sorti le front d'AWS (lots 3 et 4, livrés les 2026-09-19 et 2026-09-20). Deux cibles GCP étaient possibles et **une des deux aurait fait sortir le projet du « 0 €/mois, tous les services dans leur palier gratuit »**, indicateur suivi au Bloc 3, sans qu'aucune alerte ne le dise avant la facture.
 
 - **Cloud Storage + Cloud CDN derrière un load balancer applicatif externe** est l'équivalent direct de S3 + CloudFront, mais sa règle de transfert est facturée à l'heure **sans palier gratuit** : ≈ 18 $/mois avant le moindre octet servi.
-- **Firebase Hosting** reste dans le gratuit (10 Go stockés, 360 Mo/jour transférés), porte nativement le repli SPA, les en-têtes personnalisés et le domaine sur mesure avec son certificat, et se décrit en Terraform (`google_firebase_hosting_site`, `google_firebase_hosting_custom_domain`, provider `google-beta`). **C'est la cible recommandée.** Seul point à surveiller, les 360 Mo/jour : le trafic mesuré (≈ 500 requêtes/jour) en est loin, et un dépassement bascule sur la facturation à l'octet, pas sur une coupure.
+- **Firebase Hosting** reste dans le gratuit (10 Go stockés, 360 Mo/jour transférés), porte nativement le repli SPA, les en-têtes personnalisés et le domaine sur mesure avec son certificat, et se décrit en Terraform (`google_firebase_hosting_site`, `google_firebase_hosting_custom_domain`, provider `google-beta`). **C'est la cible retenue.** Seul point à surveiller, les 360 Mo/jour : le trafic mesuré (≈ 500 requêtes/jour) en est loin, et un dépassement bascule sur la facturation à l'octet, pas sur une coupure.
 
-Le lot 3 est livré le 2026-09-19 (site Firebase Hosting, module `web-hosting`) et la bascule du lot 4 a eu lieu le 2026-09-20 : le front est servi sur `www.movie-picker.fr` par Hosting, `web.movie-picker.fr` et l'apex y répondent `301`, `deploy-front` ne publie plus que sur Hosting. Ce qui reste du lot 4 est le retrait d'AWS lui-même, ci-dessous.
+État au 2026-09-20 : le front est servi sur `www.movie-picker.fr` par Hosting, `web.movie-picker.fr` et l'apex y répondent `301`, `deploy-front` ne publie que sur Hosting, et le compte AWS est vide (distribution, bucket, certificat, politique d'en-têtes, WAF, rôle et fournisseur OIDC supprimés ; secrets et variables `AWS_*` retirés de GitHub). Il ne reste que l'utilisateur IAM `movie-picker-ops` de la CLI locale.
 
 Deux corollaires sur l'ordre des lots, qui ne se lisent pas dans leur numérotation :
 
 1. **Les lots qui sortent le front d'AWS passent avant ceux d'identités et de CI.** Décrire en Terraform, puis outiller, un hébergement qu'on s'apprête à supprimer est du travail jeté.
-2. **Le gain visé est la consolidation, pas l'économie.** Le palier gratuit de CloudFront (1 To/mois) est plus large que celui de la cible GCP. Ce que la migration supprime, c'est un second fournisseur, un second modèle d'identité et un second endroit où regarder pendant un incident. Aucun identifiant statique n'est en jeu depuis le 2026-09-15 : les deux clouds font confiance au jeton OIDC de GitHub (`.github/actions/gcloud-auth/action.yml`, rôle AWS assumé par `deploy-front`), ce que `cloud-auth-check.yml` prouve à la demande.
+2. **Le gain visé est la consolidation, pas l'économie.** Le palier gratuit de CloudFront (1 To/mois) était plus large que celui de la cible GCP. Ce que la migration a supprimé, c'est un second fournisseur, un second modèle d'identité et un second endroit où regarder pendant un incident. Aucun identifiant statique n'est en jeu depuis le 2026-09-15 : la CI fait confiance au jeton OIDC de GitHub (`.github/actions/gcloud-auth/action.yml`), ce que `cloud-auth-check.yml` prouve à la demande.
 
-Deux pièges au décommissionnement d'AWS lui-même (lot 4) :
+Ce que le décommissionnement a appris, à rejouer pour un domaine déjà servi ailleurs :
 
-- **le certificat ACM est un wildcard `*.movie-picker.fr`.** Vérifier qu'aucun autre sous-domaine ne s'en sert avant de le retirer, sinon la suppression casse un hôte qui n'était pas dans le périmètre ;
-- **le `CNAME` se repointe à la main chez OVH**, il n'y a pas de CLI. Ce que le dépôt doit perdre au passage, secrets, variables, scripts et mentions d'AWS, se relève par un `grep -rin aws` au moment du lot : ne pas travailler sur une liste écrite à l'avance, elle sera périmée.
+- **le certificat se demande avant le trafic** : Hosting expose un défi ACME par HTTP à servir depuis l'ancien hébergement, et le certificat est actif avant que le DNS ne bouge (`infra/README.md`, section Domaines) ;
+- **les sondes suivent le domaine** : l'uptime check GCP du front n'accepte que du 2xx, un domaine passé en `301` déclenche « Front indisponible » ; un `monitoredResource` ne se modifie pas, la sonde a été recréée sur `www` et la politique repointée sur son `check_id` ;
+- **ce que le dépôt doit perdre se relève par un `grep -rin aws` au moment du lot**, pas sur une liste écrite à l'avance : la page `/tech`, les mentions légales et les locales en portaient autant que les workflows.
 
 ## C7 le dépôt est public depuis le 2026-09-10, et son historique entier avec lui
 
@@ -307,7 +308,7 @@ La bascule est **faite**. Ce qu'elle a rendu lisible, c'est **chaque commit jama
 
 **Traité le 2026-09-10, ne pas refaire :**
 
-- **Les identifiants d'infrastructure sont sortis des fichiers suivis** : compte AWS, distribution CloudFront, ARN du certificat ACM, nom du bucket, projet GCP et organisation Sentry sont remplacés par des gabarits `<COMME_CECI>`, et `infra/README.md` porte la table qui dit par quelle commande relever chaque valeur. `scripts/apply-cloudfront-headers.sh` n'a plus de valeur par défaut, il sort en 2 si `DISTRIBUTION_ID` manque. Aucun n'était un secret et aucun n'était dans les PR ni les tickets, donc le head suffisait, sans réécriture d'historique. La clé d'accès du compte root AWS, qui n'a jamais été le sujet de cette sortie, est supprimée depuis le 2026-09-15 : le poste de travail utilise un utilisateur IAM dédié.
+- **Les identifiants d'infrastructure sont sortis des fichiers suivis** : compte AWS, distribution CloudFront, ARN du certificat ACM, nom du bucket, projet GCP et organisation Sentry sont remplacés par des gabarits `<COMME_CECI>` (ceux d'AWS ont disparu avec AWS le 2026-09-20), et `infra/README.md` porte la table qui dit par quelle commande relever chaque valeur. Aucun n'était un secret et aucun n'était dans les PR ni les tickets, donc le head suffisait, sans réécriture d'historique. La clé d'accès du compte root AWS, qui n'a jamais été le sujet de cette sortie, est supprimée depuis le 2026-09-15 : le poste de travail utilise un utilisateur IAM dédié.
 - **Aucune contribution externe n'est possible sans un geste de l'auteur.** `CONTRIBUTING.md` le dit, la licence l'impose, et les jobs d'entrée de `ci-cd.yml` (`changes`, `gitleaks`, `lint-workflows`, plus `sonar` dont l'`always()` ignorerait un `changes` sauté) portent `github.event.pull_request.head.repo.fork != true`. Une PR de fork ne déclenche donc rien : ni minutes dépensées, ni `sonar` rouge faute de secrets. Cette condition vit dans un fichier que l'auteur du fork contrôle sur l'événement `pull_request` (GitHub exécute le workflow du commit de fusion), donc elle n'est qu'un confort : la vraie barrière est l'approbation `all_external_contributors` ci-dessous, et `rollback-front.yml` ne republie que les archives produites par un run de `deploy.yml` sur `master`, jamais un `front-dist-*` déposé par un autre run (audit du 2026-09-17). `SECURITY.md` détourne les failles vers un canal privé plutôt qu'un ticket public.
 
 **Les réglages posés le 2026-09-10, juste après la bascule.** Ne pas les reposer, les vérifier :

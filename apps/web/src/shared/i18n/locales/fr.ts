@@ -1673,7 +1673,7 @@ export const fr = {
     noticeEditorBody: 'Adrien Morand, contact : {{email}}',
     noticeHostingTitle: 'Hébergement',
     noticeHostingBody:
-      'Le site (front) est hébergé par Amazon Web Services (AWS S3 / CloudFront). L’API est hébergée par Google Cloud Platform (Cloud Run). La base de données est hébergée par MongoDB Atlas.',
+      'Le site (front) et l’API sont hébergés par Google Cloud Platform (Firebase Hosting et Cloud Run). La base de données est hébergée par MongoDB Atlas.',
     noticeIpTitle: 'Propriété intellectuelle',
     noticeIpBody:
       'Les données de films, séries, affiches et disponibilités proviennent de The Movie Database (TMDB) et restent la propriété de leurs ayants droit respectifs. Movie Picker n’est ni produit ni affilié à TMDB.',
@@ -1723,7 +1723,7 @@ export const fr = {
     kofiNote: 'Montant libre, ponctuel ou mensuel, sans engagement.',
     costsTitle: 'Où va l’argent',
     costsIntro: 'Movie Picker a des frais fixes chaque mois :',
-    costsHosting: 'Hébergement du site et de l’API (Amazon Web Services, Google Cloud Platform)',
+    costsHosting: 'Hébergement du site et de l’API (Google Cloud Platform)',
     costsDatabase: 'Base de données (MongoDB Atlas)',
     costsDomain: 'Nom de domaine movie-picker.fr',
     costsMonitoring: 'Surveillance des erreurs et des performances (Sentry)',
@@ -2368,19 +2368,13 @@ export const fr = {
       techHeading: 'Les chantiers techniques ouverts',
       terraform: 'Infrastructure en code',
       terraformHint:
-        'Aujourd’hui les ressources cloud ont été créées à la main. Terraform les décrirait, avec un état distant et une revue par diff.',
+        'Le registre, les secrets, Cloud Run et Firebase Hosting sont décrits en Terraform, avec un état distant ; les identités, le pipeline, les alertes et la recette restent à écrire.',
       staging: 'Environnement de recette',
       stagingHint:
         'Il n’existe qu’une production. Un environnement calqué dessus permettrait de rejouer un déploiement avant qu’il ne compte.',
-      oidc: 'Identité fédérée pour la CI',
-      oidcHint:
-        'La CI s’authentifie aujourd’hui avec une clé de compte de service stockée en secret. Une fédération d’identité supprimerait la clé.',
       leastPrivilege: 'Droits au plus juste',
       leastPrivilegeHint:
         'Le compte de service de déploiement a plus de droits que nécessaire ; le découper par usage est le pas suivant.',
-      consolidate: 'Front vers Google Cloud',
-      consolidateHint:
-        'Déplacer le front de S3 et CloudFront vers Firebase Hosting mettrait les deux applications chez le même fournisseur, et retirerait une console, un modèle de droits et une facture. Cloud Storage et Cloud CDN ont été écartés : leur règle de transfert coûte près de 18 $ par mois avant le premier octet servi.',
       sharedCache: 'Cache partagé entre instances',
       sharedCacheHint:
         'Le cache des fiches TMDB vit dans la mémoire de chaque instance : deux instances refont le même appel, et un redémarrage repart à froid. Un cache commun corrigerait les deux.',
@@ -2881,13 +2875,13 @@ export const fr = {
         'Kubernetes demandait un outillage disproportionné pour un service ; une machine virtuelle demandait un OS à patcher.',
       hostingTrade:
         "Aucun état en mémoire n'est fiable et aucun travail de fond ne peut vivre dans le processus. Les rappels sont déclenchés de l'extérieur.",
-      split: 'Deux fournisseurs de cloud, assumé',
-      splitValue:
-        'Le front est né sur AWS avant que le serveur ne parte sur Google Cloud. Les deux coexistent aujourd’hui, chacun sur ce qu’il fait le mieux.',
-      splitHint:
-        'CloudFront et S3 servent des fichiers statiques ; Cloud Run exécute un conteneur avec mise à l’échelle à zéro.',
-      splitTrade:
-        'Deux consoles, deux modèles de droits, deux factures. La consolidation est un chantier ouvert, pas un oubli.',
+      oneCloud: 'Un seul fournisseur de cloud, depuis septembre 2026',
+      oneCloudValue:
+        'Le front est né sur AWS avant que le serveur ne parte sur Google Cloud ; il l’y a rejoint sur Firebase Hosting. Une console, un modèle de droits, une facture.',
+      oneCloudHint:
+        'Cloud Storage et Cloud CDN, l’équivalent direct de S3 et CloudFront, ont été écartés : leur règle de transfert coûte près de vingt dollars par mois avant le premier octet servi. Firebase Hosting sert les fichiers, les en-têtes et le repli SPA dans le palier gratuit.',
+      oneCloudTrade:
+        'Un hébergement moins programmable qu’un CDN : sans fonction devant le site, un chemin inconnu reçoit la coquille en 200 et l’aperçu de partage ne peut pas être servi selon le client.',
       mono: 'Monorepo pnpm et Turbo',
       monoValue:
         "Un dépôt, une chaîne de livraison, un seul tag de version pour les deux applications. Le contrat d'API et le client qui le consomme changent dans le même commit, donc une rupture ne compile pas au lieu de se découvrir en production.",
@@ -2935,10 +2929,10 @@ export const fr = {
       title: 'Où ça tourne, et ce qui a le droit de le changer',
       lead: 'Rien n’est déployé à la main. Une image par commit, des secrets hors du dépôt, un retour arrière en une exécution.',
       caption:
-        'Le front et le serveur vivent chez deux fournisseurs différents, en eu-west-1 et europe-west1, reliés par une seule origine autorisée.',
+        'Le front et le serveur vivent chez le même fournisseur, en europe-west1, reliés par une seule origine autorisée.',
       smoke: 'Déploiement constaté',
       smokeValue:
-        'Après chaque déploiement, la chaîne interroge les deux sondes de santé du serveur et charge le front derrière le CDN. Un service muet fait échouer le déploiement.',
+        'Après chaque déploiement, la chaîne interroge les deux sondes de santé du serveur et charge le front sur son domaine public. Un service muet fait échouer le déploiement.',
       smokeHint:
         "Se terminer sans erreur ne prouve pas qu'un service répond ; ces appels le prouvent.",
       image: 'Image',
@@ -2953,9 +2947,9 @@ export const fr = {
         'Une origine manquante fait échouer le déploiement ; un secret optionnel absent se signale par un avertissement et désactive la fonctionnalité qui en dépend.',
       rollback: 'Retour arrière',
       rollbackValue:
-        "Un déclenchement manuel bascule tout le trafic du serveur vers la révision précédente, déjà en ligne : aucune reconstruction, aucun redéploiement. Le front n'a pas d'équivalent, l'hébergement statique ne garde aucune version.",
+        "Un déclenchement manuel bascule tout le trafic du serveur vers la révision précédente, déjà en ligne : aucune reconstruction, aucun redéploiement. Le front a le sien : l'hébergement garde chaque version publiée, et un déclenchement remet la précédente en service.",
       rollbackHint:
-        'Les révisions restent disponibles chez l’hébergeur et les anciennes images dans le registre, purgées par une chaîne dédiée pour qu’il ne gonfle pas.',
+        'Les révisions restent disponibles chez l’hébergeur et les anciennes images dans le registre, purgées par sa politique de rétention pour qu’il ne gonfle pas.',
       scheduler: 'Travail périodique',
       schedulerValue:
         "Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, et une fois par jour pour faire naître l'occurrence suivante des soirées récurrentes, sur des routes protégées par jeton.",
@@ -3033,7 +3027,7 @@ export const fr = {
       browserPwa: 'PWA installable',
       browserWorker: 'Service Worker',
       assets: 'assets',
-      cdn: 'CloudFront + S3',
+      cdn: 'Firebase Hosting',
       cdnBundle: 'bundle React statique',
       cdnFallback: 'fallback SPA',
       api: 'API .NET 10',
@@ -3157,7 +3151,6 @@ export const fr = {
       mcpAssistant: 'assistant',
       mcpGithub: 'PR et CI',
       mcpGcp: 'journaux',
-      mcpAws: 'diffusion',
       mcpSonar: 'qualité',
       mcpSentry: 'erreurs',
       mcpPosthog: 'usage',
@@ -3253,18 +3246,14 @@ export const fr = {
       lbxNote:
         'Une lecture incomplète annule toute la synchronisation : mieux vaut ne rien écrire que vider une liste.',
       infraTitle:
-        'Infrastructure : le front sur AWS, le serveur sur Google Cloud, la base managée à part',
-      infraZoneAws: 'AWS, eu-west-1',
+        'Infrastructure : le front et le serveur sur Google Cloud, la base managée à part',
       infraZoneGcp: 'Google Cloud, europe-west1',
-      infraDns: 'Domaine',
-      infraDnsSub: 'www.movie-picker.fr',
-      infraDnsDetail: 'certificat TLS géré',
-      infraCdn: 'CloudFront',
-      infraCdnSub: 'cache et en-têtes',
-      infraCdnDetail: 'purge au déploiement',
-      infraBucket: 'S3',
-      infraBucketSub: 'fichiers du front',
-      infraBucketDetail: 'cache immuable',
+      infraMonitoring: 'Cloud Monitoring',
+      infraMonitoringSub: 'sondes front et API',
+      infraMonitoringDetail: 'six alertes actives',
+      infraHosting: 'Firebase Hosting',
+      infraHostingSub: 'www.movie-picker.fr',
+      infraHostingDetail: 'TLS géré, en-têtes',
       infraSecrets: 'Secret Manager',
       infraSecretsSub: 'clés et connexions',
       infraSecretsDetail: 'injectés au déploiement',
@@ -3283,7 +3272,8 @@ export const fr = {
       infraSentry: 'Sentry',
       infraSentrySub: 'erreurs front et serveur',
       infraSentryDetail: 'région européenne',
-      infraGap: 'Ressources créées à la main : les décrire en Terraform est le chantier suivant.',
+      infraGap:
+        'Registre, secrets, Cloud Run et Hosting décrits en Terraform ; identités, alertes et recette restent à décrire.',
       infraNote:
         "Le pointillé n'est pas un chemin réseau : le navigateur appelle le serveur directement.",
       infraNoteOrigin: "L'origine du front est la seule que le serveur accepte.",

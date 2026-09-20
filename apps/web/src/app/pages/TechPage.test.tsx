@@ -83,7 +83,6 @@ describe('TechPage', () => {
     for (const tool of [
       'GitHub',
       'Google Cloud',
-      'AWS',
       'SonarCloud',
       'Sentry',
       'PostHog',
@@ -483,13 +482,13 @@ describe('TechPage', () => {
       'front',
       'styling',
       'hosting',
-      'split',
+      'oneCloud',
       'mono',
     ] as const) {
       expect(section.textContent).toContain(fr.tech.choices[choice]);
     }
 
-    const priced = ['runtime', 'database', 'auth', 'front', 'hosting', 'split'] as const;
+    const priced = ['runtime', 'database', 'auth', 'front', 'hosting', 'oneCloud'] as const;
     expect(trades).toHaveLength(priced.length);
     for (const choice of priced) {
       expect(trades.map((trade) => trade.textContent)).toContain(
@@ -597,11 +596,17 @@ describe('TechPage', () => {
     const section = container.querySelector('#infra') as HTMLElement;
     const labels = [...section.querySelectorAll('svg text')].map((node) => node.textContent);
 
-    for (const brick of ['Cloud Run', 'CloudFront', 'S3', 'MongoDB Atlas', 'Artifact Registry']) {
+    for (const brick of [
+      'Cloud Run',
+      'Firebase Hosting',
+      'Cloud Monitoring',
+      'MongoDB Atlas',
+      'Artifact Registry',
+    ]) {
       expect(labels).toContain(brick);
     }
     expect(section.textContent).toMatch(/europe-west1/);
-    expect(section.textContent).toMatch(/eu-west-1/);
+    expect(section.textContent).not.toMatch(/AWS|CloudFront|eu-west-1/);
   });
 
   it('ties every measure to a threshold that can stop a delivery', () => {
@@ -625,19 +630,10 @@ describe('TechPage', () => {
       .map((node) => node.textContent?.trim())
       .filter(Boolean);
 
-    for (const work of [
-      'terraform',
-      'staging',
-      'oidc',
-      'leastPrivilege',
-      'consolidate',
-      'sharedCache',
-    ] as const) {
+    for (const work of ['terraform', 'staging', 'leastPrivilege', 'sharedCache'] as const) {
       expect(tags).toContain(fr.tech.trajectory[work]);
     }
-    expect(tags.join(' ')).not.toMatch(/pré-rendu/i);
-    expect(fr.tech.trajectory.consolidateHint).toMatch(/vers Firebase Hosting/);
-    expect(fr.tech.trajectory.consolidateHint).not.toMatch(/vers Cloud Storage/);
+    expect(tags.join(' ')).not.toMatch(/pré-rendu|Google Cloud|fédérée/i);
   });
 
   it('files the prerendering among the choices made, no longer among open work', () => {

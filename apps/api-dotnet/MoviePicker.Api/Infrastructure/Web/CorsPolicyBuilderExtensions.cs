@@ -27,7 +27,7 @@ internal static class CorsPolicyBuilderExtensions
         if (origins.Count == 0)
         {
             throw new InvalidOperationException(
-                "ALLOWED_ORIGINS is required in production (comma-separated list of URLs, e.g. https://d123.cloudfront.net).");
+                "ALLOWED_ORIGINS is required in production (comma-separated list of URLs, e.g. https://www.example.com).");
         }
 
         policy.WithOrigins(origins.ToArray());

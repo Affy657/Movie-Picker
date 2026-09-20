@@ -5,6 +5,7 @@ import {
   Braces,
   CalendarClock,
   ClipboardCheck,
+  Cloud,
   Container,
   Database,
   FileJson,
@@ -69,7 +70,6 @@ import {
   UnitOfWorkDiagram,
 } from './tech/TechDiagrams';
 import {
-  AwsLogo,
   DotNetLogo,
   GitHubLogo,
   GoogleCloudLogo,
@@ -183,11 +183,11 @@ const CHOICE_KEYS = [
   { key: 'front', Icon: ReactLogo },
   { key: 'styling', Icon: Palette },
   { key: 'hosting', Icon: GoogleCloudLogo },
-  { key: 'split', Icon: AwsLogo },
+  { key: 'oneCloud', Icon: Cloud },
   { key: 'mono', Icon: FolderTree },
 ] as const;
 
-const PRICED_CHOICES = new Set(['runtime', 'database', 'auth', 'front', 'hosting', 'split']);
+const PRICED_CHOICES = new Set(['runtime', 'database', 'auth', 'front', 'hosting', 'oneCloud']);
 
 const FEATURE_KEYS = [
   { key: 'trigger', Icon: Timer },
@@ -207,14 +207,7 @@ const INFRA_KEYS = [
   { key: 'origins', Icon: ShieldCheck },
 ] as const;
 
-const OPEN_TECH_WORK = [
-  'terraform',
-  'staging',
-  'oidc',
-  'leastPrivilege',
-  'consolidate',
-  'sharedCache',
-] as const;
+const OPEN_TECH_WORK = ['terraform', 'staging', 'leastPrivilege', 'sharedCache'] as const;
 
 const QUALITY_BLOCKING_KEYS = [
   { key: 'coverage', Icon: FlaskConical },

@@ -28,6 +28,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **Le site et l'API sont hébergés chez un seul fournisseur** : le front a quitté AWS pour Firebase Hosting, à côté de l'API sur Google Cloud ; la chaîne de déploiement, le retour arrière et la sonde de disponibilité ne connaissent plus qu'un cloud, et le compte AWS est vide.
 - **Les mêmes onglets, menus et pastilles partout** : les onglets de « Mes soirées », de la liste d'abonnés et du choix d'avatar sont le composant d'onglets commun (celui des abonnés n'annonçait pas ses onglets aux lecteurs d'écran), le menu du compte et celui de l'agenda sont le menu commun, les filtres de recherche de films, les thèmes suggérés, l'invitation d'un participant et une dizaine de badges (« Vous », « Complet », « Série », gagnant, date relative, liste masquée) sont la pastille commune, et les boutons « Charger plus », « Tout marquer lu », « Suivre », les votes du détail d'un film et les filtres de liste sont le bouton commun.
 - **Le mode de tirage, les candidats Letterboxd et la grille d'avatars partagent une même carte à cocher**, les avatars empilés une même pile, les réglages à interrupteur une même ligne.
 - **Les icônes suivent une échelle de huit tailles**, les avatars et les petites dimensions la grille de 4 px, ce qui décale certains dessins d'un ou deux pixels.
