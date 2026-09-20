@@ -28,6 +28,11 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **La page « Créer une soirée » se lit en trois temps** : le titre, la date et l'heure, puis les options avancées regroupées par phase (ambiance, participants et films, vote et tirage), puis les templates. Le nombre de participants et de films par personne ne sont plus deux compteurs calés sur 300 et 15 mais deux interrupteurs « Limiter », éteints par défaut : une soirée créée sans y toucher n'a plus de plafond affiché, et l'allumer propose 10 personnes ou 3 films, à ajuster. Appliquer un template n'ouvre plus les options : une ligne résume ce qu'il règle, presser sa pastille une seconde fois revient aux réglages par défaut, un bouton « Réinitialiser les options » fait de même, et « Enregistrer en template » se grise tant que la configuration est identique au template appliqué au lieu de proposer un doublon. La barre d'enregistrement rejoint les pastilles dans un même bloc, comme dans les paramètres d'une soirée.
+- **Sur téléphone, le choix d'emoji du thème s'ouvre dans une feuille en bas de l'écran** au lieu d'un popover, et « Plus de thèmes » est une pastille qui dit combien de thèmes elle cache.
+- **Le mode sombre s'applique aussi aux contrôles natifs** : les icônes calendrier et horloge des champs de date et d'heure ne sont plus noires sur bleu nuit, et les sélecteurs natifs s'ouvrent en sombre.
+- **Les textes d'exemple des champs sont lisibles sur Safari** : ils prennent la couleur de texte atténué du thème au lieu du gris clair par défaut du navigateur (2,35:1 sur fond blanc).
+
 - **Le site et l'API sont hébergés chez un seul fournisseur** : le front a quitté AWS pour Firebase Hosting, à côté de l'API sur Google Cloud ; la chaîne de déploiement, le retour arrière et la sonde de disponibilité ne connaissent plus qu'un cloud, et le compte AWS est vide.
 - **Les mêmes onglets, menus et pastilles partout** : les onglets de « Mes soirées », de la liste d'abonnés et du choix d'avatar sont le composant d'onglets commun (celui des abonnés n'annonçait pas ses onglets aux lecteurs d'écran), le menu du compte et celui de l'agenda sont le menu commun, les filtres de recherche de films, les thèmes suggérés, l'invitation d'un participant et une dizaine de badges (« Vous », « Complet », « Série », gagnant, date relative, liste masquée) sont la pastille commune, et les boutons « Charger plus », « Tout marquer lu », « Suivre », les votes du détail d'un film et les filtres de liste sont le bouton commun.
 - **Le mode de tirage, les candidats Letterboxd et la grille d'avatars partagent une même carte à cocher**, les avatars empilés une même pile, les réglages à interrupteur une même ligne.
@@ -54,6 +59,9 @@ version publiée est associée à un tag Git et à une release GitHub.
 - Le bouton « Détails » d'un film, qui n'était plus branché nulle part.
 
 ### Fixed
+
+- **Créer une soirée sans titre, sans date ou sans heure le dit sous le champ, en français**, au lieu de la bulle du navigateur qui pointait sur un champ caché derrière l'en-tête ; le champ fautif reçoit le focus et n'est plus masqué par la barre du haut. Une date déjà passée est signalée sous le champ sans bloquer. L'erreur de création s'affiche juste au-dessus du bouton, pas en haut du formulaire, et si la soirée est créée mais que ses options n'ont pas pu être enregistrées, la page de la soirée le dit au lieu de se taire.
+- **Le lien de retour « Mes soirées », le sommaire « Options avancées » et « Plus de thèmes » répondent au doigt sur 44 px**, comme le reste de l'interface.
 
 - **Sur un téléphone, « Mes soirées » ne se coupe plus en « Mes soir… » dans la barre du bas** : les cinq libellés tiennent sur une ligne, même sur un écran de 320 px.
 - **L'historique des soirées se lit sur un téléphone** : le titre et le film gagnant prennent toute la largeur au lieu d'être coupés après cinq lettres, la date, les participants, les films et la couronne d'hôte passent en dessous, le récapitulatif tient sur trois colonnes, et la barre de recherche défile avec la page comme sur Ma liste.

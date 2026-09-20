@@ -46,6 +46,7 @@ export default function EventTemplateSaveBar({
   const takenNames = templates.map((template) => template.name);
   const hasDrifted =
     appliedTemplate !== null && !isSameTemplateConfig(draft, templateToDraft(appliedTemplate));
+  const sameAsApplied = appliedTemplate !== null && !hasDrifted;
   const justSaved =
     lastSaved !== null && isSameTemplateConfig(draft, templateToDraft(lastSaved))
       ? lastSaved
@@ -78,11 +79,12 @@ export default function EventTemplateSaveBar({
       ? t('events.settings.templates.saveFromEventHint')
       : t('events.settings.templates.saveHint');
 
-  const driftHint = hasDrifted
-    ? t('events.settings.templates.modifiedHint', { name: appliedTemplate.name })
-    : null;
-
-  const hintLabel = driftHint ?? (appliedTemplate === null ? idleHint : null);
+  const hintLabel = (() => {
+    if (appliedTemplate === null) return idleHint;
+    if (hasDrifted)
+      return t('events.settings.templates.modifiedHint', { name: appliedTemplate.name });
+    return t('events.settings.templates.sameAsApplied', { name: appliedTemplate.name });
+  })();
 
   return (
     <div className={clsx(styles.bar, className)}>
@@ -94,7 +96,7 @@ export default function EventTemplateSaveBar({
           </span>
         </output>
       ) : (
-        hintLabel !== null && <p className={styles.hint}>{hintLabel}</p>
+        <p className={styles.hint}>{hintLabel}</p>
       )}
 
       {naming ? (
@@ -122,7 +124,7 @@ export default function EventTemplateSaveBar({
           )}
           <Button
             size="sm"
-            disabled={disabled || isFull || justSaved !== null}
+            disabled={disabled || isFull || justSaved !== null || sameAsApplied}
             onClick={startNaming}
           >
             {hasDrifted ? (

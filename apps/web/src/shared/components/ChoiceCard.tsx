@@ -46,6 +46,7 @@ function nextIndex(key: string, current: number, count: number): number | null {
 }
 
 interface ChoiceGroupProps<T extends string> {
+  id?: string;
   value: T | null;
   onChange: (value: T) => void;
   onSelect?: (value: T) => void;
@@ -56,6 +57,7 @@ interface ChoiceGroupProps<T extends string> {
 }
 
 export function ChoiceGroup<T extends string>({
+  id,
   value,
   onChange,
   onSelect,
@@ -111,6 +113,7 @@ export function ChoiceGroup<T extends string>({
     <ChoiceGroupContext.Provider value={contextValue}>
       <div
         ref={containerRef}
+        id={id}
         role="radiogroup"
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}

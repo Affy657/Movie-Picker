@@ -25,6 +25,8 @@ function renderRow(
   overrides: Partial<{
     templates: EventTemplateData[];
     appliedTemplate: EventTemplateData | null;
+    appliedSummary: string | null;
+    onClear: () => void;
   }> = {}
 ) {
   const onApply = vi.fn();
@@ -35,7 +37,9 @@ function renderRow(
       <EventTemplatesRow
         templates={overrides.templates ?? [makeTemplate()]}
         appliedTemplate={overrides.appliedTemplate ?? null}
+        appliedSummary={overrides.appliedSummary}
         onApply={onApply}
+        onClear={overrides.onClear}
         onRename={onRename}
         onDelete={onDelete}
       />
@@ -87,6 +91,37 @@ describe('EventTemplatesRow', () => {
       'true'
     );
     expect(screen.getByText(/Configuration appliquée/)).toBeInTheDocument();
+  });
+
+  it('sums up the applied configuration in one line when it is given', () => {
+    renderRow({
+      appliedTemplate: makeTemplate(),
+      appliedSummary: '🎃 Halloween, 3 films par personne, 8 participants max',
+    });
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Configuration appliquée : 🎃 Halloween, 3 films par personne, 8 participants max.'
+    );
+  });
+
+  it('clears the applied template when its chip is pressed again', async () => {
+    const user = userEvent.setup();
+    const onClear = vi.fn();
+    const { onApply } = renderRow({ appliedTemplate: makeTemplate(), onClear });
+
+    await user.click(screen.getByRole('button', { name: /Soirée horreur/ }));
+
+    expect(onClear).toHaveBeenCalledTimes(1);
+    expect(onApply).not.toHaveBeenCalled();
+  });
+
+  it('re-applies the pressed chip when nothing handles the clearing', async () => {
+    const user = userEvent.setup();
+    const { onApply } = renderRow({ appliedTemplate: makeTemplate() });
+
+    await user.click(screen.getByRole('button', { name: /Soirée horreur/ }));
+
+    expect(onApply).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }));
   });
 
   it('signale le plafond atteint', () => {

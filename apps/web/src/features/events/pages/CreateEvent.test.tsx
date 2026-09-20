@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import CreateEvent from '@/features/events/pages/CreateEvent';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { QueryClientWrapper } from '@/test-utils/queryWrapper';
@@ -39,6 +39,38 @@ const TEMPLATES_PATH = '/users/me/event-templates';
 
 function isTemplatesCall(path: unknown): boolean {
   return typeof path === 'string' && path.startsWith(TEMPLATES_PATH);
+}
+
+function LocationStateProbe() {
+  return <p data-testid="location-state">{JSON.stringify(useLocation().state)}</p>;
+}
+
+const HORROR_TEMPLATE = {
+  id: 't1',
+  name: 'Soirée horreur',
+  theme: '🎃 Halloween',
+  maxProposalsPerParticipant: 4,
+  maxParticipants: 12,
+  wheelMode: 'strictRandom',
+  richSharePreview: true,
+  allowSeries: true,
+  winnerCount: 1,
+};
+
+function mockTemplates(items: unknown[]) {
+  mockFetchApi.mockImplementation((path: unknown) => {
+    if (isTemplatesCall(path)) return Promise.resolve({ items });
+    if (path === '/events') return Promise.resolve({ slug: 'abc', shareUrl: 'x' });
+    return Promise.resolve({});
+  });
+}
+
+function configCallBody(): Record<string, unknown> {
+  const configCall = mockFetchApi.mock.calls.find(
+    ([path]) => typeof path === 'string' && path.startsWith('/events/abc/config')
+  );
+  expect(configCall).toBeDefined();
+  return JSON.parse((configCall![1] as { body: string }).body) as Record<string, unknown>;
 }
 
 describe('CreateEvent', () => {
@@ -97,7 +129,7 @@ describe('CreateEvent', () => {
     mockFetchApi.mockResolvedValueOnce({});
     RenderCreateEvent();
 
-    await user.click(screen.getByText(/options/i));
+    await user.click(screen.getByText(/options avancées/i));
     const winnerCount = screen.getByLabelText(/films gagnants/i);
     await user.clear(winnerCount);
     await user.type(winnerCount, '4');
@@ -141,37 +173,59 @@ describe('CreateEvent', () => {
     expect(screen.queryByText('Mes templates')).not.toBeInTheDocument();
   });
 
-  it('applique un template aux champs du formulaire', async () => {
+  it('applies a template to the form fields and sums it up without opening the options', async () => {
     const user = userEvent.setup();
-    mockFetchApi.mockImplementation((path: unknown) =>
-      isTemplatesCall(path)
-        ? Promise.resolve({
-            items: [
-              {
-                id: 't1',
-                name: 'Soirée horreur',
-                theme: '🎃 Halloween',
-                maxProposalsPerParticipant: 4,
-                maxParticipants: 12,
-                wheelMode: 'strictRandom',
-                richSharePreview: true,
-                allowSeries: true,
-                winnerCount: 1,
-              },
-            ],
-          })
-        : Promise.resolve({})
-    );
+    mockTemplates([HORROR_TEMPLATE]);
     RenderCreateEvent();
 
     const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
     await user.click(chip);
 
     expect(chip).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByText(/options avancées/i).closest('details')).toHaveAttribute('open');
+    expect(screen.getByText(/options avancées/i).closest('details')).not.toHaveAttribute('open');
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Configuration appliquée : 🎃 Halloween, 4 films par personne, 12 participants max, aléatoire strict, séries autorisées.'
+    );
     expect(screen.getByLabelText(/films max par personne/i)).toHaveValue(4);
     expect(screen.getByLabelText(/participants max/i)).toHaveValue(12);
     expect(screen.getByRole('radio', { name: /aléatoire strict/i })).toBeChecked();
+  });
+
+  it('pressing the applied chip again brings the options back to the defaults', async () => {
+    const user = userEvent.setup();
+    mockTemplates([HORROR_TEMPLATE]);
+    RenderCreateEvent();
+
+    const chip = await screen.findByRole('button', { name: /Soirée horreur/ });
+    await user.click(chip);
+    await user.click(chip);
+
+    expect(screen.getByRole('button', { name: /Soirée horreur/ })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+    expect(screen.queryByLabelText(/films max par personne/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/participants max/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /pondéré par les votes/i })).toBeChecked();
+  });
+
+  it('offers to reset the options once one of them leaves the defaults', async () => {
+    const user = userEvent.setup();
+    RenderCreateEvent();
+
+    expect(screen.queryByRole('button', { name: /réinitialiser les options/i })).toBeNull();
+    await user.click(screen.getByText(/options avancées/i));
+    await user.click(screen.getByRole('switch', { name: /autoriser les séries/i }));
+    expect(screen.getByRole('button', { name: /enregistrer en template/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /réinitialiser les options/i }));
+
+    expect(screen.getByRole('switch', { name: /autoriser les séries/i })).toHaveAttribute(
+      'aria-checked',
+      'false'
+    );
+    expect(screen.queryByRole('button', { name: /réinitialiser les options/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /enregistrer en template/i })).toBeNull();
   });
 
   it('removes the tick from the chip as soon as a covered field changes', async () => {
@@ -210,7 +264,7 @@ describe('CreateEvent', () => {
     );
   });
 
-  it('announces the configuration taken from a past movie night and opens the options', async () => {
+  it('announces and sums up the configuration taken from a past movie night', async () => {
     mockFetchApi.mockImplementation((path: unknown) => {
       if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
       if (typeof path === 'string' && path.includes('/config')) {
@@ -242,10 +296,148 @@ describe('CreateEvent', () => {
       </QueryClientWrapper>
     );
 
-    expect(
-      await screen.findByText(/Configuration de « Soirée du 31 octobre » reprise/)
-    ).toBeInTheDocument();
+    const notice = await screen.findByText(/Configuration de « Soirée du 31 octobre » reprise/);
+    expect(notice).toHaveTextContent(
+      '🎃 Halloween, 4 films par personne, 12 participants max, aléatoire strict.'
+    );
     expect(screen.getByLabelText(/films max par personne/i)).toHaveValue(4);
+  });
+
+  it('drops the reused-configuration notice once a template is applied instead', async () => {
+    const user = userEvent.setup();
+    mockFetchApi.mockImplementation((path: unknown) => {
+      if (isTemplatesCall(path)) return Promise.resolve({ items: [HORROR_TEMPLATE] });
+      if (typeof path === 'string' && path.includes('/config')) {
+        return Promise.resolve({
+          theme: '🎬 Classiques',
+          maxProposalsPerParticipant: 2,
+          maxParticipants: 6,
+          wheelMode: 'weightedByVotes',
+          allowSeries: false,
+        });
+      }
+      return Promise.resolve({});
+    });
+    render(
+      <QueryClientWrapper>
+        <LocaleProvider>
+          <MemoryRouter
+            initialEntries={[
+              {
+                pathname: '/new',
+                state: { reuseEventSlug: 'abc', reuseEventTitle: 'Soirée du 31' },
+              },
+            ]}
+          >
+            <CreateEvent />
+          </MemoryRouter>
+        </LocaleProvider>
+      </QueryClientWrapper>
+    );
+
+    expect(
+      await screen.findByText(/Configuration de « Soirée du 31 » reprise/)
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Soirée horreur/ }));
+
+    expect(screen.queryByText(/Configuration de « Soirée du 31 » reprise/)).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent(/Configuration appliquée : 🎃 Halloween/);
+  });
+
+  it('creates the movie night without any cap by default', async () => {
+    const user = userEvent.setup();
+    mockTemplates([]);
+    RenderCreateEvent();
+
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    await waitFor(() => {
+      expect(configCallBody()).toEqual(
+        expect.objectContaining({
+          maxParticipants: 0,
+          maxProposalsPerParticipant: 0,
+          maxVotesPerParticipant: 0,
+        })
+      );
+    });
+  });
+
+  it('enabling the participants limit sends the default cap, ready to be adjusted', async () => {
+    const user = userEvent.setup();
+    mockTemplates([]);
+    RenderCreateEvent();
+
+    await user.click(screen.getByText(/options avancées/i));
+    await user.click(screen.getByRole('switch', { name: /limiter le nombre de participants/i }));
+    expect(screen.getByLabelText(/participants max/i)).toHaveValue(10);
+    await user.click(screen.getByRole('switch', { name: /limiter les films proposés/i }));
+    expect(screen.getByLabelText(/films max par personne/i)).toHaveValue(3);
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    await waitFor(() => {
+      expect(configCallBody()).toEqual(
+        expect.objectContaining({ maxParticipants: 10, maxProposalsPerParticipant: 3 })
+      );
+    });
+  });
+
+  it('refuses an empty title under the field, without calling the API', async () => {
+    const user = userEvent.setup();
+    mockTemplates([]);
+    RenderCreateEvent();
+
+    const titleInput = screen.getByLabelText(/titre/i);
+    await user.clear(titleInput);
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    expect(screen.getByText('Donnez un titre à la soirée.')).toBeInTheDocument();
+    expect(titleInput).toHaveAttribute('aria-invalid', 'true');
+    expect(titleInput).toHaveFocus();
+    expect(mockFetchApi).not.toHaveBeenCalledWith('/events', expect.anything());
+
+    await user.type(titleInput, 'Ma soirée');
+    expect(screen.queryByText('Donnez un titre à la soirée.')).not.toBeInTheDocument();
+  });
+
+  it('warns about a date already in the past without blocking the creation', async () => {
+    const user = userEvent.setup();
+    mockTemplates([]);
+    RenderCreateEvent();
+
+    fireEvent.change(screen.getByLabelText(/date/i), { target: { value: '2000-01-01' } });
+    expect(screen.getByText('Cette date est déjà passée.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    await waitFor(() => {
+      expect(mockFetchApi).toHaveBeenCalledWith('/events', expect.anything());
+    });
+  });
+
+  it('sends the host to the movie night with a warning when the options could not be saved', async () => {
+    const user = userEvent.setup();
+    mockFetchApi.mockImplementation((path: unknown) => {
+      if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
+      if (path === '/events') return Promise.resolve({ slug: 'abc', shareUrl: 'x' });
+      return Promise.reject(new Error('boom'));
+    });
+    render(
+      <QueryClientWrapper>
+        <LocaleProvider>
+          <MemoryRouter initialEntries={['/new']}>
+            <Routes>
+              <Route path="/new" element={<CreateEvent />} />
+              <Route path="/e/:slug" element={<LocationStateProbe />} />
+            </Routes>
+          </MemoryRouter>
+        </LocaleProvider>
+      </QueryClientWrapper>
+    );
+
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    expect(JSON.parse((await screen.findByTestId('location-state')).textContent ?? '')).toEqual(
+      expect.objectContaining({ justCreated: true, configNotSaved: true })
+    );
   });
 
   it('without the vote limit enabled, the movie night is created without a limit', async () => {
