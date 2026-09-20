@@ -62,6 +62,10 @@ public sealed class MoviePickerOptions
 
     public string? SchedulerToken { get; set; }
 
+    public string? SchedulerOidcAudience { get; set; }
+
+    public string? SchedulerOidcServiceAccount { get; set; }
+
     public bool InProcessRemindersEnabled { get; set; }
 
     public string? GitHubToken { get; set; }

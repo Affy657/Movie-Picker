@@ -11,67 +11,70 @@ namespace MoviePicker.Api.Tests.Controllers;
 
 public sealed class SchedulerControllerRecurringEventsTests
 {
-    private readonly Mock<ISchedulerTokenValidator> _tokenValidator = new();
+    private readonly Mock<ISchedulerCallerAuthenticator> _authenticator = new();
     private readonly Mock<IRecurringEventPass> _pass = new();
     private readonly Mock<IFinishedEventWatchlistPass> _watchlistPass = new();
     private readonly SchedulerController _sut = new SchedulerController().WithContext();
 
     public SchedulerControllerRecurringEventsTests()
     {
-        _tokenValidator.SetupGet(v => v.IsConfigured).Returns(true);
         _pass.Setup(p => p.RunAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new RecurringEventPassResult(3, 2, 1));
     }
 
-    private string? _presentedToken;
+    private void Verdict(SchedulerCallerVerdict verdict) =>
+        _authenticator
+            .Setup(a => a.AuthenticateAsync(It.IsAny<SchedulerCallerCredentials>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(verdict);
 
-    private void PresentToken(string? token) => _presentedToken = token;
+    private void PresentBearer(string token) => _sut.Request.Headers.Authorization = $"Bearer {token}";
 
-    private Task<IActionResult> Run() =>
-        _sut.RunRecurringEvents(
-            _tokenValidator.Object,
-            _pass.Object,
-            _presentedToken,
-            CancellationToken.None);
+    private Task<IActionResult> Run(CancellationToken ct = default) =>
+        _sut.RunRecurringEvents(_authenticator.Object, _pass.Object, ct);
 
     [Fact]
-    public async Task RunFinishedEvents_ValidToken_RunsTheWatchlistPassAndReturnsItsResult()
+    public async Task RunFinishedEvents_AcceptedCaller_RunsTheWatchlistPassAndReturnsItsResult()
     {
-        _tokenValidator.Setup(v => v.IsValid("good")).Returns(true);
+        Verdict(SchedulerCallerVerdict.Accepted);
+        PresentBearer("jwt");
         _watchlistPass.Setup(p => p.RunAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FinishedEventWatchlistPassResult(4, 3));
 
-        var result = await _sut.RunFinishedEvents(
-            _tokenValidator.Object,
-            _watchlistPass.Object,
-            "good",
-            CancellationToken.None);
+        var result = await _sut.RunFinishedEvents(_authenticator.Object, _watchlistPass.Object, CancellationToken.None);
 
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Equal(new FinishedEventWatchlistPassResult(4, 3), ok.Value);
     }
 
     [Fact]
-    public async Task RunFinishedEvents_WrongToken_Returns401AndDoesNotRunThePass()
+    public async Task RunFinishedEvents_RefusedCaller_Returns401AndDoesNotRunThePass()
     {
-        _tokenValidator.Setup(v => v.IsValid("bad")).Returns(false);
+        Verdict(SchedulerCallerVerdict.Refused);
+        PresentBearer("bad");
 
-        var result = await _sut.RunFinishedEvents(
-            _tokenValidator.Object,
-            _watchlistPass.Object,
-            "bad",
-            CancellationToken.None);
+        var result = await _sut.RunFinishedEvents(_authenticator.Object, _watchlistPass.Object, CancellationToken.None);
 
         Assert.IsType<UnauthorizedResult>(result);
         _watchlistPass.Verify(p => p.RunAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task RunRecurringEvents_TokenNotConfigured_Returns503AndDoesNotRunThePass()
+    public async Task RunFinishedEvents_NothingConfigured_Returns503()
     {
-        _tokenValidator.SetupGet(v => v.IsConfigured).Returns(false);
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(true);
-        PresentToken("peu-importe");
+        Verdict(SchedulerCallerVerdict.NotConfigured);
+
+        var result = await _sut.RunFinishedEvents(_authenticator.Object, _watchlistPass.Object, CancellationToken.None);
+
+        var response = Assert.IsType<StatusCodeResult>(result);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, response.StatusCode);
+        _watchlistPass.Verify(p => p.RunAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RunRecurringEvents_NothingConfigured_Returns503AndDoesNotRunThePass()
+    {
+        Verdict(SchedulerCallerVerdict.NotConfigured);
+        PresentBearer("peu-importe");
 
         var result = await Run();
 
@@ -81,10 +84,10 @@ public sealed class SchedulerControllerRecurringEventsTests
     }
 
     [Fact]
-    public async Task RunRecurringEvents_WrongToken_Returns401AndDoesNotRunThePass()
+    public async Task RunRecurringEvents_RefusedCaller_Returns401AndDoesNotRunThePass()
     {
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(false);
-        PresentToken("mauvais-token");
+        Verdict(SchedulerCallerVerdict.Refused);
+        PresentBearer("mauvais");
 
         var result = await Run();
 
@@ -93,32 +96,36 @@ public sealed class SchedulerControllerRecurringEventsTests
     }
 
     [Fact]
-    public async Task RunRecurringEvents_MissingHeader_Returns401()
+    public async Task RunRecurringEvents_WithoutAnyHeader_PresentsEmptyCredentials()
     {
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(false);
+        Verdict(SchedulerCallerVerdict.Refused);
 
         var result = await Run();
 
         Assert.IsType<UnauthorizedResult>(result);
-        _tokenValidator.Verify(v => v.IsValid(It.Is<string?>(t => string.IsNullOrEmpty(t))), Times.Once);
+        _authenticator.Verify(
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, null), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task RunRecurringEvents_ForwardsThePresentedTokenToTheValidator()
+    public async Task RunRecurringEvents_ForwardsTheBearerToTheAuthenticator()
     {
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(true);
-        PresentToken("bon-token");
+        Verdict(SchedulerCallerVerdict.Accepted);
+        PresentBearer("jwt");
 
         await Run();
 
-        _tokenValidator.Verify(v => v.IsValid("bon-token"), Times.Once);
+        _authenticator.Verify(
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, "jwt"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task RunRecurringEvents_ValidToken_RunsThePassAndReturnsItsReport()
+    public async Task RunRecurringEvents_AcceptedCaller_RunsThePassAndReturnsItsReport()
     {
-        _tokenValidator.Setup(v => v.IsValid("bon-token")).Returns(true);
-        PresentToken("bon-token");
+        Verdict(SchedulerCallerVerdict.Accepted);
+        PresentBearer("jwt");
 
         var result = await Run();
 
@@ -131,15 +138,11 @@ public sealed class SchedulerControllerRecurringEventsTests
     [Fact]
     public async Task RunRecurringEvents_ForwardsTheCancellationTokenToThePass()
     {
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(true);
-        PresentToken("bon-token");
+        Verdict(SchedulerCallerVerdict.Accepted);
+        PresentBearer("jwt");
         using var cts = new CancellationTokenSource();
 
-        await _sut.RunRecurringEvents(
-            _tokenValidator.Object,
-            _pass.Object,
-            _presentedToken,
-            cts.Token);
+        await Run(cts.Token);
 
         _pass.Verify(p => p.RunAsync(cts.Token), Times.Once);
     }

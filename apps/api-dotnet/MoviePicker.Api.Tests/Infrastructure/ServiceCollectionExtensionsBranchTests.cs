@@ -285,6 +285,21 @@ public sealed class ServiceCollectionExtensionsBranchTests
     }
 
     [Fact]
+    public void SchedulerOidc_BlankReadsAsAbsent_AudienceLosesItsTrailingSlash()
+    {
+        Assert.Null(OptionsFrom([]).SchedulerOidcAudience);
+        Assert.Null(OptionsFrom([]).SchedulerOidcServiceAccount);
+        Assert.Null(OptionsFrom(new Dictionary<string, string?> { ["SCHEDULER_OIDC_AUDIENCE"] = "  " }).SchedulerOidcAudience);
+        var options = OptionsFrom(new Dictionary<string, string?>
+        {
+            ["SCHEDULER_OIDC_AUDIENCE"] = " https://api.movie-picker.fr/ ",
+            ["SCHEDULER_OIDC_SERVICE_ACCOUNT"] = " scheduler@project.iam.gserviceaccount.com "
+        });
+        Assert.Equal("https://api.movie-picker.fr", options.SchedulerOidcAudience);
+        Assert.Equal("scheduler@project.iam.gserviceaccount.com", options.SchedulerOidcServiceAccount);
+    }
+
+    [Fact]
     public void KofiWebhookToken_BlankKeepsItAbsentAndIsOtherwiseTrimmed()
     {
         Assert.Null(OptionsFrom(new Dictionary<string, string?> { ["KOFI_WEBHOOK_TOKEN"] = "  " }).KofiWebhookToken);
@@ -386,6 +401,8 @@ public sealed class ServiceCollectionExtensionsBranchTests
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IPasswordHasher>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<ISchedulerTokenValidator>());
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<ISchedulerCallerAuthenticator>());
+        Assert.NotNull(scope.ServiceProvider.GetRequiredService<IGoogleOidcSchedulerTokenValidator>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IPushNotificationSender>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IPosterImageStore>());
     }

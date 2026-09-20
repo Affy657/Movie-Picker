@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
@@ -79,6 +81,13 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient(WebPushSender.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15));
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
         services.AddSingleton<ISchedulerTokenValidator, SchedulerTokenValidator>();
+        services.AddSingleton<IConfigurationManager<OpenIdConnectConfiguration>>(_ =>
+            new ConfigurationManager<OpenIdConnectConfiguration>(
+                GoogleOidcSchedulerTokenValidator.GoogleDiscoveryDocument,
+                new OpenIdConnectConfigurationRetriever(),
+                new HttpDocumentRetriever { RequireHttps = true }));
+        services.AddSingleton<IGoogleOidcSchedulerTokenValidator, GoogleOidcSchedulerTokenValidator>();
+        services.AddSingleton<ISchedulerCallerAuthenticator, SchedulerCallerAuthenticator>();
         services.AddScoped<IEventReminderPass, EventReminderPass>();
         services.AddScoped<IRecurringEventPass, RecurringEventPass>();
         services.AddScoped<IFinishedEventWatchlistPass, FinishedEventWatchlistPass>();
@@ -152,6 +161,10 @@ public static class ServiceCollectionExtensions
 
         var schedulerToken = cfg["SCHEDULER_TOKEN"];
         opts.SchedulerToken = string.IsNullOrWhiteSpace(schedulerToken) ? null : schedulerToken.Trim();
+        var schedulerAudience = cfg["SCHEDULER_OIDC_AUDIENCE"];
+        opts.SchedulerOidcAudience = string.IsNullOrWhiteSpace(schedulerAudience) ? null : schedulerAudience.Trim().TrimEnd('/');
+        var schedulerServiceAccount = cfg["SCHEDULER_OIDC_SERVICE_ACCOUNT"];
+        opts.SchedulerOidcServiceAccount = string.IsNullOrWhiteSpace(schedulerServiceAccount) ? null : schedulerServiceAccount.Trim();
 
         opts.InProcessRemindersEnabled = IsInProcessRemindersEnabled(cfg);
 
