@@ -325,7 +325,9 @@ jobs:
           retention-days: 30
       # The tag is the commit: what the staging run pushed for it is what production gets. The
       # read needs `artifactregistry.reader` on the repository, the only right the production
-      # identity keeps there.
+      # identity keeps there. The tag is listed rather than described: `images describe` also
+      # reads Container Analysis for its summary, a right this identity does not have, and it
+      # answered nothing at the first production run.
       - name: Resolve the image the staging ran
         id: resolve
         if: inputs.stage == 'production'
@@ -334,7 +336,7 @@ jobs:
         run: |
           set -eo pipefail
           REPO="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api"
-          DIGEST="$(gcloud artifacts docker images describe "${REPO}:${GITHUB_SHA}" --format='value(image_summary.digest)' 2>/dev/null || true)"
+          DIGEST="$(gcloud artifacts docker tags list "$REPO" --filter="tag:${GITHUB_SHA}" --format='value(version)' | sed 's#.*/versions/##' | head -1 || true)"
           if ! printf '%s' "$DIGEST" | grep -qE '^sha256:[0-9a-f]{64}$'; then
             echo "::error::No image ${REPO}:${GITHUB_SHA} in the registry: the staging deployment of this commit did not push it (or the retention removed it). Deploy to the staging first."
             exit 1
