@@ -630,10 +630,40 @@ describe('TechPage', () => {
       .map((node) => node.textContent?.trim())
       .filter(Boolean);
 
-    for (const work of ['terraform', 'staging', 'leastPrivilege', 'sharedCache'] as const) {
+    for (const work of [
+      'sharedCache',
+      'containerTwice',
+      'schedulerToken',
+      'sentryToken',
+    ] as const) {
       expect(tags).toContain(fr.tech.trajectory[work]);
     }
-    expect(tags.join(' ')).not.toMatch(/pré-rendu|Google Cloud|fédérée/i);
+    expect(tags.join(' ')).not.toMatch(
+      /pré-rendu|Google Cloud|fédérée|Environnement de recette|Infrastructure en code|au plus juste/i
+    );
+  });
+
+  it('describes the staging, the infrastructure as code and the keyless identities', () => {
+    const { container } = renderTechPage();
+    const section = container.querySelector('#infra') as HTMLElement;
+
+    expect(section.textContent).toMatch(/staging\.movie-picker\.fr/);
+    expect(section.textContent).toMatch(/Terraform/);
+    expect(section.textContent).toMatch(/sans clé/i);
+    expect(section.textContent).not.toMatch(/restent à décrire|qu’une production/i);
+  });
+
+  it('lists the infrastructure and backup pipelines beside the main graph', () => {
+    const { container } = renderTechPage();
+    const section = container.querySelector('#ci') as HTMLElement;
+    const tags = [...section.querySelectorAll('[class*="tag"]')]
+      .map((node) => node.textContent?.trim())
+      .filter(Boolean);
+
+    for (const pipeline of ['rollback', 'terraform', 'backup', 'securityScan'] as const) {
+      expect(tags).toContain(fr.tech.ci[pipeline]);
+    }
+    expect(tags.join(' ')).not.toMatch(/nettoyage du registre/i);
   });
 
   it('files the prerendering among the choices made, no longer among open work', () => {

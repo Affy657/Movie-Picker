@@ -2379,7 +2379,7 @@ export const fr = {
         'Plateforme de dons pour créateurs ; le soutien confirmé apparaît ensuite comme un badge sur le profil.',
       scheduler: 'Cloud Scheduler',
       schedulerValue:
-        'Appelle le serveur à heure fixe : toutes les 30 minutes pour les rappels de soirée, une fois par jour pour les soirées récurrentes. Même protection par jeton, puisque les routes sont ouvertes sur internet.',
+        'Appelle le serveur à heure fixe : toutes les 30 minutes pour les rappels de soirée, une fois par nuit pour les soirées récurrentes, puis pour les soirées terminées. Même protection par jeton, puisque les routes sont ouvertes sur internet.',
       schedulerHint:
         "Planificateur de Google Cloud : il appelle une adresse à l'heure dite, ce qui remplace une minuterie vivant dans le serveur.",
       issues: 'GitHub Issues',
@@ -2397,18 +2397,18 @@ export const fr = {
       unplannedDetail:
         'Des versions qui ne sont pas encore cadrées. Leur nombre et leur contenu dépendront des retours d’usage.',
       techHeading: 'Les chantiers techniques ouverts',
-      terraform: 'Infrastructure en code',
-      terraformHint:
-        'Le registre, les secrets, Cloud Run et Firebase Hosting sont décrits en Terraform, avec un état distant ; les identités, le pipeline, les alertes et la recette restent à écrire.',
-      staging: 'Environnement de recette',
-      stagingHint:
-        'Il n’existe qu’une production. Un environnement calqué dessus permettrait de rejouer un déploiement avant qu’il ne compte.',
-      leastPrivilege: 'Droits au plus juste',
-      leastPrivilegeHint:
-        'Le compte de service de déploiement a plus de droits que nécessaire ; le découper par usage est le pas suivant.',
       sharedCache: 'Cache partagé entre instances',
       sharedCacheHint:
         'Le cache des fiches TMDB vit dans la mémoire de chaque instance : deux instances refont le même appel, et un redémarrage repart à froid. Un cache commun corrigerait les deux.',
+      containerTwice: 'Le conteneur décrit à deux endroits',
+      containerTwiceHint:
+        'Les secrets montés et les variables du serveur vivent dans la chaîne de déploiement et dans Terraform ; tant que la version voyage en variable plutôt que dans l’image, la chaîne fait foi et la description suit.',
+      schedulerToken: 'Planificateur authentifié par secret',
+      schedulerTokenHint:
+        'Les routes appelées à heure fixe vérifient un jeton statique, là où Cloud Scheduler sait signer chaque appel avec une identité : le remplacer supprimerait un secret.',
+      sentryToken: 'Un jeton de dépôt reste',
+      sentryTokenHint:
+        'Tout le reste est sans clé ; le jeton qui envoie les source maps à Sentry est encore un secret de dépôt, à ranger derrière un environnement.',
       techLead: 'Ce qui n’est pas fait, et qui est nommé plutôt que passé sous silence.',
       mvpWhen: 'Février 2026',
       mvpWhat: 'MVP',
@@ -2755,12 +2755,12 @@ export const fr = {
         "Il tourne sur l'arbre de travail et bloque la construction de l'image ; la plateforme refuse en plus un push qui contiendrait une clé reconnue.",
       image: 'Image étiquetée',
       imageValue:
-        "Le serveur part en image conteneurisée, étiquetée par l'empreinte du commit et poussée dans le registre avant tout déploiement.",
+        "Le serveur part en image conteneurisée, étiquetée par l'empreinte du commit et poussée dans le registre par la mise en recette ; la production reprend cette image telle quelle, rescannée mais jamais reconstruite.",
       imageHint:
         "Le déploiement pointe une image précise plutôt qu'une étiquette mouvante : revenir en arrière consiste à repointer la précédente.",
       guard: 'Garde-fou de déploiement',
       guardValue:
-        'Un dernier job compare le périmètre modifié au résultat de chaque déploiement et échoue si le front a changé sans partir en production.',
+        "Un dernier job compare ce qui a été demandé au résultat de chaque déploiement et échoue si une cible n'est pas partie, en recette comme en production.",
       guardHint:
         "Il existe parce que le cas s'est produit : des jobs sautés laissaient la chaîne verte alors que la production était à moitié à jour, un job sauté n'étant pas un job en échec.",
       caches: 'Chaîne mise en cache',
@@ -2768,12 +2768,15 @@ export const fr = {
         "Dépendances NuGet, tâches Turbo, couches Docker et base de vulnérabilités sont conservées d'une exécution à l'autre.",
       cachesHint:
         "Chaque job porte aussi un délai maximal, pour qu'une étape bloquée ne retienne pas la chaîne indéfiniment.",
-      otherPipelines: 'Trois autres chaînes, hors du graphe principal',
+      otherPipelines: 'Quatre autres chaînes, hors du graphe principal',
       rollback: 'retour arrière',
       rollbackHint: "Déclenchable à la main pour remettre en ligne l'image précédente.",
-      registry: 'nettoyage du registre',
-      registryHint:
-        'Purge les anciennes images Docker pour que le registre ne gonfle pas indéfiniment.',
+      terraform: 'infrastructure',
+      terraformHint:
+        "Planifie un changement de l'infrastructure sur sa pull request, et l'applique une fois fusionné sur master.",
+      backup: 'sauvegarde',
+      backupHint:
+        "Chaque nuit, un export de la base part dans un bucket privé, relu et restauré sur le runner avant d'être retenu ; trente jours de rétention.",
       securityScan: 'analyse de sécurité',
       securityScanHint:
         'Planifiée, indépendante des envois de code, pour attraper les failles publiées après coup.',
@@ -2958,9 +2961,9 @@ export const fr = {
     },
     infra: {
       title: 'Où ça tourne, et ce qui a le droit de le changer',
-      lead: 'Rien n’est déployé à la main. Une image par commit, des secrets hors du dépôt, un retour arrière en une exécution.',
+      lead: 'Rien n’est déployé à la main. Une image par commit, des secrets hors du dépôt, une recette que chaque livraison traverse, un retour arrière en une exécution, et une infrastructure décrite en code que seule une revue change.',
       caption:
-        'Le front et le serveur vivent chez le même fournisseur, en europe-west1, reliés par une seule origine autorisée.',
+        'Le front et le serveur vivent chez le même fournisseur, en europe-west1, reliés par une seule origine autorisée ; la recette est une seconde instance du même cadre, sous staging.movie-picker.fr.',
       smoke: 'Déploiement constaté',
       smokeValue:
         'Après chaque déploiement, la chaîne interroge les deux sondes de santé du serveur et charge le front sur son domaine public. Un service muet fait échouer le déploiement.',
@@ -2983,14 +2986,29 @@ export const fr = {
         'Les révisions restent disponibles chez l’hébergeur et les anciennes images dans le registre, purgées par sa politique de rétention pour qu’il ne gonfle pas.',
       scheduler: 'Travail périodique',
       schedulerValue:
-        "Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, et une fois par jour pour faire naître l'occurrence suivante des soirées récurrentes, sur des routes protégées par jeton.",
+        "Aucune tâche de fond ne vit dans le processus. Un planificateur externe appelle le serveur toutes les 30 minutes pour les rappels de soirée, et une fois par jour pour faire naître l'occurrence suivante des soirées récurrentes puis clore celles qui se sont terminées seules, sur des routes protégées par jeton.",
       schedulerHint:
-        'Les deux jobs sont créés par la chaîne de déploiement, mais seulement si le jeton existe : sans lui, ni rappel ni occurrence suivante ne partent, et le déploiement le signale par un avertissement.',
+        'Les trois jobs sont créés par la chaîne de déploiement en production, mais seulement si le jeton existe : sans lui, ni rappel ni occurrence suivante ne partent, et le déploiement le signale par un avertissement. La recette n’en a aucun.',
       origins: 'Origines',
       originsValue:
         'Le serveur n’accepte que les origines déclarées. Le déploiement échoue si la liste n’est pas renseignée.',
       originsHint:
         'La liste est une variable de dépôt, contrôlée avant l’appel de déploiement, pas une valeur par défaut permissive.',
+      staging: 'Recette avant production',
+      stagingValue:
+        'Chaque commit part d’abord sur staging.movie-picker.fr, une seconde instance du site et du serveur avec sa propre base et ses propres clients de connexion. La production refuse de partir tant que la recette ne sert pas exactement ce commit, et reprend l’image que la recette exécute sans la reconstruire.',
+      stagingHint:
+        'La recette n’est pas indexée par les moteurs de recherche, n’a ni sonde ni sauvegarde, et tourne dans le même projet sous ses propres identités.',
+      iac: 'Infrastructure décrite',
+      iacValue:
+        'Registre, secrets, services, sites, identités, fédération et alertes sont décrits en Terraform, avec un état distant versionné et verrouillé. Un changement se planifie sur sa pull request et ne s’applique qu’une fois fusionné.',
+      iacHint:
+        'La production a été importée, jamais recréée : le plan est vide tant que le code et la réalité coïncident, et une dérive se lit en revue plutôt qu’en incident.',
+      identities: 'Identités sans clé',
+      identitiesValue:
+        'Aucune clé de compte de service n’existe. Les chaînes de déploiement et d’infrastructure échangent le jeton de GitHub contre une identité par environnement, et chaque identité n’a que les droits des commandes qu’elle joue, liés à la ressource qu’elles touchent.',
+      identitiesHint:
+        'Le serveur tourne sous une identité qui ne sait que lire ses secrets : compromis, il ne pourrait ni se redéployer, ni lire une clé qu’il n’utilise pas.',
     },
     quality: {
       title: 'Ce qui est mesuré, et le seuil qui fait échouer',
@@ -3022,7 +3040,7 @@ export const fr = {
       monitoringValue:
         "Trois sondes interrogent le service de l'extérieur, depuis trois continents, et cinq politiques d'alerte préviennent par courriel : service ou base injoignables, erreurs serveur, latence dégradée.",
       monitoringHint:
-        "Les sondes visent /health, /health/ready et la racine du front. Les seuils sont posés au-dessus du bruit mesuré pour qu'une alerte reste crédible, et un incident se referme seul après trente minutes de retour à la normale.",
+        "Les sondes visent /health, /health/ready et la racine du front. Les seuils sont posés au-dessus du bruit mesuré pour qu'une alerte reste crédible, et un incident se referme seul après trente minutes de retour à la normale. Sondes, politiques et leur documentation sont décrites en code.",
       sentry: 'Sentry',
       sentryValue:
         'Erreurs du navigateur et du serveur, rattachées à la version déployée par le SHA du commit.',
@@ -3304,7 +3322,7 @@ export const fr = {
       infraSentrySub: 'erreurs front et serveur',
       infraSentryDetail: 'région européenne',
       infraGap:
-        'Registre, secrets, Cloud Run et Hosting décrits en Terraform ; identités, alertes et recette restent à décrire.',
+        'Tout le cadre est décrit en Terraform, identités et alertes comprises ; la recette staging.movie-picker.fr en est une seconde instance, et un changement passe par une revue avant d’être appliqué.',
       infraNote:
         "Le pointillé n'est pas un chemin réseau : le navigateur appelle le serveur directement.",
       infraNoteOrigin: "L'origine du front est la seule que le serveur accepte.",

@@ -2339,7 +2339,7 @@ export const en: Locale = {
         'A donation platform for creators; a confirmed contribution then shows as a badge on the profile.',
       scheduler: 'Cloud Scheduler',
       schedulerValue:
-        'Calls the server on a fixed schedule: every 30 minutes for the movie night reminders, once a day for the recurring nights. Same token protection, since the routes are open on the internet.',
+        'Calls the server on a fixed schedule: every 30 minutes for the movie night reminders, once a night for the recurring nights, then for the finished ones. Same token protection, since the routes are open on the internet.',
       schedulerHint:
         'Google Cloud scheduler: it calls an address at the appointed time, which replaces a timer living inside the server.',
       issues: 'GitHub Issues',
@@ -2357,18 +2357,18 @@ export const en: Locale = {
       unplannedDetail:
         'Versions that are not scoped yet. How many there are, and what they carry, will depend on how the product gets used.',
       techHeading: 'The open technical work',
-      terraform: 'Infrastructure as code',
-      terraformHint:
-        'The registry, the secrets, Cloud Run and Firebase Hosting are described in Terraform, with remote state; identities, the pipeline, alerts and staging remain to be written.',
-      staging: 'Staging environment',
-      stagingHint:
-        'Only production exists. An environment mirroring it would let a deployment be rehearsed before it counts.',
-      leastPrivilege: 'Least privilege',
-      leastPrivilegeHint:
-        'The deployment service account holds more rights than it needs; splitting it by purpose is the next step.',
       sharedCache: 'Cache shared across instances',
       sharedCacheHint:
         'The TMDB entry cache lives in the memory of each instance: two instances repeat the same call, and a restart starts cold. A shared cache would fix both.',
+      containerTwice: 'The container described in two places',
+      containerTwiceHint:
+        'The mounted secrets and the server variables live in the deployment pipeline and in Terraform; as long as the version travels as a variable rather than in the image, the pipeline rules and the description follows.',
+      schedulerToken: 'Scheduler authenticated by a secret',
+      schedulerTokenHint:
+        'The routes called on a schedule check a static token, where Cloud Scheduler can sign every call with an identity: replacing it would remove a secret.',
+      sentryToken: 'One repository token remains',
+      sentryTokenHint:
+        'Everything else is keyless; the token that uploads source maps to Sentry is still a repository secret, to be moved behind an environment.',
       techLead: 'What is not done, named rather than left unsaid.',
       mvpWhen: 'February 2026',
       mvpWhat: 'MVP',
@@ -2710,12 +2710,12 @@ export const en: Locale = {
         'It runs on the working tree and blocks the image build; the platform also refuses a push carrying a recognised key.',
       image: 'Tagged image',
       imageValue:
-        'The server ships as a container image, tagged with the commit fingerprint and pushed to the registry before any deployment.',
+        'The server ships as a container image, tagged with the commit fingerprint and pushed to the registry by the staging deployment; production reuses that image as is, scanned again but never rebuilt.',
       imageHint:
         'Deployment points at a precise image rather than a moving tag: rolling back means pointing at the previous one.',
       guard: 'Deployment guard',
       guardValue:
-        'A final job compares the changed scope against the result of each deployment and fails if the front end changed without reaching production.',
+        'A final job compares what was requested against the result of each deployment and fails if a target did not leave, on the staging as in production.',
       guardHint:
         'It exists because it happened: skipped jobs left the pipeline green while production was half up to date, a skipped job not being a failed one.',
       caches: 'A cached pipeline',
@@ -2723,11 +2723,15 @@ export const en: Locale = {
         'NuGet dependencies, Turbo tasks, Docker layers and the vulnerability database are kept from one run to the next.',
       cachesHint:
         'Every job also carries a time limit, so a stuck step cannot hold the pipeline indefinitely.',
-      otherPipelines: 'Three other pipelines, outside the main graph',
+      otherPipelines: 'Four other pipelines, outside the main graph',
       rollback: 'rollback',
       rollbackHint: 'Manually triggered to put the previous image back online.',
-      registry: 'registry cleanup',
-      registryHint: 'Purges old Docker images so the registry does not grow forever.',
+      terraform: 'infrastructure',
+      terraformHint:
+        'Plans an infrastructure change on its pull request, and applies it once merged on master.',
+      backup: 'backup',
+      backupHint:
+        'Every night, a dump of the database goes to a private bucket, read back and restored on the runner before it is kept; thirty days of retention.',
       securityScan: 'security scan',
       securityScanHint:
         'Scheduled, independent of pushes, to catch vulnerabilities published after the fact.',
@@ -2907,9 +2911,9 @@ export const en: Locale = {
     },
     infra: {
       title: 'Where it runs, and what is allowed to change it',
-      lead: 'Nothing is deployed by hand. One image per commit, secrets outside the repository, a rollback in one run.',
+      lead: 'Nothing is deployed by hand. One image per commit, secrets outside the repository, a staging every delivery goes through, a rollback in one run, and an infrastructure described in code that only a review changes.',
       caption:
-        'The front end and the server live with the same provider, in europe-west1, joined by a single allowed origin.',
+        'The front end and the server live with the same provider, in europe-west1, joined by a single allowed origin; the staging is a second instance of the same frame, under staging.movie-picker.fr.',
       smoke: 'Deployment observed',
       smokeValue:
         'After every deployment the pipeline calls both health probes on the server and loads the front end on its public domain. A silent service fails the deployment.',
@@ -2931,14 +2935,29 @@ export const en: Locale = {
         'Revisions stay available at the host and old images in the registry, purged by its retention policy so that it does not grow forever.',
       scheduler: 'Periodic work',
       schedulerValue:
-        'No background work lives in the process. An external scheduler calls the server every 30 minutes for the event reminders, and once a day to spawn the next occurrence of recurring nights, on routes protected by a token.',
+        'No background work lives in the process. An external scheduler calls the server every 30 minutes for the event reminders, and once a day to spawn the next occurrence of recurring nights then close the ones that ended on their own, on routes protected by a token.',
       schedulerHint:
-        'Both jobs are created by the deployment pipeline, but only if the token exists: without it neither a reminder nor a next occurrence goes out, and the deployment reports it as a warning.',
+        'The three jobs are created by the deployment pipeline in production, but only if the token exists: without it neither a reminder nor a next occurrence goes out, and the deployment reports it as a warning. The staging has none.',
       origins: 'Origins',
       originsValue:
         'The server only accepts declared origins. The deployment fails if the list is not set.',
       originsHint:
         'The list is a repository variable, checked before the deploy call, not a permissive default.',
+      staging: 'Staging before production',
+      stagingValue:
+        'Every commit first goes to staging.movie-picker.fr, a second instance of the site and the server with its own database and its own sign-in clients. Production refuses to leave until the staging serves exactly that commit, and reuses the image the staging runs without rebuilding it.',
+      stagingHint:
+        'The staging is not indexed by search engines, has neither probes nor backups, and runs in the same project under identities of its own.',
+      iac: 'Infrastructure described',
+      iacValue:
+        'Registry, secrets, services, sites, identities, federation and alerts are described in Terraform, with a versioned and locked remote state. A change is planned on its pull request and applied only once merged.',
+      iacHint:
+        'Production was imported, never recreated: the plan is empty as long as code and reality agree, and a drift shows up in a review rather than in an incident.',
+      identities: 'Keyless identities',
+      identitiesValue:
+        'No service account key exists. The deployment and infrastructure pipelines exchange the GitHub token for one identity per environment, and each identity only holds the rights of the commands it runs, bound to the resource they touch.',
+      identitiesHint:
+        'The server runs under an identity that can only read its secrets: compromised, it could neither redeploy itself nor read a key it does not use.',
     },
     quality: {
       title: 'What is measured, and the threshold that fails the build',
@@ -2970,7 +2989,7 @@ export const en: Locale = {
       monitoringValue:
         'Three probes query the service from outside, from three continents, and five alert policies warn by e-mail: service or database unreachable, server errors, degraded latency.',
       monitoringHint:
-        'The probes target /health, /health/ready and the front root. Thresholds sit above the measured noise so that an alert stays credible, and an incident closes on its own after thirty minutes back to normal.',
+        'The probes target /health, /health/ready and the front root. Thresholds sit above the measured noise so that an alert stays credible, and an incident closes on its own after thirty minutes back to normal. Probes, policies and their documentation are described in code.',
       sentry: 'Sentry',
       sentryValue:
         'Browser and server errors, tied to the deployed version through the commit SHA.',
@@ -3249,7 +3268,7 @@ export const en: Locale = {
       infraSentrySub: 'front and server errors',
       infraSentryDetail: 'European region',
       infraGap:
-        'Registry, secrets, Cloud Run and Hosting described in Terraform; identities, alerts and staging remain.',
+        'The whole frame is described in Terraform, identities and alerts included; the staging staging.movie-picker.fr is a second instance of it, and a change goes through a review before being applied.',
       infraNote: 'The dotted line is not a network path: the browser calls the server directly.',
       infraNoteOrigin: 'The front end origin is the only one the server accepts.',
       requestPathTitle:

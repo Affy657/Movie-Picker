@@ -8,6 +8,7 @@ import {
   Cloud,
   Container,
   Database,
+  FileCode2,
   FileJson,
   Fingerprint,
   FlaskConical,
@@ -17,12 +18,14 @@ import {
   GitCommitVertical,
   GitCompare,
   GitPullRequest,
+  IdCard,
   ImageDown,
   KeyRound,
   Languages,
   Layers,
   ListChecks,
   Lock,
+  Milestone,
   MonitorSmartphone,
   Network,
   PackageSearch,
@@ -161,7 +164,7 @@ const CI_KEYS = [
   { key: 'caches', Icon: Layers },
 ] as const;
 
-const OTHER_PIPELINES = ['rollback', 'registry', 'securityScan'] as const;
+const OTHER_PIPELINES = ['rollback', 'terraform', 'backup', 'securityScan'] as const;
 
 const CONTRACT_KEYS = [
   { key: 'export', Icon: FileJson },
@@ -205,9 +208,12 @@ const INFRA_KEYS = [
   { key: 'rollback', Icon: Undo2 },
   { key: 'scheduler', Icon: CalendarClock },
   { key: 'origins', Icon: ShieldCheck },
+  { key: 'staging', Icon: Milestone },
+  { key: 'iac', Icon: FileCode2 },
+  { key: 'identities', Icon: IdCard },
 ] as const;
 
-const OPEN_TECH_WORK = ['terraform', 'staging', 'leastPrivilege', 'sharedCache'] as const;
+const OPEN_TECH_WORK = ['sharedCache', 'containerTwice', 'schedulerToken', 'sentryToken'] as const;
 
 const QUALITY_BLOCKING_KEYS = [
   { key: 'coverage', Icon: FlaskConical },
