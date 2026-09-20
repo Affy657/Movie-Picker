@@ -11,6 +11,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 ### Added
 
 - **Le site s'appelle désormais `www.movie-picker.fr`** : l'adresse historique `web.movie-picker.fr` et `movie-picker.fr` y renvoient d'elles-mêmes, en gardant la page demandée, donc un lien de soirée ou un courriel déjà reçu continue d'ouvrir la bonne page ; `www` et l'adresse nue répondent enfin en HTTPS. L'hébergement du site est passé sur Firebase Hosting, à côté de l'API, et une adresse tapée avec une barre finale est ramenée sur sa page.
+- **Un environnement de recette, `staging.movie-picker.fr`** : une seconde instance de l'API et du site, avec sa propre base et ses propres comptes de connexion, décrite en code à côté de la production ; chaque livraison y passe d'abord, et la production ne part que si la recette sert exactement le même commit, avec la même image de conteneur, sans reconstruction. La recette n'est pas indexée par les moteurs de recherche.
 - **L'infrastructure commence à s'écrire en code** : une arborescence Terraform dédiée, aux versions épinglées, avec un état distant versionné et verrouillé, et une porte `fmt` + `validate` jouée dans la vérification locale comme dans la CI.
 - **La production GCP est décrite et importée** : le registre d'images et sa rétention, le service qui sert l'API avec son domaine, et les quatorze secrets avec le droit de les lire, en trois modules réutilisables, sans qu'aucune ressource n'ait été recréée. Le workflow mensuel qui reposait la rétention du registre disparaît, la description la porte.
 

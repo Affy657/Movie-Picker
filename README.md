@@ -121,11 +121,14 @@ qualité sur `master` et sur les pull requests : Gitleaks, le lint des workflows
 dépendances npm et NuGet, les suites de tests, les E2E et le Quality Gate SonarCloud.
 
 `.github/workflows/deploy.yml` met en production, et **seulement à la main** : un push sur `master`
-ne déploie rien. Le déclenchement choisit sa cible (tout, front seul, API seule), refuse de partir
-si le run de CI du commit visé n'est pas vert, puis ajoute les deux portes propres au déploiement,
-les seuils Lighthouse et le scan Trivy de l'image. Grouper plusieurs livraisons dans un seul
-déploiement est le but : quand le dépôt était privé, ses minutes GitHub Actions étaient facturées et
-rejouer le chemin de déploiement à chaque commit en consommait la moitié.
+ne déploie rien. Le déclenchement choisit son étape (la recette `staging.movie-picker.fr`, puis la
+production) et sa cible (tout, front seul, API seule), refuse de partir si le run de CI du commit
+visé n'est pas vert, puis ajoute les deux portes propres au déploiement, les seuils Lighthouse et le
+scan Trivy de l'image. La production refuse de partir tant que la recette ne sert pas exactement le
+même commit, et elle redéploie l'image de conteneur que la recette exécute, sans la reconstruire.
+Grouper plusieurs livraisons dans un seul déploiement est le but : quand le dépôt était privé, ses
+minutes GitHub Actions étaient facturées et rejouer le chemin de déploiement à chaque commit en
+consommait la moitié.
 
 Trois choix structurent la mise en production :
 

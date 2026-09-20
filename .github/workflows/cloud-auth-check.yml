@@ -1,8 +1,8 @@
 # Proves that the keyless authentication of the workflows still works, without touching anything:
-# the GitHub OIDC token is exchanged for the CI service account on GCP (Workload Identity
-# Federation), which then answers read-only calls. Run it after any change to the federation
-# (pool, provider, service account binding, environment name) before relying on a deployment to
-# find out.
+# the GitHub OIDC token is exchanged for the CI service account of each stage on GCP (Workload
+# Identity Federation), which then answers read-only calls. Run it after any change to the
+# federation (pool, provider, service account binding, environment name) before relying on a
+# deployment to find out.
 
 name: 🔐 Cloud auth check
 
@@ -14,10 +14,14 @@ permissions:
 
 jobs:
   probe:
-    name: 🔐 Exchange the OIDC token on GCP
+    name: 🔐 Exchange the OIDC token on GCP (${{ matrix.stage }})
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    environment: production
+    strategy:
+      fail-fast: false
+      matrix:
+        stage: [production, staging]
+    environment: ${{ matrix.stage }}
     permissions:
       contents: read
       id-token: write
@@ -30,18 +34,21 @@ jobs:
           workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
-      # The runtime account is the one `deploy.yml` gives to every new revision: a deployment
-      # without it fails at revision creation, so its existence is checked here, where nothing
-      # is at stake.
+      # The runtime account is the one `deploy.yml` gives to every new revision of the stage: a
+      # deployment without it fails at revision creation, so its existence is checked here, where
+      # nothing is at stake. The scheduler token is production's alone, as its Scheduler jobs are.
       - name: GCP, read-only calls as the CI service account
         run: |
           gcloud auth list --filter=status:ACTIVE --format='value(account)'
-          gcloud secrets describe SCHEDULER_TOKEN --format='value(name)' >/dev/null
+          if [ "$STAGE" = "production" ]; then
+            gcloud secrets describe SCHEDULER_TOKEN --format='value(name)' >/dev/null
+          fi
           gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)'
           gcloud iam service-accounts describe "${API_RUNTIME_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --format='value(email)' >/dev/null
-          echo "GCP federation OK, runtime service account present"
+          echo "GCP federation OK for the $STAGE, runtime service account present"
         env:
+          STAGE: ${{ matrix.stage }}
           GCP_REGION: europe-west1
-          CLOUD_RUN_SERVICE_NAME: movie-picker-api
-          API_RUNTIME_SERVICE_ACCOUNT_NAME: movie-picker-api
+          CLOUD_RUN_SERVICE_NAME: ${{ matrix.stage == 'production' && 'movie-picker-api' || 'movie-picker-api-staging' }}
+          API_RUNTIME_SERVICE_ACCOUNT_NAME: ${{ matrix.stage == 'production' && 'movie-picker-api' || 'movie-picker-api-staging' }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}

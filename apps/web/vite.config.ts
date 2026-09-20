@@ -31,6 +31,23 @@ function cspMetaPlugin(apiOrigin: string, sentryOrigin: string): Plugin {
   };
 }
 
+function releaseMetaPlugin(release: string): Plugin {
+  return {
+    name: 'moviepicker-release-meta',
+    apply: 'build',
+    transformIndexHtml() {
+      if (!release) return [];
+      return [
+        {
+          tag: 'meta',
+          attrs: { name: 'release', content: release },
+          injectTo: 'head',
+        },
+      ];
+    },
+  };
+}
+
 const CRITICAL_FONT_BASES = [
   'overpass-latin-400-normal',
   'overpass-latin-700-normal',
@@ -296,9 +313,11 @@ export default defineConfig(({ mode }) => {
   const sentryDsn = process.env.VITE_SENTRY_DSN || env.VITE_SENTRY_DSN || '';
   const sentryOrigin = toSentryIngestOrigin(sentryDsn);
   const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
+  const release = (process.env.SENTRY_RELEASE || '').trim();
   return {
     plugins: [
       react(),
+      releaseMetaPlugin(release),
       VitePWA({
         strategies: 'injectManifest',
         srcDir: 'src',

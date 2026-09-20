@@ -71,7 +71,7 @@ module "ci" {
   ]
   acts_as_service_accounts = [google_service_account.api_runtime.name]
   image_repositories = {
-    api = { location = var.region, repository_id = module.api_images.repository_id }
+    api = { location = var.region, repository_id = module.api_images.repository_id, role = "roles/artifactregistry.reader" }
   }
   readable_secrets = ["SCHEDULER_TOKEN", "MONGODB_URI"]
   bucket_roles = {

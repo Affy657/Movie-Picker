@@ -12,6 +12,10 @@ inputs:
     description: "Public web origins, comma-separated as in ALLOWED_ORIGINS; the first one is probed, empty to skip"
     required: false
     default: ""
+  noindex:
+    description: "true when the site must answer with X-Robots-Tag noindex (the staging), false when it must not (production): a header published on the wrong site fails here"
+    required: false
+    default: "false"
 runs:
   using: composite
   steps:
@@ -22,6 +26,7 @@ runs:
       shell: bash
       env:
         HOSTING_URL: ${{ inputs.hosting-url }}
+        NOINDEX: ${{ inputs.noindex }}
       run: |
         set -eo pipefail
         code="$(curl -sS -o "$RUNNER_TEMP/hosting.html" -D "$RUNNER_TEMP/hosting.headers" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$HOSTING_URL/")"
@@ -29,6 +34,15 @@ runs:
         test "$code" = "200"
         grep -qi '^x-frame-options: DENY' "$RUNNER_TEMP/hosting.headers"
         grep -qi '^cache-control: no-cache, must-revalidate' "$RUNNER_TEMP/hosting.headers"
+        if [ "$NOINDEX" = "true" ]; then
+          grep -qi '^x-robots-tag: .*noindex' "$RUNNER_TEMP/hosting.headers" || {
+            echo "::error::$HOSTING_URL answers without X-Robots-Tag noindex: this site must never be indexed."
+            exit 1
+          }
+        elif grep -qi '^x-robots-tag: .*noindex' "$RUNNER_TEMP/hosting.headers"; then
+          echo "::error::$HOSTING_URL answers with X-Robots-Tag noindex: a staging header reached this site, it would leave the index."
+          exit 1
+        fi
         echo "Hosting answers with the expected headers."
     # The previous smoke test queries the site address: it says nothing about the public domain
     # served to users, whose DNS or certificate can be broken while the site answers perfectly.

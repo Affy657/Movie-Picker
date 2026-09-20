@@ -6,6 +6,15 @@
 # minutes were billed and 99% of the cost went to master pushes: half of that cost was the
 # deployment path, replayed on every commit that was not delivered anyway.
 #
+# **Through the staging first.** The same workflow deploys two stages, chosen at trigger time:
+# `staging` (the recette, `staging.movie-picker.fr`) then `production`. Production refuses to
+# leave until the staging serves exactly the commit being deployed (release reported by the API on
+# `/health/ready`, release written in the index.html the web app serves), and it does not rebuild
+# the API image: it resolves the one the staging run pushed for this commit and redeploys that
+# digest, so that the bytes that passed the recette are the bytes production runs. The two
+# stages differ only by the GitHub environment their jobs run in (identity, `VITE_API_URL`,
+# `ALLOWED_ORIGINS`) and by the names of their targets below; the staging has no Scheduler job.
+#
 # Accepted trade-off: production is stale by default between two triggers. The final guard
 # therefore checks that every requested target really left, not the run colour: a deployment job
 # skipped by a red `needs:` does not show up as a failure.
@@ -19,20 +28,30 @@
 # gate was measured without gain).
 #
 # Rollback: `rollback.yml` for the API (earlier Cloud Run revision), `rollback-front.yml` for the
-# web app (a Hosting release pointed back at a version `deploy-front` built).
+# web app (a Hosting release pointed back at a version `deploy-front` built). Both target
+# production; the staging is rolled back by deploying again.
 #
-# Two identities on GCP, never the same one. The workflows impersonate the CI service account
-# (`gcloud-auth`), which can push images, create revisions and manage the Scheduler jobs. The
-# revision itself runs as `movie-picker-api@<project>.iam.gserviceaccount.com`, which can only
-# read the secrets mounted below: an API compromised at runtime cannot redeploy itself, rewrite
-# the Scheduler jobs or read a secret it does not use. `cloud-auth-check.yml` checks that the
-# runtime account exists before a deployment finds out.
+# Two identities per stage on GCP, never the same one. The workflows impersonate the CI service
+# account of their environment (`gcloud-auth`), which can push images, create revisions and manage
+# the Scheduler jobs. The revision itself runs as `movie-picker-api@<project>.iam.gserviceaccount.com`
+# (`movie-picker-api-staging@` for the staging), which can only read the secrets mounted below: an
+# API compromised at runtime cannot redeploy itself, rewrite the Scheduler jobs or read a secret it
+# does not use. `cloud-auth-check.yml` checks that the runtime accounts exist before a deployment
+# finds out.
 
 name: 🚀 Deploy
 
 on:
   workflow_dispatch:
     inputs:
+      stage:
+        description: "Where it gets deployed: the staging first, production only once the staging serves this commit"
+        type: choice
+        required: true
+        default: staging
+        options:
+          - staging
+          - production
       target:
         description: "What gets deployed"
         type: choice
@@ -46,22 +65,28 @@ on:
 permissions:
   contents: read
 
-# Two simultaneous deployments would step on each other on Hosting as on Cloud Run. Never cancel
-# mid-way: a deployment interrupted between the revision and its promotion leaves an inconsistent
-# state.
+# Two simultaneous deployments of a stage would step on each other on Hosting as on Cloud Run.
+# Never cancel mid-way: a deployment interrupted between the revision and its promotion leaves an
+# inconsistent state. `deploy-production` is also the group of the rollback workflows.
 concurrency:
-  group: deploy-production
+  group: deploy-${{ inputs.stage }}
   cancel-in-progress: false
 
 env:
   NODE_VERSION: "22"
   GCP_REGION: europe-west1
   GCP_ARTIFACT_REPO: movie-picker
-  CLOUD_RUN_SERVICE_NAME: movie-picker-api
-  API_RUNTIME_SERVICE_ACCOUNT_NAME: movie-picker-api
-  # Firebase Hosting site of the web app (`infra/terraform`, module `web`), served on
-  # www.movie-picker.fr and verified on its web.app address as well.
-  FIREBASE_HOSTING_SITE: movie-picker-web
+  # The targets of each stage, as `infra/terraform/environments/<stage>` names them. Everything
+  # else that differs between the stages comes from the GitHub environment of the same name.
+  CLOUD_RUN_SERVICE_NAME: ${{ inputs.stage == 'production' && 'movie-picker-api' || 'movie-picker-api-staging' }}
+  API_RUNTIME_SERVICE_ACCOUNT_NAME: ${{ inputs.stage == 'production' && 'movie-picker-api' || 'movie-picker-api-staging' }}
+  # Firebase Hosting site of the web app (`infra/terraform`, module `web`), served on its custom
+  # domain and verified on its web.app address as well.
+  FIREBASE_HOSTING_SITE: ${{ inputs.stage == 'production' && 'movie-picker-web' || 'movie-picker-web-staging' }}
+  # Public addresses of the staging, read by the production gate: both are public, like every
+  # domain of the project.
+  STAGING_WEB_URL: https://staging.movie-picker.fr
+  STAGING_API_URL: https://api.staging.movie-picker.fr
   # The web lane runs the CLI from the lockfile (`@sentry/cli`, integrity checked by pnpm); the
   # jobs without Node download the same version and check its checksum, as the other binaries
   # of the workflows are: an unverified download would run inside a job holding cloud credentials.
@@ -70,15 +95,16 @@ env:
 
 jobs:
   # The only gate of this workflow. It replays nothing: it requires the `ci-cd.yml` run of the
-  # target commit to be green. A missing run (no push since, or runners blocked by billing) is
-  # treated as a refusal, not as a green light by default.
+  # target commit to be green, and, for production, the staging to serve that very commit. A
+  # missing run (no push since, or runners blocked by billing) is treated as a refusal, not as a
+  # green light by default.
   # Reading the conclusion alone is enough because a master run plays every lane, without path
   # filtering (see the `ci-cd.yml` header): its colour holds for the whole tree of the commit.
   # Before that, a documentation commit on top of a red code commit gave a green run in 12 s, nine
   # jobs skipped, and this guard accepted it.
-  # The refusal outside master below is doubled by the branch policy of the `production`
-  # environment (Settings → Environments), which also covers the rollback and backup workflows:
-  # this `if` is only the clear message and the fast exit.
+  # The refusal outside master below is doubled by the branch policy of the `production` and
+  # `staging` environments (Settings → Environments), which also covers the rollback and backup
+  # workflows: this `if` is only the clear message and the fast exit.
   verify-ci:
     name: ✅ Require a green CI run on the target commit
     runs-on: ubuntu-24.04
@@ -90,7 +116,7 @@ jobs:
       - name: Refuse a deployment outside master
         run: |
           if [ "$GITHUB_REF" != "refs/heads/master" ]; then
-            echo "::error::Production only leaves from master (requested ref: $GITHUB_REF). Merge first."
+            echo "::error::A deployment only leaves from master (requested ref: $GITHUB_REF). Merge first."
             exit 1
           fi
       # `--jq` filters server-side on the exact SHA: a pull request run carries the same head_sha
@@ -126,6 +152,37 @@ jobs:
             exit 1
           fi
           echo "CI gates green on $GITHUB_SHA."
+      # Read on the public addresses, as a user would: the API reports the SHA it was built from
+      # in `/health/ready`, the web app writes it in a `<meta name="release">` of its index.html
+      # (`apps/web/vite.config.ts`). A staging that serves another commit, or nothing, refuses
+      # production: deploy the commit to the staging first. Only the requested targets are read:
+      # a front-only deployment says nothing about the API.
+      - name: Require the staging to serve this commit
+        if: inputs.stage == 'production'
+        env:
+          TARGET: ${{ inputs.target }}
+        run: |
+          set -eo pipefail
+          if [ "$TARGET" != "front" ]; then
+            body="$RUNNER_TEMP/staging-ready.json"
+            curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$body" "$STAGING_API_URL/health/ready"
+            served="$(jq -r '.release // ""' "$body")"
+            if [ "$served" != "$GITHUB_SHA" ]; then
+              echo "::error::The staging API serves release '${served:-none}', not $GITHUB_SHA: deploy this commit to the staging first (stage=staging), then to production."
+              exit 1
+            fi
+            echo "Staging API serves $served."
+          fi
+          if [ "$TARGET" != "api" ]; then
+            page="$RUNNER_TEMP/staging-index.html"
+            curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 -o "$page" "$STAGING_WEB_URL/"
+            served="$(grep -oE '<meta name="release" content="[0-9a-f]{40}"' "$page" | grep -oE '[0-9a-f]{40}' | head -1 || true)"
+            if [ "$served" != "$GITHUB_SHA" ]; then
+              echo "::error::The staging web app serves release '${served:-none}', not $GITHUB_SHA: deploy this commit to the staging first (stage=staging), then to production."
+              exit 1
+            fi
+            echo "Staging web app serves $served."
+          fi
 
   # Blocking gate of `deploy-front`, moved here from `ci-cd.yml`: 9 minutes per master push whose
   # measurement was only consumed by a deployment. On the deployment path, it costs 9 minutes per
@@ -162,18 +219,24 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-  # `environment: production` on every job talking to GCP: the federation trusts the GitHub OIDC
-  # token only when its subject is this environment, whose branch policy restricts it to `master`.
-  # No long-lived cloud credential exists in the repository secrets any more.
-  docker-api:
-    name: 🐳 Docker API → Artifact Registry
+  # `environment: <stage>` on every job talking to GCP: the federation trusts the GitHub OIDC
+  # token only when its subject is one of these environments, whose branch policy restricts them
+  # to `master`, and binds each one to its own identity. No long-lived cloud credential exists in
+  # the repository secrets any more.
+  #
+  # One job, two ways to get the digest to deploy. For the staging, the image is built, scanned,
+  # pushed as `api:<sha>` and its digest read back. For production, the tag the staging run pushed
+  # for this commit is resolved to its digest and scanned again (a CVE published between the two
+  # stages blocks production the same way), never rebuilt: the production identity cannot push.
+  image:
+    name: 🐳 API image (built for the staging, resolved from it for production)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: verify-ci
     outputs:
-      image_digest: ${{ steps.push.outputs.digest }}
+      image_digest: ${{ steps.push.outputs.digest || steps.resolve.outputs.digest }}
     if: inputs.target == 'all' || inputs.target == 'api'
-    environment: production
+    environment: ${{ inputs.stage }}
     permissions:
       contents: read
       id-token: write
@@ -188,10 +251,12 @@ jobs:
           project-id: ${{ secrets.GCP_PROJECT_ID }}
       - run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+        if: inputs.stage == 'staging'
       # The context is the solution folder, not the project one: `Directory.Build.props` lives
       # there, and an image built without it compiles with other analyser and audit settings than
       # the ones `lint-api` validated. The Dockerfile copies only what the API needs.
       - name: Build API image (buildx + GHA layer cache)
+        if: inputs.stage == 'staging'
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: apps/api-dotnet
@@ -208,6 +273,7 @@ jobs:
       # (workaround / mitigation) and suppress it on the Trivy side (`.trivyignore` at the root of
       # the build context) with a review note.
       - name: Scan Docker image (Trivy)
+        if: inputs.stage == 'staging'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: movie-picker-api
@@ -221,6 +287,7 @@ jobs:
       # digest names exactly the bytes Trivy just scanned.
       - name: Tag & push image
         id: push
+        if: inputs.stage == 'staging'
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
@@ -242,6 +309,7 @@ jobs:
           echo "Digest: $DIGEST"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
       - name: Image SBOM (Trivy → CycloneDX, artifact)
+        if: inputs.stage == 'staging'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: movie-picker-api
@@ -249,22 +317,53 @@ jobs:
           output: sbom.cdx.json
           cache: true
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: inputs.stage == 'staging'
         with:
           name: sbom-api
           path: sbom.cdx.json
           if-no-files-found: warn
           retention-days: 30
+      # The tag is the commit: what the staging run pushed for it is what production gets. The
+      # read needs `artifactregistry.reader` on the repository, the only right the production
+      # identity keeps there.
+      - name: Resolve the image the staging ran
+        id: resolve
+        if: inputs.stage == 'production'
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          set -eo pipefail
+          REPO="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api"
+          DIGEST="$(gcloud artifacts docker images describe "${REPO}:${GITHUB_SHA}" --format='value(image_summary.digest)' 2>/dev/null || true)"
+          if ! printf '%s' "$DIGEST" | grep -qE '^sha256:[0-9a-f]{64}$'; then
+            echo "::error::No image ${REPO}:${GITHUB_SHA} in the registry: the staging deployment of this commit did not push it (or the retention removed it). Deploy to the staging first."
+            exit 1
+          fi
+          echo "Image the staging ran: ${REPO}@${DIGEST}"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "ref=${REPO}@${DIGEST}" >> "$GITHUB_OUTPUT"
+      - name: Scan the resolved image again (Trivy)
+        if: inputs.stage == 'production'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.resolve.outputs.ref }}
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          vuln-type: os,library
+          cache: true
 
   deploy-api:
     name: 🚀 Deploy API → Cloud Run
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     # A bare `needs:`, without `always()` nor `result` test: the quality gates are already required
-    # by `verify-ci` upstream of `docker-api`, and an `always()` let the skip of an intermediate job
+    # by `verify-ci` upstream of `image`, and an `always()` let the skip of an intermediate job
     # propagate silently down to here, exactly the trap that left production ten days behind. A red
-    # or skipped docker-api skips this job, and the final guard reports it.
-    needs: docker-api
-    environment: production
+    # or skipped image job skips this job, and the final guard reports it.
+    needs: image
+    environment: ${{ inputs.stage }}
     permissions:
       contents: read
       id-token: write
@@ -282,6 +381,11 @@ jobs:
       # which exposed the bad revision for the duration of the smoke tests and then left the traffic
       # pinned to a named revision, a state in which `gcloud run deploy` sends no traffic to the
       # following revisions, without anything turning red.
+      #
+      # The secrets mounted are the ones `infra/terraform` describes for the stage. The staging
+      # mounts its own database and OAuth clients (`STAGING_*`) and, under their production name,
+      # the shared keys it uses; it mounts neither the data protection keyring (unused once MongoDB
+      # holds the keys, DEBT-045) nor the scheduler token (no Scheduler job targets the staging).
       - name: Deploy without traffic (GCP secrets + CORS)
         id: deploy
         env:
@@ -289,7 +393,8 @@ jobs:
           ALLOWED_ORIGINS_VARS: ${{ vars.ALLOWED_ORIGINS }}
           ALLOWED_ORIGINS_SECRET: ${{ secrets.ALLOWED_ORIGINS }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          IMAGE_DIGEST: ${{ needs.docker-api.outputs.image_digest }}
+          IMAGE_DIGEST: ${{ needs.image.outputs.image_digest }}
+          STAGE: ${{ inputs.stage }}
         run: |
           set -eo pipefail
           CORS="${ALLOWED_ORIGINS_VARS:-$ALLOWED_ORIGINS_SECRET}"
@@ -299,25 +404,29 @@ jobs:
             echo "::error::  • or a Secret with the same name (ALLOWED_ORIGINS) if you prefer."
             exit 1
           fi
-          # The format is already validated on the docker-api side; here only check that the value
+          # The format is already validated on the image side; here only check that the value
           # crossed the boundary between the two jobs.
           if [ -z "$IMAGE_DIGEST" ]; then
-            echo "::error::Image digest missing: the docker-api job did not pass it on."
+            echo "::error::Image digest missing: the image job did not pass it on."
             exit 1
           fi
           TAG="s-${GITHUB_SHA:0:7}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           RUNTIME_SA="${API_RUNTIME_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
-          SECRETS="MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
-          # Optional: once the v4 read access token exists in Secret Manager, the API sends it as a
-          # Bearer header and stops appending TMDB_API_KEY to its outbound URLs.
-          if gcloud secrets describe TMDB_READ_ACCESS_TOKEN >/dev/null 2>&1; then
-            SECRETS="$SECRETS,TMDB_READ_ACCESS_TOKEN=TMDB_READ_ACCESS_TOKEN:latest"
-          fi
-          if gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
-            SECRETS="$SECRETS,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest"
+          if [ "$STAGE" = "production" ]; then
+            SECRETS="MONGODB_URI=MONGODB_URI:latest,TMDB_API_KEY=TMDB_API_KEY:latest,AUTH_DATAPROTECTION_KEYRING=AUTH_DATAPROTECTION_KEYRING:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,KOFI_WEBHOOK_TOKEN=KOFI_WEBHOOK_TOKEN:latest,OAUTH_GOOGLE_CLIENT_ID=OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=OAUTH_GITHUB_CLIENT_SECRET:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
+            # Optional: once the v4 read access token exists in Secret Manager, the API sends it as
+            # a Bearer header and stops appending TMDB_API_KEY to its outbound URLs.
+            if gcloud secrets describe TMDB_READ_ACCESS_TOKEN >/dev/null 2>&1; then
+              SECRETS="$SECRETS,TMDB_READ_ACCESS_TOKEN=TMDB_READ_ACCESS_TOKEN:latest"
+            fi
+            if gcloud secrets describe SCHEDULER_TOKEN >/dev/null 2>&1; then
+              SECRETS="$SECRETS,SCHEDULER_TOKEN=SCHEDULER_TOKEN:latest"
+            else
+              echo "::warning::SCHEDULER_TOKEN secret missing from Secret Manager. The API starts without it, but the POST /api/v1/scheduler/* routes will answer 503: neither event reminders nor the recurring events sweep will run. Create the secret then rerun this deployment."
+            fi
           else
-            echo "::warning::SCHEDULER_TOKEN secret missing from Secret Manager. The API starts without it, but the POST /api/v1/scheduler/* routes will answer 503: neither event reminders nor the recurring events sweep will run. Create the secret then rerun this deployment."
+            SECRETS="MONGODB_URI=STAGING_MONGODB_URI:latest,OAUTH_GOOGLE_CLIENT_ID=STAGING_OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=STAGING_OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=STAGING_OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=STAGING_OAUTH_GITHUB_CLIENT_SECRET:latest,TMDB_API_KEY=TMDB_API_KEY:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
           fi
           # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
           gcloud run deploy "$CLOUD_RUN_SERVICE_NAME" \
@@ -330,7 +439,7 @@ jobs:
             --no-traffic \
             --tag "$TAG" \
             --set-secrets "$SECRETS" \
-            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=production##SENTRY_RELEASE=${GITHUB_SHA}##EMAIL_PROVIDER=resend"
+            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=$STAGE##SENTRY_RELEASE=${GITHUB_SHA}##EMAIL_PROVIDER=resend"
           TAG_URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
             | jq -r --arg t "$TAG" '[.status.traffic[]? | select(.tag == $t) | .url] | first // ""')"
           if [ -z "$TAG_URL" ]; then
@@ -339,8 +448,8 @@ jobs:
           fi
           echo "Revision deployed without traffic, reachable at $TAG_URL"
           echo "tag_url=$TAG_URL" >> "$GITHUB_OUTPUT"
-      # Probes run on the tagged URL: production still serves the previous revision. A failure here
-      # leaves production untouched, there is nothing to repair, the revision is not promoted.
+      # Probes run on the tagged URL: the stage still serves the previous revision. A failure here
+      # leaves it untouched, there is nothing to repair, the revision is not promoted.
       - name: Validate the revision before exposing it
         uses: ./.github/actions/check-api-health
         with:
@@ -358,7 +467,10 @@ jobs:
       # Closing an event still creates its next occurrence and cleans the winners out of the
       # participants' watchlists on the spot; the two nightly sweeps catch up the series nobody
       # reopened and the events that finished on their own. Reads no longer write (DEBT-029).
+      # Production only: the staging has no Scheduler job, its scheduler routes answer 503, and
+      # three more jobs would leave the free tier of Cloud Scheduler.
       - name: "Event reminders, recurring and finished events: Cloud Scheduler"
+        if: inputs.stage == 'production'
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
@@ -409,12 +521,12 @@ jobs:
         run: |
           set -eo pipefail
           URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
-          echo "Production (Cloud Run URL): $URL"
+          echo "Live service (Cloud Run URL): $URL"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
       # `expected-release`: `/health/ready` reports the SHA the revision was built from, so the
       # probe asserts that the traffic really moved, where a bare `status=ok` is what the
       # previous revision answers too.
-      - name: Verify production after promotion
+      - name: Verify the stage after promotion
         uses: ./.github/actions/check-api-health
         with:
           url: ${{ steps.service.outputs.url }}
@@ -436,6 +548,7 @@ jobs:
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
           SENTRY_URL: ${{ vars.SENTRY_URL }}
           SENTRY_RELEASE: ${{ github.sha }}
+          STAGE: ${{ inputs.stage }}
         run: |
           if [ -z "$SENTRY_AUTH_TOKEN" ]; then
             echo "SENTRY_AUTH_TOKEN missing, skipped"
@@ -448,7 +561,7 @@ jobs:
           extra=()
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
           ./sentry-cli "${extra[@]}" releases new "$SENTRY_RELEASE" || true
-          ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "api-${SENTRY_RELEASE}"
+          ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e "$STAGE" -n "api-${SENTRY_RELEASE}"
 
   deploy-front:
     name: 🚀 Deploy web → Firebase Hosting
@@ -458,7 +571,7 @@ jobs:
     # requires all of them on the target commit. Only Lighthouse remains here, the only gate that
     # runs in this workflow.
     needs: lighthouse
-    environment: production
+    environment: ${{ inputs.stage }}
     permissions:
       contents: read
       id-token: write
@@ -472,7 +585,7 @@ jobs:
             echo "::error::VITE_API_URL (secret) is empty."
             exit 1
           fi
-          if echo "$VITE_API_URL" | grep -qE 'web\.app|firebaseapp\.com|//(www|web)\.movie-picker\.fr'; then
+          if echo "$VITE_API_URL" | grep -qE 'web\.app|firebaseapp\.com|//(www|web|staging)\.movie-picker\.fr'; then
             echo "::error::VITE_API_URL must be the API URL (Cloud Run), not the web app's."
             exit 1
           fi
@@ -481,6 +594,7 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          VITE_SENTRY_ENVIRONMENT: ${{ inputs.stage }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
@@ -499,8 +613,16 @@ jobs:
       # release: the cache tiers and the security headers travel with it
       # (`infra/firebase-hosting.json`), and the previous versions stay listed, which is what
       # `rollback-front.yml` points back to. No archive to keep: Hosting keeps the versions itself.
+      # The staging adds `X-Robots-Tag: noindex` to every answer: a recette indexed next to the
+      # canonical domain would be duplicate content.
       - name: Publish the build to Firebase Hosting (version, upload, release)
-        run: node scripts/publish-front-firebase.mjs --site "$FIREBASE_HOSTING_SITE" --dist apps/web/dist
+        env:
+          STAGE: ${{ inputs.stage }}
+        run: |
+          set -eo pipefail
+          args=()
+          if [ "$STAGE" != "production" ]; then args+=(--header "X-Robots-Tag: noindex, nofollow"); fi
+          node scripts/publish-front-firebase.mjs --site "$FIREBASE_HOSTING_SITE" --dist apps/web/dist "${args[@]}"
       - name: Verify the served web build
         uses: ./.github/actions/verify-front
         with:
@@ -510,6 +632,7 @@ jobs:
           # app's by construction, rather than rewritten here: one more value to keep up to date
           # would be one more value to forget during a domain migration.
           public-origins: ${{ vars.ALLOWED_ORIGINS }}
+          noindex: ${{ inputs.stage != 'production' && 'true' || 'false' }}
       - name: Record the Sentry deploy (web)
         continue-on-error: true
         env:
@@ -517,6 +640,7 @@ jobs:
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
           SENTRY_URL: ${{ vars.SENTRY_URL }}
           SENTRY_RELEASE: ${{ github.sha }}
+          STAGE: ${{ inputs.stage }}
         run: |
           if [ -z "$SENTRY_AUTH_TOKEN" ]; then
             echo "SENTRY_AUTH_TOKEN missing, skipped"
@@ -525,12 +649,12 @@ jobs:
           extra=()
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
           pnpm --filter web exec sentry-cli -- "${extra[@]}" releases new "$SENTRY_RELEASE" || true
-          pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-${SENTRY_RELEASE}"
+          pnpm --filter web exec sentry-cli -- "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e "$STAGE" -n "front-${SENTRY_RELEASE}"
 
   # `always()` is essential here and harmless: the job deploys nothing, it only compares what was
   # requested with what left. Without it, a target skipped by a red gate would leave the run green
-  # with a stale production, the most expensive failure mode of this pipeline, and the only one
-  # that does not show in the run colour.
+  # with a stale stage, the most expensive failure mode of this pipeline, and the only one that
+  # does not show in the run colour.
   deploy-guard:
     name: 🛑 Deployment guard
     runs-on: ubuntu-24.04
@@ -542,27 +666,28 @@ jobs:
     steps:
       - name: Check that every requested target was deployed
         env:
+          STAGE: ${{ inputs.stage }}
           TARGET: ${{ inputs.target }}
           FRONT_RESULT: ${{ needs.deploy-front.result }}
           API_RESULT: ${{ needs.deploy-api.result }}
         run: |
-          echo "requested target: $TARGET"
+          echo "stage: $STAGE, requested target: $TARGET"
           echo "web: deployment=$FRONT_RESULT"
           echo "api: deployment=$API_RESULT"
           fail=0
           if [ "$TARGET" = "all" ] || [ "$TARGET" = "front" ]; then
             if [ "$FRONT_RESULT" != "success" ]; then
-              echo "::error::Web requested but Deploy web is '$FRONT_RESULT': production is not up to date."
+              echo "::error::Web requested but Deploy web is '$FRONT_RESULT': the $STAGE is not up to date."
               fail=1
             fi
           fi
           if [ "$TARGET" = "all" ] || [ "$TARGET" = "api" ]; then
             if [ "$API_RESULT" != "success" ]; then
-              echo "::error::API requested but Deploy API is '$API_RESULT': production is not up to date."
+              echo "::error::API requested but Deploy API is '$API_RESULT': the $STAGE is not up to date."
               fail=1
             fi
           fi
           if [ "$fail" = "0" ]; then
-            echo "Every requested target is deployed."
+            echo "Every requested target is deployed to the $STAGE."
           fi
           exit "$fail"

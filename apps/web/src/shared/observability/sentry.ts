@@ -56,7 +56,7 @@ async function loadAndInit(dsn: string): Promise<void> {
   const Sentry = await import('@sentry/react');
   Sentry.init({
     dsn,
-    environment: 'production',
+    environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || 'production',
     tracesSampleRate: 0.1,
     tracePropagationTargets: sentryTracePropagationTargets(),
     integrations: [Sentry.browserTracingIntegration()],

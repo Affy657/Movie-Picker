@@ -219,7 +219,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (24 points produit, 23 points tech, 32 restants)
+## 📋 V1.7, planifiée (24 points produit, 23 points tech, 24 restants)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
@@ -242,7 +242,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ✅ 🔒 `M` **Terraform 5, IAM décrit et clés longue durée retirées** : un compte dédié au pipeline, dont chaque droit est relevé commande par commande et lié à la ressource qu'il touche, l'identité d'exécution et la fédération GitHub décrites puis importées ; aucune clé sur aucun compte, et le compte Compute par défaut n'a plus rien.
 - ✅ ⚙️ `S` **Terraform 6, plan en PR et apply sur master** : un workflow dédié, `plan` en lecture seule publié en commentaire de PR (un seul, réédité à chaque push), `apply` sur `master` derrière l'environnement de production ; deux identités sans clé, une par environnement, une dérive se voit en revue plutôt qu'en incident.
 - ✅ 📊 `M` **Terraform 7, supervision décrite en IaC** : les trois sondes, les six politiques d'alerte avec leur documentation et leurs seuils justifiés, le canal e-mail et le tableau de bord de MCO décrits puis importés, les conditions et les tuiles lisant l'identifiant des sondes sur la ressource ; appliqué par le workflow du lot 6.
-- ⬜ 🏗️ `L` **Terraform 8, environnement de recette** : seconde instanciation des modules des lots 2, 3 et 5, avec son entrée DNS et un déploiement qui passe par la recette avant la prod. Son coût dépend entièrement des lots précédents.
+- ✅ 🏗️ `L` **Terraform 8, environnement de recette** : second module racine `environments/staging` qui instancie les modules des lots 2, 3 et 5 dans le même projet (service, site, secrets propres, identités d'exécution et de déploiement dédiées, liées à la fédération et au dépôt d'images de la production par son état distant), `staging.movie-picker.fr` et `api.staging.movie-picker.fr`, et `deploy.yml` qui prend une étape : la production refuse tant que la recette ne sert pas ce commit et redéploie le digest que la recette exécute.
 
 > **Note, cible d'hébergement du front (lot 3)** : Firebase Hosting plutôt que Cloud Storage et Cloud CDN, dont la règle de transfert coûte près de 18 $ par mois avant le premier octet servi et ferait sortir le projet du « 0 €/mois » suivi comme indicateur. Seul point à surveiller : 360 Mo par jour, loin du trafic mesuré.
 

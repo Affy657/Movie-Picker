@@ -1,0 +1,78 @@
+name: "Terraform init and plan"
+description: "Installs the pinned Terraform, initialises one root module of infra/terraform/environments/ on its remote state and plans it. The plan text is left in $RUNNER_TEMP/plan.txt and the exit code of -detailed-exitcode is the output, so that the caller can post it, summarise it or apply it. Shared by the pull request plan and the master apply of infra.yml."
+inputs:
+  root:
+    description: "Root module to plan, relative to the repository (infra/terraform/environments/<name>)"
+    required: true
+  terraform-version:
+    description: "Terraform version, the one pinned in every root module (pnpm run check:tools)"
+    required: true
+  state-bucket:
+    description: "Bucket of the remote states (TF_STATE_BUCKET secret)"
+    required: true
+  project-id:
+    description: "GCP project the root describes (GCP_PROJECT_ID secret)"
+    required: true
+  alert-email:
+    description: "Address the alert policies notify (ALERT_EMAIL secret); read by the production root only, the others ignore it"
+    required: false
+    default: ""
+  lock:
+    description: "false to plan without taking the state lock, what a read-only review does"
+    required: false
+    default: "true"
+  out:
+    description: "File the plan is saved to inside the root module, empty for a plan that is only read"
+    required: false
+    default: ""
+outputs:
+  exitcode:
+    description: "Exit code of terraform plan -detailed-exitcode: 0 nothing to change, 2 changes, 1 error"
+    value: ${{ steps.plan.outputs.exitcode }}
+runs:
+  using: composite
+  steps:
+    - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+      with:
+        terraform_version: ${{ inputs.terraform-version }}
+        terraform_wrapper: false
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.terraform.d/plugin-cache
+        key: terraform-providers-${{ runner.os }}-${{ hashFiles('infra/terraform/**/.terraform.lock.hcl') }}
+    # The plugin cache directory is exported in each step rather than through GITHUB_ENV, which a
+    # composite action is not meant to write.
+    - name: terraform init (remote state, providers from the lock file)
+      shell: bash
+      env:
+        TERRAFORM_ROOT: ${{ inputs.root }}
+        TF_STATE_BUCKET: ${{ inputs.state-bucket }}
+      run: |
+        export TF_PLUGIN_CACHE_DIR="$HOME/.terraform.d/plugin-cache"
+        mkdir -p "$TF_PLUGIN_CACHE_DIR"
+        terraform -chdir="$TERRAFORM_ROOT" init -input=false -lockfile=readonly -no-color -backend-config="bucket=$TF_STATE_BUCKET"
+    # `-detailed-exitcode`: 0 nothing to change, 2 changes, 1 error. The plan text is kept whatever
+    # the outcome, an error is worth reading too. The composite shell is `bash -eo pipefail`: the
+    # code is caught on the pipeline, which `-e` would otherwise end on a 2, and `tee` does not
+    # hide it (without pipefail an apply was once silently skipped behind a green job).
+    - name: terraform plan
+      id: plan
+      shell: bash
+      env:
+        TERRAFORM_ROOT: ${{ inputs.root }}
+        TF_VAR_project_id: ${{ inputs.project-id }}
+        TF_VAR_state_bucket: ${{ inputs.state-bucket }}
+        ALERT_EMAIL: ${{ inputs.alert-email }}
+        LOCK: ${{ inputs.lock }}
+        OUT: ${{ inputs.out }}
+      run: |
+        # Exported only when given: an empty TF_VAR is a value, and the production root would plan
+        # its notification channel on an empty address.
+        if [ -n "$ALERT_EMAIL" ]; then export TF_VAR_alert_email="$ALERT_EMAIL"; fi
+        export TF_PLUGIN_CACHE_DIR="$HOME/.terraform.d/plugin-cache"
+        args=(-input=false -no-color -detailed-exitcode "-lock=$LOCK")
+        if [ -n "$OUT" ]; then args+=("-out=$OUT"); fi
+        code=0
+        terraform -chdir="$TERRAFORM_ROOT" plan "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/plan.txt" || code=$?
+        echo "exitcode=$code" >> "$GITHUB_OUTPUT"
+        test "$code" != "1"

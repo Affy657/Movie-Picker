@@ -7,6 +7,7 @@
  * with no key file and no npm package holding cloud credentials.
  *
  *   node scripts/publish-front-firebase.mjs --site <site-id> [--dist apps/web/dist] [--dry-run]
+ *     [--header "Name: value"]...
  *
  * The quota project (`x-goog-user-project`) is `GCP_PROJECT_ID`, else the active gcloud project:
  * with a user token the Hosting API refuses every call without it, as the Firebase APIs do under
@@ -18,7 +19,9 @@
  *     itself (`trailingSlashBehavior: REMOVE` in the config redirects the slashed form to it). The
  *     generic shell keeps answering every other path through the `**` rewrite.
  * The cache tiers and the security headers are the config's, not the script's: they live in
- * `infra/`, and a change there is reviewed as infrastructure.
+ * `infra/`, and a change there is reviewed as infrastructure. `--header` adds a header to every
+ * answer of this publication on top of them: what the staging uses for `X-Robots-Tag: noindex`,
+ * a header production must never carry, so it is not in the shared config.
  *
  * Nothing here is deleted or overwritten: a version is immutable, a release points the site at
  * it, and the previous release stays listed, which is what `rollback-front-firebase.mjs` uses.
@@ -50,9 +53,22 @@ function option(name, fallback) {
   return value;
 }
 
+function headerOptions() {
+  const headers = {};
+  process.argv.forEach((arg, index) => {
+    if (arg !== '--header') return;
+    const value = process.argv[index + 1] ?? '';
+    const separator = value.indexOf(':');
+    if (separator <= 0) fail('--header expects "Name: value".');
+    headers[value.slice(0, separator).trim()] = value.slice(separator + 1).trim();
+  });
+  return headers;
+}
+
 const site = option('--site', '');
 const dist = join(root, option('--dist', 'apps/web/dist'));
 const configPath = join(root, option('--config', 'infra/firebase-hosting.json'));
+const extraHeaders = headerOptions();
 const dryRun = process.argv.includes('--dry-run');
 if (!site) fail('--site <site-id> is required.');
 
@@ -139,6 +155,9 @@ function summary(files) {
 
 if (!statSync(dist, { throwIfNoEntry: false })?.isDirectory()) fail(`${dist} is not a directory.`);
 const config = JSON.parse(readFileSync(configPath, 'utf8'));
+if (Object.keys(extraHeaders).length > 0) {
+  config.headers = [...(config.headers ?? []), { glob: '**', headers: extraHeaders }];
+}
 const files = collect();
 console.log(`Hosting site ${site}: ${summary(files)}`);
 
