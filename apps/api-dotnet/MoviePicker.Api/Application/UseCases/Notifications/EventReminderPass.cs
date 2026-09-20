@@ -29,9 +29,7 @@ public sealed class EventReminderPass : IEventReminderPass
     private readonly IUserRepository _users;
     private readonly IMovieRepository _movies;
     private readonly IPushSubscriptionRepository _subscriptions;
-    private readonly IPushNotificationSender _sender;
-    private readonly IUserNotificationRepository _notifications;
-    private readonly INotificationDedupRepository _dedup;
+    private readonly ReminderDelivery _delivery;
     private readonly TimeProvider _clock;
     private readonly ILogger<EventReminderPass> _logger;
 
@@ -52,9 +50,7 @@ public sealed class EventReminderPass : IEventReminderPass
         _users = users;
         _movies = movies;
         _subscriptions = subscriptions;
-        _sender = sender;
-        _notifications = notifications;
-        _dedup = dedup;
+        _delivery = new ReminderDelivery(dedup, notifications, sender);
         _clock = clock;
         _logger = logger;
     }
@@ -160,7 +156,7 @@ public sealed class EventReminderPass : IEventReminderPass
             await NotifyUserReminderAsync(user, evt, window, now, pushTitle, pushBody, subsByUser, ct);
     }
 
-    private async Task NotifyUserReminderAsync(
+    private Task NotifyUserReminderAsync(
         User user,
         Event evt,
         ReminderWindow window,
@@ -170,32 +166,13 @@ public sealed class EventReminderPass : IEventReminderPass
         Dictionary<string, List<PushSubscription>> subsByUser,
         CancellationToken ct)
     {
-        if (subsByUser.TryGetValue(user.Id, out var subs) && subs.Count > 0)
-        {
-            var claimed = await _dedup.TryClaimAsync(
-                user.Id, window.NotifType, evt.Id, NotificationDedupChannel.Push, ct);
-            if (claimed)
-            {
-                var message = new PushMessage(
-                    Title: pushTitle,
-                    Body: pushBody,
-                    Tag: $"reminder-{window.NotifType}-{evt.Id}",
-                    Url: $"/e/{evt.Slug}"
-                );
-                foreach (var sub in subs)
-                    await _sender.SendAsync(sub, message, ct);
-            }
-        }
-
-        if (await _notifications.ExistsAsync(user.Id, window.NotifType, evt.Id, ct))
-            return;
-
-        var inAppClaimed = await _dedup.TryClaimAsync(
-            user.Id, window.NotifType, evt.Id, NotificationDedupChannel.InApp, ct);
-        if (!inAppClaimed)
-            return;
-
-        await _notifications.AddAsync(new UserNotification
+        var push = new PushMessage(
+            Title: pushTitle,
+            Body: pushBody,
+            Tag: $"reminder-{window.NotifType}-{evt.Id}",
+            Url: $"/e/{evt.Slug}"
+        );
+        var inApp = new UserNotification
         {
             UserId = user.Id,
             Type = window.NotifType,
@@ -204,7 +181,8 @@ public sealed class EventReminderPass : IEventReminderPass
             EventTitle = evt.Title,
             IsRead = false,
             CreatedAt = now
-        }, ct);
+        };
+        return _delivery.DeliverAsync(inApp, subsByUser.GetValueOrDefault(user.Id) ?? [], push, ct);
     }
 
     private async Task<int> ProcessPendingEventsAsync(
@@ -234,32 +212,13 @@ public sealed class EventReminderPass : IEventReminderPass
             return;
 
         var subs = await _subscriptions.ListByUserIdAsync(host.Id, ct);
-        if (subs.Count > 0)
-        {
-            var claimed = await _dedup.TryClaimAsync(
-                host.Id, UserNotificationType.EventPending, evt.Id, NotificationDedupChannel.Push, ct);
-            if (claimed)
-            {
-                var message = new PushMessage(
-                    Title: "Soirée en suspens 😅",
-                    Body: $"{evt.Title} s'est terminée sans qu'aucun film n'ait été choisi… on se rattrape la prochaine fois ?",
-                    Tag: $"pending-{evt.Id}",
-                    Url: $"/e/{evt.Slug}"
-                );
-                foreach (var sub in subs)
-                    await _sender.SendAsync(sub, message, ct);
-            }
-        }
-
-        if (await _notifications.ExistsAsync(host.Id, UserNotificationType.EventPending, evt.Id, ct))
-            return;
-
-        var inAppClaimed = await _dedup.TryClaimAsync(
-            host.Id, UserNotificationType.EventPending, evt.Id, NotificationDedupChannel.InApp, ct);
-        if (!inAppClaimed)
-            return;
-
-        await _notifications.AddAsync(new UserNotification
+        var push = new PushMessage(
+            Title: "Soirée en suspens 😅",
+            Body: $"{evt.Title} s'est terminée sans qu'aucun film n'ait été choisi… on se rattrape la prochaine fois ?",
+            Tag: $"pending-{evt.Id}",
+            Url: $"/e/{evt.Slug}"
+        );
+        var inApp = new UserNotification
         {
             UserId = host.Id,
             Type = UserNotificationType.EventPending,
@@ -268,7 +227,8 @@ public sealed class EventReminderPass : IEventReminderPass
             EventTitle = evt.Title,
             IsRead = false,
             CreatedAt = now
-        }, ct);
+        };
+        await _delivery.DeliverAsync(inApp, subs, push, ct);
     }
 
     private sealed record ReminderWindow(

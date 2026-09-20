@@ -208,6 +208,39 @@ describe('service worker — notifications', () => {
     expect(openWindow).not.toHaveBeenCalled();
   });
 
+  it('sends an already open tab to the destination when the link carries an intent', async () => {
+    const navigate = vi.fn().mockResolvedValue(undefined);
+    const focus = vi.fn().mockResolvedValue({ url: `${origin()}/e/soiree`, navigate });
+    openClients = [{ url: `${origin()}/e/soiree`, focus }];
+    const event = {
+      ...pending(),
+      notification: { close: vi.fn(), data: { url: '/e/soiree?rate' } },
+    };
+
+    listeners.get('notificationclick')!(event as unknown as Record<string, unknown>);
+    await event.settled();
+
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith('/e/soiree?rate');
+    expect(openWindow).not.toHaveBeenCalled();
+  });
+
+  it('leaves a tab already on the exact destination alone', async () => {
+    const navigate = vi.fn();
+    const focus = vi.fn().mockResolvedValue({ url: `${origin()}/e/soiree?rate`, navigate });
+    openClients = [{ url: `${origin()}/e/soiree?rate`, focus }];
+    const event = {
+      ...pending(),
+      notification: { close: vi.fn(), data: { url: '/e/soiree?rate' } },
+    };
+
+    listeners.get('notificationclick')!(event as unknown as Record<string, unknown>);
+    await event.settled();
+
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('ouvre un onglet quand aucun ne correspond', async () => {
     openClients = [{ url: `${origin()}/watchlist`, focus: vi.fn() }];
     const event = { ...pending(), notification: { close: vi.fn(), data: { url: '/e/soiree' } } };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Film, Star, Trophy } from 'lucide-react';
 import AvatarStack from '@/shared/components/AvatarStack';
 import Button from '@/shared/components/Button';
@@ -28,6 +28,8 @@ export type WinnerRatingContext = {
   error: string | null;
   onSave: (movieId: string, value: number) => Promise<boolean>;
   onClear: (movieId: string) => Promise<boolean>;
+  autoOpenMovieId?: string | null;
+  onAutoOpen?: () => void;
 };
 
 type Props = {
@@ -61,6 +63,14 @@ function WinnerRatingActions({
   const average = averageRating(raters.map((r) => r.value as number));
   const mine = rows.find((r) => r.isSelf)?.value ?? null;
   const canRate = context.currentParticipantId !== null;
+  const autoOpen = canRate && context.autoOpenMovieId === movie.id;
+  const { onAutoOpen } = context;
+  useEffect(() => {
+    if (!autoOpen) return;
+    onAutoOpen?.();
+    setAttempted(false);
+    setOpen(true);
+  }, [autoOpen, onAutoOpen]);
   if (!canRate && average === null) return null;
 
   const openDialog = () => {

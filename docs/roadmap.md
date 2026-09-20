@@ -219,12 +219,12 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (24 points produit, 23 points tech, 43 restants)
+## 📋 V1.7, planifiée (24 points produit, 23 points tech, 40 restants)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
 - ✅ `M` **Note d'un film vu** (V1.7) : une fois la soirée terminée, chaque participant note le ou les films choisis depuis la carte « Les films de la soirée », par étoiles à demi-pas, dans l'échelle réglée dans ses paramètres ; la note se modifie et s'efface sans limite de temps. Tout le monde, visiteur compris, voit les notes de chacun et la moyenne, et la note de l'auteur s'affiche sur ses films vus du profil public. Le renvoi vers Letterboxd ou IMDb est remis au backlog.
-- ⬜ `M` **Relance du lendemain** : le lendemain de la soirée, chaque participant qui n'a pas encore noté reçoit une notification push et in-app qui ouvre directement la note du film vu. C'est le premier contact avec un invité venu par lien une fois la soirée passée.
+- ✅ `M` **Relance du lendemain** (V1.7) : le lendemain de la soirée à 10 h (heure de Paris), chaque participant qui n'a pas encore noté un des films choisis reçoit une notification push et in-app qui ouvre directement la note du premier film non noté ; une seule relance par soirée, rattrapée jusqu'à trois jours après la date, désactivable dans les réglages (« Rappels »). C'est le premier contact avec un invité venu par lien une fois la soirée passée.
 - ⬜ `M` **Page recap publique de soirée** : une page en lecture seule, accessible sans compte, résume le ou les films choisis, les participants et leurs notes, avec un aperçu Open Graph. Un visiteur y trouve un bouton « Organise la tienne » qui mène à la création de compte et de soirée.
 - ⬜ `L` **Partage de soirée en story** : image au format des stories des réseaux sociaux générée depuis le recap, avec le lien de la page recap, envoyée par le partage natif du téléphone ou téléchargée depuis la page soirée.
 - ⬜ `M` **Top 3 films préférés sur le profil** : sélectionner et afficher trois films favoris sur son profil public `/u/:handle` via une recherche TMDB, visibles par tous et modifiables depuis les paramètres.

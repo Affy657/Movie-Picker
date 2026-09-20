@@ -142,6 +142,33 @@ describe('NotificationsPage (MSW)', () => {
     await waitFor(() => expect(markedId).toBe('n1'));
   });
 
+  it('a rating reminder names the movie and opens the movie night in rating mode', async () => {
+    server.use(
+      authedUserHandler,
+      http.get(`${TEST_API_V1}/notifications/inbox`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              ...base,
+              id: 'r1',
+              type: 'ratingreminder',
+              eventSlug: 'soiree-pizza',
+              eventTitle: 'Soiree pizza',
+              movieTitle: 'Inception',
+            },
+          ],
+          unreadCount: 1,
+        })
+      )
+    );
+
+    renderPage();
+
+    const link = await screen.findByRole('link', { name: /Inception/ });
+    expect(link).toHaveTextContent('Soiree pizza');
+    expect(link).toHaveAttribute('href', ROUTES.eventDetailRating('soiree-pizza'));
+  });
+
   it("a 'movie night cancelled' notification is not clickable to a destination", async () => {
     server.use(
       authedUserHandler,

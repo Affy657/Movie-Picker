@@ -7,6 +7,7 @@ import EventWinnerSummary, {
   type WinnerRatingContext,
 } from '@/features/events/pages/event-detail/EventWinnerSummary';
 import { useEventMovieRating } from '@/features/events/pages/event-detail/useEventMovieRating';
+import { useRatingLink } from '@/features/events/hooks/useRatingLink';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
@@ -119,6 +120,7 @@ export default function EventDetailSessionBody({
   );
   const { user } = useAuth();
   const movieRating = useEventMovieRating({ slug, participant, refreshAll });
+  const ratingLink = useRatingLink(winners, participant?.participantId ?? null, !!event.isFinished);
   const rating: WinnerRatingContext = {
     scale: user?.ratingScale ?? 'five',
     participants: event.participants ?? [],
@@ -127,6 +129,8 @@ export default function EventDetailSessionBody({
     error: movieRating.error,
     onSave: movieRating.save,
     onClear: movieRating.clear,
+    autoOpenMovieId: ratingLink.movieId,
+    onAutoOpen: ratingLink.consume,
   };
   return (
     <>

@@ -31,6 +31,11 @@ public interface IEventRepository
 
     Task<IReadOnlyList<Event>> ListMissingStartAtAsync(int limit, CancellationToken ct = default);
 
+    Task<IReadOnlyList<Event>> ListWithWinnerStartingBetweenAsync(
+        DateTimeOffset fromInclusive,
+        DateTimeOffset toExclusive,
+        CancellationToken ct = default);
+
     Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(
         string? creatorUserId,
         CancellationToken ct = default);

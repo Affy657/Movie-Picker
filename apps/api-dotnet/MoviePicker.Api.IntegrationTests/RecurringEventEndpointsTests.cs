@@ -186,4 +186,14 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, res.StatusCode);
     }
+
+    [Fact]
+    public async Task RatingRemindersSweep_WithoutASchedulerToken_Returns503()
+    {
+        using var client = _factory.CreateClient();
+
+        var res = await client.PostAsync("/api/v1/scheduler/rating-reminders", null);
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, res.StatusCode);
+    }
 }

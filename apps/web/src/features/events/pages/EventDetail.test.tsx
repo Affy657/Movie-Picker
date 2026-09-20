@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import EventDetail from '@/features/events/pages/EventDetail';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
@@ -45,6 +45,11 @@ function renderEventDetail(initialPath: string, client?: QueryClient) {
       </MemoryRouter>
     </AppTestProviders>
   );
+}
+
+function LocationProbe({ onSearch }: Readonly<{ onSearch: (search: string) => void }>) {
+  onSearch(useLocation().search);
+  return null;
 }
 
 async function openParticipantsPanel(user: ReturnType<typeof userEvent.setup>) {
@@ -408,6 +413,111 @@ describe('EventDetail (MSW)', () => {
       await user.click(screen.getByTestId('confirm-dialog-confirm'));
 
       expect(await screen.findByText(/déjà été lancée/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('arriving from the next-day rating reminder', () => {
+    const myPid = 'p-msw-alice';
+
+    function serveFinishedNightWithWinner(ratedByMe: boolean, asParticipant = true) {
+      server.use(
+        http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
+          HttpResponse.json({
+            _id: 'evt-msw',
+            title: 'Soirée démo',
+            date: '2026-09-19',
+            time: '21:00',
+            slug,
+            isHost: false,
+            isFinished: true,
+            lifecycle: 'finished',
+            winners: [{ movieId: 'm-win', pickMethod: 'wheel', pickedAt: '2026-09-19T20:00:00Z' }],
+            participantCount: 2,
+            movieCount: 1,
+            myParticipant: asParticipant ? { _id: myPid, pseudo: 'Alice' } : null,
+            participants: [
+              { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
+              { _id: myPid, pseudo: 'Alice' },
+            ],
+            config: {
+              theme: null,
+              maxProposalsPerParticipant: null,
+              maxParticipants: null,
+              wheelMode: 'strictRandom',
+              winnerCount: 1,
+            },
+          })
+        ),
+        http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+          HttpResponse.json([
+            {
+              _id: 'm-win',
+              eventId: 'evt-msw',
+              participantId: 'p-msw-host',
+              tmdbId: 42,
+              mediaType: 'movie',
+              title: 'Matrix',
+              year: '1999',
+              posterPath: null,
+              proposerPseudo: 'Hôte',
+              score: 2,
+              up: 2,
+              down: 0,
+              ratings: ratedByMe
+                ? [{ participantId: myPid, value: 8, updatedAt: '2026-09-20T08:00:00Z' }]
+                : [],
+            },
+          ])
+        )
+      );
+    }
+
+    it('opens the rating of the watched movie and drops the parameter from the URL', async () => {
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveFinishedNightWithWinner(false);
+      let search = '';
+      render(
+        <AppTestProviders>
+          <MemoryRouter initialEntries={[`/e/${slug}?rate`]}>
+            <Routes>
+              <Route
+                path="/e/:slug"
+                element={
+                  <>
+                    <EventDetail />
+                    <LocationProbe onSearch={(value) => (search = value)} />
+                  </>
+                }
+              />
+            </Routes>
+          </MemoryRouter>
+        </AppTestProviders>
+      );
+
+      const dialog = await screen.findByRole('dialog', { name: 'Noter ce film' });
+      expect(within(dialog).getByText('Matrix')).toBeInTheDocument();
+      await waitFor(() => expect(search).toBe(''));
+    });
+
+    it('opens nothing when every watched movie already carries my rating', async () => {
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveFinishedNightWithWinner(true);
+
+      renderEventDetail(`/e/${slug}?rate`);
+
+      expect(await screen.findByRole('button', { name: 'Votre note 4/5' })).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('opens nothing for a visitor who follows the link', async () => {
+      serveFinishedNightWithWinner(false, false);
+
+      renderEventDetail(`/e/${slug}?rate`);
+
+      expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+      expect((await screen.findAllByText('Matrix')).length).toBeGreaterThan(0);
+      expect(screen.queryByRole('button', { name: 'Noter ce film' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 

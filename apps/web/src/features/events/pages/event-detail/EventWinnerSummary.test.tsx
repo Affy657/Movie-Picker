@@ -187,6 +187,33 @@ describe('EventWinnerSummary', () => {
       expect(within(dialog).getByRole('alert')).toHaveTextContent('Réessayez');
     });
 
+    it('opens the rating dialog of the movie named by the reminder link on arrival, once', () => {
+      const onAutoOpen = vi.fn();
+      renderSummary(
+        <EventWinnerSummary
+          winners={[movie({ id: 'm1', title: 'Matrix' }), movie({ id: 'm2', title: 'Alien' })]}
+          isFinished
+          rating={ratingContext({ autoOpenMovieId: 'm2', onAutoOpen })}
+        />
+      );
+
+      const dialog = screen.getByRole('dialog', { name: 'Noter ce film' });
+      expect(within(dialog).getByText('Alien')).toBeInTheDocument();
+      expect(onAutoOpen).toHaveBeenCalledOnce();
+    });
+
+    it('opens nothing on arrival when the link names no movie', () => {
+      renderSummary(
+        <EventWinnerSummary
+          winners={[movie({})]}
+          isFinished
+          rating={ratingContext({ autoOpenMovieId: null, onAutoOpen: vi.fn() })}
+        />
+      );
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
     it('opens the group list from the average, with who has not rated yet', async () => {
       const rated = movie({
         ratings: [{ participantId: 'p2', value: 9, updatedAt: '2026-09-20T10:00:00Z' }],

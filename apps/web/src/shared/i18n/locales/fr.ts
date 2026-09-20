@@ -1625,6 +1625,7 @@ export const fr = {
     prefEventDateChanged: 'La date d’une soirée change',
     prefEventReminder1h: 'Rappel 1 heure avant la soirée',
     prefEventReminder24h: 'Rappel 24 heures avant la soirée',
+    prefRatingReminder: 'Rappel le lendemain pour noter le film vu',
     prefEventInvitation: 'Invitation à une soirée',
     prefNewFollower: "Quelqu'un vous suit",
     prefEventPending: 'Soirée terminée sans film choisi',
@@ -1667,6 +1668,8 @@ export const fr = {
       "**{{eventTitle}}** s'est terminée sans qu'aucun film n'ait été choisi… on se rattrape la prochaine fois ? 😅",
     letterboxdReconciliationPendingText:
       "La synchro Letterboxd n'a pas pu identifier certains films automatiquement. Réglez ça dans vos paramètres.",
+    ratingReminderText: 'Alors, **{{movie}}** ? Donnez-lui votre note pour **{{eventTitle}}** ⭐',
+    ratingReminderGroupedText: 'Alors, **{{movie}}** ? Donnez-lui votre note ⭐',
   },
 
   footer: {

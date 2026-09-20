@@ -1597,6 +1597,7 @@ export const en: Locale = {
     prefEventDateChanged: 'An event date changes',
     prefEventReminder1h: 'Reminder 1 hour before the event',
     prefEventReminder24h: 'Reminder 24 hours before the event',
+    prefRatingReminder: 'Next-day reminder to rate the movie you watched',
     prefEventInvitation: 'Invitation to an event',
     prefNewFollower: 'Someone follows you',
     prefEventPending: 'Event finished with no movie picked',
@@ -1637,6 +1638,8 @@ export const en: Locale = {
     eventPendingText: '**{{eventTitle}}** ended with no movie picked... catch it next time? 😅',
     letterboxdReconciliationPendingText:
       'The Letterboxd sync could not automatically identify some films. Fix it in your settings.',
+    ratingReminderText: 'How was **{{movie}}**? Give it your rating for **{{eventTitle}}** ⭐',
+    ratingReminderGroupedText: 'How was **{{movie}}**? Give it your rating ⭐',
   },
 
   footer: {

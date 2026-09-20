@@ -359,7 +359,7 @@ jobs:
       # Closing an event still creates its next occurrence and cleans the winners out of the
       # participants' watchlists on the spot; the two nightly sweeps catch up the series nobody
       # reopened and the events that finished on their own. Reads no longer write (DEBT-029).
-      - name: "Event reminders, recurring and finished events: Cloud Scheduler"
+      - name: "Event and rating reminders, recurring and finished events: Cloud Scheduler"
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
@@ -401,6 +401,7 @@ jobs:
           upsert_job movie-picker-event-reminders "*/30 * * * *" /api/v1/scheduler/event-reminders
           upsert_job movie-picker-recurring-events "15 3 * * *" /api/v1/scheduler/recurring-events
           upsert_job movie-picker-finished-events "45 3 * * *" /api/v1/scheduler/finished-events
+          upsert_job movie-picker-rating-reminders "0 10 * * *" /api/v1/scheduler/rating-reminders
       # The revision is already proven: what is checked here is that the traffic really switched and
       # that the public domain leads to it. A failure is routing, DNS or certificate, not code, hence
       # no rollback. PUBLIC_API_URL derives from VITE_API_URL, the URL the web app is built against:

@@ -5000,6 +5000,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/scheduler/rating-reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "X-Scheduler-Token"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RatingReminderPassResult"];
+                        "application/json": components["schemas"]["RatingReminderPassResult"];
+                        "text/json": components["schemas"]["RatingReminderPassResult"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sitemap.xml": {
         parameters: {
             query?: never;
@@ -7096,6 +7171,12 @@ export interface components {
             isWatchlistPublic?: boolean;
             /** Format: int32 */
             watchlistCount?: number | null;
+        };
+        RatingReminderPassResult: {
+            /** Format: int32 */
+            finishedNights?: number;
+            /** Format: int32 */
+            reminded?: number;
         };
         /** @enum {string} */
         RatingScale: "five" | "ten";

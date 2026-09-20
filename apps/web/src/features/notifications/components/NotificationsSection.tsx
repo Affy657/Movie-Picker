@@ -45,6 +45,7 @@ const PREF_GROUPS: readonly PrefGroup[] = [
     items: [
       { type: 'eventreminder1h', labelKey: 'notifications.prefEventReminder1h' },
       { type: 'eventreminder24h', labelKey: 'notifications.prefEventReminder24h' },
+      { type: 'ratingreminder', labelKey: 'notifications.prefRatingReminder' },
     ],
   },
   {

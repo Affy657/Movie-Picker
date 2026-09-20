@@ -170,6 +170,20 @@ public sealed class InMemoryEventRepository : IEventRepository
         return Task.FromResult(result);
     }
 
+    public Task<IReadOnlyList<Event>> ListWithWinnerStartingBetweenAsync(
+        DateTimeOffset fromInclusive,
+        DateTimeOffset toExclusive,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = _byId.Values
+            .Where(e => e.HasWinner
+                && EventSchedule.TryGetStartUtc(e.Date, e.Time, out var startAt)
+                && startAt >= fromInclusive
+                && startAt < toExclusive)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
     public Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(
         string? creatorUserId,
         CancellationToken ct = default)

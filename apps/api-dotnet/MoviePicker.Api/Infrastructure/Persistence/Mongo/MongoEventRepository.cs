@@ -183,6 +183,20 @@ public sealed class MongoEventRepository : IEventRepository
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<Event>> ListWithWinnerStartingBetweenAsync(
+        DateTimeOffset fromInclusive,
+        DateTimeOffset toExclusive,
+        CancellationToken ct = default)
+    {
+        var builder = Builders<EventDocument>.Filter;
+        var filter = builder.And(
+            builder.SizeGt(x => x.Winners, 0),
+            builder.Gte(x => x.StartAtUtc, fromInclusive.UtcDateTime),
+            builder.Lt(x => x.StartAtUtc, toExclusive.UtcDateTime));
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
     public async Task<IReadOnlyList<Event>> ListRecurringAwaitingNextOccurrenceAsync(
         string? creatorUserId,
         CancellationToken ct = default)

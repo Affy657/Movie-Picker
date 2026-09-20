@@ -251,6 +251,29 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task ListWithWinnerStartingBetween_KeepsTheWinnersOfTheWindow_WhetherClosedOrNot()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        var winners = new[] { new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now } };
+        var yesterday = await events.AddAsync(NewEvent("yesterday-" + marker) with { Winners = winners, Date = "2041-03-09" });
+        var threeDaysAgo = await events.AddAsync(NewEvent("three-days-" + marker) with { Winners = winners, Date = "2041-03-07", Time = "00:00" });
+        var closedByHost = await events.AddAsync(NewEvent("closed-" + marker) with { Winners = winners, Date = "2041-03-08", ClosedAt = Now });
+        await events.AddAsync(NewEvent("four-days-" + marker) with { Winners = winners, Date = "2041-03-06", Time = "23:30" });
+        await events.AddAsync(NewEvent("today-" + marker) with { Winners = winners, Date = "2041-03-10", Time = "00:00" });
+        await events.AddAsync(NewEvent("no-winner-" + marker) with { Date = "2041-03-09" });
+
+        var found = await events.ListWithWinnerStartingBetweenAsync(
+            new DateTimeOffset(2041, 3, 6, 23, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2041, 3, 9, 23, 0, 0, TimeSpan.Zero));
+
+        var mine = found.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet();
+        HashSet<string> expected = [yesterday.Id, threeDaysAgo.Id, closedByHost.Id];
+        Assert.Equal(expected, mine);
+    }
+
+    [Fact]
     public async Task ListAllByCreatorUserId_ReturnsEveryCreatedEvent_EvenBeyondTwoHundred()
     {
         using var scope = _factory.Services.CreateScope();

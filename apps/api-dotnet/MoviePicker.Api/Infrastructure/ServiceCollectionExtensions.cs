@@ -80,6 +80,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
         services.AddSingleton<ISchedulerTokenValidator, SchedulerTokenValidator>();
         services.AddScoped<IEventReminderPass, EventReminderPass>();
+        services.AddScoped<IRatingReminderPass, RatingReminderPass>();
         services.AddScoped<IRecurringEventPass, RecurringEventPass>();
         services.AddScoped<IFinishedEventWatchlistPass, FinishedEventWatchlistPass>();
 

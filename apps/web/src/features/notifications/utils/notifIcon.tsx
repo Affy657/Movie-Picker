@@ -10,6 +10,7 @@ import {
   MousePointerClick,
   RefreshCw,
   Shuffle,
+  Star,
   UserPlus,
   Users,
   XCircle,
@@ -42,6 +43,8 @@ export function notifIcon(type: string, size = ICON_SIZE.lg): ReactNode {
       return <Hourglass size={size} aria-hidden />;
     case 'letterboxdreconciliationpending':
       return <RefreshCw size={size} aria-hidden />;
+    case 'ratingreminder':
+      return <Star size={size} aria-hidden />;
     default:
       return <Bell size={size} aria-hidden />;
   }
