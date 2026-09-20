@@ -38,6 +38,12 @@ resource "google_service_account" "api_runtime" {
   description  = "Runtime identity of the staging revisions: reads the staging secrets and the shared ones it mounts, never the production database"
 }
 
+resource "google_service_account_iam_member" "terraform_acts_as_api_runtime" {
+  service_account_id = google_service_account.api_runtime.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${local.production.terraform_service_account_email}"
+}
+
 module "ci" {
   source = "../../modules/workload-identity"
 
@@ -99,7 +105,7 @@ module "api" {
     EMAIL_PROVIDER     = "resend"
   }
 
-  depends_on = [google_service_account.api_runtime]
+  depends_on = [google_service_account_iam_member.terraform_acts_as_api_runtime]
 }
 
 module "web" {
