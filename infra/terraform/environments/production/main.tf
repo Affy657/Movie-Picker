@@ -87,7 +87,7 @@ resource "google_project_iam_custom_role" "secrets_operator" {
   project     = var.project_id
   role_id     = local.secrets_operator_role_id
   title       = "Secret Manager operator, payloads excluded"
-  description = "Creates, describes and shares secrets, never reads a version itself: what Terraform needs. Not a wall: sharing is setIamPolicy, by which a leaked identity would grant itself secretAccessor in one call, written in the Admin Activity audit log. A deny policy would close that path; it needs an organisation, which this project has none of (infra/README.md)."
+  description = "Creates, describes and shares secrets, never reads a version itself: what Terraform needs. Not a wall: sharing is setIamPolicy, by which a leaked identity would grant itself secretAccessor, an audit-logged call; the deny policy that would close it needs an organisation (infra/README.md)."
   permissions = [
     "secretmanager.locations.get",
     "secretmanager.locations.list",
