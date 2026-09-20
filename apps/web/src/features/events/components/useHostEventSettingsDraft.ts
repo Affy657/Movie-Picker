@@ -12,17 +12,15 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
 import { formatRelativeEventDate } from '@/shared/utils/formatRelativeEventDate';
-import type {
-  EventConfigPatchPayload,
-  EventData,
-  EventRecurrence,
-  WheelMode,
-} from '@/features/events/types';
 import {
   DEFAULT_PARTICIPANT_LIMIT,
   DEFAULT_PROPOSAL_LIMIT,
   MAX_EVENT_PARTICIPANTS,
   MAX_PROPOSALS_PER_PARTICIPANT,
+  type EventConfigPatchPayload,
+  type EventData,
+  type EventRecurrence,
+  type WheelMode,
 } from '@/features/events/types';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import {
