@@ -142,4 +142,13 @@ describe('inlineScriptHashes', () => {
   it('ne renvoie rien sans script en ligne', async () => {
     expect(await inlineScriptHashes('<html><body><p>x</p></body></html>')).toEqual([]);
   });
+
+  it('closes a script on an end tag that carries whitespace, as a browser does', async () => {
+    const tight = await inlineScriptHashes('<script>a()</script>');
+    const spaced = await inlineScriptHashes('<script>a()</script >');
+    const newline = await inlineScriptHashes('<script>a()</script\n>');
+
+    expect(spaced).toEqual(tight);
+    expect(newline).toEqual(tight);
+  });
 });

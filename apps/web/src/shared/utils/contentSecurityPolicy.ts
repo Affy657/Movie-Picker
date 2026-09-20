@@ -29,7 +29,7 @@ export function toSentryIngestOrigin(dsn: string): string {
   }
 }
 
-const INLINE_SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+const INLINE_SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
 const SCRIPT_TYPE = /\btype\s*=\s*["']?([^"'\s>]+)/i;
 const EXECUTABLE_SCRIPT_TYPES = new Set(['module', 'text/javascript', 'application/javascript']);
 
