@@ -140,12 +140,13 @@ const tools = [
     pins: [{ file: 'scripts/verify-local.cjs', pattern: /aquasec\/trivy:([^@']+)@/ }],
     latest: () => latestGithubRelease('aquasecurity/trivy'),
   },
-  // The providers are Dependabot's (terraform ecosystem); the binary is pinned in three places,
-  // the CI, the local image and every root module, which must agree.
+  // The providers are Dependabot's (terraform ecosystem); the binary is pinned in four places,
+  // the two workflows, the local image and every root module, which must agree.
   {
     name: 'terraform',
     pins: [
       { file: '.github/workflows/ci-cd.yml', pattern: /TERRAFORM_VERSION: "([^"]+)"/ },
+      { file: '.github/workflows/infra.yml', pattern: /TERRAFORM_VERSION: "([^"]+)"/ },
       { file: 'scripts/terraform.mjs', pattern: /hashicorp\/terraform:([^@']+)@/ },
       ...listRoots().map((rootName) => ({
         file: `${ENVIRONMENTS_DIR}/${rootName}/versions.tf`,

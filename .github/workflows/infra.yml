@@ -1,0 +1,215 @@
+# Terraform of `infra/terraform/`, the one place the production infrastructure is changed from:
+#   - on a pull request that touches it, `plan` against production, posted as a sticky comment on
+#     the PR (one comment, edited on every push), so that a change is reviewed as the diff of the
+#     resources it will produce and a drift of the real infrastructure shows up before a merge;
+#   - on master, `plan` then `apply` behind the `production` environment, so that master and the
+#     infrastructure never disagree for longer than one run.
+#
+# Two identities, both keyless, both described in the root module (`module "terraform"` and
+# `module "terraform_plan"`): the pull request one is read-only, reads the state without taking
+# the lock (`-lock=false`) and can be assumed only by a job of the `infra-plan` environment; the
+# master one manages everything the root module describes, hence its reach, and can be assumed
+# only by a job of the `production` environment, which the branch policy reserves to master.
+# The identifiers of both live as secrets of their environment (and, for the plan job, as
+# Dependabot secrets, otherwise a provider bump would run without them): `GCP_PROJECT_ID`,
+# `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` / `GCP_TERRAFORM_SERVICE_ACCOUNT` and
+# `TF_STATE_BUCKET`, the same names `scripts/terraform.mjs` reads locally from `.env`.
+#
+# `fmt` and `validate` stay in `ci-cd.yml` (`lint-terraform`), without credentials: this workflow
+# only runs when there is something to plan. The binary version is pinned here, in `ci-cd.yml`,
+# in `scripts/terraform.mjs` and in every root module; `pnpm run check:tools` keeps them equal.
+
+name: 🏗️ Terraform
+
+on:
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+  push:
+    branches: [master]
+    paths:
+      - "infra/terraform/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One state, one lock: two applies never overlap, and a plan waits for a running apply so that it
+# reads the state the apply leaves.
+concurrency:
+  group: terraform-production
+  cancel-in-progress: false
+
+env:
+  TERRAFORM_VERSION: "1.16.3"
+  TF_IN_AUTOMATION: "1"
+  TF_INPUT: "0"
+  TERRAFORM_ROOT: infra/terraform/environments/production
+
+jobs:
+  plan:
+    name: 🔍 Plan on the pull request
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork != true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: infra-plan
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+      - name: Provider cache directory
+        run: |
+          mkdir -p "$HOME/.terraform.d/plugin-cache"
+          echo "TF_PLUGIN_CACHE_DIR=$HOME/.terraform.d/plugin-cache" >> "$GITHUB_ENV"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: terraform-providers-${{ runner.os }}-${{ hashFiles('infra/terraform/**/.terraform.lock.hcl') }}
+      - name: terraform init (remote state, providers from the lock file)
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+        run: terraform -chdir="$TERRAFORM_ROOT" init -input=false -lockfile=readonly -no-color -backend-config="bucket=$TF_STATE_BUCKET"
+      # `-detailed-exitcode`: 0 nothing to change, 2 changes, 1 error. The plan is kept whatever
+      # the outcome, an error is worth a comment too. `-lock=false`: a review must never block a
+      # deployment or an apply holding the lock.
+      - name: terraform plan (read-only, without the lock)
+        id: plan
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_state_bucket: ${{ secrets.TF_STATE_BUCKET }}
+        run: |
+          set -o pipefail
+          terraform -chdir="$TERRAFORM_ROOT" plan -input=false -lock=false -no-color -detailed-exitcode 2>&1 | tee "$RUNNER_TEMP/plan.txt"
+          code="${PIPESTATUS[0]}"
+          echo "exitcode=$code" >> "$GITHUB_OUTPUT"
+          test "$code" != "1"
+      # One comment per root module, found again by its first line and edited in place: a PR that
+      # is pushed ten times keeps one plan, the current one. The refresh lines are dropped and the
+      # identifiers the repository keeps out of its files (project id and number, state bucket)
+      # are replaced by their placeholders, as `infra/README.md` names them: the comment is as
+      # public as the repository. Truncated when GitHub's limit is near, the full text stays in
+      # the job log, where the secrets are masked.
+      - name: Publish the plan on the pull request
+        if: always() && steps.plan.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EXITCODE: ${{ steps.plan.outputs.exitcode }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+        run: |
+          set -eo pipefail
+          marker="<!-- terraform-plan:${TERRAFORM_ROOT} -->"
+          case "$EXITCODE" in
+            0) verdict="No change: the infrastructure already matches this branch." ;;
+            2) verdict="Changes: this branch would change the infrastructure, read the plan before merging." ;;
+            *) verdict="Plan failed: read the [job log]($RUN_URL) before merging." ;;
+          esac
+          grep -v -E 'Refreshing state\.\.\.|^[a-z_.]+: (Reading\.\.\.|Read complete)' "$RUNNER_TEMP/plan.txt" \
+            | sed -e "s#$GCP_PROJECT_ID#<PROJET_GCP>#g" -e "s#$TF_STATE_BUCKET#<BUCKET_TFSTATE>#g" -e 's#projects/[0-9]\{6,\}#projects/<NUMERO_PROJET>#g' \
+            > "$RUNNER_TEMP/plan.public.txt" || true
+          plan="$(head -c 60000 "$RUNNER_TEMP/plan.public.txt")"
+          if [ "$(wc -c < "$RUNNER_TEMP/plan.public.txt")" -gt 60000 ]; then
+            plan="$plan"$'\n'"... (truncated, the full plan is in the job log)"
+          fi
+          {
+            echo "$marker"
+            echo "### Terraform plan, \`$TERRAFORM_ROOT\`"
+            echo
+            echo "$verdict Commit \`${HEAD_SHA:0:8}\`, [run]($RUN_URL)."
+            echo
+            echo "<details><summary>Plan output</summary>"
+            echo
+            echo '```'
+            echo "$plan"
+            echo '```'
+            echo
+            echo "</details>"
+          } > "$RUNNER_TEMP/comment.md"
+          existing="$(gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -1)"
+          if [ -n "$existing" ]; then
+            gh api --method PATCH "repos/$REPOSITORY/issues/comments/$existing" -F body=@"$RUNNER_TEMP/comment.md" > /dev/null
+          else
+            gh api --method POST "repos/$REPOSITORY/issues/$PR_NUMBER/comments" -F body=@"$RUNNER_TEMP/comment.md" > /dev/null
+          fi
+          echo "Plan published on #$PR_NUMBER (exit code $EXITCODE)."
+
+  apply:
+    name: 🚀 Plan and apply on master
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_TERRAFORM_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+      - name: Provider cache directory
+        run: |
+          mkdir -p "$HOME/.terraform.d/plugin-cache"
+          echo "TF_PLUGIN_CACHE_DIR=$HOME/.terraform.d/plugin-cache" >> "$GITHUB_ENV"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: terraform-providers-${{ runner.os }}-${{ hashFiles('infra/terraform/**/.terraform.lock.hcl') }}
+      - name: terraform init (remote state, providers from the lock file)
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+        run: terraform -chdir="$TERRAFORM_ROOT" init -input=false -lockfile=readonly -no-color -backend-config="bucket=$TF_STATE_BUCKET"
+      # The plan is saved and the apply replays that file: what is applied is exactly what the
+      # summary shows, not a second plan computed a minute later.
+      - name: terraform plan
+        id: plan
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_state_bucket: ${{ secrets.TF_STATE_BUCKET }}
+        run: |
+          set -o pipefail
+          terraform -chdir="$TERRAFORM_ROOT" plan -input=false -no-color -detailed-exitcode -out=tfplan 2>&1 | tee "$RUNNER_TEMP/plan.txt"
+          code="${PIPESTATUS[0]}"
+          echo "exitcode=$code" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Terraform plan, \`$TERRAFORM_ROOT\` (exit code $code)"
+            echo
+            echo '```'
+            head -c 60000 "$RUNNER_TEMP/plan.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          test "$code" != "1"
+      - name: terraform apply
+        if: steps.plan.outputs.exitcode == '2'
+        env:
+          TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+          TF_VAR_state_bucket: ${{ secrets.TF_STATE_BUCKET }}
+        run: terraform -chdir="$TERRAFORM_ROOT" apply -input=false -no-color tfplan
+      - name: Nothing to apply
+        if: steps.plan.outputs.exitcode == '0'
+        run: echo "The infrastructure already matches master."

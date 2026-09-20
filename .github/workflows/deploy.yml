@@ -277,10 +277,6 @@ jobs:
           workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
-      - name: Enable the Secret Manager API (required by --set-secrets, idempotent)
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-        run: gcloud services enable secretmanager.googleapis.com --project="$GCP_PROJECT_ID"
       # The revision is deployed WITHOUT traffic, then validated on its tagged URL: a container
       # failing its probes never reaches a user. This scheme replaces "deploy, observe, roll back",
       # which exposed the bad revision for the duration of the smoke tests and then left the traffic

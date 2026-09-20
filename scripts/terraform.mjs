@@ -19,7 +19,8 @@
  *     (environment, else `.env`): the repository is public and names no bucket. `-backend=false`
  *     skips it, that is what the local gate and the CI use;
  *   - `TF_VAR_project_id`, from `GCP_PROJECT_ID` (environment, else `.env`), else the active
- *     gcloud project;
+ *     gcloud project, and `TF_VAR_state_bucket` from the same `TF_STATE_BUCKET`: the root module
+ *     grants the bucket to the identities that plan and apply from GitHub;
  *   - `GOOGLE_OAUTH_ACCESS_TOKEN`, from `gcloud auth print-access-token`, for every command that
  *     reaches GCP. No key file and no application-default credentials on the machine; the token
  *     is passed by name to Docker, never on its command line.
@@ -147,13 +148,23 @@ export function terraform(args, { rootName = 'production', isolatedDataDir = fal
         fail('GCP_PROJECT_ID is not set (environment or .env) and gcloud has no active project.');
       }
     }
+    if (!env.TF_VAR_state_bucket) {
+      env.TF_VAR_state_bucket = setting('TF_STATE_BUCKET') || '';
+    }
     if (!env.GOOGLE_OAUTH_ACCESS_TOKEN) {
       env.GOOGLE_OAUTH_ACCESS_TOKEN = gcloud(['auth', 'print-access-token']);
       if (!env.GOOGLE_OAUTH_ACCESS_TOKEN) {
         fail('gcloud auth print-access-token returned nothing: run `gcloud auth login` first.');
       }
     }
-    dockerEnv.push('-e', 'TF_VAR_project_id', '-e', 'GOOGLE_OAUTH_ACCESS_TOKEN');
+    dockerEnv.push(
+      '-e',
+      'TF_VAR_project_id',
+      '-e',
+      'TF_VAR_state_bucket',
+      '-e',
+      'GOOGLE_OAUTH_ACCESS_TOKEN'
+    );
   }
 
   const tty = process.stdin.isTTY && process.stdout.isTTY ? ['-t'] : [];

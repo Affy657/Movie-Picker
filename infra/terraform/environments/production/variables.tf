@@ -14,3 +14,14 @@ variable "api_runtime_service_account_name" {
   type        = string
   default     = "movie-picker-api"
 }
+
+variable "backup_bucket" {
+  description = "Bucket the MongoDB backups are written to, the same value as BACKUP_BUCKET in backup-mongo.yml. Its lifecycle is not described here."
+  type        = string
+  default     = "movie-picker-backups"
+}
+
+variable "state_bucket" {
+  description = "Bucket that holds this state, the same value as TF_STATE_BUCKET: the identities that plan and apply from GitHub read or write it. The bucket itself is not described."
+  type        = string
+}
