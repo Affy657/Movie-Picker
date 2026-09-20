@@ -27,11 +27,6 @@ resource "google_service_account_iam_member" "acts_as" {
   member             = "serviceAccount:${google_service_account.this.email}"
 }
 
-moved {
-  from = google_artifact_registry_repository_iam_member.writer
-  to   = google_artifact_registry_repository_iam_member.images
-}
-
 resource "google_artifact_registry_repository_iam_member" "images" {
   for_each = var.image_repositories
 

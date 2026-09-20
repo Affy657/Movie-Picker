@@ -71,7 +71,7 @@ runs:
           echo "No local build to compare with: the public domain answers, version not checked."
           exit 0
         fi
-        ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' "$DIST/index.html" | head -1)"
+        ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' "$DIST/index.html" | head -1 || true)"
         if [ -z "$ENTRY" ]; then
           echo "::error::Entry point not found in the local build, version smoke test impossible."
           exit 1

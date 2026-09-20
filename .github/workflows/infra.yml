@@ -24,14 +24,20 @@
 
 name: 🏗️ Terraform
 
+# The workflow and its composite action are in the paths: a change to how the plan is made is
+# reviewed with a plan too.
 on:
   pull_request:
     paths:
       - "infra/terraform/**"
+      - ".github/workflows/infra.yml"
+      - ".github/actions/terraform-plan/**"
   push:
     branches: [master]
     paths:
       - "infra/terraform/**"
+      - ".github/workflows/infra.yml"
+      - ".github/actions/terraform-plan/**"
   workflow_dispatch:
 
 permissions:
@@ -139,8 +145,8 @@ jobs:
           fi
           echo "Plan published on #$PR_NUMBER (exit code $EXITCODE)."
 
-  # The plan is saved and the apply replays that file: what is applied is exactly what the summary
-  # shows, not a second plan computed a minute later.
+  # Plan saved, summarised and applied by the composite action (`apply`): what is applied is
+  # exactly what the job summary shows, not a second plan computed a minute later.
   apply:
     name: 🚀 Plan and apply on master (production)
     if: github.event_name != 'pull_request'
@@ -150,8 +156,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    env:
-      TERRAFORM_ROOT: infra/terraform/environments/production
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -161,33 +165,15 @@ jobs:
           workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service-account: ${{ secrets.GCP_TERRAFORM_SERVICE_ACCOUNT }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
-      - name: terraform plan
-        id: plan
+      - name: terraform plan and apply
         uses: ./.github/actions/terraform-plan
         with:
-          root: ${{ env.TERRAFORM_ROOT }}
+          root: infra/terraform/environments/production
           terraform-version: ${{ env.TERRAFORM_VERSION }}
           state-bucket: ${{ secrets.TF_STATE_BUCKET }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
           alert-email: ${{ secrets.ALERT_EMAIL }}
-          out: tfplan
-      - name: Plan summary
-        env:
-          EXITCODE: ${{ steps.plan.outputs.exitcode }}
-        run: |
-          {
-            echo "### Terraform plan, \`$TERRAFORM_ROOT\` (exit code $EXITCODE)"
-            echo
-            echo '```'
-            head -c 60000 "$RUNNER_TEMP/plan.txt"
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-      - name: terraform apply
-        if: steps.plan.outputs.exitcode == '2'
-        run: terraform -chdir="$TERRAFORM_ROOT" apply -input=false -no-color tfplan
-      - name: Nothing to apply
-        if: steps.plan.outputs.exitcode == '0'
-        run: echo "The infrastructure already matches master."
+          apply: "true"
 
   # After production, never beside it: the staging binds its identities to the federation and
   # shares the image repository, both read from the production outputs.
@@ -201,8 +187,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    env:
-      TERRAFORM_ROOT: infra/terraform/environments/staging
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -212,29 +196,11 @@ jobs:
           workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service-account: ${{ secrets.GCP_TERRAFORM_SERVICE_ACCOUNT }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
-      - name: terraform plan
-        id: plan
+      - name: terraform plan and apply
         uses: ./.github/actions/terraform-plan
         with:
-          root: ${{ env.TERRAFORM_ROOT }}
+          root: infra/terraform/environments/staging
           terraform-version: ${{ env.TERRAFORM_VERSION }}
           state-bucket: ${{ secrets.TF_STATE_BUCKET }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
-          out: tfplan
-      - name: Plan summary
-        env:
-          EXITCODE: ${{ steps.plan.outputs.exitcode }}
-        run: |
-          {
-            echo "### Terraform plan, \`$TERRAFORM_ROOT\` (exit code $EXITCODE)"
-            echo
-            echo '```'
-            head -c 60000 "$RUNNER_TEMP/plan.txt"
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-      - name: terraform apply
-        if: steps.plan.outputs.exitcode == '2'
-        run: terraform -chdir="$TERRAFORM_ROOT" apply -input=false -no-color tfplan
-      - name: Nothing to apply
-        if: steps.plan.outputs.exitcode == '0'
-        run: echo "The infrastructure already matches master."
+          apply: "true"

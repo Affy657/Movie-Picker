@@ -1,6 +1,7 @@
 locals {
   api_runtime_service_account_email = google_service_account.api_runtime.email
   github_repository                 = "Affy657/Movie-Picker"
+  github_repository_id              = "1166675954"
   secrets_operator_role_id          = "secretsOperator"
   bucket_iam_editor_role_id         = "bucketIamEditor"
 
@@ -47,9 +48,10 @@ resource "google_service_account" "api_runtime" {
 module "github" {
   source = "../../modules/github-federation"
 
-  project_id          = var.project_id
-  github_repository   = local.github_repository
-  github_environments = ["production", "infra-plan", "staging"]
+  project_id           = var.project_id
+  github_repository    = local.github_repository
+  github_repository_id = local.github_repository_id
+  github_environments  = ["production", "infra-plan", "staging"]
 }
 
 module "ci" {
@@ -85,7 +87,7 @@ resource "google_project_iam_custom_role" "secrets_operator" {
   project     = var.project_id
   role_id     = local.secrets_operator_role_id
   title       = "Secret Manager operator, payloads excluded"
-  description = "Creates, describes and shares secrets without ever reading a version: what Terraform needs, and nothing a leak of the identity could turn into a secret value."
+  description = "Creates, describes and shares secrets, never reads a version itself: what Terraform needs. Not a wall: sharing is setIamPolicy, by which a leaked identity would grant itself secretAccessor in one call, written in the Admin Activity audit log. A deny policy would close that path; it needs an organisation, which this project has none of (infra/README.md)."
   permissions = [
     "secretmanager.locations.get",
     "secretmanager.locations.list",

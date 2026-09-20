@@ -20,6 +20,11 @@ variable "github_repository" {
   type        = string
 }
 
+variable "github_repository_id" {
+  description = "Numeric id of that repository (gh api repos/<owner>/<name> --jq .id). A name is freed by a rename or a transfer and can be claimed again; the id never changes, so the provider checks both."
+  type        = string
+}
+
 variable "github_environments" {
   description = "GitHub environments a job must run in to be trusted: the only subjects the provider accepts. Which identity each subject may assume is bound on the identity itself."
   type        = set(string)

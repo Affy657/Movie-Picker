@@ -10,10 +10,10 @@
 # `staging` (the recette, `staging.movie-picker.fr`) then `production`. Production refuses to
 # leave until the staging serves exactly the commit being deployed (release reported by the API on
 # `/health/ready`, release written in the index.html the web app serves), and it does not rebuild
-# the API image: it resolves the one the staging run pushed for this commit and redeploys that
-# digest, so that the bytes that passed the recette are the bytes production runs. The two
-# stages differ only by the GitHub environment their jobs run in (identity, `VITE_API_URL`,
-# `ALLOWED_ORIGINS`) and by the names of their targets below; the staging has no Scheduler job.
+# the API image: it reads the digest of the revision the staging serves and redeploys it, so that
+# the bytes that passed the recette are the bytes production runs. The two stages differ only by
+# the GitHub environment their jobs run in (identity, `VITE_API_URL`, `ALLOWED_ORIGINS`) and by
+# the names of their targets below; the staging has no Scheduler job.
 #
 # Accepted trade-off: production is stale by default between two triggers. The final guard
 # therefore checks that every requested target really left, not the run colour: a deployment job
@@ -22,10 +22,12 @@
 # The quality gates are not bypassed, they are *consumed*: `verify-ci` refuses to deploy a commit
 # whose `ci-cd.yml` run is not green (gitleaks, lint, tests, E2E, Sonar Quality Gate). Replaying
 # those gates here would double their cost without proving anything more, since they already ran
-# on exactly this commit. Lighthouse, on the other hand, runs **here**: the job weighs 9 of the 27
-# minutes of a master run, so it no longer belongs on the path of every push, and it keeps its role
-# as the blocking gate of `deploy-front` (see dead end I4 in docs/technical-debt.md, loosening this
-# gate was measured without gain).
+# on exactly this commit. Lighthouse, on the other hand, runs **here**, on the staging stage only:
+# the job weighs 9 of the 27 minutes of a master run, so it no longer belongs on the path of every
+# push, and it keeps its role as the blocking gate of `deploy-front` (see dead end I4 in
+# docs/technical-debt.md, loosening this gate was measured without gain). It measures a local
+# build of the commit, the same whatever the stage, so production does not replay it: the staging
+# only serves a front this gate let through, and `verify-ci` requires that front to be this commit.
 #
 # Rollback: `rollback.yml` for the API (earlier Cloud Run revision), `rollback-front.yml` for the
 # web app (a Hosting release pointed back at a version `deploy-front` built). Both target
@@ -83,10 +85,11 @@ env:
   # Firebase Hosting site of the web app (`infra/terraform`, module `web`), served on its custom
   # domain and verified on its web.app address as well.
   FIREBASE_HOSTING_SITE: ${{ inputs.stage == 'production' && 'movie-picker-web' || 'movie-picker-web-staging' }}
-  # Public addresses of the staging, read by the production gate: both are public, like every
-  # domain of the project.
+  # Public addresses of the staging, read by the production gate (both are public, like every
+  # domain of the project), and the staging service, whose serving revision production redeploys.
   STAGING_WEB_URL: https://staging.movie-picker.fr
   STAGING_API_URL: https://api.staging.movie-picker.fr
+  STAGING_CLOUD_RUN_SERVICE_NAME: movie-picker-api-staging
   # The web lane runs the CLI from the lockfile (`@sentry/cli`, integrity checked by pnpm); the
   # jobs without Node download the same version and check its checksum, as the other binaries
   # of the workflows are: an unverified download would run inside a job holding cloud credentials.
@@ -156,7 +159,9 @@ jobs:
       # in `/health/ready`, the web app writes it in a `<meta name="release">` of its index.html
       # (`apps/web/vite.config.ts`). A staging that serves another commit, or nothing, refuses
       # production: deploy the commit to the staging first. Only the requested targets are read:
-      # a front-only deployment says nothing about the API.
+      # a front-only deployment says nothing about the API. The release of the API is read whatever
+      # the status code: `/health/ready` answers 503 with the same body when the staging database
+      # is away, and a staging incident must not hold a production fix back.
       - name: Require the staging to serve this commit
         if: inputs.stage == 'production'
         env:
@@ -165,8 +170,9 @@ jobs:
           set -eo pipefail
           if [ "$TARGET" != "front" ]; then
             body="$RUNNER_TEMP/staging-ready.json"
-            curl -sS --fail --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$body" "$STAGING_API_URL/health/ready"
-            served="$(jq -r '.release // ""' "$body")"
+            code="$(curl -sS --retry 5 --retry-all-errors --retry-delay 5 --max-time 60 -o "$body" -w '%{http_code}' "$STAGING_API_URL/health/ready" || true)"
+            echo "GET $STAGING_API_URL/health/ready -> ${code:-no answer}"
+            served="$(jq -r '.release // ""' "$body" 2>/dev/null || true)"
             if [ "$served" != "$GITHUB_SHA" ]; then
               echo "::error::The staging API serves release '${served:-none}', not $GITHUB_SHA: deploy this commit to the staging first (stage=staging), then to production."
               exit 1
@@ -186,12 +192,14 @@ jobs:
 
   # Blocking gate of `deploy-front`, moved here from `ci-cd.yml`: 9 minutes per master push whose
   # measurement was only consumed by a deployment. On the deployment path, it costs 9 minutes per
-  # real delivery and keeps exactly the same blocking power.
+  # real delivery and keeps exactly the same blocking power. Staging stage only: the measurement
+  # does not depend on the stage (a local build, `scripts/lighthouse-run.mjs`), and a front reaches
+  # production only once the staging served it, which this gate decided (header).
   # Trade-off: a performance regression is no longer seen at push time but at deployment time.
   lighthouse:
     name: 💡 Lighthouse web (blocking thresholds)
     needs: verify-ci
-    if: inputs.target == 'all' || inputs.target == 'front'
+    if: inputs.stage == 'staging' && (inputs.target == 'all' || inputs.target == 'front')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -225,9 +233,9 @@ jobs:
   # the repository secrets any more.
   #
   # One job, two ways to get the digest to deploy. For the staging, the image is built, scanned,
-  # pushed as `api:<sha>` and its digest read back. For production, the tag the staging run pushed
-  # for this commit is resolved to its digest and scanned again (a CVE published between the two
-  # stages blocks production the same way), never rebuilt: the production identity cannot push.
+  # pushed as `api:<sha>` and its digest read back. For production, the digest of the revision the
+  # staging serves is read and scanned again (a CVE published between the two stages blocks
+  # production the same way), never rebuilt: the production identity cannot push.
   image:
     name: 🐳 API image (built for the staging, resolved from it for production)
     runs-on: ubuntu-24.04
@@ -323,12 +331,15 @@ jobs:
           path: sbom.cdx.json
           if-no-files-found: warn
           retention-days: 30
-      # The tag is the commit: what the staging run pushed for it is what production gets. The
-      # read needs `artifactregistry.reader` on the repository, the only right the production
-      # identity keeps there. The tag is listed rather than described: `images describe` also
-      # reads Container Analysis for its summary, a right this identity does not have, and it
-      # answered nothing at the first production run.
-      - name: Resolve the image the staging ran
+      # What the staging serves is what production gets: the revision of the staging service that
+      # carries the traffic is read, with the release it was built from and the digest it resolved
+      # to. The tag `api:<sha>` would name the last image a staging run pushed, not the one the
+      # staging serves when that run failed at validation; the revision is the served bytes
+      # themselves, and its release is checked once more on the very object being promoted, so a
+      # staging deployment racing this run cannot slip another commit in. The reads need
+      # `run.developer` on the project and, for the scan, `artifactregistry.reader` on the
+      # repository: the only rights the production identity keeps there.
+      - name: Resolve the image the staging serves
         id: resolve
         if: inputs.stage == 'production'
         env:
@@ -336,12 +347,25 @@ jobs:
         run: |
           set -eo pipefail
           REPO="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api"
-          DIGEST="$(gcloud artifacts docker tags list "$REPO" --filter="tag:${GITHUB_SHA}" --format='value(version)' | sed 's#.*/versions/##' | head -1 || true)"
-          if ! printf '%s' "$DIGEST" | grep -qE '^sha256:[0-9a-f]{64}$'; then
-            echo "::error::No image ${REPO}:${GITHUB_SHA} in the registry: the staging deployment of this commit did not push it (or the retention removed it). Deploy to the staging first."
+          REVISION="$(gcloud run services describe "$STAGING_CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
+            | jq -r '[.status.traffic[]? | select((.percent // 0) > 0)] | sort_by(.percent) | last | .revisionName // ""')"
+          if [ -z "$REVISION" ]; then
+            echo "::error::No revision of $STAGING_CLOUD_RUN_SERVICE_NAME carries traffic: deploy this commit to the staging first (stage=staging)."
             exit 1
           fi
-          echo "Image the staging ran: ${REPO}@${DIGEST}"
+          gcloud run revisions describe "$REVISION" --region "$GCP_REGION" --format=json > "$RUNNER_TEMP/staging-revision.json"
+          RELEASE="$(jq -r '[.spec.containers[0].env[]? | select(.name == "SENTRY_RELEASE") | .value] | first // ""' "$RUNNER_TEMP/staging-revision.json")"
+          IMAGE="$(jq -r '.status.imageDigest // ""' "$RUNNER_TEMP/staging-revision.json")"
+          DIGEST="${IMAGE##*@}"
+          if [ "$RELEASE" != "$GITHUB_SHA" ]; then
+            echo "::error::The staging revision $REVISION was built from '${RELEASE:-none}', not $GITHUB_SHA: deploy this commit to the staging first (stage=staging)."
+            exit 1
+          fi
+          if [ "$IMAGE" != "${REPO}@${DIGEST}" ] || ! printf '%s' "$DIGEST" | grep -qE '^sha256:[0-9a-f]{64}$'; then
+            echo "::error::The staging revision $REVISION runs '${IMAGE:-nothing}', not an image of ${REPO} resolved by digest: deploy this commit to the staging through this workflow first."
+            exit 1
+          fi
+          echo "Image the staging serves: ${REPO}@${DIGEST} (revision $REVISION, release $RELEASE)"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
           echo "ref=${REPO}@${DIGEST}" >> "$GITHUB_OUTPUT"
       - name: Scan the resolved image again (Trivy)
@@ -570,9 +594,18 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Same reasoning as `deploy-api`: the long list of gates is replaced by `verify-ci`, which
-    # requires all of them on the target commit. Only Lighthouse remains here, the only gate that
-    # runs in this workflow.
-    needs: lighthouse
+    # requires all of them on the target commit. Lighthouse is the only gate that runs in this
+    # workflow, on the staging stage alone (header): the condition requires its success there and
+    # accepts its skip on production, where `verify-ci` has required the staging to serve this
+    # very front. `!cancelled()` rather than a bare `needs:`, because a bare one would skip this
+    # job behind the skipped Lighthouse of production; every outcome that matters is spelled out
+    # here, nothing propagates silently, and the final guard reads the result anyway.
+    needs: [verify-ci, lighthouse]
+    if: >-
+      !cancelled()
+      && needs.verify-ci.result == 'success'
+      && (inputs.target == 'all' || inputs.target == 'front')
+      && (needs.lighthouse.result == 'success' || (inputs.stage == 'production' && needs.lighthouse.result == 'skipped'))
     environment: ${{ inputs.stage }}
     permissions:
       contents: read

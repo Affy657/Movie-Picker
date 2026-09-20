@@ -39,6 +39,7 @@ import { gzipSync } from 'node:zlib';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const API = 'https://firebasehosting.googleapis.com/v1beta1';
 const HASHES_PER_POPULATE_CALL = 1000;
+const UPLOAD_CONCURRENCY = 6;
 
 function fail(message) {
   console.error(`\x1b[31m✗\x1b[0m ${message}`);
@@ -195,18 +196,24 @@ for (let i = 0; i < files.length; i += HASHES_PER_POPULATE_CALL) {
   uploadUrl = populated.uploadUrl ?? uploadUrl;
 }
 
+// A few uploads in flight rather than one: every hashed asset of a release is new to Hosting, and
+// each one is a round trip. A failed upload ends the process through `call`.
 const byHash = new Map(files.map((f) => [f.hash, f]));
+const pending = [...uploadRequired];
 let uploaded = 0;
-for (const hash of uploadRequired) {
-  await call(
-    'PUT',
-    `${uploadUrl}/${hash}`,
-    byHash.get(hash).gzipped,
-    token,
-    'application/octet-stream'
-  );
-  uploaded += 1;
+async function upload() {
+  for (let hash = pending.shift(); hash !== undefined; hash = pending.shift()) {
+    await call(
+      'PUT',
+      `${uploadUrl}/${hash}`,
+      byHash.get(hash).gzipped,
+      token,
+      'application/octet-stream'
+    );
+    uploaded += 1;
+  }
 }
+await Promise.all(Array.from({ length: Math.min(UPLOAD_CONCURRENCY, pending.length) }, upload));
 console.log(`${uploaded} uploaded, ${files.length - uploaded} already known to Hosting`);
 
 const finalized = await call(

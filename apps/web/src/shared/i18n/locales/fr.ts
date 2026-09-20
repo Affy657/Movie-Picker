@@ -3022,7 +3022,7 @@ export const fr = {
         'Les seuils sont montés au fil des paliers ; ils ne descendent jamais, c’est ce qui les rend utiles.',
       lighthouse: 'Lighthouse',
       lighthouseValue:
-        '{{pages}} pages auditées à chaque envoi, avec des minimums de {{perf}} en performance, {{a11y}} en accessibilité, {{bp}} en bonnes pratiques et {{seo}} en référencement.',
+        '{{pages}} pages auditées à chaque mise en recette, avec des minimums de {{perf}} en performance, {{a11y}} en accessibilité, {{bp}} en bonnes pratiques et {{seo}} en référencement ; la production ne part que si la recette a servi ce commit, donc si cette porte l’a laissé passer.',
       lighthouseHint:
         "Chaque page est mesurée cinq fois et c'est la médiane qui est retenue, pour lisser la variance du runner. Plus aucune page n'a de plancher à elle depuis que l'état déconnecté d'une route protégée se rend depuis la coquille.",
       axe: 'Accessibilité automatisée',

@@ -2971,7 +2971,7 @@ export const en: Locale = {
         'Thresholds were raised milestone after milestone; they never come back down, which is what makes them useful.',
       lighthouse: 'Lighthouse',
       lighthouseValue:
-        '{{pages}} pages audited on every push, with minimums of {{perf}} for performance, {{a11y}} for accessibility, {{bp}} for best practices and {{seo}} for SEO.',
+        '{{pages}} pages audited at every staging deployment, with minimums of {{perf}} for performance, {{a11y}} for accessibility, {{bp}} for best practices and {{seo}} for SEO; production only leaves once the staging served this commit, hence once this gate let it through.',
       lighthouseHint:
         'Each page is measured five times and the median is kept, to smooth out the runner variance. No page has a floor of its own any more since the signed-out state of a protected route renders from the shell.',
       axe: 'Automated accessibility',
