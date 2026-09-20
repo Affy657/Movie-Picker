@@ -45,8 +45,12 @@ on:
     branches:
       - master
       - "v*"
+  # A pull request into a version branch runs the gates too: a feature branch triggers no push
+  # run, so without `v*` here its review had no CI at all until the merge.
   pull_request:
-    branches: [master]
+    branches:
+      - master
+      - "v*"
 
 permissions:
   contents: read
