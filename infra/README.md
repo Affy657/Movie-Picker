@@ -27,7 +27,8 @@ infra/terraform/
 │  ├─ cloud-run-api/       le service Cloud Run de l'API, son invocation publique et son domaine
 │  ├─ web-hosting/         le site Firebase Hosting du front (provider google-beta)
 │  ├─ github-federation/   le pool et le provider OIDC qui font confiance aux workflows du dépôt, environnement par environnement
-│  └─ workload-identity/   un compte sans clé que GitHub assume depuis un seul environnement, et chaque droit du compte, lié à sa ressource
+│  ├─ workload-identity/   un compte sans clé que GitHub assume depuis un seul environnement, et chaque droit du compte, lié à sa ressource
+│  └─ monitoring/          les trois sondes, les six politiques d'alerte, le canal e-mail et le tableau de bord
 └─ environments/
    └─ production/          module racine : main.tf (les API du projet, l'identité d'exécution, les modules, l'activation de Firebase), versions.tf, backend.tf, providers.tf, variables.tf, outputs.tf, .terraform.lock.hcl
 ```
@@ -60,7 +61,7 @@ pnpm run terraform -- providers lock           # après un changement de version
 Ce que l'enveloppe ajoute d'elle-même :
 
 - à `init`, le bucket d'état (`-backend-config=bucket=…`), lu dans `TF_STATE_BUCKET` (variable d'environnement, sinon `.env` à la racine du dépôt) ; `-backend=false` s'en passe, c'est ce que font la porte locale et la CI ;
-- `TF_VAR_project_id`, lu dans `GCP_PROJECT_ID` (variable d'environnement, sinon `.env`), sinon le projet actif de gcloud ;
+- `TF_VAR_project_id`, lu dans `GCP_PROJECT_ID` (variable d'environnement, sinon `.env`), sinon le projet actif de gcloud ; `TF_VAR_state_bucket` depuis `TF_STATE_BUCKET` et `TF_VAR_alert_email` depuis `ALERT_EMAIL`, deux valeurs que le module racine attend et que le dépôt ne porte pas ;
 - `GOOGLE_OAUTH_ACCESS_TOKEN`, obtenu par `gcloud auth print-access-token` pour toute commande qui parle à GCP : aucun fichier de clé sur le poste, le jeton dure une heure et passe à Docker par son nom, jamais sur sa ligne de commande ;
 - à `providers lock` sans `-platform`, les cinq plateformes (linux et darwin en amd64 et arm64, windows amd64) : sans elles le fichier de verrouillage ne porterait que l'empreinte `h1:` de linux_amd64 et `init -lockfile=readonly` refuserait le cache des providers partout ailleurs.
 
@@ -82,6 +83,7 @@ puis, dans le `.env` local (ignoré par git, en liste blanche de gitleaks) :
 ```
 TF_STATE_BUCKET=<BUCKET_TFSTATE>
 GCP_PROJECT_ID=<PROJET_GCP>
+ALERT_EMAIL=<ADRESSE_DES_ALERTES>
 ```
 
 La règle de cycle de vie ne supprime que les versions non courantes de plus de 90 jours ; la version courante de l'état ne s'efface jamais d'elle-même. L'état porte tout ce que les ressources exposent, valeurs de secrets comprises quand Terraform les lit : accès public interdit, accès uniforme au niveau du bucket, et seuls le compte propriétaire du projet, `movie-picker-terraform@` (lecture et écriture, depuis master) et `movie-picker-terraform-plan@` (lecture seule, depuis une PR) y accèdent, les deux derniers par des liaisons décrites dans le module racine (`state_bucket`).
@@ -116,6 +118,14 @@ Quatre comptes de service, aucune clé : `gcloud iam service-accounts keys list 
 Les secrets GitHub qui désignent ces identités sont des sorties du module racine : `ci_service_account_email` (`GCP_SERVICE_ACCOUNT` de `production`), `terraform_service_account_email` (`GCP_TERRAFORM_SERVICE_ACCOUNT` de `production`), `terraform_plan_service_account_email` (`GCP_SERVICE_ACCOUNT` de `infra-plan`) et `workload_identity_provider` (`GCP_WORKLOAD_IDENTITY_PROVIDER` des deux environnements). Après tout changement du pool, du provider ou des droits, `gh workflow run cloud-auth-check.yml --ref master` prouve l'échange avant qu'un déploiement ne le découvre ; une liaison IAM fraîchement posée met une à deux minutes à être visible, un premier échec en `iam.serviceAccounts.getAccessToken` juste après un `apply` se rejoue.
 
 Les API du projet dont tout cela dépend (`iam`, `iamcredentials`, `run`, `artifactregistry`, `secretmanager`, `cloudscheduler`) sont décrites et importées (`google_project_service.platform`, `disable_on_destroy = false`) : `deploy.yml` n'active plus rien lui-même. Le compte Compute par défaut, qui portait le pipeline jusqu'au 2026-09-20 avec neuf rôles sur le projet, `artifactregistry.admin` sur le dépôt et `objectAdmin` sur le bucket, n'a plus aucun droit ni liaison ; le rôle `cloudbuild.builds.builder` du compte Cloud Build, vestige du premier déploiement depuis les sources, est retiré avec lui.
+
+### Supervision (lot 7, importée le 2026-09-20)
+
+Le module `monitoring` décrit ce que les alertes du projet sont, et le lie : les trois sondes de disponibilité (`/health` toutes les 60 s, `/health/ready` toutes les 15 minutes avec son ping MongoDB, le domaine canonique du front toutes les 5 minutes, depuis l'Europe, les USA et l'Asie-Pacifique), les six politiques (trois sur les sondes, deux sur les métriques Cloud Run, une notification de nouveau compte lue dans les journaux structurés de l'API), le canal e-mail qu'elles notifient et le tableau de bord de MCO. L'identifiant d'une sonde est attribué par l'API à sa création : les conditions et les tuiles du tableau de bord le lisent sur la ressource (`uptime_check_id`) au lieu de le recopier, ce qui est la raison de les décrire ensemble. Recréer une sonde (un `monitoredResource` ne se modifie pas) repointe donc tout ce qui la lit dans le même `apply`.
+
+La documentation de chaque politique, celle qui arrive dans l'e-mail d'alerte, vit ici en Markdown (`documentation.content`) : c'est elle que l'on relit avant de toucher un seuil, et les seuils y sont justifiés par les mesures qui les ont fixés. L'adresse notifiée est `ALERT_EMAIL` (`.env` local, secret des deux environnements GitHub et de Dependabot), déclarée sensible : un `plan` l'affiche en `(sensitive value)`, et le premier `apply` après l'import a mis à jour le canal sans rien changer, pour que l'état porte cette sensibilité.
+
+Une sonde qui reçoit un `301` compte comme en échec (`2xx` attendu) : la sonde du front vise le domaine canonique, jamais un alias qui redirige.
 
 ### Plan en PR, apply sur master (lot 6, posé le 2026-09-20)
 

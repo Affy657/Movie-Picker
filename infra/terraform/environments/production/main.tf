@@ -230,3 +230,13 @@ module "web" {
   custom_domain    = "www.movie-picker.fr"
   redirect_domains = ["web.movie-picker.fr", "movie-picker.fr"]
 }
+
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  project_id       = var.project_id
+  alert_email      = var.alert_email
+  api_host         = "api.movie-picker.fr"
+  web_host         = "www.movie-picker.fr"
+  api_service_name = module.api.name
+}
