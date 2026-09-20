@@ -27,14 +27,29 @@ resource "google_service_account_iam_member" "acts_as" {
   member             = "serviceAccount:${google_service_account.this.email}"
 }
 
-resource "google_artifact_registry_repository_iam_member" "writer" {
+moved {
+  from = google_artifact_registry_repository_iam_member.writer
+  to   = google_artifact_registry_repository_iam_member.images
+}
+
+resource "google_artifact_registry_repository_iam_member" "images" {
   for_each = var.image_repositories
 
   project    = var.project_id
   location   = each.value.location
   repository = each.value.repository_id
-  role       = "roles/artifactregistry.writer"
+  role       = each.value.role
   member     = "serviceAccount:${google_service_account.this.email}"
+}
+
+resource "google_cloud_run_v2_service_iam_member" "services" {
+  for_each = var.run_services
+
+  project  = var.project_id
+  location = each.value.location
+  name     = each.value.name
+  role     = each.value.role
+  member   = "serviceAccount:${google_service_account.this.email}"
 }
 
 resource "google_secret_manager_secret_iam_member" "accessor" {

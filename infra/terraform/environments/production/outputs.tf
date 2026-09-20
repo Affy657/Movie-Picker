@@ -37,3 +37,13 @@ output "workload_identity_provider" {
   description = "Provider the workflows exchange their OIDC token with, the GCP_WORKLOAD_IDENTITY_PROVIDER secret of both GitHub environments."
   value       = module.github.provider_name
 }
+
+output "github_federation" {
+  description = "Pool, provider and trusted subjects of the GitHub federation: the staging root module binds its identities to them through the remote state."
+  value       = module.github
+}
+
+output "api_images_repository_id" {
+  description = "Artifact Registry repository of the API images, shared with the staging: the image promoted to production is the one the staging ran."
+  value       = module.api_images.repository_id
+}

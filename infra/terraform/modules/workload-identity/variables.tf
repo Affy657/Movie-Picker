@@ -41,8 +41,18 @@ variable "acts_as_service_accounts" {
 }
 
 variable "image_repositories" {
-  description = "Artifact Registry repositories the identity pushes images to."
-  type        = map(object({ location = string, repository_id = string }))
+  description = "Artifact Registry repositories the identity works with, keyed by a short name: writer for the identity that pushes the images, reader for the one that only resolves and scans them."
+  type = map(object({
+    location      = string
+    repository_id = string
+    role          = optional(string, "roles/artifactregistry.writer")
+  }))
+  default = {}
+}
+
+variable "run_services" {
+  description = "Cloud Run services the identity is granted a role on, keyed by a short name: a deployer bound to its service cannot deploy another one of the project."
+  type        = map(object({ location = string, name = string, role = string }))
   default     = {}
 }
 

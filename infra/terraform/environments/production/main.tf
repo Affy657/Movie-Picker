@@ -49,7 +49,7 @@ module "github" {
 
   project_id          = var.project_id
   github_repository   = local.github_repository
-  github_environments = ["production", "infra-plan"]
+  github_environments = ["production", "infra-plan", "staging"]
 }
 
 module "ci" {
