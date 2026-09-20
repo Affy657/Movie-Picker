@@ -84,7 +84,10 @@ jobs:
         run: terraform -chdir="$TERRAFORM_ROOT" init -input=false -lockfile=readonly -no-color -backend-config="bucket=$TF_STATE_BUCKET"
       # `-detailed-exitcode`: 0 nothing to change, 2 changes, 1 error. The plan is kept whatever
       # the outcome, an error is worth a comment too. `-lock=false`: a review must never block a
-      # deployment or an apply holding the lock.
+      # deployment or an apply holding the lock. The runner shell is `bash -e` without `pipefail`:
+      # with `tee` alone the pipeline always exited 0 and an apply was silently skipped, so
+      # `pipefail` is set and the code is caught on the pipeline, which `-e` would otherwise end
+      # on a 2.
       - name: terraform plan (read-only, without the lock)
         id: plan
         env:
@@ -92,8 +95,8 @@ jobs:
           TF_VAR_state_bucket: ${{ secrets.TF_STATE_BUCKET }}
         run: |
           set -o pipefail
-          terraform -chdir="$TERRAFORM_ROOT" plan -input=false -lock=false -no-color -detailed-exitcode 2>&1 | tee "$RUNNER_TEMP/plan.txt"
-          code="${PIPESTATUS[0]}"
+          code=0
+          terraform -chdir="$TERRAFORM_ROOT" plan -input=false -lock=false -no-color -detailed-exitcode 2>&1 | tee "$RUNNER_TEMP/plan.txt" || code=$?
           echo "exitcode=$code" >> "$GITHUB_OUTPUT"
           test "$code" != "1"
       # One comment per root module, found again by its first line and edited in place: a PR that
@@ -193,8 +196,8 @@ jobs:
           TF_VAR_state_bucket: ${{ secrets.TF_STATE_BUCKET }}
         run: |
           set -o pipefail
-          terraform -chdir="$TERRAFORM_ROOT" plan -input=false -no-color -detailed-exitcode -out=tfplan 2>&1 | tee "$RUNNER_TEMP/plan.txt"
-          code="${PIPESTATUS[0]}"
+          code=0
+          terraform -chdir="$TERRAFORM_ROOT" plan -input=false -no-color -detailed-exitcode -out=tfplan 2>&1 | tee "$RUNNER_TEMP/plan.txt" || code=$?
           echo "exitcode=$code" >> "$GITHUB_OUTPUT"
           {
             echo "### Terraform plan, \`$TERRAFORM_ROOT\` (exit code $code)"
