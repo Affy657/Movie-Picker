@@ -5,6 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import {
   buildContentSecurityPolicy,
+  inlineScriptHashes,
   toApiOrigin,
   toSentryIngestOrigin,
 } from './src/shared/utils/contentSecurityPolicy';
@@ -14,19 +15,34 @@ const devQuickLoginStub = path.resolve(
   'src/features/auth/devQuickLoginCredentials.stub.ts'
 );
 
+/**
+ * Dernier a transformer le document : les scripts en ligne de la coquille (theme, langue, titre
+ * de la home, prechargement de la locale) sont autorises par leur empreinte SHA-256 plutot que
+ * par `'unsafe-inline'`, donc l'empreinte se calcule sur le texte final, apres tous les autres
+ * plugins. `scripts/prerender.mjs` retire ou garde ces scripts a l'octet pres, il n'en ajoute
+ * aucun.
+ */
 function cspMetaPlugin(apiOrigin: string, sentryOrigin: string): Plugin {
-  const policy = buildContentSecurityPolicy(apiOrigin, sentryOrigin);
   return {
     name: 'moviepicker-csp-meta',
     apply: 'build',
-    transformIndexHtml() {
-      return [
-        {
-          tag: 'meta',
-          attrs: { 'http-equiv': 'Content-Security-Policy', content: policy },
-          injectTo: 'head-prepend',
-        },
-      ];
+    enforce: 'post',
+    transformIndexHtml: {
+      order: 'post',
+      async handler(html) {
+        const policy = buildContentSecurityPolicy(
+          apiOrigin,
+          sentryOrigin,
+          await inlineScriptHashes(html)
+        );
+        return [
+          {
+            tag: 'meta',
+            attrs: { 'http-equiv': 'Content-Security-Policy', content: policy },
+            injectTo: 'head-prepend',
+          },
+        ];
+      },
     },
   };
 }
@@ -370,9 +386,9 @@ export default defineConfig(({ mode }) => {
           type: 'module',
         },
       }),
-      cspMetaPlugin(apiOrigin, sentryOrigin),
       appShellClosurePlugin(appShellModules),
       preloadCriticalAssetsPlugin(),
+      cspMetaPlugin(apiOrigin, sentryOrigin),
       ...(sentryAuthToken
         ? sentryVitePlugin({
             org: process.env.SENTRY_ORG,

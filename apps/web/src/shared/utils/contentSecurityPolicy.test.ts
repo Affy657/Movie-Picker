@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildContentSecurityPolicy,
+  inlineScriptHashes,
   toApiOrigin,
   toSentryIngestOrigin,
 } from '@/shared/utils/contentSecurityPolicy';
@@ -71,6 +72,19 @@ describe('buildContentSecurityPolicy', () => {
     expect(directive(policy, 'script-src')).toContain('https://eu-assets.i.posthog.com');
   });
 
+  it("n'autorise aucun script en ligne sans empreinte", () => {
+    expect(directive(policy, 'script-src')).toBe(
+      "script-src 'self' https://eu-assets.i.posthog.com"
+    );
+  });
+
+  it('autorise les scripts en ligne par leur empreinte, entre self et PostHog', () => {
+    const hashed = buildContentSecurityPolicy('', '', ["'sha256-abc='", "'sha256-def='"]);
+    expect(directive(hashed, 'script-src')).toBe(
+      "script-src 'self' 'sha256-abc=' 'sha256-def=' https://eu-assets.i.posthog.com"
+    );
+  });
+
   it('garde les directives de verrouillage', () => {
     expect(directive(policy, 'default-src')).toBe("default-src 'self'");
     expect(directive(policy, 'object-src')).toBe("object-src 'none'");
@@ -92,5 +106,40 @@ describe('buildContentSecurityPolicy', () => {
     const local = buildContentSecurityPolicy(toApiOrigin('http://127.0.0.1:5010'), '');
     expect(directive(local, 'img-src')).toContain('http://127.0.0.1:5010');
     expect(directive(local, 'connect-src')).toContain('http://127.0.0.1:5010');
+  });
+});
+
+describe('inlineScriptHashes', () => {
+  it("calcule l'empreinte SHA-256 en base64 du texte exact de chaque script en ligne", async () => {
+    const html = '<html><head><script>alert(1)</script></head></html>';
+
+    expect(await inlineScriptHashes(html)).toEqual([
+      "'sha256-bhHHL3z2vDgxUt0W3dWQOrprscmda2Y5pLsLg4GF+pI='",
+    ]);
+  });
+
+  it('ignore les scripts externes et ceux qui ne sont pas du JavaScript', async () => {
+    const html = [
+      '<script src="/assets/index-abc.js" type="module"></script>',
+      '<script type="application/ld+json">{"@type":"WebSite"}</script>',
+      '<script type="module">console.log(1)</script>',
+      '<script>console.log(1)</script>',
+    ].join('');
+
+    const hashes = await inlineScriptHashes(html);
+
+    expect(hashes).toHaveLength(1);
+    expect(hashes[0]).toMatch(/^'sha256-[A-Za-z0-9+/]+=*'$/);
+  });
+
+  it("garde les espaces et les retours a la ligne, qui comptent dans l'empreinte", async () => {
+    const compact = await inlineScriptHashes('<script>a()</script>');
+    const spaced = await inlineScriptHashes('<script>\n  a()\n</script>');
+
+    expect(compact).not.toEqual(spaced);
+  });
+
+  it('ne renvoie rien sans script en ligne', async () => {
+    expect(await inlineScriptHashes('<html><body><p>x</p></body></html>')).toEqual([]);
   });
 });
