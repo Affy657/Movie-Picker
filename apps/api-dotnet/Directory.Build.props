@@ -5,12 +5,15 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <!-- Unawaited async: build error (subtle bugs). The rest: EditorConfig + CI -warnaserror. -->
     <WarningsAsErrors>$(WarningsAsErrors);CS4014</WarningsAsErrors>
-    <!-- packages.lock.json next to each project, the NuGet counterpart of pnpm-lock.yaml: the
-         resolved graph and the content hash of every package. Locked on the CI runners (CI=true)
-         and in the Dockerfile (- -locked-mode): a restore that would need another version or
-         another hash fails instead of resolving silently. Dependabot updates the lock files. -->
-    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-    <RestoreLockedMode Condition="'$(CI)' == 'true'">true</RestoreLockedMode>
+    <!-- packages.lock.json next to the API project only, the NuGet counterpart of pnpm-lock.yaml:
+         the resolved graph and the content hash of every package. Locked on the CI runners
+         (CI=true) and in the Dockerfile (- -locked-mode): a restore that would need another
+         version or another hash fails instead of resolving silently. Dependabot updates that lock
+         file. The test projects carry none: their lock would repeat the API graph, and Dependabot
+         does not rewrite the lock of a project it did not bump, so every NuGet bump of the API
+         failed their locked restore (NU1004) until someone regenerated them by hand. -->
+    <RestorePackagesWithLockFile Condition="'$(MSBuildProjectName)' == 'MoviePicker.Api'">true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(CI)' == 'true' and '$(MSBuildProjectName)' == 'MoviePicker.Api'">true</RestoreLockedMode>
   </PropertyGroup>
 
   <!-- GHSA-6c8g-7p36-r338 (SharpCompress, Moderate, zip-slip): no upstream fix, and the
