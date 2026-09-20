@@ -78,6 +78,15 @@ describe('HistoryEventRow', () => {
     expect(posters[0]!.getAttribute('src')).toContain('premier.jpg');
   });
 
+  it('carries the date, the counts and the host mark next to the title', () => {
+    renderRow({ ...base, maxParticipants: 8 });
+
+    expect(screen.getByText(/2 sept\./)).toBeInTheDocument();
+    expect(screen.getByText('6 / 8')).toBeInTheDocument();
+    expect(screen.getByText('8 films proposés')).toBeInTheDocument();
+    expect(screen.getByTitle('Vous organisez cette soirée')).toBeInTheDocument();
+  });
+
   it('falls back to the no-movie state when the movie night has no winner', () => {
     renderRow(base);
 

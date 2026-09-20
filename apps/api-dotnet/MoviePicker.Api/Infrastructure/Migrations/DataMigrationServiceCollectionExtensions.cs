@@ -9,7 +9,7 @@ public static class DataMigrationServiceCollectionExtensions
     {
         services.AddScoped<IDataMigration, AssignMissingUserHandlesMigration>();
         services.AddScoped<IDataMigration, BackfillMovieGenresMigration>();
-        services.AddScoped<IDataMigration, BackfillWatchlistRuntimesMigration>();
+        services.AddScoped<IDataMigration, BackfillWatchlistFactsMigration>();
         services.AddScoped<IDataMigration, BackfillEventStartAtMigration>();
         services.AddHostedService<DataMigrationRunner>();
         return services;

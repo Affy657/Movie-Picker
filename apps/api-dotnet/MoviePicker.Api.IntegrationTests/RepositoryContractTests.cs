@@ -41,6 +41,19 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         UpdatedAt = Now
     };
 
+    private static WatchlistItem NewWatchlistItem(string userId, int tmdbId, int? runtimeMinutes, double? voteAverage) => new()
+    {
+        Id = string.Empty,
+        UserId = userId,
+        TmdbId = tmdbId,
+        MediaType = MovieMediaType.Movie,
+        Title = $"Film {tmdbId}",
+        Year = "2001",
+        RuntimeMinutes = runtimeMinutes,
+        VoteAverage = voteAverage,
+        CreatedAt = Now
+    };
+
     [Fact]
     public async Task EventUpdate_WithTheVersionJustRead_SucceedsAndIncrementsVersion()
     {
@@ -393,5 +406,35 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
 
         var stored = await ReadRawAsync("users", created.Id);
         Assert.False(stored.Contains("bio"));
+    }
+
+    [Fact]
+    public async Task WatchlistFacts_ListsTheItemsWithoutRuntimeOrVote_AndUpdateFillsThem()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var watchlist = scope.ServiceProvider.GetRequiredService<IWatchlistRepository>();
+        var userId = ObjectId.GenerateNewId().ToString();
+        await watchlist.AddAsync(NewWatchlistItem(userId, 1, runtimeMinutes: null, voteAverage: null));
+        await watchlist.AddAsync(NewWatchlistItem(userId, 2, runtimeMinutes: 0, voteAverage: 6.5));
+        await watchlist.AddAsync(NewWatchlistItem(userId, 3, runtimeMinutes: 98, voteAverage: null));
+        await watchlist.AddAsync(NewWatchlistItem(userId, 4, runtimeMinutes: 98, voteAverage: 6.5));
+
+        var missing = await watchlist.ListMissingFactsAsync(1000);
+
+        Assert.Equal([1, 2, 3], missing.Where(i => i.UserId == userId).Select(i => i.TmdbId).Order());
+
+        var first = await watchlist.GetOneAsync(userId, 1, MovieMediaType.Movie);
+        await watchlist.UpdateFactsAsync(first!.Id, 104, 7.4);
+        var third = await watchlist.GetOneAsync(userId, 3, MovieMediaType.Movie);
+        await watchlist.UpdateFactsAsync(third!.Id, 98, null);
+
+        var filled = await watchlist.GetOneAsync(userId, 1, MovieMediaType.Movie);
+        Assert.Equal(104, filled!.RuntimeMinutes);
+        Assert.Equal(7.4, filled.VoteAverage);
+        var stillWithoutVote = await watchlist.GetOneAsync(userId, 3, MovieMediaType.Movie);
+        Assert.Null(stillWithoutVote!.VoteAverage);
+        Assert.Equal(
+            [2, 3],
+            (await watchlist.ListMissingFactsAsync(1000)).Where(i => i.UserId == userId).Select(i => i.TmdbId).Order());
     }
 }
