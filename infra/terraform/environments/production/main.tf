@@ -80,6 +80,19 @@ resource "google_project_iam_audit_config" "secret_manager" {
   }
 }
 
+resource "google_project_iam_audit_config" "storage" {
+  project = var.project_id
+  service = "storage.googleapis.com"
+
+  audit_log_config {
+    log_type = "DATA_READ"
+  }
+
+  audit_log_config {
+    log_type = "DATA_WRITE"
+  }
+}
+
 module "github" {
   source = "../../modules/github-federation"
 
@@ -197,6 +210,16 @@ resource "google_project_iam_custom_role" "plan_iam_viewer" {
     "iam.serviceAccounts.list",
     "resourcemanager.projects.getIamPolicy",
   ]
+}
+
+resource "google_secret_manager_secret" "backup_database_uri" {
+  project             = var.project_id
+  secret_id           = "MONGODB_BACKUP_URI"
+  deletion_protection = true
+
+  replication {
+    auto {}
+  }
 }
 
 resource "google_storage_bucket" "backups" {
@@ -334,6 +357,7 @@ module "api" {
   service_account_email = local.api_runtime_service_account_email
   domain                = "api.movie-picker.fr"
   secret_env            = local.api_secret_names
+  max_instance_count    = 5
 
   plain_env = {
     SENTRY_ENVIRONMENT = "production"
@@ -374,4 +398,5 @@ module "monitoring" {
   api_host         = "api.movie-picker.fr"
   web_host         = "www.movie-picker.fr"
   api_service_name = module.api.name
+  backup_bucket    = google_storage_bucket.backups.name
 }

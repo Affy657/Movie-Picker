@@ -5,7 +5,7 @@ resource "google_artifact_registry_repository" "this" {
   format        = "DOCKER"
 
   cleanup_policies {
-    id     = "keep-10-recent"
+    id     = "keep-30-recent"
     action = "KEEP"
 
     most_recent_versions {

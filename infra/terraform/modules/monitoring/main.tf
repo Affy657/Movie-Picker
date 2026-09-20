@@ -9,6 +9,7 @@ locals {
   api_ready_passed  = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.api_readiness.uptime_check_id}\""
   web_passed        = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.web.uptime_check_id}\""
   channels          = concat([google_monitoring_notification_channel.email.name], google_monitoring_notification_channel.sms[*].name)
+  backup_published  = "storage_googleapis_com:api_request_count{monitored_resource=\"gcs_bucket\", bucket_name=\"${var.backup_bucket}\", method=\"MoveObject\", response_code=\"OK\"}"
 }
 
 resource "google_monitoring_notification_channel" "email" {
@@ -456,6 +457,46 @@ resource "google_monitoring_alert_policy" "new_user" {
       **Contenu** : l'identifiant Mongo du compte et l'heure. Les journaux ne portent ni e-mail ni pseudo (zéro PII), le profil se lit dans la collection `users` du cluster Atlas.
 
       **Conduite à tenir** : aucune. Si l'e-mail devient trop fréquent, passer la période de `notificationRateLimit` à une heure ou remplacer cette politique par un résumé quotidien.
+    EOT
+    )
+  }
+}
+
+resource "google_monitoring_alert_policy" "backup_stale" {
+  project               = var.project_id
+  display_name          = "Sauvegarde MongoDB en retard"
+  combiner              = "OR"
+  severity              = "ERROR"
+  notification_channels = local.channels
+
+  alert_strategy {
+    auto_close = "86400s"
+  }
+
+  conditions {
+    display_name = "Aucune archive publiee dans le bucket de sauvegarde depuis 36 heures"
+
+    condition_prometheus_query_language {
+      query               = "absent_over_time(${local.backup_published}[36h])"
+      duration            = "0s"
+      evaluation_interval = "300s"
+      alert_rule          = "MongoBackupStale"
+    }
+  }
+
+  documentation {
+    mime_type = "text/markdown"
+    content = chomp(<<-EOT
+      **Indicateur** : requêtes `MoveObject` réussies sur le bucket de sauvegarde (`storage.googleapis.com/api/request_count`), la dernière étape de `backup-mongo.yml`, qui déplace l'archive de `pending/` vers `mongodb/` une fois sa restauration vérifiée. Une archive écrite puis refusée à la vérification ne produit pas ce mouvement.
+
+      **Déclenchement** : aucun mouvement depuis 36 heures (`absent_over_time`, PromQL), évalué toutes les 5 minutes. La sauvegarde part tous les jours vers 07:30 à 08:05 UTC (cron GitHub à 02:31, retardé d'environ cinq heures par la plateforme) : 36 heures laissent passer ce retard et une journée de dérive, pas deux.
+
+      **Pourquoi une alerte ici** : l'échec d'un run planifié n'est signalé que par un e-mail de GitHub, et un run qui ne part plus ne l'est par rien : GitHub désactive les workflows planifiés d'un dépôt public sans activité pendant 60 jours, et une identité fédérée révoquée ou un bucket renommé arrêtent la sauvegarde sans rougir nulle part.
+
+      **Conduite à tenir** :
+      1. Ouvrir les runs de `backup-mongo.yml` (onglet Actions) : run rouge, run absent, ou workflow désactivé (« This scheduled workflow is disabled »).
+      2. Relancer à la main : `gh workflow run backup-mongo.yml --ref master`, puis vérifier l'archive du jour avec `gcloud storage ls -l gs://<BUCKET_SAUVEGARDE>/mongodb/`.
+      3. Si `gcloud storage mv` cesse d'apparaître comme `MoveObject` (changement de gcloud), adapter le filtre de cette politique dans `infra/terraform/modules/monitoring/main.tf` plutôt que de la désactiver.
     EOT
     )
   }

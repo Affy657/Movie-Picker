@@ -7,6 +7,11 @@ variable "alert_email" {
   description = "Address every alert policy notifies. The value is a person, kept out of the repository: TF_VAR_alert_email, from ALERT_EMAIL locally and from the ALERT_EMAIL secret in GitHub."
   type        = string
   sensitive   = true
+
+  validation {
+    condition     = can(regex("^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$", var.alert_email))
+    error_message = "alert_email must be an e-mail address; an empty value would blank the channel every policy notifies."
+  }
 }
 
 variable "alert_sms_number" {
@@ -28,6 +33,11 @@ variable "web_host" {
 
 variable "api_service_name" {
   description = "Cloud Run service name, the resource label the metric conditions and the log condition filter on."
+  type        = string
+}
+
+variable "backup_bucket" {
+  description = "Bucket the daily MongoDB backup publishes its verified archive in: the freshness policy alerts when no object has been moved into it for 36 hours."
   type        = string
 }
 

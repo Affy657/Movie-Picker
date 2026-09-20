@@ -33,9 +33,14 @@ variable "state_bucket" {
 }
 
 variable "alert_email" {
-  description = "Address the alert policies notify, TF_VAR_alert_email: ALERT_EMAIL locally (.env), the ALERT_EMAIL secret in GitHub."
+  description = "Address the alert policies notify, TF_VAR_alert_email: ALERT_EMAIL locally (.env), the ALERT_EMAIL secret in GitHub. An empty value is refused rather than applied: a plan run without the variable once offered to blank the notification channel of every alert."
   type        = string
   sensitive   = true
+
+  validation {
+    condition     = can(regex("^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$", var.alert_email))
+    error_message = "alert_email must be an e-mail address: set ALERT_EMAIL (environment or .env) before planning the production root."
+  }
 }
 
 variable "alert_sms_number" {
@@ -43,4 +48,9 @@ variable "alert_sms_number" {
   type        = string
   sensitive   = true
   default     = ""
+
+  validation {
+    condition     = var.alert_sms_number == "" || can(regex("^\\+[1-9][0-9]{6,14}$", var.alert_sms_number))
+    error_message = "alert_sms_number must be empty or an E.164 number (+ and 7 to 15 digits)."
+  }
 }
