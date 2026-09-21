@@ -386,7 +386,20 @@ module "web" {
   project_id       = google_firebase_project.this.project
   site_id          = "movie-picker-web"
   custom_domain    = "www.movie-picker.fr"
-  redirect_domains = ["web.movie-picker.fr", "movie-picker.fr"]
+  redirect_domains = ["movie-picker.fr"]
+}
+
+module "web_legacy" {
+  source = "../../modules/web-hosting"
+
+  project_id    = google_firebase_project.this.project
+  site_id       = "movie-picker-web-legacy"
+  custom_domain = "web.movie-picker.fr"
+}
+
+moved {
+  from = module.web.google_firebase_hosting_custom_domain.redirect["web.movie-picker.fr"]
+  to   = module.web_legacy.google_firebase_hosting_custom_domain.this[0]
 }
 
 module "monitoring" {

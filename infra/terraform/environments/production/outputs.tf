@@ -9,8 +9,8 @@ output "api_images_registry" {
 }
 
 output "web_dns" {
-  description = "State of each custom domain of the web app and the DNS records Hosting still asks for."
-  value       = module.web.required_dns_updates
+  description = "State of each custom domain of the web app, the legacy domain included, and the DNS records Hosting still asks for."
+  value       = merge(module.web.required_dns_updates, module.web_legacy.required_dns_updates)
 }
 
 output "web_default_url" {
