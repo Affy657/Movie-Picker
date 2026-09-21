@@ -3367,6 +3367,14 @@ export const fr = {
       copied: 'Lien copié',
     },
   },
+  movedOrigin: {
+    banner: {
+      title: 'Movie Picker a changé d’adresse',
+      description:
+        'L’application vit désormais sur www.movie-picker.fr. Si vous l’aviez installée sur votre écran d’accueil, réinstallez-la depuis cette adresse : l’ancienne ne recevra plus les mises à jour.',
+      dismiss: 'Compris',
+    },
+  },
 } as const;
 
 type DeepStringify<T> = {

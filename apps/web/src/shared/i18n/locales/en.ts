@@ -3313,4 +3313,12 @@ export const en: Locale = {
       copied: 'Link copied',
     },
   },
+  movedOrigin: {
+    banner: {
+      title: 'Movie Picker has a new address',
+      description:
+        'The app now lives at www.movie-picker.fr. If you had installed it on your home screen, install it again from this address: the old one will no longer receive updates.',
+      dismiss: 'Got it',
+    },
+  },
 };
