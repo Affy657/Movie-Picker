@@ -93,6 +93,22 @@ resource "google_project_iam_audit_config" "storage" {
   }
 }
 
+resource "google_logging_project_bucket_config" "audit" {
+  project        = var.project_id
+  location       = var.region
+  bucket_id      = "audit"
+  retention_days = 400
+  description    = "Data access audit logs of Secret Manager and Cloud Storage, who read which secret or backup: kept 400 days here where _Default keeps them 30"
+}
+
+resource "google_logging_project_sink" "audit_data_access" {
+  project                = var.project_id
+  name                   = "audit-data-access"
+  destination            = "logging.googleapis.com/${google_logging_project_bucket_config.audit.id}"
+  filter                 = "log_id(\"cloudaudit.googleapis.com/data_access\")"
+  unique_writer_identity = true
+}
+
 module "github" {
   source = "../../modules/github-federation"
 
@@ -199,8 +215,8 @@ resource "google_project_iam_custom_role" "bucket_viewer" {
 resource "google_project_iam_custom_role" "plan_iam_viewer" {
   project     = var.project_id
   role_id     = local.plan_iam_viewer_role_id
-  title       = "IAM viewer for a Terraform plan"
-  description = "Reads the service accounts, the custom roles and the IAM policies of the project, of its service accounts and of its image repository: what a plan needs to refresh what infra/terraform binds, without the object listing and the log reading that roles/iam.securityReviewer adds."
+  title       = "Viewer for a Terraform plan (IAM, logging configuration)"
+  description = "Reads the service accounts, custom roles and IAM policies of the project, its service accounts and its image repository, plus the log bucket and sink infra/terraform describes: what a plan refreshes, without the object listing and log reading of roles/iam.securityReviewer and roles/logging.viewer."
   permissions = [
     "artifactregistry.repositories.getIamPolicy",
     "iam.roles.get",
@@ -208,6 +224,8 @@ resource "google_project_iam_custom_role" "plan_iam_viewer" {
     "iam.serviceAccounts.get",
     "iam.serviceAccounts.getIamPolicy",
     "iam.serviceAccounts.list",
+    "logging.buckets.get",
+    "logging.sinks.get",
     "resourcemanager.projects.getIamPolicy",
   ]
 }
@@ -276,6 +294,7 @@ module "terraform" {
     "roles/iam.roleAdmin",
     "roles/iam.serviceAccountAdmin",
     "roles/iam.workloadIdentityPoolAdmin",
+    "roles/logging.configWriter",
     "roles/monitoring.editor",
     "roles/resourcemanager.lienModifier",
     "roles/resourcemanager.projectIamAdmin",
