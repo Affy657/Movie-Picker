@@ -7,7 +7,7 @@ Fichier de travail pour agent. Il n'est pas destiné à être lu par un humain :
 1. Avant d'agir sur une entrée, exécuter son `verify`. Ce fichier vieillit ; **sauf mention contraire dans l'entrée**, une sortie signifie « encore ouvert » et une sortie vide signifie « déjà réglé, supprimer l'entrée sans rien faire d'autre ». Une entrée qui demande de lire un nombre plutôt qu'une présence le dit dans son `verify`.
 2. Une entrée `state: agent` peut être traitée en autonomie. `state: humain` demande un geste que l'agent ne peut pas faire (le champ `bloque` dit lequel). `state: differe` ne se traite pas tant que son `declencheur` n'est pas observé.
 3. Fin de traitement : supprimer l'entrée entière. Ne pas la cocher, ne pas la garder en « fait », git porte l'historique.
-4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-056`.
+4. Nouvelle entrée : reprendre exactement le schéma de champs ci-dessous, avec un identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-057`.
 5. Ce fichier ne contient que de la dette, c'est-à-dire du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature à construire va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure ici** : pas d'adresse de compte de service, pas de nom de bucket, pas d'identifiant de compte. Le dépôt a vocation à devenir public, et une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou employer un espace réservé `<COMME_CECI>` dans les commandes. La table des gabarits, et la commande qui relève chaque valeur, sont dans `infra/README.md`.
 7. Deux sections en fin de fichier n'obéissent pas à ce schéma et ne se traitent jamais : **Contraintes** liste ce qui casse en silence si on y touche, **Impasses** liste ce qui a déjà été essayé et mesuré sans gain. Les lire avant d'optimiser quoi que ce soit sur le front ou de toucher au déploiement.
@@ -343,6 +343,16 @@ Schéma : `state` / `impact` / `ou` / `verify` / `fix` / `fini-quand` / `piege` 
 - verify: `gcloud projects get-iam-policy <PROJET_GCP> --flatten='bindings[].members' --filter='bindings.role=roles/firebasehosting.admin' --format='value(bindings.members)' | grep -c staging` ; encore ouvert tant que la commande rend autre chose que 0
 - fix: un projet Firebase dédié à la recette (site `movie-picker-web-staging` recréé dedans, `firebasehosting.admin` de l'identité de recette sur ce projet seul, `x-goog-user-project` du script de publication sur ce projet) ; ou, si Hosting expose un jour une IAM par site, la liaison sur le seul site de recette.
 - piege: un site Hosting ne se déplace pas d'un projet à l'autre : le recréer change son adresse `web.app`, donc le CNAME de `staging.movie-picker.fr` et l'URL de `verify-front` dans `deploy.yml`.
+
+## DEBT-056 le secret scanning ne vérifie pas la validité des secrets qu'il trouve
+
+- state: humain
+- bloque: `PATCH repos/<owner>/<repo>` avec `security_and_analysis.secret_scanning_validity_checks.status = enabled` répond 200 et laisse `disabled` (constaté le 2026-09-21, même comportement que `secret_scanning_non_provider_patterns` le 2026-09-17) : le réglage ne se coche que dans l'interface, Settings / Code security.
+- impact: une alerte de secret scanning dit qu'un jeton a été poussé, pas s'il est encore actif : sans vérification de validité, un jeton révoqué et un jeton vivant se lisent pareil, et le tri d'une alerte demande d'aller tester le jeton à la main. Gratuit sur un dépôt public. La détection des motifs hors fournisseurs (`non_provider_patterns`, mots de passe génériques, chaînes de connexion) reste elle aussi désactivée ; elle se trouve au même endroit, à activer dans le même geste si l'interface la propose sans abonnement.
+- ou: GitHub, Settings / Code security / Secret scanning (« Validity checks », « Non-provider patterns »)
+- verify: `gh api repos/Affy657/Movie-Picker --jq '.security_and_analysis.secret_scanning_validity_checks.status'` ; encore ouvert tant que la commande rend `disabled`
+- fix: cocher « Validity checks » (et « Non-provider patterns » si elle est proposée) dans Settings / Code security, puis rejouer `verify`.
+- piege: aucun ; une alerte marquée « active » par la vérification est à traiter comme une fuite en cours, pas comme un rappel.
 
 ---
 
