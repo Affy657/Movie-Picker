@@ -100,6 +100,7 @@
   align-items: center;
   height: var(--space-4);
   font-size: var(--font-size-2xs);
+  line-height: var(--leading-none);
   color: var(--color-meta);
   font-variant-numeric: tabular-nums;
 }
@@ -125,7 +126,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: var(--leading-none);
 }
 
 .badge {

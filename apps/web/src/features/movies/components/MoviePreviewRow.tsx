@@ -30,7 +30,12 @@ export function MoviePreviewRail({ size = 'sm', itemCount, label, children }: Re
 
   return (
     <div className={clsx(styles.railViewport, size === 'wide' && styles.railViewportWide)}>
-      <ul ref={railRef} className={clsx(styles.rail, RAIL_SIZE_CLASS[size])} aria-label={label}>
+      <ul
+        ref={railRef}
+        className={clsx(styles.rail, RAIL_SIZE_CLASS[size])}
+        aria-label={label}
+        data-testid="movie-preview-rail"
+      >
         {children}
       </ul>
       {scrollable ? (
