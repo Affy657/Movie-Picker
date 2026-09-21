@@ -9,7 +9,13 @@
 #     apply job plans again under the lock and applies that very plan, production first and the
 #     staging after it (the staging root reads the production outputs through the remote state).
 #     Nothing to apply on either root skips the approval: master and the infrastructure agree, no
-#     click is asked for.
+#     click is asked for. A plan that only refreshes output values (Hosting reporting a domain in
+#     another state, for instance) counts as nothing: the composite action counts the resources a
+#     plan creates, changes or destroys, and the approval is asked for those alone;
+#   - every Monday, the same read-only plans, and a red run when either root would change a
+#     resource: the infrastructure drifted from master (a change made in the console, a resource
+#     Google re-described) and nothing else would say so before the next push touching this tree.
+#     `pnpm run check:iam` covers the IAM bindings Terraform does not see; this covers the rest.
 #
 # The approval exists because master takes direct pushes: without it, an infrastructure change
 # pushed without a pull request was applied by nobody's reading. A run waiting for its approval
@@ -50,6 +56,8 @@ on:
       - "infra/terraform/**"
       - ".github/workflows/infra.yml"
       - ".github/actions/terraform-plan/**"
+  schedule:
+    - cron: "23 5 * * 1" # Monday 05:23 UTC, started hours late by GitHub like every schedule here
   workflow_dispatch:
 
 permissions:
@@ -117,13 +125,18 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           EXITCODE: ${{ steps.plan.outputs.exitcode }}
+          RESOURCE_CHANGES: ${{ steps.plan.outputs.resource-changes }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -eo pipefail
           marker="<!-- terraform-plan:${TERRAFORM_ROOT} -->"
           case "$EXITCODE" in
             0) verdict="No change: the infrastructure already matches this branch." ;;
-            2) verdict="Changes: this branch would change the infrastructure, read the plan before merging." ;;
+            2) if [ "$RESOURCE_CHANGES" = "0" ]; then
+                 verdict="Output values only: the infrastructure already matches this branch, the merge applies nothing."
+               else
+                 verdict="Changes: this branch would change $RESOURCE_CHANGES resource(s) of the infrastructure, read the plan before merging."
+               fi ;;
             *) verdict="Plan failed: read the [job log]($RUN_URL) before merging." ;;
           esac
           plan="$(head -c 60000 "$RUNNER_TEMP/plan.public.txt")"
@@ -166,6 +179,7 @@ jobs:
       id-token: write
     outputs:
       exitcode: ${{ steps.plan.outputs.exitcode }}
+      resource-changes: ${{ steps.plan.outputs.resource-changes }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -201,6 +215,7 @@ jobs:
       id-token: write
     outputs:
       exitcode: ${{ steps.plan.outputs.exitcode }}
+      resource-changes: ${{ steps.plan.outputs.resource-changes }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -221,15 +236,48 @@ jobs:
           lock: "false"
           summary: "true"
 
+  # The scheduled run is a drift check: it deploys nothing and turns red when either root would
+  # change a resource, which is the only signal there is for a change made outside master. Read
+  # the two plan summaries, then either describe the change in `infra/terraform` or dispatch this
+  # workflow to apply master back over it.
+  drift:
+    name: 🧭 Weekly drift check (red when the infrastructure left master)
+    needs: [plan-production, plan-staging]
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Compare both roots with master
+        env:
+          PRODUCTION_CHANGES: ${{ needs.plan-production.outputs.resource-changes }}
+          STAGING_CHANGES: ${{ needs.plan-staging.outputs.resource-changes }}
+        run: |
+          fail=0
+          for root in production staging; do
+            if [ "$root" = "production" ]; then changes="$PRODUCTION_CHANGES"; else changes="$STAGING_CHANGES"; fi
+            if [ "$changes" != "0" ]; then
+              echo "::error::The $root infrastructure differs from master on $changes resource(s): read the plan summary of this run, then describe the change in infra/terraform or dispatch this workflow to apply master again."
+              fail=1
+            else
+              echo "$root: the infrastructure matches master."
+            fi
+          done
+          exit "$fail"
+
   # Waits for the reviewer of the `infra-apply` environment (Settings / Environments), then plans
   # again under the lock and applies that very plan, root after root: what is applied is exactly
   # what the second summary shows, not the plan read a click earlier, and a drift in between shows
-  # up as a difference between the two. Skipped when neither root has anything to apply. One apply
-  # at a time across runs: two never overlap, the next waits for the lock the first releases.
+  # up as a difference between the two. Skipped when neither root would change a resource, so an
+  # output-only refresh asks for no click. One apply at a time across runs: two never overlap, the
+  # next waits for the lock the first releases.
   apply:
     name: 🚀 Apply on master (production, then staging)
     needs: [plan-production, plan-staging]
-    if: needs.plan-production.outputs.exitcode == '2' || needs.plan-staging.outputs.exitcode == '2'
+    if: >-
+      github.event_name != 'schedule'
+      && (needs.plan-production.outputs.resource-changes != '0' || needs.plan-staging.outputs.resource-changes != '0')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment: infra-apply
