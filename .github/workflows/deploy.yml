@@ -576,6 +576,9 @@ jobs:
       # accepts it, never on one that does not. `--clear-headers` drops the header of the jobs
       # created before this step existed. Attaching the identity needs `iam.serviceAccountUser`
       # on it, granted to the CI account in `infra/terraform` (`acts_as_service_accounts`).
+      # Three retries with a short backoff: without them (the Scheduler default), an attempt
+      # that hits a cold start past its deadline or a 503 is lost, and a nightly pass waits
+      # for the next night; the "Passe planifiee en echec" alert still reports the attempt.
       - name: "Event reminders, recurring and finished events: Cloud Scheduler"
         if: inputs.stage == 'production'
         env:
@@ -604,6 +607,9 @@ jobs:
               --uri "$URL$path"
               --http-method POST
               --attempt-deadline 300s
+              --max-retry-attempts 3
+              --min-backoff 30s
+              --max-backoff 300s
               --oidc-service-account-email "$SCHEDULER_SA"
               --oidc-token-audience "$AUDIENCE"
             )
