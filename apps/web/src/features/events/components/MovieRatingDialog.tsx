@@ -1,8 +1,6 @@
 import { useId, useState } from 'react';
 import { Film } from 'lucide-react';
-import Avatar from '@/shared/components/Avatar';
 import Button from '@/shared/components/Button';
-import Chip from '@/shared/components/Chip';
 import DialogTitleBar from '@/shared/components/DialogTitleBar';
 import Modal from '@/shared/components/Modal';
 import Sheet from '@/shared/components/Sheet';
@@ -12,7 +10,8 @@ import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { RatingScale } from '@/shared/types/theme';
-import { averageRating, formatRating } from '@/shared/utils/formatRating';
+import { formatRating } from '@/shared/utils/formatRating';
+import RatingNotes from './RatingNotes';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import styles from './MovieRatingDialog.module.css';
 
@@ -22,6 +21,8 @@ export type ParticipantRating = {
   avatarId: string | null;
   value: number | null;
   isSelf: boolean;
+  handle?: string | null;
+  isCreator?: boolean;
 };
 
 type Props = {
@@ -59,8 +60,6 @@ export default function MovieRatingDialog({
   const isMobile = useIsMobile();
   const titleId = useId();
   const [draft, setDraft] = useState<number | null>(mine);
-  const values = participants.map((p) => p.value).filter((v): v is number => v !== null);
-  const average = averageRating(values);
   const title = t(canRate ? 'events.ratings.dialogTitleRate' : 'events.ratings.dialogTitleRead');
   const poster = posterImageSrc(movie.posterPath);
   const starLabel = (stars: number) =>
@@ -108,37 +107,7 @@ export default function MovieRatingDialog({
         </p>
       ) : null}
 
-      <section className={styles.notes} aria-label={t('events.ratings.listTitle')}>
-        <div className={styles.notesHead}>
-          <h3 className={styles.notesTitle}>{t('events.ratings.listTitle')}</h3>
-          {average !== null ? (
-            <Chip tone="neutral" size="sm">
-              {t('events.ratings.average', {
-                value: formatRating(average, scale, locale, { decimals: 1 }),
-              })}
-            </Chip>
-          ) : null}
-        </div>
-        {values.length === 0 ? (
-          <p className={styles.empty}>{t('events.ratings.nobodyYet')}</p>
-        ) : (
-          <ul className={styles.list}>
-            {participants.map((p) => (
-              <li key={p.participantId} className={styles.row}>
-                <Avatar avatarId={p.avatarId} pseudo={p.pseudo} size="sm" />
-                <span className={styles.rowName}>
-                  {p.isSelf ? t('events.ratings.you') : p.pseudo}
-                </span>
-                {p.value === null ? (
-                  <span className={styles.rowPending}>{t('events.ratings.pending')}</span>
-                ) : (
-                  <span className={styles.rowValue}>{formatRating(p.value, scale, locale)}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <RatingNotes participants={participants} scale={scale} />
     </div>
   );
 

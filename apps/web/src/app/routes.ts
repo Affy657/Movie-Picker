@@ -1,4 +1,5 @@
 const EVENT_PREFIX = '/e';
+const RECAP_PREFIX = '/r';
 
 export const RATE_QUERY_PARAM = 'rate';
 
@@ -54,7 +55,12 @@ export const ROUTES = {
 
   eventDetail: (slug: string) => `${EVENT_PREFIX}/${slug}`,
 
-  eventDetailRating: (slug: string) => `${EVENT_PREFIX}/${slug}?${RATE_QUERY_PARAM}`,
+  eventDetailRating: (slug: string, movieId?: string) =>
+    `${EVENT_PREFIX}/${slug}?${RATE_QUERY_PARAM}${movieId ? `=${movieId}` : ''}`,
+
+  nightRecapPattern: `${RECAP_PREFIX}/:slug`,
+
+  nightRecap: (slug: string) => `${RECAP_PREFIX}/${slug}`,
 
   profilePattern: '/u/:handle',
 

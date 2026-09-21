@@ -7,6 +7,7 @@ export const ROUTE_CHUNKS = {
   landing: () => import('@/app/pages/LandingPage'),
   createEvent: () => import('@/features/events/pages/CreateEvent'),
   eventDetail: () => import('@/features/events/pages/EventDetail'),
+  nightRecap: () => import('@/features/events/pages/NightRecapPage'),
   login: () => import('@/features/auth/pages/LoginPage'),
   register: () => import('@/features/auth/pages/RegisterPage'),
   forgotPassword: () => import('@/features/auth/pages/ForgotPasswordPage'),

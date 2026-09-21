@@ -74,6 +74,35 @@ describe('EventWinnerSummary', () => {
     expect(screen.getByText('Alice')).toBeInTheDocument();
   });
 
+  it('puts the given action in the heading row, next to the title', () => {
+    renderSummary(
+      <EventWinnerSummary
+        winners={[movie({})]}
+        isFinished
+        action={<a href="/r/soiree">Voir le recap</a>}
+      />
+    );
+    const card = screen.getByRole('region', { name: 'Le film de la soirée' });
+    expect(within(card).getByRole('link', { name: 'Voir le recap' })).toHaveAttribute(
+      'href',
+      '/r/soiree'
+    );
+  });
+
+  it('lets the caller draw the rating area of each movie', () => {
+    renderSummary(
+      <EventWinnerSummary
+        winners={[movie({}), movie({ id: 'm2', title: 'Heat' })]}
+        isFinished
+        rating={ratingContext()}
+        renderRating={(item) => <p>Notes de {item.title}</p>}
+      />
+    );
+    expect(screen.getByText('Notes de Matrix')).toBeInTheDocument();
+    expect(screen.getByText('Notes de Heat')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Noter ce film' })).not.toBeInTheDocument();
+  });
+
   it('numbers several winners in draw order and keeps the night open when not finished', () => {
     renderSummary(
       <EventWinnerSummary

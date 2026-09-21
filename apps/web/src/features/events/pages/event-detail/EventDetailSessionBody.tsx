@@ -9,6 +9,12 @@ import EventWinnerSummary, {
 import { useEventMovieRating } from '@/features/events/pages/event-detail/useEventMovieRating';
 import { useRatingLink } from '@/features/events/hooks/useRatingLink';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { Link } from 'react-router';
+import { ArrowRight } from 'lucide-react';
+import { ROUTES } from '@/app/routes';
+import { buttonClass } from '@/shared/components/Button';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useTranslation } from '@/shared/i18n';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import styles from './EventDetailSession.module.css';
@@ -119,6 +125,7 @@ export default function EventDetailSessionBody({
     [event.participants]
   );
   const { user } = useAuth();
+  const { t } = useTranslation();
   const movieRating = useEventMovieRating({ slug, participant, refreshAll });
   const ratingLink = useRatingLink(winners, participant?.participantId ?? null, !!event.isFinished);
   const rating: WinnerRatingContext = {
@@ -154,6 +161,15 @@ export default function EventDetailSessionBody({
           isFinished={!!event.isFinished}
           participantAvatars={participantAvatars}
           rating={rating}
+          action={
+            <Link
+              to={ROUTES.nightRecap(slug)}
+              className={buttonClass({ variant: 'ghost', size: 'sm' })}
+            >
+              {t('events.recap.viewRecap')}
+              <ArrowRight size={ICON_SIZE.sm} aria-hidden />
+            </Link>
+          }
         />
       )}
       <div ref={moviesSection.ref} className={styles.moviesSection}>

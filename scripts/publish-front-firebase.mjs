@@ -8,6 +8,7 @@
  *
  *   node scripts/publish-front-firebase.mjs --site <site-id> [--dist apps/web/dist] [--dry-run]
  *     [--config infra/firebase-hosting.json] [--no-prerender] [--header "Name: value"]...
+ *     [--api-service <cloud-run-service>]
  *
  * The quota project (`x-goog-user-project`) is `GCP_PROJECT_ID`, else the active gcloud project:
  * with a user token the Hosting API refuses every call without it, as the Firebase APIs do under
@@ -24,6 +25,8 @@
  * a header production must never carry, so it is not in the shared config. `--no-prerender` publishes
  * a folder that is not a web build and has no prerendered route, such as the legacy site of
  * `infra/web-legacy/` (its own `--config`, one worker file, redirects for everything else).
+ * `--api-service` names the Cloud Run service the `run` rewrites of the config point at (the
+ * night recaps under `/r/`): the config names the production service, the staging passes its own.
  *
  * Nothing here is deleted or overwritten: a version is immutable, a release points the site at
  * it, and the previous release stays listed, which is what `rollback-front-firebase.mjs` uses.
@@ -72,6 +75,7 @@ const site = option('--site', '');
 const dist = join(root, option('--dist', 'apps/web/dist'));
 const configPath = join(root, option('--config', 'infra/firebase-hosting.json'));
 const extraHeaders = headerOptions();
+const apiService = option('--api-service', '');
 const dryRun = process.argv.includes('--dry-run');
 const withPrerender = !process.argv.includes('--no-prerender');
 if (!site) fail('--site <site-id> is required.');
@@ -162,6 +166,11 @@ if (!statSync(dist, { throwIfNoEntry: false })?.isDirectory()) fail(`${dist} is 
 const config = JSON.parse(readFileSync(configPath, 'utf8'));
 if (Object.keys(extraHeaders).length > 0) {
   config.headers = [...(config.headers ?? []), { glob: '**', headers: extraHeaders }];
+}
+if (apiService) {
+  for (const rewrite of config.rewrites ?? []) {
+    if (rewrite.run) rewrite.run.serviceId = apiService;
+  }
 }
 const files = collect();
 console.log(`Hosting site ${site}: ${summary(files)}`);

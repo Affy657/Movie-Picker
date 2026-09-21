@@ -36,7 +36,8 @@ export function formatEventDateLong(
   isoDate: string,
   time: string,
   locale: LocaleCode,
-  joiner: string
+  joiner: string,
+  { keepsake = false }: { keepsake?: boolean } = {}
 ): string {
   const raw = isoDate.trim();
   const parts = raw.split('-').map((p) => Number.parseInt(p, 10));
@@ -47,8 +48,8 @@ export function formatEventDateLong(
   const options: Intl.DateTimeFormatOptions = {
     weekday: 'long',
     day: 'numeric',
-    month: 'short',
-    ...(y !== new Date().getFullYear() && { year: 'numeric' }),
+    month: keepsake ? 'long' : 'short',
+    ...((keepsake || y !== new Date().getFullYear()) && { year: 'numeric' }),
   };
   const datePart = new Intl.DateTimeFormat(LOCALE_TAG[locale], options).format(dt);
   return `${datePart} ${joiner} ${formatEventTime(time)}`;

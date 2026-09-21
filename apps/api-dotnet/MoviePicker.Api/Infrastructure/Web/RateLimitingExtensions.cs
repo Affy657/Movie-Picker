@@ -44,6 +44,7 @@ public static class RateLimitingExtensions
     public const string NotificationMutationPolicy = "notification-mutation";
     public const string AuthLogoutPolicy = "auth-logout";
     public const string HealthReadyPolicy = "health-ready";
+    public const string RecapDocumentPolicy = "recap-document";
 
     public const int GlobalPermitLimitPerMinute = 900;
 
@@ -84,7 +85,8 @@ public static class RateLimitingExtensions
         new(MovieMutationPolicy, 60, 1, false),
         new(NotificationMutationPolicy, 60, 1, false),
         new(AuthLogoutPolicy, 30, 1, false),
-        new(HealthReadyPolicy, 30, 1, false)
+        new(HealthReadyPolicy, 30, 1, false),
+        new(RecapDocumentPolicy, 120, 1, false, BySlug: true)
     ];
 
     public static IServiceCollection AddMoviePickerRateLimiter(
@@ -141,17 +143,23 @@ public static class RateLimitingExtensions
         return null;
     }
 
-    internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec) =>
-        spec.ByUser ? UserOrIpPartitionKey.Get(httpContext) : ClientIpPartitionKey.Get(httpContext);
-
-    internal static RateLimitPartition<string> CreateGlobalPartition(HttpContext httpContext) =>
-        BuildFixedWindow(ClientIpPartitionKey.Get(httpContext), GlobalPermitLimitPerMinute, 1);
-
-    internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec)
+    internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec)
     {
-        var key = spec.ByUser ? UserOrIpPartitionKey.Get(httpContext) : ClientIpPartitionKey.Get(httpContext);
-        return BuildFixedWindow(key, spec.PermitLimit, spec.WindowMinutes);
+        if (spec.BySlug)
+            return RouteSlugPartitionKey.Get(httpContext) ?? ClientIpPartitionKey.Get(httpContext);
+        return spec.ByUser ? UserOrIpPartitionKey.Get(httpContext) : ClientIpPartitionKey.Get(httpContext);
     }
+
+    internal static RateLimitPartition<string> CreateGlobalPartition(HttpContext httpContext)
+    {
+        var policyName = httpContext.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
+        if (policyName is not null && FindPolicy(policyName) is { BySlug: true })
+            return RateLimitPartition.GetNoLimiter("proxied");
+        return BuildFixedWindow(ClientIpPartitionKey.Get(httpContext), GlobalPermitLimitPerMinute, 1);
+    }
+
+    internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec) =>
+        BuildFixedWindow(PartitionKeyFor(httpContext, spec), spec.PermitLimit, spec.WindowMinutes);
 
     internal static RateLimitPartition<string> BuildFixedWindow(string key, int permitLimit, int windowMinutes) =>
         RateLimitPartition.GetFixedWindowLimiter(
@@ -165,7 +173,12 @@ public static class RateLimitingExtensions
                 AutoReplenishment = true
             });
 
-    internal readonly record struct PolicySpec(string Name, int PermitLimit, int WindowMinutes, bool ByUser);
+    internal readonly record struct PolicySpec(
+        string Name,
+        int PermitLimit,
+        int WindowMinutes,
+        bool ByUser,
+        bool BySlug = false);
 }
 
 internal static class ClientIpPartitionKey
@@ -174,6 +187,15 @@ internal static class ClientIpPartitionKey
     {
         var ip = httpContext.Connection.RemoteIpAddress;
         return ip?.ToString() ?? "unknown";
+    }
+}
+
+internal static class RouteSlugPartitionKey
+{
+    internal static string? Get(HttpContext httpContext)
+    {
+        var slug = httpContext.Request.RouteValues["slug"]?.ToString();
+        return string.IsNullOrWhiteSpace(slug) ? null : $"slug:{slug}";
     }
 }
 

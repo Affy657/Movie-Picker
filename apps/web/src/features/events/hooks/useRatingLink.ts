@@ -6,13 +6,15 @@ import type { MovieData } from '@/shared/types/movie';
 export function ratingLinkTarget(
   winners: MovieData[],
   participantId: string | null,
-  isFinished: boolean
+  isFinished: boolean,
+  requestedMovieId: string | null = null
 ): string | null {
   if (!participantId || !isFinished) return null;
-  const unrated = winners.find(
+  const unrated = winners.filter(
     (movie) => !(movie.ratings ?? []).some((rating) => rating.participantId === participantId)
   );
-  return unrated?.id ?? null;
+  const requested = unrated.find((movie) => movie.id === requestedMovieId);
+  return requested?.id ?? unrated[0]?.id ?? null;
 }
 
 export function useRatingLink(
@@ -22,7 +24,9 @@ export function useRatingLink(
 ): { movieId: string | null; consume: () => void } {
   const [searchParams, setSearchParams] = useSearchParams();
   const requested = searchParams.has(RATE_QUERY_PARAM);
-  const movieId = requested ? ratingLinkTarget(winners, participantId, isFinished) : null;
+  const movieId = requested
+    ? ratingLinkTarget(winners, participantId, isFinished, searchParams.get(RATE_QUERY_PARAM))
+    : null;
   const consume = useCallback(() => {
     if (!requested) return;
     const next = new URLSearchParams(searchParams);

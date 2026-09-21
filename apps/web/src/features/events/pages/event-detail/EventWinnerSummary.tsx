@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import clsx from 'clsx';
 import { Film, Star, Trophy } from 'lucide-react';
 import AvatarStack from '@/shared/components/AvatarStack';
 import Button from '@/shared/components/Button';
@@ -37,6 +38,9 @@ type Props = {
   isFinished: boolean;
   participantAvatars?: Record<string, string>;
   rating?: WinnerRatingContext;
+  action?: ReactNode;
+  renderRating?: (movie: MovieData) => ReactNode;
+  posterSize?: 'md' | 'lg';
 };
 
 function participantRatings(movie: MovieData, context: WinnerRatingContext): ParticipantRating[] {
@@ -147,7 +151,10 @@ function WinnerRatingActions({
   );
 }
 
-function WinnerPoster({ posterPath }: Readonly<{ posterPath: string | null | undefined }>) {
+function WinnerPoster({
+  posterPath,
+  large,
+}: Readonly<{ posterPath: string | null | undefined; large: boolean }>) {
   const src = posterImageSrc(posterPath);
   if (!src) {
     return (
@@ -156,15 +163,16 @@ function WinnerPoster({ posterPath }: Readonly<{ posterPath: string | null | und
       </span>
     );
   }
+  const width = large ? 112 : 64;
   return (
     <img
       src={src}
       srcSet={tmdbPosterSrcSetForList(src)}
-      sizes="64px"
+      sizes={`${width}px`}
       alt=""
       className={styles.poster}
-      width={64}
-      height={96}
+      width={width}
+      height={Math.round(width * 1.5)}
       decoding="async"
     />
   );
@@ -175,6 +183,9 @@ export default function EventWinnerSummary({
   isFinished,
   participantAvatars,
   rating,
+  action,
+  renderRating,
+  posterSize = 'md',
 }: Readonly<Props>) {
   const { t } = useTranslation();
   if (winners.length === 0) return null;
@@ -185,17 +196,23 @@ export default function EventWinnerSummary({
 
   return (
     <Card as="section" padding="md" elevation="sm" className={styles.root} aria-label={heading}>
-      <h2 className={styles.heading}>
-        <Trophy size={ICON_SIZE.md} aria-hidden className={styles.headingIcon} />
-        <span className={styles.headingLabel}>{heading}</span>
-      </h2>
+      <div className={styles.headingRow}>
+        <h2 className={styles.heading}>
+          <Trophy size={ICON_SIZE.md} aria-hidden className={styles.headingIcon} />
+          <span className={styles.headingLabel}>{heading}</span>
+        </h2>
+        {action}
+      </div>
       <ol className={styles.list}>
         {winners.map((movie, index) => {
           const facts = [movie.year, formatRuntimeMinutes(movie.runtimeMinutes)].filter(Boolean);
           return (
-            <li key={movie.id} className={styles.item}>
+            <li
+              key={movie.id}
+              className={clsx(styles.item, posterSize === 'lg' && styles.itemLarge)}
+            >
               <span className={styles.posterCol}>
-                <WinnerPoster posterPath={movie.posterPath} />
+                <WinnerPoster posterPath={movie.posterPath} large={posterSize === 'lg'} />
                 {several ? <span className={styles.rank}>{index + 1}</span> : null}
               </span>
               <div className={styles.body}>
@@ -213,10 +230,11 @@ export default function EventWinnerSummary({
                   handle={movie.proposerHandle}
                   t={t}
                 />
-                {isFinished && rating ? (
+                {!renderRating && isFinished && rating ? (
                   <WinnerRatingActions movie={movie} context={rating} />
                 ) : null}
               </div>
+              {renderRating ? <div className={styles.below}>{renderRating(movie)}</div> : null}
             </li>
           );
         })}

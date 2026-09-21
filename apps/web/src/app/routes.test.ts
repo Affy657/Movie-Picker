@@ -26,4 +26,11 @@ describe('ROUTES', () => {
     expect(ROUTES.howItWorks).toBe('/decouvrir');
     expect(ROUTES.howItWorks).not.toBe(ROUTES.home);
   });
+
+  it('gives a night a short recap address and a rating link that can name the movie', () => {
+    expect(ROUTES.nightRecapPattern).toBe('/r/:slug');
+    expect(ROUTES.nightRecap('7fKq2p')).toBe('/r/7fKq2p');
+    expect(ROUTES.eventDetailRating('7fKq2p')).toBe('/e/7fKq2p?rate');
+    expect(ROUTES.eventDetailRating('7fKq2p', 'abc123')).toBe('/e/7fKq2p?rate=abc123');
+  });
 });

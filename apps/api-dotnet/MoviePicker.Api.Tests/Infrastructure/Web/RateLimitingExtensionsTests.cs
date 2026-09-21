@@ -112,6 +112,60 @@ public sealed class RateLimitingExtensionsTests
     }
 
     [Fact]
+    public void CreatePartition_BySlug_UsesTheRouteSlugAndNotTheAddress()
+    {
+        var http = new DefaultHttpContext();
+        http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
+        http.Request.RouteValues["slug"] = "7fKq2p";
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.RecapDocumentPolicy)!.Value;
+
+        var partition = RateLimitingExtensions.CreatePartition(http, spec);
+
+        Assert.Equal("slug:7fKq2p", partition.PartitionKey);
+        Assert.Equal("slug:7fKq2p", RateLimitingExtensions.PartitionKeyFor(http, spec));
+    }
+
+    [Fact]
+    public void CreatePartition_BySlug_WithoutSlug_FallsBackToTheAddress()
+    {
+        var http = new DefaultHttpContext();
+        http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.RecapDocumentPolicy)!.Value;
+
+        Assert.Equal("192.0.2.8", RateLimitingExtensions.CreatePartition(http, spec).PartitionKey);
+    }
+
+    [Fact]
+    public void CreateGlobalPartition_LeavesTheProxiedDocumentsToTheirOwnPolicy()
+    {
+        var http = new DefaultHttpContext();
+        http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
+        http.SetEndpoint(new Endpoint(
+            null,
+            new EndpointMetadataCollection(new EnableRateLimitingAttribute(RateLimitingExtensions.RecapDocumentPolicy)),
+            "recap"));
+
+        var partition = RateLimitingExtensions.CreateGlobalPartition(http);
+
+        Assert.Equal("proxied", partition.PartitionKey);
+        using var lease = partition.Factory(partition.PartitionKey).AttemptAcquire();
+        Assert.True(lease.IsAcquired);
+    }
+
+    [Fact]
+    public void CreateGlobalPartition_KeepsTheAddressForEveryOtherEndpoint()
+    {
+        var http = new DefaultHttpContext();
+        http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
+        http.SetEndpoint(new Endpoint(
+            null,
+            new EndpointMetadataCollection(new EnableRateLimitingAttribute(RateLimitingExtensions.PublicProfilePolicy)),
+            "profile"));
+
+        Assert.Equal("192.0.2.8", RateLimitingExtensions.CreateGlobalPartition(http).PartitionKey);
+    }
+
+    [Fact]
     public async Task WriteRejectedAsync_SetsStatusAndRetryAfter()
     {
         var http = new DefaultHttpContext();

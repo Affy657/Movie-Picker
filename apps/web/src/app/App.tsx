@@ -24,6 +24,7 @@ const MovieCollectionsPage = lazy(ROUTE_CHUNKS.movieCollections);
 const LandingPage = lazy(ROUTE_CHUNKS.landing);
 const CreateEvent = lazy(ROUTE_CHUNKS.createEvent);
 const EventDetail = lazy(ROUTE_CHUNKS.eventDetail);
+const NightRecapPage = lazy(ROUTE_CHUNKS.nightRecap);
 const LoginPage = lazy(ROUTE_CHUNKS.login);
 const RegisterPage = lazy(ROUTE_CHUNKS.register);
 const ForgotPasswordPage = lazy(ROUTE_CHUNKS.forgotPassword);
@@ -167,6 +168,7 @@ export function AppRoutes() {
           }
         />
         <Route path={ROUTES.eventDetailPattern} element={<EventDetail />} />
+        <Route path={ROUTES.nightRecapPattern} element={<NightRecapPage />} />
         <Route path={ROUTES.profileMoviesPattern} element={<ProfileMoviesPage />} />
         <Route path={ROUTES.profileWatchlistPattern} element={<ProfileWatchlistPage />} />
         <Route path={ROUTES.profilePattern} element={<ProfilePage />} />

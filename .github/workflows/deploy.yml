@@ -530,6 +530,8 @@ jobs:
             SECRETS="MONGODB_URI=STAGING_MONGODB_URI:latest,OAUTH_GOOGLE_CLIENT_ID=STAGING_OAUTH_GOOGLE_CLIENT_ID:latest,OAUTH_GOOGLE_CLIENT_SECRET=STAGING_OAUTH_GOOGLE_CLIENT_SECRET:latest,OAUTH_GITHUB_CLIENT_ID=STAGING_OAUTH_GITHUB_CLIENT_ID:latest,OAUTH_GITHUB_CLIENT_SECRET=STAGING_OAUTH_GITHUB_CLIENT_SECRET:latest,TMDB_API_KEY=TMDB_API_KEY:latest,VAPID_PUBLIC_KEY=VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest,RESEND_API_KEY=RESEND_API_KEY:latest,GITHUB_TOKEN=GITHUB_TOKEN:latest"
           fi
           # --set-env-vars dict parsing treats ':' and ',' specially; ^##^ sets an alternate delimiter (gcloud topic escaping).
+          # PUBLIC_WEB_BASE_URL is the first allowed origin, the web app of this stage: the API
+          # reads its shell there for the night recaps and writes its links (recap, password reset).
           gcloud run deploy "$CLOUD_RUN_SERVICE_NAME" \
             --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api@${IMAGE_DIGEST}" \
             --region "$GCP_REGION" \
@@ -540,7 +542,7 @@ jobs:
             --no-traffic \
             --tag "$TAG" \
             --set-secrets "$SECRETS" \
-            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##SENTRY_ENVIRONMENT=$STAGE##SENTRY_RELEASE=${GITHUB_SHA}##EMAIL_PROVIDER=resend${SCHEDULER_ENV}"
+            --set-env-vars "^##^ALLOWED_ORIGINS=$CORS##PUBLIC_WEB_BASE_URL=${CORS%%,*}##SENTRY_ENVIRONMENT=$STAGE##SENTRY_RELEASE=${GITHUB_SHA}##EMAIL_PROVIDER=resend${SCHEDULER_ENV}"
           TAG_URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
             | jq -r --arg t "$TAG" '[.status.traffic[]? | select(.tag == $t) | .url] | first // ""')"
           if [ -z "$TAG_URL" ]; then
@@ -775,7 +777,8 @@ jobs:
       # (`infra/firebase-hosting.json`), and the previous versions stay listed, which is what
       # `rollback-front.yml` points back to. No archive to keep: Hosting keeps the versions itself.
       # The staging adds `X-Robots-Tag: noindex` to every answer: a recette indexed next to the
-      # canonical domain would be duplicate content.
+      # canonical domain would be duplicate content. The `/r/**` rewrite of the config points at
+      # the Cloud Run service of the stage: the night recaps are documents the API renders.
       - name: Publish the build to Firebase Hosting (version, upload, release)
         env:
           STAGE: ${{ inputs.stage }}
@@ -783,7 +786,7 @@ jobs:
           set -eo pipefail
           args=()
           if [ "$STAGE" != "production" ]; then args+=(--header "X-Robots-Tag: noindex, nofollow"); fi
-          node scripts/publish-front-firebase.mjs --site "$FIREBASE_HOSTING_SITE" --dist apps/web/dist "${args[@]}"
+          node scripts/publish-front-firebase.mjs --site "$FIREBASE_HOSTING_SITE" --dist apps/web/dist             --api-service "$CLOUD_RUN_SERVICE_NAME" "${args[@]}"
       - name: Verify the served web build
         uses: ./.github/actions/verify-front
         with:

@@ -93,6 +93,7 @@ function EventDetailSessionOverlays({
             slug={slug}
             event={event}
             shareUrl={share.url}
+            recap={share.recap}
             dateFormatted={dates.dateFormatted}
             timeFormatted={dates.timeFormatted}
             dateLabel={dates.dateLabel}

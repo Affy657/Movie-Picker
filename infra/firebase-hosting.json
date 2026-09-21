@@ -1,7 +1,10 @@
 {
   "cleanUrls": false,
   "trailingSlashBehavior": "REMOVE",
-  "rewrites": [{ "glob": "**", "path": "/index.html" }],
+  "rewrites": [
+    { "glob": "/r/**", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } },
+    { "glob": "**", "path": "/index.html" }
+  ],
   "headers": [
     {
       "glob": "**",

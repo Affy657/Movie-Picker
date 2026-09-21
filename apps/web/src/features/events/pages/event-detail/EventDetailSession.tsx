@@ -14,7 +14,7 @@ import {
 } from '@/shared/utils/formatMyEventsListDate';
 import PageLayout from '@/shared/components/PageLayout';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { eventFrontendUrl } from '@/features/events/api/eventsApi';
+import { eventFrontendUrl, nightRecapFrontendUrl } from '@/features/events/api/eventsApi';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import { eventCountdown, type EventCountdown } from '@/shared/utils/eventCountdown';
@@ -29,7 +29,12 @@ import EventDetailSessionChrome from './EventDetailSessionChrome';
 import EventDetailSessionBody from './EventDetailSessionBody';
 import { OVERLAY_CHUNKS } from './eventDetailOverlays';
 import { useEventDetailActions } from './useEventDetailActions';
-import type { MoviesViewMode, ParticipantRef, ShareTab } from './eventDetailSessionTypes';
+import type {
+  MoviesViewMode,
+  ParticipantRef,
+  RecapShare,
+  ShareTab,
+} from './eventDetailSessionTypes';
 
 type EventDetailSessionProps = {
   slug: string;
@@ -184,7 +189,12 @@ export default function EventDetailSession({
     locale,
     t('events.detail.dateTimeJoiner')
   );
-  const shareUrl = eventFrontendUrl(slug);
+  const firstWinnerId = event.winners?.[0]?.movieId;
+  const recap: RecapShare | null =
+    event.isFinished && firstWinnerId
+      ? { movie: movies.find((movie) => movie.id === firstWinnerId) ?? null }
+      : null;
+  const shareUrl = recap ? nightRecapFrontendUrl(slug) : eventFrontendUrl(slug);
   const needsJoin = !event.isFinished && !participant;
   const maxParticipants = event.config?.maxParticipants ?? null;
   const myParticipantSummary =
@@ -226,6 +236,7 @@ export default function EventDetailSession({
           open: shareOpen,
           initialTab: shareInitialTab,
           url: shareUrl,
+          recap,
           onOpen: openShare,
           onClose: () => setShareOpen(false),
         }}

@@ -5,6 +5,7 @@ Allow: /
 # Routes privées ou non indexables : pages soirée (lien partagé, non publique),
 # espaces utilisateur et formulaires derrière auth.
 Disallow: /e/
+Disallow: /r/
 Disallow: /my-events
 Disallow: /settings
 Disallow: /new

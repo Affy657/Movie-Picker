@@ -34,6 +34,7 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
 
     public FakeEmailSender FakeEmail { get; } = new();
     public FakeGitHubIssueClient FakeGitHubIssues { get; } = new();
+    public FakeWebShellSource FakeWebShell { get; } = new();
 
     public bool RunsAgainstMongo => _mongoUri.Length > 0;
 
@@ -60,6 +61,9 @@ public sealed class MoviePickerApplicationFactory : WebApplicationFactory<Progra
 
             services.RemoveAll<IGitHubIssueClient>();
             services.AddSingleton<IGitHubIssueClient>(FakeGitHubIssues);
+
+            services.RemoveAll<IWebShellSource>();
+            services.AddSingleton<IWebShellSource>(FakeWebShell);
 
             services.RemoveAll<ITmdbMovieSearch>();
             services.AddSingleton<ITmdbMovieSearch, StubTmdbMovieSearch>();

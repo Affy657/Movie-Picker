@@ -47,6 +47,37 @@ describe('useEvent', () => {
     expect(result.current.data?.isFinished).toBe(false);
   });
 
+  it('polls a night that is live and stays quiet when asked not to follow it', async () => {
+    const liveNight = () =>
+      HttpResponse.json({
+        _id: 'e2',
+        title: 'Live',
+        date: new Date().toISOString().slice(0, 10),
+        time: `${String(new Date().getHours()).padStart(2, '0')}:00`,
+        slug: 'live',
+        isHost: false,
+        isFinished: false,
+        lifecycle: 'live',
+        config: { theme: null, maxProposalsPerParticipant: null, maxParticipants: null },
+      });
+    server.use(http.get(`${TEST_API_V1}/events/slug/:slug`, liveNight));
+    const client = createTestQueryClient();
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientWrapper client={client}>{children}</QueryClientWrapper>
+    );
+
+    const following = renderHook(() => useEvent('live', null), { wrapper });
+    await waitFor(() => expect(following.result.current.isSuccess).toBe(true));
+    const followed = client.getQueryCache().find({ queryKey: ['event', 'detail', 'live', ''] });
+    expect(followed?.observers[0]?.options.refetchInterval).toBeTypeOf('function');
+    following.unmount();
+
+    const reading = renderHook(() => useEvent('live', null, { live: false }), { wrapper });
+    await waitFor(() => expect(reading.result.current.isSuccess).toBe(true));
+    const read = client.getQueryCache().find({ queryKey: ['event', 'detail', 'live', ''] });
+    expect(read?.observers[0]?.options.refetchInterval).toBe(false);
+  });
+
   it('passe en erreur sur un 404', async () => {
     server.use(
       http.get(`${TEST_API_V1}/events/slug/:slug`, () =>

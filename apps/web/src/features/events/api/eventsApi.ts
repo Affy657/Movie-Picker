@@ -1,3 +1,4 @@
+import { ROUTES } from '@/app/routes';
 import { fetchApi, apiUrl, withHostToken } from '@/shared/api/client';
 import {
   mapEventData,
@@ -185,7 +186,11 @@ export function eventSharePreviewUrl(slug: string): string {
 }
 
 export function eventFrontendUrl(slug: string): string {
-  return `${globalThis.location.origin}/e/${slug}`;
+  return `${globalThis.location.origin}${ROUTES.eventDetail(slug)}`;
+}
+
+export function nightRecapFrontendUrl(slug: string): string {
+  return `${globalThis.location.origin}${ROUTES.nightRecap(slug)}`;
 }
 
 export interface EligibleFollowItem {

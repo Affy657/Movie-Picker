@@ -92,6 +92,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRatingReminderPass, RatingReminderPass>();
         services.AddScoped<IRecurringEventPass, RecurringEventPass>();
         services.AddScoped<IFinishedEventWatchlistPass, FinishedEventWatchlistPass>();
+        services.AddHttpClient(HttpWebShellSource.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(3));
+        services.AddSingleton<IWebShellSource, HttpWebShellSource>();
 
         var runsRemindersInProcess = environment.IsDevelopment()
             || IsInProcessRemindersEnabled(configuration);

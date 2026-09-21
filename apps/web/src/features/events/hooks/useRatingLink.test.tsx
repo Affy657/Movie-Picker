@@ -48,6 +48,17 @@ describe('ratingLinkTarget', () => {
   it('names nothing while the night is not over', () => {
     expect(ratingLinkTarget([movie('m1')], 'p1', false)).toBeNull();
   });
+
+  it('names the requested winner when the participant has not rated it', () => {
+    const winners = [movie('m1'), movie('m2')];
+    expect(ratingLinkTarget(winners, 'p1', true, 'm2')).toBe('m2');
+  });
+
+  it('falls back to the first unrated winner when the requested one is rated or unknown', () => {
+    const winners = [movie('m1'), movie('m2', ['p1'])];
+    expect(ratingLinkTarget(winners, 'p1', true, 'm2')).toBe('m1');
+    expect(ratingLinkTarget(winners, 'p1', true, 'nope')).toBe('m1');
+  });
 });
 
 describe('useRatingLink', () => {
@@ -74,6 +85,14 @@ describe('useRatingLink', () => {
         wrapper: wrapperAt('?rate'),
       }
     );
+
+    expect(result.current.movieId).toBe('m2');
+  });
+
+  it('points at the winner named by the parameter', () => {
+    const { result } = renderHook(() => useLinkWithSearch([movie('m1'), movie('m2')], 'p1', true), {
+      wrapper: wrapperAt('?rate=m2'),
+    });
 
     expect(result.current.movieId).toBe('m2');
   });

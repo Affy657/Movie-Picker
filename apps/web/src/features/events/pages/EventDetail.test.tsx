@@ -540,6 +540,134 @@ describe('EventDetail (MSW)', () => {
     });
   });
 
+  describe('the recap of the night', () => {
+    const myPid = 'p-msw-alice';
+
+    function serveNightWithWinner(isFinished: boolean, withWinner = true) {
+      server.use(
+        http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
+          HttpResponse.json({
+            _id: 'evt-msw',
+            title: 'Soirée démo',
+            date: '2026-09-19',
+            time: '21:00',
+            slug,
+            isHost: false,
+            isFinished,
+            lifecycle: isFinished ? 'finished' : 'live',
+            winners: withWinner
+              ? [{ movieId: 'm-win', pickMethod: 'wheel', pickedAt: '2026-09-19T20:00:00Z' }]
+              : [],
+            participantCount: 2,
+            movieCount: 1,
+            myParticipant: { _id: myPid, pseudo: 'Alice' },
+            participants: [
+              { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
+              { _id: myPid, pseudo: 'Alice' },
+            ],
+            config: {
+              theme: null,
+              maxProposalsPerParticipant: null,
+              maxParticipants: null,
+              wheelMode: 'strictRandom',
+              winnerCount: 1,
+            },
+          })
+        ),
+        http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+          HttpResponse.json([
+            {
+              _id: 'm-win',
+              eventId: 'evt-msw',
+              participantId: 'p-msw-host',
+              tmdbId: 42,
+              mediaType: 'movie',
+              title: 'Matrix',
+              year: '1999',
+              posterPath: null,
+              proposerPseudo: 'Hôte',
+              score: 2,
+              up: 2,
+              down: 0,
+              ratings: [{ participantId: myPid, value: 8, updatedAt: '2026-09-20T08:00:00Z' }],
+            },
+          ])
+        )
+      );
+    }
+
+    it('links the chosen movie card to the recap and shares the recap once the night is over', async () => {
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveNightWithWinner(true);
+      renderEventDetail(`/e/${slug}`);
+
+      const card = await screen.findByRole('region', { name: 'Le film de la soirée' });
+      expect(within(card).getByRole('link', { name: 'Voir le recap' })).toHaveAttribute(
+        'href',
+        `/r/${slug}`
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
+
+      const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
+      expect(
+        within(dialog).getByText(`${globalThis.location.origin}/r/${slug}`)
+      ).toBeInTheDocument();
+      expect(within(dialog).getByText('Matrix')).toBeInTheDocument();
+      expect(within(dialog).getByText('Moyenne 4,0/5, 1 note')).toBeInTheDocument();
+    });
+
+    it('keeps the invitation to share while the night is not over, the recap link aside', async () => {
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveNightWithWinner(false);
+      renderEventDetail(`/e/${slug}`);
+
+      const card = await screen.findByRole('region', { name: 'Ce soir, vous regardez' });
+      expect(within(card).getByRole('link', { name: 'Voir le recap' })).toHaveAttribute(
+        'href',
+        `/r/${slug}`
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
+
+      expect(
+        await screen.findByRole('heading', { name: 'Partager la soirée' })
+      ).toBeInTheDocument();
+      expect(screen.getByText(`${globalThis.location.origin}/e/${slug}`)).toBeInTheDocument();
+    });
+
+    it('shares the recap of a finished night even while its movies have not arrived', async () => {
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveNightWithWinner(true);
+      server.use(http.get(`${TEST_API_V1}/events/${slug}/movies`, () => new Promise(() => {})));
+      renderEventDetail(`/e/${slug}`);
+
+      await screen.findByRole('heading', { name: 'Soirée démo' });
+      await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
+
+      const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
+      expect(
+        within(dialog).getByText(`${globalThis.location.origin}/r/${slug}`)
+      ).toBeInTheDocument();
+      expect(within(dialog).queryByText('Matrix')).not.toBeInTheDocument();
+    });
+
+    it('offers no recap link and keeps the invitation when no movie was chosen', async () => {
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveNightWithWinner(true, false);
+      renderEventDetail(`/e/${slug}`);
+
+      expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Voir le recap' })).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
+
+      expect(
+        await screen.findByRole('heading', { name: 'Partager la soirée' })
+      ).toBeInTheDocument();
+    });
+  });
+
   describe('flux quitter (participant)', () => {
     it('the creator does not see the "Leave" button (hidden in the UI)', async () => {
       const user = userEvent.setup();
