@@ -7,7 +7,7 @@
  * with no key file and no npm package holding cloud credentials.
  *
  *   node scripts/publish-front-firebase.mjs --site <site-id> [--dist apps/web/dist] [--dry-run]
- *     [--header "Name: value"]...
+ *     [--config infra/firebase-hosting.json] [--no-prerender] [--header "Name: value"]...
  *
  * The quota project (`x-goog-user-project`) is `GCP_PROJECT_ID`, else the active gcloud project:
  * with a user token the Hosting API refuses every call without it, as the Firebase APIs do under
@@ -21,7 +21,9 @@
  * The cache tiers and the security headers are the config's, not the script's: they live in
  * `infra/`, and a change there is reviewed as infrastructure. `--header` adds a header to every
  * answer of this publication on top of them: what the staging uses for `X-Robots-Tag: noindex`,
- * a header production must never carry, so it is not in the shared config.
+ * a header production must never carry, so it is not in the shared config. `--no-prerender` publishes
+ * a folder that is not a web build and has no prerendered route, such as the legacy site of
+ * `infra/web-legacy/` (its own `--config`, one worker file, redirects for everything else).
  *
  * Nothing here is deleted or overwritten: a version is immutable, a release points the site at
  * it, and the previous release stays listed, which is what `rollback-front-firebase.mjs` uses.
@@ -71,6 +73,7 @@ const dist = join(root, option('--dist', 'apps/web/dist'));
 const configPath = join(root, option('--config', 'infra/firebase-hosting.json'));
 const extraHeaders = headerOptions();
 const dryRun = process.argv.includes('--dry-run');
+const withPrerender = !process.argv.includes('--no-prerender');
 if (!site) fail('--site <site-id> is required.');
 
 function quotaProject() {
@@ -127,7 +130,8 @@ function collect() {
     const path = hostingPath(file);
     if (path) files.push({ path, file });
   }
-  files.push(...prerenderedFiles());
+  if (withPrerender) files.push(...prerenderedFiles());
+  if (files.length === 0) fail(`${dist} holds nothing to publish.`);
   return files.map(({ path, file }) => {
     const gzipped = gzipSync(readFileSync(file), { level: 9 });
     return { path, gzipped, hash: createHash('sha256').update(gzipped).digest('hex') };

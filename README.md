@@ -150,10 +150,11 @@ Trois choix structurent la mise en production :
 Workflows annexes : `backup-mongo.yml` sauvegarde la base chaque nuit et restaure l'archive pour la
 vérifier avant de la publier, `rollback.yml` et `rollback-front.yml` sont les portes manuelles de
 retour arrière (révision Cloud Run antérieure, version Hosting antérieure remise en service),
-`security-scan.yml` tient la veille de vulnérabilités ; l'infrastructure (registre d'images,
-secrets, service Cloud Run, hébergement du front, identités et fédération GitHub) est décrite en
-Terraform (`infra/terraform/`), planifiée en commentaire de PR et appliquée sur `master` par
-`infra.yml`.
+`security-scan.yml` tient la veille de vulnérabilités, `web-legacy.yml` publie l'ancienne adresse
+du site (`infra/web-legacy/` : un worker qui désinstalle celui d'avant le changement d'adresse, une
+redirection pour tout le reste) ; l'infrastructure (registre d'images, secrets, service Cloud Run,
+hébergement du front, identités et fédération GitHub) est décrite en Terraform
+(`infra/terraform/`), planifiée en commentaire de PR et appliquée sur `master` par `infra.yml`.
 
 ## Documentation
 

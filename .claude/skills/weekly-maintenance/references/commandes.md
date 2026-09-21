@@ -111,7 +111,7 @@ Le cluster dev et le cluster prod sont encore partagés (dette connue) : bien v�
 
 ## Domaine et certificat
 
-Le front est sur **`www.movie-picker.fr`** (Firebase Hosting), l'API sur **`api.movie-picker.fr`** (Cloud Run). `movie-picker.fr` et `web.movie-picker.fr` répondent `301` vers `www` depuis le 2026-09-20 : un `curl -I` sur ces deux hôtes doit rendre une redirection, pas un 200 ni un 000.
+Le front est sur **`www.movie-picker.fr`** (Firebase Hosting), l'API sur **`api.movie-picker.fr`** (Cloud Run). `movie-picker.fr` et `web.movie-picker.fr` répondent `301` vers `www` depuis le 2026-09-20 : un `curl -I` sur ces deux hôtes doit rendre une redirection, pas un 200 ni un 000. Une exception voulue : `https://web.movie-picker.fr/sw.js` répond `200` avec le worker de départ (`infra/web-legacy/`), c'est lui qui désinstalle les anciens service workers ; un `301` sur ce chemin voudrait dire que le domaine est retombé sur le site principal.
 
 ```bash
 for host in www.movie-picker.fr api.movie-picker.fr; do
