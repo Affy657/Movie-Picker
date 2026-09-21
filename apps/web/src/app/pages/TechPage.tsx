@@ -35,8 +35,10 @@ import {
   RefreshCw,
   Route,
   Scale,
+  ScrollText,
   ServerCog,
   ShieldCheck,
+  Signpost,
   SplitSquareHorizontal,
   Timer,
   Undo2,
@@ -147,6 +149,7 @@ const SECURITY_KEYS = [
   { key: 'startup', Icon: Power },
   { key: 'gdpr', Icon: Scale },
   { key: 'traces', Icon: Route },
+  { key: 'audit', Icon: ScrollText },
 ] as const;
 
 const SERVER_KEYS = [
@@ -211,9 +214,10 @@ const INFRA_KEYS = [
   { key: 'staging', Icon: Milestone },
   { key: 'iac', Icon: FileCode2 },
   { key: 'identities', Icon: IdCard },
+  { key: 'legacy', Icon: Signpost },
 ] as const;
 
-const OPEN_TECH_WORK = ['sharedCache', 'containerTwice', 'sentryToken'] as const;
+const OPEN_TECH_WORK = ['sharedCache', 'containerTwice', 'sentryToken', 'scopedAccess'] as const;
 
 const QUALITY_BLOCKING_KEYS = [
   { key: 'coverage', Icon: FlaskConical },

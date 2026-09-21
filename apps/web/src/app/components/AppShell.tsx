@@ -42,14 +42,24 @@ type NavItemSpec = Omit<NavItemDef, 'label'> & {
 };
 
 const NAV_ITEMS: ReadonlyArray<NavItemSpec> = [
-  { to: ROUTES.myEvents, labelKey: 'nav.myEvents', Icon: CalendarDays },
+  {
+    to: ROUTES.myEvents,
+    labelKey: 'nav.myEvents',
+    mobileLabelKey: 'nav.myEventsShort',
+    Icon: CalendarDays,
+  },
   {
     to: ROUTES.createEvent,
     labelKey: 'nav.createEvent',
     mobileLabelKey: 'nav.createEventShort',
     Icon: Plus,
   },
-  { to: ROUTES.watchlist, labelKey: 'nav.watchlist', Icon: Bookmark },
+  {
+    to: ROUTES.watchlist,
+    labelKey: 'nav.watchlist',
+    mobileLabelKey: 'nav.watchlistShort',
+    Icon: Bookmark,
+  },
 ];
 
 const LANDING_NAV_ITEMS: ReadonlyArray<{ anchor: string; labelKey: TranslationKey }> = [
@@ -194,7 +204,7 @@ export default function AppShell() {
         label: t('nav.profile'),
         Icon: UserRound,
       }
-    : { to: withReturnTo(ROUTES.login, returnTo), label: t('nav.signIn'), Icon: LogIn };
+    : { to: withReturnTo(ROUTES.login, returnTo), label: t('nav.signInShort'), Icon: LogIn };
 
   const mobileItems: NavItemDef[] = [exploreItem, ...compactItems, accountItem];
 

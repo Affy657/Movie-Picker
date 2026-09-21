@@ -275,10 +275,16 @@ describe('App (routes)', () => {
       const labels = within(mobileNav)
         .getAllByRole('link')
         .map((link) => link.textContent?.trim());
-      expect(labels).toEqual(['Explorer', 'Mes soirées', 'Créer', 'Ma liste', 'Se connecter']);
-      expect(within(mobileNav).getByRole('link', { name: /^Se connecter$/i })).toHaveAttribute(
+      expect(labels).toEqual(['Explorer', 'Soirées', 'Créer', 'Ma liste', 'Connexion']);
+      expect(within(mobileNav).getByRole('link', { name: /^Connexion$/i })).toHaveAttribute(
         'href',
         '/login'
+      );
+      const desktopNav = navs.at(0);
+      if (!desktopNav) throw new Error('Nav bureau introuvable');
+      expect(within(desktopNav).getByRole('link', { name: /^Mes soirées$/i })).toHaveAttribute(
+        'href',
+        '/my-events'
       );
     });
 
@@ -361,7 +367,13 @@ describe('App (routes)', () => {
       const mobileNav = navs.at(-1);
       if (!mobileNav) throw new Error('Mobile nav introuvable');
       expect(within(mobileNav).queryByRole('link', { name: /^Accueil$/i })).not.toBeInTheDocument();
-      expect(within(mobileNav).getByRole('link', { name: /^Mes soirées$/i })).toBeInTheDocument();
+      expect(within(mobileNav).getByRole('link', { name: /^Soirées$/i })).toHaveAttribute(
+        'href',
+        '/my-events'
+      );
+      expect(
+        within(mobileNav).queryByRole('link', { name: /^Mes soirées$/i })
+      ).not.toBeInTheDocument();
       expect(within(mobileNav).getByRole('link', { name: /^Créer$/i })).toHaveAttribute(
         'href',
         '/new'
@@ -375,13 +387,17 @@ describe('App (routes)', () => {
         'href',
         '/new'
       );
+      expect(within(desktopNav).getByRole('link', { name: /^Mes soirées$/i })).toHaveAttribute(
+        'href',
+        '/my-events'
+      );
       expect(
         within(mobileNav).queryByRole('link', { name: /^Paramètres$/i })
       ).not.toBeInTheDocument();
       const labels = within(mobileNav)
         .getAllByRole('link')
         .map((link) => link.textContent?.trim());
-      expect(labels).toEqual(['Explorer', 'Mes soirées', 'Créer', 'Ma liste', 'Profil']);
+      expect(labels).toEqual(['Explorer', 'Soirées', 'Créer', 'Ma liste', 'Profil']);
       expect(within(mobileNav).getByRole('link', { name: /^Profil$/i })).toHaveAttribute(
         'href',
         '/u/alice'
