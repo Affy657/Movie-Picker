@@ -30,7 +30,7 @@ inputs:
     required: false
     default: "false"
   apply:
-    description: "true to apply the saved plan (tfplan, in the root module) when its exit code is 2; false for a plan that is only read"
+    description: "true to apply the saved plan (plan.tfplan, in the root module, an extension .gitignore already lists) when its exit code is 2; false for a plan that is only read"
     required: false
     default: "false"
 outputs:
@@ -86,11 +86,11 @@ runs:
         if [ -n "$ALERT_SMS_NUMBER" ]; then export TF_VAR_alert_sms_number="$ALERT_SMS_NUMBER"; fi
         export TF_PLUGIN_CACHE_DIR="$HOME/.terraform.d/plugin-cache"
         code=0
-        terraform -chdir="$TERRAFORM_ROOT" plan -input=false -no-color -detailed-exitcode "-lock=$LOCK" -out=tfplan 2>&1 | tee "$RUNNER_TEMP/plan.txt" || code=$?
+        terraform -chdir="$TERRAFORM_ROOT" plan -input=false -no-color -detailed-exitcode "-lock=$LOCK" -out=plan.tfplan 2>&1 | tee "$RUNNER_TEMP/plan.txt" || code=$?
         echo "exitcode=$code" >> "$GITHUB_OUTPUT"
         changes=0
         if [ "$code" = "2" ]; then
-          changes="$(terraform -chdir="$TERRAFORM_ROOT" show -json tfplan \
+          changes="$(terraform -chdir="$TERRAFORM_ROOT" show -json plan.tfplan \
             | jq '[.resource_changes[]? | select(.change.actions != ["no-op"] and .change.actions != ["read"])] | length')"
         fi
         echo "resource_changes=$changes" >> "$GITHUB_OUTPUT"
@@ -143,7 +143,7 @@ runs:
       shell: bash
       env:
         TERRAFORM_ROOT: ${{ inputs.root }}
-      run: terraform -chdir="$TERRAFORM_ROOT" apply -input=false -no-color tfplan
+      run: terraform -chdir="$TERRAFORM_ROOT" apply -input=false -no-color plan.tfplan
     - name: Nothing to apply
       if: inputs.apply == 'true' && steps.plan.outputs.exitcode == '0'
       shell: bash
