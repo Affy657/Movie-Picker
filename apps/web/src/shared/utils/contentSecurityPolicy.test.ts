@@ -151,4 +151,14 @@ describe('inlineScriptHashes', () => {
     expect(spaced).toEqual(tight);
     expect(newline).toEqual(tight);
   });
+
+  it('closes a script on an end tag that carries attributes, as a browser does', async () => {
+    const tight = await inlineScriptHashes('<script>a()</script>');
+    const attributed = await inlineScriptHashes('<script>a()</script\t\n bar>');
+    const longerName = await inlineScriptHashes('<script>a()</scripts>b()</script>');
+
+    expect(attributed).toEqual(tight);
+    expect(longerName).toEqual(await inlineScriptHashes('<script>a()</scripts>b()</script >'));
+    expect(longerName).not.toEqual(tight);
+  });
 });
