@@ -81,7 +81,10 @@ jobs:
             for path in "/" "/e/some-night?x=1" "/settings" "/index.html"; do
               status="$(curl -sS -o /dev/null -w '%{http_code}' "$origin$path")"
               location="$(curl -sS -o /dev/null -w '%{redirect_url}' "$origin$path")"
-              [ "$status" = "301" ] && [ "$location" = "$CANONICAL_ORIGIN$path" ] || { echo "::error::$origin$path answers $status to $location, expected 301 to $CANONICAL_ORIGIN$path"; return 1; }
+              if [ "$status" != "301" ] || [ "$location" != "$CANONICAL_ORIGIN$path" ]; then
+                echo "::error::$origin$path answers $status to $location, expected 301 to $CANONICAL_ORIGIN$path"
+                return 1
+              fi
             done
             location="$(curl -sS -o /dev/null -w '%{redirect_url}' "$origin/my-events")"
             [ "$location" = "$CANONICAL_ORIGIN/my-events?movedFrom=web" ] || { echo "::error::$origin/my-events redirects to $location, expected the movedFrom marker"; return 1; }
