@@ -6,10 +6,24 @@ import Chip from '@/shared/components/Chip';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { RatingScale } from '@/shared/types/theme';
 import { averageRating, formatRating } from '@/shared/utils/formatRating';
-import { ratingCountLabel, type ParticipantRating } from './MovieRatingDialog';
 import styles from './RatingNotes.module.css';
+
+export type ParticipantRating = {
+  participantId: string;
+  pseudo: string;
+  avatarId: string | null;
+  value: number | null;
+  isSelf: boolean;
+  handle?: string | null;
+  isCreator?: boolean;
+};
+
+export function ratingCountLabel(count: number, t: ReturnType<typeof useTranslation>['t']) {
+  return pluralizeCount(count, 'events.ratings.countOne', 'events.ratings.countMany', t);
+}
 
 type Props = {
   participants: ParticipantRating[];

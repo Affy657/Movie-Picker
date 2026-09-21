@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { LocaleProvider } from '@/shared/i18n';
 import RatingNotes from '@/features/events/components/RatingNotes';
-import type { ParticipantRating } from '@/features/events/components/MovieRatingDialog';
+import type { ParticipantRating } from '@/features/events/components/RatingNotes';
 
 const rows: ParticipantRating[] = [
   { participantId: 'me', pseudo: 'Sofia', avatarId: null, value: null, isSelf: true },

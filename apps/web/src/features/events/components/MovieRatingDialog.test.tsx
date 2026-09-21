@@ -2,9 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
-import MovieRatingDialog, {
-  type ParticipantRating,
-} from '@/features/events/components/MovieRatingDialog';
+import MovieRatingDialog from '@/features/events/components/MovieRatingDialog';
+import type { ParticipantRating } from '@/features/events/components/RatingNotes';
 
 const movie = { title: 'The Matrix', year: '1999', posterPath: null };
 

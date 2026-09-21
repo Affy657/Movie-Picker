@@ -6,10 +6,8 @@ import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { ProposerBadge } from '@/features/movies/components/movieCardParts';
-import MovieRatingDialog, {
-  ratingCountLabel,
-  type ParticipantRating,
-} from '@/features/events/components/MovieRatingDialog';
+import MovieRatingDialog from '@/features/events/components/MovieRatingDialog';
+import { ratingCountLabel, type ParticipantRating } from '@/features/events/components/RatingNotes';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { EventParticipantSummary } from '@/shared/types/event';

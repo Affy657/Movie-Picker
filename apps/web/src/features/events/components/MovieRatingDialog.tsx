@@ -11,19 +11,9 @@ import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { RatingScale } from '@/shared/types/theme';
 import { formatRating } from '@/shared/utils/formatRating';
-import RatingNotes from './RatingNotes';
+import RatingNotes, { type ParticipantRating } from './RatingNotes';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import styles from './MovieRatingDialog.module.css';
-
-export type ParticipantRating = {
-  participantId: string;
-  pseudo: string;
-  avatarId: string | null;
-  value: number | null;
-  isSelf: boolean;
-  handle?: string | null;
-  isCreator?: boolean;
-};
 
 type Props = {
   open: boolean;
@@ -38,10 +28,6 @@ type Props = {
   onSave: (value: number) => void;
   onClear: () => void;
 };
-
-export function ratingCountLabel(count: number, t: ReturnType<typeof useTranslation>['t']) {
-  return pluralizeCount(count, 'events.ratings.countOne', 'events.ratings.countMany', t);
-}
 
 export default function MovieRatingDialog({
   open,

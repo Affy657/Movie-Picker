@@ -1,7 +1,7 @@
 import { Clapperboard, Film, Users } from 'lucide-react';
 import ShareDialog from '@/shared/components/ShareDialog';
 import EventInviteFriendsTab from '@/features/events/components/EventInviteFriendsTab';
-import { ratingCountLabel } from '@/features/events/components/MovieRatingDialog';
+import { ratingCountLabel } from '@/features/events/components/RatingNotes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTranslation } from '@/shared/i18n';
 import type { EventData } from '@/features/events/types';

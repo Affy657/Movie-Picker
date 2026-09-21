@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { Star } from 'lucide-react';
 import EventWinnerSummary from '@/features/events/pages/event-detail/EventWinnerSummary';
 import RatingNotes from '@/features/events/components/RatingNotes';
-import type { ParticipantRating } from '@/features/events/components/MovieRatingDialog';
+import type { ParticipantRating } from '@/features/events/components/RatingNotes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
 import { buttonClass } from '@/shared/components/Button';
