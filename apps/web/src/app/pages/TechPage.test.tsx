@@ -124,8 +124,10 @@ describe('TechPage', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#production') as HTMLElement;
 
-    expect(section.querySelectorAll('article')).toHaveLength(8);
+    expect(section.querySelectorAll('article')).toHaveLength(9);
     expect(section.textContent).toContain(fr.tech.production.passwords);
+    expect(section.textContent).toContain(fr.tech.production.audit);
+    expect(section.textContent).toMatch(/400 jours/);
     expect(section.textContent).toContain(String(TECH_METRICS.rateLimitPolicies));
     expect(section.textContent).toMatch(/liste d.origines autorisées ni adresse de base/i);
     expect(section.textContent).not.toMatch(/refuse de démarrer s.il manque un secret/i);
@@ -150,14 +152,26 @@ describe('TechPage', () => {
     expect(section.textContent).not.toMatch(/portail qualité informatif/i);
   });
 
-  it('says the deployment is observed and that the scheduler depends on its token', () => {
+  it('says the deployment is observed and that the scheduler retries under its signed token', () => {
     const { container } = renderTechPage();
     const section = container.querySelector('#infra') as HTMLElement;
 
     expect(section.textContent).toContain(fr.tech.infra.smoke);
     expect(section.textContent).toContain(String(TECH_METRICS.deploySecrets));
-    expect(section.textContent).toMatch(/seulement si le jeton existe/i);
+    expect(section.textContent).toMatch(/version servie/i);
+    expect(section.textContent).toMatch(/retentent trois fois/i);
+    expect(section.textContent).not.toMatch(/seulement si le jeton existe/i);
     expect(section.textContent).not.toMatch(/remet en ligne l.image précédente/i);
+  });
+
+  it('explains why the former address serves a leaving worker instead of a bare redirect', () => {
+    const { container } = renderTechPage();
+    const section = container.querySelector('#infra') as HTMLElement;
+
+    expect(section.querySelectorAll('article')).toHaveLength(10);
+    expect(section.textContent).toContain(fr.tech.infra.legacy);
+    expect(section.textContent).toMatch(/web\.movie-picker\.fr/);
+    expect(section.textContent).toMatch(/service worker/i);
   });
 
   it('details the integration chain instead of leaving it to the diagram alone', () => {
@@ -180,10 +194,16 @@ describe('TechPage', () => {
       'ciTestApi',
       'ciTestWeb',
       'ciE2eMongo',
-      'ciBandBoth',
+      'ciLintTerraform',
+      'ciScopeAlways',
+      'ciVerify',
+      'ciBuildFront',
+      'ciZoneGates',
+      'ciZoneDeploy',
     ] as const) {
       expect(diagram).toContain(fr.tech.diagram[node]);
     }
+    expect(diagram).not.toMatch(/vers l’image|vers le front/);
   });
 
   it('ne redit pas les familles de tests dans les pratiques', () => {
@@ -630,7 +650,7 @@ describe('TechPage', () => {
       .map((node) => node.textContent?.trim())
       .filter(Boolean);
 
-    for (const work of ['sharedCache', 'containerTwice', 'sentryToken'] as const) {
+    for (const work of ['sharedCache', 'containerTwice', 'sentryToken', 'scopedAccess'] as const) {
       expect(tags).toContain(fr.tech.trajectory[work]);
     }
     expect(tags.join(' ')).not.toMatch(
@@ -659,6 +679,10 @@ describe('TechPage', () => {
       expect(tags).toContain(fr.tech.ci[pipeline]);
     }
     expect(tags.join(' ')).not.toMatch(/nettoyage du registre/i);
+    expect(section.textContent).toMatch(/relecteur/i);
+    expect(section.textContent).toMatch(/chaque lundi/i);
+    expect(section.textContent).toMatch(/36 heures/);
+    expect(section.textContent).toMatch(/branche de version/i);
   });
 
   it('files the prerendering among the choices made, no longer among open work', () => {
@@ -689,7 +713,8 @@ describe('TechPage', () => {
 
     expect(section.textContent).toMatch(/Cloud Monitoring/);
     expect(section.textContent).toMatch(/trois sondes/i);
-    expect(section.textContent).toMatch(/cinq politiques d.alerte/i);
+    expect(section.textContent).toMatch(/huit politiques d.alerte/i);
+    expect(section.textContent).not.toMatch(/cinq politiques d.alerte/i);
     expect(section.textContent).toMatch(/les trois dernières/i);
     expect(section.textContent).not.toMatch(/les deux dernières/i);
   });
