@@ -733,10 +733,16 @@ jobs:
     name: 🚀 Deploy web → Firebase Hosting
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    # A bare `needs:`: a build that did not succeed, or was skipped, skips the publication, and
-    # the final guard reports it. The publication script runs on Node alone, without any
-    # dependency of the lockfile: nothing is installed in this job, which holds the identity.
+    # Not a bare `needs:`: a job skipped anywhere upstream skips a job with a bare `needs:`, and
+    # Lighthouse is skipped on every production run, so the first production run after
+    # Lighthouse moved to the staging built the web app and published nothing (run 35567322606,
+    # the guard caught it). The condition spells out the one thing that matters, a successful
+    # build, and `!cancelled()` keeps the upstream skip from deciding. A build that failed or was
+    # skipped still skips the publication, and the final guard reports it. The publication script
+    # runs on Node alone, without any dependency of the lockfile: nothing is installed in this
+    # job, which holds the identity.
     needs: build-front
+    if: ${{ !cancelled() && needs.build-front.result == 'success' }}
     environment: ${{ inputs.stage }}
     permissions:
       contents: read
