@@ -20,7 +20,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 - **Poids d'une version** : somme des tailles de ses items, reportée dans le titre. `S` vaut 1, `M` vaut 3, `L` vaut 8, `XL` vaut 20 ; un `?` ne compte pas. C'est ce nombre qui permet de comparer deux versions et de décider d'y ajouter ou d'en retirer une feature.
 - **Produit ou tech** : une entrée va en section Tech si elle est **transverse et indépendante de toute feature** (CI/CD, infra, sécurité de la chaîne, observabilité, outillage qualité). L'implémentation technique d'une feature (schéma, endpoints, cache) appartient à la feature elle-même.
 - **Types d'entrée tech** : 🏗️ infra et déploiement, ⚙️ CI/CD et qualité, 🔒 sécurité, 📊 observabilité, ♿ accessibilité.
-- **Format d'une entrée** : une ligne, ``- <statut> `type` `taille` **Titre** (version) : description``, le type n'étant porté que par les entrées tech. La description tient en une à deux phrases et 300 caractères au plus, et dit ce que l'utilisateur obtient plutôt que comment c'est construit. Le détail vit dans le code, la spec et les tests.
+- **Format d'une entrée** : une ligne, ``- <statut> `type` `taille` **Titre** : description``, le type n'étant porté que par les entrées tech, ni version ni date après le titre (la section les porte). La description tient en une à deux phrases et 300 caractères au plus, et dit ce que l'utilisateur obtient plutôt que comment c'est construit. Le détail vit dans le code, la spec et les tests.
 
 ---
 
@@ -175,25 +175,25 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 - ✅ `M` **Navigation ouverte aux visiteurs sans compte** (v1.4.1) : nav, footer et cinq pages accessibles sans compte, avec un état déconnecté dédié et un appel à la connexion ou à l'inscription. `/decouvrir` devient la page publique indexable à la place de la racine.
 
-- ✅ `L` **Refonte de la landing page** (V1.5) : neuf sections en FR et EN, de l'accroche à l'appel à l'action, avec une roue jouable et l'interface du produit reconstruite en CSS. Devenue « Comment ça marche » sur `/decouvrir` quand la home d'exploration a repris la racine.
+- ✅ `L` **Refonte de la landing page** : neuf sections en FR et EN, de l'accroche à l'appel à l'action, avec une roue jouable et l'interface du produit reconstruite en CSS. Devenue « Comment ça marche » sur `/decouvrir` quand la home d'exploration a repris la racine.
 
 **Blocs visibles sans compte**, livrés en V1.5. La racine `/` porte la home d'exploration pour tout le monde, connecté ou non, la landing marketing vit sur `/decouvrir`, et chaque bloc a sa page liste filtrable (`ShowcaseListPage`) alimentée par `GET /api/v1/movies/showcase`. Chaque bloc est un carrousel à défilement horizontal, avec flèches sur appareil pointeur et balayage au doigt.
-- ✅ `M` **Films tendance de la semaine** (V1.5) : carrousel sur la racine, cent films chargés par section dont vingt montés dans le carrousel, lien « Voir les N films » vers la page liste filtrable.
-- ✅ `S` **Suggestions thématiques** (V1.5) : dix thèmes déclarés côté API (frissons, comédies françaises, années 80, années 90, années 2000, braquages, pépites A24, moins de 90 minutes, les indétrônables, en famille), sélectionnables en onglets.
-- ✅ `M` **Les plus proposés sur Movie Picker** (V1.5) : agrégation sur les films de soirées, un film entre au classement à partir de deux soirées distinctes, le bloc s'affiche à partir de trente films distincts.
-- ✅ `S` **Collections TMDB** (V1.5) : douze franchises curées, grille dédiée sur `/films/collections`, page par saga sur `/films/collection/:id`.
-- ✅ `M` **Recherche de films depuis la home** (V1.5) : champ en tête de page qui ouvre `/films/recherche?q=…`, la même page liste que les autres blocs, fiche film comprise.
-- ✅ `M` **Recherche par réalisateur et acteur** (V1.5) : le nom d'une personne ramène sa filmographie, rôles joués et films réalisés, en plus des titres qui correspondent au texte saisi. La personne la plus populaire est retenue, et ses films passent devant quand le nom est saisi en entier.
-- ✅ `S` **Films populaires par genre** (V1.5) : onglets en pastilles sur le bloc tendances, clavier compris, réutilisant la primitive `Tabs`.
-- ✅ `S` **Actuellement au cinéma** (V1.5) : endpoint TMDB « Now Playing » région FR, même rangée et même page liste que les autres blocs.
-- ✅ `S` **Ce soir en streaming** (V1.5) : onglets par plateforme (Netflix, Prime Video, Disney+, Canal+, Apple TV+) via `with_watch_providers` sur la région configurée, page liste sur `/films/streaming/:provider`.
+- ✅ `M` **Films tendance de la semaine** : carrousel sur la racine, cent films chargés par section dont vingt montés dans le carrousel, lien « Voir les N films » vers la page liste filtrable.
+- ✅ `S` **Suggestions thématiques** : dix thèmes déclarés côté API (frissons, comédies françaises, années 80, années 90, années 2000, braquages, pépites A24, moins de 90 minutes, les indétrônables, en famille), sélectionnables en onglets.
+- ✅ `M` **Les plus proposés sur Movie Picker** : agrégation sur les films de soirées, un film entre au classement à partir de deux soirées distinctes, le bloc s'affiche à partir de trente films distincts.
+- ✅ `S` **Collections TMDB** : douze franchises curées, grille dédiée sur `/films/collections`, page par saga sur `/films/collection/:id`.
+- ✅ `M` **Recherche de films depuis la home** : champ en tête de page qui ouvre `/films/recherche?q=…`, la même page liste que les autres blocs, fiche film comprise.
+- ✅ `M` **Recherche par réalisateur et acteur** : le nom d'une personne ramène sa filmographie, rôles joués et films réalisés, en plus des titres qui correspondent au texte saisi. La personne la plus populaire est retenue, et ses films passent devant quand le nom est saisi en entier.
+- ✅ `S` **Films populaires par genre** : onglets en pastilles sur le bloc tendances, clavier compris, réutilisant la primitive `Tabs`.
+- ✅ `S` **Actuellement au cinéma** : endpoint TMDB « Now Playing » région FR, même rangée et même page liste que les autres blocs.
+- ✅ `S` **Ce soir en streaming** : onglets par plateforme (Netflix, Prime Video, Disney+, Canal+, Apple TV+) via `with_watch_providers` sur la région configurée, page liste sur `/films/streaming/:provider`.
 
 **Blocs visibles connecté uniquement** : la racine ne redirige plus vers Mes soirées, elle sert la même home enrichie de rangées personnelles ; une entrée « Explorer » ouvre la page depuis la nav et depuis la barre du bas mobile. Une rangée personnelle vide ne se rend pas du tout.
 
-- ✅ `S` **Films de la watchlist** (V1.5) : rangée « Dans votre liste » alimentée par la watchlist personnelle, fiche film et lien vers `/watchlist`.
-- ✅ `M` **Films des personnes suivies** (V1.5) : rangée « Vos amis ont vu » sur `GET /api/v1/users/me/following-watched-movies`, agrégation des soirées terminées des comptes suivis, dédoublonnée par film ; les profils passés en privé sont exclus.
-- ✅ `S` **Films de la prochaine soirée** (V1.5) : rangée « À voir avant votre prochaine soirée » listant les films proposés pour la soirée active la plus proche, avec accès direct à cette soirée.
-- ✅ `M` **Recommandations personnelles** (V1.5) : rangée « Parce que vous avez aimé », recommandations TMDB amorcées sur le dernier film vu, page liste sur `/films/similaires/:seedTmdbId`.
+- ✅ `S` **Films de la watchlist** : rangée « Dans votre liste » alimentée par la watchlist personnelle, fiche film et lien vers `/watchlist`.
+- ✅ `M` **Films des personnes suivies** : rangée « Vos amis ont vu » sur `GET /api/v1/users/me/following-watched-movies`, agrégation des soirées terminées des comptes suivis, dédoublonnée par film ; les profils passés en privé sont exclus.
+- ✅ `S` **Films de la prochaine soirée** : rangée « À voir avant votre prochaine soirée » listant les films proposés pour la soirée active la plus proche, avec accès direct à cette soirée.
+- ✅ `M` **Recommandations personnelles** : rangée « Parce que vous avez aimé », recommandations TMDB amorcées sur le dernier film vu, page liste sur `/films/similaires/:seedTmdbId`.
 
 ---
 
@@ -201,12 +201,12 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 **Objectif** : compléter la boucle sociale entamée en V1.2 et ritualiser la soirée. Items classés par valeur utilisateur décroissante.
 
-- ✅ `M` **Recherche d'utilisateurs** (V1.6) : onglet « Rechercher » dans la modale Abonnements / Abonnés, qui trouve un compte par pseudo ou par handle, en sous-chaîne et sans tenir compte de la casse ni des accents. Les profils privés sont exclus, vingt résultats au plus.
-- ✅ `L` **Soirée récurrente** (V1.6) : réglage « Répéter cette soirée » au rythme hebdomadaire, bimensuel ou mensuel ; la soirée suivante naît à la clôture de la précédente, avec la même configuration et une liste de films vide. Une seule occurrence ouverte à la fois, et l'hôte coupe la série quand il veut.
-- ✅ `M` **Templates de soirée** (V1.6) : jusqu'à cinq configurations nommées par compte, enregistrées depuis la création d'une soirée comme depuis les paramètres d'une soirée existante, et réappliquées en un clic. Le menu d'une soirée passée propose en plus « Refaire cette soirée ».
-- ✅ `L` **Plusieurs films gagnants par soirée** (V1.6) : l'hôte règle le nombre de films gagnants jusqu'à dix, et chaque tirage ajoute un film au palmarès en l'excluant des suivants. Les gagnants comptent partout : historique, statistiques, partage et « Vos amis ont vu ».
-- ✅ `S` **Plage de votes configurable** (V1.6) : l'hôte active une limite de votes par participant dans les paramètres de la soirée, reprise dans les templates et les soirées récurrentes. Une fois ses votes posés, le participant est prévenu qu'il doit en retirer un pour voter ailleurs.
-- ✅ `M` **Watchlist d'un autre utilisateur** (V1.6) : la watchlist d'un compte se consulte depuis son profil public `/u/:handle`, sur une page dédiée calquée sur celle des films vus. Un réglage de visibilité propre à la watchlist, indépendant de celui du profil et activé par défaut, permet de la masquer.
+- ✅ `M` **Recherche d'utilisateurs** : onglet « Rechercher » dans la modale Abonnements / Abonnés, qui trouve un compte par pseudo ou par handle, en sous-chaîne et sans tenir compte de la casse ni des accents. Les profils privés sont exclus, vingt résultats au plus.
+- ✅ `L` **Soirée récurrente** : réglage « Répéter cette soirée » au rythme hebdomadaire, bimensuel ou mensuel ; la soirée suivante naît à la clôture de la précédente, avec la même configuration et une liste de films vide. Une seule occurrence ouverte à la fois, et l'hôte coupe la série quand il veut.
+- ✅ `M` **Templates de soirée** : jusqu'à cinq configurations nommées par compte, enregistrées depuis la création d'une soirée comme depuis les paramètres d'une soirée existante, et réappliquées en un clic. Le menu d'une soirée passée propose en plus « Refaire cette soirée ».
+- ✅ `L` **Plusieurs films gagnants par soirée** : l'hôte règle le nombre de films gagnants jusqu'à dix, et chaque tirage ajoute un film au palmarès en l'excluant des suivants. Les gagnants comptent partout : historique, statistiques, partage et « Vos amis ont vu ».
+- ✅ `S` **Plage de votes configurable** : l'hôte active une limite de votes par participant dans les paramètres de la soirée, reprise dans les templates et les soirées récurrentes. Une fois ses votes posés, le participant est prévenu qu'il doit en retirer un pour voter ailleurs.
+- ✅ `M` **Watchlist d'un autre utilisateur** : la watchlist d'un compte se consulte depuis son profil public `/u/:handle`, sur une page dédiée calquée sur celle des films vus. Un réglage de visibilité propre à la watchlist, indépendant de celui du profil et activé par défaut, permet de la masquer.
 
 **Tech**
 
@@ -223,9 +223,9 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
-- ✅ `M` **Note d'un film vu** (V1.7) : Soirée terminée, chaque participant note le ou les films choisis par étoiles à demi-pas, dans son échelle, et modifie ou efface sa note sans limite de temps. Tout le monde, visiteur compris, voit les notes et la moyenne ; la note de l'auteur figure sur ses films vus du profil public.
-- ✅ `M` **Relance du lendemain** (V1.7) : Le lendemain à 10 h, chaque participant qui n'a pas encore noté un film choisi reçoit une notification, push et in-app, qui ouvre directement la note du premier film non noté. Une seule relance par soirée, rattrapée jusqu'à trois jours, désactivable dans les réglages.
-- ✅ `M` **Page recap publique de soirée** (V1.7) : Dès qu'un film est choisi, une page partageable et lisible sans compte résume la soirée : films choisis, moyenne et note de chacun, « Noter » pour qui ne l'a pas encore fait, « Organise la tienne » pour le visiteur. Le lien partagé montre le titre, le film, la moyenne et l'affiche.
+- ✅ `M` **Note d'un film vu** : Soirée terminée, chaque participant note le ou les films choisis par étoiles à demi-pas, dans son échelle, et modifie ou efface sa note sans limite de temps. Tout le monde, visiteur compris, voit les notes et la moyenne ; la note de l'auteur figure sur ses films vus du profil public.
+- ✅ `M` **Relance du lendemain** : Le lendemain à 10 h, chaque participant qui n'a pas encore noté un film choisi reçoit une notification, push et in-app, qui ouvre directement la note du premier film non noté. Une seule relance par soirée, rattrapée jusqu'à trois jours, désactivable dans les réglages.
+- ✅ `M` **Page recap publique de soirée** : Dès qu'un film est choisi, une page partageable et lisible sans compte résume la soirée : films choisis, moyenne et note de chacun, « Noter » pour qui ne l'a pas encore fait, « Organise la tienne » pour le visiteur. Le lien partagé montre le titre, le film, la moyenne et l'affiche.
 - ⬜ `L` **Partage de soirée en story** : image au format des stories des réseaux sociaux générée depuis le recap, avec le lien de la page recap, envoyée par le partage natif du téléphone ou téléchargée depuis la page soirée.
 - ⬜ `M` **Top 3 films préférés sur le profil** : sélectionner et afficher trois films favoris sur son profil public `/u/:handle` via une recherche TMDB, visibles par tous et modifiables depuis les paramètres.
 - ⬜ `M` **Photo de profil personnalisée** : téléverser une image comme photo de profil, en remplacement de l'avatar généré actuel.
