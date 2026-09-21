@@ -1,7 +1,9 @@
 using System.Linq;
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.UserMovies;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Tests.Builders;
@@ -21,6 +23,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IMovieRepository> _movies = new();
     private readonly Mock<IMovieRatingRepository> _ratings = new();
+    private readonly Mock<ITmdbMovieSearch> _tmdb = new();
     private readonly DateTimeOffset _now = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
 
     private static User PublicUser(bool isPublic = true) => new()
@@ -87,12 +90,19 @@ public sealed class GetUserWatchedMoviesHandlerTests
             .ReturnsAsync(Array.Empty<Event>());
         _ratings.Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<MovieRating>());
+        _tmdb.Setup(s => s.GetEnrichmentsAsync(
+                It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
         return new GetUserWatchedMoviesHandler(
             _users.Object,
             _participants.Object,
             _events.Object,
             _movies.Object,
             _ratings.Object,
+            _tmdb.Object,
+            Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }),
             new FixedTimeProvider(_now));
     }
 

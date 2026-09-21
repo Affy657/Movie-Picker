@@ -14,7 +14,7 @@ public static class ProductionStartupValidation
         if (string.IsNullOrWhiteSpace(app.Configuration["ALLOWED_ORIGINS"]))
         {
             throw new InvalidOperationException(
-                "ALLOWED_ORIGINS is required outside development (comma-separated list of front URLs, e.g. https://d123.cloudfront.net).");
+                "ALLOWED_ORIGINS is required outside development (comma-separated list of front URLs, e.g. https://www.example.com).");
         }
 
         if (string.IsNullOrWhiteSpace(app.Configuration["MONGODB_URI"]))

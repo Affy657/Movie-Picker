@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import Footer from '@/app/components/Footer';
+import dropdownStyles from '@/shared/components/Dropdown.module.css';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { resetPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import { resetSessionHintMemoryForTests } from '@/features/auth/session-hint';
@@ -55,6 +56,7 @@ describe('Footer language', () => {
 
     expect(screen.getByText('Langue')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Langue' }));
+    expect(screen.getByRole('listbox')).toHaveClass(dropdownStyles.menuUp!);
     await user.click(screen.getByRole('option', { name: 'English' }));
 
     expect(screen.getByText('Language')).toBeInTheDocument();

@@ -129,11 +129,12 @@ describe('EventTemplateSaveBar', () => {
     expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeDisabled();
   });
 
-  it('offers nothing more when the applied template is unchanged', () => {
+  it('refuses a duplicate while the applied template is unchanged', () => {
     renderBar({ templates: [makeTemplate()], appliedTemplate: makeTemplate() });
 
     expect(screen.queryByRole('button', { name: 'Mettre à jour' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeDisabled();
+    expect(screen.getByText('Identique au template « Soirée horreur ».')).toBeInTheDocument();
   });
 
   it('offers the update when the applied configuration has changed', async () => {
@@ -203,7 +204,7 @@ describe('EventTemplateSaveBar', () => {
     renderBar({ variant: 'event', templates: [makeTemplate()], appliedTemplate: makeTemplate() });
 
     expect(screen.queryByText('Cette configuration marche bien ?')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeDisabled();
   });
 
   it('asks as long as no template is applied', () => {

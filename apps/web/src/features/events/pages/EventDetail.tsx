@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router';
+import { Link, useLocation, useParams } from 'react-router';
 import { AlertCircle } from 'lucide-react';
 import { ROUTES } from '@/app/routes';
 import EventDetailSkeleton from '@/features/events/pages/event-detail/EventDetailSkeleton';
@@ -29,9 +29,12 @@ function getDocumentTitle(
   return APP_DOCUMENT_TITLE;
 }
 
+type ArrivalState = { configNotSaved?: boolean } | null;
+
 export default function EventDetail() {
   const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
+  const arrival = useLocation().state as ArrivalState;
   const {
     hostToken,
     eventQuery,
@@ -43,7 +46,7 @@ export default function EventDetail() {
     actionError,
     setActionError,
     refreshAll,
-  } = useEventDetailPage(slug);
+  } = useEventDetailPage(slug, arrival?.configNotSaved ? t('events.create.configNotSaved') : null);
 
   const isNetworkPaused = eventQuery.isPending && eventQuery.fetchStatus === 'paused';
   const isLoadingEvent = eventQuery.isPending && !isNetworkPaused;

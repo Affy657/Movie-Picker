@@ -6,9 +6,9 @@
 
 <p align="center">
   Choisir un film à plusieurs sans y passer la soirée.<br>
-  <a href="https://web.movie-picker.fr/"><strong>Ouvrir l'application</strong></a>
+  <a href="https://www.movie-picker.fr/"><strong>Ouvrir l'application</strong></a>
   &nbsp;&nbsp;&nbsp;
-  <a href="https://web.movie-picker.fr/tech"><strong>Lire le dossier technique</strong></a>
+  <a href="https://www.movie-picker.fr/tech"><strong>Lire le dossier technique</strong></a>
 </p>
 
 ## Le produit
@@ -35,7 +35,7 @@ sur les vues principales.
 
 | Couche | Technologies |
 | --- | --- |
-| Front | React 19, TypeScript, Vite, TanStack Query, React Router, PWA via Workbox. Build statique sur S3 derrière CloudFront |
+| Front | React 19, TypeScript, Vite, TanStack Query, React Router, PWA via Workbox. Build statique sur Firebase Hosting |
 | API | ASP.NET Core sur .NET 10, architecture hexagonale, conteneur sur Cloud Run déployé par digest |
 | Données | MongoDB Atlas, transactions par `IUnitOfWork`, migrations versionnées en base |
 | Services | TMDB (films et affiches, proxifiées par l'API), Resend (mails), Sentry, PostHog |
@@ -44,10 +44,8 @@ sur les vues principales.
 ```mermaid
 flowchart LR
   Browser[Navigateur ou PWA]
-  subgraph aws [AWS]
-    CF[CloudFront] --> S3[S3 statique]
-  end
   subgraph gcp [GCP]
+    FH[Firebase Hosting, front statique]
     AR[Artifact Registry] -.-> CR[Cloud Run, API .NET]
   end
   Browser --> CF
@@ -62,7 +60,7 @@ dérive ses types : une route retirée côté API casse la compilation du front.
 passe par cookie de session, les actions d'hôte par un jeton dans l'URL de partage.
 
 > **Le dossier technique du projet est publié en ligne, sur
-> [web.movie-picker.fr/tech](https://web.movie-picker.fr/tech).** Quatorze sections : architecture,
+> [www.movie-picker.fr/tech](https://www.movie-picker.fr/tech).** Quatorze sections : architecture,
 > choix techniques, interface, serveur, contrat d'API, modèle de données, une fonctionnalité suivie
 > de bout en bout, tests, intégration continue, infrastructure, mesures, sécurité, méthode de
 > travail et trajectoire. Les chiffres y sont relevés dans le dépôt au moment du build, pas estimés.
@@ -123,11 +121,14 @@ qualité sur `master` et sur les pull requests : Gitleaks, le lint des workflows
 dépendances npm et NuGet, les suites de tests, les E2E et le Quality Gate SonarCloud.
 
 `.github/workflows/deploy.yml` met en production, et **seulement à la main** : un push sur `master`
-ne déploie rien. Le déclenchement choisit sa cible (tout, front seul, API seule), refuse de partir
-si le run de CI du commit visé n'est pas vert, puis ajoute les deux portes propres au déploiement,
-les seuils Lighthouse et le scan Trivy de l'image. Grouper plusieurs livraisons dans un seul
-déploiement est le but : quand le dépôt était privé, ses minutes GitHub Actions étaient facturées et
-rejouer le chemin de déploiement à chaque commit en consommait la moitié.
+ne déploie rien. Le déclenchement choisit son étape (la recette `staging.movie-picker.fr`, puis la
+production) et sa cible (tout, front seul, API seule), refuse de partir si le run de CI du commit
+visé n'est pas vert, puis ajoute les deux portes propres au déploiement, les seuils Lighthouse et le
+scan Trivy de l'image. La production refuse de partir tant que la recette ne sert pas exactement le
+même commit, et elle redéploie l'image de conteneur que la recette exécute, sans la reconstruire.
+Grouper plusieurs livraisons dans un seul déploiement est le but : quand le dépôt était privé, ses
+minutes GitHub Actions étaient facturées et rejouer le chemin de déploiement à chaque commit en
+consommait la moitié.
 
 Trois choix structurent la mise en production :
 
@@ -137,25 +138,29 @@ Trois choix structurent la mise en production :
 - **L'API n'est jamais promue avant d'être vérifiée.** Chaque révision est déployée sans trafic,
   éprouvée sur son URL taguée, et ne reçoit d'utilisateurs qu'une fois ses sondes vertes. Il n'y a
   donc pas de retour arrière à faire sur une révision défaillante, elle n'a servi personne.
-- **Le front est poussé en trois temps**, `index.html` et le service worker en dernier, puis
-  CloudFront est invalidé, pour qu'aucun client ne se retrouve avec un service worker en avance sur
-  ses bundles. Le `dist` est archivé trente jours, l'hébergement statique ne gardant aucune version.
-- **Les routes publiques indexables sont prérendues** au build et publiées sous une clé sans
-  extension égale à leur chemin, ce qui les fait servir en HTML complet au lieu de la coquille SPA.
-  Un client sans JavaScript, moteur d'indexation ou aperçu de lien, reçoit le contenu et les
-  métadonnées de la page, pas un document vide.
+- **Le front est publié comme une version immuable** de Firebase Hosting, qui porte avec ses
+  fichiers les paliers de cache et les en-têtes de sécurité (`infra/firebase-hosting.json`), puis
+  mise en service d'un coup : aucun client ne se retrouve avec un service worker en avance sur ses
+  bundles, et les versions précédentes restent servables pour un retour arrière.
+- **Les routes publiques indexables sont prérendues** au build et publiées comme `<route>/index.html`,
+  ce qui les fait servir en HTML complet au lieu de la coquille SPA, la forme avec barre finale étant
+  ramenée sur la route. Un client sans JavaScript, moteur d'indexation ou aperçu de lien, reçoit le
+  contenu et les métadonnées de la page, pas un document vide.
 
 Workflows annexes : `backup-mongo.yml` sauvegarde la base chaque nuit et restaure l'archive pour la
 vérifier avant de la publier, `rollback.yml` et `rollback-front.yml` sont les portes manuelles de
-retour arrière (révision Cloud Run antérieure, build front archivé republié avec les mêmes passes S3
-que le déploiement), `registry-cleanup.yml` et `security-scan.yml` tiennent la rétention et la
-veille de vulnérabilités.
+retour arrière (révision Cloud Run antérieure, version Hosting antérieure remise en service),
+`security-scan.yml` tient la veille de vulnérabilités, `web-legacy.yml` publie l'ancienne adresse
+du site (`infra/web-legacy/` : un worker qui désinstalle celui d'avant le changement d'adresse, une
+redirection pour tout le reste) ; l'infrastructure (registre d'images, secrets, service Cloud Run,
+hébergement du front, identités et fédération GitHub) est décrite en Terraform
+(`infra/terraform/`), planifiée en commentaire de PR et appliquée sur `master` par `infra.yml`.
 
 ## Documentation
 
 | Document | Contenu |
 | --- | --- |
-| [Dossier technique](https://web.movie-picker.fr/tech) | La version longue de tout ce qui précède, publiée dans l'application |
+| [Dossier technique](https://www.movie-picker.fr/tech) | La version longue de tout ce qui précède, publiée dans l'application |
 | [`AGENTS.md`](AGENTS.md) | Règles du dépôt : conventions, design system, portes de qualité, workflow |
 | [`docs/development.md`](docs/development.md) | Installation détaillée, seed, scripts, tests, structure |
 | [`docs/design-system.md`](docs/design-system.md) | Jetons et composants partagés du front, props, états et garanties d'accessibilité |
@@ -163,7 +168,6 @@ veille de vulnérabilités.
 | [`docs/roadmap.md`](docs/roadmap.md) | Roadmap produit et tech, version par version |
 | [`docs/technical-debt.md`](docs/technical-debt.md) | Dette technique, contraintes et impasses connues |
 | [`docs/runbook-mongodb-restore.md`](docs/runbook-mongodb-restore.md) | Remettre une sauvegarde MongoDB dans le cluster de production |
-| [`docs/runbook-migration-domaine-www.md`](docs/runbook-migration-domaine-www.md) | Bascule du front de `web.` vers `www.movie-picker.fr`, en cours |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Projet solo : ce qui est accepté, ce qui ne l'est pas, où signaler |
 | [`SECURITY.md`](SECURITY.md) | Signaler une faille, par un canal privé |
 

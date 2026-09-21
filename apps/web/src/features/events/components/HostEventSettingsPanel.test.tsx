@@ -85,7 +85,10 @@ describe('HostEventSettingsPanel', () => {
 
     expect(screen.getByLabelText(/nom de la soir/i)).toBeDisabled();
     expect(screen.getByRole('radio', { name: /par les votes/i })).toBeDisabled();
-    expect(screen.getByLabelText(/films max par personne/i)).toBeDisabled();
+    expect(screen.getByRole('switch', { name: /limiter les films proposés/i })).toBeDisabled();
+    expect(
+      screen.getByRole('switch', { name: /limiter le nombre de participants/i })
+    ).toBeDisabled();
     expect(screen.getByLabelText(/films gagnants/i)).toBeEnabled();
     expect(screen.getByRole('switch', { name: /répéter cette soirée/i })).toBeEnabled();
     expect(screen.getByRole('status')).toHaveTextContent(/tirage a commenc/i);
@@ -130,13 +133,13 @@ describe('HostEventSettingsPanel', () => {
     await waitFor(() => expect(patched).toBe(true));
   });
 
-  it('envoie maxParticipants saisi dans le PATCH', async () => {
+  it('enabling the participants limit sends the default cap, then the typed one', async () => {
     const user = userEvent.setup();
-    let seenMax: unknown;
+    const seen: unknown[] = [];
     server.use(
       http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
-        seenMax = body.maxParticipants;
+        seen.push(body.maxParticipants);
         return HttpResponse.json({
           theme: 'SF',
           maxProposalsPerParticipant: null,
@@ -157,10 +160,65 @@ describe('HostEventSettingsPanel', () => {
       />
     );
 
+    expect(screen.queryByLabelText(/participants max/i)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('switch', { name: /limiter le nombre de participants/i }));
+    await waitFor(() => expect(seen).toEqual([10]));
+
     await user.clear(screen.getByLabelText(/participants max/i));
     await user.type(screen.getByLabelText(/participants max/i), '8');
 
-    await waitFor(() => expect(seenMax).toBe(8), { timeout: 3000 });
+    await waitFor(() => expect(seen.at(-1)).toBe(8), { timeout: 3000 });
+  });
+
+  it('turning the participants limit off sends 0 and hides the counter', async () => {
+    const user = userEvent.setup();
+    let seenMax: unknown = 'untouched';
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        seenMax = body.maxParticipants;
+        return HttpResponse.json({ ...baseEvent.config, maxParticipants: null });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{ ...baseEvent, config: { ...baseEvent.config!, maxParticipants: 8 } }}
+      />
+    );
+
+    expect(screen.getByLabelText(/participants max/i)).toHaveValue(8);
+    await user.click(screen.getByRole('switch', { name: /limiter le nombre de participants/i }));
+
+    await waitFor(() => expect(seenMax).toBe(0));
+    expect(screen.queryByLabelText(/participants max/i)).not.toBeInTheDocument();
+  });
+
+  it('shows a limit stored at the cap as no limit', () => {
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={{
+          ...baseEvent,
+          config: { ...baseEvent.config!, maxParticipants: 300, maxProposalsPerParticipant: 15 },
+        }}
+      />
+    );
+
+    expect(
+      screen.getByRole('switch', { name: /limiter le nombre de participants/i })
+    ).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('switch', { name: /limiter les films proposés/i })).toHaveAttribute(
+      'aria-checked',
+      'false'
+    );
   });
 
   it('enabling the vote limit sends the default value, then the typed value', async () => {
@@ -278,7 +336,11 @@ describe('HostEventSettingsPanel', () => {
         onClose={() => {}}
         slug={slug}
         hostToken={null}
-        event={{ ...baseEvent, participantCount: 5 }}
+        event={{
+          ...baseEvent,
+          participantCount: 5,
+          config: { ...baseEvent.config!, maxParticipants: 8 },
+        }}
       />
     );
 

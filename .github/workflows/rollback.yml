@@ -15,14 +15,30 @@
 #     chain cannot see: a regression noticed afterwards, a precise revision to target, an incident
 #     unrelated to a deployment.
 #
-# NB: the web rollback is `rollback-front.yml`, which republishes a `front-dist-<sha>` artifact
-#     archived by deploy-front with the same S3 passes as the deployment.
+# NB: the web rollback is `rollback-front.yml`, which points a Hosting release back at a version
+#     deploy-front built.
+#
+# The stage is an input, as in `deploy.yml`: the staging is where a rollback is rehearsed before
+# the day it is needed in production (a rollback never exercised is a runbook, not a safety net).
+# The image of the target revision must still exist in the registry: Cloud Run keeps its own copy
+# only for the revisions that serve traffic, and the repository purges what is older than 30 days
+# beyond the 30 most recent images (`infra/terraform`, module `artifact-registry`). The check
+# runs before the traffic moves, so an unreachable target refuses the rollback instead of
+# breaking the stage.
 
 name: ⏪ Rollback API (Cloud Run)
 
 on:
   workflow_dispatch:
     inputs:
+      stage:
+        description: "Stage to roll back"
+        type: choice
+        required: true
+        default: production
+        options:
+          - production
+          - staging
       revision:
         description: "Target Cloud Run revision (empty = previous revision)"
         required: false
@@ -34,19 +50,20 @@ permissions:
 # Same group as `deploy.yml`: a rollback during a deployment, or the reverse, would step on each
 # other's Cloud Run traffic.
 concurrency:
-  group: deploy-production
+  group: deploy-${{ inputs.stage }}
   cancel-in-progress: false
 
 env:
   GCP_REGION: europe-west1
-  CLOUD_RUN_SERVICE_NAME: movie-picker-api
+  GCP_ARTIFACT_REPO: movie-picker
+  CLOUD_RUN_SERVICE_NAME: ${{ inputs.stage == 'production' && 'movie-picker-api' || 'movie-picker-api-staging' }}
 
 jobs:
   rollback:
-    name: ⏪ Roll back Cloud Run traffic
+    name: ⏪ Roll back Cloud Run traffic (${{ inputs.stage }})
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    environment: production
+    environment: ${{ inputs.stage }}
     permissions:
       contents: read
       id-token: write
@@ -63,6 +80,7 @@ jobs:
         id: target
         env:
           INPUT_REV: ${{ inputs.revision }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
           set -eo pipefail
           SERVING="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
@@ -89,9 +107,17 @@ jobs:
             echo "::error::$TARGET already serves the traffic: a rollback to it would only pin the service."
             exit 1
           fi
-          RELEASE="$(gcloud run revisions describe "$TARGET" --region "$GCP_REGION" --format=json \
-            | jq -r '[.spec.containers[0].env[]? | select(.name == "SENTRY_RELEASE") | .value] | first // ""')"
-          echo "Rolling back $SERVING -> $TARGET (release ${RELEASE:-unknown})"
+          gcloud run revisions describe "$TARGET" --region "$GCP_REGION" --format=json > "$RUNNER_TEMP/target.json"
+          RELEASE="$(jq -r '[.spec.containers[0].env[]? | select(.name == "SENTRY_RELEASE") | .value] | first // ""' "$RUNNER_TEMP/target.json")"
+          IMAGE="$(jq -r '.status.imageDigest // .spec.containers[0].image // ""' "$RUNNER_TEMP/target.json")"
+          # `images list` filtered on the digest rather than `images describe`: the latter also
+          # reads Container Analysis, which the reader role does not cover (deploy.yml, same trap).
+          REPO="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_ARTIFACT_REPO}/api"
+          if [ "${IMAGE%@*}" != "$REPO" ] || [ -z "$(gcloud artifacts docker images list "$REPO" --filter="version=${IMAGE##*@}" --format='value(version)' 2>/dev/null)" ]; then
+            echo "::error::The image of $TARGET ($IMAGE) is no longer in the registry: new instances of that revision could not start. Pick a more recent revision, or redeploy the commit."
+            exit 1
+          fi
+          echo "Rolling back $SERVING -> $TARGET (release ${RELEASE:-unknown}, image still in the registry)"
           {
             echo "target=$TARGET"
             echo "release=$RELEASE"
@@ -113,7 +139,7 @@ jobs:
       # Same probes as the deployment, /health/ready included: an earlier revision can answer ok
       # without being ready, if a secret it expects has disappeared since. The release check
       # proves the traffic really moved to the target, not only that something answers.
-      - name: Verify production after the switch
+      - name: Verify the stage after the switch
         uses: ./.github/actions/check-api-health
         with:
           url: ${{ steps.service.outputs.url }}

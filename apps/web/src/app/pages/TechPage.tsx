@@ -5,8 +5,10 @@ import {
   Braces,
   CalendarClock,
   ClipboardCheck,
+  Cloud,
   Container,
   Database,
+  FileCode2,
   FileJson,
   Fingerprint,
   FlaskConical,
@@ -16,12 +18,14 @@ import {
   GitCommitVertical,
   GitCompare,
   GitPullRequest,
+  IdCard,
   ImageDown,
   KeyRound,
   Languages,
   Layers,
   ListChecks,
   Lock,
+  Milestone,
   MonitorSmartphone,
   Network,
   PackageSearch,
@@ -69,7 +73,6 @@ import {
   UnitOfWorkDiagram,
 } from './tech/TechDiagrams';
 import {
-  AwsLogo,
   DotNetLogo,
   GitHubLogo,
   GoogleCloudLogo,
@@ -161,7 +164,7 @@ const CI_KEYS = [
   { key: 'caches', Icon: Layers },
 ] as const;
 
-const OTHER_PIPELINES = ['rollback', 'registry', 'securityScan'] as const;
+const OTHER_PIPELINES = ['rollback', 'terraform', 'backup', 'securityScan'] as const;
 
 const CONTRACT_KEYS = [
   { key: 'export', Icon: FileJson },
@@ -183,11 +186,11 @@ const CHOICE_KEYS = [
   { key: 'front', Icon: ReactLogo },
   { key: 'styling', Icon: Palette },
   { key: 'hosting', Icon: GoogleCloudLogo },
-  { key: 'split', Icon: AwsLogo },
+  { key: 'oneCloud', Icon: Cloud },
   { key: 'mono', Icon: FolderTree },
 ] as const;
 
-const PRICED_CHOICES = new Set(['runtime', 'database', 'auth', 'front', 'hosting', 'split']);
+const PRICED_CHOICES = new Set(['runtime', 'database', 'auth', 'front', 'hosting', 'oneCloud']);
 
 const FEATURE_KEYS = [
   { key: 'trigger', Icon: Timer },
@@ -205,16 +208,12 @@ const INFRA_KEYS = [
   { key: 'rollback', Icon: Undo2 },
   { key: 'scheduler', Icon: CalendarClock },
   { key: 'origins', Icon: ShieldCheck },
+  { key: 'staging', Icon: Milestone },
+  { key: 'iac', Icon: FileCode2 },
+  { key: 'identities', Icon: IdCard },
 ] as const;
 
-const OPEN_TECH_WORK = [
-  'terraform',
-  'staging',
-  'oidc',
-  'leastPrivilege',
-  'consolidate',
-  'sharedCache',
-] as const;
+const OPEN_TECH_WORK = ['sharedCache', 'containerTwice', 'sentryToken'] as const;
 
 const QUALITY_BLOCKING_KEYS = [
   { key: 'coverage', Icon: FlaskConical },

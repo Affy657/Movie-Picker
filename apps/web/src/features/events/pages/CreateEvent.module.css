@@ -4,6 +4,7 @@
 }
 
 .backLink {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
@@ -64,65 +65,18 @@
 
 .fieldGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   gap: 0 var(--space-4);
 }
 
-.advancedBody .fieldGrid {
-  margin-top: var(--space-4);
-}
-
-.counterGrid {
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: var(--space-3) var(--space-4);
-}
-
-.subField {
-  margin-top: var(--space-3);
-  padding-left: var(--space-3);
-  border-left: 2px solid var(--color-border-subtle);
-}
-
-.templatesRow {
-  margin: var(--space-2) 0 var(--space-3);
-}
-
-.fieldGrid > .field {
-  margin-bottom: 0;
-}
-
-.field + .field {
-  margin-top: var(--space-1);
-}
-
-@media (max-width: 29.9375rem) {
-  .fieldGrid {
-    grid-template-columns: 1fr;
-  }
+.pastHint {
+  color: var(--color-warning);
+  font-weight: var(--font-weight-medium);
 }
 
 .submit {
   width: 100%;
   margin-top: var(--space-2);
-}
-
-.reused {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  margin: 0 0 var(--space-2);
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--leading-none);
-  color: var(--color-primary-text);
-}
-
-.reused svg {
-  flex-shrink: 0;
-}
-
-.reusedLabel {
-  transform: translateY(var(--text-optical-nudge));
 }
 
 .advanced {
@@ -136,6 +90,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-height: var(--tap-target-min);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
@@ -174,29 +129,89 @@
 
 .advancedChevron {
   flex-shrink: 0;
-  width: var(--space-2);
-  height: var(--space-2);
-  border-right: 2px solid var(--color-text-muted);
-  border-bottom: 2px solid var(--color-text-muted);
-  transform: rotate(-45deg);
+  color: var(--color-text-muted);
   transition: transform var(--duration-base) var(--ease-default);
 }
 
 .advanced[open] .advancedChevron {
-  transform: rotate(45deg);
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .advancedChevron {
+    transition: none;
+  }
 }
 
 .advancedBody {
-  padding: var(--space-4) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-4);
   border-top: 1px solid var(--color-border-subtle);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   background: var(--color-surface);
 }
 
-.advancedBody .field {
-  margin-top: var(--space-4);
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3-5);
 }
 
-.toggleRow {
-  margin-top: var(--space-4);
+.groupTitle {
+  margin: 0;
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-section-heading);
+  line-height: var(--leading-none);
+}
+
+.groupField {
+  margin-bottom: 0;
+}
+
+.subField {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--color-border-subtle);
+}
+
+.counterField > div {
+  max-width: 12rem;
+}
+
+.resetRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.resetLabel {
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.templatesSection {
+  margin: 0 0 var(--space-4);
+}
+
+.reused {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1-5);
+  margin: 0 0 var(--space-2-5);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-normal);
+  color: var(--color-primary-text);
+}
+
+.reused svg {
+  flex-shrink: 0;
+  margin-top: var(--space-0-5);
+}
+
+.reusedLabel {
+  transform: translateY(var(--text-optical-nudge));
 }

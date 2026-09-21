@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Net.Http.Headers;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.Notifications;
@@ -23,15 +24,15 @@ public sealed class SchedulerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> RunEventReminders(
-        [FromServices] ISchedulerTokenValidator tokenValidator,
+        [FromServices] ISchedulerCallerAuthenticator authenticator,
         [FromServices] IEventReminderPass pass,
-        [FromHeader(Name = "X-Scheduler-Token")] string? schedulerToken,
         CancellationToken ct)
     {
-        if (!tokenValidator.IsConfigured)
+        var verdict = await authenticator.AuthenticateAsync(PresentedCredentials(), ct);
+        if (verdict == SchedulerCallerVerdict.NotConfigured)
             return StatusCode(StatusCodes.Status503ServiceUnavailable);
 
-        if (!tokenValidator.IsValid(schedulerToken))
+        if (verdict != SchedulerCallerVerdict.Accepted)
             return Unauthorized();
 
         var result = await pass.RunAsync(ct);
@@ -47,15 +48,15 @@ public sealed class SchedulerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> RunRecurringEvents(
-        [FromServices] ISchedulerTokenValidator tokenValidator,
+        [FromServices] ISchedulerCallerAuthenticator authenticator,
         [FromServices] IRecurringEventPass pass,
-        [FromHeader(Name = "X-Scheduler-Token")] string? schedulerToken,
         CancellationToken ct)
     {
-        if (!tokenValidator.IsConfigured)
+        var verdict = await authenticator.AuthenticateAsync(PresentedCredentials(), ct);
+        if (verdict == SchedulerCallerVerdict.NotConfigured)
             return StatusCode(StatusCodes.Status503ServiceUnavailable);
 
-        if (!tokenValidator.IsValid(schedulerToken))
+        if (verdict != SchedulerCallerVerdict.Accepted)
             return Unauthorized();
 
         var result = await pass.RunAsync(ct);
@@ -71,15 +72,15 @@ public sealed class SchedulerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> RunFinishedEvents(
-        [FromServices] ISchedulerTokenValidator tokenValidator,
+        [FromServices] ISchedulerCallerAuthenticator authenticator,
         [FromServices] IFinishedEventWatchlistPass pass,
-        [FromHeader(Name = "X-Scheduler-Token")] string? schedulerToken,
         CancellationToken ct)
     {
-        if (!tokenValidator.IsConfigured)
+        var verdict = await authenticator.AuthenticateAsync(PresentedCredentials(), ct);
+        if (verdict == SchedulerCallerVerdict.NotConfigured)
             return StatusCode(StatusCodes.Status503ServiceUnavailable);
 
-        if (!tokenValidator.IsValid(schedulerToken))
+        if (verdict != SchedulerCallerVerdict.Accepted)
             return Unauthorized();
 
         var result = await pass.RunAsync(ct);
@@ -95,18 +96,33 @@ public sealed class SchedulerController : ControllerBase
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> RunRatingReminders(
-        [FromServices] ISchedulerTokenValidator tokenValidator,
+        [FromServices] ISchedulerCallerAuthenticator authenticator,
         [FromServices] IRatingReminderPass pass,
-        [FromHeader(Name = "X-Scheduler-Token")] string? schedulerToken,
         CancellationToken ct)
     {
-        if (!tokenValidator.IsConfigured)
+        var verdict = await authenticator.AuthenticateAsync(PresentedCredentials(), ct);
+        if (verdict == SchedulerCallerVerdict.NotConfigured)
             return StatusCode(StatusCodes.Status503ServiceUnavailable);
 
-        if (!tokenValidator.IsValid(schedulerToken))
+        if (verdict != SchedulerCallerVerdict.Accepted)
             return Unauthorized();
 
         var result = await pass.RunAsync(ct);
         return Ok(result);
+    }
+
+    private const string SharedTokenHeader = "X-Scheduler-Token";
+    private const string BearerPrefix = "Bearer ";
+
+    private SchedulerCallerCredentials PresentedCredentials()
+    {
+        var shared = Request.Headers[SharedTokenHeader].ToString();
+        var authorization = Request.Headers[HeaderNames.Authorization].ToString();
+        var bearer = authorization.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase)
+            ? authorization[BearerPrefix.Length..]
+            : null;
+        return new SchedulerCallerCredentials(
+            string.IsNullOrWhiteSpace(shared) ? null : shared,
+            string.IsNullOrWhiteSpace(bearer) ? null : bearer);
     }
 }

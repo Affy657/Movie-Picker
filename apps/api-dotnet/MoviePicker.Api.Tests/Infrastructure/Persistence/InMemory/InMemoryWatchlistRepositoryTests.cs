@@ -220,45 +220,58 @@ public sealed class InMemoryWatchlistRepositoryTests
     }
 
     [Fact]
-    public async Task UpdateRuntimeAsync_ExistingItem_UpdatesRuntime()
+    public async Task UpdateFactsAsync_ExistingItem_UpdatesRuntimeAndVoteAverage()
     {
         await _sut.AddAsync(Item());
         var stored = await _sut.GetOneAsync("u1", 42, MovieMediaType.Movie);
 
-        await _sut.UpdateRuntimeAsync(stored!.Id, 104);
+        await _sut.UpdateFactsAsync(stored!.Id, 104, 7.4);
 
         var updated = await _sut.GetOneAsync("u1", 42, MovieMediaType.Movie);
         Assert.Equal(104, updated!.RuntimeMinutes);
+        Assert.Equal(7.4, updated.VoteAverage);
     }
 
     [Fact]
-    public async Task UpdateRuntimeAsync_MissingItem_DoesNothing()
+    public async Task UpdateFactsAsync_NullFact_LeavesTheStoredValue()
     {
-        await _sut.UpdateRuntimeAsync("missing-id", 104);
+        await _sut.AddAsync(Item() with { VoteAverage = 8.1 });
+        var stored = await _sut.GetOneAsync("u1", 42, MovieMediaType.Movie);
+
+        await _sut.UpdateFactsAsync(stored!.Id, 104, null);
+
+        var updated = await _sut.GetOneAsync("u1", 42, MovieMediaType.Movie);
+        Assert.Equal(104, updated!.RuntimeMinutes);
+        Assert.Equal(8.1, updated.VoteAverage);
+    }
+
+    [Fact]
+    public async Task UpdateFactsAsync_MissingItem_DoesNothing()
+    {
+        await _sut.UpdateFactsAsync("missing-id", 104, 7.4);
 
         Assert.Empty(await _sut.ListByUserIdAsync("u1"));
     }
 
     [Fact]
-    public async Task ListMissingRuntimeAsync_ReturnsOnlyItemsWithoutRuntime()
+    public async Task ListMissingFactsAsync_ReturnsItemsWithoutRuntimeOrWithoutVote()
     {
         await _sut.AddAsync(Item(tmdbId: 1));
-        await _sut.AddAsync(Item(tmdbId: 2));
-        var withRuntime = await _sut.GetOneAsync("u1", 2, MovieMediaType.Movie);
-        await _sut.UpdateRuntimeAsync(withRuntime!.Id, 104);
+        await _sut.AddAsync(Item(tmdbId: 2) with { RuntimeMinutes = 0, VoteAverage = 6.5 });
+        await _sut.AddAsync(Item(tmdbId: 3) with { RuntimeMinutes = 98 });
+        await _sut.AddAsync(Item(tmdbId: 4) with { RuntimeMinutes = 98, VoteAverage = 6.5 });
 
-        var missing = await _sut.ListMissingRuntimeAsync(10);
+        var missing = await _sut.ListMissingFactsAsync(10);
 
-        var only = Assert.Single(missing);
-        Assert.Equal(1, only.TmdbId);
+        Assert.Equal([1, 2, 3], missing.Select(item => item.TmdbId).Order());
     }
 
     [Fact]
-    public async Task ListMissingRuntimeAsync_LimitZeroOrLess_ReturnsEmpty()
+    public async Task ListMissingFactsAsync_LimitZeroOrLess_ReturnsEmpty()
     {
         await _sut.AddAsync(Item());
 
-        var missing = await _sut.ListMissingRuntimeAsync(0);
+        var missing = await _sut.ListMissingFactsAsync(0);
 
         Assert.Empty(missing);
     }

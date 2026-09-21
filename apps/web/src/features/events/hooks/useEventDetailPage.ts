@@ -19,7 +19,10 @@ function isParticipantGone(participantId: string, event: EventData | null, slug:
   return !event.participants.some((p) => p.id === participantId);
 }
 
-export function useEventDetailPage(slug: string | undefined) {
+export function useEventDetailPage(
+  slug: string | undefined,
+  initialActionError: string | null = null
+) {
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const hostFromUrl = searchParams.get('host');
@@ -45,7 +48,7 @@ export function useEventDetailPage(slug: string | undefined) {
     participantId: participant?.participantId ?? null,
   });
   const movies = moviesQuery.data ?? [];
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(initialActionError);
 
   useEffect(() => {
     if (!slug) {

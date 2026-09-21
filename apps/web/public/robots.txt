@@ -1,4 +1,4 @@
-# Domaine canonique : https://web.movie-picker.fr (voir MoviePickerOptions.PublicWebBaseUrl).
+# Domaine canonique : https://www.movie-picker.fr (voir MoviePickerOptions.PublicWebBaseUrl).
 # Adapter si fork / autre hôte.
 User-agent: *
 Allow: /
@@ -18,4 +18,4 @@ Disallow: /auth/
 # Résultats de recherche interne : jamais indexés, et sans fin par la requête.
 Disallow: /films/recherche
 
-Sitemap: https://web.movie-picker.fr/sitemap.xml
+Sitemap: https://www.movie-picker.fr/sitemap.xml

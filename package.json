@@ -23,6 +23,7 @@
     "check:terraform": "node scripts/check-terraform.mjs",
     "terraform": "node scripts/terraform.mjs",
     "check:tools": "node scripts/check-tool-versions.mjs",
+    "check:iam": "node scripts/check-iam.mjs",
     "format": "prettier --write --cache \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:check": "prettier --check --cache \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:dotnet": "dotnet format apps/api-dotnet/MoviePicker.slnx --verbosity minimal",

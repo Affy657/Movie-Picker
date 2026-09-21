@@ -6,6 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Version>1.0.0</Version>
     <AssemblyName>MoviePicker.Api</AssemblyName>
+    <!-- The runtime the Dockerfile publishes for, so that packages.lock.json carries its graph
+         and the locked restore of the image build matches the file committed from any machine. -->
+    <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.12" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.23.0" />
     <PackageReference Include="MongoDB.Driver" Version="3.11.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="WebPush" Version="1.0.13" />

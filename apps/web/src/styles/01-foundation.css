@@ -288,6 +288,7 @@
 
 :root,
 [data-theme='light'] {
+  color-scheme: light;
   --color-bg: #f4f6fa;
   --color-surface: #ffffff;
   --color-surface-raised: #ffffff;
@@ -410,6 +411,7 @@
 }
 
 [data-theme='dark'] {
+  color-scheme: dark;
   --color-bg: #0a0f1c;
   --color-surface: #131a2b;
   --color-surface-raised: #1a2338;

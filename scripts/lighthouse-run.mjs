@@ -248,11 +248,11 @@ const perPageMins = budgets.perPageMinimumScores ?? {};
 fs.mkdirSync(OUT, { recursive: true });
 
 /**
- * Production serves the prerendered routes as exact S3 keys: `/soutenir` answers with
- * `prerendered/soutenir.html`, not with the SPA shell. Without these rewrites, `serve -s` returns
- * `index.html` and the measurement covers a page nobody receives: its LCP element is rendered by
- * React while it sits in the document in production. The SPA fallback stays last, like the
- * CloudFront 403/404 fallback.
+ * Production serves the prerendered routes as files of their own (`soutenir/index.html` on
+ * Hosting): `/soutenir` answers with `prerendered/soutenir.html`, not with the SPA shell. Without
+ * these rewrites, `serve -s` returns `index.html` and the measurement covers a page nobody
+ * receives: its LCP element is rendered by React while it sits in the document in production. The
+ * SPA fallback stays last, like the `**` rewrite of Hosting.
  *
  * The fallback is written as a negation rather than `**` because `serve-handler` applies its rules
  * in cascade: it replays the remaining rules on the already rewritten path. A final `**` would

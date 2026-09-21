@@ -19,6 +19,7 @@ import WhatsNewModal from './WhatsNewModal';
 import WhatsNewNavChip from './WhatsNewNavChip';
 import { ProposeIdeaDialog } from './ProposeIdeaButton';
 import InAppBrowserBanner from './InAppBrowserBanner';
+import MovedOriginBanner from './MovedOriginBanner';
 import styles from './AppShell.module.css';
 import { buttonClass } from '@/shared/components/Button';
 
@@ -281,6 +282,7 @@ export default function AppShell() {
         </>
       ) : null}
       <InAppBrowserBanner />
+      <MovedOriginBanner />
     </div>
   );
 }

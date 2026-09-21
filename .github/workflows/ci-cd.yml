@@ -45,8 +45,12 @@ on:
     branches:
       - master
       - "v*"
+  # A pull request into a version branch runs the gates too: a feature branch triggers no push
+  # run, so without `v*` here its review had no CI at all until the merge.
   pull_request:
-    branches: [master]
+    branches:
+      - master
+      - "v*"
 
 permissions:
   contents: read
@@ -150,7 +154,7 @@ jobs:
       - name: Scan working tree
         run: |
           docker run --rm -v "${PWD}:/repo:ro" \
-            ghcr.io/gitleaks/gitleaks:v8.24.3@sha256:e1b35e12a8c6fa8901f060459cfb6b2fc4c484d3afbe3b029733a3bbfab07055 \
+            "$GITLEAKS_IMAGE" \
             dir --no-banner --redact --verbose --exit-code 1 /repo
 
   # Workflows are large YAML and bash files that neither check:architecture, nor ESLint, nor
@@ -161,7 +165,7 @@ jobs:
   #     delegates `run:` blocks to shellcheck, preinstalled on GitHub runners. It only reads
   #     workflows, not composite actions.
   #   - zizmor: security audit of the workflows **and of the composite actions** in
-  #     `.github/actions/`, where the S3 passes, the health probes and the GCP authentication now
+  #     `.github/actions/`, where the web smoke tests, the health probes and the GCP authentication now
   #     live. `medium` threshold: the repository is at 0 medium and 0 high, so the gate is green
   #     today and only catches serious findings (injection from an untrusted context, exposed
   #     secrets). Going down to `low` would mean handling 9 cosmetic findings. `--offline` so that

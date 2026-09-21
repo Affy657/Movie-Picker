@@ -1,8 +1,9 @@
 # Proves that the keyless authentication of the workflows still works, without touching anything:
-# the GitHub OIDC token is exchanged for the CI service account on GCP (Workload Identity
-# Federation) and for the deploy role on AWS, then each side answers a read-only call. Run it
-# after any change to the federation (pool, provider, role trust policy, environment name) before
-# relying on a deployment to find out.
+# the GitHub OIDC token is exchanged, on GCP (Workload Identity Federation), for the identity of
+# each environment a workflow runs in (the two deployment stages, the backup, the Terraform apply
+# and the Terraform plan), which then answers read-only calls within its own reach. Run it after any change to the
+# federation (pool, provider, service account binding, environment name) before relying on a
+# deployment, a backup or an apply to find out.
 
 name: 🔐 Cloud auth check
 
@@ -14,10 +15,14 @@ permissions:
 
 jobs:
   probe:
-    name: 🔐 Exchange the OIDC token on both clouds
+    name: 🔐 Exchange the OIDC token on GCP (${{ matrix.stage }})
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    environment: production
+    strategy:
+      fail-fast: false
+      matrix:
+        stage: [production, staging]
+    environment: ${{ matrix.stage }}
     permissions:
       contents: read
       id-token: write
@@ -30,29 +35,103 @@ jobs:
           workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           project-id: ${{ secrets.GCP_PROJECT_ID }}
-      # The runtime account is the one `deploy.yml` gives to every new revision: a deployment
-      # without it fails at revision creation, so its existence is checked here, where nothing
-      # is at stake.
+      # The runtime account is the one `deploy.yml` gives to every new revision of the stage: a
+      # deployment without it fails at revision creation, so its existence is checked here, where
+      # nothing is at stake. The scheduler identity is production's alone, as its jobs are: the
+      # deployment attaches it to them, which needs `iam.serviceAccountUser` on it.
       - name: GCP, read-only calls as the CI service account
         run: |
           gcloud auth list --filter=status:ACTIVE --format='value(account)'
-          gcloud secrets describe SCHEDULER_TOKEN --format='value(name)' >/dev/null
           gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)'
           gcloud iam service-accounts describe "${API_RUNTIME_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --format='value(email)' >/dev/null
-          echo "GCP federation OK, runtime service account present"
+          if [ "$STAGE" = "production" ]; then
+            gcloud iam service-accounts describe "${SCHEDULER_SERVICE_ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --format='value(email)' >/dev/null
+          fi
+          echo "GCP federation OK for the $STAGE, runtime service account present"
         env:
+          STAGE: ${{ matrix.stage }}
           GCP_REGION: europe-west1
-          CLOUD_RUN_SERVICE_NAME: movie-picker-api
-          API_RUNTIME_SERVICE_ACCOUNT_NAME: movie-picker-api
+          CLOUD_RUN_SERVICE_NAME: ${{ matrix.stage == 'production' && 'movie-picker-api' || 'movie-picker-api-staging' }}
+          API_RUNTIME_SERVICE_ACCOUNT_NAME: ${{ matrix.stage == 'production' && 'movie-picker-api' || 'movie-picker-api-staging' }}
+          SCHEDULER_SERVICE_ACCOUNT_NAME: movie-picker-scheduler
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      - uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6
+
+  # The backup identity reads one secret and writes one bucket: listing the bucket is the
+  # read-only call within its reach.
+  probe-backup:
+    name: 🔐 Exchange the OIDC token on GCP (backup)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: backup
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
-      - name: AWS, read-only calls as the deploy role
-        run: |
-          aws sts get-caller-identity --query Arn --output text | sed -E 's#:[0-9]{12}:#:<account>:#'
-          aws s3api list-objects-v2 --bucket "$AWS_S3_BUCKET" --max-items 1 --query 'KeyCount' --output text >/dev/null
-          echo "AWS federation OK"
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: GCP, read-only calls as the backup service account
         env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          BACKUP_BUCKET: ${{ vars.BACKUP_BUCKET }}
+        run: |
+          gcloud auth list --filter=status:ACTIVE --format='value(account)'
+          gcloud storage ls "gs://${BACKUP_BUCKET}/mongodb/" >/dev/null
+          echo "GCP federation OK for the backup, bucket readable"
+
+  # The Terraform identity: listing the states is its read-only call.
+  probe-infra-apply:
+    name: 🔐 Exchange the OIDC token on GCP (infra-apply)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: infra-apply
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_TERRAFORM_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: GCP, read-only calls as the Terraform service account
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+        run: |
+          gcloud auth list --filter=status:ACTIVE --format='value(account)'
+          gcloud storage ls "gs://${TF_STATE_BUCKET}/environments/" >/dev/null
+          echo "GCP federation OK for the Terraform apply, states readable"
+
+  # The read-only Terraform identity of the pull request plans, also used by the plan that
+  # precedes the apply on master: the only subject the federation accepts from any ref.
+  probe-infra-plan:
+    name: 🔐 Exchange the OIDC token on GCP (infra-plan)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: infra-plan
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: GCP, read-only calls as the Terraform plan service account
+        env:
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+        run: |
+          gcloud auth list --filter=status:ACTIVE --format='value(account)'
+          gcloud storage ls "gs://${TF_STATE_BUCKET}/environments/" >/dev/null
+          echo "GCP federation OK for the Terraform plan, states readable"

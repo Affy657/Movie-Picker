@@ -4787,9 +4787,7 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: {
-                    "X-Scheduler-Token"?: string;
-                };
+                header?: never;
                 path?: never;
                 cookie?: never;
             };
@@ -4862,9 +4860,7 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: {
-                    "X-Scheduler-Token"?: string;
-                };
+                header?: never;
                 path?: never;
                 cookie?: never;
             };
@@ -4937,9 +4933,7 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: {
-                    "X-Scheduler-Token"?: string;
-                };
+                header?: never;
                 path?: never;
                 cookie?: never;
             };
@@ -7340,6 +7334,10 @@ export interface components {
             title?: string | null;
             year?: string | null;
             posterPath?: string | null;
+            /** Format: double */
+            voteAverage?: number | null;
+            /** Format: int32 */
+            runtimeMinutes?: number | null;
             genreIds?: number[] | null;
             mediaType?: components["schemas"]["MovieMediaType"];
             /** Format: date-time */

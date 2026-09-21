@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
@@ -17,6 +19,8 @@ public sealed class GetFollowedWatchedMoviesHandler : IGetFollowedWatchedMoviesH
     private readonly IParticipantRepository _participants;
     private readonly IEventRepository _events;
     private readonly IMovieRepository _movies;
+    private readonly ITmdbMovieSearch _tmdb;
+    private readonly MoviePickerOptions _options;
     private readonly TimeProvider _clock;
 
     public GetFollowedWatchedMoviesHandler(
@@ -25,6 +29,8 @@ public sealed class GetFollowedWatchedMoviesHandler : IGetFollowedWatchedMoviesH
         IParticipantRepository participants,
         IEventRepository events,
         IMovieRepository movies,
+        ITmdbMovieSearch tmdb,
+        IOptions<MoviePickerOptions> options,
         TimeProvider clock)
     {
         _follows = follows;
@@ -32,6 +38,8 @@ public sealed class GetFollowedWatchedMoviesHandler : IGetFollowedWatchedMoviesH
         _participants = participants;
         _events = events;
         _movies = movies;
+        _tmdb = tmdb;
+        _options = options.Value;
         _clock = clock;
     }
 
@@ -91,7 +99,10 @@ public sealed class GetFollowedWatchedMoviesHandler : IGetFollowedWatchedMoviesH
             })
             .ToList();
 
-        return new UserWatchedMoviesResponse { Items = items };
+        return new UserWatchedMoviesResponse
+        {
+            Items = await WatchedMoviesFacts.WithTmdbFactsAsync(items, _tmdb, _options, ct)
+        };
     }
 
     private static DateTimeOffset WatchedAtOf(Event evt) =>

@@ -1,0 +1,28 @@
+{
+  "redirects": [
+    {
+      "regex": "^/my-events$",
+      "statusCode": 301,
+      "location": "https://www.movie-picker.fr/my-events?movedFrom=web"
+    },
+    {
+      "regex": "^/(?P<path>(?:[^s].*|s(?:[^w].*)?|sw(?:[^.].*)?|sw\\.(?:[^j].*)?|sw\\.j(?:[^s].*)?)?)$",
+      "statusCode": 301,
+      "location": "https://www.movie-picker.fr/:path"
+    }
+  ],
+  "headers": [
+    {
+      "glob": "**",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
+        "X-Content-Type-Options": "nosniff",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+        "X-Robots-Tag": "noindex, nofollow"
+      }
+    }
+  ]
+}

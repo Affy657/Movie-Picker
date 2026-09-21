@@ -57,6 +57,7 @@ export default function ProfileMoviesSection({ handle }: Readonly<Props>) {
               <MovieBrowseCard
                 key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
                 item={item}
+                ratingScale={user?.ratingScale}
                 hasHover={hasHover}
                 isLoggedIn={isLoggedIn}
                 inWatchlist={watchlist.has(item)}

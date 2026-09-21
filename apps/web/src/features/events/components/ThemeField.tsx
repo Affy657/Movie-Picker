@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import clsx from 'clsx';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
+import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { t as translate, SUPPORTED_LOCALES, useTranslation } from '@/shared/i18n';
 import Chip from '@/shared/components/Chip';
+import Sheet from '@/shared/components/Sheet';
 import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
 import styles from './ThemeField.module.css';
-import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export const THEME_EMOJIS = [
   '🎃',
@@ -117,10 +118,12 @@ export default function ThemeField({
   const pickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const emojiGridRef = useRef<HTMLDivElement>(null);
-  const fitLeft = useMenuHorizontalFit(pickerOpen, pickerRef, emojiGridRef, 'left');
+  const gridId = useId();
+  const touchScreen = useMediaQuery('(pointer: coarse)');
+  const fitLeft = useMenuHorizontalFit(pickerOpen && !touchScreen, pickerRef, emojiGridRef, 'left');
 
   useEffect(() => {
-    if (!pickerOpen) return;
+    if (!pickerOpen || touchScreen) return;
     const closeOnPointerOutside = (e: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
         setPickerOpen(false);
@@ -137,12 +140,39 @@ export default function ThemeField({
       document.removeEventListener('mousedown', closeOnPointerOutside);
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, [pickerOpen]);
+  }, [pickerOpen, touchScreen]);
 
   useEffect(() => {
     if (!pickerOpen) return;
     emojiGridRef.current?.querySelector<HTMLElement>('[role="radio"][tabindex="0"]')?.focus();
   }, [pickerOpen]);
+
+  const emojiGrid = (
+    <ChoiceGroup
+      id={gridId}
+      value={emoji}
+      onChange={onEmojiChange}
+      onSelect={() => setPickerOpen(false)}
+      ariaLabel={t('events.settings.emojiListLabel')}
+      className={clsx(styles.emojiGrid, touchScreen && styles.emojiGridSheet)}
+    >
+      <ChoiceCard
+        value=""
+        layout="tile"
+        ariaLabel={t('events.settings.emojiNoneLabel')}
+        className={clsx(styles.emojiOpt, styles.emojiOptNone)}
+      >
+        ✕
+      </ChoiceCard>
+      {THEME_EMOJIS.map((e) => (
+        <ChoiceCard key={e} value={e} layout="tile" className={styles.emojiOpt}>
+          {e}
+        </ChoiceCard>
+      ))}
+    </ChoiceGroup>
+  );
+
+  const hiddenPresetCount = THEME_PRESETS.length - PRESETS_VISIBLE;
 
   return (
     <>
@@ -156,37 +186,28 @@ export default function ThemeField({
             disabled={disabled}
             aria-label={t('events.settings.emojiPickerLabel')}
             aria-expanded={pickerOpen}
+            aria-haspopup={touchScreen ? 'dialog' : undefined}
+            aria-controls={pickerOpen ? gridId : undefined}
           >
             {emoji || '🎬'}
           </button>
-          {pickerOpen && (
+          {pickerOpen && !touchScreen && (
             <div
               ref={emojiGridRef}
               className={styles.emojiPopover}
               style={fitLeft !== null ? { left: fitLeft } : undefined}
             >
-              <ChoiceGroup
-                value={emoji}
-                onChange={onEmojiChange}
-                onSelect={() => setPickerOpen(false)}
-                ariaLabel={t('events.settings.emojiListLabel')}
-                className={styles.emojiGrid}
-              >
-                <ChoiceCard
-                  value=""
-                  layout="tile"
-                  ariaLabel={t('events.settings.emojiNoneLabel')}
-                  className={clsx(styles.emojiOpt, styles.emojiOptNone)}
-                >
-                  ✕
-                </ChoiceCard>
-                {THEME_EMOJIS.map((e) => (
-                  <ChoiceCard key={e} value={e} layout="tile" className={styles.emojiOpt}>
-                    {e}
-                  </ChoiceCard>
-                ))}
-              </ChoiceGroup>
+              {emojiGrid}
             </div>
+          )}
+          {touchScreen && (
+            <Sheet
+              open={pickerOpen}
+              title={t('events.settings.emojiPickerLabel')}
+              onClose={() => setPickerOpen(false)}
+            >
+              <div ref={emojiGridRef}>{emojiGrid}</div>
+            </Sheet>
           )}
         </div>
         <input
@@ -220,28 +241,15 @@ export default function ThemeField({
               </Chip>
             );
           })}
-          <button
-            type="button"
-            className={styles.presetMore}
+          <Chip
+            tone="muted"
+            icon={presetsExpanded ? ChevronUp : MoreHorizontal}
             onClick={() => setPresetsExpanded((v) => !v)}
-            aria-expanded={presetsExpanded}
-            aria-label={t(
-              presetsExpanded
-                ? 'events.settings.themePresetsLess'
-                : 'events.settings.themePresetsMore'
-            )}
-            title={t(
-              presetsExpanded
-                ? 'events.settings.themePresetsLess'
-                : 'events.settings.themePresetsMore'
-            )}
           >
-            {presetsExpanded ? (
-              <ChevronUp size={ICON_SIZE.sm} aria-hidden />
-            ) : (
-              <MoreHorizontal size={ICON_SIZE.sm} aria-hidden />
-            )}
-          </button>
+            {presetsExpanded
+              ? t('events.settings.themePresetsLess')
+              : t('events.settings.themePresetsMoreCount', { count: hiddenPresetCount })}
+          </Chip>
         </fieldset>
       )}
     </>

@@ -79,7 +79,7 @@ export default function HistoryEventRow({
         )}
       </Link>
 
-      <div className={styles.side}>
+      <div className={styles.facts}>
         <span className={styles.stats}>
           <ParticipantStat
             count={event.participantCount ?? 0}
@@ -96,14 +96,16 @@ export default function HistoryEventRow({
         ) : (
           <span className={styles.hostIconPlaceholder} aria-hidden />
         )}
-        <EventCardMenu
-          title={event.title}
-          onDelete={onDelete}
-          onRemove={onRemove}
-          onReuse={onReuse}
-          removeLabel={t('events.myEvents.historyRemoveAction')}
-        />
       </div>
+
+      <EventCardMenu
+        className={styles.menu}
+        title={event.title}
+        onDelete={onDelete}
+        onRemove={onRemove}
+        onReuse={onReuse}
+        removeLabel={t('events.myEvents.historyRemoveAction')}
+      />
     </Card>
   );
 }

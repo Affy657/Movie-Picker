@@ -17,8 +17,10 @@ type Props = {
   appliedTemplate: EventTemplateData | null;
   disabled?: boolean;
   applyLockedHint?: string | null;
+  appliedSummary?: string | null;
   className?: string;
   onApply: (template: EventTemplateData) => void;
+  onClear?: () => void;
   onRename: (template: EventTemplateData, name: string) => void;
   onDelete: (template: EventTemplateData) => void;
 };
@@ -28,8 +30,10 @@ export default function EventTemplatesRow({
   appliedTemplate,
   disabled = false,
   applyLockedHint = null,
+  appliedSummary = null,
   className,
   onApply,
+  onClear,
   onRename,
   onDelete,
 }: Readonly<Props>) {
@@ -88,7 +92,11 @@ export default function EventTemplatesRow({
       return (
         <output className={styles.hintApplied}>
           <Check size={ICON_SIZE.sm} aria-hidden />
-          <span className={styles.hintLabel}>{t('events.settings.templates.applied')}</span>
+          <span className={styles.hintLabel}>
+            {appliedSummary
+              ? t('events.settings.templates.appliedSummary', { summary: appliedSummary })
+              : t('events.settings.templates.applied')}
+          </span>
         </output>
       );
     if (isFull)
@@ -106,7 +114,7 @@ export default function EventTemplatesRow({
         <Sparkles size={ICON_SIZE.sm} aria-hidden className={styles.headerIcon} />
         <span className={styles.headerLabel}>{t('events.settings.templates.title')}</span>
         <Button
-          variant="secondary"
+          variant="ghost"
           size="sm"
           className={styles.manageButton}
           disabled={disabled}
@@ -172,10 +180,11 @@ export default function EventTemplatesRow({
                 tone={applied ? 'primary' : 'neutral'}
                 selected={applied}
                 icon={applied ? Check : undefined}
-                className={styles.chip}
                 disabled={disabled || applyLocked}
                 onClick={() => {
-                  if (!disabled && !applyLocked) onApply(template);
+                  if (disabled || applyLocked) return;
+                  if (applied && onClear) onClear();
+                  else onApply(template);
                 }}
               >
                 {template.name}

@@ -61,7 +61,7 @@ describe('TechPage', () => {
       ).toBeGreaterThan(0);
     }
     expect(
-      screen.getByRole('heading', { name: new RegExp(String(TECH_METRICS.ciJobs)) })
+      screen.getByRole('heading', { name: new RegExp(`(^|\\D)${TECH_METRICS.ciJobs}(\\D|$)`) })
     ).toBeInTheDocument();
   });
 
@@ -83,7 +83,6 @@ describe('TechPage', () => {
     for (const tool of [
       'GitHub',
       'Google Cloud',
-      'AWS',
       'SonarCloud',
       'Sentry',
       'PostHog',
@@ -483,13 +482,13 @@ describe('TechPage', () => {
       'front',
       'styling',
       'hosting',
-      'split',
+      'oneCloud',
       'mono',
     ] as const) {
       expect(section.textContent).toContain(fr.tech.choices[choice]);
     }
 
-    const priced = ['runtime', 'database', 'auth', 'front', 'hosting', 'split'] as const;
+    const priced = ['runtime', 'database', 'auth', 'front', 'hosting', 'oneCloud'] as const;
     expect(trades).toHaveLength(priced.length);
     for (const choice of priced) {
       expect(trades.map((trade) => trade.textContent)).toContain(
@@ -597,11 +596,17 @@ describe('TechPage', () => {
     const section = container.querySelector('#infra') as HTMLElement;
     const labels = [...section.querySelectorAll('svg text')].map((node) => node.textContent);
 
-    for (const brick of ['Cloud Run', 'CloudFront', 'S3', 'MongoDB Atlas', 'Artifact Registry']) {
+    for (const brick of [
+      'Cloud Run',
+      'Firebase Hosting',
+      'Cloud Monitoring',
+      'MongoDB Atlas',
+      'Artifact Registry',
+    ]) {
       expect(labels).toContain(brick);
     }
     expect(section.textContent).toMatch(/europe-west1/);
-    expect(section.textContent).toMatch(/eu-west-1/);
+    expect(section.textContent).not.toMatch(/AWS|CloudFront|eu-west-1/);
   });
 
   it('ties every measure to a threshold that can stop a delivery', () => {
@@ -625,19 +630,35 @@ describe('TechPage', () => {
       .map((node) => node.textContent?.trim())
       .filter(Boolean);
 
-    for (const work of [
-      'terraform',
-      'staging',
-      'oidc',
-      'leastPrivilege',
-      'consolidate',
-      'sharedCache',
-    ] as const) {
+    for (const work of ['sharedCache', 'containerTwice', 'sentryToken'] as const) {
       expect(tags).toContain(fr.tech.trajectory[work]);
     }
-    expect(tags.join(' ')).not.toMatch(/pré-rendu/i);
-    expect(fr.tech.trajectory.consolidateHint).toMatch(/vers Firebase Hosting/);
-    expect(fr.tech.trajectory.consolidateHint).not.toMatch(/vers Cloud Storage/);
+    expect(tags.join(' ')).not.toMatch(
+      /pré-rendu|Google Cloud|fédérée|Environnement de recette|Infrastructure en code|au plus juste/i
+    );
+  });
+
+  it('describes the staging, the infrastructure as code and the keyless identities', () => {
+    const { container } = renderTechPage();
+    const section = container.querySelector('#infra') as HTMLElement;
+
+    expect(section.textContent).toMatch(/staging\.movie-picker\.fr/);
+    expect(section.textContent).toMatch(/Terraform/);
+    expect(section.textContent).toMatch(/sans clé/i);
+    expect(section.textContent).not.toMatch(/restent à décrire|qu’une production/i);
+  });
+
+  it('lists the infrastructure and backup pipelines beside the main graph', () => {
+    const { container } = renderTechPage();
+    const section = container.querySelector('#ci') as HTMLElement;
+    const tags = [...section.querySelectorAll('[class*="tag"]')]
+      .map((node) => node.textContent?.trim())
+      .filter(Boolean);
+
+    for (const pipeline of ['rollback', 'terraform', 'backup', 'securityScan'] as const) {
+      expect(tags).toContain(fr.tech.ci[pipeline]);
+    }
+    expect(tags.join(' ')).not.toMatch(/nettoyage du registre/i);
   });
 
   it('files the prerendering among the choices made, no longer among open work', () => {

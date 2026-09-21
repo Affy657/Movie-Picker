@@ -1,0 +1,100 @@
+# Publication of the legacy web origin, `web.movie-picker.fr`, where the app lived until
+# 2026-09-20 (`infra/web-legacy/`, Hosting site `movie-picker-web-legacy`, `module "web_legacy"`
+# of the production root module of `infra/terraform`).
+#
+# Why a site rather than the domain-level redirect Hosting offers: a service worker registered on
+# the old origin before the move outlives the move. The browser fetches a worker script with
+# redirects forbidden, so a 301 on `/sw.js` never updates it, and the worker keeps serving the old
+# shell from its cache on the old origin, which the API refuses (CORS). The site serves one file,
+# `/sw.js`, a worker whose only job is to leave (caches, registration, every open window sent to
+# the same page on www), and answers 301 to www for every other path, query kept, the way the
+# domain-level redirect did. The old start URL of the installed app, `/my-events`, carries
+# `?movedFrom=web` so that www can tell the visitor to install the app again from there.
+#
+# Runs on every change of that folder or of the publication script, and on demand. The job holds
+# the deployment identity of the `production` environment, the one `deploy.yml` publishes the web
+# app with. The site must exist first: the Terraform apply of `infra.yml` creates it.
+
+name: 🏚️ Legacy web origin
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "infra/web-legacy/**"
+      - "scripts/publish-front-firebase.mjs"
+      - ".github/workflows/web-legacy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-legacy
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+  FIREBASE_HOSTING_SITE: movie-picker-web-legacy
+  LEGACY_ORIGIN: https://web.movie-picker.fr
+  CANONICAL_ORIGIN: https://www.movie-picker.fr
+
+jobs:
+  publish:
+    name: 🏚️ Publish the legacy origin
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Publish the worker and the redirects (version, upload, release)
+        run: |
+          set -eo pipefail
+          node scripts/publish-front-firebase.mjs --site "$FIREBASE_HOSTING_SITE" --dist infra/web-legacy/site --config infra/web-legacy/hosting.json --no-prerender
+      # What a browser holding the old worker must find: a 200 on the worker script, a 301 to www
+      # everywhere else with the path and the query kept, and the marker on the old start URL.
+      # Checked on the site's own address first, then on the domain, which only answers once
+      # Hosting serves it (the certificate follows the Terraform apply by a few minutes, hence the
+      # retries).
+      - name: Verify the served origin
+        run: |
+          set -eo pipefail
+          check() {
+            local origin="$1"
+            local status location
+            status="$(curl -sS -o /tmp/sw.js -w '%{http_code}' -H 'Accept: */*' "$origin/sw.js")"
+            [ "$status" = "200" ] || { echo "::error::$origin/sw.js answers $status, expected 200"; return 1; }
+            grep -q "registration.unregister()" /tmp/sw.js || { echo "::error::$origin/sw.js is not the leaving worker"; return 1; }
+            for path in "/" "/e/some-night?x=1" "/settings" "/index.html"; do
+              status="$(curl -sS -o /dev/null -w '%{http_code}' "$origin$path")"
+              location="$(curl -sS -o /dev/null -w '%{redirect_url}' "$origin$path")"
+              if [ "$status" != "301" ] || [ "$location" != "$CANONICAL_ORIGIN$path" ]; then
+                echo "::error::$origin$path answers $status to $location, expected 301 to $CANONICAL_ORIGIN$path"
+                return 1
+              fi
+            done
+            location="$(curl -sS -o /dev/null -w '%{redirect_url}' "$origin/my-events")"
+            [ "$location" = "$CANONICAL_ORIGIN/my-events?movedFrom=web" ] || { echo "::error::$origin/my-events redirects to $location, expected the movedFrom marker"; return 1; }
+            echo "$origin: worker served, every other path answers 301 to www."
+          }
+          check "https://$FIREBASE_HOSTING_SITE.web.app"
+          for attempt in $(seq 1 20); do
+            if check "$LEGACY_ORIGIN"; then exit 0; fi
+            echo "Attempt $attempt: $LEGACY_ORIGIN is not served by the legacy site yet, retrying in 30 s."
+            sleep 30
+          done
+          echo "::error::$LEGACY_ORIGIN is still not served by the legacy site: check the domain state with 'pnpm run terraform -- output web_dns' (a DNS record Hosting still asks for, or a certificate not issued yet)."
+          exit 1

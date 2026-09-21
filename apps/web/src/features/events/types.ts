@@ -13,6 +13,10 @@ export const MAX_PROPOSALS_PER_PARTICIPANT = 15;
 
 export const DEFAULT_VOTE_LIMIT = 3;
 
+export const DEFAULT_PARTICIPANT_LIMIT = 10;
+
+export const DEFAULT_PROPOSAL_LIMIT = 3;
+
 export const DEFAULT_EVENT_CONFIG: EventConfigData = {
   theme: null,
   maxProposalsPerParticipant: null,

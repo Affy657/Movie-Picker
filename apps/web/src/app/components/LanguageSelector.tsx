@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import Dropdown from '@/shared/components/Dropdown';
+import Dropdown, { type DropdownPlacement } from '@/shared/components/Dropdown';
 import {
   useLocale,
   useTranslation,
@@ -12,10 +12,12 @@ export default function LanguageSelector({
   className = '',
   id,
   inline = false,
+  placement,
 }: Readonly<{
   className?: string;
   id?: string;
   inline?: boolean;
+  placement?: DropdownPlacement;
 }>) {
   const { locale, setLocale } = useLocale();
   const { t } = useTranslation();
@@ -40,6 +42,7 @@ export default function LanguageSelector({
       ariaLabel={id ? undefined : t('common.languageLabel')}
       className={className || undefined}
       inline={inline}
+      placement={placement}
     />
   );
 }

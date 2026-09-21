@@ -1,144 +1,89 @@
-# Web rollback (S3 + CloudFront): republishes a build archived by `deploy-front`.
+# Web rollback (Firebase Hosting): serves again a version `deploy-front` already built.
 #   - Manually triggered (workflow_dispatch).
-#   - Empty `commit` input → the previous build, second most recent `front-dist-*` artifact, the
-#     most recent one being by construction the one served (the archive is taken after the S3 upload).
-#   - No gate replayed: the artifact went through the whole chain when it was deployed. That only
-#     holds for archives uploaded by a `deploy.yml` run on `master`, so any other `front-dist-*`
-#     artifact of the repository (a pull request run can upload one) is ignored.
+#   - Empty `commit` input → the version released before the one currently served.
+#   - No gate replayed and nothing uploaded: the version went through the whole chain when it was
+#     deployed, and Hosting still holds its files. That only holds for versions created by a
+#     `deploy.yml` run, which `scripts/publish-front-firebase.mjs` labels with their commit and run
+#     id: a version without those labels (published from a workstation) is never a target, as the
+#     archive-based rollback ignored the artifacts of pull request runs.
 #
-# The hosting keeps no versions: `aws s3 sync` overwrites, and the previous build only survives in
-# the `front-dist-<sha>` artifact archived by `deploy-front` (30 days). Republishing that artifact
-# with a bare `aws s3 sync` would upload `index.html` and the service worker with the CloudFront
-# default cache and desynchronise installed PWAs from their bundles: an outage added to the one
-# being repaired. That is why this workflow goes through the same composite actions as the
-# deployment, `publish-front` then `verify-front`, without rewriting anything here.
+# A commit that did not deploy the web app has no version: `commit` must name a commit that was
+# deployed on the web side, the list printed by the script says which.
 #
-# A commit that does not touch the web app produces no artifact: `commit` must name a commit that
-# was deployed on the web side, the artifact list says which.
+# The stage is an input, as in `deploy.yml`: the staging is where a rollback is rehearsed before
+# the day it is needed in production.
 
-name: ⏪ Rollback web (S3 + CloudFront)
+name: ⏪ Rollback web
 
 on:
   workflow_dispatch:
     inputs:
+      stage:
+        description: "Stage to roll back"
+        type: choice
+        required: true
+        default: production
+        options:
+          - production
+          - staging
       commit:
-        description: "SHA of the commit whose build is republished, 7+ characters (empty = previous build)"
+        description: "SHA of the deployed commit to serve again, 7+ characters (empty = previous version)"
         required: false
         type: string
 
 permissions:
   contents: read
 
-# Same group as `deploy.yml`: two simultaneous publications would step on each other on S3.
+# Same group as `deploy.yml`: two simultaneous releases would race on the site.
 concurrency:
-  group: deploy-production
+  group: deploy-${{ inputs.stage }}
   cancel-in-progress: false
 
 # Same version as `deploy.yml` and as the `@sentry/cli` of the lockfile, checksum verified: the
-# binary runs in a job holding the AWS deploy role.
+# binary runs in a job holding cloud credentials.
 env:
   SENTRY_CLI_VERSION: "2.58.6"
   SENTRY_CLI_LINUX_X86_64_BINARY_SHA256: "36b689311b399d9332950d84f4299aee682d2d290a770a77372b30a74f7e7add"
+  FIREBASE_HOSTING_SITE: ${{ inputs.stage == 'production' && 'movie-picker-web' || 'movie-picker-web-staging' }}
 
 jobs:
   rollback:
-    name: ⏪ Republish an archived web build
+    name: ⏪ Serve a previous web version again (${{ inputs.stage }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    environment: production
+    timeout-minutes: 10
+    environment: ${{ inputs.stage }}
     permissions:
       contents: read
-      actions: read
       id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # `--paginate` because the CI artifacts (coverage, traces, OpenAPI, seven days of retention)
-      # drown the `front-dist-*` ones on the first page.
-      - name: Pick the archive to republish
-        id: pick
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Release the previous version (or the one of the given commit)
+        id: release
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT: ${{ inputs.commit }}
         run: |
           set -eo pipefail
-          if [ -n "$COMMIT" ] && ! printf '%s' "$COMMIT" | grep -qE '^[0-9a-f]{7,40}$'; then
-            echo "::error::'$COMMIT' is not a commit SHA (7 to 40 hexadecimal characters)."
-            exit 1
-          fi
-          # Artifacts live 30 days, so deploy runs older than that cannot own an eligible archive.
-          since="$(date -u -d '31 days ago' +%Y-%m-%d)"
-          deploy_runs="$(gh api --paginate \
-            "repos/$GITHUB_REPOSITORY/actions/workflows/deploy.yml/runs?branch=master&created=%3E%3D$since&per_page=100" \
-            --jq '.workflow_runs[] | select(.head_repository.fork | not) | .id' | jq -sc '.')"
-          all="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
-            | jq -r --argjson deploy_runs "$deploy_runs" '.artifacts[]
-                  | select(.name | startswith("front-dist-"))
-                  | select(.expired | not)
-                  | select(.workflow_run.head_branch == "master")
-                  | select(.workflow_run.head_repository_id == .workflow_run.repository_id)
-                  | select(.workflow_run.id as $id | $deploy_runs | index($id))
-                  | "\(.created_at)\t\(.workflow_run.id)\t\(.name)"' | sort -r)"
-          if [ -z "$all" ]; then
-            echo "::error::No front-dist-* artifact produced by a deploy.yml run on master: nothing to republish."
-            exit 1
-          fi
-          echo "Available archives (most recent first):"
-          printf '%s\n' "$all"
-          if [ -n "$COMMIT" ]; then
-            chosen="$(printf '%s\n' "$all" | awk -F'\t' -v prefix="front-dist-$COMMIT" 'index($3, prefix) == 1')"
-            count="$(printf '%s' "$chosen" | grep -c . || true)"
-            if [ "$count" != "1" ]; then
-              echo "::error::$count archive(s) for commit '$COMMIT': exactly one is needed. Give a longer SHA or pick one from the list above."
-              exit 1
-            fi
-          else
-            chosen="$(printf '%s\n' "$all" | sed -n '2p')"
-            if [ -z "$chosen" ]; then
-              echo "::error::Only one archive exists, the one being served: nothing older to republish. Give a commit or redeploy."
-              exit 1
-            fi
-          fi
-          run_id="$(printf '%s' "$chosen" | cut -f2)"
-          name="$(printf '%s' "$chosen" | cut -f3)"
-          echo "Selected archive: $name (run $run_id)"
-          {
-            echo "run_id=$run_id"
-            echo "name=$name"
-            echo "sha=${name#front-dist-}"
-          } >> "$GITHUB_OUTPUT"
-      - name: Download the archive
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUN_ID: ${{ steps.pick.outputs.run_id }}
-          NAME: ${{ steps.pick.outputs.name }}
-        run: |
-          set -eo pipefail
-          gh run download "$RUN_ID" -n "$NAME" -D apps/web/dist
-          for f in index.html sw.js manifest.webmanifest sitemap.xml prerendered/manifest.json; do
-            if [ ! -f "apps/web/dist/$f" ]; then
-              echo "::error::The archive does not contain $f: this is not a complete deploy-front build."
-              exit 1
-            fi
-          done
-          echo "Build $NAME ready to republish."
-      - uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION || 'eu-west-1' }}
-      - name: Publish the build to S3 (immutable assets, then no-cache, index.html last)
-        uses: ./.github/actions/publish-front
-        with:
-          dist: apps/web/dist
-          bucket: ${{ secrets.AWS_S3_BUCKET }}
-      - name: Invalidate CloudFront and verify the served web build
+          args=()
+          if [ -n "$COMMIT" ]; then args+=(--commit "$COMMIT"); fi
+          node scripts/rollback-front-firebase.mjs --site "$FIREBASE_HOSTING_SITE" "${args[@]}"
+      # The version released again names its commit in its index.html: the probe reads it on the
+      # site address and on the public domain, where a 200 alone would also be answered by the
+      # version the rollback was meant to withdraw.
+      - name: Verify the served web build
         uses: ./.github/actions/verify-front
         with:
-          dist: apps/web/dist
-          distribution-id: ${{ vars.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+          hosting-url: https://${{ env.FIREBASE_HOSTING_SITE }}.web.app
           public-origins: ${{ vars.ALLOWED_ORIGINS }}
-      # The republished bundle carries the release of its original commit: Sentry must know it is
+          noindex: ${{ inputs.stage != 'production' && 'true' || 'false' }}
+          expected-release: ${{ steps.release.outputs.sha }}
+      # The version served again carries the release of its original commit: Sentry must know it is
       # live again, otherwise the errors that follow read as a regression of the release that was
       # just withdrawn.
       - name: Record the rollback in Sentry (web)
@@ -147,7 +92,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
           SENTRY_URL: ${{ vars.SENTRY_URL }}
-          SENTRY_RELEASE: ${{ steps.pick.outputs.sha }}
+          SENTRY_RELEASE: ${{ steps.release.outputs.sha }}
+          STAGE: ${{ inputs.stage }}
         run: |
           if [ -z "$SENTRY_AUTH_TOKEN" ]; then
             echo "SENTRY_AUTH_TOKEN missing, skipped"
@@ -159,4 +105,4 @@ jobs:
           chmod +x sentry-cli
           extra=()
           if [ -n "$SENTRY_URL" ]; then extra+=(--url "$SENTRY_URL"); fi
-          ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e production -n "front-rollback-$SENTRY_RELEASE"
+          ./sentry-cli "${extra[@]}" deploys new --release "$SENTRY_RELEASE" -e "$STAGE" -n "front-rollback-$SENTRY_RELEASE"

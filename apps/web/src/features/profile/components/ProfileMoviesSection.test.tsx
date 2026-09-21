@@ -178,6 +178,44 @@ describe('ProfileMoviesSection (MSW)', () => {
     expect(screen.queryByRole('button', { name: /plus d.actions/i })).not.toBeInTheDocument();
   });
 
+  it('reads the rating and the runtime on the scale of the signed-in account', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Bob',
+          emailMasked: 'b***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          ratingScale: 'ten',
+        })
+      ),
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              tmdbId: 27205,
+              title: 'Inception',
+              year: '2010',
+              posterPath: null,
+              voteAverage: 8.4,
+              runtimeMinutes: 148,
+              genreIds: [28],
+              mediaType: 'movie',
+              watchedAt: '2026-06-01T00:00:00Z',
+            },
+          ],
+        })
+      )
+    );
+
+    renderSection('alice');
+
+    expect(await screen.findByRole('heading', { name: 'Inception', level: 3 })).toBeInTheDocument();
+    expect(await screen.findByText('8.4/10')).toBeInTheDocument();
+    expect(screen.getByText('2h28')).toBeInTheDocument();
+  });
+
   it('clicking a poster opens the details modal', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>

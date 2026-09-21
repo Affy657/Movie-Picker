@@ -668,7 +668,16 @@ export const en: Locale = {
       defaultTitle: 'Movie night on {{date}}',
       description:
         'Give it a title, a date and a time. You can adjust the settings later if you need to.',
-      advancedOptions: 'Advanced options (optional)',
+      advancedOptions: 'Advanced options',
+      titleRequired: 'Give the movie night a title.',
+      dateRequired: 'Pick a date.',
+      timeRequired: 'Pick a time.',
+      pastDateHint: 'This date is already in the past.',
+      sectionTheme: 'Mood',
+      themeLabel: 'Theme',
+      resetOptions: 'Reset the options',
+      configNotSaved:
+        'The movie night is created, but its options could not be saved. Set them from the movie night settings.',
     },
     join: {
       title: 'Join the event',
@@ -872,7 +881,9 @@ export const en: Locale = {
     },
     settings: {
       title: 'Event settings',
-      sectionFlow: 'The flow',
+      sectionParticipants: 'Participants and movies',
+      sectionDraw: 'Vote and draw',
+      sectionAfter: 'After the night',
       titleLabel: 'Event name',
       titlePlaceholder: 'E.g. Friday movie night',
       titleRequired: 'Event name is required.',
@@ -894,6 +905,7 @@ export const en: Locale = {
       themePresetsLegend: 'Suggested themes',
       themePresetsMore: 'More themes',
       themePresetsLess: 'Fewer themes',
+      themePresetsMoreCount: '{{count}} more',
       themePresets: {
         horror: 'Horror',
         comedy: 'Comedy',
@@ -921,6 +933,8 @@ export const en: Locale = {
         count: '{{count}} template out of {{max}}.',
         countMany: '{{count}} templates out of {{max}}.',
         applied: 'Configuration applied.',
+        appliedSummary: 'Configuration applied: {{summary}}.',
+        sameAsApplied: 'Same as the “{{name}}” template.',
         capReached: '{{max}} templates out of {{max}}. Delete one to save a new one.',
         applyAriaLabel: 'Apply the “{{name}}” template',
         renameAriaLabel: 'Rename the “{{name}}” template',
@@ -950,6 +964,23 @@ export const en: Locale = {
         reusedFromUnnamed: 'Configuration from that night reused. Adjust it if needed.',
         error: 'Could not save the template.',
       },
+      summary: {
+        defaults: 'Default settings',
+        proposalsOne: '1 movie per person',
+        proposalsMany: '{{count}} movies per person',
+        participantsOne: '1 participant max',
+        participantsMany: '{{count}} participants max',
+        votesOne: '1 vote per person',
+        votesMany: '{{count}} votes per person',
+        winners: '{{count}} winning movies',
+        strictRandom: 'strict random',
+        series: 'series allowed',
+      },
+      proposalLimitLabel: 'Limit the movies proposed per person',
+      proposalLimitDesc: 'Otherwise everyone can propose up to {{max}} movies.',
+      participantLimitLabel: 'Limit the number of participants',
+      participantLimitDesc: 'Otherwise up to {{max}} people can join the movie night.',
+      maxParticipantsCapHint: '{{max}} at most.',
       maxProposalsLabel: 'Max movies per person',
       maxProposalsHint: '{{max}} at most.',
       maxProposalsInvalid: 'Movies per person: whole number between 1 and {{max}}.',
@@ -1673,7 +1704,7 @@ export const en: Locale = {
     noticeEditorBody: 'Adrien Morand, contact: {{email}}',
     noticeHostingTitle: 'Hosting',
     noticeHostingBody:
-      'The website (front-end) is hosted by Amazon Web Services (AWS S3 / CloudFront). The API is hosted by Google Cloud Platform (Cloud Run). The database is hosted by MongoDB Atlas.',
+      'The website (front-end) and the API are hosted by Google Cloud Platform (Firebase Hosting and Cloud Run). The database is hosted by MongoDB Atlas.',
     noticeIpTitle: 'Intellectual property',
     noticeIpBody:
       'Movie and TV show data, posters and availability information come from The Movie Database (TMDB) and remain the property of their respective rights holders. Movie Picker is neither produced by nor affiliated with TMDB.',
@@ -1723,7 +1754,7 @@ export const en: Locale = {
     kofiNote: 'Any amount, one-off or monthly, no commitment.',
     costsTitle: 'Where the money goes',
     costsIntro: 'Movie Picker has fixed costs every month:',
-    costsHosting: 'Website and API hosting (Amazon Web Services, Google Cloud Platform)',
+    costsHosting: 'Website and API hosting (Google Cloud Platform)',
     costsDatabase: 'Database (MongoDB Atlas)',
     costsDomain: 'The movie-picker.fr domain name',
     costsMonitoring: 'Error and performance monitoring (Sentry)',
@@ -2340,7 +2371,7 @@ export const en: Locale = {
         'A donation platform for creators; a confirmed contribution then shows as a badge on the profile.',
       scheduler: 'Cloud Scheduler',
       schedulerValue:
-        'Calls the server on a fixed schedule: every 30 minutes for the movie night reminders, once a day for the recurring nights. Same token protection, since the routes are open on the internet.',
+        'Calls the server on a fixed schedule: every 30 minutes for the movie night reminders, once a night for the recurring nights, then for the finished ones. Same token protection, since the routes are open on the internet.',
       schedulerHint:
         'Google Cloud scheduler: it calls an address at the appointed time, which replaces a timer living inside the server.',
       issues: 'GitHub Issues',
@@ -2358,24 +2389,15 @@ export const en: Locale = {
       unplannedDetail:
         'Versions that are not scoped yet. How many there are, and what they carry, will depend on how the product gets used.',
       techHeading: 'The open technical work',
-      terraform: 'Infrastructure as code',
-      terraformHint:
-        'Cloud resources were created by hand. Terraform would describe them, with remote state and review by diff.',
-      staging: 'Staging environment',
-      stagingHint:
-        'Only production exists. An environment mirroring it would let a deployment be rehearsed before it counts.',
-      oidc: 'Federated identity for CI',
-      oidcHint:
-        'CI authenticates today with a service account key stored as a secret. Identity federation would remove the key.',
-      leastPrivilege: 'Least privilege',
-      leastPrivilegeHint:
-        'The deployment service account holds more rights than it needs; splitting it by purpose is the next step.',
-      consolidate: 'Front end to Google Cloud',
-      consolidateHint:
-        'Moving the front end from S3 and CloudFront to Firebase Hosting would put both applications with the same provider, and remove one console, one permission model and one invoice. Cloud Storage and Cloud CDN were ruled out: their forwarding rule costs close to 18 $ a month before the first byte is served.',
       sharedCache: 'Cache shared across instances',
       sharedCacheHint:
         'The TMDB entry cache lives in the memory of each instance: two instances repeat the same call, and a restart starts cold. A shared cache would fix both.',
+      containerTwice: 'The container described in two places',
+      containerTwiceHint:
+        'The mounted secrets, the server variables and the three scheduled jobs live in the deployment pipeline and in Terraform; as long as the version travels as a variable rather than in the image, the pipeline rules and the description follows.',
+      sentryToken: 'One repository token remains',
+      sentryTokenHint:
+        'Everything else is keyless; the token that uploads source maps to Sentry is still a repository secret, to be moved behind an environment.',
       techLead: 'What is not done, named rather than left unsaid.',
       mvpWhen: 'February 2026',
       mvpWhat: 'MVP',
@@ -2717,12 +2739,12 @@ export const en: Locale = {
         'It runs on the working tree and blocks the image build; the platform also refuses a push carrying a recognised key.',
       image: 'Tagged image',
       imageValue:
-        'The server ships as a container image, tagged with the commit fingerprint and pushed to the registry before any deployment.',
+        'The server ships as a container image, tagged with the commit fingerprint and pushed to the registry by the staging deployment; production reuses that image as is, scanned again but never rebuilt.',
       imageHint:
         'Deployment points at a precise image rather than a moving tag: rolling back means pointing at the previous one.',
       guard: 'Deployment guard',
       guardValue:
-        'A final job compares the changed scope against the result of each deployment and fails if the front end changed without reaching production.',
+        'A final job compares what was requested against the result of each deployment and fails if a target did not leave, on the staging as in production.',
       guardHint:
         'It exists because it happened: skipped jobs left the pipeline green while production was half up to date, a skipped job not being a failed one.',
       caches: 'A cached pipeline',
@@ -2730,11 +2752,15 @@ export const en: Locale = {
         'NuGet dependencies, Turbo tasks, Docker layers and the vulnerability database are kept from one run to the next.',
       cachesHint:
         'Every job also carries a time limit, so a stuck step cannot hold the pipeline indefinitely.',
-      otherPipelines: 'Three other pipelines, outside the main graph',
+      otherPipelines: 'Four other pipelines, outside the main graph',
       rollback: 'rollback',
       rollbackHint: 'Manually triggered to put the previous image back online.',
-      registry: 'registry cleanup',
-      registryHint: 'Purges old Docker images so the registry does not grow forever.',
+      terraform: 'infrastructure',
+      terraformHint:
+        'Plans an infrastructure change on its pull request, and applies it once merged on master.',
+      backup: 'backup',
+      backupHint:
+        'Every night, a dump of the database goes to a private bucket, read back and restored on the runner before it is kept; thirty days of retention.',
       securityScan: 'security scan',
       securityScanHint:
         'Scheduled, independent of pushes, to catch vulnerabilities published after the fact.',
@@ -2863,13 +2889,13 @@ export const en: Locale = {
         'Kubernetes meant disproportionate tooling for a single service; a virtual machine meant an OS to patch.',
       hostingTrade:
         'No in-memory state is reliable and no background work can live in the process. Reminders are triggered from outside.',
-      split: 'Two cloud providers, on purpose',
-      splitValue:
-        'The front end was born on AWS before the server moved to Google Cloud. Both now coexist, each on what it does best.',
-      splitHint:
-        'CloudFront and S3 serve static files; Cloud Run runs a container that scales to zero.',
-      splitTrade:
-        'Two consoles, two permission models, two invoices. Consolidating is an open piece of work, not an oversight.',
+      oneCloud: 'One cloud provider, since September 2026',
+      oneCloudValue:
+        'The front end was born on AWS before the server moved to Google Cloud; it joined it there on Firebase Hosting. One console, one permission model, one invoice.',
+      oneCloudHint:
+        'Cloud Storage and Cloud CDN, the direct equivalent of S3 and CloudFront, were ruled out: their forwarding rule costs close to twenty dollars a month before the first byte is served. Firebase Hosting serves the files, the headers and the SPA fallback within the free tier.',
+      oneCloudTrade:
+        'A hosting less programmable than a CDN: with no function in front of the site, an unknown path gets the shell with a 200 and the share preview cannot be served per client.',
       mono: 'A pnpm and Turbo monorepo',
       monoValue:
         'One repository, one delivery chain, one version tag for both applications. The API contract and the client that consumes it change in the same commit, so a break fails to compile instead of surfacing in production.',
@@ -2914,12 +2940,12 @@ export const en: Locale = {
     },
     infra: {
       title: 'Where it runs, and what is allowed to change it',
-      lead: 'Nothing is deployed by hand. One image per commit, secrets outside the repository, a rollback in one run.',
+      lead: 'Nothing is deployed by hand. One image per commit, secrets outside the repository, a staging every delivery goes through, a rollback in one run, and an infrastructure described in code that only a review changes.',
       caption:
-        'The front end and the server live with two different providers, in eu-west-1 and europe-west1, joined by a single allowed origin.',
+        'The front end and the server live with the same provider, in europe-west1, joined by a single allowed origin; the staging is a second instance of the same frame, under staging.movie-picker.fr.',
       smoke: 'Deployment observed',
       smokeValue:
-        'After every deployment the pipeline calls both health probes on the server and loads the front end behind the CDN. A silent service fails the deployment.',
+        'After every deployment the pipeline calls both health probes on the server and loads the front end on its public domain. A silent service fails the deployment.',
       smokeHint: 'Finishing without an error does not prove a service answers; these calls do.',
       image: 'Image',
       imageValue:
@@ -2933,19 +2959,34 @@ export const en: Locale = {
         'A missing origin fails the deployment; a missing optional secret is reported as a warning and disables the feature that depends on it.',
       rollback: 'Rollback',
       rollbackValue:
-        'A manual run shifts all server traffic to the previous revision, already online: no rebuild, no redeployment. The front end has no equivalent, static hosting keeps no versions.',
+        'A manual run shifts all server traffic to the previous revision, already online: no rebuild, no redeployment. The front end has its own: the hosting keeps every published version, and a run serves the previous one again.',
       rollbackHint:
-        'Revisions stay available at the host and old images in the registry, purged by a dedicated pipeline so that it does not grow forever.',
+        'Revisions stay available at the host and old images in the registry, purged by its retention policy so that it does not grow forever.',
       scheduler: 'Periodic work',
       schedulerValue:
-        'No background work lives in the process. An external scheduler calls the server every 30 minutes for the event reminders, and once a day to spawn the next occurrence of recurring nights, on routes protected by a token.',
+        'No background work lives in the process. An external scheduler calls the server every 30 minutes for the event reminders, and once a day to spawn the next occurrence of recurring nights then close the ones that ended on their own, on routes protected by a token.',
       schedulerHint:
-        'Both jobs are created by the deployment pipeline, but only if the token exists: without it neither a reminder nor a next occurrence goes out, and the deployment reports it as a warning.',
+        'The three jobs are created by the deployment pipeline in production, but only if the token exists: without it neither a reminder nor a next occurrence goes out, and the deployment reports it as a warning. The staging has none.',
       origins: 'Origins',
       originsValue:
         'The server only accepts declared origins. The deployment fails if the list is not set.',
       originsHint:
         'The list is a repository variable, checked before the deploy call, not a permissive default.',
+      staging: 'Staging before production',
+      stagingValue:
+        'Every commit first goes to staging.movie-picker.fr, a second instance of the site and the server with its own database and its own sign-in clients. Production refuses to leave until the staging serves exactly that commit, and reuses the image the staging runs without rebuilding it.',
+      stagingHint:
+        'The staging is not indexed by search engines, has neither probes nor backups, and runs in the same project under identities of its own.',
+      iac: 'Infrastructure described',
+      iacValue:
+        'Registry, secrets, services, sites, identities, federation and alerts are described in Terraform, with a versioned and locked remote state. A change is planned on its pull request and applied only once merged.',
+      iacHint:
+        'Production was imported, never recreated: the plan is empty as long as code and reality agree, and a drift shows up in a review rather than in an incident.',
+      identities: 'Keyless identities',
+      identitiesValue:
+        'No service account key exists. The deployment and infrastructure pipelines exchange the GitHub token for one identity per environment, and each identity only holds the rights of the commands it runs, bound to the resource they touch.',
+      identitiesHint:
+        'The server runs under an identity that can only read its secrets: compromised, it could neither redeploy itself nor read a key it does not use.',
     },
     quality: {
       title: 'What is measured, and the threshold that fails the build',
@@ -2959,7 +3000,7 @@ export const en: Locale = {
         'Thresholds were raised milestone after milestone; they never come back down, which is what makes them useful.',
       lighthouse: 'Lighthouse',
       lighthouseValue:
-        '{{pages}} pages audited on every push, with minimums of {{perf}} for performance, {{a11y}} for accessibility, {{bp}} for best practices and {{seo}} for SEO.',
+        '{{pages}} pages audited at every staging deployment, with minimums of {{perf}} for performance, {{a11y}} for accessibility, {{bp}} for best practices and {{seo}} for SEO; production only leaves once the staging served this commit, hence once this gate let it through.',
       lighthouseHint:
         'Each page is measured five times and the median is kept, to smooth out the runner variance. No page has a floor of its own any more since the signed-out state of a protected route renders from the shell.',
       axe: 'Automated accessibility',
@@ -2977,7 +3018,7 @@ export const en: Locale = {
       monitoringValue:
         'Three probes query the service from outside, from three continents, and five alert policies warn by e-mail: service or database unreachable, server errors, degraded latency.',
       monitoringHint:
-        'The probes target /health, /health/ready and the front root. Thresholds sit above the measured noise so that an alert stays credible, and an incident closes on its own after thirty minutes back to normal.',
+        'The probes target /health, /health/ready and the front root. Thresholds sit above the measured noise so that an alert stays credible, and an incident closes on its own after thirty minutes back to normal. Probes, policies and their documentation are described in code.',
       sentry: 'Sentry',
       sentryValue:
         'Browser and server errors, tied to the deployed version through the commit SHA.',
@@ -3013,7 +3054,7 @@ export const en: Locale = {
       browserPwa: 'installable PWA',
       browserWorker: 'Service Worker',
       assets: 'assets',
-      cdn: 'CloudFront + S3',
+      cdn: 'Firebase Hosting',
       cdnBundle: 'static React bundle',
       cdnFallback: 'SPA fallback',
       api: '.NET 10 API',
@@ -3136,7 +3177,6 @@ export const en: Locale = {
       mcpAssistant: 'assistant',
       mcpGithub: 'PRs and CI',
       mcpGcp: 'logs',
-      mcpAws: 'delivery',
       mcpSonar: 'quality',
       mcpSentry: 'errors',
       mcpPosthog: 'usage',
@@ -3230,18 +3270,14 @@ export const en: Locale = {
       lbxNote:
         'An incomplete read cancels the whole sync: better to write nothing than to empty a list.',
       infraTitle:
-        'Infrastructure: the front end on AWS, the server on Google Cloud, the database managed apart',
-      infraZoneAws: 'AWS, eu-west-1',
+        'Infrastructure: the front end and the server on Google Cloud, the database managed apart',
       infraZoneGcp: 'Google Cloud, europe-west1',
-      infraDns: 'Domain',
-      infraDnsSub: 'web.movie-picker.fr',
-      infraDnsDetail: 'managed TLS certificate',
-      infraCdn: 'CloudFront',
-      infraCdnSub: 'cache and headers',
-      infraCdnDetail: 'purged on deploy',
-      infraBucket: 'S3',
-      infraBucketSub: 'front-end files',
-      infraBucketDetail: 'immutable cache',
+      infraMonitoring: 'Cloud Monitoring',
+      infraMonitoringSub: 'front + API probes',
+      infraMonitoringDetail: 'six alert policies',
+      infraHosting: 'Firebase Hosting',
+      infraHostingSub: 'www.movie-picker.fr',
+      infraHostingDetail: 'managed TLS, headers',
       infraSecrets: 'Secret Manager',
       infraSecretsSub: 'keys and connections',
       infraSecretsDetail: 'injected at deploy time',
@@ -3253,14 +3289,15 @@ export const en: Locale = {
       infraRegistryDetail: 'tagged by SHA, purged',
       infraScheduler: 'Cloud Scheduler',
       infraSchedulerSub: 'reminders, recurring and finished nights',
-      infraSchedulerDetail: 'created if the token exists',
+      infraSchedulerDetail: 'OIDC token signed by an identity',
       infraAtlas: 'MongoDB Atlas',
       infraAtlasSub: 'managed replica set',
       infraAtlasDetail: 'transactions available',
       infraSentry: 'Sentry',
       infraSentrySub: 'front and server errors',
       infraSentryDetail: 'European region',
-      infraGap: 'Resources created by hand: describing them in Terraform is the next step.',
+      infraGap:
+        'The whole frame is described in Terraform, identities and alerts included; the staging staging.movie-picker.fr is a second instance of it, and a change goes through a review before being applied.',
       infraNote: 'The dotted line is not a network path: the browser calls the server directly.',
       infraNoteOrigin: 'The front end origin is the only one the server accepts.',
       requestPathTitle:
@@ -3306,6 +3343,14 @@ export const en: Locale = {
       openInBrowser: 'Open in browser',
       copyLink: 'Copy link',
       copied: 'Link copied',
+    },
+  },
+  movedOrigin: {
+    banner: {
+      title: 'Movie Picker has a new address',
+      description:
+        'The app now lives at www.movie-picker.fr. If you had installed it on your home screen, install it again from this address: the old one will no longer receive updates.',
+      dismiss: 'Got it',
     },
   },
 };

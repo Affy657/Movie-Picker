@@ -65,6 +65,8 @@ const personalHandlers = [
           title: 'Film de ma liste',
           year: '2021',
           posterPath: null,
+          voteAverage: 7.4,
+          runtimeMinutes: 128,
           createdAt: '2026-01-01T00:00:00Z',
         },
       ],
@@ -79,6 +81,8 @@ const personalHandlers = [
           title: "Film d'un ami",
           year: '2019',
           posterPath: null,
+          voteAverage: 6.2,
+          runtimeMinutes: 95,
           genreIds: [18],
           watchedAt: '2026-02-01T00:00:00Z',
         },
@@ -344,6 +348,25 @@ describe('HomePage', () => {
     await waitFor(() => expect(removedPath).toContain('/watchlist/501'));
   });
 
+  it('signed-in: the personal rails read the same facts line as the showcase cards', async () => {
+    server.use(authedUserHandler, showcaseHandler, collectionsHandler, ...personalHandlers);
+    renderPage();
+
+    const mine = (await screen.findByRole('heading', { name: 'Dans votre liste' })).closest(
+      'section'
+    );
+    const friends = (await screen.findByRole('heading', { name: 'Vos amis ont vu' })).closest(
+      'section'
+    );
+
+    expect(within(mine!).getByText('Film de ma liste').closest('li')).toHaveTextContent(
+      '20213.7/52h08'
+    );
+    expect(within(friends!).getByText("Film d'un ami").closest('li')).toHaveTextContent(
+      '20193.1/51h35'
+    );
+  });
+
   it('hover, visitor: the kebab keeps only the details and Letterboxd', async () => {
     stubHoverCapability();
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
@@ -537,7 +560,7 @@ describe('HomePage', () => {
 
     expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
       'href',
-      'https://web.movie-picker.fr/'
+      'https://www.movie-picker.fr/'
     );
   });
 

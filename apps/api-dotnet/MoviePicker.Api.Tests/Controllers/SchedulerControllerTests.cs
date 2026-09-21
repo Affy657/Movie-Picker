@@ -10,34 +10,33 @@ namespace MoviePicker.Api.Tests.Controllers;
 
 public sealed class SchedulerControllerTests
 {
-    private readonly Mock<ISchedulerTokenValidator> _tokenValidator = new();
+    private readonly Mock<ISchedulerCallerAuthenticator> _authenticator = new();
     private readonly Mock<IEventReminderPass> _pass = new();
     private readonly SchedulerController _sut = new SchedulerController().WithContext();
 
     public SchedulerControllerTests()
     {
-        _tokenValidator.SetupGet(v => v.IsConfigured).Returns(true);
         _pass.Setup(p => p.RunAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EventReminderPassResult(4, 1, 2, 0));
     }
 
-    private string? _presentedToken;
+    private void Verdict(SchedulerCallerVerdict verdict) =>
+        _authenticator
+            .Setup(a => a.AuthenticateAsync(It.IsAny<SchedulerCallerCredentials>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(verdict);
 
-    private void PresentToken(string? token) => _presentedToken = token;
+    private void PresentSharedToken(string token) => _sut.Request.Headers["X-Scheduler-Token"] = token;
 
-    private Task<IActionResult> Run() =>
-        _sut.RunEventReminders(
-            _tokenValidator.Object,
-            _pass.Object,
-            _presentedToken,
-            CancellationToken.None);
+    private void PresentBearer(string token) => _sut.Request.Headers.Authorization = $"Bearer {token}";
+
+    private Task<IActionResult> Run(CancellationToken ct = default) =>
+        _sut.RunEventReminders(_authenticator.Object, _pass.Object, ct);
 
     [Fact]
-    public async Task RunEventReminders_TokenNotConfigured_Returns503AndDoesNotRunThePass()
+    public async Task RunEventReminders_NothingConfigured_Returns503AndDoesNotRunThePass()
     {
-        _tokenValidator.SetupGet(v => v.IsConfigured).Returns(false);
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(true);
-        PresentToken("peu-importe");
+        Verdict(SchedulerCallerVerdict.NotConfigured);
+        PresentSharedToken("peu-importe");
 
         var result = await Run();
 
@@ -47,10 +46,10 @@ public sealed class SchedulerControllerTests
     }
 
     [Fact]
-    public async Task RunEventReminders_WrongToken_Returns401AndDoesNotRunThePass()
+    public async Task RunEventReminders_RefusedCaller_Returns401AndDoesNotRunThePass()
     {
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(false);
-        PresentToken("mauvais-token");
+        Verdict(SchedulerCallerVerdict.Refused);
+        PresentSharedToken("mauvais-token");
 
         var result = await Run();
 
@@ -59,21 +58,23 @@ public sealed class SchedulerControllerTests
     }
 
     [Fact]
-    public async Task RunEventReminders_MissingHeader_Returns401()
+    public async Task RunEventReminders_WithoutAnyHeader_PresentsEmptyCredentials()
     {
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(false);
+        Verdict(SchedulerCallerVerdict.Refused);
 
         var result = await Run();
 
         Assert.IsType<UnauthorizedResult>(result);
-        _tokenValidator.Verify(v => v.IsValid(It.Is<string?>(t => string.IsNullOrEmpty(t))), Times.Once);
+        _authenticator.Verify(
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, null), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task RunEventReminders_ValidToken_RunsThePassAndReturnsItsReport()
+    public async Task RunEventReminders_AcceptedCaller_RunsThePassAndReturnsItsReport()
     {
-        _tokenValidator.Setup(v => v.IsValid("bon-token")).Returns(true);
-        PresentToken("bon-token");
+        Verdict(SchedulerCallerVerdict.Accepted);
+        PresentBearer("jwt");
 
         var result = await Run();
 
@@ -84,29 +85,45 @@ public sealed class SchedulerControllerTests
     }
 
     [Fact]
-    public async Task RunEventReminders_ForwardsThePresentedTokenToTheValidator()
+    public async Task RunEventReminders_ForwardsBothHeadersToTheAuthenticator()
     {
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(true);
-        PresentToken("bon-token");
+        Verdict(SchedulerCallerVerdict.Accepted);
+        PresentSharedToken("bon-token");
+        PresentBearer("jwt");
 
         await Run();
 
-        _tokenValidator.Verify(v => v.IsValid("bon-token"), Times.Once);
+        _authenticator.Verify(
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials("bon-token", "jwt"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task RunEventReminders_ForwardsTheCancellationTokenToThePass()
+    public async Task RunEventReminders_ReadsTheBearerSchemeCaseInsensitivelyAndIgnoresOtherSchemes()
     {
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(true);
-        PresentToken("bon-token");
+        Verdict(SchedulerCallerVerdict.Accepted);
+        _sut.Request.Headers.Authorization = "bearer jwt";
+        await Run();
+        _authenticator.Verify(
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, "jwt"), It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _sut.Request.Headers.Authorization = "Basic abc";
+        await Run();
+        _authenticator.Verify(
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, null), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RunEventReminders_ForwardsTheCancellationTokenToThePassAndTheAuthenticator()
+    {
+        Verdict(SchedulerCallerVerdict.Accepted);
         using var cts = new CancellationTokenSource();
 
-        await _sut.RunEventReminders(
-            _tokenValidator.Object,
-            _pass.Object,
-            _presentedToken,
-            cts.Token);
+        await Run(cts.Token);
 
         _pass.Verify(p => p.RunAsync(cts.Token), Times.Once);
+        _authenticator.Verify(a => a.AuthenticateAsync(It.IsAny<SchedulerCallerCredentials>(), cts.Token), Times.Once);
     }
 }

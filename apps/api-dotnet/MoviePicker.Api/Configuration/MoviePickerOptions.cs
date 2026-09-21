@@ -35,11 +35,11 @@ public sealed class MoviePickerOptions
 
     public int PosterCacheMaxBytes { get; set; } = 524_288;
 
-    public string PublicWebBaseUrl { get; set; } = "https://web.movie-picker.fr";
+    public string PublicWebBaseUrl { get; set; } = "https://www.movie-picker.fr";
 
     public string ResolvedWebBaseUrl() =>
         string.IsNullOrWhiteSpace(PublicWebBaseUrl)
-            ? "https://web.movie-picker.fr"
+            ? "https://www.movie-picker.fr"
             : PublicWebBaseUrl.Trim().TrimEnd('/');
 
     public string EmailProvider { get; set; } = "log";
@@ -61,6 +61,10 @@ public sealed class MoviePickerOptions
     public string? KofiWebhookToken { get; set; }
 
     public string? SchedulerToken { get; set; }
+
+    public string? SchedulerOidcAudience { get; set; }
+
+    public string? SchedulerOidcServiceAccount { get; set; }
 
     public bool InProcessRemindersEnabled { get; set; }
 

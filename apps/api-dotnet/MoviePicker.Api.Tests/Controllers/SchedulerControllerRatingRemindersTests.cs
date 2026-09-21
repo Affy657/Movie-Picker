@@ -10,31 +10,33 @@ namespace MoviePicker.Api.Tests.Controllers;
 
 public sealed class SchedulerControllerRatingRemindersTests
 {
-    private readonly Mock<ISchedulerTokenValidator> _tokenValidator = new();
+    private readonly Mock<ISchedulerCallerAuthenticator> _authenticator = new();
     private readonly Mock<IRatingReminderPass> _pass = new();
     private readonly SchedulerController _sut = new SchedulerController().WithContext();
 
     public SchedulerControllerRatingRemindersTests()
     {
-        _tokenValidator.SetupGet(v => v.IsConfigured).Returns(true);
         _pass.Setup(p => p.RunAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new RatingReminderPassResult(2, 5));
     }
 
-    private Task<IActionResult> Run(string? presentedToken) =>
-        _sut.RunRatingReminders(
-            _tokenValidator.Object,
-            _pass.Object,
-            presentedToken,
-            CancellationToken.None);
+    private void Verdict(SchedulerCallerVerdict verdict) =>
+        _authenticator
+            .Setup(a => a.AuthenticateAsync(It.IsAny<SchedulerCallerCredentials>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(verdict);
+
+    private void PresentBearer(string token) => _sut.Request.Headers.Authorization = $"Bearer {token}";
+
+    private Task<IActionResult> Run(CancellationToken ct = default) =>
+        _sut.RunRatingReminders(_authenticator.Object, _pass.Object, ct);
 
     [Fact]
-    public async Task RunRatingReminders_TokenNotConfigured_Returns503AndDoesNotRunThePass()
+    public async Task RunRatingReminders_NothingConfigured_Returns503AndDoesNotRunThePass()
     {
-        _tokenValidator.SetupGet(v => v.IsConfigured).Returns(false);
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(true);
+        Verdict(SchedulerCallerVerdict.NotConfigured);
+        PresentBearer("peu-importe");
 
-        var result = await Run("peu-importe");
+        var result = await Run();
 
         var response = Assert.IsType<StatusCodeResult>(result);
         Assert.Equal(StatusCodes.Status503ServiceUnavailable, response.StatusCode);
@@ -42,46 +44,53 @@ public sealed class SchedulerControllerRatingRemindersTests
     }
 
     [Fact]
-    public async Task RunRatingReminders_WrongToken_Returns401AndDoesNotRunThePass()
+    public async Task RunRatingReminders_RefusedCaller_Returns401AndDoesNotRunThePass()
     {
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(false);
+        Verdict(SchedulerCallerVerdict.Refused);
+        PresentBearer("mauvais-jeton");
 
-        var result = await Run("mauvais-token");
+        var result = await Run();
 
         Assert.IsType<UnauthorizedResult>(result);
         _pass.Verify(p => p.RunAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task RunRatingReminders_MissingHeader_Returns401()
+    public async Task RunRatingReminders_WithoutAnyHeader_PresentsEmptyCredentials()
     {
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(false);
+        Verdict(SchedulerCallerVerdict.Refused);
 
-        var result = await Run(null);
+        var result = await Run();
 
         Assert.IsType<UnauthorizedResult>(result);
-        _tokenValidator.Verify(v => v.IsValid(It.Is<string?>(t => string.IsNullOrEmpty(t))), Times.Once);
+        _authenticator.Verify(
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, null), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task RunRatingReminders_ValidToken_RunsThePassAndReturnsItsReport()
+    public async Task RunRatingReminders_AcceptedCaller_RunsThePassAndReturnsItsReport()
     {
-        _tokenValidator.Setup(v => v.IsValid("bon-token")).Returns(true);
+        Verdict(SchedulerCallerVerdict.Accepted);
+        PresentBearer("jwt");
 
-        var result = await Run("bon-token");
+        var result = await Run();
 
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Equal(new RatingReminderPassResult(2, 5), ok.Value);
-        _pass.Verify(p => p.RunAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _authenticator.Verify(
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, "jwt"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task RunRatingReminders_ForwardsTheCancellationTokenToThePass()
     {
-        _tokenValidator.Setup(v => v.IsValid(It.IsAny<string?>())).Returns(true);
+        Verdict(SchedulerCallerVerdict.Accepted);
+        PresentBearer("jwt");
         using var cts = new CancellationTokenSource();
 
-        await _sut.RunRatingReminders(_tokenValidator.Object, _pass.Object, "bon-token", cts.Token);
+        await Run(cts.Token);
 
         _pass.Verify(p => p.RunAsync(cts.Token), Times.Once);
     }

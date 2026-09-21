@@ -83,6 +83,11 @@
   overflow-y: auto;
 }
 
+.menuUp {
+  top: auto;
+  bottom: calc(100% + var(--space-1-5));
+}
+
 .option {
   display: flex;
   align-items: center;

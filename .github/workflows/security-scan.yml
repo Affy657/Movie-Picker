@@ -4,7 +4,12 @@
 #     repository about five hours late (observed 09:24 to 10:54 UTC for a 04:17 cron): the
 #     delay is the platform's, not a sign that the schedule is broken.
 #   - Fails on High/Critical → notification through the scheduled-run failure e-mail.
-#   - No cloud secret required (audits + filesystem scan only).
+#   - No cloud secret required (audits + filesystem scan only). The image production runs is
+#     scanned at its build and again at its promotion, then never: a CVE of the runtime base image
+#     published between two deployments would wait for the next one. The base image is public
+#     and pinned by digest in the Dockerfile, so the same scan runs here every week on the very
+#     layers production serves, with no identity. The Terraform tree gets its misconfiguration
+#     scan on the same cron, `check:terraform` only reads its syntax.
 # The same cron carries the Letterboxd canary: the real watchlist client reads the witness
 # account named by the LETTERBOXD_CANARY_USERNAME variable, so a markup change on their side
 # opens a ticket here within the week instead of silently killing every sync. The job does not
@@ -50,6 +55,35 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: "1"
           ignore-unfixed: true
+          cache: true
+      - name: Runtime base image of the API, as the Dockerfile pins it
+        id: base-image
+        run: |
+          set -eo pipefail
+          image="$(grep -oE '^FROM +mcr\.microsoft\.com/dotnet/aspnet:[^ ]+' apps/api-dotnet/MoviePicker.Api/Dockerfile | head -1 | awk '{ print $2 }')"
+          if [ -z "$image" ]; then
+            echo "::error::No aspnet base image found in the Dockerfile: the weekly scan of the served layers has nothing to scan."
+            exit 1
+          fi
+          echo "Base image: $image"
+          echo "ref=$image" >> "$GITHUB_OUTPUT"
+      - name: Runtime base image scan (Trivy; OS packages and .NET runtime production serves)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ steps.base-image.outputs.ref }}
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          cache: true
+      - name: Terraform misconfiguration scan (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: infra/terraform
+          severity: HIGH,CRITICAL
+          exit-code: "1"
           cache: true
 
   letterboxd-canary:

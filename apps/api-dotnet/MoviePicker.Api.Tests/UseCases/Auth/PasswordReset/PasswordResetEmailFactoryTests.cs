@@ -5,7 +5,7 @@ namespace MoviePicker.Api.Tests.UseCases.Auth.PasswordReset;
 
 public class PasswordResetEmailFactoryTests
 {
-    private static readonly Uri ResetUrl = new("https://web.movie-picker.fr/reset?token=abc");
+    private static readonly Uri ResetUrl = new("https://www.movie-picker.fr/reset?token=abc");
 
     [Fact]
     public void Build_French_HasFrenchSubjectAndContainsResetUrl()
@@ -51,7 +51,7 @@ public class PasswordResetEmailFactoryTests
     public void Build_HtmlAndTextBodyEscapeUrl_NoBrokenLink()
     {
         var msg = PasswordResetEmailFactory.Build("u@x.fr", "x", ResetUrl, "fr");
-        Assert.Contains("https://web.movie-picker.fr/reset?token=abc", msg.HtmlBody);
-        Assert.Contains("https://web.movie-picker.fr/reset?token=abc", msg.TextBody);
+        Assert.Contains("https://www.movie-picker.fr/reset?token=abc", msg.HtmlBody);
+        Assert.Contains("https://www.movie-picker.fr/reset?token=abc", msg.TextBody);
     }
 }

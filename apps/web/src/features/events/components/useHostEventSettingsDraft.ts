@@ -4,6 +4,7 @@ import { useEventTemplates } from '@/features/events/hooks/useEventTemplates';
 import {
   buildTemplateDraft,
   configToFields,
+  limitFieldOnEnable,
   type ApplicableConfig,
 } from '@/features/events/lib/eventTemplateDraft';
 import { patchEventConfig } from '@/features/events/api/eventsApi';
@@ -11,11 +12,15 @@ import { getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
 import { formatRelativeEventDate } from '@/shared/utils/formatRelativeEventDate';
-import type {
-  EventConfigPatchPayload,
-  EventData,
-  EventRecurrence,
-  WheelMode,
+import {
+  DEFAULT_PARTICIPANT_LIMIT,
+  DEFAULT_PROPOSAL_LIMIT,
+  MAX_EVENT_PARTICIPANTS,
+  MAX_PROPOSALS_PER_PARTICIPANT,
+  type EventConfigPatchPayload,
+  type EventData,
+  type EventRecurrence,
+  type WheelMode,
 } from '@/features/events/types';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import {
@@ -59,7 +64,13 @@ export function useHostEventSettingsDraft({
   );
   const initialDateLocalRef = useRef(eventDateTimeToLocal(event.date, event.time));
   const [notifyDateChange, setNotifyDateChange] = useState(true);
+  const [proposalLimitEnabled, setProposalLimitEnabled] = useState(
+    initialFields.proposalLimitEnabled
+  );
   const [maxProp, setMaxProp] = useState(initialFields.maxProposals);
+  const [participantLimitEnabled, setParticipantLimitEnabled] = useState(
+    initialFields.participantLimitEnabled
+  );
   const [maxParticipants, setMaxParticipants] = useState(initialFields.maxParticipants);
   const [voteLimitEnabled, setVoteLimitEnabled] = useState(initialFields.voteLimitEnabled);
   const [maxVotes, setMaxVotes] = useState(initialFields.maxVotes);
@@ -86,7 +97,9 @@ export function useHostEventSettingsDraft({
   const templateDraft = buildTemplateDraft({
     themeEmoji,
     themeText,
+    proposalLimitEnabled,
     maxProposals: maxProp,
+    participantLimitEnabled,
     maxParticipants,
     voteLimitEnabled,
     maxVotes,
@@ -100,7 +113,9 @@ export function useHostEventSettingsDraft({
     const next = configToFields(config);
     setThemeEmoji(next.themeEmoji);
     setThemeText(next.themeText);
+    setProposalLimitEnabled(next.proposalLimitEnabled);
     setMaxProp(next.maxProposals);
+    setParticipantLimitEnabled(next.participantLimitEnabled);
     setMaxParticipants(next.maxParticipants);
     setVoteLimitEnabled(next.voteLimitEnabled);
     setMaxVotes(next.maxVotes);
@@ -130,6 +145,30 @@ export function useHostEventSettingsDraft({
     clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => performSaveRef.current(), immediate ? 0 : 600);
   }, []);
+
+  const toggleProposalLimit = useCallback(
+    (checked: boolean) => {
+      setProposalLimitEnabled(checked);
+      if (checked)
+        setMaxProp((current) =>
+          limitFieldOnEnable(current, MAX_PROPOSALS_PER_PARTICIPANT, DEFAULT_PROPOSAL_LIMIT)
+        );
+      scheduleAutoSave(true);
+    },
+    [scheduleAutoSave]
+  );
+
+  const toggleParticipantLimit = useCallback(
+    (checked: boolean) => {
+      setParticipantLimitEnabled(checked);
+      if (checked)
+        setMaxParticipants((current) =>
+          limitFieldOnEnable(current, MAX_EVENT_PARTICIPANTS, DEFAULT_PARTICIPANT_LIMIT)
+        );
+      scheduleAutoSave(true);
+    },
+    [scheduleAutoSave]
+  );
 
   const eventTemplates = useEventTemplates(open && isConnectedCreator, {
     draft: templateDraft,
@@ -174,7 +213,9 @@ export function useHostEventSettingsDraft({
       {
         eventTitle,
         eventDateLocal,
+        proposalLimitEnabled,
         maxProp,
+        participantLimitEnabled,
         maxParticipants,
         voteLimitEnabled,
         maxVotes,
@@ -198,10 +239,10 @@ export function useHostEventSettingsDraft({
       ...titlePatch(eventTitle.trim(), event.title),
       ...(theme !== (cfg.theme ?? '') ? { theme } : {}),
       ...(maxProposalsPerParticipant !== cfg.maxProposalsPerParticipant
-        ? { maxProposalsPerParticipant }
+        ? { maxProposalsPerParticipant: maxProposalsPerParticipant ?? 0 }
         : {}),
       ...(maxParticipantsValue !== cfg.maxParticipants
-        ? { maxParticipants: maxParticipantsValue }
+        ? { maxParticipants: maxParticipantsValue ?? 0 }
         : {}),
       ...(maxVotesPerParticipant !== (cfg.maxVotesPerParticipant ?? null)
         ? { maxVotesPerParticipant: maxVotesPerParticipant ?? 0 }
@@ -247,8 +288,12 @@ export function useHostEventSettingsDraft({
     dateWasEdited,
     notifyDateChange,
     setNotifyDateChange,
+    proposalLimitEnabled,
+    toggleProposalLimit,
     maxProp,
     setMaxProp,
+    participantLimitEnabled,
+    toggleParticipantLimit,
     maxParticipants,
     setMaxParticipants,
     maxParticipantsHint,

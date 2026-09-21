@@ -176,8 +176,8 @@ movie-picker/
 ├─ configs/           tsconfig et Prettier partagés, exclusions Sonar
 ├─ docs/              Roadmap, dette technique, ce guide
 ├─ e2e/               Parcours Playwright
-├─ infra/             Terraform (infra/terraform/), politiques IAM, CloudFront et rétention de registre
-└─ scripts/           verify:local, lint des workflows, Terraform, prérequis, export OpenAPI, seuils de couverture
+├─ infra/             Terraform (infra/terraform/) et la configuration du site Firebase Hosting
+└─ scripts/           verify:local, lint des workflows, Terraform, publication Firebase Hosting, prérequis, export OpenAPI, seuils de couverture
 ```
 
 L'API suit un découpage hexagonal : `Domain` porte les entités et les règles sans dépendance au

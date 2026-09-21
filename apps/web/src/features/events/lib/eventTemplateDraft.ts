@@ -1,5 +1,7 @@
 import { parseTheme } from '@/features/events/components/ThemeField';
 import {
+  DEFAULT_PARTICIPANT_LIMIT,
+  DEFAULT_PROPOSAL_LIMIT,
   DEFAULT_VOTE_LIMIT,
   MAX_EVENT_PARTICIPANTS,
   MAX_EVENT_TEMPLATE_NAME_LENGTH,
@@ -38,7 +40,9 @@ export type ApplicableConfig = Pick<
 export interface TemplateFormFields {
   themeEmoji: string;
   themeText: string;
+  proposalLimitEnabled: boolean;
   maxProposals: string;
+  participantLimitEnabled: boolean;
   maxParticipants: string;
   voteLimitEnabled: boolean;
   maxVotes: string;
@@ -50,8 +54,31 @@ export interface TemplateFormFields {
 
 function parseLimit(raw: string): number | null {
   const value = Number(raw.trim());
-  if (!Number.isFinite(value) || value <= 0) return null;
+  if (!Number.isInteger(value) || value <= 0) return null;
   return value;
+}
+
+export function limitBelowCap(value: number | null | undefined, cap: number): number | null {
+  return value != null && value > 0 && value < cap ? value : null;
+}
+
+function isBelowCap(value: number | null | undefined, cap: number): boolean {
+  return limitBelowCap(value, cap) !== null;
+}
+
+function parseCappedLimit(
+  enabled: boolean,
+  raw: string,
+  cap: number,
+  fallback: number
+): number | null {
+  if (!enabled) return null;
+  const value = parseLimit(raw) ?? fallback;
+  return value >= cap ? null : value;
+}
+
+export function limitFieldOnEnable(value: string, cap: number, fallback: number): string {
+  return isBelowCap(parseLimit(value), cap) ? value : String(fallback);
 }
 
 function parseWinnerCount(raw: string): number {
@@ -65,8 +92,18 @@ export function buildTemplateDraft(fields: TemplateFormFields): TemplateConfigDr
   const theme = [fields.themeEmoji.trim(), fields.themeText.trim()].filter(Boolean).join(' ');
   return {
     theme: theme.length > 0 ? theme : null,
-    maxProposalsPerParticipant: parseLimit(fields.maxProposals),
-    maxParticipants: parseLimit(fields.maxParticipants),
+    maxProposalsPerParticipant: parseCappedLimit(
+      fields.proposalLimitEnabled,
+      fields.maxProposals,
+      MAX_PROPOSALS_PER_PARTICIPANT,
+      DEFAULT_PROPOSAL_LIMIT
+    ),
+    maxParticipants: parseCappedLimit(
+      fields.participantLimitEnabled,
+      fields.maxParticipants,
+      MAX_EVENT_PARTICIPANTS,
+      DEFAULT_PARTICIPANT_LIMIT
+    ),
     maxVotesPerParticipant: fields.voteLimitEnabled
       ? (parseLimit(fields.maxVotes) ?? DEFAULT_VOTE_LIMIT)
       : null,
@@ -82,7 +119,12 @@ export function configToFields(config: ApplicableConfig): TemplateFormFields {
   return {
     themeEmoji: theme.emoji,
     themeText: theme.text,
+    proposalLimitEnabled: isBelowCap(
+      config.maxProposalsPerParticipant,
+      MAX_PROPOSALS_PER_PARTICIPANT
+    ),
     maxProposals: String(config.maxProposalsPerParticipant ?? MAX_PROPOSALS_PER_PARTICIPANT),
+    participantLimitEnabled: isBelowCap(config.maxParticipants, MAX_EVENT_PARTICIPANTS),
     maxParticipants: String(config.maxParticipants ?? MAX_EVENT_PARTICIPANTS),
     voteLimitEnabled: config.maxVotesPerParticipant != null,
     maxVotes: String(config.maxVotesPerParticipant ?? DEFAULT_VOTE_LIMIT),
@@ -91,6 +133,18 @@ export function configToFields(config: ApplicableConfig): TemplateFormFields {
     allowSeries: config.allowSeries ?? false,
     winnerCount: String(config.winnerCount),
   };
+}
+
+export function defaultTemplateFields(): TemplateFormFields {
+  return {
+    ...configToFields(DEFAULT_EVENT_CONFIG),
+    maxProposals: String(DEFAULT_PROPOSAL_LIMIT),
+    maxParticipants: String(DEFAULT_PARTICIPANT_LIMIT),
+  };
+}
+
+export function isDefaultTemplateDraft(draft: TemplateConfigDraft): boolean {
+  return isSameTemplateConfig(draft, buildTemplateDraft(defaultTemplateFields()));
 }
 
 export function draftToConfigPatch(draft: TemplateConfigDraft): EventConfigPatchPayload {

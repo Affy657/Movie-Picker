@@ -144,10 +144,16 @@ a:focus-visible {
   min-height: var(--tap-target-min);
   background: var(--color-input-bg);
   color: var(--color-text);
+  scroll-margin-top: calc(var(--header-height) + var(--space-4));
   transition:
     border-color var(--duration-base) var(--ease-default),
     box-shadow var(--duration-base) var(--ease-default);
   outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-placeholder);
+  opacity: 1;
 }
 
 @media (hover: hover) {

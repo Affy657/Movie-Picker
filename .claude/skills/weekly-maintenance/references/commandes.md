@@ -18,10 +18,9 @@ Workflows planifiés, dernier statut :
 
 ```bash
 rtk gh run list --repo Affy657/Movie-Picker --workflow security-scan.yml --limit 1 --json conclusion,createdAt
-rtk gh run list --repo Affy657/Movie-Picker --workflow registry-cleanup.yml --limit 1 --json conclusion,createdAt
 ```
 
-`security-scan.yml` tourne le lundi à 04:17 UTC, `registry-cleanup.yml` le 1er du mois à 05:00 UTC, `backup-mongo.yml` tous les jours à 02:31 UTC. GitHub démarre les runs planifiés de ce dépôt avec environ cinq heures de retard, c'est constant et ce n'est pas une panne.
+`security-scan.yml` tourne le lundi à 04:17 UTC, `backup-mongo.yml` tous les jours à 02:31 UTC. GitHub démarre les runs planifiés de ce dépôt avec environ cinq heures de retard, c'est constant et ce n'est pas une panne.
 
 Outils épinglés à la main (gitleaks, actionlint, zizmor, SonarScanner, sentry-cli, mongo tools, images MongoDB et Trivy) contre leur dernière version publiée :
 
@@ -30,6 +29,14 @@ rtk pnpm run check:tools
 ```
 
 Une ligne par outil, `ok` ou `behind`, code de sortie 1 dès qu'un outil est en retard. La montée se fait dans les fichiers que le script cite, digest ou somme de contrôle compris, puis `pnpm run check:workflows` et la porte gitleaks de `verify:local` rejouent les nouvelles versions en local.
+
+Liaisons IAM hors de ce que `infra/terraform` décrit (projet, buckets, secrets, comptes de service, dépôt d'images, services Cloud Run), clés de compte de service, comptes non décrits encore actifs, et secrets dont la dernière version a plus d'un an :
+
+```bash
+rtk pnpm run check:iam
+```
+
+Une ligne par constat, code de sortie 1 dès qu'il y en a un. Une liaison de trop se retire à la main (`gcloud <ressource> remove-iam-policy-binding`), jamais en la décrivant pour la faire taire ; un secret trop vieux se fait tourner dans la console du fournisseur puis `gcloud secrets versions add`.
 
 Merge d'une PR Dependabot :
 
@@ -104,14 +111,14 @@ Le cluster dev et le cluster prod sont encore partagés (dette connue) : bien v�
 
 ## Domaine et certificat
 
-Le front est sur **`web.movie-picker.fr`**, l'API sur **`api.movie-picker.fr`**. Ni `movie-picker.fr` ni `www.movie-picker.fr` ne servent l'application : ils pointent encore sur OVH, la bascule décrite dans [docs/runbook-migration-domaine-www.md](../../../../docs/runbook-migration-domaine-www.md) est en cours et DEBT-014 porte son état d'avancement. Viser un de ces deux hôtes donne un `curl` à 000 et fait conclure à tort que la prod est morte.
+Le front est sur **`www.movie-picker.fr`** (Firebase Hosting), l'API sur **`api.movie-picker.fr`** (Cloud Run). `movie-picker.fr` et `web.movie-picker.fr` répondent `301` vers `www` depuis le 2026-09-20 : un `curl -I` sur ces deux hôtes doit rendre une redirection, pas un 200 ni un 000. Une exception voulue : `https://web.movie-picker.fr/sw.js` répond `200` avec le worker de départ (`infra/web-legacy/`), c'est lui qui désinstalle les anciens service workers ; un `301` sur ce chemin voudrait dire que le domaine est retombé sur le site principal.
 
 ```bash
-for host in web.movie-picker.fr api.movie-picker.fr; do
+for host in www.movie-picker.fr api.movie-picker.fr; do
   echo | openssl s_client -connect "$host:443" -servername "$host" 2>/dev/null \
     | openssl x509 -noout -enddate -subject
 done
-curl -sS -o /dev/null -w "front %{http_code}\n" --max-time 15 https://web.movie-picker.fr/
+curl -sS -o /dev/null -w "front %{http_code}\n" --max-time 15 https://www.movie-picker.fr/
 curl -sS -o /dev/null -w "api %{http_code}\n" --max-time 15 https://api.movie-picker.fr/health
 ```
 

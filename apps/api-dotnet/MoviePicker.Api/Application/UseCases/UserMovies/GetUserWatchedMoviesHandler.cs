@@ -1,6 +1,8 @@
+using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
@@ -17,6 +19,8 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
     private readonly IEventRepository _events;
     private readonly IMovieRepository _movies;
     private readonly IMovieRatingRepository _ratings;
+    private readonly ITmdbMovieSearch _tmdb;
+    private readonly MoviePickerOptions _options;
     private readonly TimeProvider _clock;
 
     public GetUserWatchedMoviesHandler(
@@ -25,6 +29,8 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
         IEventRepository events,
         IMovieRepository movies,
         IMovieRatingRepository ratings,
+        ITmdbMovieSearch tmdb,
+        IOptions<MoviePickerOptions> options,
         TimeProvider clock)
     {
         _users = users;
@@ -32,6 +38,8 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
         _events = events;
         _movies = movies;
         _ratings = ratings;
+        _tmdb = tmdb;
+        _options = options.Value;
         _clock = clock;
     }
 
@@ -92,7 +100,10 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
             })
             .ToList();
 
-        return new UserWatchedMoviesResponse { Items = items };
+        return new UserWatchedMoviesResponse
+        {
+            Items = await WatchedMoviesFacts.WithTmdbFactsAsync(items, _tmdb, _options, ct)
+        };
     }
 
     private static DateTimeOffset WatchedAtOf(Event evt) =>

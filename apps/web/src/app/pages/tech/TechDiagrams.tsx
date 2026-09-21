@@ -2,7 +2,6 @@ import {
   Container,
   FlaskConical,
   Gauge,
-  Globe,
   KeyRound,
   MousePointerClick,
   PackageSearch,
@@ -13,7 +12,6 @@ import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { TECH_METRICS } from './generated/techMetrics';
 import {
   AnthropicLogo,
-  AwsLogo,
   ClaudeLogo,
   DotNetLogo,
   GitHubLogo,
@@ -126,7 +124,7 @@ export function ArchitectureDiagram() {
       </text>
 
       <rect x="250" y="40" width="210" height="118" rx="12" fill={SURFACE} stroke={BORDER} />
-      <AwsLogo x={345} y={54} size={ICON_SIZE.xl} />
+      <GoogleCloudLogo x={345} y={54} size={ICON_SIZE.xl} />
       <text x="355" y="96" textAnchor="middle" className={styles.svgTitle} fill={TEXT}>
         {t('tech.diagram.cdn')}
       </text>
@@ -672,7 +670,7 @@ export function CiGraphDiagram() {
         stroke={PRIMARY}
         strokeWidth="1.5"
       />
-      <AwsLogo x={650} y={352} size={ICON_SIZE.md} />
+      <GoogleCloudLogo x={650} y={352} size={ICON_SIZE.md} />
       <text x="674" y="365" className={styles.svgLabel} fill={TEXT}>
         {t('tech.diagram.ciDeployFront')}
       </text>
@@ -695,13 +693,12 @@ export function CiGraphDiagram() {
 const MCP_TOOLS = [
   { key: 'github', name: 'GitHub', reads: 'tech.diagram.mcpGithub', Logo: GitHubLogo },
   { key: 'gcp', name: 'Google Cloud', reads: 'tech.diagram.mcpGcp', Logo: GoogleCloudLogo },
-  { key: 'aws', name: 'AWS', reads: 'tech.diagram.mcpAws', Logo: AwsLogo },
   { key: 'sonar', name: 'SonarCloud', reads: 'tech.diagram.mcpSonar', Logo: SonarLogo },
   { key: 'sentry', name: 'Sentry', reads: 'tech.diagram.mcpSentry', Logo: SentryLogo },
   { key: 'posthog', name: 'PostHog', reads: 'tech.diagram.mcpPosthog', Logo: PostHogLogo },
   { key: 'mongo', name: 'MongoDB', reads: 'tech.diagram.mcpMongo', Logo: MongoLogo },
   { key: 'resend', name: 'Resend', reads: 'tech.diagram.mcpResend', Logo: ResendLogo },
-].map((tool, index) => ({ ...tool, column: 8 + index * 109 })) as readonly {
+].map((tool, index) => ({ ...tool, column: 64 + index * 109 })) as readonly {
   key: string;
   name: string;
   reads: TranslationKey;
@@ -1656,9 +1653,8 @@ export function LetterboxdFlowDiagram() {
 }
 
 const INFRA_NODES = [
-  { key: 'Dns', x: 16, y: 34, w: 172, h: 74, Logo: Globe, hot: false },
-  { key: 'Cdn', x: 16, y: 136, w: 172, h: 74, Logo: AwsLogo, hot: false },
-  { key: 'Bucket', x: 16, y: 238, w: 172, h: 74, Logo: AwsLogo, hot: false },
+  { key: 'Monitoring', x: 16, y: 34, w: 172, h: 74, Logo: GoogleCloudLogo, hot: false },
+  { key: 'Hosting', x: 16, y: 136, w: 172, h: 74, Logo: GoogleCloudLogo, hot: false },
   { key: 'Secrets', x: 224, y: 34, w: 196, h: 74, Logo: GoogleCloudLogo, hot: false },
   { key: 'Run', x: 224, y: 136, w: 196, h: 74, Logo: GoogleCloudLogo, hot: true },
   { key: 'Registry', x: 448, y: 34, w: 196, h: 74, Logo: GoogleCloudLogo, hot: false },
@@ -1679,35 +1675,20 @@ export function InfraDiagram() {
 
       <rect
         x="8"
-        y="118"
-        width="196"
-        height="212"
-        rx="12"
-        fill="none"
-        stroke={BORDER}
-        strokeDasharray="4 4"
-      />
-      <text x="16" y="326" className={styles.svgSub} fill={META}>
-        {t('tech.diagram.infraZoneAws')}
-      </text>
-
-      <rect
-        x="216"
         y="8"
-        width="436"
+        width="644"
         height="232"
         rx="12"
         fill="none"
         stroke={BORDER}
         strokeDasharray="4 4"
       />
-      <text x="224" y="234" className={styles.svgSub} fill={META}>
+      <text x="16" y="234" className={styles.svgSub} fill={META}>
         {t('tech.diagram.infraZoneGcp')}
       </text>
 
       <g stroke={META} strokeWidth="1.3" fill="none" markerEnd="url(#tech-arrow-infra)">
         <path d="M 102 108 L 102 130" />
-        <path d="M 102 238 L 102 216" />
         <path d="M 322 108 L 322 130" />
         <path d="M 490 108 C 490 122, 420 122, 386 130" />
         <path d="M 448 173 L 432 173" />
@@ -1734,7 +1715,7 @@ export function InfraDiagram() {
             fill={node.hot ? PRIMARY_SOFT : SURFACE}
             stroke={node.hot ? PRIMARY : BORDER}
           />
-          <node.Logo x={node.x + 12} y={node.y + 11} size={ICON_SIZE.md} color={META} />
+          <node.Logo x={node.x + 12} y={node.y + 11} size={ICON_SIZE.md} />
           <text x={node.x + 36} y={node.y + 23} className={styles.svgLabel} fill={TEXT}>
             {t(`tech.diagram.infra${node.key}` as TranslationKey)}
           </text>

@@ -1,59 +1,72 @@
-name: "Invalidate CloudFront and verify the served web build"
-description: "Invalidates the distribution, checks that CloudFront answers, then that the public domain serves the entry point of the build that was just published. Shared by the deployment and the rollback."
+name: "Verify the served web build"
+description: "Checks that Firebase Hosting answers on the site address with the expected headers, then that the public domain serves the entry point of the build that was just released. Shared by the deployment and the rollback."
 inputs:
   dist:
-    description: "Folder of the build that was just published, to compare its index.html with the one the domain serves"
-    required: true
-  distribution-id:
-    description: "CloudFront distribution id (AWS_CLOUDFRONT_DISTRIBUTION_ID variable); empty to skip the invalidation"
+    description: "Folder of the build that was just released, to compare its index.html with the one the domain serves; empty to only check that the public domain answers"
     required: false
     default: ""
+  hosting-url:
+    description: "Address of the Hosting site (https://<site>.web.app), probed before the public domain"
+    required: true
   public-origins:
     description: "Public web origins, comma-separated as in ALLOWED_ORIGINS; the first one is probed, empty to skip"
+    required: false
+    default: ""
+  noindex:
+    description: "true when the site must answer with X-Robots-Tag noindex (the staging), false when it must not (production): a header published on the wrong site fails here"
+    required: false
+    default: "false"
+  expected-release:
+    description: "Commit the served index.html must name in its <meta name=\"release\"> (written at build time by apps/web/vite.config.ts), read on the site address and on the public domain; empty to skip. A version built before that meta existed cannot pass it: the rollback then reports the mismatch, the release itself is done"
     required: false
     default: ""
 runs:
   using: composite
   steps:
-    - name: CloudFront invalidation
-      if: inputs.distribution-id != ''
+    # -o file rather than /dev/null: with --retry, curl cannot rewind /dev/null and exits with 23
+    # without ever writing the HTTP code. The headers are the ones `infra/firebase-hosting.json`
+    # declares: a version released without its config would answer 200 all the same.
+    - name: Web smoke test (Hosting site)
       shell: bash
       env:
-        DISTRIBUTION_ID: ${{ inputs.distribution-id }}
+        HOSTING_URL: ${{ inputs.hosting-url }}
+        NOINDEX: ${{ inputs.noindex }}
+        EXPECTED_RELEASE: ${{ inputs.expected-release }}
       run: |
         set -eo pipefail
-        INV_ID=$(aws cloudfront create-invalidation \
-          --distribution-id "$DISTRIBUTION_ID" \
-          --paths "/*" \
-          --query 'Invalidation.Id' --output text)
-        aws cloudfront wait invalidation-completed \
-          --distribution-id "$DISTRIBUTION_ID" \
-          --id "$INV_ID"
-    - name: Web smoke test (CloudFront)
-      if: inputs.distribution-id != ''
-      shell: bash
-      env:
-        DISTRIBUTION_ID: ${{ inputs.distribution-id }}
-      run: |
-        set -eo pipefail
-        DOMAIN="$(aws cloudfront get-distribution --id "$DISTRIBUTION_ID" --query 'Distribution.DomainName' --output text)"
-        echo "CloudFront domain: $DOMAIN"
-        # -o file rather than /dev/null: with --retry, curl cannot rewind /dev/null and exits
-        # with 23 without ever writing the HTTP code.
-        code="$(curl -sS -o "$RUNNER_TEMP/cf.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "https://$DOMAIN/")"
-        echo "GET / -> $code"
+        code="$(curl -sS -o "$RUNNER_TEMP/hosting.html" -D "$RUNNER_TEMP/hosting.headers" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$HOSTING_URL/")"
+        echo "GET $HOSTING_URL/ -> $code"
         test "$code" = "200"
-    # The previous smoke test queries the CloudFront domain: it says nothing about the public
-    # domain served to users, whose DNS, certificate or alias can be broken while the distribution
-    # answers perfectly.
-    # A 200 does not say which version is served: without invalidation, the CDN answers 200 with
-    # the old index.html and the publication looks fine. So the hashed entry point of the build
-    # that was just uploaded is compared with the one the public domain really serves.
+        grep -qi '^x-frame-options: DENY' "$RUNNER_TEMP/hosting.headers"
+        grep -qi '^cache-control: no-cache, must-revalidate' "$RUNNER_TEMP/hosting.headers"
+        if [ "$NOINDEX" = "true" ]; then
+          grep -qi '^x-robots-tag: .*noindex' "$RUNNER_TEMP/hosting.headers" || {
+            echo "::error::$HOSTING_URL answers without X-Robots-Tag noindex: this site must never be indexed."
+            exit 1
+          }
+        elif grep -qi '^x-robots-tag: .*noindex' "$RUNNER_TEMP/hosting.headers"; then
+          echo "::error::$HOSTING_URL answers with X-Robots-Tag noindex: a staging header reached this site, it would leave the index."
+          exit 1
+        fi
+        echo "Hosting answers with the expected headers."
+        if [ -n "$EXPECTED_RELEASE" ]; then
+          served="$(grep -oE '<meta name="release" content="[0-9a-f]{40}"' "$RUNNER_TEMP/hosting.html" | grep -oE '[0-9a-f]{40}' | head -1 || true)"
+          if [ "$served" != "$EXPECTED_RELEASE" ]; then
+            echo "::error::$HOSTING_URL serves release '${served:-none}', expected '$EXPECTED_RELEASE': the site does not serve the version that was just released."
+            exit 1
+          fi
+          echo "Hosting serves release $served."
+        fi
+    # The previous smoke test queries the site address: it says nothing about the public domain
+    # served to users, whose DNS or certificate can be broken while the site answers perfectly.
+    # A 200 does not say which version is served either: the hashed entry point of the build that
+    # was just released is compared with the one the public domain really serves.
     - name: Web smoke test (public domain + served version)
       shell: bash
       env:
         DIST: ${{ inputs.dist }}
         ALLOWED_ORIGINS: ${{ inputs.public-origins }}
+        EXPECTED_RELEASE: ${{ inputs.expected-release }}
       run: |
         set -eo pipefail
         PUBLIC_WEB_URL="${ALLOWED_ORIGINS%%,*}"
@@ -65,16 +78,28 @@ runs:
         code="$(curl -sS -o "$RUNNER_TEMP/pub.html" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$PUBLIC_WEB_URL/")"
         echo "GET $PUBLIC_WEB_URL/ -> $code"
         if [ "$code" != "200" ]; then
-          echo "::error::$PUBLIC_WEB_URL does not answer 200: DNS, certificate or alias of the web hosting."
+          echo "::error::$PUBLIC_WEB_URL does not answer 200: DNS, certificate or custom domain of the web hosting."
           exit 1
         fi
-        ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' "$DIST/index.html" | head -1)"
+        if [ -n "$EXPECTED_RELEASE" ]; then
+          served="$(grep -oE '<meta name="release" content="[0-9a-f]{40}"' "$RUNNER_TEMP/pub.html" | grep -oE '[0-9a-f]{40}' | head -1 || true)"
+          if [ "$served" != "$EXPECTED_RELEASE" ]; then
+            echo "::error::$PUBLIC_WEB_URL serves release '${served:-none}', expected '$EXPECTED_RELEASE': the public domain does not serve the version that was just released."
+            exit 1
+          fi
+          echo "Public domain serves release $served."
+        fi
+        if [ -z "$DIST" ]; then
+          echo "No local build to compare with: the public domain answers, version checked by its release only."
+          exit 0
+        fi
+        ENTRY="$(grep -oE '/assets/[A-Za-z0-9._-]+\.js' "$DIST/index.html" | head -1 || true)"
         if [ -z "$ENTRY" ]; then
           echo "::error::Entry point not found in the local build, version smoke test impossible."
           exit 1
         fi
         echo "Expected entry point: $ENTRY"
         if ! grep -qF "$ENTRY" "$RUNNER_TEMP/pub.html"; then
-          echo "::error::$PUBLIC_WEB_URL serves an index.html that does not reference $ENTRY: stale build in cache (CDN invalidation missing or incomplete)."
+          echo "::error::$PUBLIC_WEB_URL serves an index.html that does not reference $ENTRY: the release did not reach the public domain."
           exit 1
         fi

@@ -1,0 +1,320 @@
+# Terraform of `infra/terraform/`, the one place the infrastructure is changed from:
+#   - on a pull request that touches it, `plan` of every root module, each posted as a sticky
+#     comment on the PR (one comment per root, edited on every push), so that a change is reviewed
+#     as the diff of the resources it will produce and a drift of the real infrastructure shows up
+#     before a merge;
+#   - on master, `plan` of every root module first, read-only and written to the job summary, then
+#     `apply` behind the `infra-apply` environment, whose required reviewer is asked before the
+#     job starts: the plan of the first jobs is what there is to read before approving, and the
+#     apply job plans again under the lock and applies that very plan, production first and the
+#     staging after it (the staging root reads the production outputs through the remote state).
+#     Nothing to apply on either root skips the approval: master and the infrastructure agree, no
+#     click is asked for. A plan that only refreshes output values (Hosting reporting a domain in
+#     another state, for instance) counts as nothing: the composite action counts the resources a
+#     plan creates, changes or destroys, and the approval is asked for those alone;
+#   - every Monday, the same read-only plans, and a red run when either root would change a
+#     resource: the infrastructure drifted from master (a change made in the console, a resource
+#     Google re-described) and nothing else would say so before the next push touching this tree.
+#     `pnpm run check:iam` covers the IAM bindings Terraform does not see; this covers the rest.
+#
+# The approval exists because master takes direct pushes: without it, an infrastructure change
+# pushed without a pull request was applied by nobody's reading. A run waiting for its approval
+# keeps master and the infrastructure apart until the click, and GitHub fails it after 30 days:
+# approve or refuse, never leave one waiting. The saved plan cannot travel between the jobs as an
+# artifact, the artifacts of a public repository being readable by anyone: hence the second plan.
+#
+# Two identities, both keyless, both described in the production root module (`module "terraform"`
+# and `module "terraform_plan"`): the read-only one reads the states without taking the lock
+# (`-lock=false`) and can be assumed only by a job of the `infra-plan` environment, from a pull
+# request as from master; the other manages everything the root modules describe, hence its
+# reach, and can be assumed only by a job of the `infra-apply` environment, which the branch policy
+# reserves to master, which requires a reviewer, and which no other workflow uses: a deployment or
+# backup job, however compromised, cannot exchange its token for the identity that administers the
+# IAM of the project. The identifiers of both live as secrets of their environment (and, for the
+# plan job, as Dependabot secrets, otherwise a provider bump would run without them):
+# `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` /
+# `GCP_TERRAFORM_SERVICE_ACCOUNT`, `TF_STATE_BUCKET`, `ALERT_EMAIL` and the optional
+# `ALERT_SMS_NUMBER`, the same names `scripts/terraform.mjs` reads locally from `.env`.
+#
+# `fmt` and `validate` stay in `ci-cd.yml` (`lint-terraform`), without credentials: this workflow
+# only runs when there is something to plan. The binary version is pinned here, in `ci-cd.yml`,
+# in `scripts/terraform.mjs` and in every root module; `pnpm run check:tools` keeps them equal.
+
+name: 🏗️ Terraform
+
+# The workflow and its composite action are in the paths: a change to how the plan is made is
+# reviewed with a plan too.
+on:
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/infra.yml"
+      - ".github/actions/terraform-plan/**"
+  push:
+    branches: [master]
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/infra.yml"
+      - ".github/actions/terraform-plan/**"
+  schedule:
+    - cron: "23 5 * * 1" # Monday 05:23 UTC, started hours late by GitHub like every schedule here
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TERRAFORM_VERSION: "1.16.3"
+  TF_IN_AUTOMATION: "1"
+  TF_INPUT: "0"
+
+jobs:
+  # A review plan takes no lock, so it never waits for an apply and only the latest push of a pull
+  # request is worth planning.
+  plan:
+    name: 🔍 Plan on the pull request (${{ matrix.root }})
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork != true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: infra-plan
+    concurrency:
+      group: terraform-plan-pr-${{ github.event.pull_request.number }}-${{ matrix.root }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        root: [production, staging]
+    env:
+      TERRAFORM_ROOT: infra/terraform/environments/${{ matrix.root }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      # `-lock=false`: a review must never block a deployment or an apply holding the lock.
+      - name: terraform plan (read-only, without the lock)
+        id: plan
+        uses: ./.github/actions/terraform-plan
+        with:
+          root: ${{ env.TERRAFORM_ROOT }}
+          terraform-version: ${{ env.TERRAFORM_VERSION }}
+          state-bucket: ${{ secrets.TF_STATE_BUCKET }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+          alert-email: ${{ secrets.ALERT_EMAIL }}
+          alert-sms-number: ${{ secrets.ALERT_SMS_NUMBER }}
+          lock: "false"
+      # One comment per root module, found again by its first line and edited in place: a PR that
+      # is pushed ten times keeps one plan per root, the current one. The public form of the plan
+      # is the composite action's (refresh lines dropped, project id and number and state bucket
+      # replaced by their placeholders, as `infra/README.md` names them): the comment is as public
+      # as the repository. Truncated when GitHub's limit is near, the full text stays in the job
+      # log, where the secrets are masked.
+      - name: Publish the plan on the pull request
+        if: always() && steps.plan.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EXITCODE: ${{ steps.plan.outputs.exitcode }}
+          RESOURCE_CHANGES: ${{ steps.plan.outputs.resource-changes }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -eo pipefail
+          marker="<!-- terraform-plan:${TERRAFORM_ROOT} -->"
+          case "$EXITCODE" in
+            0) verdict="No change: the infrastructure already matches this branch." ;;
+            2) if [ "$RESOURCE_CHANGES" = "0" ]; then
+                 verdict="Output values only: the infrastructure already matches this branch, the merge applies nothing."
+               else
+                 verdict="Changes: this branch would change $RESOURCE_CHANGES resource(s) of the infrastructure, read the plan before merging."
+               fi ;;
+            *) verdict="Plan failed: read the [job log]($RUN_URL) before merging." ;;
+          esac
+          plan="$(head -c 60000 "$RUNNER_TEMP/plan.public.txt")"
+          if [ "$(wc -c < "$RUNNER_TEMP/plan.public.txt")" -gt 60000 ]; then
+            plan="$plan"$'\n'"... (truncated, the full plan is in the job log)"
+          fi
+          {
+            echo "$marker"
+            echo "### Terraform plan, \`$TERRAFORM_ROOT\`"
+            echo
+            echo "$verdict Commit \`${HEAD_SHA:0:8}\`, [run]($RUN_URL)."
+            echo
+            echo "<details><summary>Plan output</summary>"
+            echo
+            echo '```'
+            echo "$plan"
+            echo '```'
+            echo
+            echo "</details>"
+          } > "$RUNNER_TEMP/comment.md"
+          existing="$(gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments" --paginate --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -1)"
+          if [ -n "$existing" ]; then
+            gh api --method PATCH "repos/$REPOSITORY/issues/comments/$existing" -F body=@"$RUNNER_TEMP/comment.md" > /dev/null
+          else
+            gh api --method POST "repos/$REPOSITORY/issues/$PR_NUMBER/comments" -F body=@"$RUNNER_TEMP/comment.md" > /dev/null
+          fi
+          echo "Plan published on #$PR_NUMBER (exit code $EXITCODE)."
+
+  # The plans to read before approving the apply: read-only, without the lock, under the same
+  # identity as a pull request review, written to the job summary. Two jobs rather than a matrix,
+  # so that each exit code reaches the apply job under its own name.
+  plan-production:
+    name: 🔍 Plan on master (production)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: infra-plan
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      exitcode: ${{ steps.plan.outputs.exitcode }}
+      resource-changes: ${{ steps.plan.outputs.resource-changes }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: terraform plan (read-only, without the lock, job summary)
+        id: plan
+        uses: ./.github/actions/terraform-plan
+        with:
+          root: infra/terraform/environments/production
+          terraform-version: ${{ env.TERRAFORM_VERSION }}
+          state-bucket: ${{ secrets.TF_STATE_BUCKET }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+          alert-email: ${{ secrets.ALERT_EMAIL }}
+          alert-sms-number: ${{ secrets.ALERT_SMS_NUMBER }}
+          lock: "false"
+          summary: "true"
+
+  # Planned against the production outputs as they are before the apply: a staging change that
+  # only appears once production is applied is planned again, under the lock, by the apply job.
+  plan-staging:
+    name: 🔍 Plan on master (staging)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: infra-plan
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      exitcode: ${{ steps.plan.outputs.exitcode }}
+      resource-changes: ${{ steps.plan.outputs.resource-changes }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: terraform plan (read-only, without the lock, job summary)
+        id: plan
+        uses: ./.github/actions/terraform-plan
+        with:
+          root: infra/terraform/environments/staging
+          terraform-version: ${{ env.TERRAFORM_VERSION }}
+          state-bucket: ${{ secrets.TF_STATE_BUCKET }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+          lock: "false"
+          summary: "true"
+
+  # The scheduled run is a drift check: it deploys nothing and turns red when either root would
+  # change a resource, which is the only signal there is for a change made outside master. Read
+  # the two plan summaries, then either describe the change in `infra/terraform` or dispatch this
+  # workflow to apply master back over it.
+  drift:
+    name: 🧭 Weekly drift check (red when the infrastructure left master)
+    needs: [plan-production, plan-staging]
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Compare both roots with master
+        env:
+          PRODUCTION_CHANGES: ${{ needs.plan-production.outputs.resource-changes }}
+          STAGING_CHANGES: ${{ needs.plan-staging.outputs.resource-changes }}
+        run: |
+          fail=0
+          for root in production staging; do
+            if [ "$root" = "production" ]; then changes="$PRODUCTION_CHANGES"; else changes="$STAGING_CHANGES"; fi
+            if [ "$changes" != "0" ]; then
+              echo "::error::The $root infrastructure differs from master on $changes resource(s): read the plan summary of this run, then describe the change in infra/terraform or dispatch this workflow to apply master again."
+              fail=1
+            else
+              echo "$root: the infrastructure matches master."
+            fi
+          done
+          exit "$fail"
+
+  # Waits for the reviewer of the `infra-apply` environment (Settings / Environments), then plans
+  # again under the lock and applies that very plan, root after root: what is applied is exactly
+  # what the second summary shows, not the plan read a click earlier, and a drift in between shows
+  # up as a difference between the two. Skipped when neither root would change a resource, so an
+  # output-only refresh asks for no click. One apply at a time across runs: two never overlap, the
+  # next waits for the lock the first releases.
+  apply:
+    name: 🚀 Apply on master (production, then staging)
+    needs: [plan-production, plan-staging]
+    if: >-
+      github.event_name != 'schedule'
+      && (needs.plan-production.outputs.resource-changes != '0' || needs.plan-staging.outputs.resource-changes != '0')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: infra-apply
+    concurrency:
+      group: terraform-apply
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/gcloud-auth
+        with:
+          workload-identity-provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ secrets.GCP_TERRAFORM_SERVICE_ACCOUNT }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: terraform plan and apply (production)
+        uses: ./.github/actions/terraform-plan
+        with:
+          root: infra/terraform/environments/production
+          terraform-version: ${{ env.TERRAFORM_VERSION }}
+          state-bucket: ${{ secrets.TF_STATE_BUCKET }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+          alert-email: ${{ secrets.ALERT_EMAIL }}
+          alert-sms-number: ${{ secrets.ALERT_SMS_NUMBER }}
+          summary: "true"
+          apply: "true"
+      # After production, never beside it: the staging binds its identities to the federation and
+      # shares the image repository, both read from the production outputs.
+      - name: terraform plan and apply (staging)
+        uses: ./.github/actions/terraform-plan
+        with:
+          root: infra/terraform/environments/staging
+          terraform-version: ${{ env.TERRAFORM_VERSION }}
+          state-bucket: ${{ secrets.TF_STATE_BUCKET }}
+          project-id: ${{ secrets.GCP_PROJECT_ID }}
+          summary: "true"
+          apply: "true"
