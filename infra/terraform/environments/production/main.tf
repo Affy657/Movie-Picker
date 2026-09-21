@@ -144,12 +144,12 @@ module "backup" {
   subject            = module.github.subjects["backup"]
 
   project_roles    = ["roles/serviceusage.serviceUsageConsumer"]
-  readable_secrets = ["MONGODB_URI"]
+  readable_secrets = ["MONGODB_URI", google_secret_manager_secret.backup_database_uri.secret_id]
   bucket_roles = {
     backups = { bucket = google_storage_bucket.backups.name, role = "roles/storage.objectAdmin" }
   }
 
-  depends_on = [google_project_service.platform, module.api_secrets]
+  depends_on = [google_project_service.platform, module.api_secrets, google_secret_manager_secret.backup_database_uri]
 }
 
 resource "google_project_iam_custom_role" "secrets_operator" {

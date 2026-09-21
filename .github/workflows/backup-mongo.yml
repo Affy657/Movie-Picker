@@ -17,6 +17,13 @@
 # instance and extra permissions; to be decided if the write volume grows.
 #
 # The URI is read from Secret Manager rather than duplicated as a GitHub secret: a single source.
+# It is `MONGODB_BACKUP_URI`, not the URI of the API: an Atlas user that can only read the
+# production database, with that database in the path, so that the dump covers it and nothing
+# else (`mongodump` takes the database of the URI as its `--db`). Until that secret has a
+# version (DEBT-053, the Atlas user is a console gesture), the dump falls back on `MONGODB_URI`
+# with a warning, as it ran until 2026-09-21: as the cluster administrator the API also used,
+# archiving every database of the cluster. The fallback and the second binding leave with the
+# debt entry.
 #
 # The job runs in the `backup` environment, whose identity (`module "backup"` of the production
 # root module of `infra/terraform`) can read that one secret and write that one bucket, and
@@ -25,7 +32,8 @@
 # the daily archives and the pending area, 400 days for the monthly copies under `monthly/`) are
 # described there too. What remains by hand is the `BACKUP_BUCKET` repository variable
 # (Settings / Secrets and variables / Actions / Variables) and the environment itself, with the
-# `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT` secrets.
+# `GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT` secrets, and the
+# version of `MONGODB_BACKUP_URI` itself (a secret value never goes through Terraform).
 #
 # The bucket holds personal data (e-mail addresses, password hashes): public access forbidden,
 # and the archive is never published as a GitHub artifact. The run log is public, like every
@@ -115,8 +123,12 @@ jobs:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
           set -eo pipefail
-          if ! URI="$(gcloud secrets versions access latest --secret=MONGODB_URI --project="$GCP_PROJECT_ID")"; then
-            echo "::error::Reading the MONGODB_URI secret was refused: grant roles/secretmanager.secretAccessor to the CI service account."
+          if URI="$(gcloud secrets versions access latest --secret=MONGODB_BACKUP_URI --project="$GCP_PROJECT_ID" 2>/dev/null)" && [ -n "$URI" ]; then
+            echo "Dump taken with MONGODB_BACKUP_URI, the read-only user of the production database."
+          elif URI="$(gcloud secrets versions access latest --secret=MONGODB_URI --project="$GCP_PROJECT_ID")"; then
+            echo "::warning::MONGODB_BACKUP_URI has no version yet: the dump runs with MONGODB_URI, the URI of the API. Add the version (DEBT-053), then drop this fallback."
+          else
+            echo "::error::Neither MONGODB_BACKUP_URI nor MONGODB_URI could be read: the backup identity needs roles/secretmanager.secretAccessor on the first (module backup of infra/terraform), and the secret a version."
             exit 1
           fi
           echo "::add-mask::$URI"
