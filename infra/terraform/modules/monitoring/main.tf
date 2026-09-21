@@ -477,8 +477,8 @@ resource "google_monitoring_alert_policy" "backup_stale" {
     display_name = "Aucune archive publiee dans le bucket de sauvegarde depuis 36 heures"
 
     condition_prometheus_query_language {
-      query               = "absent_over_time(${local.backup_published}[36h])"
-      duration            = "1800s"
+      query               = "max_over_time((sum(count_over_time(${local.backup_published}[36h])) or vector(0))[1h:5m]) == 0"
+      duration            = "0s"
       evaluation_interval = "300s"
       alert_rule          = "MongoBackupStale"
     }
@@ -489,7 +489,7 @@ resource "google_monitoring_alert_policy" "backup_stale" {
     content = chomp(<<-EOT
       **Indicateur** : requêtes `MoveObject` réussies sur le bucket de sauvegarde (`storage.googleapis.com/api/request_count`), la dernière étape de `backup-mongo.yml`, qui déplace l'archive de `pending/` vers `mongodb/` une fois sa restauration vérifiée. Une archive écrite puis refusée à la vérification ne produit pas ce mouvement.
 
-      **Déclenchement** : aucun mouvement depuis 36 heures (`absent_over_time`, PromQL), évalué toutes les 5 minutes et tenu pendant 30 minutes avant de notifier. La sauvegarde part tous les jours vers 07:30 à 08:05 UTC (cron GitHub à 02:31, retardé d'environ cinq heures par la plateforme) : 36 heures laissent passer ce retard et une journée de dérive, pas deux. Les 30 minutes existent parce que l'évaluateur a vu la série absente pendant une seule évaluation le 2026-09-21 à 08:11 UTC, à l'instant où le point de la sauvegarde du jour arrivait, alors que la même requête rejouée sur cette fenêtre n'est jamais absente : une absence d'une évaluation est un artefact d'ingestion, pas une sauvegarde manquée.
+      **Déclenchement** : aucun mouvement depuis 36 heures, évalué toutes les 5 minutes. La requête PromQL compte les points `MoveObject` des 36 dernières heures (`count_over_time`, ramené à 0 par `or vector(0)` quand la série n'a aucun point) et ne notifie que si ce compte est resté à 0 sur chaque évaluation de la dernière heure (sous-requête `[1h:5m]`, `max_over_time ... == 0`). La sauvegarde part tous les jours vers 07:30 à 08:05 UTC (cron GitHub à 02:31, retardé d'environ cinq heures par la plateforme) : 36 heures laissent passer ce retard et une journée de dérive, pas deux. L'heure de confirmation existe parce que l'évaluateur a vu la série absente pendant une seule évaluation le 2026-09-21 à 08:11 UTC, à l'instant où le point de la sauvegarde du jour arrivait, alors que la même requête rejouée sur cette fenêtre n'est jamais absente : une absence d'une évaluation est un artefact d'ingestion, pas une sauvegarde manquée. Elle est écrite dans la requête parce que l'API refuse une fenêtre de retest (`duration`) sur un PromQL dont la portée dépasse 25 heures.
 
       **Pourquoi une alerte ici** : l'échec d'un run planifié n'est signalé que par un e-mail de GitHub, et un run qui ne part plus ne l'est par rien : GitHub désactive les workflows planifiés d'un dépôt public sans activité pendant 60 jours, et une identité fédérée révoquée ou un bucket renommé arrêtent la sauvegarde sans rougir nulle part.
 
