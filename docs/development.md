@@ -142,7 +142,29 @@ Tous se lancent à la racine du dépôt.
 | `pnpm run openapi:export`, `pnpm run openapi:types:check` | Contrat OpenAPI et dérive des types |
 | `pnpm --filter web prerender` | Prérendu des routes publiques indexables, à lancer après un build |
 | `pnpm run lighthouse` | Lighthouse sur le build, demande Node 22+ et Chrome |
+| `pnpm run capture:screenshots` | Captures du README, sur l'application lancée en local |
 | `pnpm run verify:local` | La chaîne complète, seize étapes en trois voies concurrentes puis la suite front seule, durées affichées en fin de run |
+
+## Captures du README
+
+`pnpm run capture:screenshots` refait les quatre images de `docs/screenshots/` sur l'application
+lancée en local. Le script se connecte au compte de démonstration, renomme le profil, crée une
+soirée propre (six films, quatre participants, des votes), retire de la liste les films sans
+affiche, puis photographie l'accueil, la soirée, le tirage et la liste en 1280 x 800, thème sombre.
+
+L'API doit tourner **sans base**, sinon la soirée de démonstration est écrite dans MongoDB, et
+**avec une clé TMDB**, sinon les affiches manquent. Depuis un worktree, `MOVIEPICKER_TEST_CONTEXT`
+est nécessaire : sans lui l'API remonte les dossiers parents et charge le `.env` du dépôt
+principal, donc sa base.
+
+```bash
+MOVIEPICKER_TEST_CONTEXT=1 TMDB_API_KEY=<clé> pnpm run dev:api-dotnet
+pnpm run dev:web
+pnpm run capture:screenshots
+```
+
+Les états qui gâchent une capture sont déjà traités : bandeau de consentement et fenêtre « Quoi de
+neuf » fermés, images paresseuses chargées par un défilement complet, animations coupées.
 
 ## Tests
 
@@ -174,10 +196,10 @@ movie-picker/
 ├─ archive/           Application Expo du cursus et documents gelés, plus construits
 ├─ artifacts/         Contrat OpenAPI, rapports Lighthouse et Stryker
 ├─ configs/           tsconfig et Prettier partagés, exclusions Sonar
-├─ docs/              Roadmap, dette technique, ce guide
+├─ docs/              Roadmap, dette technique, ce guide, captures du README
 ├─ e2e/               Parcours Playwright
 ├─ infra/             Terraform (infra/terraform/) et la configuration du site Firebase Hosting
-└─ scripts/           verify:local, lint des workflows, Terraform, publication Firebase Hosting, prérequis, export OpenAPI, seuils de couverture
+└─ scripts/           verify:local, lint des workflows, Terraform, publication Firebase Hosting, prérequis, export OpenAPI, seuils de couverture, captures
 ```
 
 L'API suit un découpage hexagonal : `Domain` porte les entités et les règles sans dépendance au

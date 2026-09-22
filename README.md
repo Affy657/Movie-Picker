@@ -11,6 +11,21 @@
   <a href="https://www.movie-picker.fr/tech"><strong>Lire le dossier technique</strong></a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/Affy657/Movie-Picker/actions/workflows/ci-cd.yml"><img
+    src="https://github.com/Affy657/Movie-Picker/actions/workflows/ci-cd.yml/badge.svg?branch=master&event=push"
+    alt="CI"></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=Affy657_Movie-Picker"><img
+    src="https://sonarcloud.io/api/project_badges/measure?project=Affy657_Movie-Picker&metric=alert_status"
+    alt="Quality Gate SonarCloud"></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=Affy657_Movie-Picker"><img
+    src="https://sonarcloud.io/api/project_badges/measure?project=Affy657_Movie-Picker&metric=sqale_rating"
+    alt="Maintenabilité SonarCloud"></a>
+  <a href="https://github.com/Affy657/Movie-Picker/releases"><img
+    src="https://img.shields.io/github/v/release/Affy657/Movie-Picker?label=version"
+    alt="Dernière version publiée"></a>
+</p>
+
 ## Le produit
 
 On crée une soirée, on partage le lien, chacun propose des films et vote, la roue tranche.
@@ -22,14 +37,29 @@ On crée une soirée, on partage le lien, chacun propose des films et vote, la r
 5. **Lancer la roue**, en tirage strictement aléatoire ou pondéré par les votes, au choix de l'hôte.
 6. **Couronner** un ou plusieurs films, jusqu'à dix selon le réglage de l'hôte : chaque tirage en ajoute un au palmarès.
 
-Autour de ce parcours : des soirées qui se répètent au rythme choisi et des modèles de soirée
-réutilisables, une limite de votes par participant, une page d'accueil d'exploration (rangées
-personnalisées, 120 sagas, sélections thématiques, ce qui passe ce soir en streaming), une liste de
-films personnelle avec notes sur 5 ou sur 10 et consultable depuis le profil de ses amis, des profils
-publics `/u/:handle` avec recherche de comptes et suivi entre eux, l'import Letterboxd, les
-notifications push et in-app, l'export calendrier `.ics`, le thème clair ou sombre, l'installation en
-PWA, l'export et la suppression de compte au sens RGPD, et une navigation clavier vérifiée par axe
-sur les vues principales.
+|  |  |
+| :--: | :--: |
+| <img src="docs/screenshots/01-accueil.png" alt="Page d'accueil : recherche et rangées de films"> | <img src="docs/screenshots/02-soiree.png" alt="Une soirée : films proposés, votes et participants"> |
+| Ce qu'on peut regarder ce soir | Les films proposés, les votes, les participants |
+| <img src="docs/screenshots/03-tirage.png" alt="Résultat du tirage de la roue"> | <img src="docs/screenshots/04-ma-liste.png" alt="Ma liste de films"> |
+| La roue tranche | Sa liste de films, notée et importable depuis Letterboxd |
+
+Captures prises sur l'application lancée en local, par
+[`scripts/capture-screenshots.mjs`](scripts/capture-screenshots.mjs).
+
+Autour de ce parcours :
+
+- **Soirées** : récurrence au rythme choisi, modèles réutilisables, limite de votes par
+  participant, export calendrier `.ics`.
+- **Exploration** : page d'accueil avec rangées personnalisées, 120 sagas, sélections thématiques
+  et ce qui passe ce soir en streaming.
+- **Liste de films** : notes sur 5 ou sur 10, import Letterboxd, consultable depuis le profil de
+  ses amis.
+- **Social** : profils publics `/u/:handle`, recherche de comptes et suivi entre eux, notifications
+  push et in-app.
+- **Confort** : thème clair ou sombre, installation en PWA, navigation clavier vérifiée par axe sur
+  les vues principales.
+- **RGPD** : export et suppression de compte.
 
 ## La stack
 
@@ -48,7 +78,7 @@ flowchart LR
     FH[Firebase Hosting, front statique]
     AR[Artifact Registry] -.-> CR[Cloud Run, API .NET]
   end
-  Browser --> CF
+  Browser --> FH
   Browser --> CR
   CR --> Mongo[(MongoDB Atlas)]
   CR --> TMDB[API TMDB]
@@ -168,6 +198,7 @@ hébergement du front, identités et fédération GitHub) est décrite en Terraf
 | [`docs/roadmap.md`](docs/roadmap.md) | Roadmap produit et tech, version par version |
 | [`docs/technical-debt.md`](docs/technical-debt.md) | Dette technique, contraintes et impasses connues |
 | [`docs/runbook-mongodb-restore.md`](docs/runbook-mongodb-restore.md) | Remettre une sauvegarde MongoDB dans le cluster de production |
+| [`archive/`](archive/) | Ce qui est gelé et conservé pour l'historique, hors du périmètre construit et déployé |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Projet solo : ce qui est accepté, ce qui ne l'est pas, où signaler |
 | [`SECURITY.md`](SECURITY.md) | Signaler une faille, par un canal privé |
 
