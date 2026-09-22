@@ -392,12 +392,12 @@ Pour un domaine déjà servi ailleurs : demander le certificat avant de bouger l
 
 ## C7 le dépôt est public depuis le 2026-09-10, et son historique entier avec lui
 
-Chaque commit jamais poussé, les 86 PR et les 7 tickets sont lisibles ; un `git rm` ou un retour en privé n'y change rien. Audit du 2026-09-10 sur les 1 003 commits, PR et tickets, **à ne pas rejouer** : aucun secret (`gitleaks` sur l'historique complet : quatre `curl-auth-user` de documentation ; recherches vides pour `GOCSPX-`, `re_`, `sq[pau]_`, `ghp_`/`github_pat_`, `AKIA`, `AIza`, PEM, `mongodb+srv` avec mot de passe, JWT ; aucun `.env` versionné), aucune donnée personnelle dans les captures RNCP ni les tickets. La porte `gitleaks` de la CI tourne en mode `dir` et ne couvre jamais l'historique.
+Chaque commit jamais poussé, les 86 PR et les 7 tickets sont lisibles ; un `git rm` ou un retour en privé n'y change rien. Audit du 2026-09-10 sur les 1 003 commits, PR et tickets, **à ne pas rejouer** : aucun secret (`gitleaks` sur l'historique complet : quatre `curl-auth-user` de documentation ; recherches vides pour `GOCSPX-`, `re_`, `sq[pau]_`, `ghp_`/`github_pat_`, `AKIA`, `AIza`, PEM, `mongodb+srv` avec mot de passe, JWT ; aucun `.env` versionné), aucune donnée personnelle dans les captures du dossier de titre ni les tickets. La porte `gitleaks` de la CI tourne en mode `dir` et ne couvre jamais l'historique.
 
 Publié sciemment, ne pas y revenir comme si c'était un oubli :
 
 1. Le courriel personnel de l'auteur est l'adresse de 916 commits sur 1 003. Réécrire l'historique changerait tous les SHA et casserait les liens des PR pour une adresse déjà publiée. `user.email` est posé en `noreply` en local sur ce dépôt ; un clone neuf hérite de la configuration globale, à reposer.
-2. `archive/docs/RNCP/` (livrables notés, slides du Bloc 3) et `archive/docs/_ynov/` (consigne de module) sont publiés.
+2. `archive/docs/_ynov/` (consigne de module) est publié. Le dossier du titre (`archive/docs/RNCP/`, livrables notés et slides) a été retiré de l'arbre le 2026-09-22 et exporté en PDF hors dépôt : il reste lisible dans l'historique, ce qui est sans conséquence, l'audit ci-dessus n'y a trouvé aucune donnée personnelle.
 3. Les branches distantes sont visibles : `master`, la branche de version en cours, `feedback-attachments` (où `GitHubIssueClient` publie les captures jointes aux signalements, lisibles via `raw.githubusercontent.com`) et les branches Dependabot de passage. Les branches de worktree restent locales.
 4. Les journaux et artefacts des runs Actions sont publics. Aucun `set -x` ni `echo` de secret dans les workflows ; `playwright-traces` et `playwright-traces-mongo` (corps de requêtes et cookies) n'existent que sur un run rouge et vivent 7 jours, `sbom-api` (`deploy.yml`, étape de recette) 30 jours. Ne pas allonger ces rétentions.
 
