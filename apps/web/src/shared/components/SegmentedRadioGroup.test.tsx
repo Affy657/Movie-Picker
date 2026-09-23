@@ -85,4 +85,13 @@ describe('SegmentedRadioGroup', () => {
     expect(screen.getByRole('radiogroup').className).toContain(styles.rootSm);
     expect(screen.getByRole('radio', { name: 'Grille' }).className).toContain(styles.optionSm);
   });
+
+  it('refuses a group without any accessible name at compile time', () => {
+    render(
+      // @ts-expect-error a radiogroup is named by ariaLabel or ariaLabelledBy
+      <SegmentedRadioGroup options={OPTIONS} value="grid" onChange={vi.fn()} />
+    );
+
+    expect(screen.getByRole('radiogroup')).not.toHaveAttribute('aria-label');
+  });
 });

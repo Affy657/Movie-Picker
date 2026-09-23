@@ -38,7 +38,7 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: blur(22px) brightness(0.55) saturate(1.1);
+  filter: var(--filter-poster-backdrop);
   transform: scale(1.25);
 }
 
@@ -63,21 +63,11 @@
 }
 
 .tvBadge {
+  composes: posterBadge from './movieCardParts.module.css';
   position: absolute;
   top: var(--space-2);
   left: var(--space-2);
   z-index: var(--z-raised);
-  padding: calc(var(--space-0-5) + var(--text-optical-nudge-caps))
-    calc(var(--space-1-5) - var(--tracking-wide))
-    calc(var(--space-0-5) - var(--text-optical-nudge-caps)) var(--space-1-5);
-  font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--on-poster-badge-fg);
-  background: var(--on-poster-scrim);
-  border: 1px solid var(--on-poster-border);
-  border-radius: var(--radius-sm);
 }
 
 .info {

@@ -1,5 +1,4 @@
 import { NavLink, Outlet, useNavigate } from 'react-router';
-import { ChevronLeft } from 'lucide-react';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
@@ -8,6 +7,7 @@ import AccountIdentityHeader from './AccountIdentityHeader';
 import { ACCOUNT_RUBRIQUES } from './accountRubriques';
 import styles from './AccountLayout.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import BackLink from '@/shared/components/BackLink';
 
 export default function AccountLayout({ user }: Readonly<{ user: UserProfile }>) {
   const { t } = useTranslation();
@@ -21,10 +21,9 @@ export default function AccountLayout({ user }: Readonly<{ user: UserProfile }>)
 
       {isMobile ? (
         <div className={styles.mobileSubHeader}>
-          <button type="button" className={styles.back} onClick={() => navigate(ROUTES.account)}>
-            <ChevronLeft size={ICON_SIZE.md} aria-hidden />
-            <span>{t('auth.account.backToAccount')}</span>
-          </button>
+          <BackLink onClick={() => navigate(ROUTES.account)}>
+            {t('auth.account.backToAccount')}
+          </BackLink>
         </div>
       ) : (
         <nav className={styles.rubrics} aria-label={t('auth.account.rubricsNavAriaLabel')}>

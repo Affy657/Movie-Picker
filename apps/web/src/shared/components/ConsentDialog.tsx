@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import { useTranslation } from '@/shared/i18n';
 import { useConsent } from '@/shared/contexts/ConsentContext';
+import Card from './Card';
 import styles from './ConsentDialog.module.css';
 import Modal from './Modal';
 import Button from '@/shared/components/Button';
@@ -44,14 +45,14 @@ export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
       <p className={styles.description}>{t('consent.dialog.description')}</p>
 
       <ul className={styles.categories}>
-        <li className={styles.category}>
+        <Card as="li" padding="none" surface="sunken" className={styles.category}>
           <div className={styles.categoryInfo}>
             <strong className={styles.categoryName}>{t('consent.dialog.functional')}</strong>
             <p className={styles.categoryDesc}>{t('consent.dialog.functionalDesc')}</p>
           </div>
           <span className={styles.requiredBadge}>{t('consent.dialog.required')}</span>
-        </li>
-        <li className={styles.category}>
+        </Card>
+        <Card as="li" padding="none" surface="sunken" className={styles.category}>
           <label
             className={styles.categoryLabel}
             htmlFor="consent-analytics"
@@ -69,14 +70,14 @@ export default function ConsentDialog({ open, onClose }: Readonly<Props>) {
               className={styles.checkbox}
             />
           </label>
-        </li>
-        <li className={styles.category}>
+        </Card>
+        <Card as="li" padding="none" surface="sunken" className={styles.category}>
           <div className={styles.categoryInfo}>
             <strong className={styles.categoryName}>{t('consent.dialog.errorMonitoring')}</strong>
             <p className={styles.categoryDesc}>{t('consent.dialog.errorMonitoringDesc')}</p>
           </div>
           <span className={styles.requiredBadge}>{t('consent.dialog.required')}</span>
-        </li>
+        </Card>
       </ul>
 
       <div className={styles.actions}>

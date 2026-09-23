@@ -34,9 +34,9 @@ export default function ProfileStreakFlame({ weeks, bestWeeks }: Readonly<Props>
       <svg className={styles.flame} viewBox="0 0 64 80" aria-hidden focusable="false">
         <defs>
           <linearGradient id={gradientId} x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stopColor="#fbbf24" />
-            <stop offset="45%" stopColor="#f97316" />
-            <stop offset="100%" stopColor="#ef4444" />
+            <stop offset="0%" className={styles.flameBase} />
+            <stop offset="45%" className={styles.flameMiddle} />
+            <stop offset="100%" className={styles.flameTip} />
           </linearGradient>
         </defs>
         <path d={FLAME_PATH} fill={`url(#${gradientId})`} />

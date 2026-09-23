@@ -1,5 +1,4 @@
 import { useId } from 'react';
-import Button from '@/shared/components/Button';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { Tabs, TabPanel, type TabDef } from '@/shared/components/Tabs';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
@@ -14,6 +13,10 @@ import MovieBrowseCard, {
 import { useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import type { ShowcaseItem, ShowcaseQuery } from '@/features/movies/api/showcaseApi';
 import styles from './HomeShowcaseRow.module.css';
+import EmptyState from '@/shared/components/EmptyState';
+import { ICON_SIZE } from '@/shared/components/iconSize';
+import { Film } from 'lucide-react';
+import InlineError from '@/shared/components/InlineError';
 
 const SKELETON_CARDS = 6;
 export const RAIL_PREVIEW_COUNT = 20;
@@ -143,17 +146,24 @@ export default function HomeShowcaseRow<T extends string>({
     body = <SkeletonRow label={t('showcase.loading')} />;
   } else if (showcase.isError) {
     body = (
-      <p className={styles.state}>
-        {t('showcase.error')}
-        <Button size="sm" variant="secondary" onClick={() => void showcase.refetch()}>
-          {t('showcase.retry')}
-        </Button>
-      </p>
+      <InlineError
+        message={t('showcase.error')}
+        retryLabel={t('showcase.retry')}
+        onRetry={() => void showcase.refetch()}
+        messageRole="status"
+      />
     );
   } else if (items.length === 0 && !tabConfig) {
     return null;
   } else if (items.length === 0) {
-    body = <p className={styles.state}>{t('showcase.empty')}</p>;
+    body = (
+      <EmptyState
+        compact
+        icon={<Film aria-hidden size={ICON_SIZE['2xl']} />}
+        title={t('showcase.empty')}
+        message={t('showcase.emptyMessage')}
+      />
+    );
   } else {
     body = grid;
   }

@@ -3,10 +3,17 @@ import type { GenreCount } from '@/features/events/api/userStatsApi';
 import { genreLabel } from '@/shared/utils/tmdbGenres';
 import styles from './ProfileStatsSection.module.css';
 
-const HUES = [255, 195, 155, 310, 65, 20];
+const GENRE_COLOR_TOKENS = [
+  '--color-genre-0',
+  '--color-genre-1',
+  '--color-genre-2',
+  '--color-genre-3',
+  '--color-genre-4',
+  '--color-genre-5',
+] as const;
 
 function genreColor(index: number): string {
-  return `oklch(0.72 0.13 ${HUES[index % HUES.length]})`;
+  return `var(${GENRE_COLOR_TOKENS[index % GENRE_COLOR_TOKENS.length]})`;
 }
 
 interface Props {

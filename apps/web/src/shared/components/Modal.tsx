@@ -1,22 +1,49 @@
-import { useId, type ReactNode, type RefObject } from 'react';
+import { useId, type ReactElement, type ReactNode, type RefObject } from 'react';
 import clsx from 'clsx';
 import { useModalDialog } from '@/shared/hooks/useDialogOpen';
 import { useTranslation } from '@/shared/i18n';
 import DialogTitleBar from './DialogTitleBar';
 import styles from './Modal.module.css';
 
-export type ModalSize = 'xs' | 'sm' | 'md' | 'base' | 'xl';
+export type ModalSize = 'xs' | 'sm' | 'md' | 'lg' | '2xl';
+
+const SIZE_CLASS: Record<ModalSize, string | undefined> = {
+  xs: styles.sizeXs,
+  sm: styles.sizeSm,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+  '2xl': styles.size2xl,
+};
 
 export type ModalSurface = 'surface' | 'bare' | 'media' | 'borderless';
 
-type ModalProps = {
+type ModalNaming =
+  | {
+      title: string | ReactElement;
+      titleId?: string;
+      titleDetail?: ReactNode;
+      ariaLabelledBy?: never;
+      ariaLabel?: never;
+    }
+  | {
+      ariaLabelledBy: string;
+      title?: never;
+      titleId?: never;
+      titleDetail?: never;
+      ariaLabel?: never;
+    }
+  | {
+      ariaLabel: string;
+      title?: never;
+      titleId?: never;
+      titleDetail?: never;
+      ariaLabelledBy?: never;
+    };
+
+type ModalProps = ModalNaming & {
   open: boolean;
   onClose: () => void;
-  title?: ReactNode;
-  titleId?: string;
-  ariaLabelledBy?: string;
   ariaDescribedBy?: string;
-  ariaLabel?: string;
   size?: ModalSize;
   surface?: ModalSurface;
   padded?: boolean;
@@ -24,7 +51,7 @@ type ModalProps = {
   anchoredTop?: boolean;
   bottomSheetOnMobile?: boolean;
   strongBackdrop?: boolean;
-  closeLabel?: string;
+  closeAriaLabel?: string;
   className?: string;
   'data-testid'?: string;
   dialogRef?: RefObject<HTMLDialogElement | null>;
@@ -36,6 +63,7 @@ export default function Modal({
   onClose,
   title,
   titleId,
+  titleDetail,
   ariaLabelledBy,
   ariaDescribedBy,
   ariaLabel,
@@ -46,7 +74,7 @@ export default function Modal({
   anchoredTop = false,
   bottomSheetOnMobile = false,
   strongBackdrop = false,
-  closeLabel,
+  closeAriaLabel,
   className,
   'data-testid': testId,
   dialogRef: externalRef,
@@ -62,7 +90,7 @@ export default function Modal({
       ref={dialogRef}
       className={clsx(
         styles.dialog,
-        styles[size],
+        SIZE_CLASS[size],
         surface === 'bare' && styles.bare,
         surface === 'media' && styles.media,
         surface === 'borderless' && styles.borderless,
@@ -82,8 +110,9 @@ export default function Modal({
         <DialogTitleBar
           titleId={resolvedTitleId}
           title={title}
+          detail={titleDetail}
           onClose={onClose}
-          closeLabel={closeLabel ?? t('common.close')}
+          closeAriaLabel={closeAriaLabel ?? t('common.close')}
         />
       ) : null}
       {children}

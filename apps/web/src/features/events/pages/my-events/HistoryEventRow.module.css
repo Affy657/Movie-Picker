@@ -38,8 +38,8 @@
   padding: calc(var(--space-0-5) + var(--text-optical-nudge)) var(--space-1-5)
     calc(var(--space-0-5) - var(--text-optical-nudge));
   border-radius: var(--radius-sm);
-  background: var(--on-poster-scrim-strong);
-  color: var(--on-poster-fg-strong);
+  background: var(--color-on-poster-scrim-strong);
+  color: var(--color-on-poster-fg-strong);
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-bold);
   line-height: var(--leading-none);
@@ -77,7 +77,7 @@
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);
   line-height: var(--leading-snug);
-  letter-spacing: var(--tracking-close);
+  letter-spacing: var(--tracking-tight);
   color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;

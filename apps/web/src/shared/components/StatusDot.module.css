@@ -1,0 +1,28 @@
+.dot {
+  flex: 0 0 auto;
+  width: var(--space-1-5);
+  height: var(--space-1-5);
+  border-radius: var(--radius-pill);
+  background: currentColor;
+}
+
+.pulsing {
+  animation: statusPulse var(--duration-breathe) var(--ease-in-out) infinite;
+}
+
+@keyframes statusPulse {
+  0%,
+  70%,
+  100% {
+    opacity: 1;
+  }
+  35% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulsing {
+    animation: none;
+  }
+}

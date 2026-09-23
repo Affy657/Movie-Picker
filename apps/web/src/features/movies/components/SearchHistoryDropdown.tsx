@@ -121,7 +121,9 @@ export default function SearchHistoryDropdown({
         <span className={styles.historyTitle} id={titleId}>
           {t('movies.search.historyTitle')}
         </span>
-        <LinkButton onClick={clear}>{t('movies.search.historyClear')}</LinkButton>
+        <LinkButton size="sm" onClick={clear}>
+          {t('movies.search.historyClear')}
+        </LinkButton>
       </div>
       <ul className={styles.historyList} ref={listRef}>
         {history.map((query, index) => (

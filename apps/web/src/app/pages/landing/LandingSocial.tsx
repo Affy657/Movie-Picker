@@ -53,10 +53,10 @@ export default function LandingSocial() {
 
           <div className={styles.stats}>
             {stats.map((stat) => (
-              <div key={stat.label} className={styles.stat}>
+              <Card padding="none" surface="sunken" key={stat.label} className={styles.stat}>
                 <p className={styles.statValue}>{stat.value}</p>
                 <p className={styles.statLabel}>{stat.label}</p>
-              </div>
+              </Card>
             ))}
           </div>
 

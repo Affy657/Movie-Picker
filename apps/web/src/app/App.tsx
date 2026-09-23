@@ -131,7 +131,7 @@ export function AppRoutes() {
               titleKey="events.myEvents.signedOutTitle"
               messageKey="events.myEvents.signedOutMessage"
               returnTo={ROUTES.myEvents}
-              maxWidth="min(var(--container-xl), 100%)"
+              maxWidth="min(var(--container-2xl), 100%)"
             >
               <MyEventsPage />
             </SessionGate>
@@ -146,7 +146,7 @@ export function AppRoutes() {
               titleKey="watchlist.signedOutTitle"
               messageKey="watchlist.signedOutMessage"
               returnTo={ROUTES.watchlist}
-              maxWidth="var(--container-base)"
+              maxWidth="var(--container-lg)"
             >
               <WatchlistPage />
             </SessionGate>

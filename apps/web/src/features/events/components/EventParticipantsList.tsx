@@ -69,13 +69,9 @@ export default function EventParticipantsList({
           <span className={styles.headerLabel}>{t('events.participants.title')}</span>
           <span className={styles.count}>({countLabel})</span>
           {isFull && (
-            <Chip
-              tone="warning"
-              size="sm"
-              className={styles.fullBadge}
-              ariaLabel={t('events.participants.fullBadgeAria')}
-            >
-              {t('events.participants.fullBadge')}
+            <Chip tone="warning" size="sm" className={styles.fullBadge}>
+              <span aria-hidden="true">{t('events.participants.fullBadge')}</span>
+              <span className="visually-hidden">{t('events.participants.fullBadgeAria')}</span>
             </Chip>
           )}
         </h2>
@@ -91,7 +87,7 @@ export default function EventParticipantsList({
             {managing ? (
               <>
                 <Check aria-hidden size={ICON_SIZE.sm} />
-                <span className={styles.manageBtnLabel}>{t('events.participants.manageDone')}</span>
+                {t('events.participants.manageDone')}
               </>
             ) : (
               <>
@@ -172,7 +168,7 @@ export default function EventParticipantsList({
             <li>
               <Chip
                 icon={UserPlus}
-                className={styles.inviteChip}
+                dashed
                 onClick={onInvite}
                 ariaLabel={t('events.participants.inviteAriaLabel')}
               >

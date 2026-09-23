@@ -23,7 +23,7 @@
 }
 
 @media (hover: hover) {
-  .card:hover {
+  .card:not(.selected):hover {
     border-color: var(--color-border);
     background: var(--color-surface-hover);
   }
@@ -31,7 +31,7 @@
 
 .card:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .card:disabled {
@@ -39,8 +39,7 @@
   cursor: not-allowed;
 }
 
-.selected,
-.selected:hover {
+.selected {
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
 }

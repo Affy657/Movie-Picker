@@ -26,6 +26,11 @@
   color: var(--color-primary-text);
 }
 
+.trigger:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset);
+}
+
 @media (hover: hover) {
   .trigger:hover {
     background: var(--color-surface-hover);
@@ -55,11 +60,9 @@
 }
 
 .panelTitle {
+  composes: sectionLabel from './typography.module.css';
   font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-semibold);
   color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide-lg);
 }
 
 .panel p {
@@ -68,17 +71,4 @@
 
 .close {
   align-self: flex-start;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--color-primary-text);
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-}
-
-@media (hover: hover) {
-  .close:hover {
-    text-decoration: underline;
-  }
 }

@@ -46,7 +46,7 @@
 
 .cardTrigger:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
   border-radius: var(--radius-sm);
 }
 
@@ -101,7 +101,7 @@
   height: var(--space-4);
   font-size: var(--font-size-2xs);
   line-height: var(--leading-none);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
   font-variant-numeric: tabular-nums;
 }
 
@@ -129,6 +129,7 @@
 }
 
 .badge {
+  composes: posterBadge from './movieCardParts.module.css';
   position: absolute;
   top: var(--space-2);
   left: var(--space-2);
@@ -136,18 +137,6 @@
   pointer-events: none;
   display: inline-flex;
   align-items: center;
-  padding: calc(var(--space-0-5) + var(--text-optical-nudge-caps))
-    calc(var(--space-1-5) - var(--tracking-wide))
-    calc(var(--space-0-5) - var(--text-optical-nudge-caps)) var(--space-1-5);
-  border-radius: var(--radius-sm);
-  background: var(--on-poster-scrim);
-  color: var(--on-poster-badge-fg);
-  border: 1px solid var(--on-poster-border);
-  font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-  line-height: var(--leading-none);
 }
 
 .badgeStacked {

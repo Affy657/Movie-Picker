@@ -17,6 +17,7 @@ import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
 import Tooltip from '@/shared/components/Tooltip';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import BackLink from '@/shared/components/BackLink';
 
 const MAX_STACKED_AVATARS = 4;
 const STICKY_BAR_MEDIA = '(min-width: 48rem)';
@@ -453,14 +454,9 @@ export default function EventDetailHeader({
   return (
     <>
       <div className={styles.top}>
-        <button
-          type="button"
-          className={clsx('back-link back-link-button', styles.back)}
-          onClick={goBack}
-        >
-          <ArrowLeft size={ICON_SIZE.md} aria-hidden />
+        <BackLink onClick={goBack} className={styles.backLink}>
           {t('events.detail.backNav')}
-        </button>
+        </BackLink>
         {stickyBar ? null : utilityActions}
       </div>
 
@@ -473,15 +469,9 @@ export default function EventDetailHeader({
         data-event-sticky-bar={stickyBar || undefined}
       >
         {condensed ? (
-          <button
-            type="button"
-            className={styles.backCondensed}
-            onClick={goBack}
-            aria-label={t('events.detail.backNav')}
-            title={t('events.detail.backNav')}
-          >
+          <IconButton size="sm" ariaLabel={t('events.detail.backNav')} onClick={goBack}>
             <ArrowLeft size={ICON_SIZE.lg} aria-hidden />
-          </button>
+          </IconButton>
         ) : null}
         <div className={styles.heading}>
           <h1 className={styles.title}>{title}</h1>

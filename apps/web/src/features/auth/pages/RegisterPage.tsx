@@ -116,7 +116,7 @@ export default function RegisterPage() {
               />
             )}
           </Field>
-          <Button type="submit" variant="primary" loading={loading}>
+          <Button type="submit" variant="primary" fullWidth loading={loading}>
             {loading ? t('auth.register.submitting') : t('auth.register.submit')}
           </Button>
         </form>

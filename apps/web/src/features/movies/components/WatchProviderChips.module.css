@@ -36,14 +36,12 @@
 }
 
 .labelText {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   margin: 0;
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
   font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-wider);
-  text-transform: uppercase;
   line-height: var(--leading-none);
   color: var(--color-text-muted);
 }
@@ -131,7 +129,7 @@
 
 .providerLink:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .more {
@@ -158,7 +156,7 @@
   color: var(--color-primary-text);
   border-color: var(--color-primary-border-soft);
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 @media (hover: hover) {

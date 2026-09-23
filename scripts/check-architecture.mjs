@@ -244,10 +244,29 @@ function stripTokenCalls(value) {
 const OPACITY_DECL = /(?:^|[;{\n])\s*opacity\s*:\s*([^;{}]+)/g;
 const KEYFRAME_STEP = /^(?:from|to|\d+%)(?:\s*,\s*(?:from|to|\d+%))*$/;
 const CSS_RULE_RE = /([^{}]+)\{([^{}]*)\}/g;
-const RAW_COLOR = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
+const RAW_COLOR = /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/;
+const NAMED_COLOR =
+  /(?<![\w-])(?:white|black|red|green|blue|yellow|orange|purple|pink|gray|grey|silver|navy|teal|maroon|olive|lime|aqua|fuchsia)(?![\w-])/i;
+const URL_CALL = /url\((?:"[^"]*"|'[^']*'|[^)]*)\)/g;
+const COLOR_PROP =
+  /(?:^|[;{\n])\s*(color|background(?:-color|-image)?|border(?:-[a-z-]+)?|outline(?:-color)?|box-shadow|text-shadow|fill|stroke|stop-color|caret-color|accent-color|text-decoration-color)\s*:\s*([^;{}]+)/g;
 const PRIMARY_AS_TEXT = /(?<![\w-])color\s*:\s*var\((--color-primary(?:-hover)?)\)/g;
-const AD_HOC_ROLE_MIX =
-  /color-mix\(in srgb, var\(--color-(primary|error|success|warning|text|text-muted|meta|bg|surface|border|border-subtle)\)/g;
+function colorMixRoles(text) {
+  const roles = [];
+  let start = text.indexOf('color-mix(');
+  while (start !== -1) {
+    let depth = 0;
+    let end = start + 'color-mix'.length;
+    for (; end < text.length; end += 1) {
+      if (text[end] === '(') depth += 1;
+      else if (text[end] === ')' && --depth === 0) break;
+    }
+    for (const [, role] of text.slice(start, end).matchAll(/var\((--color-[\w-]+)\)/g))
+      roles.push(role);
+    start = text.indexOf('color-mix(', end);
+  }
+  return roles;
+}
 const TOKENISED_PROPS = [
   ['line-height', /var\(--leading-|inherit|normal|^0$/, '--leading-*'],
   ['letter-spacing', /var\(--tracking-|inherit|normal|^0$/, '--tracking-*'],
@@ -256,28 +275,139 @@ const TOKENISED_PROPS = [
   ['border-radius', /var\(--radius-|inherit|^(?:(?:0|50%|100%)\s*)+$/, '--radius-*'],
 ];
 const MOTION_PROP =
-  /(?:^|[;{\n])\s*(transition|animation)(-duration|-timing-function)?\s*:\s*([^;{}]+)/g;
+  /(?:^|[;{\n])\s*(transition|animation)(-duration|-timing-function|-delay)?\s*:\s*([^;{}]+)/g;
 const LITERAL_DURATION = /(?<![\w-])\d*\.?\d+m?s\b/;
 const LITERAL_EASING = /(?<![\w-])(?:ease(?:-in|-out|-in-out)?|linear|cubic-bezier\(|steps\()/;
 const DURATION_WITHOUT_EASING = /var\(--duration-[\w-]+\)\s*(?:,|$)/;
 const BORDER_WIDTH =
   /(?:^|[;{\n])\s*(border(?:-(?:top|right|bottom|left|inline|block)(?:-(?:start|end))?)?(?:-width)?)\s*:\s*([^;{}]+)/g;
 const OUTLINE_LITERAL = /(?:^|[;{\n])\s*outline\s*:\s*(\d+px\s+solid\s+var\(--color-primary\))/g;
+const OUTLINE_OFFSET = /(?:^|[;{\n])\s*outline-offset\s*:\s*([^;{}]+)/g;
+const FILTER_PROP = /(?:^|[;{\n])\s*((?:-webkit-)?(?:backdrop-)?filter)\s*:\s*([^;{}]+)/g;
+const GRID_TRACK_PROP =
+  /(?:^|[;{\n])\s*(grid-template-columns|grid-template-rows|grid-auto-columns|grid-auto-rows)\s*:\s*([^;{}]+)/g;
 const FOCUS_VISIBLE_RULE = /([^{}]*:focus-visible[^{]*)\{([^}]*)\}/g;
-const PRIMITIVE_IN_MODULE =
-  /var\((--(?:blue|green|violet|pink|orange|red|cyan|indigo|amber|emerald|yellow|sky)-\d+)\)/g;
+const HUES =
+  'blue|green|violet|purple|pink|orange|red|cyan|indigo|amber|emerald|yellow|sky|teal|fuchsia|slate|night';
+const PRIMITIVE_IN_MODULE = new RegExp(`var\\((--(?:(?:${HUES})-\\d+|white|black))\\)`, 'g');
 const DECLARED_TOKEN = /(?:^|[;{\n])\s*(--[a-z][\w-]*)\s*:/g;
-const TOKENS_CONSUMED_INDIRECTLY =
-  /^--(?:(?:blue|green|violet|purple|pink|orange|red|cyan|indigo|amber|emerald|yellow|sky)-\d+|icon-[\w]+)$/;
+const CUSTOM_PROPERTY = /(?:^|[;{\n])\s*(--[a-z][\w-]*)\s*:\s*([^;{}]+)/g;
+const CUSTOM_PROPERTY_DECLARATION =
+  /(^|[;{\n])\s*--[a-z][\w-]*\s*:(?:[^;{}"'()]|"[^"]*"|'[^']*'|\((?:[^()"']|"[^"]*"|'[^']*'|\([^()]*\))*\))*;/g;
+const LANDING_PALETTE = 'apps/web/src/app/pages/landing/landingPalette.css';
+const TOKEN_SHEETS = new Set([FOUNDATION, LANDING_PALETTE]);
+const TOKENS_CONSUMED_INDIRECTLY = new RegExp(`^--(?:(?:${HUES})-\\d+|white|black|icon-[\\w]+)$`);
 const USED_TOKEN = /var\((--[a-z][\w-]*)\)/g;
 const TOKEN_IN_SOURCE = /['"`](--[a-z][\w-]*)['"`]/g;
+const REDUCED_MOTION = '@media (prefers-reduced-motion: reduce)';
+const HAS_RAW_LENGTH = /(?<![\w.-])-?\d*\.?\d+(?:rem|px)\b/;
+
+function smallLiteral(value) {
+  for (const [length, , number, unit] of stripTokenCalls(value).matchAll(SIZE_LITERAL)) {
+    if (CLIP_PATTERN_LENGTHS.has(length) || HAIRLINE_LENGTHS.has(length)) continue;
+    const px = unit === 'rem' ? Number(number) * 16 : Number(number);
+    if (px === 0 || px > SIZE_SCALE_MAX_PX) continue;
+    return length;
+  }
+  return null;
+}
+
+function forEachRule(text, visit) {
+  const stack = [];
+  let buffer = '';
+  for (const character of text.replace(/\/\*[\s\S]*?\*\//g, '')) {
+    if (character === '{') {
+      stack.push(
+        buffer
+          .slice(buffer.lastIndexOf(';') + 1)
+          .trim()
+          .replace(/\s+/g, ' ')
+      );
+      buffer = '';
+    } else if (character === '}') {
+      const header = stack.pop();
+      if (header !== undefined) visit(header, buffer, [...stack]);
+      buffer = '';
+    } else {
+      buffer += character;
+    }
+  }
+}
+
+function withoutAttributeSelectors(selector) {
+  return selector.replace(/\[[^\]]*\]/g, '');
+}
+
+function subjectClassListsOf(selector) {
+  return withoutAttributeSelectors(selector)
+    .split(',')
+    .map((alternative) => {
+      const compounds = alternative
+        .trim()
+        .split(/[\s>+~]+/)
+        .filter(Boolean);
+      return [...(compounds.at(-1) ?? '').matchAll(/\.(-?[A-Za-z_][\w-]*)/g)].map(
+        ([, name]) => name
+      );
+    });
+}
+
+function checkHoverAndMotion(path, text) {
+  const underReducedMotion = (ancestors) =>
+    ancestors.some((ancestor) => ancestor.includes('prefers-reduced-motion: reduce'));
+  const moving = [];
+  const calmed = new Set();
+  let calmedWithoutClass = false;
+  forEachRule(text, (selector, body, ancestors) => {
+    if (selector.startsWith('@') || KEYFRAME_STEP.test(selector)) return;
+    if (
+      selector.includes(':hover') &&
+      !underReducedMotion(ancestors) &&
+      !ancestors.some((ancestor) => ancestor.includes('(hover: hover)'))
+    )
+      violations.push(
+        `${path}: ${selector} sits outside @media (hover: hover), the hover state sticks after a tap`
+      );
+    if (underReducedMotion(ancestors)) {
+      for (const names of subjectClassListsOf(selector)) {
+        if (names.length === 0) calmedWithoutClass = true;
+        for (const name of names) calmed.add(name);
+      }
+      return;
+    }
+    for (const [, prop, value] of body.matchAll(
+      /(?:^|[;\n])\s*(animation|animation-name|transition|transition-property)\s*:\s*([^;]+)/g
+    )) {
+      const shown = value.trim();
+      const animates = prop.startsWith('animation') && shown !== 'none';
+      const slides =
+        prop.startsWith('transition') && /\b(?:transform|translate|scale|rotate|all)\b/.test(shown);
+      if (animates || slides) {
+        moving.push(selector);
+        break;
+      }
+    }
+  });
+  if (path === FOUNDATION) return;
+  const covered = (names) =>
+    names.length === 0
+      ? calmedWithoutClass || calmed.size > 0
+      : names.some((name) => calmed.has(name));
+  for (const selector of moving)
+    if (!subjectClassListsOf(selector).every(covered))
+      violations.push(
+        `${path}: ${selector} animates or transitions a transform without its ${REDUCED_MOTION} counterpart (AGENTS.md)`
+      );
+}
 
 function checkDesignTokens(cssFiles) {
   for (const file of cssFiles) {
     const path = rel(file);
-    const text = readFileSync(file, 'utf8');
+    const raw = readFileSync(file, 'utf8');
+    const isModule = path.endsWith('.module.css');
+    const text = TOKEN_SHEETS.has(path) ? raw.replace(CUSTOM_PROPERTY_DECLARATION, '$1') : raw;
 
-    for (const [, query] of text.matchAll(/@media\s+([^{]+)\{/g)) {
+    for (const [, query] of raw.matchAll(/@media\s+([^{]+)\{/g)) {
       for (const condition of query.trim().split(/\s+and\s+/)) {
         const normalized = condition.trim();
         if (!normalized.startsWith('(')) continue;
@@ -288,7 +418,7 @@ function checkDesignTokens(cssFiles) {
       }
     }
 
-    if (path === FOUNDATION) continue;
+    checkHoverAndMotion(path, text);
 
     for (const [, prop, value] of text.matchAll(SPACING_PROP)) {
       const literals = [...stripTokenCalls(value).matchAll(RAW_LENGTH)]
@@ -298,71 +428,94 @@ function checkDesignTokens(cssFiles) {
         violations.push(`${path}: ${prop}: ${value.trim()}, use var(--space-*)`);
     }
 
-    if (path.endsWith('.module.css')) {
-      for (const [, prop, value] of text.matchAll(SIZE_PROP)) {
-        const shown = value.trim().replace(/\s+/g, ' ');
-        for (const [length, sign, number, unit] of stripTokenCalls(value).matchAll(SIZE_LITERAL)) {
-          if (CLIP_PATTERN_LENGTHS.has(length) || HAIRLINE_LENGTHS.has(length)) continue;
-          const px = unit === 'rem' ? Number(number) * 16 : Number(number);
-          if (px === 0 || px > SIZE_SCALE_MAX_PX) continue;
-          violations.push(
-            `${path}: ${prop}: ${shown}, a size under ${SIZE_SCALE_MAX_PX}px is var(--space-*), var(--icon-*), var(--avatar-*) or var(--tap-target-min)`
-          );
-          break;
-        }
-      }
-      for (const [, value] of text.matchAll(TRANSFORM_PROP))
-        for (const [, fn, sign, number, unit] of stripTokenCalls(value).matchAll(
-          TRANSLATE_LITERAL
-        )) {
-          if (HAIRLINE_LENGTHS.has(`${sign}${number}${unit}`)) continue;
-          violations.push(
-            `${path}: transform: ${fn}(${sign}${number}${unit}), a hover lift is var(--lift-*), an offset var(--space-*)`
-          );
-        }
-    }
+    for (const [, prop, value] of text.matchAll(SIZE_PROP))
+      if (smallLiteral(value))
+        violations.push(
+          `${path}: ${prop}: ${value.trim().replace(/\s+/g, ' ')}, a size under ${SIZE_SCALE_MAX_PX}px is var(--space-*), var(--icon-*), var(--avatar-*) or var(--tap-target-min)`
+        );
 
-    if (path.endsWith('.module.css'))
-      for (const [, selector, body] of text.matchAll(CSS_RULE_RE)) {
-        if (KEYFRAME_STEP.test(selector.trim())) continue;
-        for (const [, value] of body.matchAll(OPACITY_DECL)) {
-          const shown = value.trim();
-          if (/^(?:0|1|inherit)$/.test(shown) || /^(?:var\(--opacity-|calc\()/.test(shown))
-            continue;
+    for (const [, prop, value] of text.matchAll(GRID_TRACK_PROP))
+      if (smallLiteral(value))
+        violations.push(
+          `${path}: ${prop}: ${value.trim().replace(/\s+/g, ' ')}, a track under ${SIZE_SCALE_MAX_PX}px is a size token`
+        );
+
+    if (!TOKEN_SHEETS.has(path))
+      for (const [, name, value] of text.matchAll(CUSTOM_PROPERTY)) {
+        if (smallLiteral(value))
           violations.push(
-            `${path}: ${selector.trim().replace(/\s+/g, ' ')} opacity: ${shown}, use var(--opacity-*)`
+            `${path}: ${name}: ${value.trim()}, a local custom property under ${SIZE_SCALE_MAX_PX}px launders a literal, use a size token`
           );
-        }
+        if (NAMED_COLOR.test(stripTokenCalls(value).replace(URL_CALL, ' ')))
+          violations.push(
+            `${path}: ${name}: ${value.trim()}, a named colour is a literal, use a --color-* token`
+          );
       }
+
+    for (const [, value] of text.matchAll(TRANSFORM_PROP))
+      for (const [, fn, sign, number, unit] of stripTokenCalls(value).matchAll(TRANSLATE_LITERAL)) {
+        if (HAIRLINE_LENGTHS.has(`${sign}${number}${unit}`)) continue;
+        violations.push(
+          `${path}: transform: ${fn}(${sign}${number}${unit}), a hover lift is var(--lift-*), an offset var(--space-*)`
+        );
+      }
+
+    for (const [, selector, body] of text.matchAll(CSS_RULE_RE)) {
+      if (KEYFRAME_STEP.test(selector.trim())) continue;
+      for (const [, value] of body.matchAll(OPACITY_DECL)) {
+        const shown = value.trim();
+        if (/^(?:0|1|inherit)$/.test(shown) || /^(?:var\(--opacity-|calc\()/.test(shown)) continue;
+        violations.push(
+          `${path}: ${selector.trim().replace(/\s+/g, ' ')} opacity: ${shown}, use var(--opacity-*)`
+        );
+      }
+    }
 
     for (const [, value] of text.matchAll(/font-size\s*:\s*([^;{}]+)/g)) {
-      if (/var\(--font-size|clamp\(|inherit|100%/.test(value)) continue;
-      violations.push(`${path}: font-size: ${value.trim()}, use var(--font-size-*)`);
+      const shown = value.replace(/!important/, '').trim();
+      if (/^(?:inherit|100%)$/.test(shown)) continue;
+      if (
+        /var\(--font-size/.test(shown) &&
+        /^(?:clamp\(|[\s,()]|\d*\.?\d+vw)*$/.test(stripTokenCalls(shown))
+      )
+        continue;
+      violations.push(
+        `${path}: font-size: ${value.trim()}, use var(--font-size-*), a fluid size clamps between tokens`
+      );
     }
+
+    for (const [, value] of text.matchAll(/(?:^|[;{\n])\s*font\s*:\s*([^;{}]+)/g))
+      if (value.replace(/!important/, '').trim() !== 'inherit')
+        violations.push(`${path}: font: ${value.trim()}, write the longhands with their tokens`);
 
     for (const [, value] of text.matchAll(/z-index\s*:\s*([^;{}]+)/g)) {
       if (/var\(--z-/.test(value)) continue;
       violations.push(`${path}: z-index: ${value.trim()}, use var(--z-*)`);
     }
 
-    if (path.endsWith('.module.css') && RAW_COLOR.test(text))
-      violations.push(`${path}: literal colour, use a --color-* / --on-poster-* token`);
+    if (RAW_COLOR.test(text)) violations.push(`${path}: literal colour, use a --color-* token`);
+
+    for (const [, prop, value] of text.matchAll(COLOR_PROP))
+      if (NAMED_COLOR.test(stripTokenCalls(value).replace(URL_CALL, ' ')))
+        violations.push(
+          `${path}: ${prop}: ${value.trim()}, a named colour is a literal, use a --color-* token`
+        );
 
     for (const [, token] of text.matchAll(PRIMARY_AS_TEXT))
       violations.push(
         `${path}: color: var(${token}), the primary colours surfaces, text uses --color-primary-text / --color-primary-text-hover`
       );
 
-    if (path.endsWith('.module.css'))
+    if (isModule)
       for (const [primitive] of text.matchAll(PRIMITIVE_IN_MODULE))
         violations.push(
           `${path}: ${primitive}, primitives stay in the foundation, a module consumes a --color-* role`
         );
 
-    if (path.endsWith('.module.css'))
-      for (const [, role] of text.matchAll(AD_HOC_ROLE_MIX))
+    if (isModule)
+      for (const role of colorMixRoles(text))
         violations.push(
-          `${path}: color-mix() on --color-${role} by hand, use its -bg / -border / -tint / -soft / -hover / -active / -sunken / -translucent token`
+          `${path}: color-mix() on ${role} by hand, declare the declination in the foundation (-bg, -border, -soft, -tint...)`
         );
 
     for (const [prop, allowed, tokens] of TOKENISED_PROPS)
@@ -376,9 +529,9 @@ function checkDesignTokens(cssFiles) {
       if (/^\s*none\s*$/.test(value)) continue;
       const shown = value.trim().replace(/\s+/g, ' ');
       if (LITERAL_DURATION.test(value))
-        violations.push(`${path}: ${prop}: ${shown}, use var(--duration-*)`);
+        violations.push(`${path}: ${prop}${suffix ?? ''}: ${shown}, use var(--duration-*)`);
       if (LITERAL_EASING.test(value))
-        violations.push(`${path}: ${prop}: ${shown}, use var(--ease-*)`);
+        violations.push(`${path}: ${prop}${suffix ?? ''}: ${shown}, use var(--ease-*)`);
       if (prop === 'transition' && !suffix && DURATION_WITHOUT_EASING.test(value.trim()))
         violations.push(`${path}: ${prop}: ${shown}, a duration token takes its var(--ease-*)`);
     }
@@ -393,6 +546,20 @@ function checkDesignTokens(cssFiles) {
 
     for (const [, value] of text.matchAll(OUTLINE_LITERAL))
       violations.push(`${path}: outline: ${value}, use var(--outline-focus)`);
+
+    for (const [, value] of text.matchAll(OUTLINE_OFFSET))
+      if (
+        !/^(?:var\(--outline-offset(?:-inset)?\)|0)$/.test(value.replace(/!important/, '').trim())
+      )
+        violations.push(
+          `${path}: outline-offset: ${value.trim()}, use var(--outline-offset) or var(--outline-offset-inset)`
+        );
+
+    for (const [, prop, value] of text.matchAll(FILTER_PROP))
+      if (HAS_RAW_LENGTH.test(stripTokenCalls(value)))
+        violations.push(
+          `${path}: ${prop}: ${value.trim()}, a blur or a drop shadow is a --backdrop-blur-* / --filter-* token`
+        );
 
     for (const [, selector, body] of text.matchAll(FOCUS_VISIBLE_RULE))
       if (/outline\s*:\s*none/.test(body) && !/box-shadow\s*:\s*var\(--ring-focus\)/.test(body))
@@ -418,8 +585,20 @@ function checkUndeclaredTokens(cssFiles, sourceFiles) {
     foundationTokens.add(name);
   for (const file of cssFiles)
     for (const [, name] of readFileSync(file, 'utf8').matchAll(DECLARED_TOKEN)) declared.add(name);
-  for (const file of sourceFiles)
-    for (const [, name] of readFileSync(file, 'utf8').matchAll(TOKEN_IN_SOURCE)) declared.add(name);
+  const readInSource = [];
+  for (const file of sourceFiles) {
+    const source = readFileSync(file, 'utf8');
+    for (const match of source.matchAll(TOKEN_IN_SOURCE)) {
+      const after = source.slice(match.index + match[0].length);
+      const before = source.slice(Math.max(0, match.index - 16), match.index);
+      if (
+        /^\s*(?:as\s+[\w.]+\s*)?\]?\s*:/.test(after) ||
+        /(?:set|remove)Property\(\s*$/.test(before)
+      )
+        declared.add(match[1]);
+      else if (!file.includes('.test.')) readInSource.push([rel(file), match[1]]);
+    }
+  }
   const used = new Set();
   for (const file of [...cssFiles, ...sourceFiles, join(root, 'apps/web/index.html')]) {
     const text = readFileSync(file, 'utf8');
@@ -440,6 +619,11 @@ function checkUndeclaredTokens(cssFiles, sourceFiles) {
           `${path}: var(${name}, ...) carries a fallback on a foundation token, the fallback is dead or contradicts the token`
         );
   }
+  for (const [path, name] of readInSource)
+    if (!declared.has(name))
+      violations.push(
+        `${path}: '${name}' is read from TypeScript and declared nowhere, renamed or removed token?`
+      );
   for (const name of foundationTokens)
     if (!used.has(name) && !TOKENS_CONSUMED_INDIRECTLY.test(name))
       violations.push(`${FOUNDATION}: ${name} is declared and consumed nowhere, delete the token`);
@@ -494,8 +678,14 @@ const NUMERIC_ICON_SIZE =
   /<[A-Z][\w.]*\b(?:[^>]|=>)*?\b(?:size|iconSize)=\{([^{}]*?\b\d+\b[^{}]*)\}/g;
 const NUMERIC_ICON_DIMENSIONS = /<[A-Z][\w.]*\b(?:[^>]|=>)*?\bwidth=\{(\d+)\}\s+height=\{(\d+)\}/g;
 const NUMERIC_ICON_SIZE_DEFAULT = /\b(?:size|iconSize)\s*=\s*(\d+)\b(?=\s*[,)}])/g;
-const INLINE_ROLE_MIX =
-  /color-mix\(in srgb, var\(--color-(primary|error|success|warning|text|text-muted|meta|bg|surface|border|border-subtle)\)/g;
+const TS_COLOR_ALLOWED = new Set([
+  'apps/web/src/app/pages/tech/TechLogos.tsx',
+  'apps/web/src/features/auth/components/OAuthProviderButtons.tsx',
+  'apps/web/src/shared/components/QrCode.tsx',
+  'apps/web/src/shared/utils/downloadQrPng.ts',
+]);
+const TS_COLOR_LITERAL =
+  /['"`]#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})['"`]|['"`][^'"`\n]*\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\([^'"`\n]*['"`]/g;
 
 function checkInlineStyleTokens(files) {
   for (const file of files) {
@@ -515,10 +705,15 @@ function checkInlineStyleTokens(files) {
       for (const [, value] of source.matchAll(NUMERIC_ICON_SIZE_DEFAULT))
         violations.push(`${path}: size = ${value} as a default, an icon size is ICON_SIZE.<step>`);
     }
-    for (const [, role] of source.matchAll(INLINE_ROLE_MIX))
+    for (const role of colorMixRoles(source))
       violations.push(
-        `${path}: color-mix() on --color-${role} in TypeScript, declare the role in the foundation and consume it from the CSS module`
+        `${path}: color-mix() on ${role} in TypeScript, declare the role in the foundation and consume it from the CSS module`
       );
+    if (!TS_COLOR_ALLOWED.has(path))
+      for (const [shown] of source.matchAll(TS_COLOR_LITERAL))
+        violations.push(
+          `${path}: ${shown} in TypeScript, a colour is a --color-* token (a canvas reads it with readCssToken)`
+        );
   }
 }
 
@@ -619,9 +814,11 @@ function checkTapTargets(cssFiles, tsFiles) {
  * 2. Re-exported styles object: `export { styles as xStyles }` adds `xStyles` to the searched names.
  * 3. Bracket access: `styles[variable]` makes the module unanalysable, so it is excluded and
  *    **listed** in the output, so that the exclusion is a visible choice, not a silent false negative.
- * 4. CSS-only usage: a class in descendant position (`.footer .btn`), the target of a `composes:`
- *    (from the same module or, with `from '...'`, from another one) or inside a `:global(...)` is
- *    really used without appearing in TypeScript.
+ * 4. CSS-only usage: the target of a `composes:` (from the same module or, with `from '...'`, from
+ *    another one) or a class inside a `:global(...)` is really used without appearing in
+ *    TypeScript. A class in descendant position (`.footer .btn`) is not: it still has to be
+ *    rendered, otherwise the rule styles nothing. Attribute selectors are ignored, so the dot in
+ *    `a[href$='.pdf']` is not read as a class.
  */
 const CSS_MODULE_IMPORT_RE =
   /import\s+(?:(\w+)|\*\s+as\s+(\w+))\s+from\s*['"]([^'"]+\.module\.css)['"]/g;
@@ -655,16 +852,14 @@ function classesOfCssModule(text) {
     for (const name of value.trim().split(/\s+/)) if (name !== 'from') usedInCss.add(name);
 
   const withoutGlobals = text.replace(GLOBAL_SELECTOR_RE, ' ');
-  for (const selector of selectorsOf(withoutGlobals)) {
+  for (const selector of selectorsOf(withoutGlobals).map(withoutAttributeSelectors)) {
     for (const alternative of selector.split(',')) {
       const compounds = alternative
         .trim()
         .split(/[\s>+~]+/)
         .filter(Boolean);
-      compounds.forEach((compound, index) => {
-        for (const [, name] of compound.matchAll(CLASS_IN_COMPOUND_RE))
-          (index === 0 ? leading : usedInCss).add(name);
-      });
+      for (const compound of compounds)
+        for (const [, name] of compound.matchAll(CLASS_IN_COMPOUND_RE)) leading.add(name);
     }
   }
   return { leading, usedInCss };
@@ -745,6 +940,19 @@ function checkDeadCssClasses(cssFiles, tsFiles) {
 }
 
 const GLOBAL_CLASS_ADDED_BY_LIBRARIES = new Set(['lucide']);
+const LIBRARY_CLASS_PREFIXES = ['lucide-'];
+const addedByLibrary = (name) =>
+  GLOBAL_CLASS_ADDED_BY_LIBRARIES.has(name) ||
+  LIBRARY_CLASS_PREFIXES.some((prefix) => name.startsWith(prefix));
+const STRING_LITERAL = /(['"`])((?:\\.|(?!\1)[^\\])*)\1/g;
+
+function classNamesInStrings(sources) {
+  const names = new Set();
+  for (const source of sources)
+    for (const [, , content] of source.matchAll(STRING_LITERAL))
+      for (const token of content.split(/\$\{[^}]*\}|[\s'"`]+/)) if (token) names.add(token);
+  return names;
+}
 
 function checkDeadGlobalClasses(cssFiles, sourceFiles) {
   const haystack = sourceFiles.map((file) => readFileSync(file, 'utf8')).join('\n');
@@ -753,13 +961,63 @@ function checkDeadGlobalClasses(cssFiles, sourceFiles) {
     const path = rel(file);
     const declared = new Set();
     for (const selector of selectorsOf(readFileSync(file, 'utf8')))
-      for (const [, name] of selector.matchAll(CLASS_IN_COMPOUND_RE)) declared.add(name);
+      for (const [, name] of withoutAttributeSelectors(selector).matchAll(CLASS_IN_COMPOUND_RE))
+        declared.add(name);
     for (const name of declared) {
-      if (GLOBAL_CLASS_ADDED_BY_LIBRARIES.has(name)) continue;
+      if (addedByLibrary(name)) continue;
       if (new RegExp(`(?<![\\w-])${name}(?![\\w-])`).test(haystack)) continue;
       violations.push(`${path}: .${name} is declared and never used, delete the class`);
     }
   }
+}
+
+function checkGlobalTargets(cssFiles, sourceFiles) {
+  const declared = new Set();
+  for (const file of cssFiles) {
+    if (file.endsWith('.module.css')) continue;
+    for (const selector of selectorsOf(readFileSync(file, 'utf8')))
+      for (const [, name] of withoutAttributeSelectors(selector).matchAll(CLASS_IN_COMPOUND_RE))
+        declared.add(name);
+  }
+  const rendered = classNamesInStrings(
+    sourceFiles.filter((file) => !file.includes('.test.')).map((file) => readFileSync(file, 'utf8'))
+  );
+  for (const file of cssFiles) {
+    if (!file.endsWith('.module.css')) continue;
+    for (const [, inside] of readFileSync(file, 'utf8').matchAll(GLOBAL_SELECTOR_RE))
+      for (const [, name] of withoutAttributeSelectors(inside).matchAll(CLASS_IN_COMPOUND_RE)) {
+        if (declared.has(name) || addedByLibrary(name)) continue;
+        if (rendered.has(name)) continue;
+        violations.push(
+          `${rel(file)}: :global(.${name}) targets a class that no stylesheet declares and no component renders, the rule is dead`
+        );
+      }
+  }
+}
+
+const AVATAR_TSX = 'apps/web/src/shared/components/Avatar.tsx';
+
+function checkAvatarScale() {
+  const tokens = sizeTokensOfFoundation();
+  const foundation = readFileSync(join(root, FOUNDATION), 'utf8');
+  const steps = new Map();
+  for (const [, step, value] of foundation.matchAll(/--avatar-([\w]+)\s*:\s*([^;]+);/g))
+    steps.set(step, lengthInPx(value, tokens));
+  const source = readFileSync(join(root, AVATAR_TSX), 'utf8');
+  const block = /const SIZE_PX[^=]*=\s*\{([^}]*)\}/.exec(source)?.[1] ?? '';
+  const constants = new Map(
+    [...block.matchAll(/(\w+)\s*:\s*(\d+)/g)].map(([, step, value]) => [step, Number(value)])
+  );
+  for (const [step, px] of steps)
+    if (constants.get(step) !== px)
+      violations.push(
+        `${AVATAR_TSX}: SIZE_PX.${step} is ${constants.get(step)}, --avatar-${step} is ${px}px in the foundation`
+      );
+  for (const step of constants.keys())
+    if (!steps.has(step))
+      violations.push(
+        `${AVATAR_TSX}: SIZE_PX.${step} has no --avatar-${step} token in the foundation`
+      );
 }
 
 function checkIconScale() {
@@ -806,6 +1064,11 @@ checkTapTargets(
 );
 checkInlineStyleTokens(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
 checkIconScale();
+checkAvatarScale();
+checkGlobalTargets(
+  webFiles.filter((f) => f.endsWith('.css')),
+  [...webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')), indexHtml]
+);
 const cssModulesExcluded = checkDeadCssClasses(
   webFiles.filter((f) => f.endsWith('.css')),
   webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
@@ -825,7 +1088,7 @@ if (violations.length > 0) {
   process.exit(1);
 }
 console.log(
-  'Architecture: no violation (comments, API layers, shared/ as a leaf, feature layers, import cycles, design system tokens, icon and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes and tokens).'
+  'Architecture: no violation (comments, API layers, shared/ as a leaf, feature layers, import cycles, design system tokens, colours in TypeScript, hover and reduced motion, icon, avatar and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes, :global targets and tokens).'
 );
 if (cssModulesExcluded.length > 0)
   console.log(

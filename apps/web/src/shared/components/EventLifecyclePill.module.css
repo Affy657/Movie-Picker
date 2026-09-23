@@ -17,57 +17,28 @@
 .upcoming {
   background: var(--color-badge-upcoming-bg);
   color: var(--color-badge-upcoming-text);
-  border-color: color-mix(in srgb, var(--color-badge-upcoming-text) 32%, transparent);
+  border-color: var(--color-badge-upcoming-border);
 }
 
 .live {
   background: var(--color-badge-live-bg);
   color: var(--color-badge-live-text);
-  border-color: color-mix(in srgb, var(--color-badge-live-text) 32%, transparent);
+  border-color: var(--color-badge-live-border);
 }
 
 .finished {
-  background: color-mix(
-    in srgb,
-    var(--color-badge-finished-bg) 92%,
-    var(--color-badge-finished-text) 8%
-  );
+  background: var(--color-badge-finished-bg);
   color: var(--color-badge-finished-text);
-  border-color: color-mix(in srgb, var(--color-badge-finished-text) 40%, transparent);
+  border-color: var(--color-badge-finished-border);
 }
 
 .pending {
   background: var(--color-badge-pending-bg);
   color: var(--color-badge-pending-text);
-  border-color: color-mix(in srgb, var(--color-badge-pending-text) 32%, transparent);
+  border-color: var(--color-badge-pending-border);
 }
 
 .detail {
   font-weight: var(--font-weight-medium);
   opacity: var(--opacity-muted);
-}
-
-.pulse {
-  width: var(--space-1-5);
-  height: var(--space-1-5);
-  border-radius: var(--radius-pill);
-  background: currentColor;
-  animation: lifecycleBlip var(--duration-breathe) var(--ease-in-out) infinite;
-}
-
-@keyframes lifecycleBlip {
-  0%,
-  70%,
-  100% {
-    opacity: 1;
-  }
-  35% {
-    opacity: 0.3;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pulse {
-    animation: none;
-  }
 }

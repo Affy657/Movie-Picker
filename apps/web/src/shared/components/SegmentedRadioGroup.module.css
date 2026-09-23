@@ -84,3 +84,9 @@
 .optionIcon.optionSelected {
   color: var(--color-primary-text);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .option {
+    transition: none;
+  }
+}

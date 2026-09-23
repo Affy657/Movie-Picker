@@ -31,7 +31,7 @@
 }
 
 .bubble::after {
-  --tooltip-arrow: 5px;
+  --tooltip-arrow: var(--space-1-5);
   content: '';
   position: absolute;
   border: var(--tooltip-arrow) solid transparent;
@@ -119,6 +119,6 @@
 
 .wrapperFocusable:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
   border-radius: var(--radius-sm);
 }

@@ -10,3 +10,5 @@ export const ICON_SIZE = {
 } as const;
 
 export type IconSize = keyof typeof ICON_SIZE;
+
+export type IconSizeValue = (typeof ICON_SIZE)[IconSize];

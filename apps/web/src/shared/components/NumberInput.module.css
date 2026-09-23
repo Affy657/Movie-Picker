@@ -71,6 +71,7 @@
 
 .stepBtn:active:not(:disabled) {
   background: var(--color-primary-soft-hover);
+  color: var(--color-primary-text-hover);
 }
 
 .stepBtn:disabled {

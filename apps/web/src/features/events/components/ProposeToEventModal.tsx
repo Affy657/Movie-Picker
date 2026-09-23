@@ -1,5 +1,4 @@
 import { useId, useState } from 'react';
-import { X } from 'lucide-react';
 import { Link } from 'react-router';
 import { useTranslation } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -15,8 +14,10 @@ import {
 } from '@/features/events/hooks/useProposeMovieToEvent';
 import styles from './ProposeToEventModal.module.css';
 import Modal from '@/shared/components/Modal';
-import IconButton from '@/shared/components/IconButton';
+import Card from '@/shared/components/Card';
+import EmptyState from '@/shared/components/EmptyState';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { CalendarX } from 'lucide-react';
 
 type RowState = { status: 'idle' | 'pending' | 'done' | 'error'; error?: string };
 
@@ -54,19 +55,21 @@ export default function ProposeToEventModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} size="sm" column ariaLabelledBy={titleId}>
-      <div className={styles.header}>
-        <h2 id={titleId} className={styles.title}>
-          {t('watchlist.propose.modalTitle', { title: movie.title })}
-        </h2>
-        <IconButton ariaLabel={t('common.close')} onClick={onClose}>
-          <X aria-hidden size={ICON_SIZE.lg} />
-        </IconButton>
-      </div>
-
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="sm"
+      column
+      title={t('watchlist.propose.modalTitle', { title: movie.title })}
+      titleId={titleId}
+    >
       {isLoading && <p className="placeholder">{t('common.loading')}</p>}
       {!isLoading && eligible.length === 0 && (
-        <p className={styles.empty}>{t('watchlist.propose.noEvents')}</p>
+        <EmptyState
+          compact
+          icon={<CalendarX aria-hidden size={ICON_SIZE['2xl']} />}
+          message={t('watchlist.propose.noEvents')}
+        />
       )}
       {!isLoading && eligible.length > 0 && (
         <ul className={styles.list}>
@@ -75,14 +78,18 @@ export default function ProposeToEventModal({
             const isDone = row.status === 'done';
             return (
               <li key={e.slug} className={styles.row}>
-                <button
+                <Card
+                  as="button"
                   type="button"
+                  interactive
+                  elevation="sm"
+                  padding="none"
                   className={eventSummaryCardStyles.card}
                   onClick={() => handlePropose(e.slug)}
                   disabled={row.status === 'pending' || isDone}
                 >
                   <EventSummaryCardBody event={e} />
-                </button>
+                </Card>
                 <div className={styles.rowStatus}>
                   {row.status === 'pending' && <span>{t('common.loading')}</span>}
                   {isDone && (

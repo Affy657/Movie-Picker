@@ -150,7 +150,7 @@ export default function ResetPasswordPage() {
               />
             )}
           </Field>
-          <Button type="submit" variant="primary" loading={loading}>
+          <Button type="submit" variant="primary" fullWidth loading={loading}>
             {loading ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submit')}
           </Button>
         </form>

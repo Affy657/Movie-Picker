@@ -4,13 +4,13 @@
   padding: 0;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 9rem;
+  grid-auto-columns: var(--poster-column-md);
   gap: var(--space-3-5);
   overflow: hidden;
 }
 
 .skeletonGridWide {
-  grid-auto-columns: 17rem;
+  grid-auto-columns: var(--collection-column);
 }
 
 .skeletonCard {
@@ -25,15 +25,6 @@
   gap: var(--space-1);
 }
 
-.state {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin: 0;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-}
 
 .tabs {
   margin: 0;
@@ -45,6 +36,6 @@
 
 .panel:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: var(--space-1);
+  outline-offset: var(--outline-offset);
   border-radius: var(--radius-sm);
 }

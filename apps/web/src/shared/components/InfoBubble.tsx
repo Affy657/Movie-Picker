@@ -5,10 +5,12 @@ import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useTranslation } from '@/shared/i18n';
 import styles from './InfoBubble.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-
-const PANEL_MAX_WIDTH = 320;
-const VIEWPORT_MARGIN = 8;
-const TRIGGER_GAP = 6;
+import LinkButton from './LinkButton';
+import {
+  INFO_PANEL_MAX_WIDTH_PX,
+  MENU_ANCHOR_GAP_PX,
+  MENU_VIEWPORT_MARGIN_PX,
+} from './menuGeometry';
 
 type InfoBubbleProps = {
   label: string;
@@ -33,18 +35,18 @@ export default function InfoBubble({ label, children }: Readonly<InfoBubbleProps
     if (!trigger) return;
 
     const rect = trigger.getBoundingClientRect();
-    const available = globalThis.innerWidth - VIEWPORT_MARGIN * 2;
-    const width = Math.min(PANEL_MAX_WIDTH, available);
+    const available = globalThis.innerWidth - MENU_VIEWPORT_MARGIN_PX * 2;
+    const width = Math.min(INFO_PANEL_MAX_WIDTH_PX, available);
     const left = Math.min(
-      Math.max(rect.left, VIEWPORT_MARGIN),
-      globalThis.innerWidth - width - VIEWPORT_MARGIN
+      Math.max(rect.left, MENU_VIEWPORT_MARGIN_PX),
+      globalThis.innerWidth - width - MENU_VIEWPORT_MARGIN_PX
     );
 
     const panelHeight = panelRef.current?.offsetHeight ?? 0;
-    const below = rect.bottom + TRIGGER_GAP;
+    const below = rect.bottom + MENU_ANCHOR_GAP_PX;
     const overflowsBottom = panelHeight > 0 && below + panelHeight > globalThis.innerHeight;
     const top = overflowsBottom
-      ? Math.max(VIEWPORT_MARGIN, rect.top - TRIGGER_GAP - panelHeight)
+      ? Math.max(MENU_VIEWPORT_MARGIN_PX, rect.top - MENU_ANCHOR_GAP_PX - panelHeight)
       : below;
 
     setPosition({ top, left, width });
@@ -96,9 +98,9 @@ export default function InfoBubble({ label, children }: Readonly<InfoBubbleProps
         >
           <span className={styles.panelTitle}>{label}</span>
           {children}
-          <button type="button" className={styles.close} onClick={() => setOpen(false)}>
+          <LinkButton size="sm" className={styles.close} onClick={() => setOpen(false)}>
             {t('common.close')}
-          </button>
+          </LinkButton>
         </span>
       )}
     </span>

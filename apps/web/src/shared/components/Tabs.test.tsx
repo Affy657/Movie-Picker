@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Tabs, TabPanel } from '@/shared/components/Tabs';
+import countBadgeStyles from '@/shared/components/CountBadge.module.css';
 
 type Key = 'a' | 'b' | 'c';
 
@@ -43,6 +44,13 @@ describe('Tabs', () => {
     expect(screen.getByRole('tab', { name: 'Beta3' })).toHaveAttribute('aria-selected', 'false');
     expect(screen.getByText('Contenu Alpha')).toBeInTheDocument();
     expect(screen.queryByText('Contenu Beta')).not.toBeInTheDocument();
+  });
+
+  it('draws a tab count with CountBadge', () => {
+    render(<Harness active="a" onChange={vi.fn()} />);
+    const badge = screen.getByText('3').closest(`.${countBadgeStyles.badge}`);
+    expect(badge).not.toBeNull();
+    expect(badge?.className).toContain(countBadgeStyles.neutral);
   });
 
   it('a single panel is mounted at a time', () => {

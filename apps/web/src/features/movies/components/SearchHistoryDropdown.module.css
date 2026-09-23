@@ -44,10 +44,8 @@
 }
 
 .historyTitle {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-wider);
-  text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
@@ -108,7 +106,7 @@
 
 .historyItemBtn:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: -2px;
+  outline-offset: var(--outline-offset-inset);
 }
 
 .historyIcon {

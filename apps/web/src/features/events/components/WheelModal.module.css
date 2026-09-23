@@ -9,7 +9,7 @@
   margin: 0;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-  color: var(--on-poster-fg-soft);
+  color: var(--color-on-poster-fg-soft);
   letter-spacing: var(--tracking-wide);
 }
 
@@ -154,7 +154,7 @@
     justify-content: stretch;
   }
 
-  .footer .btn {
+  .footer > * {
     width: 100%;
   }
 }

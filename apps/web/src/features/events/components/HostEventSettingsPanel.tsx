@@ -27,6 +27,7 @@ import {
 import { useTranslation } from '@/shared/i18n';
 import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import Chip, { type ChipTone } from '@/shared/components/Chip';
 
 type HostEventSettingsPanelProps = {
   slug: string;
@@ -44,11 +45,11 @@ const SAVE_STATUS_LABEL_KEYS = {
   error: 'events.settings.saveStatusError',
 } as const satisfies Record<SaveState, string>;
 
-const SAVE_STATUS_CLASS: Record<SaveState, string | undefined> = {
-  saved: styles.saveStatusSaved,
-  pending: styles.saveStatusPending,
-  error: styles.saveStatusError,
-};
+const SAVE_STATUS_TONE = {
+  saved: 'success',
+  pending: 'muted',
+  error: 'danger',
+} as const satisfies Record<SaveState, ChipTone>;
 
 export default function HostEventSettingsPanel({
   slug,
@@ -144,10 +145,14 @@ export default function HostEventSettingsPanel({
           <h2 id={titleId} className={styles.panelTitle}>
             {t('events.settings.title')}
           </h2>
-          <span className={clsx(styles.saveStatus, SAVE_STATUS_CLASS[saveState])}>
-            <span className={styles.saveStatusDot} aria-hidden />
-            <span>{saveStatusLabel}</span>
-          </span>
+          <Chip
+            size="sm"
+            tone={SAVE_STATUS_TONE[saveState]}
+            dot={saveState === 'pending' ? 'pulsing' : true}
+            className={styles.saveStatus}
+          >
+            {saveStatusLabel}
+          </Chip>
           <IconButton size="sm" ariaLabel={t('common.close')} onClick={onClose}>
             <X size={ICON_SIZE.md} aria-hidden />
           </IconButton>

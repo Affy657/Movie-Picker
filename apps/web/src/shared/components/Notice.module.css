@@ -1,6 +1,5 @@
 .root {
   position: fixed;
-  top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
   left: var(--space-4);
   right: var(--space-4);
   z-index: var(--z-header);
@@ -8,7 +7,16 @@
   flex-direction: column;
   gap: var(--space-3-5);
   padding: var(--space-3-5) var(--space-4);
+}
+
+.top {
+  top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
   animation: slideDown var(--duration-enter) var(--ease-out) both;
+}
+
+.bottom {
+  bottom: calc(var(--mobile-nav-height) + var(--space-3));
+  animation: slideUp var(--duration-enter) var(--ease-out) both;
 }
 
 @media (min-width: 48rem) {
@@ -18,11 +26,26 @@
     transform: translateX(-50%);
     width: min(600px, calc(100vw - var(--space-12)));
   }
+
+  .bottom {
+    bottom: var(--space-6);
+  }
 }
 
 @keyframes slideDown {
   from {
     translate: 0 -120%;
+    opacity: 0;
+  }
+  to {
+    translate: 0 0;
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    translate: 0 120%;
     opacity: 0;
   }
   to {
@@ -67,13 +90,14 @@
 }
 
 @media (max-width: 29.9375rem) {
-  .actions :global(.btn) {
+  .actions > * {
     flex: 1 1 100%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .root {
+  .top,
+  .bottom {
     animation: none;
   }
 }

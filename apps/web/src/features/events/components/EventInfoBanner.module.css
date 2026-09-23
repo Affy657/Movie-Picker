@@ -24,12 +24,12 @@
 }
 
 .upcoming {
-  border: 1px solid color-mix(in srgb, var(--color-badge-upcoming-text) 30%, transparent);
+  border: 1px solid var(--color-badge-upcoming-border);
   background: var(--color-badge-upcoming-bg);
 }
 
 .upcoming .iconWrap {
-  background: color-mix(in srgb, var(--color-badge-upcoming-text) 22%, transparent);
+  background: var(--color-badge-upcoming-soft);
   color: var(--color-badge-upcoming-text);
 }
 
@@ -57,10 +57,8 @@
 }
 
 .kicker {
+  composes: overline from '@/shared/components/typography.module.css';
   font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-widest);
 }
 
 .text {

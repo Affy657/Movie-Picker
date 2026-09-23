@@ -10,22 +10,26 @@
   gap: var(--space-2);
 }
 
-.eyebrow {
-  margin: var(--space-0);
+.monoLabel {
   font-family: var(--font-mono);
-  font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-caps);
+  letter-spacing: var(--tracking-widest);
   text-transform: uppercase;
+}
+
+.eyebrow {
+  composes: monoLabel;
+  margin: var(--space-0);
+  font-size: var(--font-size-3xs);
   color: var(--color-primary-text);
+  font-weight: var(--font-weight-semibold);
 }
 
 .title {
   margin: var(--space-0);
   font-size: clamp(var(--font-size-3xl), 2.6vw, var(--font-size-4xl));
   font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-display);
-  line-height: var(--leading-compact);
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
   text-wrap: balance;
 }
 
@@ -86,7 +90,7 @@
   margin: var(--space-4) var(--space-0) var(--space-0);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }
 
 .tags {
@@ -116,13 +120,11 @@
 }
 
 .groupHeading {
+  composes: monoLabel;
   margin: var(--space-0);
-  font-family: var(--font-mono);
   font-size: var(--font-size-3xs);
+  color: var(--color-text-subtle);
   font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
-  color: var(--color-meta);
 }
 
 .factList {
@@ -170,17 +172,15 @@
 }
 
 .factTerm {
+  composes: monoLabel;
   grid-column: 2;
   align-self: center;
   margin: var(--space-0);
-  font-family: var(--font-mono);
   font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-semibold);
   line-height: var(--leading-none);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
   color: var(--color-text);
   transform: translateY(var(--text-optical-nudge-caps));
+  font-weight: var(--font-weight-semibold);
 }
 
 .factDetail {
@@ -198,13 +198,11 @@
   border-top: 1px solid var(--color-border-subtle);
   font-size: var(--font-size-2xs);
   line-height: var(--leading-snug);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }
 
 .factTradeLabel {
-  font-family: var(--font-mono);
+  composes: monoLabel;
   font-size: var(--font-size-4xs);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
   color: var(--color-text-muted);
 }

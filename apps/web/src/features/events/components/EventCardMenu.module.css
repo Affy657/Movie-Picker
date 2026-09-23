@@ -4,34 +4,6 @@
 }
 
 .trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--tap-target-min);
-  height: var(--tap-target-min);
   margin: calc(var(--space-2) * -1);
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: transparent;
   color: var(--color-text-muted);
-  cursor: pointer;
-  transition:
-    background var(--duration-base) var(--ease-default),
-    color var(--duration-base) var(--ease-default);
-}
-
-.trigger:focus-visible {
-  background: var(--color-surface-active);
-  color: var(--color-text);
-  outline: var(--outline-focus);
-  outline-offset: 2px;
-}
-
-@media (hover: hover) {
-  .trigger:hover {
-    background: var(--color-surface-active);
-    color: var(--color-text);
-    outline: none;
-  }
 }

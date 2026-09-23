@@ -9,6 +9,7 @@ import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import styles from './EventWinnerSummary.module.css';
+import CountBadge from '@/shared/components/CountBadge';
 
 type Props = {
   winners: MovieData[];
@@ -64,7 +65,9 @@ export default function EventWinnerSummary({
             <li key={movie.id} className={styles.item}>
               <span className={styles.posterCol}>
                 <WinnerPoster posterPath={movie.posterPath} />
-                {several ? <span className={styles.rank}>{index + 1}</span> : null}
+                {several ? (
+                  <CountBadge value={index + 1} tone="success" className={styles.rank} />
+                ) : null}
               </span>
               <span className={styles.body}>
                 <span className={styles.title}>{movie.title}</span>

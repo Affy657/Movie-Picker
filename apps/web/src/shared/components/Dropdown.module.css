@@ -128,6 +128,7 @@
 
 .optionSelected.optionActive {
   background: var(--color-primary-soft-hover);
+  color: var(--color-primary-text-hover);
 }
 
 .optionLabel {
@@ -139,4 +140,10 @@
 .optionCheck {
   flex-shrink: 0;
   color: var(--color-primary-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .triggerChevron {
+    transition: none;
+  }
 }

@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { MovieData } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
-import WheelModal from './WheelModal';
+import WheelModal, { confettiPalettes } from './WheelModal';
 
 vi.mock('canvas-confetti', () => ({
   default: Object.assign(vi.fn(), {
@@ -306,5 +306,29 @@ describe('WheelModal', () => {
       </LocaleProvider>
     );
     expect(onSpinComplete).toHaveBeenCalledOnce();
+  });
+});
+
+describe('confettiPalettes', () => {
+  it('splits the wheel colours between the two side bursts', () => {
+    const colors = Array.from({ length: 12 }, (_, index) => `c${index}`);
+    expect(confettiPalettes(colors)).toEqual({
+      burst: colors,
+      left: colors.slice(0, 6),
+      right: colors.slice(6),
+    });
+  });
+
+  it('never hands an empty palette to a side burst', () => {
+    expect(confettiPalettes(['a'])).toEqual({ burst: ['a'], left: ['a'], right: ['a'] });
+    expect(confettiPalettes(['a', 'b', 'c'])).toEqual({
+      burst: ['a', 'b', 'c'],
+      left: ['a', 'b'],
+      right: ['c'],
+    });
+  });
+
+  it('lets canvas-confetti pick its own colours when no token resolves', () => {
+    expect(confettiPalettes([])).toEqual({ burst: undefined, left: undefined, right: undefined });
   });
 });

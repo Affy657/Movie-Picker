@@ -45,7 +45,7 @@
 .text {
   font-size: var(--font-size-md);
   color: var(--color-text-muted);
-  line-height: var(--leading-loose);
+  line-height: var(--leading-relaxed);
 }
 
 .demo {

@@ -219,7 +219,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (24 points produit, 23 points tech, 24 restants)
+## 📋 V1.7, planifiée (24 points produit, 34 points tech, 24 restants)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
@@ -244,6 +244,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ✅ 📊 `M` **Terraform 7, supervision décrite en IaC** : les trois sondes, les six politiques d'alerte avec leur documentation et leurs seuils justifiés, le canal e-mail et le tableau de bord de MCO décrits puis importés, les conditions et les tuiles lisant l'identifiant des sondes sur la ressource ; appliqué par le workflow du lot 6.
 - ✅ 🏗️ `L` **Terraform 8, environnement de recette** : second module racine `environments/staging` qui instancie les modules des lots 2, 3 et 5 dans le même projet (service, site, secrets propres, identités d'exécution et de déploiement dédiées, liées à la fédération et au dépôt d'images de la production par son état distant), `staging.movie-picker.fr` et `api.staging.movie-picker.fr`, et `deploy.yml` qui prend une étape : la production refuse tant que la recette ne sert pas ce commit et redéploie le digest que la recette exécute.
 - ✅ 🔒 `M` **Audit de l'infrastructure et frontières d'identité** : audit complet du 2026-09-20 (Terraform, workflows, IAM réel, DNS, TLS, en-têtes, coûts) et ses vingt-cinq constats corrigés dans la foulée : une identité par environnement GitHub (`backup`, `infra-apply`), fédération liée à `master`, identités Terraform sans lecture d'objets, liaisons résiduelles retirées et revue hebdomadaire `check:iam`, jeton OIDC pour Cloud Scheduler et alerte sur ses échecs, lien contre la suppression du projet, journaux d'accès aux secrets, bucket de sauvegarde décrit avec copie mensuelle, retours arrière répétables en recette, build du site hors du job qui déploie, lockfile NuGet, CSP sans `unsafe-inline`, HSTS sur les sous-domaines.
+- ✅ ♿ `L` **Design system audité et outillé** : texte des boutons et liens lisible sur chaque couleur d'accent, en clair comme en sombre, écrans alignés sur les mêmes composants (retour, titres, compteurs, erreurs, états vides), et des garde-fous qui empêchent de réintroduire une couleur, une taille ou une animation hors du système.
 
 > **Note, cible d'hébergement du front (lot 3)** : Firebase Hosting plutôt que Cloud Storage et Cloud CDN, dont la règle de transfert coûte près de 18 $ par mois avant le premier octet servi et ferait sortir le projet du « 0 €/mois » suivi comme indicateur. Seul point à surveiller : 360 Mo par jour, loin du trafic mesuré.
 

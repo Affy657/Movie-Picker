@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { Film, Search } from 'lucide-react';
+import { Film, ListFilter, Search } from 'lucide-react';
 import {
   addMovieToEvent,
   searchMovies,
@@ -10,13 +10,13 @@ import {
 } from '@/features/movies/api/moviesApi';
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
-import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
+import { useLocale, useTranslation } from '@/shared/i18n';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { metaGenresLabel, movieMetaLine } from '@/shared/utils/movieMetaLine';
 import type { MovieData } from '@/shared/types/movie';
 import { safeTmdbWatchUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
-import WatchProviderChips, { ModeIcon } from '@/features/movies/components/WatchProviderChips';
+import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useSearchHistory } from '@/features/movies/hooks/useSearchHistory';
@@ -30,6 +30,8 @@ import SearchHistoryDropdown, { HISTORY_ITEM_SELECTOR } from './SearchHistoryDro
 import styles from './AddMovieForm.module.css';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import CountBadge from '@/shared/components/CountBadge';
+import { PaidOfferChip } from '@/features/movies/components/movieCardParts';
 
 const SEARCH_DEBOUNCE_MS = 350;
 const SEARCH_MIN_CHARS = 2;
@@ -40,43 +42,6 @@ function makeSearchKey(term: string, filters: MovieSearchFilters): string {
 
 function isSameTmdbItem(m: MovieData, r: MovieSearchItem): boolean {
   return m.tmdbId === r.id && (m.mediaType ?? 'movie') === (r.mediaType ?? 'movie');
-}
-
-function PaidAvailabilityChip({
-  type,
-  count,
-  title,
-  watchPageUrl,
-  t,
-}: Readonly<{
-  type: 'rent' | 'buy';
-  count: number;
-  title: string;
-  watchPageUrl: string | null;
-  t: Translate;
-}>) {
-  const ariaLabel = t(
-    type === 'rent' ? 'movies.watchProviders.alsoRentAria' : 'movies.watchProviders.alsoBuyAria',
-    { count, title }
-  );
-  const icon = <ModeIcon type={type} size={ICON_SIZE.sm} />;
-  return watchPageUrl ? (
-    <a
-      href={watchPageUrl}
-      className={styles.paidChip}
-      aria-label={ariaLabel}
-      target="_blank"
-      rel="noreferrer noopener"
-    >
-      {icon}
-      <span className={styles.paidChipCount}>{count}</span>
-    </a>
-  ) : (
-    <span className={styles.paidChip} role="img" aria-label={ariaLabel}>
-      {icon}
-      <span className={styles.paidChipCount}>{count}</span>
-    </span>
-  );
 }
 
 export interface AddMovieFormProps {
@@ -448,33 +413,17 @@ export default function AddMovieForm({
             />
           </div>
           <Button
-            className={clsx(
-              styles.filterIconBtn,
-              styles.filterIconBtnLabeled,
-              filters.filtersOpen && styles.filterIconBtnActive
-            )}
+            variant={filters.filtersOpen ? 'soft' : 'secondary'}
+            className={clsx(styles.filterIconBtn, styles.filterIconBtnLabeled)}
             onClick={() => filters.setFiltersOpen((v) => !v)}
             aria-expanded={filters.filtersOpen}
             aria-controls={filtersPanelId}
             data-filters-toggle
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <path d="M1.5 3.5h11M4 7h6M6.5 10.5h1" />
-            </svg>
+            <ListFilter size={ICON_SIZE.sm} aria-hidden />
             <span className={styles.filterIconBtnLabel}>{t('movies.search.filtersToggle')}</span>
             {activeFiltersCount > 0 && (
-              <span className={styles.filtersBadge} aria-hidden="true">
-                {activeFiltersCount}
-              </span>
+              <CountBadge value={activeFiltersCount} size="sm" aria-hidden="true" />
             )}
           </Button>
         </div>
@@ -608,21 +557,25 @@ export default function AddMovieForm({
                             watchPageUrl={safeWatchUrl}
                           />
                           {rentCount > 0 && (
-                            <PaidAvailabilityChip
+                            <PaidOfferChip
                               type="rent"
                               count={rentCount}
-                              title={r.title}
-                              watchPageUrl={safeWatchUrl}
-                              t={t}
+                              ariaLabel={t('movies.watchProviders.alsoRentAria', {
+                                count: rentCount,
+                                title: r.title,
+                              })}
+                              href={safeWatchUrl ?? undefined}
                             />
                           )}
                           {buyCount > 0 && (
-                            <PaidAvailabilityChip
+                            <PaidOfferChip
                               type="buy"
                               count={buyCount}
-                              title={r.title}
-                              watchPageUrl={safeWatchUrl}
-                              t={t}
+                              ariaLabel={t('movies.watchProviders.alsoBuyAria', {
+                                count: buyCount,
+                                title: r.title,
+                              })}
+                              href={safeWatchUrl ?? undefined}
                             />
                           )}
                         </div>

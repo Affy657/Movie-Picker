@@ -7,7 +7,8 @@ import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
-import SpinningWheel from './SpinningWheel';
+import SpinningWheel, { WHEEL_SEGMENT_TOKENS } from './SpinningWheel';
+import { readCssToken } from '@/shared/utils/cssToken';
 import Modal from '@/shared/components/Modal';
 import styles from './WheelModal.module.css';
 import Button from '@/shared/components/Button';
@@ -15,6 +16,13 @@ import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const noop = () => {};
+
+export function confettiPalettes(colors: string[]) {
+  if (colors.length === 0) return { burst: undefined, left: undefined, right: undefined };
+  if (colors.length === 1) return { burst: colors, left: colors, right: colors };
+  const half = Math.ceil(colors.length / 2);
+  return { burst: colors, left: colors.slice(0, half), right: colors.slice(half) };
+}
 
 interface WheelModalProps {
   open: boolean;
@@ -132,12 +140,19 @@ export default function WheelModal({
       confettiCanvasRef.current = canvas;
 
       const fire = confetti.create(canvas, { resize: true, useWorker: false });
+      const {
+        burst: burstColors,
+        left: leftColors,
+        right: rightColors,
+      } = confettiPalettes(
+        WHEEL_SEGMENT_TOKENS.map((token) => readCssToken(token)).filter(Boolean)
+      );
 
       fire?.({
         particleCount: 160,
         spread: 80,
         origin: { x: 0.5, y: 0.55 },
-        colors: ['#3B82F6', '#7C3AED', '#06B6D4', '#EC4899', '#F97316', '#10B981'],
+        colors: burstColors,
       })?.catch(noop);
 
       clearTimeout(confettiTimerRef.current);
@@ -147,14 +162,14 @@ export default function WheelModal({
           angle: 60,
           spread: 55,
           origin: { x: 0.1, y: 0.5 },
-          colors: ['#4F46E5', '#D97706', '#0D9488', '#DB2777'],
+          colors: leftColors,
         })?.catch(noop);
         fire?.({
           particleCount: 80,
           angle: 120,
           spread: 55,
           origin: { x: 0.9, y: 0.5 },
-          colors: ['#8B5CF6', '#0891B2', '#F97316', '#EC4899'],
+          colors: rightColors,
         })?.catch(noop);
         confettiTimerRef.current = setTimeout(cleanupConfettiOverlay, 4500);
       }, 180);

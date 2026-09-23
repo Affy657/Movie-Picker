@@ -81,7 +81,7 @@ export default function ForgotPasswordPage() {
               />
             )}
           </Field>
-          <Button type="submit" variant="primary" loading={loading}>
+          <Button type="submit" variant="primary" fullWidth loading={loading}>
             {loading ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submit')}
           </Button>
         </form>

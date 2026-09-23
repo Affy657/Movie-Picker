@@ -111,7 +111,7 @@
 
 .profileLink:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 3px;
+  outline-offset: var(--outline-offset);
 }
 
 .hostBadge {
@@ -144,7 +144,7 @@
   background: var(--color-error-bg);
   color: var(--color-error);
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 @media (hover: hover) {
@@ -158,10 +158,6 @@
 .removeBtn:disabled {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
-}
-
-.inviteChip {
-  border-style: dashed;
 }
 
 .chipMe {

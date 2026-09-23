@@ -1,7 +1,6 @@
 import { useId, useMemo, useState } from 'react';
-import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Film, RefreshCw, AlertCircle } from 'lucide-react';
+import { Film } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
 import Avatar from '@/shared/components/Avatar';
@@ -41,6 +40,8 @@ import styles from './ProfileCollectionPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import BackLink from '@/shared/components/BackLink';
+import InlineError from '@/shared/components/InlineError';
 
 export interface ProfileCollectionTexts {
   pageTitle: (name: string) => string;
@@ -162,10 +163,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
 
   return (
     <PageLayout className={styles.layout}>
-      <Link to={ROUTES.profile(profile.handle)} className={styles.backLink}>
-        <ArrowLeft size={ICON_SIZE.md} aria-hidden />
-        <span className={styles.backLinkLabel}>{t('profile.movies.backLink')}</span>
-      </Link>
+      <BackLink to={ROUTES.profile(profile.handle)}>{t('profile.movies.backLink')}</BackLink>
 
       <div className={styles.headerRow}>
         <Avatar avatarId={profile.avatarId} pseudo={profile.displayName} size="lg" />
@@ -187,18 +185,11 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
         <WatchlistSkeleton label={t('profile.loading')} gridClassName={styles.grid} />
       )}
       {!itemsQuery.isPending && itemsQuery.isError && (
-        <div className={styles.moviesError} role="alert">
-          <span className={styles.moviesErrorIcon} aria-hidden>
-            <AlertCircle size={ICON_SIZE.lg} />
-          </span>
-          <div className={styles.moviesErrorBody}>
-            <p className={styles.moviesErrorMessage}>{texts.loadError}</p>
-            <Button type="button" size="sm" onClick={() => itemsQuery.refetch()}>
-              <RefreshCw size={ICON_SIZE.md} aria-hidden />
-              <span className={styles.btnLabel}>{t('profile.stats.retry')}</span>
-            </Button>
-          </div>
-        </div>
+        <InlineError
+          message={texts.loadError}
+          retryLabel={t('profile.stats.retry')}
+          onRetry={() => void itemsQuery.refetch()}
+        />
       )}
       {!itemsQuery.isPending && !itemsQuery.isError && totalCount === 0 && (
         <EmptyState

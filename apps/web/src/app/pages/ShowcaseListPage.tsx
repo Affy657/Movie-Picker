@@ -1,7 +1,6 @@
 import { useCallback, useId, useMemo, useState, type ReactNode } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
 import PageLayout from '@/shared/components/PageLayout';
 import Button from '@/shared/components/Button';
@@ -41,7 +40,6 @@ import {
   THEME_LABEL_KEYS,
   type ShowcaseListVariant,
 } from '@/features/movies/showcaseSections';
-import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type { ShowcaseListVariant };
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
@@ -54,6 +52,7 @@ import ShowcaseListStates from './ShowcaseListStates';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './ShowcaseListPage.module.css';
 import { collectionDisplayName } from '@/features/movies/utils/collectionName';
+import BackLink from '@/shared/components/BackLink';
 
 interface ShowcaseListItem {
   tmdbId: number;
@@ -367,10 +366,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
   return (
     <PageLayout className={styles.layout}>
-      <Link to={ROUTES.home} className={styles.backLink}>
-        <ArrowLeft size={ICON_SIZE.md} aria-hidden />
-        <span>{t('showcase.backToHome')}</span>
-      </Link>
+      <BackLink to={ROUTES.home}>{t('showcase.backToHome')}</BackLink>
 
       <div className={styles.headerText}>
         <h1 className={styles.pageTitle}>{headingText}</h1>

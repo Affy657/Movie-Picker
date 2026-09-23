@@ -40,7 +40,7 @@ export default function LandingSteps() {
               <p className={styles.num}>01</p>
               <h3 className={styles.title}>{t('landing.steps.create.title')}</h3>
               <p className={styles.text}>{t('landing.steps.create.text')}</p>
-              <div className={styles.demo} aria-hidden="true">
+              <Card padding="none" surface="sunken" className={styles.demo} aria-hidden="true">
                 <div className={demo.field}>
                   <span className={demo.fieldLabel}>{t('landing.steps.create.fieldTitle')}</span>
                   <span className={clsx(demo.fieldInput, demo.fieldInputFocus)}>
@@ -54,7 +54,7 @@ export default function LandingSteps() {
                     {t('landing.steps.create.whenValue')}
                   </span>
                 </div>
-              </div>
+              </Card>
             </Card>
           </li>
 
@@ -68,7 +68,7 @@ export default function LandingSteps() {
               <p className={styles.num}>02</p>
               <h3 className={styles.title}>{t('landing.steps.share.title')}</h3>
               <p className={styles.text}>{t('landing.steps.share.text')}</p>
-              <div className={styles.demo}>
+              <Card padding="none" surface="sunken" className={styles.demo}>
                 <span className={demo.qr} aria-hidden="true">
                   <Suspense fallback={null}>
                     <QrCode value={DEMO_QR_URL} title={t('landing.steps.share.qrTitle')} />
@@ -77,7 +77,7 @@ export default function LandingSteps() {
                 <div className={demo.shareLine} aria-hidden="true">
                   <span className={demo.shareUrl}>{t('landing.demo.url')}</span>
                 </div>
-              </div>
+              </Card>
             </Card>
           </li>
 
@@ -91,7 +91,7 @@ export default function LandingSteps() {
               <p className={styles.num}>03</p>
               <h3 className={styles.title}>{t('landing.steps.vote.title')}</h3>
               <p className={styles.text}>{t('landing.steps.vote.text')}</p>
-              <div className={styles.demo} aria-hidden="true">
+              <Card padding="none" surface="sunken" className={styles.demo} aria-hidden="true">
                 <div className={demo.listRow}>
                   <DemoPoster tone={3} label="Parasite" />
                   <span className={demo.listTitle}>Parasite</span>
@@ -110,7 +110,7 @@ export default function LandingSteps() {
                     </span>
                   </span>
                 </div>
-              </div>
+              </Card>
             </Card>
           </li>
 
@@ -124,10 +124,10 @@ export default function LandingSteps() {
               <p className={styles.num}>04</p>
               <h3 className={styles.title}>{t('landing.steps.wheel.title')}</h3>
               <p className={styles.text}>{t('landing.steps.wheel.text')}</p>
-              <div className={styles.demo} aria-hidden="true">
+              <Card padding="none" surface="sunken" className={styles.demo} aria-hidden="true">
                 <span className={demo.wheelMini} />
                 <p className={demo.stepLegend}>{t('landing.steps.wheel.legend')}</p>
-              </div>
+              </Card>
             </Card>
           </li>
         </ol>

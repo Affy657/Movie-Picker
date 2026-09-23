@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { Layers } from 'lucide-react';
 import styles from './MovieCollectionCard.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import Card from '@/shared/components/Card';
 
 interface Props {
   to: string;
@@ -18,7 +19,7 @@ export default function MovieCollectionCard({
 }: Readonly<Props>) {
   return (
     <li className={styles.card}>
-      <Link to={to} className={styles.link}>
+      <Card as={Link} to={to} interactive padding="none" surface="sunken" className={styles.link}>
         <span className={styles.posterWrap}>
           {posterSrc ? (
             <img src={posterSrc} alt="" className={styles.poster} loading="lazy" decoding="async" />
@@ -32,7 +33,7 @@ export default function MovieCollectionCard({
           <span className={styles.name}>{name}</span>
           <span className={styles.count}>{movieCountLabel}</span>
         </span>
-      </Link>
+      </Card>
     </li>
   );
 }

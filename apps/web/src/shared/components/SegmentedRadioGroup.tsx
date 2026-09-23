@@ -21,18 +21,20 @@ export default function SegmentedRadioGroup<T extends string>({
   size = 'md',
   iconOnly = false,
   disabled = false,
-}: Readonly<{
-  options: readonly SegmentedOption<T>[];
-  value: T;
-  onChange: (value: T) => void;
-  ariaLabel: string;
-  ariaLabelledBy?: string;
-  className?: string;
-  id?: string;
-  size?: SegmentedSize;
-  iconOnly?: boolean;
-  disabled?: boolean;
-}>) {
+}: Readonly<
+  {
+    options: readonly SegmentedOption<T>[];
+    value: T;
+    onChange: (value: T) => void;
+    className?: string;
+    id?: string;
+    size?: SegmentedSize;
+    iconOnly?: boolean;
+    disabled?: boolean;
+  } & (
+    { ariaLabel: string; ariaLabelledBy?: string } | { ariaLabelledBy: string; ariaLabel?: string }
+  )
+>) {
   const handleKey = (e: React.KeyboardEvent, idx: number) => {
     if (disabled) return;
     const last = options.length - 1;

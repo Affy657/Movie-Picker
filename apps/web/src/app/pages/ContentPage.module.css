@@ -1,14 +1,10 @@
 .layout {
-  --page-max-width: var(--container-base);
+  --page-max-width: var(--container-lg);
 }
 
 .title {
+  composes: pageTitle from '@/shared/components/typography.module.css';
   margin: 0 0 var(--space-2);
-  font-size: clamp(1.5rem, 3vw, 1.875rem);
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-tight);
-  line-height: var(--leading-tight);
-  color: var(--color-text);
 }
 
 .intro {
@@ -33,7 +29,7 @@
 .updatedAt {
   margin-top: calc(-1 * var(--space-2));
   font-size: var(--font-size-xs);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }
 
 .sectionList {

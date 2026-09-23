@@ -1,6 +1,5 @@
 import { useId, useState } from 'react';
 import clsx from 'clsx';
-import { X } from 'lucide-react';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n';
@@ -17,9 +16,8 @@ import {
 import styles from './LetterboxdChoicesModal.module.css';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
-import IconButton from '@/shared/components/IconButton';
 import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
-import { ICON_SIZE } from '@/shared/components/iconSize';
+import LinkButton from '@/shared/components/LinkButton';
 
 interface LetterboxdChoicesModalProps {
   open: boolean;
@@ -135,32 +133,32 @@ export default function LetterboxdChoicesModal({
   const decideLater = () => void runConfirm(answers);
 
   return (
-    <Modal open={open} onClose={onClose} size="md" column ariaLabelledBy={titleId}>
-      <div className={styles.header}>
-        <div className={styles.headTextGroup}>
-          <h2 id={titleId} className={styles.title}>
-            {total === 1
-              ? t('auth.account.letterboxd.choicesTitleOne')
-              : t('auth.account.letterboxd.choicesTitle', { count: total })}
-          </h2>
-          <span className={styles.progressDots} aria-hidden="true">
-            {choices.map((choice, i) => (
-              <span
-                key={choice.rowIndex}
-                className={clsx(
-                  styles.progressDot,
-                  i < index && styles.progressDotDone,
-                  i === index && styles.progressDotCurrent
-                )}
-              />
-            ))}
-          </span>
-        </div>
-        <IconButton ariaLabel={t('common.close')} onClick={onClose}>
-          <X aria-hidden size={ICON_SIZE.lg} />
-        </IconButton>
-      </div>
-
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="md"
+      column
+      title={
+        total === 1
+          ? t('auth.account.letterboxd.choicesTitleOne')
+          : t('auth.account.letterboxd.choicesTitle', { count: total })
+      }
+      titleId={titleId}
+      titleDetail={
+        <span className={styles.progressDots} aria-hidden="true">
+          {choices.map((choice, i) => (
+            <span
+              key={choice.rowIndex}
+              className={clsx(
+                styles.progressDot,
+                i < index && styles.progressDotDone,
+                i === index && styles.progressDotCurrent
+              )}
+            />
+          ))}
+        </span>
+      }
+    >
       <p className={styles.intro}>
         {t('auth.account.letterboxd.choicesStepOf', { current: index + 1, total })}
       </p>
@@ -210,14 +208,9 @@ export default function LetterboxdChoicesModal({
       </ChoiceGroup>
 
       <div className={styles.footer}>
-        <button
-          type="button"
-          className={styles.laterLink}
-          onClick={decideLater}
-          disabled={confirming}
-        >
+        <LinkButton size="sm" onClick={decideLater} disabled={confirming}>
           {t('auth.account.letterboxd.choicesDecideLater')}
-        </button>
+        </LinkButton>
         <div className={styles.footerActions}>
           <Button
             type="button"

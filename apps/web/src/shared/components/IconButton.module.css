@@ -15,6 +15,10 @@
     color var(--duration-base) var(--ease-default);
 }
 
+.round {
+  border-radius: var(--radius-pill);
+}
+
 .expandedHitArea {
   composes: expanded from './tapTarget.module.css';
 }
@@ -46,14 +50,14 @@
   }
 
   .onPoster:hover {
-    background: var(--on-poster-scrim-strong);
-    color: var(--on-poster-fg);
+    background: var(--color-on-poster-scrim-strong);
+    color: var(--color-on-poster-fg);
   }
 }
 
 .root:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .root:disabled {
@@ -71,7 +75,7 @@
 }
 
 .onPoster {
-  background: var(--on-poster-scrim);
-  color: var(--on-poster-fg);
-  border: 1px solid var(--on-poster-border);
+  background: var(--color-on-poster-scrim);
+  color: var(--color-on-poster-fg);
+  border: 1px solid var(--color-on-poster-border);
 }

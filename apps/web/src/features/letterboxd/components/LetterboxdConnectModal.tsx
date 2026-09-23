@@ -6,7 +6,6 @@ import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { invalidateWatchlist } from '@/features/movies/hooks/useWatchlist';
-import DialogTitleBar from '@/shared/components/DialogTitleBar';
 import InfoBubble from '@/shared/components/InfoBubble';
 import {
   syncLetterboxd,
@@ -20,6 +19,7 @@ import styles from './LetterboxdConnectModal.module.css';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import Card from '@/shared/components/Card';
 
 interface LetterboxdConnectModalProps {
   open: boolean;
@@ -63,23 +63,23 @@ function ConnectFormModal({
   };
 
   return (
-    <Modal open onClose={onClose} size="sm" column ariaLabelledBy={titleId}>
-      <DialogTitleBar
-        titleId={titleId}
-        title={
-          <>
-            {t('auth.account.letterboxd.connectTitle')}
-            <InfoBubble label={t('auth.account.letterboxd.helpTitle')}>
-              <p>{t('auth.account.letterboxd.helpSync')}</p>
-              <p>{t('auth.account.letterboxd.helpSafety')}</p>
-              <p>{t('auth.account.letterboxd.helpUsername')}</p>
-            </InfoBubble>
-          </>
-        }
-        onClose={onClose}
-        closeLabel={t('common.close')}
-      />
-
+    <Modal
+      open
+      onClose={onClose}
+      size="sm"
+      column
+      titleId={titleId}
+      title={
+        <>
+          {t('auth.account.letterboxd.connectTitle')}
+          <InfoBubble label={t('auth.account.letterboxd.helpTitle')}>
+            <p>{t('auth.account.letterboxd.helpSync')}</p>
+            <p>{t('auth.account.letterboxd.helpSafety')}</p>
+            <p>{t('auth.account.letterboxd.helpUsername')}</p>
+          </InfoBubble>
+        </>
+      }
+    >
       <p className={styles.intro}>{t('auth.account.letterboxd.connectIntro')}</p>
 
       <form
@@ -107,7 +107,7 @@ function ConnectFormModal({
         </div>
 
         {connecting ? (
-          <div className={styles.progress}>
+          <Card padding="none" surface="sunken" className={styles.progress}>
             <div className={styles.progressTrack}>
               <progress
                 className={styles.progressControl}
@@ -116,9 +116,9 @@ function ConnectFormModal({
               <span className={styles.progressBarFill} aria-hidden />
             </div>
             <p className={styles.progressText}>{t('auth.account.letterboxd.connectSyncingHint')}</p>
-          </div>
+          </Card>
         ) : (
-          <div className={styles.steps}>
+          <Card padding="none" surface="sunken" className={styles.steps}>
             <span className={styles.step}>
               <span className={styles.stepDot}>
                 <span className={styles.stepDotText}>1</span>
@@ -137,7 +137,7 @@ function ConnectFormModal({
               </span>
               <span>{t('auth.account.letterboxd.connectStep3')}</span>
             </span>
-          </div>
+          </Card>
         )}
 
         {connectError && (
@@ -187,16 +187,16 @@ function DoneModal({
   const undecidedCount = undecidedTitles.length;
 
   return (
-    <Modal open onClose={onClose} size="sm" column ariaLabelledBy={titleId}>
-      <DialogTitleBar
-        titleId={titleId}
-        title={t('auth.account.letterboxd.doneTitle')}
-        onClose={onClose}
-        closeLabel={t('common.close')}
-      />
-
+    <Modal
+      open
+      onClose={onClose}
+      size="sm"
+      column
+      title={t('auth.account.letterboxd.doneTitle')}
+      titleId={titleId}
+    >
       <div className={styles.body}>
-        <div className={styles.report}>
+        <Card padding="none" surface="sunken" className={styles.report}>
           {addedCount > 0 && (
             <span className={styles.reportRow}>
               <span className={styles.reportIconOk}>
@@ -265,7 +265,7 @@ function DoneModal({
               </ul>
             </details>
           )}
-        </div>
+        </Card>
 
         <p className={styles.intro}>{t('auth.account.letterboxd.doneFooterNote')}</p>
 

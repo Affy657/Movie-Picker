@@ -11,10 +11,8 @@
 }
 
 .groupLabel {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wider);
   color: var(--color-text-muted);
   line-height: var(--leading-none);
 }

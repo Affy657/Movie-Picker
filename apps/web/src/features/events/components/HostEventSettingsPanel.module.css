@@ -35,64 +35,7 @@
 }
 
 .saveStatus {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
   flex-shrink: 0;
-  font-size: var(--font-size-2xs);
-  line-height: var(--leading-none);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill);
-  white-space: nowrap;
-}
-
-.saveStatus span:last-child {
-  transform: translateY(var(--text-optical-nudge));
-}
-
-.saveStatusDot {
-  width: var(--space-1-5);
-  height: var(--space-1-5);
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.saveStatusSaved {
-  color: var(--color-success);
-  background: var(--color-success-bg);
-}
-
-.saveStatusSaved .saveStatusDot {
-  background: var(--color-success);
-}
-
-.saveStatusPending {
-  color: var(--color-text-muted);
-  background: var(--color-surface-active);
-}
-
-.saveStatusPending .saveStatusDot {
-  background: var(--color-text-muted);
-  animation: settingsPulse var(--duration-pulse) var(--ease-in-out) infinite;
-}
-
-.saveStatusError {
-  color: var(--color-error);
-  background: var(--color-error-bg);
-}
-
-.saveStatusError .saveStatusDot {
-  background: var(--color-error);
-}
-
-@keyframes settingsPulse {
-  0%,
-  100% {
-    opacity: 0.35;
-  }
-  50% {
-    opacity: 1;
-  }
 }
 
 .form {
@@ -138,11 +81,9 @@
 }
 
 .sectionTitle {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   margin: 0;
   font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
   color: var(--color-section-heading);
   line-height: var(--leading-none);
 }
@@ -231,7 +172,7 @@
   height: var(--space-10);
   border-radius: 50%;
   background: var(--color-primary-soft-hover);
-  color: var(--color-primary-text);
+  color: var(--color-primary-text-hover);
   font-size: var(--font-size-xl);
   line-height: var(--leading-none);
 }
@@ -314,12 +255,12 @@
   transform: translateY(var(--text-optical-nudge));
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .saveStatusPending .saveStatusDot {
-    animation: none;
-  }
-}
-
 .lockable {
   display: contents;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .themeChevron {
+    transition: none;
+  }
 }

@@ -24,6 +24,7 @@ import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import LinkButton from '@/shared/components/LinkButton';
 
 function formatSyncDate(iso: string, locale: string): string {
   return new Date(iso).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
@@ -305,7 +306,13 @@ export default function LetterboxdImportSection() {
       )}
 
       {report && !syncError && (
-        <div className={styles.report} role="status" aria-live="polite">
+        <Card
+          padding="none"
+          surface="sunken"
+          className={styles.report}
+          role="status"
+          aria-live="polite"
+        >
           <span className={styles.reportRow}>
             <span className={styles.reportIconOk}>
               <Check size={ICON_SIZE.sm} aria-hidden />
@@ -319,15 +326,15 @@ export default function LetterboxdImportSection() {
           </span>
 
           {report.pendingChoices.length > 0 && (
-            <button
-              type="button"
+            <LinkButton
+              size="sm"
               className={styles.reportAction}
               onClick={() => setChoicesOpen(true)}
             >
               {t('auth.account.letterboxd.reportPending', {
                 count: String(report.pendingChoices.length),
               })}
-            </button>
+            </LinkButton>
           )}
 
           {report.unmatchedTitles.length > 0 && (
@@ -352,7 +359,7 @@ export default function LetterboxdImportSection() {
               })}
             </p>
           )}
-        </div>
+        </Card>
       )}
 
       {confirmResult && (

@@ -1,0 +1,15 @@
+.scoreBar {
+  display: flex;
+  height: var(--space-1);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--color-surface-active);
+}
+
+.scoreBarUp {
+  background: var(--color-primary);
+}
+
+.scoreBarDown {
+  background: var(--color-error);
+}

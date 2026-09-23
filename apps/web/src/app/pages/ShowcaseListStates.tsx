@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { Film } from 'lucide-react';
-import Button, { buttonClass } from '@/shared/components/Button';
+import { buttonClass } from '@/shared/components/Button';
 import EmptyState from '@/shared/components/EmptyState';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import { ROUTES } from '@/app/routes';
@@ -8,6 +8,7 @@ import { useTranslation } from '@/shared/i18n';
 import type { ShowcaseListVariant } from '@/features/movies/showcaseSections';
 import styles from './ShowcaseListPage.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import InlineError from '@/shared/components/InlineError';
 
 type Props = {
   variant: ShowcaseListVariant;
@@ -52,12 +53,11 @@ export default function ShowcaseListStates({
 
   if (isError) {
     return (
-      <p className={styles.state} role="alert">
-        {t('showcase.error')}
-        <Button size="sm" variant="secondary" onClick={onRetry}>
-          {t('showcase.retry')}
-        </Button>
-      </p>
+      <InlineError
+        message={t('showcase.error')}
+        retryLabel={t('showcase.retry')}
+        onRetry={onRetry}
+      />
     );
   }
 

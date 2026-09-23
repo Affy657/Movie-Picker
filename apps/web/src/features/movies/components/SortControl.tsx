@@ -46,7 +46,7 @@ export default function SortControl<TSortKey extends string>({
           triggerIcon={<DirectionIcon size={ICON_SIZE.xs} aria-hidden />}
           triggerClassName={styles.menuTrigger}
           panelClassName={styles.menuPanel}
-          panelLabel={sortMenuAriaLabel}
+          panelAriaLabel={sortMenuAriaLabel}
         >
           {(close) => (
             <>

@@ -1,7 +1,7 @@
 .rowGrid {
   grid-template-columns:
     var(--space-9) var(--table-col-poster) minmax(0, 1fr) var(--table-col-vote)
-    var(--table-col-runtime) var(--table-col-year) var(--table-col-availability) 92px 150px 72px
+    var(--table-col-runtime) var(--table-col-year) var(--table-col-availability) var(--table-col-votes) var(--table-col-seen) var(--table-col-score)
     var(--table-col-kebab);
 }
 
@@ -75,7 +75,7 @@
 
 .errorRetry:focus-visible {
   outline: 2px solid var(--color-error);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .rank {
@@ -120,7 +120,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--font-size-3xs);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
   text-align: center;
 }
 
@@ -152,21 +152,8 @@
 }
 
 .scoreBar {
-  display: flex;
   width: var(--tap-target-min);
-  height: var(--space-1);
   margin-top: var(--space-1-5);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-  background: var(--color-surface-active);
-}
-
-.scoreBarUp {
-  background: var(--color-primary);
-}
-
-.scoreBarDown {
-  background: var(--color-error);
 }
 
 .mobileBottomSection {
@@ -196,7 +183,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--font-size-2xs);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }
 
 .mobileVoteScore {

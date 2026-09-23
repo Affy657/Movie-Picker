@@ -67,7 +67,9 @@ export function FilterSheet({
       onClose={onClose}
       footer={
         <>
-          <LinkButton onClick={onReset}>{resetLabel}</LinkButton>
+          <LinkButton size="sm" onClick={onReset}>
+            {resetLabel}
+          </LinkButton>
           <Button type="button" variant="primary" size="sm" onClick={onClose}>
             {applyLabel}
           </Button>

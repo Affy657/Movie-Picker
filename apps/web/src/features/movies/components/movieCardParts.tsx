@@ -261,22 +261,55 @@ export function VoteBar({
   );
 }
 
-export function PaidOfferChip({
-  type,
-  count,
-  onClick,
-  ariaLabel,
-}: Readonly<{
-  type: 'rent' | 'buy';
-  count: number;
-  onClick: () => void;
-  ariaLabel: string;
-}>) {
-  return (
-    <button type="button" className={styles.paidChip} onClick={onClick} aria-label={ariaLabel}>
+export function PaidOfferChip(
+  props: Readonly<
+    {
+      type: 'rent' | 'buy';
+      count: number;
+      ariaLabel: string;
+    } & ({ onClick: () => void; href?: never } | { href?: string; onClick?: never })
+  >
+) {
+  const { type, count, ariaLabel } = props;
+  const content = (
+    <>
       <ModeIcon type={type} size={ICON_SIZE.sm} />
       <span className={styles.paidChipCount}>{count}</span>
-    </button>
+    </>
+  );
+  if (props.onClick) {
+    return (
+      <button
+        type="button"
+        className={styles.paidChip}
+        onClick={props.onClick}
+        aria-label={ariaLabel}
+      >
+        {content}
+      </button>
+    );
+  }
+  if (props.href) {
+    return (
+      <a
+        href={props.href}
+        className={styles.paidChip}
+        aria-label={ariaLabel}
+        target="_blank"
+        rel="noreferrer noopener"
+      >
+        {content}
+      </a>
+    );
+  }
+  return (
+    <span
+      className={clsx(styles.paidChip, styles.paidChipStatic)}
+      role="img"
+      aria-label={ariaLabel}
+    >
+      {content}
+    </span>
   );
 }
 

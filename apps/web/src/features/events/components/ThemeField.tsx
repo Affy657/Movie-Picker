@@ -223,9 +223,7 @@ export default function ThemeField({
       </div>
       {!disabled && (
         <fieldset className={styles.presets}>
-          <legend className={styles.presetsLegend}>
-            {t('events.settings.themePresetsLegend')}
-          </legend>
+          <legend className="visually-hidden">{t('events.settings.themePresetsLegend')}</legend>
           {(presetsExpanded ? THEME_PRESETS : THEME_PRESETS.slice(0, PRESETS_VISIBLE)).map((p) => {
             const presetText = t(`events.settings.themePresets.${p.slug}`);
             return (

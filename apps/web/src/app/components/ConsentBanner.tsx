@@ -4,7 +4,7 @@ import { useConsent } from '@/shared/contexts/ConsentContext';
 import ConsentDialog from '@/shared/components/ConsentDialog';
 import styles from './ConsentBanner.module.css';
 import Button from '@/shared/components/Button';
-import Card from '@/shared/components/Card';
+import Notice from '@/shared/components/Notice';
 
 export default function ConsentBanner() {
   const { t } = useTranslation();
@@ -15,41 +15,32 @@ export default function ConsentBanner() {
 
   return (
     <>
-      <Card
-        as="section"
-        padding="none"
-        elevation="lg"
-        className={styles.root}
-        aria-label={t('consent.banner.title')}
-        aria-live="polite"
+      <Notice
+        placement="bottom"
+        title={t('consent.banner.title')}
+        description={t('consent.banner.description')}
       >
-        <div className={styles.content}>
-          <p className={styles.title}>{t('consent.banner.title')}</p>
-          <p className={styles.description}>{t('consent.banner.description')}</p>
-        </div>
-        <div className={styles.actions}>
-          <Button type="button" size="sm" className={styles.rejectBtn} onClick={rejectAll}>
-            {t('consent.banner.rejectAll')}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            className={styles.customizeBtn}
-            onClick={() => setDialogOpen(true)}
-          >
-            {t('consent.banner.customize')}
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            className={styles.acceptBtn}
-            onClick={acceptAll}
-          >
-            {t('consent.banner.acceptAll')}
-          </Button>
-        </div>
-      </Card>
+        <Button type="button" size="sm" className={styles.rejectBtn} onClick={rejectAll}>
+          {t('consent.banner.rejectAll')}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          className={styles.customizeBtn}
+          onClick={() => setDialogOpen(true)}
+        >
+          {t('consent.banner.customize')}
+        </Button>
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          className={styles.acceptBtn}
+          onClick={acceptAll}
+        >
+          {t('consent.banner.acceptAll')}
+        </Button>
+      </Notice>
       <ConsentDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
     </>
   );

@@ -12,9 +12,9 @@
   gap: var(--space-1-5);
   padding: var(--space-1) var(--space-2-5);
   background: transparent;
-  border: 1px solid var(--mc-border, var(--on-poster-border));
+  border: 1px solid var(--mc-border, var(--color-on-poster-border));
   border-radius: var(--radius-pill);
-  color: var(--mc-fg-soft, var(--on-poster-fg-soft));
+  color: var(--mc-fg-soft, var(--color-on-poster-fg-soft));
   font-size: var(--font-size-2xs);
   line-height: var(--leading-none);
   cursor: pointer;
@@ -23,18 +23,18 @@
 }
 
 .seenBtn:focus-visible {
-  background: var(--mc-overlay-hover-soft, var(--on-poster-overlay-hover-soft));
+  background: var(--mc-overlay-hover-soft, var(--color-on-poster-overlay-hover-soft));
 }
 
 @media (hover: hover) {
   .seenBtn:hover:not(:disabled) {
-    background: var(--mc-overlay-hover-soft, var(--on-poster-overlay-hover-soft));
+    background: var(--mc-overlay-hover-soft, var(--color-on-poster-overlay-hover-soft));
   }
 }
 
 .seenBtn:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .seenBtn:disabled {
@@ -43,9 +43,9 @@
 }
 
 .seenActive {
-  background: var(--mc-active-bg, var(--on-poster-active-bg));
-  border-color: var(--mc-icon-muted, var(--on-poster-icon-muted));
-  color: var(--mc-fg, var(--on-poster-fg));
+  background: var(--mc-active-bg, var(--color-on-poster-active-bg));
+  border-color: var(--mc-icon-muted, var(--color-on-poster-icon-muted));
+  color: var(--mc-fg, var(--color-on-poster-fg));
 }
 
 .seenLabel {
@@ -54,5 +54,5 @@
 }
 
 .seenAvatars {
-  --avatar-stack-ring: var(--mc-surface-ring, var(--on-poster-surface-ring));
+  --avatar-stack-ring: var(--mc-surface-ring, var(--color-on-poster-surface-ring));
 }

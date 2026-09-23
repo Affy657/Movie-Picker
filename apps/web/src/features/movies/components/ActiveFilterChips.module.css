@@ -4,13 +4,3 @@
   gap: var(--space-1-5);
 }
 
-.clearAll {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-primary-text);
-  background: none;
-  border: none;
-  padding: var(--space-1) var(--space-1-5);
-  font-family: inherit;
-  cursor: pointer;
-}

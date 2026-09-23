@@ -175,7 +175,7 @@
 .weekGrid {
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-  grid-auto-rows: 1.25rem;
+  grid-auto-rows: var(--space-5);
   gap: var(--space-1);
 }
 
@@ -213,7 +213,7 @@
 
 .weekCell:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .weekMonths {

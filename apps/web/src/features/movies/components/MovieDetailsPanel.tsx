@@ -8,6 +8,8 @@ import { extractYouTubeId } from '@/shared/utils/youtube';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './MovieDetailsPanel.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import LinkButton, { linkButtonClass } from '@/shared/components/LinkButton';
+import { buttonLabelClass } from '@/shared/components/Button';
 
 const MAX_CAST = 6;
 
@@ -126,14 +128,10 @@ function MovieDetailsBody({
       {safeTrailerUrl &&
         (onPlayTrailer ? (
           <div className={styles.trailerRow}>
-            <button
-              type="button"
-              className={styles.trailerLink}
-              onClick={() => onPlayTrailer(safeTrailerUrl)}
-            >
+            <LinkButton size="sm" onClick={() => onPlayTrailer(safeTrailerUrl)}>
               <PlayCircle aria-hidden size={ICON_SIZE.sm} />
-              <span className={styles.trailerLinkLabel}>{t('movies.details.trailerLink')}</span>
-            </button>
+              {t('movies.details.trailerLink')}
+            </LinkButton>
           </div>
         ) : (
           <div className={styles.trailerRow}>
@@ -141,10 +139,12 @@ function MovieDetailsBody({
               href={safeTrailerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={styles.trailerLink}
+              className={linkButtonClass({ size: 'sm' })}
             >
               <PlayCircle aria-hidden size={ICON_SIZE.sm} />
-              <span className={styles.trailerLinkLabel}>{t('movies.details.trailerLink')}</span>
+              <span className={buttonLabelClass(t('movies.details.trailerLink'))}>
+                {t('movies.details.trailerLink')}
+              </span>
             </a>
           </div>
         ))}

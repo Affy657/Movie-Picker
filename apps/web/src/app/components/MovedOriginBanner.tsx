@@ -3,7 +3,7 @@ import { useTranslation } from '@/shared/i18n';
 import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
 import { dismissMovedOriginNotice, isMovedOriginNoticePending } from '@/shared/pwa/movedOrigin';
 import { shouldOfferSystemBrowser } from './InAppBrowserBanner';
-import TopNotice from '@/shared/components/TopNotice';
+import Notice from '@/shared/components/Notice';
 import Button from '@/shared/components/Button';
 import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
 
@@ -31,10 +31,10 @@ export default function MovedOriginBanner() {
 
   return (
     <>
-      <TopNotice
+      <Notice
         title={t('movedOrigin.banner.title')}
         description={t('movedOrigin.banner.description')}
-        onDismiss={dismiss}
+        onClose={dismiss}
       >
         <Button
           type="button"
@@ -48,7 +48,7 @@ export default function MovedOriginBanner() {
         <Button type="button" size="sm" onClick={dismiss}>
           {t('movedOrigin.banner.dismiss')}
         </Button>
-      </TopNotice>
+      </Notice>
       {install.guideOpen ? (
         <InstallPwaDialog open mode={install.guideMode} onClose={install.closeGuide} />
       ) : null}

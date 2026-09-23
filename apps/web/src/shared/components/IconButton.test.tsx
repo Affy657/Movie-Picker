@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import IconButton from '@/shared/components/IconButton';
+import IconButton, { iconButtonClass } from '@/shared/components/IconButton';
 import styles from '@/shared/components/IconButton.module.css';
 import spinnerStyles from '@/shared/components/Spinner.module.css';
 
@@ -56,5 +56,26 @@ describe('IconButton', () => {
 
     await userEvent.click(button);
     expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it('draws a round button with shape="round"', () => {
+    render(
+      <IconButton ariaLabel="Suivant" shape="round">
+        <svg aria-hidden />
+      </IconButton>
+    );
+
+    expect(screen.getByRole('button', { name: 'Suivant' }).className).toContain(styles.round);
+  });
+
+  it('gives a link the same class composition through iconButtonClass', () => {
+    expect(iconButtonClass().split(' ').sort()).toEqual(
+      [styles.root, styles.md, styles.expandedHitArea].sort()
+    );
+    expect(
+      iconButtonClass({ size: 'lg', tone: 'onPoster', shape: 'round' }).split(' ').sort()
+    ).toEqual(
+      [styles.root, styles.lg, styles.onPoster, styles.round, styles.expandedHitArea].sort()
+    );
   });
 });

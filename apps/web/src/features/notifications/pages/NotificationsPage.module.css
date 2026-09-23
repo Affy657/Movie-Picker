@@ -7,12 +7,8 @@
 }
 
 .pageTitle {
+  composes: pageTitle from '@/shared/components/typography.module.css';
   margin: 0;
-  font-size: clamp(1.5rem, 4vw, 1.875rem);
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-tight);
-  line-height: var(--leading-tight);
-  color: var(--color-text);
 }
 
 .markAllBtn {
@@ -70,7 +66,7 @@
 
 .item:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: -2px;
+  outline-offset: var(--outline-offset-inset);
 }
 
 .itemIcon {
@@ -103,7 +99,7 @@
 .itemTime {
   flex-shrink: 0;
   font-size: var(--font-size-2xs);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
   white-space: nowrap;
   padding-top: var(--space-0-5);
 }

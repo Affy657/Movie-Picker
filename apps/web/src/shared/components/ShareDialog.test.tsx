@@ -33,7 +33,7 @@ const baseProps = {
   qrHint: "Ouvrez l'appareil photo pour rejoindre la soirée sur mobile.",
   fileSlug: 'abc',
   preview: { name: 'Soirée ciné', meta: ['Samedi 6 septembre', '4 participants'] },
-  surface: 'event' as const,
+  analyticsSurface: 'event' as const,
 };
 
 describe('ShareDialog', () => {
@@ -186,7 +186,7 @@ describe('ShareDialog', () => {
     renderDialog(
       <ShareDialog
         {...baseProps}
-        surface="profile"
+        analyticsSurface="profile"
         preview={{ avatarId: null, name: 'Alice', meta: ['@alice', 'Membre depuis mars 2024'] }}
       />
     );

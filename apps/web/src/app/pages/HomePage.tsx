@@ -42,6 +42,7 @@ import {
 import styles from './HomePage.module.css';
 import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import LinkButton from '@/shared/components/LinkButton';
 
 type GenreTabKey = 'all' | `${number}`;
 
@@ -177,14 +178,9 @@ export default function HomePage() {
         <p className={styles.examples}>
           <span className={styles.examplesLabel}>{t('home.searchExamplesLabel')}</span>
           {SEARCH_EXAMPLES.map((example) => (
-            <button
-              key={example}
-              type="button"
-              className={styles.example}
-              onClick={() => runSearch(example)}
-            >
+            <LinkButton key={example} size="sm" onClick={() => runSearch(example)}>
               {example}
-            </button>
+            </LinkButton>
           ))}
         </p>
       </div>

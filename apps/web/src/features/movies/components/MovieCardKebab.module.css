@@ -21,8 +21,8 @@
   padding: 0;
   border: none;
   border-radius: var(--radius-pill);
-  background: var(--mc-kebab-bg, var(--on-poster-kebab-bg));
-  color: var(--mc-kebab-fg, var(--on-poster-kebab-fg));
+  background: var(--mc-kebab-bg, var(--color-on-poster-kebab-bg));
+  color: var(--mc-kebab-fg, var(--color-on-poster-kebab-fg));
   cursor: pointer;
   opacity: var(--opacity-card-kebab, 1);
   transition:
@@ -35,21 +35,21 @@
 }
 
 .kebabBtn:focus-visible {
-  background: var(--mc-kebab-bg-hover, var(--on-poster-kebab-bg-hover));
-  color: var(--mc-kebab-fg-hover, var(--mc-kebab-fg, var(--on-poster-kebab-fg)));
+  background: var(--mc-kebab-bg-hover, var(--color-on-poster-kebab-bg-hover));
+  color: var(--mc-kebab-fg-hover, var(--mc-kebab-fg, var(--color-on-poster-kebab-fg)));
 }
 
 @media (hover: hover) {
   .kebabBtn:hover {
-    background: var(--mc-kebab-bg-hover, var(--on-poster-kebab-bg-hover));
-    color: var(--mc-kebab-fg-hover, var(--mc-kebab-fg, var(--on-poster-kebab-fg)));
+    background: var(--mc-kebab-bg-hover, var(--color-on-poster-kebab-bg-hover));
+    color: var(--mc-kebab-fg-hover, var(--mc-kebab-fg, var(--color-on-poster-kebab-fg)));
   }
 }
 
 .kebabBtn:focus-visible {
   opacity: 1;
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .kebabMenu {

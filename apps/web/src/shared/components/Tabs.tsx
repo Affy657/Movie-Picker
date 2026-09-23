@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import clsx from 'clsx';
 import { useTablistKeyboard } from '@/shared/hooks/useTablistKeyboard';
 import { useRailScroll } from '@/shared/hooks/useRailScroll';
+import CountBadge from './CountBadge';
 import styles from './Tabs.module.css';
 
 type ScrollFade = 'both' | 'start' | 'end' | undefined;
@@ -134,7 +135,9 @@ export function Tabs<T extends string>({
             >
               {tab.icon}
               {tab.iconOnly ? null : <span className={styles.tabLabel}>{tab.label}</span>}
-              {tab.badge != null && <span className={styles.tabBadge}>{tab.badge}</span>}
+              {tab.badge != null && (
+                <CountBadge value={tab.badge} tone="neutral" className={styles.tabBadge} />
+              )}
             </button>
           );
         })}

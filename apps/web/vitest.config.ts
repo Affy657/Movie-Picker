@@ -20,6 +20,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     include: ['src/**/*.test.{ts,tsx}'],
+    css: { include: [/src\/styles\/01-foundation\.css/] },
     setupFiles: ['src/test-setup.ts'],
     testTimeout: 25000,
     hookTimeout: 25000,

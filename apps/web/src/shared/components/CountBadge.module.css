@@ -1,0 +1,39 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: var(--space-5);
+  height: var(--space-5);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-none);
+  font-variant-numeric: tabular-nums;
+}
+
+.sm {
+  min-width: var(--space-4);
+  height: var(--space-4);
+  padding: 0 var(--space-0-5);
+}
+
+.primary {
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.success {
+  background: var(--color-success);
+  color: var(--color-primary-contrast);
+}
+
+.neutral {
+  background: var(--color-surface-hover-strong);
+  color: var(--color-text-muted);
+}
+
+.value {
+  transform: translateY(var(--text-optical-nudge-caps));
+}

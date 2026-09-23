@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
-import { Check, Download, Link2, Share2, X } from 'lucide-react';
+import { Check, Download, Link2, Share2 } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import QrCode from '@/shared/components/QrCode';
 import Sheet from '@/shared/components/Sheet';
@@ -12,7 +12,6 @@ import { useTranslation } from '@/shared/i18n';
 import Modal from './Modal';
 import styles from './ShareDialog.module.css';
 import Button from '@/shared/components/Button';
-import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type ShareSurface = 'event' | 'profile';
@@ -39,7 +38,7 @@ interface ShareLinkPanelProps {
   qrHint: string;
   fileSlug: string;
   preview: ShareDialogPreview;
-  surface: ShareSurface;
+  analyticsSurface: ShareSurface;
 }
 
 function ShareLinkPanel({
@@ -49,14 +48,14 @@ function ShareLinkPanel({
   qrHint,
   fileSlug,
   preview,
-  surface,
+  analyticsSurface,
 }: Readonly<ShareLinkPanelProps>) {
   const { t } = useTranslation();
   const { copied, copyLink, nativeShare, canNativeShare } = useShareAction(
     url,
     title,
     shareText,
-    surface
+    analyticsSurface
   );
   const qrRef = useRef<HTMLDivElement>(null);
 
@@ -155,7 +154,7 @@ export interface ShareDialogProps {
   fileSlug: string;
   preview: ShareDialogPreview;
   shareText?: string;
-  surface: ShareSurface;
+  analyticsSurface: ShareSurface;
   initialTab?: string;
   extraTab?: ShareDialogTab;
 }
@@ -169,7 +168,7 @@ export default function ShareDialog({
   fileSlug,
   preview,
   shareText,
-  surface,
+  analyticsSurface,
   initialTab,
   extraTab,
 }: Readonly<ShareDialogProps>) {
@@ -191,7 +190,7 @@ export default function ShareDialog({
       qrHint={qrHint}
       fileSlug={fileSlug}
       preview={preview}
-      surface={surface}
+      analyticsSurface={analyticsSurface}
     />
   );
 
@@ -242,19 +241,12 @@ export default function ShareDialog({
       onClose={onClose}
       size="xs"
       column
-      ariaLabelledBy={titleId}
+      title={title}
+      titleId={titleId}
       className={clsx(extraTab && styles.dialogWithTabs)}
     >
       {open && (
         <>
-          <div className={styles.header}>
-            <h2 id={titleId} className={styles.title}>
-              {title}
-            </h2>
-            <IconButton className={styles.closeBtn} ariaLabel={t('common.close')} onClick={onClose}>
-              <X size={ICON_SIZE.xl} aria-hidden />
-            </IconButton>
-          </div>
           {tabsBar}
           <div className={styles.body}>{panels}</div>
         </>

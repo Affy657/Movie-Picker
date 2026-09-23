@@ -150,7 +150,9 @@ export default function MovieListFiltersPanel({
 
       {onReset && labels.resetAll ? (
         <div className={styles.footerRow}>
-          <LinkButton onClick={onReset}>{labels.resetAll}</LinkButton>
+          <LinkButton size="sm" onClick={onReset}>
+            {labels.resetAll}
+          </LinkButton>
         </div>
       ) : null}
     </Card>

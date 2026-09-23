@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router';
+import { useCallback, useEffect, useId, useRef, useState, type SyntheticEvent } from 'react';
+import { useNavigate, useLocation } from 'react-router';
 import clsx from 'clsx';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ChevronDown, ListRestart, Settings2, Sparkles } from 'lucide-react';
+import { ChevronDown, ListRestart, Settings2, Sparkles } from 'lucide-react';
 import ThemeField from '@/features/events/components/ThemeField';
 import WheelModeField from '@/features/events/components/WheelModeField';
 import EventTemplatesRow from '@/features/events/components/EventTemplatesRow';
@@ -27,6 +27,7 @@ import {
 import NumberInput from '@/shared/components/NumberInput';
 import ToggleRow from '@/shared/components/ToggleRow';
 import PageLayout from '@/shared/components/PageLayout';
+import Card from '@/shared/components/Card';
 import {
   createEvent as createEventApi,
   fetchEventConfig,
@@ -53,9 +54,9 @@ import { formatEventTitleDate } from '@/shared/utils/formatMyEventsListDate';
 import styles from './CreateEvent.module.css';
 import templatesStyles from '@/features/events/components/EventTemplatesSection.module.css';
 import Button from '@/shared/components/Button';
-import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Field from '@/shared/components/Field';
+import FormPageShell from '@/shared/components/FormPageShell';
 
 function getDefaultDate(): string {
   const d = new Date();
@@ -252,14 +253,11 @@ export default function CreateEvent() {
 
   return (
     <PageLayout className={styles.layout}>
-      <Link to={ROUTES.myEvents} className={styles.backLink}>
-        <ArrowLeft size={ICON_SIZE.md} aria-hidden />
-        <span className={styles.backLinkLabel}>{t('nav.myEvents')}</span>
-      </Link>
-      <Card padding="none" radius="lg" elevation="md" className={styles.card}>
-        <span className={styles.cardAccent} aria-hidden />
-        <h1 className={styles.title}>{t('events.create.title')}</h1>
-        <p className={styles.description}>{t('events.create.description')}</p>
+      <FormPageShell
+        title={t('events.create.title')}
+        description={t('events.create.description')}
+        back={{ to: ROUTES.myEvents, label: t('nav.myEvents') }}
+      >
         <form onSubmit={handleSubmit} className="form" noValidate>
           <Field
             label={t('events.create.titleLabel')}
@@ -334,10 +332,15 @@ export default function CreateEvent() {
             </Field>
           </div>
 
-          <details
+          <Card
+            as="details"
+            padding="none"
+            surface="sunken"
             className={styles.advanced}
             open={advancedOpen}
-            onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}
+            onToggle={(e: SyntheticEvent<HTMLDetailsElement>) =>
+              setAdvancedOpen(e.currentTarget.open)
+            }
           >
             <summary className={styles.advancedSummary}>
               <Settings2 size={ICON_SIZE.md} aria-hidden className={styles.advancedIcon} />
@@ -510,12 +513,12 @@ export default function CreateEvent() {
                 <div className={styles.resetRow}>
                   <Button variant="ghost" size="sm" onClick={resetOptions}>
                     <ListRestart size={ICON_SIZE.sm} aria-hidden />
-                    <span className={styles.resetLabel}>{t('events.create.resetOptions')}</span>
+                    {t('events.create.resetOptions')}
                   </Button>
                 </div>
               )}
             </div>
-          </details>
+          </Card>
 
           {showTemplates && (
             <section className={clsx(styles.templatesSection, templatesStyles.section)}>
@@ -564,11 +567,17 @@ export default function CreateEvent() {
               {error}
             </p>
           )}
-          <Button type="submit" variant="primary" className={styles.submit} loading={loading}>
+          <Button
+            type="submit"
+            variant="primary"
+            fullWidth
+            className={styles.submit}
+            loading={loading}
+          >
             {loading ? t('events.create.submitting') : t('events.create.submit')}
           </Button>
         </form>
-      </Card>
+      </FormPageShell>
     </PageLayout>
   );
 }

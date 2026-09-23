@@ -4,11 +4,11 @@ import clsx from 'clsx';
 import { Check } from 'lucide-react';
 import { useMenuState } from '@/shared/hooks/useMenuState';
 import styles from './Menu.module.css';
+import { hasDescenders } from './opticalNudge';
+import { buttonClass, buttonLabelClass } from './Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const ENABLED_ITEM_SELECTOR = '[role="menuitem"]:not([disabled])';
-const DESCENDER_CHARS = /[gjpqy]/;
-
 function nextItemIndex(key: string, current: number, count: number): number | null {
   switch (key) {
     case 'ArrowDown':
@@ -77,7 +77,7 @@ interface MenuProps {
   triggerLabel: string;
   triggerIcon?: React.ReactNode;
   triggerClassName?: string;
-  panelLabel: string;
+  panelAriaLabel: string;
   panelClassName?: string;
   children: (close: () => void) => React.ReactNode;
 }
@@ -86,7 +86,7 @@ export default function Menu({
   triggerLabel,
   triggerIcon,
   triggerClassName,
-  panelLabel,
+  panelAriaLabel,
   panelClassName,
   children,
 }: Readonly<MenuProps>) {
@@ -97,14 +97,17 @@ export default function Menu({
       <button
         {...menu.triggerProps}
         type="button"
-        className={clsx(styles.trigger, triggerClassName)}
+        className={clsx(
+          buttonClass({ variant: menu.open ? 'soft' : 'secondary', size: 'sm' }),
+          triggerClassName
+        )}
       >
         {triggerIcon}
-        <span className={styles.triggerLabel}>{triggerLabel}</span>
+        <span className={buttonLabelClass(triggerLabel)}>{triggerLabel}</span>
       </button>
 
       {menu.open ? (
-        <MenuPanel {...menu.panelProps} ariaLabel={panelLabel} className={panelClassName}>
+        <MenuPanel {...menu.panelProps} ariaLabel={panelAriaLabel} className={panelClassName}>
           {children(menu.close)}
         </MenuPanel>
       ) : null}
@@ -130,7 +133,7 @@ interface MenuItemProps {
 }
 
 function itemLabelClassName(children: React.ReactNode): string {
-  const capsOnly = typeof children === 'string' && !DESCENDER_CHARS.test(children);
+  const capsOnly = typeof children === 'string' && !hasDescenders(children);
   return clsx(styles.itemLabel, capsOnly && styles.itemLabelCaps);
 }
 

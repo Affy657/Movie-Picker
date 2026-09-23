@@ -43,8 +43,12 @@ function WatchlistCell({
 
   return (
     <>
-      <Link
+      <Card
+        as={Link}
         to={isOwnProfile ? ROUTES.watchlist : ROUTES.profileWatchlist(profile.handle)}
+        interactive
+        padding="none"
+        surface="sunken"
         className={clsx(styles.statCell, styles.watchlistCell)}
       >
         <Icon
@@ -69,7 +73,7 @@ function WatchlistCell({
           )}
         </span>
         <ChevronRight size={ICON_SIZE.md} className={styles.chevron} aria-hidden />
-      </Link>
+      </Card>
       {hidden ? (
         <Link to={ROUTES.accountProfile} className={styles.watchlistSettingLink}>
           {t('profile.watchlist.makeVisible')}
@@ -116,8 +120,12 @@ export default function ProfileIdentityCard({
       {streak && <ProfileStreakFlame weeks={streak.weeks} bestWeeks={streak.bestWeeks} />}
 
       <div className={styles.followStats}>
-        <button
+        <Card
+          as="button"
           type="button"
+          interactive
+          padding="none"
+          surface="sunken"
           className={styles.statCell}
           aria-haspopup="dialog"
           onClick={() => onOpenFollowModal('following')}
@@ -127,9 +135,13 @@ export default function ProfileIdentityCard({
             <span className={styles.statCellLabel}>{t('profile.follow.following')}</span>
           </span>
           <ChevronRight size={ICON_SIZE.md} className={styles.chevron} aria-hidden />
-        </button>
-        <button
+        </Card>
+        <Card
+          as="button"
           type="button"
+          interactive
+          padding="none"
+          surface="sunken"
           className={styles.statCell}
           aria-haspopup="dialog"
           onClick={() => onOpenFollowModal('followers')}
@@ -139,7 +151,7 @@ export default function ProfileIdentityCard({
             <span className={styles.statCellLabel}>{t('profile.follow.followers')}</span>
           </span>
           <ChevronRight size={ICON_SIZE.md} className={styles.chevron} aria-hidden />
-        </button>
+        </Card>
       </div>
 
       <WatchlistCell profile={profile} isOwnProfile={isOwnProfile} />

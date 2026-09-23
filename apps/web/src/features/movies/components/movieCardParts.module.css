@@ -8,7 +8,7 @@
 .proposerName {
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-semibold);
-  color: var(--mc-fg-muted, var(--on-poster-fg-muted));
+  color: var(--mc-fg-muted, var(--color-on-poster-fg-muted));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -34,7 +34,7 @@
 
 .proposerLink:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .proposerGroup {
@@ -55,20 +55,20 @@
   padding: 0;
   background: none;
   border: none;
-  color: var(--mc-icon-muted, var(--on-poster-icon-muted));
+  color: var(--mc-icon-muted, var(--color-on-poster-icon-muted));
   cursor: pointer;
   transition: color var(--duration-base) var(--ease-default);
 }
 
 .addNote:focus-visible {
-  color: var(--mc-fg-soft, var(--on-poster-fg-soft));
+  color: var(--mc-fg-soft, var(--color-on-poster-fg-soft));
   outline: 2px solid currentColor;
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 @media (hover: hover) {
   .addNote:hover {
-    color: var(--mc-fg-soft, var(--on-poster-fg-soft));
+    color: var(--mc-fg-soft, var(--color-on-poster-fg-soft));
     outline: none;
   }
 }
@@ -85,7 +85,7 @@
 
 .posterTrigger:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: -2px;
+  outline-offset: var(--outline-offset-inset);
 }
 
 .winnerRibbon {
@@ -127,8 +127,8 @@
   width: var(--space-5);
   height: var(--space-5);
   border-radius: var(--radius-pill);
-  background: var(--on-poster-scrim-strong);
-  color: var(--on-poster-fg);
+  background: var(--color-on-poster-scrim-strong);
+  color: var(--color-on-poster-fg);
 }
 
 .votes {
@@ -149,7 +149,7 @@
   background: none;
   border: none;
   border-radius: var(--radius-sm);
-  color: var(--mc-fg, var(--on-poster-fg));
+  color: var(--mc-fg, var(--color-on-poster-fg));
   font-size: var(--font-size-sm);
   line-height: var(--leading-none);
   cursor: pointer;
@@ -157,18 +157,18 @@
 }
 
 .voteBtn:focus-visible {
-  background: var(--mc-overlay-hover, var(--on-poster-overlay-hover));
+  background: var(--mc-overlay-hover, var(--color-on-poster-overlay-hover));
 }
 
 @media (hover: hover) {
   .voteBtn:hover:not(:disabled) {
-    background: var(--mc-overlay-hover, var(--on-poster-overlay-hover));
+    background: var(--mc-overlay-hover, var(--color-on-poster-overlay-hover));
   }
 }
 
 .voteBtn:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .votesLocked .voteBtn:disabled {
@@ -177,7 +177,7 @@
 }
 
 .voteActive {
-  background: var(--mc-overlay-active, var(--on-poster-overlay-active));
+  background: var(--mc-overlay-active, var(--color-on-poster-overlay-active));
 }
 
 .voteCount {
@@ -198,39 +198,36 @@
   min-width: var(--space-7);
   padding: 0 var(--space-1);
   border-radius: var(--radius-xs);
-  border: 1px dashed var(--mc-border, var(--on-poster-border));
+  border: 1px dashed var(--mc-border, var(--color-on-poster-border));
   background: transparent;
-  color: var(--mc-fg-muted, var(--on-poster-fg-muted));
+  color: var(--mc-fg-muted, var(--color-on-poster-fg-muted));
   font-size: var(--font-size-3xs);
   font-weight: var(--font-weight-semibold);
   font-variant-numeric: tabular-nums;
   line-height: var(--leading-none);
   cursor: pointer;
   flex-shrink: 0;
+  text-decoration: none;
   transition:
     color var(--duration-base) var(--ease-default),
     border-color var(--duration-base) var(--ease-default);
 }
 
+.paidChipStatic {
+  cursor: default;
+}
+
 .paidChip:focus-visible {
   color: var(--color-primary-text);
-  border-color: color-mix(
-    in srgb,
-    var(--color-primary) 45%,
-    var(--mc-border, var(--on-poster-border))
-  );
+  border-color: var(--color-primary);
   outline: 2px solid currentColor;
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 @media (hover: hover) {
   .paidChip:hover {
     color: var(--color-primary-text);
-    border-color: color-mix(
-      in srgb,
-      var(--color-primary) 45%,
-      var(--mc-border, var(--on-poster-border))
-    );
+    border-color: var(--color-primary);
     outline: none;
   }
 }
@@ -297,7 +294,7 @@
 
 .selectOverlay:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .selectOverlayRemove:focus-visible {
@@ -374,4 +371,19 @@
   --mc-kebab-bg-hover: var(--color-surface-hover);
   --mc-kebab-fg: var(--color-text-muted);
   --mc-kebab-fg-hover: var(--color-text);
+}
+
+.posterBadge {
+  padding: calc(var(--space-0-5) + var(--text-optical-nudge-caps))
+    calc(var(--space-1-5) - var(--tracking-wide))
+    calc(var(--space-0-5) - var(--text-optical-nudge-caps)) var(--space-1-5);
+  border: 1px solid var(--color-on-poster-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-on-poster-scrim);
+  color: var(--color-on-poster-badge-fg);
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  line-height: var(--leading-none);
+  text-transform: uppercase;
 }

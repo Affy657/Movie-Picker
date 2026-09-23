@@ -1,7 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, AlertCircle } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { getErrorMessage, ApiError } from '@/shared/api/apiError';
@@ -29,8 +28,7 @@ import {
 } from '@/features/profile/api/profileApi';
 import { fetchUserStats } from '@/features/events/api/userStatsApi';
 import styles from './ProfilePage.module.css';
-import Button from '@/shared/components/Button';
-import { ICON_SIZE } from '@/shared/components/iconSize';
+import InlineError from '@/shared/components/InlineError';
 
 const FollowListModal = lazy(() => import('@/features/profile/components/FollowListModal'));
 const ProfileStatsSection = lazy(() => import('@/features/profile/components/ProfileStatsSection'));
@@ -186,18 +184,11 @@ export default function ProfilePage() {
           {statsQuery.isPending && <ProfileStatsSkeleton />}
 
           {statsQuery.isError && (
-            <div className={styles.statsError} role="alert">
-              <span className={styles.statsErrorIcon} aria-hidden>
-                <AlertCircle size={ICON_SIZE.lg} />
-              </span>
-              <div className={styles.statsErrorBody}>
-                <p className={styles.statsErrorMessage}>{t('profile.stats.loadError')}</p>
-                <Button type="button" size="sm" onClick={() => statsQuery.refetch()}>
-                  <RefreshCw size={ICON_SIZE.md} aria-hidden />
-                  <span className={styles.btnLabel}>{t('profile.stats.retry')}</span>
-                </Button>
-              </div>
-            </div>
+            <InlineError
+              message={t('profile.stats.loadError')}
+              retryLabel={t('profile.stats.retry')}
+              onRetry={() => void statsQuery.refetch()}
+            />
           )}
 
           {statsQuery.data && (

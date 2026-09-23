@@ -20,11 +20,11 @@
 .title {
   font-weight: var(--font-weight-extrabold);
   font-size: var(--font-size-md);
-  letter-spacing: var(--tracking-close);
+  letter-spacing: var(--tracking-tight);
 }
 
 .text {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
-  line-height: var(--leading-loose);
+  line-height: var(--leading-relaxed);
 }

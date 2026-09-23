@@ -74,12 +74,12 @@
 
 .thumb:focus-visible::-webkit-slider-thumb {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .thumb:focus-visible::-moz-range-thumb {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .labels {

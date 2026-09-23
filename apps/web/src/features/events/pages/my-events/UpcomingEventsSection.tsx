@@ -11,6 +11,7 @@ import type { MyEventSummary } from '@/features/events/types';
 import { useTranslation } from '@/shared/i18n';
 import styles from '@/features/events/pages/MyEventsPage.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import Card from '@/shared/components/Card';
 
 interface UpcomingEventsSectionProps {
   events: MyEventSummary[];
@@ -33,12 +34,16 @@ export default function UpcomingEventsSection({
       <ul className={styles.list}>
         {events.map((ev) => (
           <li key={ev.id} className={styles.item}>
-            <Link
+            <Card
+              as={Link}
               to={ROUTES.eventDetail(ev.slug)}
+              interactive
+              elevation="sm"
+              padding="none"
               className={clsx(eventSummaryCardStyles.card, !ev.isCreator && styles.linkWithKebab)}
             >
               <EventSummaryCardBody event={ev} />
-            </Link>
+            </Card>
             {!ev.isCreator ? (
               <EventCardMenu
                 title={ev.title}

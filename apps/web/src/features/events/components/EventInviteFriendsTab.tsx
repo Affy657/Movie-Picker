@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search } from 'lucide-react';
+import { SearchX, UserPlus } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
@@ -18,6 +18,9 @@ import styles from './EventInviteFriendsTab.module.css';
 import Button from '@/shared/components/Button';
 import Chip from '@/shared/components/Chip';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import EmptyState from '@/shared/components/EmptyState';
+import SearchField from '@/shared/components/SearchField';
+import { linkButtonClass } from '@/shared/components/LinkButton';
 
 type Props = {
   slug: string;
@@ -78,35 +81,32 @@ export default function EventInviteFriendsTab({ slug, onNavigate }: Readonly<Pro
       {followsQuery.isError && <p className={styles.errorState}>{t('events.invite.loadError')}</p>}
 
       {!followsQuery.isPending && !followsQuery.isError && follows.length === 0 && (
-        <div className={styles.emptyState}>
-          <p>{t('events.invite.emptyLine1')}</p>
-          {user?.handle && (
-            <p>
+        <EmptyState
+          compact
+          icon={<UserPlus aria-hidden size={ICON_SIZE['2xl']} />}
+          message={t('events.invite.emptyLine1')}
+          actions={
+            user?.handle ? (
               <Link
                 to={ROUTES.profile(user.handle)}
                 onClick={onNavigate}
-                className={styles.emptyLink}
+                className={linkButtonClass()}
               >
                 {t('events.invite.emptyLink')}
               </Link>
-            </p>
-          )}
-        </div>
+            ) : undefined
+          }
+        />
       )}
 
       {follows.length > 0 && (
         <>
-          <div className={styles.searchWrap}>
-            <Search className={styles.searchIcon} size={ICON_SIZE.md} aria-hidden />
-            <input
-              type="search"
-              className={styles.searchInput}
-              placeholder={t('events.invite.searchPlaceholder')}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label={t('events.invite.searchPlaceholder')}
-            />
-          </div>
+          <SearchField
+            value={query}
+            onChange={setQuery}
+            placeholder={t('events.invite.searchPlaceholder')}
+            ariaLabel={t('events.invite.searchPlaceholder')}
+          />
 
           {itemError && (
             <p className="error" role="alert">
@@ -115,7 +115,11 @@ export default function EventInviteFriendsTab({ slug, onNavigate }: Readonly<Pro
           )}
 
           {filtered.length === 0 ? (
-            <p className={styles.noResults}>{t('events.invite.searchNoResults', { query })}</p>
+            <EmptyState
+              compact
+              icon={<SearchX aria-hidden size={ICON_SIZE['2xl']} />}
+              message={t('events.invite.searchNoResults', { query })}
+            />
           ) : (
             <ul className={styles.list}>
               {filtered.map((item) => {
@@ -133,10 +137,10 @@ export default function EventInviteFriendsTab({ slug, onNavigate }: Readonly<Pro
                     variant="primary"
                     size="sm"
                     onClick={() => handleInvite(item)}
-                    disabled={isBusy}
+                    loading={isBusy}
                     aria-label={t('events.invite.inviteAriaLabel', { name: item.displayName })}
                   >
-                    {isBusy ? '…' : t('events.invite.inviteAction')}
+                    {t('events.invite.inviteAction')}
                   </Button>
                 );
 

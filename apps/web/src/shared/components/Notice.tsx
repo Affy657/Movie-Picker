@@ -1,24 +1,29 @@
 import type { ReactNode } from 'react';
+import clsx from 'clsx';
 import { X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import Card from './Card';
 import IconButton from './IconButton';
 import { ICON_SIZE } from './iconSize';
-import styles from './TopNotice.module.css';
+import styles from './Notice.module.css';
 
-type TopNoticeProps = {
+export type NoticePlacement = 'top' | 'bottom';
+
+type NoticeProps = {
   title: string;
   description: string;
-  onDismiss: () => void;
+  placement?: NoticePlacement;
+  onClose?: () => void;
   children?: ReactNode;
 };
 
-export default function TopNotice({
+export default function Notice({
   title,
   description,
-  onDismiss,
+  placement = 'top',
+  onClose,
   children,
-}: Readonly<TopNoticeProps>) {
+}: Readonly<NoticeProps>) {
   const { t } = useTranslation();
 
   return (
@@ -26,7 +31,7 @@ export default function TopNotice({
       as="section"
       padding="none"
       elevation="lg"
-      className={styles.root}
+      className={clsx(styles.root, placement === 'top' ? styles.top : styles.bottom)}
       aria-label={title}
       aria-live="polite"
     >
@@ -35,9 +40,11 @@ export default function TopNotice({
           <p className={styles.title}>{title}</p>
           <p className={styles.description}>{description}</p>
         </div>
-        <IconButton ariaLabel={t('common.close')} onClick={onDismiss}>
-          <X size={ICON_SIZE.lg} aria-hidden />
-        </IconButton>
+        {onClose ? (
+          <IconButton ariaLabel={t('common.close')} onClick={onClose}>
+            <X size={ICON_SIZE.lg} aria-hidden />
+          </IconButton>
+        ) : null}
       </div>
       {children ? <div className={styles.actions}>{children}</div> : null}
     </Card>

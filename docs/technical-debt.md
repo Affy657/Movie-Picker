@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-057`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-058`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -347,6 +347,16 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `gh api repos/Affy657/Movie-Picker --jq '.security_and_analysis.secret_scanning_validity_checks.status'` ; encore ouvert tant que la commande rend `disabled`
 - fix: cocher « Validity checks » (et « Non-provider patterns » si elle est proposée) dans Settings / Code security, puis rejouer `verify`
 - piege: une alerte marquée « active » par la vérification est à traiter comme une fuite en cours, pas comme un rappel
+
+## DEBT-057 trois fermetures au clic extérieur écrites à la main
+
+- state: agent
+- impact: le sélecteur d'emoji du thème, le menu des cartes film et `Dropdown` posent chacun leur écouteur `mousedown` sur le document au lieu de `useClickOutside`. Trois comportements proches mais pas identiques (Échap qui rend ou non le focus, clic dans une boîte de dialogue ouverte, second élément porté par un portail), qu'une correction du hook ne corrige pas.
+- ou: `apps/web/src/features/events/components/ThemeField.tsx`, `apps/web/src/features/movies/components/MovieCardKebab.tsx`, `apps/web/src/shared/components/Dropdown.tsx`, `apps/web/src/shared/hooks/useClickOutside.ts`
+- verify: `grep -rn "addEventListener('mousedown'" apps/web/src --include=*.tsx`
+- fix: donner à `useClickOutside` une liste de refs (le panneau porté par un portail du menu des cartes), un rendu du focus à Échap, et n'ignorer un clic dans un `dialog[open]` que si ce dialogue ne contient pas la ref ; puis y passer les trois appelants
+- fini-quand: le `verify` ne sort plus rien et le sélecteur d'emoji se ferme toujours au clic ailleurs dans la feuille des paramètres de soirée
+- piege: `ThemeField` vit dans la feuille des paramètres de soirée, un `<dialog>` ouvert : le hook actuel ignore tout clic dans un dialogue ouvert, donc le sélecteur ne se fermerait plus. C'est la raison de l'écouteur maison, pas un oubli.
 
 ---
 

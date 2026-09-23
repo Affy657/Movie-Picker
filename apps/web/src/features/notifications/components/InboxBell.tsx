@@ -8,6 +8,8 @@ import { useTranslation } from '@/shared/i18n';
 import { fetchNotificationInbox } from '@/features/notifications/api/notificationsApi';
 import styles from './InboxBell.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import CountBadge from '@/shared/components/CountBadge';
+import { iconButtonClass } from '@/shared/components/IconButton';
 
 export default function InboxBell() {
   const { t } = useTranslation();
@@ -25,7 +27,7 @@ export default function InboxBell() {
     <Tooltip label={t('notifications.inboxAriaLabel')} placement="bottom">
       <Link
         to={ROUTES.notifications}
-        className={styles.bellButton}
+        className={iconButtonClass()}
         aria-label={
           unreadCount > 0
             ? t('notifications.inboxAriaLabelWithCount', { count: displayCount })
@@ -34,9 +36,7 @@ export default function InboxBell() {
       >
         <Bell size={ICON_SIZE.xl} aria-hidden />
         {unreadCount > 0 && (
-          <span className={styles.badge} aria-hidden>
-            {displayCount}
-          </span>
+          <CountBadge value={displayCount} size="sm" className={styles.badge} aria-hidden />
         )}
       </Link>
     </Tooltip>

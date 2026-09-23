@@ -23,14 +23,14 @@ const PICKER_COLORS = [
 type PickerColor = (typeof PICKER_COLORS)[number];
 
 const SWATCH_COLORS: Record<PickerColor, string> = {
-  blue: 'var(--accent-swatch-blue)',
-  green: 'var(--accent-swatch-green)',
-  purple: 'var(--accent-swatch-purple)',
-  pink: 'var(--accent-swatch-pink)',
-  orange: 'var(--accent-swatch-orange)',
-  red: 'var(--accent-swatch-red)',
-  cyan: 'var(--accent-swatch-cyan)',
-  indigo: 'var(--accent-swatch-indigo)',
+  blue: 'var(--color-accent-swatch-blue)',
+  green: 'var(--color-accent-swatch-green)',
+  purple: 'var(--color-accent-swatch-purple)',
+  pink: 'var(--color-accent-swatch-pink)',
+  orange: 'var(--color-accent-swatch-orange)',
+  red: 'var(--color-accent-swatch-red)',
+  cyan: 'var(--color-accent-swatch-cyan)',
+  indigo: 'var(--color-accent-swatch-indigo)',
 };
 
 const ACCENT_LABEL_KEY: Record<PickerColor, TranslationKey> = {

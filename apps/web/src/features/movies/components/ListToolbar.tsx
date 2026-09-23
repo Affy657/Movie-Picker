@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
-import clsx from 'clsx';
 import SearchField from '@/shared/components/SearchField';
 import SortControl, { type SortOption } from '@/features/movies/components/SortControl';
 import styles from './ListToolbar.module.css';
@@ -8,6 +7,7 @@ import Button from '@/shared/components/Button';
 import LinkButton from '@/shared/components/LinkButton';
 import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import CountBadge from '@/shared/components/CountBadge';
 
 export type { SortOption };
 
@@ -80,10 +80,8 @@ export default function ListToolbar<TSortKey extends string>({
         {onToggleFilters ? (
           <>
             <Button
-              className={clsx(
-                styles.filterBtn,
-                (activeFilterCount > 0 || filtersOpen) && styles.filterBtnActive
-              )}
+              variant={activeFilterCount > 0 || filtersOpen ? 'soft' : 'secondary'}
+              className={styles.filterBtn}
               onClick={onToggleFilters}
               aria-expanded={filtersOpen}
               aria-controls={filtersPanelId}
@@ -91,12 +89,8 @@ export default function ListToolbar<TSortKey extends string>({
               data-filters-toggle
             >
               <SlidersHorizontal size={ICON_SIZE.md} aria-hidden />
-              <span className={styles.filterBtnLabel}>{filtersLabel}</span>
-              {activeFilterCount > 0 && (
-                <span className={styles.badgeCount} aria-hidden="true">
-                  <span className={styles.badgeCountText}>{activeFilterCount}</span>
-                </span>
-              )}
+              {filtersLabel}
+              {activeFilterCount > 0 && <CountBadge value={activeFilterCount} aria-hidden="true" />}
             </Button>
 
             {hideSort ? null : <span className={styles.divider} aria-hidden="true" />}
@@ -120,7 +114,9 @@ export default function ListToolbar<TSortKey extends string>({
         {isFiltered ? (
           <span className={styles.resultCount}>
             {resultCountText}
-            <LinkButton onClick={onClearAll}>{clearAllLabel}</LinkButton>
+            <LinkButton size="sm" onClick={onClearAll}>
+              {clearAllLabel}
+            </LinkButton>
           </span>
         ) : null}
 

@@ -2,10 +2,13 @@
   composes: onSurface from './movieCardParts.module.css';
   overflow: clip;
   --table-col-poster: var(--space-16);
-  --table-col-vote: 56px;
-  --table-col-runtime: 60px;
-  --table-col-year: 56px;
+  --table-col-vote: var(--space-14);
+  --table-col-runtime: calc(var(--space-14) + var(--space-1));
+  --table-col-year: var(--space-14);
   --table-col-availability: 150px;
+  --table-col-votes: calc(var(--space-20) + var(--space-3));
+  --table-col-seen: 150px;
+  --table-col-score: calc(var(--space-16) + var(--space-2));
   --table-col-kebab: var(--tap-target-min);
 }
 
@@ -51,6 +54,7 @@
 }
 
 .colHeaderBtn {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   composes: expanded from '@/shared/components/tapTarget.module.css';
   display: inline-flex;
   align-items: center;
@@ -58,19 +62,16 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
   font-family: inherit;
   font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-widest);
-  text-transform: uppercase;
   cursor: pointer;
 }
 
 .colHeaderBtn:focus-visible {
   color: var(--color-text);
   outline: var(--outline-focus);
-  outline-offset: -2px;
+  outline-offset: var(--outline-offset-inset);
 }
 
 @media (hover: hover) {
@@ -199,7 +200,7 @@
 
 .availabilityEmpty {
   font-size: var(--font-size-3xs);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }
 
 .kebabCol {
@@ -249,7 +250,7 @@
   align-items: center;
   gap: var(--space-1) var(--space-2);
   font-size: var(--font-size-sm);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
   font-variant-numeric: tabular-nums;
 }
 
@@ -272,5 +273,5 @@
 
 .disclosure:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }

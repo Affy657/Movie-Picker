@@ -15,7 +15,7 @@
 }
 
 .handleOnBackdrop {
-  background: var(--on-poster-fg);
+  background: var(--color-on-poster-fg);
 }
 
 .header {

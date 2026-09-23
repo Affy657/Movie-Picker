@@ -94,7 +94,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   font-size: var(--font-size-sm);
-  line-height: var(--leading-compact);
+  line-height: var(--leading-tight);
   color: var(--color-text-muted);
 }
 

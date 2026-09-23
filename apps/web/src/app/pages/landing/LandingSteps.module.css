@@ -62,7 +62,7 @@
   font-family: var(--font-mono);
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-widest);
+  letter-spacing: var(--tracking-wider);
   color: var(--color-primary-text);
 }
 
@@ -76,22 +76,19 @@
 .title {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-close);
+  letter-spacing: var(--tracking-tight);
   line-height: var(--leading-tight);
 }
 
 .text {
   font-size: var(--font-size-md);
   color: var(--color-text-muted);
-  line-height: var(--leading-loose);
+  line-height: var(--leading-relaxed);
 }
 
 .demo {
   margin-top: auto;
   padding: var(--space-3-5);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-sunken);
-  border: 1px solid var(--color-border-subtle);
   min-height: 7.5rem;
   display: flex;
   flex-direction: column;

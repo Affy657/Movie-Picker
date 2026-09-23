@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import Button from '@/shared/components/Button';
+import InlineError from '@/shared/components/InlineError';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
@@ -36,12 +36,12 @@ export default function HomeCollectionsRow() {
     );
   } else if (collections.isError) {
     body = (
-      <p className={styles.state}>
-        {t('showcase.error')}
-        <Button size="sm" variant="secondary" onClick={() => void collections.refetch()}>
-          {t('showcase.retry')}
-        </Button>
-      </p>
+      <InlineError
+        message={t('showcase.error')}
+        retryLabel={t('showcase.retry')}
+        onRetry={() => void collections.refetch()}
+        messageRole="status"
+      />
     );
   } else if (items.length === 0) {
     return null;

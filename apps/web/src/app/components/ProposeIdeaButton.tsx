@@ -20,7 +20,6 @@ import { createIdeaSuggestion, type IdeaSuggestionCategory } from '@/shared/api/
 import styles from './ProposeIdeaButton.module.css';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
-import IconButton from '@/shared/components/IconButton';
 import clsx from 'clsx';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Field from '@/shared/components/Field';
@@ -194,17 +193,9 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
       size="sm"
       column
       bottomSheetOnMobile
-      ariaLabelledBy={titleId}
+      title={t('proposeIdea.dialogTitle')}
+      titleId={titleId}
     >
-      <header className={styles.header}>
-        <h2 id={titleId} className={styles.title}>
-          {t('proposeIdea.dialogTitle')}
-        </h2>
-        <IconButton ariaLabel={t('common.close')} onClick={onClose}>
-          <X size={ICON_SIZE.lg} aria-hidden />
-        </IconButton>
-      </header>
-
       {status === 'success' ? (
         <div className={styles.successState}>
           <p className={styles.successMessage} role="status" aria-live="polite">

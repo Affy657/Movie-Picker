@@ -12,28 +12,28 @@
 
 .dialog::backdrop {
   background: var(--color-overlay-backdrop);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: var(--backdrop-blur-overlay);
+  -webkit-backdrop-filter: var(--backdrop-blur-overlay);
 }
 
-.xs {
+.sizeXs {
   --modal-width: var(--container-xs);
 }
 
-.sm {
+.sizeSm {
   --modal-width: var(--container-sm);
 }
 
-.md {
+.sizeMd {
   --modal-width: var(--container-md);
 }
 
-.base {
-  --modal-width: var(--container-base);
+.sizeLg {
+  --modal-width: var(--container-lg);
 }
 
-.xl {
-  --modal-width: var(--container-xl);
+.size2xl {
+  --modal-width: var(--container-2xl);
 }
 
 .padded {

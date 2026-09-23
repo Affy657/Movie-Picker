@@ -1,13 +1,10 @@
 import { useId } from 'react';
-import { X } from 'lucide-react';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useCopyFeedback } from '@/shared/hooks/useCopyFeedback';
 import type { PwaInstallGuideMode } from '@/shared/pwa/pwaInstall';
 import styles from './InstallPwaDialog.module.css';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
-import IconButton from '@/shared/components/IconButton';
-import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const GUIDE_COPY: Record<
   PwaInstallGuideMode,
@@ -59,16 +56,8 @@ export default function InstallPwaDialog({ open, mode, onClose }: Readonly<Insta
   const steps = copyKeys.steps.map((key) => t(key));
 
   return (
-    <Modal open={open} onClose={onClose} size="xs" ariaLabelledBy={titleId}>
+    <Modal open={open} onClose={onClose} size="xs" title={title} titleId={titleId}>
       <div className={styles.inner}>
-        <header className={styles.header}>
-          <h2 id={titleId} className={styles.title}>
-            {title}
-          </h2>
-          <IconButton ariaLabel={t('common.close')} onClick={onClose}>
-            <X size={ICON_SIZE.lg} aria-hidden />
-          </IconButton>
-        </header>
         <p className={styles.intro}>{intro}</p>
         <ol className={styles.steps}>
           {steps.map((step) => (

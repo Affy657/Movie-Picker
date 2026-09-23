@@ -19,7 +19,7 @@
   margin: 0;
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-narrow);
+  letter-spacing: var(--tracking-tight);
   line-height: var(--leading-tight);
 }
 
@@ -40,7 +40,7 @@
 .bio {
   margin: var(--space-3-5) 0 0;
   font-size: var(--font-size-md);
-  line-height: var(--leading-base);
+  line-height: var(--leading-comfortable);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   display: -webkit-box;
@@ -70,18 +70,7 @@
   gap: var(--space-1-5);
   min-height: var(--tap-target-min);
   padding: var(--space-2) var(--space-3);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  cursor: pointer;
   text-align: left;
-  transition: background var(--duration-fast) var(--ease-default);
-}
-
-@media (hover: hover) {
-  .statCell:hover {
-    background: var(--color-surface-hover);
-  }
 }
 
 .statCellText {

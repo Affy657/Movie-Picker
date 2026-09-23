@@ -119,7 +119,7 @@ export default function ProfileActions({
       <div className={styles.shareGroup}>
         <Button type="button" className={styles.shareBtn} onClick={() => setShareOpen(true)}>
           <Share2 size={ICON_SIZE.sm} aria-hidden />
-          <span className={styles.btnLabel}>{t('share.trigger')}</span>
+          {t('share.trigger')}
         </Button>
       </div>
 
@@ -135,7 +135,7 @@ export default function ProfileActions({
           name: profile.displayName,
           meta: [`@${profile.handle}`, memberSinceLabel],
         }}
-        surface="profile"
+        analyticsSurface="profile"
       />
     </div>
   );

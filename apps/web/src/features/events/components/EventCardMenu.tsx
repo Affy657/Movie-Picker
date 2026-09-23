@@ -5,6 +5,7 @@ import { MenuPanel, MenuItem } from '@/shared/components/Menu';
 import { useTranslation } from '@/shared/i18n';
 import styles from './EventCardMenu.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import IconButton from '@/shared/components/IconButton';
 
 interface EventCardMenuProps {
   title: string;
@@ -32,9 +33,16 @@ export default function EventCardMenu({
 
   return (
     <div ref={menu.containerRef} className={clsx(styles.container, className)}>
-      <button {...menu.triggerProps} type="button" className={styles.trigger} aria-label={label}>
+      <IconButton
+        {...menu.triggerProps}
+        ariaLabel={label}
+        showTitle={false}
+        size="lg"
+        shape="round"
+        className={styles.trigger}
+      >
         <MoreVertical aria-hidden size={ICON_SIZE.md} />
-      </button>
+      </IconButton>
       {menu.open ? (
         <MenuPanel {...menu.panelProps} ariaLabel={label}>
           {onReuse && (

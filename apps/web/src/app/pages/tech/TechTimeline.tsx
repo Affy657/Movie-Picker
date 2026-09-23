@@ -4,6 +4,7 @@ import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { TechHint } from './TechBlocks';
 import shared from './techShared.module.css';
 import styles from './techPage.module.css';
+import Chip from '@/shared/components/Chip';
 
 type MilestoneState = 'shipped' | 'current' | 'planned';
 
@@ -52,12 +53,14 @@ export default function TechTimeline() {
             <p className={styles.timelineWhen}>
               <span>{t(`tech.trajectory.${key}When` as TranslationKey)}</span>
               {state === 'planned' ? (
-                <span className={styles.timelineBadge}>{t('tech.trajectory.plannedBadge')}</span>
+                <Chip size="sm" dashed>
+                  {t('tech.trajectory.plannedBadge')}
+                </Chip>
               ) : null}
               {state === 'current' ? (
-                <span className={clsx(styles.timelineBadge, styles.timelineBadgeCurrent)}>
+                <Chip size="sm" tone="primary">
                   {t('tech.trajectory.currentBadge')}
-                </span>
+                </Chip>
               ) : null}
             </p>
             <h3 className={styles.timelineWhat}>

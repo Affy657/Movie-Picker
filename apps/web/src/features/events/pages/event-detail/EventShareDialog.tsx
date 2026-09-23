@@ -63,7 +63,7 @@ export default function EventShareDialog({
         time: timeFormatted,
         date: dateLabel,
       })}
-      surface="event"
+      analyticsSurface="event"
       initialTab={initialTab}
       extraTab={friendsTab}
     />

@@ -6,16 +6,16 @@ import Chip from '@/shared/components/Chip';
 import {
   CardModals,
   CardSelectionOverlay,
-  PosterDetailsTrigger,
+  isSelectable,
+  type MovieCardCommonProps,
   MovieCardKebab,
+  PosterDetailsTrigger,
   ProposerBadge,
+  useMovieCardState,
   VoteBar,
   WatchlistBadge,
-  WinnerRibbon,
-  isSelectable,
-  useMovieCardState,
   winnerBadgeLabel,
-  type MovieCardCommonProps,
+  WinnerRibbon,
 } from '@/features/movies/components/movieCardParts';
 import Tooltip from '@/shared/components/Tooltip';
 import {
@@ -31,6 +31,7 @@ import table from './MovieTable.module.css';
 import styles from './EventMovieRow.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { Translate } from '@/shared/i18n';
+import ScoreBar from '@/features/movies/components/ScoreBar';
 
 type RowSortKey =
   'createdAt' | 'voteAverage' | 'duration' | 'score' | 'availability' | 'seen' | 'releaseDate';
@@ -99,12 +100,7 @@ function ScoreBlock({ m, t }: Readonly<{ m: MovieCardCommonProps['movie']; t: Tr
       >
         {m.score > 0 ? `+${m.score}` : m.score}
       </span>
-      <span className={styles.scoreBar}>
-        {upRatio > 0 && <span className={styles.scoreBarUp} style={{ flexBasis: `${upRatio}%` }} />}
-        {downRatio > 0 && (
-          <span className={styles.scoreBarDown} style={{ flexBasis: `${downRatio}%` }} />
-        )}
-      </span>
+      <ScoreBar upRatio={upRatio} downRatio={downRatio} className={styles.scoreBar} />
     </span>
   );
   if (total === 0) return scoreNode;

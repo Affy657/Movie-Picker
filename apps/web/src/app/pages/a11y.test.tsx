@@ -444,7 +444,7 @@ describe('accessibility (axe)', () => {
           titleKey="watchlist.signedOutTitle"
           messageKey="watchlist.signedOutMessage"
           returnTo={ROUTES.watchlist}
-          maxWidth="var(--container-base)"
+          maxWidth="var(--container-lg)"
         >
           <p>jamais rendu</p>
         </SessionGate>
