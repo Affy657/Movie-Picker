@@ -4,6 +4,7 @@ output "uptime_check_ids" {
     api_health    = google_monitoring_uptime_check_config.api_health.uptime_check_id
     api_readiness = google_monitoring_uptime_check_config.api_readiness.uptime_check_id
     web           = google_monitoring_uptime_check_config.web.uptime_check_id
+    staging_api   = google_monitoring_uptime_check_config.staging_api_health.uptime_check_id
   }
 }
 
