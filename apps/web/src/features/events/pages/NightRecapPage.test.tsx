@@ -255,6 +255,24 @@ describe('NightRecapPage (MSW)', () => {
     expect(within(card).getAllByText('Pas encore noté')).toHaveLength(7);
   });
 
+  it('shares the story of the night from the recap page', async () => {
+    serveNight({
+      winners: ['m-inception', 'm-heat'],
+      ratings: { 'm-inception': [{ participantId: 'p-claire', value: 10 }], 'm-heat': [] },
+    });
+    renderRecap();
+
+    await screen.findByRole('region', { name: 'Les 2 films de la soirée' });
+    await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
+    await userEvent.click(within(dialog).getByRole('tab', { name: 'Story' }));
+
+    expect(within(dialog).getByRole('radio', { name: 'Les films' })).toBeChecked();
+    expect(within(dialog).getByRole('radio', { name: 'Un film' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('radio', { name: 'Les notes' })).toBeInTheDocument();
+  });
+
   it('waits for the movie when none is chosen yet', async () => {
     serveNight({ winners: [], isFinished: false });
     renderRecap();

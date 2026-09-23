@@ -17,6 +17,12 @@ const noop = (): void => {};
 const canvas2dStub = {
   measureText: () => ({ width: 0 }),
   clearRect: noop,
+  fillRect: noop,
+  rect: noop,
+  arcTo: noop,
+  clip: noop,
+  createLinearGradient: () => ({ addColorStop: noop }),
+  createRadialGradient: () => ({ addColorStop: noop }),
   beginPath: noop,
   closePath: noop,
   moveTo: noop,

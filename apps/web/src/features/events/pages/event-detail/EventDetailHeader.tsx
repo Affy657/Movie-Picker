@@ -11,6 +11,7 @@ import AvatarStack from '@/shared/components/AvatarStack';
 import type { EventParticipantSummary, MyEventLifecycle } from '@/shared/types/event';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { participantsCountLabel } from '@/features/events/utils/eventLabels';
 import { ROUTES } from '@/app/routes';
 import styles from './EventDetailHeader.module.css';
 import Button from '@/shared/components/Button';
@@ -405,12 +406,7 @@ export default function EventDetailHeader({
 
   const stacked = (participants ?? []).slice(0, MAX_STACKED_AVATARS);
   const hiddenCount = Math.max(participantCount - stacked.length, 0);
-  const participantsLabel = pluralizeCount(
-    participantCount,
-    'events.detail.participantsToggleOne',
-    'events.detail.participantsToggle',
-    t
-  );
+  const participantsLabel = participantsCountLabel(participantCount, t);
   const moviesLabel = pluralizeCount(
     moviesCount,
     'events.detail.moviesCountOne',

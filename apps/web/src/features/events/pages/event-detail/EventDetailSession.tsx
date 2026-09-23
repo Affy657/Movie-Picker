@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type Dispatch,
@@ -190,10 +191,14 @@ export default function EventDetailSession({
     t('events.detail.dateTimeJoiner')
   );
   const firstWinnerId = event.winners?.[0]?.movieId;
+  const winnerMovies = useMemo(() => {
+    const byId = new Map(movies.map((movie) => [movie.id, movie]));
+    return (event.winners ?? [])
+      .map((winner) => byId.get(winner.movieId))
+      .filter((movie): movie is MovieData => !!movie);
+  }, [event.winners, movies]);
   const recap: RecapShare | null =
-    event.isFinished && firstWinnerId
-      ? { movie: movies.find((movie) => movie.id === firstWinnerId) ?? null }
-      : null;
+    event.isFinished && firstWinnerId ? { winners: winnerMovies } : null;
   const shareUrl = recap ? nightRecapFrontendUrl(slug) : eventFrontendUrl(slug);
   const needsJoin = !event.isFinished && !participant;
   const maxParticipants = event.config?.maxParticipants ?? null;

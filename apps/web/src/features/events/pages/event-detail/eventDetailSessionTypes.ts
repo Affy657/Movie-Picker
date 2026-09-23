@@ -7,7 +7,7 @@ export type ParticipantRef = { participantId: string; pseudo: string };
 
 export type ShareTab = 'link' | 'friends';
 
-export type RecapShare = { movie: MovieData | null };
+export type RecapShare = { winners: MovieData[] };
 
 export type MoviesViewMode = 'grid' | 'list';
 

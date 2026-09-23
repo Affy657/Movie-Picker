@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-057`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-058`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -346,6 +346,15 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `gh api repos/Affy657/Movie-Picker --jq '.security_and_analysis.secret_scanning_validity_checks.status'` ; encore ouvert tant que la commande rend `disabled`
 - fix: cocher « Validity checks » (et « Non-provider patterns » si elle est proposée) dans Settings / Code security, puis rejouer `verify`
 - piege: une alerte marquée « active » par la vérification est à traiter comme une fuite en cours, pas comme un rappel
+
+## DEBT-057 les images de la page bloquent la lecture CORS du canvas de la story
+
+- state: agent
+- impact: les `<img>` de l'app chargent affiches et avatars sans attribut `crossorigin`, donc le navigateur range une réponse inutilisable par un canvas dans son cache HTTP. La génération d'une story doit rappeler chaque ressource avec `cache: 'reload'` (`apps/web/src/features/events/story/storyAssets.ts`) pour éviter cette entrée, soit jusqu'à onze requêtes revalidées par ouverture de la fenêtre de partage. Un cache de ressources par session de dialogue absorbe déjà le coût des slides suivantes
+- ou: `apps/web/src/shared/components/` et les composants d'affiche et d'avatar qui rendent un `<img>`
+- verify: `grep -rn "posterImageSrc\|avatarUrl" apps/web/src --include=*.tsx` ; encore ouvert tant qu'un de ces `<img>` n'a pas `crossOrigin="anonymous"`
+- fix: poser `crossOrigin="anonymous"` sur les `<img>` d'affiche et d'avatar, vérifier que l'API et DiceBear répondent bien `Access-Control-Allow-Origin` sur ces routes, puis repasser la story en `cache: 'default'`
+- piege: une seule route sans en-tête CORS et l'image ne s'affiche plus du tout sur la page, pas seulement dans la story : contrôler chaque origine avant de basculer
 
 ---
 

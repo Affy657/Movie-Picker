@@ -12,6 +12,7 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useEverOpened } from '@/shared/hooks/useEverOpened';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { participantsCountLabel } from '@/features/events/utils/eventLabels';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import {
@@ -25,8 +26,9 @@ const MAX_STACKED_AVATARS = 4;
 
 export default function NightRecapHeader({
   event,
-  recapOf,
-}: Readonly<{ event: EventData; recapOf: MovieData | null }>) {
+  winners,
+}: Readonly<{ event: EventData; winners: MovieData[] }>) {
+  const recapOf = winners[0] ?? null;
   const { t } = useTranslation();
   const { locale } = useLocale();
   const navigate = useNavigate();
@@ -40,12 +42,7 @@ export default function NightRecapHeader({
   const participants = event.participants ?? [];
   const participantCount = event.participantCount ?? participants.length;
   const stacked = participants.slice(0, MAX_STACKED_AVATARS);
-  const participantsLabel = pluralizeCount(
-    participantCount,
-    'events.detail.participantsToggleOne',
-    'events.detail.participantsToggle',
-    t
-  );
+  const participantsLabel = participantsCountLabel(participantCount, t);
   const proposedLabel = pluralizeCount(
     event.movieCount ?? 0,
     'events.recap.proposedOne',
@@ -102,7 +99,7 @@ export default function NightRecapHeader({
           slug={event.slug}
           event={event}
           shareUrl={nightRecapFrontendUrl(event.slug)}
-          recap={{ movie: recapOf }}
+          recap={{ winners }}
           dateFormatted={dateFormatted}
           timeFormatted={formatEventTime(event.time)}
           dateLabel={formatMyEventsListDate(event.date, locale)}

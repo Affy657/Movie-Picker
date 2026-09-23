@@ -652,6 +652,34 @@ describe('EventDetail (MSW)', () => {
       expect(within(dialog).queryByText('Matrix')).not.toBeInTheDocument();
     });
 
+    it('offers the story of the night beside its link', async () => {
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveNightWithWinner(true);
+      renderEventDetail(`/e/${slug}`);
+
+      await screen.findByRole('region', { name: 'Le film de la soirée' });
+      await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
+
+      const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
+      await userEvent.click(within(dialog).getByRole('tab', { name: 'Story' }));
+
+      expect(within(dialog).getByRole('radio', { name: 'Le film' })).toBeChecked();
+      expect(within(dialog).getByRole('radio', { name: 'Les notes' })).toBeInTheDocument();
+    });
+
+    it('has no story to offer while the movies of the night have not arrived', async () => {
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveNightWithWinner(true);
+      server.use(http.get(`${TEST_API_V1}/events/${slug}/movies`, () => new Promise(() => {})));
+      renderEventDetail(`/e/${slug}`);
+
+      await screen.findByRole('heading', { name: 'Soirée démo' });
+      await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
+
+      const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
+      expect(within(dialog).queryByRole('tab', { name: 'Story' })).not.toBeInTheDocument();
+    });
+
     it('offers no recap link and keeps the invitation when no movie was chosen', async () => {
       setStoredParticipant(slug, myPid, 'Alice');
       serveNightWithWinner(true, false);

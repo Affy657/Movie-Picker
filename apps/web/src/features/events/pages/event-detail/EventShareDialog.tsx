@@ -1,6 +1,7 @@
-import { Clapperboard, Film, Users } from 'lucide-react';
+import { Clapperboard, Film, Image as ImageIcon, Users } from 'lucide-react';
 import ShareDialog from '@/shared/components/ShareDialog';
 import EventInviteFriendsTab from '@/features/events/components/EventInviteFriendsTab';
+import StoryShareTab from '@/features/events/story/StoryShareTab';
 import { ratingCountLabel } from '@/features/events/components/RatingNotes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTranslation } from '@/shared/i18n';
@@ -55,7 +56,8 @@ export default function EventShareDialog({
   recap = null,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const ratingsLabel = useRecapRatingsLabel(recap?.movie);
+  const recapMovie = recap ? (recap.winners[0] ?? null) : null;
+  const ratingsLabel = useRecapRatingsLabel(recapMovie);
   const friendsTab =
     hostCanInvite && !recap
       ? {
@@ -68,7 +70,26 @@ export default function EventShareDialog({
       : undefined;
 
   if (recap) {
-    const movie = recap.movie;
+    const movie = recapMovie;
+    const shareText = movie
+      ? t('events.recap.share.shareText', { movie: movie.title, title: event.title })
+      : t('events.recap.share.shareTextNoMovie', { title: event.title });
+    const storyTab =
+      recap.winners.length > 0
+        ? {
+            id: 'story',
+            label: t('events.recap.story.tab'),
+            icon: <ImageIcon size={ICON_SIZE.md} aria-hidden />,
+            content: (
+              <StoryShareTab
+                event={event}
+                winners={recap.winners}
+                recapUrl={shareUrl}
+                shareText={shareText}
+              />
+            ),
+          }
+        : undefined;
     return (
       <ShareDialog
         open={open}
@@ -82,13 +103,10 @@ export default function EventShareDialog({
           name: event.title,
           meta: movie ? [movie.title, ratingsLabel] : [dateFormatted],
         }}
-        shareText={
-          movie
-            ? t('events.recap.share.shareText', { movie: movie.title, title: event.title })
-            : t('events.recap.share.shareTextNoMovie', { title: event.title })
-        }
+        shareText={shareText}
         surface="event"
         initialTab="link"
+        extraTab={storyTab}
       />
     );
   }

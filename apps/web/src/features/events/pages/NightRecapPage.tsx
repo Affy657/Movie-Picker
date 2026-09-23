@@ -67,7 +67,7 @@ export default function NightRecapPage() {
 
   return (
     <PageLayout>
-      <NightRecapHeader event={event} recapOf={winners[0] ?? null} />
+      <NightRecapHeader event={event} winners={winners} />
       <NightRecapFilms event={event} winners={winners} />
       <NightRecapCta slug={slug} />
     </PageLayout>

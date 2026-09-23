@@ -219,14 +219,14 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (24 points produit, 23 points tech, 15 restants)
+## 📋 V1.7, planifiée (24 points produit, 23 points tech, 7 restants)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
 - ✅ `M` **Note d'un film vu** : Soirée terminée, chaque participant note le ou les films choisis par étoiles à demi-pas, dans son échelle, et modifie ou efface sa note sans limite de temps. Tout le monde, visiteur compris, voit les notes et la moyenne ; la note de l'auteur figure sur ses films vus du profil public.
 - ✅ `M` **Relance du lendemain** : Le lendemain à 10 h, chaque participant qui n'a pas encore noté un film choisi reçoit une notification, push et in-app, qui ouvre directement la note du premier film non noté. Une seule relance par soirée, rattrapée jusqu'à trois jours, désactivable dans les réglages.
 - ✅ `M` **Page recap publique de soirée** : Dès qu'un film est choisi, une page partageable et lisible sans compte résume la soirée : films choisis, moyenne et note de chacun, « Noter » pour qui ne l'a pas encore fait, « Organise la tienne » pour le visiteur. Le lien partagé montre le titre, le film, la moyenne et l'affiche.
-- ⬜ `L` **Partage de soirée en story** : image au format des stories des réseaux sociaux générée depuis le recap, avec le lien de la page recap, envoyée par le partage natif du téléphone ou téléchargée depuis la page soirée.
+- ✅ `L` **Partage de soirée en story** : image au format des stories des réseaux sociaux générée depuis le recap, avec le lien de la page recap, envoyée par le partage natif du téléphone ou téléchargée depuis la page soirée.
 - ⬜ `M` **Top 3 films préférés sur le profil** : sélectionner et afficher trois films favoris sur son profil public `/u/:handle` via une recherche TMDB, visibles par tous et modifiables depuis les paramètres.
 - ⬜ `M` **Photo de profil personnalisée** : téléverser une image comme photo de profil, en remplacement de l'avatar généré actuel.
 - ⬜ `S` **Pioche aléatoire dans la watchlist** : bouton qui tire un film au hasard parmi les films à voir de la watchlist, proposable dans une soirée en un clic.
