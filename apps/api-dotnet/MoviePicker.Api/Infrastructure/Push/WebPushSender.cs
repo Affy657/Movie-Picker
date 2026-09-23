@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Configuration;
 using WebPush;
 using PushSubscriptionDomain = MoviePicker.Api.Domain.Entities.PushSubscription;
@@ -44,6 +45,16 @@ public sealed class WebPushSender : IPushNotificationSender
         if (string.IsNullOrWhiteSpace(_publicKey) || string.IsNullOrWhiteSpace(_privateKey))
         {
             _logger.LogDebug("VAPID keys not configured, skipping push notification");
+            return;
+        }
+
+        if (!PushEndpointPolicy.IsKnownPushServiceEndpoint(subscription.Endpoint))
+        {
+            _logger.LogWarning(
+                "Push subscription for user {UserId} targets an unknown push service, purging endpoint",
+                subscription.UserId
+            );
+            await PurgeSubscriptionAsync(subscription, ct);
             return;
         }
 
@@ -107,7 +118,7 @@ public sealed class WebPushSender : IPushNotificationSender
         {
             _logger.LogWarning(
                 ex,
-                "Failed to purge expired push subscription for user {UserId}",
+                "Failed to purge push subscription for user {UserId}",
                 subscription.UserId
             );
         }

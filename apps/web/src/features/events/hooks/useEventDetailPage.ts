@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getStoredHostToken,
@@ -24,13 +24,23 @@ export function useEventDetailPage(
   initialActionError: string | null = null
 ) {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const hostFromUrl = searchParams.get('host');
   const hostFromStorage = slug ? getStoredHostToken(slug) : null;
   const hostToken = hostFromUrl ?? hostFromStorage;
   useEffect(() => {
-    if (slug && hostFromUrl) setStoredHostToken(slug, hostFromUrl);
-  }, [slug, hostFromUrl]);
+    if (!slug || !hostFromUrl) return;
+    setStoredHostToken(slug, hostFromUrl);
+    if (getStoredHostToken(slug) !== hostFromUrl) return;
+    const withoutHost = new URLSearchParams(searchParams);
+    withoutHost.delete('host');
+    navigate(
+      { search: `?${withoutHost.toString()}`, hash: location.hash },
+      { replace: true, state: location.state }
+    );
+  }, [slug, hostFromUrl, searchParams, location.hash, location.state, navigate]);
 
   const eventQuery = useEvent(slug, hostToken);
   const event = eventQuery.data ?? null;

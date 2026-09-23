@@ -29,6 +29,18 @@ public sealed class InMemoryPushSubscriptionRepositoryTests
     }
 
     [Fact]
+    public async Task UpsertAsync_TheSameEndpointForAnotherUser_MovesItToThatUser()
+    {
+        await _repo.UpsertAsync(Mk(userId: "u1", endpoint: "e1"));
+        await _repo.UpsertAsync(Mk(userId: "u1", endpoint: "e2"));
+
+        await _repo.UpsertAsync(Mk(userId: "u2", endpoint: "e1"));
+
+        Assert.Equal("e2", (await _repo.ListByUserIdAsync("u1")).Single().Endpoint);
+        Assert.Equal("e1", (await _repo.ListByUserIdAsync("u2")).Single().Endpoint);
+    }
+
+    [Fact]
     public async Task ListByUserIdAsync_ReturnsOnlyOwnSubscriptions()
     {
         await _repo.UpsertAsync(Mk(userId: "u1", endpoint: "e1"));

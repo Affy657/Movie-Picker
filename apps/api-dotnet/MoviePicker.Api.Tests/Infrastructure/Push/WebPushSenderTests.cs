@@ -42,11 +42,13 @@ public sealed class WebPushSenderTests : IDisposable
             NullLogger<WebPushSender>.Instance
         );
 
-    private static PushSubscription Subscription(string p256dh = "not-a-valid-key") =>
+    private static PushSubscription Subscription(
+        string p256dh = "not-a-valid-key",
+        string endpoint = "https://fcm.googleapis.com/fcm/send/abc") =>
         new()
         {
             UserId = "u1",
-            Endpoint = "https://push.example.com/abc",
+            Endpoint = endpoint,
             P256dh = p256dh,
             Auth = "not-a-valid-auth",
             CreatedAt = DateTimeOffset.UtcNow,
@@ -108,6 +110,19 @@ public sealed class WebPushSenderTests : IDisposable
 
         await sender.SendAsync(subscription, Message);
 
+        Assert.Empty(await _repository.ListByUserIdAsync(subscription.UserId));
+    }
+
+    [Fact]
+    public async Task SendAsync_EndpointOutsideTheKnownPushServices_PurgesWithoutSending()
+    {
+        var subscription = Subscription(GenerateClientPublicKey(), "https://push.example.com/abc");
+        await _repository.UpsertAsync(subscription);
+        var keys = WebPush.VapidHelper.GenerateVapidKeys();
+
+        await Build(keys.PublicKey, keys.PrivateKey).SendAsync(subscription, Message);
+
+        Assert.Empty(_pushService.Requests);
         Assert.Empty(await _repository.ListByUserIdAsync(subscription.UserId));
     }
 

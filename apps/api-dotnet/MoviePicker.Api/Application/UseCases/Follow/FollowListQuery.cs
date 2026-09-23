@@ -35,7 +35,7 @@ internal static class FollowListQuery
 
         var orderedItems = ids
             .Select(id => listed.FirstOrDefault(u => u.Id == id))
-            .Where(u => u is not null)
+            .Where(u => u is not null && (u.IsProfilePublic || u.Id == currentUserId || user.Id == currentUserId))
             .Select(u => new FollowUserItem
             {
                 Handle = u!.Handle,

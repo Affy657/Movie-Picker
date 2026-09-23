@@ -77,6 +77,40 @@ describe('FollowListModal (MSW)', () => {
     expect(screen.getByText('@bob')).toBeInTheDocument();
   });
 
+  it('explains the gap when the list is shorter than the count', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () =>
+        HttpResponse.json({
+          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
+        })
+      )
+    );
+
+    renderModal({ followingCount: 2 });
+
+    expect(await screen.findByText('Bob')).toBeInTheDocument();
+    expect(
+      screen.getByText('Les profils privés n’apparaissent pas dans cette liste.')
+    ).toBeInTheDocument();
+  });
+
+  it('says nothing about private profiles when the list matches the count', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () =>
+        HttpResponse.json({
+          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
+        })
+      )
+    );
+
+    renderModal({ followingCount: 1 });
+
+    expect(await screen.findByText('Bob')).toBeInTheDocument();
+    expect(screen.queryByText(/profils privés/i)).not.toBeInTheDocument();
+  });
+
   it("bascule vers l'onglet Followers au clic", async () => {
     const user = userEvent.setup();
     server.use(

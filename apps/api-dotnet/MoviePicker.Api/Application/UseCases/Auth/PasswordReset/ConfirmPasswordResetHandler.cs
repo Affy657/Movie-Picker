@@ -15,6 +15,7 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
     private readonly IPasswordResetTokenRepository _tokens;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
+    private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly TimeProvider _clock;
     private readonly ILogger<ConfirmPasswordResetHandler> _logger;
 
@@ -23,6 +24,7 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
         IPasswordResetTokenRepository tokens,
         IPasswordHasher passwordHasher,
         IAuthSessionInvalidator sessionInvalidator,
+        IPushSubscriptionRepository pushSubscriptions,
         TimeProvider clock,
         ILogger<ConfirmPasswordResetHandler> logger)
     {
@@ -30,6 +32,7 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
         _tokens = tokens;
         _passwordHasher = passwordHasher;
         _sessionInvalidator = sessionInvalidator;
+        _pushSubscriptions = pushSubscriptions;
         _clock = clock;
         _logger = logger;
     }
@@ -68,11 +71,25 @@ public sealed class ConfirmPasswordResetHandler : IConfirmPasswordResetHandler
         await _tokens.InvalidateActiveForUserAsync(stored.UserId, now, ct);
 
         var invalidatedSessions = await _sessionInvalidator.InvalidateAllForUserAsync(stored.UserId, ct);
+        var revokedPushSubscriptions = await RevokePushSubscriptionsAsync(stored.UserId, ct);
 
         _logger.LogInformation(
-            "PasswordReset.Confirm: success for {EmailMasked} (userId={UserId}, tokenId={TokenId}, invalidatedSessions={Sessions}, unlinkedIdentities={Identities})",
-            EmailMasking.Mask(user.Email), user.Id, stored.Id, invalidatedSessions, user.Identities.Count);
+            "PasswordReset.Confirm: success for {EmailMasked} (userId={UserId}, tokenId={TokenId}, invalidatedSessions={Sessions}, unlinkedIdentities={Identities}, revokedPushSubscriptions={PushSubscriptions})",
+            EmailMasking.Mask(user.Email), user.Id, stored.Id, invalidatedSessions, user.Identities.Count, revokedPushSubscriptions);
 
         return new PasswordResetConfirmResponse { Message = SuccessMessage };
+    }
+
+    private async Task<long> RevokePushSubscriptionsAsync(string userId, CancellationToken ct)
+    {
+        try
+        {
+            return await _pushSubscriptions.DeleteByUserIdAsync(userId, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "PasswordReset.Confirm: push subscriptions not revoked for {UserId}", userId);
+            return 0;
+        }
     }
 }

@@ -75,6 +75,7 @@ public static class ErrorCodes
     public const string WrongPassword = "wrong_password";
     public const string CurrentPasswordIncorrect = "current_password_incorrect";
     public const string ConfirmationIncorrect = "confirmation_incorrect";
+    public const string ReauthenticationRequired = "reauthentication_required";
 
     public const string InvalidParticipant = "invalid_participant";
     public const string ParticipantRequired = "participant_required";
@@ -112,6 +113,7 @@ public static class ErrorCodes
     public const string TooManyAttachments = "too_many_attachments";
     public const string AttachmentContentInvalid = "attachment_content_invalid";
     public const string AttachmentContentMismatch = "attachment_content_mismatch";
+    public const string AttachmentImageUnreadable = "attachment_image_unreadable";
     public const string InviteOnlyFollowed = "invite_only_followed";
     public const string NoMovieProposed = "no_movie_proposed";
     public const string AllMoviesExcluded = "all_movies_excluded";

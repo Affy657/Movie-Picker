@@ -35,6 +35,14 @@ public sealed class OAuthLinkHandler : IOAuthLinkHandler
         }
 
         var user = await _users.GetByIdAsync(currentUserId, ct) ?? throw Errors.UserNotFound();
+        if (user.Identities.Any(i => i.Provider == info.Provider))
+        {
+            _logger.LogWarning(
+                "OAuth link: {Provider} is already linked to userId={UserId}, it must be unlinked first",
+                info.Provider, currentUserId);
+            return new OAuthOutcome { Kind = OAuthOutcomeKind.ProviderAlreadyLinked };
+        }
+
         var now = _clock.GetUtcNow();
         var identity = new LinkedIdentity
         {
@@ -44,8 +52,7 @@ public sealed class OAuthLinkHandler : IOAuthLinkHandler
             LinkedAt = now
         };
 
-        var otherProviderIdentities = user.Identities.Where(i => i.Provider != info.Provider).ToList();
-        var updated = user with { Identities = [.. otherProviderIdentities, identity], UpdatedAt = now };
+        var updated = user with { Identities = [.. user.Identities, identity], UpdatedAt = now };
         User saved;
         try
         {

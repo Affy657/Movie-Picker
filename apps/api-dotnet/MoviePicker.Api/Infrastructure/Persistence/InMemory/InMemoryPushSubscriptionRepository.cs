@@ -10,6 +10,12 @@ public sealed class InMemoryPushSubscriptionRepository : IPushSubscriptionReposi
 
     public Task UpsertAsync(PushSubscription subscription, CancellationToken ct = default)
     {
+        foreach (var (existingKey, existing) in _store)
+        {
+            if (existing.Endpoint == subscription.Endpoint && existing.UserId != subscription.UserId)
+                _store.TryRemove(existingKey, out _);
+        }
+
         var key = $"{subscription.UserId}|{subscription.Endpoint}";
         _store[key] = subscription with { Id = key };
         return Task.CompletedTask;

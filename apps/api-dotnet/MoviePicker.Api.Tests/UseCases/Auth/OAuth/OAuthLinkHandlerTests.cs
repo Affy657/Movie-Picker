@@ -125,7 +125,7 @@ public sealed class OAuthLinkHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_RelinkingSameProviderWithDifferentAccount_ReplacesPreviousIdentity()
+    public async Task HandleAsync_RelinkingSameProviderWithDifferentAccount_IsRefusedUntilTheFirstIsUnlinked()
     {
         var f = new Fixture();
         var user = await f.Users.AddAsync(new User
@@ -148,11 +148,11 @@ public sealed class OAuthLinkHandlerTests
             DisplayName = "Neo"
         });
 
-        Assert.Equal(OAuthOutcomeKind.Linked, outcome.Kind);
+        Assert.Equal(OAuthOutcomeKind.ProviderAlreadyLinked, outcome.Kind);
         var reloaded = await f.Users.GetByIdAsync(user.Id);
         var identity = Assert.Single(reloaded!.Identities);
-        Assert.Equal("g-new", identity.Subject);
-        Assert.Null(await f.Users.GetByIdentityAsync("google", "g-old"));
+        Assert.Equal("g-old", identity.Subject);
+        Assert.Null(await f.Users.GetByIdentityAsync("google", "g-new"));
     }
 
     [Fact]

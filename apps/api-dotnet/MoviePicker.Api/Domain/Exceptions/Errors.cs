@@ -191,6 +191,9 @@ public static class Errors
     public static UnauthorizedException ConfirmationIncorrect() =>
         new("Confirmation is incorrect", ErrorCodes.ConfirmationIncorrect);
 
+    public static ForbiddenException ReauthenticationRequired() =>
+        new("A recent sign-in is required", ErrorCodes.ReauthenticationRequired);
+
     public static BadRequestException InvalidParticipant() =>
         new("Invalid participant for this movie night", ErrorCodes.InvalidParticipant);
 
@@ -295,6 +298,9 @@ public static class Errors
 
     public static BadRequestException AttachmentContentInvalid(string fileName) =>
         new($"Invalid content (malformed base64) for \"{fileName}\"", ErrorCodes.AttachmentContentInvalid, Params(("name", fileName)));
+
+    public static BadRequestException AttachmentImageUnreadable(string fileName) =>
+        new($"The image \"{fileName}\" could not be read", ErrorCodes.AttachmentImageUnreadable, Params(("name", fileName)));
 
     public static BadRequestException AttachmentContentMismatch(string fileName, string contentType) =>
         new($"The content of \"{fileName}\" does not match the declared format ({contentType})", ErrorCodes.AttachmentContentMismatch, Params(("name", fileName), ("type", contentType)));

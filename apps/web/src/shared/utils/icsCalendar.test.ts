@@ -61,6 +61,43 @@ describe('icsCalendar', () => {
     expect(ics).toContain('LOCATION:https://moviepicker.app/e/a\\,b');
   });
 
+  it('buildIcsContent never lets the title, the description or the URL open a new calendar property', () => {
+    const ics = buildIcsContent(
+      {
+        ...baseEvent,
+        title: 'Ciné\rATTENDEE:mailto:x@example.com\u{2028}X-TITLE:1',
+        description:
+          'Pizza\u{2028}ATTENDEE:mailto:y@example.com\rX-NOTE:1\u{85}X-NEL:1\u{2029}X-PAR:1',
+        url: 'https://moviepicker.app/e/abc\r\nATTENDEE:mailto:x@example.com\nX-EXTRA:1\u{2028}X-URL:1',
+      },
+      FIXED_NOW
+    );
+    const unfolded = ics!.replaceAll('\r\n ', '');
+    const propertyNames = unfolded.split('\r\n').map((line) => line.split(':')[0] ?? '');
+    const injectedNames = ['ATTENDEE', 'X-TITLE', 'X-NOTE', 'X-NEL', 'X-PAR', 'X-EXTRA', 'X-URL'];
+
+    expect(ics!.replaceAll('\r\n', '')).not.toMatch(/[\r\n]/);
+    expect(ics).not.toMatch(/[\u{85}\u{2028}\u{2029}]/u);
+    expect(propertyNames.filter((name) => injectedNames.includes(name))).toEqual([]);
+    expect(unfolded).toContain(String.raw`SUMMARY:Ciné\nATTENDEE:mailto:x@example.com\nX-TITLE:1`);
+    expect(unfolded).toContain(
+      String.raw`DESCRIPTION:Pizza\nATTENDEE:mailto:y@example.com\nX-NOTE:1\nX-NEL:1\nX-PAR:1`
+    );
+    expect(unfolded).toContain(
+      'URL:https://moviepicker.app/e/abcATTENDEE:mailto:x@example.comX-EXTRA:1X-URL:1'
+    );
+  });
+
+  it('buildIcsContent strips the control characters left in a text value', () => {
+    const ics = buildIcsContent(
+      { ...baseEvent, title: 'Ciné\u0000 pizza\u001b\u007f\u009b', description: 'a\u0007b\tc' },
+      FIXED_NOW
+    );
+
+    expect(ics).toContain('SUMMARY:Ciné pizza\r\n');
+    expect(ics).toContain('DESCRIPTION:abc\r\n');
+  });
+
   it('buildIcsContent retourne null pour une date invalide', () => {
     expect(buildIcsContent({ ...baseEvent, date: '' }, FIXED_NOW)).toBeNull();
     expect(buildIcsContent({ ...baseEvent, date: 'pas-une-date' }, FIXED_NOW)).toBeNull();

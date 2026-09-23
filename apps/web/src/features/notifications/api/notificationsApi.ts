@@ -1,4 +1,4 @@
-import { fetchApi } from '@/shared/api/client';
+import { apiPath, fetchApi } from '@/shared/api/client';
 
 export type NotificationTypeKey =
   | 'newfollower'
@@ -52,7 +52,7 @@ export async function markAllNotificationsRead(): Promise<void> {
 }
 
 export async function markNotificationRead(id: string): Promise<void> {
-  await fetchApi(`/notifications/inbox/${id}/read`, { method: 'POST' });
+  await fetchApi(apiPath('notifications', 'inbox', id, 'read'), { method: 'POST' });
 }
 
 export async function fetchVapidPublicKey(): Promise<string> {

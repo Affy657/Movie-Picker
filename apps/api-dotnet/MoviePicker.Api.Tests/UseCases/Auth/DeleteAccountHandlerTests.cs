@@ -191,7 +191,7 @@ public sealed class DeleteAccountHandlerTests
 
         Assert.Null(await f.Users.GetByIdAsync(user.Id));
 
-        var keptCreatedEvent = await f.Events.GetByIdOrSlugAsync(createdEvent.Id);
+        var keptCreatedEvent = await f.Events.GetByIdOrSlugAsync(createdEvent.Slug);
         Assert.NotNull(keptCreatedEvent);
         Assert.Null(keptCreatedEvent!.CreatorUserId);
 

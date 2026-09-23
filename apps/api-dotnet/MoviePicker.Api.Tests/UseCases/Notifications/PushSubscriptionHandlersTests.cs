@@ -15,12 +15,12 @@ public sealed class SubscribePushHandlerTests
     {
         var subs = new Mock<IPushSubscriptionRepository>();
         var sut = new SubscribePushHandler(subs.Object, TimeProvider.System);
-        var request = new SubscribePushRequest { Endpoint = "https://push.example/abc", P256dh = "key", Auth = "auth" };
+        var request = new SubscribePushRequest { Endpoint = "https://fcm.googleapis.com/fcm/send/abc", P256dh = "key", Auth = "auth" };
 
         await sut.HandleAsync("u1", request);
 
         subs.Verify(s => s.UpsertAsync(
-            It.Is<PushSubscription>(x => x.UserId == "u1" && x.Endpoint == "https://push.example/abc" && x.P256dh == "key" && x.Auth == "auth"),
+            It.Is<PushSubscription>(x => x.UserId == "u1" && x.Endpoint == "https://fcm.googleapis.com/fcm/send/abc" && x.P256dh == "key" && x.Auth == "auth"),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -31,7 +31,16 @@ public sealed class SubscribePushHandlerTests
     [InlineData("https://10.0.0.7/abc")]
     [InlineData("https://localhost/abc")]
     [InlineData("https://169.254.169.254/computeMetadata/v1/")]
-    public async Task HandleAsync_RejectsEndpointsThatAreNotPublicHttpsHosts(string endpoint)
+    [InlineData("https://push.example/abc")]
+    [InlineData("https://collect.attacker.example/v")]
+    [InlineData("https://fcm.googleapis.com.attacker.example/fcm/send/abc")]
+    [InlineData("https://notfcm.googleapis.com/fcm/send/abc")]
+    [InlineData("https://metadata.google.internal/computeMetadata/v1/")]
+    [InlineData("http://fcm.googleapis.com/fcm/send/abc")]
+    [InlineData("https://fcm.googleapis.com:8443/fcm/send/abc")]
+    [InlineData("https://fcm.googleapis.com@collect.attacker.example/abc")]
+    [InlineData("https://someone@fcm.googleapis.com/fcm/send/abc")]
+    public async Task HandleAsync_RejectsEndpointsOutsideTheKnownPushServices(string endpoint)
     {
         var subs = new Mock<IPushSubscriptionRepository>();
         var sut = new SubscribePushHandler(subs.Object, TimeProvider.System);
@@ -44,9 +53,12 @@ public sealed class SubscribePushHandlerTests
 
     [Theory]
     [InlineData("https://fcm.googleapis.com/fcm/send/abc")]
+    [InlineData("https://fcm.googleapis.com/wp/abc")]
     [InlineData("https://updates.push.services.mozilla.com/wpush/v2/abc")]
     [InlineData("https://web.push.apple.com/abc")]
-    public async Task HandleAsync_AcceptsPublicHttpsPushServices(string endpoint)
+    [InlineData("https://wns2-par02p.notify.windows.com/w/?token=abc")]
+    [InlineData("https://FCM.googleapis.com/fcm/send/abc")]
+    public async Task HandleAsync_AcceptsTheKnownPushServices(string endpoint)
     {
         var subs = new Mock<IPushSubscriptionRepository>();
         var sut = new SubscribePushHandler(subs.Object, TimeProvider.System);

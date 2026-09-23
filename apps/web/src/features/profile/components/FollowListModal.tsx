@@ -123,6 +123,8 @@ export default function FollowListModal({
 
   const items = visibleItems(searching, searchEnabled, activeQuery);
   const isPending = isListPending(searching, searchEnabled, activeQuery);
+  const listedCount = tab === 'following' ? followingCount : followersCount;
+  const hidesPrivateProfiles = !searching && !isPending && listedCount > items.length;
   const highlight = highlightTerm(searching, debouncedQuery);
   const togglePending = followMutation.isPending || unfollowMutation.isPending;
 
@@ -162,6 +164,9 @@ export default function FollowListModal({
           onNavigate={onClose}
         />
       ))}
+      {hidesPrivateProfiles && (
+        <li className={`hint ${styles.privateNote}`}>{t('profile.follow.privateHidden')}</li>
+      )}
     </ul>
   );
 

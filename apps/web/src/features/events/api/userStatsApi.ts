@@ -1,4 +1,4 @@
-import { fetchApi } from '@/shared/api/client';
+import { apiPath, fetchApi } from '@/shared/api/client';
 
 export interface GenreCount {
   genreId: number;
@@ -24,5 +24,5 @@ export interface UserStats {
 }
 
 export async function fetchUserStats(handle: string, signal?: AbortSignal): Promise<UserStats> {
-  return fetchApi<UserStats>(`/users/${encodeURIComponent(handle)}/stats`, { signal });
+  return fetchApi<UserStats>(apiPath('users', handle, 'stats'), { signal });
 }

@@ -1,6 +1,9 @@
-import type { PostHog, Properties } from 'posthog-js';
+import type { CaptureResult, PostHog, Properties } from 'posthog-js';
+import { redactSensitiveUrl, SENSITIVE_QUERY_PARAMETERS } from '@/shared/utils/sensitiveUrl';
 
 const PERSON_PII_KEYS = ['displayName', 'handle'] as const;
+
+const MAX_REDACTION_DEPTH = 5;
 
 let posthog: PostHog | null = null;
 let initialized = false;
@@ -17,6 +20,40 @@ export function stripPersonPii(properties?: Properties): Properties | undefined 
     delete next[key];
   }
   return next;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object') return false;
+  const prototype: unknown = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function redactUrlsDeep(value: unknown, depth: number): unknown {
+  if (typeof value === 'string') return redactSensitiveUrl(value);
+  if (depth >= MAX_REDACTION_DEPTH) return value;
+  if (Array.isArray(value)) return value.map((item: unknown) => redactUrlsDeep(item, depth + 1));
+  if (!isPlainObject(value)) return value;
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [key, redactUrlsDeep(item, depth + 1)])
+  );
+}
+
+function redactProperties<T extends Properties | undefined>(properties: T): T {
+  return redactUrlsDeep(properties, 0) as T;
+}
+
+export function redactCapturedUrls(event: CaptureResult | null): CaptureResult | null {
+  if (!event) return event;
+  try {
+    return {
+      ...event,
+      properties: redactProperties(event.properties),
+      $set: redactProperties(event.$set),
+      $set_once: redactProperties(event.$set_once),
+    };
+  } catch {
+    return null;
+  }
 }
 
 function applyOptIn(): void {
@@ -87,11 +124,17 @@ async function doInit(): Promise<void> {
     capture_pageview: 'history_change',
     capture_pageleave: true,
     capture_performance: { web_vitals: true },
+    capture_heatmaps: false,
+    capture_dead_clicks: false,
+    capture_exceptions: false,
+    mask_personal_data_properties: true,
+    custom_personal_data_properties: [...SENSITIVE_QUERY_PARAMETERS],
     disable_session_recording: true,
     disable_surveys: true,
     opt_out_capturing_by_default: true,
     person_profiles: 'identified_only',
     sanitize_properties: (properties) => stripPersonPii(properties) ?? {},
+    before_send: redactCapturedUrls,
   });
   posthog = ph;
   initialized = true;

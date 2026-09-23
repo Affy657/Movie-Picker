@@ -8,6 +8,8 @@
 #   TMDB_READ_ACCESS_TOKEN   (optional, preferred: travels as a Bearer header), on GCP: Secret Manager
 #   TMDB_API_KEY             (optional, legacy v3 key appended to the query string when no token is set)
 #   ALLOWED_ORIGINS          (required outside Development): CORS origins of the front, comma-separated
+#   EMAIL_PROVIDER           (required outside Development, must be "resend")
+#   RESEND_API_KEY           (required outside Development), on GCP: Secret Manager
 #   ASPNETCORE_ENVIRONMENT   (optional, defaults to Production)
 #   PORT                     (Cloud Run injects 8080; Kestrel listens on 8080 through ASPNETCORE_URLS)
 

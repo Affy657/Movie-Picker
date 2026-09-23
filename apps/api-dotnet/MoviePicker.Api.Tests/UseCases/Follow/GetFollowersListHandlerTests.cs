@@ -80,4 +80,45 @@ public sealed class GetFollowersListHandlerTests
         Assert.True(result.Items.Single(i => i.Handle == "carla").IsFollowedByMe);
         Assert.False(result.Items.Single(i => i.Handle == "bob").IsFollowedByMe);
     }
+
+    [Fact]
+    public async Task HandleAsync_LeavesPrivateAccountsOut_ExceptTheReaderThemself()
+    {
+        _users.Setup(u => u.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(U("target", "alice"));
+        _follows.Setup(f => f.GetFollowerIdsAsync("target", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["u1", "u2", "me"]);
+        _users.Setup(u => u.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                U("u1", "carla"),
+                U("u2", "hidden") with { IsProfilePublic = false },
+                U("me", "reader") with { IsProfilePublic = false }
+            ]);
+        _follows.Setup(f => f.GetFollowingIdsAsync("me", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var anonymous = await _sut.HandleAsync("alice", null);
+        var reader = await _sut.HandleAsync("alice", "me");
+
+        Assert.Equal(["carla"], anonymous.Items.Select(i => i.Handle));
+        Assert.Equal(["carla", "reader"], reader.Items.Select(i => i.Handle));
+    }
+
+    [Fact]
+    public async Task HandleAsync_TheProfileOwner_SeesTheirPrivateFollowers()
+    {
+        _users.Setup(u => u.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(U("target", "alice"));
+        _follows.Setup(f => f.GetFollowerIdsAsync("target", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["u1", "u2"]);
+        _users.Setup(u => u.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                U("u1", "carla"),
+                U("u2", "hidden") with { IsProfilePublic = false }
+            ]);
+        _follows.Setup(f => f.GetFollowingIdsAsync("target", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var owner = await _sut.HandleAsync("alice", "target");
+
+        Assert.Equal(["carla", "hidden"], owner.Items.Select(i => i.Handle));
+    }
 }

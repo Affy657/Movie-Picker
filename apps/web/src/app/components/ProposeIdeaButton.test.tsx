@@ -68,6 +68,13 @@ describe('ProposeIdeaButton', () => {
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
   });
 
+  it('warns before sending that the suggestion becomes a public GitHub issue', async () => {
+    renderButton();
+    await openDialog();
+
+    expect(await screen.findByText(/ticket public sur GitHub/i)).toBeInTheDocument();
+  });
+
   it('envoie la suggestion et affiche la confirmation', async () => {
     let receivedBody: unknown = null;
     server.use(
@@ -91,6 +98,27 @@ describe('ProposeIdeaButton', () => {
       description: 'Ce serait top !',
       pagePath: '/e/soiree-cine',
     });
+  });
+
+  it('cuts the page path to the 300 characters the API accepts', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, async ({ request }) => {
+        receivedBody = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+    const longPath = `/films/collection/${'a'.repeat(400)}`;
+
+    renderButton(longPath);
+    const user = await openDialog();
+    await fillForm(user);
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(/merci/i);
+    });
+    expect(receivedBody).toMatchObject({ pagePath: longPath.slice(0, 300) });
   });
 
   it('sends the selected category (Bug) rather than the default value', async () => {

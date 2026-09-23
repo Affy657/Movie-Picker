@@ -9,6 +9,7 @@ import {
   type ProfilePatch,
 } from '@/features/auth/api/authApi';
 import { clearStoredEventIdentities } from '@/shared/utils/eventIdentityStorage';
+import { dropBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import type { UserProfile } from '@/features/auth/types';
@@ -83,7 +84,11 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await postAuthLogout();
+      try {
+        await postAuthLogout();
+      } finally {
+        void dropBrowserPushSubscription();
+      }
       clearStoredEventIdentities();
       queryClient.setQueryData(queryKeys.auth.me, null);
       await signedOutStateRendered();

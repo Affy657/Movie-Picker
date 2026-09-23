@@ -12,7 +12,10 @@ import {
 } from '@/features/profile/api/profileApi';
 import { fetchUserStats } from '@/features/events/api/userStatsApi';
 
-vi.mock('@/shared/api/client', () => ({ fetchApi: vi.fn() }));
+vi.mock('@/shared/api/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/shared/api/client')>()),
+  fetchApi: vi.fn(),
+}));
 
 const mockFetchApi = vi.mocked(fetchApi);
 

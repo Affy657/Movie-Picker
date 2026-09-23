@@ -8,6 +8,7 @@ import { useTranslation, LocaleProvider } from '@/shared/i18n';
 import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
 import AnalyticsSync from '@/app/components/AnalyticsSync';
+import PushSubscriptionSync from '@/app/components/PushSubscriptionSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import AppShell from '@/app/components/AppShell';
 import SessionGate from '@/app/components/SessionGate';
@@ -202,6 +203,7 @@ export function AppProviders({ children }: Readonly<{ children: ReactNode }>) {
             <AuthProvider>
               <UserThemeSync />
               <AnalyticsSync />
+              <PushSubscriptionSync />
               {children}
             </AuthProvider>
           </ConsentProvider>

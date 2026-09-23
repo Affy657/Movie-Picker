@@ -15,6 +15,12 @@ public sealed class MongoPushSubscriptionRepository : IPushSubscriptionRepositor
 
     public async Task UpsertAsync(PushSubscription subscription, CancellationToken ct = default)
     {
+        await _collection.DeleteManyAsync(
+            Builders<PushSubscriptionDocument>.Filter.And(
+                Builders<PushSubscriptionDocument>.Filter.Eq(x => x.Endpoint, subscription.Endpoint),
+                Builders<PushSubscriptionDocument>.Filter.Ne(x => x.UserId, subscription.UserId)),
+            ct);
+
         var filter = Builders<PushSubscriptionDocument>.Filter.And(
             Builders<PushSubscriptionDocument>.Filter.Eq(x => x.UserId, subscription.UserId),
             Builders<PushSubscriptionDocument>.Filter.Eq(x => x.Endpoint, subscription.Endpoint));

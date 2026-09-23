@@ -46,6 +46,18 @@ export function apiUrl(path: string): string {
   return `${base}${API_VERSION_PREFIX}${p}`;
 }
 
+const COLLAPSIBLE_PATH_SEGMENTS = new Set(['', '.', '..']);
+
+function encodePathSegment(segment: string | number): string {
+  const text = String(segment);
+  if (COLLAPSIBLE_PATH_SEGMENTS.has(text)) throw new Error('Invalid API path segment');
+  return encodeURIComponent(text);
+}
+
+export function apiPath(...segments: ReadonlyArray<string | number>): string {
+  return `/${segments.map(encodePathSegment).join('/')}`;
+}
+
 function userFacing(key: TranslationKey): string {
   return t(key, undefined, preferredLocale());
 }

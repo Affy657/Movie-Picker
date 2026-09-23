@@ -10,23 +10,26 @@ namespace MoviePicker.Api.Tests.Controllers;
 
 internal static class ControllerTestHelpers
 {
-    public static ClaimsPrincipal AuthenticatedUser(string userId, string displayName = "Tester")
+    public static ClaimsPrincipal AuthenticatedUser(string userId, string displayName = "Tester", params Claim[] extraClaims)
     {
         var identity = new ClaimsIdentity(
-            new[]
-            {
+            [
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Name, displayName)
-            },
+                new Claim(ClaimTypes.Name, displayName),
+                .. extraClaims
+            ],
             CookieAuthenticationDefaults.AuthenticationScheme);
         return new ClaimsPrincipal(identity);
     }
 
-    public static TController WithContext<TController>(this TController controller, ClaimsPrincipal? user = null)
+    public static TController WithContext<TController>(
+        this TController controller,
+        ClaimsPrincipal? user = null,
+        IAuthenticationService? authentication = null)
         where TController : ControllerBase
     {
         var services = new ServiceCollection();
-        services.AddSingleton<IAuthenticationService>(new Mock<IAuthenticationService>().Object);
+        services.AddSingleton(authentication ?? new Mock<IAuthenticationService>().Object);
 
         var httpContext = new DefaultHttpContext
         {

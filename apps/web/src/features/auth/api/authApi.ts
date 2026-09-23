@@ -1,4 +1,4 @@
-import { apiUrl, fetchApi } from '@/shared/api/client';
+import { apiPath, apiUrl, fetchApi } from '@/shared/api/client';
 import { downloadBlob } from '@/shared/utils/downloadBlob';
 import { ApiError } from '@/shared/api/apiError';
 import type { AccentColor, RatingScale, UiThemePreference } from '@/shared/types/theme';
@@ -64,11 +64,13 @@ export async function fetchOAuthProviders(): Promise<string[]> {
 }
 
 export function oauthStartUrl(provider: string, returnTo: string): string {
-  return apiUrl(`/auth/oauth/${provider}/start?returnTo=${encodeURIComponent(returnTo)}`);
+  return apiUrl(
+    `${apiPath('auth', 'oauth', provider, 'start')}?returnTo=${encodeURIComponent(returnTo)}`
+  );
 }
 
 export async function unlinkOAuthProvider(provider: string): Promise<void> {
-  await fetchApi(`/auth/me/identities/${provider}`, { method: 'DELETE' });
+  await fetchApi(apiPath('auth', 'me', 'identities', provider), { method: 'DELETE' });
 }
 
 export interface ProfilePatch {

@@ -8,7 +8,10 @@ import {
   removeFromWatchlist,
 } from '@/features/movies/api/watchlistApi';
 
-vi.mock('@/shared/api/client', () => ({ fetchApi: vi.fn() }));
+vi.mock('@/shared/api/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/shared/api/client')>()),
+  fetchApi: vi.fn(),
+}));
 
 const mockFetchApi = vi.mocked(fetchApi);
 

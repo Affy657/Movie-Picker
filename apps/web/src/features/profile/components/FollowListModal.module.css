@@ -59,6 +59,11 @@
   font-size: var(--font-size-sm);
 }
 
+.privateNote {
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
+}
+
 .item {
   display: flex;
   align-items: center;

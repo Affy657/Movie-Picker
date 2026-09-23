@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import EventDetail from '@/features/events/pages/EventDetail';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
@@ -16,7 +16,11 @@ import {
 } from '@/mocks/handlers';
 import { http, HttpResponse } from 'msw';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
-import { setStoredParticipant, getStoredParticipant } from '@/shared/utils/eventIdentityStorage';
+import {
+  getStoredHostToken,
+  setStoredParticipant,
+  getStoredParticipant,
+} from '@/shared/utils/eventIdentityStorage';
 import { JOIN_PROMPT_ANCHOR_ID } from '@/features/events/joinPrompt';
 
 beforeAll(() => {
@@ -33,6 +37,10 @@ beforeAll(() => {
   }
 });
 
+function LocationSearch() {
+  return <output data-testid="location-search">{useLocation().search}</output>;
+}
+
 function renderEventDetail(
   initialPath: string,
   client?: QueryClient,
@@ -47,6 +55,7 @@ function renderEventDetail(
           <Route path="/my-events" element={<div data-testid="route-my-events" />} />
           <Route path="/" element={<div data-testid="route-home" />} />
         </Routes>
+        <LocationSearch />
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -181,6 +190,28 @@ describe('EventDetail (MSW)', () => {
     renderEventDetail(`/e/inconnu`);
     expect(await screen.findByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
     expect(document.title).toBe(pageTitle('Soirée introuvable'));
+  });
+
+  it('moves a legacy host token out of the address bar into the session', async () => {
+    renderEventDetail(`/e/${slug}?host=legacy-host-token&tab=movies`);
+    await waitFor(() => {
+      expect(screen.getByTestId('location-search').textContent).toBe('?tab=movies');
+    });
+    expect(getStoredHostToken(slug)).toBe('legacy-host-token');
+  });
+
+  it('treats a malformed slug as a missing movie night without calling the API', async () => {
+    const requested: string[] = [];
+    server.use(
+      http.all(`${TEST_API_V1}/events/*`, ({ request }) => {
+        requested.push(request.url);
+        return HttpResponse.json({ error: 'unexpected' }, { status: 500 });
+      })
+    );
+    renderEventDetail('/e/abc%3Fx%23y');
+    expect(await screen.findByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
+    expect(document.title).toBe(pageTitle('Soirée introuvable'));
+    expect(requested).toEqual([]);
   });
 
   it('shows the link and the QR code for a plain participant (without host token)', async () => {

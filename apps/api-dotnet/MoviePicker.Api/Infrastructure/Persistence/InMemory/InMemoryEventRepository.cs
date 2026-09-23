@@ -12,15 +12,11 @@ public sealed class InMemoryEventRepository : IEventRepository
     private readonly ConcurrentDictionary<string, Event> _byId = new();
     private readonly ConcurrentDictionary<string, Event> _bySlug = new();
 
-    public Task<Event?> GetByIdOrSlugAsync(string idOrSlug, CancellationToken ct = default)
+    public Task<Event?> GetByIdOrSlugAsync(string slug, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(idOrSlug))
+        if (string.IsNullOrWhiteSpace(slug))
             return Task.FromResult<Event?>(null);
-        if (_byId.TryGetValue(idOrSlug, out var e))
-            return Task.FromResult<Event?>(e);
-        if (_bySlug.TryGetValue(idOrSlug, out e))
-            return Task.FromResult<Event?>(e);
-        return Task.FromResult<Event?>(null);
+        return Task.FromResult(_bySlug.TryGetValue(slug, out var e) ? e : null);
     }
 
     public Task<Event> AddAsync(Event evt, CancellationToken ct = default)

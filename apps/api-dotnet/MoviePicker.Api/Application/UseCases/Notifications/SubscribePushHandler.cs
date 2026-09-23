@@ -18,7 +18,7 @@ public sealed class SubscribePushHandler : ISubscribePushHandler
 
     public async Task HandleAsync(string userId, SubscribePushRequest request, CancellationToken ct = default)
     {
-        if (!PushEndpointPolicy.IsPublicHttpsEndpoint(request.Endpoint))
+        if (!PushEndpointPolicy.IsKnownPushServiceEndpoint(request.Endpoint))
             throw Errors.InvalidPushEndpoint();
 
         var subscription = new PushSubscription
@@ -36,16 +36,26 @@ public sealed class SubscribePushHandler : ISubscribePushHandler
 
 public static class PushEndpointPolicy
 {
-    public static bool IsPublicHttpsEndpoint(string? endpoint)
+    private static readonly string[] KnownPushServiceDomains =
+    [
+        "fcm.googleapis.com",
+        "android.googleapis.com",
+        "push.services.mozilla.com",
+        "notify.windows.com",
+        "push.apple.com"
+    ];
+
+    public static bool IsKnownPushServiceEndpoint(string? endpoint)
     {
         if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var uri))
             return false;
         if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
             return false;
-        if (uri.HostNameType is UriHostNameType.IPv4 or UriHostNameType.IPv6)
+        if (uri.HostNameType != UriHostNameType.Dns || !uri.IsDefaultPort || uri.UserInfo.Length > 0)
             return false;
-        if (string.Equals(uri.IdnHost, "localhost", StringComparison.OrdinalIgnoreCase))
-            return false;
-        return uri.IdnHost.Contains('.');
+        var host = uri.IdnHost;
+        return KnownPushServiceDomains.Any(domain =>
+            string.Equals(host, domain, StringComparison.OrdinalIgnoreCase)
+            || host.EndsWith("." + domain, StringComparison.OrdinalIgnoreCase));
     }
 }

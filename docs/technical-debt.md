@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-058`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-066`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -80,22 +80,23 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 
 - state: humain
 - bloque: un jeton d'organisation Sentry ne se crée que dans son interface (`Settings / Auth Tokens`), l'API MCP ne l'expose pas ; la valeur d'un secret GitHub ne se relit pas, donc il faut le ressaisir. L'agent ne manipule pas de jeton en clair, le geste entier est humain.
-- impact: le seul secret de déploiement lisible par n'importe quel workflow sur n'importe quelle branche, tout le reste vit dans l'environnement `production` (politique de branche `master`). Portée du jeton : créer des releases et des deploys Sentry, pas de lecture de données.
+- impact: le seul secret de déploiement lisible par n'importe quel workflow sur n'importe quelle branche, tout le reste vit dans les environnements `production` et `staging` (politique de branche `master`). Portée annoncée : créer des releases et des deploys Sentry ; si la valeur est encore le jeton personnel posé à la mise en place de Sentry, elle lit aussi les issues et les événements, à confirmer dans `Settings / Auth Tokens` au moment du remplacement.
 - ou: `Settings / Secrets and variables / Actions`, secret de dépôt `SENTRY_AUTH_TOKEN` ; jobs `deploy-api`, `deploy-front` de `deploy.yml` et `rollback` de `rollback-front.yml`
 - verify: `gh secret list --json name --jq '[.[].name] | join(",")'` rend `SENTRY_AUTH_TOKEN,SONAR_TOKEN` ; réglé quand il ne rend plus que `SONAR_TOKEN`
 - fix: créer un nouveau jeton d'organisation Sentry (scopes `project:releases` et `org:read`), puis :
   ```bash
   gh secret set SENTRY_AUTH_TOKEN --env production
+  gh secret set SENTRY_AUTH_TOKEN --env staging
   gh secret delete SENTRY_AUTH_TOKEN
   ```
-  révoquer l'ancien jeton dans Sentry.
+  révoquer l'ancien jeton dans Sentry. Les jobs `build-front`, `deploy-front` et `deploy-api` tournent dans `environment: ${{ inputs.stage }}` : sans le secret dans `staging`, la recette perd ses source maps sans le signaler.
 - piege: `SONAR_TOKEN` reste volontairement au niveau du dépôt, le job `sonar` tourne sur les PR et les branches `v*`, que la politique de branche de `production` exclurait. Tout job qui lit un secret de déploiement porte `environment: production` ; sans cette ligne il lirait une valeur vide.
 
 ## DEBT-030 les captures des suggestions d'idées sont hébergées sur une branche du dépôt public
 
 - state: humain
 - bloque: décision produit, garder ou non les pièces jointes des suggestions
-- impact: tout compte connecté peut publier jusqu'à 4 images par heure sur la branche `GITHUB_ATTACHMENTS_BRANCH` du dépôt public. Les octets magiques et le type MIME sont vérifiés, pas le contenu : le dépôt devient un hébergeur d'images sous le nom du projet, et une image retirée reste dans l'historique git.
+- impact: tout compte connecté peut publier jusqu'à 40 images par heure (10 suggestions de 4 pièces jointes, `IdeaSuggestionPolicy` de `RateLimitingExtensions.cs`) sur la branche `GITHUB_ATTACHMENTS_BRANCH` du dépôt public. Les octets magiques et le type MIME sont vérifiés et les métadonnées JPEG, PNG, WebP et GIF retirées avant l'envoi (`ImageMetadataStripper`, liste blanche des blocs de rendu), pas le contenu : le dépôt devient un hébergeur d'images sous le nom du projet, et une image retirée reste dans l'historique git. Le ticket lui-même ne porte plus ni nom, ni handle, ni identifiant de compte (une référence aléatoire, que l'API journalise avec le compte : `IdeaSuggestion: published reference`), ni identifiant de soirée ou de profil (`Page : /e/:slug`, tout segment inconnu devient `:param`).
 - ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/GitHub/GitHubIssueClient.cs`, `UploadAttachmentAsync`
 - verify: `grep -n "UploadAttachmentAsync" apps/api-dotnet/MoviePicker.Api/Infrastructure/GitHub/GitHubIssueClient.cs` ; encore ouvert tant que la méthode pousse un blob dans le dépôt
 - fix: soit retirer les pièces jointes du formulaire de suggestion, soit les héberger hors dépôt (bucket privé, lien signé dans le ticket)
@@ -105,7 +106,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 
 - state: humain
 - bloque: décision produit, retirer ou non le jeton d'hôte. Le chantier co-hôte de V1.8 est le moment naturel, il ajouterait sinon un troisième chemin.
-- impact: `EventHost.IsHost` accepte le jeton (`X-Host-Token`, ou `?host=` pour les clients en cache, ou localStorage) **ou** `CreatorUserId`. Créer une soirée exige un compte depuis la V1.2, donc le jeton est un vestige, et un lien partagé avec le jeton donne les commandes de l'hôte à n'importe qui, sans compte. Onze fichiers front le transportent, l'API le masque dans les logs et Sentry pour compenser.
+- impact: `EventHost.IsHost` accepte le jeton (`X-Host-Token`, ou `?host=` pour les anciens liens, que le front range en `sessionStorage` puis retire de la barre d'adresse) **ou** `CreatorUserId`. Créer une soirée exige un compte depuis la V1.2, donc le jeton est un vestige, et un lien partagé avec le jeton donne les commandes de l'hôte à n'importe qui, sans compte. Onze fichiers front le transportent, l'API le masque dans les logs et Sentry pour compenser.
 - ou: `apps/api-dotnet/MoviePicker.Api/Domain/EventHost.cs`, `Infrastructure/Web/HostTokenAccessor.cs`, `SensitiveQueryRedaction.cs` ; côté front `grep -rl hostToken apps/web/src --include=*.ts --include=*.tsx | grep -v test`
 - verify: `grep -n "TokenMatches" apps/api-dotnet/MoviePicker.Api/Domain/EventHost.cs` ; encore ouvert tant que le jeton compte dans `IsHost`
 - fix: hôte = `CreatorUserId`, co-hôtes = liste d'identifiants sur `Event` posée par le chantier co-hôte ; puis retirer `HostToken` du document, `HostTokenAccessor`, `SensitiveQueryRedaction`, `withHostToken` et le stockage local côté front, et l'en-tête `X-Host-Token` du contrat OpenAPI
@@ -196,13 +197,13 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 
 - state: humain
 - bloque: une décision sur la route `/e/*` : Firebase Hosting ne route pas selon l'user agent, la réécriture `/e/**` vers Cloud Run enverrait humains et robots à l'API, qui devrait servir la coquille aux premiers ; le code de l'aperçu est déjà là
-- impact: le lien partagé est `https://<front>/e/<slug>` et Hosting lui répond la coquille SPA, donc WhatsApp, Messenger, Discord et consorts affichent le titre et l'image génériques du site quelle que soit la soirée. `GET /api/v1/events/slug/{slug}/share-preview`, qui rend le HTML Open Graph de la soirée, n'est plus appelé par personne depuis `9a1ecc87` (le lien de partage est passé de l'URL API à l'URL front) : `eventSharePreviewUrl` dans `apps/web/src/features/events/api/eventsApi.ts` n'a aucun appelant et le réglage `richSharePreview` de la soirée ne change rien pour l'utilisateur.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventSharePreview/GetEventSharePreviewHtmlHandler.cs`, `apps/web/src/features/events/api/eventsApi.ts`, `infra/firebase-hosting.json` (réécritures)
+- impact: le lien partagé est `https://<front>/e/<slug>` et Hosting lui répond la coquille SPA, donc WhatsApp, Messenger, Discord et consorts affichent le titre et l'image génériques du site quelle que soit la soirée. `GET /api/v1/events/slug/{slug}/share-preview`, qui rend le HTML Open Graph de la soirée, n'est plus appelé par personne depuis `9a1ecc87` (le lien de partage est passé de l'URL API à l'URL front, et l'assistant front qui construisait l'URL de l'API a été supprimé le 2026-09-23) : le réglage `richSharePreview` de la soirée ne change rien pour l'utilisateur.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventSharePreview/GetEventSharePreviewHtmlHandler.cs`, `infra/firebase-hosting.json` (réécritures)
 - verify: encore ouvert tant que la commande ne renvoie pas une balise `og:title` propre à la soirée (la coquille rend le titre du site).
   ```bash
   curl -sS -A "facebookexternalhit/1.1" https://www.movie-picker.fr/e/<SLUG_PUBLIC> | grep -o '<meta property="og:title" content="[^"]*"'
   ```
-- fix: une réécriture Hosting `{ "glob": "/e/**", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } }` dans `infra/firebase-hosting.json`, l'API servant l'aperçu aux robots (`facebookexternalhit`, `WhatsApp`, `Discordbot`, `Twitterbot`, `Slackbot`, `LinkedInBot`, `TelegramBot`) et la coquille `index.html` aux humains, lue depuis Hosting ou embarquée ; le 404 des soirées inconnues (DEBT-043) vient avec. À défaut, supprimer l'endpoint, `eventSharePreviewUrl` et le réglage `richSharePreview` pour ne pas promettre un aperçu qui n'existe pas.
+- fix: une réécriture Hosting `{ "glob": "/e/**", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } }` dans `infra/firebase-hosting.json`, l'API servant l'aperçu aux robots (`facebookexternalhit`, `WhatsApp`, `Discordbot`, `Twitterbot`, `Slackbot`, `LinkedInBot`, `TelegramBot`) et la coquille `index.html` aux humains, lue depuis Hosting ou embarquée ; le 404 des soirées inconnues (DEBT-043) vient avec. À défaut, supprimer l'endpoint et le réglage `richSharePreview` pour ne pas promettre un aperçu qui n'existe pas.
 - piege: `robots.txt` interdit `/e/` : seuls les robots d'aperçu (qui ignorent `robots.txt`) sont concernés. Ne pas servir le HTML de l'API aux navigateurs, il n'a ni style ni application.
 
 ## DEBT-043 toute adresse inconnue répond 200
@@ -316,7 +317,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - ou: Secret Manager `MONGODB_URI`, `STAGING_MONGODB_URI`, `MONGODB_BACKUP_URI` (créé vide le 2026-09-21) ; `.github/workflows/backup-mongo.yml` (repli sur `MONGODB_URI` avec avertissement) ; `infra/terraform/environments/production/main.tf` (`module "backup"`, `readable_secrets` porte encore `MONGODB_URI`) ; `C:\ynov\movie-picker\.env` (hors dépôt) ; console Atlas, projet de production (cluster0) et le second projet à créer
 - verify: `docker run --rm mongo:8 mongosh --quiet "$(gcloud secrets versions access latest --secret=MONGODB_URI --project <PROJET_GCP>)" --eval 'print(db.runCommand({connectionStatus: 1}).authInfo.authenticatedUserRoles.map(r => r.role).join(","))'` ; encore ouvert tant que la commande imprime `atlasAdmin`
 - fix: (humain) dans le projet de production, Database Access / Add new database user, mot de passe autogénéré, « Specific Privileges » : `moviepicker_api` `readWrite` sur `moviepicker`, `moviepicker_backup` `read` sur `moviepicker` ; un second projet Atlas « Movie Picker non-prod » avec un cluster M0 (AWS, eu-west-1), Network Access `0.0.0.0/0` (Cloud Run n'a pas d'IP fixe), et deux utilisateurs `moviepicker_staging` `readWrite` sur `moviepicker_staging`, `moviepicker_dev` `readWrite` sur `moviepicker_dev` ; les quatre mots de passe et l'hôte du nouveau cluster dans `Downloads\atlas-users.txt`, une ligne `nom=valeur` chacun, `host=<cluster>.<id>.mongodb.net` pour l'hôte. (agent) construire les URI (`urllib.parse.quote(mot_de_passe, safe='')`) : production `mongodb+srv://moviepicker_api:<mdp>@<HOTE_CLUSTER_PROD>/?appName=Cluster0` (l'hôte est celui de l'URI en place ; pas de base dans le chemin, l'API prend `moviepicker` par défaut), sauvegarde `mongodb+srv://moviepicker_backup:<mdp>@<HOTE_CLUSTER_PROD>/moviepicker?appName=Cluster0` (la base dans le chemin, `mongodump` la prend comme `--db`), recette `mongodb+srv://moviepicker_staging:<mdp>@<hôte>/moviepicker_staging?retryWrites=true&w=majority&appName=Cluster0&maxPoolSize=10`, dev `mongodb+srv://moviepicker_dev:<mdp>@<hôte>/moviepicker_dev?retryWrites=true&w=majority&appName=Cluster0` ; prouver chacune par `mongosh --eval` (`connectionStatus` rend le seul rôle attendu, `ping` sur sa base, un `insertOne` puis `drop` d'une collection `_rotation_probe` pour les `readWrite`, `estimatedDocumentCount` de `users` pour la lecture, et `listDatabases` refusé) ; `gcloud secrets versions add` pour `MONGODB_URI`, `MONGODB_BACKUP_URI`, `STAGING_MONGODB_URI` depuis des fichiers temporaires écrasés puis supprimés ; `MONGODB_URI=` du `.env` réécrit avec l'URI de dev ; écraser et supprimer `atlas-users.txt` ; déployer recette puis production (`target=all`), `gh workflow run backup-mongo.yml --ref master` et lire « Dump taken with MONGODB_BACKUP_URI » dans son journal ; retirer `"MONGODB_URI"` de `readable_secrets` du `module "backup"` et le repli de `backup-mongo.yml` (`infra.yml` applique, un clic) ; `gcloud secrets versions destroy` des anciennes versions de `MONGODB_URI` et `STAGING_MONGODB_URI` ; `pnpm run seed` sur la nouvelle base de dev. (humain, en dernier) supprimer l'ancien administrateur (l'utilisateur de l'URI remplacée) et `moviepicker_staging` du projet de production, et la base `moviepicker_staging` qui y reste.
-- piege: ne rien supprimer côté Atlas avant que les deux étapes servent des révisions nées après les nouvelles versions : `MONGODB_URI:latest` est lu au démarrage de chaque instance, une instance déjà debout garde l'ancienne valeur jusqu'à sa fin. Un utilisateur limité à une base ne peut pas `serverStatus` ni `listDatabases` : la preuve d'accès est l'`insertOne`, pas un état du serveur. La base de recette repart vide sur le nouveau cluster, l'API y recrée index et migrations au premier démarrage.
+- piege: une archive de sauvegarde contient aussi des secrets d'authentification, le porte-clés Data Protection (`MongoXmlRepository`, aucun `XmlEncryptor`) et les sessions. Tant que l'utilisateur de la sauvegarde est administrateur, lire une archive ne donne rien de plus que ce qu'il a déjà ; dès qu'il n'aura plus que la lecture, l'archive vaudra plus que son accès. Traiter dans le même chantier : exclure `data_protection_keys` et `auth_sessions` du dump (`--excludeCollection`, au prix d'une déconnexion générale après une restauration), ou chiffrer le porte-clés par un `IXmlEncryptor` adossé à Cloud KMS dont seule l'identité d'exécution de l'API peut déchiffrer. Ne rien supprimer côté Atlas avant que les deux étapes servent des révisions nées après les nouvelles versions : `MONGODB_URI:latest` est lu au démarrage de chaque instance, une instance déjà debout garde l'ancienne valeur jusqu'à sa fin. Un utilisateur limité à une base ne peut pas `serverStatus` ni `listDatabases` : la preuve d'accès est l'`insertOne`, pas un état du serveur. La base de recette repart vide sur le nouveau cluster, l'API y recrée index et migrations au premier démarrage.
 
 ## DEBT-054 l'apex porte deux revendications Hosting, et les quatre domaines servent encore un certificat temporaire
 
@@ -357,6 +358,36 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: donner à `useClickOutside` une liste de refs (le panneau porté par un portail du menu des cartes), un rendu du focus à Échap, et n'ignorer un clic dans un `dialog[open]` que si ce dialogue ne contient pas la ref ; puis y passer les trois appelants
 - fini-quand: le `verify` ne sort plus rien et le sélecteur d'emoji se ferme toujours au clic ailleurs dans la feuille des paramètres de soirée
 - piege: `ThemeField` vit dans la feuille des paramètres de soirée, un `<dialog>` ouvert : le hook actuel ignore tout clic dans un dialogue ouvert, donc le sélecteur ne se fermerait plus. C'est la raison de l'écouteur maison, pas un oubli.
+
+## DEBT-063 `check:iam` ne relit aucune liaison des comptes que Terraform décrit
+
+- state: agent
+- impact: `review()` saute tout membre `serviceAccount:movie-picker-*@<PROJET_GCP>`, quels que soient le rôle et la ressource, alors que l'en-tête du script annonce relire tout ce que Terraform accorde.
+- ou: `scripts/check-iam.mjs` (`isDescribedServiceAccount`, appelé dans `review()`)
+- verify: `grep -n "isDescribedServiceAccount(member)) continue" scripts/check-iam.mjs` ; encore ouvert tant que la ligne existe
+- fix: pour les comptes décrits, comparer chaque couple rôle et ressource à la liste attendue tirée des `.tf` (ou d'un `terraform show -json` de chaque racine), et ne sauter que les couples attendus ; un test du script avec une liaison inattendue sur un compte décrit
+- fini-quand: une liaison posée à la main sur un compte décrit fait échouer `pnpm run check:iam`
+- refs: DEBT-050, la deny policy qui fermerait ce chemin n'existe pas hors organisation
+
+## DEBT-064 `GetByIdOrSlugAsync` ne résout plus que le slug
+
+- state: differe
+- declencheur: la fusion de `v1.7` dans `master`
+- impact: depuis le 2026-09-23, une soirée ne se trouve plus par son `ObjectId` (en partie prévisible, il ouvrait la soirée sans son lien). La méthode du port, l'extension `GetRequiredByIdOrSlugAsync`, les paramètres `idOrSlug` du front et le segment de route `{idOrSlug}` gardent l'ancien nom pour ne pas multiplier les conflits avec `v1.7`, qui ajoute ses propres appels : le nom ment.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/Ports/IEventRepository.cs`, `EventRepositoryExtensions.cs`, `Infrastructure/Persistence/Mongo/MongoEventRepository.cs`, `Infrastructure/Persistence/InMemory/InMemoryEventRepository.cs`, `Controllers/EventsController.cs`, `Controllers/EventMoviesController.cs`, une quarantaine de fichiers de test ; `apps/web/src/features/events/api/eventsApi.ts`
+- verify: `grep -rln "ByIdOrSlug" apps/api-dotnet --include=*.cs | grep -v /obj/` ; encore ouvert tant qu'il rend un fichier
+- fix: renommer en `GetBySlugAsync` et `GetRequiredBySlugAsync`, `idOrSlug` en `slug` partout, y compris le segment de route, puis `pnpm run openapi:export` et `pnpm run openapi:types`
+- piege: renommer le segment de route change les clés de `paths` dans le contrat OpenAPI, donc le schéma généré et `apiContract.test.ts` côté front ; les faire dans le même commit. La fusion de `v1.7` apporte aussi une trentaine de chemins d'API construits sans `apiPath` (dont `setMovieRating` et `deleteMovieRating` de `moviesApi.ts`) : les convertir dans le même geste, `grep -rln '/events/\${' apps/web/src --include=*.ts | grep -v test` ne doit plus rien rendre.
+
+## DEBT-065 l'inscription ne vérifie pas que l'adresse e-mail appartient à l'inscrit
+
+- state: humain
+- bloque: décision produit, une confirmation d'adresse à l'inscription (courriel de confirmation, compte limité tant qu'il n'est pas confirmé)
+- impact: n'importe qui peut ouvrir un compte à mot de passe sur l'adresse d'un tiers. Le vrai titulaire ne peut alors ni s'inscrire ni se connecter par Google ou GitHub (`account_exists`) tant qu'il n'a pas repris le compte par « mot de passe oublié », et le badge Ko-fi, attribué par adresse, peut aller au squatteur. Pas de prise de compte : la connexion OAuth ne fusionne jamais un compte à mot de passe, et la réinitialisation coupe sessions, identités liées et abonnements push de l'occupant.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Auth/RegisterUserHandler.cs`, `Application/UseCases/Auth/OAuth/OAuthLoginHandler.cs` (`PasswordAccountRequiresManualLink`), `Application/UseCases/Donations/ProcessKofiWebhookHandler.cs`
+- verify: `grep -c "EmailVerified" apps/api-dotnet/MoviePicker.Api/Domain/Entities/User.cs` ; encore ouvert tant que la commande rend `0`
+- fix: un `EmailVerifiedAt` sur `User` et un courriel de confirmation (même mécanique de jeton que la réinitialisation) ; côté OAuth, un e-mail vérifié par le fournisseur qui tombe sur un compte non confirmé vaut preuve de possession : purger mot de passe, identités, sessions et abonnements push de l'occupant au lieu de refuser ; ne pas attribuer le badge Ko-fi à une adresse non confirmée
+- fini-quand: un compte non confirmé ne peut plus bloquer l'adresse d'un tiers
 
 ---
 

@@ -55,6 +55,41 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     };
 
     [Fact]
+    public async Task EventLookup_ResolvesTheSlug_ButNeverTheEventId()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var created = await events.AddAsync(NewEvent("Lookup"));
+
+        Assert.Equal(created.Id, (await events.GetByIdOrSlugAsync(created.Slug))?.Id);
+        Assert.Null(await events.GetByIdOrSlugAsync(created.Id));
+    }
+
+    [Fact]
+    public async Task PushSubscriptionUpsert_ForAnotherUser_MovesTheEndpointToThatUser()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var subscriptions = scope.ServiceProvider.GetRequiredService<IPushSubscriptionRepository>();
+        var previousOwner = ObjectId.GenerateNewId().ToString();
+        var newOwner = ObjectId.GenerateNewId().ToString();
+        var endpoint = "https://fcm.googleapis.com/fcm/send/" + Guid.NewGuid().ToString("N");
+        PushSubscription Subscription(string userId) => new()
+        {
+            UserId = userId,
+            Endpoint = endpoint,
+            P256dh = "key",
+            Auth = "auth",
+            CreatedAt = Now
+        };
+
+        await subscriptions.UpsertAsync(Subscription(previousOwner));
+        await subscriptions.UpsertAsync(Subscription(newOwner));
+
+        Assert.Empty(await subscriptions.ListByUserIdAsync(previousOwner));
+        Assert.Equal(endpoint, (await subscriptions.ListByUserIdAsync(newOwner)).Single().Endpoint);
+    }
+
+    [Fact]
     public async Task EventUpdate_WithTheVersionJustRead_SucceedsAndIncrementsVersion()
     {
         using var scope = _factory.Services.CreateScope();
@@ -64,7 +99,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var updated = await events.UpdateAsync(created with { Title = "Version 1" });
 
         Assert.Equal(created.Version + 1, updated.Version);
-        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.Equal("Version 1", reloaded!.Title);
         Assert.Equal(updated.Version, reloaded.Version);
     }
@@ -75,15 +110,15 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var created = await events.AddAsync(NewEvent("Original"));
-        var hostA = await events.GetByIdOrSlugAsync(created.Id);
-        var hostB = await events.GetByIdOrSlugAsync(created.Id);
+        var hostA = await events.GetByIdOrSlugAsync(created.Slug);
+        var hostB = await events.GetByIdOrSlugAsync(created.Slug);
 
         await events.UpdateAsync(hostA! with { Title = "Écrit par A" });
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
             events.UpdateAsync(hostB! with { Title = "Écrit par B" }));
 
         Assert.Equal("concurrent_update", ex.Reason);
-        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.Equal("Écrit par A", reloaded!.Title);
     }
 
@@ -93,13 +128,13 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var created = await events.AddAsync(NewEvent("Nettoyage"));
-        var stale = await events.GetByIdOrSlugAsync(created.Id);
+        var stale = await events.GetByIdOrSlugAsync(created.Slug);
 
         Assert.True(await events.MarkWatchlistCleanedAsync(created.Id, Now.AddHours(1)));
 
         await Assert.ThrowsAsync<ConflictException>(() =>
             events.UpdateAsync(stale! with { Title = "Écrasement" }));
-        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.NotNull(reloaded!.WatchlistCleanedAt);
         Assert.Equal("Nettoyage", reloaded.Title);
     }
@@ -114,7 +149,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         await events.MarkChangedAsync(created.Id);
         await events.MarkChangedAsync(created.Id);
 
-        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.Equal(created.WriteSeq + 2, reloaded!.WriteSeq);
         Assert.Equal(created.Version, reloaded.Version);
     }
@@ -134,12 +169,12 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var created = await events.AddAsync(NewEvent("Seq"));
-        var read = await events.GetByIdOrSlugAsync(created.Id);
+        var read = await events.GetByIdOrSlugAsync(created.Slug);
 
         await events.MarkChangedAsync(created.Id);
         await events.UpdateAsync(read! with { Title = "Seq 2" });
 
-        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.Equal("Seq 2", reloaded!.Title);
         Assert.Equal(read.WriteSeq + 2, reloaded.WriteSeq);
     }
@@ -152,9 +187,9 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var created = await events.AddAsync(NewEvent("Targeted") with { CreatorUserId = ObjectId.GenerateNewId().ToString() });
 
         Assert.True(await events.MarkWatchlistCleanedAsync(created.Id, Now.AddHours(1)));
-        var afterCleanup = await events.GetByIdOrSlugAsync(created.Id);
+        var afterCleanup = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.Equal(1, await events.AnonymizeCreatorAsync(created.CreatorUserId!));
-        var afterAnonymize = await events.GetByIdOrSlugAsync(created.Id);
+        var afterAnonymize = await events.GetByIdOrSlugAsync(created.Slug);
 
         Assert.Equal(created.WriteSeq + 1, afterCleanup!.WriteSeq);
         Assert.Equal(created.WriteSeq + 2, afterAnonymize!.WriteSeq);

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
-import { apiUrl, fetchApi } from '@/shared/api/client';
+import { apiPath, apiUrl, fetchApi } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/apiError';
 import { loadLocale } from '@/shared/i18n/locales';
 import { fr } from '@/shared/i18n/locales/fr';
@@ -10,6 +10,30 @@ describe('apiUrl', () => {
     expect(apiUrl('/events')).toMatch(/^https?:\/\/.+\/api\/v1\/events$/);
     expect(apiUrl('events')).toMatch(/\/api\/v1\/events$/);
     expect(apiUrl('/health')).toMatch(/\/health$/);
+  });
+});
+
+describe('apiPath', () => {
+  it('joins the segments into an absolute path', () => {
+    expect(apiPath('events', 'Ab3dE_9xYz', 'movies', 42)).toBe('/events/Ab3dE_9xYz/movies/42');
+  });
+
+  it('encodes every character that would move the path, query or fragment boundary', () => {
+    expect(apiPath('events', 'a?b', 'wheel')).toBe('/events/a%3Fb/wheel');
+    expect(apiPath('events', 'a#b')).toBe('/events/a%23b');
+    expect(apiPath('events', '../users/me')).toBe('/events/..%2Fusers%2Fme');
+    expect(apiPath('events', 'a\r\nb')).toBe('/events/a%0D%0Ab');
+    expect(apiPath('events', '100%')).toBe('/events/100%25');
+  });
+
+  it('refuses a segment the URL parser would drop or collapse into its parent', () => {
+    expect(() => apiPath('events', '..', 'movies')).toThrow(new Error('Invalid API path segment'));
+    expect(() => apiPath('events', '.')).toThrow(new Error('Invalid API path segment'));
+    expect(() => apiPath('events', '', 'movies')).toThrow(new Error('Invalid API path segment'));
+  });
+
+  it('keeps a segment that only contains dots among other characters', () => {
+    expect(apiPath('events', '...', 'a.b', '.x', 0)).toBe('/events/.../a.b/.x/0');
   });
 });
 

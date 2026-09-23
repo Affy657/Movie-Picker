@@ -426,6 +426,10 @@ export const fr = {
         accountExists:
           'Un compte Movie Picker existe déjà avec cette adresse e-mail. Connectez-vous avec votre mot de passe, puis liez ce fournisseur depuis la page Paramètres.',
         identityTaken: 'Ce compte est d\u00e9j\u00e0 li\u00e9 \u00e0 un autre profil Movie Picker.',
+        providerAlreadyLinked:
+          'Un compte de ce fournisseur est d\u00e9j\u00e0 li\u00e9 \u00e0 votre profil. D\u00e9liez-le d\u2019abord pour en lier un autre.',
+        reauthenticationRequired:
+          'Pour lier un compte, d\u00e9connectez-vous puis reconnectez-vous d\u2019abord : cette \u00e9tape prot\u00e8ge votre profil si quelqu\u2019un d\u2019autre utilise votre session.',
         generic: 'Connexion impossible. R\u00e9essayez.',
       },
     },
@@ -1507,6 +1511,8 @@ export const fr = {
     wrong_password: 'Mot de passe incorrect.',
     current_password_incorrect: 'Mot de passe actuel incorrect.',
     confirmation_incorrect: 'Confirmation incorrecte.',
+    reauthentication_required:
+      'Par sécurité, déconnectez-vous puis reconnectez-vous avant de réessayer.',
     invalid_participant: 'Participant invalide pour cette soirée',
     participant_required: 'Participant requis.',
     participant_id_required: 'Le paramètre participantId est requis.',
@@ -1549,6 +1555,8 @@ export const fr = {
     attachment_content_invalid: 'Contenu invalide (base64 malformé) pour « {{name}} ».',
     attachment_content_mismatch:
       'Le contenu de « {{name}} » ne correspond pas au format déclaré ({{type}}).',
+    attachment_image_unreadable:
+      'Impossible de lire l’image « {{name}} ». Essayez une autre capture.',
     invite_only_followed: 'Vous ne pouvez inviter que des utilisateurs que vous suivez.',
     no_movie_proposed: 'Aucun film proposé. Proposez au moins un film pour lancer la roue.',
     all_movies_excluded:
@@ -1734,6 +1742,9 @@ export const fr = {
     privacyDonationsTitle: 'Dons via Ko-fi',
     privacyDonationsBody:
       'Les paiements sont traités intégralement par Ko-fi, qui agit comme responsable de traitement pour les données de paiement : Movie Picker n’y a jamais accès. À chaque don, Ko-fi notifie notre serveur et transmet l’adresse e-mail du donateur. Cette adresse est utilisée uniquement, en mémoire, pour retrouver le compte Movie Picker correspondant et y afficher le badge de soutien ; elle n’est jamais enregistrée. Aucun montant, nom de donateur ni message n’est conservé : seule la date du premier don est stockée sur le compte concerné, ainsi qu’un identifiant technique de notification qui évite de traiter deux fois le même don.',
+    privacyIdeasTitle: 'Suggestions d’idées',
+    privacyIdeasBody:
+      'Une suggestion envoyée depuis le bouton « Proposer une idée » devient un ticket public du dépôt GitHub du projet, lisible par tous : son titre, sa description, ses captures d’écran (sans leurs métadonnées), le type de page d’où elle part et la version de l’application. Votre nom, votre handle et votre e-mail n’y figurent pas, seulement un identifiant technique qui permet de vous recontacter. La suppression de votre compte n’efface pas ce ticket : écrivez à l’adresse de contact pour le faire retirer.',
     privacyRetentionTitle: 'Durée de conservation',
     privacyRetentionBody:
       'Vos données sont conservées tant que votre compte existe. La suppression de compte, disponible depuis la page Paramètres, efface définitivement votre profil ; les soirées créées et vos votes sont conservés mais anonymisés.',
@@ -1814,6 +1825,8 @@ export const fr = {
     attachmentsTooLarge: 'Image trop lourde (4 Mo maximum) : {{name}}',
     attachmentsUnsupportedType:
       'Format non supporté (PNG, JPEG, WebP ou GIF uniquement) : {{name}}',
+    publicNotice:
+      'Votre suggestion et vos captures seront publiées dans un ticket public sur GitHub, sans votre nom. N’y mettez rien de personnel.',
     submit: 'Envoyer',
     submitting: 'Envoi…',
     submitError: 'Impossible d’envoyer votre suggestion pour le moment. Réessayez.',
@@ -1843,6 +1856,7 @@ export const fr = {
       sheetTitle: 'Abonnements',
       isMeBadge: 'Vous',
       empty: 'Aucun utilisateur ici.',
+      privateHidden: 'Les profils privés n’apparaissent pas dans cette liste.',
       followAriaLabel: 'Suivre @{{handle}}',
       unfollowAriaLabel: 'Ne plus suivre @{{handle}}',
       error: 'Action impossible, réessayez.',

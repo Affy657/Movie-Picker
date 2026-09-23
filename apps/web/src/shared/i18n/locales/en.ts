@@ -427,6 +427,10 @@ export const en: Locale = {
         accountExists:
           'A Movie Picker account already exists with this email. Log in with your password, then link this provider from the Settings page.',
         identityTaken: 'This account is already linked to another Movie Picker profile.',
+        providerAlreadyLinked:
+          'An account from this provider is already linked to your profile. Unlink it first to link another one.',
+        reauthenticationRequired:
+          'To link an account, log out and log in again first: this step protects your profile if someone else is using your session.',
         generic: 'Sign-in failed. Please try again.',
       },
     },
@@ -1483,6 +1487,7 @@ export const en: Locale = {
     wrong_password: 'Wrong password.',
     current_password_incorrect: 'Current password is incorrect.',
     confirmation_incorrect: 'Confirmation is incorrect.',
+    reauthentication_required: 'For your security, log out and log in again, then try again.',
     invalid_participant: 'Invalid participant for this movie night',
     participant_required: 'Participant required.',
     participant_id_required: 'The participantId parameter is required.',
@@ -1524,6 +1529,7 @@ export const en: Locale = {
     attachment_content_invalid: 'Invalid content (malformed base64) for “{{name}}”.',
     attachment_content_mismatch:
       'The content of “{{name}}” does not match the declared format ({{type}}).',
+    attachment_image_unreadable: 'The image “{{name}}” could not be read. Try another screenshot.',
     invite_only_followed: 'You can only invite users you follow.',
     no_movie_proposed: 'No movie proposed. Propose at least one movie to spin the wheel.',
     all_movies_excluded:
@@ -1703,6 +1709,9 @@ export const en: Locale = {
     privacyDonationsTitle: 'Donations through Ko-fi',
     privacyDonationsBody:
       'Payments are handled entirely by Ko-fi, which acts as the data controller for payment data: Movie Picker never has access to it. For each donation, Ko-fi notifies our server and passes on the donor’s email address. That address is used in memory only, to find the matching Movie Picker account and show the supporter badge on it; it is never stored. No amount, donor name or message is kept: only the date of the first donation is stored on the account concerned, along with a technical notification identifier that prevents the same donation from being processed twice.',
+    privacyIdeasTitle: 'Idea suggestions',
+    privacyIdeasBody:
+      'A suggestion sent from the “Suggest an idea” button becomes a public issue of the project’s GitHub repository, readable by anyone: its title, description, screenshots (without their metadata), the kind of page it was sent from and the app version. Your name, handle and email are not included, only a technical identifier that lets us reach you. Deleting your account does not remove that issue: write to the contact address to have it taken down.',
     privacyRetentionTitle: 'Data retention',
     privacyRetentionBody:
       'Your data is kept for as long as your account exists. Deleting your account, available from the Settings page, permanently erases your profile; events you created and your votes are kept but anonymised.',
@@ -1782,6 +1791,8 @@ export const en: Locale = {
     attachmentsTooMany: 'You can only attach up to {{max}} images.',
     attachmentsTooLarge: 'Image too large (4 MB max): {{name}}',
     attachmentsUnsupportedType: 'Unsupported format (PNG, JPEG, WebP or GIF only): {{name}}',
+    publicNotice:
+      'Your suggestion and screenshots will be published in a public GitHub issue, without your name. Do not include anything personal.',
     submit: 'Send',
     submitting: 'Sending…',
     submitError: 'Could not send your suggestion right now. Please try again.',
@@ -1811,6 +1822,7 @@ export const en: Locale = {
       sheetTitle: 'Follow list',
       isMeBadge: 'You',
       empty: 'Nobody here yet.',
+      privateHidden: 'Private profiles are not shown in this list.',
       followAriaLabel: 'Follow @{{handle}}',
       unfollowAriaLabel: 'Unfollow @{{handle}}',
       error: 'Action failed, please try again.',

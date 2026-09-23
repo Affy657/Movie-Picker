@@ -4,11 +4,13 @@ import { fetchApi } from '@/shared/api/client';
 import {
   addMovieToEvent,
   clearMovieVote,
+  deleteMoviePitchNote,
   fetchEventMovies,
   fetchMovieDetails,
   markMovieAsSeen,
   removeMovieFromEvent,
   searchMovies,
+  setMoviePitchNote,
   setMovieWheelExclusion,
   unmarkMovieAsSeen,
   voteMovie,
@@ -233,4 +235,77 @@ describe('movie mutations', () => {
       body: JSON.stringify({ participantId: 'p1' }),
     });
   });
+});
+
+describe('movie API paths', () => {
+  const craftedSlug = 'Ab3dE_9xYz?x#y';
+  const encodedSlug = 'Ab3dE_9xYz%3Fx%23y';
+
+  function requestedPath(): string {
+    const [path] = mockFetchApi.mock.calls[0] ?? [];
+    return String(path);
+  }
+
+  it.each([
+    ['fetchEventMovies', () => fetchEventMovies(craftedSlug), `/events/${encodedSlug}/movies`],
+    [
+      'addMovieToEvent',
+      () =>
+        addMovieToEvent(craftedSlug, {
+          tmdbId: 1,
+          title: 'T',
+          year: '2000',
+          posterPath: null,
+          participantId: 'p1',
+        }),
+      `/events/${encodedSlug}/movies`,
+    ],
+    [
+      'voteMovie',
+      () => voteMovie(craftedSlug, 'm/1', 'p1', 1),
+      `/events/${encodedSlug}/movies/m%2F1/vote`,
+    ],
+    [
+      'clearMovieVote',
+      () => clearMovieVote(craftedSlug, 'm/1', 'p1'),
+      `/events/${encodedSlug}/movies/m%2F1/vote?participantId=p1`,
+    ],
+    [
+      'removeMovieFromEvent',
+      () => removeMovieFromEvent(craftedSlug, 'm/1', 'p1'),
+      `/events/${encodedSlug}/movies/m%2F1`,
+    ],
+    [
+      'setMovieWheelExclusion',
+      () => setMovieWheelExclusion(craftedSlug, 'm/1', true),
+      `/events/${encodedSlug}/movies/m%2F1/wheel-exclusion`,
+    ],
+    [
+      'setMoviePitchNote',
+      () => setMoviePitchNote(craftedSlug, 'm/1', 'p1', 'note'),
+      `/events/${encodedSlug}/movies/m%2F1/note`,
+    ],
+    [
+      'deleteMoviePitchNote',
+      () => deleteMoviePitchNote(craftedSlug, 'm/1', 'p1'),
+      `/events/${encodedSlug}/movies/m%2F1/note`,
+    ],
+    [
+      'markMovieAsSeen',
+      () => markMovieAsSeen(craftedSlug, 'm/1', 'p1'),
+      `/events/${encodedSlug}/movies/m%2F1/seen`,
+    ],
+    [
+      'unmarkMovieAsSeen',
+      () => unmarkMovieAsSeen(craftedSlug, 'm/1', 'p1'),
+      `/events/${encodedSlug}/movies/m%2F1/seen`,
+    ],
+  ])(
+    '%s keeps crafted identifiers inside their own path segments',
+    async (_name, call, expected) => {
+      await call();
+
+      expect(requestedPath()).toBe(expected);
+    }
+  );
 });

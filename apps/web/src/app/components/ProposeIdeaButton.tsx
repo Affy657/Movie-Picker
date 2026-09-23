@@ -26,6 +26,7 @@ import Field from '@/shared/components/Field';
 
 const TITLE_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
+const PAGE_PATH_MAX_LENGTH = 300;
 const MAX_ATTACHMENTS = 4;
 const MAX_ATTACHMENT_SIZE_BYTES = 4 * 1024 * 1024;
 const ACCEPTED_ATTACHMENT_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
@@ -175,7 +176,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
         category,
         title: title.trim(),
         description: description.trim(),
-        pagePath: location.pathname,
+        pagePath: location.pathname.slice(0, PAGE_PATH_MAX_LENGTH),
         appVersion: APP_VERSION,
         attachments: attachmentPayload.length > 0 ? attachmentPayload : undefined,
       });
@@ -312,6 +313,8 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
                 </p>
               ) : null}
             </fieldset>
+
+            <p className="hint">{t('proposeIdea.publicNotice')}</p>
 
             {error ? (
               <p className="error" role="alert">

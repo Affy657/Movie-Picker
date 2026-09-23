@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import AuthPageShell, { authPageShellStyles } from '@/features/auth/components/AuthPageShell';
 import PageLayout from '@/shared/components/PageLayout';
@@ -11,15 +11,39 @@ import { postPasswordResetConfirm } from '@/features/auth/api/authApi';
 import { API_ERROR_REASONS, ApiError } from '@/shared/api/apiError';
 import Button, { buttonClass } from '@/shared/components/Button';
 import Field from '@/shared/components/Field';
+import {
+  safeSessionStorageGet,
+  safeSessionStorageRemove,
+  safeSessionStorageSet,
+} from '@/shared/utils/safeStorage';
 
 const PASSWORD_MIN_LENGTH = 8;
+
+const RESET_TOKEN_STORAGE_KEY = 'mp.passwordResetToken';
+
+function tokenFromUrl(params: URLSearchParams): string {
+  return (params.get('token') ?? '').trim();
+}
+
+function initialResetToken(params: URLSearchParams): string {
+  return tokenFromUrl(params) || (safeSessionStorageGet(RESET_TOKEN_STORAGE_KEY) ?? '').trim();
+}
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation();
   useNoindexPage(pageTitle(t('auth.resetPassword.title')), ROUTES.resetPassword);
 
-  const [params] = useSearchParams();
-  const token = (params.get('token') ?? '').trim();
+  const [params, setParams] = useSearchParams();
+  const [token] = useState(() => initialResetToken(params));
+
+  useEffect(() => {
+    if (!params.has('token')) return;
+    const fromUrl = tokenFromUrl(params);
+    if (fromUrl) safeSessionStorageSet(RESET_TOKEN_STORAGE_KEY, fromUrl);
+    const withoutToken = new URLSearchParams(params);
+    withoutToken.delete('token');
+    setParams(withoutToken, { replace: true });
+  }, [params, setParams]);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -35,9 +59,11 @@ export default function ResetPasswordPage() {
     }
     try {
       await postPasswordResetConfirm(token, newPassword);
+      safeSessionStorageRemove(RESET_TOKEN_STORAGE_KEY);
       setSuccess(true);
     } catch (e) {
       if (ApiError.is(e) && e.reason === API_ERROR_REASONS.invalidResetToken) {
+        safeSessionStorageRemove(RESET_TOKEN_STORAGE_KEY);
         setTokenInvalid(true);
         return;
       }

@@ -37,8 +37,96 @@ public sealed class ChangePasswordHandlerTests
         IUserRepository users,
         IPasswordHasher hasher,
         IAuthSessionInvalidator sessions,
-        TimeProvider clock) =>
-        new(users, hasher, sessions, clock, NullLogger<ChangePasswordHandler>.Instance);
+        TimeProvider clock,
+        IPushSubscriptionRepository? pushSubscriptions = null) =>
+        new(
+            users,
+            hasher,
+            sessions,
+            pushSubscriptions ?? new Mock<IPushSubscriptionRepository>().Object,
+            clock,
+            NullLogger<ChangePasswordHandler>.Instance);
+
+    private static ChangePasswordRequest Change(string? currentPassword, string newPassword) =>
+        new() { CurrentPassword = currentPassword, NewPassword = newPassword };
+
+    [Fact]
+    public async Task HandleAsync_Success_RevokesThePushSubscriptionsWithTheSessions()
+    {
+        var user = SampleUser();
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) => u);
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Verify("old-hash", "abcd1234")).Returns(PasswordVerification.Success);
+        hasher.Setup(x => x.Hash("wxyz5678")).Returns("new-hash");
+        var pushSubscriptions = new Mock<IPushSubscriptionRepository>();
+
+        var handler = CreateHandler(
+            users.Object,
+            hasher.Object,
+            new Mock<IAuthSessionInvalidator>().Object,
+            new FakeTimeProvider(TestEpoch),
+            pushSubscriptions.Object);
+
+        await handler.HandleAsync(user.Id, Change("abcd1234", "wxyz5678"), recentlyAuthenticated: false);
+
+        pushSubscriptions.Verify(x => x.DeleteByUserIdAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PushRevocationFails_TheNewPasswordStillHolds()
+    {
+        var user = SampleUser();
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) => u);
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Verify("old-hash", "abcd1234")).Returns(PasswordVerification.Success);
+        hasher.Setup(x => x.Hash("wxyz5678")).Returns("new-hash");
+        var sessions = new Mock<IAuthSessionInvalidator>();
+        var pushSubscriptions = new Mock<IPushSubscriptionRepository>();
+        pushSubscriptions.Setup(x => x.DeleteByUserIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("store unavailable"));
+
+        var handler = CreateHandler(
+            users.Object,
+            hasher.Object,
+            sessions.Object,
+            new FakeTimeProvider(TestEpoch),
+            pushSubscriptions.Object);
+
+        await handler.HandleAsync(user.Id, Change("abcd1234", "wxyz5678"), recentlyAuthenticated: false);
+
+        users.Verify(x => x.UpdateAsync(It.Is<User>(u => u.PasswordHash == "new-hash"), It.IsAny<CancellationToken>()), Times.Once);
+        sessions.Verify(x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WrongCurrentPassword_KeepsThePushSubscriptions()
+    {
+        var user = SampleUser();
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Verify("old-hash", "wrong")).Returns(PasswordVerification.Failed);
+        var pushSubscriptions = new Mock<IPushSubscriptionRepository>();
+
+        var handler = CreateHandler(
+            users.Object,
+            hasher.Object,
+            new Mock<IAuthSessionInvalidator>().Object,
+            new FakeTimeProvider(TestEpoch),
+            pushSubscriptions.Object);
+
+        var ex = await Assert.ThrowsAsync<UnauthorizedException>(
+            () => handler.HandleAsync(user.Id, Change("wrong", "wxyz5678"), recentlyAuthenticated: true));
+
+        Assert.Equal(ErrorCodes.CurrentPasswordIncorrect, ex.Reason);
+        pushSubscriptions.Verify(x => x.DeleteByUserIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 
     [Fact]
     public async Task HandleAsync_UserNotFound_ThrowsNotFound()
@@ -51,12 +139,8 @@ public sealed class ChangePasswordHandlerTests
 
         var handler = CreateHandler(users.Object, hasher.Object, sessions.Object, new FakeTimeProvider(TestEpoch));
 
-        await Assert.ThrowsAsync<NotFoundException>(() =>
-            handler.HandleAsync("missing", new ChangePasswordRequest
-            {
-                CurrentPassword = "abcd1234",
-                NewPassword = "wxyz5678"
-            }));
+        await Assert.ThrowsAsync<NotFoundException>(
+            () => handler.HandleAsync("missing", Change("abcd1234", "wxyz5678"), recentlyAuthenticated: true));
 
         sessions.Verify(x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -76,12 +160,8 @@ public sealed class ChangePasswordHandlerTests
 
         var handler = CreateHandler(users.Object, hasher.Object, sessions.Object, new FakeTimeProvider(TestEpoch));
 
-        var ex = await Assert.ThrowsAsync<UnauthorizedException>(() =>
-            handler.HandleAsync(user.Id, new ChangePasswordRequest
-            {
-                CurrentPassword = "wrong",
-                NewPassword = "wxyz5678"
-            }));
+        var ex = await Assert.ThrowsAsync<UnauthorizedException>(
+            () => handler.HandleAsync(user.Id, Change("wrong", "wxyz5678"), recentlyAuthenticated: false));
 
         Assert.Equal(ErrorCodes.CurrentPasswordIncorrect, ex.Reason);
         users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -103,12 +183,8 @@ public sealed class ChangePasswordHandlerTests
 
         var handler = CreateHandler(users.Object, hasher.Object, sessions.Object, new FakeTimeProvider(TestEpoch));
 
-        var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
-            handler.HandleAsync(user.Id, new ChangePasswordRequest
-            {
-                CurrentPassword = "abcd1234",
-                NewPassword = "abc1"
-            }));
+        var ex = await Assert.ThrowsAsync<BadRequestException>(
+            () => handler.HandleAsync(user.Id, Change("abcd1234", "abc1"), recentlyAuthenticated: false));
 
         Assert.Equal(ErrorCodes.PasswordTooShort, ex.Reason);
         users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -130,12 +206,8 @@ public sealed class ChangePasswordHandlerTests
 
         var handler = CreateHandler(users.Object, hasher.Object, sessions.Object, new FakeTimeProvider(TestEpoch));
 
-        await Assert.ThrowsAsync<BadRequestException>(() =>
-            handler.HandleAsync(user.Id, new ChangePasswordRequest
-            {
-                CurrentPassword = "abcd1234",
-                NewPassword = "abcdefgh"
-            }));
+        await Assert.ThrowsAsync<BadRequestException>(
+            () => handler.HandleAsync(user.Id, Change("abcd1234", "abcdefgh"), recentlyAuthenticated: false));
 
         users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -163,11 +235,7 @@ public sealed class ChangePasswordHandlerTests
 
         var handler = CreateHandler(users.Object, hasher.Object, sessions.Object, new FakeTimeProvider(TestEpoch));
 
-        await handler.HandleAsync(user.Id, new ChangePasswordRequest
-        {
-            CurrentPassword = "abcd1234",
-            NewPassword = "wxyz5678"
-        });
+        await handler.HandleAsync(user.Id, Change("abcd1234", "wxyz5678"), recentlyAuthenticated: false);
 
         Assert.NotNull(captured);
         Assert.Equal("new-hash", captured!.PasswordHash);
@@ -195,17 +263,31 @@ public sealed class ChangePasswordHandlerTests
 
         var handler = CreateHandler(users.Object, hasher.Object, sessions.Object, new FakeTimeProvider(TestEpoch));
 
-        await handler.HandleAsync(user.Id, new ChangePasswordRequest
-        {
-            CurrentPassword = null,
-            NewPassword = "wxyz5678"
-        });
+        await handler.HandleAsync(user.Id, Change(null, "wxyz5678"), recentlyAuthenticated: true);
 
         hasher.Verify(
             x => x.Verify(It.IsAny<string>(), It.IsAny<string>()),
             Times.Never);
         Assert.Equal("new-hash", captured!.PasswordHash);
         sessions.Verify(x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoExistingPasswordOnAStaleSession_RequiresAFreshSignIn()
+    {
+        var user = SampleUser() with { PasswordHash = string.Empty };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var sessions = new Mock<IAuthSessionInvalidator>();
+
+        var handler = CreateHandler(users.Object, new Mock<IPasswordHasher>().Object, sessions.Object, new FakeTimeProvider(TestEpoch));
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(
+            () => handler.HandleAsync(user.Id, Change(null, "wxyz5678"), recentlyAuthenticated: false));
+
+        Assert.Equal(ErrorCodes.ReauthenticationRequired, ex.Reason);
+        users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+        sessions.Verify(x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -228,11 +310,7 @@ public sealed class ChangePasswordHandlerTests
 
         var handler = CreateHandler(users.Object, hasher.Object, sessions.Object, new FakeTimeProvider(TestEpoch));
 
-        await handler.HandleAsync(user.Id, new ChangePasswordRequest
-        {
-            CurrentPassword = "abcd1234",
-            NewPassword = "wxyz5678"
-        });
+        await handler.HandleAsync(user.Id, Change("abcd1234", "wxyz5678"), recentlyAuthenticated: false);
 
         users.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
         sessions.Verify(x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once);

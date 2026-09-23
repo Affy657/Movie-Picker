@@ -1,4 +1,4 @@
-import { fetchApi } from '@/shared/api/client';
+import { apiPath, fetchApi } from '@/shared/api/client';
 import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
 
 export interface WatchlistItem {
@@ -68,5 +68,5 @@ export async function removeFromWatchlist(
   mediaType: MovieMediaType = 'movie'
 ): Promise<void> {
   const params = new URLSearchParams({ mediaType });
-  await fetchApi(`/watchlist/${tmdbId}?${params.toString()}`, { method: 'DELETE' });
+  await fetchApi(`${apiPath('watchlist', tmdbId)}?${params.toString()}`, { method: 'DELETE' });
 }

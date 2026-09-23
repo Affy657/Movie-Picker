@@ -18,21 +18,12 @@ public sealed class MongoEventRepository : IEventRepository
         _collection = collections.GetCollection<EventDocument>("events");
     }
 
-    public async Task<Event?> GetByIdOrSlugAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<Event?> GetByIdOrSlugAsync(string slug, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(idOrSlug))
+        if (string.IsNullOrWhiteSpace(slug))
             return null;
 
-        var filters = new List<FilterDefinition<EventDocument>>
-        {
-            Builders<EventDocument>.Filter.Eq(x => x.Slug, idOrSlug)
-        };
-
-        if (ObjectId.TryParse(idOrSlug, out _))
-            filters.Add(Builders<EventDocument>.Filter.Eq(x => x.Id, idOrSlug));
-
-        var filter = Builders<EventDocument>.Filter.Or(filters);
-        var doc = await _collection.Find(filter).FirstOrDefaultAsync(ct);
+        var doc = await _collection.Find(Builders<EventDocument>.Filter.Eq(x => x.Slug, slug)).FirstOrDefaultAsync(ct);
 
         return doc is null ? null : EventDocumentMapper.ToDomain(doc);
     }

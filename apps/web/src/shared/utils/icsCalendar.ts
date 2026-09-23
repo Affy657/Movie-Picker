@@ -60,12 +60,26 @@ function slugForUid(value: string): string {
   return slug || 'soiree';
 }
 
+const LINE_BREAKS = /\r\n|[\r\n\u{85}\u{2028}\u{2029}]/gu;
+
+function isControlOrLineSeparator(code: number): boolean {
+  return code <= 0x1f || (code >= 0x7f && code <= 0x9f) || code === 0x2028 || code === 0x2029;
+}
+
+function withoutControlCharacters(value: string): string {
+  return Array.from(value)
+    .filter((char) => !isControlOrLineSeparator(char.codePointAt(0) ?? 0))
+    .join('');
+}
+
 function escapeIcsText(value: string): string {
-  return value
-    .replaceAll('\\', String.raw`\\`)
-    .replaceAll(';', String.raw`\;`)
-    .replaceAll(',', String.raw`\,`)
-    .replaceAll(/\r?\n/g, String.raw`\n`);
+  return withoutControlCharacters(
+    value
+      .replaceAll('\\', String.raw`\\`)
+      .replaceAll(';', String.raw`\;`)
+      .replaceAll(',', String.raw`\,`)
+      .replaceAll(LINE_BREAKS, String.raw`\n`)
+  );
 }
 
 function foldIcsLine(line: string): string {
@@ -97,7 +111,10 @@ export function buildIcsContent(event: CalendarEvent, now: Date = new Date()): s
   ];
   if (event.description) lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`);
   if (event.url) {
-    lines.push(`URL:${event.url}`, `LOCATION:${escapeIcsText(event.url)}`);
+    lines.push(
+      `URL:${withoutControlCharacters(event.url)}`,
+      `LOCATION:${escapeIcsText(event.url)}`
+    );
   }
   lines.push('END:VEVENT', 'END:VCALENDAR');
 

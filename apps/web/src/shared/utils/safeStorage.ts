@@ -13,3 +13,27 @@ export function safeLocalStorageSet(key: string, value: string): void {
     return;
   }
 }
+
+export function safeSessionStorageGet(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+export function safeSessionStorageSet(key: string, value: string): void {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch {
+    return;
+  }
+}
+
+export function safeSessionStorageRemove(key: string): void {
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    return;
+  }
+}

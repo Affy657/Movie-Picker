@@ -1,18 +1,87 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
+using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Controllers;
+using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Controllers;
 
 public sealed class AuthControllerTests
 {
+    private const string WebBase = "https://www.example.test";
+
+    private static readonly DateTimeOffset Now = new(2026, 9, 23, 20, 0, 0, TimeSpan.Zero);
+
+    private static readonly TimeProvider Clock = new FixedClock(Now);
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
+
     private static AuthController Controller(string? userId) =>
         new AuthController().WithContext(
             userId is null ? null : ControllerTestHelpers.AuthenticatedUser(userId));
+
+    private static AuthController SessionController(DateTimeOffset signedInAt, IAuthenticationService? authentication = null) =>
+        new AuthController().WithContext(
+            ControllerTestHelpers.AuthenticatedUser("u1", "Tester", RecentAuthentication.ClaimFor(signedInAt)),
+            authentication);
+
+    private static OAuthProviderCatalog GoogleEnabled() =>
+        new(new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["OAUTH_GOOGLE_CLIENT_ID"] = "client-id",
+                ["OAUTH_GOOGLE_CLIENT_SECRET"] = "client-secret"
+            })
+            .Build());
+
+    private static IOptions<MoviePickerOptions> Options() =>
+        Microsoft.Extensions.Options.Options.Create(new MoviePickerOptions { PublicWebBaseUrl = WebBase });
+
+    private static Mock<IAuthenticationService> ExternalSignIn()
+    {
+        var authentication = new Mock<IAuthenticationService>();
+        var external = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.NameIdentifier, "google-subject")],
+            AuthConstants.ExternalCookieScheme));
+        authentication
+            .Setup(a => a.AuthenticateAsync(It.IsAny<HttpContext>(), AuthConstants.ExternalCookieScheme))
+            .ReturnsAsync(AuthenticateResult.Success(
+                new AuthenticationTicket(external, AuthConstants.ExternalCookieScheme)));
+        return authentication;
+    }
+
+    private static Mock<IOAuthLinkHandler> LinkHandler(OAuthOutcomeKind outcome)
+    {
+        var handler = new Mock<IOAuthLinkHandler>();
+        handler
+            .Setup(h => h.HandleAsync("u1", It.IsAny<ExternalLoginInfo>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OAuthOutcome { Kind = outcome });
+        return handler;
+    }
+
+    private static Task<IActionResult> Callback(AuthController controller, IOAuthLinkHandler linkHandler) =>
+        controller.OAuthCallback(
+            "google",
+            new Mock<IOAuthLoginHandler>().Object,
+            linkHandler,
+            GoogleEnabled(),
+            Options(),
+            Clock,
+            CancellationToken.None);
 
     [Fact]
     public async Task Register_SignsInAndReturnsCreatedAtMe()
@@ -21,7 +90,7 @@ public sealed class AuthControllerTests
         handler.Setup(h => h.HandleAsync(It.IsAny<RegisterRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new RegisterResponse { UserId = "u1", DisplayName = "Neo" });
 
-        var result = await Controller(null).Register(null!, handler.Object, CancellationToken.None);
+        var result = await Controller(null).Register(null!, handler.Object, Clock, CancellationToken.None);
 
         var created = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(nameof(AuthController.Me), created.ActionName);
@@ -34,9 +103,34 @@ public sealed class AuthControllerTests
         handler.Setup(h => h.HandleAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LoginResponse { UserId = "u1", DisplayName = "Neo" });
 
-        var result = await Controller(null).Login(null!, handler.Object, CancellationToken.None);
+        var result = await Controller(null).Login(null!, handler.Object, Clock, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Login_CarriesTheSignInTimeInTheSessionClaims()
+    {
+        var handler = new Mock<ILoginUserHandler>();
+        handler.Setup(h => h.HandleAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LoginResponse { UserId = "u1", DisplayName = "Neo" });
+        var authentication = new Mock<IAuthenticationService>();
+        ClaimsPrincipal? signedIn = null;
+        authentication
+            .Setup(a => a.SignInAsync(
+                It.IsAny<HttpContext>(),
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                It.IsAny<ClaimsPrincipal>(),
+                It.IsAny<AuthenticationProperties?>()))
+            .Callback<HttpContext, string?, ClaimsPrincipal, AuthenticationProperties?>((_, _, principal, _) => signedIn = principal)
+            .Returns(Task.CompletedTask);
+        var controller = new AuthController().WithContext(authentication: authentication.Object);
+
+        await controller.Login(null!, handler.Object, Clock, CancellationToken.None);
+
+        Assert.NotNull(signedIn);
+        Assert.True(RecentAuthentication.IsRecent(signedIn, Now + RecentAuthentication.Window));
+        Assert.False(RecentAuthentication.IsRecent(signedIn, Now + RecentAuthentication.Window + TimeSpan.FromSeconds(1)));
     }
 
     [Fact]
@@ -45,6 +139,72 @@ public sealed class AuthControllerTests
         var result = await Controller("u1").Logout();
 
         Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public void OAuthStart_Anonymous_ChallengesTheProvider()
+    {
+        var result = Controller(null).OAuthStart("google", "/settings/integrations", GoogleEnabled(), Options(), Clock);
+
+        var challenge = Assert.IsType<ChallengeResult>(result);
+        Assert.Equal(["google"], challenge.AuthenticationSchemes);
+    }
+
+    [Fact]
+    public void OAuthStart_RecentSession_ChallengesTheProvider()
+    {
+        var result = SessionController(Now.AddMinutes(-2))
+            .OAuthStart("google", "/settings/integrations", GoogleEnabled(), Options(), Clock);
+
+        Assert.IsType<ChallengeResult>(result);
+    }
+
+    [Fact]
+    public void OAuthStart_StaleSession_SendsBackToTheIntegrationsPage()
+    {
+        var result = SessionController(Now - RecentAuthentication.Window - TimeSpan.FromMinutes(1))
+            .OAuthStart("google", "/settings/integrations", GoogleEnabled(), Options(), Clock);
+
+        var redirect = Assert.IsType<RedirectResult>(result);
+        Assert.Equal($"{WebBase}/settings/integrations?oauthError=reauthentication_required", redirect.Url);
+    }
+
+    [Fact]
+    public void OAuthStart_SessionWithoutSignInTime_SendsBackToTheIntegrationsPage()
+    {
+        var result = Controller("u1").OAuthStart("google", "/settings/integrations", GoogleEnabled(), Options(), Clock);
+
+        var redirect = Assert.IsType<RedirectResult>(result);
+        Assert.Equal($"{WebBase}/settings/integrations?oauthError=reauthentication_required", redirect.Url);
+    }
+
+    [Fact]
+    public async Task OAuthCallback_StaleSession_RefusesTheLink()
+    {
+        var linkHandler = LinkHandler(OAuthOutcomeKind.Linked);
+        var controller = SessionController(Now - RecentAuthentication.Window - TimeSpan.FromMinutes(1), ExternalSignIn().Object);
+
+        var result = await Callback(controller, linkHandler.Object);
+
+        var redirect = Assert.IsType<RedirectResult>(result);
+        Assert.Equal($"{WebBase}/settings/integrations?oauthError=reauthentication_required", redirect.Url);
+        linkHandler.Verify(
+            h => h.HandleAsync(It.IsAny<string>(), It.IsAny<ExternalLoginInfo>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Theory]
+    [InlineData(OAuthOutcomeKind.Linked, "oauthLinked=google")]
+    [InlineData(OAuthOutcomeKind.ProviderAlreadyLinked, "oauthError=provider_already_linked")]
+    [InlineData(OAuthOutcomeKind.IdentityLinkedToOtherAccount, "oauthError=identity_taken")]
+    public async Task OAuthCallback_RecentSession_ReportsTheLinkOutcomeOnTheIntegrationsPage(OAuthOutcomeKind outcome, string expectedQuery)
+    {
+        var controller = SessionController(Now.AddMinutes(-2), ExternalSignIn().Object);
+
+        var result = await Callback(controller, LinkHandler(outcome).Object);
+
+        var redirect = Assert.IsType<RedirectResult>(result);
+        Assert.Equal($"{WebBase}/settings/integrations?{expectedQuery}", redirect.Url);
     }
 
     [Fact]
@@ -98,7 +258,7 @@ public sealed class AuthControllerTests
     [Fact]
     public async Task ChangePassword_NullBody_ReturnsBadRequest()
     {
-        var result = await Controller("u1").ChangePassword(null, new Mock<IChangePasswordHandler>().Object, CancellationToken.None);
+        var result = await Controller("u1").ChangePassword(null, new Mock<IChangePasswordHandler>().Object, Clock, CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -108,11 +268,25 @@ public sealed class AuthControllerTests
     {
         var handler = new Mock<IChangePasswordHandler>();
 
-        var result = await Controller("u1").ChangePassword(new ChangePasswordRequest(), handler.Object, CancellationToken.None);
+        var result = await Controller("u1").ChangePassword(new ChangePasswordRequest(), handler.Object, Clock, CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(
-            h => h.HandleAsync("u1", It.IsAny<ChangePasswordRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+            h => h.HandleAsync("u1", It.IsAny<ChangePasswordRequest>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(2, true)]
+    [InlineData(11, false)]
+    public async Task ChangePassword_TellsTheHandlerWhetherTheSignInIsRecent(int minutesSinceSignIn, bool expectedRecent)
+    {
+        var handler = new Mock<IChangePasswordHandler>();
+
+        await SessionController(Now.AddMinutes(-minutesSinceSignIn))
+            .ChangePassword(new ChangePasswordRequest(), handler.Object, Clock, CancellationToken.None);
+
+        handler.Verify(
+            h => h.HandleAsync("u1", It.IsAny<ChangePasswordRequest>(), expectedRecent, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
