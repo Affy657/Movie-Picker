@@ -42,6 +42,7 @@ type EventDetailSessionProps = {
   actionError: string | null;
   setActionError: Dispatch<SetStateAction<string | null>>;
   refreshAll: () => void;
+  connectionUnstable?: boolean;
 };
 
 const COUNTDOWN_TICK_MS = 60_000;
@@ -68,6 +69,7 @@ export default function EventDetailSession({
   actionError,
   setActionError,
   refreshAll,
+  connectionUnstable = false,
 }: Readonly<EventDetailSessionProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -196,7 +198,8 @@ export default function EventDetailSession({
 
   const participantCount = event.participantCount ?? event.participants?.length ?? 0;
   let moviesCount = event.movieCount ?? 0;
-  if (moviesQuery.isSuccess) moviesCount = movies.length;
+  const moviesLoaded = moviesQuery.data !== undefined;
+  if (moviesLoaded) moviesCount = movies.length;
   const votersCount = event.votersCount ?? 0;
   const lifecycle = normalizeMyEventLifecycle(event.lifecycle);
   const countdown = eventCountdown(event.date, event.time, nowMs);
@@ -204,7 +207,7 @@ export default function EventDetailSession({
     ? t(COUNTDOWN_KEYS[countdown.unit], countdownParams(countdown))
     : null;
   const canConfigure = !!event.isHost && !event.isFinished;
-  const emptyStateCarriesAddMovie = moviesQuery.isSuccess && movies.length === 0;
+  const emptyStateCarriesAddMovie = moviesLoaded && movies.length === 0;
   const canAddMovie = !event.isFinished && !!participant && !emptyStateCarriesAddMovie;
   const isFull =
     typeof maxParticipants === 'number' &&
@@ -251,6 +254,8 @@ export default function EventDetailSession({
         onRequestCloseWithoutMovie={requestCloseWithoutMovie}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
+        connectionUnstable={connectionUnstable}
+        onRetryConnection={refreshAll}
       />
       <EventDetailSessionBody
         slug={slug}

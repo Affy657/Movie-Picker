@@ -758,6 +758,9 @@ export const fr = {
       participantsToggleOne: '1 participant',
       participantsToggle: '{{count}} participants',
       themeAria: 'Thème de soirée : {{theme}}',
+      unstableKicker: 'Connexion instable',
+      unstableText: 'Les dernières modifications de la soirée n’ont pas pu être chargées.',
+      unstableMeta: 'La page se remet à jour d’elle-même dès que le serveur répond.',
     },
     myEvents: {
       title: 'Mes soirées',
@@ -1530,6 +1533,8 @@ export const fr = {
       'Le pseudo Letterboxd ne peut contenir que des lettres, chiffres et underscores.',
     letterboxd_username_missing: 'Aucun pseudo Letterboxd enregistré sur votre compte.',
     letterboxd_sync_failed: 'Synchronisation impossible.',
+    letterboxd_sync_unavailable:
+      'Letterboxd ou TMDB ne répond pas pour le moment. Réessayez dans quelques minutes.',
     letterboxd_watchlist_incomplete:
       "Watchlist Letterboxd inaccessible. Vérifiez l'orthographe du pseudo et que votre profil Letterboxd est public.",
     invalid_date_format: 'date doit être au format YYYY-MM-DD.',
@@ -2584,9 +2589,9 @@ export const fr = {
       loadingHint:
         "Le premier écran n'emporte pas le reste de l'application, et les paquets de dépendances restent en cache du navigateur d'une version à la suivante.",
       offline: 'Hors ligne',
-      offlineValue: 'Installable, coquille et affiches en cache, consultable sans réseau.',
+      offlineValue: 'Installable, coquille et vitrine en cache ; une soirée demande le réseau.',
       offlineHint:
-        "Le service worker sert la coquille de l'app et les affiches déjà vues quand le réseau manque.",
+        "Le service worker garde la coquille de l'app et la vitrine du catalogue pour démarrer vite ; sans réseau, une soirée affiche une erreur au lieu d'un chargement sans fin.",
       languages: 'Langues',
       languagesValue: 'Français et anglais, bascule sans rechargement.',
       languagesHint:

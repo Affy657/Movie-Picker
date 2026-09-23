@@ -149,23 +149,49 @@ function rethrowFetchError(e: unknown): never {
   throw new ApiError(isNetwork ? networkErrorMessage() : msg, { code: 0 });
 }
 
+function statusMessage(status: number): string {
+  if (status === 429) return userFacing('apiErrors.rate_limited');
+  if (status === 503) return userFacing('errors.api.unavailable');
+  if (status >= 500) return userFacing('errors.api.server');
+  return userFacing('errors.generic');
+}
+
+function readRetryAfterMs(res: Response): number | undefined {
+  const raw = res.headers.get('retry-after')?.trim();
+  if (!raw) return undefined;
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
+  const at = Date.parse(raw);
+  return Number.isNaN(at) ? undefined : Math.max(0, at - Date.now());
+}
+
+type ErrorBody = { error?: unknown; reason?: unknown; params?: unknown };
+
+function parseErrorBody(text: string, isJson: boolean): ErrorBody {
+  if (!isJson || !text.trim()) return {};
+  try {
+    const parsed: unknown = JSON.parse(text);
+    return parsed !== null && typeof parsed === 'object' ? (parsed as ErrorBody) : {};
+  } catch {
+    return {};
+  }
+}
+
 function handleErrorResponse(res: Response, text: string, isJson: boolean): never {
   if (looksLikeHtml(isJson, text)) {
     throw new ApiError(htmlResponseMessage(), { code: res.status });
   }
-  let parsed: { error?: string; reason?: string; params?: unknown } = { error: res.statusText };
-  if (isJson && text.trim()) {
-    try {
-      parsed = JSON.parse(text) as { error?: string; reason?: string; params?: unknown };
-    } catch {}
-  }
+  const parsed = parseErrorBody(text, isJson);
   const reason = typeof parsed.reason === 'string' ? parsed.reason : undefined;
   const translated = reason
     ? translateApiReason(reason, readApiErrorParams(parsed.params))
     : undefined;
-  throw new ApiError(translated ?? parsed.error ?? `HTTP ${res.status}`, {
+  const serverMessage =
+    typeof parsed.error === 'string' && parsed.error.trim() ? parsed.error : undefined;
+  throw new ApiError(translated ?? serverMessage ?? statusMessage(res.status), {
     code: res.status,
     reason,
+    retryAfterMs: readRetryAfterMs(res),
   });
 }
 
@@ -196,7 +222,7 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
     rethrowFetchError(e);
   }
   const contentType = res.headers.get('content-type') ?? '';
-  const isJson = contentType.includes('application/json');
+  const isJson = /application\/(?:[\w.-]+\+)?json/i.test(contentType);
   const text = await res.text();
 
   if (!res.ok) handleErrorResponse(res, text, isJson);

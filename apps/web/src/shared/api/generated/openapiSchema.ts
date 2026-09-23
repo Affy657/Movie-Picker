@@ -186,7 +186,13 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["LogoutRequest"];
+                    "text/json": components["schemas"]["LogoutRequest"];
+                    "application/*+json": components["schemas"]["LogoutRequest"];
+                };
+            };
             responses: {
                 /** @description No Content */
                 204: {
@@ -1002,6 +1008,17 @@ export interface paths {
                 };
                 /** @description Not Found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2296,6 +2313,17 @@ export interface paths {
                         "text/json": components["schemas"]["ProblemDetails"];
                     };
                 };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
                 /** @description Internal Server Error */
                 500: {
                     headers: {
@@ -2451,9 +2479,9 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["CsrfGuardRequest"];
-                    "text/json": components["schemas"]["CsrfGuardRequest"];
-                    "application/*+json": components["schemas"]["CsrfGuardRequest"];
+                    "application/json": components["schemas"]["LaunchWheelRequest"];
+                    "text/json": components["schemas"]["LaunchWheelRequest"];
+                    "application/*+json": components["schemas"]["LaunchWheelRequest"];
                 };
             };
             responses: {
@@ -4568,6 +4596,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/posters/tmdb/{size}/{file}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    size: string;
+                    file: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Modified */
+                304: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/jpeg": components["schemas"]["ProblemDetails"];
+                        "image/png": components["schemas"]["ProblemDetails"];
+                        "image/webp": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scheduler/event-reminders": {
         parameters: {
             query?: never;
@@ -4631,7 +4713,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["EventReminderPassResult"];
+                        "application/json": components["schemas"]["EventReminderPassResult"];
+                        "text/json": components["schemas"]["EventReminderPassResult"];
+                    };
                 };
             };
         };
@@ -4704,7 +4790,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["RecurringEventPassResult"];
+                        "application/json": components["schemas"]["RecurringEventPassResult"];
+                        "text/json": components["schemas"]["RecurringEventPassResult"];
+                    };
                 };
             };
         };
@@ -4777,7 +4867,88 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
+                    content: {
+                        "text/plain": components["schemas"]["FinishedEventWatchlistPassResult"];
+                        "application/json": components["schemas"]["FinishedEventWatchlistPassResult"];
+                        "text/json": components["schemas"]["FinishedEventWatchlistPassResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheduler/warm-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CatalogWarmPassResult"];
+                        "application/json": components["schemas"]["CatalogWarmPassResult"];
+                        "text/json": components["schemas"]["CatalogWarmPassResult"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
                     content?: never;
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CatalogWarmPassResult"];
+                        "application/json": components["schemas"]["CatalogWarmPassResult"];
+                        "text/json": components["schemas"]["CatalogWarmPassResult"];
+                    };
                 };
             };
         };
@@ -6218,6 +6389,12 @@ export interface components {
             runtimeMinutes?: number | null;
             letterboxdSlug?: string | null;
         };
+        CatalogWarmPassResult: {
+            /** Format: int32 */
+            refreshed?: number;
+            /** Format: int32 */
+            failed?: number;
+        };
         ChangePasswordRequest: {
             currentPassword?: string | null;
             newPassword: string;
@@ -6242,6 +6419,7 @@ export interface components {
             title: string;
             date: string;
             time: string;
+            clientRequestId?: string | null;
         };
         CreateEventResponse: {
             _id?: string | null;
@@ -6366,6 +6544,8 @@ export interface components {
             reminders24h?: number;
             /** Format: int32 */
             pendingEvents?: number;
+            /** Format: int32 */
+            deliveryFailures?: number;
         };
         EventTemplateListResponse: {
             items?: components["schemas"]["EventTemplateResponse"][] | null;
@@ -6480,6 +6660,8 @@ export interface components {
             candidates?: number;
             /** Format: int32 */
             cleaned?: number;
+            /** Format: int32 */
+            failed?: number;
         };
         FollowListResponse: {
             items?: components["schemas"]["FollowUserItem"][] | null;
@@ -6538,6 +6720,10 @@ export interface components {
             isNew?: boolean;
             message?: string | null;
         };
+        LaunchWheelRequest: {
+            /** Format: int32 */
+            expectedWinnerCount?: number | null;
+        };
         LetterboxdImportCandidateResponse: {
             /** Format: int32 */
             tmdbId?: number;
@@ -6593,6 +6779,9 @@ export interface components {
         LoginResponse: {
             userId?: string | null;
             displayName?: string | null;
+        };
+        LogoutRequest: {
+            pushEndpoint?: string | null;
         };
         MarkAsSeenRequest: {
             participantId: string;
@@ -6874,6 +7063,8 @@ export interface components {
             created?: number;
             /** Format: int32 */
             stopped?: number;
+            /** Format: int32 */
+            failed?: number;
         };
         RegisterRequest: {
             /** Format: email */

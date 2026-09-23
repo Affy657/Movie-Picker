@@ -12,6 +12,7 @@ import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 import EventDetailSession from '@/features/events/pages/event-detail/EventDetailSession';
 import { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { ApiError } from '@/shared/api/apiError';
 
 function getDocumentTitle(
   slug: string | undefined,
@@ -50,7 +51,10 @@ export default function EventDetail() {
 
   const isNetworkPaused = eventQuery.isPending && eventQuery.fetchStatus === 'paused';
   const isLoadingEvent = eventQuery.isPending && !isNetworkPaused;
-  const isEventUnavailable = eventQuery.isError || isNetworkPaused;
+  const isEventGone = ApiError.is(eventQuery.error) && eventQuery.error.code === 404;
+  const isEventUnavailable = (eventQuery.isError && (!event || isEventGone)) || isNetworkPaused;
+  const isShowingStaleData =
+    eventQuery.isError || (moviesQuery.isError && moviesQuery.data !== undefined);
 
   const documentTitle = getDocumentTitle(
     slug,
@@ -111,6 +115,7 @@ export default function EventDetail() {
       actionError={actionError}
       setActionError={setActionError}
       refreshAll={refreshAll}
+      connectionUnstable={isShowingStaleData}
     />
   );
 }

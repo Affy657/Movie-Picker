@@ -449,6 +449,18 @@ describe('LetterboxdImportSection (MSW)', () => {
     ).toBe(true);
   });
 
+  it.each([
+    ['letterboxd_sync_unavailable', 'ne répond pas pour le moment'],
+    ['letterboxd_sync_failed', 'Synchronisation impossible.'],
+  ])('translates the stored code %s of a failed synchronisation', async (code, expected) => {
+    server.use(meHandler({ letterboxdUsername: 'affy657', letterboxdLastSyncError: code }));
+
+    renderAccount();
+
+    const alerts = await screen.findAllByRole('alert');
+    expect(alerts.some((el) => el.textContent?.includes(expected))).toBe(true);
+  });
+
   it('shows a stored sync error verbatim when it is not a known code', async () => {
     server.use(
       meHandler({

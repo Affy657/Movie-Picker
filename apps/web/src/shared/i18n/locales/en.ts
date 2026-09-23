@@ -748,6 +748,9 @@ export const en: Locale = {
       participantsToggleOne: '1 participant',
       participantsToggle: '{{count}} participants',
       themeAria: 'Event theme: {{theme}}',
+      unstableKicker: 'Unstable connection',
+      unstableText: 'The latest changes to this movie night could not be loaded.',
+      unstableMeta: 'The page updates itself as soon as the server answers.',
     },
     myEvents: {
       title: 'My events',
@@ -1505,6 +1508,8 @@ export const en: Locale = {
       'Letterboxd username can only contain letters, digits and underscores.',
     letterboxd_username_missing: 'No Letterboxd username saved on your account.',
     letterboxd_sync_failed: 'Synchronization failed.',
+    letterboxd_sync_unavailable:
+      'Letterboxd or TMDB is not answering right now. Try again in a few minutes.',
     letterboxd_watchlist_incomplete:
       'Letterboxd watchlist unreachable. Check the spelling of the username and that your Letterboxd profile is public.',
     invalid_date_format: 'date must use the YYYY-MM-DD format.',
@@ -2542,9 +2547,9 @@ export const en: Locale = {
       loadingHint:
         'The first screen does not carry the rest of the application, and the dependency bundles stay in the browser cache from one version to the next.',
       offline: 'Offline',
-      offlineValue: 'Installable, shell and posters cached, browsable without a network.',
+      offlineValue: 'Installable, shell and showcase cached; a movie night needs the network.',
       offlineHint:
-        'The service worker serves the app shell and already-seen posters when the network is missing.',
+        'The service worker keeps the app shell and the catalogue showcase for a fast start; offline, a movie night shows an error instead of loading forever.',
       languages: 'Languages',
       languagesValue: 'French and English, switched without reloading.',
       languagesHint:

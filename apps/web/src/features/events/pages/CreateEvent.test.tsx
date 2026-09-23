@@ -65,6 +65,12 @@ function mockTemplates(items: unknown[]) {
   });
 }
 
+function createCallBodies(): Record<string, unknown>[] {
+  return mockFetchApi.mock.calls
+    .filter(([path]) => path === '/events')
+    .map(([, init]) => JSON.parse((init as { body: string }).body) as Record<string, unknown>);
+}
+
 function configCallBody(): Record<string, unknown> {
   const configCall = mockFetchApi.mock.calls.find(
     ([path]) => typeof path === 'string' && path.startsWith('/events/abc/config')
@@ -111,12 +117,74 @@ describe('CreateEvent', () => {
     await waitFor(() => {
       expect(mockFetchApi).toHaveBeenCalledWith(
         '/events',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ title: 'Ma soirée', date: '2030-12-31', time: '20:00' }),
-        })
+        expect.objectContaining({ method: 'POST' })
       );
     });
+    expect(createCallBodies()[0]).toEqual({
+      title: 'Ma soirée',
+      date: '2030-12-31',
+      time: '20:00',
+      clientRequestId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+    });
+  });
+
+  it('retries a failed creation under the same request id, so the server never creates it twice', async () => {
+    const user = userEvent.setup();
+    let attempts = 0;
+    mockFetchApi.mockImplementation((path: unknown) => {
+      if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
+      if (path === '/events') {
+        attempts += 1;
+        return attempts === 1
+          ? Promise.reject(new Error('Connexion perdue'))
+          : Promise.resolve({ slug: 'abc', shareUrl: 'x' });
+      }
+      return Promise.resolve({});
+    });
+    RenderCreateEvent();
+    await user.type(screen.getByLabelText(/titre/i), 'Ma soirée');
+    fireEvent.change(screen.getByLabelText(/date/i), { target: { value: '2030-12-31' } });
+    fireEvent.change(screen.getByLabelText(/heure/i), { target: { value: '20:00' } });
+
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/connexion perdue/i));
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    await waitFor(() => expect(createCallBodies()).toHaveLength(2));
+    const [first, second] = createCallBodies();
+    expect(first?.clientRequestId).toEqual(expect.any(String));
+    expect(second?.clientRequestId).toBe(first?.clientRequestId);
+  });
+
+  it('retries under a new request id once the title changed, so the edit is not answered with the first night', async () => {
+    const user = userEvent.setup();
+    let attempts = 0;
+    mockFetchApi.mockImplementation((path: unknown) => {
+      if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
+      if (path === '/events') {
+        attempts += 1;
+        return attempts === 1
+          ? Promise.reject(new Error('Connexion perdue'))
+          : Promise.resolve({ slug: 'abc', shareUrl: 'x' });
+      }
+      return Promise.resolve({});
+    });
+    RenderCreateEvent();
+    const titleInput = screen.getByLabelText(/titre/i);
+    await user.type(titleInput, 'Ma soirée');
+    fireEvent.change(screen.getByLabelText(/date/i), { target: { value: '2030-12-31' } });
+    fireEvent.change(screen.getByLabelText(/heure/i), { target: { value: '20:00' } });
+
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/connexion perdue/i));
+    await user.type(titleInput, ' bis');
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    await waitFor(() => expect(createCallBodies()).toHaveLength(2));
+    const [first, second] = createCallBodies();
+    expect(second?.title).toBe(`${String(first?.title)} bis`);
+    expect(second?.clientRequestId).toEqual(expect.stringMatching(/^[0-9a-f-]{36}$/));
+    expect(second?.clientRequestId).not.toBe(first?.clientRequestId);
   });
 
   it('sends the chosen number of winning movies at creation', async () => {

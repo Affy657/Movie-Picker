@@ -69,6 +69,66 @@ describe('useEventWheel : annonce du gagnant', () => {
     expect(postEventWheelAnnounce).not.toHaveBeenCalled();
   });
 
+  it('tells the server how many winners it has seen, so a replayed launch draws nobody new', async () => {
+    const { result } = renderHook(
+      () =>
+        useEventWheel({
+          slug: 'soiree',
+          event: { ...hostEvent, winners: [{ movieId: 'mov0' }] } as EventData,
+          movies: [winner],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper }
+    );
+
+    act(() => result.current.launch());
+
+    await waitFor(() => expect(postEventWheel).toHaveBeenCalledWith('soiree', 'ht1', 1));
+  });
+
+  it('counts its own draw before the next poll, so a relaunch asks for a new film', async () => {
+    const second = { id: 'mov2', title: 'Alien', tmdbId: 2 } as MovieData;
+    const { result } = renderHook(
+      () =>
+        useEventWheel({
+          slug: 'soiree',
+          event: { ...hostEvent, winners: [], config: { winnerCount: 3 } } as unknown as EventData,
+          movies: [winner, second],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper }
+    );
+
+    act(() => result.current.launch());
+    await waitFor(() => expect(result.current.spinWinner?.id).toBe('mov1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    act(() => result.current.launch());
+
+    await waitFor(() => expect(postEventWheel).toHaveBeenLastCalledWith('soiree', 'ht1', 1));
+  });
+
+  it('shows a replayed draw as it is instead of spinning onto another film', async () => {
+    const { result } = renderHook(
+      () =>
+        useEventWheel({
+          slug: 'soiree',
+          event: { ...hostEvent, winners: [], config: { winnerCount: 3 } } as unknown as EventData,
+          movies: [{ id: 'mov2', title: 'Alien', tmdbId: 2 } as MovieData],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper }
+    );
+
+    act(() => result.current.launch());
+
+    await waitFor(() => expect(result.current.spinWinner?.id).toBe('mov1'));
+    expect(result.current.spinPool.map((m) => m.id)).toEqual(['mov1']);
+    expect(result.current.winnerIndex).toBe(0);
+  });
+
   it('announces the winner when the wheel stops', async () => {
     const { result } = renderWheel();
 

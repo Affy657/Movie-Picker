@@ -4,6 +4,7 @@ import { ApiError } from '@/shared/api/apiError';
 import type { AccentColor, RatingScale, UiThemePreference } from '@/shared/types/theme';
 import type { UserProfile } from '@/features/auth/types';
 import { clearSessionHint, hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
+import { currentDevicePushSubscription } from '@/shared/pwa/devicePushSubscription';
 
 export async function fetchAuthMeForSession(): Promise<UserProfile | null> {
   if (!hasSessionHint()) return null;
@@ -51,9 +52,14 @@ export async function postAuthRegister(
 }
 
 export async function postAuthLogout(): Promise<void> {
+  const pushSubscription = await currentDevicePushSubscription();
   try {
-    await fetchApi('/auth/logout', { method: 'POST' });
+    await fetchApi('/auth/logout', {
+      method: 'POST',
+      body: JSON.stringify({ pushEndpoint: pushSubscription?.endpoint }),
+    });
   } finally {
+    await pushSubscription?.unsubscribe().catch(() => false);
     clearSessionHint();
   }
 }

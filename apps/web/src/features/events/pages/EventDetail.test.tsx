@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import EventDetail from '@/features/events/pages/EventDetail';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
 import { onlineManager, QueryClient } from '@tanstack/react-query';
 import {
@@ -181,6 +181,68 @@ describe('EventDetail (MSW)', () => {
     renderEventDetail(`/e/inconnu`);
     expect(await screen.findByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
     expect(document.title).toBe(pageTitle('Soirée introuvable'));
+  });
+
+  it('keeps the movie night and its movies on screen when a refresh fails, and says so', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+        HttpResponse.json([
+          {
+            _id: 'm-stale-1',
+            eventId: 'evt-msw',
+            participantId: 'p-msw-host',
+            tmdbId: 42,
+            mediaType: 'movie',
+            title: 'Matrix',
+            year: '1999',
+            posterPath: null,
+            proposerPseudo: 'Hôte',
+            score: 2,
+            up: 2,
+            down: 0,
+          },
+        ])
+      )
+    );
+    const client = createTestQueryClient();
+    renderEventDetail(`/e/${slug}`, client);
+    expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
+        HttpResponse.json({ error: 'down' }, { status: 503 })
+      ),
+      http.get(`${TEST_API_V1}/events/:s/movies`, () =>
+        HttpResponse.json({ error: 'down' }, { status: 503 })
+      )
+    );
+    await client.refetchQueries();
+
+    expect(await screen.findByText(/connexion instable/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+    expect(screen.queryByText(/impossible de charger la liste des films/i)).not.toBeInTheDocument();
+
+    server.resetHandlers();
+    await user.click(screen.getByRole('button', { name: /réessayer/i }));
+
+    await waitFor(() => expect(screen.queryByText(/connexion instable/i)).not.toBeInTheDocument());
+  });
+
+  it('shows the missing movie night when it is deleted while being viewed', async () => {
+    const client = createTestQueryClient();
+    renderEventDetail(`/e/${slug}`, client);
+    expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
+        HttpResponse.json({ error: 'introuvable' }, { status: 404 })
+      )
+    );
+    await client.refetchQueries();
+
+    expect(await screen.findByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
   });
 
   it('shows the link and the QR code for a plain participant (without host token)', async () => {
