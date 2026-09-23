@@ -14,6 +14,13 @@ public sealed class InMemoryRateLimitCounterStore : IRateLimitCounterStore
         return Task.FromResult(counter.Increment());
     }
 
+    public Task DecrementAsync(string key, CancellationToken ct = default)
+    {
+        if (_counters.TryGetValue(key, out var counter))
+            counter.Decrement();
+        return Task.CompletedTask;
+    }
+
     private void PurgeExpired(DateTimeOffset now)
     {
         foreach (var entry in _counters)
@@ -31,6 +38,14 @@ public sealed class InMemoryRateLimitCounterStore : IRateLimitCounterStore
 
         public DateTimeOffset ExpiresAt { get; }
 
+        public long Value => Interlocked.Read(ref _value);
+
         public long Increment() => Interlocked.Increment(ref _value);
+
+        public void Decrement()
+        {
+            if (Interlocked.Decrement(ref _value) < 0)
+                Interlocked.Increment(ref _value);
+        }
     }
 }

@@ -1,3 +1,4 @@
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
@@ -171,5 +172,40 @@ public sealed class InMemoryParticipantRepositoryTests
         var still = await _repo.FindByEventAndPseudoAsync("evt1", "Anonyme");
         Assert.NotNull(still);
         Assert.Equal(2, await _repo.CountByEventIdAsync("evt1"));
+    }
+
+    [Fact]
+    public async Task AddAsync_PseudoAlreadyTakenInTheEvent_ThrowsASamePseudoConflict()
+    {
+        await _repo.AddAsync(Mk(eventId: "evt1", pseudo: "Alice", userId: "u1"));
+
+        var ex = await Assert.ThrowsAsync<ParticipantConflictException>(() =>
+            _repo.AddAsync(Mk(eventId: "evt1", pseudo: "Alice", userId: "u2")));
+
+        Assert.Equal(ParticipantCollision.SamePseudo, ex.Collision);
+        Assert.Null(await _repo.FindByEventAndUserIdAsync("evt1", "u2"));
+        Assert.Equal(1, await _repo.CountByEventIdAsync("evt1"));
+    }
+
+    [Fact]
+    public async Task AddAsync_AccountAlreadyInTheEvent_ThrowsASameAccountConflict()
+    {
+        await _repo.AddAsync(Mk(eventId: "evt1", pseudo: "Alice", userId: "u1"));
+
+        var ex = await Assert.ThrowsAsync<ParticipantConflictException>(() =>
+            _repo.AddAsync(Mk(eventId: "evt1", pseudo: "Alice bis", userId: "u1")));
+
+        Assert.Equal(ParticipantCollision.SameAccount, ex.Collision);
+        Assert.Null(await _repo.FindByEventAndPseudoAsync("evt1", "Alice bis"));
+    }
+
+    [Fact]
+    public async Task AddAsync_SamePseudoInAnotherEvent_IsAccepted()
+    {
+        await _repo.AddAsync(Mk(eventId: "evt1", pseudo: "Alice", userId: "u1"));
+
+        await _repo.AddAsync(Mk(eventId: "evt2", pseudo: "Alice", userId: "u2"));
+
+        Assert.Equal(1, await _repo.CountByEventIdAsync("evt2"));
     }
 }

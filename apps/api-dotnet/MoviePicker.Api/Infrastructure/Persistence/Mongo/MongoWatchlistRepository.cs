@@ -130,6 +130,22 @@ public sealed class MongoWatchlistRepository : IWatchlistRepository
         await _collection.UpdateOneAsync(x => x.Id == itemId, update, cancellationToken: ct);
     }
 
+    public async Task<IReadOnlyList<WatchlistItem>> ListWithLegacyPosterPathAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return [];
+
+        var filter = Builders<WatchlistItemDocument>.Filter.Regex(x => x.PosterPath, LegacyPosterPaths.Pattern);
+        var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
+        return docs.ConvertAll(ToDomain);
+    }
+
+    public async Task UpdatePosterPathAsync(string itemId, string? posterPath, CancellationToken ct = default)
+    {
+        var update = Builders<WatchlistItemDocument>.Update.Set(x => x.PosterPath, posterPath);
+        await _collection.UpdateOneAsync(x => x.Id == itemId, update, cancellationToken: ct);
+    }
+
     public async Task<IReadOnlyList<WatchlistItem>> ListMissingGenresAsync(int limit, CancellationToken ct = default)
     {
         if (limit <= 0)

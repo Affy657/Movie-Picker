@@ -33,13 +33,13 @@ public sealed class AddToWatchlistHandlerTests
             NullLogger<AddToWatchlistHandler>.Instance);
     }
 
-    private static AddWatchlistItemRequest Request(double? voteAverage = 8.3, int? runtimeMinutes = 136) => new()
+    private static AddWatchlistItemRequest Request(double? voteAverage = 8.3, int? runtimeMinutes = 136, string? posterPath = null) => new()
     {
         TmdbId = 42,
         MediaType = MovieMediaType.Movie,
         Title = "Matrix",
         Year = "1999",
-        PosterPath = null,
+        PosterPath = posterPath,
         VoteAverage = voteAverage,
         RuntimeMinutes = runtimeMinutes
     };
@@ -213,5 +213,32 @@ public sealed class AddToWatchlistHandlerTests
 
         Assert.Null(inserted!.RuntimeMinutes);
         Assert.Null(inserted.VoteAverage);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LegacyPosterKey_IsStoredAsTheStatelessRoute()
+    {
+        var legacyKey = new string('c', 64);
+        _posterImageStore.Setup(p => p.FindSourceUrlAsync(legacyKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://image.tmdb.org/t/p/w500/kept.jpg");
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.HandleAsync(UserId, Request(posterPath: "/api/v1/posters/" + legacyKey));
+
+        _watchlist.Verify(
+            w => w.AddAsync(It.Is<WatchlistItem>(i => i.PosterPath == "/api/v1/posters/tmdb/w500/kept.jpg"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LegacyPosterKeyAlreadyGone_IsNotStored()
+    {
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.HandleAsync(UserId, Request(posterPath: "/api/v1/posters/" + new string('d', 64)));
+
+        _watchlist.Verify(
+            w => w.AddAsync(It.Is<WatchlistItem>(i => i.PosterPath == null), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

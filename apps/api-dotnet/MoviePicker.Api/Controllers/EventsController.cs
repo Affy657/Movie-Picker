@@ -113,9 +113,11 @@ public sealed class EventsController : ControllerBase
     }
 
     [HttpGet("slug/{idOrSlug}")]
+    [EnableRateLimiting(RateLimitingExtensions.EventViewPollPolicy)]
     [ProducesResponseType(typeof(EventDetailResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> GetBySlug(
         string idOrSlug,
         [FromServices] IEventViewTagHandler viewTag,
@@ -168,11 +170,11 @@ public sealed class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
     public async Task<IActionResult> Wheel(
         string idOrSlug,
-        [FromBody] CsrfGuardRequest _,
+        [FromBody] LaunchWheelRequest request,
         [FromServices] ILaunchWheelHandler handler,
         CancellationToken ct)
     {
-        var result = await handler.HandleAsync(idOrSlug, ct);
+        var result = await handler.HandleAsync(idOrSlug, request.ExpectedWinnerCount, ct);
         return Ok(result);
     }
 

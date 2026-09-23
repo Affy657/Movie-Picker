@@ -57,11 +57,17 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
             CreatedAt = participant.CreatedAt,
             UpdatedAt = participant.UpdatedAt
         };
-        _byId[id] = created;
-        _eventPseudoToId[(created.EventId, created.Pseudo)] = id;
         var createdUserId = created.UserId;
-        if (!string.IsNullOrWhiteSpace(createdUserId))
-            _eventUserToId[(created.EventId, createdUserId)] = id;
+        if (!string.IsNullOrWhiteSpace(createdUserId) && !_eventUserToId.TryAdd((created.EventId, createdUserId), id))
+            throw new ParticipantConflictException(ParticipantCollision.SameAccount);
+        if (!_eventPseudoToId.TryAdd((created.EventId, created.Pseudo), id))
+        {
+            if (!string.IsNullOrWhiteSpace(createdUserId))
+                _eventUserToId.TryRemove((created.EventId, createdUserId), out _);
+            throw new ParticipantConflictException(ParticipantCollision.SamePseudo);
+        }
+
+        _byId[id] = created;
         return Task.FromResult(created);
     }
 

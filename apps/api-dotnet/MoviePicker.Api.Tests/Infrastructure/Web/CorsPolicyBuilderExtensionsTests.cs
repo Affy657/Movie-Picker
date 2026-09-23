@@ -41,6 +41,15 @@ public sealed class CorsPolicyBuilderExtensionsTests
     }
 
     [Fact]
+    public void Configure_Always_LetsBrowsersReusePreflightsAndReadRetryAfter()
+    {
+        var policy = BuildPolicy(Config("https://app.example"), new FakeHostEnvironment());
+
+        Assert.Equal(TimeSpan.FromHours(2), policy.PreflightMaxAge);
+        Assert.Contains("Retry-After", policy.ExposedHeaders);
+    }
+
+    [Fact]
     public void Configure_Production_WithOrigins_RestrictsToConfiguredList()
     {
         var policy = BuildPolicy(

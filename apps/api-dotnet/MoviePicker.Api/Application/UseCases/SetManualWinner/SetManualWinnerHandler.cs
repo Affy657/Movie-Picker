@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
@@ -82,9 +81,6 @@ public sealed class SetManualWinnerHandler : ISetManualWinnerHandler
 
         await _winnerAnnouncer.AnnounceAsync(evt, winner.Title, WinnerPickMethod.Manual, CancellationToken.None);
 
-        if (winner.PosterPath is not null &&
-            TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(winner.PosterPath, out var normalizedPoster))
-            await _posterImageStore.RegisterTmdbSourceAsync(normalizedPoster, ct);
         var winnerPoster = _posterImageStore.ToPublicPosterPath(winner.PosterPath);
 
         return new WheelResponse

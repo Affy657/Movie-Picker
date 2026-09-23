@@ -1,7 +1,9 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
 
@@ -74,9 +76,15 @@ public sealed class InMemoryMovieRepository : IMovieRepository
     {
         var id = string.IsNullOrEmpty(movie.Id) ? Guid.NewGuid().ToString("N")[..24] : movie.Id;
         var created = movie with { Id = id };
-        _byId[id] = created;
         var list = _byEventId.GetOrAdd(created.EventId, _ => []);
-        lock (list) { list.Add(created); }
+        lock (list)
+        {
+            if (list.Exists(m => m.TmdbId == created.TmdbId && m.MediaType == created.MediaType))
+                throw Errors.MovieAlreadyProposed();
+            list.Add(created);
+        }
+
+        _byId[id] = created;
         return Task.FromResult(created);
     }
 
@@ -175,6 +183,38 @@ public sealed class InMemoryMovieRepository : IMovieRepository
 
         var list = _byId.Values.Where(m => set.Contains(m.ParticipantId)).ToList();
         return Task.FromResult<IReadOnlyList<Movie>>(list);
+    }
+
+    public Task<IReadOnlyList<Movie>> ListWithLegacyPosterPathAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return Task.FromResult<IReadOnlyList<Movie>>(Array.Empty<Movie>());
+
+        var list = _byId.Values
+            .Where(m => TmdbPosterUrlNormalizer.TryParsePosterKey(m.PosterPath, out _))
+            .Take(limit)
+            .ToList();
+        return Task.FromResult<IReadOnlyList<Movie>>(list);
+    }
+
+    public Task UpdatePosterPathAsync(string movieId, string? posterPath, CancellationToken ct = default)
+    {
+        if (!_byId.TryGetValue(movieId, out var existing))
+            return Task.CompletedTask;
+
+        var updated = existing with { PosterPath = posterPath, UpdatedAt = DateTimeOffset.UtcNow };
+        _byId[movieId] = updated;
+
+        if (_byEventId.TryGetValue(existing.EventId, out var list))
+        {
+            lock (list)
+            {
+                var idx = list.FindIndex(m => m.Id == movieId);
+                if (idx >= 0) list[idx] = updated;
+            }
+        }
+
+        return Task.CompletedTask;
     }
 
     public Task<IReadOnlyList<Movie>> ListMissingGenresAsync(int limit, CancellationToken ct = default)

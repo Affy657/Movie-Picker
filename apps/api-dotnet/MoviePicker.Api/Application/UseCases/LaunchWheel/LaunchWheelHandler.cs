@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
@@ -40,7 +39,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         _clock = clock;
     }
 
-    public async Task<WheelResponse> HandleAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<WheelResponse> HandleAsync(string idOrSlug, int? expectedWinnerCount = null, CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
 
@@ -51,6 +50,10 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
 
         if (evt.IsFinished(_clock.GetUtcNow()))
             throw Errors.EventFinished();
+
+        if (expectedWinnerCount is { } expected && evt.Winners.Count > expected
+            && await ReplayLatestDrawAsync(evt, ct) is { } replayed)
+            return replayed;
 
         if (evt.RemainingWinnerSlots == 0)
             throw Errors.WinnersAllDrawn(evt.TargetWinnerCount);
@@ -100,14 +103,24 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
             ? "Only one movie in the draw: direct winner"
             : "Wheel spun";
 
-        if (winner.PosterPath is not null &&
-            TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(winner.PosterPath, out var wNorm))
-            await _posterImageStore.RegisterTmdbSourceAsync(wNorm, ct);
         var winnerPoster = _posterImageStore.ToPublicPosterPath(winner.PosterPath);
         return new WheelResponse
         {
             Winner = WinnerMovieResponse.FromDomain(winner, winnerPoster),
             Message = message
+        };
+    }
+
+    private async Task<WheelResponse?> ReplayLatestDrawAsync(Event evt, CancellationToken ct)
+    {
+        var latest = await _movieRepository.GetByIdAsync(evt.Winners[^1].MovieId, ct);
+        if (latest is null)
+            return null;
+
+        return new WheelResponse
+        {
+            Winner = WinnerMovieResponse.FromDomain(latest, _posterImageStore.ToPublicPosterPath(latest.PosterPath)),
+            Message = "Wheel already spun"
         };
     }
 }

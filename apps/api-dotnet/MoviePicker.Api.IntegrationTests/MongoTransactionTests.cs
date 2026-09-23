@@ -1,6 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging.Abstractions;
+using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -99,5 +104,32 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
 
         Assert.NotNull(await events.GetByIdOrSlugAsync(evt.Slug));
         Assert.Single(await participants.ListByEventIdAsync(createdEventId));
+    }
+
+    [MongoFact]
+    public async Task TransactionRetriedWithoutEnd_GivesUpWithinItsBudgetAsAConcurrentUpdate()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var services = scope.ServiceProvider;
+        var unitOfWork = new MongoUnitOfWork(
+            services.GetRequiredService<IMongoClient>(),
+            services.GetRequiredService<MongoSessionAccessor>(),
+            services.GetRequiredService<IHostEnvironment>(),
+            NullLogger<MongoUnitOfWork>.Instance,
+            TimeSpan.FromSeconds(2));
+        var attempts = 0;
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => unitOfWork.ExecuteAsync(_ =>
+        {
+            attempts++;
+            var transient = new MongoException("simulated write conflict");
+            transient.AddErrorLabel("TransientTransactionError");
+            throw transient;
+        }));
+
+        Assert.Equal(ErrorCodes.ConcurrentUpdate, ex.Reason);
+        Assert.True(attempts > 1);
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(20), $"gave up after {watch.Elapsed}");
     }
 }

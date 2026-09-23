@@ -51,6 +51,18 @@ public sealed class MongoIndexPlanTests
     }
 
     [Fact]
+    public void MoviesUniqueIndex_IsReplacedByCreatingTheNewOneBeforeDroppingTheOld()
+    {
+        var steps = MongoIndexInitializer.BuildPlan(Mock.Of<IMongoDatabase>()).Descriptions.ToList();
+
+        var created = steps.FindIndex(step => step.StartsWith("movies|movies_eventId_tmdbId_mediaType_unique|", StringComparison.Ordinal));
+        var dropped = steps.IndexOf("drop movies movies_eventId_tmdbId_unique");
+
+        Assert.InRange(created, 0, int.MaxValue);
+        Assert.True(dropped > created, "the old unique index must outlive the creation of its replacement");
+    }
+
+    [Fact]
     public void MarkerId_DependsOnThePartialFilterExpression()
     {
         var partial = NewPlan();

@@ -40,4 +40,23 @@ public sealed class MongoNotificationDedupRepository : INotificationDedupReposit
             return false;
         }
     }
+
+    public async Task ReleaseAsync(
+        string userId,
+        UserNotificationType type,
+        string eventId,
+        NotificationDedupChannel channel = NotificationDedupChannel.Push,
+        CancellationToken ct = default)
+    {
+        var filter = Builders<PushDedupMarkerDocument>.Filter;
+        var sameChannel = channel == NotificationDedupChannel.Push
+            ? filter.Or(filter.Eq(x => x.Channel, (int)channel), filter.Exists(x => x.Channel, false))
+            : filter.Eq(x => x.Channel, (int)channel);
+        await _collection.DeleteOneAsync(
+            filter.Eq(x => x.UserId, userId)
+                & filter.Eq(x => x.Type, (int)type)
+                & filter.Eq(x => x.EventId, eventId)
+                & sameChannel,
+            ct);
+    }
 }

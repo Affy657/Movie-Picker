@@ -6,5 +6,5 @@ public sealed record PushMessage(string Title, string Body, string? Tag = null, 
 
 public interface IPushNotificationSender
 {
-    Task SendAsync(PushSubscription subscription, PushMessage message, CancellationToken ct = default);
+    Task<bool> SendAsync(PushSubscription subscription, PushMessage message, CancellationToken ct = default);
 }

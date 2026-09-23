@@ -137,8 +137,9 @@ public sealed partial class TmdbMovieSearch
         var url = $"{ApiBase}/collection/{collectionId}?language=fr-FR";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
-        if (!res.IsSuccessStatusCode)
+        if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
             return null;
+        res.EnsureSuccessStatusCode();
 
         await using var stream = await res.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
         return await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);

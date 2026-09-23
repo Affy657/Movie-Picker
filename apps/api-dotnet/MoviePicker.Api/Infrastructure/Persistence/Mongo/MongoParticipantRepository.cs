@@ -8,6 +8,8 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoParticipantRepository : IParticipantRepository
 {
+    internal const string EventPseudoIndexName = "participants_eventId_pseudo_unique";
+
     private readonly TransactionalCollection<ParticipantDocument> _collection;
 
     public MongoParticipantRepository(MongoCollectionFactory collections)
@@ -66,18 +68,10 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         }
         catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
         {
-            var byPseudo = await FindByEventAndPseudoAsync(participant.EventId, participant.Pseudo, ct);
-            if (byPseudo is not null)
-                return byPseudo;
-
-            if (!string.IsNullOrWhiteSpace(participant.UserId))
-            {
-                var byUser = await FindByEventAndUserIdAsync(participant.EventId, participant.UserId, ct);
-                if (byUser is not null)
-                    return byUser;
-            }
-
-            throw;
+            throw new ParticipantConflictException(
+                ex.WriteError.Message.Contains(EventPseudoIndexName, StringComparison.Ordinal)
+                    ? ParticipantCollision.SamePseudo
+                    : ParticipantCollision.SameAccount);
         }
     }
 
@@ -185,28 +179,17 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         long count = 0;
         foreach (var doc in docs)
         {
-            var now = DateTime.UtcNow;
-            try
-            {
-                await _collection.UpdateOneAsync(
-                    x => x.Id == doc.Id,
-                    Builders<ParticipantDocument>.Update
-                        .Unset(x => x.UserId)
-                        .Set(x => x.Pseudo, anonymizedPseudo)
-                        .Set(x => x.UpdatedAt, now),
-                    cancellationToken: ct);
-            }
-            catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
-            {
-                await _collection.UpdateOneAsync(
-                    x => x.Id == doc.Id,
-                    Builders<ParticipantDocument>.Update
-                        .Unset(x => x.UserId)
-                        .Set(x => x.Pseudo, $"{anonymizedPseudo} {doc.Id[^6..]}")
-                        .Set(x => x.UpdatedAt, now),
-                    cancellationToken: ct);
-            }
-
+            var pseudoTaken = await _collection.CountDocumentsAsync(
+                x => x.EventId == doc.EventId && x.Pseudo == anonymizedPseudo,
+                new CountOptions { Limit = 1 },
+                ct) > 0;
+            await _collection.UpdateOneAsync(
+                x => x.Id == doc.Id,
+                Builders<ParticipantDocument>.Update
+                    .Unset(x => x.UserId)
+                    .Set(x => x.Pseudo, pseudoTaken ? $"{anonymizedPseudo} {doc.Id[^6..]}" : anonymizedPseudo)
+                    .Set(x => x.UpdatedAt, DateTime.UtcNow),
+                cancellationToken: ct);
             count++;
         }
 

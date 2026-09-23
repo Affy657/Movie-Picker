@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -105,6 +106,26 @@ public sealed class InMemoryWatchlistRepository : IWatchlistRepository
         var entry = _store.FirstOrDefault(kv => kv.Value.Id == itemId);
         if (entry.Key is not null)
             _store.TryUpdate(entry.Key, entry.Value with { GenreIds = genreIds }, entry.Value);
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<WatchlistItem>> ListWithLegacyPosterPathAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return Task.FromResult<IReadOnlyList<WatchlistItem>>([]);
+
+        IReadOnlyList<WatchlistItem> result = _store.Values
+            .Where(x => TmdbPosterUrlNormalizer.TryParsePosterKey(x.PosterPath, out _))
+            .Take(limit)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task UpdatePosterPathAsync(string itemId, string? posterPath, CancellationToken ct = default)
+    {
+        var entry = _store.FirstOrDefault(kv => kv.Value.Id == itemId);
+        if (entry.Key is not null)
+            _store.TryUpdate(entry.Key, entry.Value with { PosterPath = posterPath }, entry.Value);
         return Task.CompletedTask;
     }
 

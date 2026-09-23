@@ -2,7 +2,6 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 
@@ -96,9 +95,6 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
         var wm = await _movies.GetByIdAsync(evt.Winners[0].MovieId, ct);
         if (wm is null || string.IsNullOrEmpty(wm.PosterPath))
             return fallback;
-
-        if (TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(wm.PosterPath, out var pNorm))
-            await _posterImageStore.RegisterTmdbSourceAsync(pNorm, ct);
 
         var posterOut = _posterImageStore.ToPublicPosterPath(wm.PosterPath);
         if (string.IsNullOrEmpty(posterOut) || !posterOut.StartsWith('/'))

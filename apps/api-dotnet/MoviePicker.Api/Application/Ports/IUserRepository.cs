@@ -4,10 +4,13 @@ namespace MoviePicker.Api.Application.Ports;
 
 public sealed record PublicProfileRef(string Handle, DateTimeOffset UpdatedAt);
 
+public sealed record UserCard(string Id, string AvatarId, string? Handle, bool IsProfilePublic);
+
 public interface IUserRepository
 {
     Task<User?> GetByIdAsync(string id, CancellationToken ct = default);
     Task<IReadOnlyList<User>> ListByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default);
+    Task<IReadOnlyList<UserCard>> ListCardsByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default);
     Task<User?> GetByEmailAsync(string email, CancellationToken ct = default);
     Task<User?> GetByHandleAsync(string handle, CancellationToken ct = default);
     Task<User?> GetByIdentityAsync(string provider, string subject, CancellationToken ct = default);

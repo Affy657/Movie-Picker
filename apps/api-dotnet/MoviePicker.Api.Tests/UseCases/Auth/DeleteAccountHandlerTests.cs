@@ -215,4 +215,53 @@ public sealed class DeleteAccountHandlerTests
             x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task HandleAsync_AnonymizesTheDeletedActorInOtherUsersNotifications()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        await f.Notifications.AddAsync(new UserNotification
+        {
+            UserId = "someone-else",
+            Type = UserNotificationType.NewFollower,
+            ActorHandle = user.Handle,
+            ActorDisplayName = user.DisplayName,
+            ActorAvatarId = "fox",
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        var kept = Assert.Single(await f.Notifications.ListByUserIdAsync("someone-else"));
+        Assert.Null(kept.ActorHandle);
+        Assert.Null(kept.ActorAvatarId);
+        Assert.Equal(DeleteAccountHandler.AnonymizedParticipantPseudo, kept.ActorDisplayName);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SecondDeletedAccountOfTheSameEvent_GetsADistinctAnonymousPseudo()
+    {
+        var f = new Fixture();
+        var first = await SeedUserAsync(f, "abcd1234");
+        var second = await f.Users.AddAsync(new User
+        {
+            Email = "trinity@example.com",
+            DisplayName = "Trinity",
+            Handle = "trinity",
+            PasswordHash = f.Hasher.Hash("abcd1234"),
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        });
+        var evt = await f.Events.AddAsync(new Event { Title = "Soirée", Slug = "soiree-partagee" });
+        await f.Participants.AddAsync(new Participant { EventId = evt.Id, Pseudo = "Neo", UserId = first.Id });
+        await f.Participants.AddAsync(new Participant { EventId = evt.Id, Pseudo = "Trinity", UserId = second.Id });
+
+        await f.CreateHandler().HandleAsync(first.Id, new DeleteAccountRequest { Password = "abcd1234" });
+        await f.CreateHandler().HandleAsync(second.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        var pseudos = (await f.Participants.ListByEventIdAsync(evt.Id)).Select(p => p.Pseudo).ToList();
+        Assert.Equal(2, pseudos.Distinct().Count());
+        Assert.All(pseudos, p => Assert.StartsWith(DeleteAccountHandler.AnonymizedParticipantPseudo, p));
+    }
 }

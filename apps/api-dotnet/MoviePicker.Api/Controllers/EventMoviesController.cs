@@ -26,9 +26,11 @@ public sealed class EventMoviesController : ControllerBase
 {
     [HttpGet]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.EventViewPollPolicy)]
     [ProducesResponseType(typeof(IReadOnlyList<MovieWithScoreResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> List(
         string idOrSlug,
         [FromServices] IEventViewTagHandler viewTag,

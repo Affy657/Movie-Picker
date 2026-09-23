@@ -18,6 +18,7 @@ public static class EventDocumentMapper
             HostToken = doc.HostToken,
             Slug = doc.Slug,
             CreatorUserId = doc.CreatorUserId,
+            CreationRequestId = doc.CreationRequestId,
             Config = config,
             ClosedAt = doc.ClosedAt.HasValue ? new DateTimeOffset(doc.ClosedAt.Value, TimeSpan.Zero) : null,
             Winners = ToWinners(doc),
@@ -50,6 +51,7 @@ public static class EventDocumentMapper
             HostToken = evt.HostToken,
             Slug = evt.Slug,
             CreatorUserId = evt.CreatorUserId,
+            CreationRequestId = evt.CreationRequestId,
             Config = config,
             ClosedAt = evt.ClosedAt?.UtcDateTime,
             Winners = evt.Winners

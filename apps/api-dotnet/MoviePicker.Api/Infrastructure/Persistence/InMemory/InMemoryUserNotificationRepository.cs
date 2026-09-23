@@ -65,6 +65,24 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
         return Task.FromResult(result);
     }
 
+    public Task<long> AnonymizeActorAsync(string actorHandle, string anonymizedName, CancellationToken ct = default)
+    {
+        long count = 0;
+        if (string.IsNullOrWhiteSpace(actorHandle))
+            return Task.FromResult(count);
+
+        foreach (var (key, n) in _store.ToList())
+        {
+            if (n.ActorHandle != actorHandle)
+                continue;
+            var anonymized = n with { ActorHandle = null, ActorDisplayName = anonymizedName, ActorAvatarId = null };
+            if (_store.TryUpdate(key, anonymized, n))
+                count++;
+        }
+
+        return Task.FromResult(count);
+    }
+
     public Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default)
     {
         long count = 0;

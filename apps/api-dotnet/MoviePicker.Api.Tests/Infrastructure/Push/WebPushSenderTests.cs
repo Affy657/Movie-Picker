@@ -42,11 +42,13 @@ public sealed class WebPushSenderTests : IDisposable
             NullLogger<WebPushSender>.Instance
         );
 
-    private static PushSubscription Subscription(string p256dh = "not-a-valid-key") =>
+    private static PushSubscription Subscription(
+        string p256dh = "not-a-valid-key",
+        string endpoint = "https://fcm.googleapis.com/fcm/send/abc") =>
         new()
         {
             UserId = "u1",
-            Endpoint = "https://push.example.com/abc",
+            Endpoint = endpoint,
             P256dh = p256dh,
             Auth = "not-a-valid-auth",
             CreatedAt = DateTimeOffset.UtcNow,
@@ -112,6 +114,20 @@ public sealed class WebPushSenderTests : IDisposable
     }
 
     [Fact]
+    public async Task SendAsync_EndpointOutsideTheKnownPushServices_IsPurgedWithoutBeingCalled()
+    {
+        var subscription = Subscription(GenerateClientPublicKey(), "https://slow-sink.attacker.test/abc");
+        await _repository.UpsertAsync(subscription);
+        var keys = WebPush.VapidHelper.GenerateVapidKeys();
+
+        var settled = await Build(keys.PublicKey, keys.PrivateKey).SendAsync(subscription, Message);
+
+        Assert.True(settled);
+        Assert.Empty(_pushService.Requests);
+        Assert.Empty(await _repository.ListByUserIdAsync(subscription.UserId));
+    }
+
+    [Fact]
     public async Task SendAsync_SendsThroughTheNamedHttpClient()
     {
         var subscription = Subscription(GenerateClientPublicKey());
@@ -138,6 +154,30 @@ public sealed class WebPushSenderTests : IDisposable
 
         Assert.Equal(3, _pushService.Requests.Count);
         Assert.False(_pushService.Disposed);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Created, true)]
+    [InlineData(HttpStatusCode.BadRequest, true)]
+    [InlineData(HttpStatusCode.TooManyRequests, false)]
+    [InlineData(HttpStatusCode.ServiceUnavailable, false)]
+    public async Task SendAsync_ReportsWhetherTheDeliveryIsSettled(HttpStatusCode answer, bool settled)
+    {
+        var subscription = Subscription(GenerateClientPublicKey());
+        var keys = WebPush.VapidHelper.GenerateVapidKeys();
+        _pushService.StatusCode = answer;
+
+        var delivered = await Build(keys.PublicKey, keys.PrivateKey).SendAsync(subscription, Message);
+
+        Assert.Equal(settled, delivered);
+    }
+
+    [Fact]
+    public void IsWorthRetrying_NetworkFailure_IsRetried()
+    {
+        Assert.True(WebPushSender.IsWorthRetrying(new HttpRequestException("connection reset")));
+        Assert.True(WebPushSender.IsWorthRetrying(new TaskCanceledException()));
+        Assert.False(WebPushSender.IsWorthRetrying(new ArgumentException("invalid key")));
     }
 
     private static string GenerateClientPublicKey()

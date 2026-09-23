@@ -33,6 +33,19 @@ public sealed class MongoUserRepository : IUserRepository
         return docs.ConvertAll(UserDocumentMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<UserCard>> ListCardsByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default)
+    {
+        if (ids.Count == 0)
+            return [];
+        var filter = Builders<UserDocument>.Filter.In(x => x.Id, ids);
+        var card = Builders<UserDocument>.Projection
+            .Include(x => x.AvatarId)
+            .Include(x => x.Handle)
+            .Include(x => x.IsProfilePublic);
+        var docs = await _collection.Find(filter).Project<UserDocument>(card).ToListAsync(ct);
+        return docs.ConvertAll(d => new UserCard(d.Id, d.AvatarId ?? string.Empty, d.Handle, d.IsProfilePublic ?? true));
+    }
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
         var normalized = NormalizeEmail(email);

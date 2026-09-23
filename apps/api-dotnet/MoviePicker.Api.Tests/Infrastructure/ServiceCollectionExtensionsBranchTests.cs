@@ -418,6 +418,18 @@ public sealed class ServiceCollectionExtensionsBranchTests
     }
 
     [Fact]
+    public void WebPush_NeverFollowsARedirect()
+    {
+        using var provider = Wire([]).BuildServiceProvider();
+
+        HttpMessageHandler handler = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(WebPushSender.HttpClientName);
+        while (handler is DelegatingHandler delegating)
+            handler = delegating.InnerHandler!;
+
+        Assert.False(Assert.IsType<SocketsHttpHandler>(handler).AllowAutoRedirect);
+    }
+
+    [Fact]
     public void ReadinessProbe_WithMongo_IsCached()
     {
         var services = Wire(new Dictionary<string, string?> { ["MONGODB_URI"] = DevMongoUri });

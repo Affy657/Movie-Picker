@@ -83,12 +83,12 @@ public sealed class NotificationsEndpointsTests : IClassFixture<MoviePickerAppli
 
         var sub = await client.PostAsJsonAsync(
             "/api/v1/notifications/subscriptions",
-            new { endpoint = "https://push.example.com/abc", p256dh = "key", auth = "auth" });
+            new { endpoint = "https://fcm.googleapis.com/fcm/send/abc", p256dh = "key", auth = "auth" });
         Assert.Equal(HttpStatusCode.NoContent, sub.StatusCode);
 
         var unsub = await client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, "/api/v1/notifications/subscriptions")
         {
-            Content = JsonContent.Create(new { endpoint = "https://push.example.com/abc" })
+            Content = JsonContent.Create(new { endpoint = "https://fcm.googleapis.com/fcm/send/abc" })
         });
         Assert.Equal(HttpStatusCode.NoContent, unsub.StatusCode);
     }

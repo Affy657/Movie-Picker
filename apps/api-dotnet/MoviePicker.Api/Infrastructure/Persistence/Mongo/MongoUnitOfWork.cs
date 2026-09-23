@@ -2,6 +2,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
@@ -9,23 +10,28 @@ public sealed class MongoUnitOfWork : IUnitOfWork
 {
     private const int IllegalOperationCode = 20;
 
+    public static readonly TimeSpan DefaultTransactionBudget = TimeSpan.FromSeconds(15);
+
     private static int _transactionsUnavailableLogged;
 
     private readonly IMongoClient _client;
     private readonly MongoSessionAccessor _sessions;
     private readonly bool _isDevelopment;
     private readonly ILogger<MongoUnitOfWork> _logger;
+    private readonly TimeSpan _transactionBudget;
 
     public MongoUnitOfWork(
         IMongoClient client,
         MongoSessionAccessor sessions,
         IHostEnvironment environment,
-        ILogger<MongoUnitOfWork> logger)
+        ILogger<MongoUnitOfWork> logger,
+        TimeSpan? transactionBudget = null)
     {
         _client = client;
         _sessions = sessions;
         _isDevelopment = environment.IsDevelopment();
         _logger = logger;
+        _transactionBudget = transactionBudget ?? DefaultTransactionBudget;
     }
 
     public async Task ExecuteAsync(Func<CancellationToken, Task> work, CancellationToken ct = default)
@@ -38,6 +44,8 @@ public sealed class MongoUnitOfWork : IUnitOfWork
 
         using var session = await _client.StartSessionAsync(cancellationToken: ct);
         _sessions.Session = session;
+        using var budget = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        budget.CancelAfter(_transactionBudget);
         try
         {
             await session.WithTransactionAsync(
@@ -46,7 +54,12 @@ public sealed class MongoUnitOfWork : IUnitOfWork
                     await work(token);
                     return true;
                 },
-                cancellationToken: ct);
+                cancellationToken: budget.Token);
+        }
+        catch (OperationCanceledException) when (budget.IsCancellationRequested && !ct.IsCancellationRequested)
+        {
+            _logger.LogWarning("Transaction abandoned after retrying for {Budget}", _transactionBudget);
+            throw Errors.ConcurrentUpdate();
         }
         catch (MongoException ex) when (ShouldRunWithoutTransaction(ex, _isDevelopment))
         {

@@ -49,10 +49,6 @@ public sealed class ListMoviesForEventHandlerTests
         _posterStore = new Mock<IPosterImageStore>();
         _currentUser = new Mock<ICurrentUserAccessor>();
         _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
-        _posterStore.Setup(s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
-        _posterStore
-            .Setup(s => s.RegisterTmdbSourcesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
         _seenMarkRepo
             .Setup(r => r.AggregateByMovieIdsAsync(It.IsAny<string>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<string, SeenMarkAggregate>());
@@ -63,8 +59,8 @@ public sealed class ListMoviesForEventHandlerTests
             .Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Participant>());
         _userRepo
-            .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<User>());
+            .Setup(r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<UserCard>)[]);
         var opts = Options.Create(new MoviePickerOptions { TmdbApiKey = null });
         _sut = new ListMoviesForEventHandler(
             _eventRepo.Object,
@@ -351,5 +347,37 @@ public sealed class ListMoviesForEventHandlerTests
         Assert.Equal(8, p.ProviderId);
         Assert.Equal("Netflix", p.Name);
         Assert.Equal("flatrate", p.Type);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ProposerWithAPublicProfile_ShowsItsHandleFromTheUserCard()
+    {
+        var evt = ActiveEvent();
+        var now = DateTimeOffset.UtcNow;
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(
+        [
+            new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Film A", Year = "2020", CreatedAt = now, UpdatedAt = now }
+        ]);
+        _participantRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(
+        [
+            new Participant { Id = "p1", EventId = evt.Id, Pseudo = "Alice", UserId = "u1", CreatedAt = now, UpdatedAt = now }
+        ]);
+        _participantRepo
+            .Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, string> { ["p1"] = "Alice" });
+        _voteRepo
+            .Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+        _userRepo
+            .Setup(r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<UserCard>)[new UserCard("u1", "avatar-1", "alice", IsProfilePublic: true)]);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Equal("alice", Assert.Single(result).ProposerHandle);
+        _userRepo.Verify(
+            r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

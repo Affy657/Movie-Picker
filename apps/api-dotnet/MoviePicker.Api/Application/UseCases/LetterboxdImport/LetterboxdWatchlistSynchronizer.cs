@@ -23,6 +23,9 @@ public sealed class LetterboxdWatchlistSynchronizer
     private readonly ILetterboxdWatchlistClient _letterboxd;
     private readonly ITmdbMovieSearch _tmdb;
     private readonly IAddToWatchlistHandler _addToWatchlist;
+    private readonly IParticipantRepository _participants;
+    private readonly IEventRepository _events;
+    private readonly IMovieRepository _movies;
     private readonly ILogger<LetterboxdWatchlistSynchronizer> _logger;
 
     public LetterboxdWatchlistSynchronizer(
@@ -30,12 +33,18 @@ public sealed class LetterboxdWatchlistSynchronizer
         ILetterboxdWatchlistClient letterboxd,
         ITmdbMovieSearch tmdb,
         IAddToWatchlistHandler addToWatchlist,
+        IParticipantRepository participants,
+        IEventRepository events,
+        IMovieRepository movies,
         ILogger<LetterboxdWatchlistSynchronizer> logger)
     {
         _watchlist = watchlist;
         _letterboxd = letterboxd;
         _tmdb = tmdb;
         _addToWatchlist = addToWatchlist;
+        _participants = participants;
+        _events = events;
+        _movies = movies;
         _logger = logger;
     }
 
@@ -69,7 +78,7 @@ public sealed class LetterboxdWatchlistSynchronizer
             TotalTruncated: Math.Max(0, snapshot.Films.Count - LetterboxdImportLimits.MaxRows));
     }
 
-    private static LetterboxdSyncOutcome Failed(string error) =>
+    public static LetterboxdSyncOutcome Failed(string error) =>
         new(false, error, 0, 0, [], [], 0, 0);
 
     private async Task<int> RemoveDepartedAsync(
@@ -107,6 +116,7 @@ public sealed class LetterboxdWatchlistSynchronizer
         var unmatched = new List<string>();
         var pending = new List<LetterboxdImportRowResponse>();
         var rowIndex = 0;
+        HashSet<(int TmdbId, MovieMediaType MediaType)>? watchedAtAMovieNight = null;
 
         foreach (var film in films.Take(LetterboxdImportLimits.MaxRows))
         {
@@ -137,12 +147,36 @@ public sealed class LetterboxdWatchlistSynchronizer
                 continue;
             }
 
+            watchedAtAMovieNight ??= await WatchedAtAMovieNightAsync(userId, ct);
+            if (watchedAtAMovieNight.Contains((confident.Id, confident.MediaType)))
+                continue;
+
             await _addToWatchlist.HandleAsync(userId, ToAddRequest(confident, film.Slug), ct);
             knownTmdbKeys.Add((confident.Id, confident.MediaType));
             added++;
         }
 
         return new AdditionResult(added, unmatched, pending);
+    }
+
+    private async Task<HashSet<(int TmdbId, MovieMediaType MediaType)>> WatchedAtAMovieNightAsync(
+        string userId,
+        CancellationToken ct)
+    {
+        var eventIds = await _participants.ListDistinctEventIdsByUserIdAsync(userId, ct);
+        if (eventIds.Count == 0)
+            return [];
+
+        var winnerIds = (await _events.ListByIdsAsync(eventIds, ct))
+            .Where(e => e.WatchlistCleanedAt is not null)
+            .SelectMany(e => e.GetWinnerMovieIds())
+            .ToList();
+        if (winnerIds.Count == 0)
+            return [];
+
+        return (await _movies.ListByIdsAsync(winnerIds, ct))
+            .Select(m => (m.TmdbId, m.MediaType))
+            .ToHashSet();
     }
 
     private static string FormatFilm(LetterboxdFilm film) =>

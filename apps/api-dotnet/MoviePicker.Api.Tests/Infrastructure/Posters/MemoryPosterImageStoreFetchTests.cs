@@ -44,13 +44,12 @@ public sealed class MemoryPosterImageStoreFetchTests
     }
 
     [Fact]
-    public async Task GetByKeyAsync_RegisteredSource_FetchesAndReturnsImage()
+    public async Task GetOrFetchAsync_FetchesAndReturnsImage()
     {
         var bytes = new byte[] { 1, 2, 3, 4 };
         var store = Build(StubHandler(_ => Image(bytes, "image/jpeg")).Object);
-        await store.RegisterTmdbSourceAsync(Source);
 
-        var blob = await store.GetByKeyAsync(Key);
+        var blob = await store.GetOrFetchAsync(Source);
 
         Assert.NotNull(blob);
         Assert.Equal(bytes, blob!.Data);
@@ -58,14 +57,13 @@ public sealed class MemoryPosterImageStoreFetchTests
     }
 
     [Fact]
-    public async Task GetByKeyAsync_SecondCall_ServedFromCacheWithoutRefetch()
+    public async Task GetOrFetchAsync_SecondCall_ServedFromCacheWithoutRefetch()
     {
         var handler = StubHandler(_ => Image(new byte[] { 9 }, "image/png"));
         var store = Build(handler.Object);
-        await store.RegisterTmdbSourceAsync(Source);
 
-        await store.GetByKeyAsync(Key);
-        var second = await store.GetByKeyAsync(Key);
+        await store.GetOrFetchAsync(Source);
+        var second = await store.GetOrFetchAsync(Source);
 
         Assert.NotNull(second);
         handler.Protected().Verify(
@@ -73,44 +71,115 @@ public sealed class MemoryPosterImageStoreFetchTests
     }
 
     [Fact]
-    public async Task GetByKeyAsync_DisallowedContentType_ReturnsNull()
+    public async Task GetOrFetchAsync_ConcurrentColdRequests_FetchOnce()
+    {
+        var release = new TaskCompletionSource<HttpResponseMessage>();
+        var mock = new Mock<HttpMessageHandler>();
+        mock.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns(() => release.Task);
+        var store = Build(mock.Object);
+
+        var first = store.GetOrFetchAsync(Source);
+        var second = store.GetOrFetchAsync(Source);
+        release.SetResult(Image(new byte[] { 7 }, "image/jpeg"));
+        await Task.WhenAll(first, second);
+
+        mock.Protected().Verify(
+            "SendAsync", Times.Once(), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetOrFetchAsync_NonTmdbUrl_ReturnsNullWithoutFetching()
+    {
+        var handler = StubHandler(_ => Image(new byte[] { 1 }, "image/jpeg"));
+        var store = Build(handler.Object);
+
+        Assert.Null(await store.GetOrFetchAsync("https://evil.example/t/p/w500/abc.jpg"));
+        handler.Protected().Verify(
+            "SendAsync", Times.Never(), ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetOrFetchAsync_DisallowedContentType_ReturnsNull()
     {
         var store = Build(StubHandler(_ => Image(new byte[] { 1 }, "text/html")).Object);
-        await store.RegisterTmdbSourceAsync(Source);
 
-        Assert.Null(await store.GetByKeyAsync(Key));
+        Assert.Null(await store.GetOrFetchAsync(Source));
     }
 
     [Fact]
-    public async Task GetByKeyAsync_HttpError_ReturnsNull()
+    public async Task GetOrFetchAsync_HttpError_ReturnsNull()
     {
         var store = Build(StubHandler(_ => new HttpResponseMessage(HttpStatusCode.NotFound)).Object);
-        await store.RegisterTmdbSourceAsync(Source);
 
-        Assert.Null(await store.GetByKeyAsync(Key));
+        Assert.Null(await store.GetOrFetchAsync(Source));
     }
 
     [Fact]
-    public async Task GetByKeyAsync_ExceedsMaxBytes_ReturnsNull()
+    public async Task GetOrFetchAsync_ExceedsMaxBytes_ReturnsNull()
     {
         var store = Build(
             StubHandler(_ => Image(new byte[] { 1, 2, 3, 4, 5, 6 }, "image/jpeg")).Object,
             new MoviePickerOptions { PosterCacheMaxBytes = 2 });
-        await store.RegisterTmdbSourceAsync(Source);
 
-        Assert.Null(await store.GetByKeyAsync(Key));
+        Assert.Null(await store.GetOrFetchAsync(Source));
     }
 
     [Fact]
-    public async Task GetByKeyAsync_FetchThrows_ReturnsNull()
+    public async Task GetOrFetchAsync_FetchThrows_ReturnsNull()
     {
         var mock = new Mock<HttpMessageHandler>();
         mock.Protected()
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("boom"));
         var store = Build(mock.Object);
-        await store.RegisterTmdbSourceAsync(Source);
 
-        Assert.Null(await store.GetByKeyAsync(Key));
+        Assert.Null(await store.GetOrFetchAsync(Source));
+    }
+
+    [Fact]
+    public async Task GetByKeyAsync_AfterAStatelessFetch_ServesTheLegacyKeyOfTheSameSource()
+    {
+        var bytes = new byte[] { 5, 6 };
+        var store = Build(StubHandler(_ => Image(bytes, "image/jpeg")).Object);
+        await store.GetOrFetchAsync(Source);
+
+        var blob = await store.GetByKeyAsync(Key);
+
+        Assert.NotNull(blob);
+        Assert.Equal(bytes, blob!.Data);
+    }
+
+    [Fact]
+    public async Task FindSourceUrlAsync_KnownKey_ReturnsTheTmdbSource()
+    {
+        var store = Build(StubHandler(_ => Image(new byte[] { 1 }, "image/jpeg")).Object);
+        await store.GetOrFetchAsync(Source);
+
+        Assert.Equal(Source, await store.FindSourceUrlAsync(Key));
+    }
+
+    [Fact]
+    public async Task FindSourceUrlAsync_UnknownKey_ReturnsNull()
+    {
+        var store = Build(StubHandler(_ => Image(new byte[] { 1 }, "image/jpeg")).Object);
+
+        Assert.Null(await store.FindSourceUrlAsync(Key));
+    }
+
+    [Fact]
+    public async Task GetOrFetchAsync_CacheFull_ServesTheImageWithoutKeepingIt()
+    {
+        var handler = StubHandler(_ => Image(new byte[] { 7 }, "image/jpeg"));
+        var store = Build(handler.Object, new MoviePickerOptions { PosterCacheMaxEntries = 1 });
+        const string other = "https://image.tmdb.org/t/p/w500/other.jpg";
+
+        await store.GetOrFetchAsync(Source);
+        var served = await store.GetOrFetchAsync(other);
+
+        Assert.NotNull(served);
+        Assert.Null(await store.FindSourceUrlAsync(TmdbPosterUrlNormalizer.ComputeKey(other)));
+        Assert.NotNull(await store.FindSourceUrlAsync(Key));
     }
 }

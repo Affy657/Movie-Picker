@@ -22,6 +22,8 @@ public sealed class MongoIndexPlan
 
     public int StepCount => _steps.Count;
 
+    internal IReadOnlyList<string> Descriptions => _descriptions;
+
     public string MarkerId
     {
         get

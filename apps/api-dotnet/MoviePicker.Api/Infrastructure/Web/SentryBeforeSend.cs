@@ -1,17 +1,37 @@
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authentication;
+using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using Sentry;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
-internal static class SentryBeforeSend
+internal static partial class SentryBeforeSend
 {
     internal static SentryEvent? Prepare(SentryEvent sentryEvent)
     {
         sentryEvent.User = new SentryUser();
         sentryEvent.Request.Url = SensitiveQueryRedaction.RedactUrl(sentryEvent.Request.Url);
         sentryEvent.Request.QueryString = SensitiveQueryRedaction.RedactQueryString(sentryEvent.Request.QueryString);
+        DropLoggedValues(sentryEvent);
         return IsAuthenticationNoise(sentryEvent) ? null : sentryEvent;
     }
+
+    internal static bool IsLogNoise(string category, LogLevel level, EventId eventId, Exception? exception) =>
+        string.Equals(category, typeof(MongoDatabaseHealthProbe).FullName, StringComparison.Ordinal);
+
+    private static void DropLoggedValues(SentryEvent sentryEvent)
+    {
+        if (sentryEvent.Message?.Message is not { Length: > 0 } template)
+            return;
+
+        foreach (Match placeholder in LogPlaceholder().Matches(template))
+            sentryEvent.UnsetTag(placeholder.Groups["name"].Value);
+
+        sentryEvent.Message = new SentryMessage { Message = template, Formatted = template };
+    }
+
+    [GeneratedRegex(@"\{(?<name>@?[A-Za-z0-9_]+)(?:[,:][^}]*)?\}", RegexOptions.CultureInvariant)]
+    private static partial Regex LogPlaceholder();
 
     internal static Breadcrumb? RedactBreadcrumb(Breadcrumb breadcrumb, SentryHint hint)
     {

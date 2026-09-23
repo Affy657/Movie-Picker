@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Logging;
+using MoviePicker.Api.Application.UseCases.RecurringEvents;
+using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Web;
 using Sentry;
 using Xunit;
@@ -59,6 +62,52 @@ public sealed class SentryBeforeSendTests
         Assert.NotNull(prepared);
         Assert.Equal("https://api.test/api/v1/events/abc/wheel?host=***&x=1", prepared!.Request.Url);
         Assert.Equal("host=***&x=1", prepared.Request.QueryString);
+    }
+
+    [Fact]
+    public void Prepare_EventFromALog_KeepsTheTemplateWithoutTheLoggedValues()
+    {
+        const string template = "Incomplete read of the watchlist of {Username}: {Collected:N0} film(s) out of {@Expected}";
+        var sentryEvent = new SentryEvent
+        {
+            Message = new SentryMessage
+            {
+                Message = template,
+                Formatted = "Incomplete read of the watchlist of jdoe: 3 film(s) out of 12"
+            }
+        };
+        sentryEvent.SetTag("Username", "jdoe");
+        sentryEvent.SetTag("Collected", "3");
+        sentryEvent.SetTag("@Expected", "12");
+        sentryEvent.SetTag("route.action", "Import");
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        Assert.Equal(template, prepared!.Message!.Formatted);
+        Assert.Equal(template, prepared.Message.Message);
+        Assert.Equal(new[] { "route.action" }, prepared.Tags.Keys);
+    }
+
+    [Fact]
+    public void IsLogNoise_DropsTheReadinessProbeWhichTheUptimeCheckAlreadyWatches()
+    {
+        Assert.True(SentryBeforeSend.IsLogNoise(
+            typeof(MongoDatabaseHealthProbe).FullName!, LogLevel.Error, default, new TimeoutException()));
+        Assert.False(SentryBeforeSend.IsLogNoise(
+            typeof(RecurringEventPass).FullName!, LogLevel.Error, default, new TimeoutException()));
+    }
+
+    [Fact]
+    public void Prepare_EventWithoutMessage_KeepsItsTags()
+    {
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom"));
+        sentryEvent.SetTag("route.action", "Import");
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.Equal("Import", prepared!.Tags["route.action"]);
+        Assert.Null(prepared.Message);
     }
 
     [Theory]

@@ -9,6 +9,8 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoEventRepository : IEventRepository
 {
+    internal const string CreationRequestIndexName = "events_creator_creationRequest_unique";
+
     private const string WriteSeqElement = "writeSeq";
 
     private readonly TransactionalCollection<EventDocument> _collection;
@@ -43,8 +45,29 @@ public sealed class MongoEventRepository : IEventRepository
         if (string.IsNullOrEmpty(doc.Id))
             doc.Id = ObjectId.GenerateNewId().ToString();
 
-        await _collection.InsertOneAsync(doc, cancellationToken: ct);
+        try
+        {
+            await _collection.InsertOneAsync(doc, cancellationToken: ct);
+        }
+        catch (MongoWriteException ex) when (
+            ex.WriteError?.Category == ServerErrorCategory.DuplicateKey
+            && ex.WriteError.Message.Contains(CreationRequestIndexName, StringComparison.Ordinal))
+        {
+            throw new EventCreationReplayedException();
+        }
+
         return EventDocumentMapper.ToDomain(doc);
+    }
+
+    public async Task<Event?> FindByCreationRequestAsync(
+        string creatorUserId,
+        string creationRequestId,
+        CancellationToken ct = default)
+    {
+        var doc = await _collection
+            .Find(x => x.CreatorUserId == creatorUserId && x.CreationRequestId == creationRequestId)
+            .FirstOrDefaultAsync(ct);
+        return doc is null ? null : EventDocumentMapper.ToDomain(doc);
     }
 
     public async Task<Event> UpdateAsync(Event evt, CancellationToken ct = default)

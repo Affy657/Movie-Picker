@@ -27,18 +27,32 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
 
     public async Task<MovieCollectionListResponse> HandleAsync(CancellationToken ct = default)
     {
-        var ttl = TimeSpan.FromHours(Math.Clamp(_options.MovieShowcaseCacheHours, 1, 168));
-        var items = await _cache.GetOrLoadAsync(CacheKey, ttl, LoadCollectionsAsync, ct: ct);
+        var items = await _cache.GetOrLoadCheckedAsync(CacheKey, CacheTtl(), LoadCollectionsAsync, ct: ct);
         return Build(items);
     }
 
-    private async Task<IReadOnlyList<MovieCollectionResponse>> LoadCollectionsAsync(CancellationToken ct)
+    public async Task<bool> RefreshAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            return await _cache.RefreshAsync(CacheKey, CacheTtl(), LoadCollectionsAsync, ct);
+        }
+        catch (MoviePickerException)
+        {
+            return false;
+        }
+    }
+
+    private TimeSpan CacheTtl() => TimeSpan.FromHours(Math.Clamp(_options.MovieShowcaseCacheHours, 1, 168));
+
+    private async Task<CacheLoad<IReadOnlyList<MovieCollectionResponse>>> LoadCollectionsAsync(CancellationToken ct)
     {
         if (!_options.HasTmdbCredentials)
             throw Errors.ShowcaseUnavailable();
 
         var ids = MovieShowcaseCatalog.CollectionIds;
         var summaries = new TmdbCollectionSummary?[ids.Count];
+        var failures = 0;
         await Parallel.ForEachAsync(
             Enumerable.Range(0, ids.Count),
             new ParallelOptions
@@ -48,7 +62,10 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
             },
             async (index, token) =>
             {
-                summaries[index] = await TryGetCollectionAsync(ids[index], token);
+                var (summary, failed) = await TryGetCollectionAsync(ids[index], token);
+                summaries[index] = summary;
+                if (failed)
+                    Interlocked.Increment(ref failures);
             });
 
         var items = summaries
@@ -66,18 +83,18 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
         if (items.Count == 0)
             throw Errors.ShowcaseUnavailable();
 
-        return items;
+        return new CacheLoad<IReadOnlyList<MovieCollectionResponse>>(items, IsComplete: failures == 0);
     }
 
-    private async Task<TmdbCollectionSummary?> TryGetCollectionAsync(int id, CancellationToken ct)
+    private async Task<(TmdbCollectionSummary? Summary, bool Failed)> TryGetCollectionAsync(int id, CancellationToken ct)
     {
         try
         {
-            return await _tmdb.GetCollectionAsync(id, ct);
+            return (await _tmdb.GetCollectionAsync(id, ct), false);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
         {
-            return null;
+            return (null, true);
         }
     }
 

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -83,6 +84,26 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
     }
 
     [Fact]
+    public async Task GetDetails_SlowerThanTheRequestBudget_Returns503()
+    {
+        var fake = new FakeTmdb { HangOnDetails = true };
+        using var client = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<ITmdbMovieSearch>();
+            services.AddSingleton<ITmdbMovieSearch>(fake);
+            services.PostConfigure<RequestTimeoutOptions>(options => options.DefaultPolicy = new RequestTimeoutPolicy
+            {
+                Timeout = TimeSpan.FromMilliseconds(200),
+                TimeoutStatusCode = options.DefaultPolicy!.TimeoutStatusCode
+            });
+        })).CreateClient();
+
+        var res = await client.GetAsync("/api/v1/movies/tmdb/42/details");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, res.StatusCode);
+    }
+
+    [Fact]
     public async Task GetDetails_InvalidIdZero_Returns404()
     {
         var fake = new FakeTmdb();
@@ -97,6 +118,7 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
     {
         public TmdbMovieDetails? Details { get; set; }
         public bool ThrowOnDetails { get; set; }
+        public bool HangOnDetails { get; set; }
 
         public Task<IReadOnlyList<TmdbSearchItem>> SearchAsync(string query, bool allowSeries, IReadOnlyList<int>? genreIds = null, int? yearFrom = null, int? yearTo = null, double? voteMin = null, string? originalLanguage = null, int? runtimeMin = null, int? runtimeMax = null, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
@@ -109,11 +131,13 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
             => Task.FromResult<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>>(
                 new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>());
 
-        public Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
+        public async Task<TmdbMovieDetails?> GetDetailsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
         {
             if (ThrowOnDetails)
                 throw new HttpRequestException("tmdb down");
-            return Task.FromResult(Details);
+            if (HangOnDetails)
+                await Task.Delay(Timeout.Infinite, ct);
+            return Details;
         }
 
         public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default)

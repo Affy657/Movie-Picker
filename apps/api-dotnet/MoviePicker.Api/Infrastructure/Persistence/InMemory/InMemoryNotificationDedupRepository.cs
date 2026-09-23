@@ -13,10 +13,20 @@ public sealed class InMemoryNotificationDedupRepository : INotificationDedupRepo
         UserNotificationType type,
         string eventId,
         NotificationDedupChannel channel = NotificationDedupChannel.Push,
+        CancellationToken ct = default) =>
+        Task.FromResult(_claimed.TryAdd(Key(userId, type, eventId, channel), 0));
+
+    public Task ReleaseAsync(
+        string userId,
+        UserNotificationType type,
+        string eventId,
+        NotificationDedupChannel channel = NotificationDedupChannel.Push,
         CancellationToken ct = default)
     {
-        var key = $"{userId}|{(int)type}|{eventId}|{(int)channel}";
-        var claimed = _claimed.TryAdd(key, 0);
-        return Task.FromResult(claimed);
+        _claimed.TryRemove(Key(userId, type, eventId, channel), out _);
+        return Task.CompletedTask;
     }
+
+    private static string Key(string userId, UserNotificationType type, string eventId, NotificationDedupChannel channel) =>
+        $"{userId}|{(int)type}|{eventId}|{(int)channel}";
 }

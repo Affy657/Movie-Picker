@@ -7,12 +7,13 @@ namespace MoviePicker.Api.Tests.Infrastructure.Persistence.InMemory;
 public sealed class InMemoryMovieRepositoryTests
 {
     private readonly InMemoryMovieRepository _repo = new();
+    private static int _nextTmdbId = 1000;
 
     private static Movie Mk(
         string id = "",
         string eventId = "evt1",
         string participantId = "p1",
-        int tmdbId = 100,
+        int? tmdbId = null,
         MovieMediaType mediaType = MovieMediaType.Movie,
         string title = "Inception",
         IReadOnlyList<int>? genreIds = null,
@@ -21,7 +22,7 @@ public sealed class InMemoryMovieRepositoryTests
             Id = id,
             EventId = eventId,
             ParticipantId = participantId,
-            TmdbId = tmdbId,
+            TmdbId = tmdbId ?? Interlocked.Increment(ref _nextTmdbId),
             MediaType = mediaType,
             Title = title,
             Year = "2010",

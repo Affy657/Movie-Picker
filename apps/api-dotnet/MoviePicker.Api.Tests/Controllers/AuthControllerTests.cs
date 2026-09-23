@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
@@ -42,9 +45,54 @@ public sealed class AuthControllerTests
     [Fact]
     public async Task Logout_ReturnsNoContent()
     {
-        var result = await Controller("u1").Logout();
+        var handler = new Mock<ILogoutHandler>();
+
+        var result = await Controller("u1").Logout(
+            new LogoutRequest { PushEndpoint = "https://fcm.googleapis.com/fcm/send/abc" },
+            handler.Object);
 
         Assert.IsType<NoContentResult>(result);
+        handler.Verify(h => h.HandleAsync("u1", "https://fcm.googleapis.com/fcm/send/abc", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Logout_SignsOutFirstThenForgetsTheDeviceWithoutTheRequestToken()
+    {
+        var steps = new List<string>();
+        var authentication = new Mock<IAuthenticationService>();
+        authentication
+            .Setup(a => a.SignOutAsync(It.IsAny<HttpContext>(), It.IsAny<string?>(), It.IsAny<AuthenticationProperties?>()))
+            .Callback(() => steps.Add("sign-out"))
+            .Returns(Task.CompletedTask);
+        var handler = new Mock<ILogoutHandler>();
+        CancellationToken cleanupToken = default;
+        handler
+            .Setup(h => h.HandleAsync(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .Callback<string?, string?, CancellationToken>((_, _, token) =>
+            {
+                steps.Add("forget-device");
+                cleanupToken = token;
+            })
+            .Returns(Task.CompletedTask);
+        var controller = new AuthController
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    RequestServices = new ServiceCollection().AddSingleton(authentication.Object).BuildServiceProvider(),
+                    User = ControllerTestHelpers.AuthenticatedUser("u1")
+                }
+            }
+        };
+
+        var result = await controller.Logout(
+            new LogoutRequest { PushEndpoint = "https://fcm.googleapis.com/fcm/send/abc" },
+            handler.Object);
+
+        Assert.IsType<NoContentResult>(result);
+        Assert.Equal(["sign-out", "forget-device"], steps);
+        Assert.Equal(CancellationToken.None, cleanupToken);
     }
 
     [Fact]

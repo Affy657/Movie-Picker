@@ -40,7 +40,7 @@ public sealed class CachedAuthTicketStoreTests
     }
 
     [Fact]
-    public async Task RetrieveAsync_DoesNotCacheAMiss()
+    public async Task RetrieveAsync_ReplayedDeadSession_IsLookedUpOncePerTtl()
     {
         var (store, inner, _) = Build();
         inner.Setup(s => s.RetrieveAsync("missing")).ReturnsAsync((AuthenticationTicket?)null);
@@ -48,7 +48,19 @@ public sealed class CachedAuthTicketStoreTests
         Assert.Null(await store.RetrieveAsync("missing"));
         Assert.Null(await store.RetrieveAsync("missing"));
 
-        inner.Verify(s => s.RetrieveAsync("missing"), Times.Exactly(2));
+        inner.Verify(s => s.RetrieveAsync("missing"), Times.Once);
+    }
+
+    [Fact]
+    public async Task RenewAsync_AfterAMiss_ServesTheRenewedTicket()
+    {
+        var (store, inner, _) = Build();
+        inner.Setup(s => s.RetrieveAsync("k1")).ReturnsAsync((AuthenticationTicket?)null);
+        await store.RetrieveAsync("k1");
+
+        await store.RenewAsync("k1", Ticket("u1"));
+
+        Assert.Equal("u1", (await store.RetrieveAsync("k1"))!.Principal.FindFirstValue(ClaimTypes.NameIdentifier));
     }
 
     [Fact]

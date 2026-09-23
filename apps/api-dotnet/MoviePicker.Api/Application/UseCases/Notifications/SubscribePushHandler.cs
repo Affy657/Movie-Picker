@@ -7,6 +7,8 @@ namespace MoviePicker.Api.Application.UseCases.Notifications;
 
 public sealed class SubscribePushHandler : ISubscribePushHandler
 {
+    public const int MaxDevicesPerAccount = 10;
+
     private readonly IPushSubscriptionRepository _subscriptions;
     private readonly TimeProvider _clock;
 
@@ -18,7 +20,7 @@ public sealed class SubscribePushHandler : ISubscribePushHandler
 
     public async Task HandleAsync(string userId, SubscribePushRequest request, CancellationToken ct = default)
     {
-        if (!PushEndpointPolicy.IsPublicHttpsEndpoint(request.Endpoint))
+        if (!PushEndpointPolicy.IsKnownPushService(request.Endpoint))
             throw Errors.InvalidPushEndpoint();
 
         var subscription = new PushSubscription
@@ -31,21 +33,40 @@ public sealed class SubscribePushHandler : ISubscribePushHandler
             CreatedAt = _clock.GetUtcNow()
         };
         await _subscriptions.UpsertAsync(subscription, ct);
+
+        var devices = await _subscriptions.ListByUserIdAsync(userId, ct);
+        var stale = devices
+            .Where(d => d.Endpoint != request.Endpoint)
+            .OrderByDescending(d => d.CreatedAt)
+            .Skip(MaxDevicesPerAccount - 1);
+        foreach (var device in stale)
+            await _subscriptions.DeleteByEndpointAsync(userId, device.Endpoint, ct);
     }
 }
 
 public static class PushEndpointPolicy
 {
-    public static bool IsPublicHttpsEndpoint(string? endpoint)
+    private static readonly string[] KnownPushServiceDomains =
+    [
+        "googleapis.com",
+        "google.com",
+        "push.services.mozilla.com",
+        "push.apple.com",
+        "notify.windows.com"
+    ];
+
+    public static bool IsKnownPushService(string? endpoint)
     {
         if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var uri))
             return false;
         if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
             return false;
-        if (uri.HostNameType is UriHostNameType.IPv4 or UriHostNameType.IPv6)
+        if (uri.HostNameType is not UriHostNameType.Dns)
             return false;
-        if (string.Equals(uri.IdnHost, "localhost", StringComparison.OrdinalIgnoreCase))
-            return false;
-        return uri.IdnHost.Contains('.');
+
+        var host = uri.IdnHost;
+        return KnownPushServiceDomains.Any(domain =>
+            string.Equals(host, domain, StringComparison.OrdinalIgnoreCase)
+            || host.EndsWith("." + domain, StringComparison.OrdinalIgnoreCase));
     }
 }

@@ -72,14 +72,14 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             .Select(p => p.UserId!)
             .Distinct()
             .ToList();
-        var users = participantUserIds.Count > 0
-            ? await _userRepository.ListByIdsAsync(participantUserIds, ct)
-            : Array.Empty<User>();
-        var userById = users.ToDictionary(u => u.Id);
+        var cards = participantUserIds.Count > 0
+            ? await _userRepository.ListCardsByIdsAsync(participantUserIds, ct)
+            : [];
+        var cardById = cards.ToDictionary(c => c.Id);
 
         var creatorUserId = evt.CreatorUserId;
         var participantsSummary = participants
-            .Select(p => ToParticipantSummary(p, userById, creatorUserId))
+            .Select(p => ToParticipantSummary(p, cardById, creatorUserId))
             .ToList();
 
         return new EventDetailResponse
@@ -122,10 +122,10 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
 
     private static EventParticipantSummaryResponse ToParticipantSummary(
         Participant p,
-        Dictionary<string, User> userById,
+        Dictionary<string, UserCard> cardById,
         string? creatorUserId)
     {
-        User? linkedUser = p.UserId is not null && userById.TryGetValue(p.UserId, out var u) ? u : null;
+        UserCard? linkedUser = p.UserId is not null && cardById.TryGetValue(p.UserId, out var card) ? card : null;
         return new EventParticipantSummaryResponse
         {
             Id = p.Id,

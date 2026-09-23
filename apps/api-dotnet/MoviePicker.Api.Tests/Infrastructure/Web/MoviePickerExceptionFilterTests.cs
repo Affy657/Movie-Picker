@@ -34,6 +34,33 @@ public sealed class MoviePickerExceptionFilterTests
     }
 
     [Fact]
+    public void OnException_RequestCancelled_LeavesTheExceptionToTheTimeoutAndAbortHandling()
+    {
+        var filter = new MoviePickerExceptionFilter(new StubHostEnvironment());
+        var context = CreateContext(new OperationCanceledException());
+        using var aborted = new CancellationTokenSource();
+        aborted.Cancel();
+        context.HttpContext.RequestAborted = aborted.Token;
+
+        filter.OnException(context);
+
+        Assert.False(context.ExceptionHandled);
+        Assert.Null(context.Result);
+    }
+
+    [Fact]
+    public void OnException_CancellationWhileTheRequestIsAlive_IsAnInternalError()
+    {
+        var filter = new MoviePickerExceptionFilter(new StubHostEnvironment());
+        var context = CreateContext(new TaskCanceledException("outbound call timed out"));
+
+        filter.OnException(context);
+
+        Assert.True(context.ExceptionHandled);
+        Assert.Equal(500, Assert.IsType<JsonResult>(context.Result).StatusCode);
+    }
+
+    [Fact]
     public void OnException_NotFoundException_Sets404AndJsonError()
     {
         var env = new StubHostEnvironment { EnvironmentName = "Production" };
