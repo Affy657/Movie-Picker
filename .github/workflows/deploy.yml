@@ -568,8 +568,11 @@ jobs:
       # Closing an event still creates its next occurrence and cleans the winners out of the
       # participants' watchlists on the spot; the two nightly sweeps catch up the series nobody
       # reopened and the events that finished on their own. Reads no longer write (DEBT-029).
-      # Production only: the staging has no Scheduler job, its scheduler routes answer 503, and
-      # three more jobs would leave the free tier of Cloud Scheduler.
+      # Production only: the staging has no Scheduler job, its scheduler routes answer 503. Three
+      # jobs fit in the free tier of Cloud Scheduler; the fourth, the catalog warm-up, costs
+      # 0.10 USD a month. It rewrites the home catalog every five hours, before the six-hour cache
+      # expires, so no visitor pays the reload from TMDB; a pass that keeps an older snapshot
+      # answers 503 and is retried.
       # The jobs sign a Google OIDC token with `movie-picker-scheduler@` for the audience the
       # revision just promoted was given (`SCHEDULER_OIDC_AUDIENCE`, the public API URL): the
       # switch from the shared header to the token is made here, on a revision that already
@@ -579,7 +582,7 @@ jobs:
       # Three retries with a short backoff: without them (the Scheduler default), an attempt
       # that hits a cold start past its deadline or a 503 is lost, and a nightly pass waits
       # for the next night; the "Passe planifiee en echec" alert still reports the attempt.
-      - name: "Event reminders, recurring and finished events: Cloud Scheduler"
+      - name: "Scheduled passes: Cloud Scheduler"
         if: inputs.stage == 'production'
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -592,7 +595,7 @@ jobs:
           # traffic. A missing schedule is a warning: it says nothing about the health of the
           # deployed API.
           if ! gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)' | grep -q cloudscheduler; then
-            echo "::warning::Cloud Scheduler API disabled on the project: jobs not configured, event reminders will not leave, recurring events will only be renewed on closing and watchlists will only be cleaned on closing. Run 'gcloud services enable cloudscheduler.googleapis.com' then rerun this deployment."
+            echo "::warning::Cloud Scheduler API disabled on the project: jobs not configured, event reminders will not leave, recurring events will only be renewed on closing, watchlists will only be cleaned on closing and the home catalog will only be reloaded on demand. Run 'gcloud services enable cloudscheduler.googleapis.com' then rerun this deployment."
             exit 0
           fi
           URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format='value(status.url)')"
@@ -622,6 +625,7 @@ jobs:
           upsert_job movie-picker-event-reminders "*/30 * * * *" /api/v1/scheduler/event-reminders
           upsert_job movie-picker-recurring-events "15 3 * * *" /api/v1/scheduler/recurring-events
           upsert_job movie-picker-finished-events "45 3 * * *" /api/v1/scheduler/finished-events
+          upsert_job movie-picker-warm-catalog "20 */5 * * *" /api/v1/scheduler/warm-catalog
       # The revision is already proven: what is checked here is that the traffic really switched and
       # that the public domain leads to it. A failure is routing, DNS or certificate, not code, hence
       # no rollback. PUBLIC_API_URL derives from VITE_API_URL, the URL the web app is built against:
@@ -747,8 +751,17 @@ jobs:
     # skipped still skips the publication, and the final guard reports it. The publication script
     # runs on Node alone, without any dependency of the lockfile: nothing is installed in this
     # job, which holds the identity.
-    needs: build-front
-    if: ${{ !cancelled() && needs.build-front.result == 'success' }}
+    # After `deploy-api` when both lanes leave: the web app of a commit may call a route only the
+    # API of the same commit serves, so publishing it next to a revision that failed its
+    # validation would break the live front against the live API. The API goes first and must
+    # keep serving the web app already published (rule in AGENTS.md). On a `front` target the API
+    # is skipped, and `verify-ci` has checked that its lane did not change since the release the
+    # stage serves.
+    needs: [build-front, deploy-api]
+    if: >-
+      !cancelled()
+      && needs.build-front.result == 'success'
+      && (needs.deploy-api.result == 'success' || (inputs.target == 'front' && needs.deploy-api.result == 'skipped'))
     environment: ${{ inputs.stage }}
     permissions:
       contents: read

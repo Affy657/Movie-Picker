@@ -1,5 +1,5 @@
 name: "Verify the served web build"
-description: "Checks that Firebase Hosting answers on the site address with the expected headers, then that the public domain serves the entry point of the build that was just released. Shared by the deployment and the rollback."
+description: "Checks that Firebase Hosting answers on the site address with the expected headers and, for a fresh build, a 404 on a missing asset, then that the public domain serves the entry point of the build that was just released. Shared by the deployment and the rollback."
 inputs:
   dist:
     description: "Folder of the build that was just released, to compare its index.html with the one the domain serves; empty to only check that the public domain answers"
@@ -57,7 +57,24 @@ runs:
           fi
           echo "Hosting serves release $served."
         fi
-    # The previous smoke test queries the site address: it says nothing about the public domain
+    # A tab still running the previous build asks for chunks the new version no longer has. The
+    # SPA fallback must not answer them with index.html: a 404 fails the dynamic import and the
+    # app reloads itself (`vite:preloadError`). Only for a build of this commit (`dist` given): a
+    # rollback may serve a version published before the rule, whose config rewrote every path.
+    - name: Missing asset answers 404 (Hosting site)
+      if: inputs.dist != ''
+      shell: bash
+      env:
+        HOSTING_URL: ${{ inputs.hosting-url }}
+      run: |
+        set -eo pipefail
+        code="$(curl -sS -o "$RUNNER_TEMP/missing-asset.txt" -w '%{http_code}' --retry 5 --retry-all-errors --retry-delay 5 --max-time 30 "$HOSTING_URL/assets/missing-asset-probe.js")"
+        echo "GET $HOSTING_URL/assets/missing-asset-probe.js -> $code"
+        if [ "$code" != "404" ]; then
+          echo "::error::A missing file under /assets answers $code instead of 404: a tab running the previous build would load index.html as a script instead of reloading."
+          exit 1
+        fi
+    # The previous smoke tests query the site address: they say nothing about the public domain
     # served to users, whose DNS or certificate can be broken while the site answers perfectly.
     # A 200 does not say which version is served either: the hashed entry point of the build that
     # was just released is compared with the one the public domain really serves.
