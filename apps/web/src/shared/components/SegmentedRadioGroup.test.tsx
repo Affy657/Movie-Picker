@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -52,11 +53,42 @@ describe('SegmentedRadioGroup', () => {
     await user.keyboard('{ArrowRight}');
     expect(onChange).toHaveBeenLastCalledWith('grid');
     await user.keyboard('{ArrowLeft}');
-    expect(onChange).toHaveBeenLastCalledWith('list');
+    expect(onChange).toHaveBeenLastCalledWith('map');
     await user.keyboard('{Home}');
     expect(onChange).toHaveBeenLastCalledWith('grid');
     await user.keyboard('{End}');
     expect(onChange).toHaveBeenLastCalledWith('map');
+  });
+
+  it('moves focus with the selection so repeated arrows keep walking the options', async () => {
+    const user = userEvent.setup();
+    function ControlledGroup() {
+      const [choice, setChoice] = useState<Choice>('grid');
+      return (
+        <SegmentedRadioGroup
+          options={OPTIONS}
+          value={choice}
+          onChange={setChoice}
+          ariaLabel="Affichage"
+        />
+      );
+    }
+    render(<ControlledGroup />);
+    screen.getByRole('radio', { name: 'Grille' }).focus();
+
+    await user.keyboard('{ArrowRight}');
+    expect(screen.getByRole('radio', { name: 'Liste' })).toHaveFocus();
+
+    await user.keyboard('{ArrowRight}');
+    const map = screen.getByRole('radio', { name: 'Carte' });
+    expect(map).toHaveFocus();
+    expect(map).toHaveAttribute('aria-checked', 'true');
+
+    await user.keyboard('{Home}');
+    expect(screen.getByRole('radio', { name: 'Grille' })).toHaveFocus();
+
+    await user.keyboard('{End}');
+    expect(map).toHaveFocus();
   });
 
   it('keeps the label as the accessible name when an option shows its icon alone', () => {

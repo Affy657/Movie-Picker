@@ -276,7 +276,7 @@ Toute liste d'onglets du produit passe par là, y compris deux onglets dans une 
 
 ### SegmentedRadioGroup
 
-Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches, Home et End, seule l'option cochée est tabulable. C'est le sélecteur de thème, d'échelle de note et de mode de roue.
+Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches, Home et End, qui déplacent la sélection et le focus ensemble, seule l'option cochée est tabulable. C'est le sélecteur de thème, d'échelle de note et de mode de roue.
 
 | Prop | Type | Rôle |
 |---|---|---|
