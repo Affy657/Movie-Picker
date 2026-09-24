@@ -53,6 +53,7 @@ type RegisteredRoute = { matches: RouteMatcher; strategy: unknown };
 
 const installation = {
   routes: [] as RegisteredRoute[],
+  expirationOptions: [] as unknown[],
   precacheCalls: 0,
   cleanupCalls: 0,
   networkFirstCalls: 0,
@@ -91,6 +92,7 @@ beforeAll(async () => {
     matches: call[0] as RouteMatcher,
     strategy: call[1],
   }));
+  installation.expirationOptions = workbox.ExpirationPlugin.mock.calls.map((call) => call[0]);
   installation.precacheCalls = workbox.precacheAndRoute.mock.calls.length;
   installation.cleanupCalls = workbox.cleanupOutdatedCaches.mock.calls.length;
   installation.networkFirstCalls = workbox.NetworkFirst.mock.calls.length;
@@ -142,6 +144,14 @@ describe('service worker — mise en cache', () => {
     const matches = tmdbRouteMatcher();
     expect(matches({ url: new URL('https://image.tmdb.org/t/p/w500/a.jpg') })).toBe(true);
     expect(matches({ url: new URL('https://evil.test/t/p/w500/a.jpg') })).toBe(false);
+  });
+
+  it('refreshes a cached TMDB image behind its display, so a transient error is replaced on the next view', () => {
+    expect(installation.routes[1]!.strategy).toBeInstanceOf(workbox.StaleWhileRevalidate);
+  });
+
+  it('lets the browser drop the cached TMDB images when the storage quota runs out', () => {
+    expect(installation.expirationOptions[1]).toMatchObject({ purgeOnQuotaError: true });
   });
 });
 
