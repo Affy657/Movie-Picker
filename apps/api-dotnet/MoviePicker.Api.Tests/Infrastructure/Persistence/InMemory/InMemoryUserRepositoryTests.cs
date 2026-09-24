@@ -1,4 +1,5 @@
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
 
@@ -95,6 +96,86 @@ public sealed class InMemoryUserRepositoryTests
         Assert.Null(await _repo.GetByHandleAsync("alice"));
         Assert.NotNull(await _repo.GetByEmailAsync("alice2@test.local"));
         Assert.NotNull(await _repo.GetByHandleAsync("alice2"));
+    }
+
+    private static LinkedIdentity Google(string subject) => new()
+    {
+        Provider = "google",
+        Subject = subject,
+        Email = "linked@test.local",
+        LinkedAt = DateTimeOffset.UtcNow
+    };
+
+    [Theory]
+    [InlineData("ALICE@test.local", "alice", "google-alice", ErrorCodes.EmailTaken)]
+    [InlineData("ALICE@test.local", "bob", "google-bob", ErrorCodes.EmailTaken)]
+    [InlineData("bob@test.local", "ALICE", "google-alice", ErrorCodes.HandleTaken)]
+    [InlineData("bob@test.local", "bob", "google-alice", ErrorCodes.IdentityConflict)]
+    public async Task AddAsync_OnATakenKey_IsRefusedLikeTheMongoUniqueIndexes(
+        string email,
+        string handle,
+        string subject,
+        string expectedReason)
+    {
+        var alice = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice") with { Identities = [Google("google-alice")] });
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+            _repo.AddAsync(Mk(email: email, handle: handle) with { Identities = [Google(subject)] }));
+
+        Assert.Equal(expectedReason, ex.Reason);
+        Assert.Equal(alice.Id, (await _repo.GetByEmailAsync("alice@test.local"))!.Id);
+        Assert.Equal(alice.Id, (await _repo.GetByHandleAsync("alice"))!.Id);
+        Assert.Null(await _repo.GetByEmailAsync("bob@test.local"));
+        Assert.Null(await _repo.GetByHandleAsync("bob"));
+    }
+
+    [Theory]
+    [InlineData("ALICE@test.local", "alice", "google-alice", ErrorCodes.EmailTaken)]
+    [InlineData("bob@test.local", "Alice", "google-alice", ErrorCodes.HandleTaken)]
+    [InlineData("bob@test.local", "bob", "google-alice", ErrorCodes.IdentityConflict)]
+    public async Task UpdateAsync_TowardsAKeyOfAnotherUser_IsRefusedAndKeepsBothUsers(
+        string email,
+        string handle,
+        string subject,
+        string expectedReason)
+    {
+        var alice = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice") with { Identities = [Google("google-alice")] });
+        var bob = await _repo.AddAsync(Mk(email: "bob@test.local", handle: "bob"));
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+            _repo.UpdateAsync(bob with { Email = email, Handle = handle, Identities = [Google(subject)] }));
+
+        Assert.Equal(expectedReason, ex.Reason);
+        Assert.Equal(alice.Id, (await _repo.GetByEmailAsync("alice@test.local"))!.Id);
+        Assert.Equal(alice.Id, (await _repo.GetByHandleAsync("alice"))!.Id);
+        Assert.Equal(alice.Id, (await _repo.GetByIdentityAsync("google", "google-alice"))!.Id);
+        Assert.Equal(bob, await _repo.GetByIdAsync(bob.Id));
+        Assert.Equal(bob.Id, (await _repo.GetByEmailAsync("bob@test.local"))!.Id);
+        Assert.Equal(bob.Id, (await _repo.GetByHandleAsync("bob"))!.Id);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_KeepingItsOwnEmailHandleAndIdentity_Succeeds()
+    {
+        var alice = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice") with { Identities = [Google("google-alice")] });
+
+        var updated = await _repo.UpdateAsync(alice with { Email = "ALICE@test.local", Handle = "Alice", DisplayName = "Alice bis" });
+
+        Assert.Equal("Alice bis", updated.DisplayName);
+        Assert.Equal(alice.Id, (await _repo.GetByEmailAsync("alice@test.local"))!.Id);
+        Assert.Equal(alice.Id, (await _repo.GetByHandleAsync("alice"))!.Id);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ReleasesThePreviousEmailAndHandleForOtherUsers()
+    {
+        var alice = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice"));
+        await _repo.UpdateAsync(alice with { Email = "alice2@test.local", Handle = "alice2" });
+
+        var newcomer = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice"));
+
+        Assert.Equal(newcomer.Id, (await _repo.GetByEmailAsync("alice@test.local"))!.Id);
+        Assert.Equal(newcomer.Id, (await _repo.GetByHandleAsync("alice"))!.Id);
     }
 
     [Fact]

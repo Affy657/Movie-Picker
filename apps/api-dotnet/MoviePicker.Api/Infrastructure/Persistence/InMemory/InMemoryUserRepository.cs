@@ -12,6 +12,7 @@ public sealed class InMemoryUserRepository : IUserRepository
     private readonly ConcurrentDictionary<string, string> _emailToId = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _handleToId = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _templatesGate = new();
+    private readonly object _uniqueKeysGate = new();
 
     public Task<User?> GetByIdAsync(string id, CancellationToken ct = default) =>
         Task.FromResult(_byId.TryGetValue(id, out var u) ? u : null);
@@ -209,49 +210,76 @@ public sealed class InMemoryUserRepository : IUserRepository
         var email = Normalize(user.Email) ?? user.Email.Trim();
         var handle = NormalizeHandle(user.Handle);
         var created = Copy(user, id, email, handle);
-        _byId[id] = created;
-        _emailToId[email] = id;
-        if (handle is not null)
-            _handleToId[handle] = id;
+        lock (_uniqueKeysGate)
+        {
+            EnsureUniqueKeysAreFree(id, email, handle, created.Identities);
+            _byId[id] = created;
+            _emailToId[email] = id;
+            if (handle is not null)
+                _handleToId[handle] = id;
+        }
+
         return Task.FromResult(created);
     }
 
     public Task<User> UpdateAsync(User user, CancellationToken ct = default)
     {
-        if (!_byId.TryGetValue(user.Id, out var previous))
-            throw Errors.UserNotFound();
-        if (previous.Version != user.Version)
-            throw Errors.ConcurrentUpdate();
+        lock (_uniqueKeysGate)
+        {
+            if (!_byId.TryGetValue(user.Id, out var previous))
+                throw Errors.UserNotFound();
+            if (previous.Version != user.Version)
+                throw Errors.ConcurrentUpdate();
 
-        var email = Normalize(user.Email) ?? user.Email.Trim();
-        var handle = NormalizeHandle(user.Handle);
-        var updated = Copy(user with { Version = user.Version + 1 }, user.Id, email, handle);
-        if (!_byId.TryUpdate(user.Id, updated, previous))
-            throw Errors.ConcurrentUpdate();
+            var email = Normalize(user.Email) ?? user.Email.Trim();
+            var handle = NormalizeHandle(user.Handle);
+            EnsureUniqueKeysAreFree(user.Id, email, handle, user.Identities);
+            var updated = Copy(user with { Version = user.Version + 1 }, user.Id, email, handle);
+            if (!_byId.TryUpdate(user.Id, updated, previous))
+                throw Errors.ConcurrentUpdate();
 
-        var prevEmail = Normalize(previous.Email) ?? previous.Email.Trim();
-        _emailToId.TryRemove(prevEmail, out _);
-        var prevHandle = NormalizeHandle(previous.Handle);
-        if (prevHandle is not null)
-            _handleToId.TryRemove(prevHandle, out _);
-
-        _emailToId[email] = user.Id;
-        if (handle is not null)
-            _handleToId[handle] = user.Id;
-        return Task.FromResult(updated);
+            ReleaseUniqueKeys(previous);
+            _emailToId[email] = user.Id;
+            if (handle is not null)
+                _handleToId[handle] = user.Id;
+            return Task.FromResult(updated);
+        }
     }
 
     public Task<bool> DeleteAsync(string id, CancellationToken ct = default)
     {
-        if (!_byId.TryRemove(id, out var removed))
-            return Task.FromResult(false);
+        lock (_uniqueKeysGate)
+        {
+            if (!_byId.TryRemove(id, out var removed))
+                return Task.FromResult(false);
 
-        var email = Normalize(removed.Email) ?? removed.Email.Trim();
-        _emailToId.TryRemove(email, out _);
-        var handle = NormalizeHandle(removed.Handle);
+            ReleaseUniqueKeys(removed);
+            return Task.FromResult(true);
+        }
+    }
+
+    private void EnsureUniqueKeysAreFree(string userId, string email, string? handle, IReadOnlyList<LinkedIdentity> identities)
+    {
+        if (_emailToId.TryGetValue(email, out var emailOwner) && emailOwner != userId)
+            throw Errors.EmailTaken();
+        if (handle is not null && _handleToId.TryGetValue(handle, out var handleOwner) && handleOwner != userId)
+            throw Errors.HandleTaken();
+        if (identities.Count > 0 && _byId.Values.Any(other => other.Id != userId && SharesAnIdentity(other, identities)))
+            throw Errors.IdentityConflict();
+    }
+
+    private static bool SharesAnIdentity(User other, IReadOnlyList<LinkedIdentity> identities) =>
+        other.Identities.Any(owned => identities.Any(wanted =>
+            string.Equals(owned.Provider, wanted.Provider, StringComparison.Ordinal)
+            && string.Equals(owned.Subject, wanted.Subject, StringComparison.Ordinal)));
+
+    private void ReleaseUniqueKeys(User user)
+    {
+        var email = Normalize(user.Email) ?? user.Email.Trim();
+        _emailToId.TryRemove(new KeyValuePair<string, string>(email, user.Id));
+        var handle = NormalizeHandle(user.Handle);
         if (handle is not null)
-            _handleToId.TryRemove(handle, out _);
-        return Task.FromResult(true);
+            _handleToId.TryRemove(new KeyValuePair<string, string>(handle, user.Id));
     }
 
     private static User Copy(User user, string id, string email, string? handle) =>
