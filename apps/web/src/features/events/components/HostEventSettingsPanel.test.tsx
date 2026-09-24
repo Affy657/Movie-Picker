@@ -738,6 +738,47 @@ describe('HostEventSettingsPanel', () => {
     ).toBeInTheDocument();
   });
 
+  it('renaming a template that is not applied does not offer to overwrite it', async () => {
+    const user = userEvent.setup();
+    let templates = [templateFixture];
+    let putBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: templates })
+      ),
+      http.put(`${TEST_API_V1}/users/me/event-templates/tpl1`, async ({ request }) => {
+        putBody = (await request.json()) as Record<string, unknown>;
+        templates = [{ ...templateFixture, name: 'Soirée frissons' }];
+        return HttpResponse.json(templates[0]);
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Gérer' }));
+    await user.click(
+      screen.getByRole('button', { name: /Renommer le template « Soirée horreur »/ })
+    );
+    const nameField = screen.getByRole('textbox', { name: /Nom du template/ });
+    await user.clear(nameField);
+    await user.type(nameField, 'Soirée frissons');
+    await user.click(screen.getByRole('button', { name: 'Valider' }));
+
+    await waitFor(() => expect(putBody).toMatchObject({ name: 'Soirée frissons' }));
+    expect(await screen.findByText('Soirée frissons')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mettre à jour' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Vous avez modifié la configuration/)).not.toBeInTheDocument();
+    expect(screen.getByText('Cette configuration marche bien ?')).toBeInTheDocument();
+  });
+
   it('updates the applied template after a settings tweak', async () => {
     const user = userEvent.setup();
     let putBody: Record<string, unknown> | null = null;
