@@ -28,6 +28,11 @@ function ExposeLogout({ onLogout }: Readonly<{ onLogout: (logout: Logout) => voi
   return null;
 }
 
+function ExposeUser({ onUser }: Readonly<{ onUser: (user: UserProfile | null) => void }>) {
+  onUser(useAuth().user);
+  return null;
+}
+
 async function renderLogout(): Promise<Logout> {
   let logout: Logout | undefined;
   render(
@@ -58,15 +63,48 @@ describe('AuthProvider logout', () => {
   });
 
   it('still drops the push subscription when the server refuses the logout', async () => {
-    vi.mocked(postAuthLogout).mockRejectedValueOnce(new ApiError('Session expired', { code: 401 }));
+    vi.mocked(postAuthLogout).mockRejectedValueOnce(new ApiError('Server error', { code: 500 }));
     const logout = await renderLogout();
 
     await act(async () => {
-      await expect(logout()).rejects.toThrow('Session expired');
+      await expect(logout()).rejects.toThrow('Server error');
     });
 
     expect(postAuthLogout).toHaveBeenCalledTimes(1);
     expect(dropBrowserPushSubscription).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['the server already revoked the session', new ApiError('Session expired', { code: 401 })],
+    ['the network is down', new ApiError('Network error', { code: 0 })],
+  ])('signs this tab out when %s', async (_case, failure) => {
+    vi.mocked(postAuthLogout).mockRejectedValueOnce(failure);
+    let logout: Logout | undefined;
+    let user: UserProfile | null | undefined;
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <AuthProvider>
+          <ExposeLogout
+            onLogout={(fn) => {
+              logout = fn;
+            }}
+          />
+          <ExposeUser
+            onUser={(value) => {
+              user = value;
+            }}
+          />
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(user?.userId).toBe('u1'));
+
+    await act(async () => {
+      await logout!();
+    });
+
+    expect(user).toBeNull();
+    expect(dropBrowserPushSubscription).toHaveBeenCalled();
   });
 });
 

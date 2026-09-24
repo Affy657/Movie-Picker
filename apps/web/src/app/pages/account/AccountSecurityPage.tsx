@@ -46,13 +46,28 @@ function PasswordRow({ user }: Readonly<{ user: UserProfile }>) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [succeeded, setSucceeded] = useState(false);
   const redirectTimerRef = useRef<number | undefined>(undefined);
-  useEffect(() => () => globalThis.clearTimeout(redirectTimerRef.current), []);
+  const endSessionRef = useRef(endSession);
+
+  useEffect(() => {
+    endSessionRef.current = endSession;
+  }, [endSession]);
+
+  useEffect(
+    () => () => {
+      if (redirectTimerRef.current === undefined) return;
+      globalThis.clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = undefined;
+      void endSessionRef.current();
+    },
+    []
+  );
 
   const changeAction = useCallback(async () => {
     await patchChangePassword(user.hasPassword ? currentPassword : '', newPassword);
     setSucceeded(true);
     globalThis.clearTimeout(redirectTimerRef.current);
     redirectTimerRef.current = globalThis.setTimeout(() => {
+      redirectTimerRef.current = undefined;
       void endSession();
       navigate(ROUTES.login, { replace: true });
     }, POST_PASSWORD_CHANGE_REDIRECT_MS);

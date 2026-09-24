@@ -163,6 +163,36 @@ describe('UserMenu', () => {
     await waitFor(() => expect(loggedOut).toBe(true));
   });
 
+  it('signs out without an error when the server already revoked the session', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(baseUser)),
+      http.post(`${TEST_API_V1}/auth/logout`, () =>
+        HttpResponse.json(
+          { error: 'Authentication required', code: 401, reason: 'unauthorized' },
+          { status: 401 }
+        )
+      )
+    );
+    const client = createTestQueryClient();
+    render(
+      <AppTestProviders client={client}>
+        <MemoryRouter>
+          <UserMenu user={baseUser} />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+    await waitFor(() =>
+      expect(client.getQueryData<UserProfile | null>(queryKeys.auth.me)?.userId).toBe('u1')
+    );
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+    await user.click(screen.getByRole('menuitem', { name: /se déconnecter/i }));
+
+    await waitFor(() => expect(client.getQueryData(queryKeys.auth.me)).toBeNull());
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('signing out forgets the movie night identities and clears the query cache', async () => {
     const user = userEvent.setup();
     server.use(

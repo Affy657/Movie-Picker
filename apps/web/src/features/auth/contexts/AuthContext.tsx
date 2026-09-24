@@ -16,6 +16,7 @@ import {
   postAuthRegister,
   type ProfilePatch,
 } from '@/features/auth/api/authApi';
+import { ApiError } from '@/shared/api/apiError';
 import { clearStoredEventIdentities } from '@/shared/utils/eventIdentityStorage';
 import { dropBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -38,6 +39,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function signedOutStateRendered(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+function sessionGoneOrUnreachable(error: unknown): boolean {
+  return ApiError.is(error) && (error.code === 401 || error.code === 0);
 }
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
@@ -122,6 +127,8 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     mutationFn: async () => {
       try {
         await postAuthLogout();
+      } catch (error) {
+        if (!sessionGoneOrUnreachable(error)) throw error;
       } finally {
         void dropBrowserPushSubscription();
       }
