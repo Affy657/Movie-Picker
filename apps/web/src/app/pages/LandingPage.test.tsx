@@ -1,6 +1,9 @@
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
+import { setupServer } from 'msw/node';
+import { http, HttpResponse } from 'msw';
+import { TEST_API_V1 } from '@/mocks/handlers';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import LandingPage from '@/app/pages/LandingPage';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
@@ -75,5 +78,38 @@ describe('LandingPage', () => {
       screen.getByRole('heading', { name: /what happens between two movie nights/i, level: 2 })
     ).toBeInTheDocument();
     expect(screen.getByText(/free, no ads, no commitment/i)).toBeInTheDocument();
+  });
+
+  describe('signed in', () => {
+    const server = setupServer(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u1',
+          displayName: 'Alice',
+          handle: 'alice',
+          emailMasked: 'a***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+        })
+      )
+    );
+
+    beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+    afterEach(() => server.resetHandlers());
+    afterAll(() => server.close());
+
+    it('the closing call to action offers to create a night instead of signing up or in', async () => {
+      renderLanding();
+      const main = screen.getByRole('main');
+      const finalSection = within(main).getByRole('region', {
+        name: /votre prochaine soirée commence ici/i,
+      });
+
+      expect(
+        await within(finalSection).findByRole('link', { name: /^créer une soirée$/i })
+      ).toHaveAttribute('href', '/new');
+      expect(within(main).queryByRole('link', { name: /^créer un compte$/i })).toBeNull();
+      expect(within(main).queryByRole('link', { name: /^se connecter$/i })).toBeNull();
+    });
   });
 });
