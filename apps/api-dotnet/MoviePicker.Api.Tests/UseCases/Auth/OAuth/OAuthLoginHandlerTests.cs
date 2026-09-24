@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -226,6 +227,26 @@ public sealed class OAuthLoginHandlerTests
         Assert.Equal(OAuthOutcomeKind.SignedIn, outcome.Kind);
         Assert.Equal(user.Id, outcome.User!.Id);
         Assert.Contains(outcome.User.Identities, i => i.Provider == "github" && i.Subject == "gh-2");
+    }
+
+    [Fact]
+    public async Task HandleAsync_ProviderNameLongerThanTheProfileAllows_IsCutToASaveableName()
+    {
+        var f = new Fixture();
+        var longName = new string('a', 79) + "🎬" + new string('b', 30);
+
+        var outcome = await f.CreateHandler().HandleAsync(new ExternalLoginInfo
+        {
+            Provider = "google",
+            Subject = "sub-long",
+            Email = "long@example.com",
+            EmailVerified = true,
+            DisplayName = longName
+        });
+
+        var saved = outcome.User!.DisplayName;
+        Assert.Null(AuthInputValidation.ValidateDisplayName(saved));
+        Assert.Equal(new string('a', 79), saved);
     }
 
     [Fact]

@@ -94,7 +94,7 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
         DateTimeOffset now,
         CancellationToken ct)
     {
-        var displayName = string.IsNullOrWhiteSpace(info.DisplayName) ? "Membre" : info.DisplayName.Trim();
+        var displayName = string.IsNullOrWhiteSpace(info.DisplayName) ? "Membre" : FitDisplayName(info.DisplayName.Trim());
 
         try
         {
@@ -132,5 +132,14 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
             conflict.Reason,
             winner is not null);
         return winner ?? throw Errors.OAuthLinkFailed();
+    }
+
+    private static string FitDisplayName(string name)
+    {
+        const int max = AuthInputValidation.DisplayNameMaxLength;
+        if (name.Length <= max)
+            return name;
+        var cut = char.IsHighSurrogate(name[max - 1]) ? max - 1 : max;
+        return name[..cut].TrimEnd();
     }
 }
