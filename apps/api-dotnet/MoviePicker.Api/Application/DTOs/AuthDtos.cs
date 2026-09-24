@@ -13,7 +13,7 @@ public sealed class RegisterRequest
 
     [Required(ErrorMessage = "Password is required")]
     [MinLength(1)]
-    [MaxLength(128)]
+    [MaxLength(1024)]
     public string Password { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Display name is required")]
@@ -107,7 +107,7 @@ public sealed class ChangePasswordRequest
     public string? CurrentPassword { get; init; }
 
     [Required(ErrorMessage = "New password is required")]
-    [MaxLength(128)]
+    [MaxLength(1024)]
     public string NewPassword { get; init; } = string.Empty;
 }
 
