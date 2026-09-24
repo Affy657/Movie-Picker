@@ -136,6 +136,28 @@ public sealed partial class CreateIdeaSuggestionHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_NeutralizesIssueReferencesAndHtmlComments_InTheDescription()
+    {
+        GitHubIssueDraft? captured = null;
+        _github.Setup(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()))
+            .Callback<GitHubIssueDraft, CancellationToken>((d, _) => captured = d)
+            .Returns(Task.CompletedTask);
+
+        await _sut.HandleAsync(UserId, new CreateIdeaSuggestionRequest
+        {
+            Category = IdeaSuggestionCategory.Idea,
+            Title = "Comme #12",
+            Description = "Voir #12, torvalds/linux#34, GH-5 et https://github.com/x/y/issues/9\n<!-- tout le reste disparaît"
+        });
+
+        Assert.NotNull(captured);
+        Assert.DoesNotContain("#12", captured!.Title, StringComparison.Ordinal);
+        foreach (var reference in new[] { "#12", "linux#34", "GH-5", "github.com/x/y/issues/9", "<!--" })
+            Assert.DoesNotContain(reference, captured.Body, StringComparison.Ordinal);
+        Assert.Contains("Référence :", captured.Body, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task HandleAsync_GitHubClientFails_PropagatesServiceUnavailable()
     {
         _github.Setup(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()))

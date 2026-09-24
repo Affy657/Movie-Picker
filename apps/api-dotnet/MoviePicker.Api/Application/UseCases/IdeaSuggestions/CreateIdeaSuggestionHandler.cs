@@ -152,11 +152,11 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
             _ => ("Idée", "idée-utilisateur")
         };
 
-        var title = $"[{prefix}] {NeutralizeMentions(request.Title.Trim())}";
+        var title = $"[{prefix}] {NeutralizeGitHubReferences(request.Title.Trim())}";
 
         var bodyLines = new List<string>
         {
-            NeutralizeMentions(request.Description.Trim()),
+            NeutralizeGitHubReferences(request.Description.Trim()),
             string.Empty,
             "---",
             $"Référence : {reference}"
@@ -184,5 +184,27 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
         RegexOptions.Compiled,
         TimeSpan.FromMilliseconds(100));
 
-    private static string NeutralizeMentions(string text) => MentionPattern.Replace(text, "@\u200b");
+    private static readonly Regex IssueNumberPattern = new(
+        @"#(?=\d)",
+        RegexOptions.Compiled,
+        TimeSpan.FromMilliseconds(100));
+
+    private static readonly Regex GitHubShorthandPattern = new(
+        @"\bGH(?=-\d)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase,
+        TimeSpan.FromMilliseconds(100));
+
+    private static readonly Regex GitHubHostPattern = new(
+        @"github(?=\.com)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase,
+        TimeSpan.FromMilliseconds(100));
+
+    private static string NeutralizeGitHubReferences(string text)
+    {
+        var neutralized = MentionPattern.Replace(text, "@\u200b");
+        neutralized = IssueNumberPattern.Replace(neutralized, "#\u200b");
+        neutralized = GitHubShorthandPattern.Replace(neutralized, match => match.Value + "\u200b");
+        neutralized = GitHubHostPattern.Replace(neutralized, match => match.Value + "\u200b");
+        return neutralized.Replace("<!--", "&lt;!--", StringComparison.Ordinal);
+    }
 }
