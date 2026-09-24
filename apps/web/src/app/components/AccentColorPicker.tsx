@@ -66,13 +66,17 @@ export default function AccentColorPicker({
   const accentRef = useRef(accent);
   accentRef.current = accent;
   const patchTimerRef = useRef<number | null>(null);
+  const sendPendingPatchRef = useRef<(() => void) | null>(null);
   const userId = user?.userId;
   useEffect(() => {
     if (userId) lastCommittedRef.current = accentRef.current;
   }, [userId]);
   useEffect(
     () => () => {
-      if (patchTimerRef.current !== null) clearTimeout(patchTimerRef.current);
+      if (patchTimerRef.current === null) return;
+      clearTimeout(patchTimerRef.current);
+      patchTimerRef.current = null;
+      sendPendingPatchRef.current?.();
     },
     []
   );
@@ -92,8 +96,7 @@ export default function AccentColorPicker({
         return;
       }
       if (patchTimerRef.current !== null) clearTimeout(patchTimerRef.current);
-      patchTimerRef.current = globalThis.setTimeout(() => {
-        patchTimerRef.current = null;
+      sendPendingPatchRef.current = () => {
         const rollback = lastCommittedRef.current;
         void patchProfile({ accentColor: next })
           .then(() => {
@@ -109,6 +112,10 @@ export default function AccentColorPicker({
               })
             );
           });
+      };
+      patchTimerRef.current = globalThis.setTimeout(() => {
+        patchTimerRef.current = null;
+        sendPendingPatchRef.current?.();
       }, PATCH_DEBOUNCE_MS);
     },
     [effectiveSelection, setAccent, user, patchProfile, onSaved, t]
