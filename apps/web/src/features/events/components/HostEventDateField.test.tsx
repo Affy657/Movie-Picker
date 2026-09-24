@@ -13,6 +13,7 @@ function renderField(relativeDateLabel: string | null) {
         showNotifyRow={false}
         notifyDateChange={false}
         onValueChange={vi.fn()}
+        onCommit={vi.fn()}
         onNotifyChange={vi.fn()}
       />
     </AppTestProviders>

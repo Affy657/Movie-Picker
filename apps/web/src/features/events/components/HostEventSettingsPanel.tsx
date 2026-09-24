@@ -71,6 +71,7 @@ export default function HostEventSettingsPanel({
     themePreview,
     eventDateLocal,
     setEventDateLocal,
+    commitEventDate,
     relativeDateLabel,
     dateWasEdited,
     notifyDateChange,
@@ -203,10 +204,8 @@ export default function HostEventSettingsPanel({
                 relativeDateLabel={relativeDateLabel}
                 showNotifyRow={dateWasEdited && !fieldErrors.date}
                 notifyDateChange={notifyDateChange}
-                onValueChange={(v) => {
-                  setEventDateLocal(v);
-                  scheduleAutoSave();
-                }}
+                onValueChange={setEventDateLocal}
+                onCommit={commitEventDate}
                 onNotifyChange={setNotifyDateChange}
               />
 

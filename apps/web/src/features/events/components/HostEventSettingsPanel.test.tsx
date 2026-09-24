@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -543,7 +543,7 @@ describe('HostEventSettingsPanel', () => {
     expect(body).toEqual({ winnerCount: 3 });
   });
 
-  it("envoie la date, l'heure et le choix de notification seulement quand la date change", async () => {
+  it('sends the date, the time and the notify choice once the host leaves the date field', async () => {
     const user = userEvent.setup();
     let body: Record<string, unknown> | null = null;
     server.use(
@@ -567,12 +567,127 @@ describe('HostEventSettingsPanel', () => {
     const dateField = screen.getByLabelText(/date et heure/i);
     await user.clear(dateField);
     await user.type(dateField, '2030-02-01T21:30');
+    await user.click(screen.getByLabelText(/nom de la soir/i));
 
     await waitFor(() => expect(body).not.toBeNull(), { timeout: 3000 });
     expect(body).toEqual({
       date: '2030-02-01',
       time: '21:30',
       notifyParticipantsOfDateChange: true,
+    });
+  });
+
+  describe('rescheduling', () => {
+    function capturePatchBodies() {
+      const bodies: Record<string, unknown>[] = [];
+      server.use(
+        http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+          bodies.push((await request.json()) as Record<string, unknown>);
+          return HttpResponse.json({ ...baseEvent.config });
+        })
+      );
+      return bodies;
+    }
+
+    function renderPanel() {
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={null}
+          event={baseEvent}
+          open
+          onClose={() => {}}
+        />
+      );
+      return screen.getByLabelText(/date et heure/i);
+    }
+
+    const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    it('sends a single new date, so a single notification, however long the host pauses while editing it', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBodies();
+      const dateField = renderPanel();
+
+      await user.click(dateField);
+      fireEvent.change(dateField, { target: { value: '2030-02-01T20:00' } });
+      await pause(800);
+      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+      await pause(800);
+
+      expect(bodies).toEqual([]);
+
+      await user.click(screen.getByLabelText(/nom de la soir/i));
+
+      await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
+      expect(bodies[0]).toEqual({
+        date: '2030-02-01',
+        time: '21:30',
+        notifyParticipantsOfDateChange: true,
+      });
+    });
+
+    it('keeps the notify choice on screen until the new date is saved, and sends it', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBodies();
+      const dateField = renderPanel();
+
+      await user.click(dateField);
+      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+      await pause(800);
+      await user.click(screen.getByRole('checkbox', { name: /prévenir les participants/i }));
+      await user.click(screen.getByLabelText(/nom de la soir/i));
+
+      await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
+      expect(bodies[0]).toEqual({
+        date: '2030-02-01',
+        time: '21:30',
+        notifyParticipantsOfDateChange: false,
+      });
+    });
+
+    function ClosablePanel() {
+      const [open, setOpen] = useState(true);
+      return (
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={null}
+          event={baseEvent}
+          open={open}
+          onClose={() => setOpen(false)}
+        />
+      );
+    }
+
+    it('saves a date still being edited when the sheet closes', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBodies();
+      renderWithRouter(<ClosablePanel />);
+      const dateField = screen.getByLabelText(/date et heure/i);
+
+      await user.click(dateField);
+      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Fermer' }));
+
+      await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
+      expect(bodies[0]).toEqual({
+        date: '2030-02-01',
+        time: '21:30',
+        notifyParticipantsOfDateChange: true,
+      });
+    });
+
+    it('leaves a date still being edited out of the save of another field', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBodies();
+      const dateField = renderPanel();
+
+      await user.type(screen.getByLabelText(/nom de la soir/i), ' ciné');
+      await user.click(dateField);
+      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+
+      await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
+      expect(bodies[0]).toEqual({ title: 'Test ciné' });
     });
   });
 

@@ -67,6 +67,7 @@ export function useHostEventSettingsDraft({
   const [eventDateLocal, setEventDateLocal] = useState(
     eventDateTimeToLocal(event.date, event.time)
   );
+  const committedDateLocalRef = useRef(eventDateTimeToLocal(event.date, event.time));
   const savedRef = useRef<SavedSettings>(savedSettingsOf(event));
   const saveInFlightRef = useRef(false);
   const saveQueuedRef = useRef(false);
@@ -88,6 +89,7 @@ export function useHostEventSettingsDraft({
   const [winnerCount, setWinnerCount] = useState(initialFields.winnerCount);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const performSaveRef = useRef<() => void>(() => {});
+  const commitEventDateRef = useRef<(immediate: boolean) => void>(() => {});
 
   useEffect(() => () => clearTimeout(saveTimerRef.current), []);
 
@@ -201,6 +203,7 @@ export function useHostEventSettingsDraft({
     setThemeOpen(false);
     const saved = savedSettingsOf(event);
     savedRef.current = saved;
+    committedDateLocalRef.current = saved.dateLocal;
     setEventDateLocal(saved.dateLocal);
     setNotifyDateChange(true);
     setRecurrence(event.config?.recurrence ?? null);
@@ -210,9 +213,17 @@ export function useHostEventSettingsDraft({
     setSaveState('saved');
   }, [event, applyFields, forgetAppliedTemplate]);
 
+  commitEventDateRef.current = (immediate) => {
+    if (eventDateLocal === committedDateLocalRef.current) return;
+    committedDateLocalRef.current = eventDateLocal;
+    scheduleAutoSave(immediate);
+  };
+  const commitEventDate = useCallback(() => commitEventDateRef.current(false), []);
+
   const wasOpenRef = useRef(false);
   useEffect(() => {
     if (open && !wasOpenRef.current) hydrateFromEvent();
+    if (!open && wasOpenRef.current) commitEventDateRef.current(true);
     wasOpenRef.current = open;
   }, [open, hydrateFromEvent]);
 
@@ -222,6 +233,7 @@ export function useHostEventSettingsDraft({
       return;
     }
 
+    const committedDateLocal = committedDateLocalRef.current;
     const {
       errors,
       maxProposalsPerParticipant,
@@ -231,7 +243,7 @@ export function useHostEventSettingsDraft({
     } = validateSettingsDraft(
       {
         eventTitle,
-        eventDateLocal,
+        eventDateLocal: committedDateLocal,
         proposalLimitEnabled,
         maxProp,
         participantLimitEnabled,
@@ -263,7 +275,7 @@ export function useHostEventSettingsDraft({
       richSharePreview,
       winnerCount: winnerCountValue ?? savedRef.current.winnerCount,
       recurrence,
-      dateLocal: eventDateLocal,
+      dateLocal: committedDateLocal,
     };
     const body = settingsPatch(settings, savedRef.current, notifyDateChange);
     if (Object.keys(body).length === 0) {
@@ -297,6 +309,7 @@ export function useHostEventSettingsDraft({
     themePreview,
     eventDateLocal,
     setEventDateLocal,
+    commitEventDate,
     relativeDateLabel,
     dateWasEdited,
     notifyDateChange,
