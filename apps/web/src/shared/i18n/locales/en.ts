@@ -1416,6 +1416,7 @@ export const en: Locale = {
     forbidden: 'Access denied.',
     unauthorized: 'Authentication required.',
     internal_error: 'An internal error occurred.',
+    validation_failed: 'Some of the information sent is not valid. Check it and try again.',
     rate_limited: 'Too many requests. Please try again in a moment.',
     concurrent_update: 'Modified in the meantime. Reload the page and try again.',
     'vote-limit-reached': 'Limit of {{max}} vote(s) per participant reached.',

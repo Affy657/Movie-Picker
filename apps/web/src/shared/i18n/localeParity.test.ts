@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { fr } from './locales/fr';
 import { en } from './locales/en';
+import errorCodesSource from '../../../../api-dotnet/MoviePicker.Api/Domain/Exceptions/ErrorCodes.cs?raw';
 
 function flatten(node: unknown, prefix = ''): Array<[string, unknown]> {
   if (typeof node !== 'object' || node === null) return [[prefix, node]];
@@ -13,6 +14,11 @@ const frEntries = flatten(fr);
 const enEntries = flatten(en);
 const frKeys = frEntries.map(([key]) => key);
 const enKeys = enEntries.map(([key]) => key);
+
+const apiErrorCodes = Array.from(
+  errorCodesSource.matchAll(/public const string \w+ = "([^"]+)";/g),
+  ([, code]) => code ?? ''
+);
 
 describe('locale parity', () => {
   it('the English locale covers every French key', () => {
@@ -30,6 +36,16 @@ describe('locale parity', () => {
       .filter(([, value]) => typeof value !== 'string' || value.trim().length === 0)
       .map(([key]) => key);
     expect(invalid, `valeurs invalides : ${invalid.join(', ')}`).toEqual([]);
+  });
+
+  it('translates every error code of the API in both locales', () => {
+    expect(apiErrorCodes).toContain('not_found');
+    const untranslated = Object.entries({ fr, en }).flatMap(([localeCode, locale]) =>
+      apiErrorCodes
+        .filter((reason) => !Object.hasOwn(locale.apiErrors, reason))
+        .map((reason) => `${localeCode}.apiErrors.${reason}`)
+    );
+    expect(untranslated, `untranslated API error codes: ${untranslated.join(', ')}`).toEqual([]);
   });
 
   it('the French locale uses the formal "vous" everywhere', () => {
