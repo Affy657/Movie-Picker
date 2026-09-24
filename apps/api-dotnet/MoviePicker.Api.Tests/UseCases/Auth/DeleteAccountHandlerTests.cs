@@ -240,6 +240,64 @@ public sealed class DeleteAccountHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_MarksEveryJoinedNightAsChanged()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        await f.Participants.AddAsync(new Participant { EventId = "joined-1", Pseudo = "Neo", UserId = user.Id });
+        await f.Participants.AddAsync(new Participant { EventId = "joined-2", Pseudo = "Neo", UserId = user.Id });
+        var events = new Mock<IEventRepository>();
+        events
+            .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
+                ids.Select(id => new Event { Id = id, Title = id, Slug = id }).ToList());
+        var handler = new DeleteAccountHandler(
+            f.Users,
+            f.Hasher,
+            events.Object,
+            f.Participants,
+            f.Notifications,
+            f.Push,
+            f.Follows,
+            f.Watchlist,
+            f.ResetTokens,
+            f.Sessions.Object,
+            new InMemoryUnitOfWork(),
+            NullLogger<DeleteAccountHandler>.Instance);
+
+        await handler.HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        events.Verify(r => r.MarkChangedAsync("joined-1", It.IsAny<CancellationToken>()), Times.Once);
+        events.Verify(r => r.MarkChangedAsync("joined-2", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_JoinedNight_ServesTheAnonymousPseudoUnderANewWriteSequence()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var joined = await f.Events.AddAsync(new Event { Title = "Soirée amie", Slug = "soiree-amie", CreatorUserId = "other-1" });
+        await f.Participants.AddAsync(new Participant { EventId = joined.Id, Pseudo = "Neo", UserId = user.Id });
+        var before = (await f.Events.GetByIdOrSlugAsync(joined.Slug))!.WriteSeq;
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        Assert.True((await f.Events.GetByIdOrSlugAsync(joined.Slug))!.WriteSeq > before);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ParticipationInADeletedNight_DoesNotBlockTheDeletion()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        await f.Participants.AddAsync(new Participant { EventId = "deleted-night", Pseudo = "Neo", UserId = user.Id });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        Assert.Null(await f.Users.GetByIdAsync(user.Id));
+    }
+
+    [Fact]
     public async Task HandleAsync_SecondDeletedAccountOfTheSameEvent_GetsADistinctAnonymousPseudo()
     {
         var f = new Fixture();

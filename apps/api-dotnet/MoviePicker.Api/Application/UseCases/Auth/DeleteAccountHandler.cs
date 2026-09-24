@@ -84,8 +84,10 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
             async token =>
             {
                 anonymizedEvents = await _events.AnonymizeCreatorAsync(userId, token);
+                var joinedEventIds = await _participants.ListDistinctEventIdsByUserIdAsync(userId, token);
                 anonymizedParticipations = await _participants.AnonymizeByUserIdAsync(
                     userId, AnonymizedParticipantPseudo, token);
+                await MarkJoinedEventsChangedAsync(joinedEventIds, token);
                 await _notifications.DeleteByUserIdAsync(userId, token);
                 if (!string.IsNullOrWhiteSpace(user.Handle))
                     await _notifications.AnonymizeActorAsync(user.Handle, AnonymizedParticipantPseudo, token);
@@ -102,5 +104,11 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _logger.LogInformation(
             "DeleteAccount: success for {EmailMasked} (userId={UserId}, anonymizedEvents={Events}, anonymizedParticipations={Participations})",
             EmailMasking.Mask(user.Email), userId, anonymizedEvents, anonymizedParticipations);
+    }
+
+    private async Task MarkJoinedEventsChangedAsync(IReadOnlyList<string> joinedEventIds, CancellationToken ct)
+    {
+        foreach (var joined in await _events.ListByIdsAsync(joinedEventIds, ct))
+            await _events.MarkChangedAsync(joined.Id, ct);
     }
 }
