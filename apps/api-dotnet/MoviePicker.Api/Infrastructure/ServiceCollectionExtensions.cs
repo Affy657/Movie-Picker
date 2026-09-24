@@ -90,7 +90,6 @@ public static class ServiceCollectionExtensions
             .AddHttpClient(WebPushSender.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15))
             .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false });
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
-        services.AddSingleton<ISchedulerTokenValidator, SchedulerTokenValidator>();
         services.AddSingleton<IConfigurationManager<OpenIdConnectConfiguration>>(_ =>
             new ConfigurationManager<OpenIdConnectConfiguration>(
                 GoogleOidcSchedulerTokenValidator.GoogleDiscoveryDocument,
@@ -170,8 +169,6 @@ public static class ServiceCollectionExtensions
         if (!string.IsNullOrWhiteSpace(kofiToken))
             opts.KofiWebhookToken = kofiToken.Trim();
 
-        var schedulerToken = cfg["SCHEDULER_TOKEN"];
-        opts.SchedulerToken = string.IsNullOrWhiteSpace(schedulerToken) ? null : schedulerToken.Trim();
         var schedulerAudience = cfg["SCHEDULER_OIDC_AUDIENCE"];
         opts.SchedulerOidcAudience = string.IsNullOrWhiteSpace(schedulerAudience) ? null : schedulerAudience.Trim().TrimEnd('/');
         var schedulerServiceAccount = cfg["SCHEDULER_OIDC_SERVICE_ACCOUNT"];

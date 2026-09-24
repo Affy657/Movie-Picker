@@ -7,7 +7,7 @@ public enum SchedulerCallerVerdict
     Accepted
 }
 
-public sealed record SchedulerCallerCredentials(string? SharedToken, string? BearerToken);
+public sealed record SchedulerCallerCredentials(string? BearerToken);
 
 public interface ISchedulerCallerAuthenticator
 {

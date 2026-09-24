@@ -104,7 +104,7 @@ public sealed class SchedulerControllerRecurringEventsTests
 
         Assert.IsType<UnauthorizedResult>(result);
         _authenticator.Verify(
-            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, null), It.IsAny<CancellationToken>()),
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -117,7 +117,7 @@ public sealed class SchedulerControllerRecurringEventsTests
         await Run();
 
         _authenticator.Verify(
-            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, "jwt"), It.IsAny<CancellationToken>()),
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials("jwt"), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

@@ -25,8 +25,6 @@ public sealed class SchedulerControllerTests
             .Setup(a => a.AuthenticateAsync(It.IsAny<SchedulerCallerCredentials>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(verdict);
 
-    private void PresentSharedToken(string token) => _sut.Request.Headers["X-Scheduler-Token"] = token;
-
     private void PresentBearer(string token) => _sut.Request.Headers.Authorization = $"Bearer {token}";
 
     private Task<IActionResult> Run(CancellationToken ct = default) =>
@@ -36,7 +34,7 @@ public sealed class SchedulerControllerTests
     public async Task RunEventReminders_NothingConfigured_Returns503AndDoesNotRunThePass()
     {
         Verdict(SchedulerCallerVerdict.NotConfigured);
-        PresentSharedToken("peu-importe");
+        PresentBearer("jwt");
 
         var result = await Run();
 
@@ -49,7 +47,7 @@ public sealed class SchedulerControllerTests
     public async Task RunEventReminders_RefusedCaller_Returns401AndDoesNotRunThePass()
     {
         Verdict(SchedulerCallerVerdict.Refused);
-        PresentSharedToken("mauvais-token");
+        PresentBearer("mauvais-jwt");
 
         var result = await Run();
 
@@ -66,7 +64,7 @@ public sealed class SchedulerControllerTests
 
         Assert.IsType<UnauthorizedResult>(result);
         _authenticator.Verify(
-            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, null), It.IsAny<CancellationToken>()),
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -85,16 +83,16 @@ public sealed class SchedulerControllerTests
     }
 
     [Fact]
-    public async Task RunEventReminders_ForwardsBothHeadersToTheAuthenticator()
+    public async Task RunEventReminders_IgnoresTheRetiredSharedTokenHeader()
     {
         Verdict(SchedulerCallerVerdict.Accepted);
-        PresentSharedToken("bon-token");
+        _sut.Request.Headers["X-Scheduler-Token"] = "bon-token";
         PresentBearer("jwt");
 
         await Run();
 
         _authenticator.Verify(
-            a => a.AuthenticateAsync(new SchedulerCallerCredentials("bon-token", "jwt"), It.IsAny<CancellationToken>()),
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials("jwt"), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -105,13 +103,13 @@ public sealed class SchedulerControllerTests
         _sut.Request.Headers.Authorization = "bearer jwt";
         await Run();
         _authenticator.Verify(
-            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, "jwt"), It.IsAny<CancellationToken>()),
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials("jwt"), It.IsAny<CancellationToken>()),
             Times.Once);
 
         _sut.Request.Headers.Authorization = "Basic abc";
         await Run();
         _authenticator.Verify(
-            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, null), It.IsAny<CancellationToken>()),
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

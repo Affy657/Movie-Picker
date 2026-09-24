@@ -91,18 +91,14 @@ public sealed class SchedulerController : ControllerBase
         return failed(result) ? StatusCode(StatusCodes.Status503ServiceUnavailable, result) : Ok(result);
     }
 
-    private const string SharedTokenHeader = "X-Scheduler-Token";
     private const string BearerPrefix = "Bearer ";
 
     private SchedulerCallerCredentials PresentedCredentials()
     {
-        var shared = Request.Headers[SharedTokenHeader].ToString();
         var authorization = Request.Headers[HeaderNames.Authorization].ToString();
         var bearer = authorization.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase)
             ? authorization[BearerPrefix.Length..]
             : null;
-        return new SchedulerCallerCredentials(
-            string.IsNullOrWhiteSpace(shared) ? null : shared,
-            string.IsNullOrWhiteSpace(bearer) ? null : bearer);
+        return new SchedulerCallerCredentials(string.IsNullOrWhiteSpace(bearer) ? null : bearer);
     }
 }

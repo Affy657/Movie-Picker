@@ -62,8 +62,6 @@ public sealed class MoviePickerOptions
 
     public string? KofiWebhookToken { get; set; }
 
-    public string? SchedulerToken { get; set; }
-
     public string? SchedulerOidcAudience { get; set; }
 
     public string? SchedulerOidcServiceAccount { get; set; }
