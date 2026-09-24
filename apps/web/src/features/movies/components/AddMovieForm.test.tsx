@@ -165,6 +165,53 @@ describe('AddMovieForm (MSW)', () => {
     expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
+  it('a movie and a series sharing a TMDB id both get their own result row', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/movies/search`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 1399,
+              mediaType: 'movie',
+              title: 'Homonyme Film',
+              year: '2011',
+              posterPath: null,
+              voteAverage: 7.1,
+              tmdbWatchPageUrl: null,
+            },
+            {
+              id: 1399,
+              mediaType: 'tv',
+              title: 'Homonyme Série',
+              year: '2011',
+              posterPath: null,
+              voteAverage: 8.4,
+              tmdbWatchPageUrl: null,
+            },
+          ],
+          watchProvidersRegion: 'FR',
+          disclaimer: '',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        })
+      )
+    );
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const user = userEvent.setup();
+      renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+      await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Homonyme');
+
+      expect(await screen.findByText('Homonyme Série', {}, { timeout: 3000 })).toBeInTheDocument();
+      expect(screen.getByText('Homonyme Film')).toBeInTheDocument();
+      const duplicateKeyWarnings = consoleError.mock.calls.filter((call) =>
+        call.some((part) => String(part).includes('same key'))
+      );
+      expect(duplicateKeyWarnings).toEqual([]);
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
   it('affiche un message si la recherche ne retourne aucun film', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
