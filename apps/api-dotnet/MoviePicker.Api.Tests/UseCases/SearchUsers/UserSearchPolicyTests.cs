@@ -60,6 +60,35 @@ public sealed class UserSearchPolicyTests
     }
 
     [Theory]
+    [InlineData("Šárka", "Šárka Nováková")]
+    [InlineData("šárka", "Šárka Nováková")]
+    [InlineData("Šárka", "Sarka Novakova")]
+    [InlineData("Dvořák", "Antonín Dvořák")]
+    [InlineData("Žižek", "Slavoj Žižek")]
+    [InlineData("Erdős", "Paul Erdős")]
+    [InlineData("Şahin", "Ayşe Şahin")]
+    [InlineData("Erdoğan", "Ayşe Erdoğan")]
+    [InlineData("Čapek", "Karel Čapek")]
+    [InlineData("Ďurica", "Ján Ďurica")]
+    public void ToRegexPattern_MatchesAccentedLettersOutsideTheFoldingTable(string query, string value)
+    {
+        var pattern = new Regex("^" + UserSearchPolicy.ToRegexPattern(query), RegexOptions.IgnoreCase);
+        var anywhere = new Regex(UserSearchPolicy.ToRegexPattern(query), RegexOptions.IgnoreCase);
+
+        Assert.True(UserSearchPolicy.Contains(value, query));
+        Assert.Matches(anywhere, value);
+        Assert.Equal(UserSearchPolicy.StartsWith(value, query), pattern.IsMatch(value));
+    }
+
+    [Fact]
+    public void ToRegexPattern_OfADecomposedQuery_MatchesTheComposedName()
+    {
+        var decomposed = "Šarka";
+
+        Assert.Matches(new Regex(UserSearchPolicy.ToRegexPattern(decomposed), RegexOptions.IgnoreCase), "Šárka");
+    }
+
+    [Theory]
     [InlineData(".*")]
     [InlineData("a+b")]
     [InlineData("(")]

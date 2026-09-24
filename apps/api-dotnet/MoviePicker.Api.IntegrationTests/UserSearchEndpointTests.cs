@@ -68,6 +68,18 @@ public sealed class UserSearchEndpointTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task Search_FindsANameWrittenWithAccentsOutsideTheFrenchAlphabet()
+    {
+        var marker = $"Zeph{Guid.NewGuid():N}"[..14];
+        var (_, target) = await NewUserAsync($"Šárka Dvořák {marker}");
+        var (searcher, _) = await NewUserAsync("CzechSeeker");
+
+        var result = await SearchAsync(searcher, $"Šárka Dvořák {marker}");
+
+        Assert.Contains(result.Items, i => i.Handle == target.Handle);
+    }
+
+    [Fact]
     public async Task Search_ExcludesPrivateProfiles()
     {
         var marker = $"Zeph{Guid.NewGuid():N}"[..14];
