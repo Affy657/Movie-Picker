@@ -30,14 +30,8 @@ public sealed class DataMigrationRunner : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        try
-        {
-            await Task.Delay(_startupDelay, stoppingToken);
-        }
-        catch (OperationCanceledException)
-        {
+        if (!await WaitForStartupAsync(stoppingToken))
             return;
-        }
 
         using var scope = _scopeFactory.CreateScope();
         var history = scope.ServiceProvider.GetRequiredService<IMigrationHistoryRepository>();
@@ -48,52 +42,77 @@ public sealed class DataMigrationRunner : BackgroundService
 
         foreach (var migration in migrations)
         {
-            if (stoppingToken.IsCancellationRequested)
+            if (stoppingToken.IsCancellationRequested || !await TryApplyAsync(history, migration, stoppingToken))
                 return;
+        }
+    }
 
-            try
-            {
-                var repeatable = migration is IRepeatableDataMigration;
-                if (!repeatable && await history.IsAppliedAsync(migration.Id, stoppingToken))
-                    continue;
+    private async Task<bool> WaitForStartupAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            await Task.Delay(_startupDelay, stoppingToken);
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+    }
 
-                if (!await history.TryAcquireLeaseAsync(migration.Id, _holder, _clock.GetUtcNow(), LeaseDuration, stoppingToken))
-                {
-                    _logger.LogInformation(
-                        "Migration {MigrationId} is running on another instance, which applies the remaining ones",
-                        migration.Id);
-                    return;
-                }
+    private async Task<bool> TryApplyAsync(
+        IMigrationHistoryRepository history, IDataMigration migration, CancellationToken stoppingToken)
+    {
+        try
+        {
+            return await ApplyUnderLeaseAsync(history, migration, stoppingToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Migration {MigrationId} failed: it will be replayed at the next startup",
+                migration.Id);
+            return true;
+        }
+    }
 
-                try
-                {
-                    if (!repeatable && await history.IsAppliedAsync(migration.Id, stoppingToken))
-                        continue;
+    private async Task<bool> ApplyUnderLeaseAsync(
+        IMigrationHistoryRepository history, IDataMigration migration, CancellationToken stoppingToken)
+    {
+        var repeatable = migration is IRepeatableDataMigration;
+        if (!repeatable && await history.IsAppliedAsync(migration.Id, stoppingToken))
+            return true;
 
-                    var affected = await migration.ExecuteAsync(stoppingToken);
-                    if (!repeatable)
-                        await history.MarkAppliedAsync(migration.Id, affected, _clock.GetUtcNow(), stoppingToken);
-                    _logger.LogInformation(
-                        "Migration {MigrationId} applied: {Affected} document(s) updated",
-                        migration.Id,
-                        affected);
-                }
-                finally
-                {
-                    await ReleaseLeaseAsync(history, migration.Id);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Migration {MigrationId} failed: it will be replayed at the next startup",
-                    migration.Id);
-            }
+        if (!await history.TryAcquireLeaseAsync(migration.Id, _holder, _clock.GetUtcNow(), LeaseDuration, stoppingToken))
+        {
+            _logger.LogInformation(
+                "Migration {MigrationId} is running on another instance, which applies the remaining ones",
+                migration.Id);
+            return false;
+        }
+
+        try
+        {
+            if (!repeatable && await history.IsAppliedAsync(migration.Id, stoppingToken))
+                return true;
+
+            var affected = await migration.ExecuteAsync(stoppingToken);
+            if (!repeatable)
+                await history.MarkAppliedAsync(migration.Id, affected, _clock.GetUtcNow(), stoppingToken);
+            _logger.LogInformation(
+                "Migration {MigrationId} applied: {Affected} document(s) updated",
+                migration.Id,
+                affected);
+            return true;
+        }
+        finally
+        {
+            await ReleaseLeaseAsync(history, migration.Id);
         }
     }
 

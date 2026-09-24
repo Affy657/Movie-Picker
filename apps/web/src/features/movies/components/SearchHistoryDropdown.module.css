@@ -1,5 +1,8 @@
 .historyDropdown {
   composes: card radiusMd elevationLg from '@/shared/components/Card.module.css';
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
   position: absolute;
   top: calc(100% + var(--space-1-5));
   left: 0;

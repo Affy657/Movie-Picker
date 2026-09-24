@@ -136,7 +136,8 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
   );
 
   const togglePush = () => {
-    void (subscribed ? unsubscribe() : subscribe());
+    if (subscribed) void unsubscribe();
+    else void subscribe();
   };
 
   if (!supported) return <NotificationsUnsupported />;

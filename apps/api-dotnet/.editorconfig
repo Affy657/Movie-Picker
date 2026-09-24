@@ -19,6 +19,12 @@ dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.CA1711.severity = none
 dotnet_diagnostic.CA1716.severity = none
 
+# SonarCloud imports these suggestions as issues: warnings here, so the Release build (-warnaserror) stops them before a push.
+dotnet_diagnostic.CA1822.severity = warning
+dotnet_diagnostic.CA1859.severity = warning
+dotnet_diagnostic.CA1861.severity = warning
+dotnet_diagnostic.SYSLIB1045.severity = warning
+
 # LoggerMessage source-gen : hors périmètre MVP ; évite bruit CA1848/CA1873 sur middleware
 dotnet_diagnostic.CA1848.severity = none
 dotnet_diagnostic.CA1873.severity = none

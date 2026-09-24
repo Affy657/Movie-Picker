@@ -119,6 +119,28 @@ function EventDetailSessionOverlays({
   );
 }
 
+function SessionPendingBanner({
+  isHost,
+  wheel,
+  settings,
+  onRequestCloseWithoutMovie,
+}: Readonly<{
+  isHost: boolean;
+  wheel: WheelApi;
+  settings: SettingsOverlay;
+  onRequestCloseWithoutMovie: () => void;
+}>) {
+  const canLaunch = wheel.canSpin && !wheel.spinDisabled;
+  return (
+    <EventPendingBanner
+      isHost={isHost}
+      onLaunchWheel={canLaunch ? wheel.launch : undefined}
+      onReschedule={settings.canConfigure ? settings.onOpen : undefined}
+      onCloseWithoutMovie={settings.canConfigure ? onRequestCloseWithoutMovie : undefined}
+    />
+  );
+}
+
 export default function EventDetailSessionChrome({
   slug,
   hostToken,
@@ -191,11 +213,11 @@ export default function EventDetailSessionChrome({
       />
       {connectionUnstable ? <EventConnectionBanner onRetry={onRetryConnection} /> : null}
       {lifecycle === 'pending' ? (
-        <EventPendingBanner
+        <SessionPendingBanner
           isHost={!!event.isHost}
-          onLaunchWheel={wheel.canSpin && !wheel.spinDisabled ? wheel.launch : undefined}
-          onReschedule={settings.canConfigure ? settings.onOpen : undefined}
-          onCloseWithoutMovie={settings.canConfigure ? onRequestCloseWithoutMovie : undefined}
+          wheel={wheel}
+          settings={settings}
+          onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
         />
       ) : null}
       <EventDetailSessionOverlays

@@ -60,17 +60,17 @@ export function EventMovieRowHeader({
   >;
   const sort = (key: RowSortKey) => [{ key, label: byKey[key] }];
   const layout: MovieTableColumn<RowSortKey>[] = [
-    {},
-    {},
-    { sorts: sort('createdAt'), inset: true },
-    { sorts: sort('voteAverage'), align: 'end' },
-    { sorts: sort('duration'), align: 'end' },
-    { sorts: sort('releaseDate'), align: 'end' },
-    { sorts: sort('availability'), inset: true },
-    {},
-    { sorts: sort('seen'), align: 'center' },
-    { sorts: sort('score'), align: 'end' },
-    {},
+    { id: 'rank' },
+    { id: 'poster' },
+    { id: 'title', sorts: sort('createdAt'), inset: true },
+    { id: 'vote', sorts: sort('voteAverage'), align: 'end' },
+    { id: 'runtime', sorts: sort('duration'), align: 'end' },
+    { id: 'release', sorts: sort('releaseDate'), align: 'end' },
+    { id: 'availability', sorts: sort('availability'), inset: true },
+    { id: 'votes' },
+    { id: 'seen', sorts: sort('seen'), align: 'center' },
+    { id: 'score', sorts: sort('score'), align: 'end' },
+    { id: 'actions' },
   ];
 
   return (

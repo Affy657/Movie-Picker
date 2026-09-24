@@ -58,14 +58,11 @@ public static class ImageMetadataStripper
         var offset = 2;
         while (offset < image.Length)
         {
-            if (image[offset] != JpegMarkerPrefix)
-                return null;
-            while (offset < image.Length && image[offset] == JpegMarkerPrefix)
-                offset++;
-            if (offset >= image.Length)
+            var read = ReadJpegMarker(image, offset);
+            if (read is null)
                 return null;
 
-            var marker = image[offset++];
+            var (marker, next) = read.Value;
             if (marker == JpegEndOfImage)
             {
                 output.Write([JpegMarkerPrefix, JpegEndOfImage]);
@@ -74,27 +71,45 @@ public static class ImageMetadataStripper
             if (IsStandaloneJpegMarker(marker))
             {
                 output.Write([JpegMarkerPrefix, marker]);
+                offset = next;
                 continue;
             }
-            if (marker is JpegStartOfImage or 0x00 || offset + 2 > image.Length)
+
+            offset = CopyJpegSegment(image, output, marker, next);
+            if (offset < 0)
                 return null;
-
-            var segmentEnd = offset + BinaryPrimitives.ReadUInt16BigEndian(image.AsSpan(offset, 2));
-            if (segmentEnd < offset + 2 || segmentEnd > image.Length)
-                return null;
-
-            WriteJpegSegment(output, marker, image.AsSpan(offset, segmentEnd - offset));
-            offset = segmentEnd;
-
-            if (marker == JpegStartOfScan)
-            {
-                var scanEnd = EntropyCodedDataEnd(image, offset);
-                output.Write(image, offset, scanEnd - offset);
-                offset = scanEnd;
-            }
         }
 
         return output.ToArray();
+    }
+
+    private static (byte Marker, int Next)? ReadJpegMarker(byte[] image, int offset)
+    {
+        if (image[offset] != JpegMarkerPrefix)
+            return null;
+
+        var index = offset;
+        while (index < image.Length && image[index] == JpegMarkerPrefix)
+            index++;
+        return index < image.Length ? (image[index], index + 1) : null;
+    }
+
+    private static int CopyJpegSegment(byte[] image, MemoryStream output, byte marker, int offset)
+    {
+        if (marker is JpegStartOfImage or 0x00 || offset + 2 > image.Length)
+            return -1;
+
+        var segmentEnd = offset + BinaryPrimitives.ReadUInt16BigEndian(image.AsSpan(offset, 2));
+        if (segmentEnd < offset + 2 || segmentEnd > image.Length)
+            return -1;
+
+        WriteJpegSegment(output, marker, image.AsSpan(offset, segmentEnd - offset));
+        if (marker != JpegStartOfScan)
+            return segmentEnd;
+
+        var scanEnd = EntropyCodedDataEnd(image, segmentEnd);
+        output.Write(image, segmentEnd, scanEnd - segmentEnd);
+        return scanEnd;
     }
 
     private static void WriteJpegSegment(MemoryStream output, byte marker, ReadOnlySpan<byte> segment)
@@ -289,40 +304,44 @@ public static class ImageMetadataStripper
 
         using var output = new MemoryStream(image.Length);
         output.Write(image, 0, offset);
-        while (offset < image.Length)
+        while (offset < image.Length && image[offset] != GifTrailer)
         {
-            var blockStart = offset;
-            int blockEnd;
-            switch (image[offset])
-            {
-                case GifTrailer:
-                    output.WriteByte(GifTrailer);
-                    return output.ToArray();
-                case GifImageDescriptor:
-                    if (offset + 10 > image.Length)
-                        return null;
-                    blockEnd = SubBlocksEnd(image, offset + 10 + ColorTableLength(image[offset + 9]) + 1);
-                    if (blockEnd < 0)
-                        return null;
-                    output.Write(image, blockStart, blockEnd - blockStart);
-                    break;
-                case GifExtension:
-                    if (offset + 2 > image.Length)
-                        return null;
-                    blockEnd = SubBlocksEnd(image, offset + 2);
-                    if (blockEnd < 0)
-                        return null;
-                    if (!IsGifMetadataExtension(image[offset + 1], image.AsSpan(offset + 2, blockEnd - offset - 2)))
-                        output.Write(image, blockStart, blockEnd - blockStart);
-                    break;
-                default:
-                    return null;
-            }
-            offset = blockEnd;
+            offset = CopyGifBlock(image, output, offset);
+            if (offset < 0)
+                return null;
         }
 
         output.WriteByte(GifTrailer);
         return output.ToArray();
+    }
+
+    private static int CopyGifBlock(byte[] image, MemoryStream output, int offset) => image[offset] switch
+    {
+        GifImageDescriptor => CopyGifImage(image, output, offset),
+        GifExtension => CopyGifExtension(image, output, offset),
+        _ => -1
+    };
+
+    private static int CopyGifImage(byte[] image, MemoryStream output, int offset)
+    {
+        if (offset + 10 > image.Length)
+            return -1;
+
+        var blockEnd = SubBlocksEnd(image, offset + 10 + ColorTableLength(image[offset + 9]) + 1);
+        if (blockEnd >= 0)
+            output.Write(image, offset, blockEnd - offset);
+        return blockEnd;
+    }
+
+    private static int CopyGifExtension(byte[] image, MemoryStream output, int offset)
+    {
+        if (offset + 2 > image.Length)
+            return -1;
+
+        var blockEnd = SubBlocksEnd(image, offset + 2);
+        if (blockEnd >= 0 && !IsGifMetadataExtension(image[offset + 1], image.AsSpan(offset + 2, blockEnd - offset - 2)))
+            output.Write(image, offset, blockEnd - offset);
+        return blockEnd;
     }
 
     private static int ColorTableLength(byte flags) => (flags & 0x80) == 0 ? 0 : 3 * (1 << ((flags & 0x07) + 1));

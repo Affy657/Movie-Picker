@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Watchlist;
@@ -240,5 +241,29 @@ public sealed class AddToWatchlistHandlerTests
         _watchlist.Verify(
             w => w.AddAsync(It.Is<WatchlistItem>(i => i.PosterPath == null), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Theory]
+    [InlineData("https://collect.attacker.example/pixel.png")]
+    [InlineData("https://image.tmdb.org.attacker.example/t/p/w500/a.jpg")]
+    [InlineData("http://image.tmdb.org/t/p/w500/a.jpg")]
+    public async Task HandleAsync_PosterOutsideTmdb_IsRefused(string posterPath)
+    {
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, Request(posterPath: posterPath)));
+
+        Assert.Equal(ErrorCodes.InvalidPosterPath, ex.Reason);
+        _watchlist.Verify(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("https://image.tmdb.org/t/p/w500/a.jpg")]
+    [InlineData("/api/v1/posters/tmdb/w500/a.jpg")]
+    public async Task HandleAsync_TmdbPoster_IsAccepted(string posterPath)
+    {
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.HandleAsync(UserId, Request(posterPath: posterPath));
+
+        _watchlist.Verify(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

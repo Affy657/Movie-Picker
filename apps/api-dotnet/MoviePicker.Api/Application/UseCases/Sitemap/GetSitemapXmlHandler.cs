@@ -11,6 +11,9 @@ namespace MoviePicker.Api.Application.UseCases.Sitemap;
 public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
 {
     private const int MaxProfileUrls = 49_999;
+    private const string Daily = "daily";
+    private const string Weekly = "weekly";
+    private const string Monthly = "monthly";
 
     private readonly IUserRepository _users;
     private readonly MoviePickerOptions _options;
@@ -46,18 +49,18 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
         sb.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.Append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
         var today = _clock.GetUtcNow();
-        AppendUrl(sb, $"{webBase}/", today, "daily", "1.0");
-        AppendUrl(sb, $"{webBase}/decouvrir", null, "monthly", "0.8");
-        AppendUrl(sb, $"{webBase}/films/tendances", today, "daily", "0.8");
-        AppendUrl(sb, $"{webBase}/films/au-cinema", null, "weekly", "0.8");
-        AppendUrl(sb, $"{webBase}/films/les-plus-proposes", null, "weekly", "0.7");
-        AppendUrl(sb, $"{webBase}/films/collections", null, "monthly", "0.6");
-        AppendUrl(sb, $"{webBase}/tech", null, "monthly", "0.5");
-        AppendUrl(sb, $"{webBase}/soutenir", null, "monthly", "0.3");
+        AppendUrl(sb, $"{webBase}/", today, Daily, "1.0");
+        AppendUrl(sb, $"{webBase}/decouvrir", null, Monthly, "0.8");
+        AppendUrl(sb, $"{webBase}/films/tendances", today, Daily, "0.8");
+        AppendUrl(sb, $"{webBase}/films/au-cinema", null, Weekly, "0.8");
+        AppendUrl(sb, $"{webBase}/films/les-plus-proposes", null, Weekly, "0.7");
+        AppendUrl(sb, $"{webBase}/films/collections", null, Monthly, "0.6");
+        AppendUrl(sb, $"{webBase}/tech", null, Monthly, "0.5");
+        AppendUrl(sb, $"{webBase}/soutenir", null, Monthly, "0.3");
         foreach (var profile in profiles)
         {
             var loc = $"{webBase}/u/{Uri.EscapeDataString(profile.Handle)}";
-            AppendUrl(sb, loc, profile.UpdatedAt, "weekly", "0.6");
+            AppendUrl(sb, loc, profile.UpdatedAt, Weekly, "0.6");
         }
         sb.Append("</urlset>\n");
         return sb.ToString();

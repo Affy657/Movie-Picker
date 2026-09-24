@@ -188,18 +188,7 @@ public sealed class AuthController : ControllerBase
 
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.IsNullOrEmpty(currentUserId))
-        {
-            if (!IsRecentlyAuthenticated(clock))
-                return Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, ReauthenticationRequiredError)));
-
-            var linkOutcome = await linkHandler.HandleAsync(currentUserId, info, ct);
-            return linkOutcome.Kind switch
-            {
-                OAuthOutcomeKind.Linked => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, ("oauthLinked", knownProvider))),
-                OAuthOutcomeKind.ProviderAlreadyLinked => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, "provider_already_linked"))),
-                _ => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, "identity_taken")))
-            };
-        }
+            return await LinkToSignedInAccountAsync(currentUserId, knownProvider, info, linkHandler, clock, webBase, ct);
 
         var loginOutcome = await loginHandler.HandleAsync(info, ct);
         if (loginOutcome.Kind != OAuthOutcomeKind.SignedIn || loginOutcome.User is null)
@@ -218,6 +207,27 @@ public sealed class AuthController : ControllerBase
             (ReturnToItemKey, returnTo),
             ("provider", knownProvider),
             ("event", loginOutcome.IsNewAccount ? "signup" : "login")));
+    }
+
+    private async Task<IActionResult> LinkToSignedInAccountAsync(
+        string currentUserId,
+        string provider,
+        ExternalLoginInfo info,
+        IOAuthLinkHandler linkHandler,
+        TimeProvider clock,
+        string webBase,
+        CancellationToken ct)
+    {
+        if (!IsRecentlyAuthenticated(clock))
+            return Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, ReauthenticationRequiredError)));
+
+        var linkOutcome = await linkHandler.HandleAsync(currentUserId, info, ct);
+        return linkOutcome.Kind switch
+        {
+            OAuthOutcomeKind.Linked => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, ("oauthLinked", provider))),
+            OAuthOutcomeKind.ProviderAlreadyLinked => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, "provider_already_linked"))),
+            _ => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, "identity_taken")))
+        };
     }
 
     [HttpDelete("me/identities/{provider}")]

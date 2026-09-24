@@ -493,7 +493,7 @@ Réglages posés le même jour, à vérifier et non reposer :
 
 ## C8 jamais d'`await` de premier niveau dans `main.tsx`
 
-`apps/web/src/main.tsx` termine par `boot().catch(...)` : le `.catch` retire la coquille si `boot` échoue et évite la promesse flottante. Un `await` de premier niveau rend l'évaluation du module d'entrée asynchrone et retarde tout le montage de React : posé le 2026-09-09, il a coûté 3 à 5 points Lighthouse sur onze pages sur treize. Sonar réclame l'inverse (`typescript:S7785`, « accepté » sur SonarCloud avec cette contrainte en justification) : si l'analyse le rouvre, le ré-accepter, pas le corriger.
+`apps/web/src/main.tsx` termine par `void boot()`, et `boot` attrape ses propres erreurs : il retire la coquille et démarre Sentry dans un `finally`, que le montage réussisse ou non, sans promesse flottante. Un `await` de premier niveau rend l'évaluation du module d'entrée asynchrone et retarde tout le montage de React : posé le 2026-09-09, il a coûté 3 à 5 points Lighthouse sur onze pages sur treize. Sonar réclamait ce `await` (`typescript:S7785`) tant que le module finissait par `boot().catch(...)` ; la forme `void boot()` le satisfait sans le poser, ne pas revenir à une chaîne de promesse.
 
 Signature du diagnostic pour toute régression de ce type : `home` et `login` ne bougent pas, les onze autres perdent, parce que ce sont les deux pages dont le plus grand élément n'attend pas React (titre peint dans la coquille pour `home`, LCP adossé à une ressource pour `login`). Une régression qui épargne ces deux pages est dans le chemin de montage. Pour l'attribuer à un commit, la porte ne tournant qu'au déploiement, relever le score sur les runs passés :
 

@@ -83,7 +83,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
             }
             catch (ParticipantConflictException conflict) when (conflict.Collision == ParticipantCollision.SamePseudo)
             {
-                _logger.LogInformation("Pseudo taken concurrently in movie night {EventId}, joining again", evt.Id);
+                _logger.LogInformation(conflict, "Pseudo taken concurrently in movie night {EventId}, joining again", evt.Id);
             }
         }
 
@@ -119,13 +119,17 @@ public sealed class JoinEventHandler : IJoinEventHandler
         if (!taken.Contains(requested))
             return requested;
 
-        for (var rank = 2; ; rank++)
+        var rank = 1;
+        string candidate;
+        do
         {
+            rank++;
             var suffix = $" {rank}";
-            var candidate = TruncateForSuffix(requested, MaxPseudoLength - suffix.Length) + suffix;
-            if (!taken.Contains(candidate))
-                return candidate;
+            candidate = TruncateForSuffix(requested, MaxPseudoLength - suffix.Length) + suffix;
         }
+        while (taken.Contains(candidate));
+
+        return candidate;
     }
 
     private static string TruncateForSuffix(string pseudo, int maxLength)

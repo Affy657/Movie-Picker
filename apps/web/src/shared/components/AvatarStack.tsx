@@ -32,24 +32,25 @@ export default function AvatarStack({
   return (
     <span
       className={clsx(styles.stack, size === 'sm' && styles.sm, className)}
-      role={ariaLabel ? 'img' : undefined}
-      aria-label={ariaLabel}
       aria-hidden={ariaLabel ? undefined : true}
     >
-      {shown.map((person) => (
-        <Avatar
-          key={person.key}
-          avatarId={person.avatarId}
-          pseudo={person.pseudo}
-          size={size}
-          className={styles.item}
-        />
-      ))}
-      {hidden > 0 ? (
-        <span className={styles.more}>
-          <span className={styles.moreText}>+{hidden}</span>
-        </span>
-      ) : null}
+      {ariaLabel ? <span className="visually-hidden">{ariaLabel}</span> : null}
+      <span className={styles.faces} aria-hidden="true">
+        {shown.map((person) => (
+          <Avatar
+            key={person.key}
+            avatarId={person.avatarId}
+            pseudo={person.pseudo}
+            size={size}
+            className={styles.item}
+          />
+        ))}
+        {hidden > 0 ? (
+          <span className={styles.more}>
+            <span className={styles.moreText}>+{hidden}</span>
+          </span>
+        ) : null}
+      </span>
     </span>
   );
 }

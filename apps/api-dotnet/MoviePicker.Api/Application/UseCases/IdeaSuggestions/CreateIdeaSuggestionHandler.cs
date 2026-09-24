@@ -95,7 +95,7 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
     };
 
     private async Task<List<string>> UploadAttachmentsAsync(
-        IReadOnlyList<GitHubAttachmentUpload> uploads, CancellationToken ct)
+        List<GitHubAttachmentUpload> uploads, CancellationToken ct)
     {
         if (uploads.Count == 0)
             return [];

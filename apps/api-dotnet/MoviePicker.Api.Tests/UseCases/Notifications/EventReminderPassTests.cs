@@ -617,4 +617,41 @@ public sealed class EventReminderPassTests
         Assert.Equal(1, result.Reminders24h);
         Assert.Equal(0, result.PendingEvents);
     }
+
+    private void GivenLegacyMarker(string userId, UserNotificationType type, string eventId, NotificationDedupChannel channel, DateTimeOffset claimedAt) =>
+        _dedup.Setup(r => r.WasClaimedSinceAsync(userId, type, eventId, channel, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string _, UserNotificationType _, string _, NotificationDedupChannel _, DateTimeOffset since, CancellationToken _) =>
+                claimedAt >= since);
+
+    [Fact]
+    public async Task RunAsync_ReminderSentByTheRevisionBeforeTheOccurrenceKey_IsNotSentAgain()
+    {
+        GivenOpenEvents(EventStartingAt("e1", Now.AddHours(1)));
+        GivenParticipants("e1", "u1");
+        GivenUsers(Subscriber("u1"));
+        GivenPushSubscription("u1");
+        GivenLegacyMarker("u1", UserNotificationType.EventReminder1h, "e1", NotificationDedupChannel.Push, Now.AddMinutes(-5));
+        GivenLegacyMarker("u1", UserNotificationType.EventReminder1h, "e1", NotificationDedupChannel.InApp, Now.AddMinutes(-5));
+
+        await CreatePass().RunAsync();
+
+        _sender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        VerifyInboxAdded("u1", UserNotificationType.EventReminder1h, Times.Never());
+    }
+
+    [Fact]
+    public async Task RunAsync_LegacyMarkerOfAnEarlierSchedule_StillRemindsForTheNewStart()
+    {
+        GivenOpenEvents(EventStartingAt("e1", Now.AddHours(1)));
+        GivenParticipants("e1", "u1");
+        GivenUsers(Subscriber("u1"));
+        GivenPushSubscription("u1");
+        GivenLegacyMarker("u1", UserNotificationType.EventReminder1h, "e1", NotificationDedupChannel.Push, Now.AddDays(-3));
+        GivenLegacyMarker("u1", UserNotificationType.EventReminder1h, "e1", NotificationDedupChannel.InApp, Now.AddDays(-3));
+
+        await CreatePass().RunAsync();
+
+        _sender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+        VerifyInboxAdded("u1", UserNotificationType.EventReminder1h, Times.Once());
+    }
 }

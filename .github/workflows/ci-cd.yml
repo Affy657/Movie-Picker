@@ -659,6 +659,7 @@ jobs:
             /d:sonar.architecture.enable=false \
             /v:"$VERSION" \
             /d:sonar.exclusions="$EXCL" \
+            /d:sonar.test.exclusions="$TEST_EXCL" \
             /d:sonar.coverage.exclusions="$COV_EXCL" \
             /d:sonar.cpd.exclusions="$CPD" \
             /d:sonar.javascript.lcov.reportPaths="apps/web/coverage/lcov.info" \
@@ -674,6 +675,15 @@ jobs:
               --results-directory coverage-unit
           fi
           dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+      # The Quality Gate only judges new code, and an issue accepted in the SonarCloud UI leaves
+      # it: this step holds the whole branch to zero open, accepted or dismissed issues, zero
+      # hotspot to review, A on every rating, no duplication and the coverage floor.
+      - name: "SonarCloud: zero issues, A everywhere, no duplication, coverage floor"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_BRANCH: ${{ github.ref_name }}
+          SONAR_PULL_REQUEST: ${{ github.event.pull_request.number }}
+        run: node scripts/check-sonar.mjs
       # SonarCloud files a pull request analysis under `pullRequest=<number>`, not under its head
       # branch: queried by branch, the diagnostic answered "No projectStatus" on every red PR.
       - name: "Quality Gate: failing conditions detail"

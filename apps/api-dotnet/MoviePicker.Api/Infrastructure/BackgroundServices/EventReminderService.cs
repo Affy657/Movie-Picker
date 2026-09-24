@@ -20,26 +20,28 @@ public sealed class EventReminderService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await RunPassAsync(stoppingToken);
+            await Task.Delay(Interval, stoppingToken).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        }
+    }
+
+    private async Task RunPassAsync(CancellationToken stoppingToken)
+    {
         try
         {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                try
-                {
-                    using var scope = _scopeFactory.CreateScope();
-                    var pass = scope.ServiceProvider.GetRequiredService<IEventReminderPass>();
-                    await pass.RunAsync(stoppingToken);
-                }
-                catch (Exception ex) when (ex is not OperationCanceledException)
-                {
-                    _logger.LogError(ex, "Error while sending movie night reminders");
-                }
-
-                await Task.Delay(Interval, stoppingToken);
-            }
+            using var scope = _scopeFactory.CreateScope();
+            var pass = scope.ServiceProvider.GetRequiredService<IEventReminderPass>();
+            await pass.RunAsync(stoppingToken);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex) when (stoppingToken.IsCancellationRequested)
         {
+            _logger.LogDebug(ex, "Movie night reminder pass interrupted by the shutdown");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while sending movie night reminders");
         }
     }
 }

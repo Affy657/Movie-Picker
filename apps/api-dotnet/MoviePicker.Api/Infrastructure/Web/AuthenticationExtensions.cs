@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -49,9 +50,7 @@ public static class AuthenticationExtensions
                 options.Scope.Add("profile");
                 options.ClaimActions.MapCustomJson(
                     "email_verified",
-                    element => element.ValueKind == System.Text.Json.JsonValueKind.True
-                        ? "true"
-                        : "false");
+                    user => IsGoogleEmailVerified(user) ? "true" : "false");
             });
         }
 
@@ -80,4 +79,10 @@ public static class AuthenticationExtensions
         services.AddAuthorization();
         return services;
     }
+
+    private static bool IsGoogleEmailVerified(JsonElement user) =>
+        IsTrue(user, "verified_email") || IsTrue(user, "email_verified");
+
+    private static bool IsTrue(JsonElement user, string property) =>
+        user.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.True;
 }

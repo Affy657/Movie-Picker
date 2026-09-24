@@ -91,7 +91,7 @@ export default function SearchHistoryDropdown({
         return;
       case 'End':
         event.preventDefault();
-        buttons[buttons.length - 1]?.focus();
+        buttons.at(-1)?.focus();
         return;
       case 'Escape':
         event.preventDefault();
@@ -110,45 +110,45 @@ export default function SearchHistoryDropdown({
   };
 
   return (
-    <div
-      className={styles.historyDropdown}
-      role="group"
-      aria-labelledby={titleId}
-      onKeyDown={onKeyDown}
-      onMouseDown={(event) => event.preventDefault()}
-    >
-      <div className={styles.historyHeader}>
-        <span className={styles.historyTitle} id={titleId}>
-          {t('movies.search.historyTitle')}
-        </span>
-        <LinkButton size="sm" onClick={clear}>
-          {t('movies.search.historyClear')}
-        </LinkButton>
+    <fieldset className={styles.historyDropdown} aria-labelledby={titleId}>
+      <div
+        role="presentation"
+        onKeyDown={onKeyDown}
+        onMouseDown={(event) => event.preventDefault()}
+      >
+        <div className={styles.historyHeader}>
+          <span className={styles.historyTitle} id={titleId}>
+            {t('movies.search.historyTitle')}
+          </span>
+          <LinkButton size="sm" onClick={clear}>
+            {t('movies.search.historyClear')}
+          </LinkButton>
+        </div>
+        <ul className={styles.historyList} ref={listRef}>
+          {history.map((query, index) => (
+            <li key={query} className={styles.historyItem}>
+              <button
+                type="button"
+                className={styles.historyItemBtn}
+                aria-label={t('movies.search.historySelectAria', { query })}
+                onClick={() => select(query)}
+                data-history-item
+              >
+                <History className={styles.historyIcon} size={ICON_SIZE.sm} aria-hidden />
+                <span className={styles.historyLabel}>{query}</span>
+              </button>
+              <IconButton
+                size="sm"
+                className={styles.historyRemoveBtn}
+                ariaLabel={t('movies.search.historyRemoveAria', { query })}
+                onClick={() => remove(index)}
+              >
+                <X size={ICON_SIZE.md} aria-hidden />
+              </IconButton>
+            </li>
+          ))}
+        </ul>
       </div>
-      <ul className={styles.historyList} ref={listRef}>
-        {history.map((query, index) => (
-          <li key={query} className={styles.historyItem}>
-            <button
-              type="button"
-              className={styles.historyItemBtn}
-              aria-label={t('movies.search.historySelectAria', { query })}
-              onClick={() => select(query)}
-              data-history-item
-            >
-              <History className={styles.historyIcon} size={ICON_SIZE.sm} aria-hidden />
-              <span className={styles.historyLabel}>{query}</span>
-            </button>
-            <IconButton
-              size="sm"
-              className={styles.historyRemoveBtn}
-              ariaLabel={t('movies.search.historyRemoveAria', { query })}
-              onClick={() => remove(index)}
-            >
-              <X size={ICON_SIZE.md} aria-hidden />
-            </IconButton>
-          </li>
-        ))}
-      </ul>
-    </div>
+    </fieldset>
   );
 }

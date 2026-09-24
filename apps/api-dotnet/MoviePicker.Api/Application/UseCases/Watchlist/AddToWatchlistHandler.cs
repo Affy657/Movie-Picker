@@ -66,17 +66,10 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
     private async Task<string?> ResolvePosterAsync(string? posterPath, CancellationToken ct)
     {
         var poster = string.IsNullOrWhiteSpace(posterPath) ? null : posterPath.Trim();
-        if (poster is not null && !IsAcceptablePosterPath(poster))
+        if (poster is not null && !TmdbPosterUrlNormalizer.IsAcceptedPosterReference(poster))
             throw Errors.InvalidPosterPath();
 
         return await _posterImageStore.ToStoredPosterPathAsync(poster, ct);
-    }
-
-    private static bool IsAcceptablePosterPath(string p)
-    {
-        if (Uri.TryCreate(p, UriKind.Absolute, out var u) && u.Scheme == Uri.UriSchemeHttps)
-            return true;
-        return TmdbPosterUrlNormalizer.IsAcceptedPosterReference(p);
     }
 
     private static int? KnownRuntime(int? runtimeMinutes) => runtimeMinutes is > 0 ? runtimeMinutes : null;
