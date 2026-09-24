@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -38,10 +40,17 @@ public sealed class PostersController : ControllerBase
         string size,
         string file,
         [FromServices] IPosterImageStore store,
+        [FromServices] IOptions<MoviePickerOptions> options,
         CancellationToken ct)
     {
         if (!TmdbPosterUrlNormalizer.TryResolveTmdbRoute(size, file, out var source))
             return NotFound();
+
+        if (!options.Value.PosterCacheEnabled)
+        {
+            Response.Headers.CacheControl = "public,max-age=86400";
+            return Redirect(source);
+        }
 
         return await ServeAsync(TmdbPosterUrlNormalizer.ComputeKey(source), () => store.GetOrFetchAsync(source, ct));
     }
