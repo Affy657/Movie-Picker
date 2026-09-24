@@ -153,7 +153,7 @@
 
 .rail {
   position: sticky;
-  top: var(--space-0);
+  top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
   z-index: var(--z-sticky);
   display: grid;
   margin-top: var(--space-6);
