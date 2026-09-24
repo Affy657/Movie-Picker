@@ -48,12 +48,12 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         if (!EventHost.IsHost(evt, token, userId))
             throw Errors.HostOnly();
 
-        if (evt.IsFinished(_clock.GetUtcNow()))
-            throw Errors.EventFinished();
-
         if (expectedWinnerCount is { } expected && evt.Winners.Count > expected
             && await ReplayLatestDrawAsync(evt, ct) is { } replayed)
             return replayed;
+
+        if (evt.IsFinished(_clock.GetUtcNow()))
+            throw Errors.EventFinished();
 
         if (evt.RemainingWinnerSlots == 0)
             throw Errors.WinnersAllDrawn(evt.TargetWinnerCount);
