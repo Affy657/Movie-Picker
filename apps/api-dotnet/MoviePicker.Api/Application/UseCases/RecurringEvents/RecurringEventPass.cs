@@ -72,44 +72,70 @@ public sealed class RecurringEventPass : IRecurringEventPass
 
         foreach (var parent in candidates)
         {
-            if (parent.Recurrence is not { } frequency
-                || !string.IsNullOrEmpty(parent.NextOccurrenceEventId)
-                || parent.Lifecycle(now) is not (EventLifecycle.Pending or EventLifecycle.Finished))
-                continue;
-
-            if (!DateOnly.TryParse(parent.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parentDate))
-                continue;
-
-            if (EventRecurrence.NextDate(parentDate, frequency, today, parent.RecurrenceAnchorDay) is not { } nextDate)
+            switch (await AdvanceSeriesAsync(parent, now, today, ct))
             {
-                await StopSeriesAsync(parent, now, "series dormant beyond the catch-up limit", ct);
-                stopped++;
-                continue;
-            }
-
-            var host = string.IsNullOrWhiteSpace(parent.CreatorUserId)
-                ? null
-                : await _users.GetByIdAsync(parent.CreatorUserId, ct);
-
-            if (host is null)
-            {
-                await StopSeriesAsync(parent, now, "host not found", ct);
-                stopped++;
-                continue;
-            }
-
-            switch (await TryCreateNextOccurrenceAsync(parent, host, nextDate, now, ct))
-            {
-                case OccurrenceOutcome.Created:
+                case SeriesStep.Created:
                     created++;
                     break;
-                case OccurrenceOutcome.Failed:
+                case SeriesStep.Stopped:
+                    stopped++;
+                    break;
+                case SeriesStep.Failed:
                     failed++;
                     break;
             }
         }
 
         return new RecurringEventPassResult(candidates.Count, created, stopped, failed);
+    }
+
+    private enum SeriesStep
+    {
+        Skipped,
+        Created,
+        Stopped,
+        Failed
+    }
+
+    private async Task<SeriesStep> AdvanceSeriesAsync(Event parent, DateTimeOffset now, DateOnly today, CancellationToken ct)
+    {
+        if (SlotAwaitingItsSuccessor(parent, now) is not { } slot)
+            return SeriesStep.Skipped;
+
+        if (EventRecurrence.NextDate(slot.Date, slot.Frequency, today, parent.RecurrenceAnchorDay) is not { } nextDate)
+        {
+            await StopSeriesAsync(parent, now, "series dormant beyond the catch-up limit", ct);
+            return SeriesStep.Stopped;
+        }
+
+        var host = string.IsNullOrWhiteSpace(parent.CreatorUserId)
+            ? null
+            : await _users.GetByIdAsync(parent.CreatorUserId, ct);
+
+        if (host is null)
+        {
+            await StopSeriesAsync(parent, now, "host not found", ct);
+            return SeriesStep.Stopped;
+        }
+
+        return await TryCreateNextOccurrenceAsync(parent, host, nextDate, now, ct) switch
+        {
+            OccurrenceOutcome.Created => SeriesStep.Created,
+            OccurrenceOutcome.Failed => SeriesStep.Failed,
+            _ => SeriesStep.Skipped
+        };
+    }
+
+    private static (RecurrenceFrequency Frequency, DateOnly Date)? SlotAwaitingItsSuccessor(Event parent, DateTimeOffset now)
+    {
+        if (parent.Recurrence is not { } frequency
+            || !string.IsNullOrEmpty(parent.NextOccurrenceEventId)
+            || parent.Lifecycle(now) is not (EventLifecycle.Pending or EventLifecycle.Finished))
+            return null;
+
+        return DateOnly.TryParse(parent.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            ? (frequency, date)
+            : null;
     }
 
     private enum OccurrenceOutcome

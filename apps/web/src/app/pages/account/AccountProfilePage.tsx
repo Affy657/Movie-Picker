@@ -66,7 +66,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
   const { t } = useTranslation();
   const { patchProfile } = useAuth();
 
-  const [draft, setDraftState] = useState(() => draftOf(user));
+  const [draft, setDraft] = useState(() => draftOf(user));
   const draftRef = useRef(draft);
   const serverDraftRef = useRef(draft);
   const [pseudoError, setPseudoError] = useState<string | null>(null);
@@ -76,19 +76,19 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
   const savingRef = useRef(false);
   const pendingRetryRef = useRef(false);
 
-  const setDraft = useCallback((next: ProfileDraft) => {
+  const replaceDraft = useCallback((next: ProfileDraft) => {
     draftRef.current = next;
-    setDraftState(next);
+    setDraft(next);
   }, []);
 
-  const editDraft = (edit: Partial<ProfileDraft>) => setDraft({ ...draftRef.current, ...edit });
+  const editDraft = (edit: Partial<ProfileDraft>) => replaceDraft({ ...draftRef.current, ...edit });
 
   useEffect(() => {
     const incoming = draftOf(user);
     const merged = keepUnsavedEdits(draftRef.current, serverDraftRef.current, incoming);
     serverDraftRef.current = incoming;
-    if (!sameDraft(merged, draftRef.current)) setDraft(merged);
-  }, [user, setDraft]);
+    if (!sameDraft(merged, draftRef.current)) replaceDraft(merged);
+  }, [user, replaceDraft]);
 
   useEffect(() => () => globalThis.clearTimeout(timerRef.current), []);
 
@@ -124,7 +124,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
         isWatchlistPublic: sent.isWatchlistPublic,
       });
       serverDraftRef.current = draftOf(updated);
-      if (sameDraft(draftRef.current, sent)) setDraft(serverDraftRef.current);
+      if (sameDraft(draftRef.current, sent)) replaceDraft(serverDraftRef.current);
       flashSaved();
     } catch (err) {
       setSaveError(getErrorMessage(err, t('profile.settings.fallbackError')));
@@ -135,7 +135,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
         void flush();
       }
     }
-  }, [patchProfile, flashSaved, t, setDraft]);
+  }, [patchProfile, flashSaved, t, replaceDraft]);
 
   const scheduleSave = () => {
     globalThis.clearTimeout(timerRef.current);
