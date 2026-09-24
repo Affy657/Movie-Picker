@@ -16,6 +16,10 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const noop = () => {};
 
+function supportsPopover(element: HTMLElement): boolean {
+  return typeof element.showPopover === 'function';
+}
+
 export function confettiPalettes(colors: string[]) {
   if (colors.length === 0) return { burst: undefined, left: undefined, right: undefined };
   if (colors.length === 1) return { burst: colors, left: colors, right: colors };
@@ -89,7 +93,9 @@ export default function WheelModal({
     confettiCanvasRef.current?.remove();
     confettiCanvasRef.current = null;
     const overlay = confettiOverlayRef.current;
-    if (overlay?.matches(':popover-open')) overlay.hidePopover();
+    if (overlay && supportsPopover(overlay) && overlay.matches(':popover-open')) {
+      overlay.hidePopover();
+    }
   }, []);
 
   useEffect(() => {
@@ -132,7 +138,7 @@ export default function WheelModal({
       const overlay = confettiOverlayRef.current;
       if (!overlay) return;
 
-      overlay.showPopover();
+      if (supportsPopover(overlay)) overlay.showPopover();
 
       const canvas = document.createElement('canvas');
       canvas.style.cssText =

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import type { MovieData } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
 import WheelModal, { confettiPalettes } from './WheelModal';
@@ -16,6 +16,7 @@ vi.mock('./SpinningWheel', () => ({
       Fin de roue
     </button>
   ),
+  WHEEL_SEGMENT_TOKENS: [],
 }));
 vi.mock('@/features/movies/components/WatchProviderChips', () => ({
   default: ({ providers }: { providers: unknown[] }) => (
@@ -455,6 +456,94 @@ describe('WheelModal', () => {
       </LocaleProvider>
     );
     expect(onSpinComplete).toHaveBeenCalledOnce();
+  });
+});
+
+describe('WheelModal and the Popover API', () => {
+  type PopoverMethods = Partial<Pick<HTMLElement, 'showPopover' | 'hidePopover'>>;
+  const popoverDescriptors = {
+    showPopover: Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'showPopover'),
+    hidePopover: Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'hidePopover'),
+  };
+
+  beforeEach(() => {
+    const nativeMatches = Element.prototype.matches;
+    vi.spyOn(Element.prototype, 'matches').mockImplementation(function matchesWithoutPopover(
+      this: Element,
+      selector: string
+    ) {
+      if (selector.includes(':popover-open')) {
+        throw new DOMException('The string did not match the expected pattern.', 'SyntaxError');
+      }
+      return nativeMatches.call(this, selector);
+    });
+    delete (HTMLElement.prototype as PopoverMethods).showPopover;
+    delete (HTMLElement.prototype as PopoverMethods).hidePopover;
+    vi.useFakeTimers({
+      toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'setTimeout', 'clearTimeout'],
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    for (const [name, descriptor] of Object.entries(popoverDescriptors)) {
+      if (descriptor) Object.defineProperty(HTMLElement.prototype, name, descriptor);
+      else Reflect.deleteProperty(HTMLElement.prototype, name);
+    }
+  });
+
+  it('opens the wheel and reveals the winner without crashing the page on Safari before 17', () => {
+    const { unmount } = wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+    expect(wheelDialog()).toHaveAttribute('open');
+
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+    act(() => {
+      vi.advanceTimersToNextFrame();
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(screen.getByRole('heading', { name: /film sélectionné/i })).toBeInTheDocument();
+    expect(() => unmount()).not.toThrow();
+  });
+
+  it('still raises the confetti above the modal where the Popover API exists', () => {
+    const showPopover = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'showPopover', {
+      configurable: true,
+      value: showPopover,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'hidePopover', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    vi.mocked(Element.prototype.matches).mockImplementation(() => false);
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+    act(() => {
+      vi.advanceTimersToNextFrame();
+    });
+
+    expect(showPopover).toHaveBeenCalledOnce();
   });
 });
 
