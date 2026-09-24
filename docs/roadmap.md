@@ -250,17 +250,17 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.8, planifiée (34 points)
+## 📋 V1.8, planifiée (46 points)
 
-**Objectif** : faire passer la soirée en temps réel et armer l'hôte, avec la sécurité du compte en complément.
+**Objectif** : donner à chacun ses listes de films, faites à la main, remplies par des règles ou tenues à plusieurs, et faire passer la soirée en temps réel, avec la sécurité du compte en complément.
 
+- ⬜ `L` **Mes listes** : la page Ma liste devient Mes listes, où chacun crée, renomme et supprime ses propres listes de films à côté de la liste « À voir », chacune visible sur le profil ou privée. Un film s'ajoute à n'importe quelle liste depuis sa fiche.
+- ⬜ `L` **Listes intelligentes** : une liste qui se remplit toute seule dans tout le catalogue TMDB à partir de règles combinées (genres, décennie, note, durée, acteurs, réalisateur, plateformes de streaming). Elle se met à jour d'elle-même, et ses règles se modifient à tout moment.
+- ⬜ `L` **Listes collaboratives** : le créateur d'une liste y invite d'autres personnes, qui peuvent alors y ajouter et en retirer des films, et chaque film affiche qui l'a ajouté. Pensée pour la liste « à voir ensemble » d'un couple, d'une coloc ou d'une bande.
 - ⬜ `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
-- ⬜ `M` **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
-- ⬜ `L` **Co-hôte** : l'hôte peut désigner un ou plusieurs participants comme co-hôtes ; mêmes droits que l'hôte (lancer la roue, expulser un participant, modifier les paramètres) sauf supprimer la soirée.
 - ⬜ `L` **Synchronisation temps réel** : remplacer le polling par une connexion temps réel ; propositions, votes et arrivées de participants apparaissent sans délai perceptible.
 - ⬜ `M` **Présence sur la page soirée** : avatars des participants actuellement connectés et signal « en train de proposer un film », posés sur la connexion temps réel.
 - ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
-- ⬜ `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
 
 ---
 
@@ -275,7 +275,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## Backlog produit (non priorisé sur une release) (160 points, 1 non estimé)
+## Backlog produit (non priorisé sur une release) (185 points, 1 non estimé)
 
 > **Note V2, application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
@@ -291,22 +291,26 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - `S` **Home : invitations en attente** : rappel des invitations non répondues directement sur la home, plus visible que les notifications seules.
 - `S` **Home : soirée rapide** : bouton « Créer une soirée » avec la dernière config utilisée en un clic ; dépend des templates de soirée (V1.6).
 - `S` **Home : derniers films gagnants** : les 3-4 films tirés dans ses propres soirées récentes, ce qui évite de reproposer un film qu'on vient de voir. Distinct de « Vos amis ont vu », livré en V1.5, qui couvre les soirées des comptes suivis.
-- `M` **Fil d'activité des follows** : événements sociaux (soirée créée par un ami, soirée clôturée) au-delà des seuls films vus, dont la rangée « Vos amis ont vu » couvre déjà la moitié.
+- `L` **Fil d'actualité** : un fil qui rassemble l'activité des comptes suivis (soirées créées et terminées, films notés, listes publiées) et les soirées publiques à venir. Il prolonge la rangée « Vos amis ont vu » de la home, limitée aux films vus.
+- `L` **Soirée publique** : une soirée que l'hôte rend publique apparaît sur une page de découverte, et n'importe quel compte peut la rejoindre. L'hôte peut bannir un participant, qui ne peut alors plus revenir par le lien.
 - `L` **Sondage de disponibilité** : avant de créer une soirée, l'hôte propose plusieurs créneaux à ses follows et chacun coche ses disponibilités. L'hôte retient le créneau final, qui crée la soirée.
 - `L` **Plateformes streaming par compte** : chaque utilisateur renseigne ses abonnements dans ses paramètres, et la page d'une soirée affiche les plateformes communes à tous les participants. Les films peuvent être filtrés à celles-ci.
 - `XL` **Messages privés** : messagerie directe entre deux utilisateurs qui se suivent mutuellement ; accessible depuis le profil public ou la liste de follows ; permet d'organiser une soirée ou d'échanger en dehors du contexte d'une soirée existante.
+- `L` **Co-hôte** : l'hôte peut désigner un ou plusieurs participants comme co-hôtes ; mêmes droits que l'hôte (lancer la roue, expulser un participant, modifier les paramètres) sauf supprimer la soirée.
 - `M` **Proposition de film anonyme** : option dans les paramètres de la soirée activable par l'hôte ; le nom du proposant n'est plus affiché sur les cards de films tant que la roue n'a pas été lancée, pour éviter les votes d'affinité plutôt que de goût.
 - `L` **Chat de soirée** : panneau de discussion en temps réel sur la page soirée, latéral sur desktop et en onglet sur mobile. Destiné à remplacer les mini-commentaires par film par un seul espace d'échange.
 - `?` **Événements hebdomadaires** : dépend de la home page V1.5, événement qui change chaque semaine, sous différentes formes possibles (thème à respecter dans le film gagnant d'une soirée, événement saisonnier type Halloween ou Noël, etc.) ; à définir plus précisément une fois la home page livrée.
 - `S` **Description de soirée** : champ de description libre en complément du titre à la création d'une soirée, modifiable ensuite par l'hôte ; affiché sur la page soirée pour donner du contexte (thème de la soirée, consignes, etc.).
 - `M` **Soirée à distance synchronisée** : intégrer dans le parcours soirée l'usage d'une extension de visionnage synchronisé existante (Teleparty, Scener…) ; une fois le film gagnant désigné, la page soirée guide l'hôte pour lancer une session et partage le lien généré aux participants via le mécanisme d'invitation existant.
-- `M` **Trigger warnings sur les fiches films** : avertissements précis (violence sexuelle, mort d'un animal, lumières clignotantes, suicide) tirés d'une base communautaire, affichés sur la fiche film et sur la card une fois le film tiré, avec un réglage par compte pour les masquer. Prolonge les badges d'âge et de genre des avertissements de contenu (V1.8).
+- `M` **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
+- `M` **Trigger warnings sur les fiches films** : avertissements précis (violence sexuelle, mort d'un animal, lumières clignotantes, suicide) tirés d'une base communautaire, affichés sur la fiche film et sur la card une fois le film tiré, avec un réglage par compte pour les masquer. Prolonge les badges d'âge et de genre des avertissements de contenu.
 - `S` **Serveur Discord Movie Picker** : un serveur communautaire pour les retours, les idées et l'annonce des versions, avec un lien d'invitation dans le pied de page et le centre d'aide. Les salons reprennent les entrées « Proposer une idée » et « Signaler un problème » sans remplacer les tickets GitHub.
 - `XL` **Vrai support des séries (progression par épisode)** : suivre la saison et l'épisode en cours d'une série et le prochain à voir, via les endpoints TMDB dédiés. Remplace le traitement actuel d'une série comme un simple film.
 - `M` **Connexion Discord, Meta et Twitch** : trois fournisseurs OAuth supplémentaires aux côtés de Google et GitHub, dans la section « Connexions » existante.
 - `L` **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
 - `M` **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
 - `M` **Alerte nouvelle connexion** : e-mail automatique envoyé à l'utilisateur lors d'une connexion depuis un nouvel appareil ou navigateur.
+- `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
 - `S` **Contact / Support** : formulaire ou adresse dédiée pour signaler un problème, distinct du bouton « Proposer une idée » réservé aux suggestions de features.
 - `M` **Onboarding pour nouveaux utilisateurs** : mini tour guidé ou écran de bienvenue à la première connexion, expliquant le concept (créer une soirée, voter, la roue).
 - `M` **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.

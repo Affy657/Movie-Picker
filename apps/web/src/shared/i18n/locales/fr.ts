@@ -2554,16 +2554,16 @@ export const fr = {
       v18When: 'Plus tard',
       v18What: 'V1.8',
       v18Detail:
-        "Remplacer le rafraîchissement périodique par une vraie connexion temps réel, et armer l'hôte des outils qui lui manquent.",
+        'Des listes de films à soi, faites à la main, remplies par des règles ou tenues à plusieurs, et une vraie connexion temps réel à la place du rafraîchissement périodique.',
       v18Hint:
         'Le temps réel est le dernier chantier de plateforme encore ouvert sur la trajectoire produit.',
-      v18Item1: 'Synchronisation temps réel',
-      v18Item2: 'Présence sur la page soirée',
-      v18Item3: 'Co-hôte',
+      v18Item1: 'Mes listes',
+      v18Item2: 'Listes intelligentes',
+      v18Item3: 'Listes collaboratives',
       v18Item4: 'Thème imposé',
-      v18Item5: 'Avertissements de contenu',
-      v18Item6: 'Double authentification',
-      v18Item7: "Centre d'aide",
+      v18Item5: 'Synchronisation temps réel',
+      v18Item6: 'Présence sur la page soirée',
+      v18Item7: 'Double authentification',
       v19When: 'Plus tard encore',
       v19What: 'V1.9',
       v19Detail:

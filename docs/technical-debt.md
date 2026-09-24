@@ -105,7 +105,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 ## DEBT-032 deux modèles d'autorisation hôte coexistent, le jeton porteur et le compte créateur
 
 - state: humain
-- bloque: décision produit, retirer ou non le jeton d'hôte. Le chantier co-hôte de V1.8 est le moment naturel, il ajouterait sinon un troisième chemin.
+- bloque: décision produit, retirer ou non le jeton d'hôte. Le chantier co-hôte, au backlog produit, est le moment naturel, il ajouterait sinon un troisième chemin.
 - impact: `EventHost.IsHost` accepte le jeton (`X-Host-Token`, ou `?host=` pour les anciens liens, que le front range en `sessionStorage` puis retire de la barre d'adresse) **ou** `CreatorUserId`. Créer une soirée exige un compte depuis la V1.2, donc le jeton est un vestige, et un lien partagé avec le jeton donne les commandes de l'hôte à n'importe qui, sans compte. Onze fichiers front le transportent, l'API le masque dans les logs et Sentry pour compenser.
 - ou: `apps/api-dotnet/MoviePicker.Api/Domain/EventHost.cs`, `Infrastructure/Web/HostTokenAccessor.cs`, `SensitiveQueryRedaction.cs` ; côté front `grep -rl hostToken apps/web/src --include=*.ts --include=*.tsx | grep -v test`
 - verify: `grep -n "TokenMatches" apps/api-dotnet/MoviePicker.Api/Domain/EventHost.cs` ; encore ouvert tant que le jeton compte dans `IsHost`
