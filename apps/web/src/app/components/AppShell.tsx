@@ -8,6 +8,7 @@ import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxd
 import { useWhatsNew } from '@/shared/hooks/useWhatsNew';
 import { shouldShowWhatsNewNavChip } from '@/shared/whatsNew';
 import { withReturnTo, ROUTES } from '@/app/routes';
+import { safeReturnTo } from '@/shared/utils/returnTo';
 import { routeIntentHandlers } from '@/app/routeChunks';
 import { LANDING_ANCHORS } from '@/app/pages/landing/anchors';
 import UserMenu from '@/features/auth/components/UserMenu';
@@ -180,10 +181,12 @@ export default function AppShell() {
 
   const isAuthenticated = !!user;
   const isLandingRoute = location.pathname === ROUTES.howItWorks && !isAuthenticated;
-  const returnTo = `${location.pathname}${location.search}`;
   const isOnAuthRoute = (
     [ROUTES.login, ROUTES.register, ROUTES.forgotPassword, ROUTES.resetPassword] as string[]
   ).includes(location.pathname);
+  const returnTo = isOnAuthRoute
+    ? safeReturnTo(new URLSearchParams(location.search).get('returnTo'))
+    : `${location.pathname}${location.search}`;
 
   const exploreItem: NavItemDef = {
     to: ROUTES.home,

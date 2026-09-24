@@ -288,6 +288,34 @@ describe('App (routes)', () => {
       );
     });
 
+    it('AppShell: on an auth page the mobile sign-in link keeps the pending returnTo', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/register?returnTo=%2Fe%2Fsoiree-horreur']);
+      await screen.findByRole('heading', { name: /^inscription$/i, level: 1 }, { timeout: 20000 });
+      const mobileNav = screen
+        .getAllByRole('navigation', { name: /navigation principale/i })
+        .at(-1);
+      if (!mobileNav) throw new Error('Mobile nav not found');
+      expect(within(mobileNav).getByRole('link', { name: /^Connexion$/i })).toHaveAttribute(
+        'href',
+        '/login?returnTo=%2Fe%2Fsoiree-horreur'
+      );
+    });
+
+    it('AppShell: on an auth page without returnTo the mobile sign-in link leads home afterwards', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/forgot-password']);
+      await screen.findByRole('heading', { level: 1 }, { timeout: 20000 });
+      const mobileNav = screen
+        .getAllByRole('navigation', { name: /navigation principale/i })
+        .at(-1);
+      if (!mobileNav) throw new Error('Mobile nav not found');
+      expect(within(mobileNav).getByRole('link', { name: /^Connexion$/i })).toHaveAttribute(
+        'href',
+        '/login'
+      );
+    });
+
     it('AppShell : les boutons de connexion et inscription remplacent la cloche et le menu du compte', async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
