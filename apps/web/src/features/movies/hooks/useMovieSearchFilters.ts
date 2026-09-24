@@ -175,7 +175,6 @@ export function useMovieSearchFilters(tmdbLanguage: string, ratingScale?: Rating
   }, []);
 
   const changeRuntimeRange = useCallback((min: number, max: number) => {
-    filterChangedRef.current = true;
     setRuntimeRange([min, max]);
   }, []);
 

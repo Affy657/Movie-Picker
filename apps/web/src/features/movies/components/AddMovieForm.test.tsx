@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll, afterEach, afterAll, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { LocaleProvider } from '@/shared/i18n';
@@ -85,6 +85,45 @@ describe('AddMovieForm (MSW)', () => {
     await user.type(input, 'c');
     expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
     expect(searchCalls).toBe(1);
+  });
+
+  it('dragging the runtime slider sends a single search once the debounce settles', async () => {
+    const searchedRuntimeMax: (string | null)[] = [];
+    server.use(
+      http.get(`${TEST_API_V1}/movies/search`, ({ request }) => {
+        searchedRuntimeMax.push(new URL(request.url).searchParams.get('runtimeMax'));
+        return HttpResponse.json({
+          items: [
+            {
+              id: 100,
+              title: 'Film Test',
+              year: '2024',
+              posterPath: null,
+              voteAverage: 7.5,
+              watchProviders: [],
+              tmdbWatchPageUrl: null,
+            },
+          ],
+          watchProvidersRegion: 'FR',
+          disclaimer: '',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        });
+      })
+    );
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
+    expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(searchedRuntimeMax).toEqual([null]);
+
+    await user.click(screen.getByRole('button', { name: /filtres avancés/i }));
+    const maxSlider = screen.getByRole('slider', { name: 'Durée maximum' });
+    for (const minutes of [175, 170, 165, 160, 155, 150]) {
+      fireEvent.change(maxSlider, { target: { value: String(minutes) } });
+    }
+
+    await new Promise((r) => setTimeout(r, 600));
+    expect(searchedRuntimeMax).toEqual([null, '150']);
   });
 
   it('affiche un message si la recherche ne retourne aucun film', async () => {

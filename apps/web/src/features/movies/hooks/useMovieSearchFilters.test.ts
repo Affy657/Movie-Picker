@@ -114,7 +114,12 @@ describe('useMovieSearchFilters', () => {
     expect(result.current.activeFilters.runtimeMin).toBe(30);
     expect(result.current.activeFilters.runtimeMax).toBe(90);
     expect(result.current.hasApiFilters).toBe(true);
-    expect(result.current.filterChangedRef.current).toBe(true);
+  });
+
+  it('a runtime drag is left to the search debounce, not flagged as an immediate filter change', () => {
+    const { result } = renderHook(() => useMovieSearchFilters('fr'));
+    act(() => result.current.changeRuntimeRange(30, 90));
+    expect(result.current.filterChangedRef.current).toBe(false);
   });
 
   it('changeRuntimeRange aux bornes ne produit aucun filtre actif', () => {
