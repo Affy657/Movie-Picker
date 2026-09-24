@@ -166,6 +166,41 @@ describe('useEventWheel : annonce du gagnant', () => {
 
     expect(postEventWheelAnnounce).toHaveBeenCalledTimes(1);
   });
+
+  it('announces the winner when the host leaves the page while the wheel is still spinning', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { result, unmount } = renderWheel();
+
+    act(() => result.current.launch());
+    await vi.waitFor(() => expect(result.current.isModalOpen).toBe(true));
+    expect(postEventWheelAnnounce).not.toHaveBeenCalled();
+
+    unmount();
+    await vi.advanceTimersByTimeAsync(WHEEL_SPIN_DURATION_MS + 100);
+
+    expect(postEventWheelAnnounce).toHaveBeenCalledTimes(1);
+    expect(postEventWheelAnnounce).toHaveBeenCalledWith('soiree', 'ht1');
+  });
+
+  it('does not announce again on leaving the page once the winner is out', async () => {
+    const { result, unmount } = renderWheel();
+
+    act(() => result.current.launch());
+    await waitFor(() => expect(result.current.isModalOpen).toBe(true));
+    act(() => result.current.revealWinner());
+
+    unmount();
+
+    expect(postEventWheelAnnounce).toHaveBeenCalledTimes(1);
+  });
+
+  it('announces nothing on leaving the page when no wheel was launched', () => {
+    const { unmount } = renderWheel();
+
+    unmount();
+
+    expect(postEventWheelAnnounce).not.toHaveBeenCalled();
+  });
 });
 
 describe('useEventWheel: remaining slots', () => {
