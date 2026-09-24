@@ -66,7 +66,7 @@ function getDefaultStart(): { date: string; time: string } {
   const start = new Date();
   const totalMin = start.getHours() * 60 + start.getMinutes();
   if (totalMin < 20 * 60) start.setHours(20, 0, 0, 0);
-  else start.setHours(0, Math.ceil(totalMin / 30) * 30, 0, 0);
+  else start.setHours(0, (Math.floor(totalMin / 30) + 1) * 30, 0, 0);
   return {
     date: `${start.getFullYear()}-${pad2(start.getMonth() + 1)}-${pad2(start.getDate())}`,
     time: `${pad2(start.getHours())}:${pad2(start.getMinutes())}`,

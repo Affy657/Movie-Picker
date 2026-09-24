@@ -481,6 +481,33 @@ describe('CreateEvent', () => {
     }
   });
 
+  it('starts the night at the next half hour when the page opens right on one', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 8, 24, 20, 0, 30));
+    try {
+      RenderCreateEvent();
+
+      expect(screen.getByLabelText(/date/i)).toHaveValue('2026-09-24');
+      expect(screen.getByLabelText(/heure/i)).toHaveValue('20:30');
+      expect(screen.queryByText('Cette date est déjà passée.')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('starts the night tomorrow at midnight when the page opens right at 23:30', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 8, 24, 23, 30, 5));
+    try {
+      RenderCreateEvent();
+
+      expect(screen.getByLabelText(/date/i)).toHaveValue('2026-09-25');
+      expect(screen.getByLabelText(/heure/i)).toHaveValue('00:00');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('warns about a date already in the past without blocking the creation', async () => {
     const user = userEvent.setup();
     mockTemplates([]);
