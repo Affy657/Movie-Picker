@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Controllers;
+using MoviePicker.Api.Infrastructure.Posters;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Controllers;
@@ -10,6 +13,12 @@ namespace MoviePicker.Api.Tests.Controllers;
 public sealed class PostersControllerTests
 {
     private static readonly string ValidKey = new('a', 64);
+
+    private static readonly IOptions<MoviePickerOptions> CacheEnabled =
+        Options.Create(new MoviePickerOptions { PosterCacheEnabled = true });
+
+    private static readonly IOptions<MoviePickerOptions> CacheDisabled =
+        Options.Create(new MoviePickerOptions { PosterCacheEnabled = false });
 
     [Fact]
     public async Task Get_InvalidKey_ReturnsNotFound_WithoutHittingStore()
@@ -79,7 +88,7 @@ public sealed class PostersControllerTests
         var store = new Mock<IPosterImageStore>();
         var controller = new PostersController().WithContext();
 
-        var result = await controller.GetTmdb(size, file, store.Object, CancellationToken.None);
+        var result = await controller.GetTmdb(size, file, store.Object, CacheEnabled, CancellationToken.None);
 
         Assert.IsType<NotFoundResult>(result);
         store.Verify(s => s.GetOrFetchAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -94,7 +103,7 @@ public sealed class PostersControllerTests
         store.Setup(s => s.GetOrFetchAsync(source, It.IsAny<CancellationToken>())).ReturnsAsync(blob);
         var controller = new PostersController().WithContext();
 
-        var result = await controller.GetTmdb("w500", "abc.jpg", store.Object, CancellationToken.None);
+        var result = await controller.GetTmdb("w500", "abc.jpg", store.Object, CacheEnabled, CancellationToken.None);
 
         var file = Assert.IsType<FileContentResult>(result);
         Assert.Equal(blob.Data, file.FileContents);
@@ -112,7 +121,7 @@ public sealed class PostersControllerTests
             .ReturnsAsync((PosterImageBlob?)null);
         var controller = new PostersController().WithContext();
 
-        var result = await controller.GetTmdb("w500", "abc.jpg", store.Object, CancellationToken.None);
+        var result = await controller.GetTmdb("w500", "abc.jpg", store.Object, CacheEnabled, CancellationToken.None);
 
         Assert.IsType<NotFoundResult>(result);
         Assert.Equal("no-store", controller.Response.Headers.CacheControl);
@@ -128,11 +137,39 @@ public sealed class PostersControllerTests
         var controller = new PostersController().WithContext();
         controller.Request.Headers.IfNoneMatch = $"\"{key}\"";
 
-        var result = await controller.GetTmdb("w500", "abc.jpg", store.Object, CancellationToken.None);
+        var result = await controller.GetTmdb("w500", "abc.jpg", store.Object, CacheEnabled, CancellationToken.None);
 
         var status = Assert.IsType<StatusCodeResult>(result);
         Assert.Equal(StatusCodes.Status304NotModified, status.StatusCode);
         store.Verify(s => s.GetOrFetchAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetTmdb_PosterCacheDisabled_RedirectsToTheTmdbCdn()
+    {
+        var controller = new PostersController().WithContext();
+
+        var result = await controller.GetTmdb("w500", "abc.jpg", new DisabledPosterImageStore(), CacheDisabled, CancellationToken.None);
+
+        var redirect = Assert.IsType<RedirectResult>(result);
+        Assert.Equal("https://image.tmdb.org/t/p/w500/abc.jpg", redirect.Url);
+        Assert.False(redirect.Permanent);
+        Assert.Equal("public,max-age=86400", controller.Response.Headers.CacheControl);
+        Assert.False(controller.Response.Headers.ContainsKey("ETag"));
+    }
+
+    [Theory]
+    [InlineData("w500", "../secrets.jpg")]
+    [InlineData("w500", "..%2Fsecrets.jpg")]
+    [InlineData("big", "abc.jpg")]
+    [InlineData("w500", "abc.svg")]
+    public async Task GetTmdb_PosterCacheDisabled_InvalidSegments_ReturnNotFound(string size, string file)
+    {
+        var controller = new PostersController().WithContext();
+
+        var result = await controller.GetTmdb(size, file, new DisabledPosterImageStore(), CacheDisabled, CancellationToken.None);
+
+        Assert.IsType<NotFoundResult>(result);
     }
 
     [Fact]
@@ -143,7 +180,7 @@ public sealed class PostersControllerTests
             .ThrowsAsync(new InvalidOperationException("database unreachable"));
         var sut = new PostersController().WithContext();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.GetTmdb("w500", "abc.jpg", store.Object, CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.GetTmdb("w500", "abc.jpg", store.Object, CacheEnabled, CancellationToken.None));
 
         Assert.False(sut.Response.Headers.ContainsKey("Cache-Control"));
         Assert.False(sut.Response.Headers.ContainsKey("ETag"));

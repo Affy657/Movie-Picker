@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Infrastructure.Posters;
@@ -55,6 +57,25 @@ public sealed class PostersEndpointTests : IClassFixture<MoviePickerApplicationF
         Assert.Equal("image/jpeg", first.Content.Headers.ContentType?.MediaType);
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
         Assert.Equal(["https://image.tmdb.org/t/p/w500/never-seen.jpg"], tmdb.Requested);
+    }
+
+    [Fact]
+    public async Task GetTmdbPoster_PosterCacheDisabled_RedirectsToTheTmdbCdn()
+    {
+        var tmdb = new RecordingImageHandler();
+        var client = _factory.WithWebHostBuilder(b =>
+            {
+                b.UseSetting("POSTER_CACHE_ENABLED", "false");
+                b.ConfigureTestServices(services =>
+                    services.AddHttpClient(PosterFetchHttp.ClientName).ConfigurePrimaryHttpMessageHandler(() => tmdb));
+            })
+            .CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        var res = await client.GetAsync("/api/v1/posters/tmdb/w500/cache-disabled.jpg");
+
+        Assert.Equal(HttpStatusCode.Redirect, res.StatusCode);
+        Assert.Equal(new Uri("https://image.tmdb.org/t/p/w500/cache-disabled.jpg"), res.Headers.Location);
+        Assert.Empty(tmdb.Requested);
     }
 
     private sealed class RecordingImageHandler : HttpMessageHandler
