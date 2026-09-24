@@ -71,25 +71,20 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             .Distinct()
             .ToList();
 
-        long removedVotes = 0;
-        long removedSeenMarks = 0;
-        long removedMovies = 0;
-        long removedParticipants = 0;
-        var deleted = false;
-
+        var cascade = new Cascade();
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
-                removedVotes = await _voteRepository.DeleteByEventIdAsync(evt.Id, token);
-                removedSeenMarks = await _seenMarkRepository.DeleteByEventIdAsync(evt.Id, token);
-                removedMovies = await _movieRepository.DeleteByEventIdAsync(evt.Id, token);
-                removedParticipants = await _participantRepository.DeleteByEventIdAsync(evt.Id, token);
+                cascade.Votes = await _voteRepository.DeleteByEventIdAsync(evt.Id, token);
+                cascade.SeenMarks = await _seenMarkRepository.DeleteByEventIdAsync(evt.Id, token);
+                cascade.Movies = await _movieRepository.DeleteByEventIdAsync(evt.Id, token);
+                cascade.Participants = await _participantRepository.DeleteByEventIdAsync(evt.Id, token);
                 await _notifications.DeleteByEventIdAsync(evt.Id, token);
-                deleted = await _eventRepository.DeleteAsync(evt.Id, token);
+                cascade.EventDeleted = await _eventRepository.DeleteAsync(evt.Id, token);
             },
             ct);
 
-        if (!deleted)
+        if (!cascade.EventDeleted)
         {
             _logger.LogWarning(
                 "DeleteEvent: cascade succeeded but movie night {EventId} no longer existed at the final deletion",
@@ -104,21 +99,30 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             evt.Id,
             evt.Slug,
             currentUserId,
-            removedVotes,
-            removedSeenMarks,
-            removedMovies,
-            removedParticipants);
+            cascade.Votes,
+            cascade.SeenMarks,
+            cascade.Movies,
+            cascade.Participants);
 
         return new DeleteEventResponse
         {
             EventId = evt.Id,
             Slug = evt.Slug ?? string.Empty,
             Message = "Movie night deleted",
-            RemovedParticipants = removedParticipants,
-            RemovedMovies = removedMovies,
-            RemovedVotes = removedVotes,
-            RemovedSeenMarks = removedSeenMarks
+            RemovedParticipants = cascade.Participants,
+            RemovedMovies = cascade.Movies,
+            RemovedVotes = cascade.Votes,
+            RemovedSeenMarks = cascade.SeenMarks
         };
+    }
+
+    private sealed class Cascade
+    {
+        public long Votes { get; set; }
+        public long SeenMarks { get; set; }
+        public long Movies { get; set; }
+        public long Participants { get; set; }
+        public bool EventDeleted { get; set; }
     }
 
     private async Task NotifyParticipantsOnEventDeletedAsync(Event evt, List<string> userIds, CancellationToken ct)

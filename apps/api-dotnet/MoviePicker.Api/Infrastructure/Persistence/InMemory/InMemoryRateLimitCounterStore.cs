@@ -38,8 +38,6 @@ public sealed class InMemoryRateLimitCounterStore : IRateLimitCounterStore
 
         public DateTimeOffset ExpiresAt { get; }
 
-        public long Value => Interlocked.Read(ref _value);
-
         public long Increment() => Interlocked.Increment(ref _value);
 
         public void Decrement()

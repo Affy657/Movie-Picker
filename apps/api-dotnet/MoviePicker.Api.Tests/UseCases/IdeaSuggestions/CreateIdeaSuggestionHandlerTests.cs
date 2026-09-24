@@ -10,7 +10,7 @@ using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.IdeaSuggestions;
 
-public sealed class CreateIdeaSuggestionHandlerTests
+public sealed partial class CreateIdeaSuggestionHandlerTests
 {
     private const string UserId = "6512bd43d9caa6e02c990b0a";
 
@@ -66,7 +66,7 @@ public sealed class CreateIdeaSuggestionHandlerTests
         Assert.StartsWith("[Idée]", captured!.Title);
         Assert.Contains("Ajouter un mode battle", captured.Title);
         Assert.Contains("Ce serait top d'avoir un mode tournoi.", captured.Body);
-        Assert.Matches(new Regex("^Référence : [0-9a-f]{12}$", RegexOptions.Multiline), captured.Body);
+        Assert.Matches(ReferenceLine(), captured.Body);
         Assert.DoesNotContain(UserId, captured.Body);
         Assert.Contains("Page : /e/:slug", captured.Body);
         Assert.DoesNotContain("abc123", captured.Body);
@@ -79,7 +79,7 @@ public sealed class CreateIdeaSuggestionHandlerTests
     {
         var draft = await CaptureDraftAsync(Request());
 
-        var reference = Regex.Match(draft.Body, "Référence : ([0-9a-f]{12})").Groups[1].Value;
+        var reference = ReferenceValue().Match(draft.Body).Groups[1].Value;
         var entry = Assert.Single(_logger.Messages, message => message.Contains(reference, StringComparison.Ordinal));
         Assert.Contains(UserId, entry);
     }
@@ -91,8 +91,8 @@ public sealed class CreateIdeaSuggestionHandlerTests
         var second = await CaptureDraftAsync(Request());
 
         Assert.NotEqual(
-            Regex.Match(first.Body, "Référence : ([0-9a-f]{12})").Groups[1].Value,
-            Regex.Match(second.Body, "Référence : ([0-9a-f]{12})").Groups[1].Value);
+            ReferenceValue().Match(first.Body).Groups[1].Value,
+            ReferenceValue().Match(second.Body).Groups[1].Value);
     }
 
     [Theory]
@@ -336,4 +336,10 @@ public sealed class CreateIdeaSuggestionHandlerTests
         _github.Verify(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()), Times.Never);
         _github.Verify(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [GeneratedRegex("^Référence : [0-9a-f]{12}$", RegexOptions.Multiline)]
+    private static partial Regex ReferenceLine();
+
+    [GeneratedRegex("Référence : ([0-9a-f]{12})")]
+    private static partial Regex ReferenceValue();
 }

@@ -86,7 +86,7 @@ public sealed class SentryBeforeSendTests
         Assert.NotNull(prepared);
         Assert.Equal(template, prepared!.Message!.Formatted);
         Assert.Equal(template, prepared.Message.Message);
-        Assert.Equal(new[] { "route.action" }, prepared.Tags.Keys);
+        Assert.Equal("route.action", Assert.Single(prepared.Tags.Keys));
     }
 
     [Fact]

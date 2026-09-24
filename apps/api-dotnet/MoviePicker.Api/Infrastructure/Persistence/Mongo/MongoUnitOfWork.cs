@@ -56,9 +56,9 @@ public sealed class MongoUnitOfWork : IUnitOfWork
                 },
                 cancellationToken: budget.Token);
         }
-        catch (OperationCanceledException) when (budget.IsCancellationRequested && !ct.IsCancellationRequested)
+        catch (OperationCanceledException abandoned) when (budget.IsCancellationRequested && !ct.IsCancellationRequested)
         {
-            _logger.LogWarning("Transaction abandoned after retrying for {Budget}", _transactionBudget);
+            _logger.LogWarning(abandoned, "Transaction abandoned after retrying for {Budget}", _transactionBudget);
             throw Errors.ConcurrentUpdate();
         }
         catch (MongoException ex) when (ShouldRunWithoutTransaction(ex, _isDevelopment))
