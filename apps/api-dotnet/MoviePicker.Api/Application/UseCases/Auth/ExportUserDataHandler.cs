@@ -18,6 +18,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     private readonly ISeenMarkRepository _seenMarks;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IWatchlistRepository _watchlist;
+    private readonly IMovieRepository _movies;
     private readonly TimeProvider _clock;
 
     public ExportUserDataHandler(
@@ -30,6 +31,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         ISeenMarkRepository seenMarks,
         IPushSubscriptionRepository pushSubscriptions,
         IWatchlistRepository watchlist,
+        IMovieRepository movies,
         TimeProvider clock)
     {
         _users = users;
@@ -41,6 +43,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         _seenMarks = seenMarks;
         _pushSubscriptions = pushSubscriptions;
         _watchlist = watchlist;
+        _movies = movies;
         _clock = clock;
     }
 
@@ -60,6 +63,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var participantIds = participations.Select(p => p.Id).ToList();
         var votes = await _votes.ListByParticipantIdsAsync(participantIds, ct);
         var seenMarks = await _seenMarks.ListByParticipantIdsAsync(participantIds, ct);
+        var proposedMovies = await _movies.ListByParticipantIdsAsync(participantIds, ct);
         var pushSubscriptions = await _pushSubscriptions.ListByUserIdAsync(userId, ct);
 
         var participationEventIds = participations.Select(p => p.EventId).Distinct().ToList();
@@ -74,6 +78,9 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var seenByParticipant = seenMarks
             .GroupBy(s => s.ParticipantId)
             .ToDictionary(g => g.Key, g => g.ToList());
+        var proposedByParticipant = proposedMovies
+            .GroupBy(m => m.ParticipantId)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         return new UserDataExportResponse
         {
@@ -84,7 +91,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
             Followers = MapConnections(followerUsers),
             CreatedEvents = createdEvents.Select(MapCreatedEvent).ToList(),
             Participations = participations
-                .Select(p => MapParticipation(p, eventTitleById, votesByParticipant, seenByParticipant))
+                .Select(p => MapParticipation(p, eventTitleById, votesByParticipant, seenByParticipant, proposedByParticipant))
                 .ToList(),
             PushSubscriptions = pushSubscriptions
                 .Select(s => new ExportedPushSubscription { Endpoint = s.Endpoint, CreatedAt = s.CreatedAt })
@@ -93,10 +100,12 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         };
     }
 
+    private static string MediaTypeName(MovieMediaType mediaType) => mediaType == MovieMediaType.Tv ? "tv" : "movie";
+
     private static ExportedWatchlistItem MapWatchlistItem(WatchlistItem item) => new()
     {
         TmdbId = item.TmdbId,
-        MediaType = item.MediaType == MovieMediaType.Tv ? "tv" : "movie",
+        MediaType = MediaTypeName(item.MediaType),
         Title = item.Title,
         Year = item.Year,
         CreatedAt = item.CreatedAt
@@ -119,6 +128,11 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         NotificationPreferences = user.NotificationPreferences
             .ToDictionary(kv => kv.Key.ToString().ToLowerInvariant(), kv => kv.Value),
         SupporterSince = user.SupporterSince,
+        RatingScale = user.RatingScale.ToString(),
+        LetterboxdUsername = user.LetterboxdUsername,
+        EventTemplates = user.EventTemplates
+            .Select(t => new ExportedEventTemplate { Name = t.Name, Theme = t.Config.Theme, CreatedAt = t.CreatedAt })
+            .ToList(),
         CreatedAt = user.CreatedAt,
         UpdatedAt = user.UpdatedAt
     };
@@ -154,10 +168,12 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         Participant p,
         Dictionary<string, string> eventTitleById,
         Dictionary<string, List<Vote>> votesByParticipant,
-        Dictionary<string, List<SeenMark>> seenByParticipant)
+        Dictionary<string, List<SeenMark>> seenByParticipant,
+        Dictionary<string, List<Movie>> proposedByParticipant)
     {
         var votes = votesByParticipant.TryGetValue(p.Id, out var v) ? v : [];
         var seen = seenByParticipant.TryGetValue(p.Id, out var s) ? s : [];
+        var proposed = proposedByParticipant.TryGetValue(p.Id, out var m) ? m : [];
         return new ExportedParticipation
         {
             EventId = p.EventId,
@@ -169,6 +185,18 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
                 .ToList(),
             SeenMarks = seen
                 .Select(x => new ExportedSeenMark { MovieId = x.MovieId, CreatedAt = x.CreatedAt })
+                .ToList(),
+            ProposedMovies = proposed
+                .Select(x => new ExportedProposedMovie
+                {
+                    MovieId = x.Id,
+                    TmdbId = x.TmdbId,
+                    MediaType = MediaTypeName(x.MediaType),
+                    Title = x.Title,
+                    Year = x.Year,
+                    PitchNote = x.PitchNote,
+                    CreatedAt = x.CreatedAt
+                })
                 .ToList()
         };
     }
