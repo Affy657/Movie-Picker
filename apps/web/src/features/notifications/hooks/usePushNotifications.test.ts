@@ -8,6 +8,7 @@ import {
 } from '@/features/notifications/api/notificationsApi';
 import { usePushNotifications } from '@/features/notifications/hooks/usePushNotifications';
 import { LocaleProvider } from '@/shared/i18n';
+import { ApiError } from '@/shared/api/apiError';
 
 const renderPushHook = () => renderHook(() => usePushNotifications(), { wrapper: LocaleProvider });
 
@@ -27,6 +28,10 @@ function keyBytes(text: string): ArrayBuffer {
 
 function base64Url(text: string): string {
   return btoa(text).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
+
+function browserPushError(message: string, name: string): Error {
+  return Object.assign(new Error(message), { name });
 }
 
 function textOf(key: BufferSource): string {
@@ -186,6 +191,57 @@ describe('usePushNotifications (supported)', () => {
     expect(result.current.subscribed).toBe(true);
     expect(result.current.error).toBeNull();
     expect(unsubscribeCurrent).not.toHaveBeenCalled();
+  });
+
+  it('subscribe() shows the translated fallback, not the raw browser error', async () => {
+    requestPermission.mockResolvedValue('granted');
+    mockFetchKey.mockResolvedValue('dGVzdA');
+    pmSubscribe.mockRejectedValue(
+      browserPushError('Registration failed - push service error', 'AbortError')
+    );
+
+    const { result } = renderPushHook();
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.subscribe();
+    });
+
+    expect(result.current.error).toBe('Erreur lors de l’activation des notifications');
+    expect(result.current.subscribed).toBe(false);
+  });
+
+  it('subscribe() shows the message of an API error, already translated by the client', async () => {
+    requestPermission.mockResolvedValue('granted');
+    mockFetchKey.mockResolvedValue('dGVzdA');
+    pmSubscribe.mockResolvedValue({ toJSON: () => ({ endpoint: 'https://push/x' }) });
+    mockPost.mockRejectedValue(new ApiError('Trop de requêtes, réessayez.', { code: 429 }));
+
+    const { result } = renderPushHook();
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.subscribe();
+    });
+
+    expect(result.current.error).toBe('Trop de requêtes, réessayez.');
+  });
+
+  it('unsubscribe() shows the translated fallback, not the raw browser error', async () => {
+    const unsubscribe = vi
+      .fn()
+      .mockRejectedValue(browserPushError('Push service unreachable', 'InvalidStateError'));
+    getSubscription.mockResolvedValue({ endpoint: 'https://push/x', unsubscribe });
+    mockDelete.mockResolvedValue(undefined);
+
+    const { result } = renderPushHook();
+    await waitFor(() => expect(result.current.subscribed).toBe(true));
+
+    await act(async () => {
+      await result.current.unsubscribe();
+    });
+
+    expect(result.current.error).toBe('Erreur lors de la désactivation');
   });
 
   it('unsubscribe() deletes the subscription server-side and locally', async () => {
