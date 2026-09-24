@@ -195,6 +195,43 @@ describe('LetterboxdChoicesModal (MSW)', () => {
     );
   });
 
+  it.each([
+    { how: 'skipped with Passer', settle: 'skip' as const },
+    { how: 'refused with « aucun de ces films »', settle: 'none' as const },
+  ])(
+    'reports a title $how as still pending, as the count sent to the API does',
+    async ({ settle }) => {
+      const user = userEvent.setup();
+      let received: { remainingUnresolvedCount: number } | undefined;
+      let unresolvedTitles: string[] | undefined;
+
+      server.use(
+        http.post(`${TEST_API_V1}/letterboxd/confirm`, async ({ request }) => {
+          received = (await request.json()) as { remainingUnresolvedCount: number };
+          return HttpResponse.json({ added: 1, alreadyPresent: 0, pendingReconciliationCount: 1 });
+        })
+      );
+
+      renderModal(TWO_CHOICES, (_result, unresolved) => {
+        unresolvedTitles = unresolved.map((choice) => choice.title);
+      });
+
+      if (settle === 'skip') {
+        await user.click(screen.getByRole('button', { name: 'Passer' }));
+      } else {
+        await user.click(
+          screen.getByRole('radio', { name: 'Aucun de ces films, ignorer ce titre' })
+        );
+        await user.click(screen.getByRole('button', { name: 'Confirmer et suivant' }));
+      }
+      await user.click(screen.getByRole('radio', { name: /Spider-Man/ }));
+      await user.click(screen.getByRole('button', { name: 'Confirmer et terminer' }));
+
+      await waitFor(() => expect(unresolvedTitles).toEqual(['Midnight Mass']));
+      expect(received?.remainingUnresolvedCount).toBe(1);
+    }
+  );
+
   it('allows deciding later by sending only the titles already settled', async () => {
     const user = userEvent.setup();
     let received: unknown;
