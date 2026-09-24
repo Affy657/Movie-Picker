@@ -206,6 +206,7 @@ public sealed class LetterboxdWatchlistSynchronizer
         Year = item.Year,
         PosterPath = item.PosterPath,
         VoteAverage = item.VoteAverage,
+        GenreIds = item.GenreIds,
         LetterboxdSlug = slug
     };
 

@@ -25,6 +25,9 @@ public sealed class AddWatchlistItemRequest
 
     public int? RuntimeMinutes { get; init; }
 
+    [MaxLength(20)]
+    public IReadOnlyList<int>? GenreIds { get; init; }
+
     [MaxLength(200)]
     public string? LetterboxdSlug { get; init; }
 }

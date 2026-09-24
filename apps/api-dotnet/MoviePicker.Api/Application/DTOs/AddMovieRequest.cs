@@ -21,6 +21,9 @@ public sealed class AddMovieRequest
 
     public string? PosterPath { get; init; }
 
+    [MaxLength(20)]
+    public IReadOnlyList<int>? GenreIds { get; init; }
+
     [MaxLength(140)]
     public string? PitchNote { get; init; }
 

@@ -34,16 +34,58 @@ public sealed class AddToWatchlistHandlerTests
             NullLogger<AddToWatchlistHandler>.Instance);
     }
 
-    private static AddWatchlistItemRequest Request(double? voteAverage = 8.3, int? runtimeMinutes = 136, string? posterPath = null) => new()
+    private static AddWatchlistItemRequest Request(
+        double? voteAverage = 8.3,
+        int? runtimeMinutes = 136,
+        string? posterPath = null,
+        IReadOnlyList<int>? genreIds = null) => new()
+        {
+            TmdbId = 42,
+            MediaType = MovieMediaType.Movie,
+            Title = "Matrix",
+            Year = "1999",
+            PosterPath = posterPath,
+            VoteAverage = voteAverage,
+            RuntimeMinutes = runtimeMinutes,
+            GenreIds = genreIds
+        };
+
+    private static readonly int[] SearchResultGenreIds = [878, 0, 28, 878];
+    private static readonly int[] SanitizedSearchResultGenreIds = [878, 28];
+    private static readonly int[] DocumentaryGenreIds = [99];
+
+    [Fact]
+    public async Task HandleAsync_TmdbDetailsDown_KeepsTheGenresOfTheSearchResult()
     {
-        TmdbId = 42,
-        MediaType = MovieMediaType.Movie,
-        Title = "Matrix",
-        Year = "1999",
-        PosterPath = posterPath,
-        VoteAverage = voteAverage,
-        RuntimeMinutes = runtimeMinutes
-    };
+        WatchlistItem? stored = null;
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
+            .Callback<WatchlistItem, CancellationToken>((item, _) => stored = item)
+            .ReturnsAsync(true);
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
+
+        var result = await _sut.HandleAsync(UserId, Request(genreIds: SearchResultGenreIds));
+
+        Assert.Equal(SanitizedSearchResultGenreIds, stored!.GenreIds);
+        Assert.Equal(SanitizedSearchResultGenreIds, result.GenreIds);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbDetailsAvailable_TheirGenresWinOverTheSearchResult()
+    {
+        WatchlistItem? stored = null;
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
+            .Callback<WatchlistItem, CancellationToken>((item, _) => stored = item)
+            .ReturnsAsync(true);
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MatrixDetails(136));
+
+        await _sut.HandleAsync(UserId, Request(genreIds: DocumentaryGenreIds));
+
+        Assert.Equal(GenreIds, stored!.GenreIds);
+    }
 
     private static TmdbMovieDetails MatrixDetails(int? runtime, double? voteAverage = null) =>
         new(42, "Matrix", null, null, null, [], runtime, [], GenreIds, "1999-03-31", VoteAverage: voteAverage);

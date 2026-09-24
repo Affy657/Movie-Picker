@@ -83,7 +83,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
 
         var now = _clock.GetUtcNow();
         var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
-        var genreIdsTask = FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, ct);
+        var genreIdsTask = FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, request.GenreIds, ct);
         var proposerUserTask = _userRepository.GetByIdAsync(currentUserId, ct);
         await Task.WhenAll(genreIdsTask, proposerUserTask);
         var genreIds = await genreIdsTask;
@@ -171,17 +171,24 @@ public sealed class AddMovieHandler : IAddMovieHandler
         return created;
     }
 
-    private async Task<IReadOnlyList<int>> FetchGenreIdsBestEffortAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
+    private async Task<IReadOnlyList<int>> FetchGenreIdsBestEffortAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        IReadOnlyList<int>? searchResultGenreIds,
+        CancellationToken ct)
     {
+        var knownGenreIds = searchResultGenreIds is null
+            ? []
+            : searchResultGenreIds.Where(id => id > 0).Distinct().ToList();
         try
         {
             var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
-            return details?.GenreIds ?? [];
+            return details?.GenreIds ?? knownGenreIds;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "TMDB genre lookup failed for {TmdbId}, movie added without genres", tmdbId);
-            return [];
+            _logger.LogWarning(ex, "TMDB genre lookup failed for {TmdbId}, movie added with the genres of its search result", tmdbId);
+            return knownGenreIds;
         }
     }
 

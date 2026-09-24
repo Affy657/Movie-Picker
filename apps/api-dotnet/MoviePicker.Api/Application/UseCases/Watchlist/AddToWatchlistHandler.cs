@@ -48,7 +48,7 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
             LetterboxdSlug = string.IsNullOrWhiteSpace(request.LetterboxdSlug)
                 ? null
                 : request.LetterboxdSlug.Trim(),
-            GenreIds = details?.GenreIds ?? [],
+            GenreIds = details?.GenreIds ?? SearchResultGenres(request.GenreIds),
             CreatedAt = _clock.GetUtcNow()
         };
 
@@ -74,6 +74,9 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
 
     private static int? KnownRuntime(int? runtimeMinutes) => runtimeMinutes is > 0 ? runtimeMinutes : null;
 
+    private static List<int> SearchResultGenres(IReadOnlyList<int>? genreIds) =>
+        genreIds is null ? [] : genreIds.Where(id => id > 0).Distinct().ToList();
+
     private async Task<TmdbMovieDetails?> FetchDetailsBestEffortAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
     {
         try
@@ -82,7 +85,10 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "TMDB details lookup failed for {TmdbId}, item added to the watchlist without genres nor facts", tmdbId);
+            _logger.LogWarning(
+                ex,
+                "TMDB details lookup failed for {TmdbId}, item added to the watchlist with the genres of its search result and without facts",
+                tmdbId);
             return null;
         }
     }

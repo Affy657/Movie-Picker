@@ -43,15 +43,19 @@ public sealed class AddMovieHandlerTests
 
     private static AddMovieRequest Request(
         string participantId = "p123456789012345678901234",
-        MovieMediaType mediaType = MovieMediaType.Movie) => new()
+        MovieMediaType mediaType = MovieMediaType.Movie,
+        IReadOnlyList<int>? genreIds = null) => new()
         {
             TmdbId = 27205,
             MediaType = mediaType,
             Title = " Inception ",
             Year = "2010",
             PosterPath = "https://image.tmdb.org/t/p/w154/abc.jpg",
+            GenreIds = genreIds,
             ParticipantId = participantId
         };
+
+    private static readonly int[] SearchResultGenreIds = [878, 28];
 
     public AddMovieHandlerTests()
     {
@@ -218,6 +222,30 @@ public sealed class AddMovieHandlerTests
         Assert.NotNull(inserted);
         Assert.Empty(inserted!.GenreIds);
         Assert.Equal("mov1", result.Id);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbFails_KeepsTheGenresOfTheSearchResult()
+    {
+        var evt = ActiveEvent();
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        Movie? inserted = null;
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo
+            .Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()))
+            .Callback<Movie, CancellationToken>((m, _) => inserted = m)
+            .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
+
+        var result = await _sut.HandleAsync("evt1", Request(participant.Id, genreIds: SearchResultGenreIds), null);
+
+        Assert.Equal(SearchResultGenreIds, inserted!.GenreIds);
+        Assert.Equal(SearchResultGenreIds, result.GenreIds);
     }
 
     [Fact]

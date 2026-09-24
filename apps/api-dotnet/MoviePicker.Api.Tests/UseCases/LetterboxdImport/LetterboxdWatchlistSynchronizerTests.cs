@@ -16,6 +16,7 @@ public sealed class LetterboxdWatchlistSynchronizerTests
     private const string UserId = "u1";
     private const string Username = "affy657";
     private static readonly int[] DramaMysteryGenreIds = [18, 9648];
+    private static readonly int[] AnimationSciFiGenreIds = [16, 878];
 
     private readonly Mock<IWatchlistRepository> _watchlist = new();
     private readonly Mock<ILetterboxdWatchlistClient> _letterboxd = new();
@@ -247,6 +248,37 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         Assert.Equal(createdAt, kept.CreatedAt);
         Assert.Equal(0, outcome.Removed);
         Assert.Equal(0, outcome.Added);
+    }
+
+    [Fact]
+    public async Task SyncAsync_TmdbDetailsDownWhileImporting_KeepsTheGenresOfTheSearchResult()
+    {
+        var watchlist = new InMemoryWatchlistRepository();
+        var posters = new Mock<IPosterImageStore>();
+        posters.Setup(p => p.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? path) => path);
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
+        GivenLetterboxd(true, new LetterboxdFilm("akira", "Akira", "1988"));
+        GivenTmdbResults(
+            "Akira",
+            new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira", GenreIds: AnimationSciFiGenreIds));
+        var sut = new LetterboxdWatchlistSynchronizer(
+            watchlist,
+            _letterboxd.Object,
+            _tmdb.Object,
+            new AddToWatchlistHandler(
+                watchlist, posters.Object, TimeProvider.System, _tmdb.Object, NullLogger<AddToWatchlistHandler>.Instance),
+            _participants.Object,
+            _events.Object,
+            _movies.Object,
+            NullLogger<LetterboxdWatchlistSynchronizer>.Instance);
+
+        var outcome = await sut.SyncAsync(TheUser());
+
+        Assert.Equal(1, outcome.Added);
+        var added = await watchlist.GetOneAsync(UserId, 149, MovieMediaType.Movie);
+        Assert.Equal(AnimationSciFiGenreIds, added!.GenreIds);
     }
 
     [Fact]
