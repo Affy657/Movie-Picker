@@ -276,10 +276,17 @@ public sealed class EventReminderPass : IEventReminderPass
             Body: $"{evt.Title} s'est terminée sans qu'aucun film n'ait été choisi… on se rattrape la prochaine fois ?",
             Tag: $"pending-{evt.Id}",
             Url: $"/e/{evt.Slug}");
-        await DeliverOnceAsync(host.Id, UserNotificationType.EventPending, evt.Id, subs, message, failures, ct);
+        if (!EventSchedule.TryGetStartUtc(evt.Date, evt.Time, out var startUtc))
+            return;
 
-        if (!await _notifications.ExistsAsync(host.Id, UserNotificationType.EventPending, evt.Id, ct))
-            await AddToInboxOnceAsync(host.Id, UserNotificationType.EventPending, evt.Id, evt, now, ct);
+        var occurrenceKey = OccurrenceKey(evt.Id, startUtc);
+        var pendingSince = startUtc + EventSchedule.PendingDelay;
+        if (!await _dedup.WasClaimedSinceAsync(host.Id, UserNotificationType.EventPending, evt.Id, NotificationDedupChannel.Push, pendingSince, ct))
+            await DeliverOnceAsync(host.Id, UserNotificationType.EventPending, occurrenceKey, subs, message, failures, ct);
+
+        if (!await _dedup.WasClaimedSinceAsync(host.Id, UserNotificationType.EventPending, evt.Id, NotificationDedupChannel.InApp, pendingSince, ct)
+            && !await _notifications.ExistsSinceAsync(host.Id, UserNotificationType.EventPending, evt.Id, pendingSince, ct))
+            await AddToInboxOnceAsync(host.Id, UserNotificationType.EventPending, occurrenceKey, evt, now, ct);
     }
 
     private sealed record ReminderOccurrence(Event Event, DateTimeOffset StartUtc, string Key, bool NoMovieYet);

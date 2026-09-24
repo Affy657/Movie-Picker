@@ -90,6 +90,25 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task NotificationExistsSince_IgnoresTheNoticesOfAnEarlierWindow()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var userId = ObjectId.GenerateNewId().ToString();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = userId,
+            Type = UserNotificationType.EventPending,
+            EventId = eventId,
+            CreatedAt = Now.AddDays(-7)
+        });
+
+        Assert.True(await notifications.ExistsSinceAsync(userId, UserNotificationType.EventPending, eventId, Now.AddDays(-8)));
+        Assert.False(await notifications.ExistsSinceAsync(userId, UserNotificationType.EventPending, eventId, Now.AddDays(-1)));
+    }
+
+    [Fact]
     public async Task MovieCount_CountsOnlyTheFilmsOfThatNight()
     {
         using var scope = _factory.Services.CreateScope();
