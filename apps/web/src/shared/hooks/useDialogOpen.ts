@@ -1,5 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react';
 
+function landsOnBackdrop(dialog: HTMLDialogElement, event: MouseEvent): boolean {
+  if (event.target !== dialog) return false;
+  const box = dialog.getBoundingClientRect();
+  return (
+    event.clientX < box.left ||
+    event.clientX > box.right ||
+    event.clientY < box.top ||
+    event.clientY > box.bottom
+  );
+}
+
 export function useDialogOpen(
   ref: RefObject<HTMLDialogElement | null>,
   open: boolean,
@@ -47,13 +58,21 @@ export function useModalDialog(
       }
       if (open) onCloseRef.current();
     };
+    let pressedOnBackdrop = false;
+    const handleBackdropPress = (e: PointerEvent) => {
+      pressedOnBackdrop = landsOnBackdrop(dlg, e);
+    };
     const handleBackdropClick = (e: MouseEvent) => {
-      if (e.target === dlg) onCloseRef.current();
+      const startedOnBackdrop = pressedOnBackdrop;
+      pressedOnBackdrop = false;
+      if (startedOnBackdrop && landsOnBackdrop(dlg, e)) onCloseRef.current();
     };
     dlg.addEventListener('close', handleClose);
+    dlg.addEventListener('pointerdown', handleBackdropPress);
     dlg.addEventListener('click', handleBackdropClick);
     return () => {
       dlg.removeEventListener('close', handleClose);
+      dlg.removeEventListener('pointerdown', handleBackdropPress);
       dlg.removeEventListener('click', handleBackdropClick);
     };
   }, [open, dialogRef]);
