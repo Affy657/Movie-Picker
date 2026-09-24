@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Disc3, Film, X } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
-import { useDialogOpen } from '@/shared/hooks/useDialogOpen';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
@@ -89,8 +88,6 @@ export default function WheelModal({
     if (overlay?.matches(':popover-open')) overlay.hidePopover();
   }, []);
 
-  useDialogOpen(dialogRef, open);
-
   useEffect(() => {
     if (open) {
       setAnimDone(skipSpin);
@@ -104,19 +101,19 @@ export default function WheelModal({
 
   useEffect(() => {
     const dlg = dialogRef.current;
-    if (!dlg) return;
-    const prevent = (e: Event) => {
-      if (!animDone) e.preventDefault();
-    };
-    const handleBackdropClick = (e: MouseEvent) => {
-      if (e.target === dlg && animDone) onClose();
-    };
-    dlg.addEventListener('cancel', prevent);
-    dlg.addEventListener('click', handleBackdropClick);
-    return () => {
-      dlg.removeEventListener('cancel', prevent);
-      dlg.removeEventListener('click', handleBackdropClick);
-    };
+    if (!dlg || animDone) return;
+    const keepSpinning = (e: Event) => e.preventDefault();
+    dlg.addEventListener('cancel', keepSpinning);
+    return () => dlg.removeEventListener('cancel', keepSpinning);
+  }, [animDone]);
+
+  const closeUnlessSpinning = useCallback(() => {
+    if (animDone) {
+      onClose();
+      return;
+    }
+    const dlg = dialogRef.current;
+    if (dlg && !dlg.open) dlg.showModal();
   }, [animDone, onClose]);
 
   const onSpinCompleteRef = useRef(onSpinComplete);
@@ -189,11 +186,12 @@ export default function WheelModal({
     <>
       <Modal
         open={open}
-        onClose={onClose}
+        onClose={closeUnlessSpinning}
         size="md"
         surface={animDone ? 'surface' : 'bare'}
         strongBackdrop
         ariaLabelledBy="wheel-modal-title"
+        dialogRef={dialogRef}
         className={animDone ? styles.dialogDone : undefined}
       >
         {!animDone && (

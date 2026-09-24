@@ -43,7 +43,81 @@ function wrap(ui: ReactNode) {
   return render(<LocaleProvider>{ui}</LocaleProvider>);
 }
 
+function wheelDialog(): HTMLDialogElement {
+  const dialog = document.querySelector('dialog');
+  if (!dialog) throw new Error('No wheel dialog rendered');
+  return dialog;
+}
+
+function pressEscape(dialog: HTMLDialogElement) {
+  const cancel = new Event('cancel', { cancelable: true });
+  dialog.dispatchEvent(cancel);
+  if (!cancel.defaultPrevented) dialog.close();
+}
+
 describe('WheelModal', () => {
+  it('cannot be dismissed while the wheel spins, so the winner is not announced early', () => {
+    const onClose = vi.fn();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={onClose}
+      />
+    );
+    const dialog = wheelDialog();
+
+    pressEscape(dialog);
+    fireEvent.click(dialog);
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(dialog).toHaveAttribute('open');
+  });
+
+  it('shows the wheel again when the browser closes it anyway during the spin', () => {
+    const onClose = vi.fn();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={onClose}
+      />
+    );
+    const dialog = wheelDialog();
+
+    dialog.close();
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(dialog).toHaveAttribute('open');
+  });
+
+  it('closes once, on Escape or on the backdrop, when the winner is shown', () => {
+    const onClose = vi.fn();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={onClose}
+      />
+    );
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+
+    fireEvent.click(wheelDialog());
+    expect(onClose).toHaveBeenCalledOnce();
+
+    pressEscape(wheelDialog());
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
   it("affiche le titre 'Tirage en cours' tant que la roue tourne", () => {
     wrap(
       <WheelModal
