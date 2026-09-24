@@ -340,6 +340,7 @@ export default function WatchlistPage() {
               posterPath: item.posterPath,
               voteAverage: item.voteAverage,
               runtimeMinutes: item.runtimeMinutes,
+              genreIds: item.genreIds,
             });
           }}
           isItemAlreadyAdded={(item) => inWatchlistKeys.has(itemKey(item.id, item.mediaType))}
