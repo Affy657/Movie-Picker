@@ -9,11 +9,19 @@ namespace MoviePicker.Api.Application.UseCases.Auth;
 public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 {
     private readonly IUserRepository _users;
+    private readonly IUserNotificationRepository _notifications;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
-    public PatchUserProfileHandler(IUserRepository users, TimeProvider clock)
+    public PatchUserProfileHandler(
+        IUserRepository users,
+        IUserNotificationRepository notifications,
+        IUnitOfWork unitOfWork,
+        TimeProvider clock)
     {
         _users = users;
+        _notifications = notifications;
+        _unitOfWork = unitOfWork;
         _clock = clock;
     }
 
@@ -43,13 +51,28 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         User saved;
         try
         {
-            saved = await _users.UpdateAsync(updated, ct);
+            saved = string.Equals(updated.Handle, user.Handle, StringComparison.Ordinal)
+                ? await _users.UpdateAsync(updated, ct)
+                : await SaveWithNewHandleAsync(updated, user.Handle, ct);
         }
         catch (ConflictException ex) when (ex.Reason == ErrorCodes.HandleTaken)
         {
             throw Errors.HandleTaken();
         }
         return UserProfileMapping.ToResponse(saved);
+    }
+
+    private async Task<User> SaveWithNewHandleAsync(User updated, string previousHandle, CancellationToken ct)
+    {
+        var saved = updated;
+        await _unitOfWork.ExecuteAsync(
+            async token =>
+            {
+                saved = await _users.UpdateAsync(updated, token);
+                await _notifications.RenameActorHandleAsync(previousHandle, saved.Handle, token);
+            },
+            ct);
+        return saved;
     }
 
     private async Task<User> ApplyRequestAsync(User user, PatchUserProfileRequest request, CancellationToken ct)

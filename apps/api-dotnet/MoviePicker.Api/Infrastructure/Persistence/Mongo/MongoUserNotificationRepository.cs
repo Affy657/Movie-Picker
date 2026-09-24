@@ -123,6 +123,17 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
         return res.IsAcknowledged ? res.ModifiedCount : 0;
     }
 
+    public async Task<long> RenameActorHandleAsync(string previousHandle, string newHandle, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(previousHandle) || string.IsNullOrWhiteSpace(newHandle))
+            return 0;
+        var res = await _collection.UpdateManyAsync(
+            x => x.ActorHandle == previousHandle,
+            Builders<UserNotificationDocument>.Update.Set(x => x.ActorHandle, newHandle),
+            cancellationToken: ct);
+        return res.IsAcknowledged ? res.ModifiedCount : 0;
+    }
+
     public async Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(eventId))

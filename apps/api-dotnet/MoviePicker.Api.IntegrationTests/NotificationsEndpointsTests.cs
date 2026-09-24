@@ -123,4 +123,20 @@ public sealed class NotificationsEndpointsTests : IClassFixture<MoviePickerAppli
         var after = await bob.GetFromJsonAsync<NotificationInboxResponse>("/api/v1/notifications/inbox", Json);
         Assert.Equal(0, after!.UnreadCount);
     }
+
+    [Fact]
+    public async Task FollowerChangesTheirHandle_TheInboxPointsToTheNewOne()
+    {
+        var (alice, _) = await NewUserAsync("NotifRenamer");
+        var (bob, b) = await NewUserAsync("NotifFollowed");
+        var follow = await alice.PostAsync($"/api/v1/users/{b.Handle}/follow", null);
+        Assert.Equal(HttpStatusCode.NoContent, follow.StatusCode);
+        var renamed = "ren" + Guid.NewGuid().ToString("N")[..10];
+
+        var patch = await alice.PatchAsJsonAsync("/api/v1/auth/me", new { handle = renamed });
+
+        patch.EnsureSuccessStatusCode();
+        var inbox = await bob.GetFromJsonAsync<NotificationInboxResponse>("/api/v1/notifications/inbox", Json);
+        Assert.Equal(renamed, Assert.Single(inbox!.Items).ActorHandle);
+    }
 }

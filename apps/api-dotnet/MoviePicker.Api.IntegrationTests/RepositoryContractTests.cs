@@ -529,6 +529,54 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("Compte supprimé", kept.ActorDisplayName);
     }
 
+    private static async Task<string> AddActorNotificationAsync(IUserNotificationRepository notifications, string actorHandle)
+    {
+        var recipient = ObjectId.GenerateNewId().ToString();
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = recipient,
+            Type = UserNotificationType.NewFollower,
+            ActorHandle = actorHandle,
+            ActorDisplayName = "Acteur",
+            ActorAvatarId = "fox",
+            CreatedAt = Now
+        });
+        return recipient;
+    }
+
+    [Fact]
+    public async Task NotificationRenameActorHandle_PointsEveryNotificationOfThePreviousHandleToTheNewOne()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var previous = "avant" + Guid.NewGuid().ToString("N")[..8];
+        var renamed = "apres" + Guid.NewGuid().ToString("N")[..8];
+        var unrelatedHandle = "autre" + Guid.NewGuid().ToString("N")[..8];
+        var first = await AddActorNotificationAsync(notifications, previous);
+        var second = await AddActorNotificationAsync(notifications, previous);
+        var unrelated = await AddActorNotificationAsync(notifications, unrelatedHandle);
+
+        Assert.Equal(2, await notifications.RenameActorHandleAsync(previous, renamed));
+
+        Assert.Equal(renamed, Assert.Single(await notifications.ListByUserIdAsync(first)).ActorHandle);
+        Assert.Equal(renamed, Assert.Single(await notifications.ListByUserIdAsync(second)).ActorHandle);
+        Assert.Equal(unrelatedHandle, Assert.Single(await notifications.ListByUserIdAsync(unrelated)).ActorHandle);
+    }
+
+    [MongoFact]
+    public async Task NotificationRead_KeepsWorkingOnAFieldWrittenByANewerApiVersion()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var recipient = await AddActorNotificationAsync(notifications, "neuf" + Guid.NewGuid().ToString("N")[..8]);
+        var stored = Assert.Single(await notifications.ListByUserIdAsync(recipient));
+        await SetRawFieldAsync("user_notifications", stored.Id, "fieldFromANewerVersion", "kept");
+
+        var read = await notifications.ListByUserIdAsync(recipient);
+
+        Assert.Equal(stored.Id, Assert.Single(read).Id);
+    }
+
     private static Movie NewMovie(string eventId, string participantId, int tmdbId, string title) => new()
     {
         Id = string.Empty,

@@ -5,12 +5,18 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth;
 
 public sealed class PatchUserProfileHandlerTests
 {
+    private static PatchUserProfileHandler Handler(
+        IUserRepository users,
+        IUserNotificationRepository? notifications = null) =>
+        new(users, notifications ?? new InMemoryUserNotificationRepository(), new InMemoryUnitOfWork(), TimeProvider.System);
+
     private static User User(string id = "u1") =>
         new()
         {
@@ -28,7 +34,7 @@ public sealed class PatchUserProfileHandlerTests
     {
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync("x", It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             handler.HandleAsync("x", new PatchUserProfileRequest { DisplayName = "N" }));
@@ -40,7 +46,7 @@ public sealed class PatchUserProfileHandlerTests
         var u = User();
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest());
 
@@ -59,7 +65,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         var res = await handler.HandleAsync(
             "u1",
@@ -77,7 +83,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         var res = await handler.HandleAsync(
             "u1",
@@ -97,7 +103,7 @@ public sealed class PatchUserProfileHandlerTests
         var u = User();
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync("u1", new PatchUserProfileRequest { DisplayName = "   " }));
@@ -112,7 +118,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { UiTheme = "light" });
 
@@ -131,7 +137,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { RatingScale = "ten" });
 
@@ -151,7 +157,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { Handle = "NEW_HANDLE" });
 
@@ -170,7 +176,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.GetByHandleAsync("taken", It.IsAny<CancellationToken>()))
             .ReturnsAsync(User("u2") with { Handle = "taken" });
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         await Assert.ThrowsAsync<ConflictException>(() =>
             handler.HandleAsync("u1", new PatchUserProfileRequest { Handle = "taken" }));
@@ -182,7 +188,7 @@ public sealed class PatchUserProfileHandlerTests
         var u = User();
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync("u1", new PatchUserProfileRequest { Handle = "ab" }));
@@ -194,7 +200,7 @@ public sealed class PatchUserProfileHandlerTests
         var u = User();
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync("u1", new PatchUserProfileRequest { Bio = new string('x', 141) }));
@@ -209,7 +215,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { Bio = "   " });
 
@@ -225,7 +231,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { IsProfilePublic = false });
 
@@ -244,7 +250,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { IsWatchlistPublic = false });
 
@@ -266,7 +272,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { LetterboxdUsername = "  dave_v  " });
 
@@ -282,7 +288,7 @@ public sealed class PatchUserProfileHandlerTests
         var u = User();
         var users = new Mock<IUserRepository>();
         users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             handler.HandleAsync("u1", new PatchUserProfileRequest { LetterboxdUsername = "dave/v" }));
@@ -298,11 +304,72 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+        var handler = Handler(users.Object);
 
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { LetterboxdUsername = "" });
 
         Assert.Null(res.LetterboxdUsername);
+    }
+
+    private static Mock<IUserRepository> UsersAcceptingAnyFreeHandle(User user)
+    {
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        users.Setup(x => x.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        return users;
+    }
+
+    [Fact]
+    public async Task HandleAsync_HandleChange_PointsTheNotificationsTheUserActedInToTheNewHandle()
+    {
+        var users = UsersAcceptingAnyFreeHandle(User() with { Handle = "ancien" });
+        var notifications = new InMemoryUserNotificationRepository();
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = "followed-1",
+            Type = UserNotificationType.NewFollower,
+            ActorHandle = "ancien",
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = "host-1",
+            Type = UserNotificationType.ParticipantJoined,
+            ActorHandle = "ancien",
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = "host-1",
+            Type = UserNotificationType.MovieAdded,
+            ActorHandle = "quelquun",
+            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-1)
+        });
+
+        await Handler(users.Object, notifications).HandleAsync("u1", new PatchUserProfileRequest { Handle = "nouveau" });
+
+        Assert.Equal("nouveau", Assert.Single(await notifications.ListByUserIdAsync("followed-1")).ActorHandle);
+        Assert.Equal(
+            ["nouveau", "quelquun"],
+            (await notifications.ListByUserIdAsync("host-1")).Select(n => n.ActorHandle));
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithoutHandleChange_LeavesTheNotificationsAlone()
+    {
+        var users = UsersAcceptingAnyFreeHandle(User() with { Handle = "ancien" });
+        var notifications = new Mock<IUserNotificationRepository>();
+
+        await Handler(users.Object, notifications.Object).HandleAsync(
+            "u1",
+            new PatchUserProfileRequest { Handle = "ANCIEN", DisplayName = "Nouveau nom" });
+
+        notifications.Verify(
+            x => x.RenameActorHandleAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     private static User LinkedToLetterboxd() => User() with
@@ -324,7 +391,7 @@ public sealed class PatchUserProfileHandlerTests
         users
             .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User x, CancellationToken _) => x);
-        return (new PatchUserProfileHandler(users.Object, TimeProvider.System), users);
+        return (Handler(users.Object), users);
     }
 
     [Fact]

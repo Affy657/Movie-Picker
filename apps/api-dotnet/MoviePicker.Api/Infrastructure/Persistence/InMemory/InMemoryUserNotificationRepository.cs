@@ -67,20 +67,32 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
 
     public Task<long> AnonymizeActorAsync(string actorHandle, string anonymizedName, CancellationToken ct = default)
     {
-        long count = 0;
         if (string.IsNullOrWhiteSpace(actorHandle))
-            return Task.FromResult(count);
+            return Task.FromResult(0L);
 
+        return Task.FromResult(RewriteActor(
+            actorHandle,
+            n => n with { ActorHandle = null, ActorDisplayName = anonymizedName, ActorAvatarId = null }));
+    }
+
+    public Task<long> RenameActorHandleAsync(string previousHandle, string newHandle, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(previousHandle) || string.IsNullOrWhiteSpace(newHandle))
+            return Task.FromResult(0L);
+
+        return Task.FromResult(RewriteActor(previousHandle, n => n with { ActorHandle = newHandle }));
+    }
+
+    private long RewriteActor(string actorHandle, Func<UserNotification, UserNotification> rewrite)
+    {
+        long count = 0;
         foreach (var (key, n) in _store.ToList())
         {
-            if (n.ActorHandle != actorHandle)
-                continue;
-            var anonymized = n with { ActorHandle = null, ActorDisplayName = anonymizedName, ActorAvatarId = null };
-            if (_store.TryUpdate(key, anonymized, n))
+            if (n.ActorHandle == actorHandle && _store.TryUpdate(key, rewrite(n), n))
                 count++;
         }
 
-        return Task.FromResult(count);
+        return count;
     }
 
     public Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default)

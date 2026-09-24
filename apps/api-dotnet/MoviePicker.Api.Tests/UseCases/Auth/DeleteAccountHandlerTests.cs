@@ -240,6 +240,31 @@ public sealed class DeleteAccountHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_AfterAHandleChange_StillAnonymizesTheNotificationsTheUserActedIn()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        await f.Notifications.AddAsync(new UserNotification
+        {
+            UserId = "someone-else",
+            Type = UserNotificationType.NewFollower,
+            ActorHandle = user.Handle,
+            ActorDisplayName = user.DisplayName,
+            ActorAvatarId = "fox",
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+        var renaming = new PatchUserProfileHandler(f.Users, f.Notifications, new InMemoryUnitOfWork(), TimeProvider.System);
+        await renaming.HandleAsync(user.Id, new PatchUserProfileRequest { Handle = "neo_apres" });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        var kept = Assert.Single(await f.Notifications.ListByUserIdAsync("someone-else"));
+        Assert.Null(kept.ActorHandle);
+        Assert.Null(kept.ActorAvatarId);
+        Assert.Equal(DeleteAccountHandler.AnonymizedParticipantPseudo, kept.ActorDisplayName);
+    }
+
+    [Fact]
     public async Task HandleAsync_MarksEveryJoinedNightAsChanged()
     {
         var f = new Fixture();
