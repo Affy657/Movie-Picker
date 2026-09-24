@@ -16,6 +16,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly TimeProvider _clock;
     private readonly ILogger<RemoveParticipantHandler> _logger;
 
     public RemoveParticipantHandler(
@@ -27,6 +28,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IUnitOfWork unitOfWork,
+        TimeProvider clock,
         ILogger<RemoveParticipantHandler> logger)
     {
         _eventRepository = eventRepository;
@@ -37,6 +39,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _unitOfWork = unitOfWork;
+        _clock = clock;
         _logger = logger;
     }
 
@@ -74,6 +77,10 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
+                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                if (current.HasWinner)
+                    throw Errors.ParticipantsLockedWheel();
+
                 await _voteRepository.DeleteByMovieIdsAsync(movieIds, token);
                 await _seenMarkRepository.DeleteByMovieIdsAsync(evt.Id, movieIds, token);
                 await _movieRepository.DeleteByIdsAsync(movieIds, token);
@@ -81,7 +88,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
                 await _seenMarkRepository.DeleteByEventAndParticipantAsync(evt.Id, participant.Id, token);
                 if (!await _participantRepository.DeleteAsync(participant.Id, evt.Id, token))
                     throw Errors.ParticipantNotFound();
-                await _eventRepository.MarkChangedAsync(evt.Id, token);
+                await _eventRepository.UpdateAsync(current with { UpdatedAt = _clock.GetUtcNow() }, token);
             },
             ct);
 

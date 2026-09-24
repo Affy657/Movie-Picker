@@ -40,6 +40,7 @@ public sealed class RemoveParticipantHandlerTests
             _hostTokenAccessor.Object,
             _currentUser.Object,
             _unitOfWork,
+            TimeProvider.System,
             NullLogger<RemoveParticipantHandler>.Instance);
     }
 
@@ -173,7 +174,24 @@ public sealed class RemoveParticipantHandlerTests
         _seenMarkRepo.Verify(r => r.DeleteByEventAndParticipantAsync("evt1", "p1", It.IsAny<CancellationToken>()), Times.Once);
         _participantRepo.Verify(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(1, _unitOfWork.Executions);
-        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt1"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WinnerDrawnMeanwhile_RefusesInsideTheUnitOfWorkAndDeletesNothing()
+    {
+        var evt = ActiveEvent();
+        _eventRepo.SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(evt)
+            .ReturnsAsync(evt with { Winners = TestWinners.Won("m1") });
+        SetupParticipant(Participant(userId: null));
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", "p1"));
+
+        Assert.Equal(ErrorCodes.ParticipantsLockedWheel, ex.Reason);
+        _movieRepo.Verify(r => r.DeleteByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _participantRepo.Verify(r => r.DeleteAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -204,7 +222,7 @@ public sealed class RemoveParticipantHandlerTests
 
         Assert.Equal(0, deletesOutsideUnitOfWork);
         Assert.Equal(1, _unitOfWork.Executions);
-        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt1"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -251,7 +269,7 @@ public sealed class RemoveParticipantHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync("evt1", "p1"));
 
         Assert.Equal(1, _unitOfWork.Executions);
-        _eventRepo.Verify(r => r.MarkChangedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
