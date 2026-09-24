@@ -164,6 +164,7 @@ public sealed class AuthController : ControllerBase
         [FromServices] OAuthProviderCatalog catalog,
         [FromServices] IOptions<MoviePickerOptions> options,
         [FromServices] TimeProvider clock,
+        [FromServices] ILogger<AuthController> logger,
         CancellationToken ct)
     {
         var webBase = options.Value.ResolvedWebBaseUrl();
@@ -188,9 +189,23 @@ public sealed class AuthController : ControllerBase
 
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.IsNullOrEmpty(currentUserId))
-            return await LinkToSignedInAccountAsync(currentUserId, knownProvider, info, linkHandler, clock, webBase, ct);
+            return await LinkToSignedInAccountAsync(currentUserId, knownProvider, info, linkHandler, clock, webBase, logger, ct);
 
-        var loginOutcome = await loginHandler.HandleAsync(info, ct);
+        OAuthOutcome loginOutcome;
+        try
+        {
+            loginOutcome = await loginHandler.HandleAsync(info, ct);
+        }
+        catch (MoviePickerException ex)
+        {
+            logger.LogWarning(ex, "OAuth callback: {Provider} sign-in failed ({Reason})", knownProvider, ex.Reason);
+            return Redirect(BuildFrontUrl(
+                webBase,
+                FrontLoginPath,
+                (OauthErrorQueryKey, ex.Reason ?? ErrorCodes.OAuthLinkFailed),
+                (ReturnToItemKey, returnTo)));
+        }
+
         if (loginOutcome.Kind != OAuthOutcomeKind.SignedIn || loginOutcome.User is null)
         {
             var errorCode = loginOutcome.Kind is OAuthOutcomeKind.PasswordAccountRequiresManualLink
@@ -217,12 +232,26 @@ public sealed class AuthController : ControllerBase
         IOAuthLinkHandler linkHandler,
         TimeProvider clock,
         string webBase,
+        ILogger<AuthController> logger,
         CancellationToken ct)
     {
         if (!IsRecentlyAuthenticated(clock))
             return Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, ReauthenticationRequiredError)));
 
-        var linkOutcome = await linkHandler.HandleAsync(currentUserId, info, ct);
+        OAuthOutcome linkOutcome;
+        try
+        {
+            linkOutcome = await linkHandler.HandleAsync(currentUserId, info, ct);
+        }
+        catch (MoviePickerException ex)
+        {
+            logger.LogWarning(ex, "OAuth callback: {Provider} link failed ({Reason})", provider, ex.Reason);
+            return Redirect(BuildFrontUrl(
+                webBase,
+                FrontIntegrationsPath,
+                (OauthErrorQueryKey, ex.Reason ?? ErrorCodes.OAuthLinkFailed)));
+        }
+
         return linkOutcome.Kind switch
         {
             OAuthOutcomeKind.Linked => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, ("oauthLinked", provider))),

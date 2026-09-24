@@ -72,9 +72,9 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
                 var updated = byEmail with { Identities = [.. byEmail.Identities, identity], UpdatedAt = now };
                 saved = await _users.UpdateAsync(updated, ct);
             }
-            catch (ConflictException ex) when (ex.Reason == ErrorCodes.IdentityConflict)
+            catch (ConflictException ex) when (IsLostFirstSignInRace(ex))
             {
-                saved = await ResolveIdentityRaceAsync(info, ct);
+                saved = await ResolveIdentityRaceAsync(info, ex, ct);
             }
             _logger.LogInformation(
                 "OAuth login: auto-linked {Provider} to existing account (userId={UserId})", info.Provider, saved.Id);
@@ -114,13 +114,23 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
                 ct);
             return (created, true);
         }
-        catch (ConflictException ex) when (ex.Reason == ErrorCodes.IdentityConflict)
+        catch (ConflictException ex) when (IsLostFirstSignInRace(ex))
         {
-            return (await ResolveIdentityRaceAsync(info, ct), false);
+            return (await ResolveIdentityRaceAsync(info, ex, ct), false);
         }
     }
 
-    private async Task<User> ResolveIdentityRaceAsync(ExternalLoginInfo info, CancellationToken ct) =>
-        await _users.GetByIdentityAsync(info.Provider, info.Subject, ct)
-        ?? throw Errors.OAuthLinkFailed();
+    private static bool IsLostFirstSignInRace(ConflictException ex) =>
+        ex.Reason is ErrorCodes.IdentityConflict or ErrorCodes.EmailTaken or ErrorCodes.ConcurrentUpdate;
+
+    private async Task<User> ResolveIdentityRaceAsync(ExternalLoginInfo info, ConflictException conflict, CancellationToken ct)
+    {
+        var winner = await _users.GetByIdentityAsync(info.Provider, info.Subject, ct);
+        _logger.LogWarning(
+            "OAuth login: first {Provider} sign-in lost a race ({Reason}), identity found on re-read: {Found}",
+            info.Provider,
+            conflict.Reason,
+            winner is not null);
+        return winner ?? throw Errors.OAuthLinkFailed();
+    }
 }

@@ -282,6 +282,87 @@ public sealed class OAuthLoginHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_RaceOnAutoLinkLostOnTheAccountVersion_SignsInTheRaceWinner()
+    {
+        var winner = new User { Id = "u-winner", Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" };
+        var users = new Mock<IUserRepository>();
+        users.SetupSequence(x => x.GetByIdentityAsync("google", "sub-race", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null)
+            .ReturnsAsync(winner);
+        users.Setup(x => x.GetByEmailAsync("neo@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = "u-winner", Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" });
+        users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.ConcurrentUpdate());
+
+        var handler = new OAuthLoginHandler(users.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+
+        var outcome = await handler.HandleAsync(new ExternalLoginInfo
+        {
+            Provider = "google",
+            Subject = "sub-race",
+            Email = "neo@example.com",
+            EmailVerified = true,
+            DisplayName = "Neo"
+        });
+
+        Assert.Equal(OAuthOutcomeKind.SignedIn, outcome.Kind);
+        Assert.Equal("u-winner", outcome.User!.Id);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RaceOnAccountCreationLostOnTheEmailIndex_SignsInTheRaceWinner()
+    {
+        var winner = new User { Id = "u-winner", Email = "smith@example.com", DisplayName = "Agent Smith", Handle = "agentsmith" };
+        var users = new Mock<IUserRepository>();
+        users.SetupSequence(x => x.GetByIdentityAsync("google", "sub-race", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null)
+            .ReturnsAsync(winner);
+        users.Setup(x => x.GetByEmailAsync("smith@example.com", It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.EmailTaken());
+
+        var handler = new OAuthLoginHandler(users.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+
+        var outcome = await handler.HandleAsync(new ExternalLoginInfo
+        {
+            Provider = "google",
+            Subject = "sub-race",
+            Email = "smith@example.com",
+            EmailVerified = true,
+            DisplayName = "Agent Smith"
+        });
+
+        Assert.Equal(OAuthOutcomeKind.SignedIn, outcome.Kind);
+        Assert.Equal("u-winner", outcome.User!.Id);
+        Assert.False(outcome.IsNewAccount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_EmailTakenByAnotherAccountMeanwhile_FailsWithABusinessError()
+    {
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdentityAsync("google", "sub-late", It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.GetByEmailAsync("late@example.com", It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.EmailTaken());
+
+        var handler = new OAuthLoginHandler(users.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => handler.HandleAsync(new ExternalLoginInfo
+        {
+            Provider = "google",
+            Subject = "sub-late",
+            Email = "late@example.com",
+            EmailVerified = true,
+            DisplayName = "Late"
+        }));
+
+        Assert.Equal(ErrorCodes.OAuthLinkFailed, ex.Reason);
+    }
+
+    [Fact]
     public async Task HandleAsync_RaceOnAccountCreation_ResolvesToRaceWinner()
     {
         var winner = new User { Id = "u-winner", Email = "smith@example.com", DisplayName = "Agent Smith", Handle = "agentsmith" };

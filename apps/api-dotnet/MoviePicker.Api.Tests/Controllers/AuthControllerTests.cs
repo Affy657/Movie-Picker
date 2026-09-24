@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
@@ -13,6 +14,7 @@ using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Controllers;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
@@ -82,6 +84,7 @@ public sealed class AuthControllerTests
             GoogleEnabled(),
             Options(),
             Clock,
+            NullLogger<AuthController>.Instance,
             CancellationToken.None);
 
     [Fact]
@@ -261,7 +264,37 @@ public sealed class AuthControllerTests
             GoogleEnabled(),
             Options(),
             Clock,
+            NullLogger<AuthController>.Instance,
             CancellationToken.None);
+
+    [Fact]
+    public async Task OAuthCallback_BusinessErrorWhileSigningIn_SendsBackToTheLoginPageInsteadOfAnErrorBody()
+    {
+        var loginHandler = new Mock<IOAuthLoginHandler>();
+        loginHandler
+            .Setup(h => h.HandleAsync(It.IsAny<ExternalLoginInfo>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.OAuthLinkFailed());
+
+        var result = await SignInCallback(loginHandler.Object);
+
+        var redirect = Assert.IsType<RedirectResult>(result);
+        Assert.Equal($"{WebBase}/login?oauthError=oauth_link_failed&returnTo=%2F", redirect.Url);
+    }
+
+    [Fact]
+    public async Task OAuthCallback_BusinessErrorWhileLinking_SendsBackToTheIntegrationsPage()
+    {
+        var linkHandler = new Mock<IOAuthLinkHandler>();
+        linkHandler
+            .Setup(h => h.HandleAsync("u1", It.IsAny<ExternalLoginInfo>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.UserNotFound());
+        var controller = SessionController(Now.AddMinutes(-2), ExternalSignIn().Object);
+
+        var result = await Callback(controller, linkHandler.Object);
+
+        var redirect = Assert.IsType<RedirectResult>(result);
+        Assert.Equal($"{WebBase}/settings/integrations?oauthError=user_not_found", redirect.Url);
+    }
 
     [Fact]
     public async Task OAuthCallback_IdentityTheUserUnlinked_SendsBackToTheLoginPageAskingForAManualLink()
