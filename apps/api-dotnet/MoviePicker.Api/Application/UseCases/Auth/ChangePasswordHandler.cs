@@ -10,6 +10,7 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
 {
     private readonly IUserRepository _users;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IPasswordResetTokenRepository _resetTokens;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly TimeProvider _clock;
@@ -18,6 +19,7 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
     public ChangePasswordHandler(
         IUserRepository users,
         IPasswordHasher passwordHasher,
+        IPasswordResetTokenRepository resetTokens,
         IAuthSessionInvalidator sessionInvalidator,
         IPushSubscriptionRepository pushSubscriptions,
         TimeProvider clock,
@@ -25,6 +27,7 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
     {
         _users = users;
         _passwordHasher = passwordHasher;
+        _resetTokens = resetTokens;
         _sessionInvalidator = sessionInvalidator;
         _pushSubscriptions = pushSubscriptions;
         _clock = clock;
@@ -62,6 +65,7 @@ public sealed class ChangePasswordHandler : IChangePasswordHandler
         var updated = user with { PasswordHash = newHash, UpdatedAt = now };
         await _users.UpdateAsync(updated, ct);
 
+        await _resetTokens.InvalidateActiveForUserAsync(userId, now, ct);
         var invalidatedSessions = await _sessionInvalidator.InvalidateAllForUserAsync(userId, ct);
         var revokedPushSubscriptions = await RevokePushSubscriptionsAsync(userId, ct);
 

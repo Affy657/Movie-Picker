@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth;
@@ -38,10 +39,12 @@ public sealed class ChangePasswordHandlerTests
         IPasswordHasher hasher,
         IAuthSessionInvalidator sessions,
         TimeProvider clock,
-        IPushSubscriptionRepository? pushSubscriptions = null) =>
+        IPushSubscriptionRepository? pushSubscriptions = null,
+        IPasswordResetTokenRepository? resetTokens = null) =>
         new(
             users,
             hasher,
+            resetTokens ?? new InMemoryPasswordResetTokenRepository(),
             sessions,
             pushSubscriptions ?? new Mock<IPushSubscriptionRepository>().Object,
             clock,
@@ -49,6 +52,67 @@ public sealed class ChangePasswordHandlerTests
 
     private static ChangePasswordRequest Change(string? currentPassword, string newPassword) =>
         new() { CurrentPassword = currentPassword, NewPassword = newPassword };
+
+    private static async Task<InMemoryPasswordResetTokenRepository> PendingResetLinkAsync(string userId)
+    {
+        var resetTokens = new InMemoryPasswordResetTokenRepository();
+        await resetTokens.AddAsync(new PasswordResetToken
+        {
+            UserId = userId,
+            TokenHash = "pending-link",
+            ExpiresAtUtc = DateTimeOffset.UtcNow.AddHours(1),
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+        return resetTokens;
+    }
+
+    [Fact]
+    public async Task HandleAsync_Success_InvalidatesThePendingResetLinks()
+    {
+        var user = SampleUser();
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) => u);
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Verify("old-hash", "abcd1234")).Returns(PasswordVerification.Success);
+        hasher.Setup(x => x.Hash("wxyz5678")).Returns("new-hash");
+        var resetTokens = await PendingResetLinkAsync(user.Id);
+
+        var handler = CreateHandler(
+            users.Object,
+            hasher.Object,
+            new Mock<IAuthSessionInvalidator>().Object,
+            new FakeTimeProvider(TestEpoch),
+            resetTokens: resetTokens);
+
+        await handler.HandleAsync(user.Id, Change("abcd1234", "wxyz5678"), recentlyAuthenticated: false);
+
+        Assert.Null(await resetTokens.GetByTokenHashAsync("pending-link"));
+    }
+
+    [Fact]
+    public async Task HandleAsync_WrongCurrentPassword_KeepsThePendingResetLinks()
+    {
+        var user = SampleUser();
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Verify("old-hash", "wrong")).Returns(PasswordVerification.Failed);
+        var resetTokens = await PendingResetLinkAsync(user.Id);
+
+        var handler = CreateHandler(
+            users.Object,
+            hasher.Object,
+            new Mock<IAuthSessionInvalidator>().Object,
+            new FakeTimeProvider(TestEpoch),
+            resetTokens: resetTokens);
+
+        await Assert.ThrowsAsync<UnauthorizedException>(
+            () => handler.HandleAsync(user.Id, Change("wrong", "wxyz5678"), recentlyAuthenticated: true));
+
+        Assert.NotNull(await resetTokens.GetByTokenHashAsync("pending-link"));
+    }
 
     [Fact]
     public async Task HandleAsync_Success_RevokesThePushSubscriptionsWithTheSessions()
