@@ -70,6 +70,26 @@ describe('fetchApi', () => {
     });
   });
 
+  it('inserts a reason param holding replacement patterns verbatim', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({
+            error: 'A template named Tom $& Jerry already exists',
+            code: 409,
+            reason: 'event_template_name_taken',
+            params: { name: 'Tom $& Jerry' },
+          })
+        ),
+    });
+    await expect(fetchApi('/event-templates')).rejects.toMatchObject({
+      message: fr.apiErrors.event_template_name_taken.split('{{name}}').join('Tom $& Jerry'),
+    });
+  });
+
   it('follows the locale switch and keeps the server text for an unknown reason', async () => {
     localStorage.setItem('moviepicker-locale', 'en');
     const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>;

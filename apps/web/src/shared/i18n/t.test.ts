@@ -22,6 +22,17 @@ describe('t (i18n)', () => {
     );
   });
 
+  it('inserts a value holding replacement patterns verbatim', () => {
+    expect(t('common.pageTitle', { segment: 'Tom $& Jerry' })).toBe('Tom $& Jerry | Movie Picker');
+    expect(t('common.pageTitle', { segment: "Ca$$h $` $'" })).toBe("Ca$$h $` $' | Movie Picker");
+  });
+
+  it('never substitutes a placeholder brought in by another value', () => {
+    expect(t('showcase.filteredCount', { shown: '{{total}}', total: 3 })).toBe(
+      '{{total}} films sur 3'
+    );
+  });
+
   it('returns the raw key when it is invalid (resilience)', () => {
     const badKey = 'nonexistent.key' as Parameters<typeof t>[0];
     expect(t(badKey)).toBe('nonexistent.key');
