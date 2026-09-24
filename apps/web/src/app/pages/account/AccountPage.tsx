@@ -1,6 +1,8 @@
 import { Link, Navigate, Route, Routes } from 'react-router';
 import PageLayout from '@/shared/components/PageLayout';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { hasSessionHint } from '@/features/auth/session-hint';
+import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useTranslation } from '@/shared/i18n';
@@ -74,7 +76,7 @@ function AccountAuthenticated({ user }: Readonly<{ user: UserProfile }>) {
 export default function AccountPage() {
   const { t } = useTranslation();
   useNoindexPage(pageTitle(t('auth.account.title')), ROUTES.account);
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, authCheckFailed } = useAuth();
 
   if (isLoading) {
     return (
@@ -83,6 +85,8 @@ export default function AccountPage() {
       </PageLayout>
     );
   }
+
+  if (!user && authCheckFailed && hasSessionHint()) return <SessionCheckErrorState />;
 
   if (!user) {
     return (
