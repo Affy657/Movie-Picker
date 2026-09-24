@@ -55,6 +55,75 @@ public sealed class RateLimitingExtensionsTests
         Assert.Equal("unknown", ClientIpPartitionKey.Get(new DefaultHttpContext()));
     }
 
+    [Theory]
+    [InlineData("2001:db8:1:2::1", "2001:db8:1:2:ffff:ffff:ffff:ffff")]
+    [InlineData("2001:db8:1:2::1", "2001:db8:1:2:8a2e:370:7334:1")]
+    public void ClientIpPartitionKey_AddressesOfOneIpv6Network_ShareOneKey(string first, string second)
+    {
+        Assert.Equal(ClientIpPartitionKey.Get(From(first)), ClientIpPartitionKey.Get(From(second)));
+    }
+
+    [Fact]
+    public void ClientIpPartitionKey_TwoIpv6Networks_KeepTheirOwnKeys()
+    {
+        Assert.NotEqual(
+            ClientIpPartitionKey.Get(From("2001:db8:1:2::1")),
+            ClientIpPartitionKey.Get(From("2001:db8:1:3::1")));
+    }
+
+    [Fact]
+    public void ClientIpPartitionKey_Ipv4MappedAddress_IsKeyedLikeItsIpv4Address()
+    {
+        Assert.Equal("203.0.113.10", ClientIpPartitionKey.Get(From("::ffff:203.0.113.10")));
+        Assert.NotEqual(
+            ClientIpPartitionKey.Get(From("::ffff:203.0.113.10")),
+            ClientIpPartitionKey.Get(From("::ffff:198.51.100.2")));
+    }
+
+    [Theory]
+    [InlineData(RateLimitingExtensions.AuthLoginPolicy)]
+    [InlineData(RateLimitingExtensions.AuthRegisterPolicy)]
+    [InlineData(RateLimitingExtensions.AuthPasswordResetRequestPolicy)]
+    public void CreatePartition_AddressScopedPolicy_RotatingInsideAnIpv6Network_KeepsThePartition(string policy)
+    {
+        var spec = RateLimitingExtensions.FindPolicy(policy)!.Value;
+
+        var first = RateLimitingExtensions.CreatePartition(From("2001:db8:1:2::1"), spec);
+        var rotated = RateLimitingExtensions.CreatePartition(From("2001:db8:1:2:dead:beef:0:1"), spec);
+
+        Assert.Equal(first.PartitionKey, rotated.PartitionKey);
+    }
+
+    [Fact]
+    public void ClientAddressAccessor_RotatingInsideAnIpv6Network_ReportsOneSource()
+    {
+        static string SourceOf(string address) =>
+            new ClientAddressAccessor(new HttpContextAccessor { HttpContext = From(address) }).GetClientAddress();
+
+        Assert.Equal(SourceOf("2001:db8:1:2::1"), SourceOf("2001:db8:1:2:dead:beef:0:1"));
+    }
+
+    [Fact]
+    public void CreatePartition_IdeaSuggestion_CountsPerAccountWhateverTheAddress()
+    {
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.IdeaSuggestionPolicy)!.Value;
+
+        var fromHome = RateLimitingExtensions.CreatePartition(SignedIn("alice", "192.0.2.8"), spec);
+        var fromWork = RateLimitingExtensions.CreatePartition(SignedIn("alice", "198.51.100.2"), spec);
+        var neighbour = RateLimitingExtensions.CreatePartition(SignedIn("bob", "192.0.2.8"), spec);
+
+        Assert.Equal("user:alice", fromHome.PartitionKey);
+        Assert.Equal(fromHome.PartitionKey, fromWork.PartitionKey);
+        Assert.NotEqual(fromHome.PartitionKey, neighbour.PartitionKey);
+    }
+
+    private static DefaultHttpContext From(string address)
+    {
+        var http = new DefaultHttpContext();
+        http.Connection.RemoteIpAddress = IPAddress.Parse(address);
+        return http;
+    }
+
     [Fact]
     public void UserOrIpPartitionKey_PrefersAuthenticatedUser()
     {

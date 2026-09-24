@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Net;
+using System.Net.Sockets;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
@@ -79,7 +81,7 @@ public static class RateLimitingExtensions
         new(WatchlistMutationPolicy, 60, 1),
         new(LetterboxdImportPolicy, 10, 1),
         new(KofiWebhookPolicy, 20, 1, QuotaScope.Address),
-        new(IdeaSuggestionPolicy, 10, 60, QuotaScope.Address),
+        new(IdeaSuggestionPolicy, 10, 60),
         new(SchedulerPolicy, 10, 1, QuotaScope.Address),
         new(HostActionPolicy, 60, 1),
         new(MovieMutationPolicy, 60, 1),
@@ -190,10 +192,23 @@ public static class RateLimitingExtensions
 
 internal static class ClientIpPartitionKey
 {
+    private const int Ipv6NetworkPrefixBytes = 8;
+
     internal static string Get(HttpContext httpContext)
     {
         var ip = httpContext.Connection.RemoteIpAddress;
-        return ip?.ToString() ?? "unknown";
+        if (ip is null)
+            return "unknown";
+        if (ip.IsIPv4MappedToIPv6)
+            return ip.MapToIPv4().ToString();
+        return ip.AddressFamily == AddressFamily.InterNetworkV6 ? Ipv6NetworkOf(ip) : ip.ToString();
+    }
+
+    private static string Ipv6NetworkOf(IPAddress address)
+    {
+        var bytes = address.GetAddressBytes();
+        Array.Clear(bytes, Ipv6NetworkPrefixBytes, bytes.Length - Ipv6NetworkPrefixBytes);
+        return $"{new IPAddress(bytes)}/{Ipv6NetworkPrefixBytes * 8}";
     }
 }
 
