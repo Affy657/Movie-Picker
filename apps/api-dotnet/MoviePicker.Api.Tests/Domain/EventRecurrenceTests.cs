@@ -7,6 +7,17 @@ public sealed class EventRecurrenceTests
 {
     private static readonly DateOnly FarPast = new(2000, 1, 1);
 
+    [Theory]
+    [InlineData(RecurrenceFrequency.Weekly)]
+    [InlineData(RecurrenceFrequency.Biweekly)]
+    [InlineData(RecurrenceFrequency.Monthly)]
+    public void NextDate_PastTheLastDayOfTheCalendar_HasNoNextDate(RecurrenceFrequency frequency)
+    {
+        var next = EventRecurrence.NextDate(new DateOnly(9999, 12, 31), frequency, FarPast);
+
+        Assert.Null(next);
+    }
+
     [Fact]
     public void NextDate_Weekly_AddsSevenDays()
     {
