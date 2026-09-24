@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import RatingScaleToggle from '@/app/components/RatingScaleToggle';
@@ -65,6 +65,40 @@ describe('RatingScaleToggle', () => {
     );
 
     expect(patchProfile).toHaveBeenCalledWith({ ratingScale: 'ten' });
+  });
+
+  it('shows an alert and skips onSaved when persistence fails', async () => {
+    configure({ userId: 'u1', ratingScale: 'five' }, vi.fn().mockRejectedValue(new Error('nope')));
+    const onSaved = vi.fn();
+
+    render(<RatingScaleToggle onSaved={onSaved} />);
+    await userEvent.click(
+      screen.getByRole('radio', { name: 'auth.account.ratingScaleOptions.ten' })
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('auth.account.ratingScaleSaveError');
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('radio', { name: 'auth.account.ratingScaleOptions.five' })
+    ).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('clears the alert once a later save goes through', async () => {
+    const patchProfile = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('nope'))
+      .mockResolvedValueOnce(undefined);
+    configure({ userId: 'u1', ratingScale: 'five' }, patchProfile);
+
+    render(<RatingScaleToggle />);
+    const ten = screen.getByRole('radio', { name: 'auth.account.ratingScaleOptions.ten' });
+    await userEvent.click(ten);
+    await screen.findByRole('alert');
+
+    await userEvent.click(ten);
+
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+    expect(patchProfile).toHaveBeenCalledTimes(2);
   });
 
   it('moves to the next option with ArrowRight', () => {

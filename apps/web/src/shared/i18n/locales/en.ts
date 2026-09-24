@@ -554,6 +554,7 @@ export const en: Locale = {
         indigo: 'Indigo',
       },
       ratingScaleLabel: 'Rating scale',
+      ratingScaleSaveError: 'The rating scale could not be saved. Try again.',
       ratingScaleOptions: {
         five: 'Out of 5',
         ten: 'Out of 10',
