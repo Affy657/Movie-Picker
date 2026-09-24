@@ -73,6 +73,7 @@ export type ParticipantsPanelState = {
   pendingRemovalId: string | null;
   removePending: boolean;
   canShowLeave: boolean;
+  canRemove: boolean;
   isConnectedSelf: boolean;
   onRemove: (participantId: string, pseudo: string) => void;
   onInviteFriends: () => void;
@@ -87,5 +88,6 @@ export type MoviesSectionState = {
   onAddMovieOpenChange: (open: boolean) => void;
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
   isFull: boolean;
+  wheelLocked: boolean;
   onRequestRemove: (movie: MovieData) => void;
 };

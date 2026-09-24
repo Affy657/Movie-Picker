@@ -622,5 +622,47 @@ describe('MovieList', () => {
       await userEvent.click(screen.getByTestId('manual-pick-m2'));
       expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'm2', title: 'Matrix' }));
     });
+
+    it('once the wheel is locked, offers the host no movie removal the API would refuse', async () => {
+      stubHoverCapability();
+      renderWithLocale(
+        <MovieList
+          movies={[movies[0]!]}
+          {...baseProps()}
+          participantId="p0"
+          participantPseudo="Hôte"
+          isHost
+          viewMode="grid"
+          wheelLocked
+        />
+      );
+      await userEvent.click(screen.getByRole('button', { name: /Plus d’actions/ }));
+      expect(screen.getByRole('menuitem', { name: 'Voir les détails' })).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: /Retirer/ })).not.toBeInTheDocument();
+    });
+
+    it('once the wheel is locked, offers the proposer no pitch note to add', () => {
+      const proposerList = (wheelLocked: boolean) => (
+        <MemoryRouter>
+          <QueryClientWrapper>
+            <LocaleProvider>
+              <MovieList
+                movies={[movies[0]!]}
+                {...baseProps()}
+                participantId="p1"
+                participantPseudo="Alice"
+                viewMode="grid"
+                wheelLocked={wheelLocked}
+              />
+            </LocaleProvider>
+          </QueryClientWrapper>
+        </MemoryRouter>
+      );
+      const { rerender } = render(proposerList(false));
+      expect(screen.getByRole('button', { name: 'Ajouter une note' })).toBeInTheDocument();
+
+      rerender(proposerList(true));
+      expect(screen.queryByRole('button', { name: 'Ajouter une note' })).not.toBeInTheDocument();
+    });
   });
 });

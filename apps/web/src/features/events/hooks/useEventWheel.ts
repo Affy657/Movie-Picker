@@ -37,6 +37,7 @@ export type EventWheelState = {
   showReset: boolean;
   noMovie: boolean;
   canRelaunchFromModal: boolean;
+  wheelLocked: boolean;
   launch: () => void;
   reset: () => void;
   dismissModal: () => void;
@@ -366,6 +367,7 @@ export function useEventWheel({
     noMovie: moviesCount === 0,
     canRelaunchFromModal:
       isOpenForActions && !manualReveal && remainingDraws > 0 && drawableMovies.length > 0,
+    wheelLocked: drawnIds.length > 0,
     launch,
     reset,
     dismissModal,

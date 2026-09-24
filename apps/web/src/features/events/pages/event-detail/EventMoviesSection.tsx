@@ -111,6 +111,7 @@ export type EventMoviesSectionProps = {
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
   winnerMovieIds?: string[];
   isFull?: boolean;
+  wheelLocked?: boolean;
 };
 
 function emptyStateMessageKey(input: {
@@ -220,6 +221,7 @@ export default function EventMoviesSection({
   addMovieTriggerRef,
   winnerMovieIds,
   isFull = false,
+  wheelLocked = false,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { user } = useAuth();
@@ -320,6 +322,7 @@ export default function EventMoviesSection({
     canVote: !isFinished,
     participantPseudo: participant?.pseudo ?? null,
     isFinished,
+    wheelLocked,
     isHost: !!event.isHost,
     onActionError: handleActionError,
     onVote: handleVote,

@@ -18,6 +18,7 @@ interface MovieListProps {
   canVote?: boolean;
   participantPseudo: string | null;
   isFinished: boolean;
+  wheelLocked?: boolean;
   isHost?: boolean;
   onVote: (movieId: string, value: 1 | -1) => Promise<void>;
   onRemove: (movie: MovieData) => void;
@@ -52,6 +53,7 @@ export default function MovieList({
   canVote,
   participantPseudo,
   isFinished,
+  wheelLocked = false,
   isHost = false,
   onVote,
   onRemove,
@@ -104,6 +106,7 @@ export default function MovieList({
     canVote,
     participantPseudo,
     isFinished,
+    wheelLocked,
     isHost,
     onVote,
     onRemove,

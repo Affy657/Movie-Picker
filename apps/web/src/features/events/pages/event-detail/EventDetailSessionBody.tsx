@@ -34,7 +34,7 @@ function EventParticipantsPanel({
         maxParticipants={event.config?.maxParticipants ?? null}
         isHost={!!event.isHost}
         pendingRemovalId={panel.pendingRemovalId}
-        onRemoveParticipant={event.isFinished ? undefined : panel.onRemove}
+        onRemoveParticipant={panel.canRemove ? panel.onRemove : undefined}
         onInvite={hostCanInvite ? panel.onInviteFriends : undefined}
         onLeave={panel.canShowLeave ? panel.onLeave : undefined}
         leaveDisabled={
@@ -158,6 +158,7 @@ export default function EventDetailSessionBody({
           addMovieTriggerRef={moviesSection.addMovieTriggerRef}
           winnerMovieIds={wheel.winnerIds}
           isFull={moviesSection.isFull}
+          wheelLocked={moviesSection.wheelLocked}
         />
       </div>
       {event.isFinished && (event.winners?.length ?? 0) === 0 ? (

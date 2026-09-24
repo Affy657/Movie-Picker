@@ -51,6 +51,7 @@ export interface MovieCardCommonProps {
   canVote?: boolean;
   participantPseudo: string | null;
   isFinished: boolean;
+  wheelLocked?: boolean;
   isHost: boolean;
   onVote: (movieId: string, value: 1 | -1) => Promise<void>;
   onRemove: (movie: MovieData) => void;
@@ -104,6 +105,7 @@ export function useMovieCardState({
   canVote,
   participantPseudo,
   isFinished,
+  wheelLocked = false,
   isHost,
   participantAvatars,
   ratingScale,
@@ -117,6 +119,7 @@ export function useMovieCardState({
   canVote?: boolean;
   participantPseudo: string | null;
   isFinished: boolean;
+  wheelLocked?: boolean;
   isHost: boolean;
   participantAvatars?: Record<string, string>;
   ratingScale?: RatingScale;
@@ -126,8 +129,9 @@ export function useMovieCardState({
 }>) {
   const isMine = !!participantId && getParticipantId(m) === participantId;
   const proposerAvatarId = participantAvatars?.[getParticipantId(m)] ?? '';
-  const canRemove = !isFinished && (isMine || isHost);
+  const canRemove = !isFinished && !wheelLocked && (isMine || isHost);
   const canAct = !isFinished && !!participantId;
+  const canEditNote = canAct && isMine && !wheelLocked;
   const votingAvailable = canVote ?? canAct;
   const iMarkedSeen = !!(participantPseudo && m.seenByPseudos?.includes(participantPseudo));
   const others = (m.seenByPseudos ?? []).filter((p) => p !== participantPseudo);
@@ -151,7 +155,7 @@ export function useMovieCardState({
   const hasDetails = m.tmdbId > 0;
   const detailsOpen =
     hasDetails && detailsTarget?.tmdbId === m.tmdbId && detailsTarget.mediaType === mediaType;
-  const showAddNote = canAct && isMine && !m.pitchNote && !noteEditing;
+  const showAddNote = canEditNote && !m.pitchNote && !noteEditing;
 
   const openDetails = useCallback(
     (tab: MovieDetailsTabKey = 'event') => {

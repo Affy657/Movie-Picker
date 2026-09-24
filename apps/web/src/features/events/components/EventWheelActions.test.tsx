@@ -25,6 +25,7 @@ function wheelState(overrides: Partial<EventWheelState> = {}): EventWheelState {
     showRemoveWinner: false,
     showReset: false,
     canRelaunchFromModal: false,
+    wheelLocked: false,
     launch: vi.fn(),
     reset: vi.fn(),
     dismissModal: vi.fn(),

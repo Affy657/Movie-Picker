@@ -191,7 +191,8 @@ export default function EventDetailSession({
       ? event.participants.find((p) => p.id === participant.participantId)
       : null;
   const isCreatorSelf = !!myParticipantSummary?.isCreator;
-  const canShowLeave = !event.isFinished && !!participant && !isCreatorSelf;
+  const participantsLocked = !!event.isFinished || wheel.wheelLocked;
+  const canShowLeave = !participantsLocked && !!participant && !isCreatorSelf;
 
   const participantCount = event.participantCount ?? event.participants?.length ?? 0;
   let moviesCount = event.movieCount ?? 0;
@@ -272,6 +273,7 @@ export default function EventDetailSession({
           pendingRemovalId,
           removePending,
           canShowLeave,
+          canRemove: !participantsLocked,
           isConnectedSelf,
           onRemove: handleRemoveParticipant,
           onInviteFriends: () => openShare('friends'),
@@ -285,6 +287,7 @@ export default function EventDetailSession({
           onAddMovieOpenChange: setAddMovieOpen,
           addMovieTriggerRef,
           isFull,
+          wheelLocked: wheel.wheelLocked,
           onRequestRemove: handleRequestRemoveMovie,
         }}
       />
