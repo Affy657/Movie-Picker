@@ -17,6 +17,24 @@ describe('eventScheduled', () => {
     );
   });
 
+  it('keeps summer time for a night starting between 01:00 and 01:59 on the day summer time ends', () => {
+    expect(eventScheduledStartUtcMs({ date: '2026-10-25', time: '01:30' })).toBe(
+      Date.parse('2026-10-24T23:30:00Z')
+    );
+  });
+
+  it('keeps winter time for a night starting between 01:00 and 01:59 on the day summer time starts', () => {
+    expect(eventScheduledStartUtcMs({ date: '2026-03-29', time: '01:30' })).toBe(
+      Date.parse('2026-03-29T00:30:00Z')
+    );
+  });
+
+  it('reads the repeated hour of the autumn switch as winter time, like the API', () => {
+    expect(eventScheduledStartUtcMs({ date: '2026-10-25', time: '02:30' })).toBe(
+      Date.parse('2026-10-25T01:30:00Z')
+    );
+  });
+
   it('eventScheduledStartUtcMs : heure invalide', () => {
     expect(eventScheduledStartUtcMs({ date: '2030-06-01', time: 'not-a-time' })).toBeNull();
   });
