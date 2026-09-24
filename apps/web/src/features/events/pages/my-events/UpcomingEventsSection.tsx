@@ -13,6 +13,10 @@ import styles from '@/features/events/pages/MyEventsPage.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Card from '@/shared/components/Card';
 
+function canLeaveNight(event: MyEventSummary): boolean {
+  return !event.isCreator && (event.winnerMovies?.length ?? 0) === 0;
+}
+
 interface UpcomingEventsSectionProps {
   events: MyEventSummary[];
   onLeave: (slug: string) => void;
@@ -40,11 +44,14 @@ export default function UpcomingEventsSection({
               interactive
               elevation="sm"
               padding="none"
-              className={clsx(eventSummaryCardStyles.card, !ev.isCreator && styles.linkWithKebab)}
+              className={clsx(
+                eventSummaryCardStyles.card,
+                canLeaveNight(ev) && styles.linkWithKebab
+              )}
             >
               <EventSummaryCardBody event={ev} />
             </Card>
-            {!ev.isCreator ? (
+            {canLeaveNight(ev) ? (
               <EventCardMenu
                 title={ev.title}
                 className={styles.itemKebab}

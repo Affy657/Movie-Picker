@@ -628,6 +628,105 @@ describe('EventDetail (MSW)', () => {
     });
   });
 
+  describe('after a draw on a movie night still open', () => {
+    function drawnEventHandler(isHost: boolean, myParticipantId: string) {
+      return http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
+        HttpResponse.json({
+          _id: 'evt-msw',
+          title: 'Soirée démo',
+          date: '2030-12-15',
+          time: '21:00',
+          slug,
+          isHost,
+          isFinished: false,
+          lifecycle: 'live',
+          winners: [{ movieId: 'm-msw-1', pickMethod: 'manual', pickedAt: '2020-01-01T00:00:00Z' }],
+          participantCount: 3,
+          movieCount: 1,
+          myParticipant: { _id: myParticipantId, pseudo: 'Moi' },
+          participants: [
+            { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
+            { _id: 'p-msw-alice', pseudo: 'Alice' },
+            { _id: 'p-msw-bob', pseudo: 'Bob' },
+          ],
+          config: {
+            theme: null,
+            maxProposalsPerParticipant: null,
+            maxParticipants: null,
+            wheelMode: 'strictRandom',
+            winnerCount: 1,
+          },
+        })
+      );
+    }
+
+    const drawnMoviesHandler = http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+      HttpResponse.json([
+        {
+          _id: 'm-msw-1',
+          eventId: 'evt-msw',
+          participantId: 'p-msw-host',
+          tmdbId: 42,
+          mediaType: 'movie',
+          title: 'Matrix',
+          year: '1999',
+          posterPath: null,
+          proposerPseudo: 'Hôte',
+          score: 2,
+          up: 2,
+          down: 0,
+        },
+      ])
+    );
+
+    it('the host is offered no participant removal the API would refuse', async () => {
+      const user = userEvent.setup();
+      setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      server.use(
+        drawnEventHandler(true, 'p-msw-host'),
+        drawnMoviesHandler,
+        http.get(`${TEST_API_V1}/events/${slug}/invitations/eligible-follows`, () =>
+          HttpResponse.json({ follows: [] })
+        )
+      );
+
+      renderEventDetail(`/e/${slug}?host=host-token`);
+      expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+      await openParticipantsPanel(user);
+
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+      expect(screen.queryByTestId('manage-participants-toggle')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('remove-participant-p-msw-alice')).not.toBeInTheDocument();
+    });
+
+    it('a participant is offered no leave the API would refuse', async () => {
+      const user = userEvent.setup();
+      setStoredParticipant(slug, 'p-msw-bob', 'Bob');
+      server.use(drawnEventHandler(false, 'p-msw-bob'), drawnMoviesHandler);
+
+      renderEventDetail(`/e/${slug}`);
+      expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+      await openParticipantsPanel(user);
+
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+      expect(screen.queryByTestId('leave-event-button')).not.toBeInTheDocument();
+    });
+
+    it('the proposer is offered no movie removal the API would refuse', async () => {
+      const user = userEvent.setup();
+      setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      stubHoverCapability();
+      server.use(drawnEventHandler(false, 'p-msw-host'), drawnMoviesHandler);
+
+      renderEventDetail(`/e/${slug}`);
+      expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+
+      await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
+      expect(await screen.findByRole('menu')).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: /retirer matrix/i })).not.toBeInTheDocument();
+    });
+  });
+
   describe('modal chaining (single instance)', () => {
     it('open remove, cancel, open leave: consistent labels', async () => {
       const user = userEvent.setup();

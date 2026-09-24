@@ -179,6 +179,52 @@ describe('MyEventsPage (MSW)', () => {
     expect(document.title).toBe(pageTitle('Mes soirées'));
   });
 
+  it('offers no leave on a joined night whose wheel already picked a movie', async () => {
+    const joinedNight = {
+      slug: 'autre',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-03T00:00:00Z',
+      isCreator: false,
+      isParticipant: true,
+      lifecycle: 'live',
+      participantCount: 6,
+      movieCount: 1,
+    };
+    server.use(
+      authMeHandler,
+      myEventsHandler(
+        [
+          {
+            ...joinedNight,
+            id: 'e2',
+            title: 'Chez Bob',
+            date: '2035-09-01',
+            time: '20:00',
+            winnerMovies: [{ title: 'Parasite', posterPath: null }],
+          },
+          {
+            ...joinedNight,
+            id: 'e3',
+            slug: 'encore-ouverte',
+            title: 'Chez Chloé',
+            date: '2035-09-02',
+            time: '20:00',
+          },
+        ],
+        [],
+        { active: 2, finished: 0 }
+      )
+    );
+
+    renderMyEvents();
+
+    await screen.findByRole('link', { name: /Chez Bob/i }, { timeout: 5000 });
+    expect(screen.getByRole('button', { name: /Options pour Chez Chloé/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Options pour Chez Bob/i })
+    ).not.toBeInTheDocument();
+  });
+
   it('history: open the menu and delete a finished hosted movie night', async () => {
     const user = (await import('@testing-library/user-event')).default.setup();
     let deleteCalled = false;
