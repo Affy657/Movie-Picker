@@ -62,7 +62,7 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
 
         await _users.SetLetterboxdPendingReconciliationCountAsync(userId, outcome.PendingChoices.Count, ct);
 
-        if (!force && outcome.PendingChoices.Count > 0
+        if (!force && outcome.PendingChoices.Count > user.LetterboxdPendingReconciliationCount
             && user.NotifiesOn(UserNotificationType.LetterboxdReconciliationPending))
         {
             await _notifications.AddAsync(new UserNotification
