@@ -128,7 +128,7 @@ public sealed class EventReminderPass : IEventReminderPass
 
         foreach (var (evt, startUtc) in eventsInWindow)
         {
-            var occurrence = new ReminderOccurrence(evt, OccurrenceKey(evt.Id, startUtc), noMovieEventIds.Contains(evt.Id));
+            var occurrence = new ReminderOccurrence(evt, startUtc, OccurrenceKey(evt.Id, startUtc), noMovieEventIds.Contains(evt.Id));
             await ProcessEventRemindersAsync(occurrence, window, now, failures, ct);
         }
 
@@ -175,10 +175,20 @@ public sealed class EventReminderPass : IEventReminderPass
         foreach (var user in notifiableUsers)
         {
             var subs = subsByUser.TryGetValue(user.Id, out var userSubs) ? userSubs : [];
-            await DeliverOnceAsync(user.Id, window.NotifType, occurrence.Key, subs, push, failures, ct);
-            await AddToInboxOnceAsync(user.Id, window.NotifType, occurrence.Key, evt, now, ct);
+            if (!await SentBeforeOccurrenceKeysAsync(user.Id, occurrence, window, NotificationDedupChannel.Push, ct))
+                await DeliverOnceAsync(user.Id, window.NotifType, occurrence.Key, subs, push, failures, ct);
+            if (!await SentBeforeOccurrenceKeysAsync(user.Id, occurrence, window, NotificationDedupChannel.InApp, ct))
+                await AddToInboxOnceAsync(user.Id, window.NotifType, occurrence.Key, evt, now, ct);
         }
     }
+
+    private Task<bool> SentBeforeOccurrenceKeysAsync(
+        string userId,
+        ReminderOccurrence occurrence,
+        ReminderWindow window,
+        NotificationDedupChannel channel,
+        CancellationToken ct) =>
+        _dedup.WasClaimedSinceAsync(userId, window.NotifType, occurrence.Event.Id, channel, occurrence.StartUtc - window.Max, ct);
 
     private async Task DeliverOnceAsync(
         string userId,
@@ -272,7 +282,7 @@ public sealed class EventReminderPass : IEventReminderPass
         await AddToInboxOnceAsync(host.Id, UserNotificationType.EventPending, evt.Id, evt, now, ct);
     }
 
-    private sealed record ReminderOccurrence(Event Event, string Key, bool NoMovieYet);
+    private sealed record ReminderOccurrence(Event Event, DateTimeOffset StartUtc, string Key, bool NoMovieYet);
 
     private sealed class DeliveryFailures
     {

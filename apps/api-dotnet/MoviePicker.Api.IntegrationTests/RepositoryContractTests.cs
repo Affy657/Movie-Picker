@@ -354,7 +354,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(0, await votes.DeleteByMovieIdsAsync([]));
     }
 
-    private async Task<(Event Event, Participant Participant)> NewEventWithParticipantAsync(IServiceProvider services, string title)
+    private static async Task<(Event Event, Participant Participant)> NewEventWithParticipantAsync(IServiceProvider services, string title)
     {
         var evt = await services.GetRequiredService<IEventRepository>().AddAsync(NewEvent(title));
         var participant = await services.GetRequiredService<IParticipantRepository>().AddAsync(new Participant
@@ -712,5 +712,24 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         await dedup.ReleaseAsync(userId, UserNotificationType.EventReminder1h, key, channel);
 
         Assert.True(await dedup.TryClaimAsync(userId, UserNotificationType.EventReminder1h, key, channel));
+    }
+
+    [Theory]
+    [InlineData(NotificationDedupChannel.Push)]
+    [InlineData(NotificationDedupChannel.InApp)]
+    public async Task NotificationDedup_WasClaimedSince_SeesOnlyClaimsFromThatTimeOn(NotificationDedupChannel channel)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dedup = scope.ServiceProvider.GetRequiredService<INotificationDedupRepository>();
+        var userId = ObjectId.GenerateNewId().ToString();
+        var key = "evt-" + Guid.NewGuid().ToString("N");
+        var before = DateTimeOffset.UtcNow.AddMinutes(-5);
+
+        Assert.False(await dedup.WasClaimedSinceAsync(userId, UserNotificationType.EventReminder1h, key, channel, before));
+        Assert.True(await dedup.TryClaimAsync(userId, UserNotificationType.EventReminder1h, key, channel));
+
+        Assert.True(await dedup.WasClaimedSinceAsync(userId, UserNotificationType.EventReminder1h, key, channel, before));
+        Assert.False(await dedup.WasClaimedSinceAsync(userId, UserNotificationType.EventReminder1h, key, channel, DateTimeOffset.UtcNow.AddHours(1)));
+        Assert.False(await dedup.WasClaimedSinceAsync(userId, UserNotificationType.EventReminder24h, key, channel, before));
     }
 }

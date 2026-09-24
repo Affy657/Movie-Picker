@@ -53,4 +53,25 @@ public sealed class InMemoryNotificationDedupRepositoryTests
         Assert.False(await _repo.TryClaimAsync(
             "u1", UserNotificationType.EventReminder1h, "evt1", NotificationDedupChannel.InApp));
     }
+
+    private sealed class SteppingClock : TimeProvider
+    {
+        public DateTimeOffset Now { get; set; } = new(2026, 9, 24, 12, 0, 0, TimeSpan.Zero);
+
+        public override DateTimeOffset GetUtcNow() => Now;
+    }
+
+    [Fact]
+    public async Task WasClaimedSinceAsync_SeesOnlyAClaimMadeFromThatTimeOn()
+    {
+        var clock = new SteppingClock();
+        var repo = new InMemoryNotificationDedupRepository(clock);
+        var claimedAt = clock.Now;
+        await repo.TryClaimAsync("u1", UserNotificationType.EventReminder1h, "evt1", NotificationDedupChannel.InApp);
+        clock.Now = claimedAt.AddHours(2);
+
+        Assert.True(await repo.WasClaimedSinceAsync("u1", UserNotificationType.EventReminder1h, "evt1", NotificationDedupChannel.InApp, claimedAt.AddMinutes(-1)));
+        Assert.False(await repo.WasClaimedSinceAsync("u1", UserNotificationType.EventReminder1h, "evt1", NotificationDedupChannel.InApp, claimedAt.AddMinutes(1)));
+        Assert.False(await repo.WasClaimedSinceAsync("u1", UserNotificationType.EventReminder1h, "evt1", NotificationDedupChannel.Push, claimedAt.AddMinutes(-1)));
+    }
 }
