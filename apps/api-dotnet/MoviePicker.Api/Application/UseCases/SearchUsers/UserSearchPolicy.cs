@@ -7,11 +7,20 @@ namespace MoviePicker.Api.Application.UseCases.SearchUsers;
 public static class UserSearchPolicy
 {
     public const int MinQueryLength = 2;
+    public const int MaxQueryLength = 64;
     public const int ResultLimit = 20;
 
     private const CompareOptions LooseComparison = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
 
-    public static string Normalize(string? raw) => (raw ?? string.Empty).Trim();
+    public static string Normalize(string? raw)
+    {
+        var trimmed = (raw ?? string.Empty).Trim();
+        if (trimmed.Length <= MaxQueryLength)
+            return trimmed;
+
+        var cut = char.IsHighSurrogate(trimmed[MaxQueryLength - 1]) ? MaxQueryLength - 1 : MaxQueryLength;
+        return trimmed[..cut].TrimEnd();
+    }
 
     public static bool Contains(string? value, string query) =>
         !string.IsNullOrEmpty(value)

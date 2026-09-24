@@ -98,6 +98,16 @@ public sealed class UserSearchEndpointTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task Search_AVeryLongAccentFoldedQuery_AnswersInsteadOfFailing()
+    {
+        var (searcher, _) = await NewUserAsync("LongQuerySeeker");
+
+        var response = await searcher.GetAsync($"/api/v1/users/search?q={new string('a', 2_000)}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Search_QueryShorterThanTwoCharacters_ReturnsEmpty()
     {
         var (searcher, _) = await NewUserAsync("ShortQuerySeeker");

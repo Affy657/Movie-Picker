@@ -79,4 +79,40 @@ public sealed class UserSearchPolicyTests
         Assert.Equal("lea", UserSearchPolicy.Normalize("  lea  "));
         Assert.Equal(string.Empty, UserSearchPolicy.Normalize(null));
     }
+
+    [Fact]
+    public void Normalize_AVeryLongQuery_IsCutToTheMaximumLength()
+    {
+        var normalized = UserSearchPolicy.Normalize(new string('a', 5_000));
+
+        Assert.Equal(new string('a', UserSearchPolicy.MaxQueryLength), normalized);
+    }
+
+    [Fact]
+    public void ToRegexPattern_OfTheLongestAccentFoldedQuery_StaysFarBelowTheMongoPatternLimit()
+    {
+        var pattern = "^" + UserSearchPolicy.ToRegexPattern(UserSearchPolicy.Normalize(new string('a', 5_000)));
+
+        Assert.True(pattern.Length < 4_096, $"pattern length {pattern.Length}");
+    }
+
+    [Fact]
+    public void Normalize_NeverCutsASurrogatePairInHalf()
+    {
+        var query = new string('a', UserSearchPolicy.MaxQueryLength - 1) + "🎬" + "suite";
+
+        var normalized = UserSearchPolicy.Normalize(query);
+
+        Assert.False(char.IsHighSurrogate(normalized[^1]));
+        Assert.Equal(new string('a', UserSearchPolicy.MaxQueryLength - 1), normalized);
+        Assert.NotEmpty(UserSearchPolicy.ToRegexPattern(normalized));
+    }
+
+    [Fact]
+    public void Normalize_IsStableOnItsOwnOutput()
+    {
+        var once = UserSearchPolicy.Normalize(new string('a', 70) + "   ");
+
+        Assert.Equal(once, UserSearchPolicy.Normalize(once));
+    }
 }
