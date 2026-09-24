@@ -1,6 +1,6 @@
 const HOST = 'https://sonarcloud.io';
 const PROJECT = 'Affy657_Movie-Picker';
-const COVERAGE_FLOOR = 90.5;
+const COVERAGE_FLOOR = 90.7;
 const BRANCH_RATINGS = [
   'reliability_rating',
   'security_rating',
