@@ -89,6 +89,10 @@ function spinDisabledHintOf(s: SpinAvailability, t: Translate): string | null {
   return null;
 }
 
+function listedMovieOrWinner(winner: MovieData, listed: readonly MovieData[]): MovieData {
+  return listed.find((m) => m.id === winner.id) ?? winner;
+}
+
 function primaryActionOf(input: {
   canSpin: boolean;
   noMovie: boolean;
@@ -237,13 +241,14 @@ export function useEventWheel({
     setLoading(true);
     postEventWheel(slug, hostToken, drawnIds.length)
       .then((res) => {
-        const drawnNow = drawableMovies.some((m) => m.id === res.winner.id);
-        const pool = drawnNow ? drawableMovies : [res.winner];
+        const drawn = listedMovieOrWinner(res.winner, safeMovies);
+        const drawnNow = drawableMovies.some((m) => m.id === drawn.id);
+        const pool = drawnNow ? drawableMovies : [drawn];
         setSpinPool(pool);
-        setLocallyDrawnIds((ids) => (ids.includes(res.winner.id) ? ids : [...ids, res.winner.id]));
-        setPendingRevealId(res.winner.id);
-        setSpinWinner(res.winner);
-        setWinnerIndex(pool.findIndex((m) => m.id === res.winner.id));
+        setLocallyDrawnIds((ids) => (ids.includes(drawn.id) ? ids : [...ids, drawn.id]));
+        setPendingRevealId(drawn.id);
+        setSpinWinner(drawn);
+        setWinnerIndex(pool.findIndex((m) => m.id === drawn.id));
         setManualReveal(false);
         setWheelKey((k) => k + 1);
         setIsModalOpen(true);
@@ -253,7 +258,7 @@ export function useEventWheel({
       })
       .catch((err) => setError(getErrorMessage(err, t('events.wheel.launchError'))))
       .finally(() => setLoading(false));
-  }, [slug, hostToken, drawnIds.length, drawableMovies, announceWinner, track, t]);
+  }, [slug, hostToken, drawnIds.length, safeMovies, drawableMovies, announceWinner, track, t]);
 
   const pickWinnerManually = useCallback(
     (movie: MovieData) => {
@@ -261,12 +266,11 @@ export function useEventWheel({
       setLoading(true);
       postEventWinner(slug, movie.id, hostToken)
         .then((res) => {
+          const picked = listedMovieOrWinner(res.winner, [movie]);
           setPendingRevealId(null);
-          setSpinPool([res.winner]);
-          setLocallyDrawnIds((ids) =>
-            ids.includes(res.winner.id) ? ids : [...ids, res.winner.id]
-          );
-          setSpinWinner(res.winner);
+          setSpinPool([picked]);
+          setLocallyDrawnIds((ids) => (ids.includes(picked.id) ? ids : [...ids, picked.id]));
+          setSpinWinner(picked);
           setWinnerIndex(0);
           setManualReveal(true);
           setWheelKey((k) => k + 1);
