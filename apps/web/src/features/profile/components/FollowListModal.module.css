@@ -64,6 +64,10 @@
   text-align: center;
 }
 
+.loadError {
+  padding: var(--space-2) var(--space-4);
+}
+
 .item {
   display: flex;
   align-items: center;

@@ -38,6 +38,33 @@ describe('NotificationsPage (MSW)', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
+  it('says the inbox could not load and retries, instead of claiming it is empty', async () => {
+    const user = userEvent.setup();
+    let calls = 0;
+    server.use(
+      authedUserHandler,
+      http.get(`${TEST_API_V1}/notifications/inbox`, () => {
+        calls += 1;
+        if (calls === 1) return new HttpResponse(null, { status: 500 });
+        return HttpResponse.json({
+          items: [{ ...base, id: 'a', type: 'eventdeleted', eventTitle: 'Soiree Rechargee' }],
+          unreadCount: 1,
+          hasMore: false,
+        });
+      })
+    );
+
+    renderPage();
+
+    expect(await screen.findByText('Impossible de charger vos notifications.')).toBeInTheDocument();
+    expect(screen.queryByText(/aucune notification/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByText(/Soiree Rechargee/)).toBeInTheDocument();
+    expect(screen.queryByText('Impossible de charger vos notifications.')).not.toBeInTheDocument();
+  });
+
   it('shows the empty state when there is no notification', async () => {
     server.use(
       authedUserHandler,

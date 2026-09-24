@@ -4,6 +4,7 @@ import { Inbox } from 'lucide-react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
+import InlineError from '@/shared/components/InlineError';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -203,6 +204,43 @@ function NotifCard({
   );
 }
 
+function InboxList({
+  groups,
+  loading,
+  t,
+  locale,
+  onRead,
+}: Readonly<{
+  groups: InboxGroup[];
+  loading: boolean;
+  t: Translate;
+  locale: LocaleCode;
+  onRead: (id: string) => void;
+}>) {
+  if (groups.length === 0 && !loading) {
+    return (
+      <EmptyState
+        icon={<Inbox size={ICON_SIZE['3xl']} aria-hidden />}
+        message={t('notifications.inboxEmpty')}
+      />
+    );
+  }
+
+  return (
+    <div className={styles.list}>
+      {groups.map((group) => (
+        <NotifCard
+          key={group.kind === 'event' ? group.eventSlug : group.item.id}
+          group={group}
+          t={t}
+          locale={locale}
+          onRead={onRead}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function NotificationsPage() {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -284,23 +322,20 @@ export default function NotificationsPage() {
         </p>
       )}
 
-      {groups.length === 0 && !inboxQuery.isLoading ? (
-        <EmptyState
-          icon={<Inbox size={ICON_SIZE['3xl']} aria-hidden />}
-          message={t('notifications.inboxEmpty')}
+      {inboxQuery.isError && !inboxQuery.data ? (
+        <InlineError
+          message={t('notifications.inboxLoadError')}
+          retryLabel={t('common.retry')}
+          onRetry={() => void inboxQuery.refetch()}
         />
       ) : (
-        <div className={styles.list}>
-          {groups.map((group) => (
-            <NotifCard
-              key={group.kind === 'event' ? group.eventSlug : group.item.id}
-              group={group}
-              t={t}
-              locale={locale}
-              onRead={handleRead}
-            />
-          ))}
-        </div>
+        <InboxList
+          groups={groups}
+          loading={inboxQuery.isLoading}
+          t={t}
+          locale={locale}
+          onRead={handleRead}
+        />
       )}
 
       {inboxQuery.hasNextPage && (

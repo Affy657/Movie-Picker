@@ -61,6 +61,67 @@ describe('FollowListModal (MSW)', () => {
     });
   });
 
+  it('says the list could not load and retries, instead of an empty list', async () => {
+    const user = userEvent.setup();
+    let calls = 0;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => {
+        calls += 1;
+        if (calls === 1) return new HttpResponse(null, { status: 500 });
+        return HttpResponse.json({
+          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
+        });
+      })
+    );
+
+    renderModal({ followingCount: 2 });
+
+    expect(await screen.findByText('Impossible de charger cette liste.')).toBeInTheDocument();
+    expect(screen.queryByText(/aucun utilisateur/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/profils privés/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByText('Bob')).toBeInTheDocument();
+    expect(screen.queryByText('Impossible de charger cette liste.')).not.toBeInTheDocument();
+  });
+
+  it('says the search failed and retries, instead of claiming nobody matches', async () => {
+    const user = userEvent.setup();
+    let calls = 0;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
+      http.get(`${TEST_API_V1}/users/search`, () => {
+        calls += 1;
+        if (calls === 1) return new HttpResponse(null, { status: 500 });
+        return HttpResponse.json({
+          items: [
+            {
+              handle: 'sofiamorgane',
+              displayName: 'Sofia Benali',
+              avatarId: '',
+              isFollowedByMe: false,
+            },
+          ],
+        });
+      })
+    );
+
+    renderModal();
+    await screen.findByText(/aucun utilisateur/i);
+    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
+
+    expect(await screen.findByText('Recherche impossible, réessayez.')).toBeInTheDocument();
+    expect(screen.queryByText('Personne ne correspond')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByText('Sofia Benali')).toBeInTheDocument();
+  });
+
   it('affiche les utilisateurs dans la liste', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),

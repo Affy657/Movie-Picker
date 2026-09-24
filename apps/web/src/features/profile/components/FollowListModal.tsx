@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import IconButton from '@/shared/components/IconButton';
+import InlineError from '@/shared/components/InlineError';
 import { TabPanel } from '@/shared/components/Tabs';
 import Sheet from '@/shared/components/Sheet';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
@@ -44,6 +45,15 @@ function visibleItems(searching: boolean, searchEnabled: boolean, activeQuery: F
 function isListPending(searching: boolean, searchEnabled: boolean, activeQuery: FollowListQuery) {
   if (searching) return searchEnabled && activeQuery.isPending;
   return activeQuery.isPending;
+}
+
+function hasListLoadFailed(
+  searching: boolean,
+  searchEnabled: boolean,
+  activeQuery: FollowListQuery
+) {
+  if (searching && !searchEnabled) return false;
+  return activeQuery.isError && !activeQuery.data;
 }
 
 interface Props {
@@ -123,8 +133,10 @@ export default function FollowListModal({
 
   const items = visibleItems(searching, searchEnabled, activeQuery);
   const isPending = isListPending(searching, searchEnabled, activeQuery);
+  const loadFailed = hasListLoadFailed(searching, searchEnabled, activeQuery);
   const listedCount = tab === 'following' ? followingCount : followersCount;
-  const hidesPrivateProfiles = !searching && !isPending && listedCount > items.length;
+  const hidesPrivateProfiles =
+    !searching && !isPending && !loadFailed && listedCount > items.length;
   const highlight = highlightTerm(searching, debouncedQuery);
   const togglePending = followMutation.isPending || unfollowMutation.isPending;
 
@@ -147,7 +159,16 @@ export default function FollowListModal({
   const list = (
     <ul className={styles.list}>
       {isPending && <li className={styles.placeholder}>{t('common.loading')}</li>}
-      {!isPending && items.length === 0 && (
+      {loadFailed && (
+        <li className={styles.loadError}>
+          <InlineError
+            message={t(searching ? 'profile.follow.search.error' : 'profile.follow.loadError')}
+            retryLabel={t('common.retry')}
+            onRetry={() => void activeQuery.refetch()}
+          />
+        </li>
+      )}
+      {!isPending && !loadFailed && items.length === 0 && (
         <li>
           <FollowListEmptyState searching={searching} hasSearchTerm={highlight.length > 0} />
         </li>
@@ -170,15 +191,9 @@ export default function FollowListModal({
     </ul>
   );
 
-  const searchError = searchQuery.isError
-    ? getErrorMessage(searchQuery.error, t('profile.follow.search.error'))
-    : null;
-
-  const bannerMessage = followError ?? (searching ? searchError : null);
-
-  const errorBanner = bannerMessage && (
+  const errorBanner = followError && (
     <p className="error" role="alert">
-      {bannerMessage}
+      {followError}
     </p>
   );
 
