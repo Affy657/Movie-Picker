@@ -56,6 +56,18 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
         return Task.FromResult(exists);
     }
 
+    public Task<bool> ExistsSinceAsync(
+        string userId,
+        UserNotificationType type,
+        string eventId,
+        DateTimeOffset since,
+        CancellationToken ct = default)
+    {
+        var exists = _store.Values.Any(n =>
+            n.UserId == userId && n.Type == type && n.EventId == eventId && n.CreatedAt >= since);
+        return Task.FromResult(exists);
+    }
+
     public Task<IReadOnlySet<string>> ListUserIdsByTypeAndEventAsync(UserNotificationType type, string eventId, CancellationToken ct = default)
     {
         IReadOnlySet<string> result = _store.Values

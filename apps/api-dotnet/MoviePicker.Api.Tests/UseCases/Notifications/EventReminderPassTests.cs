@@ -555,7 +555,7 @@ public sealed class EventReminderPassTests
             .ReturnsAsync(Subscriber("host"));
         _subscriptions.Setup(r => r.ListByUserIdAsync("host", It.IsAny<CancellationToken>()))
             .ReturnsAsync([new PushSubscription { Id = "s1", UserId = "host", Endpoint = "https://push/host", P256dh = "k", Auth = "a" }]);
-        _notifications.Setup(r => r.ExistsAsync("host", UserNotificationType.EventPending, "e1", It.IsAny<CancellationToken>()))
+        _notifications.Setup(r => r.ExistsSinceAsync("host", UserNotificationType.EventPending, "e1", started + EventSchedule.PendingDelay, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         await CreatePass().RunAsync();
@@ -575,10 +575,50 @@ public sealed class EventReminderPassTests
             .ReturnsAsync(Subscriber("host"));
         _subscriptions.Setup(r => r.ListByUserIdAsync("host", It.IsAny<CancellationToken>()))
             .ReturnsAsync([new PushSubscription { Id = "s1", UserId = "host", Endpoint = "https://push/host", P256dh = "k", Auth = "a" }]);
+        _notifications.Setup(r => r.ExistsSinceAsync("host", UserNotificationType.EventPending, "e1", started + EventSchedule.PendingDelay, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _dedup.Setup(r => r.TryClaimAsync("host", UserNotificationType.EventPending, EventReminderPass.OccurrenceKey("e1", started), NotificationDedupChannel.Push, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        await CreatePass().RunAsync();
+
+        _sender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        VerifyInboxAdded("host", UserNotificationType.EventPending, Times.Never());
+    }
+
+    [Fact]
+    public async Task RunAsync_PendingAgainAfterAReschedule_NotifiesTheHostAgain()
+    {
+        var started = Now - EventSchedule.PendingDelay - TimeSpan.FromHours(1);
+        GivenOpenEvents(EventStartingAt("e1", started));
+        _users.Setup(r => r.GetByIdAsync("host", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Subscriber("host"));
+        _subscriptions.Setup(r => r.ListByUserIdAsync("host", It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new PushSubscription { Id = "s1", UserId = "host", Endpoint = "https://push/host", P256dh = "k", Auth = "a" }]);
         _notifications.Setup(r => r.ExistsAsync("host", UserNotificationType.EventPending, "e1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _dedup.Setup(r => r.TryClaimAsync("host", UserNotificationType.EventPending, "e1", NotificationDedupChannel.Push, It.IsAny<CancellationToken>()))
+        _dedup.Setup(r => r.TryClaimAsync("host", UserNotificationType.EventPending, "e1", It.IsAny<NotificationDedupChannel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
+
+        await CreatePass().RunAsync();
+
+        _sender.Verify(
+            s => s.SendAsync(It.IsAny<PushSubscription>(), It.Is<PushMessage>(m => m.Tag == "pending-e1"), It.IsAny<CancellationToken>()),
+            Times.Once);
+        VerifyInboxAdded("host", UserNotificationType.EventPending, Times.Once());
+    }
+
+    [Fact]
+    public async Task RunAsync_PendingNoticeClaimedUnderTheOldKeyInThisWindow_IsNotSentAgain()
+    {
+        var started = Now - EventSchedule.PendingDelay - TimeSpan.FromHours(1);
+        GivenOpenEvents(EventStartingAt("e1", started));
+        _users.Setup(r => r.GetByIdAsync("host", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Subscriber("host"));
+        _subscriptions.Setup(r => r.ListByUserIdAsync("host", It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new PushSubscription { Id = "s1", UserId = "host", Endpoint = "https://push/host", P256dh = "k", Auth = "a" }]);
+        _dedup.Setup(r => r.WasClaimedSinceAsync("host", UserNotificationType.EventPending, "e1", It.IsAny<NotificationDedupChannel>(), started + EventSchedule.PendingDelay, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         await CreatePass().RunAsync();
 

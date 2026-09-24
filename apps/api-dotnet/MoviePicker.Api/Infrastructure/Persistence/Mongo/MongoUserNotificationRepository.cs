@@ -92,6 +92,20 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
         return count > 0;
     }
 
+    public async Task<bool> ExistsSinceAsync(
+        string userId,
+        UserNotificationType type,
+        string eventId,
+        DateTimeOffset since,
+        CancellationToken ct = default)
+    {
+        var sinceUtc = since.UtcDateTime;
+        var count = await _collection.CountDocumentsAsync(
+            x => x.UserId == userId && x.Type == (int)type && x.EventId == eventId && x.CreatedAt >= sinceUtc,
+            cancellationToken: ct);
+        return count > 0;
+    }
+
     public async Task<IReadOnlySet<string>> ListUserIdsByTypeAndEventAsync(UserNotificationType type, string eventId, CancellationToken ct = default)
     {
         var docs = await _collection
