@@ -25,7 +25,7 @@ describe('fetchWatchlist', () => {
 
     const res = await fetchWatchlist();
 
-    expect(mockFetchApi).toHaveBeenCalledWith('/watchlist', undefined);
+    expect(mockFetchApi).toHaveBeenCalledWith('/watchlist?skip=0&take=500', undefined);
     expect(res).toEqual([{ tmdbId: 1, title: 'Film' }]);
   });
 
@@ -35,7 +35,37 @@ describe('fetchWatchlist', () => {
 
     await fetchWatchlist(controller.signal);
 
-    expect(mockFetchApi).toHaveBeenCalledWith('/watchlist', { signal: controller.signal });
+    expect(mockFetchApi).toHaveBeenCalledWith('/watchlist?skip=0&take=500', {
+      signal: controller.signal,
+    });
+  });
+
+  it('reads every page while the API says more items remain', async () => {
+    mockFetchApi
+      .mockResolvedValueOnce({ items: [{ tmdbId: 1 }, { tmdbId: 2 }], total: 3, hasMore: true })
+      .mockResolvedValueOnce({ items: [{ tmdbId: 3 }], total: 3, hasMore: false });
+
+    const res = await fetchWatchlist();
+
+    expect(res.map((item) => item.tmdbId)).toEqual([1, 2, 3]);
+    expect(mockFetchApi).toHaveBeenCalledTimes(2);
+    expect(mockFetchApi).toHaveBeenNthCalledWith(2, '/watchlist?skip=2&take=500', undefined);
+  });
+
+  it('stops reading pages when one comes back empty', async () => {
+    mockFetchApi.mockResolvedValue({ items: [], total: 10, hasMore: true });
+
+    expect(await fetchWatchlist()).toEqual([]);
+    expect(mockFetchApi).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the number of requests bounded', async () => {
+    mockFetchApi.mockResolvedValue({ items: [{ tmdbId: 1 }], total: 1_000_000, hasMore: true });
+
+    await fetchWatchlist();
+
+    expect(mockFetchApi.mock.calls.length).toBeGreaterThan(1);
+    expect(mockFetchApi.mock.calls.length).toBeLessThanOrEqual(20);
   });
 
   it('returns an empty array when items is missing or not an array', async () => {

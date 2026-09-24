@@ -1,4 +1,5 @@
 import { fetchApi } from '@/shared/api/client';
+import { readAllWatchlistPages } from '@/features/movies/api/watchlistApi';
 import type { MovieMediaType } from '@/shared/types/movie';
 
 export interface PublicProfile {
@@ -109,14 +110,16 @@ interface UserWatchlistResponse {
 
 export async function fetchUserWatchlist(
   handle: string,
-  take: number,
+  pageSize: number,
   signal?: AbortSignal
 ): Promise<UserWatchlistItem[]> {
-  const res = await fetchApi<UserWatchlistResponse>(
-    `/users/${encodeURIComponent(handle)}/watchlist?take=${take}`,
-    { signal }
+  const items = await readAllWatchlistPages((skip) =>
+    fetchApi<UserWatchlistResponse>(
+      `/users/${encodeURIComponent(handle)}/watchlist?skip=${skip}&take=${pageSize}`,
+      { signal }
+    )
   );
-  return (res?.items ?? []).map((item) => ({ ...item, genreIds: item.genreIds ?? [] }));
+  return items.map((item) => ({ ...item, genreIds: item.genreIds ?? [] }));
 }
 
 export async function fetchMyWatchedMovies(

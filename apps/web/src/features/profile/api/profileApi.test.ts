@@ -80,10 +80,32 @@ describe('profileApi', () => {
 
     const items = await fetchUserWatchlist('a b', 200, controller.signal);
 
-    expect(mockFetchApi).toHaveBeenCalledWith('/users/a%20b/watchlist?take=200', {
+    expect(mockFetchApi).toHaveBeenCalledWith('/users/a%20b/watchlist?skip=0&take=200', {
       signal: controller.signal,
     });
     expect(items).toEqual([expect.objectContaining({ title: 'Inception', genreIds: [] })]);
+  });
+
+  it('fetchUserWatchlist reads every page of a public watchlist longer than one page', async () => {
+    const controller = new AbortController();
+    const movie = (tmdbId: number) => ({
+      tmdbId,
+      mediaType: 'movie',
+      title: `Film ${tmdbId}`,
+      year: '2010',
+      posterPath: null,
+      createdAt: '2026-06-01T00:00:00Z',
+    });
+    mockFetchApi
+      .mockResolvedValueOnce({ items: [movie(1), movie(2)], total: 3, hasMore: true })
+      .mockResolvedValueOnce({ items: [movie(3)], total: 3, hasMore: false });
+
+    const items = await fetchUserWatchlist('bob', 2, controller.signal);
+
+    expect(items.map((item) => item.tmdbId)).toEqual([1, 2, 3]);
+    expect(mockFetchApi).toHaveBeenNthCalledWith(2, '/users/bob/watchlist?skip=2&take=2', {
+      signal: controller.signal,
+    });
   });
 
   it('fetchUserStats forwards the abort signal', async () => {
