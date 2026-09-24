@@ -119,6 +119,7 @@ public sealed class UserDocument
     public long Version { get; set; }
 }
 
+[BsonIgnoreExtraElements]
 public sealed class EventTemplateDocument
 {
     [BsonElement("id")]
@@ -134,6 +135,7 @@ public sealed class EventTemplateDocument
     public DateTime CreatedAt { get; set; }
 }
 
+[BsonIgnoreExtraElements]
 public sealed class UserIdentityDocument
 {
     [BsonElement("provider")]
@@ -162,6 +164,7 @@ public sealed class UnlinkedIdentityDocument
     public DateTime UnlinkedAt { get; set; }
 }
 
+[BsonIgnoreExtraElements]
 public sealed class NotificationPreferenceEntryDocument
 {
     [BsonElement("type")]
