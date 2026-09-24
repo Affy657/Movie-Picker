@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.DeleteEvent;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -79,6 +80,50 @@ public sealed class DeleteEventHandlerTests
         _eventRepo
             .Setup(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(evt);
+
+    [Fact]
+    public async Task HandleAsync_TheNextNightOfASeries_EndsTheSeriesOnThePreviousNight()
+    {
+        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
+        SetupEvent(MakeEvent() with { Recurrence = RecurrenceFrequency.Weekly, RecurrenceParentEventId = "parent1" });
+        var parent = MakeEvent() with
+        {
+            Id = "parent1",
+            Slug = "parent",
+            Recurrence = RecurrenceFrequency.Weekly,
+            NextOccurrenceEventId = "evt1"
+        };
+        _eventRepo
+            .Setup(r => r.ListByIdsAsync(
+                It.Is<IReadOnlyCollection<string>>(ids => ids.Contains("parent1")), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([parent]);
+        Event? savedParent = null;
+        _eventRepo
+            .Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .Callback((Event e, CancellationToken _) => savedParent = e)
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        await _sut.HandleAsync("evt1");
+
+        Assert.NotNull(savedParent);
+        Assert.Equal("parent1", savedParent!.Id);
+        Assert.Null(savedParent.NextOccurrenceEventId);
+        Assert.Null(savedParent.Recurrence);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ANightWhoseParentAlreadyMovedOn_LeavesTheParentAlone()
+    {
+        _currentUser.Setup(c => c.GetUserId()).Returns("user-1");
+        SetupEvent(MakeEvent() with { RecurrenceParentEventId = "parent1" });
+        _eventRepo
+            .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([MakeEvent() with { Id = "parent1", Recurrence = RecurrenceFrequency.Weekly, NextOccurrenceEventId = "other" }]);
+
+        await _sut.HandleAsync("evt1");
+
+        _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 
     [Fact]
     public async Task HandleAsync_AnonymousUser_ThrowsUnauthorized()
