@@ -104,6 +104,24 @@ describe('icsCalendar', () => {
     expect(ics).toContain('DESCRIPTION:abc\r\n');
   });
 
+  it('buildIcsContent folds every line at 75 octets, never inside a character', () => {
+    const utf8 = new TextEncoder();
+    const loneSurrogate = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+    const title = 'Soirée été à l’écran, séance spéciale 🎬🍿 '.repeat(4).trim();
+    const description = 'A'.repeat(100);
+
+    const ics = buildIcsContent({ ...baseEvent, title, description }, FIXED_NOW)!;
+    const physicalLines = ics.split('\r\n').filter((line) => line.length > 0);
+
+    for (const line of physicalLines) {
+      expect(utf8.encode(line).length).toBeLessThanOrEqual(75);
+      expect(line).not.toMatch(loneSurrogate);
+    }
+    const unfolded = ics.replaceAll('\r\n ', '');
+    expect(unfolded).toContain(`SUMMARY:${title.replaceAll(',', String.raw`\,`)}\r\n`);
+    expect(ics).toContain(`DESCRIPTION:${'A'.repeat(63)}\r\n ${'A'.repeat(37)}\r\n`);
+  });
+
   it('buildIcsContent retourne null pour une date invalide', () => {
     expect(buildIcsContent({ ...baseEvent, date: '' }, FIXED_NOW)).toBeNull();
     expect(buildIcsContent({ ...baseEvent, date: 'pas-une-date' }, FIXED_NOW)).toBeNull();
