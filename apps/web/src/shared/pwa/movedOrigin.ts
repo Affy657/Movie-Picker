@@ -14,7 +14,8 @@ export function captureMovedOriginMarker(
   if (params.get(MOVED_ORIGIN_PARAM) !== LEGACY_ORIGIN_MARKER) return false;
   params.delete(MOVED_ORIGIN_PARAM);
   const search = params.toString();
-  replaceUrl(`${location.pathname}${search ? `?${search}` : ''}${location.hash}`);
+  const query = search ? `?${search}` : '';
+  replaceUrl(`${location.pathname}${query}${location.hash}`);
   if (safeLocalStorageGet(MOVED_ORIGIN_NOTICE_KEY) !== 'dismissed') {
     safeLocalStorageSet(MOVED_ORIGIN_NOTICE_KEY, 'pending');
   }

@@ -5,23 +5,29 @@ const LOCALE_TAG: Record<LocaleCode, string> = {
   en: 'en-GB',
 };
 
-export function formatMyEventsListDate(isoDate: string, locale: LocaleCode): string {
-  const raw = isoDate.trim();
-  const parts = raw.split('-').map((p) => Number.parseInt(p, 10));
-  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return raw;
-  const y = parts[0]!;
-  const m = parts[1]!;
-  const d = parts[2]!;
+function formatIsoDate(
+  isoDate: string,
+  locale: LocaleCode,
+  style: Pick<Intl.DateTimeFormatOptions, 'weekday' | 'month'>
+): string | null {
+  const parts = isoDate
+    .trim()
+    .split('-')
+    .map((p) => Number.parseInt(p, 10));
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
+  const [y, m, d] = parts as [number, number, number];
   const dt = new Date(y, m - 1, d);
-  if (Number.isNaN(dt.getTime())) return raw;
-  const currentYear = new Date().getFullYear();
+  if (Number.isNaN(dt.getTime())) return null;
   const options: Intl.DateTimeFormatOptions = {
-    weekday: 'short',
+    ...style,
     day: 'numeric',
-    month: 'short',
-    ...(y !== currentYear && { year: 'numeric' }),
+    ...(y !== new Date().getFullYear() && { year: 'numeric' }),
   };
   return new Intl.DateTimeFormat(LOCALE_TAG[locale], options).format(dt);
+}
+
+export function formatMyEventsListDate(isoDate: string, locale: LocaleCode): string {
+  return formatIsoDate(isoDate, locale, { weekday: 'short', month: 'short' }) ?? isoDate.trim();
 }
 
 export function formatEventTime(time: string): string {
@@ -38,34 +44,10 @@ export function formatEventDateLong(
   locale: LocaleCode,
   joiner: string
 ): string {
-  const raw = isoDate.trim();
-  const parts = raw.split('-').map((p) => Number.parseInt(p, 10));
-  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return raw;
-  const y = parts[0]!;
-  const dt = new Date(y, parts[1]! - 1, parts[2]!);
-  if (Number.isNaN(dt.getTime())) return raw;
-  const options: Intl.DateTimeFormatOptions = {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'short',
-    ...(y !== new Date().getFullYear() && { year: 'numeric' }),
-  };
-  const datePart = new Intl.DateTimeFormat(LOCALE_TAG[locale], options).format(dt);
-  return `${datePart} ${joiner} ${formatEventTime(time)}`;
+  const datePart = formatIsoDate(isoDate, locale, { weekday: 'long', month: 'short' });
+  return datePart === null ? isoDate.trim() : `${datePart} ${joiner} ${formatEventTime(time)}`;
 }
 
 export function formatEventTitleDate(isoDate: string, locale: LocaleCode): string {
-  const raw = isoDate.trim();
-  const parts = raw.split('-').map((p) => Number.parseInt(p, 10));
-  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return raw;
-  const y = parts[0]!;
-  const dt = new Date(y, parts[1]! - 1, parts[2]!);
-  if (Number.isNaN(dt.getTime())) return raw;
-  const options: Intl.DateTimeFormatOptions = {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    ...(y !== new Date().getFullYear() && { year: 'numeric' }),
-  };
-  return new Intl.DateTimeFormat(LOCALE_TAG[locale], options).format(dt);
+  return formatIsoDate(isoDate, locale, { weekday: 'long', month: 'long' }) ?? isoDate.trim();
 }

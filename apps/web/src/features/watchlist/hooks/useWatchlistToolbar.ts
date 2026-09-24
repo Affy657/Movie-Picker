@@ -133,8 +133,7 @@ function itemMatchesSearch(item: WatchlistItem, query: string): boolean {
 function itemMatchesDecade(item: WatchlistItem, decade: string): boolean {
   const year = Number.parseInt(item.year, 10);
   const from = Number.parseInt(decade, 10);
-  if (Number.isNaN(year) || year < from || year > from + 9) return false;
-  return true;
+  return !(Number.isNaN(year) || year < from || year > from + 9);
 }
 
 function itemMatchesRuntime(item: WatchlistItem, range: [number, number]): boolean {

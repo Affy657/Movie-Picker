@@ -16,6 +16,6 @@ describe('AccountLoadingSkeleton', () => {
     const status = screen.getByRole('status');
     expect(status).toHaveAttribute('aria-busy', 'true');
     expect(status).toHaveTextContent(fr.auth.account.loadingPlaceholder);
-    expect(container.querySelectorAll('[aria-hidden="true"] span').length).toBe(9);
+    expect(container.querySelectorAll('[aria-hidden="true"] span')).toHaveLength(9);
   });
 });

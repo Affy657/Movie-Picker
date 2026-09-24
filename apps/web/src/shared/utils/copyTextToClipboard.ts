@@ -1,3 +1,5 @@
+type LegacyCopyDocument = { execCommand(commandId: 'copy'): boolean };
+
 function copyWithExecCommand(text: string): boolean {
   const textarea = document.createElement('textarea');
   textarea.value = text;
@@ -11,8 +13,9 @@ function copyWithExecCommand(text: string): boolean {
   textarea.focus();
   textarea.select();
   textarea.setSelectionRange(0, text.length);
+  const legacyDocument: LegacyCopyDocument = document;
   try {
-    return document.execCommand('copy');
+    return legacyDocument.execCommand('copy');
   } catch {
     return false;
   } finally {

@@ -9,6 +9,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
+import type { MovieDetails } from '@/features/movies/api/moviesApi';
 import type { RatingScale } from '@/shared/types/theme';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import { formatTmdbVote } from '@/shared/utils/formatTmdbVote';
@@ -117,23 +118,248 @@ function hasLibraryFooterActions(
   return !!libraryContext.onToggleWatchlist || !!libraryContext.onProposeToEvent;
 }
 
-export default function MovieDetailsModal({
-  open,
-  tmdbId,
-  mediaType,
-  title: titleProp,
-  year: yearProp,
-  posterPath: posterPathProp,
-  voteAverage: voteAverageProp,
-  runtimeMinutes: runtimeMinutesProp,
-  ratingScale: ratingScaleProp,
-  watchProviders,
-  watchPageUrl,
-  initialTab,
+interface MovieSummary {
+  title: string;
+  year: string | undefined;
+  posterSrc: string | undefined;
+  posterSrcSet: string | undefined;
+  backdropSrc: string | null;
+  genres: string[];
+  facts: string[];
+  providers: WatchProviderOffer[];
+  watchPageUrl: string | null | undefined;
+}
+
+function lengthLabelOf(
+  props: MovieDetailsModalProps,
+  details: MovieDetails | undefined,
+  t: Translate
+): string | null {
+  if (props.mediaType === 'tv' && details?.seasonCount) {
+    return pluralizeCount(
+      details.seasonCount,
+      'movies.details.seasonsOne',
+      'movies.details.seasonsMany',
+      t
+    );
+  }
+  return formatRuntimeMinutes(props.runtimeMinutes ?? details?.runtimeMinutes);
+}
+
+function summarizeMovie(
+  props: MovieDetailsModalProps,
+  details: MovieDetails | undefined,
+  userRatingScale: RatingScale | undefined,
+  t: Translate
+): MovieSummary {
+  const year = props.year ?? yearFromDate(details?.releaseDate);
+  const posterSrc = posterImageSrc(props.posterPath ?? details?.posterPath);
+  const voteLabel = formatTmdbVote(
+    props.voteAverage ?? details?.voteAverage,
+    props.ratingScale ?? userRatingScale
+  );
+  const facts = [year, lengthLabelOf(props, details, t), voteLabel].filter(
+    (fact): fact is string => !!fact
+  );
+  const ownProviders = props.watchProviders !== undefined;
+  return {
+    title: props.title ?? details?.title ?? '',
+    year,
+    posterSrc,
+    posterSrcSet: tmdbPosterSrcSetForList(posterSrc),
+    backdropSrc: details?.backdropPath ?? null,
+    genres: details?.genres ?? [],
+    facts,
+    providers: props.watchProviders ?? details?.watchProviders ?? [],
+    watchPageUrl: ownProviders ? props.watchPageUrl : (details?.tmdbWatchPageUrl ?? null),
+  };
+}
+
+function MovieDetailsHeader({
+  summary,
+  titleId,
+  dragBind,
+  backdropLoaded,
+  onBackdropLoaded,
+  onClose,
+  t,
+}: Readonly<{
+  summary: MovieSummary;
+  titleId: string;
+  dragBind: ReturnType<typeof useSheetDrag>;
+  backdropLoaded: boolean;
+  onBackdropLoaded: () => void;
+  onClose: () => void;
+  t: Translate;
+}>) {
+  const { title, facts, genres, posterSrc, posterSrcSet, backdropSrc } = summary;
+  return (
+    <div className={clsx(dragStyles.grab, styles.grab)} {...dragBind}>
+      <span
+        className={clsx(
+          dragStyles.handle,
+          dragStyles.handleMobileOnly,
+          styles.handle,
+          backdropSrc && styles.handleOnBackdrop
+        )}
+        aria-hidden="true"
+      />
+      <div className={clsx(styles.header, backdropSrc && styles.headerWithBackdrop)}>
+        {backdropSrc ? (
+          <div className={styles.backdrop} aria-hidden="true">
+            <img
+              src={backdropSrc}
+              alt=""
+              decoding="async"
+              className={clsx(styles.backdropImg, backdropLoaded && styles.backdropImgLoaded)}
+              onLoad={onBackdropLoaded}
+            />
+          </div>
+        ) : null}
+        <IconButton
+          className={styles.close}
+          tone={backdropSrc ? 'onPoster' : 'default'}
+          ariaLabel={t('common.close')}
+          onClick={onClose}
+        >
+          <X aria-hidden size={ICON_SIZE.lg} />
+        </IconButton>
+        <div className={styles.headerRow}>
+          {posterSrc ? (
+            <img
+              src={posterSrc}
+              srcSet={posterSrcSet}
+              sizes="80px"
+              alt=""
+              className={styles.poster}
+            />
+          ) : (
+            <div className={styles.posterPlaceholder} aria-hidden>
+              <Film size={ICON_SIZE.xl} />
+            </div>
+          )}
+          <div className={styles.headerInfo}>
+            <h2 id={titleId} className={styles.title}>
+              {title}
+            </h2>
+            {facts.length > 0 ? (
+              <p className={styles.facts}>
+                {facts.map((fact) => (
+                  <span key={fact}>{fact}</span>
+                ))}
+              </p>
+            ) : null}
+            {genres.length > 0 ? (
+              <ul className={styles.genres} aria-label={t('movies.details.genresLabel')}>
+                {genres.map((genre) => (
+                  <li key={genre}>
+                    <Chip size="sm" tone="muted">
+                      {genre}
+                    </Chip>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WatchlistToggleButton({
+  inWatchlist,
+  onToggle,
+  t,
+}: Readonly<{ inWatchlist: boolean; onToggle: () => void; t: Translate }>) {
+  return (
+    <Button size="sm" onClick={onToggle}>
+      {inWatchlist ? (
+        <BookmarkCheck aria-hidden size={ICON_SIZE.md} />
+      ) : (
+        <Bookmark aria-hidden size={ICON_SIZE.md} />
+      )}
+      <span className={styles.footerBtnLabel}>
+        {inWatchlist ? t('watchlist.card.removeAction') : t('watchlist.card.addAction')}
+      </span>
+    </Button>
+  );
+}
+
+function EventDetailsFooter({
   eventContext,
+  title,
+  t,
+}: Readonly<{ eventContext: MovieDetailsEventContext; title: string; t: Translate }>) {
+  const removedByHost = !eventContext.isMine && eventContext.isHost;
+  return (
+    <div className={styles.footer}>
+      {eventContext.onToggleWatchlist && (
+        <WatchlistToggleButton
+          inWatchlist={!!eventContext.isInWatchlist}
+          onToggle={eventContext.onToggleWatchlist}
+          t={t}
+        />
+      )}
+      {eventContext.wheelExclusion && (
+        <Button size="sm" onClick={eventContext.wheelExclusion.onToggle}>
+          {eventContext.wheelExclusion.excluded ? (
+            <RotateCcw aria-hidden size={ICON_SIZE.md} />
+          ) : (
+            <Disc3 aria-hidden size={ICON_SIZE.md} />
+          )}
+          <span className={styles.footerBtnLabel}>{t(wheelActionKey(eventContext))}</span>
+        </Button>
+      )}
+      {eventContext.canRemove && (
+        <Button
+          size="sm"
+          tone="danger"
+          className={styles.footerBtnDanger}
+          onClick={eventContext.onRemove}
+          aria-label={removeAriaLabel(eventContext, title, t)}
+          title={removedByHost ? t('movies.list.removeAsHostTitle') : undefined}
+        >
+          <Trash2 aria-hidden size={ICON_SIZE.md} />
+          <span className={styles.footerBtnLabel}>{t('movies.list.removeButton')}</span>
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function LibraryDetailsFooter({
   libraryContext,
   onClose,
-}: Readonly<MovieDetailsModalProps>) {
+  t,
+}: Readonly<{ libraryContext: MovieDetailsLibraryContext; onClose: () => void; t: Translate }>) {
+  return (
+    <div className={styles.footer}>
+      {libraryContext.onToggleWatchlist && (
+        <WatchlistToggleButton
+          inWatchlist={!!libraryContext.inWatchlist}
+          onToggle={libraryContext.onToggleWatchlist}
+          t={t}
+        />
+      )}
+      {libraryContext.onProposeToEvent && (
+        <Button
+          size="sm"
+          onClick={() => {
+            onClose();
+            libraryContext.onProposeToEvent?.();
+          }}
+        >
+          <ListPlus aria-hidden size={ICON_SIZE.md} />
+          <span className={styles.footerBtnLabel}>{t('watchlist.card.proposeAction')}</span>
+        </Button>
+      )}
+    </div>
+  );
+}
+
+export default function MovieDetailsModal(props: Readonly<MovieDetailsModalProps>) {
+  const { open, tmdbId, mediaType, initialTab, eventContext, libraryContext, onClose } = props;
   const { t } = useTranslation();
   const { user } = useAuth();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -160,37 +386,9 @@ export default function MovieDetailsModal({
   }, [open]);
 
   const detailsQuery = useMovieDetails(tmdbId, open, mediaType);
-  const details = detailsQuery.data;
-  const isTv = mediaType === 'tv';
-
-  const title = titleProp ?? details?.title ?? '';
-  const year = yearProp ?? yearFromDate(details?.releaseDate);
-  const posterSrc = posterImageSrc(posterPathProp ?? details?.posterPath);
-  const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
-  const backdropSrc = details?.backdropPath ?? null;
-  const genres = details?.genres ?? [];
-  const voteLabel = formatTmdbVote(
-    voteAverageProp ?? details?.voteAverage,
-    ratingScaleProp ?? user?.ratingScale
-  );
-  const lengthLabel =
-    isTv && details?.seasonCount
-      ? pluralizeCount(
-          details.seasonCount,
-          'movies.details.seasonsOne',
-          'movies.details.seasonsMany',
-          t
-        )
-      : formatRuntimeMinutes(runtimeMinutesProp ?? details?.runtimeMinutes);
-  const facts = [year, lengthLabel, voteLabel].filter((fact): fact is string => !!fact);
-
-  const providers = watchProviders ?? details?.watchProviders ?? [];
-  const resolvedWatchPageUrl =
-    watchProviders === undefined ? (details?.tmdbWatchPageUrl ?? null) : watchPageUrl;
-  const tabs = buildDetailsTabs(!!eventContext, isTv, providers.length, t);
-
-  const wheelLabel = t(wheelActionKey(eventContext));
-  const removeAria = removeAriaLabel(eventContext, title, t);
+  const summary = summarizeMovie(props, detailsQuery.data, user?.ratingScale, t);
+  const { title, year, providers } = summary;
+  const tabs = buildDetailsTabs(!!eventContext, mediaType === 'tv', providers.length, t);
   const hasFooterActions = hasEventFooterActions(eventContext);
   const hasLibraryFooter = hasLibraryFooterActions(eventContext, libraryContext);
 
@@ -209,76 +407,15 @@ export default function MovieDetailsModal({
     >
       {open && (
         <>
-          <div className={clsx(dragStyles.grab, styles.grab)} {...dragBind}>
-            <span
-              className={clsx(
-                dragStyles.handle,
-                dragStyles.handleMobileOnly,
-                styles.handle,
-                backdropSrc && styles.handleOnBackdrop
-              )}
-              aria-hidden="true"
-            />
-            <div className={clsx(styles.header, backdropSrc && styles.headerWithBackdrop)}>
-              {backdropSrc ? (
-                <div className={styles.backdrop} aria-hidden="true">
-                  <img
-                    src={backdropSrc}
-                    alt=""
-                    decoding="async"
-                    className={clsx(styles.backdropImg, backdropLoaded && styles.backdropImgLoaded)}
-                    onLoad={() => setBackdropLoaded(true)}
-                  />
-                </div>
-              ) : null}
-              <IconButton
-                className={styles.close}
-                tone={backdropSrc ? 'onPoster' : 'default'}
-                ariaLabel={t('common.close')}
-                onClick={onClose}
-              >
-                <X aria-hidden size={ICON_SIZE.lg} />
-              </IconButton>
-              <div className={styles.headerRow}>
-                {posterSrc ? (
-                  <img
-                    src={posterSrc}
-                    srcSet={posterSrcSet}
-                    sizes="80px"
-                    alt=""
-                    className={styles.poster}
-                  />
-                ) : (
-                  <div className={styles.posterPlaceholder} aria-hidden>
-                    <Film size={ICON_SIZE.xl} />
-                  </div>
-                )}
-                <div className={styles.headerInfo}>
-                  <h2 id={titleId} className={styles.title}>
-                    {title}
-                  </h2>
-                  {facts.length > 0 ? (
-                    <p className={styles.facts}>
-                      {facts.map((fact) => (
-                        <span key={fact}>{fact}</span>
-                      ))}
-                    </p>
-                  ) : null}
-                  {genres.length > 0 ? (
-                    <ul className={styles.genres} aria-label={t('movies.details.genresLabel')}>
-                      {genres.map((genre) => (
-                        <li key={genre}>
-                          <Chip size="sm" tone="muted">
-                            {genre}
-                          </Chip>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </div>
+          <MovieDetailsHeader
+            summary={summary}
+            titleId={titleId}
+            dragBind={dragBind}
+            backdropLoaded={backdropLoaded}
+            onBackdropLoaded={() => setBackdropLoaded(true)}
+            onClose={onClose}
+            t={t}
+          />
 
           <div className={styles.tabsBar}>
             <Tabs
@@ -318,7 +455,7 @@ export default function MovieDetailsModal({
               {providers.length > 0 ? (
                 <WatchProviderChips
                   providers={providers}
-                  watchPageUrl={resolvedWatchPageUrl}
+                  watchPageUrl={summary.watchPageUrl}
                   separators
                   labelStyle="text"
                 />
@@ -328,82 +465,13 @@ export default function MovieDetailsModal({
             </TabPanel>
           </div>
 
-          {hasFooterActions && eventContext && (
-            <div className={styles.footer}>
-              {eventContext.onToggleWatchlist && (
-                <Button size="sm" onClick={eventContext.onToggleWatchlist}>
-                  {eventContext.isInWatchlist ? (
-                    <BookmarkCheck aria-hidden size={ICON_SIZE.md} />
-                  ) : (
-                    <Bookmark aria-hidden size={ICON_SIZE.md} />
-                  )}
-                  <span className={styles.footerBtnLabel}>
-                    {eventContext.isInWatchlist
-                      ? t('watchlist.card.removeAction')
-                      : t('watchlist.card.addAction')}
-                  </span>
-                </Button>
-              )}
-              {eventContext.wheelExclusion && (
-                <Button size="sm" onClick={eventContext.wheelExclusion.onToggle}>
-                  {eventContext.wheelExclusion.excluded ? (
-                    <RotateCcw aria-hidden size={ICON_SIZE.md} />
-                  ) : (
-                    <Disc3 aria-hidden size={ICON_SIZE.md} />
-                  )}
-                  <span className={styles.footerBtnLabel}>{wheelLabel}</span>
-                </Button>
-              )}
-              {eventContext.canRemove && (
-                <Button
-                  size="sm"
-                  tone="danger"
-                  className={styles.footerBtnDanger}
-                  onClick={eventContext.onRemove}
-                  aria-label={removeAria}
-                  title={
-                    !eventContext.isMine && eventContext.isHost
-                      ? t('movies.list.removeAsHostTitle')
-                      : undefined
-                  }
-                >
-                  <Trash2 aria-hidden size={ICON_SIZE.md} />
-                  <span className={styles.footerBtnLabel}>{t('movies.list.removeButton')}</span>
-                </Button>
-              )}
-            </div>
-          )}
+          {hasFooterActions && eventContext ? (
+            <EventDetailsFooter eventContext={eventContext} title={title} t={t} />
+          ) : null}
 
-          {hasLibraryFooter && libraryContext && (
-            <div className={styles.footer}>
-              {libraryContext.onToggleWatchlist && (
-                <Button size="sm" onClick={libraryContext.onToggleWatchlist}>
-                  {libraryContext.inWatchlist ? (
-                    <BookmarkCheck aria-hidden size={ICON_SIZE.md} />
-                  ) : (
-                    <Bookmark aria-hidden size={ICON_SIZE.md} />
-                  )}
-                  <span className={styles.footerBtnLabel}>
-                    {libraryContext.inWatchlist
-                      ? t('watchlist.card.removeAction')
-                      : t('watchlist.card.addAction')}
-                  </span>
-                </Button>
-              )}
-              {libraryContext.onProposeToEvent && (
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    onClose();
-                    libraryContext.onProposeToEvent?.();
-                  }}
-                >
-                  <ListPlus aria-hidden size={ICON_SIZE.md} />
-                  <span className={styles.footerBtnLabel}>{t('watchlist.card.proposeAction')}</span>
-                </Button>
-              )}
-            </div>
-          )}
+          {hasLibraryFooter && libraryContext ? (
+            <LibraryDetailsFooter libraryContext={libraryContext} onClose={onClose} t={t} />
+          ) : null}
 
           <p className={styles.attribution}>{t('movies.details.regionAttribution')}</p>
 

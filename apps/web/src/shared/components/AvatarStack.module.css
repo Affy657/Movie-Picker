@@ -4,6 +4,11 @@
   align-items: center;
 }
 
+.faces {
+  display: inline-flex;
+  align-items: center;
+}
+
 .item {
   box-shadow: 0 0 0 2px var(--avatar-stack-ring);
 }
