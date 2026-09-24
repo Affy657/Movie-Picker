@@ -78,6 +78,41 @@ describe('useHistoryToolbar', () => {
     expect(result.current.visibleEvents.map((e) => e.id)).toEqual(['b', 'c', 'a']);
   });
 
+  it('orders nights of the same day by their start time, in both directions', () => {
+    const sameDay = [
+      event({ id: 'late', date: '2026-06-01', time: '21:30' }),
+      event({ id: 'early', date: '2026-06-01', time: '18:00' }),
+      event({ id: 'next-day', date: '2026-06-02', time: '12:00' }),
+    ];
+    const { result } = renderHook(() => useHistoryToolbar({ events: sameDay }));
+    expect(result.current.visibleEvents.map((e) => e.id)).toEqual(['next-day', 'late', 'early']);
+
+    act(() => result.current.setSortBy('date'));
+    expect(result.current.visibleEvents.map((e) => e.id)).toEqual(['early', 'late', 'next-day']);
+  });
+
+  it('keeps the API order between ties, whatever the direction', () => {
+    const ties = [
+      event({ id: 'first', title: 'Soirée', movieCount: 2 }),
+      event({ id: 'second', title: 'soirée', movieCount: 2 }),
+    ];
+    const { result } = renderHook(() => useHistoryToolbar({ events: ties }));
+
+    act(() => result.current.setSortBy('movieCount'));
+    expect(result.current.sortDir).toBe('desc');
+    expect(result.current.visibleEvents.map((e) => e.id)).toEqual(['first', 'second']);
+
+    act(() => result.current.setSortBy('movieCount'));
+    expect(result.current.visibleEvents.map((e) => e.id)).toEqual(['first', 'second']);
+
+    act(() => result.current.setSortBy('title'));
+    expect(result.current.visibleEvents.map((e) => e.id)).toEqual(['first', 'second']);
+
+    act(() => result.current.setSortBy('title'));
+    expect(result.current.sortDir).toBe('desc');
+    expect(result.current.visibleEvents.map((e) => e.id)).toEqual(['first', 'second']);
+  });
+
   it('filters by role', () => {
     const { result } = renderHook(() => useHistoryToolbar({ events: EVENTS }));
     act(() => result.current.toggleRole('hosted'));
