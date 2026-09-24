@@ -90,8 +90,8 @@ public sealed class InMemoryMovieRepositoryTests
     {
         await _repo.InsertAsync(Mk(title: "Inception"));
 
-        Assert.True(await _repo.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "  inception  "));
-        Assert.False(await _repo.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "Tenet"));
+        Assert.True(await _repo.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "  inception  ", "2010"));
+        Assert.False(await _repo.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "Tenet", "2010"));
     }
 
     [Fact]

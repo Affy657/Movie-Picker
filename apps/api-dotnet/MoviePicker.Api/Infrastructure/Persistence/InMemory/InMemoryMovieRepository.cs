@@ -55,11 +55,16 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         }
     }
 
-    public Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, CancellationToken ct = default)
+    public Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, string? year, CancellationToken ct = default)
     {
         var list = _byEventId.GetOrAdd(eventId, _ => []);
         var t = title.Trim();
-        lock (list) { return Task.FromResult(list.Any(m => string.Equals(m.Title, t, StringComparison.OrdinalIgnoreCase))); }
+        var y = MovieYear.Normalize(year);
+        lock (list)
+        {
+            return Task.FromResult(list.Any(m =>
+                string.Equals(m.Title, t, StringComparison.OrdinalIgnoreCase) && MovieYear.Normalize(m.Year) == y));
+        }
     }
 
     public Task<int> CountByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
