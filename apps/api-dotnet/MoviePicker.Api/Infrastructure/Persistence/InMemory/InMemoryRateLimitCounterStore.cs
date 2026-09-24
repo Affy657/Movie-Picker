@@ -6,10 +6,16 @@ namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
 public sealed class InMemoryRateLimitCounterStore : IRateLimitCounterStore
 {
     private readonly ConcurrentDictionary<string, Counter> _counters = new();
+    private readonly TimeProvider _clock;
+
+    public InMemoryRateLimitCounterStore(TimeProvider? clock = null)
+    {
+        _clock = clock ?? TimeProvider.System;
+    }
 
     public Task<long> IncrementAsync(string key, DateTimeOffset expiresAt, CancellationToken ct = default)
     {
-        PurgeExpired(expiresAt);
+        PurgeExpired(_clock.GetUtcNow());
         var counter = _counters.GetOrAdd(key, _ => new Counter(expiresAt));
         return Task.FromResult(counter.Increment());
     }
@@ -25,8 +31,8 @@ public sealed class InMemoryRateLimitCounterStore : IRateLimitCounterStore
     {
         foreach (var entry in _counters)
         {
-            if (entry.Value.ExpiresAt < now)
-                _counters.TryRemove(entry.Key, out _);
+            if (entry.Value.ExpiresAt <= now)
+                _counters.TryRemove(entry);
         }
     }
 
