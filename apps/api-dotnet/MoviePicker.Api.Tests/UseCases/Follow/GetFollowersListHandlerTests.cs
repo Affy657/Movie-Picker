@@ -121,4 +121,23 @@ public sealed class GetFollowersListHandlerTests
 
         Assert.Equal(["carla", "hidden"], owner.Items.Select(i => i.Handle));
     }
+    [Fact]
+    public async Task HandleAsync_APrivateFollowerTheOwnerCannotFollow_OffersNoFollowButton()
+    {
+        _users.Setup(u => u.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(U("target", "alice"));
+        _follows.Setup(f => f.GetFollowerIdsAsync("target", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["u1", "u2", "u3"]);
+        _users.Setup(u => u.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                U("u1", "carla"),
+                U("u2", "hidden") with { IsProfilePublic = false },
+                U("u3", "hiddenfollowedback") with { IsProfilePublic = false }
+            ]);
+        _follows.Setup(f => f.GetFollowingIdsAsync("target", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["u3"]);
+
+        var owner = await _sut.HandleAsync("alice", "target");
+
+        Assert.Equal([false, null, true], owner.Items.Select(i => i.IsFollowedByMe));
+    }
 }
