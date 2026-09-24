@@ -167,7 +167,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 **Objectif** : home page inspirationnelle, qui transforme l'accueil en vrai point d'entrée du produit, accessible sans compte et enrichi une fois connecté.
 
-Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est nécessaire pour que la home tienne debout, et deux dépendent d'un chantier d'une autre version.
+Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est nécessaire pour que la home tienne debout, et deux dépendent d'un chantier d'une autre version. Quatre en ont depuis été retirés, et le cinquième est devenu le fil d'actualité de la V1.10.
 
 ### 🏠 Home page
 
@@ -262,26 +262,26 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.9, planifiée (33 points)
+## 📋 V1.9, planifiée (30 points)
 
-**Objectif** : une soirée en temps réel, lisible même hors-ligne et cadrée par le thème de l'hôte, avec la sécurité du compte et le confort au quotidien en complément.
+**Objectif** : une soirée en temps réel, lisible même hors-ligne et cadrée par le thème de l'hôte, avec le confort au quotidien en complément.
 
 - ⬜ `L` **Synchronisation temps réel** : remplacer le polling par une connexion temps réel ; propositions, votes et arrivées de participants apparaissent sans délai perceptible.
 - ⬜ `M` **Présence sur la page soirée** : avatars des participants actuellement connectés et signal « en train de proposer un film », posés sur la connexion temps réel.
 - ⬜ `M` **Consultation hors-ligne de la dernière soirée** : la dernière vue soirée reste lisible sans réseau, avec une bannière « Données en cache, reconnexion en cours ». Lecture seule : les actions attendent le retour du réseau.
 - ⬜ `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
-- ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
 - ⬜ `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation ; recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème.
 
 ---
 
-## 📋 V1.10, planifiée (42 points)
+## 📋 V1.10, planifiée (45 points)
 
 **Objectif** : ouvrir Movie Picker au-delà de son cercle, avec la confiance que cela demande : des comptes mieux protégés, un état du service consultable, une aide en ligne et des actions qui survivent à une coupure de réseau.
 
 - ⬜ `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Dépend de la synchronisation temps réel et de la consultation hors-ligne (V1.9).
 - ⬜ `L` **Fil d'actualité** : un fil qui rassemble l'activité des comptes suivis (soirées créées et terminées, films notés, listes publiées) et les soirées publiques à venir. Il prolonge la rangée « Vos amis ont vu » de la home, limitée aux films vus.
 - ⬜ `L` **Soirée publique** : une soirée que l'hôte rend publique apparaît sur une page de découverte, et n'importe quel compte peut la rejoindre. L'hôte peut bannir un participant, qui ne peut alors plus revenir par le lien.
+- ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
 - ⬜ `L` **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
 - ⬜ `M` **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
 - ⬜ `M` **Alerte nouvelle connexion** : e-mail automatique envoyé à l'utilisateur lors d'une connexion depuis un nouvel appareil ou navigateur.
@@ -290,7 +290,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## Backlog produit (non priorisé sur une release) (143 points, 1 non estimé)
+## Backlog produit (non priorisé sur une release) (139 points, 1 non estimé)
 
 > **Note V2, application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
@@ -301,10 +301,6 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - `L` **Badges / achievements** : 4 badges (Organisateur, Cinéphile, Faiseur de rois, Juré assidu), code de calcul supprimé ; à concevoir avec un design abouti et réimplémenter.
 - `M` **Compatibilité ciné** : score de compatibilité cinématographique avec un ami basé sur les films « déjà vu » en commun ; nécessite les statistiques utilisateur et potentiellement l'intégration Letterboxd pour être complet.
 - `S` **Statistique : note moyenne des films gagnants** : ajouter dans la section stats du profil public la moyenne des notes TMDB des films tirés gagnants dans les soirées auxquelles l'utilisateur a participé ; aucune infra supplémentaire, les notes TMDB sont déjà stockées avec les films.
-- `S` **Home : prochaine soirée mise en avant** : carte principale avec titre, heure et accès direct à la soirée imminente, ce qui évite de passer par « Mes soirées ». La rangée « À voir avant votre prochaine soirée » livrée en V1.5 donne déjà l'accès, sans la mise en avant.
-- `S` **Home : invitations en attente** : rappel des invitations non répondues directement sur la home, plus visible que les notifications seules.
-- `S` **Home : soirée rapide** : bouton « Créer une soirée » avec la dernière config utilisée en un clic ; dépend des templates de soirée (V1.6).
-- `S` **Home : derniers films gagnants** : les 3-4 films tirés dans ses propres soirées récentes, ce qui évite de reproposer un film qu'on vient de voir. Distinct de « Vos amis ont vu », livré en V1.5, qui couvre les soirées des comptes suivis.
 - `L` **Sondage de disponibilité** : avant de créer une soirée, l'hôte propose plusieurs créneaux à ses follows et chacun coche ses disponibilités. L'hôte retient le créneau final, qui crée la soirée.
 - `L` **Plateformes streaming par compte** : chaque utilisateur renseigne ses abonnements dans ses paramètres, et la page d'une soirée affiche les plateformes communes à tous les participants. Les films peuvent être filtrés à celles-ci.
 - `XL` **Messages privés** : messagerie directe entre deux utilisateurs qui se suivent mutuellement ; accessible depuis le profil public ou la liste de follows ; permet d'organiser une soirée ou d'échanger en dehors du contexte d'une soirée existante.
