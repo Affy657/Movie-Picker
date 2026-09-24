@@ -31,4 +31,34 @@ public sealed class InMemoryRateLimitCounterStoreTests
 
         Assert.Equal(1, await _store.IncrementAsync("b", _expiry));
     }
+
+    [Fact]
+    public async Task IncrementAsync_OfALongerWindow_KeepsTheLiveShorterCounters()
+    {
+        await _store.IncrementAsync("a", _expiry);
+        await _store.IncrementAsync("b", _expiry.AddMinutes(14));
+
+        Assert.Equal(2, await _store.IncrementAsync("a", _expiry));
+    }
+
+    [Fact]
+    public async Task IncrementAsync_OnceTheWindowHasEnded_StartsCountingAgain()
+    {
+        var windowStart = new DateTimeOffset(2026, 9, 24, 12, 0, 0, TimeSpan.Zero);
+        var clock = new SettableClock(windowStart);
+        var store = new InMemoryRateLimitCounterStore(clock);
+        await store.IncrementAsync("a", windowStart.AddMinutes(1));
+        await store.IncrementAsync("a", windowStart.AddMinutes(1));
+
+        clock.Now = windowStart.AddMinutes(1);
+
+        Assert.Equal(1, await store.IncrementAsync("a", windowStart.AddMinutes(2)));
+    }
+
+    private sealed class SettableClock(DateTimeOffset now) : TimeProvider
+    {
+        public DateTimeOffset Now { get; set; } = now;
+
+        public override DateTimeOffset GetUtcNow() => Now;
+    }
 }
