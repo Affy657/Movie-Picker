@@ -17,6 +17,12 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Security
 
+- **Le jeton d'hôte et l'adresse IP ne partent plus vers le suivi d'erreurs** : les en-têtes qui les portaient étaient transmis tels quels à Sentry avec chaque erreur et chaque requête échantillonnée, et les requêtes échantillonnées gardaient aussi le `?host=` d'un ancien lien.
+- **Les codes de connexion Google et GitHub ne s'écrivent plus dans les journaux du serveur** au retour du fournisseur.
+- **Le pseudo d'un profil privé ne s'affiche plus dans les notifications des autres** : rejoindre une soirée, y proposer un film ou suivre quelqu'un laissait voir son pseudo, et un lien vers un profil introuvable.
+- **Retirer son consentement aux mesures d'audience est respecté même pendant le chargement** : un refus donné dans les premières secondes pouvait être annulé par la fin du chargement de PostHog, qui reprenait alors la mesure.
+- **Le choix des cookies se modifie depuis le pied de page** (« Gérer les cookies ») : une fois le bandeau validé, il n'existait plus aucun moyen de retirer son accord.
+- **Une adresse de retour piégée après la connexion ne fait plus planter la page** : un lien de connexion dont l'adresse de retour cachait une tabulation ou un saut de ligne menait vers un autre site et bloquait l'application.
 - **Une soirée ne s'ouvre plus que par son lien**, plus par son identifiant interne.
 - **Les adresses de soirée sont vérifiées avant tout appel au serveur** : le code de la soirée est encodé dans chaque requête, une adresse malformée affiche « soirée introuvable », et l'ajout à l'agenda ne laisse plus passer de saut de ligne.
 - **Changer ou réinitialiser son mot de passe coupe aussi les notifications push** des appareils abonnés, se déconnecter désabonne le navigateur, et un appareil encore connecté se réabonne de lui-même ; un navigateur ne reçoit plus que les notifications du dernier compte qui s'y est connecté, et seuls les services push de Google, Mozilla, Microsoft et Apple sont acceptés, y compris pour les abonnements déjà enregistrés.
@@ -98,6 +104,46 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
+- **Un tirage relancé après une coupure réseau retrouve son gagnant** : quand la réponse d'un tirage se perdait sur une soirée déjà en suspens, le second clic répondait « soirée terminée », et le gagnant n'était jamais annoncé.
+- **Le gagnant de la roue est annoncé même si l'hôte quitte la page pendant qu'elle tourne**, et une erreur au tirage suivant s'affiche dans la fenêtre de la roue, avec un bouton qui montre son attente, au lieu de rester cachée derrière.
+- **La roue s'ouvre sur les iPhone restés sous iOS 16** : les confettis faisaient planter la page de la soirée sur Safari avant la version 17.
+- **Un film exclu de la roue ne peut plus être tiré au même instant** par un second hôte, ni un film proposé par un participant retiré pendant son ajout survivre à ce retrait.
+- **Le plafond de participants tient face à une inscription simultanée** : baisser le plafond pendant qu'un invité rejoignait pouvait laisser six participants dans une soirée limitée à cinq.
+- **Un remake se propose à côté du film dont il reprend le titre** : « Le Roi lion » de 2019 était refusé dès que celui de 1994 était proposé.
+- **Supprimer la prochaine soirée d'une série arrête la série proprement** : la soirée précédente affichait encore « La prochaine soirée est déjà créée » et bloquait le réglage de récurrence.
+- **Une soirée datée de l'an 9999 ne bloque plus les séries des autres hôtes**, et « Mes soirées » ne plante plus sur une date aussi lointaine.
+- **Modifier le thème d'une ancienne soirée ne change plus son mode de tirage** : sur une soirée enregistrée sans réglages, la première modification passait le tirage en « pondéré par les votes » et retirait l'aperçu riche.
+- **Le thème d'une soirée garde son emoji** quand il n'a pas de texte (« 🎃 ») ou que l'emoji est composé (« 👨‍👩‍👧 Famille ») : il revenait dans le champ texte à la réouverture des réglages.
+- **Échap dans le nom d'un modèle de soirée n'annule que ce nom**, sans fermer toute la feuille des réglages.
+- **Une soirée commencée entre 1 h et 2 h un jour de changement d'heure** s'affiche, se compte à rebours et s'ajoute à l'agenda à la bonne heure.
+- **La date proposée à la création d'une soirée n'est plus déjà passée** quand on ouvre le formulaire pile à l'heure ou à la demie.
+- **Proposer un film depuis Ma liste, l'accueil ou un profil met à jour la soirée et « Mes soirées »**, qui gardaient l'ancien nombre de films jusqu'à cinq minutes.
+- **Les réglages de notifications s'affichent sur un navigateur sans notifications push** : sur iPhone hors de l'app installée, on ne pouvait plus couper les notifications de la boîte de réception.
+- **Suivre à nouveau quelqu'un ne le notifie plus à chaque fois** : désabonner puis réabonner envoyait une nouvelle notification et un push à chaque clic.
+- **Les films Letterboxd à confirmer ne sont plus signalés chaque jour** tant qu'ils restent les mêmes, et les titres passés restent comptés comme en attente au lieu de disparaître du récapitulatif.
+- **La synchronisation automatique de Letterboxd suit le compte connecté** : elle ne partait plus après un changement de compte sans rechargement, et partait en double pendant la première connexion.
+- **Le bouton « Suivre » disparaît sur un abonné au profil privé**, qui renvoyait toujours une erreur, et l'onglet « Rechercher » des abonnés n'est plus proposé sans être connecté.
+- **Suivre ou ne plus suivre quelqu'un met à jour toutes les listes et tous les compteurs** concernés, profils, abonnés, abonnements, recherche et invitations d'amis compris.
+- **« Voir mon profil » n'est plus proposé quand votre profil est privé**, où il menait à « Ce profil n'existe pas ».
+- **Un film ajouté depuis la recherche de Ma liste garde ses genres**, et retirer un film de Ma liste met à jour votre page publique.
+- **La recherche d'un utilisateur trouve les noms accentués hors du français** (Šárka, Dvořák, Erdoğan), et le surlignage tombe sur les bonnes lettres après un emoji.
+- **« Les plus proposés » compte une fois un film proposé avant et après l'arrivée des séries**, qui était coupé en deux et pouvait disparaître du classement.
+- **Un nom Google ou GitHub de plus de 80 caractères ne bloque plus l'enregistrement du profil** : il est raccourci à la création du compte.
+- **Changer d'avatar au clavier ne l'enregistre plus à chaque flèche** : les flèches parcourent la grille, Entrée ou Espace choisit, et un échec d'enregistrement s'affiche.
+- **Les flèches des choix segmentés vont jusqu'au bout** (thème, échelle de notes) : le focus restait sur l'ancienne option et la sélection ne dépassait pas la voisine.
+- **L'échelle de notes signale un enregistrement raté**, et la couleur d'accent choisie juste avant de quitter la page est bien enregistrée.
+- **« Parce que vous avez aimé » nomme le bon film** sur un lien partagé ou ancien, au lieu du dernier film vu.
+- **Les listes déroulantes annoncent leur valeur aux lecteurs d'écran**, et une bulle d'information rend le focus à son bouton en se fermant.
+- **« Copier le lien » fonctionne dans une fenêtre** sur les navigateurs sans presse-papiers moderne, dont le guide d'installation des navigateurs intégrés.
+- **Les aperçus de captures de « Proposer une idée » libèrent leur mémoire** une fois la fenêtre fermée ou l'idée envoyée.
+- **Un texte qui contient un « $ » s'affiche tel quel** dans les messages (« Tom $& Jerry », « Ca$$h ») au lieu d'être déformé.
+- **Une coupure réseau pendant la lecture d'une réponse affiche le message d'erreur réseau traduit** au lieu du texte anglais du navigateur, et les erreurs d'activation des notifications push sont traduites.
+- **Les erreurs de saisie refusées par le serveur sont traduites**, et une requête trop volumineuse reçoit une erreur 413 claire au lieu d'une erreur serveur.
+- **L'anglais choisi reste appliqué aux messages d'erreur quand le navigateur bloque le stockage local.**
+- **Une affiche TMDB en erreur n'est plus gardée un mois en cache** : elle est rechargée à l'affichage suivant.
+- **Couper le cache d'affiches du serveur ne vide plus toutes les affiches** : elles sont servies directement par TMDB.
+- **Les préférences de notification refusent un type inconnu** au lieu de désactiver une autre préférence.
+- **Le plan du site reste sous la limite de 50 000 adresses** acceptée par les moteurs de recherche.
 - **La connexion avec Google fonctionne de nouveau pour un premier accès** : depuis la V1.4, toute première connexion par Google était refusée avec « l'adresse e-mail de ce compte n'est pas vérifiée », parce que le serveur cherchait la vérification de l'adresse au mauvais endroit de la réponse de Google ; seuls les comptes Google déjà liés depuis les paramètres passaient. Une adresse vérifiée par Google suffit désormais, comme prévu.
 - **Un rappel de soirée ne repart plus quand le serveur est mis à jour** pendant la fenêtre du rappel : la nouvelle version reconnaît les rappels déjà envoyés par la précédente.
 - **Les films gagnants quittent les listes « À voir » le soir même** : quand l'hôte ne clôturait pas la soirée, le film tiré au sort restait jusqu'à sept jours de trop dans la liste de chaque participant ; il en sort désormais à la passe de nuit qui suit la fin de la soirée.
