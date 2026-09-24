@@ -19,6 +19,7 @@ public sealed class AddMovieRequest
     [MaxLength(10)]
     public string Year { get; init; } = string.Empty;
 
+    [MaxLength(500)]
     public string? PosterPath { get; init; }
 
     [MaxLength(20)]
