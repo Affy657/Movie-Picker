@@ -1,5 +1,5 @@
 import { ApiError } from '@/shared/api/apiError';
-import { loadedLocale, preferredLocale, t, type TranslationKey } from '@/shared/i18n';
+import { interpolate, loadedLocale, preferredLocale, t, type TranslationKey } from '@/shared/i18n';
 
 function hostLooksLocal(host: string): boolean {
   const h = (host.split(':')[0] ?? host).toLowerCase();
@@ -71,11 +71,7 @@ function translateApiReason(
   const messages = loadedLocale(preferredLocale())?.apiErrors;
   if (!messages || !Object.hasOwn(messages, reason)) return undefined;
   const template = messages[reason as keyof typeof messages];
-  if (!params) return template;
-  return Object.entries(params).reduce(
-    (text, [key, value]) => text.replaceAll(`{{${key}}}`, String(value)),
-    template
-  );
+  return params ? interpolate(template, params) : template;
 }
 
 function readApiErrorParams(raw: unknown): ApiErrorParams | undefined {
