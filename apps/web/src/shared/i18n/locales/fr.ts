@@ -1438,6 +1438,8 @@ export const fr = {
     forbidden: 'Accès refusé.',
     unauthorized: 'Authentification requise.',
     internal_error: "Une erreur interne s'est produite.",
+    validation_failed:
+      'Certaines informations envoyées ne sont pas valides. Vérifiez-les et réessayez.',
     rate_limited: 'Trop de requêtes. Réessayez dans un instant.',
     concurrent_update: 'Modifié entre-temps. Rechargez la page et réessayez.',
     'vote-limit-reached': 'Limite de {{max}} vote(s) par participant atteinte.',
