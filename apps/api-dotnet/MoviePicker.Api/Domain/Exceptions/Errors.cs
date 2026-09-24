@@ -56,6 +56,9 @@ public static class Errors
     public static ConflictException ProposalLimitReached(int max) =>
         new($"Limit of {max} proposal(s) per participant reached", ErrorCodes.ProposalLimitReached, Params(("max", max)));
 
+    public static ConflictException EventMovieLimitReached(int max) =>
+        new($"Limit of {max} movies per movie night reached", ErrorCodes.EventMovieLimitReached, Params(("max", max)));
+
     public static ConflictException VoteLimitReached(int max) =>
         new($"Limit of {max} vote(s) per participant reached", ErrorCodes.VoteLimitReached, Params(("max", max)));
 

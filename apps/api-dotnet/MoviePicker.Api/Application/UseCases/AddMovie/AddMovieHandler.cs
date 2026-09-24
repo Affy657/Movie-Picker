@@ -157,6 +157,8 @@ public sealed class AddMovieHandler : IAddMovieHandler
                 await _eventRepository.LockForWriteAsync(evt.Id, token);
                 if (await _participantRepository.FindByIdAndEventIdAsync(participant.Id, evt.Id, token) is null)
                     throw Errors.InvalidParticipant();
+                if (await _movieRepository.CountByEventIdAsync(evt.Id, token) >= EventConfig.MaxMoviesPerEventCap)
+                    throw Errors.EventMovieLimitReached(EventConfig.MaxMoviesPerEventCap);
                 if (maxProp is > 0)
                 {
                     var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, token);

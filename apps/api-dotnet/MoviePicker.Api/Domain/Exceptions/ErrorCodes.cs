@@ -30,6 +30,7 @@ public static class ErrorCodes
     public const string MovieAlreadyProposed = "movie_already_proposed";
     public const string MovieTitleAlreadyProposed = "movie_title_already_proposed";
     public const string ProposalLimitReached = "proposal_limit_reached";
+    public const string EventMovieLimitReached = "event_movie_limit_reached";
     public const string OAuthLinkFailed = "oauth_link_failed";
     public const string HandleTaken = "handle_taken";
     public const string IdentityConflict = "identity_conflict";

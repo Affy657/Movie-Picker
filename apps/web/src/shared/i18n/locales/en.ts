@@ -1441,6 +1441,7 @@ export const en: Locale = {
     tv_shows_not_allowed: 'This movie night does not allow TV shows.',
     movie_already_proposed: 'This movie has already been proposed (same TMDB id)',
     movie_title_already_proposed: 'A movie with this title has already been proposed',
+    event_movie_limit_reached: 'This movie night has reached the limit of {{max}} proposed movies.',
     proposal_limit_reached: 'Limit of {{max}} proposal(s) per participant reached.',
     oauth_link_failed: 'This account could not be linked. Please try again.',
     handle_taken: 'This handle is already taken.',
