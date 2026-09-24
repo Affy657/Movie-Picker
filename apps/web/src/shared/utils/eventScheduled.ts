@@ -24,9 +24,13 @@ function timeZoneOffsetMs(utcMs: number, timeZone: string): number {
 }
 
 export function eventScheduledStartUtcMs(event: { date: string; time: string }): number | null {
-  const guessMs = Date.parse(`${event.date}T${event.time}:00Z`);
-  if (Number.isNaN(guessMs)) return null;
-  return guessMs - timeZoneOffsetMs(guessMs, EVENT_TIMEZONE);
+  const wallClockAsUtcMs = Date.parse(`${event.date}T${event.time}:00Z`);
+  if (Number.isNaN(wallClockAsUtcMs)) return null;
+  const offsetAtWallClockMs = timeZoneOffsetMs(wallClockAsUtcMs, EVENT_TIMEZONE);
+  const firstGuessMs = wallClockAsUtcMs - offsetAtWallClockMs;
+  const offsetAtFirstGuessMs = timeZoneOffsetMs(firstGuessMs, EVENT_TIMEZONE);
+  if (offsetAtFirstGuessMs === offsetAtWallClockMs) return firstGuessMs;
+  return wallClockAsUtcMs - offsetAtFirstGuessMs;
 }
 
 export function formatEventStartInUserTimezone(
