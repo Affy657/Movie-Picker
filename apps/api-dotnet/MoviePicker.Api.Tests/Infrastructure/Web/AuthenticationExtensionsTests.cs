@@ -1,5 +1,8 @@
+using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -103,5 +106,30 @@ public sealed class AuthenticationExtensionsTests
         Assert.Contains(OAuthProviders.Google, schemes);
         Assert.Contains(OAuthProviders.GitHub, schemes);
         Assert.True(provider.GetRequiredService<OAuthProviderCatalog>().IsEnabled(OAuthProviders.Google));
+    }
+
+    [Theory]
+    [InlineData("""{"id":"1","email":"a@b.c","verified_email":true,"name":"A"}""", "true")]
+    [InlineData("""{"sub":"1","email":"a@b.c","email_verified":true,"name":"A"}""", "true")]
+    [InlineData("""{"id":"1","email":"a@b.c","verified_email":false,"name":"A"}""", "false")]
+    [InlineData("""{"id":"1","email":"a@b.c","name":"A"}""", "false")]
+    public void GoogleClaims_CarryTheVerificationFlagOfTheUserInfoResponse(string userInfo, string expected)
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["OAUTH_GOOGLE_CLIENT_ID"] = "google-id",
+                ["OAUTH_GOOGLE_CLIENT_SECRET"] = "google-secret"
+            })
+            .Build();
+        using var provider = BuildProvider(configuration);
+        var options = provider.GetRequiredService<IOptionsMonitor<GoogleOptions>>().Get(OAuthProviders.Google);
+        var identity = new ClaimsIdentity();
+        using var document = JsonDocument.Parse(userInfo);
+
+        foreach (var action in options.ClaimActions)
+            action.Run(document.RootElement, identity, "Google");
+
+        Assert.Equal(expected, identity.FindFirst("email_verified")?.Value);
     }
 }
