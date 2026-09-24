@@ -10,6 +10,9 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoMovieRepository : IMovieRepository
 {
+    private const string StoredTvMediaType = "tv";
+    private const string StoredMovieMediaType = "movie";
+
     private readonly TransactionalCollection<MovieDocument> _collection;
 
     public MongoMovieRepository(MongoCollectionFactory collections)
@@ -297,7 +300,7 @@ public sealed class MongoMovieRepository : IMovieRepository
                 doc => new MovieInEventKey
                 {
                     TmdbId = doc.TmdbId,
-                    MediaType = doc.MediaType,
+                    MediaType = doc.MediaType == StoredTvMediaType ? StoredTvMediaType : StoredMovieMediaType,
                     EventId = doc.EventId,
                 },
                 g => new MovieInEventRow
@@ -321,6 +324,7 @@ public sealed class MongoMovieRepository : IMovieRepository
                 })
             .Match(row => row.EventCount >= threshold)
             .SortByDescending(row => row.EventCount)
+            .ThenBy(row => row.Key.TmdbId)
             .Limit(limit)
             .ToListAsync(ct);
 

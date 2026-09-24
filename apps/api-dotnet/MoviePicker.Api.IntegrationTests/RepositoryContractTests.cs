@@ -425,6 +425,46 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(ErrorCodes.MovieAlreadyProposed, ex.Reason);
     }
 
+    [MongoFact]
+    public async Task MostProposed_CountsAFilmStoredBeforeSeriesSupportWithTheSameFilm()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var tmdbId = Random.Shared.Next(10_000_000, 20_000_000);
+        var (legacyEvent, legacyParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Legacy");
+        var (currentEvent, currentParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Current");
+        var legacy = await movies.InsertAsync(NewMovie(legacyEvent.Id, legacyParticipant.Id, tmdbId, "Legacy film"));
+        await UnsetRawFieldAsync("movies", legacy.Id, "mediaType");
+        await movies.InsertAsync(NewMovie(currentEvent.Id, currentParticipant.Id, tmdbId, "Legacy film"));
+
+        var ranking = await movies.ListMostProposedAsync(2, 1000);
+
+        var row = Assert.Single(ranking, r => r.TmdbId == tmdbId);
+        Assert.Equal(MovieMediaType.Movie, row.MediaType);
+        Assert.Equal(2, row.EventCount);
+    }
+
+    [Fact]
+    public async Task MostProposed_BreaksEventCountTiesByTmdbId()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var lowerTmdbId = Random.Shared.Next(20_000_000, 30_000_000);
+        int[] insertionOrder = [lowerTmdbId + 2, lowerTmdbId, lowerTmdbId + 1];
+        for (var round = 0; round < 2; round++)
+        {
+            var (evt, participant) = await NewEventWithParticipantAsync(scope.ServiceProvider, $"Tie {round}");
+            foreach (var tmdbId in insertionOrder)
+                await movies.InsertAsync(NewMovie(evt.Id, participant.Id, tmdbId, $"Film {tmdbId}"));
+        }
+
+        var ranking = await movies.ListMostProposedAsync(2, 1000);
+
+        Assert.Equal(
+            [lowerTmdbId, lowerTmdbId + 1, lowerTmdbId + 2],
+            ranking.Where(r => insertionOrder.Contains(r.TmdbId)).Select(r => r.TmdbId));
+    }
+
     [Fact]
     public async Task MovieInsert_SeriesSharingTheTmdbIdOfAProposedMovie_IsAccepted()
     {
@@ -646,6 +686,15 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         await database.GetCollection<BsonDocument>(collection).UpdateOneAsync(
             Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(id)),
             Builders<BsonDocument>.Update.Set(field, value));
+    }
+
+    private async Task UnsetRawFieldAsync(string collection, string id, string field)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+        await database.GetCollection<BsonDocument>(collection).UpdateOneAsync(
+            Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(id)),
+            Builders<BsonDocument>.Update.Unset(field));
     }
 
     [MongoFact]
