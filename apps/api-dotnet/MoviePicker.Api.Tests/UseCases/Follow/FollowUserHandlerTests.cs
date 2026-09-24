@@ -3,6 +3,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Follow;
@@ -26,6 +27,7 @@ public sealed class FollowUserHandlerTests
             _notifications.Object,
             _pushSubs.Object,
             _pushSender.Object,
+            new InMemoryNotificationDedupRepository(),
             TimeProvider.System);
     }
 
@@ -79,6 +81,25 @@ public sealed class FollowUserHandlerTests
         await _sut.HandleAsync(CurrentUserId, "alice");
 
         _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_FollowAgainAfterAnUnfollow_DoesNotNotifyTwice()
+    {
+        _users.Setup(u => u.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(Target());
+        _follows.Setup(f => f.FollowAsync(CurrentUserId, "target", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _users.Setup(u => u.GetByIdAsync(CurrentUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = CurrentUserId, Handle = "bob", DisplayName = "Bob" });
+        _pushSubs.Setup(p => p.ListByUserIdAsync("target", It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new PushSubscription { UserId = "target", Endpoint = "e1" }]);
+
+        await _sut.HandleAsync(CurrentUserId, "alice");
+        await _sut.HandleAsync(CurrentUserId, "alice");
+
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Once);
+        _pushSender.Verify(
+            p => p.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

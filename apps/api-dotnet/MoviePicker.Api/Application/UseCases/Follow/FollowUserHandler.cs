@@ -13,6 +13,7 @@ public sealed class FollowUserHandler : IFollowUserHandler
     private readonly IUserNotificationRepository _notifications;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
+    private readonly INotificationDedupRepository _dedup;
     private readonly TimeProvider _clock;
 
     public FollowUserHandler(
@@ -21,6 +22,7 @@ public sealed class FollowUserHandler : IFollowUserHandler
         IUserNotificationRepository notifications,
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
+        INotificationDedupRepository dedup,
         TimeProvider clock)
     {
         _follows = follows;
@@ -28,6 +30,7 @@ public sealed class FollowUserHandler : IFollowUserHandler
         _notifications = notifications;
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
+        _dedup = dedup;
         _clock = clock;
     }
 
@@ -52,6 +55,11 @@ public sealed class FollowUserHandler : IFollowUserHandler
             return;
 
         if (!target.NotifiesOn(UserNotificationType.NewFollower))
+            return;
+
+        var firstNoticeOfThisFollower = await _dedup.TryClaimAsync(
+            target.Id, UserNotificationType.NewFollower, currentUserId, NotificationDedupChannel.InApp, ct);
+        if (!firstNoticeOfThisFollower)
             return;
 
         var notification = new UserNotification
