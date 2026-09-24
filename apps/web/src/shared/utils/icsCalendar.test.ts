@@ -17,14 +17,14 @@ const baseEvent: CalendarEvent = {
 };
 
 describe('icsCalendar', () => {
-  it('buildIcsContent produit un VEVENT valide avec heure locale flottante', () => {
+  it('buildIcsContent writes a valid VEVENT starting at the Paris time, in UTC', () => {
     const ics = buildIcsContent(baseEvent, FIXED_NOW);
     expect(ics).not.toBeNull();
     expect(ics).toContain('BEGIN:VCALENDAR');
     expect(ics).toContain('BEGIN:VEVENT');
     expect(ics).toContain('END:VEVENT');
     expect(ics).toContain('END:VCALENDAR');
-    expect(ics).toContain('DTSTART:20260615T190000');
+    expect(ics).toContain('DTSTART:20260615T170000Z\r\n');
     expect(ics).toContain('DTSTAMP:20260610T080000Z');
     expect(ics).toContain('SUMMARY:Soirée ciné');
     expect(ics).toContain('URL:https://moviepicker.app/e/abc');
@@ -33,13 +33,19 @@ describe('icsCalendar', () => {
 
   it('buildIcsContent applies a default 2 h duration to DTEND', () => {
     const ics = buildIcsContent(baseEvent, FIXED_NOW);
-    expect(ics).toContain('DTEND:20260615T210000');
+    expect(ics).toContain('DTEND:20260615T190000Z\r\n');
   });
 
   it('buildIcsContent honours a custom duration', () => {
     const ics = buildIcsContent({ ...baseEvent, durationMinutes: 90 }, FIXED_NOW);
-    expect(ics).toContain('DTSTART:20260615T190000');
-    expect(ics).toContain('DTEND:20260615T203000');
+    expect(ics).toContain('DTSTART:20260615T170000Z\r\n');
+    expect(ics).toContain('DTEND:20260615T183000Z\r\n');
+  });
+
+  it('buildIcsContent follows the Paris winter offset and the day change it brings', () => {
+    const ics = buildIcsContent({ ...baseEvent, date: '2026-12-15', time: '00:30' }, FIXED_NOW);
+    expect(ics).toContain('DTSTART:20261214T233000Z\r\n');
+    expect(ics).toContain('DTEND:20261215T013000Z\r\n');
   });
 
   it('buildIcsContent escapes the special characters of the title', () => {
@@ -103,18 +109,18 @@ describe('icsCalendar', () => {
     expect(buildIcsContent({ ...baseEvent, date: 'pas-une-date' }, FIXED_NOW)).toBeNull();
   });
 
-  it('googleCalendarUrl pointe vers Google avec titre et plage de dates', () => {
+  it('googleCalendarUrl points to Google with the title and the UTC range of the Paris start', () => {
     const url = googleCalendarUrl(baseEvent);
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
     expect(parsed.origin + parsed.pathname).toBe('https://calendar.google.com/calendar/render');
     expect(parsed.searchParams.get('action')).toBe('TEMPLATE');
     expect(parsed.searchParams.get('text')).toBe('Soirée ciné');
-    expect(parsed.searchParams.get('dates')).toBe('20260615T190000/20260615T210000');
+    expect(parsed.searchParams.get('dates')).toBe('20260615T170000Z/20260615T190000Z');
     expect(parsed.searchParams.get('location')).toBe('https://moviepicker.app/e/abc');
   });
 
-  it('outlookCalendarUrl pointe vers Outlook avec sujet et dates ISO locales', () => {
+  it('outlookCalendarUrl points to Outlook with the subject and ISO dates in UTC', () => {
     const url = outlookCalendarUrl(baseEvent);
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
@@ -123,8 +129,8 @@ describe('icsCalendar', () => {
     );
     expect(parsed.searchParams.get('rru')).toBe('addevent');
     expect(parsed.searchParams.get('subject')).toBe('Soirée ciné');
-    expect(parsed.searchParams.get('startdt')).toBe('2026-06-15T19:00:00');
-    expect(parsed.searchParams.get('enddt')).toBe('2026-06-15T21:00:00');
+    expect(parsed.searchParams.get('startdt')).toBe('2026-06-15T17:00:00Z');
+    expect(parsed.searchParams.get('enddt')).toBe('2026-06-15T19:00:00Z');
   });
 
   it('les liens web retournent null pour une date invalide', () => {

@@ -1,4 +1,4 @@
-import { parseEventLocalStartMs } from '@/shared/utils/eventScheduleLocal';
+import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
 
 export const DEFAULT_EVENT_DURATION_MINUTES = 120;
 
@@ -19,7 +19,7 @@ interface EventRange {
 }
 
 function resolveRange(event: CalendarEvent): EventRange | null {
-  const startMs = parseEventLocalStartMs(event.date, event.time);
+  const startMs = eventScheduledStartUtcMs(event);
   if (startMs == null) return null;
   const minutes = event.durationMinutes ?? DEFAULT_EVENT_DURATION_MINUTES;
   return { start: new Date(startMs), end: new Date(startMs + minutes * 60_000) };
@@ -29,13 +29,6 @@ function pad(value: number): string {
   return String(value).padStart(2, '0');
 }
 
-function formatLocalStamp(date: Date): string {
-  return (
-    `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}` +
-    `T${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`
-  );
-}
-
 function formatUtcStamp(date: Date): string {
   return (
     `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}` +
@@ -43,11 +36,8 @@ function formatUtcStamp(date: Date): string {
   );
 }
 
-function formatIsoLocal(date: Date): string {
-  return (
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
-    `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-  );
+function formatIsoUtc(date: Date): string {
+  return `${date.toISOString().slice(0, 19)}Z`;
 }
 
 function slugForUid(value: string): string {
@@ -105,8 +95,8 @@ export function buildIcsContent(event: CalendarEvent, now: Date = new Date()): s
     'BEGIN:VEVENT',
     `UID:${slugForUid(event.url ?? event.title)}@movie-picker`,
     `DTSTAMP:${formatUtcStamp(now)}`,
-    `DTSTART:${formatLocalStamp(range.start)}`,
-    `DTEND:${formatLocalStamp(range.end)}`,
+    `DTSTART:${formatUtcStamp(range.start)}`,
+    `DTEND:${formatUtcStamp(range.end)}`,
     `SUMMARY:${escapeIcsText(event.title)}`,
   ];
   if (event.description) lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`);
@@ -128,7 +118,7 @@ export function googleCalendarUrl(event: CalendarEvent): string | null {
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: event.title,
-    dates: `${formatLocalStamp(range.start)}/${formatLocalStamp(range.end)}`,
+    dates: `${formatUtcStamp(range.start)}/${formatUtcStamp(range.end)}`,
   });
   if (event.description) params.set('details', event.description);
   if (event.url) params.set('location', event.url);
@@ -144,8 +134,8 @@ export function outlookCalendarUrl(event: CalendarEvent): string | null {
     path: '/calendar/action/compose',
     rru: 'addevent',
     subject: event.title,
-    startdt: formatIsoLocal(range.start),
-    enddt: formatIsoLocal(range.end),
+    startdt: formatIsoUtc(range.start),
+    enddt: formatIsoUtc(range.end),
   });
   if (event.description) params.set('body', event.description);
   if (event.url) params.set('location', event.url);
