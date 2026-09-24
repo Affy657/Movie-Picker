@@ -58,22 +58,19 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 import Field from '@/shared/components/Field';
 import FormPageShell from '@/shared/components/FormPageShell';
 
-function getDefaultDate(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+function pad2(value: number): string {
+  return String(value).padStart(2, '0');
 }
 
-function getDefaultTime(): string {
-  const now = new Date();
-  const totalMin = now.getHours() * 60 + now.getMinutes();
-  if (totalMin < 20 * 60) return '20:00';
-  const ceil = Math.ceil(totalMin / 30) * 30;
-  const h = Math.floor(ceil / 60) % 24;
-  const m = ceil % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+function getDefaultStart(): { date: string; time: string } {
+  const start = new Date();
+  const totalMin = start.getHours() * 60 + start.getMinutes();
+  if (totalMin < 20 * 60) start.setHours(20, 0, 0, 0);
+  else start.setHours(0, Math.ceil(totalMin / 30) * 30, 0, 0);
+  return {
+    date: `${start.getFullYear()}-${pad2(start.getMonth() + 1)}-${pad2(start.getDate())}`,
+    time: `${pad2(start.getHours())}:${pad2(start.getMinutes())}`,
+  };
 }
 
 const INITIAL_FIELDS = defaultTemplateFields();
@@ -89,8 +86,9 @@ export default function CreateEvent() {
   const queryClient = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
   const { track } = useAnalytics();
-  const [date, setDate] = useState(getDefaultDate);
-  const [time, setTime] = useState(getDefaultTime);
+  const [defaultStart] = useState(getDefaultStart);
+  const [date, setDate] = useState(defaultStart.date);
+  const [time, setTime] = useState(defaultStart.time);
   const suggestedTitle = t('events.create.defaultTitle', {
     date: formatEventTitleDate(date, locale),
   });

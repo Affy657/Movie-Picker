@@ -467,6 +467,20 @@ describe('CreateEvent', () => {
     expect(screen.queryByText('Donnez un titre à la soirée.')).not.toBeInTheDocument();
   });
 
+  it('starts the night tomorrow at midnight when the page opens after 23:30', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 11, 31, 23, 45));
+    try {
+      RenderCreateEvent();
+
+      expect(screen.getByLabelText(/date/i)).toHaveValue('2027-01-01');
+      expect(screen.getByLabelText(/heure/i)).toHaveValue('00:00');
+      expect(screen.queryByText('Cette date est déjà passée.')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('warns about a date already in the past without blocking the creation', async () => {
     const user = userEvent.setup();
     mockTemplates([]);
