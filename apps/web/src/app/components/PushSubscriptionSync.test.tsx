@@ -1,14 +1,20 @@
 import { render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import PushSubscriptionSync from '@/app/components/PushSubscriptionSync';
-import { postPushSubscription } from '@/features/notifications/api/notificationsApi';
-import { currentBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
+import {
+  deletePushSubscription,
+  fetchVapidPublicKey,
+  postPushSubscription,
+} from '@/features/notifications/api/notificationsApi';
+import { currentBrowserPushRegistration } from '@/shared/utils/browserPushSubscription';
 
 vi.mock('@/features/notifications/api/notificationsApi', () => ({
   postPushSubscription: vi.fn(() => Promise.resolve()),
+  deletePushSubscription: vi.fn(() => Promise.resolve()),
+  fetchVapidPublicKey: vi.fn(),
 }));
 vi.mock('@/shared/utils/browserPushSubscription', () => ({
-  currentBrowserPushSubscription: vi.fn(),
+  currentBrowserPushRegistration: vi.fn(),
 }));
 
 const useAuth = vi.fn();
@@ -21,13 +27,29 @@ const subscriptionJson = {
   keys: { p256dh: 'key', auth: 'auth' },
 };
 
+function keyBytes(text: string): ArrayBuffer {
+  return Uint8Array.from(text, (char) => char.charCodeAt(0)).buffer;
+}
+
+function base64Url(text: string): string {
+  return btoa(text).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+}
+
 describe('PushSubscriptionSync', () => {
+  let getSubscription: ReturnType<typeof vi.fn>;
+  let subscribe: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal('Notification', { permission: 'granted' });
-    vi.mocked(currentBrowserPushSubscription).mockResolvedValue({
+    getSubscription = vi.fn().mockResolvedValue({
+      endpoint: subscriptionJson.endpoint,
       toJSON: () => subscriptionJson,
-    } as unknown as PushSubscription);
+    });
+    subscribe = vi.fn();
+    vi.mocked(currentBrowserPushRegistration).mockResolvedValue({
+      pushManager: { getSubscription, subscribe },
+    } as unknown as ServiceWorkerRegistration);
   });
 
   afterEach(() => {
@@ -48,7 +70,7 @@ describe('PushSubscriptionSync', () => {
     render(<PushSubscriptionSync />);
     await Promise.resolve();
 
-    expect(currentBrowserPushSubscription).not.toHaveBeenCalled();
+    expect(currentBrowserPushRegistration).not.toHaveBeenCalled();
     expect(postPushSubscription).not.toHaveBeenCalled();
   });
 
@@ -63,12 +85,33 @@ describe('PushSubscriptionSync', () => {
   });
 
   it('sends nothing when this browser holds no subscription', async () => {
-    vi.mocked(currentBrowserPushSubscription).mockResolvedValue(null);
+    getSubscription.mockResolvedValue(null);
     useAuth.mockReturnValue({ user: { userId: 'u1' } });
 
     render(<PushSubscriptionSync />);
-    await vi.waitFor(() => expect(currentBrowserPushSubscription).toHaveBeenCalled());
+    await vi.waitFor(() => expect(getSubscription).toHaveBeenCalled());
 
     expect(postPushSubscription).not.toHaveBeenCalled();
+  });
+
+  it('renews a subscription made with a rotated server key and registers only the new one', async () => {
+    const unsubscribeStale = vi.fn().mockResolvedValue(true);
+    getSubscription.mockResolvedValue({
+      endpoint: 'https://push/stale',
+      options: { applicationServerKey: keyBytes('old-server-key') },
+      unsubscribe: unsubscribeStale,
+      toJSON: () => ({ endpoint: 'https://push/stale' }),
+    });
+    vi.mocked(fetchVapidPublicKey).mockResolvedValue(base64Url('new-server-key'));
+    const renewedJson = { endpoint: 'https://push/renewed', keys: { p256dh: 'k', auth: 'a' } };
+    subscribe.mockResolvedValue({ endpoint: 'https://push/renewed', toJSON: () => renewedJson });
+    useAuth.mockReturnValue({ user: { userId: 'u1' } });
+
+    render(<PushSubscriptionSync />);
+
+    await vi.waitFor(() => expect(postPushSubscription).toHaveBeenCalledWith(renewedJson));
+    expect(postPushSubscription).toHaveBeenCalledTimes(1);
+    expect(unsubscribeStale).toHaveBeenCalledOnce();
+    expect(deletePushSubscription).toHaveBeenCalledWith('https://push/stale');
   });
 });

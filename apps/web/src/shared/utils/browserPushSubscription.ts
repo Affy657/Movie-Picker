@@ -4,9 +4,13 @@ function pushIsSupported(): boolean {
   );
 }
 
-export async function currentBrowserPushSubscription(): Promise<PushSubscription | null> {
+export async function currentBrowserPushRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (!pushIsSupported()) return null;
-  const registration = await navigator.serviceWorker.getRegistration();
+  return (await navigator.serviceWorker.getRegistration()) ?? null;
+}
+
+export async function currentBrowserPushSubscription(): Promise<PushSubscription | null> {
+  const registration = await currentBrowserPushRegistration();
   return (await registration?.pushManager.getSubscription()) ?? null;
 }
 

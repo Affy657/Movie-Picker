@@ -4,6 +4,10 @@ import {
   fetchVapidPublicKey,
   postPushSubscription,
 } from '@/features/notifications/api/notificationsApi';
+import {
+  renewPushSubscriptionIfStale,
+  vapidKeyBytes,
+} from '@/features/notifications/utils/pushSubscriptionRenewal';
 import { useTranslation } from '@/shared/i18n';
 
 type PermissionState = 'default' | 'granted' | 'denied' | 'unsupported';
@@ -18,14 +22,11 @@ interface PushNotificationsState {
   unsubscribe: () => Promise<void>;
 }
 
-function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
-  const cleaned = base64.replaceAll(/[^A-Za-z0-9\-_]/g, '');
-  const padded = cleaned.replaceAll('-', '+').replaceAll('_', '/');
-  const padLen = (4 - (padded.length % 4)) % 4;
-  const raw = atob(padded + '='.repeat(padLen));
-  const bytes = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.codePointAt(i) ?? 0;
-  return bytes;
+async function currentSubscriptionOnServedKey(
+  registration: ServiceWorkerRegistration
+): Promise<PushSubscription | null> {
+  const subscription = await registration.pushManager.getSubscription();
+  return subscription && renewPushSubscriptionIfStale(registration, subscription);
 }
 
 export function usePushNotifications(): PushNotificationsState {
@@ -48,7 +49,7 @@ export function usePushNotifications(): PushNotificationsState {
 
     let cancelled = false;
     navigator.serviceWorker.ready
-      .then((reg) => reg.pushManager.getSubscription())
+      .then(currentSubscriptionOnServedKey)
       .then((sub) => {
         if (!cancelled) {
           setSubscribed(sub !== null);
@@ -80,7 +81,7 @@ export function usePushNotifications(): PushNotificationsState {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
+        applicationServerKey: vapidKeyBytes(publicKey),
       });
 
       await postPushSubscription(sub.toJSON());
