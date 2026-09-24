@@ -209,7 +209,7 @@ export default function WatchlistPage() {
     filtersPanelRef,
     () => toolbar.setFiltersOpen(false),
     toolbar.filtersOpen && !isMobile,
-    '[data-filters-toggle]'
+    { ignoreSelector: '[data-filters-toggle]' }
   );
 
   const addMutation = useAddToWatchlist();

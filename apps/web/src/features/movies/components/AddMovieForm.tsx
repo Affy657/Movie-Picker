@@ -113,7 +113,9 @@ export default function AddMovieForm({
   const filtersPanelRef = useRef<HTMLDivElement | null>(null);
 
   const closeFilters = useCallback(() => filters.setFiltersOpen(false), [filters]);
-  useClickOutside(filtersPanelRef, closeFilters, filters.filtersOpen, '[data-filters-toggle]');
+  useClickOutside(filtersPanelRef, closeFilters, filters.filtersOpen, {
+    ignoreSelector: '[data-filters-toggle]',
+  });
 
   useEffect(() => () => abortRef.current?.abort(), []);
 

@@ -349,16 +349,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: cocher « Validity checks » (et « Non-provider patterns » si elle est proposée) dans Settings / Code security, puis rejouer `verify`
 - piege: une alerte marquée « active » par la vérification est à traiter comme une fuite en cours, pas comme un rappel
 
-## DEBT-057 trois fermetures au clic extérieur écrites à la main
-
-- state: agent
-- impact: le sélecteur d'emoji du thème, le menu des cartes film et `Dropdown` posent chacun leur écouteur `mousedown` sur le document au lieu de `useClickOutside`. Trois comportements proches mais pas identiques (Échap qui rend ou non le focus, clic dans une boîte de dialogue ouverte, second élément porté par un portail), qu'une correction du hook ne corrige pas.
-- ou: `apps/web/src/features/events/components/ThemeField.tsx`, `apps/web/src/features/movies/components/MovieCardKebab.tsx`, `apps/web/src/shared/components/Dropdown.tsx`, `apps/web/src/shared/hooks/useClickOutside.ts`
-- verify: `grep -rn "document.addEventListener('mousedown'" apps/web/src --include=*.tsx`
-- fix: donner à `useClickOutside` une liste de refs (le panneau porté par un portail du menu des cartes), un rendu du focus à Échap, et n'ignorer un clic dans un `dialog[open]` que si ce dialogue ne contient pas la ref ; puis y passer les trois appelants
-- fini-quand: le `verify` ne sort plus rien et le sélecteur d'emoji se ferme toujours au clic ailleurs dans la feuille des paramètres de soirée
-- piege: `ThemeField` vit dans la feuille des paramètres de soirée, un `<dialog>` ouvert : le hook actuel ignore tout clic dans un dialogue ouvert, donc le sélecteur ne se fermerait plus. C'est la raison de l'écouteur maison, pas un oubli.
-
 ## DEBT-060 aucun parcours utilisateur n'est vérifié en production
 
 - state: differe

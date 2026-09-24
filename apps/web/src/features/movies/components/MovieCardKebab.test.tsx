@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   CardKebab,
@@ -140,6 +140,16 @@ describe('CardKebab', () => {
     expect(onToggleWatchlist).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     expect(document.activeElement).toBe(screen.getByRole('button', { name: /plus d’actions/i }));
+  });
+
+  it('stays open on a press in its portaled panel and closes on a press elsewhere', async () => {
+    await openKebab({ onViewDetails: () => {} });
+
+    fireEvent.mouseDown(screen.getByRole('menu'));
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('closes the menu before running an action', async () => {

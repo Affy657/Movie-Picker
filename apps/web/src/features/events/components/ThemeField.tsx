@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import clsx from 'clsx';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { t as translate, SUPPORTED_LOCALES, useTranslation } from '@/shared/i18n';
@@ -122,25 +123,9 @@ export default function ThemeField({
   const touchScreen = useMediaQuery('(pointer: coarse)');
   const fitLeft = useMenuHorizontalFit(pickerOpen && !touchScreen, pickerRef, emojiGridRef, 'left');
 
-  useEffect(() => {
-    if (!pickerOpen || touchScreen) return;
-    const closeOnPointerOutside = (e: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-        setPickerOpen(false);
-      }
-    };
-    const closeOnEscape = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      setPickerOpen(false);
-      emojiButtonRef.current?.focus();
-    };
-    document.addEventListener('mousedown', closeOnPointerOutside);
-    document.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('mousedown', closeOnPointerOutside);
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [pickerOpen, touchScreen]);
+  useClickOutside(pickerRef, () => setPickerOpen(false), pickerOpen && !touchScreen, {
+    returnFocusTo: emojiButtonRef,
+  });
 
   useEffect(() => {
     if (!pickerOpen) return;

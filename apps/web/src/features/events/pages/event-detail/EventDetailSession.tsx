@@ -87,12 +87,9 @@ export default function EventDetailSession({
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const participantsRef = useRef<HTMLDivElement>(null);
   const closeParticipants = useCallback(() => setParticipantsOpen(false), []);
-  useClickOutside(
-    participantsRef,
-    closeParticipants,
-    participantsOpen,
-    '[data-participants-toggle]'
-  );
+  useClickOutside(participantsRef, closeParticipants, participantsOpen, {
+    ignoreSelector: '[data-participants-toggle]',
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [viewMode, setViewMode] = useState<MoviesViewMode>(readMoviesViewMode);

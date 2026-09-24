@@ -46,12 +46,9 @@ export default function MovieListFilteredLayout({
   const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
   const desktopPanelOpen = filters.filtersOpen && !isMobile;
-  useClickOutside(
-    panelRef,
-    () => filters.setFiltersOpen(false),
-    desktopPanelOpen,
-    '[data-filters-toggle]'
-  );
+  useClickOutside(panelRef, () => filters.setFiltersOpen(false), desktopPanelOpen, {
+    ignoreSelector: '[data-filters-toggle]',
+  });
 
   const labels = useMemo(
     () => ({

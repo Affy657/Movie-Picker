@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
@@ -72,6 +72,44 @@ describe('ThemeField', () => {
     expect(screen.getByRole('radiogroup')).toBeInTheDocument();
 
     await user.keyboard('{Escape}');
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
+  });
+
+  it('closes on a press elsewhere in the settings sheet that holds it', async () => {
+    const user = userEvent.setup();
+    render(
+      <LocaleProvider>
+        <dialog open aria-label="Paramètres">
+          <ThemeField emoji="" text="" onEmojiChange={vi.fn()} onTextChange={vi.fn()} />
+          <button type="button">Enregistrer</button>
+        </dialog>
+      </LocaleProvider>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Choisir un emoji' }));
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+  });
+
+  it('closes the picker on Escape without closing the settings sheet around it', async () => {
+    const user = userEvent.setup();
+    render(
+      <LocaleProvider>
+        <dialog open aria-label="Paramètres">
+          <ThemeField emoji="🎃" text="" onEmojiChange={vi.fn()} onTextChange={vi.fn()} />
+        </dialog>
+      </LocaleProvider>
+    );
+
+    const opener = screen.getByRole('button', { name: 'Choisir un emoji' });
+    await user.click(opener);
+    const sheetKeepsOpen = !fireEvent.keyDown(screen.getByRole('radio', { name: '🎃' }), {
+      key: 'Escape',
+    });
+
+    expect(sheetKeepsOpen).toBe(true);
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     expect(opener).toHaveFocus();
   });

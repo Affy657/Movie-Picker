@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { Check } from 'lucide-react';
 import styles from './Dropdown.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 
 export type DropdownOption<V extends string> = {
   value: V;
@@ -89,16 +90,7 @@ export default function Dropdown<V extends string>({
     setUpward(opensUpward(placement, buttonRef.current, listRef.current));
   }, [open, placement]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDocClick = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
-  }, [open]);
+  useClickOutside(rootRef, () => setOpen(false), open);
 
   useEffect(() => {
     if (!open) return;
