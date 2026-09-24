@@ -99,7 +99,6 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
   const [prefsError, setPrefsError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!supported) return;
     fetchNotificationPreferences()
       .then((res) =>
         setPrefs(
@@ -110,7 +109,7 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
         )
       )
       .catch((err) => setPrefsError(getErrorMessage(err, t('notifications.prefsLoadError'))));
-  }, [supported, t]);
+  }, [t]);
 
   const handleTogglePref = useCallback(
     async (type: NotificationTypeKey) => {
@@ -140,8 +139,6 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
     else void subscribe();
   };
 
-  if (!supported) return <NotificationsUnsupported />;
-
   return (
     <>
       {pushError && (
@@ -158,28 +155,32 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
 
       {permission === 'denied' && <p className="hint">{t('notifications.permissionDenied')}</p>}
 
-      <Card padding="none" elevation="sm" className={sharedStyles.card}>
-        <div className={clsx(sharedStyles.row, sharedStyles.noDivider)}>
-          {subscribed ? (
-            <Bell size={ICON_SIZE.lg} aria-hidden className={sharedStyles.rowIcon} />
-          ) : (
-            <BellOff size={ICON_SIZE.lg} aria-hidden className={sharedStyles.rowIcon} />
-          )}
-          <div className={sharedStyles.rowMain}>
-            <p className={sharedStyles.rowLabel}>
-              {subscribed ? t('notifications.enabledLabel') : t('notifications.disabledLabel')}
-            </p>
+      {supported ? (
+        <Card padding="none" elevation="sm" className={sharedStyles.card}>
+          <div className={clsx(sharedStyles.row, sharedStyles.noDivider)}>
+            {subscribed ? (
+              <Bell size={ICON_SIZE.lg} aria-hidden className={sharedStyles.rowIcon} />
+            ) : (
+              <BellOff size={ICON_SIZE.lg} aria-hidden className={sharedStyles.rowIcon} />
+            )}
+            <div className={sharedStyles.rowMain}>
+              <p className={sharedStyles.rowLabel}>
+                {subscribed ? t('notifications.enabledLabel') : t('notifications.disabledLabel')}
+              </p>
+            </div>
+            <Toggle
+              checked={subscribed}
+              disabled={pushLoading || permission === 'denied'}
+              onChange={togglePush}
+              ariaLabel={
+                subscribed ? t('notifications.disableButton') : t('notifications.enableButton')
+              }
+            />
           </div>
-          <Toggle
-            checked={subscribed}
-            disabled={pushLoading || permission === 'denied'}
-            onChange={togglePush}
-            ariaLabel={
-              subscribed ? t('notifications.disableButton') : t('notifications.enableButton')
-            }
-          />
-        </div>
-      </Card>
+        </Card>
+      ) : (
+        <NotificationsUnsupported />
+      )}
 
       {prefs && (
         <Card padding="none" elevation="sm" className={sharedStyles.card}>

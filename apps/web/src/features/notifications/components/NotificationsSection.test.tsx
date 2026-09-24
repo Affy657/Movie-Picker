@@ -83,6 +83,7 @@ const allPrefs: NotificationPreferences = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockInstallClick.mockReturnValue(installState());
+  mockFetchPrefs.mockResolvedValue(allPrefs);
   vi.mocked(isIosRuntime).mockReturnValue(false);
   vi.mocked(isStandaloneRuntime).mockReturnValue(false);
 });
@@ -92,13 +93,27 @@ afterEach(() => {
 });
 
 describe('NotificationsSection', () => {
-  it('shows the unsupported hint when push is unavailable', () => {
+  it('shows the unsupported hint instead of the push toggle when push is unavailable', () => {
     mockUsePush.mockReturnValue(pushState({ supported: false, permission: 'unsupported' }));
 
     render(<NotificationsSection />);
 
     expect(screen.getByText('notifications.unsupported')).toBeInTheDocument();
-    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('switch', { name: 'notifications.enableButton' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('still loads and renders the preference toggles when push is unavailable', async () => {
+    mockUsePush.mockReturnValue(pushState({ supported: false, permission: 'unsupported' }));
+
+    render(<NotificationsSection />);
+
+    expect(
+      await screen.findByRole('switch', { name: 'notifications.prefNewFollower' })
+    ).toBeInTheDocument();
+    expect(mockFetchPrefs).toHaveBeenCalled();
+    expect(screen.getAllByRole('switch')).toHaveLength(12);
   });
 
   it('on an iPhone in Safari, points to the home screen and opens the install guide', async () => {
