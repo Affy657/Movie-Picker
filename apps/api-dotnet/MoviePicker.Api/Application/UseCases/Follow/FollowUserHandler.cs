@@ -79,7 +79,7 @@ public sealed class FollowUserHandler : IFollowUserHandler
             Title: "Nouveau follower 👀",
             Body: $"{follower.DisplayName} a commencé à vous suivre.",
             Tag: "new-follower",
-            Url: $"/u/{follower.Handle}");
+            Url: PublicHandleResolver.Resolve(follower) is { } publicHandle ? $"/u/{publicHandle}" : "/notifications");
         await PushFanOut.SendToAllAsync(_pushSender, subs, message, ct);
     }
 }
