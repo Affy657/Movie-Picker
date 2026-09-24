@@ -236,6 +236,14 @@ function resolveSubtitle({
   return t(SUBTITLE_KEYS[variant]);
 }
 
+function seedTitleForRoute(
+  seed: ReturnType<typeof useRecommendationSeed>,
+  { seedTmdbId, seedMediaType }: ShowcaseRouteSelection
+): string | undefined {
+  const seedMatchesRoute = seed.seedTmdbId === seedTmdbId && seed.seedMediaType === seedMediaType;
+  return seedMatchesRoute ? seed.seedTitle : undefined;
+}
+
 function showcaseToolbarLabels(
   toolbar: { isFiltered: boolean; visibleCount: number; totalCount: number },
   t: Translate
@@ -362,7 +370,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     variant,
     genreId,
     tmdbLanguage,
-    seedTitle: recommendationSeed.seedTitle,
+    seedTitle: seedTitleForRoute(recommendationSeed, routeSelection),
     t,
   });
 

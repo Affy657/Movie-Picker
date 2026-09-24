@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import ShowcaseListPage, { type ShowcaseListVariant } from '@/app/pages/ShowcaseListPage';
@@ -61,9 +61,30 @@ function menuItemNames() {
     .map((item) => item.getAttribute('aria-label') ?? item.textContent);
 }
 
-function renderPage(variant: ShowcaseListVariant, entry: string, path: string) {
+const lastWatchedInceptionHandler = http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
+  HttpResponse.json({
+    items: [
+      {
+        tmdbId: 27205,
+        mediaType: 'movie',
+        title: 'Inception',
+        year: '2010',
+        posterPath: null,
+        genreIds: [28],
+        watchedAt: '2026-03-01T00:00:00Z',
+      },
+    ],
+  })
+);
+
+function renderPage(
+  variant: ShowcaseListVariant,
+  entry: string,
+  path: string,
+  client = createTestQueryClient()
+) {
   return render(
-    <AppTestProviders>
+    <AppTestProviders client={client}>
       <MemoryRouter initialEntries={[entry]}>
         <Routes>
           <Route path={path} element={<ShowcaseListPage variant={variant} />} />
@@ -243,6 +264,49 @@ describe('ShowcaseListPage', () => {
     expect(await screen.findByText('Film 1')).toBeInTheDocument();
     expect(requested).toEqual([{ seed: '1399', mediaType: 'tv' }]);
   });
+
+  it('names the latest watched title as the seed when the link points at it', async () => {
+    server.use(
+      authedUserHandler,
+      emptyWatchlistHandler,
+      lastWatchedInceptionHandler,
+      showcaseHandler
+    );
+    renderPage('recommendations', '/films/similaires/27205', '/films/similaires/:seedTmdbId');
+
+    expect(await screen.findByText('Inception')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['another film', '/films/similaires/603'],
+    ['the series sharing its id', '/films/similaires/27205?type=tv'],
+  ])(
+    'keeps the generic subtitle when the link seeds %s rather than the latest watched title',
+    async (_seed, entry) => {
+      const client = createTestQueryClient();
+      server.use(
+        authedUserHandler,
+        emptyWatchlistHandler,
+        lastWatchedInceptionHandler,
+        showcaseHandler
+      );
+      renderPage('recommendations', entry, '/films/similaires/:seedTmdbId', client);
+
+      await screen.findByText('Film 1');
+      await waitFor(() =>
+        expect(
+          client
+            .getQueryCache()
+            .findAll({ queryKey: ['users', 'me', 'watched-movies'] })
+            .map((query) => query.state.status)
+        ).toEqual(['success'])
+      );
+      await act(async () => {});
+
+      expect(screen.queryByText('Inception')).not.toBeInTheDocument();
+      expect(screen.getByText('À partir de votre dernière soirée')).toBeInTheDocument();
+    }
+  );
 
   it('affiche le rang sur le classement communautaire', async () => {
     server.use(
