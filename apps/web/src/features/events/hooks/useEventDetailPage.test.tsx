@@ -1,10 +1,11 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation, type InitialEntry } from 'react-router';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import type { ReactNode } from 'react';
-import { QueryClientWrapper } from '@/test-utils/queryWrapper';
+import { QueryClientWrapper, createTestQueryClient } from '@/test-utils/queryWrapper';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import { createEventDetailHandlers, TEST_API_V1 } from '@/mocks/handlers';
 import {
   getStoredHostToken,
@@ -99,6 +100,23 @@ describe('useEventDetailPage', () => {
     await waitFor(() => expect(result.current.event).not.toBeNull());
     expect(result.current.participant).toEqual({ participantId: 'p-msw-bob', pseudo: 'Bob' });
     expect(getStoredParticipant(slug)).toEqual({ participantId: 'p-msw-bob', pseudo: 'Bob' });
+  });
+
+  it('marks my movie nights stale when it refreshes the movie night after a draw', async () => {
+    serveEventNever();
+    const client = createTestQueryClient();
+    client.setQueryData(queryKeys.myEvents.active, { pages: [], pageParams: [] });
+    const { result } = renderHook(() => useEventDetailPage(slug), {
+      wrapper: ({ children }: Readonly<{ children: ReactNode }>) => (
+        <QueryClientWrapper client={client}>
+          <MemoryRouter initialEntries={[`/e/${slug}`]}>{children}</MemoryRouter>
+        </QueryClientWrapper>
+      ),
+    });
+
+    act(() => result.current.refreshAll());
+
+    expect(client.getQueryState(queryKeys.myEvents.active)?.isInvalidated).toBe(true);
   });
 
   it('keeps the fragment and the navigation state when it moves a legacy host token into the session', async () => {

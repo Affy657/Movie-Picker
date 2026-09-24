@@ -138,7 +138,10 @@ export function useHostEventSettingsDraft({
       savedRef.current = settings;
       if (!saveQueuedRef.current) setSaveState('saved');
       setSaveError(null);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list }),
+      ]);
     },
     onError: (e) => {
       setSaveState('error');

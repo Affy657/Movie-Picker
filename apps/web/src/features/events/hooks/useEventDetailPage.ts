@@ -89,6 +89,7 @@ export function useEventDetailPage(
     if (!slug) return;
     queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
     queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
   }, [slug, hostToken, queryClient]);
 
   return {

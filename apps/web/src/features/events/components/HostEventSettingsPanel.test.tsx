@@ -7,6 +7,7 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
 import type { EventData } from '@/features/events/types';
 import {
@@ -229,6 +230,37 @@ describe('HostEventSettingsPanel', () => {
     await waitFor(() => expect(bodies).toHaveLength(2));
     expect(bodies[1]).toEqual({ allowSeries: false });
     expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+  });
+
+  it('marks my movie nights stale once a new title is saved', async () => {
+    const user = userEvent.setup();
+    let patchedBody: Record<string, unknown> | null = null;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        patchedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+    const qc = createTestQueryClient();
+    qc.setQueryData(queryKeys.myEvents.active, { pages: [], pageParams: [] });
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />,
+      qc
+    );
+
+    await user.type(screen.getByLabelText(/nom de la soir/i), ' ciné');
+
+    await waitFor(() => expect(patchedBody).toEqual({ title: 'Test ciné' }), { timeout: 3000 });
+    await waitFor(() =>
+      expect(qc.getQueryState(queryKeys.myEvents.active)?.isInvalidated).toBe(true)
+    );
   });
 
   it('enabling the participants limit sends the default cap, then the typed one', async () => {
