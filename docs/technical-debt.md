@@ -354,7 +354,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - state: agent
 - impact: le sélecteur d'emoji du thème, le menu des cartes film et `Dropdown` posent chacun leur écouteur `mousedown` sur le document au lieu de `useClickOutside`. Trois comportements proches mais pas identiques (Échap qui rend ou non le focus, clic dans une boîte de dialogue ouverte, second élément porté par un portail), qu'une correction du hook ne corrige pas.
 - ou: `apps/web/src/features/events/components/ThemeField.tsx`, `apps/web/src/features/movies/components/MovieCardKebab.tsx`, `apps/web/src/shared/components/Dropdown.tsx`, `apps/web/src/shared/hooks/useClickOutside.ts`
-- verify: `grep -rn "addEventListener('mousedown'" apps/web/src --include=*.tsx`
+- verify: `grep -rn "document.addEventListener('mousedown'" apps/web/src --include=*.tsx`
 - fix: donner à `useClickOutside` une liste de refs (le panneau porté par un portail du menu des cartes), un rendu du focus à Échap, et n'ignorer un clic dans un `dialog[open]` que si ce dialogue ne contient pas la ref ; puis y passer les trois appelants
 - fini-quand: le `verify` ne sort plus rien et le sélecteur d'emoji se ferme toujours au clic ailleurs dans la feuille des paramètres de soirée
 - piege: `ThemeField` vit dans la feuille des paramètres de soirée, un `<dialog>` ouvert : le hook actuel ignore tout clic dans un dialogue ouvert, donc le sélecteur ne se fermerait plus. C'est la raison de l'écouteur maison, pas un oubli.
@@ -493,7 +493,7 @@ Réglages posés le même jour, à vérifier et non reposer :
 
 ## C8 jamais d'`await` de premier niveau dans `main.tsx`
 
-`apps/web/src/main.tsx` termine par `void boot()`, et `boot` attrape ses propres erreurs : il retire la coquille et démarre Sentry dans un `finally`, que le montage réussisse ou non, sans promesse flottante. Un `await` de premier niveau rend l'évaluation du module d'entrée asynchrone et retarde tout le montage de React : posé le 2026-09-09, il a coûté 3 à 5 points Lighthouse sur onze pages sur treize. Sonar réclamait ce `await` (`typescript:S7785`) tant que le module finissait par `boot().catch(...)` ; la forme `void boot()` le satisfait sans le poser, ne pas revenir à une chaîne de promesse.
+`apps/web/src/main.tsx` termine par `boot()`, une fonction synchrone qui lance le montage et en attrape les erreurs dans sa chaîne de promesse : la coquille tombe et Sentry démarre dans un `finally`, que le montage réussisse ou non. Un `await` de premier niveau rend l'évaluation du module d'entrée asynchrone et retarde tout le montage de React : posé le 2026-09-09, il a coûté 3 à 5 points Lighthouse sur onze pages sur treize. Sonar réclame ce `await` (`typescript:S7785`) pour toute chaîne de promesse et tout appel de fonction `async` écrits au premier niveau du module, `void boot()` compris : la chaîne vit donc dans `boot`, qui n'est pas `async`. Ne remonter ni la chaîne ni un `async` au premier niveau.
 
 Signature du diagnostic pour toute régression de ce type : `home` et `login` ne bougent pas, les onze autres perdent, parce que ce sont les deux pages dont le plus grand élément n'attend pas React (titre peint dans la coquille pour `home`, LCP adossé à une ressource pour `login`). Une régression qui épargne ces deux pages est dans le chemin de montage. Pour l'attribuer à un commit, la porte ne tournant qu'au déploiement, relever le score sur les runs passés :
 

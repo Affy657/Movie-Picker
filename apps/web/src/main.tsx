@@ -37,15 +37,13 @@ async function mountApp(): Promise<void> {
   );
 }
 
-async function boot(): Promise<void> {
-  try {
-    await mountApp();
-  } catch (error: unknown) {
-    captureException(error);
-  } finally {
-    hideSplash();
-    scheduleSentryStart();
-  }
+function boot(): void {
+  mountApp()
+    .catch((error: unknown) => captureException(error))
+    .finally(() => {
+      hideSplash();
+      scheduleSentryStart();
+    });
 }
 
-void boot();
+boot();

@@ -1,4 +1,4 @@
-import { useId, useRef, type KeyboardEvent, type RefObject } from 'react';
+import { useEffect, useId, useRef, type RefObject } from 'react';
 import { History, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import IconButton from '@/shared/components/IconButton';
@@ -32,6 +32,7 @@ export default function SearchHistoryDropdown({
 }: Readonly<SearchHistoryDropdownProps>) {
   const { t } = useTranslation();
   const titleId = useId();
+  const panelRef = useRef<HTMLFieldSetElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
 
   const itemButtons = () =>
@@ -72,7 +73,7 @@ export default function SearchHistoryDropdown({
     onClose();
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent) => {
     const buttons = itemButtons();
     const index = focusedIndex();
     switch (event.key) {
@@ -109,46 +110,52 @@ export default function SearchHistoryDropdown({
     }
   };
 
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    const keepInputFocused = (event: MouseEvent) => event.preventDefault();
+    panel.addEventListener('keydown', onKeyDown);
+    panel.addEventListener('mousedown', keepInputFocused);
+    return () => {
+      panel.removeEventListener('keydown', onKeyDown);
+      panel.removeEventListener('mousedown', keepInputFocused);
+    };
+  });
+
   return (
-    <fieldset className={styles.historyDropdown} aria-labelledby={titleId}>
-      <div
-        role="presentation"
-        onKeyDown={onKeyDown}
-        onMouseDown={(event) => event.preventDefault()}
-      >
-        <div className={styles.historyHeader}>
-          <span className={styles.historyTitle} id={titleId}>
-            {t('movies.search.historyTitle')}
-          </span>
-          <LinkButton size="sm" onClick={clear}>
-            {t('movies.search.historyClear')}
-          </LinkButton>
-        </div>
-        <ul className={styles.historyList} ref={listRef}>
-          {history.map((query, index) => (
-            <li key={query} className={styles.historyItem}>
-              <button
-                type="button"
-                className={styles.historyItemBtn}
-                aria-label={t('movies.search.historySelectAria', { query })}
-                onClick={() => select(query)}
-                data-history-item
-              >
-                <History className={styles.historyIcon} size={ICON_SIZE.sm} aria-hidden />
-                <span className={styles.historyLabel}>{query}</span>
-              </button>
-              <IconButton
-                size="sm"
-                className={styles.historyRemoveBtn}
-                ariaLabel={t('movies.search.historyRemoveAria', { query })}
-                onClick={() => remove(index)}
-              >
-                <X size={ICON_SIZE.md} aria-hidden />
-              </IconButton>
-            </li>
-          ))}
-        </ul>
+    <fieldset ref={panelRef} className={styles.historyDropdown} aria-labelledby={titleId}>
+      <div className={styles.historyHeader}>
+        <span className={styles.historyTitle} id={titleId}>
+          {t('movies.search.historyTitle')}
+        </span>
+        <LinkButton size="sm" onClick={clear}>
+          {t('movies.search.historyClear')}
+        </LinkButton>
       </div>
+      <ul className={styles.historyList} ref={listRef}>
+        {history.map((query, index) => (
+          <li key={query} className={styles.historyItem}>
+            <button
+              type="button"
+              className={styles.historyItemBtn}
+              aria-label={t('movies.search.historySelectAria', { query })}
+              onClick={() => select(query)}
+              data-history-item
+            >
+              <History className={styles.historyIcon} size={ICON_SIZE.sm} aria-hidden />
+              <span className={styles.historyLabel}>{query}</span>
+            </button>
+            <IconButton
+              size="sm"
+              className={styles.historyRemoveBtn}
+              ariaLabel={t('movies.search.historyRemoveAria', { query })}
+              onClick={() => remove(index)}
+            >
+              <X size={ICON_SIZE.md} aria-hidden />
+            </IconButton>
+          </li>
+        ))}
+      </ul>
     </fieldset>
   );
 }
