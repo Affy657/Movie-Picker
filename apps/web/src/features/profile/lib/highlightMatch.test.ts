@@ -55,6 +55,22 @@ describe('splitOnMatch', () => {
     ]);
   });
 
+  it('highlights the matched letters after an emoji outside the basic plane', () => {
+    expect(splitOnMatch('🎬 Alice', 'ali')).toEqual([
+      { text: '🎬 ', matched: false },
+      { text: 'Ali', matched: true },
+      { text: 'ce', matched: false },
+    ]);
+  });
+
+  it('highlights a match that ends on an emoji', () => {
+    expect(splitOnMatch('Soirée 🍿🎬 ciné', 'e 🍿🎬')).toEqual([
+      { text: 'Soiré', matched: false },
+      { text: 'e 🍿🎬', matched: true },
+      { text: ' ciné', matched: false },
+    ]);
+  });
+
   it('trims the query before matching', () => {
     expect(splitOnMatch('Julien Morin', '  mor  ')).toEqual([
       { text: 'Julien ', matched: false },
