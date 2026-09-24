@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import { Link } from 'react-router';
 import { buttonClass } from '@/shared/components/Button';
 import { useTranslation } from '@/shared/i18n';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
 import { LANDING_ANCHORS } from './anchors';
 import shared from './landingShared.module.css';
@@ -9,6 +10,8 @@ import styles from './LandingFinalCta.module.css';
 
 export default function LandingFinalCta() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isSignedIn = !!user;
 
   return (
     <section
@@ -23,12 +26,26 @@ export default function LandingFinalCta() {
         </h2>
         <p className={clsx(shared.lead, shared.center)}>{t('landing.final.lead')}</p>
         <div className={styles.ctas}>
-          <Link to={ROUTES.register} className={buttonClass({ variant: 'primary', size: 'lg' })}>
-            {t('home.ctaRegister')}
-          </Link>
-          <Link to={ROUTES.login} className={buttonClass({ size: 'lg' })}>
-            {t('home.ctaLogin')}
-          </Link>
+          {isSignedIn ? (
+            <Link
+              to={ROUTES.createEvent}
+              className={buttonClass({ variant: 'primary', size: 'lg' })}
+            >
+              {t('events.myEvents.createCta')}
+            </Link>
+          ) : (
+            <>
+              <Link
+                to={ROUTES.register}
+                className={buttonClass({ variant: 'primary', size: 'lg' })}
+              >
+                {t('home.ctaRegister')}
+              </Link>
+              <Link to={ROUTES.login} className={buttonClass({ size: 'lg' })}>
+                {t('home.ctaLogin')}
+              </Link>
+            </>
+          )}
         </div>
         <p className={styles.note}>{t('landing.final.note')}</p>
       </div>
