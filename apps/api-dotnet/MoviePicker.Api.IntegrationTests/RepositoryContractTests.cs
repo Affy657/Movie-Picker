@@ -280,6 +280,74 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.NotNull(reloaded!.SupporterSince);
     }
 
+    private const int RaceRounds = 40;
+    private const int RacersPerRound = 6;
+
+    private static async Task<int> CountWinnersOfARaceAsync(Func<int, Task> update)
+    {
+        using var startingLine = new Barrier(RacersPerRound);
+        async Task<bool> AttemptAsync(int racer)
+        {
+            try
+            {
+                await update(racer);
+                return true;
+            }
+            catch (ConflictException ex) when (ex.Reason == ErrorCodes.ConcurrentUpdate)
+            {
+                return false;
+            }
+        }
+
+        var outcomes = await Task.WhenAll(Enumerable.Range(0, RacersPerRound).Select(racer =>
+            Task.Factory.StartNew(
+                () =>
+                {
+                    startingLine.SignalAndWait();
+                    return AttemptAsync(racer);
+                },
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default).Unwrap()));
+        return outcomes.Count(won => won);
+    }
+
+    [Fact]
+    public async Task EventUpdate_RacingCopiesOfTheSameVersion_LetExactlyOneWin()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var winnersPerRound = new List<int>();
+
+        for (var round = 0; round < RaceRounds; round++)
+        {
+            var created = await events.AddAsync(NewEvent($"Race {round}"));
+            winnersPerRound.Add(await CountWinnersOfARaceAsync(racer =>
+                events.UpdateAsync(created with { Title = $"Racer {racer}" })));
+            Assert.Equal(created.Version + 1, (await events.GetByIdOrSlugAsync(created.Slug))!.Version);
+        }
+
+        Assert.Equal(Enumerable.Repeat(1, RaceRounds), winnersPerRound);
+    }
+
+    [Fact]
+    public async Task UserUpdate_RacingCopiesOfTheSameVersion_LetExactlyOneWin()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var winnersPerRound = new List<int>();
+
+        for (var round = 0; round < RaceRounds; round++)
+        {
+            var created = await users.AddAsync(NewUser("race"));
+            winnersPerRound.Add(await CountWinnersOfARaceAsync(racer =>
+                users.UpdateAsync(created with { Bio = $"Racer {racer}" })));
+            Assert.Equal(created.Version + 1, (await users.GetByIdAsync(created.Id))!.Version);
+        }
+
+        Assert.Equal(Enumerable.Repeat(1, RaceRounds), winnersPerRound);
+    }
+
     [Fact]
     public async Task ListOpenEventsStartingBetween_ReturnsOnlyOpenEventsInsideTheWindow()
     {
