@@ -64,6 +64,53 @@ public sealed class SentryBeforeSendTests
         Assert.Equal("host=***&x=1", prepared.Request.QueryString);
     }
 
+    [Theory]
+    [InlineData("X-Host-Token", "X-Forwarded-For")]
+    [InlineData("x-host-token", "x-forwarded-for")]
+    public void Prepare_MasksHostTokenAndClientAddressHeaders(string hostTokenHeader, string forwardedForHeader)
+    {
+        var request = new SentryRequest();
+        request.Headers[hostTokenHeader] = "SECRET-TOKEN";
+        request.Headers[forwardedForHeader] = "203.0.113.7, 10.0.0.1";
+        request.Headers["Accept"] = "application/json";
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom")) { Request = request };
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        Assert.Equal(SensitiveQueryRedaction.Mask, prepared!.Request.Headers[hostTokenHeader]);
+        Assert.Equal(SensitiveQueryRedaction.Mask, prepared.Request.Headers[forwardedForHeader]);
+        Assert.Equal("application/json", prepared.Request.Headers["Accept"]);
+        Assert.DoesNotContain(prepared.Request.Headers.Values, value => value.Contains("SECRET", StringComparison.Ordinal));
+        Assert.DoesNotContain(prepared.Request.Headers.Values, value => value.Contains("203.0.113.7", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void PrepareTransaction_RedactsQueryStringHeadersAndUser()
+    {
+        var transaction = new SentryTransaction("GET /api/v1/events/{idOrSlug}/wheel", "http.server")
+        {
+            Request = new SentryRequest
+            {
+                Url = "https://api.test/api/v1/events/abc/wheel?host=SECRET-TOKEN&x=1",
+                QueryString = "?host=SECRET-TOKEN&x=1"
+            },
+            User = new SentryUser { Id = "000000000000", IpAddress = "203.0.113.7" }
+        };
+        transaction.Request.Headers[HostTokenAccessor.HostHeaderName] = "SECRET-TOKEN";
+        transaction.Request.Headers["X-Forwarded-For"] = "203.0.113.7";
+
+        var prepared = SentryBeforeSend.PrepareTransaction(transaction);
+
+        Assert.Same(transaction, prepared);
+        Assert.Equal("https://api.test/api/v1/events/abc/wheel?host=***&x=1", prepared.Request.Url);
+        Assert.Equal("?host=***&x=1", prepared.Request.QueryString);
+        Assert.Equal(SensitiveQueryRedaction.Mask, prepared.Request.Headers[HostTokenAccessor.HostHeaderName]);
+        Assert.Equal(SensitiveQueryRedaction.Mask, prepared.Request.Headers["X-Forwarded-For"]);
+        Assert.Null(prepared.User.Id);
+        Assert.Null(prepared.User.IpAddress);
+    }
+
     [Fact]
     public void Prepare_EventFromALog_KeepsTheTemplateWithoutTheLoggedValues()
     {
