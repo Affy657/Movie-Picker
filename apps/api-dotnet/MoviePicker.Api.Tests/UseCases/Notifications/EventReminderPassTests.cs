@@ -175,6 +175,24 @@ public sealed class EventReminderPassTests
     }
 
     [Fact]
+    public async Task RunAsync_Reminder_ExpiresWhenTheNightStarts()
+    {
+        GivenOpenEvents(EventStartingAt("e1", Now.AddMinutes(50)));
+        GivenParticipants("e1", "u1");
+        GivenUsers(Subscriber("u1"));
+        GivenPushSubscription("u1");
+
+        await CreatePass().RunAsync();
+
+        _sender.Verify(
+            s => s.SendAsync(
+                It.IsAny<PushSubscription>(),
+                It.Is<PushMessage>(m => m.TimeToLive == TimeSpan.FromMinutes(50)),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task RunAsync_EventOneDayAway_SendsThe24hReminderWithItsOwnWording()
     {
         GivenOpenEvents(EventStartingAt("e1", Now.AddHours(24)));

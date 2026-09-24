@@ -14,6 +14,10 @@ public sealed class WebPushSender : IPushNotificationSender
 {
     public const string HttpClientName = "web-push";
 
+    private static readonly TimeSpan DefaultTimeToLive = TimeSpan.FromDays(2);
+
+    private static readonly TimeSpan MinimumTimeToLive = TimeSpan.FromMinutes(1);
+
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<WebPushSender> _logger;
@@ -80,7 +84,8 @@ public sealed class WebPushSender : IPushNotificationSender
                 }
             );
 
-            await webPushClient.SendNotificationAsync(pushSubscription, payload, cancellationToken: ct);
+            var options = new Dictionary<string, object> { ["TTL"] = TimeToLiveSeconds(message) };
+            await webPushClient.SendNotificationAsync(pushSubscription, payload, options, ct);
             return true;
         }
         catch (WebPushException ex)
@@ -103,6 +108,12 @@ public sealed class WebPushSender : IPushNotificationSender
             );
             return !IsWorthRetrying(ex);
         }
+    }
+
+    private static int TimeToLiveSeconds(PushMessage message)
+    {
+        var lifetime = message.TimeToLive ?? DefaultTimeToLive;
+        return (int)Math.Clamp(lifetime.TotalSeconds, MinimumTimeToLive.TotalSeconds, DefaultTimeToLive.TotalSeconds);
     }
 
     internal static bool IsWorthRetrying(Exception ex) => ex switch
