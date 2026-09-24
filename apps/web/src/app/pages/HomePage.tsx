@@ -136,6 +136,7 @@ export default function HomePage() {
       posterPath: item.posterPath,
       voteAverage: item.voteAverage,
       runtimeMinutes: item.runtimeMinutes,
+      genreIds: item.genreIds,
     });
 
   const selectedGenreIds = genreTab === 'all' ? undefined : [Number(genreTab)];
@@ -149,6 +150,7 @@ export default function HomePage() {
       posterPath: item.posterPath,
       voteAverage: item.voteAverage,
       runtimeMinutes: item.runtimeMinutes,
+      genreIds: item.genreIds,
     });
 
   const runSearch = (term: string) => {
