@@ -1,7 +1,7 @@
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AnalyticsSync from '@/app/components/AnalyticsSync';
-import { ConsentProvider } from '@/shared/contexts/ConsentContext';
+import { ConsentProvider, useConsent } from '@/shared/contexts/ConsentContext';
 import { identify, initPostHog, resetIdentity, optIn, optOut } from '@/shared/analytics/posthog';
 
 vi.mock('@/shared/analytics/posthog', () => ({
@@ -78,5 +78,37 @@ describe('AnalyticsSync', () => {
     await vi.waitFor(() => expect(optIn).toHaveBeenCalled());
     expect(resetIdentity).toHaveBeenCalled();
     expect(identify).not.toHaveBeenCalled();
+  });
+
+  it('never opts back in when consent is withdrawn while PostHog is still loading', async () => {
+    localStorage.setItem(CONSENT_KEY, JSON.stringify({ decided: true, analytics: true }));
+    useAuth.mockReturnValue({ user: null });
+    let finishLoading: () => void = () => {};
+    vi.mocked(initPostHog).mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        finishLoading = resolve;
+      })
+    );
+    let withdrawConsent: () => void = () => {};
+    function ConsentWithdrawal() {
+      withdrawConsent = useConsent().rejectAll;
+      return null;
+    }
+    render(
+      <ConsentProvider>
+        <AnalyticsSync />
+        <ConsentWithdrawal />
+      </ConsentProvider>
+    );
+
+    act(() => withdrawConsent());
+    await act(async () => {
+      finishLoading();
+      await Promise.resolve();
+    });
+
+    const lastOptIn = Math.max(0, ...vi.mocked(optIn).mock.invocationCallOrder);
+    const lastOptOut = Math.max(0, ...vi.mocked(optOut).mock.invocationCallOrder);
+    expect(lastOptOut).toBeGreaterThan(lastOptIn);
   });
 });

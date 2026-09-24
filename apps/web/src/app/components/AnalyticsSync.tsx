@@ -13,7 +13,8 @@ export default function AnalyticsSync() {
       optOut();
       return;
     }
-    void initPostHog().then(optIn);
+    optIn();
+    void initPostHog();
   }, [analytics, decided]);
 
   useEffect(() => {
