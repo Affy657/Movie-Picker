@@ -210,9 +210,14 @@ export default function AddMovieForm({
     executeSearch(trimmedForSearch, filters.activeFilters);
   }, [searchAllowed, trimmedForSearch, filters.activeFilters, executeSearch, clearDebounceTimer]);
 
+  const previousActiveFiltersRef = useRef(filters.activeFilters);
+
   useEffect(() => {
     const trimmed = trimmedForSearch;
-    const shouldSearch = trimmed.length >= SEARCH_MIN_CHARS;
+    const filtersChanged = previousActiveFiltersRef.current !== filters.activeFilters;
+    previousActiveFiltersRef.current = filters.activeFilters;
+    const filtersOnlySearch = trimmed.length === 0 && filters.hasApiFilters && filtersChanged;
+    const shouldSearch = trimmed.length >= SEARCH_MIN_CHARS || filtersOnlySearch;
 
     if (!shouldSearch) {
       immediateSearchRef.current = false;
@@ -253,6 +258,7 @@ export default function AddMovieForm({
   }, [
     trimmedForSearch,
     filters.activeFilters,
+    filters.hasApiFilters,
     filters.filterChangedRef,
     currentSearchKey,
     executeSearch,
