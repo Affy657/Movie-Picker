@@ -16,14 +16,59 @@ const BIO_MAX_LENGTH = 140;
 const BIO_HINT_THRESHOLD = 20;
 const AUTOSAVE_DELAY_MS = 800;
 
+type ProfileDraft = {
+  displayName: string;
+  bio: string;
+  isPublic: boolean;
+  isWatchlistPublic: boolean;
+};
+
+function draftOf(user: UserProfile): ProfileDraft {
+  return {
+    displayName: user.displayName,
+    bio: user.bio ?? '',
+    isPublic: user.isProfilePublic ?? true,
+    isWatchlistPublic: user.isWatchlistPublic ?? true,
+  };
+}
+
+function sameDraft(a: ProfileDraft, b: ProfileDraft): boolean {
+  return (
+    a.displayName === b.displayName &&
+    a.bio === b.bio &&
+    a.isPublic === b.isPublic &&
+    a.isWatchlistPublic === b.isWatchlistPublic
+  );
+}
+
+function unlessEdited<T>(draftValue: T, serverValue: T, incomingValue: T): T {
+  return draftValue === serverValue ? incomingValue : draftValue;
+}
+
+function keepUnsavedEdits(
+  draft: ProfileDraft,
+  server: ProfileDraft,
+  incoming: ProfileDraft
+): ProfileDraft {
+  return {
+    displayName: unlessEdited(draft.displayName, server.displayName, incoming.displayName),
+    bio: unlessEdited(draft.bio, server.bio, incoming.bio),
+    isPublic: unlessEdited(draft.isPublic, server.isPublic, incoming.isPublic),
+    isWatchlistPublic: unlessEdited(
+      draft.isWatchlistPublic,
+      server.isWatchlistPublic,
+      incoming.isWatchlistPublic
+    ),
+  };
+}
+
 export default function AccountProfilePage({ user }: Readonly<{ user: UserProfile }>) {
   const { t } = useTranslation();
   const { patchProfile } = useAuth();
 
-  const [displayName, setDisplayName] = useState(user.displayName);
-  const [bio, setBio] = useState(user.bio ?? '');
-  const [isPublic, setIsPublic] = useState(user.isProfilePublic ?? true);
-  const [isWatchlistPublic, setIsWatchlistPublic] = useState(user.isWatchlistPublic ?? true);
+  const [draft, setDraftState] = useState(() => draftOf(user));
+  const draftRef = useRef(draft);
+  const serverDraftRef = useRef(draft);
   const [pseudoError, setPseudoError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, flashSaved] = useSavedFlash();
@@ -31,66 +76,73 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
   const savingRef = useRef(false);
   const pendingRetryRef = useRef(false);
 
+  const setDraft = useCallback((next: ProfileDraft) => {
+    draftRef.current = next;
+    setDraftState(next);
+  }, []);
+
+  const editDraft = (edit: Partial<ProfileDraft>) => setDraft({ ...draftRef.current, ...edit });
+
   useEffect(() => {
-    setDisplayName(user.displayName);
-    setBio(user.bio ?? '');
-    setIsPublic(user.isProfilePublic ?? true);
-    setIsWatchlistPublic(user.isWatchlistPublic ?? true);
-  }, [user]);
+    const incoming = draftOf(user);
+    const merged = keepUnsavedEdits(draftRef.current, serverDraftRef.current, incoming);
+    serverDraftRef.current = incoming;
+    if (!sameDraft(merged, draftRef.current)) setDraft(merged);
+  }, [user, setDraft]);
 
   useEffect(() => () => globalThis.clearTimeout(timerRef.current), []);
 
-  const flush = useCallback(
-    async (overrides: { isProfilePublic?: boolean; isWatchlistPublic?: boolean } = {}) => {
-      globalThis.clearTimeout(timerRef.current);
-      const trimmedName = displayName.trim();
-      if (!trimmedName) {
-        setPseudoError(t('auth.account.pseudoRequired'));
-        return;
-      }
-      setPseudoError(null);
+  const flush = useCallback(async () => {
+    globalThis.clearTimeout(timerRef.current);
+    const sent = draftRef.current;
+    const trimmedName = sent.displayName.trim();
+    if (!trimmedName) {
+      setPseudoError(t('auth.account.pseudoRequired'));
+      return;
+    }
+    setPseudoError(null);
 
-      const nextIsPublic = overrides.isProfilePublic ?? isPublic;
-      const nextIsWatchlistPublic = overrides.isWatchlistPublic ?? isWatchlistPublic;
-      const bioTrimmed = bio.trim();
-      const bioChanged = bioTrimmed !== (user.bio?.trim() ?? '');
-      const nameChanged = trimmedName !== user.displayName;
-      const publicChanged = nextIsPublic !== (user.isProfilePublic ?? true);
-      const watchlistChanged = nextIsWatchlistPublic !== (user.isWatchlistPublic ?? true);
-      if (!nameChanged && !bioChanged && !publicChanged && !watchlistChanged) return;
-      if (savingRef.current) {
-        pendingRetryRef.current = true;
-        return;
-      }
+    const server = serverDraftRef.current;
+    const bioTrimmed = sent.bio.trim();
+    const bioChanged = bioTrimmed !== server.bio.trim();
+    const nameChanged = trimmedName !== server.displayName;
+    const publicChanged = sent.isPublic !== server.isPublic;
+    const watchlistChanged = sent.isWatchlistPublic !== server.isWatchlistPublic;
+    if (!nameChanged && !bioChanged && !publicChanged && !watchlistChanged) return;
+    if (savingRef.current) {
+      pendingRetryRef.current = true;
+      return;
+    }
 
-      savingRef.current = true;
-      try {
-        setSaveError(null);
-        await patchProfile({
-          displayName: trimmedName,
-          ...(bioChanged ? { bio: bioTrimmed === '' ? null : bioTrimmed } : {}),
-          isProfilePublic: nextIsPublic,
-          isWatchlistPublic: nextIsWatchlistPublic,
-        });
-        flashSaved();
-      } catch (err) {
-        setSaveError(getErrorMessage(err, t('profile.settings.fallbackError')));
-      } finally {
-        savingRef.current = false;
-        if (pendingRetryRef.current) {
-          pendingRetryRef.current = false;
-          void flush();
-        }
+    savingRef.current = true;
+    try {
+      setSaveError(null);
+      const updated = await patchProfile({
+        displayName: trimmedName,
+        ...(bioChanged ? { bio: bioTrimmed === '' ? null : bioTrimmed } : {}),
+        isProfilePublic: sent.isPublic,
+        isWatchlistPublic: sent.isWatchlistPublic,
+      });
+      serverDraftRef.current = draftOf(updated);
+      if (sameDraft(draftRef.current, sent)) setDraft(serverDraftRef.current);
+      flashSaved();
+    } catch (err) {
+      setSaveError(getErrorMessage(err, t('profile.settings.fallbackError')));
+    } finally {
+      savingRef.current = false;
+      if (pendingRetryRef.current) {
+        pendingRetryRef.current = false;
+        void flush();
       }
-    },
-    [displayName, bio, isPublic, isWatchlistPublic, user, patchProfile, flashSaved, t]
-  );
+    }
+  }, [patchProfile, flashSaved, t, setDraft]);
 
   const scheduleSave = () => {
     globalThis.clearTimeout(timerRef.current);
     timerRef.current = globalThis.setTimeout(() => void flush(), AUTOSAVE_DELAY_MS);
   };
 
+  const { displayName, bio, isPublic, isWatchlistPublic } = draft;
   const bioCharsLeft = BIO_MAX_LENGTH - bio.length;
   const showBioHint = bioCharsLeft <= BIO_HINT_THRESHOLD;
   const errorMsg = pseudoError ?? saveError;
@@ -123,7 +175,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
                 autoComplete="nickname"
                 value={displayName}
                 onChange={(e) => {
-                  setDisplayName(e.target.value);
+                  editDraft({ displayName: e.target.value });
                   scheduleSave();
                 }}
                 onBlur={() => void flush()}
@@ -143,7 +195,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
                 className="input"
                 value={bio}
                 onChange={(e) => {
-                  setBio(e.target.value);
+                  editDraft({ bio: e.target.value });
                   scheduleSave();
                 }}
                 onBlur={() => void flush()}
@@ -172,10 +224,9 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
           <Toggle
             checked={isPublic}
             ariaLabel={t('profile.settings.visibilityLabel')}
-            onChange={() => {
-              const next = !isPublic;
-              setIsPublic(next);
-              void flush({ isProfilePublic: next });
+            onChange={(checked) => {
+              editDraft({ isPublic: checked });
+              void flush();
             }}
           />
         </div>
@@ -193,10 +244,9 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
             checked={isWatchlistPublic}
             disabled={!isPublic}
             ariaLabel={t('profile.settings.watchlistVisibilityLabel')}
-            onChange={() => {
-              const next = !isWatchlistPublic;
-              setIsWatchlistPublic(next);
-              void flush({ isWatchlistPublic: next });
+            onChange={(checked) => {
+              editDraft({ isWatchlistPublic: checked });
+              void flush();
             }}
           />
         </div>

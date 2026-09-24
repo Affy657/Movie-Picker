@@ -82,6 +82,120 @@ describe('AccountProfilePage (MSW)', () => {
     expect(await screen.findByText('Enregistré')).toBeInTheDocument();
   });
 
+  it('autosaves the last keystroke and keeps it in the field once saved', async () => {
+    const user = userEvent.setup();
+    const patchBodies: Record<string, unknown>[] = [];
+    server.use(
+      http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        patchBodies.push(body);
+        return HttpResponse.json({ ...baseUser, ...body });
+      })
+    );
+
+    renderProfile();
+    await screen.findByDisplayValue('Alice');
+
+    const pseudoInput = screen.getByLabelText(/pseudo/i);
+    await user.clear(pseudoInput);
+    await user.type(pseudoInput, 'Alicia');
+
+    await waitFor(() => expect(patchBodies).toHaveLength(1));
+    expect(patchBodies[0]!.displayName).toBe('Alicia');
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+    expect(pseudoInput).toHaveValue('Alicia');
+  });
+
+  it('autosaves the last keystroke of the bio', async () => {
+    const user = userEvent.setup();
+    const patchBodies: Record<string, unknown>[] = [];
+    server.use(
+      http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        patchBodies.push(body);
+        return HttpResponse.json({ ...baseUser, ...body });
+      })
+    );
+
+    renderProfile();
+    const bioInput = await screen.findByLabelText(/bio/i);
+    await user.clear(bioInput);
+    await user.type(bioInput, 'Cinéphile');
+
+    await waitFor(() => expect(patchBodies).toHaveLength(1));
+    expect(patchBodies[0]!.bio).toBe('Cinéphile');
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+    expect(bioInput).toHaveValue('Cinéphile');
+  });
+
+  it('keeps a visibility change made while the name is still saving', async () => {
+    const user = userEvent.setup();
+    const patchBodies: Record<string, unknown>[] = [];
+    let releaseFirstSave: () => void = () => undefined;
+    const firstSaveReleased = new Promise<void>((resolve) => {
+      releaseFirstSave = resolve;
+    });
+    server.use(
+      http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        patchBodies.push(body);
+        if (patchBodies.length === 1) await firstSaveReleased;
+        return HttpResponse.json({ ...baseUser, ...body });
+      })
+    );
+
+    renderProfile();
+    await screen.findByDisplayValue('Alice');
+
+    const pseudoInput = screen.getByLabelText(/pseudo/i);
+    await user.clear(pseudoInput);
+    await user.type(pseudoInput, 'Alicia');
+    await user.tab();
+    await waitFor(() => expect(patchBodies).toHaveLength(1));
+
+    const visibility = screen.getByRole('switch', { name: /profil public/i });
+    await user.click(visibility);
+    releaseFirstSave();
+
+    await waitFor(() => expect(patchBodies).toHaveLength(2));
+    expect(patchBodies[1]).toMatchObject({ displayName: 'Alicia', isProfilePublic: false });
+    await waitFor(() => expect(visibility).toHaveAttribute('aria-checked', 'false'));
+    expect(pseudoInput).toHaveValue('Alicia');
+  });
+
+  it('keeps typing that happens while the previous save is in flight', async () => {
+    const user = userEvent.setup();
+    const patchBodies: Record<string, unknown>[] = [];
+    let releaseFirstSave: () => void = () => undefined;
+    const firstSaveReleased = new Promise<void>((resolve) => {
+      releaseFirstSave = resolve;
+    });
+    server.use(
+      http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        patchBodies.push(body);
+        if (patchBodies.length === 1) await firstSaveReleased;
+        return HttpResponse.json({ ...baseUser, ...body });
+      })
+    );
+
+    renderProfile();
+    await screen.findByDisplayValue('Alice');
+
+    const pseudoInput = screen.getByLabelText(/pseudo/i);
+    await user.clear(pseudoInput);
+    await user.type(pseudoInput, 'Alicia');
+    await user.tab();
+    await waitFor(() => expect(patchBodies).toHaveLength(1));
+
+    await user.type(pseudoInput, ' B');
+    releaseFirstSave();
+
+    await waitFor(() => expect(patchBodies).toHaveLength(2));
+    expect(patchBodies[1]!.displayName).toBe('Alicia B');
+    expect(pseudoInput).toHaveValue('Alicia B');
+  });
+
   it('saves the visibility immediately when the toggle changes', async () => {
     const user = userEvent.setup();
     let patchBody: Record<string, unknown> | null = null;
