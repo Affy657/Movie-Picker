@@ -87,6 +87,14 @@ describe('Dropdown', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('leaves Escape to the dialog around it while collapsed', () => {
+    const { trigger } = setup();
+
+    const notCancelled = fireEvent.keyDown(trigger, { key: 'Escape' });
+
+    expect(notCancelled).toBe(true);
+  });
+
   it('skips a disabled option with the arrows and refuses to select it', async () => {
     const onChange = vi.fn();
     render(

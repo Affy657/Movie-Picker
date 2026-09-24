@@ -8,6 +8,7 @@ type HarnessProps = {
   onClose: () => void;
   enabled?: boolean;
   insideDialog?: boolean;
+  withOtherDialog?: boolean;
   withPortal?: boolean;
   ignoreSelector?: string;
   returnFocus?: boolean;
@@ -19,7 +20,7 @@ function Popover({
   withPortal = false,
   ignoreSelector,
   returnFocus = false,
-}: Readonly<Omit<HarnessProps, 'insideDialog'>>) {
+}: Readonly<Omit<HarnessProps, 'insideDialog' | 'withOtherDialog'>>) {
   const rootRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -46,7 +47,11 @@ function Popover({
   );
 }
 
-function Harness({ insideDialog = false, ...props }: Readonly<HarnessProps>) {
+function Harness({
+  insideDialog = false,
+  withOtherDialog = false,
+  ...props
+}: Readonly<HarnessProps>) {
   const popover = <Popover {...props} />;
   return (
     <>
@@ -61,9 +66,11 @@ function Harness({ insideDialog = false, ...props }: Readonly<HarnessProps>) {
       <button type="button" data-toggle>
         toggle
       </button>
-      <dialog open aria-label="other dialog">
-        <button type="button">in another dialog</button>
-      </dialog>
+      {withOtherDialog && (
+        <dialog open aria-label="other dialog">
+          <button type="button">in another dialog</button>
+        </dialog>
+      )}
       <button type="button">outside</button>
     </>
   );
@@ -102,7 +109,7 @@ describe('useClickOutside', () => {
 
   it('ignores a press in a dialog opened over it', () => {
     const onClose = vi.fn();
-    render(<Harness onClose={onClose} />);
+    render(<Harness onClose={onClose} withOtherDialog />);
 
     fireEvent.mouseDown(screen.getByRole('button', { name: 'in another dialog' }));
     expect(onClose).not.toHaveBeenCalled();
@@ -110,7 +117,7 @@ describe('useClickOutside', () => {
 
   it('closes on a press elsewhere in the dialog that holds it', () => {
     const onClose = vi.fn();
-    render(<Harness onClose={onClose} insideDialog />);
+    render(<Harness onClose={onClose} insideDialog withOtherDialog />);
 
     fireEvent.mouseDown(screen.getByRole('button', { name: 'elsewhere in the sheet' }));
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -134,7 +141,7 @@ describe('useClickOutside', () => {
 
   it('lets Escape pressed in a dialog opened over it close that dialog only', () => {
     const onClose = vi.fn();
-    render(<Harness onClose={onClose} />);
+    render(<Harness onClose={onClose} withOtherDialog />);
 
     const notCancelled = fireEvent.keyDown(
       screen.getByRole('button', { name: 'in another dialog' }),
@@ -143,6 +150,28 @@ describe('useClickOutside', () => {
 
     expect(onClose).not.toHaveBeenCalled();
     expect(notCancelled).toBe(true);
+  });
+
+  it('leaves Escape to a dialog opened over it when the focus fell back to the page', () => {
+    const onClose = vi.fn();
+    render(<Harness onClose={onClose} withOtherDialog />);
+
+    const notCancelled = fireEvent.keyDown(document.body, { key: 'Escape' });
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(notCancelled).toBe(true);
+  });
+
+  it('closes on Escape without pulling back a focus that already left the popover', () => {
+    const onClose = vi.fn();
+    render(<Harness onClose={onClose} returnFocus />);
+    const outside = screen.getByRole('button', { name: 'outside' });
+    outside.focus();
+
+    fireEvent.keyDown(outside, { key: 'Escape' });
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(outside).toHaveFocus();
   });
 
   it('leaves an Escape already handled by the widget alone', () => {

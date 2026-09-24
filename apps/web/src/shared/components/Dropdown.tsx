@@ -105,6 +105,7 @@ export default function Dropdown<V extends string>({
 
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
+      if (!open) return;
       e.preventDefault();
       close();
       return;

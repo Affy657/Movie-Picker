@@ -11,10 +11,26 @@ function isInside(refs: readonly ElementRef[], target: Node): boolean {
   return refs.some((ref) => ref.current?.contains(target));
 }
 
+function holdsThePopover(dialog: Element, refs: readonly ElementRef[]): boolean {
+  return refs.some((ref) => ref.current && dialog.contains(ref.current));
+}
+
 function isInForeignDialog(refs: readonly ElementRef[], target: Element): boolean {
   const dialog = target.closest('dialog[open]');
-  if (!dialog) return false;
-  return !refs.some((ref) => ref.current && dialog.contains(ref.current));
+  return dialog !== null && !holdsThePopover(dialog, refs);
+}
+
+function escapeBelongsToADialog(refs: readonly ElementRef[], target: EventTarget | null): boolean {
+  if (target instanceof Element && target.closest('dialog[open]'))
+    return isInForeignDialog(refs, target);
+  return Array.from(document.querySelectorAll('dialog[open]')).some(
+    (dialog) => !holdsThePopover(dialog, refs)
+  );
+}
+
+function focusIsInside(refs: readonly ElementRef[]): boolean {
+  const active = document.activeElement;
+  return !active || active === document.body || isInside(refs, active);
 }
 
 export function useClickOutside(
@@ -45,10 +61,12 @@ export function useClickOutside(
     };
     const handleKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || event.defaultPrevented) return;
-      if (event.target instanceof Element && isInForeignDialog(watched(), event.target)) return;
+      const list = watched();
+      if (escapeBelongsToADialog(list, event.target)) return;
       event.preventDefault();
+      const giveFocusBack = focusIsInside(list);
       onCloseRef.current();
-      returnFocusTo?.current?.focus();
+      if (giveFocusBack) returnFocusTo?.current?.focus();
     };
     document.addEventListener('mousedown', handlePointer);
     document.addEventListener('keydown', handleKey);
