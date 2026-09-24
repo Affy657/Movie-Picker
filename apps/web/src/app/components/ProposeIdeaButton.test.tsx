@@ -278,6 +278,47 @@ describe('ProposeIdeaButton', () => {
     expect(body.attachments?.[0]?.base64Content.length).toBeGreaterThan(0);
   });
 
+  it('revokes every preview URL when the dialog closes', async () => {
+    let created = 0;
+    globalThis.URL.createObjectURL = () => `blob:preview-${++created}`;
+    const revokeObjectURL = vi.fn();
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+    const { container } = renderButton();
+    const user = await openDialog();
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, [pngFile('a.png'), pngFile('b.png')]);
+    await screen.findAllByRole('button', { name: /retirer cette image/i });
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: /^fermer$/i }));
+    await waitFor(() => expect(container.querySelector('dialog')).toBeNull());
+
+    expect(revokeObjectURL).toHaveBeenCalledTimes(2);
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:preview-1');
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:preview-2');
+  });
+
+  it('revokes the preview URLs once the suggestion is sent', async () => {
+    globalThis.URL.createObjectURL = () => 'blob:sent-preview';
+    const revokeObjectURL = vi.fn();
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, () => new HttpResponse(null, { status: 204 }))
+    );
+    renderButton();
+    const user = await openDialog();
+    await fillForm(user);
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, pngFile('capture.png'));
+    await screen.findByRole('button', { name: /retirer cette image/i });
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/merci/i));
+    expect(revokeObjectURL).toHaveBeenCalledExactlyOnceWith('blob:sent-preview');
+  });
+
   it('se ferme via le bouton de fermeture', async () => {
     const { container } = renderButton();
     const user = await openDialog();

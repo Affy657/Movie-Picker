@@ -56,6 +56,10 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+function revokePreviewUrls(attachments: readonly Attachment[]) {
+  for (const attachment of attachments) URL.revokeObjectURL(attachment.previewUrl);
+}
+
 export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -65,6 +69,8 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const attachmentsRef = useRef(attachments);
+  attachmentsRef.current = attachments;
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const titleId = useId();
@@ -146,6 +152,8 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
     [t]
   );
 
+  useEffect(() => () => revokePreviewUrls(attachmentsRef.current), []);
+
   useEffect(() => {
     if (!open) return;
     setCategory('idea');
@@ -181,6 +189,8 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
         attachments: attachmentPayload.length > 0 ? attachmentPayload : undefined,
       });
       setStatus('success');
+      revokePreviewUrls(attachmentsRef.current);
+      setAttachments([]);
     } catch (err) {
       setStatus('error');
       setError(getErrorMessage(err, t('proposeIdea.submitError')));
