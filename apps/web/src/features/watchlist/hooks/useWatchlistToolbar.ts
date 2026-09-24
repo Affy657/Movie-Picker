@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { genreLabel } from '@/shared/utils/tmdbGenres';
+import { genreLabel, sharesAnyGenre } from '@/shared/utils/tmdbGenres';
 import {
   DECADE_OPTIONS,
   RUNTIME_MAX_MINUTES,
@@ -145,10 +145,7 @@ function itemMatchesRuntime(item: WatchlistItem, range: [number, number]): boole
 }
 
 function itemMatchesFilters(item: WatchlistItem, f: PersistedState): boolean {
-  if (f.genres.length > 0) {
-    const itemGenres = item.genreIds ?? [];
-    if (!itemGenres.some((g) => f.genres.includes(g))) return false;
-  }
+  if (f.genres.length > 0 && !sharesAnyGenre(item.genreIds ?? [], f.genres)) return false;
   if (f.mediaTypes.length > 0 && !f.mediaTypes.includes(item.mediaType)) return false;
   if (f.decade != null && !itemMatchesDecade(item, f.decade)) return false;
   if (f.voteMin != null && (item.voteAverage ?? -Infinity) < f.voteMin) return false;

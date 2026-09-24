@@ -107,6 +107,27 @@ describe('useWatchlistToolbar', () => {
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Alpha']);
   });
 
+  it('matches a series on the film genre chip its TV genre stands for', () => {
+    const { result } = setup([
+      item({ tmdbId: 1, title: 'Série Action', mediaType: 'tv', genreIds: [10759] }),
+      item({ tmdbId: 2, title: 'Série SF', mediaType: 'tv', genreIds: [10765] }),
+      item({ tmdbId: 3, title: 'Série Guerre', mediaType: 'tv', genreIds: [10768] }),
+      item({ tmdbId: 4, title: 'Film Comédie', genreIds: [35] }),
+    ]);
+    act(() => result.current.toggleGenre(12));
+    expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Série Action']);
+    act(() => {
+      result.current.toggleGenre(12);
+      result.current.toggleGenre(14);
+    });
+    expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Série SF']);
+    act(() => {
+      result.current.toggleGenre(14);
+      result.current.toggleGenre(10752);
+    });
+    expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Série Guerre']);
+  });
+
   it('ne borne pas la duree maximum quand seul le minimum est touche', () => {
     const { result } = setup();
     act(() => result.current.changeRuntimeRange(5, 180));

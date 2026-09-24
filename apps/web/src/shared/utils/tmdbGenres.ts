@@ -38,3 +38,20 @@ export function genreLabel(genreId: number, locale: string): string {
   if (!entry) return locale.startsWith('fr') ? 'Autre' : 'Other';
   return locale.startsWith('fr') ? entry.fr : entry.en;
 }
+
+const FILM_GENRES_OF_TV_GENRE: Record<number, readonly number[]> = {
+  10759: [28, 12],
+  10765: [878, 14],
+  10768: [10752],
+};
+
+function withFilmGenreEquivalents(genreIds: readonly number[]): number[] {
+  return genreIds.flatMap((id) => [id, ...(FILM_GENRES_OF_TV_GENRE[id] ?? [])]);
+}
+
+export function sharesAnyGenre(
+  itemGenreIds: readonly number[],
+  selectedGenreIds: readonly number[]
+): boolean {
+  return withFilmGenreEquivalents(itemGenreIds).some((id) => selectedGenreIds.includes(id));
+}

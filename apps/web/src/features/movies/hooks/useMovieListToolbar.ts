@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { genreLabel } from '@/shared/utils/tmdbGenres';
+import { genreLabel, sharesAnyGenre } from '@/shared/utils/tmdbGenres';
 import { DECADE_OPTIONS } from '@/features/movies/components/movieSearchFilterOptions';
 import type { MovieMediaType } from '@/shared/types/movie';
 
@@ -44,7 +44,7 @@ function itemMatchesSearch(item: MovieListItemLike, query: string): boolean {
 }
 
 function itemMatchesFilters(item: MovieListItemLike, f: FilterState): boolean {
-  if (f.genres.length > 0 && !item.genreIds.some((g) => f.genres.includes(g))) return false;
+  if (f.genres.length > 0 && !sharesAnyGenre(item.genreIds, f.genres)) return false;
   if (f.mediaTypes.length > 0 && !f.mediaTypes.includes(item.mediaType)) return false;
   if (f.decade != null) {
     const year = Number.parseInt(item.year, 10);

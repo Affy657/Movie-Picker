@@ -86,6 +86,27 @@ describe('useMovieListToolbar', () => {
     expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Alpha']);
   });
 
+  it('matches a series on the film genre chip its TV genre stands for', () => {
+    const { result } = setup([
+      item({ title: 'Série Action', mediaType: 'tv', genreIds: [10759] }),
+      item({ title: 'Série SF', mediaType: 'tv', genreIds: [10765] }),
+      item({ title: 'Série Guerre', mediaType: 'tv', genreIds: [10768] }),
+      item({ title: 'Film Comédie', genreIds: [35] }),
+    ]);
+    act(() => result.current.toggleGenre(28));
+    expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Série Action']);
+    act(() => {
+      result.current.toggleGenre(28);
+      result.current.toggleGenre(878);
+    });
+    expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Série SF']);
+    act(() => {
+      result.current.toggleGenre(878);
+      result.current.toggleGenre(10752);
+    });
+    expect(result.current.visibleItems.map((i) => i.title)).toEqual(['Série Guerre']);
+  });
+
   it('filtre par type de contenu', () => {
     const { result } = setup();
     act(() => result.current.toggleMediaType('tv'));
