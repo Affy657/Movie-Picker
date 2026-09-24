@@ -322,6 +322,38 @@ describe('ProposeIdeaButton', () => {
     expect(revokeObjectURL).toHaveBeenCalledExactlyOnceWith('blob:sent-preview');
   });
 
+  it('shortens an attachment name to the 150 characters the API accepts, keeping its extension', async () => {
+    type ReceivedBody = { attachments?: { fileName: string }[] };
+    let resolveReceived: (body: ReceivedBody) => void;
+    const receivedBody = new Promise<ReceivedBody>((resolve) => {
+      resolveReceived = resolve;
+    });
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, async ({ request }) => {
+        resolveReceived((await request.json()) as ReceivedBody);
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderButton();
+    const user = await openDialog();
+    await fillForm(user);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, [
+      pngFile(`${'x'.repeat(200)}.png`),
+      pngFile(`a${'😀'.repeat(80)}.png`),
+      pngFile('court.png'),
+    ]);
+    await waitFor(() =>
+      expect(screen.getAllByRole('button', { name: /retirer cette image/i })).toHaveLength(3)
+    );
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    const fileNames = (await receivedBody).attachments?.map((a) => a.fileName);
+    expect(fileNames).toEqual([`${'x'.repeat(146)}.png`, `a${'😀'.repeat(72)}.png`, 'court.png']);
+    for (const fileName of fileNames ?? []) expect(fileName.length).toBeLessThanOrEqual(150);
+  });
+
   it('explains in the interface language that an image could not be read', async () => {
     class UnreadableFileReader extends EventTarget {
       error: Error | null = null;
