@@ -103,6 +103,23 @@ public sealed class FollowUserHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_FollowerWithAPrivateProfile_PushLinksToTheInboxInsteadOfTheirProfile()
+    {
+        _users.Setup(u => u.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(Target());
+        _follows.Setup(f => f.FollowAsync(CurrentUserId, "target", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _users.Setup(u => u.GetByIdAsync(CurrentUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = CurrentUserId, Handle = "bob", DisplayName = "Bob", IsProfilePublic = false });
+        _pushSubs.Setup(p => p.ListByUserIdAsync("target", It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new PushSubscription { UserId = "target", Endpoint = "e1" }]);
+
+        await _sut.HandleAsync(CurrentUserId, "alice");
+
+        _pushSender.Verify(
+            p => p.SendAsync(It.IsAny<PushSubscription>(), It.Is<PushMessage>(m => m.Url == "/notifications"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task HandleAsync_FollowerMissing_DoesNotNotify()
     {
         _users.Setup(u => u.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(Target());
