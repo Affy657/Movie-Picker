@@ -40,6 +40,17 @@ public sealed class EventTests
         Assert.False(evt.IsFinished(now));
     }
 
+    [Theory]
+    [InlineData("9999-12-31", "20:00")]
+    [InlineData("9999-12-25", "23:30")]
+    public void Lifecycle_DateAtTheEdgeOfTheCalendar_IsUpcomingInsteadOfThrowing(string date, string time)
+    {
+        var evt = WithSchedule(date, time);
+        var now = new DateTimeOffset(2026, 6, 30, 12, 0, 0, TimeSpan.Zero);
+
+        Assert.Equal(EventLifecycle.Upcoming, evt.Lifecycle(now));
+    }
+
     [Fact]
     public void Lifecycle_BeforeStart_Upcoming()
     {
