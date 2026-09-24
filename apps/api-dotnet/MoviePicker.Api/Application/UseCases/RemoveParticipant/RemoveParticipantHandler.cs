@@ -73,13 +73,17 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         if (!isHost && !isSelfConnected)
             throw Errors.HostOrSelfOnly();
 
-        var movieIds = await _movieRepository.ListIdsByEventAndParticipantAsync(evt.Id, participant.Id, ct);
+        IReadOnlyList<string> movieIds = [];
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
                 var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                if (current.ClosedAt.HasValue)
+                    throw Errors.EventClosedParticipantsLocked();
                 if (current.HasWinner)
                     throw Errors.ParticipantsLockedWheel();
+
+                movieIds = await _movieRepository.ListIdsByEventAndParticipantAsync(evt.Id, participant.Id, token);
 
                 await _voteRepository.DeleteByMovieIdsAsync(movieIds, token);
                 await _seenMarkRepository.DeleteByMovieIdsAsync(evt.Id, movieIds, token);

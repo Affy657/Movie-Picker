@@ -226,6 +226,24 @@ public sealed class RemoveParticipantHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ListsTheParticipantsFilmsInsideTheUnitOfWork()
+    {
+        SetupEvent(ActiveEvent());
+        SetupParticipant(Participant(userId: null));
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _participantRepo.Setup(r => r.DeleteAsync("p1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var listedOutsideUnitOfWork = 0;
+        _movieRepo
+            .Setup(r => r.ListIdsByEventAndParticipantAsync("evt1", "p1", It.IsAny<CancellationToken>()))
+            .Callback(() => { if (!_unitOfWork.IsExecuting) listedOutsideUnitOfWork++; })
+            .ReturnsAsync(value);
+
+        await _sut.HandleAsync("evt1", "p1");
+
+        Assert.Equal(0, listedOutsideUnitOfWork);
+    }
+
+    [Fact]
     public async Task HandleAsync_ConnectedUserSelfLeave_Succeeds_WithLeaveMessage()
     {
         SetupEvent(ActiveEvent(creatorUserId: "creator"));
