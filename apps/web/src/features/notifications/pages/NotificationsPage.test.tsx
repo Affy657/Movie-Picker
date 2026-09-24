@@ -169,6 +169,25 @@ describe('NotificationsPage (MSW)', () => {
     await waitFor(() => expect(markedId).toBe('n1'));
   });
 
+  it('a Letterboxd films-to-confirm notification leads to the integrations settings', async () => {
+    server.use(
+      authedUserHandler,
+      http.get(`${TEST_API_V1}/notifications/inbox`, () =>
+        HttpResponse.json({
+          items: [{ ...base, id: 'lb', type: 'letterboxdreconciliationpending' }],
+          unreadCount: 1,
+        })
+      )
+    );
+
+    renderPage();
+
+    expect(await screen.findByRole('link', { name: /synchro letterboxd/i })).toHaveAttribute(
+      'href',
+      ROUTES.accountIntegrations
+    );
+  });
+
   it("a 'movie night cancelled' notification is not clickable to a destination", async () => {
     server.use(
       authedUserHandler,

@@ -45,7 +45,7 @@ function notifDestination(item: UserNotificationItem): string | null {
   if (item.type === 'newfollower')
     return item.actorHandle ? ROUTES.profile(item.actorHandle) : null;
   if (item.type === 'eventdeleted') return null;
-  if (item.type === 'letterboxdreconciliationpending') return ROUTES.account;
+  if (item.type === 'letterboxdreconciliationpending') return ROUTES.accountIntegrations;
   return item.eventSlug ? ROUTES.eventDetail(item.eventSlug) : null;
 }
 
