@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-066`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-067`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -402,6 +402,16 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: un `EmailVerifiedAt` sur `User` et un courriel de confirmation (même mécanique de jeton que la réinitialisation) ; côté OAuth, un e-mail vérifié par le fournisseur qui tombe sur un compte non confirmé vaut preuve de possession : purger mot de passe, identités, sessions et abonnements push de l'occupant au lieu de refuser ; ne pas attribuer le badge Ko-fi à une adresse non confirmée
 - fini-quand: un compte non confirmé ne peut plus bloquer l'adresse d'un tiers
 
+
+## DEBT-066 les disponibilités en streaming de Ma liste s'arrêtent aux 500 films les plus récents
+
+- state: differe
+- declencheur: un compte dépasse 500 films dans Ma liste, ou un signalement de films sans plateforme en vue liste
+- impact: depuis le 2026-09-24, Ma liste et la liste publique du profil lisent toutes les pages de la watchlist, mais `GET /api/v1/watchlist/availability` n'enrichit que la première, `GetWatchlistHandler.MaxTake` (500) : au-delà, les films s'affichent sans plateforme ni note TMDB en vue liste. Le plafond borne le fan-out TMDB d'une seule requête, ce n'est pas un oubli.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Watchlist/GetWatchlistAvailabilityHandler.cs`, `apps/web/src/features/movies/api/watchlistApi.ts` (`fetchWatchlistAvailability`)
+- verify: `grep -n "ListPageByUserIdAsync(userId, 0, GetWatchlistHandler.MaxTake" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Watchlist/GetWatchlistAvailabilityHandler.cs` ; encore ouvert tant que la ligne sort
+- fix: paginer la route (`skip`, `take`) comme `GET /watchlist` et laisser le front la lire page par page, ou n'enrichir que les films visibles
+- piege: chaque page enrichie coûte jusqu'à 500 appels TMDB en cache froid ; garder le plafond par requête, ne pas le relever d'un coup
 
 ---
 
