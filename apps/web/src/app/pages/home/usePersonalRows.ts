@@ -65,6 +65,7 @@ export function useRecommendationSeed(enabled: boolean) {
   const seed = enabled ? query.data?.items?.[0] : undefined;
   return {
     seedTmdbId: seed?.tmdbId,
+    seedMediaType: seed?.mediaType,
     seedTitle: seed?.title,
     isPending: enabled && query.isPending,
   };

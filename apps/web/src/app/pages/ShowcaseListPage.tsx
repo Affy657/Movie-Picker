@@ -109,15 +109,24 @@ type ShowcaseRouteSelection = {
   themeKey: ShowcaseTheme | undefined;
   providerKey: ShowcaseProvider | undefined;
   seedTmdbId: number | undefined;
+  seedMediaType: MovieMediaType;
   collectionId: number | undefined;
   genreId: number | undefined;
 };
 
 function buildShowcaseQuery(
   variant: Props['variant'],
-  { themeKey, providerKey, seedTmdbId, collectionId, genreId }: ShowcaseRouteSelection
+  {
+    themeKey,
+    providerKey,
+    seedTmdbId,
+    seedMediaType,
+    collectionId,
+    genreId,
+  }: ShowcaseRouteSelection
 ): ShowcaseQuery {
-  if (variant === 'recommendations') return { section: 'recommendations', seedTmdbId };
+  if (variant === 'recommendations')
+    return { section: 'recommendations', seedTmdbId, seedMediaType };
   if (variant === 'provider') return { section: 'provider', provider: providerKey };
   if (variant === 'theme') return { section: 'theme', theme: themeKey };
   if (variant === 'collection') return { section: 'collection', collectionId };
@@ -142,6 +151,7 @@ type ShowcaseRouteInputs = {
   theme: string | undefined;
   provider: string | undefined;
   seedTmdbId: string | undefined;
+  seedType: string | null;
   collectionId: string | undefined;
   genreParam: number;
 };
@@ -151,6 +161,7 @@ function parseRouteSelection({
   theme,
   provider,
   seedTmdbId,
+  seedType,
   collectionId,
   genreParam,
 }: ShowcaseRouteInputs): ShowcaseRouteSelection {
@@ -159,6 +170,7 @@ function parseRouteSelection({
     themeKey: isShowcaseTheme(theme) ? theme : undefined,
     providerKey: isShowcaseProvider(provider) ? provider : undefined,
     seedTmdbId: seedTmdbId ? Number(seedTmdbId) : undefined,
+    seedMediaType: seedType === 'tv' ? 'tv' : 'movie',
     collectionId: collectionId ? Number(collectionId) : undefined,
     genreId: variant === 'trending' && genreUsable ? genreParam : undefined,
   };
@@ -275,6 +287,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
   const searchQuery = (searchParams.get('q') ?? '').trim();
   const genreParam = Number(searchParams.get('genre'));
+  const seedType = searchParams.get('type');
   const { theme, provider, seedTmdbId: seedParam, collectionId: collectionParam } = params;
 
   const routeSelection: ShowcaseRouteSelection = useMemo(
@@ -284,10 +297,11 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
         theme,
         provider,
         seedTmdbId: seedParam,
+        seedType,
         collectionId: collectionParam,
         genreParam,
       }),
-    [variant, theme, provider, seedParam, collectionParam, genreParam]
+    [variant, theme, provider, seedParam, seedType, collectionParam, genreParam]
   );
   const { themeKey, providerKey, collectionId, genreId } = routeSelection;
 

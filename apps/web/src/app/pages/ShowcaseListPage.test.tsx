@@ -218,6 +218,32 @@ describe('ShowcaseListPage', () => {
     expect(screen.getByText('Comédie')).toBeInTheDocument();
   });
 
+  it('asks for the recommendations of a series when the link names one', async () => {
+    const requested: { seed: string | null; mediaType: string | null }[] = [];
+    server.use(
+      authMeGuestHandler,
+      http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        requested.push({ seed: params.get('seedTmdbId'), mediaType: params.get('seedMediaType') });
+        return HttpResponse.json({
+          section: 'recommendations',
+          theme: null,
+          items: [item(1, DRAMA_GENRE)],
+          disclaimer: '',
+          tmdbAttributionUrl: '',
+        });
+      })
+    );
+    renderPage(
+      'recommendations',
+      '/films/similaires/1399?type=tv',
+      '/films/similaires/:seedTmdbId'
+    );
+
+    expect(await screen.findByText('Film 1')).toBeInTheDocument();
+    expect(requested).toEqual([{ seed: '1399', mediaType: 'tv' }]);
+  });
+
   it('affiche le rang sur le classement communautaire', async () => {
     server.use(
       authMeGuestHandler,

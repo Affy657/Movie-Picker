@@ -75,6 +75,7 @@ describe('home personal rows once the account is gone', () => {
       wrapper: freshWrapper(),
     });
     await waitFor(() => expect(result.current.seedTmdbId).toBe(603));
+    expect(result.current.seedMediaType).toBe('movie');
 
     rerender({ enabled: false });
 

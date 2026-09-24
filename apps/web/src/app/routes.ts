@@ -34,7 +34,10 @@ export const ROUTES = {
   showcaseMostProposed: '/films/les-plus-proposes',
 
   showcaseRecommendationsPattern: '/films/similaires/:seedTmdbId',
-  showcaseRecommendations: (seedTmdbId: number) => `/films/similaires/${seedTmdbId}`,
+  showcaseRecommendations: (seedTmdbId: number, seedMediaType?: 'movie' | 'tv') =>
+    seedMediaType === 'tv'
+      ? `/films/similaires/${seedTmdbId}?type=tv`
+      : `/films/similaires/${seedTmdbId}`,
   showcaseProviderPattern: '/films/streaming/:provider',
   showcaseProvider: (provider: string) => `/films/streaming/${provider}`,
   showcaseThemePattern: '/films/theme/:theme',

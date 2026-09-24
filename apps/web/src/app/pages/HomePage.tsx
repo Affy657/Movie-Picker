@@ -114,7 +114,12 @@ export default function HomePage() {
   };
   const watchlistRow = useWatchlistRow(isAuthenticated);
   const friendsRow = useFriendsWatchedRow(isAuthenticated);
-  const { seedTmdbId, seedTitle, isPending: seedPending } = useRecommendationSeed(isAuthenticated);
+  const {
+    seedTmdbId,
+    seedMediaType,
+    seedTitle,
+    isPending: seedPending,
+  } = useRecommendationSeed(isAuthenticated);
   const firstRail = resolveFirstRail(
     watchlistRow.isPending || friendsRow.isPending || seedPending,
     watchlistRow.items.length > 0,
@@ -205,8 +210,8 @@ export default function HomePage() {
       {seedTmdbId ? (
         <HomeShowcaseRow
           headingKey="showcase.sections.recommendationsTitle"
-          seeAllTo={ROUTES.showcaseRecommendations(seedTmdbId)}
-          query={{ section: 'recommendations', seedTmdbId }}
+          seeAllTo={ROUTES.showcaseRecommendations(seedTmdbId, seedMediaType)}
+          query={{ section: 'recommendations', seedTmdbId, seedMediaType }}
           library={library}
           onSelect={openDetails}
           eagerCount={eagerCountFor('recommendations', firstRail)}
