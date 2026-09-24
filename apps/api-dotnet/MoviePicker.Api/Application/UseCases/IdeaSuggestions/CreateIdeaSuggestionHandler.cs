@@ -100,9 +100,14 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
         if (uploads.Count == 0)
             return [];
 
-        var urls = await Task.WhenAll(uploads.Select(upload => _github.UploadAttachmentAsync(upload, ct)));
+        var urls = new List<string>(uploads.Count);
+        foreach (var upload in uploads)
+        {
+            if (await _github.UploadAttachmentAsync(upload, ct) is { } url)
+                urls.Add(url);
+        }
 
-        return urls.Where(url => url is not null).Select(url => url!).ToList();
+        return urls;
     }
 
     private static string? PublishablePageTemplate(string? pagePath)

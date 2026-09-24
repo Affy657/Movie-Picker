@@ -172,6 +172,30 @@ public sealed partial class CreateIdeaSuggestionHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_WithAttachments_UploadsThemOneAfterTheOther()
+    {
+        var inFlight = 0;
+        var mostAtOnce = 0;
+        _github.Setup(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()))
+            .Returns(async (GitHubAttachmentUpload a, CancellationToken _) =>
+            {
+                mostAtOnce = Math.Max(mostAtOnce, Interlocked.Increment(ref inFlight));
+                await Task.Delay(20);
+                Interlocked.Decrement(ref inFlight);
+                return $"https://raw.githubusercontent.com/x/{a.FileName}";
+            });
+
+        await _sut.HandleAsync(UserId, Request(attachments:
+        [
+            new IdeaSuggestionAttachmentDto { FileName = "a.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
+            new IdeaSuggestionAttachmentDto { FileName = "b.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
+            new IdeaSuggestionAttachmentDto { FileName = "c.png", ContentType = "image/png", Base64Content = ValidPngBase64 },
+        ]));
+
+        Assert.Equal(1, mostAtOnce);
+    }
+
+    [Fact]
     public async Task HandleAsync_AttachmentUploadFails_SkipsItButStillCreatesIssue()
     {
         _github.Setup(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()))
