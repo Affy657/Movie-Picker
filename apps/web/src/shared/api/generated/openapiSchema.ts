@@ -6601,6 +6601,12 @@ export interface components {
             /** Format: date-time */
             closedAt?: string | null;
         };
+        ExportedEventTemplate: {
+            name?: string | null;
+            theme?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
+        };
         ExportedNotification: {
             type?: string | null;
             actorHandle?: string | null;
@@ -6619,6 +6625,7 @@ export interface components {
             joinedAt?: string;
             votes?: components["schemas"]["ExportedVote"][] | null;
             seenMarks?: components["schemas"]["ExportedSeenMark"][] | null;
+            proposedMovies?: components["schemas"]["ExportedProposedMovie"][] | null;
         };
         ExportedProfile: {
             userId?: string | null;
@@ -6638,10 +6645,24 @@ export interface components {
             } | null;
             /** Format: date-time */
             supporterSince?: string | null;
+            ratingScale?: string | null;
+            letterboxdUsername?: string | null;
+            eventTemplates?: components["schemas"]["ExportedEventTemplate"][] | null;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        ExportedProposedMovie: {
+            movieId?: string | null;
+            /** Format: int32 */
+            tmdbId?: number;
+            mediaType?: string | null;
+            title?: string | null;
+            year?: string | null;
+            pitchNote?: string | null;
+            /** Format: date-time */
+            createdAt?: string;
         };
         ExportedPushSubscription: {
             endpoint?: string | null;
