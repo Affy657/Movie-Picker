@@ -55,12 +55,12 @@ describe('Footer language', () => {
     renderFooter();
 
     expect(screen.getByText('Langue')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Langue' }));
+    await user.click(screen.getByRole('button', { name: 'Langue Français' }));
     expect(screen.getByRole('listbox')).toHaveClass(dropdownStyles.menuUp!);
     await user.click(screen.getByRole('option', { name: 'English' }));
 
     expect(screen.getByText('Language')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Language' })).toHaveTextContent('English');
+    expect(screen.getByRole('button', { name: 'Language English' })).toHaveTextContent('English');
     expect(localStorage.getItem('moviepicker-locale')).toBe('en');
   });
 });

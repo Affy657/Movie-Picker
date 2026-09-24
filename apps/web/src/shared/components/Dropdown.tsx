@@ -13,18 +13,19 @@ export type DropdownOption<V extends string> = {
 
 export type DropdownPlacement = 'auto' | 'bottom' | 'top';
 
-interface DropdownProps<V extends string> {
+type DropdownNaming =
+  { ariaLabel: string; ariaLabelledBy?: never } | { ariaLabelledBy: string; ariaLabel?: never };
+
+type DropdownProps<V extends string> = DropdownNaming & {
   id?: string;
   value: V;
   options: readonly DropdownOption<V>[];
   onChange: (value: V) => void;
-
-  ariaLabel?: string;
   className?: string;
   inline?: boolean;
   disabled?: boolean;
   placement?: DropdownPlacement;
-}
+};
 
 function nextEnabledIndex<V extends string>(
   options: readonly DropdownOption<V>[],
@@ -59,6 +60,7 @@ export default function Dropdown<V extends string>({
   options,
   onChange,
   ariaLabel,
+  ariaLabelledBy,
   className,
   inline = false,
   disabled = false,
@@ -76,7 +78,9 @@ export default function Dropdown<V extends string>({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const reactId = useId();
-  const listId = `${id ?? reactId}-list`;
+  const triggerId = id ?? `${reactId}-trigger`;
+  const listId = `${triggerId}-list`;
+  const valueId = `${triggerId}-value`;
 
   const selectedLabel = options.find((o) => o.value === value)?.label ?? '';
 
@@ -150,17 +154,20 @@ export default function Dropdown<V extends string>({
       <button
         ref={buttonRef}
         type="button"
-        id={id}
+        id={triggerId}
         className={styles.trigger}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-label={ariaLabel}
+        aria-labelledby={`${ariaLabelledBy ?? triggerId} ${valueId}`}
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={handleKey}
       >
-        <span className={styles.triggerLabel}>{selectedLabel}</span>
+        <span id={valueId} className={styles.triggerLabel}>
+          {selectedLabel}
+        </span>
         <span className={styles.triggerChevron} aria-hidden />
       </button>
       {open ? (
@@ -168,6 +175,8 @@ export default function Dropdown<V extends string>({
           ref={listRef}
           id={listId}
           role="listbox"
+          aria-label={ariaLabel}
+          aria-labelledby={ariaLabelledBy}
           className={clsx(styles.menu, upward && styles.menuUp)}
           tabIndex={-1}
           onKeyDown={handleKey}

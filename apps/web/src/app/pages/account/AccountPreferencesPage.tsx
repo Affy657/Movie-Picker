@@ -27,7 +27,7 @@ export default function AccountPreferencesPage() {
       <Card padding="none" elevation="sm" className={styles.card}>
         <div className={styles.field}>
           <Field label={t('auth.account.languageLabel')} htmlFor="account-language">
-            {({ id }) => <LanguageSelector id={id} />}
+            {({ id, labelId }) => <LanguageSelector id={id} ariaLabelledBy={labelId} />}
           </Field>
         </div>
 
