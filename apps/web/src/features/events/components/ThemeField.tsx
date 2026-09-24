@@ -88,7 +88,7 @@ function isPresetSelected(
 const LATIN_1_LAST_CODE_POINT = 0x00ff;
 
 const LEADING_EMOJI_SEQUENCE =
-  /^(?:\p{Regional_Indicator}{2}|\p{Extended_Pictographic}[️\p{Emoji_Modifier}\u{E0020}-\u{E007F}]*(?:‍\p{Extended_Pictographic}[️\p{Emoji_Modifier}\u{E0020}-\u{E007F}]*)*)(?=\s|$)/u;
+  /^(?:\p{Regional_Indicator}{2}|\p{Extended_Pictographic}[\u{FE0F}\p{Emoji_Modifier}\u{E0020}-\u{E007F}]*(?:\u200D\p{Extended_Pictographic}[\u{FE0F}\p{Emoji_Modifier}\u{E0020}-\u{E007F}]*)*)(?=\s|$)/u;
 
 function leadingEmojiOf(theme: string): string {
   const emoji = LEADING_EMOJI_SEQUENCE.exec(theme)?.[0] ?? '';
