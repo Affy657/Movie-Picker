@@ -12,7 +12,7 @@ import {
 } from 'react';
 import { useLocation } from 'react-router';
 import { ImagePlus, X } from 'lucide-react';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { APP_VERSION } from '@/shared/appVersion';
 import Dropdown from '@/shared/components/Dropdown';
@@ -44,6 +44,16 @@ type DialogProps = {
   onClose: () => void;
 };
 
+class UnreadableAttachmentError extends Error {
+  constructor(
+    readonly fileName: string,
+    options?: ErrorOptions
+  ) {
+    super(`Attachment ${fileName} could not be read`, options);
+    this.name = 'UnreadableAttachmentError';
+  }
+}
+
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -58,6 +68,24 @@ function fileToBase64(file: File): Promise<string> {
 
 function revokePreviewUrls(attachments: readonly Attachment[]) {
   for (const attachment of attachments) URL.revokeObjectURL(attachment.previewUrl);
+}
+
+async function toAttachmentPayload(attachment: Attachment) {
+  try {
+    return {
+      fileName: attachment.file.name,
+      contentType: attachment.file.type,
+      base64Content: await fileToBase64(attachment.file),
+    };
+  } catch (readError) {
+    throw new UnreadableAttachmentError(attachment.file.name, { cause: readError });
+  }
+}
+
+function submitErrorMessage(err: unknown, t: Translate): string {
+  if (err instanceof UnreadableAttachmentError)
+    return t('proposeIdea.attachmentsUnreadable', { name: err.fileName });
+  return getErrorMessage(err, t('proposeIdea.submitError'));
 }
 
 export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
@@ -174,11 +202,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
     setError(null);
     try {
       const attachmentPayload = await Promise.all(
-        attachments.map(async (a) => ({
-          fileName: a.file.name,
-          contentType: a.file.type,
-          base64Content: await fileToBase64(a.file),
-        }))
+        attachments.map((attachment) => toAttachmentPayload(attachment))
       );
       await createIdeaSuggestion({
         category,
@@ -193,7 +217,7 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
       setAttachments([]);
     } catch (err) {
       setStatus('error');
-      setError(getErrorMessage(err, t('proposeIdea.submitError')));
+      setError(submitErrorMessage(err, t));
     }
   };
 

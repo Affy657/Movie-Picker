@@ -1834,6 +1834,8 @@ export const fr = {
     attachmentsTooLarge: 'Image trop lourde (4 Mo maximum) : {{name}}',
     attachmentsUnsupportedType:
       'Format non supporté (PNG, JPEG, WebP ou GIF uniquement) : {{name}}',
+    attachmentsUnreadable:
+      'Impossible de lire l’image {{name}}. Retirez-la puis ajoutez-la de nouveau.',
     publicNotice:
       'Votre suggestion et vos captures seront publiées dans un ticket public sur GitHub, sans votre nom. N’y mettez rien de personnel.',
     submit: 'Envoyer',

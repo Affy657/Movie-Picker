@@ -39,7 +39,10 @@ describe('ProposeIdeaButton', () => {
   const server = setupServer();
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+    vi.unstubAllGlobals();
+  });
   afterAll(() => server.close());
 
   beforeAll(() => {
@@ -317,6 +320,45 @@ describe('ProposeIdeaButton', () => {
 
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/merci/i));
     expect(revokeObjectURL).toHaveBeenCalledExactlyOnceWith('blob:sent-preview');
+  });
+
+  it('explains in the interface language that an image could not be read', async () => {
+    class UnreadableFileReader extends EventTarget {
+      error: Error | null = null;
+      result: string | ArrayBuffer | null = null;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      readAsDataURL() {
+        this.error = Object.assign(
+          new Error(
+            'A requested file or directory could not be found at the time an operation was processed.'
+          ),
+          { name: 'NotFoundError' }
+        );
+        queueMicrotask(() => this.onerror?.());
+      }
+    }
+    vi.stubGlobal('FileReader', UnreadableFileReader);
+    let suggestionSent = false;
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, () => {
+        suggestionSent = true;
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderButton();
+    const user = await openDialog();
+    await fillForm(user);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, pngFile('capture.png'));
+    await screen.findByRole('button', { name: /retirer cette image/i });
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Impossible de lire l’image capture.png');
+    expect(alert).not.toHaveTextContent(/requested file/i);
+    expect(suggestionSent).toBe(false);
   });
 
   it('se ferme via le bouton de fermeture', async () => {
