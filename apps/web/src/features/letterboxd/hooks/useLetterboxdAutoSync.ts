@@ -8,13 +8,18 @@ import { syncLetterboxd } from '@/features/letterboxd/api/letterboxdApi';
 export function useLetterboxdAutoSync(): void {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const attemptedRef = useRef(false);
+  const decidedForUserIdRef = useRef<string | null>(null);
+  const userId = user?.userId ?? null;
+  const letterboxdUsername = user?.letterboxdUsername ?? null;
 
   useEffect(() => {
-    if (attemptedRef.current) return;
-    if (!user?.letterboxdUsername) return;
-
-    attemptedRef.current = true;
+    if (userId === null) {
+      decidedForUserIdRef.current = null;
+      return;
+    }
+    if (decidedForUserIdRef.current === userId) return;
+    decidedForUserIdRef.current = userId;
+    if (!letterboxdUsername) return;
 
     void syncLetterboxd(false)
       .then((report) => {
@@ -25,5 +30,5 @@ export function useLetterboxdAutoSync(): void {
           void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.inbox });
       })
       .catch(() => undefined);
-  }, [queryClient, user?.letterboxdUsername]);
+  }, [queryClient, userId, letterboxdUsername]);
 }
