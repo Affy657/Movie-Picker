@@ -183,6 +183,24 @@ public sealed class RecurringEventPassTests
     }
 
     [Fact]
+    public async Task RunAsync_NightLeftPendingWithoutAWinner_StillCreatesTheNextWeekSlot()
+    {
+        GivenCandidates(FinishedWeekly() with { Date = "2026-09-16", ClosedAt = null });
+        var dayAfter = new RecurringEventPass(
+            _events.Object,
+            _participants.Object,
+            _users.Object,
+            new InMemoryUnitOfWork(),
+            new FakeTimeProvider(new DateTimeOffset(2026, 9, 17, 1, 15, 0, TimeSpan.Zero)),
+            NullLogger<RecurringEventPass>.Instance);
+
+        var result = await dayAfter.RunAsync();
+
+        Assert.Equal(1, result.Created);
+        Assert.Equal("2026-09-23", CapturedNewEvent().Date);
+    }
+
+    [Fact]
     public async Task RunAsync_EventStillRunning_CreatesNothing()
     {
         GivenCandidates(FinishedWeekly() with { Date = "2026-09-30", ClosedAt = null });

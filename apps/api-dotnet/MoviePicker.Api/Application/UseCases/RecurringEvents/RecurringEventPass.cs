@@ -74,7 +74,7 @@ public sealed class RecurringEventPass : IRecurringEventPass
         {
             if (parent.Recurrence is not { } frequency
                 || !string.IsNullOrEmpty(parent.NextOccurrenceEventId)
-                || !parent.IsFinished(now))
+                || parent.Lifecycle(now) is not (EventLifecycle.Pending or EventLifecycle.Finished))
                 continue;
 
             if (!DateOnly.TryParse(parent.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parentDate))
