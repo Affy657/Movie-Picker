@@ -19,6 +19,9 @@ public static class EventRecurrence
     {
         for (var step = 1; step <= MaxCatchUpSteps; step++)
         {
+            if (!FitsInTheCalendar(current, frequency, step))
+                return null;
+
             var candidate = Shift(current, frequency, step, anchorDay ?? current.Day);
             if (candidate > notBefore)
                 return candidate;
@@ -26,6 +29,13 @@ public static class EventRecurrence
 
         return null;
     }
+
+    private static bool FitsInTheCalendar(DateOnly from, RecurrenceFrequency frequency, int step) => frequency switch
+    {
+        RecurrenceFrequency.Weekly => from.DayNumber <= DateOnly.MaxValue.DayNumber - (7 * step),
+        RecurrenceFrequency.Biweekly => from.DayNumber <= DateOnly.MaxValue.DayNumber - (14 * step),
+        _ => (from.Year * 12) + from.Month - 1 + step <= (DateOnly.MaxValue.Year * 12) + DateOnly.MaxValue.Month - 1
+    };
 
     public static DateOnly TodayInParis(DateTimeOffset utcNow) =>
         DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(utcNow, EventSchedule.ParisTimeZone).DateTime);
