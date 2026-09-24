@@ -529,7 +529,7 @@ export default function AddMovieForm({
                 : null;
               const safeWatchUrl = safeTmdbWatchUrl(r.tmdbWatchPageUrl);
               return (
-                <li key={r.id} className={styles.resultItem}>
+                <li key={`${r.mediaType ?? 'movie'}-${r.id}`} className={styles.resultItem}>
                   <div className={styles.posterWrap}>
                     {posterSrc ? (
                       <img src={posterSrc} alt="" loading="lazy" decoding="async" />
