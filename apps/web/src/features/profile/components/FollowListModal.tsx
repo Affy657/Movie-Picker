@@ -19,6 +19,7 @@ import {
   searchUsers,
   type FollowUserItem,
 } from '@/features/profile/api/profileApi';
+import { invalidateFollowGraph } from '@/features/profile/lib/invalidateFollowGraph';
 import FollowListEmptyState from './FollowListEmptyState';
 import FollowListRow from './FollowListRow';
 import FollowListTabs, { FOLLOW_LIST_TABS_ID } from './FollowListTabs';
@@ -102,17 +103,10 @@ export default function FollowListModal({
     enabled: searchEnabled,
   });
 
-  const invalidateProfileQueries = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.profile.following(handle) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.profile.followers(handle) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.profile.userSearches });
-  };
-
   const mutationHandlers = {
     onSuccess: () => {
       setFollowError(null);
-      invalidateProfileQueries();
+      void invalidateFollowGraph(queryClient);
     },
     onError: (err: unknown) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
   };
