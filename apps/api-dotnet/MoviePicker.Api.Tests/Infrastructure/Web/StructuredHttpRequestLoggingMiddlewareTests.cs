@@ -81,6 +81,26 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
         Assert.Contains("?host=***&participantId=p1", entry.Message);
     }
 
+    [Theory]
+    [InlineData("/signin-google")]
+    [InlineData("/signin-github")]
+    public async Task InvokeAsync_RedactsTheOAuthCodeAndStateOfASignInCallback(string callbackPath)
+    {
+        var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Method = "GET";
+        ctx.Request.Path = callbackPath;
+        ctx.Request.QueryString = new QueryString("?state=CfDJ8-STATE&code=4%2F0AUTH-CODE&scope=email");
+        var mw = new StructuredHttpRequestLoggingMiddleware(_ => Task.CompletedTask, logger);
+
+        await mw.InvokeAsync(ctx);
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.DoesNotContain("CfDJ8-STATE", entry.Message);
+        Assert.DoesNotContain("AUTH-CODE", entry.Message);
+        Assert.Contains("?state=***&code=***&scope=email", entry.Message);
+    }
+
     [Fact]
     public async Task InvokeAsync_StillLogs_WhenNextThrows()
     {
@@ -125,6 +145,8 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     [InlineData("?token=SECRET", "?token=***")]
     [InlineData("?api_key=SECRET&language=fr-FR", "?api_key=***&language=fr-FR")]
     [InlineData("?API_KEY=SECRET", "?API_KEY=***")]
+    [InlineData("?code=SECRET&state=OPAQUE", "?code=***&state=***")]
+    [InlineData("?Code=SECRET&State=OPAQUE", "?Code=***&State=***")]
     [InlineData("?language=fr-FR", "?language=fr-FR")]
     public void SensitiveQueryRedaction_MasksEverySecretBearingKey(string query, string expected)
     {
