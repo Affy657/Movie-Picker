@@ -19,6 +19,13 @@ describe('safeReturnTo', () => {
     expect(safeReturnTo('/\\evil.test')).toBe('/');
   });
 
+  it('rejects protocol-relative variants hidden by a character the URL parser strips', () => {
+    expect(safeReturnTo(decodeURIComponent('/%09/evil.com'))).toBe('/');
+    expect(safeReturnTo('/\n/evil.com')).toBe('/');
+    expect(safeReturnTo('/\r\\evil.com')).toBe('/');
+    expect(safeReturnTo('/\t\\evil.com')).toBe('/');
+  });
+
   it('rejects the authentication pages to avoid a redirect loop', () => {
     expect(safeReturnTo('/login')).toBe('/');
     expect(safeReturnTo('/login?returnTo=%2Flogin')).toBe('/');
