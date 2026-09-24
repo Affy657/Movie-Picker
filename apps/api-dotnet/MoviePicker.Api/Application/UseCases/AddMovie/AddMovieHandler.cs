@@ -150,21 +150,19 @@ public sealed class AddMovieHandler : IAddMovieHandler
         CancellationToken ct)
     {
         var maxProp = evt.Config?.MaxProposalsPerParticipant;
-        if (maxProp is not > 0)
-        {
-            var inserted = await _movieRepository.InsertAsync(movie, ct);
-            await _eventRepository.MarkChangedAsync(evt.Id, ct);
-            return inserted;
-        }
-
         Movie created = movie;
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
                 await _eventRepository.LockForWriteAsync(evt.Id, token);
-                var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, token);
-                if (count >= maxProp)
-                    throw Errors.ProposalLimitReached(maxProp.Value);
+                if (await _participantRepository.FindByIdAndEventIdAsync(participant.Id, evt.Id, token) is null)
+                    throw Errors.InvalidParticipant();
+                if (maxProp is > 0)
+                {
+                    var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, token);
+                    if (count >= maxProp)
+                        throw Errors.ProposalLimitReached(maxProp.Value);
+                }
                 created = await _movieRepository.InsertAsync(movie, token);
             },
             ct);

@@ -338,6 +338,24 @@ public sealed class AddMovieHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ParticipantRemovedWhileTheFilmWasOnItsWay_RefusesTheFilm()
+    {
+        var evt = ActiveEvent();
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.SetupSequence(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(participant)
+            .ReturnsAsync((Participant?)null);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
+
+        Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
+        _movieRepo.Verify(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_MaxProposalsPerParticipant_RejectsWhenAtLimit()
     {
         var evt = new Event
@@ -386,6 +404,6 @@ public sealed class AddMovieHandlerTests
         Assert.Equal(0, result.Down);
         Assert.Empty(result.SeenByPseudos);
         Assert.Empty(result.VotersUpPseudos);
-        _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 }
