@@ -160,7 +160,8 @@ export function useEventWheel({
     [eligibleMovies, drawnIds]
   );
 
-  const winnerCount = event?.config?.winnerCount ?? 1;
+  const finishesOnFirstDraw = event?.lifecycle === 'pending';
+  const winnerCount = finishesOnFirstDraw ? 1 : (event?.config?.winnerCount ?? 1);
   const remainingDraws = Math.max(0, winnerCount - drawnIds.length);
 
   const lastPickedAt = last?.pickedAt;
