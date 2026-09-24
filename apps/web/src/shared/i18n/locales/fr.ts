@@ -1464,6 +1464,7 @@ export const fr = {
     tv_shows_not_allowed: "Cette soirée n'autorise pas les séries TV.",
     movie_already_proposed: 'Ce film a déjà été proposé (même id TMDB)',
     movie_title_already_proposed: 'Un film avec ce titre a déjà été proposé',
+    event_movie_limit_reached: 'Cette soirée a atteint la limite de {{max}} films proposés.',
     proposal_limit_reached: 'Limite de {{max}} proposition(s) par participant atteinte.',
     oauth_link_failed: 'Impossible de connecter ce compte. Réessayez.',
     handle_taken: 'Ce handle est déjà pris.',

@@ -90,6 +90,30 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task MovieCount_CountsOnlyTheFilmsOfThatNight()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        foreach (var (targetEvent, tmdbId) in new[] { (eventId, 1), (eventId, 2), (ObjectId.GenerateNewId().ToString(), 3) })
+        {
+            await movies.InsertAsync(new Movie
+            {
+                Id = string.Empty,
+                EventId = targetEvent,
+                ParticipantId = ObjectId.GenerateNewId().ToString(),
+                TmdbId = tmdbId,
+                Title = $"Film {tmdbId}",
+                Year = "2001",
+                CreatedAt = Now,
+                UpdatedAt = Now
+            });
+        }
+
+        Assert.Equal(2, await movies.CountByEventIdAsync(eventId));
+    }
+
+    [Fact]
     public async Task MovieTitleLookup_TellsARemakeFromTheFilmAlreadyProposed()
     {
         using var scope = _factory.Services.CreateScope();

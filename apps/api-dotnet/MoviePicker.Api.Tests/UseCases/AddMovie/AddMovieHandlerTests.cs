@@ -356,6 +356,24 @@ public sealed class AddMovieHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_NightAlreadyHoldsTheMostFilmsItCanList_RefusesTheFilm()
+    {
+        var evt = ActiveEvent();
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(EventConfig.MaxMoviesPerEventCap);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
+
+        Assert.Equal(ErrorCodes.EventMovieLimitReached, ex.Reason);
+        Assert.Equal(EventConfig.MaxMoviesPerEventCap, ex.Parameters!["max"]);
+        _movieRepo.Verify(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_MaxProposalsPerParticipant_RejectsWhenAtLimit()
     {
         var evt = new Event
