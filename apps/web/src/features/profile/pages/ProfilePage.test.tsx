@@ -278,7 +278,7 @@ describe('ProfilePage (MSW)', () => {
       method: 'delete' as const,
     },
   ])(
-    'after $action, refreshes my own profile, both follow lists and the user searches',
+    'after $action, refreshes my own profile, both follow lists, the user searches and the friends home row',
     async ({ isFollowedByMe, button, method }) => {
       const user = userEvent.setup();
       const client = createTestQueryClient();
@@ -288,6 +288,7 @@ describe('ProfilePage (MSW)', () => {
         queryKeys.profile.followers('alice'),
         queryKeys.profile.userSearch('ali'),
         queryKeys.event.eligibleFollows('movie-night'),
+        queryKeys.me.followingWatchedMovies(20),
       ];
       for (const key of touchedKeys) client.setQueryData(key, { items: [] });
       server.use(

@@ -4,6 +4,7 @@ import {
   fetchMyWatchedMovies,
 } from '@/features/profile/api/profileApi';
 import { useWatchlist } from '@/features/movies/hooks/useWatchlist';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
 import type { PersonalRowItem } from './HomePersonalRow';
 
@@ -38,7 +39,7 @@ export function useWatchlistRow(enabled: boolean) {
 
 export function useFriendsWatchedRow(enabled: boolean) {
   const query = useQuery({
-    queryKey: ['users', 'me', 'following-watched-movies', FRIENDS_TAKE],
+    queryKey: queryKeys.me.followingWatchedMovies(FRIENDS_TAKE),
     queryFn: ({ signal }) => fetchFollowingWatchedMovies(FRIENDS_TAKE, signal),
     enabled,
   });
@@ -58,7 +59,7 @@ export function useFriendsWatchedRow(enabled: boolean) {
 
 export function useRecommendationSeed(enabled: boolean) {
   const query = useQuery({
-    queryKey: ['users', 'me', 'watched-movies', RECOMMENDATION_SEED_TAKE],
+    queryKey: queryKeys.me.watchedMovies(RECOMMENDATION_SEED_TAKE),
     queryFn: ({ signal }) => fetchMyWatchedMovies(RECOMMENDATION_SEED_TAKE, signal),
     enabled,
   });

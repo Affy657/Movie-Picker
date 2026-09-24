@@ -7,6 +7,7 @@ const FOLLOW_GRAPH_QUERY_PREFIXES = [
   queryKeys.profile.followersAll,
   queryKeys.profile.userSearches,
   queryKeys.event.eligibleFollowsAll,
+  queryKeys.me.followingWatchedMoviesAll,
 ] as const;
 
 export function invalidateFollowGraph(queryClient: QueryClient): Promise<void[]> {
