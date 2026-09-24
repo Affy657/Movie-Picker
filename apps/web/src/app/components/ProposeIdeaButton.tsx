@@ -27,6 +27,7 @@ import Field from '@/shared/components/Field';
 const TITLE_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
 const PAGE_PATH_MAX_LENGTH = 300;
+const ATTACHMENT_FILE_NAME_MAX_LENGTH = 150;
 const MAX_ATTACHMENTS = 4;
 const MAX_ATTACHMENT_SIZE_BYTES = 4 * 1024 * 1024;
 const ACCEPTED_ATTACHMENT_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
@@ -70,10 +71,30 @@ function revokePreviewUrls(attachments: readonly Attachment[]) {
   for (const attachment of attachments) URL.revokeObjectURL(attachment.previewUrl);
 }
 
+function leadingCodeUnits(text: string, maxLength: number): string {
+  let kept = '';
+  for (const character of text) {
+    if (kept.length + character.length > maxLength) break;
+    kept += character;
+  }
+  return kept;
+}
+
+function fileNameWithinApiLimit(fileName: string): string {
+  if (fileName.length <= ATTACHMENT_FILE_NAME_MAX_LENGTH) return fileName;
+  const extensionStart = fileName.lastIndexOf('.');
+  const extension = extensionStart > 0 ? fileName.slice(extensionStart) : '';
+  const keptExtension = extension.length < ATTACHMENT_FILE_NAME_MAX_LENGTH ? extension : '';
+  const stem = fileName.slice(0, fileName.length - keptExtension.length);
+  return (
+    leadingCodeUnits(stem, ATTACHMENT_FILE_NAME_MAX_LENGTH - keptExtension.length) + keptExtension
+  );
+}
+
 async function toAttachmentPayload(attachment: Attachment) {
   try {
     return {
-      fileName: attachment.file.name,
+      fileName: fileNameWithinApiLimit(attachment.file.name),
       contentType: attachment.file.type,
       base64Content: await fileToBase64(attachment.file),
     };
