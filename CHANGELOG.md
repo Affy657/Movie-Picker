@@ -98,6 +98,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
+- **Le menu d'une soirée de l'historique s'ouvre en entier** : dans Mes soirées, les trois points d'une soirée passée ouvraient le menu à l'intérieur de la carte, qui le rognait et décalait son contenu ; « Supprimer la soirée » restait hors de portée. Le menu passe désormais par-dessus la liste.
 - **La connexion avec Google fonctionne de nouveau pour un premier accès** : depuis la V1.4, toute première connexion par Google était refusée avec « l'adresse e-mail de ce compte n'est pas vérifiée », parce que le serveur cherchait la vérification de l'adresse au mauvais endroit de la réponse de Google ; seuls les comptes Google déjà liés depuis les paramètres passaient. Une adresse vérifiée par Google suffit désormais, comme prévu.
 - **Un rappel de soirée ne repart plus quand le serveur est mis à jour** pendant la fenêtre du rappel : la nouvelle version reconnaît les rappels déjà envoyés par la précédente.
 - **Les films gagnants quittent les listes « À voir » le soir même** : quand l'hôte ne clôturait pas la soirée, le film tiré au sort restait jusqu'à sept jours de trop dans la liste de chaque participant ; il en sort désormais à la passe de nuit qui suit la fin de la soirée.
