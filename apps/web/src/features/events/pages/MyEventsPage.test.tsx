@@ -234,7 +234,7 @@ describe('MyEventsPage (MSW)', () => {
     await waitFor(() => expect(deleteCalled).toBe(true));
   });
 
-  it('history: a participant removes a finished movie night from their history', async () => {
+  it('history: a participant is offered no removal the API would refuse on a finished night', async () => {
     const user = (await import('@testing-library/user-event')).default.setup();
     setStoredParticipant('rejointe-terminee', 'part-1', 'Alice');
     let removeCalled = false;
@@ -257,6 +257,7 @@ describe('MyEventsPage (MSW)', () => {
             lifecycle: 'finished',
             participantCount: 3,
             movieCount: 2,
+            winnerMovies: [{ title: 'Parasite', posterPath: null }],
           },
         ],
         { active: 0, finished: 1 }
@@ -273,13 +274,13 @@ describe('MyEventsPage (MSW)', () => {
     await user.click(historyTab);
     await screen.findByRole('link', { name: /Soirée rejointe/i });
 
-    await user.click(screen.getByRole('button', { name: /Options pour Soirée rejointe/i }));
-    await user.click(screen.getByRole('menuitem', { name: /retirer de mon historique/i }));
-
-    const openDialog = screen.getAllByTestId('confirm-dialog').find((d) => d.hasAttribute('open'))!;
-    await user.click(within(openDialog).getByTestId('confirm-dialog-confirm'));
-
-    await waitFor(() => expect(removeCalled).toBe(true));
+    expect(
+      screen.queryByRole('button', { name: /Options pour Soirée rejointe/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('menuitem', { name: /retirer de mon historique/i })
+    ).not.toBeInTheDocument();
+    expect(removeCalled).toBe(false);
   });
 
   it('history: a failed load offers a retry instead of an empty search result', async () => {

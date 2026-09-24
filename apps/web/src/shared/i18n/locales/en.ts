@@ -808,12 +808,6 @@ export const en: Locale = {
       monthGroupCountOne: '1 event',
       monthGroupCountMany: '{{count}} events',
       historyFinishedWithoutMovie: 'Finished without a movie',
-      historyRemoveAction: 'Remove from my history',
-      historyRemoveConfirmTitle: 'Remove from your history?',
-      historyRemoveConfirmMessage:
-        '"{{title}}" will be removed from your history. You can still join it again if you have the link.',
-      historyRemoveConfirmAction: 'Remove',
-      historyRemoveError: 'Removal failed.',
       pendingAutoCloseIn: 'Automatic closing {{time}}',
       pendingAutoCloseInShort: 'Closes {{time}}',
       countdown: {
