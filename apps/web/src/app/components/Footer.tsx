@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import clsx from 'clsx';
 import { Link } from 'react-router';
 import { useTranslation } from '@/shared/i18n';
@@ -8,6 +9,7 @@ import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
 import ProposeIdeaButton from './ProposeIdeaButton';
 import SupportReportButton from './SupportReportButton';
 import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
+import ConsentDialog from '@/shared/components/ConsentDialog';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import styles from './Footer.module.css';
@@ -66,6 +68,7 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
     onClick: onInstallClick,
     closeGuide: closeInstallGuide,
   } = usePwaInstallClick('footer');
+  const [consentDialogOpen, setConsentDialogOpen] = useState(false);
 
   return (
     <footer
@@ -189,6 +192,16 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
                 {t('footer.privacyPolicy')}
               </Link>
             </li>
+            <li>
+              <button
+                type="button"
+                className={clsx(styles.colLink, styles.colButtonReset)}
+                aria-haspopup="dialog"
+                onClick={() => setConsentDialogOpen(true)}
+              >
+                {t('footer.manageCookies')}
+              </button>
+            </li>
           </ul>
         </div>
       </div>
@@ -252,6 +265,9 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
       </div>
       {installGuideOpen ? (
         <InstallPwaDialog open mode={installGuideMode} onClose={closeInstallGuide} />
+      ) : null}
+      {consentDialogOpen ? (
+        <ConsentDialog open onClose={() => setConsentDialogOpen(false)} />
       ) : null}
     </footer>
   );
