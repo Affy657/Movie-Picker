@@ -9,11 +9,34 @@ namespace MoviePicker.Api.Tests.UseCases.Notifications;
 public sealed class GetInboxHandlerTests
 {
     private readonly Mock<IUserNotificationRepository> _notifications = new();
+    private readonly Mock<IUserRepository> _users = new();
     private readonly GetInboxHandler _sut;
 
     public GetInboxHandlerTests()
     {
-        _sut = new GetInboxHandler(_notifications.Object);
+        _users.Setup(u => u.GetByHandleAsync("bob", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = "bob-id", Handle = "bob", IsProfilePublic = true });
+        _sut = new GetInboxHandler(_notifications.Object, _users.Object);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnActorWithAPrivateProfile_KeepsTheirHandleOutOfTheInbox()
+    {
+        _users.Setup(u => u.GetByHandleAsync("hidden", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = "hidden-id", Handle = "hidden", IsProfilePublic = false });
+        _notifications.Setup(n => n.ListByUserIdAsync("u1", 31, 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new UserNotification { Id = "n1", UserId = "u1", Type = UserNotificationType.NewFollower, ActorHandle = "hidden", ActorDisplayName = "Hidden" },
+                new UserNotification { Id = "n2", UserId = "u1", Type = UserNotificationType.ParticipantJoined, ActorHandle = "bob" },
+                new UserNotification { Id = "n3", UserId = "u1", Type = UserNotificationType.MovieAdded, ActorHandle = "hidden" }
+            ]);
+
+        var result = await _sut.HandleAsync("u1", limit: null, offset: null);
+
+        Assert.Equal([null, "bob", null], result.Items.Select(i => i.ActorHandle));
+        Assert.Equal("Hidden", result.Items[0].ActorDisplayName);
+        _users.Verify(u => u.GetByHandleAsync("hidden", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

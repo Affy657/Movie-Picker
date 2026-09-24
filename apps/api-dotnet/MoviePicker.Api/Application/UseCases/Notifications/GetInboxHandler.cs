@@ -7,10 +7,12 @@ namespace MoviePicker.Api.Application.UseCases.Notifications;
 public sealed class GetInboxHandler : IGetInboxHandler
 {
     private readonly IUserNotificationRepository _notifications;
+    private readonly IUserRepository _users;
 
-    public GetInboxHandler(IUserNotificationRepository notifications)
+    public GetInboxHandler(IUserNotificationRepository notifications, IUserRepository users)
     {
         _notifications = notifications;
+        _users = users;
     }
 
     private const int DefaultPageSize = 30;
@@ -26,6 +28,7 @@ public sealed class GetInboxHandler : IGetInboxHandler
         var items = hasMore ? page.Take(pageSize).ToList() : page;
 
         var unreadCount = await _notifications.GetUnreadCountAsync(userId, ct);
+        var publicHandles = await ResolvePublicHandlesAsync(items, ct);
 
         return new NotificationInboxResponse
         {
@@ -33,7 +36,7 @@ public sealed class GetInboxHandler : IGetInboxHandler
             {
                 Id = n.Id,
                 Type = n.Type.ToString().ToLowerInvariant(),
-                ActorHandle = n.ActorHandle,
+                ActorHandle = n.ActorHandle is { } handle ? publicHandles.GetValueOrDefault(handle) : null,
                 ActorDisplayName = n.ActorDisplayName,
                 ActorAvatarId = n.ActorAvatarId,
                 EventSlug = n.EventSlug,
@@ -45,5 +48,15 @@ public sealed class GetInboxHandler : IGetInboxHandler
             UnreadCount = unreadCount,
             HasMore = hasMore
         };
+    }
+
+    private async Task<Dictionary<string, string?>> ResolvePublicHandlesAsync(
+        IEnumerable<UserNotification> items,
+        CancellationToken ct)
+    {
+        var resolved = new Dictionary<string, string?>(StringComparer.Ordinal);
+        foreach (var handle in items.Select(n => n.ActorHandle).OfType<string>().Distinct(StringComparer.Ordinal))
+            resolved[handle] = PublicHandleResolver.Resolve(await _users.GetByHandleAsync(handle, ct));
+        return resolved;
     }
 }
