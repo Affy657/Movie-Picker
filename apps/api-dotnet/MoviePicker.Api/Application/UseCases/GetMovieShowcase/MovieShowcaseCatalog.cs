@@ -42,6 +42,12 @@ public static class MovieShowcaseCatalog
 
     public static IReadOnlyList<string> ProviderKeys => [.. ProviderIds.Keys];
 
+    private static readonly HashSet<int> TmdbMovieGenreIds =
+    [
+        28, 12, 16, 35, 80, 99, 18, 10_751, 14, 36,
+        27, 10_402, 9_648, 10_749, 878, 10_770, 53, 10_752, 37,
+    ];
+
     private static readonly IReadOnlyDictionary<string, TmdbDiscoveryCriteria> ThemeCriteria =
         new Dictionary<string, TmdbDiscoveryCriteria>(StringComparer.OrdinalIgnoreCase)
         {
@@ -104,4 +110,15 @@ public static class MovieShowcaseCatalog
         !string.IsNullOrWhiteSpace(theme) && ThemeCriteria.TryGetValue(theme.Trim(), out var criteria)
             ? criteria
             : null;
+
+    public static string? ThemeKey(string? theme) => CatalogKey(ThemeKeys, theme);
+
+    public static string? ProviderKey(string? provider) => CatalogKey(ProviderKeys, provider);
+
+    public static bool IsTmdbMovieGenre(int genreId) => TmdbMovieGenreIds.Contains(genreId);
+
+    private static string? CatalogKey(IReadOnlyList<string> keys, string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? null
+            : keys.FirstOrDefault(key => string.Equals(key, value.Trim(), StringComparison.OrdinalIgnoreCase));
 }

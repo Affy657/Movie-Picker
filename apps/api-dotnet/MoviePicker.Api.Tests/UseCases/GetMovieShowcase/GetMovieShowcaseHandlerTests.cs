@@ -8,6 +8,7 @@ using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.GetMovieShowcase;
@@ -25,6 +26,23 @@ public sealed class GetMovieShowcaseHandlerTests
             _movies.Object,
             new SharedCacheReadThrough(_cache, _shared.Object, new SingleFlight()),
             Options.Create(new MoviePickerOptions { TmdbApiKey = apiKey }));
+
+    private GetMovieShowcaseHandler BuildAnotherInstanceOn(ISharedCache shared) =>
+        new(
+            _tmdb.Object,
+            _movies.Object,
+            new SharedCacheReadThrough(new MemoryCache(new MemoryCacheOptions()), shared, new SingleFlight()),
+            Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+
+    private void VerifyDiscoveries(Times times) =>
+        _tmdb.Verify(
+            t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            times);
+
+    private void VerifySharedWrites(Times times) =>
+        _shared.Verify(
+            c => c.SetAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<MovieShowcaseItemResponse>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()),
+            times);
 
     private static List<TmdbSearchItem> Items(int count, int idBase = 1) =>
         Enumerable.Range(0, count)
@@ -394,6 +412,95 @@ public sealed class GetMovieShowcaseHandlerTests
         _shared.Verify(
             c => c.SetAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<MovieShowcaseItemResponse>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ParametersTheSectionIgnores_ReuseOneEntry()
+    {
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(3));
+        var handler = Build();
+
+        await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
+        await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, SeedTmdbId: 42));
+        var crafted = await handler.HandleAsync(new MovieShowcaseQuery(
+            MovieShowcaseSections.Trending, Theme: "nawak", CollectionId: 7, Provider: "nawak", SeedTmdbId: 43));
+
+        _tmdb.Verify(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
+        VerifySharedWrites(Times.Once());
+        Assert.Equal(3, crafted.Items.Count);
+        Assert.Null(crafted.Theme);
+    }
+
+    [Theory]
+    [InlineData(MovieShowcaseSections.NowPlaying)]
+    [InlineData(MovieShowcaseSections.MostProposed)]
+    public async Task HandleAsync_GenresOnASectionWithoutGenres_ReuseTheSectionEntry(string section)
+    {
+        _tmdb.Setup(t => t.GetNowPlayingMoviesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(3));
+        _movies.Setup(r => r.ListMostProposedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Ranking(MovieShowcaseCatalog.MostProposedMinDistinctMovies));
+        var handler = Build();
+
+        await handler.HandleAsync(new MovieShowcaseQuery(section));
+        await handler.HandleAsync(new MovieShowcaseQuery(section, GenreIds: [28]));
+        await handler.HandleAsync(new MovieShowcaseQuery(section, GenreIds: [28, 35]));
+
+        VerifySharedWrites(Times.Once());
+    }
+
+    [Theory]
+    [InlineData(MovieShowcaseSections.Theme, "frissons", "FRISSONS")]
+    [InlineData(MovieShowcaseSections.Theme, "frissons", " Frissons ")]
+    [InlineData(MovieShowcaseSections.Provider, "netflix", "NetFlix")]
+    public async Task HandleAsync_CatalogKeyWrittenDifferently_ReadsTheSnapshotTheWarmPassWrote(
+        string section,
+        string catalogKey,
+        string variant)
+    {
+        var shared = new InMemorySharedCache();
+        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(3));
+        Assert.True(await BuildAnotherInstanceOn(shared).RefreshAsync(CatalogQuery(section, catalogKey)));
+
+        var result = await BuildAnotherInstanceOn(shared).HandleAsync(CatalogQuery(section, variant) with { GenreIds = [28] });
+
+        VerifyDiscoveries(Times.Once());
+        Assert.Equal(3, result.Items.Count);
+        Assert.Equal(section == MovieShowcaseSections.Theme ? catalogKey : null, result.Theme);
+    }
+
+    private static MovieShowcaseQuery CatalogQuery(string section, string key) =>
+        section == MovieShowcaseSections.Theme
+            ? new MovieShowcaseQuery(section, Theme: key)
+            : new MovieShowcaseQuery(section, Provider: key);
+
+    [Fact]
+    public async Task HandleAsync_TrendingOnAGenreTmdbDoesNotHave_StaysOutOfTheSharedCache()
+    {
+        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(2));
+
+        await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, GenreIds: [987_654]));
+
+        VerifySharedWrites(Times.Never());
+        _shared.Verify(
+            c => c.TryGetAsync<IReadOnlyList<MovieShowcaseItemResponse>>(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_TrendingOnAGenreTmdbDoesNotHave_IsNotPublished()
+    {
+        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(2));
+
+        var refreshed = await Build().RefreshAsync(
+            new MovieShowcaseQuery(MovieShowcaseSections.Trending, GenreIds: [987_654]));
+
+        Assert.False(refreshed);
+        VerifySharedWrites(Times.Never());
     }
 
     [Theory]
