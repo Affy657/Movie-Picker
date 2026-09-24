@@ -20,7 +20,10 @@ internal static class PosterRemoteFetch
             || fetchUri.Scheme != Uri.UriSchemeHttps
             || !string.Equals(fetchUri.Host, "image.tmdb.org", StringComparison.OrdinalIgnoreCase))
             return null;
-        using var res = await http.GetAsync(fetchUri, HttpCompletionOption.ResponseHeadersRead, ct);
+
+        using var download = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        download.CancelAfter(http.Timeout);
+        using var res = await http.GetAsync(fetchUri, HttpCompletionOption.ResponseHeadersRead, download.Token);
         if (!res.IsSuccessStatusCode)
             return null;
 
@@ -32,19 +35,19 @@ internal static class PosterRemoteFetch
         if (contentLength is > 0 && contentLength > maxBytes)
             return null;
 
-        await using var stream = await res.Content.ReadAsStreamAsync(ct);
+        await using var stream = await res.Content.ReadAsStreamAsync(download.Token);
         await using var ms = new MemoryStream();
         var buffer = new byte[8192];
         var total = 0;
         while (true)
         {
-            var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct);
+            var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), download.Token);
             if (read == 0)
                 break;
             total += read;
             if (total > maxBytes)
                 return null;
-            await ms.WriteAsync(buffer.AsMemory(0, read), ct);
+            await ms.WriteAsync(buffer.AsMemory(0, read), download.Token);
         }
 
         if (ms.Length == 0)

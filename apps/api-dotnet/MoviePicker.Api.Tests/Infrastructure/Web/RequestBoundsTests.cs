@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Controllers;
 using MoviePicker.Api.Infrastructure.Web;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Web;
@@ -22,6 +23,12 @@ public sealed class RequestBoundsTests
         }
     }
 
+    private sealed class UpstreamSilentAfterItsHeaders : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StalledContent() });
+    }
+
     private static HttpClient ClientWithBudget(TimeSpan budget) =>
         new(new RequestTimeoutHandler(budget) { InnerHandler = new SilentUpstream() }) { Timeout = Timeout.InfiniteTimeSpan };
 
@@ -32,6 +39,27 @@ public sealed class RequestBoundsTests
 
         var ex = await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync("https://api.themoviedb.org/3/movie/550"));
 
+        Assert.Equal(HttpStatusCode.GatewayTimeout, ex.StatusCode);
+    }
+
+    [Fact]
+    public async Task OutgoingCall_UpstreamSilentAfterItsHeaders_FailsAsAGatewayTimeout()
+    {
+        using var client = new HttpClient(
+            new RequestTimeoutHandler(TimeSpan.FromMilliseconds(50)) { InnerHandler = new UpstreamSilentAfterItsHeaders() })
+        {
+            Timeout = Timeout.InfiniteTimeSpan
+        };
+        using var patience = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+
+        async Task<string> ReadBodyAsync()
+        {
+            using var response = await client.GetAsync(
+                "https://api.themoviedb.org/3/movie/550", HttpCompletionOption.ResponseHeadersRead);
+            return await response.Content.ReadAsStringAsync();
+        }
+
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(() => ReadBodyAsync().WaitAsync(patience.Token));
         Assert.Equal(HttpStatusCode.GatewayTimeout, ex.StatusCode);
     }
 

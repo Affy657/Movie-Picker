@@ -142,6 +142,22 @@ public sealed class GetMovieShowcaseHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_LoadOutlivingItsBudget_AnswersServiceUnavailable()
+    {
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns(new TaskCompletionSource<IReadOnlyList<TmdbSearchItem>>().Task);
+        var handler = new GetMovieShowcaseHandler(
+            _tmdb.Object,
+            _movies.Object,
+            new SharedCacheReadThrough(_cache, _shared.Object, new SingleFlight(), TimeSpan.FromMilliseconds(100)),
+            Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+        using var patience = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+
+        await Assert.ThrowsAsync<ServiceUnavailableException>(
+            () => handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending)).WaitAsync(patience.Token));
+    }
+
+    [Fact]
     public async Task HandleAsync_SecondCall_ServedFromCache()
     {
         _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))

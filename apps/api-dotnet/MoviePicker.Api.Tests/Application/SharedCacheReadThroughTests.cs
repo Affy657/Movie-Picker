@@ -68,6 +68,37 @@ public sealed class SharedCacheReadThroughTests
     }
 
     [Fact]
+    public async Task GetOrLoadAsync_LoadOutlivingItsBudget_FailsAndFreesTheKeyForTheNextCall()
+    {
+        var sut = new SharedCacheReadThrough(_memory, _shared.Object, new SingleFlight(), TimeSpan.FromMilliseconds(100));
+        using var patience = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+
+        await Assert.ThrowsAsync<TimeoutException>(
+            () => sut.GetOrLoadAsync("k", Ttl, _ => new TaskCompletionSource<string>().Task).WaitAsync(patience.Token));
+        var next = await sut.GetOrLoadAsync("k", Ttl, _ => Task.FromResult("loaded")).WaitAsync(patience.Token);
+
+        Assert.Equal("loaded", next);
+    }
+
+    [Fact]
+    public async Task GetOrLoadAsync_LoadOutlivingItsBudget_SeesItsTokenCancelled()
+    {
+        var sut = new SharedCacheReadThrough(_memory, _shared.Object, new SingleFlight(), TimeSpan.FromMilliseconds(100));
+        var loadToken = CancellationToken.None;
+        using var patience = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+
+        await Assert.ThrowsAsync<TimeoutException>(() => sut
+            .GetOrLoadAsync("k", Ttl, token =>
+            {
+                loadToken = token;
+                return new TaskCompletionSource<string>().Task;
+            })
+            .WaitAsync(patience.Token));
+
+        Assert.True(loadToken.IsCancellationRequested);
+    }
+
+    [Fact]
     public async Task GetOrLoadAsync_LoaderFailure_LeavesCachesEmpty()
     {
         await Assert.ThrowsAsync<InvalidOperationException>(

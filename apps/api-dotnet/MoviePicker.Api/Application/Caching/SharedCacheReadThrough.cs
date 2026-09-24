@@ -10,15 +10,23 @@ public sealed class SharedCacheReadThrough
 {
     public static readonly TimeSpan IncompleteLoadTtl = TimeSpan.FromMinutes(2);
 
+    public static readonly TimeSpan DefaultLoadBudget = TimeSpan.FromSeconds(60);
+
     private readonly IMemoryCache _memory;
     private readonly ISharedCache _shared;
     private readonly SingleFlight _singleFlight;
+    private readonly TimeSpan _loadBudget;
 
-    public SharedCacheReadThrough(IMemoryCache memory, ISharedCache shared, SingleFlight singleFlight)
+    public SharedCacheReadThrough(
+        IMemoryCache memory,
+        ISharedCache shared,
+        SingleFlight singleFlight,
+        TimeSpan? loadBudget = null)
     {
         _memory = memory;
         _shared = shared;
         _singleFlight = singleFlight;
+        _loadBudget = loadBudget ?? DefaultLoadBudget;
     }
 
     public Task<T> GetOrLoadAsync<T>(
@@ -62,7 +70,7 @@ public sealed class SharedCacheReadThrough
         if (!loaded.IsComplete)
             return false;
 
-        await StoreAsync(key, loaded.Value, ttl, shareAcrossInstances: true).ConfigureAwait(false);
+        await StoreAsync(key, loaded.Value, ttl, shareAcrossInstances: true, CancellationToken.None).ConfigureAwait(false);
         return true;
     }
 
@@ -73,8 +81,29 @@ public sealed class SharedCacheReadThrough
         bool shareAcrossInstances)
         where T : class
     {
+        using var deadline = new CancellationTokenSource(_loadBudget);
+        try
+        {
+            return await LoadAndStoreAsync(key, ttl, load, shareAcrossInstances, deadline.Token)
+                .WaitAsync(deadline.Token)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException ex) when (deadline.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Loading {key} took longer than {_loadBudget.TotalSeconds} s", ex);
+        }
+    }
+
+    private async Task<T> LoadAndStoreAsync<T>(
+        string key,
+        TimeSpan ttl,
+        Func<CancellationToken, Task<CacheLoad<T>>> load,
+        bool shareAcrossInstances,
+        CancellationToken ct)
+        where T : class
+    {
         var shared = shareAcrossInstances
-            ? await _shared.TryGetAsync<T>(key, CancellationToken.None).ConfigureAwait(false)
+            ? await _shared.TryGetAsync<T>(key, ct).ConfigureAwait(false)
             : null;
         if (shared is not null)
         {
@@ -82,9 +111,9 @@ public sealed class SharedCacheReadThrough
             return shared.Value;
         }
 
-        var loaded = await load(CancellationToken.None).ConfigureAwait(false);
+        var loaded = await load(ct).ConfigureAwait(false);
         if (loaded.IsComplete)
-            await StoreAsync(key, loaded.Value, ttl, shareAcrossInstances).ConfigureAwait(false);
+            await StoreAsync(key, loaded.Value, ttl, shareAcrossInstances, ct).ConfigureAwait(false);
         else
             _memory.Set(key, loaded.Value, new MemoryCacheEntryOptions
             {
@@ -94,11 +123,11 @@ public sealed class SharedCacheReadThrough
         return loaded.Value;
     }
 
-    private async Task StoreAsync<T>(string key, T value, TimeSpan ttl, bool shareAcrossInstances)
+    private async Task StoreAsync<T>(string key, T value, TimeSpan ttl, bool shareAcrossInstances, CancellationToken ct)
         where T : class
     {
         _memory.Set(key, value, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl, Size = 1 });
         if (shareAcrossInstances)
-            await _shared.SetAsync(key, value, ttl, CancellationToken.None).ConfigureAwait(false);
+            await _shared.SetAsync(key, value, ttl, ct).ConfigureAwait(false);
     }
 }

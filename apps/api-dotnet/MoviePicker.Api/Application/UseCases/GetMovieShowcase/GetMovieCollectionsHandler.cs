@@ -27,8 +27,15 @@ public sealed class GetMovieCollectionsHandler : IGetMovieCollectionsHandler
 
     public async Task<MovieCollectionListResponse> HandleAsync(CancellationToken ct = default)
     {
-        var items = await _cache.GetOrLoadCheckedAsync(CacheKey, CacheTtl(), LoadCollectionsAsync, ct: ct);
-        return Build(items);
+        try
+        {
+            var items = await _cache.GetOrLoadCheckedAsync(CacheKey, CacheTtl(), LoadCollectionsAsync, ct: ct);
+            return Build(items);
+        }
+        catch (TimeoutException)
+        {
+            throw Errors.ShowcaseUnavailable();
+        }
     }
 
     public async Task<bool> RefreshAsync(CancellationToken ct = default)

@@ -7,6 +7,7 @@ using Moq.Protected;
 using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Infrastructure.Posters;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Posters;
@@ -124,6 +125,29 @@ public sealed class MemoryPosterImageStoreFetchTests
             new MoviePickerOptions { PosterCacheMaxBytes = 2 });
 
         Assert.Null(await store.GetOrFetchAsync(Source));
+    }
+
+    [Fact]
+    public async Task GetOrFetchAsync_ImageStallingAfterItsHeaders_GivesUpAtTheClientTimeoutAndRetriesNextTime()
+    {
+        var calls = 0;
+        var handler = StubHandler(_ => Interlocked.Increment(ref calls) == 1
+            ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StalledContent("image/jpeg") }
+            : Image(new byte[] { 7 }, "image/jpeg"));
+        var factory = new Mock<IHttpClientFactory>();
+        factory.Setup(f => f.CreateClient(It.IsAny<string>()))
+            .Returns(() => new HttpClient(handler.Object) { Timeout = TimeSpan.FromMilliseconds(100) });
+        var store = new MemoryPosterImageStore(
+            factory.Object,
+            Options.Create(new MoviePickerOptions()),
+            NullLogger<MemoryPosterImageStore>.Instance);
+        using var patience = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+
+        var first = await store.GetOrFetchAsync(Source).WaitAsync(patience.Token);
+        var second = await store.GetOrFetchAsync(Source).WaitAsync(patience.Token);
+
+        Assert.Null(first);
+        Assert.Equal(new byte[] { 7 }, second!.Data);
     }
 
     [Fact]

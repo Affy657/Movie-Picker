@@ -34,14 +34,21 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
     {
         var section = SectionRequest.From(query);
 
-        var items = await _cache.GetOrLoadAsync(
-            section.CacheKey,
-            CacheTtl(),
-            token => LoadSectionAsync(section, token),
-            section.IsSharedAcrossInstances,
-            ct);
+        try
+        {
+            var items = await _cache.GetOrLoadAsync(
+                section.CacheKey,
+                CacheTtl(),
+                token => LoadSectionAsync(section, token),
+                section.IsSharedAcrossInstances,
+                ct);
 
-        return BuildResponse(section, items);
+            return BuildResponse(section, items);
+        }
+        catch (TimeoutException)
+        {
+            throw Errors.ShowcaseUnavailable();
+        }
     }
 
     public async Task<bool> RefreshAsync(MovieShowcaseQuery query, CancellationToken ct = default)

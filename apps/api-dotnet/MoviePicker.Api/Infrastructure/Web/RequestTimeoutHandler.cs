@@ -10,7 +10,8 @@ public sealed class RequestTimeoutHandler(TimeSpan timeout) : DelegatingHandler
         budget.CancelAfter(timeout);
         try
         {
-            return await base.SendAsync(request, budget.Token).ConfigureAwait(false);
+            var response = await base.SendAsync(request, budget.Token).ConfigureAwait(false);
+            return await ReadWholeBodyAsync(response, budget.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
@@ -18,6 +19,20 @@ public sealed class RequestTimeoutHandler(TimeSpan timeout) : DelegatingHandler
                 $"Request to {request.RequestUri?.Host} timed out after {timeout.TotalSeconds} s",
                 ex,
                 HttpStatusCode.GatewayTimeout);
+        }
+    }
+
+    private static async Task<HttpResponseMessage> ReadWholeBodyAsync(HttpResponseMessage response, CancellationToken budget)
+    {
+        try
+        {
+            await response.Content.LoadIntoBufferAsync(budget).ConfigureAwait(false);
+            return response;
+        }
+        catch
+        {
+            response.Dispose();
+            throw;
         }
     }
 }
