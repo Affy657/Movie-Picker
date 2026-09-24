@@ -216,6 +216,14 @@ function parseSuccessBody<T>(res: Response, text: string, isJson: boolean): T {
   }
 }
 
+async function readResponseText(res: Response): Promise<string> {
+  try {
+    return await res.text();
+  } catch (e) {
+    rethrowFetchError(e);
+  }
+}
+
 export async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const url = apiUrl(path);
   ensureApiIsNotFrontOrigin(url);
@@ -231,7 +239,7 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
   }
   const contentType = res.headers.get('content-type') ?? '';
   const isJson = /application\/(?:[\w.-]+\+)?json/i.test(contentType);
-  const text = await res.text();
+  const text = await readResponseText(res);
 
   if (!res.ok) handleErrorResponse(res, text, isJson);
   return parseSuccessBody<T>(res, text, isJson);

@@ -267,6 +267,30 @@ describe('fetchApi', () => {
     await expect(fetchApi('/events')).rejects.toThrow(/API|connexion|impossible/i);
   });
 
+  it('words a connection dropped while the body is read as a network error', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () => Promise.reject(new TypeError('Load failed')),
+    });
+    const failure = fetchApi('/events');
+    await expect(failure).rejects.toBeInstanceOf(ApiError);
+    await expect(failure).rejects.toMatchObject({ code: 0 });
+    await expect(failure).rejects.toThrow(/API|connexion|impossible/i);
+  });
+
+  it('lets an abort during the body read through as an AbortError', async () => {
+    const abortErr = new DOMException('The operation was aborted', 'AbortError');
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () => Promise.reject(abortErr),
+    });
+    await expect(fetchApi('/events')).rejects.toBe(abortErr);
+  });
+
   it('a 200 JSON response with an empty body returns undefined', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
