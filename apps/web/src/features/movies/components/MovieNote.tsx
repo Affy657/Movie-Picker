@@ -13,7 +13,7 @@ interface MovieNoteProps {
   movieId: string;
   slug: string;
   pitchNote?: string | null;
-  isMine: boolean;
+  editable: boolean;
   participantId: string | null;
   editing: boolean;
   onEditingChange: (editing: boolean) => void;
@@ -26,7 +26,7 @@ export function MovieNote({
   movieId,
   slug,
   pitchNote,
-  isMine,
+  editable,
   participantId,
   editing,
   onEditingChange,
@@ -125,7 +125,7 @@ export function MovieNote({
     <span className={clsx(styles.noteText, !expanded && styles.noteTextClamp)}>{pitchNote}</span>
   );
 
-  if (isMine) {
+  if (editable) {
     return (
       <div className={styles.note}>
         <Quote aria-hidden size={ICON_SIZE.sm} className={styles.noteQuote} />

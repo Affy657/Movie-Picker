@@ -188,6 +188,7 @@ export function useMovieCardState({
     proposerAvatarId,
     canRemove,
     canAct,
+    canEditNote,
     canVote: votingAvailable,
     iMarkedSeen,
     others,

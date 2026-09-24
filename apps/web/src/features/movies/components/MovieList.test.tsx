@@ -664,5 +664,39 @@ describe('MovieList', () => {
       rerender(proposerList(true));
       expect(screen.queryByRole('button', { name: 'Ajouter une note' })).not.toBeInTheDocument();
     });
+
+    it('keeps the pitch note read-only for its proposer once the night is finished or the wheel locked', () => {
+      const pitchedList = (state: { isFinished: boolean; wheelLocked: boolean }) => (
+        <MemoryRouter>
+          <QueryClientWrapper>
+            <LocaleProvider>
+              <MovieList
+                movies={[{ ...movies[0]!, pitchNote: 'Un casse dans les rêves' }]}
+                {...baseProps()}
+                participantId="p1"
+                participantPseudo="Alice"
+                viewMode="grid"
+                isFinished={state.isFinished}
+                wheelLocked={state.wheelLocked}
+              />
+            </LocaleProvider>
+          </QueryClientWrapper>
+        </MemoryRouter>
+      );
+      const { rerender } = render(pitchedList({ isFinished: false, wheelLocked: false }));
+      expect(screen.getByRole('button', { name: 'Un casse dans les rêves' })).toBeInTheDocument();
+
+      rerender(pitchedList({ isFinished: true, wheelLocked: false }));
+      expect(screen.getByText('Un casse dans les rêves')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Un casse dans les rêves' })
+      ).not.toBeInTheDocument();
+
+      rerender(pitchedList({ isFinished: false, wheelLocked: true }));
+      expect(screen.getByText('Un casse dans les rêves')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Un casse dans les rêves' })
+      ).not.toBeInTheDocument();
+    });
   });
 });
