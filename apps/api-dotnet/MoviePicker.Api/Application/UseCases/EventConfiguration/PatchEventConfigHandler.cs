@@ -74,7 +74,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             && !hasWinnerCountChange)
             return EventConfigResponse.FromEvent(evt);
 
-        var current = evt.Config ?? new EventConfig();
+        var current = evt.Config ?? EventConfig.SavedWithoutSettings;
 
         var nextConfig = new EventConfig
         {
