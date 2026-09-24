@@ -2,7 +2,10 @@ import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
 
 export const DEFAULT_EVENT_DURATION_MINUTES = 120;
 
-const ICS_LINE_LIMIT = 74;
+const ICS_LINE_OCTET_LIMIT = 75;
+const ICS_CONTINUATION_PREFIX = ' ';
+
+const utf8 = new TextEncoder();
 
 export interface CalendarEvent {
   title: string;
@@ -73,13 +76,24 @@ function escapeIcsText(value: string): string {
 }
 
 function foldIcsLine(line: string): string {
-  const chars = Array.from(line);
-  if (chars.length <= ICS_LINE_LIMIT) return line;
+  if (utf8.encode(line).length <= ICS_LINE_OCTET_LIMIT) return line;
   const parts: string[] = [];
-  for (let index = 0; index < chars.length; index += ICS_LINE_LIMIT) {
-    parts.push(chars.slice(index, index + ICS_LINE_LIMIT).join(''));
+  let part = '';
+  let partOctets = 0;
+  let partBudget = ICS_LINE_OCTET_LIMIT;
+  for (const codePoint of line) {
+    const octets = utf8.encode(codePoint).length;
+    if (partOctets + octets > partBudget) {
+      parts.push(part);
+      part = '';
+      partOctets = 0;
+      partBudget = ICS_LINE_OCTET_LIMIT - ICS_CONTINUATION_PREFIX.length;
+    }
+    part += codePoint;
+    partOctets += octets;
   }
-  return parts.join('\r\n ');
+  parts.push(part);
+  return parts.join(`\r\n${ICS_CONTINUATION_PREFIX}`);
 }
 
 export function buildIcsContent(event: CalendarEvent, now: Date = new Date()): string | null {
