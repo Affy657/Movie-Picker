@@ -20,6 +20,7 @@ public sealed class PatchEventConfigHandlerTests
     private readonly Mock<IPushSubscriptionRepository> _pushSubRepo = new();
     private readonly Mock<IPushNotificationSender> _pushSender = new();
     private readonly Mock<IUserNotificationRepository> _notifications = new();
+    private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly PatchEventConfigHandler _sut;
 
     public PatchEventConfigHandlerTests()
@@ -37,6 +38,7 @@ public sealed class PatchEventConfigHandlerTests
             _pushSubRepo.Object,
             _pushSender.Object,
             _notifications.Object,
+            _unitOfWork,
             NullLogger<PatchEventConfigHandler>.Instance,
             TimeProvider.System);
     }
@@ -240,6 +242,28 @@ public sealed class PatchEventConfigHandlerTests
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
             _sut.HandleAsync("s", new PatchEventConfigRequest { MaxParticipants = 5 }));
         Assert.Equal(ErrorCodes.ParticipantLimitBelowCurrent, ex.Reason);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MaxParticipants_CountsAndSavesUnderTheEventLock()
+    {
+        var evt = Evt();
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        var steps = new List<string>();
+        _events.Setup(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "lock" : "lock-outside"))
+            .Returns(Task.CompletedTask);
+        _participants.Setup(p => p.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "count" : "count-outside"))
+            .ReturnsAsync(4);
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "save" : "save-outside"))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        await _sut.HandleAsync("s", new PatchEventConfigRequest { MaxParticipants = 5 });
+
+        Assert.Equal(["lock", "count", "save"], steps);
     }
 
     [Fact]
