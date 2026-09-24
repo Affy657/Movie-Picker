@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.UserMovies;
 
@@ -66,13 +67,37 @@ public sealed class GetFollowedWatchedMoviesHandler : IGetFollowedWatchedMoviesH
         var eventIds = participants.Select(p => p.EventId).Distinct().ToList();
         var events = await _events.ListByIdsAsync(eventIds, ct);
 
-        var watched = WatchedMoviesFacts.FinishedWinners(events, _clock.GetUtcNow())
-            .GroupBy(x => x.MovieId)
-            .Select(g => g.OrderByDescending(x => x.WatchedAt).First())
+        var latestFirst = WatchedMoviesFacts.FinishedWinners(events, _clock.GetUtcNow())
             .OrderByDescending(x => x.WatchedAt)
-            .Take(take <= 0 ? DefaultTake : Math.Min(take, MaxTake))
             .ToList();
+        var watched = await LatestNightPerFilmAsync(
+            latestFirst,
+            take <= 0 ? DefaultTake : Math.Min(take, MaxTake),
+            ct);
 
-        return await WatchedMoviesFacts.ToResponseAsync(watched, _movies, _tmdb, _options, ct);
+        return await WatchedMoviesFacts.ToResponseAsync(watched, _tmdb, _options, ct);
+    }
+
+    private async Task<List<(Movie Movie, DateTimeOffset WatchedAt)>> LatestNightPerFilmAsync(
+        List<(string MovieId, DateTimeOffset WatchedAt)> latestFirst,
+        int limit,
+        CancellationToken ct)
+    {
+        var films = new List<(Movie Movie, DateTimeOffset WatchedAt)>(limit);
+        var seen = new HashSet<(int TmdbId, MovieMediaType MediaType)>();
+        foreach (var nights in latestFirst.Chunk(limit))
+        {
+            var movies = await _movies.ListByIdsAsync(nights.Select(x => x.MovieId).Distinct().ToList(), ct);
+            var movieById = movies.ToDictionary(m => m.Id);
+            foreach (var (movieId, watchedAt) in nights)
+            {
+                if (movieById.TryGetValue(movieId, out var movie) && seen.Add((movie.TmdbId, movie.MediaType)))
+                    films.Add((movie, watchedAt));
+                if (films.Count == limit)
+                    return films;
+            }
+        }
+
+        return films;
     }
 }

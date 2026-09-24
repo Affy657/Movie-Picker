@@ -28,12 +28,24 @@ internal static class WatchedMoviesFacts
         var movies = await movieRepository.ListByIdsAsync(watched.Select(x => x.MovieId).Distinct().ToList(), ct);
         var movieById = movies.ToDictionary(m => m.Id);
 
+        var resolved = watched
+            .Where(x => movieById.ContainsKey(x.MovieId))
+            .Select(x => (Movie: movieById[x.MovieId], x.WatchedAt))
+            .ToList();
+
+        return await ToResponseAsync(resolved, tmdb, options, ct);
+    }
+
+    public static async Task<UserWatchedMoviesResponse> ToResponseAsync(
+        IReadOnlyList<(Movie Movie, DateTimeOffset WatchedAt)> watched,
+        ITmdbMovieSearch tmdb,
+        MoviePickerOptions options,
+        CancellationToken ct)
+    {
         var items = watched
-            .Select(x => (x.WatchedAt, Movie: movieById.GetValueOrDefault(x.MovieId)))
-            .Where(x => x.Movie is not null)
             .Select(x => new UserWatchedMovieItem
             {
-                TmdbId = x.Movie!.TmdbId,
+                TmdbId = x.Movie.TmdbId,
                 Title = x.Movie.Title,
                 Year = x.Movie.Year,
                 PosterPath = x.Movie.PosterPath,
