@@ -19,7 +19,7 @@ function setup<T>(hook: () => T, ownHandle?: string) {
   const wrapper = ({ children }: { children: ReactNode }) =>
     withQueryClient(<>{children}</>, client);
   const rendered = renderHook(hook, { wrapper });
-  return { ...rendered, invalidateSpy };
+  return { ...rendered, client, invalidateSpy };
 }
 
 describe('useWatchlist mutations', () => {
@@ -35,6 +35,20 @@ describe('useWatchlist mutations', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.watchlist.availability });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.profile.public('alice') });
     expect(invalidateSpy).not.toHaveBeenCalledWith({ queryKey: queryKeys.profile.publicAll });
+  });
+
+  it("a removal refreshes my public watchlist page, not other people's", async () => {
+    const { result, client } = setup(() => useRemoveFromWatchlist(), 'alice');
+    const myPublicWatchlist = queryKeys.profile.watchlist('alice', 60);
+    const theirPublicWatchlist = queryKeys.profile.watchlist('bob', 60);
+    client.setQueryData(myPublicWatchlist, { items: [] });
+    client.setQueryData(theirPublicWatchlist, { items: [] });
+
+    act(() => result.current.mutate({ tmdbId: 1 }));
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(client.getQueryState(myPublicWatchlist)?.isInvalidated).toBe(true);
+    expect(client.getQueryState(theirPublicWatchlist)?.isInvalidated).toBe(false);
   });
 
   it('a removal without a cached account only refreshes my list and its availability', async () => {

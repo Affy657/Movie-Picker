@@ -12,13 +12,14 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 
 export function invalidateWatchlist(queryClient: QueryClient): Promise<void> {
   const ownHandle = queryClient.getQueryData<UserProfile | null>(queryKeys.auth.me)?.handle;
-  return Promise.all([
-    queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.list }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.watchlist.availability }),
-    ownHandle
-      ? queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(ownHandle) })
-      : Promise.resolve(),
-  ]).then(() => undefined);
+  const ownProfileKeys = ownHandle
+    ? [queryKeys.profile.public(ownHandle), queryKeys.profile.watchlistOf(ownHandle)]
+    : [];
+  return Promise.all(
+    [queryKeys.watchlist.list, queryKeys.watchlist.availability, ...ownProfileKeys].map(
+      (queryKey) => queryClient.invalidateQueries({ queryKey })
+    )
+  ).then(() => undefined);
 }
 
 export function useWatchlist(options?: { enabled?: boolean }) {
