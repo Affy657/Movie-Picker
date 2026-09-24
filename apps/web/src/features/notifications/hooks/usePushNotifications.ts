@@ -8,6 +8,7 @@ import {
   renewPushSubscriptionIfStale,
   vapidKeyBytes,
 } from '@/features/notifications/utils/pushSubscriptionRenewal';
+import { ApiError } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
 
 type PermissionState = 'default' | 'granted' | 'denied' | 'unsupported';
@@ -87,7 +88,7 @@ export function usePushNotifications(): PushNotificationsState {
       await postPushSubscription(sub.toJSON());
       setSubscribed(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('notifications.enableError'));
+      setError(ApiError.is(e) ? e.message : t('notifications.enableError'));
     } finally {
       setLoading(false);
     }
@@ -106,7 +107,7 @@ export function usePushNotifications(): PushNotificationsState {
       }
       setSubscribed(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('notifications.disableError'));
+      setError(ApiError.is(e) ? e.message : t('notifications.disableError'));
     } finally {
       setLoading(false);
     }
