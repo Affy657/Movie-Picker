@@ -426,6 +426,8 @@ export const fr = {
         accountExists:
           'Un compte Movie Picker existe déjà avec cette adresse e-mail. Connectez-vous avec votre mot de passe, puis liez ce fournisseur depuis la page Paramètres.',
         identityTaken: 'Ce compte est d\u00e9j\u00e0 li\u00e9 \u00e0 un autre profil Movie Picker.',
+        identityUnlinked:
+          'Ce compte a \u00e9t\u00e9 d\u00e9li\u00e9 de votre profil Movie Picker. Connectez-vous autrement, puis liez-le de nouveau depuis Param\u00e8tres / Int\u00e9grations.',
         providerAlreadyLinked:
           'Un compte de ce fournisseur est d\u00e9j\u00e0 li\u00e9 \u00e0 votre profil. D\u00e9liez-le d\u2019abord pour en lier un autre.',
         reauthenticationRequired:

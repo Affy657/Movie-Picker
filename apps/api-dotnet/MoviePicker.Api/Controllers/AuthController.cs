@@ -208,10 +208,12 @@ public sealed class AuthController : ControllerBase
 
         if (loginOutcome.Kind != OAuthOutcomeKind.SignedIn || loginOutcome.User is null)
         {
-            var errorCode = loginOutcome.Kind is OAuthOutcomeKind.PasswordAccountRequiresManualLink
-                or OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink
-                ? "account_exists"
-                : "email_not_verified";
+            var errorCode = loginOutcome.Kind switch
+            {
+                OAuthOutcomeKind.PasswordAccountRequiresManualLink => "account_exists",
+                OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink => "identity_unlinked",
+                _ => "email_not_verified"
+            };
             return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, errorCode), (ReturnToItemKey, returnTo)));
         }
 

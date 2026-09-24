@@ -427,6 +427,8 @@ export const en: Locale = {
         accountExists:
           'A Movie Picker account already exists with this email. Log in with your password, then link this provider from the Settings page.',
         identityTaken: 'This account is already linked to another Movie Picker profile.',
+        identityUnlinked:
+          'This account was unlinked from your Movie Picker profile. Sign in another way, then link it again from Settings / Integrations.',
         providerAlreadyLinked:
           'An account from this provider is already linked to your profile. Unlink it first to link another one.',
         reauthenticationRequired:

@@ -14,6 +14,10 @@ describe('resolveOAuthErrorKey', () => {
     );
   });
 
+  it('tells that an account unlinked from the profile needs to be linked again by hand', () => {
+    expect(resolveOAuthErrorKey('identity_unlinked')).toBe('auth.oauth.errors.identityUnlinked');
+  });
+
   it('falls back to the generic message for an unknown code, and to nothing without code', () => {
     expect(resolveOAuthErrorKey('something_else')).toBe('auth.oauth.errors.generic');
     expect(resolveOAuthErrorKey(null)).toBeNull();

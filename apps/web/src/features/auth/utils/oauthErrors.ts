@@ -7,6 +7,7 @@ const OAUTH_ERROR_KEYS: Record<string, TranslationKey> = {
   email_not_verified: 'auth.oauth.errors.emailNotVerified',
   account_exists: 'auth.oauth.errors.accountExists',
   identity_taken: 'auth.oauth.errors.identityTaken',
+  identity_unlinked: 'auth.oauth.errors.identityUnlinked',
   provider_already_linked: 'auth.oauth.errors.providerAlreadyLinked',
   reauthentication_required: 'auth.oauth.errors.reauthenticationRequired',
 };

@@ -307,7 +307,7 @@ public sealed class AuthControllerTests
         var result = await SignInCallback(loginHandler.Object);
 
         var redirect = Assert.IsType<RedirectResult>(result);
-        Assert.Equal($"{WebBase}/login?oauthError=account_exists&returnTo=%2F", redirect.Url);
+        Assert.Equal($"{WebBase}/login?oauthError=identity_unlinked&returnTo=%2F", redirect.Url);
     }
 
     [Fact]
