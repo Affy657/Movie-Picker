@@ -17,6 +17,7 @@ export default function AccountIdentityHeader({
   const { t } = useTranslation();
   const { patchProfile } = useAuth();
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
+  const [avatarSaveError, setAvatarSaveError] = useState<string | null>(null);
   const avatarSize = 'lg';
   const linksToPublicProfile = Boolean(user.handle) && user.isProfilePublic;
 
@@ -48,12 +49,21 @@ export default function AccountIdentityHeader({
         )}
       </div>
 
+      {avatarSaveError && (
+        <p className={`error ${styles.avatarSaveError}`} role="alert">
+          {avatarSaveError}
+        </p>
+      )}
+
       <AvatarPickerModal
         open={avatarModalOpen}
         currentAvatarId={user.avatarId}
-        onSelect={async (id) => {
+        onSelect={(id) => {
           setAvatarModalOpen(false);
-          await patchProfile({ avatarId: id });
+          setAvatarSaveError(null);
+          void patchProfile({ avatarId: id }).catch(() =>
+            setAvatarSaveError(t('auth.account.avatarSaveError'))
+          );
         }}
         onClose={() => setAvatarModalOpen(false)}
       />

@@ -563,6 +563,7 @@ export const en: Locale = {
       avatarOptionAriaLabel: 'Choose avatar {{name}}',
       avatarCategoryRobots: '🤖 Robots',
       avatarCategoryEmoji: '😄 Emoji',
+      avatarSaveError: 'The avatar could not be saved. Try again.',
       exportDataTitle: 'Export my data',
       exportDataDescription: 'Profile, notifications, follows, events and votes, as JSON.',
       exportDataButton: 'Download my data',

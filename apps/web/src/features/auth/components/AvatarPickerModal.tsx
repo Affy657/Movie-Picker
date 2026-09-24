@@ -33,11 +33,23 @@ export default function AvatarPickerModal({
     EMOJI_IDS.includes(currentAvatarId as never) ? 'emoji' : 'bottts'
   );
   const ids = category === 'bottts' ? BOTTTS_IDS : EMOJI_IDS;
+  const [browsedAvatarId, setBrowsedAvatarId] = useState<string | null>(null);
+  const selectedAvatarId = browsedAvatarId ?? currentAvatarId;
+
+  const close = () => {
+    setBrowsedAvatarId(null);
+    onClose();
+  };
+
+  const commit = (id: string) => {
+    setBrowsedAvatarId(null);
+    onSelect(id);
+  };
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={close}
       size="sm"
       title={t('auth.account.avatarLabel')}
       titleId={titleId}
@@ -57,13 +69,14 @@ export default function AvatarPickerModal({
         />
 
         <ChoiceGroup
-          value={currentAvatarId}
-          onChange={onSelect}
+          value={selectedAvatarId}
+          onChange={setBrowsedAvatarId}
+          onSelect={commit}
           ariaLabel={t('auth.account.avatarLabel')}
           className={styles.grid}
         >
           {ids.map((id) => {
-            const selected = id === currentAvatarId;
+            const selected = id === selectedAvatarId;
             return (
               <ChoiceCard
                 key={id}

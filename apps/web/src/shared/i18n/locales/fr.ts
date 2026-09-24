@@ -567,6 +567,7 @@ export const fr = {
       avatarOptionAriaLabel: 'Choisir l’avatar {{name}}',
       avatarCategoryRobots: '🤖 Robots',
       avatarCategoryEmoji: '😄 Emoji',
+      avatarSaveError: 'L’avatar n’a pas pu être enregistré. Réessayez.',
       exportDataTitle: 'Exporter mes données',
       exportDataDescription:
         'Profil, notifications, abonnements, soirées et votes, au format JSON.',
