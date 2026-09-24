@@ -55,7 +55,8 @@ public sealed partial class TmdbMovieSearch
         CancellationToken ct)
     {
         var typeSegment = MediaTypeSegment(mediaType);
-        var url = $"{ApiBase}/{typeSegment}/{tmdbId}?language=fr-FR&append_to_response=credits,videos";
+        var url = $"{ApiBase}/{typeSegment}/{tmdbId}?language=fr-FR&append_to_response=credits,videos"
+            + "&include_video_language=fr,en,null";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         if (res.StatusCode == System.Net.HttpStatusCode.NotFound)

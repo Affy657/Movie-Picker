@@ -270,6 +270,48 @@ public sealed class TmdbMovieSearchAdvancedTests
         Assert.Equal("https://www.youtube.com/watch?v=trailer-fr", details!.TrailerUrl);
     }
 
+    private static Mock<HttpMessageHandler> TmdbFilteringVideosByLanguage(string videos) =>
+        Handler(request =>
+        {
+            var query = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query);
+            var requested = (query["include_video_language"] ?? "fr").Split(',');
+            var kept = System.Text.Json.JsonDocument.Parse(videos).RootElement.EnumerateArray()
+                .Where(video => requested.Contains(
+                    video.GetProperty("iso_639_1").GetString() ?? "null",
+                    StringComparer.Ordinal))
+                .Select(video => video.GetRawText());
+            return Json($$$"""{"id":1,"title":"T","videos":{"results":[{{{string.Join(",", kept)}}}]}}""");
+        });
+
+    [Fact]
+    public async Task GetDetailsAsync_FilmWithAnEnglishTrailerOnly_ReturnsIt()
+    {
+        var handler = TmdbFilteringVideosByLanguage("""
+            [{"site":"YouTube","key":"trailer-en","type":"Trailer","iso_639_1":"en","official":true}]
+            """);
+        var sut = CreateSut(CreateHttpClient(handler.Object));
+
+        var details = await sut.GetDetailsAsync(1, MovieMediaType.Movie);
+
+        Assert.Equal("https://www.youtube.com/watch?v=trailer-en", details!.TrailerUrl);
+    }
+
+    [Fact]
+    public async Task GetDetailsAsync_FrenchAndEnglishTrailers_KeepsTheFrenchOne()
+    {
+        var handler = TmdbFilteringVideosByLanguage("""
+            [
+              {"site":"YouTube","key":"trailer-en","type":"Trailer","iso_639_1":"en","official":true},
+              {"site":"YouTube","key":"trailer-fr","type":"Trailer","iso_639_1":"fr","official":true}
+            ]
+            """);
+        var sut = CreateSut(CreateHttpClient(handler.Object));
+
+        var details = await sut.GetDetailsAsync(1, MovieMediaType.Movie);
+
+        Assert.Equal("https://www.youtube.com/watch?v=trailer-fr", details!.TrailerUrl);
+    }
+
     [Fact]
     public async Task GetDetailsAsync_Tv_UsesNameFirstAirDateAndEpisodeRunTime()
     {
