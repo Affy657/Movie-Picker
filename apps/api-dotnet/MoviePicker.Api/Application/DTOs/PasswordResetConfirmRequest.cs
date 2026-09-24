@@ -6,6 +6,6 @@ public sealed record PasswordResetConfirmRequest
 {
     public string Token { get; init; } = string.Empty;
 
-    [MaxLength(128)]
+    [MaxLength(1024)]
     public string NewPassword { get; init; } = string.Empty;
 }

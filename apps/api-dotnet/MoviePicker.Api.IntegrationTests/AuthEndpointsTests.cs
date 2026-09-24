@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
@@ -86,6 +87,20 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
             new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "Long" });
 
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task Register_PasswordOverTheLimit_SaysWhichLimit()
+    {
+        var client = _factory.CreateClient();
+
+        var res = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = $"long-{Guid.NewGuid():N}@example.com", Password = new string('a', 140) + "1", DisplayName = "Long" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+        var body = await res.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(ErrorCodes.PasswordTooLong, body.GetProperty("reason").GetString());
     }
 
     [Fact]
