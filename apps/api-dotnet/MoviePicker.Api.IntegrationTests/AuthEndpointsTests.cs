@@ -76,6 +76,19 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
     }
 
     [Fact]
+    public async Task Register_EmailLongerThanAnAddressCanBe_Returns400()
+    {
+        var client = _factory.CreateClient();
+        var email = new string('a', 250) + "@example.com";
+
+        var res = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "Long" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
+
+    [Fact]
     public async Task Register_DuplicateEmail_Returns409()
     {
         var client = _factory.CreateClient();
