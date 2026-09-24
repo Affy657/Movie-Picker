@@ -63,6 +63,7 @@ public sealed class UserProfileResponse
     public int LetterboxdPendingReconciliationCount { get; init; }
     public bool HasPassword { get; init; } = true;
     public IReadOnlyList<string> LinkedProviders { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<FavoriteTitleResponse> Favorites { get; init; } = [];
     public DateTimeOffset CreatedAt { get; init; }
 }
 

@@ -316,6 +316,29 @@ describe('AddMovieForm (MSW)', () => {
     expect(screen.queryByText(/région/i)).not.toBeInTheDocument();
   });
 
+  it('puts the focus back in the search field after an addition', async () => {
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
+    await user.click(await screen.findByRole('button', { name: 'Ajouter « Film Test »' }));
+
+    await waitFor(() => expect(onAdded).toHaveBeenCalled());
+    expect(screen.getByPlaceholderText(/ajouter un film/i)).toHaveFocus();
+  });
+
+  it('does not reopen the search history when the focus comes back after an addition', async () => {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(['matrix']));
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+
+    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Inception');
+    await user.click(await screen.findByRole('button', { name: 'Ajouter « Film Test »' }));
+
+    await waitFor(() => expect(screen.getByPlaceholderText(/ajouter un film/i)).toHaveFocus());
+    expect(screen.queryByRole('button', { name: /Rechercher.*matrix/i })).not.toBeInTheDocument();
+  });
+
   it('donne le focus au champ de recherche au montage', async () => {
     renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
 

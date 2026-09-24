@@ -41,6 +41,18 @@ public interface IUserRepository
         string templateId,
         DateTimeOffset now,
         CancellationToken ct = default);
+    Task<bool> AddFavoriteAsync(
+        string userId,
+        FavoriteTitle favorite,
+        int maxPerUser,
+        DateTimeOffset now,
+        CancellationToken ct = default);
+    Task<bool> RemoveFavoriteAsync(
+        string userId,
+        int tmdbId,
+        MovieMediaType mediaType,
+        DateTimeOffset now,
+        CancellationToken ct = default);
     Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default);
     Task<User> AddAsync(User user, CancellationToken ct = default);
     Task<User> UpdateAsync(User user, CancellationToken ct = default);

@@ -5,7 +5,9 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
-import MovieBrowseCard from '@/features/movies/components/MovieBrowseCard';
+import MovieBrowseCard, {
+  type MovieLibraryActions,
+} from '@/features/movies/components/MovieBrowseCard';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
@@ -15,15 +17,23 @@ import LibraryMovieDetails, {
 } from '@/features/watchlist/components/LibraryMovieDetails';
 import { fetchUserWatchedMovies } from '@/features/profile/api/profileApi';
 import OwnerRatingBadge from '@/features/profile/components/OwnerRatingBadge';
+import ProfileFavoritesSection from '@/features/profile/components/ProfileFavoritesSection';
+import type { FavoriteTitle } from '@/shared/types/movie';
 import Card from '@/shared/components/Card';
 
 const PREVIEW_TAKE = 6;
 
 interface Props {
   handle: string;
+  favorites?: readonly FavoriteTitle[];
+  isOwnProfile?: boolean;
 }
 
-export default function ProfileMoviesSection({ handle }: Readonly<Props>) {
+export default function ProfileMoviesSection({
+  handle,
+  favorites = [],
+  isOwnProfile = false,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const query = useQuery({
     queryKey: queryKeys.profile.watchedMovies(handle, PREVIEW_TAKE),
@@ -36,8 +46,16 @@ export default function ProfileMoviesSection({ handle }: Readonly<Props>) {
   const hasHover = useHasHoverCapability();
   const watchlist = useWatchlistToggle(isLoggedIn);
 
+  const library: MovieLibraryActions = {
+    hasHover,
+    isLoggedIn,
+    has: watchlist.has,
+    toggle: watchlist.toggle,
+    propose: setProposeTarget,
+  };
+
   const items = query.data?.items ?? [];
-  if (items.length === 0) return null;
+  if (items.length === 0 && favorites.length === 0 && !isOwnProfile) return null;
 
   return (
     <>
@@ -46,38 +64,47 @@ export default function ProfileMoviesSection({ handle }: Readonly<Props>) {
           {watchlist.error}
         </p>
       ) : null}
-      <Card padding="lg" radius="lg">
-        <MoviePreviewRow
-          heading={t('profile.movies.title')}
-          seeAllTo={ROUTES.profileMovies(handle)}
-          seeAllLabel={t('profile.movies.seeAll')}
-        >
-          <MoviePreviewRail itemCount={items.length}>
-            {items.map((item) => (
-              <MovieBrowseCard
-                key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
-                item={item}
-                ratingScale={user?.ratingScale}
-                hasHover={hasHover}
-                isLoggedIn={isLoggedIn}
-                inWatchlist={watchlist.has(item)}
-                onToggleWatchlist={() => watchlist.toggle(item)}
-                onProposeToEvent={() => setProposeTarget(item)}
-                onOpenDetails={() => details.open(item)}
-                leadingBadge={
-                  item.myRating != null ? (
-                    <OwnerRatingBadge
-                      handle={handle}
-                      value={item.myRating}
-                      scale={user?.ratingScale ?? 'five'}
-                    />
-                  ) : undefined
-                }
-              />
-            ))}
-          </MoviePreviewRail>
-        </MoviePreviewRow>
-      </Card>
+      <ProfileFavoritesSection
+        favorites={favorites}
+        isOwnProfile={isOwnProfile}
+        library={library}
+        ratingScale={user?.ratingScale}
+        onOpenDetails={details.open}
+      />
+      {items.length > 0 ? (
+        <Card padding="lg" radius="lg">
+          <MoviePreviewRow
+            heading={t('profile.movies.title')}
+            seeAllTo={ROUTES.profileMovies(handle)}
+            seeAllLabel={t('profile.movies.seeAll')}
+          >
+            <MoviePreviewRail itemCount={items.length}>
+              {items.map((item) => (
+                <MovieBrowseCard
+                  key={`${item.tmdbId}|${item.mediaType}|${item.watchedAt}`}
+                  item={item}
+                  ratingScale={user?.ratingScale}
+                  hasHover={hasHover}
+                  isLoggedIn={isLoggedIn}
+                  inWatchlist={watchlist.has(item)}
+                  onToggleWatchlist={() => watchlist.toggle(item)}
+                  onProposeToEvent={() => setProposeTarget(item)}
+                  onOpenDetails={() => details.open(item)}
+                  leadingBadge={
+                    item.myRating != null ? (
+                      <OwnerRatingBadge
+                        handle={handle}
+                        value={item.myRating}
+                        scale={user?.ratingScale ?? 'five'}
+                      />
+                    ) : undefined
+                  }
+                />
+              ))}
+            </MoviePreviewRail>
+          </MoviePreviewRow>
+        </Card>
+      ) : null}
 
       <LibraryMovieDetails
         target={details.target}

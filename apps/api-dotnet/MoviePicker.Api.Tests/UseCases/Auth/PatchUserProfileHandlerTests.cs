@@ -303,4 +303,25 @@ public sealed class PatchUserProfileHandlerTests
 
         Assert.Null(res.LetterboxdUsername);
     }
+
+    [Fact]
+    public async Task HandleAsync_ResponseKeepsWhatThePatchDidNotTouch()
+    {
+        var u = User() with
+        {
+            Favorites = [new FavoriteTitle { TmdbId = 949, Title = "Heat", Year = "1995" }],
+            LetterboxdPendingReconciliationCount = 4
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        var handler = new PatchUserProfileHandler(users.Object, TimeProvider.System);
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { Bio = "Cinéphile" });
+
+        Assert.Equal(["Heat"], res.Favorites.Select(f => f.Title));
+        Assert.Equal(4, res.LetterboxdPendingReconciliationCount);
+    }
 }

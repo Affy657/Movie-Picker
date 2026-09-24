@@ -1,4 +1,5 @@
 import type { AccentColor, RatingScale, UiThemePreference } from '@/shared/types/theme';
+import type { FavoriteTitle } from '@/shared/types/movie';
 
 export interface UserProfile {
   userId: string;
@@ -19,5 +20,6 @@ export interface UserProfile {
   letterboxdPendingReconciliationCount: number;
   hasPassword: boolean;
   linkedProviders: string[];
+  favorites?: FavoriteTitle[];
   createdAt?: string;
 }

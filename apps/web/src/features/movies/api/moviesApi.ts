@@ -48,11 +48,18 @@ export interface MovieSearchFilters {
 
 export async function searchMovies(
   query: string,
-  opts?: { signal?: AbortSignal; lang?: string; eventSlug?: string; filters?: MovieSearchFilters }
+  opts?: {
+    signal?: AbortSignal;
+    lang?: string;
+    eventSlug?: string;
+    includeSeries?: boolean;
+    filters?: MovieSearchFilters;
+  }
 ): Promise<MovieSearchListResponse> {
   const params = new URLSearchParams({ q: query.trim() });
   if (opts?.lang) params.set('lang', opts.lang);
   if (opts?.eventSlug) params.set('eventSlug', opts.eventSlug);
+  if (opts?.includeSeries) params.set('includeSeries', 'true');
   if (opts?.filters?.genreIds?.length) params.set('genreIds', opts.filters.genreIds.join(','));
   if (opts?.filters?.yearFrom != null) params.set('yearFrom', String(opts.filters.yearFrom));
   if (opts?.filters?.yearTo != null) params.set('yearTo', String(opts.filters.yearTo));

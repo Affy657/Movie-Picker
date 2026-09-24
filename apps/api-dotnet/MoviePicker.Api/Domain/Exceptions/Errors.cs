@@ -104,6 +104,9 @@ public static class Errors
     public static ConflictException EventTemplateLimitReached(int max) =>
         new($"You reached the limit of {max} templates, delete one to save a new one", ErrorCodes.EventTemplateLimitReached, Params(("max", max)));
 
+    public static ConflictException FavoritesLimitReached(int max) =>
+        new($"You already have {max} favorites, remove one to add another", ErrorCodes.FavoritesLimitReached, Params(("max", max)));
+
     public static ConflictException InviteEventFinished() =>
         new("Cannot invite, the movie night is over", ErrorCodes.InviteEventFinished);
 

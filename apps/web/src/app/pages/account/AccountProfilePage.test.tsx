@@ -159,7 +159,7 @@ describe('AccountProfilePage (MSW)', () => {
     const toggle = screen.getByRole('switch', { name: /watchlist visible sur mon profil/i });
     expect(toggle).toBeDisabled();
     expect(toggle).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByText(/votre profil est privé/i)).toBeInTheDocument();
+    expect(screen.getByText(/la watchlist reste masquée/i)).toBeInTheDocument();
   });
 
   it('refuse un pseudo vide', async () => {

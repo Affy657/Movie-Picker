@@ -105,6 +105,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public List<EventTemplateDocument>? EventTemplates { get; set; }
 
+    [BsonElement("favorites")]
+    [BsonIgnoreIfNull]
+    public List<FavoriteTitleDocument>? Favorites { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 
@@ -128,6 +132,25 @@ public sealed class EventTemplateDocument
 
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
+}
+
+public sealed class FavoriteTitleDocument
+{
+    [BsonElement("tmdbId")]
+    public int TmdbId { get; set; }
+
+    [BsonElement("mediaType")]
+    public string MediaType { get; set; } = "movie";
+
+    [BsonElement("title")]
+    public string Title { get; set; } = string.Empty;
+
+    [BsonElement("year")]
+    public string Year { get; set; } = string.Empty;
+
+    [BsonElement("posterPath")]
+    [BsonIgnoreIfNull]
+    public string? PosterPath { get; set; }
 }
 
 public sealed class UserIdentityDocument

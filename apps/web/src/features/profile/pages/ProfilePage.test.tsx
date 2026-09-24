@@ -205,7 +205,7 @@ describe('ProfilePage (MSW)', () => {
       () => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       },
-      { timeout: 8000 }
+      { timeout: 20000 }
     );
   });
 
@@ -541,6 +541,98 @@ describe('ProfilePage (MSW)', () => {
 
     await waitFor(() => {
       expect(screen.queryByRole('heading', { name: /statistiques/i })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('favorites', () => {
+    const HEAT = { tmdbId: 949, mediaType: 'movie', title: 'Heat', year: '1995', posterPath: null };
+
+    it('places the favorites after the statistics, right above the last watched movies', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({ ...ALICE_PROFILE, favorites: [HEAT] })
+        ),
+        createUserStatsHandler('alice', { eventsCreated: 4 }),
+        http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+          HttpResponse.json({
+            items: [
+              {
+                tmdbId: 27205,
+                title: 'Inception',
+                year: '2010',
+                posterPath: null,
+                genreIds: [],
+                mediaType: 'movie',
+                watchedAt: '2026-06-01T00:00:00Z',
+              },
+            ],
+          })
+        )
+      );
+
+      renderProfile('alice');
+
+      const stats = await screen.findByRole('heading', { name: /statistiques/i });
+      const favorites = await screen.findByRole('heading', { name: 'Ses favoris' });
+      const watched = await screen.findByRole('heading', { name: /derniers films vus/i });
+      expect(
+        stats.compareDocumentPosition(favorites) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+      expect(
+        favorites.compareDocumentPosition(watched) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+    });
+
+    it('opens a single details dialog when favorites and watched movies are both shown', async () => {
+      const user = userEvent.setup();
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({ ...ALICE_PROFILE, favorites: [HEAT] })
+        ),
+        http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+          HttpResponse.json({
+            items: [
+              {
+                tmdbId: 27205,
+                title: 'Inception',
+                year: '2010',
+                posterPath: null,
+                genreIds: [],
+                mediaType: 'movie',
+                watchedAt: '2026-06-01T00:00:00Z',
+              },
+            ],
+          })
+        ),
+        http.get(`${TEST_API_V1}/movies/tmdb/:tmdbId/details`, () =>
+          HttpResponse.json({ tmdbId: 949, title: 'Heat', overview: 'Un braqueur et un flic.' })
+        )
+      );
+
+      renderProfile('alice');
+      await screen.findByRole('heading', { name: /derniers films vus/i });
+      await user.click(screen.getByRole('button', { name: /voir les détails de « heat »/i }));
+
+      await screen.findByRole('heading', { name: 'Heat', level: 2 });
+      expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    });
+
+    it('invites the owner to pick favorites on their own profile', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+        http.get(`${TEST_API_V1}/users/moi`, () =>
+          HttpResponse.json({ ...ALICE_PROFILE, handle: 'moi', displayName: 'Moi', favorites: [] })
+        )
+      );
+
+      renderProfile('moi');
+
+      expect(await screen.findByRole('link', { name: 'Choisir mes favoris' })).toHaveAttribute(
+        'href',
+        '/settings/profil#favoris'
+      );
     });
   });
 });

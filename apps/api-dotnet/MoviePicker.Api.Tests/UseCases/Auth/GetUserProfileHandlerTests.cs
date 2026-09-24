@@ -176,4 +176,28 @@ public sealed class GetUserProfileHandlerTests
 
         Assert.False(res.IsWatchlistPublic);
     }
+
+    [Fact]
+    public async Task HandleAsync_ReturnsTheFavoritesInTheirOrder()
+    {
+        var user = new User
+        {
+            Id = "id1",
+            Email = "bob@example.com",
+            Favorites =
+            [
+                new FavoriteTitle { TmdbId = 1920, MediaType = MovieMediaType.Tv, Title = "Twin Peaks", Year = "1990" },
+                new FavoriteTitle { TmdbId = 949, Title = "Heat", Year = "1995", PosterPath = "/api/v1/posters/abc" }
+            ]
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("id1", It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var handler = new GetUserProfileHandler(users.Object);
+
+        var res = await handler.HandleAsync("id1");
+
+        Assert.Equal(["Twin Peaks", "Heat"], res.Favorites.Select(f => f.Title));
+        Assert.Equal(MovieMediaType.Tv, res.Favorites[0].MediaType);
+        Assert.Equal("/api/v1/posters/abc", res.Favorites[1].PosterPath);
+    }
 }

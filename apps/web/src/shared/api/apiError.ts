@@ -2,6 +2,7 @@ export const API_ERROR_REASONS = {
   voteLimitReached: 'vote-limit-reached',
   invalidResetToken: 'invalid_reset_token',
   letterboxdWatchlistIncomplete: 'letterboxd_watchlist_incomplete',
+  favoritesLimitReached: 'favorites_limit_reached',
 } as const;
 
 export class ApiError extends Error {

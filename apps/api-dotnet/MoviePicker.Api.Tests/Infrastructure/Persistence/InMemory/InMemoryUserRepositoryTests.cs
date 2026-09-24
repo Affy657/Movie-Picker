@@ -1,6 +1,7 @@
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
+using static MoviePicker.Api.Tests.UseCases.Favorites.FavoriteFixtures;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Persistence.InMemory;
 
@@ -418,5 +419,96 @@ public sealed class InMemoryUserRepositoryTests
         var added = await _repo.AddAsync(Mk());
 
         Assert.False(await _repo.RemoveEventTemplateAsync(added.Id, "nope", TemplateNow));
+    }
+
+    [Fact]
+    public async Task AddFavoriteAsync_AppendsInOrderAndTouchesUpdatedAt()
+    {
+        var added = await _repo.AddAsync(Mk());
+
+        Assert.True(await _repo.AddFavoriteAsync(added.Id, Favorite(949, "Heat"), 3, TemplateNow));
+        Assert.True(await _repo.AddFavoriteAsync(added.Id, Favorite(27205, "Inception"), 3, TemplateNow));
+        var reloaded = await _repo.GetByIdAsync(added.Id);
+
+        Assert.Equal(["Heat", "Inception"], reloaded!.Favorites.Select(f => f.Title));
+        Assert.Equal(TemplateNow, reloaded.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task AddFavoriteAsync_RefusesBeyondTheCap()
+    {
+        var added = await _repo.AddAsync(Mk());
+        await _repo.AddFavoriteAsync(added.Id, Favorite(1, "Un"), 2, TemplateNow);
+        await _repo.AddFavoriteAsync(added.Id, Favorite(2, "Deux"), 2, TemplateNow);
+
+        var ok = await _repo.AddFavoriteAsync(added.Id, Favorite(3, "Trois"), 2, TemplateNow);
+
+        Assert.False(ok);
+        Assert.Equal(2, (await _repo.GetByIdAsync(added.Id))!.Favorites.Count);
+    }
+
+    [Fact]
+    public async Task AddFavoriteAsync_RefusesTheSameTitleTwice()
+    {
+        var added = await _repo.AddAsync(Mk());
+        await _repo.AddFavoriteAsync(added.Id, Favorite(949, "Heat"), 3, TemplateNow);
+
+        var ok = await _repo.AddFavoriteAsync(added.Id, Favorite(949, "Heat"), 3, TemplateNow);
+
+        Assert.False(ok);
+        Assert.Single((await _repo.GetByIdAsync(added.Id))!.Favorites);
+    }
+
+    [Fact]
+    public async Task AddFavoriteAsync_AcceptsAFilmAndASeriesSharingANumber()
+    {
+        var added = await _repo.AddAsync(Mk());
+        await _repo.AddFavoriteAsync(added.Id, Favorite(1920, "Twin Peaks"), 3, TemplateNow);
+
+        var ok = await _repo.AddFavoriteAsync(added.Id, Favorite(1920, "Twin Peaks", MovieMediaType.Tv), 3, TemplateNow);
+
+        Assert.True(ok);
+        Assert.Equal(2, (await _repo.GetByIdAsync(added.Id))!.Favorites.Count);
+    }
+
+    [Fact]
+    public async Task AddFavoriteAsync_UnknownUser_ReturnsFalse()
+    {
+        Assert.False(await _repo.AddFavoriteAsync("nope", Favorite(949, "Heat"), 3, TemplateNow));
+    }
+
+    [Fact]
+    public async Task RemoveFavoriteAsync_RemovesOnlyThatTitle()
+    {
+        var added = await _repo.AddAsync(Mk());
+        await _repo.AddFavoriteAsync(added.Id, Favorite(1920, "Twin Peaks"), 3, TemplateNow);
+        await _repo.AddFavoriteAsync(added.Id, Favorite(1920, "Twin Peaks", MovieMediaType.Tv), 3, TemplateNow);
+        await _repo.AddFavoriteAsync(added.Id, Favorite(949, "Heat"), 3, TemplateNow);
+
+        var ok = await _repo.RemoveFavoriteAsync(added.Id, 1920, MovieMediaType.Tv, TemplateNow);
+        var remaining = (await _repo.GetByIdAsync(added.Id))!.Favorites;
+
+        Assert.True(ok);
+        Assert.Equal([(1920, MovieMediaType.Movie), (949, MovieMediaType.Movie)], remaining.Select(f => (f.TmdbId, f.MediaType)));
+    }
+
+    [Fact]
+    public async Task RemoveFavoriteAsync_AbsentTitle_ReturnsFalse()
+    {
+        var added = await _repo.AddAsync(Mk());
+
+        Assert.False(await _repo.RemoveFavoriteAsync(added.Id, 949, MovieMediaType.Movie, TemplateNow));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_KeepsFavorites()
+    {
+        var added = await _repo.AddAsync(Mk());
+        await _repo.AddFavoriteAsync(added.Id, Favorite(949, "Heat"), 3, TemplateNow);
+        var current = (await _repo.GetByIdAsync(added.Id))!;
+
+        await _repo.UpdateAsync(current with { Bio = "Cinéphile" });
+
+        Assert.Equal(["Heat"], (await _repo.GetByIdAsync(added.Id))!.Favorites.Select(f => f.Title));
     }
 }

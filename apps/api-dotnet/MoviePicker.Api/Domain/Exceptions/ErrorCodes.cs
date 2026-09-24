@@ -44,6 +44,7 @@ public static class ErrorCodes
     public const string ParticipantLimitBelowCurrent = "participant_limit_below_current";
     public const string EventTemplateNameTaken = "event_template_name_taken";
     public const string EventTemplateLimitReached = "event_template_limit_reached";
+    public const string FavoritesLimitReached = "favorites_limit_reached";
     public const string InviteEventFinished = "invite_event_finished";
     public const string AlreadyParticipant = "already_participant";
     public const string InvitationAlreadySent = "invitation_already_sent";

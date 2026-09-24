@@ -21,7 +21,7 @@ public sealed class MoviesSearchControllerTests
             null, null, null, null, null, null, null, null, null, handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
-        handler.Verify(h => h.HandleAsync("", null, null, It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("", null, null, false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static readonly int[] expected = new[] { 28, 12 };
@@ -33,8 +33,8 @@ public sealed class MoviesSearchControllerTests
         var handler = new Mock<ISearchMoviesHandler>();
         handler
             .Setup(h => h.HandleAsync(
-                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()))
-            .Callback<string, string?, MovieSearchFilters?, CancellationToken>((_, _, f, _) => captured = f);
+                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string?, MovieSearchFilters?, bool, CancellationToken>((_, _, f, _, _) => captured = f);
         var controller = new MoviesSearchController().WithContext();
 
         await controller.Search(
@@ -58,8 +58,8 @@ public sealed class MoviesSearchControllerTests
         var handler = new Mock<ISearchMoviesHandler>();
         handler
             .Setup(h => h.HandleAsync(
-                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()))
-            .Callback<string, string?, MovieSearchFilters?, CancellationToken>((_, _, f, _) => captured = f);
+                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MovieSearchFilters?>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string?, MovieSearchFilters?, bool, CancellationToken>((_, _, f, _, _) => captured = f);
         var controller = new MoviesSearchController().WithContext();
 
         await controller.Search(
@@ -79,7 +79,20 @@ public sealed class MoviesSearchControllerTests
         await controller.Search("q", "soiree", null, null, null, null, null, null, null, handler.Object, CancellationToken.None);
 
         handler.Verify(
-            h => h.HandleAsync("q", "soiree", It.IsAny<MovieSearchFilters?>(), It.IsAny<CancellationToken>()), Times.Once);
+            h => h.HandleAsync("q", "soiree", It.IsAny<MovieSearchFilters?>(), false, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Search_IncludingSeries_ForwardsTheChoiceToHandler()
+    {
+        var handler = new Mock<ISearchMoviesHandler>();
+        var controller = new MoviesSearchController().WithContext();
+
+        await controller.Search(
+            "twin", null, null, null, null, null, null, null, null, handler.Object, CancellationToken.None, includeSeries: true);
+
+        handler.Verify(
+            h => h.HandleAsync("twin", null, null, true, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

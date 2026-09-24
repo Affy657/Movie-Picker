@@ -475,7 +475,7 @@ export const en: Locale = {
       attentionSuffix: ', action required',
       profileVisibilityHint:
         'Your nickname, bio and movies are visible at {{url}}. Your email never appears.',
-      navSummaryProfile: 'Nickname, bio, visibility',
+      navSummaryProfile: 'Nickname, bio, favorites, visibility',
       navSummaryPreferences: 'Language, theme, colour, ratings',
       navSummaryNotifications: 'Push and per-event alerts',
       navSummaryIntegrations: 'Letterboxd, Google, GitHub',
@@ -1522,6 +1522,7 @@ export const en: Locale = {
     participant_limit_below_current:
       'The limit ({{limit}}) is below the number of participants already in ({{current}}).',
     event_template_name_taken: 'A template named “{{name}}” already exists.',
+    favorites_limit_reached: 'You already have {{max}} favorites. Remove one to add another.',
     event_template_limit_reached:
       'You reached the limit of {{max}} templates. Delete one to save a new one.',
     invite_event_finished: 'Cannot invite: the movie night is over.',
@@ -1951,6 +1952,35 @@ export const en: Locale = {
       empty: 'No activity yet.',
       loadError: 'Statistics could not be loaded.',
       retry: 'Retry',
+    },
+    favorites: {
+      visitorTitle: 'Their favorites',
+      ownerTitle: 'My favorites',
+      edit: 'Edit',
+      editAria: 'Edit my favorites',
+      addSlot: 'Add',
+      addSlotAria: 'Add a favorite',
+      ownerOnly: 'Only you can see this',
+      inviteText:
+        'No favorites yet. Pick up to three movies or shows: they will show here for everyone who visits.',
+      inviteCta: 'Choose my favorites',
+      settings: {
+        title: 'My favorites',
+        hint: 'Up to three movies or shows, shown on your public profile.',
+        privateHint: 'Your profile is private: your favorites stay hidden for as long as it is.',
+        count: '{{count}} of {{max}}',
+        empty: 'No favorites yet.',
+        add: 'Add a favorite',
+        remove: 'Remove',
+        removeAria: 'Remove {{title}} from my favorites',
+        full: 'Three favorites at most: remove one to pick another.',
+        searchPlaceholder: 'Search for a movie or a show…',
+        searchLabel: 'Search for a favorite',
+        alreadyAdded: 'Already a favorite',
+        alreadyAddedHint: 'This title is already one of your favorites.',
+        addError: 'This favorite could not be added. Check your connection, then try again.',
+        removeError: 'This favorite could not be removed. Try again.',
+      },
     },
     watchlist: {
       theirs: 'Their watchlist',

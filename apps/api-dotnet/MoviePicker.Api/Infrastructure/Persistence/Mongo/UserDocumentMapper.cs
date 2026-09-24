@@ -22,6 +22,7 @@ public static class UserDocumentMapper
             AvatarId = doc.AvatarId ?? string.Empty,
             NotificationPreferences = BuildNotificationPreferences(doc),
             EventTemplates = (doc.EventTemplates ?? []).ConvertAll(ToTemplateDomain),
+            Favorites = (doc.Favorites ?? []).ConvertAll(ToFavoriteDomain),
             SupporterSince = doc.SupporterSince is null
                 ? null
                 : new DateTimeOffset(doc.SupporterSince.Value, TimeSpan.Zero),
@@ -58,6 +59,9 @@ public static class UserDocumentMapper
             EventTemplates = user.EventTemplates.Count == 0
                 ? null
                 : user.EventTemplates.Select(ToTemplateDocument).ToList(),
+            Favorites = user.Favorites.Count == 0
+                ? null
+                : user.Favorites.Select(ToFavoriteDocument).ToList(),
             SupporterSince = user.SupporterSince?.UtcDateTime,
             LetterboxdUsername = string.IsNullOrEmpty(user.LetterboxdUsername) ? null : user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt?.UtcDateTime,
@@ -82,6 +86,24 @@ public static class UserDocumentMapper
         Name = template.Name,
         Config = EventDocumentMapper.ToConfigDocument(template.Config),
         CreatedAt = template.CreatedAt.UtcDateTime
+    };
+
+    private static FavoriteTitle ToFavoriteDomain(FavoriteTitleDocument doc) => new()
+    {
+        TmdbId = doc.TmdbId,
+        MediaType = MovieMapper.ParseMediaType(doc.MediaType),
+        Title = doc.Title,
+        Year = doc.Year,
+        PosterPath = doc.PosterPath
+    };
+
+    internal static FavoriteTitleDocument ToFavoriteDocument(FavoriteTitle favorite) => new()
+    {
+        TmdbId = favorite.TmdbId,
+        MediaType = MovieMapper.MediaTypeToString(favorite.MediaType),
+        Title = favorite.Title,
+        Year = favorite.Year,
+        PosterPath = favorite.PosterPath
     };
 
     private static LinkedIdentity ToIdentityDomain(UserIdentityDocument doc) => new()

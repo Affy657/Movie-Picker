@@ -11,7 +11,7 @@ public sealed class InMemoryUserRepository : IUserRepository
     private readonly ConcurrentDictionary<string, User> _byId = new();
     private readonly ConcurrentDictionary<string, string> _emailToId = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _handleToId = new(StringComparer.OrdinalIgnoreCase);
-    private readonly object _templatesGate = new();
+    private readonly object _embeddedListsGate = new();
 
     public Task<User?> GetByIdAsync(string id, CancellationToken ct = default) =>
         Task.FromResult(_byId.TryGetValue(id, out var u) ? u : null);
@@ -135,7 +135,7 @@ public sealed class InMemoryUserRepository : IUserRepository
         DateTimeOffset now,
         CancellationToken ct = default)
     {
-        lock (_templatesGate)
+        lock (_embeddedListsGate)
         {
             if (!_byId.TryGetValue(userId, out var user) || user.EventTemplates.Count >= maxPerUser)
                 return Task.FromResult(false);
@@ -151,7 +151,7 @@ public sealed class InMemoryUserRepository : IUserRepository
         DateTimeOffset now,
         CancellationToken ct = default)
     {
-        lock (_templatesGate)
+        lock (_embeddedListsGate)
         {
             if (!_byId.TryGetValue(userId, out var user))
                 return Task.FromResult(false);
@@ -173,7 +173,7 @@ public sealed class InMemoryUserRepository : IUserRepository
         DateTimeOffset now,
         CancellationToken ct = default)
     {
-        lock (_templatesGate)
+        lock (_embeddedListsGate)
         {
             if (!_byId.TryGetValue(userId, out var user))
                 return Task.FromResult(false);
@@ -183,6 +183,46 @@ public sealed class InMemoryUserRepository : IUserRepository
                 return Task.FromResult(false);
 
             _byId[userId] = user with { EventTemplates = next, UpdatedAt = now, Version = user.Version + 1 };
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<bool> AddFavoriteAsync(
+        string userId,
+        FavoriteTitle favorite,
+        int maxPerUser,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        lock (_embeddedListsGate)
+        {
+            if (!_byId.TryGetValue(userId, out var user)
+                || user.Favorites.Count >= maxPerUser
+                || user.Favorites.Any(f => f.Is(favorite.TmdbId, favorite.MediaType)))
+                return Task.FromResult(false);
+
+            _byId[userId] = user with { Favorites = [.. user.Favorites, favorite], UpdatedAt = now, Version = user.Version + 1 };
+            return Task.FromResult(true);
+        }
+    }
+
+    public Task<bool> RemoveFavoriteAsync(
+        string userId,
+        int tmdbId,
+        MovieMediaType mediaType,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        lock (_embeddedListsGate)
+        {
+            if (!_byId.TryGetValue(userId, out var user))
+                return Task.FromResult(false);
+
+            var next = user.Favorites.Where(f => !f.Is(tmdbId, mediaType)).ToList();
+            if (next.Count == user.Favorites.Count)
+                return Task.FromResult(false);
+
+            _byId[userId] = user with { Favorites = next, UpdatedAt = now, Version = user.Version + 1 };
             return Task.FromResult(true);
         }
     }
@@ -265,6 +305,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             AvatarId = user.AvatarId,
             NotificationPreferences = user.NotificationPreferences,
             EventTemplates = user.EventTemplates,
+            Favorites = user.Favorites,
             SupporterSince = user.SupporterSince,
             LetterboxdUsername = user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,

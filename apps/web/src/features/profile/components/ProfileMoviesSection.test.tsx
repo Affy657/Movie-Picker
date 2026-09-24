@@ -8,12 +8,21 @@ import ProfileMoviesSection from './ProfileMoviesSection';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
+import type { FavoriteTitle } from '@/shared/types/movie';
 
-function renderSection(handle: string) {
+const HEAT: FavoriteTitle = {
+  tmdbId: 949,
+  mediaType: 'movie',
+  title: 'Heat',
+  year: '1995',
+  posterPath: null,
+};
+
+function renderSection(handle: string, favorites: FavoriteTitle[] = []) {
   return render(
     <AppTestProviders>
       <MemoryRouter>
-        <ProfileMoviesSection handle={handle} />
+        <ProfileMoviesSection handle={handle} favorites={favorites} />
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -74,6 +83,35 @@ describe('ProfileMoviesSection (MSW)', () => {
     const { container } = renderSection('alice');
 
     await waitFor(() => expect(container.firstChild).toBeNull());
+  });
+
+  it('shows the favorites even when nothing was watched yet', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => HttpResponse.json({ items: [] }))
+    );
+
+    renderSection('alice', [HEAT]);
+
+    expect(await screen.findByRole('heading', { name: 'Ses favoris' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /derniers films vus/i })).not.toBeInTheDocument();
+  });
+
+  it('says so when adding a favorite to the watchlist fails', async () => {
+    server.use(
+      authedBobHandler,
+      http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items: [] })),
+      http.post(`${TEST_API_V1}/watchlist`, () =>
+        HttpResponse.json({ error: 'Ajout impossible' }, { status: 500 })
+      ),
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => HttpResponse.json({ items: [] }))
+    );
+    const user = userEvent.setup();
+
+    renderSection('alice', [HEAT]);
+    await user.click(await screen.findByRole('button', { name: /voir les détails de « heat »/i }));
+    await user.click(await screen.findByRole('button', { name: 'Ajouter à ma liste' }));
+
+    expect(await screen.findByText('Ajout impossible')).toHaveAttribute('role', 'alert');
   });
 
   it('shows the title and the recently watched movies', async () => {

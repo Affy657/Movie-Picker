@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.EventTemplates;
+using MoviePicker.Api.Application.UseCases.Favorites;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Application.UseCases.SearchUsers;
 using MoviePicker.Api.Application.UseCases.UserMovies;
 using MoviePicker.Api.Application.UseCases.UserStats;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -231,6 +233,50 @@ public sealed class UsersController : ControllerBase
 
         await handler.HandleAsync(userId, templateId, ct);
         return NoContent();
+    }
+
+    [HttpPost("me/favorites")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
+    [Authorize]
+    [ProducesResponseType(typeof(FavoriteListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> AddFavorite(
+        [FromBody] AddFavoriteRequest request,
+        [FromServices] IAddFavoriteHandler handler,
+        [FromServices] ICurrentUserAccessor currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        return Ok(await handler.HandleAsync(userId, request, ct));
+    }
+
+    [HttpDelete("me/favorites/{tmdbId:int}")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
+    [Authorize]
+    [ProducesResponseType(typeof(FavoriteListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> RemoveFavorite(
+        int tmdbId,
+        [FromServices] IRemoveFavoriteHandler handler,
+        [FromServices] ICurrentUserAccessor currentUser,
+        CancellationToken ct,
+        [FromQuery] MovieMediaType mediaType = MovieMediaType.Movie)
+    {
+        var userId = currentUser.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        return Ok(await handler.HandleAsync(userId, tmdbId, mediaType, ct));
     }
 
     [HttpPost("{handle}/follow")]

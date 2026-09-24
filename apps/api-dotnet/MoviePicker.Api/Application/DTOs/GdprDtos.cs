@@ -11,6 +11,7 @@ public sealed record UserDataExportResponse
     public IReadOnlyList<ExportedParticipation> Participations { get; init; } = Array.Empty<ExportedParticipation>();
     public IReadOnlyList<ExportedPushSubscription> PushSubscriptions { get; init; } = Array.Empty<ExportedPushSubscription>();
     public IReadOnlyList<ExportedWatchlistItem> Watchlist { get; init; } = Array.Empty<ExportedWatchlistItem>();
+    public IReadOnlyList<ExportedFavorite> Favorites { get; init; } = Array.Empty<ExportedFavorite>();
 }
 
 public sealed record ExportedProfile
@@ -97,6 +98,14 @@ public sealed record ExportedPushSubscription
 {
     public string Endpoint { get; init; } = string.Empty;
     public DateTimeOffset CreatedAt { get; init; }
+}
+
+public sealed record ExportedFavorite
+{
+    public int TmdbId { get; init; }
+    public string MediaType { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Year { get; init; } = string.Empty;
 }
 
 public sealed record ExportedWatchlistItem

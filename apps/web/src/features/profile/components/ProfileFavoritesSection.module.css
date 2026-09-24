@@ -1,0 +1,110 @@
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 10.5rem);
+  gap: var(--space-4);
+}
+
+.freePlace {
+  display: flex;
+  align-items: flex-start;
+}
+
+.freePlaceLink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border: var(--border-width-field) dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  transition:
+    border-color var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default);
+}
+
+@media (hover: hover) {
+  .freePlaceLink:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary-text);
+  }
+}
+
+.freePlaceLink:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: 2px;
+}
+
+.freePlaceIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-9);
+  height: var(--space-9);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
+}
+
+.ownerOnly {
+  align-self: flex-start;
+}
+
+.invite {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.inviteSlots {
+  display: grid;
+  grid-template-columns: repeat(3, var(--space-14));
+  gap: var(--space-2);
+}
+
+.inviteSlots span {
+  aspect-ratio: 2 / 3;
+  border: var(--border-width-field) dashed var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.inviteBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.inviteText {
+  margin: 0;
+  max-width: 44ch;
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-comfortable);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 39.9375rem) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  .invite {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .inviteCta {
+    align-self: stretch;
+  }
+}

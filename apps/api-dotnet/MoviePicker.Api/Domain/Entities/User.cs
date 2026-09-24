@@ -52,6 +52,7 @@ public sealed record User
     public IReadOnlyDictionary<UserNotificationType, bool> NotificationPreferences { get; init; }
         = NotificationPreferenceDefaults.All();
     public IReadOnlyList<EventTemplate> EventTemplates { get; init; } = Array.Empty<EventTemplate>();
+    public IReadOnlyList<FavoriteTitle> Favorites { get; init; } = Array.Empty<FavoriteTitle>();
     public DateTimeOffset? SupporterSince { get; init; }
     public string? LetterboxdUsername { get; init; }
     public DateTimeOffset? LetterboxdLastSyncAt { get; init; }

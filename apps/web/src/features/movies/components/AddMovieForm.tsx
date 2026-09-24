@@ -95,6 +95,7 @@ export interface AddMovieFormProps {
   searchAriaLabel?: string;
   searchWrapClassName?: string;
   showWatchProviders?: boolean;
+  includeSeries?: boolean;
 }
 
 export default function AddMovieForm({
@@ -113,6 +114,7 @@ export default function AddMovieForm({
   searchAriaLabel,
   searchWrapClassName,
   showWatchProviders = true,
+  includeSeries = false,
 }: Readonly<AddMovieFormProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
@@ -191,6 +193,7 @@ export default function AddMovieForm({
           signal: controller.signal,
           lang: tmdbLanguage,
           eventSlug: slug,
+          includeSeries,
           filters: activeFilters,
         });
         if (controller.signal.aborted) return;
@@ -228,7 +231,7 @@ export default function AddMovieForm({
         if (!controller.signal.aborted) setSearching(false);
       }
     },
-    [tmdbLanguage, t, slug, addToHistory]
+    [tmdbLanguage, t, slug, includeSeries, addToHistory]
   );
 
   const searchAllowed = trimmedForSearch.length >= SEARCH_MIN_CHARS || filters.hasApiFilters;
@@ -344,6 +347,7 @@ export default function AddMovieForm({
     const onFocusOut = (e: FocusEvent) => {
       if (!el.contains(e.relatedTarget as Node | null)) {
         setInputFocused(false);
+        setHistoryDismissed(false);
       }
     };
     el.addEventListener('focusout', onFocusOut);
@@ -370,6 +374,8 @@ export default function AddMovieForm({
       clearSearchResults();
       setQuery('');
       onAdded();
+      setHistoryDismissed(true);
+      searchInputRef.current?.focus();
     } catch (err) {
       setError(getErrorMessage(err, addErrorLabel ?? t('movies.search.addError')));
     } finally {
@@ -439,7 +445,6 @@ export default function AddMovieForm({
               }}
               onFocus={() => {
                 setInputFocused(true);
-                setHistoryDismissed(false);
               }}
               placeholder={searchPlaceholder ?? t('movies.search.placeholder')}
               autoComplete="off"

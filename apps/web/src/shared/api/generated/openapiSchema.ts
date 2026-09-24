@@ -4046,6 +4046,7 @@ export interface paths {
                     language?: string;
                     runtimeMin?: number;
                     runtimeMax?: number;
+                    includeSeries?: boolean;
                 };
                 header?: never;
                 path?: never;
@@ -5920,6 +5921,203 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/me/favorites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AddFavoriteRequest"];
+                    "text/json": components["schemas"]["AddFavoriteRequest"];
+                    "application/*+json": components["schemas"]["AddFavoriteRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["FavoriteListResponse"];
+                        "application/json": components["schemas"]["FavoriteListResponse"];
+                        "text/json": components["schemas"]["FavoriteListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/favorites/{tmdbId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: {
+                    mediaType?: components["schemas"]["MovieMediaType"];
+                };
+                header?: never;
+                path: {
+                    tmdbId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["FavoriteListResponse"];
+                        "application/json": components["schemas"]["FavoriteListResponse"];
+                        "text/json": components["schemas"]["FavoriteListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{handle}/follow": {
         parameters: {
             query?: never;
@@ -6475,6 +6673,14 @@ export interface components {
     schemas: {
         /** @enum {string} */
         AccentColor: "default" | "blue" | "green" | "purple" | "pink" | "orange" | "red" | "cyan" | "indigo";
+        AddFavoriteRequest: {
+            /** Format: int32 */
+            tmdbId: number;
+            mediaType?: components["schemas"]["MovieMediaType"];
+            title: string;
+            year?: string | null;
+            posterPath?: string | null;
+        };
         AddMovieRequest: {
             /** Format: int32 */
             tmdbId: number;
@@ -6692,6 +6898,13 @@ export interface components {
             /** Format: date-time */
             closedAt?: string | null;
         };
+        ExportedFavorite: {
+            /** Format: int32 */
+            tmdbId?: number;
+            mediaType?: string | null;
+            title?: string | null;
+            year?: string | null;
+        };
         ExportedNotification: {
             type?: string | null;
             actorHandle?: string | null;
@@ -6767,6 +6980,17 @@ export interface components {
             year?: string | null;
             /** Format: date-time */
             createdAt?: string;
+        };
+        FavoriteListResponse: {
+            items?: components["schemas"]["FavoriteTitleResponse"][] | null;
+        };
+        FavoriteTitleResponse: {
+            /** Format: int32 */
+            tmdbId?: number;
+            mediaType?: components["schemas"]["MovieMediaType"];
+            title?: string | null;
+            year?: string | null;
+            posterPath?: string | null;
         };
         FinishedEventWatchlistPassResult: {
             /** Format: int32 */
@@ -7163,6 +7387,7 @@ export interface components {
             isWatchlistPublic?: boolean;
             /** Format: int32 */
             watchlistCount?: number | null;
+            favorites?: components["schemas"]["FavoriteTitleResponse"][] | null;
         };
         RatingReminderPassResult: {
             /** Format: int32 */
@@ -7268,6 +7493,7 @@ export interface components {
             participations?: components["schemas"]["ExportedParticipation"][] | null;
             pushSubscriptions?: components["schemas"]["ExportedPushSubscription"][] | null;
             watchlist?: components["schemas"]["ExportedWatchlistItem"][] | null;
+            favorites?: components["schemas"]["ExportedFavorite"][] | null;
         };
         UserNotificationItem: {
             id?: string | null;
@@ -7303,6 +7529,7 @@ export interface components {
             letterboxdPendingReconciliationCount?: number;
             hasPassword?: boolean;
             linkedProviders?: string[] | null;
+            favorites?: components["schemas"]["FavoriteTitleResponse"][] | null;
             /** Format: date-time */
             createdAt?: string;
         };

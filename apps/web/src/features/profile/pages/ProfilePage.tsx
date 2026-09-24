@@ -207,7 +207,11 @@ export default function ProfilePage() {
           )}
 
           <Suspense fallback={null}>
-            <ProfileMoviesSection handle={profile.handle} />
+            <ProfileMoviesSection
+              handle={profile.handle}
+              favorites={profile.favorites ?? []}
+              isOwnProfile={isOwnProfile}
+            />
           </Suspense>
         </div>
       </div>

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Ports;
@@ -232,6 +233,59 @@ public sealed class MongoUserRepository : IUserRepository
 
         var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
         return result.MatchedCount > 0;
+    }
+
+    public async Task<bool> AddFavoriteAsync(
+        string userId,
+        FavoriteTitle favorite,
+        int maxPerUser,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || maxPerUser < 1)
+            return false;
+
+        var filter = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Eq(x => x.Id, userId),
+            Builders<UserDocument>.Filter.Exists($"favorites.{maxPerUser - 1}", false),
+            Builders<UserDocument>.Filter.Not(
+                Builders<UserDocument>.Filter.ElemMatch(x => x.Favorites, SameFavorite(favorite.TmdbId, favorite.MediaType))));
+        var update = Builders<UserDocument>.Update
+            .Push(x => x.Favorites, UserDocumentMapper.ToFavoriteDocument(favorite))
+            .Set(x => x.UpdatedAt, now.UtcDateTime)
+            .Inc(x => x.Version, 1);
+
+        var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
+        return result.MatchedCount > 0;
+    }
+
+    public async Task<bool> RemoveFavoriteAsync(
+        string userId,
+        int tmdbId,
+        MovieMediaType mediaType,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return false;
+
+        var sameFavorite = SameFavorite(tmdbId, mediaType);
+        var filter = Builders<UserDocument>.Filter.And(
+            Builders<UserDocument>.Filter.Eq(x => x.Id, userId),
+            Builders<UserDocument>.Filter.ElemMatch(x => x.Favorites, sameFavorite));
+        var update = Builders<UserDocument>.Update
+            .PullFilter(x => x.Favorites, sameFavorite)
+            .Set(x => x.UpdatedAt, now.UtcDateTime)
+            .Inc(x => x.Version, 1);
+
+        var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
+        return result.MatchedCount > 0;
+    }
+
+    private static Expression<Func<FavoriteTitleDocument, bool>> SameFavorite(int tmdbId, MovieMediaType mediaType)
+    {
+        var mediaTypeValue = MovieMapper.MediaTypeToString(mediaType);
+        return f => f.TmdbId == tmdbId && f.MediaType == mediaTypeValue;
     }
 
     public async Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)

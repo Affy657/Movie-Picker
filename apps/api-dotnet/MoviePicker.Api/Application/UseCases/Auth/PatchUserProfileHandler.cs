@@ -36,7 +36,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             && request.LetterboxdUsername is null;
 
         if (nothingToUpdate)
-            return ToResponse(user);
+            return UserProfileResponses.From(user);
 
         var updated = await ApplyRequestAsync(user, request, ct);
 
@@ -49,7 +49,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
         {
             throw Errors.HandleTaken();
         }
-        return ToResponse(saved);
+        return UserProfileResponses.From(saved);
     }
 
     private async Task<User> ApplyRequestAsync(User user, PatchUserProfileRequest request, CancellationToken ct)
@@ -125,28 +125,6 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 
         return normalized;
     }
-
-    private static UserProfileResponse ToResponse(User user) => new()
-    {
-        UserId = user.Id,
-        DisplayName = user.DisplayName,
-        EmailMasked = EmailMasking.Mask(user.Email),
-        Email = user.Email,
-        UiTheme = user.UiTheme,
-        AccentColor = user.AccentColor,
-        RatingScale = user.RatingScale,
-        AvatarId = user.AvatarId,
-        Handle = user.Handle,
-        Bio = user.Bio,
-        IsProfilePublic = user.IsProfilePublic,
-        IsWatchlistPublic = user.IsWatchlistPublic,
-        LetterboxdUsername = user.LetterboxdUsername,
-        LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
-        LetterboxdLastSyncError = user.LetterboxdLastSyncError,
-        HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
-        LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
-        CreatedAt = user.CreatedAt
-    };
 
     private static T ParseEnum<T>(string raw, T defaultValue) where T : struct, Enum =>
         Enum.TryParse<T>(raw, ignoreCase: true, out var result) ? result : defaultValue;

@@ -51,6 +51,15 @@ function renderRow(itemCount: number) {
 describe('MoviePreviewRow', () => {
   afterEach(() => vi.restoreAllMocks());
 
+  it('names its see-all link after the row it belongs to', () => {
+    mockRailMetrics(0, 0);
+    renderRow(2);
+
+    expect(
+      screen.getByRole('link', { name: 'Voir les 100 films Tendances de la semaine' })
+    ).toHaveAttribute('href', '/films/tendances');
+  });
+
   it('expose son titre, son sous-titre et son lien Tout voir', () => {
     mockRailMetrics(0, 0);
     renderRow(2);

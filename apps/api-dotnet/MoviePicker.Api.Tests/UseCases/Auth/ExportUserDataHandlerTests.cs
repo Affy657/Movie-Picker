@@ -133,4 +133,23 @@ public sealed class ExportUserDataHandlerTests
         var push = Assert.Single(export.PushSubscriptions);
         Assert.Equal("https://push.example/abc", push.Endpoint);
     }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheFavorites()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" });
+        await f.Users.AddFavoriteAsync(user.Id, new FavoriteTitle { TmdbId = 603, Title = "Matrix", Year = "1999" }, 3, TestEpoch);
+        await f.Users.AddFavoriteAsync(
+            user.Id,
+            new FavoriteTitle { TmdbId = 1920, MediaType = MovieMediaType.Tv, Title = "Twin Peaks", Year = "1990" },
+            3,
+            TestEpoch);
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.Equal(
+            [(603, "movie", "Matrix", "1999"), (1920, "tv", "Twin Peaks", "1990")],
+            export.Favorites.Select(x => (x.TmdbId, x.MediaType, x.Title, x.Year)));
+    }
 }

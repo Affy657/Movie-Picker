@@ -290,6 +290,20 @@ public sealed class DevelopmentScenarioSeedTests(SeededDevelopmentFixture fixtur
     }
 
     [Fact]
+    public async Task Favorites_AliceShowsThreeWithASeries_ZoeOne_DevNone()
+    {
+        var alice = await fixture.UserAsync(Alice);
+        var zoe = await fixture.UserAsync("zoe@test.local");
+        var dev = await fixture.UserAsync(Dev);
+
+        Assert.Equal(
+            [(27205, MovieMediaType.Movie), (157336, MovieMediaType.Movie), (1920, MovieMediaType.Tv)],
+            alice.Favorites.Select(f => (f.TmdbId, f.MediaType)));
+        Assert.Single(zoe.Favorites);
+        Assert.Empty(dev.Favorites);
+    }
+
+    [Fact]
     public async Task RunningTheSeedTwice_CreatesNothingMore()
     {
         var events = fixture.Provider.GetRequiredService<IEventRepository>();

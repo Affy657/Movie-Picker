@@ -138,4 +138,23 @@ public sealed class GetPublicProfileHandlerTests
 
         await Assert.ThrowsAsync<NotFoundException>(() => handler.HandleAsync("ghost"));
     }
+
+    [Fact]
+    public async Task HandleAsync_ShowsTheFavoritesToAnyVisitor()
+    {
+        var (users, _, handler) = Build();
+        users.Setup(x => x.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(User(true) with
+        {
+            Favorites =
+            [
+                new FavoriteTitle { TmdbId = 949, Title = "Heat", Year = "1995" },
+                new FavoriteTitle { TmdbId = 1920, MediaType = MovieMediaType.Tv, Title = "Twin Peaks", Year = "1990" }
+            ]
+        });
+
+        var res = await handler.HandleAsync("alice");
+
+        Assert.Equal(["Heat", "Twin Peaks"], res.Favorites.Select(f => f.Title));
+        Assert.Equal(MovieMediaType.Tv, res.Favorites[1].MediaType);
+    }
 }

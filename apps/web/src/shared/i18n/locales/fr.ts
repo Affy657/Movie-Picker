@@ -478,7 +478,7 @@ export const fr = {
       attentionSuffix: ', action requise',
       profileVisibilityHint:
         'Votre pseudo, votre bio et vos films sont visibles à l’adresse {{url}}. Votre e-mail n’apparaît jamais.',
-      navSummaryProfile: 'Pseudo, bio, visibilité',
+      navSummaryProfile: 'Pseudo, bio, favoris, visibilité',
       navSummaryPreferences: 'Langue, thème, couleur, notes',
       navSummaryNotifications: 'Push et alertes par soirée',
       navSummaryIntegrations: 'Letterboxd, Google, GitHub',
@@ -1546,6 +1546,8 @@ export const fr = {
     participant_limit_below_current:
       'La limite ({{limit}}) est inférieure au nombre de participants déjà inscrits ({{current}}).',
     event_template_name_taken: 'Un template s’appelle déjà « {{name}} ».',
+    favorites_limit_reached:
+      'Vous avez déjà {{max}} favoris. Retirez-en un pour en ajouter un autre.',
     event_template_limit_reached:
       'Vous avez atteint la limite de {{max}} templates. Supprimez-en un pour en enregistrer un nouveau.',
     invite_event_finished: "Impossible d'inviter : la soirée est terminée.",
@@ -1984,6 +1986,35 @@ export const fr = {
       empty: 'Aucune activité pour le moment.',
       loadError: "Les statistiques n'ont pas pu être chargées.",
       retry: 'Réessayer',
+    },
+    favorites: {
+      visitorTitle: 'Ses favoris',
+      ownerTitle: 'Mes favoris',
+      edit: 'Modifier',
+      editAria: 'Modifier mes favoris',
+      addSlot: 'Ajouter',
+      addSlotAria: 'Ajouter un favori',
+      ownerOnly: 'Visible par vous seul',
+      inviteText:
+        'Aucun favori pour l’instant. Choisissez jusqu’à trois films ou séries : ils s’afficheront ici pour tous vos visiteurs.',
+      inviteCta: 'Choisir mes favoris',
+      settings: {
+        title: 'Mes favoris',
+        hint: 'Jusqu’à trois films ou séries, affichés sur votre profil public.',
+        privateHint: 'Votre profil est privé : vos favoris restent masqués tant qu’il le restera.',
+        count: '{{count}} sur {{max}}',
+        empty: 'Aucun favori pour l’instant.',
+        add: 'Ajouter un favori',
+        remove: 'Retirer',
+        removeAria: 'Retirer {{title}} de mes favoris',
+        full: 'Trois favoris au maximum : retirez-en un pour en choisir un autre.',
+        searchPlaceholder: 'Rechercher un film ou une série…',
+        searchLabel: 'Rechercher un favori',
+        alreadyAdded: 'Déjà en favori',
+        alreadyAddedHint: 'Ce titre fait déjà partie de vos favoris.',
+        addError: 'Ce favori n’a pas pu être ajouté. Vérifiez votre connexion, puis réessayez.',
+        removeError: 'Ce favori n’a pas pu être retiré. Réessayez.',
+      },
     },
     watchlist: {
       theirs: 'Sa watchlist',

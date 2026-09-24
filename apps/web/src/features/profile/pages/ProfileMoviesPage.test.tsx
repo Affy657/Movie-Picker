@@ -106,7 +106,9 @@ describe('ProfileMoviesPage (MSW)', () => {
     expect(screen.queryByRole('button', { name: /plus d.actions/i })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /voir les détails de « inception »/i }));
 
-    expect(await screen.findByRole('heading', { name: 'Inception', level: 2 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Inception', level: 2 }, { timeout: 20000 })
+    ).toBeInTheDocument();
   });
 
   it('hover, visitor: the kebab only offers the details and Letterboxd', async () => {

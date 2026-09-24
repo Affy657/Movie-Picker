@@ -96,17 +96,28 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
             PushSubscriptions = pushSubscriptions
                 .Select(s => new ExportedPushSubscription { Endpoint = s.Endpoint, CreatedAt = s.CreatedAt })
                 .ToList(),
-            Watchlist = watchlist.Select(MapWatchlistItem).ToList()
+            Watchlist = watchlist.Select(MapWatchlistItem).ToList(),
+            Favorites = user.Favorites.Select(MapFavorite).ToList()
         };
     }
+
+    private static string MediaTypeName(MovieMediaType mediaType) => mediaType == MovieMediaType.Tv ? "tv" : "movie";
 
     private static ExportedWatchlistItem MapWatchlistItem(WatchlistItem item) => new()
     {
         TmdbId = item.TmdbId,
-        MediaType = item.MediaType == MovieMediaType.Tv ? "tv" : "movie",
+        MediaType = MediaTypeName(item.MediaType),
         Title = item.Title,
         Year = item.Year,
         CreatedAt = item.CreatedAt
+    };
+
+    private static ExportedFavorite MapFavorite(FavoriteTitle favorite) => new()
+    {
+        TmdbId = favorite.TmdbId,
+        MediaType = MediaTypeName(favorite.MediaType),
+        Title = favorite.Title,
+        Year = favorite.Year
     };
 
     private static ExportedProfile MapProfile(User user) => new()

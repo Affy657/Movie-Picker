@@ -3,6 +3,8 @@ const RECAP_PREFIX = '/r';
 
 export const RATE_QUERY_PARAM = 'rate';
 
+export const FAVORITES_ANCHOR = 'favoris';
+
 export const ROUTES = {
   home: '/',
   createEvent: '/new',
@@ -13,6 +15,7 @@ export const ROUTES = {
   oauthCallback: '/auth/callback',
   account: '/settings',
   accountProfile: '/settings/profil',
+  accountFavorites: `/settings/profil#${FAVORITES_ANCHOR}`,
   accountPreferences: '/settings/preferences',
   accountNotifications: '/settings/notifications',
   accountIntegrations: '/settings/integrations',

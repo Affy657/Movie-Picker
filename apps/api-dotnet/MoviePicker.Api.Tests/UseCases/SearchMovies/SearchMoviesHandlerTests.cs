@@ -209,4 +209,43 @@ public sealed class SearchMoviesHandlerTests
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task HandleAsync_EventWithoutSeries_KeepsThemOutEvenWhenAsked()
+    {
+        _events
+            .Setup(r => r.GetByIdOrSlugAsync("soiree-films", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Event { Slug = "soiree-films", Config = new EventConfig { AllowSeries = false } });
+        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        var sut = Build();
+
+        await sut.HandleAsync("twin peaks", "soiree-films", includeSeries: true);
+
+        _tmdb.Verify(
+            t => t.SearchAsync("twin peaks", false, It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SeriesAskedOutsideAnEvent_SearchesMoviesAndSeries()
+    {
+        _tmdb.Setup(t => t.SearchAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        var sut = Build();
+
+        await sut.HandleAsync("twin peaks", null, includeSeries: true);
+
+        _tmdb.Verify(
+            t => t.SearchAsync("twin peaks", true, It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 }

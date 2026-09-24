@@ -84,6 +84,7 @@ export default function MoviePreviewRow({
   children,
 }: Readonly<RowProps>) {
   const headingId = useId();
+  const seeAllId = useId();
   const Heading = headingLevel === 3 ? 'h3' : 'h2';
 
   return (
@@ -96,7 +97,12 @@ export default function MoviePreviewRow({
           {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
         </div>
         {seeAllTo && seeAllLabel ? (
-          <Link to={seeAllTo} className={styles.seeAllLink}>
+          <Link
+            id={seeAllId}
+            to={seeAllTo}
+            className={styles.seeAllLink}
+            aria-labelledby={`${seeAllId} ${headingId}`}
+          >
             {seeAllLabel}
           </Link>
         ) : null}
