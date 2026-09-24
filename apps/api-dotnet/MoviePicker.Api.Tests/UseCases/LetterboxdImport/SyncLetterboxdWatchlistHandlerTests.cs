@@ -82,7 +82,11 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
             ]);
     }
 
-    private void GivenUser(string? username, DateTimeOffset? lastSyncAt, string? lastSyncError = null) =>
+    private void GivenUser(
+        string? username,
+        DateTimeOffset? lastSyncAt,
+        string? lastSyncError = null,
+        int pendingReconciliationCount = 0) =>
         _users
             .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User
@@ -91,7 +95,8 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
                 Email = "a@b.c",
                 LetterboxdUsername = username,
                 LetterboxdLastSyncAt = lastSyncAt,
-                LetterboxdLastSyncError = lastSyncError
+                LetterboxdLastSyncError = lastSyncError,
+                LetterboxdPendingReconciliationCount = pendingReconciliationCount
             });
 
     private void GivenTmdbTimesOut()
@@ -247,6 +252,20 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
                     x.UserId == UserId && x.Type == UserNotificationType.LetterboxdReconciliationPending),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AutoSyncFindsTheChoicesAlreadyReported_DoesNotNotifyAgain()
+    {
+        GivenUser(Username, Now.AddDays(-2), pendingReconciliationCount: 1);
+        GivenAmbiguousLetterboxdFilm();
+
+        var result = await _sut.HandleAsync(UserId, force: false);
+
+        Assert.Single(result.PendingChoices);
+        _notifications.Verify(
+            n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
