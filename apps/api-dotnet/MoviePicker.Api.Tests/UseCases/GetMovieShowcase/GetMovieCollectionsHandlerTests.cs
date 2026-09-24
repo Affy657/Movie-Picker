@@ -147,4 +147,38 @@ public sealed class GetMovieCollectionsHandlerTests
         Assert.Equal("Saga cache", Assert.Single(result.Items).Name);
         _tmdb.Verify(t => t.GetCollectionAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public async Task HandleAsync_OneCollectionFailedToLoad_ServesThePartialListWithoutSharingIt()
+    {
+        SetupAllCollections();
+        var failingId = MovieShowcaseCatalog.CollectionIds[0];
+        _tmdb.Setup(t => t.GetCollectionAsync(failingId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("TMDB answered 429"));
+
+        var first = await Build().HandleAsync();
+        await Build().HandleAsync();
+
+        Assert.Equal(MovieShowcaseCatalog.CollectionIds.Count - 1, first.Items.Count);
+        _shared.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<MovieCollectionResponse>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tmdb.Verify(t => t.GetCollectionAsync(failingId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_EveryCollectionLoaded_ReplacesTheSnapshot()
+    {
+        SetupAllCollections();
+
+        Assert.True(await Build().RefreshAsync());
+        _shared.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<MovieCollectionResponse>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_TmdbDown_KeepsTheOlderSnapshot()
+    {
+        _tmdb.Setup(t => t.GetCollectionAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
+
+        Assert.False(await Build().RefreshAsync());
+    }
 }

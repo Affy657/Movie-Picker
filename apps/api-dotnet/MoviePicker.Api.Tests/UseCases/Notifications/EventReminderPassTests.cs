@@ -50,6 +50,8 @@ public sealed class EventReminderPassTests
             .ReturnsAsync(false);
         _dedup.Setup(r => r.TryClaimAsync(It.IsAny<string>(), It.IsAny<UserNotificationType>(), It.IsAny<string>(), It.IsAny<NotificationDedupChannel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+        _sender.Setup(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
     }
 
     private EventReminderPass CreatePass(DateTimeOffset? now = null) => new(
@@ -317,17 +319,72 @@ public sealed class EventReminderPassTests
     }
 
     [Fact]
-    public async Task RunAsync_InboxAlreadyHasTheReminder_DoesNotAddItTwice()
+    public async Task RunAsync_InboxAlreadyClaimedForThisStart_DoesNotAddItTwice()
     {
         GivenOpenEvents(EventStartingAt("e1", Now.AddHours(1)));
         GivenParticipants("e1", "u1");
         GivenUsers(Subscriber("u1"));
+        _dedup.Setup(r => r.TryClaimAsync("u1", UserNotificationType.EventReminder1h, It.Is<string>(k => k.StartsWith("e1@")), NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        await CreatePass().RunAsync();
+
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RunAsync_ReminderSentForAnEarlierStart_StillRemindsForTheNewStart()
+    {
+        var start = Now.AddHours(1);
+        GivenOpenEvents(EventStartingAt("e1", start));
+        GivenParticipants("e1", "u1");
+        GivenUsers(Subscriber("u1"));
+        GivenPushSubscription("u1");
         _notifications.Setup(r => r.ExistsAsync("u1", UserNotificationType.EventReminder1h, "e1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         await CreatePass().RunAsync();
 
-        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+        _dedup.Verify(r => r.TryClaimAsync(
+            "u1", UserNotificationType.EventReminder1h, EventReminderPass.OccurrenceKey("e1", start),
+            NotificationDedupChannel.Push, It.IsAny<CancellationToken>()), Times.Once);
+        VerifyInboxAdded("u1", UserNotificationType.EventReminder1h, Times.Once());
+    }
+
+    [Fact]
+    public async Task RunAsync_PushFailsTransiently_ReleasesTheClaimAndReportsTheFailure()
+    {
+        var start = Now.AddHours(1);
+        GivenOpenEvents(EventStartingAt("e1", start));
+        GivenParticipants("e1", "u1");
+        GivenUsers(Subscriber("u1"));
+        GivenPushSubscription("u1");
+        _sender.Setup(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(1, result.DeliveryFailures);
+        _dedup.Verify(r => r.ReleaseAsync(
+            "u1", UserNotificationType.EventReminder1h, EventReminderPass.OccurrenceKey("e1", start),
+            NotificationDedupChannel.Push, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RunAsync_InboxWriteFails_ReleasesTheInboxClaimSoARetryAddsIt()
+    {
+        var start = Now.AddHours(1);
+        GivenOpenEvents(EventStartingAt("e1", start));
+        GivenParticipants("e1", "u1");
+        GivenUsers(Subscriber("u1"));
+        _notifications.Setup(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("database unreachable"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => CreatePass().RunAsync());
+
+        _dedup.Verify(r => r.ReleaseAsync(
+            "u1", UserNotificationType.EventReminder1h, EventReminderPass.OccurrenceKey("e1", start),
+            NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -350,7 +407,7 @@ public sealed class EventReminderPassTests
         GivenParticipants("e1", "u1");
         GivenUsers(Subscriber("u1"));
         GivenPushSubscription("u1");
-        _dedup.Setup(r => r.TryClaimAsync("u1", It.IsAny<UserNotificationType>(), "e1", NotificationDedupChannel.Push, It.IsAny<CancellationToken>()))
+        _dedup.Setup(r => r.TryClaimAsync("u1", It.IsAny<UserNotificationType>(), It.Is<string>(k => k.StartsWith("e1@")), NotificationDedupChannel.Push, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         await CreatePass().RunAsync();
@@ -469,6 +526,24 @@ public sealed class EventReminderPassTests
                 It.IsAny<CancellationToken>()),
             Times.Once);
         VerifyInboxAdded("host", UserNotificationType.EventPending, Times.Once());
+    }
+
+    [Fact]
+    public async Task RunAsync_PendingEventAlreadyInTheHostInbox_SendsNoPushAgainOnceTheMarkerExpired()
+    {
+        var started = Now - EventSchedule.PendingDelay - TimeSpan.FromDays(4);
+        GivenOpenEvents(EventStartingAt("e1", started));
+        _users.Setup(r => r.GetByIdAsync("host", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Subscriber("host"));
+        _subscriptions.Setup(r => r.ListByUserIdAsync("host", It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new PushSubscription { Id = "s1", UserId = "host", Endpoint = "https://push/host", P256dh = "k", Auth = "a" }]);
+        _notifications.Setup(r => r.ExistsAsync("host", UserNotificationType.EventPending, "e1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        await CreatePass().RunAsync();
+
+        _sender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        VerifyInboxAdded("host", UserNotificationType.EventPending, Times.Never());
     }
 
     [Fact]

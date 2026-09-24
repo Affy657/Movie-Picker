@@ -87,4 +87,22 @@ public sealed class MongoRateLimitCounterStoreTests : IClassFixture<MoviePickerA
         Assert.NotNull(stored);
         Assert.Equal(openedAt.UtcDateTime, stored!.ExpiresAt, TimeSpan.FromMilliseconds(1));
     }
+
+    [MongoFact]
+    public async Task Decrement_GivesBackAHitWithoutGoingBelowZero()
+    {
+        var key = "decrement-" + Guid.NewGuid().ToString("N");
+        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(15);
+        await IncrementAsync(key, expiresAt);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var store = scope.ServiceProvider.GetRequiredService<IRateLimitCounterStore>();
+            await store.DecrementAsync(key);
+            await store.DecrementAsync(key);
+        }
+
+        Assert.Equal(0, (await ReadAsync(key))!.Count);
+        Assert.Equal(1, await IncrementAsync(key, expiresAt));
+    }
 }

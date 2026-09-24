@@ -22,11 +22,12 @@ export function safeSessionStorageGet(key: string): string | null {
   }
 }
 
-export function safeSessionStorageSet(key: string, value: string): void {
+export function safeSessionStorageSet(key: string, value: string): boolean {
   try {
     sessionStorage.setItem(key, value);
+    return true;
   } catch {
-    return;
+    return false;
   }
 }
 

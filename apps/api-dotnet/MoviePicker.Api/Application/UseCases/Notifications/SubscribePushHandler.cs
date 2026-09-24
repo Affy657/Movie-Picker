@@ -7,6 +7,8 @@ namespace MoviePicker.Api.Application.UseCases.Notifications;
 
 public sealed class SubscribePushHandler : ISubscribePushHandler
 {
+    public const int MaxDevicesPerAccount = 10;
+
     private readonly IPushSubscriptionRepository _subscriptions;
     private readonly TimeProvider _clock;
 
@@ -31,6 +33,14 @@ public sealed class SubscribePushHandler : ISubscribePushHandler
             CreatedAt = _clock.GetUtcNow()
         };
         await _subscriptions.UpsertAsync(subscription, ct);
+
+        var devices = await _subscriptions.ListByUserIdAsync(userId, ct);
+        var stale = devices
+            .Where(d => d.Endpoint != request.Endpoint)
+            .OrderByDescending(d => d.CreatedAt)
+            .Skip(MaxDevicesPerAccount - 1);
+        foreach (var device in stale)
+            await _subscriptions.DeleteByEndpointAsync(userId, device.Endpoint, ct);
     }
 }
 
@@ -40,6 +50,7 @@ public static class PushEndpointPolicy
     [
         "fcm.googleapis.com",
         "android.googleapis.com",
+        "jmt17.google.com",
         "push.services.mozilla.com",
         "notify.windows.com",
         "push.apple.com"

@@ -69,16 +69,14 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
         if (poster is not null && !IsAcceptablePosterPath(poster))
             throw Errors.InvalidPosterPath();
 
-        if (poster is not null && TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(poster, out var norm))
-            await _posterImageStore.RegisterTmdbSourceAsync(norm, ct);
-        return _posterImageStore.ToPublicPosterPath(poster);
+        return await _posterImageStore.ToStoredPosterPathAsync(poster, ct);
     }
 
     private static bool IsAcceptablePosterPath(string p)
     {
         if (Uri.TryCreate(p, UriKind.Absolute, out var u) && u.Scheme == Uri.UriSchemeHttps)
             return true;
-        return TmdbPosterUrlNormalizer.TryParsePosterKey(p, out _);
+        return TmdbPosterUrlNormalizer.IsAcceptedPosterReference(p);
     }
 
     private static int? KnownRuntime(int? runtimeMinutes) => runtimeMinutes is > 0 ? runtimeMinutes : null;

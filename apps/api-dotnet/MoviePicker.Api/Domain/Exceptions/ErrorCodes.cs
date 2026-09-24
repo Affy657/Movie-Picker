@@ -96,6 +96,7 @@ public static class ErrorCodes
     public const string LetterboxdUsernameInvalid = "letterboxd_username_invalid";
     public const string LetterboxdUsernameMissing = "letterboxd_username_missing";
     public const string LetterboxdSyncFailed = "letterboxd_sync_failed";
+    public const string LetterboxdSyncUnavailable = "letterboxd_sync_unavailable";
     public const string LetterboxdWatchlistIncomplete = "letterboxd_watchlist_incomplete";
     public const string InvalidDateFormat = "invalid_date_format";
     public const string InvalidTimeFormat = "invalid_time_format";

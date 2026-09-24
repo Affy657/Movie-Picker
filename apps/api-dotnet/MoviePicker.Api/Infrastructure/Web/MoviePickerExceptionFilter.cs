@@ -20,6 +20,9 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
     {
         var http = context.HttpContext;
 
+        if (context.Exception is OperationCanceledException && http.RequestAborted.IsCancellationRequested)
+            return;
+
         if (context.Exception is MoviePickerException ex)
         {
             var statusCode = ToHttpStatus(ex.Kind);
@@ -54,6 +57,7 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
         ErrorKind.Forbidden => StatusCodes.Status403Forbidden,
         ErrorKind.NotFound => StatusCodes.Status404NotFound,
         ErrorKind.Conflict => StatusCodes.Status409Conflict,
+        ErrorKind.TooManyRequests => StatusCodes.Status429TooManyRequests,
         ErrorKind.ServiceUnavailable => StatusCodes.Status503ServiceUnavailable,
         _ => StatusCodes.Status500InternalServerError
     };

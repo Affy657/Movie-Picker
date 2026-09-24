@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Domain.Services;
 
 namespace MoviePicker.Api.Application.UseCases.RecurringEvents;
@@ -14,7 +15,7 @@ public interface IRecurringEventPass
     Task<RecurringEventPassResult> RunForCreatorAsync(string creatorUserId, CancellationToken ct = default);
 }
 
-public sealed record RecurringEventPassResult(int Candidates, int Created, int Stopped);
+public sealed record RecurringEventPassResult(int Candidates, int Created, int Stopped, int Failed = 0);
 
 public sealed class RecurringEventPass : IRecurringEventPass
 {
@@ -61,12 +62,13 @@ public sealed class RecurringEventPass : IRecurringEventPass
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to reload the recurring movie nights awaiting an occurrence");
-            return new RecurringEventPassResult(0, 0, 0);
+            _logger.LogError(ex, "Failed to reload the recurring movie nights awaiting an occurrence");
+            return new RecurringEventPassResult(0, 0, 0, Failed: 1);
         }
 
         var created = 0;
         var stopped = 0;
+        var failed = 0;
 
         foreach (var parent in candidates)
         {
@@ -96,14 +98,28 @@ public sealed class RecurringEventPass : IRecurringEventPass
                 continue;
             }
 
-            if (await TryCreateNextOccurrenceAsync(parent, host, nextDate, now, ct))
-                created++;
+            switch (await TryCreateNextOccurrenceAsync(parent, host, nextDate, now, ct))
+            {
+                case OccurrenceOutcome.Created:
+                    created++;
+                    break;
+                case OccurrenceOutcome.Failed:
+                    failed++;
+                    break;
+            }
         }
 
-        return new RecurringEventPassResult(candidates.Count, created, stopped);
+        return new RecurringEventPassResult(candidates.Count, created, stopped, failed);
     }
 
-    private async Task<bool> TryCreateNextOccurrenceAsync(
+    private enum OccurrenceOutcome
+    {
+        Created,
+        CreatedElsewhere,
+        Failed
+    }
+
+    private async Task<OccurrenceOutcome> TryCreateNextOccurrenceAsync(
         Event parent,
         User host,
         DateOnly nextDate,
@@ -122,6 +138,7 @@ public sealed class RecurringEventPass : IRecurringEventPass
             WatchlistCleanedAt = null,
             RecurrenceParentEventId = parent.Id,
             NextOccurrenceEventId = null,
+            CreationRequestId = null,
             CreatedAt = now,
             UpdatedAt = now,
             Version = 0
@@ -150,20 +167,45 @@ public sealed class RecurringEventPass : IRecurringEventPass
                 },
                 ct);
         }
+        catch (ConflictException conflict)
+        {
+            if (await WasCreatedElsewhereAsync(parent.Id, ct))
+                return OccurrenceOutcome.CreatedElsewhere;
+
+            _logger.LogError(
+                conflict,
+                "Next occurrence of movie night {EventId} not created: the transaction gave up",
+                parent.Id);
+            return OccurrenceOutcome.Failed;
+        }
         catch (Exception ex)
         {
-            _logger.LogWarning(
+            _logger.LogError(
                 ex,
                 "Failed to create the next occurrence of movie night {EventId}",
                 parent.Id);
-            return false;
+            return OccurrenceOutcome.Failed;
         }
 
         _logger.LogInformation(
             "Next occurrence created for movie night {EventId} on {Date}",
             parent.Id,
             next.Date);
-        return true;
+        return OccurrenceOutcome.Created;
+    }
+
+    private async Task<bool> WasCreatedElsewhereAsync(string parentId, CancellationToken ct)
+    {
+        try
+        {
+            var reloaded = await _events.ListByIdsAsync([parentId], ct);
+            return reloaded.Any(evt => !string.IsNullOrEmpty(evt.NextOccurrenceEventId));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Movie night {EventId} could not be reloaded after a conflict", parentId);
+            return false;
+        }
     }
 
     private async Task StopSeriesAsync(Event parent, DateTimeOffset now, string reason, CancellationToken ct)

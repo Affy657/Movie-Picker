@@ -15,7 +15,8 @@ internal static class CorsPolicyBuilderExtensions
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials()
-            .WithExposedHeaders(CorrelationIdConstants.ResponseHeaderName);
+            .WithExposedHeaders(CorrelationIdConstants.ResponseHeaderName, "Retry-After")
+            .SetPreflightMaxAge(TimeSpan.FromHours(2));
 
         if (environment.IsDevelopment())
         {

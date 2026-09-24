@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -15,6 +16,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly INotificationDedupRepository _dedup;
     private readonly TimeProvider _clock;
 
     public InviteUserHandler(
@@ -26,6 +28,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
         ICurrentUserAccessor currentUserAccessor,
+        INotificationDedupRepository dedup,
         TimeProvider clock)
     {
         _events = events;
@@ -36,6 +39,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
         _currentUserAccessor = currentUserAccessor;
+        _dedup = dedup;
         _clock = clock;
     }
 
@@ -67,21 +71,35 @@ public sealed class InviteUserHandler : IInviteUserHandler
         if (alreadyInvited)
             throw Errors.InvitationAlreadySent();
 
-        var actor = await _users.GetByIdAsync(currentUserId, ct);
+        var claimed = await _dedup.TryClaimAsync(
+            targetUserId, UserNotificationType.EventInvitation, evt.Id, NotificationDedupChannel.InApp, ct);
+        if (!claimed)
+            throw Errors.InvitationAlreadySent();
 
-        await _notifications.AddAsync(new UserNotification
+        User? actor;
+        try
         {
-            UserId = targetUserId,
-            Type = UserNotificationType.EventInvitation,
-            ActorHandle = actor?.Handle,
-            ActorDisplayName = actor?.DisplayName,
-            ActorAvatarId = actor?.AvatarId,
-            EventId = evt.Id,
-            EventSlug = evt.Slug,
-            EventTitle = evt.Title,
-            IsRead = false,
-            CreatedAt = _clock.GetUtcNow()
-        }, ct);
+            actor = await _users.GetByIdAsync(currentUserId, ct);
+            await _notifications.AddAsync(new UserNotification
+            {
+                UserId = targetUserId,
+                Type = UserNotificationType.EventInvitation,
+                ActorHandle = actor?.Handle,
+                ActorDisplayName = actor?.DisplayName,
+                ActorAvatarId = actor?.AvatarId,
+                EventId = evt.Id,
+                EventSlug = evt.Slug,
+                EventTitle = evt.Title,
+                IsRead = false,
+                CreatedAt = _clock.GetUtcNow()
+            }, ct);
+        }
+        catch (Exception)
+        {
+            await _dedup.ReleaseAsync(
+                targetUserId, UserNotificationType.EventInvitation, evt.Id, NotificationDedupChannel.InApp, CancellationToken.None);
+            throw;
+        }
 
         var target = await _users.GetByIdAsync(targetUserId, ct);
         if (target is not null && target.NotifiesOn(UserNotificationType.EventInvitation))
@@ -93,8 +111,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
                 Tag: $"invite-{evt.Id}",
                 Url: $"/e/{evt.Slug}"
             );
-            foreach (var sub in subs)
-                await _pushSender.SendAsync(sub, message, ct);
+            await PushFanOut.SendToAllAsync(_pushSender, subs, message, ct);
         }
 
         return new InviteUserResponse { Message = "Invitation sent" };

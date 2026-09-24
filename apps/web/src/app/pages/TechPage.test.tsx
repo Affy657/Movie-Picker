@@ -54,7 +54,7 @@ describe('TechPage', () => {
 
   it('shows the metrics generated at build time rather than hard-coded values', () => {
     renderTechPage();
-    expect(screen.getByText(String(TECH_METRICS.endpoints))).toBeInTheDocument();
+    expect(screen.getAllByText(String(TECH_METRICS.endpoints)).length).toBeGreaterThan(0);
     for (const metric of [TECH_METRICS.commits, TECH_METRICS.testCases]) {
       expect(
         screen.getAllByText((text) => text.replace(/\D/g, '') === String(metric)).length

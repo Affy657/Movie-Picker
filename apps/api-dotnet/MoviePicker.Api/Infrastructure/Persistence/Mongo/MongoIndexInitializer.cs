@@ -26,11 +26,11 @@ public sealed class MongoIndexInitializer : IHostedService
         _logger = logger;
     }
 
-    public string MarkerId => BuildPlan().MarkerId;
+    public string MarkerId => BuildPlan(_database).MarkerId;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var plan = BuildPlan();
+        var plan = BuildPlan(_database);
         try
         {
             using var scope = _scopeFactory.CreateScope();
@@ -53,9 +53,9 @@ public sealed class MongoIndexInitializer : IHostedService
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    private MongoIndexPlan BuildPlan()
+    internal static MongoIndexPlan BuildPlan(IMongoDatabase database)
     {
-        var plan = new MongoIndexPlan(_database);
+        var plan = new MongoIndexPlan(database);
         EnsureUserIndexes(plan);
         EnsureEventIndexes(plan);
         EnsureParticipantIndexes(plan);
@@ -114,7 +114,18 @@ public sealed class MongoIndexInitializer : IHostedService
         var startAt = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.StartAtUtc),
             new CreateIndexOptions { Name = "events_startAtUtc", Sparse = true });
-        plan.Create("events", slug, creator, recurrence, startAt);
+        var creationRequest = new CreateIndexModel<EventDocument>(
+            Builders<EventDocument>.IndexKeys.Ascending(x => x.CreatorUserId).Ascending(x => x.CreationRequestId),
+            new CreateIndexOptions<EventDocument>
+            {
+                Name = MongoEventRepository.CreationRequestIndexName,
+                Unique = true,
+                PartialFilterExpression = Builders<EventDocument>.Filter.Exists(x => x.CreationRequestId, true)
+            });
+        var byWinner = new CreateIndexModel<EventDocument>(
+            Builders<EventDocument>.IndexKeys.Ascending("winners.movieId"),
+            new CreateIndexOptions { Name = "events_winners_movieId" });
+        plan.Create("events", slug, creator, recurrence, startAt, creationRequest, byWinner);
     }
 
     private static void EnsureMovieIndexes(MongoIndexPlan plan)
@@ -123,9 +134,13 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<MovieDocument>.IndexKeys.Ascending(x => x.EventId),
             new CreateIndexOptions { Name = "movies_eventId" });
         var byEventTmdb = new CreateIndexModel<MovieDocument>(
-            Builders<MovieDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.TmdbId),
-            new CreateIndexOptions { Name = "movies_eventId_tmdbId_unique", Unique = true });
-        plan.Create("movies", byEvent, byEventTmdb);
+            Builders<MovieDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.TmdbId).Ascending(x => x.MediaType),
+            new CreateIndexOptions { Name = "movies_eventId_tmdbId_mediaType_unique", Unique = true });
+        var byParticipant = new CreateIndexModel<MovieDocument>(
+            Builders<MovieDocument>.IndexKeys.Ascending(x => x.ParticipantId),
+            new CreateIndexOptions { Name = "movies_participantId" });
+        plan.Create("movies", byEvent, byEventTmdb, byParticipant);
+        plan.DropIfExists<MovieDocument>("movies", "movies_eventId_tmdbId_unique");
     }
 
     private static void EnsureVoteIndexes(MongoIndexPlan plan)
@@ -139,7 +154,10 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending(x => x.MovieId)
                 .Ascending(x => x.ParticipantId),
             new CreateIndexOptions { Name = "votes_event_movie_participant_unique", Unique = true });
-        plan.Create("votes", byMovie, unique);
+        var byParticipant = new CreateIndexModel<VoteDocument>(
+            Builders<VoteDocument>.IndexKeys.Ascending(x => x.ParticipantId),
+            new CreateIndexOptions { Name = "votes_participantId" });
+        plan.Create("votes", byMovie, unique, byParticipant);
     }
 
     private static void EnsureParticipantIndexes(MongoIndexPlan plan)
@@ -162,7 +180,7 @@ public sealed class MongoIndexInitializer : IHostedService
 
         var eventPseudo = new CreateIndexModel<ParticipantDocument>(
             Builders<ParticipantDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.Pseudo),
-            new CreateIndexOptions { Name = "participants_eventId_pseudo_unique", Unique = true });
+            new CreateIndexOptions { Name = MongoParticipantRepository.EventPseudoIndexName, Unique = true });
 
         var eventCreated = new CreateIndexModel<ParticipantDocument>(
             Builders<ParticipantDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.CreatedAt),
@@ -213,7 +231,10 @@ public sealed class MongoIndexInitializer : IHostedService
         var byMovie = new CreateIndexModel<SeenMarkDocument>(
             Builders<SeenMarkDocument>.IndexKeys.Ascending(x => x.MovieId),
             new CreateIndexOptions { Name = "seen_marks_movieId" });
-        plan.Create("seen_marks", unique, byMovie);
+        var byParticipant = new CreateIndexModel<SeenMarkDocument>(
+            Builders<SeenMarkDocument>.IndexKeys.Ascending(x => x.ParticipantId),
+            new CreateIndexOptions { Name = "seen_marks_participantId" });
+        plan.Create("seen_marks", unique, byMovie, byParticipant);
     }
 
     private static void EnsurePushSubscriptionIndexes(MongoIndexPlan plan)
@@ -287,10 +308,17 @@ public sealed class MongoIndexInitializer : IHostedService
                 Name = "user_notifications_eventId",
                 PartialFilterExpression = Builders<UserNotificationDocument>.Filter.Exists(x => x.EventId, true)
             });
+        var byActor = new CreateIndexModel<UserNotificationDocument>(
+            Builders<UserNotificationDocument>.IndexKeys.Ascending(x => x.ActorHandle),
+            new CreateIndexOptions<UserNotificationDocument>
+            {
+                Name = "user_notifications_actorHandle",
+                PartialFilterExpression = Builders<UserNotificationDocument>.Filter.Exists(x => x.ActorHandle, true)
+            });
         var ttl = new CreateIndexModel<UserNotificationDocument>(
             Builders<UserNotificationDocument>.IndexKeys.Ascending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "user_notifications_createdAt_ttl", ExpireAfter = TimeSpan.FromDays(90) });
-        plan.Create("user_notifications", byUser, unread, byEvent, ttl);
+        plan.Create("user_notifications", byUser, unread, byEvent, byActor, ttl);
     }
 
     private static void EnsurePushDedupIndexes(MongoIndexPlan plan)
@@ -303,9 +331,10 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending(x => x.EventId)
                 .Ascending(x => x.Channel),
             new CreateIndexOptions { Name = "push_dedup_markers_channel_unique", Unique = true });
+        plan.DropIfExists<PushDedupMarkerDocument>("push_dedup_markers", "push_dedup_markers_createdAt_ttl");
         var ttl = new CreateIndexModel<PushDedupMarkerDocument>(
             Builders<PushDedupMarkerDocument>.IndexKeys.Ascending(x => x.CreatedAt),
-            new CreateIndexOptions { Name = "push_dedup_markers_createdAt_ttl", ExpireAfter = TimeSpan.FromDays(3) });
+            new CreateIndexOptions { Name = "push_dedup_markers_createdAt_ttl_8d", ExpireAfter = TimeSpan.FromDays(8) });
         plan.Create("push_dedup_markers", unique, ttl);
     }
 

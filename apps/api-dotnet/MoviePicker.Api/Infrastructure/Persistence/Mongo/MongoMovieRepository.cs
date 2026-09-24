@@ -94,7 +94,15 @@ public sealed class MongoMovieRepository : IMovieRepository
         var doc = MovieMapper.ToDocument(movie);
         if (string.IsNullOrEmpty(doc.Id))
             doc.Id = ObjectId.GenerateNewId().ToString();
-        await _collection.InsertOneAsync(doc, cancellationToken: ct);
+        try
+        {
+            await _collection.InsertOneAsync(doc, cancellationToken: ct);
+        }
+        catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
+        {
+            throw Errors.MovieAlreadyProposed();
+        }
+
         return MovieMapper.ToDomain(doc);
     }
 
@@ -156,6 +164,24 @@ public sealed class MongoMovieRepository : IMovieRepository
         var filter = Builders<MovieDocument>.Filter.In(x => x.ParticipantId, ids);
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(MovieMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<Movie>> ListWithLegacyPosterPathAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return [];
+
+        var filter = Builders<MovieDocument>.Filter.Regex(x => x.PosterPath, LegacyPosterPaths.Pattern);
+        var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
+        return docs.ConvertAll(MovieMapper.ToDomain);
+    }
+
+    public async Task UpdatePosterPathAsync(string movieId, string? posterPath, CancellationToken ct = default)
+    {
+        var update = Builders<MovieDocument>.Update
+            .Set(x => x.PosterPath, posterPath)
+            .Set(x => x.UpdatedAt, DateTime.UtcNow);
+        await _collection.UpdateOneAsync(x => x.Id == movieId, update, cancellationToken: ct);
     }
 
     public async Task<IReadOnlyList<Movie>> ListMissingGenresAsync(int limit, CancellationToken ct = default)

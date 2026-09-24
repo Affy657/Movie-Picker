@@ -1702,8 +1702,8 @@ internal static class DevelopmentScenarioSeed
         await VoteAsync(vote, httpContext, slug, mGhost.Id, alicePart, actors.Alice.Id, -1, ct).ConfigureAwait(false);
 
         ActAs(httpContext, actors.Dev.Id);
-        await launchWheel.HandleAsync(slug, ct).ConfigureAwait(false);
-        await launchWheel.HandleAsync(slug, ct).ConfigureAwait(false);
+        await launchWheel.HandleAsync(slug, ct: ct).ConfigureAwait(false);
+        await launchWheel.HandleAsync(slug, ct: ct).ConfigureAwait(false);
         await announce.HandleAsync(slug, ct).ConfigureAwait(false);
 
         logger.LogInformation("DevelopmentSeed: multiple winners scenario created (slug={Slug}, host=dev, 2 winners drawn out of 3, announced).", slug);

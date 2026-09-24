@@ -2,10 +2,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { startPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
 import { captureMovedOriginMarker } from '@/shared/pwa/movedOrigin';
+import { reloadOnStaleBuild } from '@/shared/pwa/staleBuildReload';
 import { captureException, scheduleSentryStart } from '@/shared/observability/sentry';
 import { loadLocale, preferredLocale } from '@/shared/i18n';
 import './index.css';
 
+reloadOnStaleBuild();
 startPwaInstallRuntime();
 captureMovedOriginMarker(window.location, (url) =>
   window.history.replaceState(window.history.state, '', url)

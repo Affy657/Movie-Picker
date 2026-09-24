@@ -52,6 +52,32 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         return BuildResponse(section, theme, items);
     }
 
+    public async Task<bool> RefreshAsync(MovieShowcaseQuery query, CancellationToken ct = default)
+    {
+        var section = (query.Section ?? string.Empty).Trim().ToLowerInvariant();
+        var genreIds = NormalizeGenreIds(query.GenreIds);
+        if (!MovieShowcaseSections.IsKnown(section) || !IsCatalogSection(section, genreIds))
+            return false;
+
+        var theme = string.IsNullOrWhiteSpace(query.Theme) ? null : query.Theme.Trim();
+        var provider = string.IsNullOrWhiteSpace(query.Provider) ? null : query.Provider.Trim();
+        try
+        {
+            RejectInvalidQuery(section, theme, provider, query);
+            return await _cache.RefreshAsync(
+                BuildCacheKey(section, theme, genreIds, query.CollectionId, provider, query.SeedTmdbId),
+                CacheTtl(),
+                async token => new CacheLoad<IReadOnlyList<MovieShowcaseItemResponse>>(
+                    await LoadSectionAsync(section, theme, genreIds, query, provider, token),
+                    IsComplete: true),
+                ct);
+        }
+        catch (MoviePickerException)
+        {
+            return false;
+        }
+    }
+
     private void RejectInvalidQuery(string section, string? theme, string? provider, MovieShowcaseQuery query)
     {
         switch (section)

@@ -40,6 +40,8 @@ public static class MovieShowcaseCatalog
             ["apple-tv-plus"] = 350,
         };
 
+    public static IReadOnlyList<string> ProviderKeys => [.. ProviderIds.Keys];
+
     private static readonly IReadOnlyDictionary<string, TmdbDiscoveryCriteria> ThemeCriteria =
         new Dictionary<string, TmdbDiscoveryCriteria>(StringComparer.OrdinalIgnoreCase)
         {

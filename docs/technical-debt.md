@@ -30,7 +30,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 
 - state: differe
 - declencheur: la mise à l'échelle devient routinière au lieu d'être exceptionnelle
-- impact: jusqu'à 5 instances (`max_instance_count`, C12), donc jusqu'à 5 caches froids indépendants. Les sélections de la home, les collections et l'enrichissement TMDB passent par `ISharedCache` (Mongo, collection `shared_cache`, index TTL) en second niveau, une instance neuve relit ces snapshots au lieu de refaire le fan-out TMDB (6 à 10 s par requête). Les `IMemoryCache` restants (recherche TMDB, détails) sont locaux.
+- impact: jusqu'à 5 instances (`max_instance_count`, C12), donc jusqu'à 5 caches froids indépendants. Les sélections de la home, les collections et l'enrichissement TMDB passent par `ISharedCache` (Mongo, collection `shared_cache`, index TTL) en second niveau, une instance neuve relit ces snapshots au lieu de refaire le fan-out TMDB (6 à 10 s par requête). Depuis le 2026-09-23 le job `movie-picker-warm-catalog` réécrit le catalogue de la home toutes les 5 heures, avant l'expiration de 6 h, et un chargement incomplet (TMDB en 429) n'écrase plus un instantané complet. Les `IMemoryCache` restants (recherche TMDB, détails) sont locaux et plafonnés (`TmdbEntryCache`, `CatalogEntryCache`, 10 000 et 500 entrées).
 - ou: `Infrastructure/Tmdb/TmdbMovieSearch.Details.cs` et `TmdbMovieSearch.Search.cs` pour ce qui reste en mémoire seule ; `Application/Caching/SharedCacheReadThrough.cs` pour le modèle à réutiliser
 - verify: `grep -rln IMemoryCache apps/api-dotnet --include=*.cs`
 - fix: passer les caches restants par `SharedCacheReadThrough`, ou un cache hors processus dédié
@@ -45,13 +45,13 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - ou: `apps/api-dotnet/MoviePicker.Api/Controllers/PostersController.cs`
 - verify: `grep -n 'return File(' apps/api-dotnet/MoviePicker.Api/Controllers/PostersController.cs` ; encore ouvert tant que la ligne sort
 - fix: stockage objet plus CDN devant
-- piege: `Cache-Control: public,max-age=86400,immutable` et l'ETag sont posés, le trafic est déjà amorti côté navigateur : le coût restant est la sortie réseau, pas le nombre de requêtes. `poster_cache` est la seule courbe de croissance de la base (31,5 Mo sur 32,3 le 2026-09-15, ~56 Ko par affiche) ; l'index TTL `poster_cache_expiresAtUtc_ttl` (30 jours glissants) borne sa taille au nombre d'affiches vues dans le mois.
+- piege: `Cache-Control: public,max-age=86400,immutable` et l'ETag sont posés, le trafic est déjà amorti côté navigateur : le coût restant est la sortie réseau, pas le nombre de requêtes. `poster_cache` est la seule courbe de croissance de la base (31,5 Mo sur 32,3 le 2026-09-15, ~56 Ko par affiche) ; l'index TTL `poster_cache_expiresAtUtc_ttl` (30 jours glissants) borne sa taille au nombre d'affiches vues dans le mois. Ce n'est plus qu'un cache depuis le 2026-09-23 : l'adresse d'une affiche porte le chemin TMDB validé (`/api/v1/posters/tmdb/<taille>/<fichier>`), et l'ancienne forme `/api/v1/posters/<sha256>`, qui dépendait d'un document de `poster_cache` et disparaissait avec lui, est réécrite par la migration `RewriteLegacyPosterPathsMigration`. Vider la collection ne coûte qu'un nouveau téléchargement depuis TMDB.
 
 ## DEBT-008 le sondage à 3,5 s fixe le plafond de la base
 
 - state: differe
 - declencheur: approcher la moitié du plafond d'opérations du palier Atlas, soit 50 opérations par seconde sur le M0 présumé (DEBT-009) : deux soirées de 6 en sondage actif au même moment y sont
-- impact: environ 15 allers-retours Mongo par cycle et par participant **quand la soirée a bougé depuis le cycle précédent**, soit environ 26 opérations par seconde pour une soirée de 6 en pleine activité, 260 à 10 soirées simultanées. Un cycle sans changement coûte 2 lectures (une par route sondée, `EventViewTagHandler`) et rend 304 : le chiffre est le pire cas, pas la moyenne. Plafond du palier : 100 opérations par seconde sur le M0 présumé (500 sur Flex), au-delà Atlas met les opérations en file.
+- impact: environ 15 allers-retours Mongo par cycle et par participant **quand la soirée a bougé depuis le cycle précédent**, soit environ 26 opérations par seconde pour une soirée de 6 en pleine activité, 260 à 10 soirées simultanées. Un cycle sans changement coûte 2 lectures (une par route sondée, `EventViewTagHandler`) et rend 304 : le chiffre est le pire cas, pas la moyenne. L'ETag change aussi une fois par minute, donc chaque participant refait un cycle complet par minute même sans changement ; depuis le 2026-09-23 cette minute est décalée de 0 à 59 s selon le lecteur, ces cycles s'étalent au lieu de tomber tous dans les mêmes 3,5 s, et le sondage recule sur erreur (`pollIntervalAfterFailures` : délai qui double avec la durée de l'échec, gigue, `Retry-After` respecté, plafond d'une minute, arrêt sur 404). Plafond du palier : 100 opérations par seconde sur le M0 présumé (500 sur Flex), au-delà Atlas met les opérations en file.
 - verify: `grep -n EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS apps/web/src/features/events/hooks/useEventLive.ts` ; encore ouvert tant que la constante existe, c'est-à-dire tant qu'on sonde
 - fix: passer en SSE
 - piege: ce n'est pas un défaut, le sondage reste le bon choix aujourd'hui (zéro infrastructure, Cloud Run n'aime pas les connexions longues) ; c'est le paramètre qui fixe la limite, à ne changer que sur le déclencheur. Le 304 tient à une règle non outillée, écrite dans `AGENTS.md` : toute mutation de la vue soirée fait bouger `writeSeq` (`UpdateAsync`, `LockForWriteAsync` ou `MarkChangedAsync`), sinon les clients en sondage gardent l'ancienne réponse jusqu'à la minute suivante.
@@ -211,7 +211,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - state: differe
 - declencheur: la réécriture Hosting `/e/**` vers Cloud Run de DEBT-042, ou une page de la coquille vue indexée dans Search Console
 - impact: `/page-inexistante` et `/e/<slug-inconnu>` répondent `200` avec la coquille SPA, le `noindex` de `NotFoundPage` n'est posé qu'en JavaScript : un moteur qui n'exécute pas le rendu peut indexer une page vide (mesuré le 2026-09-18, une `/films/collection/…` indexée avec la coquille brute)
-- ou: `infra/firebase-hosting.json` (repli `**` vers `/index.html` en 200)
+- ou: `infra/firebase-hosting.json` (repli vers `/index.html` en 200, sauf sous `/assets/`)
 - verify: `curl -sS -o /dev/null -w '%{http_code}\n' https://www.movie-picker.fr/page-inexistante` ; encore ouvert tant que la commande affiche `200`
 - fix: pour les chemins qui ne correspondent à aucune route de `apps/web/src/app/routes.ts`, renvoyer la coquille avec le statut 404 (`X-Robots-Tag: noindex`), ce qu'un hébergement statique ne sait pas faire seul ; une réécriture Hosting `/e/**` vers Cloud Run (DEBT-042) réglerait au moins les soirées inconnues, le reste demande une fonction devant le site
 - piege: `/u/<handle>` et `/e/<slug>` sont des gabarits valides même quand la ressource n'existe pas, le 404 côté edge ne peut pas les juger : leur `noindex` reste posé par l'application
@@ -359,6 +359,39 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fini-quand: le `verify` ne sort plus rien et le sélecteur d'emoji se ferme toujours au clic ailleurs dans la feuille des paramètres de soirée
 - piege: `ThemeField` vit dans la feuille des paramètres de soirée, un `<dialog>` ouvert : le hook actuel ignore tout clic dans un dialogue ouvert, donc le sélecteur ne se fermerait plus. C'est la raison de l'écouteur maison, pas un oubli.
 
+## DEBT-060 aucun parcours utilisateur n'est vérifié en production
+
+- state: differe
+- declencheur: un parcours cassé en production (connexion, création de soirée, vote) découvert par un utilisateur alors que les sondes restaient vertes, ou l'ouverture du produit au-delà du cercle des premiers utilisateurs
+- impact: les sondes vérifient `/health`, `/health/ready` et la page d'accueil, pas un parcours : une connexion OAuth cassée, une création de soirée en erreur ou un vote refusé ne se voient que dans Sentry, qui ne dit pas qu'un parcours entier est bloqué, ou par le premier utilisateur qui écrit. La suite Playwright `e2e/critical-flow.spec.ts` couvre ce parcours avant chaque déploiement, jamais après.
+- ou: `infra/terraform/modules/monitoring/main.tf` (sondes existantes), `e2e/critical-flow.spec.ts` (le parcours à rejouer)
+- verify: `grep -rlnE "synthetic_monitor|critical-flow" infra/terraform .github/workflows` ; encore ouvert tant que la commande ne rend rien (aucun moniteur synthétique décrit, aucun workflow qui rejoue le parcours)
+- fix: rejouer le parcours critique contre la production à intervalle fixe, soit par un moniteur synthétique Cloud Monitoring (fonction Cloud Run qui pilote un navigateur, décrite en Terraform, alerte sur l'échec), soit par un workflow planifié Playwright avec un compte de test dédié
+- piege: le compte de test écrit de vraies soirées en production : les préfixer, les supprimer en fin de parcours et les exclure des statistiques publiques ; un workflow GitHub planifié part avec plusieurs heures de retard (cron retardé d'environ cinq heures) et n'alerte que par e-mail de la plateforme
+- refs: A19 de l'audit de conception du 2026-09-22
+
+## DEBT-061 la recherche de comptes parcourt la collection `users` à chaque frappe
+
+- state: differe
+- declencheur: plus de 10 000 comptes, ou un p95 de `GET /api/v1/users/search` au-delà de 300 ms dans les journaux de requêtes
+- impact: `SearchPublicAsync` fait deux requêtes par expression régulière insensible à la casse et aux accents sur `handle` et `displayName` (préfixe, puis n'importe où) ; aucune ne peut utiliser d'index, chaque recherche lit toute la collection. Les statistiques de profil, l'autre lecture en parcours complet relevée par l'audit, ont reçu leurs index le 2026-09-23 (`votes_participantId`, `seen_marks_participantId`, `movies_participantId`, `events_winners_movieId`).
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoUserRepository.cs` (`SearchPublicAsync`, `FindPublicMatchesAsync`), `apps/api-dotnet/MoviePicker.Api/Application/UseCases/SearchUsers/UserSearchPolicy.cs`
+- verify: `grep -n 'new BsonRegularExpression' apps/api-dotnet/MoviePicker.Api/Infrastructure/Persistence/Mongo/MongoUserRepository.cs` ; encore ouvert tant que la recherche passe par une expression régulière insensible
+- fix: un champ de recherche normalisé (minuscules, sans accents) écrit avec le compte, indexé, interrogé par préfixe ancré sensible à la casse, que l'index sert ; la recherche « n'importe où » passe par Atlas Search (un index de recherche est permis sur le palier gratuit) ou disparaît
+- piege: le champ s'écrit d'abord dans `AddAsync` et `UpdateAsync`, la migration de remplissage vient ensuite (règle « compatible avec la version d'avant » d'`AGENTS.md`), et la recherche ne le lit qu'une version plus tard
+- refs: A18 de l'audit de conception du 2026-09-22
+
+## DEBT-062 les sauvegardes vivent dans le projet de production
+
+- state: humain
+- bloque: créer un second projet GCP, avec sa facturation, est un geste du propriétaire du compte
+- impact: les archives quotidiennes et mensuelles sont dans un bucket du projet de production : une compromission du projet (propriétaire, identité Terraform) atteint la production et ses sauvegardes d'un même geste. Depuis le 2026-09-23 l'identité de sauvegarde ne supprime plus rien hors `pending/` (liaison conditionnelle), et le versioning plus la suppression douce de 7 jours restent la seule défense contre une suppression par le propriétaire.
+- ou: `infra/terraform/environments/production/main.tf` (bucket de sauvegarde, module `backup`), `.github/workflows/backup-mongo.yml`
+- verify: `grep -c "google_storage_bucket\" \"backups" infra/terraform/environments/production/main.tf` ; encore ouvert tant que la commande rend 1
+- fix: copier chaque archive vérifiée vers un bucket d'un second projet, en écriture seule pour l'identité de sauvegarde, avec une rétention verrouillée (`retention_policy` et `is_locked`) de 30 jours
+- piege: une rétention verrouillée ne se raccourcit plus, pas même par le propriétaire, et empêche la suppression du bucket jusqu'à son terme : la poser d'abord sur un bucket d'essai
+- refs: A17 de l'audit de conception du 2026-09-22, DEBT-050 (projet hors organisation)
+
 ## DEBT-063 `check:iam` ne relit aucune liaison des comptes que Terraform décrit
 
 - state: agent
@@ -388,6 +421,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -c "EmailVerified" apps/api-dotnet/MoviePicker.Api/Domain/Entities/User.cs` ; encore ouvert tant que la commande rend `0`
 - fix: un `EmailVerifiedAt` sur `User` et un courriel de confirmation (même mécanique de jeton que la réinitialisation) ; côté OAuth, un e-mail vérifié par le fournisseur qui tombe sur un compte non confirmé vaut preuve de possession : purger mot de passe, identités, sessions et abonnements push de l'occupant au lieu de refuser ; ne pas attribuer le badge Ko-fi à une adresse non confirmée
 - fini-quand: un compte non confirmé ne peut plus bloquer l'adresse d'un tiers
+
 
 ---
 

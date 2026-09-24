@@ -173,7 +173,7 @@ jobs:
           PENDING="gs://${BACKUP_BUCKET}/pending/${NAME}"
           FINAL="gs://${BACKUP_BUCKET}/mongodb/${STAMP:0:4}/${STAMP:4:2}/${NAME}"
           if ! gcloud storage cp "$ARCHIVE" "$PENDING"; then
-            echo "::error::Write refused on gs://${BACKUP_BUCKET}: grant roles/storage.objectAdmin to the CI service account."
+            echo "::error::Write refused on gs://${BACKUP_BUCKET}/pending/: the backup identity lacks one of the three bucket bindings of module \"backup\" (objectViewer, objectCreator, objectAdmin under pending/ only); apply infra/terraform/environments/production."
             exit 1
           fi
           {
@@ -247,7 +247,9 @@ jobs:
 
       # The first verified archive of each month is copied under `monthly/`, where the bucket
       # keeps it 400 days: the daily archives leave after 30 days, and a corruption noticed later
-      # than that would otherwise have no clean copy left to go back to.
+      # than that would otherwise have no clean copy left to go back to. "First" is the first run
+      # that finds no copy for the month yet, not the run of the 1st: a failed or skipped run on
+      # the 1st no longer leaves the month without a copy.
       - name: Publish the verified archive
         env:
           PENDING: ${{ steps.upload.outputs.pending }}
@@ -259,7 +261,10 @@ jobs:
           gcloud storage mv "$PENDING" "$FINAL"
           gcloud storage ls -l "$FINAL"
           echo "Backup of the day: $FINAL"
-          if [ "${STAMP:6:2}" = "01" ]; then
+          MONTH_PREFIX="gs://${BACKUP_BUCKET}/monthly/moviepicker-${STAMP:0:6}"
+          if gcloud storage ls "${MONTH_PREFIX}*" >/dev/null 2>&1; then
+            echo "Monthly copy of ${STAMP:0:4}-${STAMP:4:2} already taken."
+          else
             MONTHLY="gs://${BACKUP_BUCKET}/monthly/${FINAL##*/}"
             gcloud storage cp "$FINAL" "$MONTHLY"
             echo "Monthly copy: $MONTHLY"

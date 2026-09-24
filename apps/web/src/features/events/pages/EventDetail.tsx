@@ -13,6 +13,7 @@ import { isWellFormedEventSlug } from '@/features/events/utils/eventSlug';
 import EventDetailSession from '@/features/events/pages/event-detail/EventDetailSession';
 import { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { ApiError } from '@/shared/api/apiError';
 
 function getDocumentTitle(
   slug: string | undefined,
@@ -65,7 +66,11 @@ export default function EventDetail() {
 
   const isNetworkPaused = eventQuery.isPending && eventQuery.fetchStatus === 'paused';
   const isLoadingEvent = !isMalformedSlug && eventQuery.isPending && !isNetworkPaused;
-  const isEventUnavailable = isMalformedSlug || eventQuery.isError || isNetworkPaused;
+  const isEventGone = ApiError.is(eventQuery.error) && eventQuery.error.code === 404;
+  const isEventUnavailable =
+    isMalformedSlug || (eventQuery.isError && (!event || isEventGone)) || isNetworkPaused;
+  const isShowingStaleData =
+    eventQuery.isError || (moviesQuery.isError && moviesQuery.data !== undefined);
 
   const documentTitle = getDocumentTitle(
     slugParam,
@@ -124,6 +129,7 @@ export default function EventDetail() {
       actionError={actionError}
       setActionError={setActionError}
       refreshAll={refreshAll}
+      connectionUnstable={isShowingStaleData}
     />
   );
 }

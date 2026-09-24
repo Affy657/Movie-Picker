@@ -97,7 +97,7 @@ export type EventMoviesSectionProps = {
   movies: MovieData[];
   moviesQuery: Pick<
     UseQueryResult<MovieData[]>,
-    'isPending' | 'isError' | 'isSuccess' | 'error' | 'refetch'
+    'data' | 'isPending' | 'isError' | 'isSuccess' | 'error' | 'refetch'
   >;
   actionError: string | null;
   onDismissActionError: () => void;
@@ -295,8 +295,8 @@ export default function EventMoviesSection({
     { key: 'releaseDate' as const, label: t('movies.list.sortReleaseDate') },
   ];
 
-  const showSortControl =
-    moviesQuery.isSuccess && (layout === 'grid' || isMobile) && movies.length > 1;
+  const moviesLoaded = moviesQuery.data !== undefined;
+  const showSortControl = moviesLoaded && (layout === 'grid' || isMobile) && movies.length > 1;
   const canAddFromEmptyState = !!participant && !addMovieOpen;
   const emptyState = isFinished ? null : (
     <EmptyState
@@ -395,7 +395,7 @@ export default function EventMoviesSection({
         </div>
       )}
 
-      {moviesQuery.isSuccess && voteQuota ? (
+      {moviesLoaded && voteQuota ? (
         <output className={styles.voteQuota}>
           <Chip tone={voteQuotaLockedHint ? 'primary' : 'default'} data-testid="vote-quota">
             {t('movies.list.voteQuota', { used: voteQuota.used, max: voteQuota.max })}
@@ -403,7 +403,7 @@ export default function EventMoviesSection({
         </output>
       ) : null}
 
-      {moviesQuery.isSuccess && (
+      {moviesLoaded && (
         <EventMovieLists
           layout={layout}
           inWheelMovies={inWheelMovies}

@@ -24,29 +24,31 @@ public sealed class BackfillWatchlistFactsMigration : IDataMigration
 
     public string Id => "2026-09-20-001-backfill-watchlist-facts";
 
-    public Task<long> ExecuteAsync(CancellationToken ct = default) =>
-        BackfillSteps.RunBatchesAsync<WatchlistItem>(
+    public async Task<long> ExecuteAsync(CancellationToken ct = default)
+    {
+        var outcome = await BackfillSteps.RunBatchesAsync<WatchlistItem>(
             _watchlist.ListMissingFactsAsync,
             item => item.Id,
-            TryBackfillFactsAsync,
-            BatchSize,
-            ct);
-
-    private Task<bool> TryBackfillFactsAsync(WatchlistItem item, CancellationToken ct) =>
-        BackfillSteps.TryApplyAsync(
-            async () =>
-            {
-                var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, ct);
-                if (details is null)
-                    return false;
-
-                var runtime = Math.Max(0, details.Runtime ?? 0);
-                await _watchlist.UpdateFactsAsync(item.Id, runtime, details.VoteAverage, ct);
-                return runtime > 0 || (item.VoteAverage is null && details.VoteAverage is not null);
-            },
-            ex => _logger.LogWarning(
+            BackfillFactsAsync,
+            (item, ex) => _logger.LogWarning(
                 ex,
                 "Facts not fetched for watchlist item {ItemId} (TMDB {TmdbId})",
                 item.Id,
-                item.TmdbId));
+                item.TmdbId),
+            BatchSize,
+            ct);
+
+        return outcome.Completed(Id);
+    }
+
+    private async Task<bool> BackfillFactsAsync(WatchlistItem item, CancellationToken ct)
+    {
+        var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, ct);
+        if (details is null)
+            return false;
+
+        var runtime = Math.Max(0, details.Runtime ?? 0);
+        await _watchlist.UpdateFactsAsync(item.Id, runtime, details.VoteAverage, ct);
+        return runtime > 0 || (item.VoteAverage is null && details.VoteAverage is not null);
+    }
 }

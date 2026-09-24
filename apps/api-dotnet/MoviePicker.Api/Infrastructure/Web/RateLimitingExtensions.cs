@@ -43,46 +43,50 @@ public static class RateLimitingExtensions
     public const string NotificationMutationPolicy = "notification-mutation";
     public const string AuthLogoutPolicy = "auth-logout";
     public const string HealthReadyPolicy = "health-ready";
+    public const string EventViewPollPolicy = "event-view-poll";
 
     public const int GlobalPermitLimitPerMinute = 900;
 
+    public const int AddressCeilingPerMinute = 1_800;
+
     private static readonly PolicySpec[] Policies =
     [
-        new(CreateEventPolicy, 20, 1, false),
-        new(JoinEventPolicy, 60, 1, false),
-        new(SearchMoviesPolicy, 40, 1, false),
-        new(MovieDetailsPolicy, 120, 1, false),
-        new(MovieShowcasePolicy, 240, 1, false),
-        new(AuthRegisterPolicy, 10, 1, false),
-        new(AuthLoginPolicy, 30, 1, false),
-        new(AuthPasswordResetRequestPolicy, 5, 1, false),
-        new(AuthPasswordResetConfirmPolicy, 30, 1, false),
-        new(AuthChangePasswordPolicy, 10, 1, false),
-        new(AuthPatchProfilePolicy, 60, 1, false),
-        new(AuthExportDataPolicy, 5, 1, false),
-        new(AuthDeleteAccountPolicy, 5, 1, false),
-        new(PatchEventConfigPolicy, 40, 1, false),
-        new(VoteMutationPolicy, 120, 1, false),
-        new(SeenMarksMutationPolicy, 120, 1, false),
-        new(NoteMutationPolicy, 60, 1, false),
-        new(RemoveParticipantPolicy, 40, 1, false),
-        new(DeleteEventPolicy, 10, 1, false),
-        new(PostersPolicy, 300, 1, false),
-        new(PublicProfilePolicy, 120, 1, false),
-        new(SearchUsersPolicy, 40, 1, false),
-        new(FollowMutationPolicy, 60, 1, false),
-        new(InviteUserPolicy, 60, 1, false),
-        new(WatchlistReadPolicy, 120, 1, false),
-        new(WatchlistMutationPolicy, 60, 1, false),
-        new(LetterboxdImportPolicy, 10, 1, false),
-        new(KofiWebhookPolicy, 20, 1, false),
-        new(IdeaSuggestionPolicy, 10, 60, true),
-        new(SchedulerPolicy, 10, 1, false),
-        new(HostActionPolicy, 60, 1, false),
-        new(MovieMutationPolicy, 60, 1, false),
-        new(NotificationMutationPolicy, 60, 1, false),
-        new(AuthLogoutPolicy, 30, 1, false),
-        new(HealthReadyPolicy, 30, 1, false)
+        new(CreateEventPolicy, 20, 1),
+        new(JoinEventPolicy, 60, 1),
+        new(SearchMoviesPolicy, 40, 1),
+        new(MovieDetailsPolicy, 120, 1),
+        new(MovieShowcasePolicy, 240, 1),
+        new(AuthRegisterPolicy, 10, 1, QuotaScope.Address),
+        new(AuthLoginPolicy, 30, 1, QuotaScope.Address),
+        new(AuthPasswordResetRequestPolicy, 5, 1, QuotaScope.Address),
+        new(AuthPasswordResetConfirmPolicy, 30, 1, QuotaScope.Address),
+        new(AuthChangePasswordPolicy, 10, 1),
+        new(AuthPatchProfilePolicy, 60, 1),
+        new(AuthExportDataPolicy, 5, 1),
+        new(AuthDeleteAccountPolicy, 5, 1),
+        new(PatchEventConfigPolicy, 40, 1),
+        new(VoteMutationPolicy, 120, 1),
+        new(SeenMarksMutationPolicy, 120, 1),
+        new(NoteMutationPolicy, 60, 1),
+        new(RemoveParticipantPolicy, 40, 1),
+        new(DeleteEventPolicy, 10, 1),
+        new(PostersPolicy, 300, 1),
+        new(PublicProfilePolicy, 120, 1),
+        new(SearchUsersPolicy, 40, 1),
+        new(FollowMutationPolicy, 60, 1),
+        new(InviteUserPolicy, 60, 1),
+        new(WatchlistReadPolicy, 120, 1),
+        new(WatchlistMutationPolicy, 60, 1),
+        new(LetterboxdImportPolicy, 10, 1),
+        new(KofiWebhookPolicy, 20, 1, QuotaScope.Address),
+        new(IdeaSuggestionPolicy, 10, 60, QuotaScope.Address),
+        new(SchedulerPolicy, 10, 1, QuotaScope.Address),
+        new(HostActionPolicy, 60, 1),
+        new(MovieMutationPolicy, 60, 1),
+        new(NotificationMutationPolicy, 60, 1),
+        new(AuthLogoutPolicy, 30, 1),
+        new(HealthReadyPolicy, 30, 1, QuotaScope.Address),
+        new(EventViewPollPolicy, 600, 1)
     ];
 
     public static IServiceCollection AddMoviePickerRateLimiter(
@@ -95,7 +99,7 @@ public static class RateLimitingExtensions
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.OnRejected = WriteRejectedAsync;
             if (!isDevelopment)
-                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(CreateGlobalPartition);
+                options.GlobalLimiter = CreateGlobalLimiter();
             foreach (var spec in Policies)
             {
                 var captured = spec;
@@ -139,17 +143,29 @@ public static class RateLimitingExtensions
         return null;
     }
 
+    internal static string PartitionKeyFor(HttpContext httpContext) => UserOrIpPartitionKey.Get(httpContext);
+
     internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec) =>
-        spec.ByUser ? UserOrIpPartitionKey.Get(httpContext) : ClientIpPartitionKey.Get(httpContext);
+        spec.Scope == QuotaScope.Address ? AddressPartitionKey(httpContext) : PartitionKeyFor(httpContext);
+
+    private static string AddressPartitionKey(HttpContext httpContext) => $"ip:{ClientIpPartitionKey.Get(httpContext)}";
+
+    internal static PartitionedRateLimiter<HttpContext> CreateGlobalLimiter() =>
+        PartitionedRateLimiter.CreateChained(
+            PartitionedRateLimiter.Create<HttpContext, string>(
+                httpContext => BuildFixedWindow(AddressPartitionKey(httpContext), AddressCeilingPerMinute, 1)),
+            PartitionedRateLimiter.Create<HttpContext, string>(CreateGlobalPartition));
 
     internal static RateLimitPartition<string> CreateGlobalPartition(HttpContext httpContext) =>
-        BuildFixedWindow(ClientIpPartitionKey.Get(httpContext), GlobalPermitLimitPerMinute, 1);
+        IsPolledEventView(httpContext)
+            ? RateLimitPartition.GetNoLimiter(EventViewPollPolicy)
+            : BuildFixedWindow(PartitionKeyFor(httpContext), GlobalPermitLimitPerMinute, 1);
 
-    internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec)
-    {
-        var key = spec.ByUser ? UserOrIpPartitionKey.Get(httpContext) : ClientIpPartitionKey.Get(httpContext);
-        return BuildFixedWindow(key, spec.PermitLimit, spec.WindowMinutes);
-    }
+    private static bool IsPolledEventView(HttpContext httpContext) =>
+        httpContext.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName == EventViewPollPolicy;
+
+    internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec) =>
+        BuildFixedWindow(PartitionKeyFor(httpContext, spec), spec.PermitLimit, spec.WindowMinutes);
 
     internal static RateLimitPartition<string> BuildFixedWindow(string key, int permitLimit, int windowMinutes) =>
         RateLimitPartition.GetFixedWindowLimiter(
@@ -163,7 +179,13 @@ public static class RateLimitingExtensions
                 AutoReplenishment = true
             });
 
-    internal readonly record struct PolicySpec(string Name, int PermitLimit, int WindowMinutes, bool ByUser);
+    internal enum QuotaScope
+    {
+        Account,
+        Address
+    }
+
+    internal readonly record struct PolicySpec(string Name, int PermitLimit, int WindowMinutes, QuotaScope Scope = QuotaScope.Account);
 }
 
 internal static class ClientIpPartitionKey

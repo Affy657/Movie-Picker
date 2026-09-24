@@ -124,7 +124,7 @@ public sealed class BackfillMovieGenresMigrationTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_TmdbFailsOnOneItem_KeepsGoingWithTheNextOnes()
+    public async Task ExecuteAsync_TmdbFailsOnOneItem_UpdatesTheOthersThenReportsTheMigrationIncomplete()
     {
         GivenMoviesMissingGenres(
             MovieWithoutGenres("m1", 11),
@@ -135,9 +135,9 @@ public sealed class BackfillMovieGenresMigrationTests
             .ThrowsAsync(new HttpRequestException("TMDB indisponible"));
         GivenTmdbDetails(33, Details(18));
 
-        var updated = await _sut.ExecuteAsync();
+        var ex = await Assert.ThrowsAsync<BackfillIncompleteException>(() => _sut.ExecuteAsync());
 
-        Assert.Equal(2, updated);
+        Assert.Equal(1, ex.Failed);
         _movies.Verify(
             r => r.UpdateGenresAsync("m3", It.IsAny<IReadOnlyList<int>>(), It.IsAny<CancellationToken>()),
             Times.Once);

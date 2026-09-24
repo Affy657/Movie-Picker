@@ -5,7 +5,7 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.FinishedEvents;
 
-public sealed record FinishedEventWatchlistPassResult(int Candidates, int Cleaned);
+public sealed record FinishedEventWatchlistPassResult(int Candidates, int Cleaned, int Failed = 0);
 
 public interface IFinishedEventWatchlistPass
 {
@@ -46,8 +46,22 @@ public sealed class FinishedEventWatchlistPass : IFinishedEventWatchlistPass
     public async Task<FinishedEventWatchlistPassResult> RunAsync(CancellationToken ct = default)
     {
         var candidates = await _events.ListAwaitingWatchlistCleanupAsync(_clock.GetUtcNow(), SweepBatchSize, ct);
-        var cleaned = await RunForEventsAsync(candidates, ct);
-        return new FinishedEventWatchlistPassResult(candidates.Count, cleaned);
+        var cleaned = 0;
+        var failed = 0;
+        foreach (var evt in candidates)
+        {
+            switch (await CleanAsync(evt, ct))
+            {
+                case CleanupOutcome.Cleaned:
+                    cleaned++;
+                    break;
+                case CleanupOutcome.Failed:
+                    failed++;
+                    break;
+            }
+        }
+
+        return new FinishedEventWatchlistPassResult(candidates.Count, cleaned, failed);
     }
 
     public async Task<int> RunForEventsAsync(IReadOnlyList<Event> events, CancellationToken ct = default)
@@ -62,25 +76,35 @@ public sealed class FinishedEventWatchlistPass : IFinishedEventWatchlistPass
         return cleaned;
     }
 
-    public async Task<bool> RunForEventAsync(Event evt, CancellationToken ct = default)
+    public async Task<bool> RunForEventAsync(Event evt, CancellationToken ct = default) =>
+        await CleanAsync(evt, ct) == CleanupOutcome.Cleaned;
+
+    private enum CleanupOutcome
+    {
+        Cleaned,
+        Skipped,
+        Failed
+    }
+
+    private async Task<CleanupOutcome> CleanAsync(Event evt, CancellationToken ct)
     {
         var now = _clock.GetUtcNow();
         if (!IsAwaitingCleanup(evt, now))
-            return false;
+            return CleanupOutcome.Skipped;
 
         try
         {
             await RemoveWinnersFromParticipantsWatchlistsAsync(evt, ct);
             await _events.MarkWatchlistCleanedAsync(evt.Id, now, ct);
-            return true;
+            return CleanupOutcome.Cleaned;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogWarning(
+            _logger.LogError(
                 ex,
                 "Failed to remove the winning movies from watchlists for movie night {EventId}",
                 evt.Id);
-            return false;
+            return CleanupOutcome.Failed;
         }
     }
 

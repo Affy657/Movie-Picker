@@ -137,12 +137,10 @@ public sealed class AddMovieHandler : IAddMovieHandler
     private async Task<string?> ResolvePosterAsync(AddMovieRequest request, CancellationToken ct)
     {
         var poster = string.IsNullOrWhiteSpace(request.PosterPath) ? null : request.PosterPath.Trim();
-        if (poster is not null && !IsAcceptablePosterPath(poster))
+        if (poster is not null && !TmdbPosterUrlNormalizer.IsAcceptedPosterReference(poster))
             throw Errors.InvalidPosterPath();
 
-        if (poster is not null && TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(poster, out var norm))
-            await _posterImageStore.RegisterTmdbSourceAsync(norm, ct);
-        return _posterImageStore.ToPublicPosterPath(poster);
+        return await _posterImageStore.ToStoredPosterPathAsync(poster, ct);
     }
 
     private async Task<Movie> InsertWithinProposalLimitAsync(
@@ -250,8 +248,4 @@ public sealed class AddMovieHandler : IAddMovieHandler
             _logger.LogWarning(ex, "Movie proposed notification failed for movie night {EventId}", evt.Id);
         }
     }
-
-    private static bool IsAcceptablePosterPath(string p) =>
-        TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(p, out _)
-        || TmdbPosterUrlNormalizer.TryParsePosterKey(p, out _);
 }

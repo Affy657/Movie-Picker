@@ -134,6 +134,9 @@ public static class Errors
     public static ConflictException WheelLockedDelete() =>
         new("The wheel has already been spun, removal is impossible", ErrorCodes.WheelLockedDelete);
 
+    public static TooManyRequestsException TooManySignInAttempts() =>
+        new("Too many failed sign-in attempts for this account, retry in a few minutes", ErrorCodes.RateLimited);
+
     public static ConflictException ConcurrentUpdate() =>
         new("Modified in the meantime, reload the page and retry", ErrorCodes.ConcurrentUpdate);
 
@@ -253,6 +256,9 @@ public static class Errors
 
     public static BadRequestException LetterboxdSyncFailed(string? reason) =>
         new("Letterboxd synchronization failed", reason ?? ErrorCodes.LetterboxdSyncFailed);
+
+    public static ServiceUnavailableException LetterboxdSyncUnavailable() =>
+        new("Letterboxd or TMDB did not answer, the synchronization will resume on its own", ErrorCodes.LetterboxdSyncUnavailable);
 
     public static BadRequestException InvalidDateFormat() =>
         new("date must use the YYYY-MM-DD format", ErrorCodes.InvalidDateFormat);

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
@@ -138,6 +139,31 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
 
         var me = await client.GetAsync("/api/v1/auth/me");
         Assert.Equal(HttpStatusCode.Unauthorized, me.StatusCode);
+    }
+
+    [Fact]
+    public async Task Logout_WithTheDeviceEndpoint_StopsPushingToThatDevice()
+    {
+        var client = _factory.CreateClient();
+        var email = $"push{Guid.NewGuid():N}@test.local";
+        var reg = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "P" });
+        ApplySessionCookie(client, reg);
+        var me = await (await client.GetAsync("/api/v1/auth/me")).Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+        var userId = me.GetProperty("userId").GetString()!;
+        var endpoint = "https://fcm.googleapis.com/fcm/send/" + Guid.NewGuid().ToString("N");
+        var subscribe = await client.PostAsJsonAsync(
+            "/api/v1/notifications/subscriptions",
+            new { endpoint, p256dh = "key", auth = "auth" });
+        Assert.True(subscribe.IsSuccessStatusCode, $"subscribe answered {(int)subscribe.StatusCode}");
+
+        var logout = await client.PostAsJsonAsync("/api/v1/auth/logout", new { pushEndpoint = endpoint });
+
+        Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
+        using var scope = _factory.Services.CreateScope();
+        var subscriptions = scope.ServiceProvider.GetRequiredService<MoviePicker.Api.Application.Ports.IPushSubscriptionRepository>();
+        Assert.Empty(await subscriptions.ListByUserIdAsync(userId));
     }
 
     [Fact]

@@ -16,4 +16,7 @@ public sealed class CreateEventRequest
     [Required]
     [RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Expected time format: HH:mm")]
     public string Time { get; init; } = string.Empty;
+
+    [MaxLength(64)]
+    public string? ClientRequestId { get; init; }
 }

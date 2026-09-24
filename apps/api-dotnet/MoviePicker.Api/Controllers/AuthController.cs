@@ -6,7 +6,9 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
@@ -105,9 +107,13 @@ public sealed class AuthController : ControllerBase
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> Logout(
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] LogoutRequest? request,
+        [FromServices] ILogoutHandler handler)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await handler.HandleAsync(userId, request?.PushEndpoint, CancellationToken.None);
         return NoContent();
     }
 
@@ -332,6 +338,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpGet("me/export")]
+    [RequestTimeout(RequestTimeoutPolicies.LongRunning)]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.AuthExportDataPolicy)]
     [SharedRateLimit(RateLimitingExtensions.AuthExportDataPolicy)]

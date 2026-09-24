@@ -244,4 +244,47 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.NotNull(await users.GetByIdAsync(fixture.UserId));
         Assert.NotEmpty(await watchlist.ListByUserIdAsync(fixture.UserId));
     }
+
+    [MongoFact]
+    public async Task SecondDeletedAccountSharingTheEvent_IsAnonymizedWithoutReplayingTheTransaction()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var services = scope.ServiceProvider;
+        var fixture = await SeedAsync(services);
+        var users = services.GetRequiredService<IUserRepository>();
+        var participants = services.GetRequiredService<IParticipantRepository>();
+        var hasher = services.GetRequiredService<IPasswordHasher>();
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var now = DateTimeOffset.UtcNow;
+        var coParticipant = await users.AddAsync(new User
+        {
+            Id = string.Empty,
+            Email = $"voisin-{suffix}@example.test",
+            PasswordHash = hasher.Hash("MotDePasse1!"),
+            DisplayName = "Voisin",
+            Handle = "voisin" + suffix,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        await participants.AddAsync(new Participant
+        {
+            Id = string.Empty,
+            EventId = fixture.EventId,
+            Pseudo = "Voisin",
+            UserId = coParticipant.Id,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        var handler = services.GetRequiredService<IDeleteAccountHandler>();
+        await handler.HandleAsync(fixture.UserId, new DeleteAccountRequest { Password = "MotDePasse1!" });
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        await handler.HandleAsync(coParticipant.Id, new DeleteAccountRequest { Password = "MotDePasse1!" });
+        watch.Stop();
+
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10), $"second deletion took {watch.Elapsed}");
+        var pseudos = (await participants.ListByEventIdAsync(fixture.EventId)).Select(p => p.Pseudo).ToList();
+        Assert.Equal(2, pseudos.Distinct().Count());
+        Assert.All(pseudos, p => Assert.StartsWith(DeleteAccountHandler.AnonymizedParticipantPseudo, p));
+    }
 }

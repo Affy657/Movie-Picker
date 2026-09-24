@@ -106,6 +106,20 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
         return res.IsAcknowledged ? res.DeletedCount : 0;
     }
 
+    public async Task<long> AnonymizeActorAsync(string actorHandle, string anonymizedName, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(actorHandle))
+            return 0;
+        var res = await _collection.UpdateManyAsync(
+            x => x.ActorHandle == actorHandle,
+            Builders<UserNotificationDocument>.Update
+                .Set(x => x.ActorHandle, null)
+                .Set(x => x.ActorDisplayName, anonymizedName)
+                .Set(x => x.ActorAvatarId, null),
+            cancellationToken: ct);
+        return res.IsAcknowledged ? res.ModifiedCount : 0;
+    }
+
     public async Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(eventId))

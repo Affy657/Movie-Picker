@@ -87,6 +87,8 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
                 anonymizedParticipations = await _participants.AnonymizeByUserIdAsync(
                     userId, AnonymizedParticipantPseudo, token);
                 await _notifications.DeleteByUserIdAsync(userId, token);
+                if (!string.IsNullOrWhiteSpace(user.Handle))
+                    await _notifications.AnonymizeActorAsync(user.Handle, AnonymizedParticipantPseudo, token);
                 await _pushSubscriptions.DeleteByUserIdAsync(userId, token);
                 await _follows.DeleteAllForUserAsync(userId, token);
                 await _watchlist.DeleteAllForUserAsync(userId, token);

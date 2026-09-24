@@ -259,4 +259,18 @@ public sealed class FinishedEventWatchlistPassTests
             r => r.MarkWatchlistCleanedAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task RunAsync_CleanupFails_IsReportedSoTheSchedulerRetries()
+    {
+        GivenWinnerAndParticipants(new Participant { Id = "p1", EventId = "evt1", Pseudo = "Alice", UserId = "u1" });
+        _watchlistRepo.Setup(r => r.RemoveForUsersAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("database unreachable"));
+        _eventRepo.Setup(r => r.ListAwaitingWatchlistCleanupAsync(It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([FinishedWithWinner()]);
+
+        var result = await _sut.RunAsync();
+
+        Assert.Equal(new FinishedEventWatchlistPassResult(1, 0, 1), result);
+    }
 }

@@ -1,4 +1,5 @@
 using System.Net;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using MoviePicker.Api.Controllers;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
@@ -78,20 +80,20 @@ public sealed class RateLimitingExtensionsTests
     }
 
     [Fact]
-    public void CreatePartition_ByIp_UsesClientAddress()
+    public void CreatePartition_Anonymous_UsesClientAddress()
     {
         var http = new DefaultHttpContext();
         http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
-        var spec = new RateLimitingExtensions.PolicySpec("search-movies", 40, 1, false);
+        var spec = new RateLimitingExtensions.PolicySpec("search-movies", 40, 1);
 
         var partition = RateLimitingExtensions.CreatePartition(http, spec);
 
-        Assert.Equal("192.0.2.8", partition.PartitionKey);
+        Assert.Equal("ip:192.0.2.8", partition.PartitionKey);
         Assert.NotNull(partition.Factory(partition.PartitionKey));
     }
 
     [Fact]
-    public void CreatePartition_ByUser_UsesUserId()
+    public void CreatePartition_SignedIn_UsesTheAccountWhateverTheAddress()
     {
         var http = new DefaultHttpContext
         {
@@ -100,16 +102,108 @@ public sealed class RateLimitingExtensionsTests
                     [new Claim(ClaimTypes.NameIdentifier, "alice")],
                     "test"))
         };
-        var spec = new RateLimitingExtensions.PolicySpec(
-            RateLimitingExtensions.IdeaSuggestionPolicy,
-            10,
-            60,
-            true);
+        http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
+        var spec = new RateLimitingExtensions.PolicySpec(RateLimitingExtensions.VoteMutationPolicy, 120, 1);
 
         var partition = RateLimitingExtensions.CreatePartition(http, spec);
 
         Assert.Equal("user:alice", partition.PartitionKey);
     }
+
+    [Theory]
+    [InlineData(RateLimitingExtensions.AuthLoginPolicy)]
+    [InlineData(RateLimitingExtensions.AuthRegisterPolicy)]
+    [InlineData(RateLimitingExtensions.AuthPasswordResetRequestPolicy)]
+    [InlineData(RateLimitingExtensions.AuthPasswordResetConfirmPolicy)]
+    public void CreatePartition_AnonymousFacingPolicy_KeysByAddressEvenWithASession(string policy)
+    {
+        var http = SignedIn("alice", "192.0.2.8");
+
+        var partition = RateLimitingExtensions.CreatePartition(http, RateLimitingExtensions.FindPolicy(policy)!.Value);
+
+        Assert.Equal("ip:192.0.2.8", partition.PartitionKey);
+    }
+
+    [Fact]
+    public void GlobalLimiter_ManyAccountsFromOneAddress_ShareTheAddressCeiling()
+    {
+        using var limiter = RateLimitingExtensions.CreateGlobalLimiter();
+        var accepted = Enumerable.Range(0, RateLimitingExtensions.AddressCeilingPerMinute + 1)
+            .Count(i =>
+            {
+                using var lease = limiter.AttemptAcquire(SignedIn($"account-{i}", "203.0.113.9"));
+                return lease.IsAcquired;
+            });
+
+        Assert.Equal(RateLimitingExtensions.AddressCeilingPerMinute, accepted);
+    }
+
+    private static DefaultHttpContext SignedIn(string userId, string address)
+    {
+        var http = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId)], "test"))
+        };
+        http.Connection.RemoteIpAddress = IPAddress.Parse(address);
+        return http;
+    }
+
+    [Fact]
+    public void CreateGlobalPartition_SignedInGuestsOnOneNetwork_GetOnePartitionEach()
+    {
+        static DefaultHttpContext Guest(string userId)
+        {
+            var http = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId)], "test"))
+            };
+            http.Connection.RemoteIpAddress = IPAddress.Parse("203.0.113.7");
+            return http;
+        }
+
+        var first = RateLimitingExtensions.CreateGlobalPartition(Guest("u1"));
+        var second = RateLimitingExtensions.CreateGlobalPartition(Guest("u2"));
+
+        Assert.NotEqual(first.PartitionKey, second.PartitionKey);
+    }
+
+    [Fact]
+    public void CreateGlobalPartition_PolledEventView_IsLeftToItsOwnPolicy()
+    {
+        var polled = WithEndpoint(new EnableRateLimitingAttribute(RateLimitingExtensions.EventViewPollPolicy));
+        var action = WithEndpoint(new EnableRateLimitingAttribute(RateLimitingExtensions.VoteMutationPolicy));
+
+        using var pollLimiter = Limiter(RateLimitingExtensions.CreateGlobalPartition(polled));
+        using var actionLimiter = Limiter(RateLimitingExtensions.CreateGlobalPartition(action));
+
+        Assert.All(
+            Enumerable.Range(0, RateLimitingExtensions.GlobalPermitLimitPerMinute + 1),
+            _ => Assert.True(pollLimiter.AttemptAcquire().IsAcquired));
+        Assert.Equal(
+            RateLimitingExtensions.GlobalPermitLimitPerMinute,
+            Enumerable.Range(0, RateLimitingExtensions.GlobalPermitLimitPerMinute + 1).Count(_ => actionLimiter.AttemptAcquire().IsAcquired));
+        Assert.NotNull(RateLimitingExtensions.FindPolicy(RateLimitingExtensions.EventViewPollPolicy));
+    }
+
+    [Theory]
+    [InlineData(typeof(EventsController), nameof(EventsController.GetBySlug))]
+    [InlineData(typeof(EventMoviesController), nameof(EventMoviesController.List))]
+    public void PolledEventViewRoutes_CountAgainstThePollPolicy(Type controller, string action)
+    {
+        var attribute = controller.GetMethod(action)!.GetCustomAttribute<EnableRateLimitingAttribute>();
+
+        Assert.Equal(RateLimitingExtensions.EventViewPollPolicy, attribute?.PolicyName);
+    }
+
+    private static DefaultHttpContext WithEndpoint(params object[] metadata)
+    {
+        var http = new DefaultHttpContext();
+        http.SetEndpoint(new Endpoint(_ => Task.CompletedTask, new EndpointMetadataCollection(metadata), "test"));
+        http.Connection.RemoteIpAddress = IPAddress.Parse("203.0.113.7");
+        return http;
+    }
+
+    private static RateLimiter Limiter(RateLimitPartition<string> partition) => partition.Factory(partition.PartitionKey);
 
     [Fact]
     public async Task WriteRejectedAsync_SetsStatusAndRetryAfter()

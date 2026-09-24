@@ -55,15 +55,38 @@ public sealed class EventViewTagHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_SameEventSameViewerSameMinute_IsStable()
+    public async Task HandleAsync_SameViewer_ChangesOnceAcrossAFreshnessWindow()
     {
         Stored(EventWith(writeSeq: 7));
         _currentUser.Setup(u => u.GetUserId()).Returns("user-a");
 
-        var first = await Handler(Noon).HandleAsync("soiree");
-        var second = await Handler(Noon.AddSeconds(30)).HandleAsync("soiree");
+        var tags = await TagsOverOneWindowAsync();
 
-        Assert.Equal(first, second);
+        Assert.Equal(2, tags.Distinct().Count());
+    }
+
+    [Fact]
+    public async Task HandleAsync_ViewersDoNotAllRollOverAtTheSameSecond()
+    {
+        Stored(EventWith(writeSeq: 7));
+        var rolloverSeconds = new HashSet<int>();
+
+        foreach (var user in Enumerable.Range(0, 10).Select(i => $"user-{i}"))
+        {
+            _currentUser.Setup(u => u.GetUserId()).Returns(user);
+            var tags = await TagsOverOneWindowAsync();
+            rolloverSeconds.Add(Enumerable.Range(1, tags.Count - 1).First(second => tags[second] != tags[second - 1]));
+        }
+
+        Assert.True(rolloverSeconds.Count > 1);
+    }
+
+    private async Task<List<string?>> TagsOverOneWindowAsync()
+    {
+        var tags = new List<string?>();
+        for (var second = 0; second <= EventViewTagHandler.FreshnessWindow.TotalSeconds; second++)
+            tags.Add(await Handler(Noon.AddSeconds(second)).HandleAsync("soiree"));
+        return tags;
     }
 
     [Fact]

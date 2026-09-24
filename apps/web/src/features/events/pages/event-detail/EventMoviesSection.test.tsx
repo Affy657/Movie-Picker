@@ -92,6 +92,7 @@ function renderSection(
           movies={props.movies ?? [MOVIE]}
           moviesQuery={
             props.moviesQuery ?? {
+              data: props.movies ?? [MOVIE],
               isPending: false,
               isError: false,
               isSuccess: true,
@@ -354,6 +355,7 @@ describe('EventMoviesSection (MSW)', () => {
     server.use(authedUserHandler, watchlistHandler([]));
     renderSection({
       moviesQuery: {
+        data: undefined,
         isPending: true,
         isError: false,
         isSuccess: false,

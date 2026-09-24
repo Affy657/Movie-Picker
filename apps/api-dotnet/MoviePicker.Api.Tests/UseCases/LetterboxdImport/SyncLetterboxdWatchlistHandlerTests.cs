@@ -31,6 +31,9 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
     private readonly Mock<ILetterboxdWatchlistClient> _letterboxd = new();
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
     private readonly Mock<IAddToWatchlistHandler> _addToWatchlist = new();
+    private readonly Mock<IParticipantRepository> _participants = new();
+    private readonly Mock<IEventRepository> _events = new();
+    private readonly Mock<IMovieRepository> _movies = new();
     private readonly SyncLetterboxdWatchlistHandler _sut;
 
     public SyncLetterboxdWatchlistHandlerTests()
@@ -42,12 +45,18 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         _letterboxd
             .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LetterboxdWatchlistSnapshot([], true));
+        _participants
+            .Setup(p => p.ListDistinctEventIdsByUserIdAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<string>)[]);
 
         var synchronizer = new LetterboxdWatchlistSynchronizer(
             _watchlist.Object,
             _letterboxd.Object,
             _tmdb.Object,
             _addToWatchlist.Object,
+            _participants.Object,
+            _events.Object,
+            _movies.Object,
             NullLogger<LetterboxdWatchlistSynchronizer>.Instance);
         _sut = new SyncLetterboxdWatchlistHandler(
             _users.Object, _notifications.Object, synchronizer, new FixedClock(Now));
@@ -78,7 +87,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
             ]);
     }
 
-    private void GivenUser(string? username, DateTimeOffset? lastSyncAt) =>
+    private void GivenUser(string? username, DateTimeOffset? lastSyncAt, string? lastSyncError = null) =>
         _users
             .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User
@@ -86,8 +95,28 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
                 Id = UserId,
                 Email = "a@b.c",
                 LetterboxdUsername = username,
-                LetterboxdLastSyncAt = lastSyncAt
+                LetterboxdLastSyncAt = lastSyncAt,
+                LetterboxdLastSyncError = lastSyncError
             });
+
+    private void GivenTmdbTimesOut()
+    {
+        _letterboxd
+            .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LetterboxdWatchlistSnapshot(
+                [new LetterboxdFilm("the-polar-express", "The Polar Express", "2004")], true));
+        _tmdb
+            .Setup(t => t.SearchAsync(
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
+                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TaskCanceledException("TMDB did not answer in time"));
+    }
+
+    private void VerifyStatusRecorded(string? error) =>
+        _users.Verify(
+            u => u.SetLetterboxdSyncStatusAsync(UserId, Now, error, It.IsAny<CancellationToken>()),
+            Times.Once);
 
     private void VerifyLetterboxdRead(Times times) =>
         _letterboxd.Verify(
@@ -250,5 +279,61 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
             .ReturnsAsync((User?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() => _sut.HandleAsync(UserId, force: false));
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbTimesOutDuringAManualSync_AnswersUnavailableAndRecordsIt()
+    {
+        GivenTmdbTimesOut();
+
+        var ex = await Assert.ThrowsAsync<ServiceUnavailableException>(() => _sut.HandleAsync(UserId, force: true));
+
+        Assert.Equal(ErrorCodes.LetterboxdSyncUnavailable, ex.Reason);
+        VerifyStatusRecorded(ErrorCodes.LetterboxdSyncUnavailable);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbTimesOutDuringAnAutoSync_IsSkippedAndRecorded()
+    {
+        GivenTmdbTimesOut();
+
+        var result = await _sut.HandleAsync(UserId, force: false);
+
+        Assert.True(result.Skipped);
+        VerifyStatusRecorded(ErrorCodes.LetterboxdSyncUnavailable);
+    }
+
+    [Fact]
+    public async Task HandleAsync_UnexpectedFailure_IsRecordedBeforePropagating()
+    {
+        _watchlist
+            .Setup(w => w.ListByUserIdAsync(UserId, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("database unreachable"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.HandleAsync(UserId, force: true));
+
+        VerifyStatusRecorded(ErrorCodes.LetterboxdSyncFailed);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LastSyncFailedMoreThanAnHourAgo_RetriesWithoutWaitingADay()
+    {
+        GivenUser(Username, Now.AddMinutes(-61), ErrorCodes.LetterboxdSyncUnavailable);
+
+        var result = await _sut.HandleAsync(UserId, force: false);
+
+        Assert.False(result.Skipped);
+        VerifyLetterboxdRead(Times.Once());
+    }
+
+    [Fact]
+    public async Task HandleAsync_LastSyncFailedMinutesAgo_WaitsBeforeRetrying()
+    {
+        GivenUser(Username, Now.AddMinutes(-10), ErrorCodes.LetterboxdSyncUnavailable);
+
+        var result = await _sut.HandleAsync(UserId, force: false);
+
+        Assert.True(result.Skipped);
+        VerifyLetterboxdRead(Times.Never());
     }
 }

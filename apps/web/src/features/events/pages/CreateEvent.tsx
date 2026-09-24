@@ -194,8 +194,18 @@ export default function CreateEvent() {
   }, [applyFields, forgetAppliedTemplate]);
 
   const configPatch = draftToConfigPatch(templateDraft);
+  const creationRequest = useRef<{ draft: string; id: string } | null>(null);
   const createAction = useCallback(async () => {
-    const res = await createEventApi({ title, date, time });
+    const draft = JSON.stringify([title, date, time]);
+    if (creationRequest.current?.draft !== draft) {
+      creationRequest.current = { draft, id: crypto.randomUUID() };
+    }
+    const res = await createEventApi({
+      title,
+      date,
+      time,
+      clientRequestId: creationRequest.current.id,
+    });
     track('event_created');
     const publicUrl = `${globalThis.location.origin}${ROUTES.eventDetail(res.slug)}`;
     if (res.creatorParticipant) {

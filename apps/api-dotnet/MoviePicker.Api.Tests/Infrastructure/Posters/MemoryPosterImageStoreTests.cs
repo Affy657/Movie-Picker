@@ -25,14 +25,13 @@ public sealed class MemoryPosterImageStoreTests
     }
 
     [Fact]
-    public void ToPublicPosterPath_TmdbUrl_MappedToApiPath()
+    public void ToPublicPosterPath_TmdbUrl_MappedToTheStatelessTmdbRoute()
     {
         const string tmdbUrl = "https://image.tmdb.org/t/p/w500/abc.jpg";
-        var expectedKey = TmdbPosterUrlNormalizer.ComputeKey(tmdbUrl);
 
         var result = Build().ToPublicPosterPath(tmdbUrl);
 
-        Assert.Equal(TmdbPosterUrlNormalizer.ApiPosterPathPrefix + expectedKey, result);
+        Assert.Equal(TmdbPosterUrlNormalizer.ApiTmdbPosterPathPrefix + "w500/abc.jpg", result);
     }
 
     [Fact]
@@ -50,14 +49,6 @@ public sealed class MemoryPosterImageStoreTests
         const string foreign = "https://example.com/poster.jpg";
 
         Assert.Equal(foreign, Build().ToPublicPosterPath(foreign));
-    }
-
-    [Fact]
-    public async Task RegisterTmdbSourcesAsync_Empty_DoesNotThrow()
-    {
-        var exception = await Record.ExceptionAsync(() => Build().RegisterTmdbSourcesAsync([]));
-
-        Assert.Null(exception);
     }
 
     [Fact]

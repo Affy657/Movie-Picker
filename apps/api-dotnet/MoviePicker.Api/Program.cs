@@ -4,11 +4,13 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Logging.Console;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure;
 using MoviePicker.Api.Infrastructure.Web;
 using Sentry;
 using Sentry.Extensibility;
+using Sentry.Extensions.Logging;
 
 EnvLoader.LoadFromEnvFileIfExists();
 
@@ -16,7 +18,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSharedDataProtection();
 
-builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AddServerHeader = false;
+    options.Limits.MaxRequestBodySize = RequestBodyLimits.DefaultBytes;
+});
+
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole(options => options.FormatterName = CloudRunJsonConsoleFormatter.FormatterName);
+    builder.Logging.AddConsoleFormatter<CloudRunJsonConsoleFormatter, JsonConsoleFormatterOptions>(options =>
+    {
+        options.IncludeScopes = true;
+        options.TimestampFormat = "O";
+        options.JsonWriterOptions = new JsonWriterOptions { Indented = false };
+    });
+    builder.Logging.SetMinimumLevel(LogLevel.Information);
+    builder.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
+    builder.Logging.AddFilter("Microsoft.AspNetCore.Routing", LogLevel.Warning);
+}
 
 var sentryDsn = builder.Configuration["SENTRY_DSN"];
 if (!string.IsNullOrWhiteSpace(sentryDsn))
@@ -28,6 +49,9 @@ if (!string.IsNullOrWhiteSpace(sentryDsn))
         options.Release = builder.Configuration["SENTRY_RELEASE"];
         options.SendDefaultPii = false;
         options.MaxRequestBodySize = RequestSize.None;
+        options.MinimumBreadcrumbLevel = LogLevel.None;
+        options.MinimumEventLevel = LogLevel.Error;
+        options.AddLogEntryFilter(SentryBeforeSend.IsLogNoise);
         options.AddExceptionFilterForType<AuthenticationFailureException>();
         options.SetBeforeSend(SentryBeforeSend.Prepare);
         options.SetBeforeBreadcrumb(SentryBeforeSend.RedactBreadcrumb);
@@ -36,20 +60,6 @@ if (!string.IsNullOrWhiteSpace(sentryDsn))
         if (!string.IsNullOrWhiteSpace(revision))
             options.ServerName = revision;
     });
-}
-
-if (!builder.Environment.IsDevelopment())
-{
-    builder.Logging.ClearProviders();
-    builder.Logging.AddJsonConsole(options =>
-    {
-        options.IncludeScopes = true;
-        options.TimestampFormat = "O";
-        options.JsonWriterOptions = new JsonWriterOptions { Indented = false };
-    });
-    builder.Logging.SetMinimumLevel(LogLevel.Information);
-    builder.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
-    builder.Logging.AddFilter("Microsoft.AspNetCore.Routing", LogLevel.Warning);
 }
 
 builder.Services.AddResponseCompression(options =>
@@ -64,6 +74,7 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Le
 builder.Services.AddMoviePicker(builder.Configuration, builder.Environment);
 builder.Services.AddMoviePickerAuthentication(builder.Configuration);
 builder.Services.AddMoviePickerRateLimiter(builder.Environment);
+builder.Services.AddMoviePickerRequestTimeouts();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -82,7 +93,8 @@ builder.Services
     {
         o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-    });
+    })
+    .ConfigureApiBehaviorOptions(o => o.SuppressModelStateInvalidFilter = true);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -118,8 +130,10 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 app.UseMiddleware<StructuredHttpRequestLoggingMiddleware>();
 app.UseCors(MoviePicker.Api.Infrastructure.ServiceCollectionExtensions.CorsPolicyFront);
-app.UseRateLimiter();
+app.UseExceptionHandler(errorApp => errorApp.Run(UnhandledExceptionResponse.WriteAsync));
+app.UseRequestTimeouts();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.UseStatusCodePages(async context =>

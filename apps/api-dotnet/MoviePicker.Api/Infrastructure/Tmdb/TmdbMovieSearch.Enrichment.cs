@@ -31,7 +31,7 @@ public sealed partial class TmdbMovieSearch
         var shared = await _sharedCache.TryGetAsync<TmdbMovieEnrichment>(cacheKey, ct).ConfigureAwait(false);
         if (shared is not null)
         {
-            _cache.Set(cacheKey, shared.Value, new MemoryCacheEntryOptions { AbsoluteExpiration = shared.ExpiresAt });
+            _cache.Set(cacheKey, shared.Value, new MemoryCacheEntryOptions { AbsoluteExpiration = shared.ExpiresAt, Size = 1 });
             return shared.Value;
         }
 
@@ -68,7 +68,7 @@ public sealed partial class TmdbMovieSearch
         {
             if (shared.TryGetValue(miss.CacheKey, out var entry))
             {
-                _cache.Set(miss.CacheKey, entry.Value, new MemoryCacheEntryOptions { AbsoluteExpiration = entry.ExpiresAt });
+                _cache.Set(miss.CacheKey, entry.Value, new MemoryCacheEntryOptions { AbsoluteExpiration = entry.ExpiresAt, Size = 1 });
                 result[(miss.TmdbId, miss.MediaType)] = entry.Value;
             }
             else
@@ -125,7 +125,7 @@ public sealed partial class TmdbMovieSearch
         try
         {
             var fresh = await FetchEnrichmentUncachedAsync(tmdbId, mediaType, region, ct).ConfigureAwait(false);
-            _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
+            _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl, Size = 1 });
             await _sharedCache.SetAsync(cacheKey, fresh, ttl, ct).ConfigureAwait(false);
             return fresh;
         }
@@ -149,7 +149,7 @@ public sealed partial class TmdbMovieSearch
             _cache.Set(
                 cacheKey,
                 TmdbUnavailableMarker.Instance,
-                new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = FailureCacheTtl() });
+                new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = FailureCacheTtl(), Size = 1 });
             return null;
         }
     }
@@ -172,6 +172,9 @@ public sealed partial class TmdbMovieSearch
         int? runtimeMinutes = null;
         string? releaseDate = null;
         using var detailRes = await detailTask.ConfigureAwait(false);
+        using var watchRes = await watchTask.ConfigureAwait(false);
+        EnsureUsableAnswer(detailRes);
+        EnsureUsableAnswer(watchRes);
         if (detailRes.IsSuccessStatusCode)
         {
             await using var detailStream = await detailRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
@@ -186,7 +189,6 @@ public sealed partial class TmdbMovieSearch
 
         string? watchPageUrl = null;
         var offers = new List<TmdbWatchProviderOffer>();
-        using var watchRes = await watchTask.ConfigureAwait(false);
         if (watchRes.IsSuccessStatusCode)
         {
             await using var watchStream = await watchRes.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
@@ -207,6 +209,12 @@ public sealed partial class TmdbMovieSearch
 
         var deduped = DedupeProviders(offers);
         return new TmdbMovieEnrichment(voteAverage, deduped, watchPageUrl, runtimeMinutes, releaseDate);
+    }
+
+    private static void EnsureUsableAnswer(HttpResponseMessage response)
+    {
+        if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NotFound)
+            throw new HttpRequestException($"TMDB answered {(int)response.StatusCode}", null, response.StatusCode);
     }
 
     private static void AppendProviders(JsonElement regionObj, string jsonKey, string type, List<TmdbWatchProviderOffer> list)

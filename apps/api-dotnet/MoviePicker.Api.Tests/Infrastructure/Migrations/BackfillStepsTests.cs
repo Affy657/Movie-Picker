@@ -7,6 +7,8 @@ public sealed class BackfillStepsTests
 {
     private sealed record Item(string Id);
 
+    private static readonly Action<Item, Exception> IgnoreFailure = (_, _) => { };
+
     private static Func<int, CancellationToken, Task<IReadOnlyList<Item>>> Batches(
         params IReadOnlyList<Item>[] pages)
     {
@@ -21,10 +23,11 @@ public sealed class BackfillStepsTests
             Batches([new Item("a"), new Item("b"), new Item("c")]),
             item => item.Id,
             (item, _) => Task.FromResult(item.Id != "b"),
+            IgnoreFailure,
             100,
             CancellationToken.None);
 
-        Assert.Equal(2, applied);
+        Assert.Equal(2, applied.Updated);
     }
 
     [Fact]
@@ -46,12 +49,36 @@ public sealed class BackfillStepsTests
                 seen.Add(item.Id);
                 return Task.FromResult(true);
             },
+            IgnoreFailure,
             100,
             CancellationToken.None);
 
-        Assert.Equal(2, applied);
+        Assert.Equal(2, applied.Updated);
         Assert.Equal(["a", "b"], seen);
         Assert.Equal(2, calls);
+    }
+
+    [Fact]
+    public async Task RunBatchesAsync_AFullPageOfSkippedItems_DoesNotHideTheRest()
+    {
+        var pending = new List<Item> { new("stuck-1"), new("stuck-2"), new("a"), new("b"), new("c") };
+
+        var applied = await BackfillSteps.RunBatchesAsync<Item>(
+            (limit, _) => Task.FromResult<IReadOnlyList<Item>>(pending.Take(limit).ToList()),
+            item => item.Id,
+            (item, _) =>
+            {
+                if (item.Id.StartsWith("stuck", StringComparison.Ordinal))
+                    return Task.FromResult(false);
+                pending.Remove(item);
+                return Task.FromResult(true);
+            },
+            IgnoreFailure,
+            2,
+            CancellationToken.None);
+
+        Assert.Equal(3, applied.Updated);
+        Assert.Equal(["stuck-1", "stuck-2"], pending.Select(item => item.Id));
     }
 
     [Fact]
@@ -67,10 +94,11 @@ public sealed class BackfillStepsTests
                 seen.Add(item.Id);
                 return Task.FromResult(true);
             },
+            IgnoreFailure,
             1,
             CancellationToken.None);
 
-        Assert.Equal(3, applied);
+        Assert.Equal(3, applied.Updated);
         Assert.Equal(["a", "b", "c"], seen);
     }
 
@@ -87,10 +115,11 @@ public sealed class BackfillStepsTests
                 seen.Add(item.Id);
                 return Task.FromResult(true);
             },
+            IgnoreFailure,
             100,
             CancellationToken.None);
 
-        Assert.Equal(3, applied);
+        Assert.Equal(3, applied.Updated);
         Assert.Equal(["a", "b", "c"], seen);
     }
 
@@ -101,10 +130,11 @@ public sealed class BackfillStepsTests
             Batches([]),
             item => item.Id,
             (_, _) => Task.FromResult(true),
+            IgnoreFailure,
             100,
             CancellationToken.None);
 
-        Assert.Equal(0, applied);
+        Assert.Equal(0, applied.Updated);
     }
 
     [Fact]
@@ -118,45 +148,64 @@ public sealed class BackfillStepsTests
                 Batches([new Item("a")]),
                 item => item.Id,
                 (_, _) => Task.FromResult(true),
+                IgnoreFailure,
                 100,
                 cts.Token));
     }
 
     [Fact]
-    public async Task TryApplyAsync_Success_ReturnsTheResultAndReportsNothing()
+    public async Task RunBatchesAsync_OneItemThrows_AppliesTheOthersAndCountsTheFailure()
     {
-        Exception? reported = null;
+        var reported = new List<string>();
 
-        var applied = await BackfillSteps.TryApplyAsync(() => Task.FromResult(true), ex => reported = ex);
+        var outcome = await BackfillSteps.RunBatchesAsync<Item>(
+            Batches([new Item("a"), new Item("b"), new Item("c")]),
+            item => item.Id,
+            (item, _) => item.Id == "b"
+                ? Task.FromException<bool>(new HttpRequestException("TMDB unavailable"))
+                : Task.FromResult(true),
+            (item, _) => reported.Add(item.Id),
+            100,
+            CancellationToken.None);
 
-        Assert.True(applied);
-        Assert.Null(reported);
+        Assert.Equal(new BackfillOutcome(2, 1), outcome);
+        Assert.Equal(["b"], reported);
     }
 
     [Fact]
-    public async Task TryApplyAsync_Throws_ReportsAndReturnsFalse()
+    public async Task RunBatchesAsync_ItemCancelled_LetsTheCancellationThrough()
     {
-        Exception? reported = null;
-        var boom = new HttpRequestException("TMDB indisponible");
-
-        var applied = await BackfillSteps.TryApplyAsync(
-            () => Task.FromException<bool>(boom),
-            ex => reported = ex);
-
-        Assert.False(applied);
-        Assert.Same(boom, reported);
-    }
-
-    [Fact]
-    public async Task TryApplyAsync_Cancelled_LetsTheCancellationThrough()
-    {
-        Exception? reported = null;
+        var reported = new List<string>();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            BackfillSteps.TryApplyAsync(
-                () => Task.FromException<bool>(new OperationCanceledException()),
-                ex => reported = ex));
+            BackfillSteps.RunBatchesAsync<Item>(
+                Batches([new Item("a")]),
+                item => item.Id,
+                (_, _) => Task.FromException<bool>(new OperationCanceledException()),
+                (item, _) => reported.Add(item.Id),
+                100,
+                CancellationToken.None));
 
-        Assert.Null(reported);
+        Assert.Empty(reported);
+    }
+
+    [Fact]
+    public void Completed_WithoutFailure_ReturnsTheUpdatedCount()
+    {
+        Assert.Equal(5, new BackfillOutcome(5, 0).Completed("m"));
+    }
+
+    [Fact]
+    public void Completed_WithFailures_ReportsTheMigrationIncomplete()
+    {
+        var ex = Assert.Throws<BackfillIncompleteException>(() => new BackfillOutcome(5, 2).Completed("m"));
+
+        Assert.Equal(2, ex.Failed);
+    }
+
+    [Fact]
+    public void Outcomes_AddUp()
+    {
+        Assert.Equal(new BackfillOutcome(3, 1), new BackfillOutcome(1, 0) + new BackfillOutcome(2, 1));
     }
 }

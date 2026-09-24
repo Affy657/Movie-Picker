@@ -1,7 +1,12 @@
 {
   "cleanUrls": false,
   "trailingSlashBehavior": "REMOVE",
-  "rewrites": [{ "glob": "**", "path": "/index.html" }],
+  "rewrites": [
+    {
+      "regex": "^/(?:[^a].*|a(?:[^s].*)?|as(?:[^s].*)?|ass(?:[^e].*)?|asse(?:[^t].*)?|asset(?:[^s].*)?|assets(?:[^/].*)?)?$",
+      "path": "/index.html"
+    }
+  ],
   "headers": [
     {
       "glob": "**",

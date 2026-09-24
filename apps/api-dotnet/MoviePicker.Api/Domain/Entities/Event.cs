@@ -10,6 +10,7 @@ public sealed record Event
     public string Slug { get; init; } = string.Empty;
 
     public string? CreatorUserId { get; init; }
+    public string? CreationRequestId { get; init; }
 
     public EventConfig? Config { get; init; }
     public DateTimeOffset? ClosedAt { get; init; }

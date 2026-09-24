@@ -17,7 +17,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         double? ExpireAfterSeconds = null);
 
     private const double NinetyDays = 90 * 24 * 60 * 60;
-    private const double ThreeDays = 3 * 24 * 60 * 60;
+    private const double EightDays = 8 * 24 * 60 * 60;
     private const double OneYear = 365 * 24 * 60 * 60;
 
     private static readonly ExpectedIndex[] Expected =
@@ -31,11 +31,15 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("events", "events_creatorUserId"),
         new("events", "events_recurrence_creatorUserId"),
         new("events", "events_startAtUtc"),
+        new("events", "events_creator_creationRequest_unique", Unique: true),
+        new("events", "events_winners_movieId"),
 
         new("movies", "movies_eventId"),
-        new("movies", "movies_eventId_tmdbId_unique", Unique: true),
+        new("movies", "movies_participantId"),
+        new("movies", "movies_eventId_tmdbId_mediaType_unique", Unique: true),
 
         new("votes", "votes_movieId"),
+        new("votes", "votes_participantId"),
         new("votes", "votes_event_movie_participant_unique", Unique: true),
 
         new("participants", "participants_eventId_userId_unique", Unique: true),
@@ -52,6 +56,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
 
         new("seen_marks", "seen_marks_event_movie_participant_unique", Unique: true),
         new("seen_marks", "seen_marks_movieId"),
+        new("seen_marks", "seen_marks_participantId"),
 
         new("push_subscriptions", "push_subscriptions_userId_endpoint_unique", Unique: true),
         new("push_subscriptions", "push_subscriptions_userId"),
@@ -67,10 +72,11 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("user_notifications", "user_notifications_userId_createdAt"),
         new("user_notifications", "user_notifications_userId_isRead"),
         new("user_notifications", "user_notifications_eventId"),
+        new("user_notifications", "user_notifications_actorHandle"),
         new("user_notifications", "user_notifications_createdAt_ttl", ExpireAfterSeconds: NinetyDays),
 
         new("push_dedup_markers", "push_dedup_markers_channel_unique", Unique: true),
-        new("push_dedup_markers", "push_dedup_markers_createdAt_ttl", ExpireAfterSeconds: ThreeDays),
+        new("push_dedup_markers", "push_dedup_markers_createdAt_ttl_8d", ExpireAfterSeconds: EightDays),
 
         new("rate_limit_counters", "rate_limit_counters_expiresAt_ttl", ExpireAfterSeconds: 0),
 

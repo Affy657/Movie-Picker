@@ -47,10 +47,10 @@ Lire les comptes : c'est l'état vers lequel la production va revenir. Si le doc
 
 ## 3. Couper les écritures
 
-1. Mettre en pause les trois jobs Cloud Scheduler, sinon les rappels et les balayages nocturnes écrivent pendant la restauration :
+1. Mettre en pause les quatre jobs Cloud Scheduler, sinon les rappels, les balayages nocturnes et le rechargement du catalogue écrivent pendant la restauration :
 
    ```bash
-   for job in movie-picker-event-reminders movie-picker-recurring-events movie-picker-finished-events; do
+   for job in movie-picker-event-reminders movie-picker-recurring-events movie-picker-finished-events movie-picker-warm-catalog; do
      gcloud scheduler jobs pause "$job" --location <REGION>
    done
    ```
@@ -73,11 +73,29 @@ unset URI
 
 ## 5. Rendre la main à l'API
 
-Les instances Cloud Run gardent des caches en mémoire (catalogue, sessions pendant 30 s, `ETag` calculés sur `writeSeq`) qui décrivent la base d'avant. Remplacer la révision pour repartir d'instances neuves, sans reconstruire l'image :
+Les instances Cloud Run gardent des caches en mémoire (catalogue, sessions pendant 30 s, `ETag` calculés sur `writeSeq`) qui décrivent la base d'avant. Remplacer la révision pour repartir d'instances neuves, sans reconstruire l'image. D'abord, lire si le trafic suit la dernière révision :
+
+```bash
+gcloud run services describe <SERVICE> --region <REGION> --format='value(status.traffic[0].latestRevision,status.traffic[0].revisionName)'
+```
+
+Si la première valeur est `True`, une nouvelle révision prend le trafic d'elle-même :
 
 ```bash
 gcloud run services update <SERVICE> --region <REGION> --update-env-vars "RESTORED_AT=<HORODATAGE>"
 ```
+
+Sinon le trafic est épinglé sur la révision nommée en seconde valeur, en général par `rollback.yml` : une révision créée par la commande ci-dessus ne recevrait rien, et elle partirait de la configuration la plus récente, celle que le retour arrière a écartée. Recréer la révision servie, avec son image, puis lui rendre le trafic :
+
+```bash
+PINNED="<REVISION_EPINGLEE>"
+IMAGE="$(gcloud run revisions describe "$PINNED" --region <REGION> --format='value(spec.containers[0].image)')"
+gcloud run deploy <SERVICE> --region <REGION> --image "$IMAGE" --update-env-vars "RESTORED_AT=<HORODATAGE>" --no-traffic
+NEW="$(gcloud run services describe <SERVICE> --region <REGION> --format='value(status.latestCreatedRevisionName)')"
+gcloud run services update-traffic <SERVICE> --region <REGION> --to-revisions "$NEW=100"
+```
+
+Le trafic reste épinglé, sur la révision neuve : le prochain `deploy.yml` le libère comme après un retour arrière.
 
 Puis :
 
@@ -88,7 +106,7 @@ Puis :
 ## 6. Reprendre le service
 
 ```bash
-for job in movie-picker-event-reminders movie-picker-recurring-events movie-picker-finished-events; do
+for job in movie-picker-event-reminders movie-picker-recurring-events movie-picker-finished-events movie-picker-warm-catalog; do
   gcloud scheduler jobs resume "$job" --location <REGION>
 done
 docker rm -f mongo-restore-check

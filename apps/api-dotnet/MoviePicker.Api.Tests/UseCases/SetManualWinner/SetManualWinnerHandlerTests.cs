@@ -51,7 +51,6 @@ public sealed class SetManualWinnerHandlerTests
     {
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns((string?)null);
         _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
-        _posterStore.Setup(s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
         _sut = new SetManualWinnerHandler(

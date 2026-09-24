@@ -24,7 +24,12 @@ export async function fetchEventBySlug(slug: string, hostToken: string | null): 
   return mapEventData(raw);
 }
 
-export type CreateEventBody = { title: string; date: string; time: string };
+export type CreateEventBody = {
+  title: string;
+  date: string;
+  time: string;
+  clientRequestId?: string;
+};
 
 export type CreateEventResponse = {
   slug: string;
@@ -101,11 +106,12 @@ export function patchEventConfig(
 
 export async function postEventWheel(
   slug: string,
-  hostToken: string | null
+  hostToken: string | null,
+  expectedWinnerCount?: number
 ): Promise<{ winner: MovieData; message: string }> {
   const raw = await fetchApi<{ winner: RawMovieData; message: string }>(
     apiPath('events', slug, 'wheel'),
-    withHostToken(hostToken, { method: 'POST', body: '{}' })
+    withHostToken(hostToken, { method: 'POST', body: JSON.stringify({ expectedWinnerCount }) })
   );
   return { winner: mapMovieData(raw.winner), message: raw.message };
 }

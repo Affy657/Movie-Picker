@@ -207,10 +207,10 @@ public sealed class EventsControllerTests
     {
         var handler = new Mock<ILaunchWheelHandler>();
 
-        var result = await Controller(null).Wheel("e", new CsrfGuardRequest(), handler.Object, CancellationToken.None);
+        var result = await Controller(null).Wheel("e", new LaunchWheelRequest { ExpectedWinnerCount = 2 }, handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
-        handler.Verify(h => h.HandleAsync("e", It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("e", 2, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 
@@ -59,10 +58,10 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         return participant is not null && participant.UserId == currentUserId;
     }
 
-    private static User? ResolveProposerUser(
+    private static UserCard? ResolveProposerUser(
         string participantId,
         Dictionary<string, Participant> participantById,
-        Dictionary<string, User> userById)
+        Dictionary<string, UserCard> userById)
     {
         if (!participantById.TryGetValue(participantId, out var participant))
             return null;
@@ -127,16 +126,14 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
 
         var pseudosTask = _participantRepository.GetPseudosByIdsAsync(participantIds, ct);
         var proposerUsersTask = proposerUserIds.Count > 0
-            ? _userRepository.ListByIdsAsync(proposerUserIds, ct)
-            : Task.FromResult<IReadOnlyList<User>>(Array.Empty<User>());
+            ? _userRepository.ListCardsByIdsAsync(proposerUserIds, ct)
+            : Task.FromResult<IReadOnlyList<UserCard>>([]);
         await Task.WhenAll(pseudosTask, proposerUsersTask);
         var pseudos = await pseudosTask;
         var proposerUsers = await proposerUsersTask;
         var userById = proposerUsers.ToDictionary(u => u.Id);
 
         var enrichmentByKey = await BuildEnrichmentMapAsync(movies, ct);
-
-        await _posterImageStore.RegisterTmdbSourcesAsync(CollectTmdbPosterSources(movies), ct);
 
         var list = new List<MovieWithScoreResponse>(movies.Count);
         foreach (var m in movies)
@@ -217,16 +214,6 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         return enrichmentByKey;
     }
 
-    private static List<string> CollectTmdbPosterSources(IReadOnlyList<Movie> movies)
-    {
-        var sources = new List<string>();
-        foreach (var m in movies)
-        {
-            if (TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(m.PosterPath, out var src))
-                sources.Add(src);
-        }
-        return sources;
-    }
 
     private static List<string> ResolvePseudos(
         IEnumerable<string> participantIds,

@@ -6,10 +6,13 @@ import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { fetchNotificationInbox } from '@/features/notifications/api/notificationsApi';
+import { pollIntervalAfterFailures } from '@/shared/api/retryPolicy';
 import styles from './InboxBell.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import CountBadge from '@/shared/components/CountBadge';
 import { iconButtonClass } from '@/shared/components/IconButton';
+
+const INBOX_POLL_INTERVAL_MS = 60_000;
 
 export default function InboxBell() {
   const { t } = useTranslation();
@@ -17,7 +20,7 @@ export default function InboxBell() {
   const inboxQuery = useQuery({
     queryKey: queryKeys.notifications.inbox,
     queryFn: () => fetchNotificationInbox(),
-    refetchInterval: 60_000,
+    refetchInterval: (query) => pollIntervalAfterFailures(INBOX_POLL_INTERVAL_MS, query),
   });
 
   const unreadCount = inboxQuery.data?.unreadCount ?? 0;

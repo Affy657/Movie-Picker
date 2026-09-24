@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -71,7 +72,6 @@ public sealed class FollowUserHandler : IFollowUserHandler
             Body: $"{follower.DisplayName} a commencé à vous suivre.",
             Tag: "new-follower",
             Url: $"/u/{follower.Handle}");
-        foreach (var sub in subs)
-            await _pushSender.SendAsync(sub, message, ct);
+        await PushFanOut.SendToAllAsync(_pushSender, subs, message, ct);
     }
 }

@@ -36,7 +36,7 @@ public sealed class WebPushSender : IPushNotificationSender
         _subject = options.Value.VapidSubject;
     }
 
-    public async Task SendAsync(
+    public async Task<bool> SendAsync(
         PushSubscriptionDomain subscription,
         PushMessage message,
         CancellationToken ct = default
@@ -45,17 +45,17 @@ public sealed class WebPushSender : IPushNotificationSender
         if (string.IsNullOrWhiteSpace(_publicKey) || string.IsNullOrWhiteSpace(_privateKey))
         {
             _logger.LogDebug("VAPID keys not configured, skipping push notification");
-            return;
+            return true;
         }
 
         if (!PushEndpointPolicy.IsKnownPushServiceEndpoint(subscription.Endpoint))
         {
             _logger.LogWarning(
-                "Push subscription for user {UserId} targets an unknown push service, purging endpoint",
+                "Push subscription of user {UserId} points outside the known push services, purging it",
                 subscription.UserId
             );
             await PurgeSubscriptionAsync(subscription, ct);
-            return;
+            return true;
         }
 
         try
@@ -81,6 +81,7 @@ public sealed class WebPushSender : IPushNotificationSender
             );
 
             await webPushClient.SendNotificationAsync(pushSubscription, payload, cancellationToken: ct);
+            return true;
         }
         catch (WebPushException ex)
             when (ex.StatusCode is System.Net.HttpStatusCode.Gone or System.Net.HttpStatusCode.NotFound)
@@ -91,6 +92,7 @@ public sealed class WebPushSender : IPushNotificationSender
                 subscription.UserId
             );
             await PurgeSubscriptionAsync(subscription, ct);
+            return true;
         }
         catch (Exception ex)
         {
@@ -99,8 +101,17 @@ public sealed class WebPushSender : IPushNotificationSender
                 "Failed to send push notification to user {UserId}",
                 subscription.UserId
             );
+            return !IsWorthRetrying(ex);
         }
     }
+
+    internal static bool IsWorthRetrying(Exception ex) => ex switch
+    {
+        WebPushException push => push.StatusCode is System.Net.HttpStatusCode.TooManyRequests
+            || (int)push.StatusCode >= 500,
+        HttpRequestException or TaskCanceledException => true,
+        _ => false
+    };
 
     private async Task PurgeSubscriptionAsync(
         PushSubscriptionDomain subscription,

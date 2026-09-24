@@ -25,6 +25,11 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(result);
     }
 
+    public async Task<IReadOnlyList<UserCard>> ListCardsByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default) =>
+        (await ListByIdsAsync(ids, ct))
+            .Select(u => new UserCard(u.Id, u.AvatarId, u.Handle, u.IsProfilePublic))
+            .ToList();
+
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
         var n = Normalize(email);

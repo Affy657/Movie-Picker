@@ -29,54 +29,50 @@ public sealed class BackfillMovieGenresMigration : IDataMigration
 
     public async Task<long> ExecuteAsync(CancellationToken ct = default)
     {
-        var updated = await BackfillSteps.RunBatchesAsync<Movie>(
+        var movies = await BackfillSteps.RunBatchesAsync<Movie>(
             _movies.ListMissingGenresAsync,
             movie => movie.Id,
-            TryBackfillMovieAsync,
-            BatchSize,
-            ct);
-
-        updated += await BackfillSteps.RunBatchesAsync<WatchlistItem>(
-            _watchlist.ListMissingGenresAsync,
-            item => item.Id,
-            TryBackfillWatchlistItemAsync,
-            BatchSize,
-            ct);
-
-        return updated;
-    }
-
-    private Task<bool> TryBackfillMovieAsync(Movie movie, CancellationToken ct) =>
-        BackfillSteps.TryApplyAsync(
-            async () =>
-            {
-                var details = await _tmdb.GetDetailsAsync(movie.TmdbId, movie.MediaType, ct);
-                if (details is not { GenreIds.Count: > 0 })
-                    return false;
-
-                await _movies.UpdateGenresAsync(movie.Id, details.GenreIds, ct);
-                return true;
-            },
-            ex => _logger.LogWarning(
+            BackfillMovieAsync,
+            (movie, ex) => _logger.LogWarning(
                 ex,
                 "Genres not fetched for movie {MovieId} (TMDB {TmdbId})",
                 movie.Id,
-                movie.TmdbId));
+                movie.TmdbId),
+            BatchSize,
+            ct);
 
-    private Task<bool> TryBackfillWatchlistItemAsync(WatchlistItem item, CancellationToken ct) =>
-        BackfillSteps.TryApplyAsync(
-            async () =>
-            {
-                var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, ct);
-                if (details is not { GenreIds.Count: > 0 })
-                    return false;
-
-                await _watchlist.UpdateGenresAsync(item.Id, details.GenreIds, ct);
-                return true;
-            },
-            ex => _logger.LogWarning(
+        var watchlist = await BackfillSteps.RunBatchesAsync<WatchlistItem>(
+            _watchlist.ListMissingGenresAsync,
+            item => item.Id,
+            BackfillWatchlistItemAsync,
+            (item, ex) => _logger.LogWarning(
                 ex,
                 "Genres not fetched for watchlist item {ItemId} (TMDB {TmdbId})",
                 item.Id,
-                item.TmdbId));
+                item.TmdbId),
+            BatchSize,
+            ct);
+
+        return (movies + watchlist).Completed(Id);
+    }
+
+    private async Task<bool> BackfillMovieAsync(Movie movie, CancellationToken ct)
+    {
+        var details = await _tmdb.GetDetailsAsync(movie.TmdbId, movie.MediaType, ct);
+        if (details is not { GenreIds.Count: > 0 })
+            return false;
+
+        await _movies.UpdateGenresAsync(movie.Id, details.GenreIds, ct);
+        return true;
+    }
+
+    private async Task<bool> BackfillWatchlistItemAsync(WatchlistItem item, CancellationToken ct)
+    {
+        var details = await _tmdb.GetDetailsAsync(item.TmdbId, item.MediaType, ct);
+        if (details is not { GenreIds.Count: > 0 })
+            return false;
+
+        await _watchlist.UpdateGenresAsync(item.Id, details.GenreIds, ct);
+        return true;
+    }
 }

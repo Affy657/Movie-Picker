@@ -228,15 +228,15 @@ export function useEventWheel({
   const launch = useCallback(() => {
     setError(null);
     setLoading(true);
-    postEventWheel(slug, hostToken)
+    postEventWheel(slug, hostToken, drawnIds.length)
       .then((res) => {
-        const pool = drawableMovies;
-        const idx = pool.findIndex((m) => m.id === res.winner.id);
+        const drawnNow = drawableMovies.some((m) => m.id === res.winner.id);
+        const pool = drawnNow ? drawableMovies : [res.winner];
         setSpinPool(pool);
         setLocallyDrawnIds((ids) => (ids.includes(res.winner.id) ? ids : [...ids, res.winner.id]));
         setPendingRevealId(res.winner.id);
         setSpinWinner(res.winner);
-        setWinnerIndex(Math.max(idx, 0));
+        setWinnerIndex(pool.findIndex((m) => m.id === res.winner.id));
         setManualReveal(false);
         setWheelKey((k) => k + 1);
         setIsModalOpen(true);
@@ -246,7 +246,7 @@ export function useEventWheel({
       })
       .catch((err) => setError(getErrorMessage(err, t('events.wheel.launchError'))))
       .finally(() => setLoading(false));
-  }, [slug, hostToken, drawableMovies, announceWinner, track, t]);
+  }, [slug, hostToken, drawnIds.length, drawableMovies, announceWinner, track, t]);
 
   const pickWinnerManually = useCallback(
     (movie: MovieData) => {

@@ -24,21 +24,51 @@ public sealed class PostersController : ControllerBase
         if (!TmdbPosterUrlNormalizer.IsValidPosterKey(k))
             return NotFound();
 
-        var entityTag = $"\"{k}\"";
-        Response.Headers.CacheControl = "public,max-age=86400,immutable";
-        Response.Headers.ETag = entityTag;
+        return await ServeAsync(k, () => store.GetByKeyAsync(k, ct));
+    }
 
+    [HttpGet("tmdb/{size}/{file}")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.PostersPolicy)]
+    [Produces("image/jpeg", "image/png", "image/webp")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTmdb(
+        string size,
+        string file,
+        [FromServices] IPosterImageStore store,
+        CancellationToken ct)
+    {
+        if (!TmdbPosterUrlNormalizer.TryResolveTmdbRoute(size, file, out var source))
+            return NotFound();
+
+        return await ServeAsync(TmdbPosterUrlNormalizer.ComputeKey(source), () => store.GetOrFetchAsync(source, ct));
+    }
+
+    private async Task<IActionResult> ServeAsync(string key, Func<Task<PosterImageBlob?>> load)
+    {
+        var entityTag = $"\"{key}\"";
         if (Request.Headers.IfNoneMatch.Contains(entityTag))
+        {
+            MarkImmutable(entityTag);
             return StatusCode(StatusCodes.Status304NotModified);
+        }
 
-        var blob = await store.GetByKeyAsync(k, ct);
+        var blob = await load();
         if (blob is null)
         {
             Response.Headers.CacheControl = "no-store";
-            Response.Headers.Remove("ETag");
             return NotFound();
         }
 
+        MarkImmutable(entityTag);
         return File(blob.Data, blob.ContentType);
+    }
+
+    private void MarkImmutable(string entityTag)
+    {
+        Response.Headers.CacheControl = "public,max-age=86400,immutable";
+        Response.Headers.ETag = entityTag;
     }
 }

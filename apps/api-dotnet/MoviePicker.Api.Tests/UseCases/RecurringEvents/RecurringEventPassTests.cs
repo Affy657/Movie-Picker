@@ -275,4 +275,72 @@ public sealed class RecurringEventPassTests
             Times.Once);
         Assert.Equal(1, result.Candidates);
     }
+
+    [Fact]
+    public async Task RunAsync_OccurrenceCreationFails_IsReportedSoTheSchedulerRetries()
+    {
+        GivenCandidates(FinishedWeekly());
+        _events
+            .Setup(r => r.AddAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("database unreachable"));
+
+        var result = await _sut.RunAsync();
+
+        Assert.Equal(1, result.Failed);
+        Assert.Equal(0, result.Created);
+    }
+
+    [Fact]
+    public async Task RunAsync_OccurrenceCreatedByAConcurrentRun_IsNotAFailure()
+    {
+        GivenCandidates(FinishedWeekly());
+        _events
+            .Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(MoviePicker.Api.Domain.Exceptions.Errors.ConcurrentUpdate());
+        _events
+            .Setup(r => r.ListByIdsAsync(It.Is<IReadOnlyCollection<string>>(ids => ids.Contains("evt-1")), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([FinishedWeekly() with { NextOccurrenceEventId = "evt-created-elsewhere" }]);
+
+        var result = await _sut.RunAsync();
+
+        Assert.Equal(0, result.Failed);
+    }
+
+    [Fact]
+    public async Task RunAsync_ConflictWithoutAnyOccurrenceCreated_IsReportedSoTheSchedulerRetries()
+    {
+        GivenCandidates(FinishedWeekly());
+        _events
+            .Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(MoviePicker.Api.Domain.Exceptions.Errors.ConcurrentUpdate());
+        _events
+            .Setup(r => r.ListByIdsAsync(It.Is<IReadOnlyCollection<string>>(ids => ids.Contains("evt-1")), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([FinishedWeekly()]);
+
+        var result = await _sut.RunAsync();
+
+        Assert.Equal(1, result.Failed);
+    }
+
+    [Fact]
+    public async Task RunAsync_SeriesCreatedWithAClientRequestId_GivesTheOccurrenceNoneOfItsOwn()
+    {
+        GivenCandidates(FinishedWeekly() with { CreationRequestId = "create-request-1" });
+
+        await _sut.RunAsync();
+
+        Assert.Null(CapturedNewEvent().CreationRequestId);
+    }
+
+    [Fact]
+    public async Task RunAsync_CandidatesCannotBeRead_IsReportedAsAFailure()
+    {
+        _events
+            .Setup(r => r.ListRecurringAwaitingNextOccurrenceAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("database unreachable"));
+
+        var result = await _sut.RunAsync();
+
+        Assert.Equal(1, result.Failed);
+    }
 }

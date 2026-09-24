@@ -155,14 +155,16 @@ module "backup" {
   project_id         = var.project_id
   service_account_id = "movie-picker-backup"
   display_name       = "GitHub Actions backup"
-  description        = "Identity the backup workflow assumes from the backup environment: reads the database URI and writes the backup bucket, the only two things a dump needs. No key exists for it."
+  description        = "Identity the backup workflow assumes from the backup environment: reads the database URI and writes the backup bucket, the only two things a dump needs. It deletes nothing outside pending/. No key exists for it."
   pool_name          = module.github.pool_name
   subject            = module.github.subjects["backup"]
 
   project_roles    = ["roles/serviceusage.serviceUsageConsumer"]
   readable_secrets = ["MONGODB_URI", google_secret_manager_secret.backup_database_uri.secret_id]
   bucket_roles = {
-    backups = { bucket = google_storage_bucket.backups.name, role = "roles/storage.objectAdmin" }
+    backups_read    = { bucket = google_storage_bucket.backups.name, role = "roles/storage.objectViewer" }
+    backups_write   = { bucket = google_storage_bucket.backups.name, role = "roles/storage.objectCreator" }
+    backups_pending = { bucket = google_storage_bucket.backups.name, role = "roles/storage.objectAdmin", object_prefix = "pending/" }
   }
 
   depends_on = [google_project_service.platform, module.api_secrets, google_secret_manager_secret.backup_database_uri]
@@ -428,6 +430,7 @@ module "monitoring" {
   alert_email      = var.alert_email
   alert_sms_number = var.alert_sms_number
   api_host         = "api.movie-picker.fr"
+  staging_api_host = "api.staging.movie-picker.fr"
   web_host         = "www.movie-picker.fr"
   api_service_name = module.api.name
   backup_bucket    = google_storage_bucket.backups.name

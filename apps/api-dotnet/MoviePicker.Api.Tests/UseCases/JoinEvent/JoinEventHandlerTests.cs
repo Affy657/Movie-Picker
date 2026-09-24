@@ -34,6 +34,8 @@ public sealed class JoinEventHandlerTests
     {
         _eventRepo = new Mock<IEventRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
+        _participantRepo.Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
         _sut = new JoinEventHandler(
             _eventRepo.Object,
             _participantRepo.Object,
@@ -86,20 +88,110 @@ public sealed class JoinEventHandlerTests
         _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Fact]
-    public async Task HandleAsync_ExistingPseudo_ReturnsIsNewFalse()
+    private static Participant Existing(string id, string pseudo, string? userId) => new()
     {
-        var evt = ActiveEvent();
-        var existing = new Participant { Id = "p0", EventId = evt.Id, Pseudo = "Bob", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
-        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(evt.Id, "Bob", It.IsAny<CancellationToken>())).ReturnsAsync(existing);
-        var request = new JoinEventRequest { Pseudo = "Bob" };
+        Id = id,
+        EventId = "evt1",
+        Pseudo = pseudo,
+        UserId = userId,
+        CreatedAt = DateTimeOffset.UtcNow,
+        UpdatedAt = DateTimeOffset.UtcNow
+    };
 
-        var result = await _sut.HandleAsync("evt1", request, "u1");
+    private void GivenParticipants(params Participant[] participants) =>
+        _participantRepo.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(participants);
+
+    private void GivenInsertEchoesTheParticipant() =>
+        _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Participant p, CancellationToken _) => p with { Id = "new" });
+
+    [Fact]
+    public async Task HandleAsync_PseudoTakenByAnotherAccount_JoinsUnderADistinctPseudo()
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        GivenParticipants(Existing("p0", "Bob", "u9"));
+        GivenInsertEchoesTheParticipant();
+
+        var result = await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Bob" }, "u1");
+
+        Assert.True(result.IsNew);
+        Assert.Equal("new", result.Participant.Id);
+        Assert.Equal("Bob 2", result.Participant.Pseudo);
+        _participantRepo.Verify(
+            r => r.AddAsync(It.Is<Participant>(p => p.UserId == "u1" && p.Pseudo == "Bob 2"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PseudoAndFirstSuffixTaken_PicksTheNextFreeSuffixWhateverTheCase()
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        GivenParticipants(Existing("p0", "bob", "u8"), Existing("p1", "Bob 2", "u9"));
+        GivenInsertEchoesTheParticipant();
+
+        var result = await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Bob" }, "u1");
+
+        Assert.Equal("Bob 3", result.Participant.Pseudo);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LongPseudoTaken_KeepsTheSuffixedPseudoWithinTheMaximumLength()
+    {
+        var longPseudo = new string('x', 100);
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        GivenParticipants(Existing("p0", longPseudo, "u9"));
+        GivenInsertEchoesTheParticipant();
+
+        var result = await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = longPseudo }, "u1");
+
+        Assert.Equal(new string('x', 98) + " 2", result.Participant.Pseudo);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ConcurrentHomonymWinsThePseudo_RetriesWithTheNextSuffix()
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _participantRepo.SetupSequence(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync([])
+            .ReturnsAsync([Existing("p0", "Bob", "u9")]);
+        _participantRepo.SetupSequence(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ParticipantConflictException(ParticipantCollision.SamePseudo))
+            .ReturnsAsync(Existing("new", "Bob 2", "u1"));
+
+        var result = await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Bob" }, "u1");
+
+        Assert.True(result.IsNew);
+        Assert.Equal("Bob 2", result.Participant.Pseudo);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ConcurrentJoinOfTheSameAccount_ReturnsTheParticipantThatWon()
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _participantRepo.SetupSequence(r => r.FindByEventAndUserIdAsync("evt1", "u1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Participant?)null)
+            .ReturnsAsync(Existing("p7", "Bob", "u1"));
+        _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ParticipantConflictException(ParticipantCollision.SameAccount));
+
+        var result = await _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Bob" }, "u1");
 
         Assert.False(result.IsNew);
-        Assert.Equal("p0", result.Participant.Id);
-        Assert.Equal("Already joined with this pseudo", result.Message);
+        Assert.Equal("p7", result.Participant.Id);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PseudoKeepsColliding_GivesUpWithAConcurrentUpdateConflict()
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ParticipantConflictException(ParticipantCollision.SamePseudo));
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+            _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Bob" }, "u1"));
+
+        Assert.Equal(ErrorCodes.ConcurrentUpdate, ex.Reason);
     }
 
     [Fact]

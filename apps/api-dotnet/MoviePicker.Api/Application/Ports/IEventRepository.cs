@@ -15,6 +15,7 @@ public interface IEventRepository
     Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListAllByCreatorUserIdAsync(string creatorUserId, CancellationToken ct = default);
+    Task<Event?> FindByCreationRequestAsync(string creatorUserId, string creationRequestId, CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
 

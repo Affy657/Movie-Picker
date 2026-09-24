@@ -109,7 +109,7 @@ public sealed class BackfillWatchlistFactsMigrationTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_TmdbFailsOnOneItem_KeepsGoingWithTheNextOnes()
+    public async Task ExecuteAsync_TmdbFailsOnOneItem_UpdatesTheOthersThenReportsTheMigrationIncomplete()
     {
         GivenItemsMissingFacts(
             ItemWithoutFacts("w1", 11),
@@ -120,9 +120,9 @@ public sealed class BackfillWatchlistFactsMigrationTests
             .ThrowsAsync(new HttpRequestException("TMDB indisponible"));
         GivenTmdbDetails(33, Details(120));
 
-        var updated = await _sut.ExecuteAsync();
+        var ex = await Assert.ThrowsAsync<BackfillIncompleteException>(() => _sut.ExecuteAsync());
 
-        Assert.Equal(2, updated);
+        Assert.Equal(1, ex.Failed);
         _watchlist.Verify(r => r.UpdateFactsAsync("w3", 120, 7.2, It.IsAny<CancellationToken>()), Times.Once);
     }
 

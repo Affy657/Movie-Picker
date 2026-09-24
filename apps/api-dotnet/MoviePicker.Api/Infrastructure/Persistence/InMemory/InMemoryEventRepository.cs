@@ -21,6 +21,10 @@ public sealed class InMemoryEventRepository : IEventRepository
 
     public Task<Event> AddAsync(Event evt, CancellationToken ct = default)
     {
+        if (evt.CreationRequestId is { } requestId
+            && _byId.Values.Any(e => e.CreatorUserId == evt.CreatorUserId && e.CreationRequestId == requestId))
+            throw new EventCreationReplayedException();
+
         var id = string.IsNullOrEmpty(evt.Id) ? Guid.NewGuid().ToString("N")[..24] : evt.Id;
         var created = evt with { Id = id };
         _byId[id] = created;
@@ -28,6 +32,13 @@ public sealed class InMemoryEventRepository : IEventRepository
             _bySlug[created.Slug] = created;
         return Task.FromResult(created);
     }
+
+    public Task<Event?> FindByCreationRequestAsync(
+        string creatorUserId,
+        string creationRequestId,
+        CancellationToken ct = default) =>
+        Task.FromResult(_byId.Values.FirstOrDefault(e =>
+            e.CreatorUserId == creatorUserId && e.CreationRequestId == creationRequestId));
 
     public Task<bool> MarkWatchlistCleanedAsync(string eventId, DateTimeOffset cleanedAt, CancellationToken ct = default)
     {

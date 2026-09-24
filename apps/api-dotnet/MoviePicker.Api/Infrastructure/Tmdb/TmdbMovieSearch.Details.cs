@@ -31,7 +31,7 @@ public sealed partial class TmdbMovieSearch
         {
             var fresh = await FetchDetailsUncachedAsync(tmdbId, mediaType, ct).ConfigureAwait(false);
             if (fresh is not null)
-                _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
+                _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl, Size = 1 });
             return fresh;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)

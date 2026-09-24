@@ -13,9 +13,13 @@ public sealed record MovieShowcaseQuery(
 public interface IGetMovieShowcaseHandler
 {
     Task<MovieShowcaseListResponse> HandleAsync(MovieShowcaseQuery query, CancellationToken ct = default);
+
+    Task<bool> RefreshAsync(MovieShowcaseQuery query, CancellationToken ct = default);
 }
 
 public interface IGetMovieCollectionsHandler
 {
     Task<MovieCollectionListResponse> HandleAsync(CancellationToken ct = default);
+
+    Task<bool> RefreshAsync(CancellationToken ct = default);
 }

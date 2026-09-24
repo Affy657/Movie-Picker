@@ -126,4 +126,44 @@ public sealed class SchedulerControllerTests
         _pass.Verify(p => p.RunAsync(cts.Token), Times.Once);
         _authenticator.Verify(a => a.AuthenticateAsync(It.IsAny<SchedulerCallerCredentials>(), cts.Token), Times.Once);
     }
+
+    [Fact]
+    public async Task RunEventReminders_DeliveriesToRetry_Answers503SoCloudSchedulerRetries()
+    {
+        Verdict(SchedulerCallerVerdict.Accepted);
+        _pass.Setup(p => p.RunAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new EventReminderPassResult(4, 1, 2, 0, DeliveryFailures: 1));
+
+        var result = await Run();
+
+        var status = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, status.StatusCode);
+        Assert.IsType<EventReminderPassResult>(status.Value);
+    }
+
+    [Fact]
+    public async Task RunCatalogWarmUp_EverySnapshotRefreshed_AnswersOk()
+    {
+        Verdict(SchedulerCallerVerdict.Accepted);
+        var pass = new Mock<MoviePicker.Api.Application.UseCases.GetMovieShowcase.ICatalogWarmPass>();
+        pass.Setup(p => p.RunAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MoviePicker.Api.Application.UseCases.GetMovieShowcase.CatalogWarmPassResult(17, 0));
+
+        var result = await _sut.RunCatalogWarmUp(_authenticator.Object, pass.Object, CancellationToken.None);
+
+        Assert.IsType<OkObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task RunCatalogWarmUp_ASnapshotKept_Answers503()
+    {
+        Verdict(SchedulerCallerVerdict.Accepted);
+        var pass = new Mock<MoviePicker.Api.Application.UseCases.GetMovieShowcase.ICatalogWarmPass>();
+        pass.Setup(p => p.RunAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MoviePicker.Api.Application.UseCases.GetMovieShowcase.CatalogWarmPassResult(16, 1));
+
+        var result = await _sut.RunCatalogWarmUp(_authenticator.Object, pass.Object, CancellationToken.None);
+
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, Assert.IsType<ObjectResult>(result).StatusCode);
+    }
 }
