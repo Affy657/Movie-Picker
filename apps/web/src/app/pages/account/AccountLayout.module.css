@@ -10,7 +10,7 @@
   gap: var(--space-0-5);
   align-self: start;
   position: sticky;
-  top: var(--space-4);
+  top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + var(--space-4));
 }
 
 .rubric {

@@ -2,7 +2,15 @@
   display: grid;
   gap: var(--space-5);
   min-width: 0;
-  scroll-margin-top: var(--space-8);
+  scroll-margin-top: calc(
+    var(--header-height) + env(safe-area-inset-top, 0px) + var(--tap-target-min) + var(--space-8)
+  );
+}
+
+@media (min-width: 80rem) {
+  .section {
+    scroll-margin-top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + var(--space-8));
+  }
 }
 
 .head {
