@@ -119,7 +119,7 @@ export default function AccountProfilePage({ user }: Readonly<{ user: UserProfil
       setSaveError(null);
       const updated = await patchProfile({
         displayName: trimmedName,
-        ...(bioChanged ? { bio: bioTrimmed === '' ? null : bioTrimmed } : {}),
+        ...(bioChanged ? { bio: bioTrimmed } : {}),
         isProfilePublic: sent.isPublic,
         isWatchlistPublic: sent.isWatchlistPublic,
       });
