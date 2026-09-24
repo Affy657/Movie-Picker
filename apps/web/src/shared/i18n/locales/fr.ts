@@ -558,6 +558,7 @@ export const fr = {
         indigo: 'Indigo',
       },
       ratingScaleLabel: 'Échelle des notes',
+      ratingScaleSaveError: 'L’échelle des notes n’a pas pu être enregistrée. Réessayez.',
       ratingScaleOptions: {
         five: 'Sur 5',
         ten: 'Sur 10',
