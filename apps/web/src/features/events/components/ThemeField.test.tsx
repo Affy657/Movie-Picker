@@ -46,6 +46,31 @@ describe('parseTheme', () => {
   it('traite un texte sans emoji', () => {
     expect(parseTheme('Comédie')).toEqual({ emoji: '', text: 'Comédie' });
   });
+
+  it('reads a theme made of an emoji alone as that emoji', () => {
+    expect(parseTheme('🎃')).toEqual({ emoji: '🎃', text: '' });
+    expect(parseTheme(' ❤️ ')).toEqual({ emoji: '❤️', text: '' });
+  });
+
+  it('keeps an emoji of several code points whole', () => {
+    expect(parseTheme('👨‍👩‍👧 Famille')).toEqual({ emoji: '👨‍👩‍👧', text: 'Famille' });
+    expect(parseTheme('🕵️ Thriller')).toEqual({ emoji: '🕵️', text: 'Thriller' });
+    expect(parseTheme('👍🏽 Validé')).toEqual({ emoji: '👍🏽', text: 'Validé' });
+    expect(parseTheme('🇫🇷 Cinéma français')).toEqual({ emoji: '🇫🇷', text: 'Cinéma français' });
+  });
+
+  it('reads back every emoji of the picker, alone or before a text', () => {
+    for (const emoji of THEME_EMOJIS) {
+      expect(parseTheme(emoji)).toEqual({ emoji, text: '' });
+      expect(parseTheme(`${emoji} Soirée`)).toEqual({ emoji, text: 'Soirée' });
+    }
+  });
+
+  it('leaves a text that only starts with a letter or a symbol untouched', () => {
+    expect(parseTheme('日本 映画')).toEqual({ emoji: '', text: '日本 映画' });
+    expect(parseTheme('© Studio Ghibli')).toEqual({ emoji: '', text: '© Studio Ghibli' });
+    expect(parseTheme('🎃Horreur')).toEqual({ emoji: '', text: '🎃Horreur' });
+  });
 });
 
 describe('ThemeField', () => {

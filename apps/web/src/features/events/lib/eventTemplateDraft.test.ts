@@ -132,6 +132,20 @@ describe('buildTemplateDraft', () => {
     expect(buildTemplateDraft(fields).maxParticipants).toBe(8);
   });
 
+  it('gives back the emoji of a theme that has no text or a multi-part emoji', () => {
+    const config = { ...baseDraft, winnerCount: 1 };
+
+    expect(configToFields({ ...config, theme: '🎃' })).toMatchObject({
+      themeEmoji: '🎃',
+      themeText: '',
+    });
+    expect(configToFields({ ...config, theme: '👨‍👩‍👧 Famille' })).toMatchObject({
+      themeEmoji: '👨‍👩‍👧',
+      themeText: 'Famille',
+    });
+    expect(buildTemplateDraft(configToFields({ ...config, theme: '🎃' })).theme).toBe('🎃');
+  });
+
   it('reads a limit stored at the cap as disabled', () => {
     const fields = configToFields({
       theme: null,
