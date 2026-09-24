@@ -8,6 +8,21 @@ import FollowListModal from '@/features/profile/components/FollowListModal';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 
+const SIGNED_IN_ALICE = {
+  userId: 'u-alice',
+  displayName: 'Alice',
+  emailMasked: 'a***@test.local',
+  uiTheme: 'system',
+  accentColor: 'default',
+  avatarId: '',
+  handle: 'alice',
+  bio: null,
+  isProfilePublic: true,
+};
+
+const signedInAsAlice = () =>
+  http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(SIGNED_IN_ALICE));
+
 function renderModal(
   overrides: Partial<Parameters<typeof FollowListModal>[0]> = {},
   onClose = vi.fn()
@@ -91,7 +106,7 @@ describe('FollowListModal (MSW)', () => {
     const user = userEvent.setup();
     let calls = 0;
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      signedInAsAlice(),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
       http.get(`${TEST_API_V1}/users/search`, () => {
         calls += 1;
@@ -111,7 +126,7 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
 
     expect(await screen.findByText('Recherche impossible, réessayez.')).toBeInTheDocument();
@@ -288,17 +303,49 @@ describe('FollowListModal (MSW)', () => {
     });
   });
 
-  it("affiche l'invitation a chercher sur l'onglet Rechercher", async () => {
-    const user = userEvent.setup();
+  it('offers no search tab to a signed-out visitor, since the search needs an account', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
     );
 
     renderModal();
+
+    expect(await screen.findByText(/aucun utilisateur/i)).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /2 abonnements/i })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Rechercher' })).not.toBeInTheDocument();
+  });
+
+  it('never runs the user search for a signed-out visitor opened on the search tab', async () => {
+    const searchCalls: string[] = [];
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
+      http.get(`${TEST_API_V1}/users/search`, ({ request }) => {
+        searchCalls.push(new URL(request.url).searchParams.get('q') ?? '');
+        return new HttpResponse(null, { status: 401 });
+      })
+    );
+
+    renderModal({ initialTab: 'search' });
+
+    expect(await screen.findByText(/aucun utilisateur/i)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Pseudo ou @handle')).not.toBeInTheDocument();
+    expect(screen.queryByText('Recherche impossible, réessayez.')).not.toBeInTheDocument();
+    expect(searchCalls).toEqual([]);
+  });
+
+  it("affiche l'invitation a chercher sur l'onglet Rechercher", async () => {
+    const user = userEvent.setup();
+    server.use(
+      signedInAsAlice(),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
+    );
+
+    renderModal();
     await screen.findByText(/aucun utilisateur/i);
 
-    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
 
     expect(await screen.findByText('Cherchez un pseudo')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Pseudo ou @handle')).toBeInTheDocument();
@@ -308,7 +355,7 @@ describe('FollowListModal (MSW)', () => {
     const user = userEvent.setup();
     const searchCalls: string[] = [];
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      signedInAsAlice(),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
       http.get(`${TEST_API_V1}/users/search`, ({ request }) => {
         searchCalls.push(new URL(request.url).searchParams.get('q') ?? '');
@@ -318,7 +365,7 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
 
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'm');
 
@@ -329,7 +376,7 @@ describe('FollowListModal (MSW)', () => {
   it('surligne la portion trouvee dans le pseudo et le handle', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      signedInAsAlice(),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
       http.get(`${TEST_API_V1}/users/search`, () =>
         HttpResponse.json({
@@ -348,7 +395,7 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
 
     expect(await screen.findByText('Sofia Benali')).toBeInTheDocument();
@@ -359,19 +406,7 @@ describe('FollowListModal (MSW)', () => {
   it('propose de suivre un compte trouve qui ne l est pas encore', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u-alice',
-          displayName: 'Alice',
-          emailMasked: 'a***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          avatarId: '',
-          handle: 'alice',
-          bio: null,
-          isProfilePublic: true,
-        })
-      ),
+      signedInAsAlice(),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
       http.get(`${TEST_API_V1}/users/search`, () =>
         HttpResponse.json({
@@ -384,7 +419,7 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
 
     expect(await screen.findByRole('button', { name: 'Suivre @lea_m' })).toBeInTheDocument();
@@ -393,14 +428,14 @@ describe('FollowListModal (MSW)', () => {
   it('explique une recherche sans resultat', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      signedInAsAlice(),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
       http.get(`${TEST_API_V1}/users/search`, () => HttpResponse.json({ items: [] }))
     );
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'zephyrin');
 
     expect(await screen.findByText('Personne ne correspond')).toBeInTheDocument();
@@ -419,7 +454,7 @@ describe('FollowListModal (MSW)', () => {
     );
     try {
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        signedInAsAlice(),
         http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
       );
 

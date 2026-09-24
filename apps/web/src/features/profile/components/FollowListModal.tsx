@@ -75,12 +75,14 @@ export default function FollowListModal({
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<Tab>(initialTab);
+  const [selectedTab, setSelectedTab] = useState<Tab>(initialTab);
   const [followError, setFollowError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS);
+  const canSearch = Boolean(user);
+  const tab: Tab = selectedTab === 'search' && !canSearch ? 'following' : selectedTab;
   const searching = tab === 'search';
-  const searchEnabled = searching && debouncedQuery.length >= MIN_SEARCH_LENGTH;
+  const searchEnabled = searching && canSearch && debouncedQuery.length >= MIN_SEARCH_LENGTH;
 
   const followingQuery = useQuery({
     queryKey: queryKeys.profile.following(handle),
@@ -150,7 +152,8 @@ export default function FollowListModal({
       tab={tab}
       followingCount={followingCount}
       followersCount={followersCount}
-      onSelect={setTab}
+      canSearch={canSearch}
+      onSelect={setSelectedTab}
     />
   );
 
