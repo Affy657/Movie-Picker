@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -25,6 +25,10 @@ const configure = (accent = 'blue', user: unknown = null, patchProfile = vi.fn()
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('AccentColorPicker', () => {
@@ -72,6 +76,40 @@ describe('AccentColorPicker', () => {
 
     expect(setAccent).toHaveBeenCalledWith('green');
     await waitFor(() => expect(patchProfile).toHaveBeenCalledWith({ accentColor: 'green' }));
+  });
+
+  it('sends the pending patch once when unmounted before the debounce elapses', () => {
+    vi.useFakeTimers();
+    const { patchProfile } = configure(
+      'blue',
+      { userId: 'u1' },
+      vi.fn().mockResolvedValue(undefined)
+    );
+
+    const { unmount } = render(<AccentColorPicker />);
+    fireEvent.click(green());
+    expect(patchProfile).not.toHaveBeenCalled();
+
+    unmount();
+    vi.advanceTimersByTime(1000);
+
+    expect(patchProfile).toHaveBeenCalledExactlyOnceWith({ accentColor: 'green' });
+  });
+
+  it('sends nothing on unmount once the debounced patch has gone out', () => {
+    vi.useFakeTimers();
+    const { patchProfile } = configure(
+      'blue',
+      { userId: 'u1' },
+      vi.fn().mockResolvedValue(undefined)
+    );
+
+    const { unmount } = render(<AccentColorPicker />);
+    fireEvent.click(green());
+    vi.advanceTimersByTime(1000);
+    unmount();
+
+    expect(patchProfile).toHaveBeenCalledTimes(1);
   });
 
   it('rolls back the accent when the patch fails', async () => {
