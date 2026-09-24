@@ -42,6 +42,7 @@ public sealed record NotificationTypePreferencePatch
 
 public sealed record PatchNotificationPreferencesRequest
 {
+    [NoEmptyItems]
     public IReadOnlyList<NotificationTypePreferencePatch> Preferences { get; init; } = [];
 }
 
