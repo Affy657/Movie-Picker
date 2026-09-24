@@ -3,7 +3,12 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
-import ThemeField, { parseTheme, THEME_PRESETS } from './ThemeField';
+import ThemeField, {
+  parseTheme,
+  THEME_EMOJIS,
+  THEME_PRESETS,
+  THEME_TEXT_MAX_LENGTH,
+} from './ThemeField';
 
 function renderField(
   overrides: Partial<{
@@ -155,6 +160,14 @@ describe('ThemeField', () => {
       expect(onEmojiChange).toHaveBeenCalledWith('🎃');
       expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     });
+  });
+
+  it('caps the text so that the longest emoji and the text fit the server limit of 100', () => {
+    renderField();
+
+    const longestEmoji = Math.max(...THEME_EMOJIS.map((emoji) => emoji.length));
+    expect(screen.getByRole('textbox')).toHaveAttribute('maxLength', String(THEME_TEXT_MAX_LENGTH));
+    expect(longestEmoji + 1 + THEME_TEXT_MAX_LENGTH).toBeLessThanOrEqual(100);
   });
 
   it('hides the suggested themes when disabled', () => {

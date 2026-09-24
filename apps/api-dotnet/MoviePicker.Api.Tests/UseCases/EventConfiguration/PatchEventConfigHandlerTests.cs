@@ -286,6 +286,34 @@ public sealed class PatchEventConfigHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_Theme_TooLong_ThrowsBadRequest()
+    {
+        var evt = Evt();
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
+            _sut.HandleAsync("s", new PatchEventConfigRequest { Theme = new string('a', EventConfig.ThemeMaxLength + 1) }));
+
+        Assert.Equal(ErrorCodes.EventThemeTooLong, ex.Reason);
+    }
+
+    [Fact]
+    public async Task HandleAsync_Theme_AtTheLimitOnceTrimmed_Updates()
+    {
+        var evt = Evt();
+        _events.Setup(r => r.GetByIdOrSlugAsync("s", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _hostToken.Setup(h => h.GetHostToken()).Returns("ht");
+        _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+        var theme = new string('a', EventConfig.ThemeMaxLength);
+
+        var res = await _sut.HandleAsync("s", new PatchEventConfigRequest { Theme = $"  {theme}  " });
+
+        Assert.Equal(theme, res.Theme);
+    }
+
+    [Fact]
     public async Task HandleAsync_Title_TooLong_ThrowsBadRequest()
     {
         var evt = Evt();

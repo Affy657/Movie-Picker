@@ -68,6 +68,8 @@ public sealed record EventConfig
 
     public const int MaxMoviesPerEventCap = 1000;
 
+    public const int ThemeMaxLength = 100;
+
     public string? Theme { get; init; }
     public int? ThemeColor { get; init; }
     public int? MaxProposalsPerParticipant { get; init; }

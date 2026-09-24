@@ -103,6 +103,7 @@ public static class ErrorCodes
     public const string ThemeColorOutOfRange = "theme_color_out_of_range";
     public const string EventTitleRequired = "event_title_required";
     public const string EventTitleTooLong = "event_title_too_long";
+    public const string EventThemeTooLong = "event_theme_too_long";
     public const string EventTemplateNameRequired = "event_template_name_required";
     public const string EventTemplateNameTooLong = "event_template_name_too_long";
     public const string SelfFollow = "self_follow";

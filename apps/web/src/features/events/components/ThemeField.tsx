@@ -50,6 +50,8 @@ export const THEME_EMOJIS = [
 
 const PRESETS_VISIBLE = 5;
 
+export const THEME_TEXT_MAX_LENGTH = 90;
+
 export const THEME_PRESETS = [
   { emoji: '🎃', slug: 'horror' },
   { emoji: '😂', slug: 'comedy' },
@@ -200,6 +202,7 @@ export default function ThemeField({
           className={clsx('input', styles.textInput)}
           type="text"
           autoComplete="off"
+          maxLength={THEME_TEXT_MAX_LENGTH}
           placeholder={t('events.settings.themeFieldPlaceholder')}
           value={text}
           onChange={(e) => onTextChange(e.target.value)}

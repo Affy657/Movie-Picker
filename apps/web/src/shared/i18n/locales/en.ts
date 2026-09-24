@@ -1522,6 +1522,7 @@ export const en: Locale = {
     theme_color_out_of_range: 'themeColor must be a hue between 0 and 359.',
     event_title_required: 'The movie night title cannot be empty.',
     event_title_too_long: 'The movie night title cannot exceed {{max}} characters.',
+    event_theme_too_long: 'The movie night theme cannot exceed {{max}} characters.',
     event_template_name_required: 'The template name cannot be empty.',
     event_template_name_too_long: 'The template name cannot exceed {{max}} characters.',
     self_follow: 'You cannot follow yourself.',

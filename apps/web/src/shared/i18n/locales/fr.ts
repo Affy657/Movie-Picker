@@ -1548,6 +1548,7 @@ export const fr = {
     theme_color_out_of_range: 'themeColor doit être une teinte entre 0 et 359.',
     event_title_required: 'Le titre de la soirée ne peut pas être vide.',
     event_title_too_long: 'Le titre de la soirée ne peut pas dépasser {{max}} caractères.',
+    event_theme_too_long: 'Le thème de la soirée ne peut pas dépasser {{max}} caractères.',
     event_template_name_required: 'Le nom du template ne peut pas être vide.',
     event_template_name_too_long: 'Le nom du template ne peut pas dépasser {{max}} caractères.',
     self_follow: 'Vous ne pouvez pas vous suivre vous-même.',

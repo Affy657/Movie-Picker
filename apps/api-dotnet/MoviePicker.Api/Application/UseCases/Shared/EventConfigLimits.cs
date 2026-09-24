@@ -24,6 +24,15 @@ public static class EventConfigLimits
         return value;
     }
 
-    public static string? NormalizeTheme(string? raw) =>
-        string.IsNullOrWhiteSpace(raw) ? null : raw.Trim();
+    public static string? NormalizeTheme(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return null;
+
+        var theme = raw.Trim();
+        if (theme.Length > EventConfig.ThemeMaxLength)
+            throw Errors.EventThemeTooLong(EventConfig.ThemeMaxLength);
+
+        return theme;
+    }
 }

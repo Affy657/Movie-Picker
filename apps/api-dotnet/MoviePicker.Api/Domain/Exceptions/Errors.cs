@@ -275,6 +275,9 @@ public static class Errors
     public static BadRequestException EventTitleTooLong(int max) =>
         new($"Movie night title cannot exceed {max} characters", ErrorCodes.EventTitleTooLong, Params(("max", max)));
 
+    public static BadRequestException EventThemeTooLong(int max) =>
+        new($"Movie night theme cannot exceed {max} characters", ErrorCodes.EventThemeTooLong, Params(("max", max)));
+
     public static BadRequestException EventTemplateNameRequired() =>
         new("Template name cannot be empty", ErrorCodes.EventTemplateNameRequired);
 
