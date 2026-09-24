@@ -6,6 +6,7 @@ using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.LetterboxdImport;
@@ -216,6 +217,36 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         _watchlist.Verify(
             w => w.RemoveAsync(UserId, 5255, MovieMediaType.Movie, It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task SyncAsync_EntryRenamedOnLetterboxd_StaysInTheWatchlistUnderItsNewSlug()
+    {
+        var watchlist = new InMemoryWatchlistRepository();
+        var createdAt = new DateTimeOffset(2026, 1, 5, 20, 0, 0, TimeSpan.Zero);
+        await watchlist.AddAsync(Item(5255, "Le Pôle express", "the-polar-express") with { CreatedAt = createdAt });
+        GivenLetterboxd(true, new LetterboxdFilm("the-polar-express-2004", "The Polar Express", "2004"));
+        GivenTmdbResults(
+            "The Polar Express",
+            new TmdbSearchItem(5255, MovieMediaType.Movie, "Le Pôle express", "2004", null, 6.8, "The Polar Express"));
+        var sut = new LetterboxdWatchlistSynchronizer(
+            watchlist,
+            _letterboxd.Object,
+            _tmdb.Object,
+            _addToWatchlist.Object,
+            _participants.Object,
+            _events.Object,
+            _movies.Object,
+            NullLogger<LetterboxdWatchlistSynchronizer>.Instance);
+
+        var outcome = await sut.SyncAsync(TheUser());
+
+        var kept = await watchlist.GetOneAsync(UserId, 5255, MovieMediaType.Movie);
+        Assert.NotNull(kept);
+        Assert.Equal("the-polar-express-2004", kept.LetterboxdSlug);
+        Assert.Equal(createdAt, kept.CreatedAt);
+        Assert.Equal(0, outcome.Removed);
+        Assert.Equal(0, outcome.Added);
     }
 
     [Fact]

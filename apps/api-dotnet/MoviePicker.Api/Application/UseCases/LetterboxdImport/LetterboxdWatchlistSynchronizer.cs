@@ -73,8 +73,10 @@ public sealed class LetterboxdWatchlistSynchronizer
                 snapshot.Total);
         }
 
-        var removed = snapshot.IsTruncated ? 0 : await RemoveDepartedAsync(user.Id, items, onLetterboxd, ct);
         var addition = await AddMissingAsync(user.Id, items, snapshot.Films, ct);
+        var removed = snapshot.IsTruncated
+            ? 0
+            : await RemoveDepartedAsync(user.Id, items, onLetterboxd, addition.Relinked, ct);
 
         return new LetterboxdSyncOutcome(
             Succeeded: true,
@@ -94,12 +96,15 @@ public sealed class LetterboxdWatchlistSynchronizer
         string userId,
         IReadOnlyList<WatchlistItem> items,
         HashSet<string> onLetterboxd,
+        IReadOnlySet<(int TmdbId, MovieMediaType MediaType)> relinked,
         CancellationToken ct)
     {
         var removed = 0;
         foreach (var item in items)
         {
-            if (string.IsNullOrEmpty(item.LetterboxdSlug) || onLetterboxd.Contains(item.LetterboxdSlug))
+            if (string.IsNullOrEmpty(item.LetterboxdSlug)
+                || onLetterboxd.Contains(item.LetterboxdSlug)
+                || relinked.Contains((item.TmdbId, item.MediaType)))
                 continue;
 
             if (await _watchlist.RemoveAsync(userId, item.TmdbId, item.MediaType, ct))
@@ -124,6 +129,7 @@ public sealed class LetterboxdWatchlistSynchronizer
         var added = 0;
         var unmatched = new List<string>();
         var pending = new List<LetterboxdImportRowResponse>();
+        var relinked = new HashSet<(int TmdbId, MovieMediaType MediaType)>();
         var rowIndex = 0;
         HashSet<(int TmdbId, MovieMediaType MediaType)>? watchedAtAMovieNight = null;
 
@@ -153,6 +159,7 @@ public sealed class LetterboxdWatchlistSynchronizer
             {
                 await _watchlist.SetLetterboxdSlugAsync(
                     userId, confident.Id, confident.MediaType, film.Slug, ct);
+                relinked.Add((confident.Id, confident.MediaType));
                 continue;
             }
 
@@ -165,7 +172,7 @@ public sealed class LetterboxdWatchlistSynchronizer
             added++;
         }
 
-        return new AdditionResult(added, unmatched, pending);
+        return new AdditionResult(added, unmatched, pending, relinked);
     }
 
     private async Task<HashSet<(int TmdbId, MovieMediaType MediaType)>> WatchedAtAMovieNightAsync(
@@ -247,5 +254,6 @@ public sealed class LetterboxdWatchlistSynchronizer
     private sealed record AdditionResult(
         int Added,
         IReadOnlyList<string> UnmatchedTitles,
-        IReadOnlyList<LetterboxdImportRowResponse> PendingChoices);
+        IReadOnlyList<LetterboxdImportRowResponse> PendingChoices,
+        IReadOnlySet<(int TmdbId, MovieMediaType MediaType)> Relinked);
 }
