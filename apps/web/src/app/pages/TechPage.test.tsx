@@ -246,7 +246,7 @@ describe('TechPage', () => {
     const { container } = renderTechPage();
     const steps = [...container.querySelectorAll('section#trajectory > ol > li')];
 
-    expect(steps).toHaveLength(14);
+    expect(steps).toHaveLength(15);
     expect(steps[0]).toHaveTextContent(/MVP/);
     expect(steps.at(-1)).toHaveTextContent(/V2/);
     expect(steps.some((step) => step.querySelector('h3')?.textContent?.includes('V1.8'))).toBe(
@@ -273,7 +273,7 @@ describe('TechPage', () => {
     expect(unplanned).toHaveLength(1);
     expect(unplanned[0]).toBe(steps.at(-2));
     expect(unplanned[0]?.textContent).toMatch(/pas encore/i);
-    expect(unplanned[0]?.textContent).toMatch(/V1\.9.*V2/);
+    expect(unplanned[0]?.textContent).toMatch(/V1\.10.*V2/);
     expect(unplanned[0]?.querySelector('h3')).toBeNull();
     expect(unplanned[0]?.querySelectorAll('li')).toHaveLength(0);
 

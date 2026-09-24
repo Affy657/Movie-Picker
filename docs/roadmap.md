@@ -8,7 +8,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 - **MVP** : parcours minimal utilisable côté utilisateur.
 - **V1, V1.1, V1.2** : releases produit progressives sur la spec complète, sans casser le cœur métier.
-- **V1.3 à V1.9** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
+- **V1.3 à V1.10** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
 - **Backlog** : idées et sujets non planifiés sur une date de release, triés régulièrement. Un backlog produit et un backlog tech, séparés, à la fin du fichier.
 - **Une branche par version** : chaque version se développe sur une branche qui porte son nom (`v1.6`, `v1.7`, …). Toutes les features de la version sont livrées sur cette branche, et elle n'est fusionnée dans `master` qu'une fois la version complète. Sur cette branche, la CI GitHub Actions n'est pas bloquante ; la fusion dans `master` rend la version déployable, et le déploiement reste un geste manuel (`deploy.yml`, voir `AGENTS.md`).
 - **Tailles t-shirt** : chaque item porte une estimation de charge, indépendante de sa valeur produit, pour comparer les versions autrement qu'au nombre de tickets. Échelle calibrée sur l'empreinte réelle des features déjà livrées.
@@ -275,11 +275,25 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## Backlog produit (non priorisé sur une release) (185 points, 1 non estimé)
+## 📋 V1.10, planifiée (42 points)
+
+**Objectif** : ouvrir Movie Picker au-delà de son cercle, avec la confiance que cela demande : des comptes mieux protégés, un état du service consultable, une aide en ligne et des actions qui survivent à une coupure de réseau.
+
+- ⬜ `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Dépend de la synchronisation temps réel et de la consultation hors-ligne (V1.9).
+- ⬜ `L` **Fil d'actualité** : un fil qui rassemble l'activité des comptes suivis (soirées créées et terminées, films notés, listes publiées) et les soirées publiques à venir. Il prolonge la rangée « Vos amis ont vu » de la home, limitée aux films vus.
+- ⬜ `L` **Soirée publique** : une soirée que l'hôte rend publique apparaît sur une page de découverte, et n'importe quel compte peut la rejoindre. L'hôte peut bannir un participant, qui ne peut alors plus revenir par le lien.
+- ⬜ `L` **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
+- ⬜ `M` **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
+- ⬜ `M` **Alerte nouvelle connexion** : e-mail automatique envoyé à l'utilisateur lors d'une connexion depuis un nouvel appareil ou navigateur.
+- ⬜ `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
+- ⬜ `M` **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
+
+---
+
+## Backlog produit (non priorisé sur une release) (143 points, 1 non estimé)
 
 > **Note V2, application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
-- `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Dépend de la synchronisation temps réel et de la consultation hors-ligne (V1.9).
 - `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion.
 - `M` **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
 - `L` **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
@@ -291,8 +305,6 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - `S` **Home : invitations en attente** : rappel des invitations non répondues directement sur la home, plus visible que les notifications seules.
 - `S` **Home : soirée rapide** : bouton « Créer une soirée » avec la dernière config utilisée en un clic ; dépend des templates de soirée (V1.6).
 - `S` **Home : derniers films gagnants** : les 3-4 films tirés dans ses propres soirées récentes, ce qui évite de reproposer un film qu'on vient de voir. Distinct de « Vos amis ont vu », livré en V1.5, qui couvre les soirées des comptes suivis.
-- `L` **Fil d'actualité** : un fil qui rassemble l'activité des comptes suivis (soirées créées et terminées, films notés, listes publiées) et les soirées publiques à venir. Il prolonge la rangée « Vos amis ont vu » de la home, limitée aux films vus.
-- `L` **Soirée publique** : une soirée que l'hôte rend publique apparaît sur une page de découverte, et n'importe quel compte peut la rejoindre. L'hôte peut bannir un participant, qui ne peut alors plus revenir par le lien.
 - `L` **Sondage de disponibilité** : avant de créer une soirée, l'hôte propose plusieurs créneaux à ses follows et chacun coche ses disponibilités. L'hôte retient le créneau final, qui crée la soirée.
 - `L` **Plateformes streaming par compte** : chaque utilisateur renseigne ses abonnements dans ses paramètres, et la page d'une soirée affiche les plateformes communes à tous les participants. Les films peuvent être filtrés à celles-ci.
 - `XL` **Messages privés** : messagerie directe entre deux utilisateurs qui se suivent mutuellement ; accessible depuis le profil public ou la liste de follows ; permet d'organiser une soirée ou d'échanger en dehors du contexte d'une soirée existante.
@@ -307,13 +319,8 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - `S` **Serveur Discord Movie Picker** : un serveur communautaire pour les retours, les idées et l'annonce des versions, avec un lien d'invitation dans le pied de page et le centre d'aide. Les salons reprennent les entrées « Proposer une idée » et « Signaler un problème » sans remplacer les tickets GitHub.
 - `XL` **Vrai support des séries (progression par épisode)** : suivre la saison et l'épisode en cours d'une série et le prochain à voir, via les endpoints TMDB dédiés. Remplace le traitement actuel d'une série comme un simple film.
 - `M` **Connexion Discord, Meta et Twitch** : trois fournisseurs OAuth supplémentaires aux côtés de Google et GitHub, dans la section « Connexions » existante.
-- `L` **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
-- `M` **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
-- `M` **Alerte nouvelle connexion** : e-mail automatique envoyé à l'utilisateur lors d'une connexion depuis un nouvel appareil ou navigateur.
-- `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
 - `S` **Contact / Support** : formulaire ou adresse dédiée pour signaler un problème, distinct du bouton « Proposer une idée » réservé aux suggestions de features.
 - `M` **Onboarding pour nouveaux utilisateurs** : mini tour guidé ou écran de bienvenue à la première connexion, expliquant le concept (créer une soirée, voter, la roue).
-- `M` **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
 
 ---
 

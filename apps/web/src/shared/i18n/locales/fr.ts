@@ -2415,7 +2415,7 @@ export const fr = {
       lead: "{{commits}} commits depuis février 2026. Chaque palier est parti en production avant que le suivant ne s'ouvre. Les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
       plannedBadge: 'à venir',
       currentBadge: 'en cours',
-      unplannedSpan: 'Entre la V1.9 et la V2',
+      unplannedSpan: 'Entre la V1.10 et la V2',
       unplannedDetail:
         'Des versions qui ne sont pas encore cadrées. Leur nombre et leur contenu dépendront des retours d’usage.',
       techHeading: 'Les chantiers techniques ouverts',
@@ -2574,12 +2574,26 @@ export const fr = {
       v19Item4: 'Thème imposé',
       v19Item5: 'Double authentification',
       v19Item6: 'Palette de commandes',
+      v110When: 'Au-delà',
+      v110What: 'V1.10',
+      v110Detail:
+        "Ouvrir l'application au-delà de son cercle, avec un fil d'actualité et des soirées publiques, et la confiance que cela demande : passkeys, sessions visibles, alerte de connexion, état du service et aide en ligne.",
+      v110Hint:
+        "Les soirées ouvertes à tous arrivent après le temps réel : en sondage, le coût d'une soirée croît avec chaque participant.",
+      v110Item1: 'Reprise hors-ligne',
+      v110Item2: "Fil d'actualité",
+      v110Item3: 'Soirée publique',
+      v110Item4: 'Passkeys',
+      v110Item5: 'Sessions actives',
+      v110Item6: 'Alerte nouvelle connexion',
+      v110Item7: "Centre d'aide",
+      v110Item8: 'Statut du service',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:
         'Une application mobile native, pleinement intégrée à la plateforme. Le prototype de cours a été archivé plutôt que rafistolé.',
       v2Hint:
-        'Aucune date annoncée : le périmètre dépendra de ce que la V1.9 aura laissé derrière elle.',
+        'Aucune date annoncée : le périmètre dépendra de ce que la V1.10 aura laissé derrière elle.',
       v2Item1: 'Application native',
       v2Item2: 'Notifications système',
       v2Item3: 'Parcours complet hors navigateur',
