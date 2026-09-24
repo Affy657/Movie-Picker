@@ -74,6 +74,13 @@ public interface ITmdbMovieSearch
         int? runtimeMax = null,
         CancellationToken ct = default);
 
+    Task<IReadOnlyList<TmdbSearchItem>> SearchTitlesAsync(
+        string query,
+        bool allowSeries,
+        int? yearFrom = null,
+        int? yearTo = null,
+        CancellationToken ct = default);
+
     Task<TmdbMovieEnrichment?> GetEnrichmentAsync(int tmdbId, MovieMediaType mediaType, string region, CancellationToken ct = default);
 
     Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> GetEnrichmentsAsync(

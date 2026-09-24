@@ -69,16 +69,11 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
             .ReturnsAsync(new LetterboxdWatchlistSnapshot(
                 [new LetterboxdFilm("dune-part-two", "Dune : Deuxième partie", "2024")], true));
         _tmdb
-            .Setup(t => t.SearchAsync(
+            .Setup(t => t.SearchTitlesAsync(
                 "Dune : Deuxième partie",
                 true,
-                null,
                 It.IsAny<int?>(),
                 It.IsAny<int?>(),
-                null,
-                null,
-                null,
-                null,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)
             [
@@ -106,10 +101,8 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
             .ReturnsAsync(new LetterboxdWatchlistSnapshot(
                 [new LetterboxdFilm("the-polar-express", "The Polar Express", "2004")], true));
         _tmdb
-            .Setup(t => t.SearchAsync(
-                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TaskCanceledException("TMDB did not answer in time"));
     }
 

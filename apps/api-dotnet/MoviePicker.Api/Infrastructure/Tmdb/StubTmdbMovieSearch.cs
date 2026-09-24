@@ -23,6 +23,14 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
         return Task.FromResult(list);
     }
 
+    public Task<IReadOnlyList<TmdbSearchItem>> SearchTitlesAsync(
+        string query,
+        bool allowSeries,
+        int? yearFrom = null,
+        int? yearTo = null,
+        CancellationToken ct = default) =>
+        SearchAsync(query, allowSeries, ct: ct);
+
     private static TmdbMovieEnrichment StubEnrichment()
     {
         var offers = new[]

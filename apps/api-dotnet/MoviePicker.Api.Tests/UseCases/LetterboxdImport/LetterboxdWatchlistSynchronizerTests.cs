@@ -73,17 +73,13 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
     private void GivenTmdbResults(string query, params TmdbSearchItem[] results) =>
         _tmdb
-            .Setup(t => t.SearchAsync(
-                query, true, null, It.IsAny<int?>(), It.IsAny<int?>(),
-                null, null, null, null, It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(query, true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)results);
 
     private void GivenTmdbFindsNothing() =>
         _tmdb
-            .Setup(t => t.SearchAsync(
-                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[]);
 
     private void VerifyNothingAdded() =>
@@ -269,10 +265,8 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         Assert.Equal(0, outcome.Added);
         Assert.Equal(0, outcome.Removed);
         _tmdb.Verify(
-            t => t.SearchAsync(
-                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
+            t => t.SearchTitlesAsync(
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
