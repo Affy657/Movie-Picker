@@ -126,6 +126,45 @@ describe('AddMovieForm (MSW)', () => {
     expect(searchedRuntimeMax).toEqual([null, '150']);
   });
 
+  it('a filter changed after a filters-only search runs the search again instead of clearing it', async () => {
+    const searchedGenres: (string | null)[] = [];
+    server.use(
+      http.get(`${TEST_API_V1}/movies/search`, ({ request }) => {
+        searchedGenres.push(new URL(request.url).searchParams.get('genreIds'));
+        return HttpResponse.json({
+          items: [
+            {
+              id: 100,
+              title: 'Film Test',
+              year: '2024',
+              posterPath: null,
+              voteAverage: 7.5,
+              watchProviders: [],
+              tmdbWatchPageUrl: null,
+            },
+          ],
+          watchProvidersRegion: 'FR',
+          disclaimer: '',
+          tmdbAttributionUrl: 'https://www.themoviedb.org/',
+        });
+      })
+    );
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    await user.click(screen.getByRole('button', { name: /filtres avancés/i }));
+    await user.click(screen.getByRole('button', { name: 'Action' }));
+    await user.click(screen.getByRole('button', { name: 'Comédie' }));
+    await user.click(screen.getByRole('button', { name: 'Rechercher' }));
+    expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(searchedGenres.at(-1)).toBe('28,35');
+
+    await user.click(screen.getByRole('button', { name: /filtres avancés/i }));
+    await user.click(screen.getByRole('button', { name: 'Comédie' }));
+
+    await waitFor(() => expect(searchedGenres.at(-1)).toBe('28'));
+    expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
+  });
+
   it('affiche un message si la recherche ne retourne aucun film', async () => {
     server.use(
       http.get(`${TEST_API_V1}/movies/search`, () =>
