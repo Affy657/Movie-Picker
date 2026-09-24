@@ -133,6 +133,104 @@ describe('HostEventSettingsPanel', () => {
     await waitFor(() => expect(patched).toBe(true));
   });
 
+  it('saves a setting switched back before the movie night is reloaded', async () => {
+    const user = userEvent.setup();
+    const bodies: Record<string, unknown>[] = [];
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        bodies.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />
+    );
+    const allowSeries = screen.getByRole('switch', { name: /autoriser les séries tv/i });
+
+    await user.click(allowSeries);
+    await waitFor(() => expect(bodies).toHaveLength(1));
+    await user.click(allowSeries);
+
+    await waitFor(() => expect(bodies).toHaveLength(2));
+    expect(bodies).toEqual([{ allowSeries: true }, { allowSeries: false }]);
+  });
+
+  it('sends nothing when a change is undone before it is saved', async () => {
+    const user = userEvent.setup();
+    let patchCalled = false;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
+        patchCalled = true;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />
+    );
+    const title = screen.getByLabelText(/nom de la soir/i);
+
+    await user.type(title, 'x{Backspace}');
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    expect(patchCalled).toBe(false);
+    expect(screen.getByText('Enregistré')).toBeInTheDocument();
+  });
+
+  it('holds a change until the save in flight is done, then sends it', async () => {
+    const user = userEvent.setup();
+    const bodies: Record<string, unknown>[] = [];
+    let releaseFirstSave: () => void = () => {};
+    const firstSaveHeld = new Promise<void>((resolve) => {
+      releaseFirstSave = resolve;
+    });
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        bodies.push((await request.json()) as Record<string, unknown>);
+        if (bodies.length === 1) await firstSaveHeld;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />
+    );
+    const allowSeries = screen.getByRole('switch', { name: /autoriser les séries tv/i });
+
+    await user.click(allowSeries);
+    await waitFor(() => expect(bodies).toHaveLength(1));
+    await user.click(allowSeries);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(bodies).toHaveLength(1);
+    expect(screen.getByText('Enregistrement…')).toBeInTheDocument();
+
+    releaseFirstSave();
+
+    await waitFor(() => expect(bodies).toHaveLength(2));
+    expect(bodies[1]).toEqual({ allowSeries: false });
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+  });
+
   it('enabling the participants limit sends the default cap, then the typed one', async () => {
     const user = userEvent.setup();
     const seen: unknown[] = [];
