@@ -220,14 +220,14 @@ public sealed class MongoEventRepository : IEventRepository
         if (limit <= 0)
             return [];
 
-        var autoClosedStartedBefore = (utcNow - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay).UtcDateTime;
+        var wonAndOverStartedBefore = (utcNow - EventSchedule.PendingDelay).UtcDateTime;
         var builder = Builders<EventDocument>.Filter;
         var filter = builder.And(
             builder.SizeGt(x => x.Winners, 0),
             builder.Eq(x => x.WatchlistCleanedAt, (DateTime?)null),
             builder.Or(
                 builder.Ne(x => x.ClosedAt, (DateTime?)null),
-                builder.Lte(x => x.StartAtUtc, autoClosedStartedBefore)));
+                builder.Lte(x => x.StartAtUtc, wonAndOverStartedBefore)));
         var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }

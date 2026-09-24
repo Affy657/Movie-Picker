@@ -286,6 +286,8 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var winners = new[] { new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now } };
         var closed = await events.AddAsync(NewEvent("closed-" + marker) with { Winners = winners, ClosedAt = Now });
         var autoClosed = await events.AddAsync(NewEvent("auto-" + marker) with { Winners = winners, Date = "2020-01-01" });
+        var endedThreeHoursAgo = await events.AddAsync(NewEvent("ended-" + marker) with { Winners = winners, Date = "2026-09-15", Time = "11:00" });
+        await events.AddAsync(NewEvent("live-" + marker) with { Winners = winners, Date = "2026-09-15", Time = "13:00" });
         var cleaned = await events.AddAsync(NewEvent("cleaned-" + marker) with { Winners = winners, ClosedAt = Now });
         Assert.True(await events.MarkWatchlistCleanedAsync(cleaned.Id, Now));
         await events.AddAsync(NewEvent("no-winner-" + marker) with { ClosedAt = Now });
@@ -294,7 +296,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var found = await events.ListAwaitingWatchlistCleanupAsync(Now, 1000);
 
         var mine = found.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet();
-        HashSet<string> expected = [closed.Id, autoClosed.Id];
+        HashSet<string> expected = [closed.Id, autoClosed.Id, endedThreeHoursAgo.Id];
         Assert.Equal(expected, mine);
     }
 
