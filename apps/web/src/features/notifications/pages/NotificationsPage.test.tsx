@@ -244,6 +244,38 @@ describe('NotificationsPage (MSW)', () => {
     expect(screen.queryByRole('button', { name: /charger la suite/i })).not.toBeInTheDocument();
   });
 
+  it('shows a notification once when a new one shifted the next page while the inbox was open', async () => {
+    const user = userEvent.setup();
+    const cancelled = (id: string, eventTitle: string, createdAt: string) => ({
+      ...base,
+      id,
+      type: 'eventdeleted',
+      eventTitle,
+      createdAt,
+    });
+    const third = cancelled('n3', 'Soiree Trois', '2026-06-03T10:00:00Z');
+    const second = cancelled('n2', 'Soiree Deux', '2026-06-02T10:00:00Z');
+    const first = cancelled('n1', 'Soiree Une', '2026-06-01T10:00:00Z');
+    server.use(
+      authedUserHandler,
+      http.get(`${TEST_API_V1}/notifications/inbox`, ({ request }) => {
+        const offset = new URL(request.url).searchParams.get('offset');
+        if (offset === '2') {
+          return HttpResponse.json({ items: [second, first], unreadCount: 4, hasMore: false });
+        }
+        return HttpResponse.json({ items: [third, second], unreadCount: 3, hasMore: true });
+      })
+    );
+
+    renderPage();
+    await screen.findByText(/Soiree Deux/);
+    await user.click(await screen.findByRole('button', { name: /charger la suite/i }));
+
+    await screen.findByText(/Soiree Une/);
+    expect(screen.getAllByText(/Soiree Deux/)).toHaveLength(1);
+    expect(screen.getAllByText(/Soiree Trois/)).toHaveLength(1);
+  });
+
   it("n'affiche pas le bouton 'charger la suite' quand hasMore est faux", async () => {
     server.use(
       authedUserHandler,

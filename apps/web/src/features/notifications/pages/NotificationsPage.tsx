@@ -32,6 +32,15 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const GROUP_PREVIEW_COUNT = 3;
 
+function withoutRepeatedIds(items: UserNotificationItem[]): UserNotificationItem[] {
+  const seenIds = new Set<string>();
+  return items.filter((item) => {
+    if (seenIds.has(item.id)) return false;
+    seenIds.add(item.id);
+    return true;
+  });
+}
+
 function notifDestination(item: UserNotificationItem): string | null {
   if (item.type === 'newfollower')
     return item.actorHandle ? ROUTES.profile(item.actorHandle) : null;
@@ -284,7 +293,7 @@ export default function NotificationsPage() {
   });
 
   const items = useMemo(
-    () => inboxQuery.data?.pages.flatMap((p) => p.items) ?? [],
+    () => withoutRepeatedIds(inboxQuery.data?.pages.flatMap((p) => p.items) ?? []),
     [inboxQuery.data]
   );
   const unreadCount = inboxQuery.data?.pages[0]?.unreadCount ?? 0;
