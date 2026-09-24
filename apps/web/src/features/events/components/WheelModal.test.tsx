@@ -49,6 +49,14 @@ function wheelDialog(): HTMLDialogElement {
   return dialog;
 }
 
+function clickBackdrop(dialog: HTMLDialogElement) {
+  vi.spyOn(dialog, 'getBoundingClientRect').mockReturnValue(
+    DOMRect.fromRect({ x: 100, y: 100, width: 300, height: 300 })
+  );
+  fireEvent.pointerDown(dialog, { clientX: 20, clientY: 20 });
+  fireEvent.click(dialog, { clientX: 20, clientY: 20 });
+}
+
 function pressEscape(dialog: HTMLDialogElement) {
   const cancel = new Event('cancel', { cancelable: true });
   dialog.dispatchEvent(cancel);
@@ -71,7 +79,7 @@ describe('WheelModal', () => {
     const dialog = wheelDialog();
 
     pressEscape(dialog);
-    fireEvent.click(dialog);
+    clickBackdrop(dialog);
 
     expect(onClose).not.toHaveBeenCalled();
     expect(dialog).toHaveAttribute('open');
@@ -111,7 +119,7 @@ describe('WheelModal', () => {
     );
     fireEvent.click(screen.getByTestId('spin-done-trigger'));
 
-    fireEvent.click(wheelDialog());
+    clickBackdrop(wheelDialog());
     expect(onClose).toHaveBeenCalledOnce();
 
     pressEscape(wheelDialog());
