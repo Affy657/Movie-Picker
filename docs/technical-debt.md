@@ -382,16 +382,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - piege: une rétention verrouillée ne se raccourcit plus, pas même par le propriétaire, et empêche la suppression du bucket jusqu'à son terme : la poser d'abord sur un bucket d'essai
 - refs: A17 de l'audit de conception du 2026-09-22, DEBT-050 (projet hors organisation)
 
-## DEBT-063 `check:iam` ne relit aucune liaison des comptes que Terraform décrit
-
-- state: agent
-- impact: `review()` saute tout membre `serviceAccount:movie-picker-*@<PROJET_GCP>`, quels que soient le rôle et la ressource, alors que l'en-tête du script annonce relire tout ce que Terraform accorde.
-- ou: `scripts/check-iam.mjs` (`isDescribedServiceAccount`, appelé dans `review()`)
-- verify: `grep -n "isDescribedServiceAccount(member)) continue" scripts/check-iam.mjs` ; encore ouvert tant que la ligne existe
-- fix: pour les comptes décrits, comparer chaque couple rôle et ressource à la liste attendue tirée des `.tf` (ou d'un `terraform show -json` de chaque racine), et ne sauter que les couples attendus ; un test du script avec une liaison inattendue sur un compte décrit
-- fini-quand: une liaison posée à la main sur un compte décrit fait échouer `pnpm run check:iam`
-- refs: DEBT-050, la deny policy qui fermerait ce chemin n'existe pas hors organisation
-
 ## DEBT-064 `GetByIdOrSlugAsync` ne résout plus que le slug
 
 - state: differe

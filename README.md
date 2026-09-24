@@ -117,7 +117,7 @@ démonstration, catalogue des scripts, structure du dépôt) est dans
 
 ## Qualité
 
-`pnpm run verify:local` rejoue la CI en local, en seize étapes réparties sur trois voies concurrentes
+`pnpm run verify:local` rejoue la CI en local, en dix-sept étapes réparties sur trois voies concurrentes
 puis la suite front seule : règles d'architecture, `pnpm lint`, ESLint, Prettier (voie node) ;
 `dotnet restore`, build Release en `-warnaserror`, `dotnet format`, tests API unitaires et
 d'intégration, export OpenAPI, contrôle de dérive des types (voie dotnet) ; lint des workflows

@@ -62,7 +62,8 @@ EXCL=$(sonar_join \
 )
 
 TEST_EXCL=$(sonar_join \
-  'archive/**'
+  'archive/**' \
+  'scripts/**'
 )
 
 CPD=$(sonar_join \

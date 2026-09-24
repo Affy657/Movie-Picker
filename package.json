@@ -24,6 +24,7 @@
     "terraform": "node scripts/terraform.mjs",
     "check:tools": "node scripts/check-tool-versions.mjs",
     "check:iam": "node scripts/check-iam.mjs",
+    "test:scripts": "node --test scripts/*.test.mjs",
     "check:sonar": "node scripts/check-sonar.mjs",
     "format": "prettier --write --cache \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:check": "prettier --check --cache \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
