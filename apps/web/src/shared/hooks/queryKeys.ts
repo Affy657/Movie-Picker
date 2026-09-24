@@ -6,8 +6,10 @@ export const queryKeys = {
     publicAll: ['profile', 'public'] as const,
     public: (handle: string | undefined) => ['profile', 'public', handle ?? '$pending'] as const,
     handleAvailability: (handle: string) => ['profile', 'handle-available', handle] as const,
+    followingAll: ['profile', 'following'] as const,
     following: (handle: string | undefined) =>
       ['profile', 'following', handle ?? '$pending'] as const,
+    followersAll: ['profile', 'followers'] as const,
     followers: (handle: string | undefined) =>
       ['profile', 'followers', handle ?? '$pending'] as const,
     stats: (handle: string | undefined) => ['profile', 'stats', handle ?? '$pending'] as const,
@@ -37,6 +39,8 @@ export const queryKeys = {
       ['event', 'detail', slug ?? '$pending', hostToken ?? ''] as const,
 
     detailForAnyHostToken: (slug: string) => ['event', 'detail', slug] as const,
+
+    eligibleFollowsAll: ['event', 'eligible-follows'] as const,
 
     eligibleFollows: (slug: string | undefined) =>
       ['event', 'eligible-follows', slug ?? '$pending'] as const,

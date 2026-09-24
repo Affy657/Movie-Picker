@@ -5,8 +5,10 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, createUserStatsHandler } from '@/mocks/handlers';
+import { queryKeys } from '@/shared/hooks/queryKeys';
+import type { QueryClient } from '@tanstack/react-query';
 
 const EMPTY_STATS = {
   eventsCreated: 0,
@@ -44,9 +46,9 @@ const ME_PROFILE = {
   isProfilePublic: true,
 };
 
-function renderProfile(handle: string) {
+function renderProfile(handle: string, client?: QueryClient) {
   return render(
-    <AppTestProviders>
+    <AppTestProviders client={client}>
       <MemoryRouter initialEntries={[`/u/${handle}`]}>
         <Routes>
           <Route path="/u/:handle" element={<ProfilePage />} />
@@ -266,6 +268,49 @@ describe('ProfilePage (MSW)', () => {
 
     expect(await screen.findByRole('button', { name: /ne plus suivre/i })).toBeInTheDocument();
   });
+
+  it.each([
+    { action: 'a follow', isFollowedByMe: false, button: 'Suivre @alice', method: 'post' as const },
+    {
+      action: 'an unfollow',
+      isFollowedByMe: true,
+      button: 'Ne plus suivre @alice',
+      method: 'delete' as const,
+    },
+  ])(
+    'after $action, refreshes my own profile, both follow lists and the user searches',
+    async ({ isFollowedByMe, button, method }) => {
+      const user = userEvent.setup();
+      const client = createTestQueryClient();
+      const touchedKeys = [
+        queryKeys.profile.public('moi'),
+        queryKeys.profile.following('moi'),
+        queryKeys.profile.followers('alice'),
+        queryKeys.profile.userSearch('ali'),
+        queryKeys.event.eligibleFollows('movie-night'),
+      ];
+      for (const key of touchedKeys) client.setQueryData(key, { items: [] });
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({ ...ALICE_PROFILE, isFollowedByMe })
+        ),
+        http[method](
+          `${TEST_API_V1}/users/alice/follow`,
+          () => new HttpResponse(null, { status: 204 })
+        )
+      );
+
+      renderProfile('alice', client);
+      await user.click(await screen.findByRole('button', { name: button }));
+
+      await waitFor(() => {
+        for (const key of touchedKeys) {
+          expect(client.getQueryState(key)?.isInvalidated, JSON.stringify(key)).toBe(true);
+        }
+      });
+    }
+  );
 
   it("n'affiche pas de bouton Suivre sur son propre profil", async () => {
     server.use(

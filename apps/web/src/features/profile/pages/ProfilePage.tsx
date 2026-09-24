@@ -26,6 +26,7 @@ import {
   unfollowUser,
   type PublicProfile,
 } from '@/features/profile/api/profileApi';
+import { invalidateFollowGraph } from '@/features/profile/lib/invalidateFollowGraph';
 import { fetchUserStats } from '@/features/events/api/userStatsApi';
 import styles from './ProfilePage.module.css';
 import InlineError from '@/shared/components/InlineError';
@@ -111,7 +112,7 @@ export default function ProfilePage() {
     mutationFn: () => followUser(profile!.handle),
     onSuccess: () => {
       setFollowError(null);
-      queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
+      void invalidateFollowGraph(queryClient);
       track('user_followed');
     },
     onError: (err) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),
@@ -121,7 +122,7 @@ export default function ProfilePage() {
     mutationFn: () => unfollowUser(profile!.handle),
     onSuccess: () => {
       setFollowError(null);
-      queryClient.invalidateQueries({ queryKey: queryKeys.profile.public(handle) });
+      void invalidateFollowGraph(queryClient);
       track('user_unfollowed');
     },
     onError: (err) => setFollowError(getErrorMessage(err, t('profile.follow.error'))),

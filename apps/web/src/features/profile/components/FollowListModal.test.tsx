@@ -5,8 +5,10 @@ import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import FollowListModal from '@/features/profile/components/FollowListModal';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
+import { queryKeys } from '@/shared/hooks/queryKeys';
+import type { QueryClient } from '@tanstack/react-query';
 
 const SIGNED_IN_ALICE = {
   userId: 'u-alice',
@@ -25,7 +27,8 @@ const signedInAsAlice = () =>
 
 function renderModal(
   overrides: Partial<Parameters<typeof FollowListModal>[0]> = {},
-  onClose = vi.fn()
+  onClose = vi.fn(),
+  client?: QueryClient
 ) {
   const props = {
     handle: 'alice',
@@ -36,7 +39,7 @@ function renderModal(
     ...overrides,
   };
   return render(
-    <AppTestProviders>
+    <AppTestProviders client={client}>
       <MemoryRouter>
         <FollowListModal {...props} />
       </MemoryRouter>
@@ -423,6 +426,42 @@ describe('FollowListModal (MSW)', () => {
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
 
     expect(await screen.findByRole('button', { name: 'Suivre @lea_m' })).toBeInTheDocument();
+  });
+
+  it('refreshes every cached profile and follow list touched by a follow, not only the viewed one', async () => {
+    const user = userEvent.setup();
+    const client = createTestQueryClient();
+    const touchedKeys = [
+      queryKeys.profile.public('lea_m'),
+      queryKeys.profile.followers('lea_m'),
+      queryKeys.profile.following('bob'),
+      queryKeys.event.eligibleFollows('movie-night'),
+    ];
+    for (const key of touchedKeys) client.setQueryData(key, { items: [] });
+    server.use(
+      signedInAsAlice(),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
+      http.get(`${TEST_API_V1}/users/search`, () =>
+        HttpResponse.json({
+          items: [
+            { handle: 'lea_m', displayName: 'Léa Moreau', avatarId: '', isFollowedByMe: false },
+          ],
+        })
+      ),
+      http.post(`${TEST_API_V1}/users/lea_m/follow`, () => new HttpResponse(null, { status: 204 }))
+    );
+
+    renderModal({}, vi.fn(), client);
+    await screen.findByText(/aucun utilisateur/i);
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
+    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
+    await user.click(await screen.findByRole('button', { name: 'Suivre @lea_m' }));
+
+    await waitFor(() => {
+      for (const key of touchedKeys) {
+        expect(client.getQueryState(key)?.isInvalidated, JSON.stringify(key)).toBe(true);
+      }
+    });
   });
 
   it('explique une recherche sans resultat', async () => {
