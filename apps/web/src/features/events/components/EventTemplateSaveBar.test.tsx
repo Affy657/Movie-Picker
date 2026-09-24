@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
 import EventTemplateSaveBar from './EventTemplateSaveBar';
@@ -116,6 +116,22 @@ describe('EventTemplateSaveBar', () => {
     await user.click(screen.getByRole('button', { name: 'Annuler' }));
 
     expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
+  });
+
+  it('drops the naming on Escape without closing the settings dialog around it', async () => {
+    const user = userEvent.setup();
+    const { onSave } = renderBar();
+
+    await user.click(screen.getByRole('button', { name: 'Enregistrer en template' }));
+    const dialogKeepsOpen = !fireEvent.keyDown(
+      screen.getByRole('textbox', { name: /Nom du template/ }),
+      { key: 'Escape' }
+    );
+
+    expect(dialogKeepsOpen).toBe(true);
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.queryByRole('textbox', { name: /Nom du template/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Enregistrer en template' })).toBeInTheDocument();
   });
 
