@@ -65,7 +65,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
             var pseudo = await AvailablePseudoAsync(evt.Id, requestedPseudo, ct);
             try
             {
-                var created = await InsertAsync(evt, NewParticipant(evt.Id, pseudo, userId), ct);
+                var created = await InsertAsync(idOrSlug, evt, NewParticipant(evt.Id, pseudo, userId), ct);
                 await NotifyHostAsync(evt, created.Pseudo, userId, CancellationToken.None);
                 return new JoinEventResult
                 {
@@ -141,23 +141,20 @@ public sealed class JoinEventHandler : IJoinEventHandler
         return pseudo[..cut].TrimEnd();
     }
 
-    private async Task<Participant> InsertAsync(Event evt, Participant participant, CancellationToken ct)
+    private async Task<Participant> InsertAsync(string idOrSlug, Event evt, Participant participant, CancellationToken ct)
     {
-        if (evt.Config?.MaxParticipants is not { } cap || cap <= 0)
-        {
-            var created = await _participantRepository.AddAsync(participant, ct);
-            await _eventRepository.MarkChangedAsync(evt.Id, ct);
-            return created;
-        }
-
         var inserted = participant;
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
                 await _eventRepository.LockForWriteAsync(evt.Id, token);
-                var currentCount = await _participantRepository.CountByEventIdAsync(evt.Id, token);
-                if (currentCount >= cap)
-                    throw Errors.EventFull(cap);
+                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                if (current.Config?.MaxParticipants is { } cap && cap > 0)
+                {
+                    var currentCount = await _participantRepository.CountByEventIdAsync(evt.Id, token);
+                    if (currentCount >= cap)
+                        throw Errors.EventFull(cap);
+                }
                 inserted = await _participantRepository.AddAsync(participant, token);
             },
             ct);

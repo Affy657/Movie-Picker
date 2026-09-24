@@ -85,7 +85,7 @@ public sealed class JoinEventHandlerTests
         Assert.Equal("p1", result.Participant.Id);
         Assert.Equal("Alice", result.Participant.Pseudo);
         Assert.Equal(evt.Id, result.Participant.EventId);
-        _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     private static Participant Existing(string id, string pseudo, string? userId) => new()
@@ -284,6 +284,25 @@ public sealed class JoinEventHandlerTests
 
         Assert.Equal(["lock", "count", "insert"], steps);
         Assert.Equal(1, _unitOfWork.Executions);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CapSetByTheHostWhileJoining_IsCountedUnderTheLock()
+    {
+        var withoutCap = ActiveEvent();
+        var cappedMeanwhile = withoutCap with { Config = new EventConfig { MaxParticipants = 3 } };
+        _eventRepo.SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(withoutCap)
+            .ReturnsAsync(cappedMeanwhile);
+        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(withoutCap.Id, "Alice", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Participant?)null);
+        _participantRepo.Setup(r => r.CountByEventIdAsync(withoutCap.Id, It.IsAny<CancellationToken>())).ReturnsAsync(3);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(
+            () => _sut.HandleAsync("evt1", new JoinEventRequest { Pseudo = "Alice" }, "u1"));
+
+        Assert.Equal(ErrorCodes.EventFull, ex.Reason);
+        _participantRepo.Verify(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

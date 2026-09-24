@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.EventConfiguration;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.EventConfiguration;
@@ -48,6 +49,7 @@ public sealed class PatchEventConfigHandlerNotificationTests
             _pushSubRepo.Object,
             _pushSender.Object,
             _notifications.Object,
+            new RecordingUnitOfWork(),
             NullLogger<PatchEventConfigHandler>.Instance,
             TimeProvider.System);
     }

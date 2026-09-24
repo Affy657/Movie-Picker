@@ -39,6 +39,7 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
             _pushSubRepo.Object,
             _pushSender.Object,
             _notifications.Object,
+            new RecordingUnitOfWork(),
             NullLogger<PatchEventConfigHandler>.Instance,
             TimeProvider.System);
     }
