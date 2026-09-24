@@ -4024,6 +4024,7 @@ export interface paths {
                     collectionId?: number;
                     provider?: string;
                     seedTmdbId?: number;
+                    seedMediaType?: components["schemas"]["MovieMediaType"];
                 };
                 header?: never;
                 path?: never;
@@ -6384,6 +6385,7 @@ export interface components {
             title: string;
             year?: string | null;
             posterPath?: string | null;
+            genreIds?: number[] | null;
             pitchNote?: string | null;
             participantId: string;
         };
@@ -6398,6 +6400,7 @@ export interface components {
             voteAverage?: number | null;
             /** Format: int32 */
             runtimeMinutes?: number | null;
+            genreIds?: number[] | null;
             letterboxdSlug?: string | null;
         };
         CatalogWarmPassResult: {
