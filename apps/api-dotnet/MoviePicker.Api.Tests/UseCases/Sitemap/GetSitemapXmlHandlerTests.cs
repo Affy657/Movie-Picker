@@ -44,6 +44,19 @@ public sealed class GetSitemapXmlHandlerTests
         XDocument.Parse(xml).Descendants(Ns + "loc").Select(e => e.Value).ToList();
 
     [Fact]
+    public async Task BuildXmlAsync_AsManyPublicProfilesAsAsked_StaysWithinTheFiftyThousandUrlLimit()
+    {
+        _users.Setup(r => r.ListPublicProfilesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((int limit, CancellationToken _) => Enumerable.Range(0, limit)
+                .Select(i => new PublicProfileRef($"user-{i}", GenerationDay))
+                .ToList());
+
+        var xml = await CreateSut().BuildXmlAsync();
+
+        Assert.True(Locs(xml).Count <= 50_000, $"{Locs(xml).Count} URLs");
+    }
+
+    [Fact]
     public async Task BuildXmlAsync_AlwaysIncludesHomePage()
     {
         SetupProfiles();
