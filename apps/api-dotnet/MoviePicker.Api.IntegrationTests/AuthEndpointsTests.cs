@@ -243,6 +243,28 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
     }
 
     [Fact]
+    public async Task ChangePassword_SignsOutTheSessionsOpenedElsewhere()
+    {
+        var email = $"cpelsewhere{Guid.NewGuid():N}@test.local";
+        var current = _factory.CreateClient();
+        var reg = await current.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "CP" });
+        ApplySessionCookie(current, reg);
+        var elsewhere = _factory.CreateClient();
+        var login = await elsewhere.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest { Email = email, Password = "abcd1234" });
+        ApplySessionCookie(elsewhere, login);
+        Assert.Equal(HttpStatusCode.OK, (await elsewhere.GetAsync("/api/v1/auth/me")).StatusCode);
+
+        var change = await current.PatchAsJsonAsync(
+            "/api/v1/auth/me/password",
+            new ChangePasswordRequest { CurrentPassword = "abcd1234", NewPassword = "wxyz5678" });
+
+        Assert.Equal(HttpStatusCode.NoContent, change.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await elsewhere.GetAsync("/api/v1/auth/me")).StatusCode);
+    }
+
+    [Fact]
     public async Task ChangePassword_WrongCurrent_Returns401()
     {
         var client = _factory.CreateClient();
@@ -429,7 +451,7 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
         Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
     }
 
-    [MongoFact]
+    [Fact]
     public async Task UnlinkIdentity_KeepsTheCurrentSession_AndSignsOutEveryOtherOne()
     {
         var email = $"unlinkall{Guid.NewGuid():N}@test.local";
