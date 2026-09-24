@@ -20,15 +20,11 @@ export default function MyEventsConfirmDialogs({
     confirmLeave,
     setConfirmLeave,
     leaveMutation,
-    confirmHistoryRemove,
-    setConfirmHistoryRemove,
-    historyRemoveMutation,
     confirmClose,
     setConfirmClose,
     closeMutation,
     setDeleteError,
     setLeaveError,
-    setHistoryRemoveError,
     setCloseError,
   } = actions;
 
@@ -62,22 +58,6 @@ export default function MyEventsConfirmDialogs({
         onCancel={() => {
           setConfirmLeave(null);
           setLeaveError(null);
-        }}
-      />
-      <ConfirmDialog
-        open={confirmHistoryRemove !== null}
-        title={t('events.myEvents.historyRemoveConfirmTitle')}
-        message={t('events.myEvents.historyRemoveConfirmMessage', {
-          title: confirmHistoryRemove?.title ?? '',
-        })}
-        confirmLabel={t('events.myEvents.historyRemoveConfirmAction')}
-        loading={historyRemoveMutation.isPending}
-        onConfirm={() => {
-          if (confirmHistoryRemove) historyRemoveMutation.mutate(confirmHistoryRemove);
-        }}
-        onCancel={() => {
-          setConfirmHistoryRemove(null);
-          setHistoryRemoveError(null);
         }}
       />
       <ConfirmDialog

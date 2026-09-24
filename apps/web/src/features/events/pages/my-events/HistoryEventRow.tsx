@@ -15,14 +15,12 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 interface HistoryEventRowProps {
   event: MyEventSummary;
   onDelete?: () => void;
-  onRemove?: () => void;
   onReuse?: () => void;
 }
 
 export default function HistoryEventRow({
   event,
   onDelete,
-  onRemove,
   onReuse,
 }: Readonly<HistoryEventRowProps>) {
   const { t } = useTranslation();
@@ -102,9 +100,7 @@ export default function HistoryEventRow({
         className={styles.menu}
         title={event.title}
         onDelete={onDelete}
-        onRemove={onRemove}
         onReuse={onReuse}
-        removeLabel={t('events.myEvents.historyRemoveAction')}
       />
     </Card>
   );

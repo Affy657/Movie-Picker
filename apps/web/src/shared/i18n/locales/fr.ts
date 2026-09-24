@@ -820,12 +820,6 @@ export const fr = {
       monthGroupCountOne: '1 soir\u00e9e',
       monthGroupCountMany: '{{count}} soir\u00e9es',
       historyFinishedWithoutMovie: 'Termin\u00e9e sans film choisi',
-      historyRemoveAction: 'Retirer de mon historique',
-      historyRemoveConfirmTitle: 'Retirer de votre historique\u00a0?',
-      historyRemoveConfirmMessage:
-        '\u00ab\u202f{{title}}\u202f\u00bb sera retir\u00e9e de votre historique. Vous pourrez toujours la rejoindre si vous avez le lien.',
-      historyRemoveConfirmAction: 'Retirer',
-      historyRemoveError: 'Suppression impossible.',
       pendingAutoCloseIn: 'Cl\u00f4ture automatique {{time}}',
       pendingAutoCloseInShort: 'Cl\u00f4ture {{time}}',
       countdown: {

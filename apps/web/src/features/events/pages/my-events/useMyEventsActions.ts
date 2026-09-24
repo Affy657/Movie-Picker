@@ -23,16 +23,10 @@ export function useMyEventsActions() {
   const [confirmLeave, setConfirmLeave] = useState<{ slug: string; participantId: string } | null>(
     null
   );
-  const [confirmHistoryRemove, setConfirmHistoryRemove] = useState<{
-    slug: string;
-    participantId: string;
-    title: string;
-  } | null>(null);
   const [confirmClose, setConfirmClose] = useState<{ slug: string; title: string } | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [closeError, setCloseError] = useState<string | null>(null);
-  const [historyRemoveError, setHistoryRemoveError] = useState<string | null>(null);
   const invalidateMyEvents = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
   }, [queryClient]);
@@ -64,21 +58,6 @@ export function useMyEventsActions() {
     },
     onSettled: () => {
       setConfirmLeave(null);
-    },
-  });
-  const historyRemoveMutation = useMutation({
-    mutationFn: ({ slug, participantId }: { slug: string; participantId: string }) =>
-      removeEventParticipant(slug, participantId, null),
-    onSuccess: (_, { slug }) => {
-      removeStoredParticipant(slug);
-      invalidateMyEvents();
-      setHistoryRemoveError(null);
-    },
-    onError: (e) => {
-      setHistoryRemoveError(getErrorMessage(e, t('events.myEvents.historyRemoveError')));
-    },
-    onSettled: () => {
-      setConfirmHistoryRemove(null);
     },
   });
   const closeMutation = useMutation({
@@ -114,19 +93,6 @@ export function useMyEventsActions() {
     [navigate]
   );
 
-  const handleHistoryRemove = useCallback(
-    (slug: string, title: string) => {
-      const stored = getStoredParticipant(slug);
-      if (!stored) {
-        navigate(ROUTES.eventDetail(slug));
-        return;
-      }
-      setHistoryRemoveError(null);
-      setConfirmHistoryRemove({ slug, participantId: stored.participantId, title });
-    },
-    [navigate]
-  );
-
   const handleDeleteEvent = useCallback((slug: string) => {
     setDeleteError(null);
     setConfirmDeleteSlug(slug);
@@ -142,27 +108,21 @@ export function useMyEventsActions() {
     setConfirmDeleteSlug,
     confirmLeave,
     setConfirmLeave,
-    confirmHistoryRemove,
-    setConfirmHistoryRemove,
     confirmClose,
     setConfirmClose,
     deleteError,
     leaveError,
     closeError,
-    historyRemoveError,
     deleteMutation,
     leaveMutation,
     closeMutation,
-    historyRemoveMutation,
     handleLeaveEvent,
-    handleHistoryRemove,
     handleReuseEvent,
     handleDeleteEvent,
     handleCloseWithoutMovie,
     setDeleteError,
     setLeaveError,
     setCloseError,
-    setHistoryRemoveError,
   };
 }
 

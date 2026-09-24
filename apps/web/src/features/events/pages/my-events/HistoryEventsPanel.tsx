@@ -159,7 +159,6 @@ export default function HistoryEventsPanel({
   const { t } = useTranslation();
   const handlers: HistoryEventHandlers = {
     onDelete: actions.handleDeleteEvent,
-    onRemove: actions.handleHistoryRemove,
     onReuse: actions.handleReuseEvent,
   };
 
@@ -168,11 +167,6 @@ export default function HistoryEventsPanel({
       {actions.deleteError ? (
         <p className="error" role="alert">
           {actions.deleteError}
-        </p>
-      ) : null}
-      {actions.historyRemoveError ? (
-        <p className="error" role="alert">
-          {actions.historyRemoveError}
         </p>
       ) : null}
 
