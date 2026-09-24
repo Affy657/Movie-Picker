@@ -13,27 +13,6 @@ public sealed class GetUserProfileHandler : IGetUserProfileHandler
     public async Task<UserProfileResponse> HandleAsync(string userId, CancellationToken ct = default)
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
-        return new UserProfileResponse
-        {
-            UserId = user.Id,
-            DisplayName = user.DisplayName,
-            EmailMasked = EmailMasking.Mask(user.Email),
-            Email = user.Email,
-            UiTheme = user.UiTheme,
-            AccentColor = user.AccentColor,
-            RatingScale = user.RatingScale,
-            AvatarId = user.AvatarId,
-            Handle = user.Handle,
-            Bio = user.Bio,
-            IsProfilePublic = user.IsProfilePublic,
-            IsWatchlistPublic = user.IsWatchlistPublic,
-            LetterboxdUsername = user.LetterboxdUsername,
-            LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
-            LetterboxdLastSyncError = user.LetterboxdLastSyncError,
-            LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
-            HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
-            LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
-            CreatedAt = user.CreatedAt
-        };
+        return UserProfileMapping.ToResponse(user);
     }
 }

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -302,5 +303,78 @@ public sealed class PatchUserProfileHandlerTests
         var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { LetterboxdUsername = "" });
 
         Assert.Null(res.LetterboxdUsername);
+    }
+
+    private static User LinkedToLetterboxd() => User() with
+    {
+        Handle = "dave",
+        Bio = "Cinéphile du dimanche",
+        AvatarId = "fox",
+        Identities = [new LinkedIdentity { Provider = "google", Subject = "g-1", Email = "a@b.co" }],
+        LetterboxdUsername = "dave_v",
+        LetterboxdLastSyncAt = new DateTimeOffset(2024, 2, 1, 0, 0, 0, TimeSpan.Zero),
+        LetterboxdLastSyncError = "letterboxd_sync_unavailable",
+        LetterboxdPendingReconciliationCount = 4
+    };
+
+    private static (PatchUserProfileHandler Handler, Mock<IUserRepository> Users) HandlerFor(User user)
+    {
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        return (new PatchUserProfileHandler(users.Object, TimeProvider.System), users);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnswersTheSameProfileAsGetMe()
+    {
+        var user = LinkedToLetterboxd();
+        var (handler, users) = HandlerFor(user);
+
+        var patched = await handler.HandleAsync(user.Id, new PatchUserProfileRequest { DisplayName = user.DisplayName });
+        var read = await new GetUserProfileHandler(users.Object).HandleAsync(user.Id);
+
+        Assert.Equal(JsonSerializer.Serialize(read), JsonSerializer.Serialize(patched));
+        Assert.Equal(4, patched.LetterboxdPendingReconciliationCount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NothingToUpdate_StillAnswersThePendingReconciliationCount()
+    {
+        var (handler, _) = HandlerFor(LinkedToLetterboxd());
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest());
+
+        Assert.Equal(4, res.LetterboxdPendingReconciliationCount);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("someone_else")]
+    public async Task HandleAsync_DisconnectingOrChangingLetterboxd_ResetsThePendingReconciliationCount(string requested)
+    {
+        var (handler, users) = HandlerFor(LinkedToLetterboxd());
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { LetterboxdUsername = requested });
+
+        Assert.Equal(0, res.LetterboxdPendingReconciliationCount);
+        users.Verify(
+            x => x.UpdateAsync(It.Is<User>(y => y.LetterboxdPendingReconciliationCount == 0), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SameLetterboxdAccountInAnotherCase_KeepsThePendingReconciliationCount()
+    {
+        var (handler, users) = HandlerFor(LinkedToLetterboxd());
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { LetterboxdUsername = "DAVE_V" });
+
+        Assert.Equal(4, res.LetterboxdPendingReconciliationCount);
+        users.Verify(
+            x => x.UpdateAsync(It.Is<User>(y => y.LetterboxdPendingReconciliationCount == 4), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }
