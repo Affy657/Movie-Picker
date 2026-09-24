@@ -63,6 +63,7 @@ export interface AddWatchlistItemBody {
   posterPath: string | null;
   voteAverage?: number | null;
   runtimeMinutes?: number | null;
+  genreIds?: number[];
 }
 
 export async function fetchWatchlist(signal?: AbortSignal): Promise<WatchlistItem[]> {

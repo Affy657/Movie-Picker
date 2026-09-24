@@ -160,6 +160,7 @@ export async function addMovieToEvent(
     year: string;
     posterPath: string | null;
     participantId: string;
+    genreIds?: number[];
   }
 ): Promise<void> {
   await fetchApi(apiPath('events', slug, 'movies'), {

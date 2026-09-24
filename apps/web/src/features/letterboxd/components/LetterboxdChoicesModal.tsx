@@ -56,6 +56,7 @@ function toSelection(
     year: candidate.year,
     posterPath: candidate.posterPath,
     voteAverage: candidate.voteAverage,
+    genreIds: candidate.genreIds,
     letterboxdSlug,
   };
 }

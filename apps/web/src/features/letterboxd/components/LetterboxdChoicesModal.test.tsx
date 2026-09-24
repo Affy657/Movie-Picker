@@ -22,6 +22,7 @@ const ONE_CHOICE: LetterboxdPendingChoice[] = [
         year: '2021',
         posterPath: null,
         voteAverage: 7.5,
+        genreIds: [18, 9648],
       },
       {
         tmdbId: 714995,
@@ -132,6 +133,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
             year: '2021',
             posterPath: null,
             voteAverage: 7.5,
+            genreIds: [18, 9648],
             letterboxdSlug: 'midnight-mass-2021',
           },
         ],
@@ -226,6 +228,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
             year: '2021',
             posterPath: null,
             voteAverage: 7.5,
+            genreIds: [18, 9648],
             letterboxdSlug: 'midnight-mass-2021',
           },
         ],

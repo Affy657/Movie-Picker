@@ -331,6 +331,7 @@ export default function AddMovieForm({
           year: r.year,
           posterPath: r.posterPath,
           participantId,
+          genreIds: r.genreIds,
         });
         track('movie_added', { mediaType: r.mediaType });
       }

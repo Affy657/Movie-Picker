@@ -10,6 +10,7 @@ export interface ProposableMovie {
   title: string;
   year: string;
   posterPath: string | null;
+  genreIds?: number[];
 }
 
 export function useProposeMovieToEvent() {
@@ -28,6 +29,7 @@ export function useProposeMovieToEvent() {
         year: movie.year,
         posterPath: movie.posterPath,
         participantId: evt.myParticipant.id,
+        genreIds: movie.genreIds,
       });
     },
     [t]
