@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from 'react';
 import { hashKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   fetchAuthMeForSession,
@@ -22,6 +30,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
+  endSession: () => Promise<void>;
   patchProfile: (patch: ProfilePatch) => Promise<UserProfile>;
 };
 
@@ -58,6 +67,33 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     void refetchSession();
   }, [refetchSession]);
 
+  const resetAccountQueries = useCallback(
+    () =>
+      queryClient.resetQueries({
+        predicate: (query) => query.queryHash !== hashKey(queryKeys.auth.me),
+      }),
+    [queryClient]
+  );
+
+  const signedInUserId = user?.userId ?? null;
+  const lastSignedInUserIdRef = useRef(signedInUserId);
+
+  useEffect(() => {
+    const previousUserId = lastSignedInUserIdRef.current;
+    lastSignedInUserIdRef.current = signedInUserId;
+    if (previousUserId === null || previousUserId === signedInUserId) return;
+    clearStoredEventIdentities();
+    void resetAccountQueries();
+  }, [signedInUserId, resetAccountQueries]);
+
+  const endSession = useCallback(async () => {
+    lastSignedInUserIdRef.current = null;
+    clearStoredEventIdentities();
+    queryClient.setQueryData(queryKeys.auth.me, null);
+    await signedOutStateRendered();
+    await resetAccountQueries();
+  }, [queryClient, resetAccountQueries]);
+
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       await postAuthLogin(email, password);
@@ -89,12 +125,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       } finally {
         void dropBrowserPushSubscription();
       }
-      clearStoredEventIdentities();
-      queryClient.setQueryData(queryKeys.auth.me, null);
-      await signedOutStateRendered();
-      await queryClient.resetQueries({
-        predicate: (query) => query.queryHash !== hashKey(queryKeys.auth.me),
-      });
+      await endSession();
     },
     onSuccess: () => track('user_logged_out'),
   });
@@ -135,9 +166,20 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       login,
       register,
       logout,
+      endSession,
       patchProfile,
     }),
-    [user, isLoading, authCheckFailed, retryAuthCheck, login, register, logout, patchProfile]
+    [
+      user,
+      isLoading,
+      authCheckFailed,
+      retryAuthCheck,
+      login,
+      register,
+      logout,
+      endSession,
+      patchProfile,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

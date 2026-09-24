@@ -19,7 +19,8 @@ function bestRatedFirst(a: WatchlistItem, b: WatchlistItem): number {
 
 export function useWatchlistRow(enabled: boolean) {
   const watchlist = useWatchlist({ enabled });
-  const items: PersonalRowItem[] = [...(watchlist.data ?? [])]
+  const movies = enabled ? (watchlist.data ?? []) : [];
+  const items: PersonalRowItem[] = [...movies]
     .sort(bestRatedFirst)
     .slice(0, WATCHLIST_TAKE)
     .map((movie): PersonalRowItem => ({
@@ -41,7 +42,8 @@ export function useFriendsWatchedRow(enabled: boolean) {
     queryFn: ({ signal }) => fetchFollowingWatchedMovies(FRIENDS_TAKE, signal),
     enabled,
   });
-  const items: PersonalRowItem[] = (query.data?.items ?? []).map((movie) => ({
+  const movies = enabled ? (query.data?.items ?? []) : [];
+  const items: PersonalRowItem[] = movies.map((movie) => ({
     tmdbId: movie.tmdbId,
     mediaType: movie.mediaType,
     title: movie.title,
@@ -60,7 +62,7 @@ export function useRecommendationSeed(enabled: boolean) {
     queryFn: ({ signal }) => fetchMyWatchedMovies(RECOMMENDATION_SEED_TAKE, signal),
     enabled,
   });
-  const seed = query.data?.items?.[0];
+  const seed = enabled ? query.data?.items?.[0] : undefined;
   return {
     seedTmdbId: seed?.tmdbId,
     seedTitle: seed?.title,

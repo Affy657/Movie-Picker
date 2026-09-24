@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useQueryClient } from '@tanstack/react-query';
 import { Download, KeyRound, LogOut, Mail, Trash2 } from 'lucide-react';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useTranslation } from '@/shared/i18n';
 import type { TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { queryKeys } from '@/shared/hooks/queryKeys';
 import { ROUTES } from '@/app/routes';
 import {
   deleteAccount,
@@ -40,7 +38,7 @@ function passwordSubmitLabel(
 function PasswordRow({ user }: Readonly<{ user: UserProfile }>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { endSession } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -55,10 +53,10 @@ function PasswordRow({ user }: Readonly<{ user: UserProfile }>) {
     setSucceeded(true);
     globalThis.clearTimeout(redirectTimerRef.current);
     redirectTimerRef.current = globalThis.setTimeout(() => {
-      queryClient.setQueryData(queryKeys.auth.me, null);
+      void endSession();
       navigate(ROUTES.login, { replace: true });
     }, POST_PASSWORD_CHANGE_REDIRECT_MS);
-  }, [user.hasPassword, currentPassword, newPassword, queryClient, navigate]);
+  }, [user.hasPassword, currentPassword, newPassword, endSession, navigate]);
 
   const {
     run: runChange,
@@ -292,17 +290,16 @@ function LogoutRow() {
 function DeleteAccountZone({ hasPassword }: Readonly<{ hasPassword: boolean }>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { endSession } = useAuth();
   const [confirming, setConfirming] = useState(false);
   const [value, setValue] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const deleteAction = useCallback(async () => {
     await deleteAccount(hasPassword ? { password: value } : { confirmation: value });
-    queryClient.setQueryData(queryKeys.auth.me, null);
-    await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+    await endSession();
     navigate(ROUTES.home, { replace: true });
-  }, [hasPassword, value, queryClient, navigate]);
+  }, [hasPassword, value, endSession, navigate]);
 
   const {
     run: runDelete,

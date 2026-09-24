@@ -5,8 +5,10 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import AccountPage from '@/app/pages/account/AccountPage';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
+import { queryKeys } from '@/shared/hooks/queryKeys';
+import { getStoredParticipant, setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 
 const ME_NO_PASSWORD = {
   userId: 'u-oauth-acc',
@@ -55,6 +57,7 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
   afterEach(() => {
     server.resetHandlers();
     localStorage.clear();
+    sessionStorage.clear();
   });
   afterAll(() => server.close());
 
@@ -150,6 +153,41 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     await vi.advanceTimersByTimeAsync(4000);
 
     expect(await screen.findByTestId('login-marker')).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it('forgets what this tab cached for the account once the password change signs it out', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    server.use(
+      http.patch(`${TEST_API_V1}/auth/me/password`, () => new HttpResponse(null, { status: 204 }))
+    );
+    const client = createTestQueryClient();
+    client.setQueryData(queryKeys.watchlist.list, [{ tmdbId: 603 }]);
+    setStoredParticipant('soiree-oauth', 'p1', 'OAuth User');
+
+    render(
+      <AppTestProviders client={client}>
+        <MemoryRouter initialEntries={['/settings/securite']}>
+          <Routes>
+            <Route path="/settings/*" element={<AccountPage />} />
+            <Route path="/login" element={<div data-testid="login-marker" />} />
+          </Routes>
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Définir' }));
+    await user.type(screen.getByLabelText('Nouveau mot de passe'), 'nouveau1234');
+    await user.type(screen.getByLabelText('Confirmer le nouveau mot de passe'), 'nouveau1234');
+    await user.click(screen.getByRole('button', { name: 'Définir le mot de passe' }));
+    expect(await screen.findByText(/mot de passe défini/i)).toBeInTheDocument();
+
+    await vi.advanceTimersByTimeAsync(4000);
+
+    expect(await screen.findByTestId('login-marker')).toBeInTheDocument();
+    await waitFor(() => expect(client.getQueryData(queryKeys.watchlist.list)).toBeUndefined());
+    expect(getStoredParticipant('soiree-oauth')).toBeNull();
     vi.useRealTimers();
   });
 

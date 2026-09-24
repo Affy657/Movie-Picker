@@ -4,9 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
+import type { QueryClient } from '@tanstack/react-query';
 import AccountPage from '@/app/pages/account/AccountPage';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
+import { queryKeys } from '@/shared/hooks/queryKeys';
+import { getStoredParticipant, setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 
 const ME = {
   userId: 'u-danger',
@@ -20,9 +23,9 @@ const ME = {
   avatarId: 'alpha',
 };
 
-function renderAccount(initialPath = '/settings/securite') {
+function renderAccount(initialPath = '/settings/securite', client?: QueryClient) {
   return render(
-    <AppTestProviders>
+    <AppTestProviders client={client}>
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/settings/*" element={<AccountPage />} />
@@ -48,6 +51,7 @@ describe('AccountPage — zone de danger (MSW)', () => {
   afterEach(() => {
     server.resetHandlers();
     localStorage.clear();
+    sessionStorage.clear();
   });
   afterAll(() => server.close());
 
@@ -98,6 +102,29 @@ describe('AccountPage — zone de danger (MSW)', () => {
 
     await waitFor(() => expect(deletedWith).toBe('abcd1234'));
     expect(await screen.findByTestId('home-marker')).toBeInTheDocument();
+  });
+
+  it('forgets what this tab cached for the deleted account', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.delete(`${TEST_API_V1}/auth/me`, () => new HttpResponse(null, { status: 204 }))
+    );
+    const client = createTestQueryClient();
+    client.setQueryData(queryKeys.watchlist.list, [{ tmdbId: 603 }]);
+    setStoredParticipant('soiree-danger', 'p1', 'Danger Tester');
+
+    renderAccount('/settings/securite', client);
+
+    await user.click(await screen.findByRole('button', { name: 'Supprimer mon compte' }));
+    await user.type(
+      await screen.findByLabelText('Saisissez votre mot de passe pour confirmer'),
+      'abcd1234'
+    );
+    await user.click(screen.getByRole('button', { name: 'Supprimer définitivement' }));
+
+    expect(await screen.findByTestId('home-marker')).toBeInTheDocument();
+    await waitFor(() => expect(client.getQueryData(queryKeys.watchlist.list)).toBeUndefined());
+    expect(getStoredParticipant('soiree-danger')).toBeNull();
   });
 
   it('refuse la suppression sans mot de passe', async () => {
