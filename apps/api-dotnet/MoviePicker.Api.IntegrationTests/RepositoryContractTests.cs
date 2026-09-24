@@ -90,6 +90,28 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task MovieTitleLookup_TellsARemakeFromTheFilmAlreadyProposed()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        await movies.InsertAsync(new Movie
+        {
+            Id = string.Empty,
+            EventId = eventId,
+            ParticipantId = ObjectId.GenerateNewId().ToString(),
+            TmdbId = 8587,
+            Title = "Le Roi lion",
+            Year = "1994",
+            CreatedAt = Now,
+            UpdatedAt = Now
+        });
+
+        Assert.True(await movies.ExistsByEventAndTitleCaseInsensitiveAsync(eventId, "le roi LION", "1994"));
+        Assert.False(await movies.ExistsByEventAndTitleCaseInsensitiveAsync(eventId, "Le Roi lion", "2019"));
+    }
+
+    [Fact]
     public async Task EventUpdate_WithTheVersionJustRead_SucceedsAndIncrementsVersion()
     {
         using var scope = _factory.Services.CreateScope();

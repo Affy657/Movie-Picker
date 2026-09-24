@@ -77,12 +77,17 @@ public sealed class MongoMovieRepository : IMovieRepository
         return count > 0;
     }
 
-    public async Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, CancellationToken ct = default)
+    public async Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, string? year, CancellationToken ct = default)
     {
         var escaped = Regex.Escape(title);
+        var normalizedYear = MovieYear.Normalize(year);
+        var sameYear = normalizedYear is null
+            ? Builders<MovieDocument>.Filter.In("year", new BsonValue[] { BsonNull.Value, string.Empty })
+            : Builders<MovieDocument>.Filter.Eq(x => x.Year, normalizedYear);
         var filter = Builders<MovieDocument>.Filter.And(
             Builders<MovieDocument>.Filter.Eq(x => x.EventId, eventId),
-            Builders<MovieDocument>.Filter.Regex(x => x.Title, new BsonRegularExpression($"^{escaped}$", "i")));
+            Builders<MovieDocument>.Filter.Regex(x => x.Title, new BsonRegularExpression($"^{escaped}$", "i")),
+            sameYear);
         var count = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
         return count > 0;
     }

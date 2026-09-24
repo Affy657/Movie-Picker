@@ -157,7 +157,7 @@ public sealed class AddMovieHandlerTests
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 42, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 42, MovieMediaType.Tv, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Breaking Bad", It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Breaking Bad", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>())).ReturnsAsync(created);
 
         var request = new AddMovieRequest
@@ -183,7 +183,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo
             .Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()))
             .Callback<Movie, CancellationToken>((m, _) => inserted = m)
@@ -208,7 +208,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo
             .Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()))
             .Callback<Movie, CancellationToken>((m, _) => inserted = m)
@@ -233,7 +233,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo
             .Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()))
             .Callback<Movie, CancellationToken>((m, _) => inserted = m)
@@ -277,7 +277,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
         Assert.Equal(ErrorCodes.MovieTitleAlreadyProposed, ex.Reason);
@@ -291,7 +291,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         var req = new AddMovieRequest { TmdbId = 27205, Title = "Inception", Year = "2010", PosterPath = "not-a-valid-absolute-uri", ParticipantId = participant.Id };
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", req, null));
@@ -320,7 +320,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         var steps = new List<string>();
         _eventRepo.Setup(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()))
             .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "lock" : "lock-outside")).Returns(Task.CompletedTask);
@@ -356,7 +356,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.CountByEventAndParticipantAsync(evt.Id, participant.Id, It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request(participant.Id), null));
@@ -372,7 +372,7 @@ public sealed class AddMovieHandlerTests
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
         _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(evt.Id, 27205, MovieMediaType.Movie, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, "Inception", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
         _movieRepo.Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>())).ReturnsAsync(createdMovie);
 
         var result = await _sut.HandleAsync("evt1", Request(participant.Id), null);

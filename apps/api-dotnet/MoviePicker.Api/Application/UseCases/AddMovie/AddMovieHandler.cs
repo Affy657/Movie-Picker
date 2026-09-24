@@ -78,7 +78,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (await _movieRepository.ExistsByEventAndTmdbIdAsync(evt.Id, request.TmdbId, request.MediaType, ct))
             throw Errors.MovieAlreadyProposed();
 
-        if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), ct))
+        if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), request.Year, ct))
             throw Errors.MovieTitleAlreadyProposed();
 
         var now = _clock.GetUtcNow();
