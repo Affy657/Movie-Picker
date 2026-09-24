@@ -80,6 +80,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
                 cascade.Movies = await _movieRepository.DeleteByEventIdAsync(evt.Id, token);
                 cascade.Participants = await _participantRepository.DeleteByEventIdAsync(evt.Id, token);
                 await _notifications.DeleteByEventIdAsync(evt.Id, token);
+                await EndTheSeriesThatLeadsHereAsync(evt, token);
                 cascade.EventDeleted = await _eventRepository.DeleteAsync(evt.Id, token);
             },
             ct);
@@ -114,6 +115,21 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             RemovedVotes = cascade.Votes,
             RemovedSeenMarks = cascade.SeenMarks
         };
+    }
+
+    private async Task EndTheSeriesThatLeadsHereAsync(Event evt, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(evt.RecurrenceParentEventId))
+            return;
+
+        var parents = await _eventRepository.ListByIdsAsync([evt.RecurrenceParentEventId], ct);
+        var parent = parents.FirstOrDefault(p => p.Id == evt.RecurrenceParentEventId);
+        if (parent is null || parent.NextOccurrenceEventId != evt.Id)
+            return;
+
+        await _eventRepository.UpdateAsync(
+            parent with { NextOccurrenceEventId = null, Recurrence = null, UpdatedAt = _clock.GetUtcNow() },
+            ct);
     }
 
     private sealed class Cascade
