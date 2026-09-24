@@ -223,16 +223,18 @@ public sealed class InMemoryUserRepository : IUserRepository
         if (previous.Version != user.Version)
             throw Errors.ConcurrentUpdate();
 
+        var email = Normalize(user.Email) ?? user.Email.Trim();
+        var handle = NormalizeHandle(user.Handle);
+        var updated = Copy(user with { Version = user.Version + 1 }, user.Id, email, handle);
+        if (!_byId.TryUpdate(user.Id, updated, previous))
+            throw Errors.ConcurrentUpdate();
+
         var prevEmail = Normalize(previous.Email) ?? previous.Email.Trim();
         _emailToId.TryRemove(prevEmail, out _);
         var prevHandle = NormalizeHandle(previous.Handle);
         if (prevHandle is not null)
             _handleToId.TryRemove(prevHandle, out _);
 
-        var email = Normalize(user.Email) ?? user.Email.Trim();
-        var handle = NormalizeHandle(user.Handle);
-        var updated = Copy(user with { Version = user.Version + 1 }, user.Id, email, handle);
-        _byId[user.Id] = updated;
         _emailToId[email] = user.Id;
         if (handle is not null)
             _handleToId[handle] = user.Id;

@@ -66,7 +66,8 @@ public sealed class InMemoryEventRepository : IEventRepository
             throw Errors.ConcurrentUpdate();
 
         var saved = evt with { Version = evt.Version + 1, WriteSeq = current.WriteSeq + 1 };
-        _byId[saved.Id] = saved;
+        if (!_byId.TryUpdate(saved.Id, saved, current))
+            throw Errors.ConcurrentUpdate();
         if (!string.IsNullOrEmpty(saved.Slug))
             _bySlug[saved.Slug] = saved;
         return Task.FromResult(saved);
