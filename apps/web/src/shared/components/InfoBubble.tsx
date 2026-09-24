@@ -28,7 +28,12 @@ export default function InfoBubble({ label, children }: Readonly<InfoBubbleProps
   const panelRef = useRef<HTMLSpanElement>(null);
   const panelId = useId();
 
-  useClickOutside(wrapperRef, () => setOpen(false), open);
+  useClickOutside(wrapperRef, () => setOpen(false), open, { returnFocusTo: triggerRef });
+
+  const closeFromPanel = () => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  };
 
   const place = useCallback(() => {
     const trigger = triggerRef.current;
@@ -98,7 +103,7 @@ export default function InfoBubble({ label, children }: Readonly<InfoBubbleProps
         >
           <span className={styles.panelTitle}>{label}</span>
           {children}
-          <LinkButton size="sm" className={styles.close} onClick={() => setOpen(false)}>
+          <LinkButton size="sm" className={styles.close} onClick={closeFromPanel}>
             {t('common.close')}
           </LinkButton>
         </span>
