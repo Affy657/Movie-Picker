@@ -32,6 +32,10 @@ function matchesOutcomes(event: MyEventSummary, outcomes: Set<HistoryOutcome>): 
   return false;
 }
 
+function startsAt(event: MyEventSummary): string {
+  return `${event.date}T${event.time}`;
+}
+
 function compareEvents(a: MyEventSummary, b: MyEventSummary, sortBy: HistorySortKey): number {
   switch (sortBy) {
     case 'title':
@@ -42,7 +46,7 @@ function compareEvents(a: MyEventSummary, b: MyEventSummary, sortBy: HistorySort
       return (a.participantCount ?? 0) - (b.participantCount ?? 0);
     case 'date':
     default:
-      return a.date.localeCompare(b.date);
+      return startsAt(a).localeCompare(startsAt(b));
   }
 }
 
@@ -97,8 +101,8 @@ export function useHistoryToolbar({ events }: UseHistoryToolbarOptions) {
 
   const visibleEvents = useMemo(() => {
     const filtered = events.filter((e) => matchesRoles(e, roles) && matchesOutcomes(e, outcomes));
-    const sorted = [...filtered].sort((a, b) => compareEvents(a, b, sortBy));
-    return sortDir === 'asc' ? sorted : sorted.reverse();
+    const direction = sortDir === 'asc' ? 1 : -1;
+    return [...filtered].sort((a, b) => direction * compareEvents(a, b, sortBy));
   }, [events, roles, outcomes, sortBy, sortDir]);
 
   return {
