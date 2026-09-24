@@ -8,6 +8,7 @@ public sealed class RegisterRequest
 {
     [Required(ErrorMessage = "E-mail is required")]
     [EmailAddress(ErrorMessage = "Invalid e-mail format")]
+    [MaxLength(254)]
     public string Email { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Password is required")]
@@ -30,6 +31,7 @@ public sealed class LoginRequest
 {
     [Required(ErrorMessage = "E-mail is required")]
     [EmailAddress(ErrorMessage = "Invalid e-mail format")]
+    [MaxLength(254)]
     public string Email { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Password is required")]
