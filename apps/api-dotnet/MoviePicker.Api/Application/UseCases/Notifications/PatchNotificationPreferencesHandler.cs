@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -28,7 +29,7 @@ public sealed class PatchNotificationPreferencesHandler : IPatchNotificationPref
 
         foreach (var patch in request.Preferences)
         {
-            if (!Enum.TryParse<UserNotificationType>(patch.Type, ignoreCase: true, out var type))
+            if (!EnumNames.TryParse<UserNotificationType>(patch.Type, out var type))
                 throw Errors.UnknownNotificationType(patch.Type);
             if (patch.Enabled is null)
                 throw Errors.NotificationEnabledRequired(patch.Type);

@@ -128,6 +128,24 @@ public sealed class PatchUserProfileHandlerTests
             Times.Once);
     }
 
+    [Theory]
+    [InlineData("99")]
+    [InlineData("light,dark")]
+    public async Task HandleAsync_UiThemeThatIsNotANamedTheme_FallsBackToSystem(string theme)
+    {
+        var u = User() with { UiTheme = UiThemePreference.Dark };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(u);
+        users
+            .Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User x, CancellationToken _) => x);
+        var handler = Handler(users.Object);
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { UiTheme = theme });
+
+        Assert.Equal(UiThemePreference.System, res.UiTheme);
+    }
+
     [Fact]
     public async Task HandleAsync_UpdatesRatingScale()
     {

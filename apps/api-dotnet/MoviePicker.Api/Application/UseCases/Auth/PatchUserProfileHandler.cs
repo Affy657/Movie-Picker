@@ -1,6 +1,7 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -151,7 +152,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
     }
 
     private static T ParseEnum<T>(string raw, T defaultValue) where T : struct, Enum =>
-        Enum.TryParse<T>(raw, ignoreCase: true, out var result) ? result : defaultValue;
+        EnumNames.TryParse<T>(raw, out var result) ? result : defaultValue;
 
     private static string? ApplyBio(string? current, string? requested)
     {
