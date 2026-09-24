@@ -50,6 +50,7 @@ function toCardItem(item: ShowcaseItem): MovieBrowseCardItem {
     posterPath: item.posterPath,
     voteAverage: item.voteAverage,
     runtimeMinutes: item.runtimeMinutes,
+    genreIds: item.genreIds,
   };
 }
 
