@@ -11,6 +11,7 @@ import {
   deleteEventWinner,
   postEventWheel,
   postEventWheelAnnounce,
+  postEventWinner,
 } from '@/features/events/api/eventsApi';
 
 vi.mock('@/features/events/api/eventsApi', () => ({
@@ -300,6 +301,57 @@ describe('useEventWheel: pending movie night', () => {
     expect(result.current.remainingDraws).toBe(0);
     expect(result.current.winnerCount).toBe(1);
     expect(result.current.canRelaunchFromModal).toBe(false);
+  });
+});
+
+describe('useEventWheel: winner shown in the modal', () => {
+  const netflix = [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' as const }];
+  const listedDune = {
+    ...winner,
+    watchProviders: netflix,
+    tmdbWatchPageUrl: 'https://www.themoviedb.org/movie/1/watch',
+  } as MovieData;
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function renderWithListedDune() {
+    return renderHook(
+      () =>
+        useEventWheel({
+          slug: 'soiree',
+          event: hostEvent,
+          movies: [listedDune],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper }
+    );
+  }
+
+  it('shows the streaming platforms of the drawn movie, which the draw response leaves out', async () => {
+    vi.mocked(postEventWheel).mockResolvedValue({ winner, message: 'Roue lancée.' });
+    const { result } = renderWithListedDune();
+
+    act(() => result.current.launch());
+
+    await waitFor(() => expect(result.current.spinWinner?.id).toBe('mov1'));
+    expect(result.current.spinWinner?.watchProviders).toEqual(netflix);
+    expect(result.current.spinWinner?.tmdbWatchPageUrl).toBe(
+      'https://www.themoviedb.org/movie/1/watch'
+    );
+  });
+
+  it('shows the streaming platforms of a movie picked by hand', async () => {
+    vi.mocked(postEventWinner).mockResolvedValue({ winner, message: 'Film choisi.' });
+    const { result } = renderWithListedDune();
+
+    act(() => result.current.pickWinnerManually(listedDune));
+
+    await waitFor(() => expect(result.current.spinWinner?.id).toBe('mov1'));
+    expect(result.current.spinWinner?.watchProviders).toEqual(netflix);
+    expect(result.current.spinPool[0]?.watchProviders).toEqual(netflix);
   });
 });
 
