@@ -86,4 +86,27 @@ describe('AccountIndexPage (MSW)', () => {
     expect(screen.getByRole('link', { name: /compte et sécurité/i })).toBeInTheDocument();
     expect(screen.getByText(', action requise')).toBeInTheDocument();
   });
+
+  it('links to my public profile on mobile while it is public', async () => {
+    stubMatchMedia(true);
+
+    renderAccount();
+
+    expect(await screen.findByRole('link', { name: 'Voir mon profil public' })).toHaveAttribute(
+      'href',
+      '/u/idx'
+    );
+  });
+
+  it('offers no link to my profile on mobile while it is private, since it would lead to a 404', async () => {
+    stubMatchMedia(true);
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({ ...ME, isProfilePublic: false }))
+    );
+
+    renderAccount();
+
+    expect(await screen.findByText('Idx')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Voir mon profil public' })).not.toBeInTheDocument();
+  });
 });

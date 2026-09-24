@@ -104,6 +104,18 @@ describe('UserMenu', () => {
     expect(screen.getByRole('menuitem', { name: /paramètres/i })).toBeInTheDocument();
   });
 
+  it('hides the profile link when my profile is private, since it would lead to a 404', async () => {
+    const user = userEvent.setup();
+    renderMenu({ ...baseUser, isProfilePublic: false });
+
+    await user.click(screen.getByRole('button', { name: /menu du compte/i }));
+
+    expect(
+      screen.queryByRole('menuitem', { name: /voir mon profil public/i })
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /paramètres/i })).toBeInTheDocument();
+  });
+
   it('closes the menu with Escape and gives the focus back to the trigger', async () => {
     const user = userEvent.setup();
     renderMenu();

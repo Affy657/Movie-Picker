@@ -73,7 +73,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
         <MenuPanel {...menu.panelProps} ariaLabel={t('nav.accountMenu')} className={styles.panel}>
           <p className={styles.heading}>{user.displayName}</p>
           <MenuSeparator />
-          {user.handle ? (
+          {user.handle && user.isProfilePublic ? (
             <MenuItem to={ROUTES.profile(user.handle)} icon={icon(UserRound)} onClick={menu.close}>
               {t('profile.settings.viewMyProfile')}
             </MenuItem>
