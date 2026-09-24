@@ -64,7 +64,16 @@ public sealed class LetterboxdWatchlistSynchronizer
             .Select(f => f.Slug)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var removed = await RemoveDepartedAsync(user.Id, items, onLetterboxd, ct);
+        if (snapshot.IsTruncated)
+        {
+            _logger.LogInformation(
+                "Letterboxd watchlist of {Username} read up to {Read} of {Total} film(s): no film removed",
+                user.LetterboxdUsername,
+                snapshot.Films.Count,
+                snapshot.Total);
+        }
+
+        var removed = snapshot.IsTruncated ? 0 : await RemoveDepartedAsync(user.Id, items, onLetterboxd, ct);
         var addition = await AddMissingAsync(user.Id, items, snapshot.Films, ct);
 
         return new LetterboxdSyncOutcome(
@@ -74,8 +83,8 @@ public sealed class LetterboxdWatchlistSynchronizer
             Removed: removed,
             UnmatchedTitles: addition.UnmatchedTitles,
             PendingChoices: addition.PendingChoices,
-            TotalOnLetterboxd: snapshot.Films.Count,
-            TotalTruncated: Math.Max(0, snapshot.Films.Count - LetterboxdImportLimits.MaxRows));
+            TotalOnLetterboxd: snapshot.Total,
+            TotalTruncated: Math.Max(0, snapshot.Total - LetterboxdImportLimits.MaxRows));
     }
 
     public static LetterboxdSyncOutcome Failed(string error) =>

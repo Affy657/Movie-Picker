@@ -105,6 +105,29 @@ public sealed class LetterboxdWatchlistSynchronizerTests
     }
 
     [Fact]
+    public async Task SyncAsync_WatchlistLongerThanWhatWasRead_ImportsWithoutRemovingAnything()
+    {
+        const int announced = 2_000;
+        GivenWatchlist(Item(5255, "Le Pôle express", "the-polar-express"));
+        _letterboxd
+            .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(LetterboxdWatchlistSnapshot.Truncated([new LetterboxdFilm("akira", "Akira", "1988")], announced));
+        GivenTmdbResults("Akira", new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira"));
+
+        var outcome = await _sut.SyncAsync(TheUser());
+
+        Assert.True(outcome.Succeeded);
+        Assert.Equal(1, outcome.Added);
+        Assert.Equal(0, outcome.Removed);
+        Assert.Equal(announced, outcome.TotalOnLetterboxd);
+        Assert.Equal(announced - LetterboxdImportLimits.MaxRows, outcome.TotalTruncated);
+        _watchlist.Verify(
+            w => w.RemoveAsync(
+                It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task SyncAsync_ConfidentMatch_AddsSilently()
     {
         GivenLetterboxd(true, new LetterboxdFilm("the-polar-express", "The Polar Express", "2004"));

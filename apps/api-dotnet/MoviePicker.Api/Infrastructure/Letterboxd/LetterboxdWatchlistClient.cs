@@ -43,20 +43,29 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
                 return LetterboxdWatchlistSnapshot.Failed();
             expected = outcome.Expected;
             if (outcome.Done)
-                break;
+                return Conclude(normalized, films, expected);
         }
 
-        if (films.Count != expected)
-        {
-            _logger.LogWarning(
-                "Incomplete Letterboxd watchlist for {Username}: {Collected} film(s) read out of {Expected} announced",
-                normalized,
-                films.Count,
-                expected);
-            return LetterboxdWatchlistSnapshot.Failed();
-        }
+        _logger.LogInformation(
+            "Letterboxd watchlist of {Username} read up to the {MaxPages}-page budget: {Collected} film(s) out of {Expected}",
+            normalized,
+            MaxPages,
+            films.Count,
+            expected);
+        return LetterboxdWatchlistSnapshot.Truncated(films, expected);
+    }
 
-        return new LetterboxdWatchlistSnapshot(films, true);
+    private LetterboxdWatchlistSnapshot Conclude(string username, List<LetterboxdFilm> films, int expected)
+    {
+        if (films.Count == expected)
+            return new LetterboxdWatchlistSnapshot(films, true);
+
+        _logger.LogWarning(
+            "Incomplete Letterboxd watchlist for {Username}: {Collected} film(s) read out of {Expected} announced",
+            username,
+            films.Count,
+            expected);
+        return LetterboxdWatchlistSnapshot.Failed();
     }
 
     private readonly record struct WatchlistPageOutcome(bool Failed, bool Done, int Expected);
@@ -92,10 +101,20 @@ public sealed partial class LetterboxdWatchlistClient : ILetterboxdWatchlistClie
         if (pageFilms.Count == 0)
             return new WatchlistPageOutcome(false, true, expected);
 
+        var before = films.Count;
         foreach (var film in pageFilms)
         {
             if (seen.Add(film.Slug))
                 films.Add(film);
+        }
+
+        if (films.Count == before)
+        {
+            _logger.LogWarning(
+                "Letterboxd watchlist page {Page} of {Username} only repeats films already read",
+                page,
+                username);
+            return new WatchlistPageOutcome(true, true, expected);
         }
 
         return new WatchlistPageOutcome(false, films.Count >= expected, expected);

@@ -160,6 +160,65 @@ public sealed class LetterboxdWatchlistClientTests
         Assert.Empty(snapshot.Films);
     }
 
+    private static int PageNumber(Uri uri)
+    {
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var pageIndex = Array.IndexOf(segments, "page");
+        return pageIndex >= 0 ? int.Parse(segments[pageIndex + 1], System.Globalization.CultureInfo.InvariantCulture) : 1;
+    }
+
+    [Fact]
+    public async Task GetWatchlistAsync_WatchlistLongerThanThePageBudget_KeepsWhatWasRead()
+    {
+        const int announced = 5_000;
+        var (sut, handler) = CreateSut(uri =>
+        {
+            var page = PageNumber(uri);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(Page(
+                    announced,
+                    Poster($"film-{page}-a", $"Film {page} A (2001)"),
+                    Poster($"film-{page}-b", $"Film {page} B (2002)")))
+            };
+        });
+
+        var snapshot = await sut.GetWatchlistAsync("affy657");
+
+        Assert.True(snapshot.IsComplete);
+        Assert.InRange(snapshot.Films.Count, 2, announced - 1);
+        Assert.Equal(["film-1-a", "film-1-b"], snapshot.Films.Take(2).Select(f => f.Slug));
+        Assert.Equal(announced, snapshot.Total);
+        Assert.True(snapshot.IsTruncated);
+        handler.Protected().Verify(
+            "SendAsync",
+            Times.Exactly(snapshot.Films.Count / 2),
+            ItExpr.IsAny<HttpRequestMessage>(),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetWatchlistAsync_PagesRepeatingTheFirstOne_IsIncomplete()
+    {
+        var (sut, _) = CreateSut(Page(500, Poster("inception", "Inception (2010)"), Poster("dune", "Dune (2021)")));
+
+        var snapshot = await sut.GetWatchlistAsync("affy657");
+
+        Assert.False(snapshot.IsComplete);
+        Assert.False(snapshot.IsTruncated);
+    }
+
+    [Fact]
+    public async Task GetWatchlistAsync_FullRead_IsNotTruncated()
+    {
+        var (sut, _) = CreateSut(Page(1, RealPosterMarkup));
+
+        var snapshot = await sut.GetWatchlistAsync("affy657");
+
+        Assert.False(snapshot.IsTruncated);
+        Assert.Equal(1, snapshot.Total);
+    }
+
     [Fact]
     public async Task GetWatchlistAsync_MissingEntryCounter_IsIncomplete()
     {
