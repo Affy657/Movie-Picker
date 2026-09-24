@@ -90,14 +90,24 @@ test.describe('Event management', () => {
       await expect(settings).toBeVisible();
 
       const saved = settings.getByText('Enregistré', { exact: true });
+      const configSaved = () =>
+        hostPage.waitForResponse(
+          (response) =>
+            response.request().method() === 'PATCH' &&
+            response.url().endsWith('/config') &&
+            response.ok()
+        );
+      const titleSaved = configSaved();
       await settings.locator('#host-cfg-title').fill('Soirée renommée E2E');
-      await expect(settings.getByText('Enregistrement…')).toBeVisible();
+      await titleSaved;
       await expect(saved).toBeVisible({ timeout: 15_000 });
+      const limitSaved = configSaved();
       await settings.getByRole('switch', { name: 'Limiter le nombre de participants' }).click();
-      await expect(settings.getByText('Enregistrement…')).toBeVisible();
+      await limitSaved;
       await expect(saved).toBeVisible({ timeout: 15_000 });
+      const capSaved = configSaved();
       await settings.locator('#host-cfg-max-participants').fill('1');
-      await expect(settings.getByText('Enregistrement…')).toBeVisible();
+      await capSaved;
       await expect(saved).toBeVisible({ timeout: 15_000 });
       await settings.getByRole('button', { name: /^fermer$/i }).click();
       await expect(settings).toBeHidden();
