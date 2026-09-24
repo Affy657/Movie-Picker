@@ -238,6 +238,73 @@ describe('WheelModal', () => {
     expect(onRelaunch).toHaveBeenCalledOnce();
   });
 
+  it('shows inside the modal why the next draw failed, instead of behind the backdrop', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        onRelaunch={vi.fn()}
+        relaunchError="Tirage impossible"
+        winnerCount={3}
+        remainingDraws={2}
+      />
+    );
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('Tirage impossible');
+    expect(wheelDialog()).toContainElement(alert);
+  });
+
+  it('shows the next draw as pending and refuses a second click while it is requested', () => {
+    const onRelaunch = vi.fn();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        onRelaunch={onRelaunch}
+        relaunching
+        winnerCount={3}
+        remainingDraws={2}
+      />
+    );
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+
+    const relaunchButton = screen.getByRole('button', { name: /tirer le suivant/i });
+    expect(relaunchButton).toHaveAttribute('aria-busy', 'true');
+    expect(relaunchButton).toBeDisabled();
+    fireEvent.click(relaunchButton);
+    expect(onRelaunch).not.toHaveBeenCalled();
+  });
+
+  it('shows no alert while the next draw has not failed', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        onRelaunch={vi.fn()}
+        relaunchError={null}
+        winnerCount={3}
+        remainingDraws={2}
+      />
+    );
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it(`goes back to "Let's go" without a possible rerun`, () => {
     wrap(
       <WheelModal
