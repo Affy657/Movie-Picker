@@ -60,6 +60,25 @@ public sealed class MoviePickerExceptionFilterTests
         Assert.Equal(500, Assert.IsType<JsonResult>(context.Result).StatusCode);
     }
 
+    [Theory]
+    [InlineData("Request body too large.", 413)]
+    [InlineData("Unexpected end of request content.", 400)]
+    public void OnException_BadHttpRequest_AnswersItsClientErrorStatus(string message, int statusCode)
+    {
+        var filter = new MoviePickerExceptionFilter(new StubHostEnvironment { EnvironmentName = "Production" });
+        var context = CreateContext(new BadHttpRequestException(message, statusCode));
+
+        filter.OnException(context);
+
+        Assert.True(context.ExceptionHandled);
+        var result = Assert.IsType<JsonResult>(context.Result);
+        Assert.Equal(statusCode, result.StatusCode);
+        var envelope = Assert.IsType<ApiErrorResponse>(result.Value);
+        Assert.Equal(statusCode, envelope.Code);
+        Assert.Equal(message, envelope.Error);
+        Assert.Equal(ErrorCodes.ValidationFailed, envelope.Reason);
+    }
+
     [Fact]
     public void OnException_NotFoundException_Sets404AndJsonError()
     {
