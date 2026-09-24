@@ -142,6 +142,32 @@ public sealed class WebPushSenderTests : IDisposable
     }
 
     [Fact]
+    public async Task SendAsync_MessageWithALifetime_AsksThePushServiceToDropItAfterward()
+    {
+        var subscription = Subscription(GenerateClientPublicKey());
+        var keys = WebPush.VapidHelper.GenerateVapidKeys();
+
+        await Build(keys.PublicKey, keys.PrivateKey)
+            .SendAsync(subscription, Message with { TimeToLive = TimeSpan.FromMinutes(30) });
+
+        var request = Assert.Single(_pushService.Requests);
+        Assert.Equal("1800", Assert.Single(request.Headers.GetValues("TTL")));
+    }
+
+    [Fact]
+    public async Task SendAsync_MessageWithoutALifetime_IsNotKeptForWeeks()
+    {
+        var subscription = Subscription(GenerateClientPublicKey());
+        var keys = WebPush.VapidHelper.GenerateVapidKeys();
+
+        await Build(keys.PublicKey, keys.PrivateKey).SendAsync(subscription, Message);
+
+        var request = Assert.Single(_pushService.Requests);
+        var ttl = int.Parse(Assert.Single(request.Headers.GetValues("TTL")), System.Globalization.CultureInfo.InvariantCulture);
+        Assert.InRange(ttl, 1, (int)TimeSpan.FromDays(2).TotalSeconds);
+    }
+
+    [Fact]
     public async Task SendAsync_RepeatedSends_ReuseTheSamePrimaryHandler()
     {
         var subscription = Subscription(GenerateClientPublicKey());

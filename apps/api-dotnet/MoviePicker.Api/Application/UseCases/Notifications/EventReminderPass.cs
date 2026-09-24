@@ -171,7 +171,8 @@ public sealed class EventReminderPass : IEventReminderPass
             Title: pushTitle,
             Body: pushBody,
             Tag: $"reminder-{window.NotifType}-{evt.Id}",
-            Url: $"/e/{evt.Slug}");
+            Url: $"/e/{evt.Slug}",
+            TimeToLive: occurrence.StartUtc - now);
         foreach (var user in notifiableUsers)
         {
             var subs = subsByUser.TryGetValue(user.Id, out var userSubs) ? userSubs : [];
