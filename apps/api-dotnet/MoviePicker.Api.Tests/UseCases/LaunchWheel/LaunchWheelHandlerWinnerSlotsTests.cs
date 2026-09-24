@@ -59,13 +59,16 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
     private void GivenEvent(int winnerCount, params string[] alreadyWon) =>
         GivenEvent(winnerCount, announcedAt: null, alreadyWon);
 
-    private void GivenEvent(int winnerCount, DateTimeOffset? announcedAt, params string[] alreadyWon)
+    private void GivenEvent(int winnerCount, DateTimeOffset? announcedAt, params string[] alreadyWon) =>
+        GivenEventOn("2030-01-01", winnerCount, announcedAt, alreadyWon);
+
+    private void GivenEventOn(string date, int winnerCount, DateTimeOffset? announcedAt, params string[] alreadyWon)
     {
         var evt = new Event
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = date,
             Time = "20:00",
             Slug = "soiree",
             HostToken = "ht1",
@@ -122,6 +125,32 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
         var result = await _sut.HandleAsync("evt1", expectedWinnerCount: 1);
 
         Assert.Equal("m2", result.Winner.Id);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReplayedAfterTheDrawFinishedAPendingNight_ReturnsTheWinnerInsteadOfEventFinished()
+    {
+        var twoDaysAgo = DateTimeOffset.UtcNow.AddDays(-2).ToString("yyyy-MM-dd");
+        GivenEventOn(twoDaysAgo, 1, announcedAt: null, "m1");
+        GivenMovies("m1", "m2");
+        _movies.Setup(r => r.GetByIdAsync("m1", It.IsAny<CancellationToken>())).ReturnsAsync(Film("m1"));
+
+        var result = await _sut.HandleAsync("evt1", expectedWinnerCount: 0);
+
+        Assert.Equal("m1", result.Winner.Id);
+        _events.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_FinishedNightWithoutAReplay_StillRefuses()
+    {
+        var twoDaysAgo = DateTimeOffset.UtcNow.AddDays(-2).ToString("yyyy-MM-dd");
+        GivenEventOn(twoDaysAgo, 1, announcedAt: null, "m1");
+        GivenMovies("m1", "m2");
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1"));
+
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
     }
 
     [Fact]
