@@ -36,6 +36,8 @@ export const queryKeys = {
     detail: (slug: string | undefined, hostToken: string | null) =>
       ['event', 'detail', slug ?? '$pending', hostToken ?? ''] as const,
 
+    detailForAnyHostToken: (slug: string) => ['event', 'detail', slug] as const,
+
     eligibleFollows: (slug: string | undefined) =>
       ['event', 'eligible-follows', slug ?? '$pending'] as const,
 
