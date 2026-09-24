@@ -18,6 +18,7 @@ export default function AccountIdentityHeader({
   const { patchProfile } = useAuth();
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const avatarSize = 'lg';
+  const linksToPublicProfile = Boolean(user.handle) && user.isProfilePublic;
 
   return (
     <div className={styles.wrapper} data-variant={variant}>
@@ -39,7 +40,7 @@ export default function AccountIdentityHeader({
           {user.handle && <p className={styles.identityHandle}>@{user.handle}</p>}
         </div>
 
-        {user.handle && variant === 'desktop' && (
+        {linksToPublicProfile && variant === 'desktop' && (
           <Link to={ROUTES.profile(user.handle)} className={styles.identityLink}>
             <Globe size={ICON_SIZE.md} aria-hidden />
             <span>{t('profile.settings.viewMyProfile')}</span>
@@ -57,7 +58,7 @@ export default function AccountIdentityHeader({
         onClose={() => setAvatarModalOpen(false)}
       />
 
-      {user.handle && variant === 'mobile' && (
+      {linksToPublicProfile && variant === 'mobile' && (
         <Link to={ROUTES.profile(user.handle)} className={styles.identityLinkMobile}>
           <Globe size={ICON_SIZE.md} aria-hidden />
           <span>{t('profile.settings.viewMyProfile')}</span>
