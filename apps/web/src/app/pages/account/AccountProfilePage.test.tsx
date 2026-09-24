@@ -128,6 +128,31 @@ describe('AccountProfilePage (MSW)', () => {
     expect(bioInput).toHaveValue('Cinéphile');
   });
 
+  it('clears the bio with an empty string, which the API reads as a removal', async () => {
+    const user = userEvent.setup();
+    const patchBodies: Record<string, unknown>[] = [];
+    server.use(
+      http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        patchBodies.push(body);
+        return HttpResponse.json({
+          ...baseUser,
+          ...body,
+          bio: body.bio === '' ? null : baseUser.bio,
+        });
+      })
+    );
+
+    renderProfile();
+    const bioInput = await screen.findByLabelText(/bio/i);
+    await user.clear(bioInput);
+
+    await waitFor(() => expect(patchBodies).toHaveLength(1));
+    expect(patchBodies[0]!.bio).toBe('');
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+    expect(bioInput).toHaveValue('');
+  });
+
   it('keeps a visibility change made while the name is still saving', async () => {
     const user = userEvent.setup();
     const patchBodies: Record<string, unknown>[] = [];
