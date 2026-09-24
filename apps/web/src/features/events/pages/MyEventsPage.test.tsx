@@ -282,6 +282,56 @@ describe('MyEventsPage (MSW)', () => {
     await waitFor(() => expect(removeCalled).toBe(true));
   });
 
+  it('history: a failed load offers a retry instead of an empty search result', async () => {
+    const user = (await import('@testing-library/user-event')).default.setup();
+    let historyCalls = 0;
+    server.use(
+      authMeHandler,
+      statsHandler,
+      http.get(`${TEST_API_V1}/events/mine`, ({ request }) => {
+        const finished = new URL(request.url).searchParams.get('scope') === 'finished';
+        if (finished && ++historyCalls === 1) {
+          return HttpResponse.json({ error: 'Historique indisponible' }, { status: 500 });
+        }
+        return HttpResponse.json({
+          events: finished
+            ? [
+                {
+                  id: 'e7',
+                  slug: 'passee',
+                  title: 'Soirée passée',
+                  date: '2020-01-01',
+                  time: '20:00',
+                  createdAt: '2019-01-01T00:00:00Z',
+                  updatedAt: '2020-01-02T00:00:00Z',
+                  isCreator: true,
+                  isParticipant: true,
+                  lifecycle: 'finished',
+                  participantCount: 2,
+                  movieCount: 1,
+                },
+              ]
+            : [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 1,
+        });
+      })
+    );
+
+    renderMyEvents();
+
+    await user.click(await screen.findByRole('tab', { name: /historique/i }, { timeout: 5000 }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Historique indisponible');
+    expect(screen.queryByText(/aucune soirée ne correspond/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /réessayer/i }));
+
+    expect(await screen.findByRole('link', { name: /Soirée passée/i })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('history: filter by outcome (with/without a chosen movie)', async () => {
     const user = (await import('@testing-library/user-event')).default.setup();
     server.use(
