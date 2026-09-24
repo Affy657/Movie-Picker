@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
@@ -37,10 +37,14 @@ registerRoute(
 
 registerRoute(
   ({ url }) => url.hostname === 'image.tmdb.org',
-  new CacheFirst({
+  new StaleWhileRevalidate({
     cacheName: 'tmdb-images-v2',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 30 }),
+      new ExpirationPlugin({
+        maxEntries: 300,
+        maxAgeSeconds: 60 * 60 * 24 * 30,
+        purgeOnQuotaError: true,
+      }),
       new CacheableResponsePlugin({ statuses: [0, 200] }),
     ],
   })
