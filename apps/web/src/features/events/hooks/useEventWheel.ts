@@ -196,9 +196,14 @@ export function useEventWheel({
     postEventWheelAnnounce(slug, hostToken).catch(() => undefined);
   }, [slug, hostToken]);
 
+  const latestAnnounceWinnerRef = useRef(announceWinner);
+  useEffect(() => {
+    latestAnnounceWinnerRef.current = announceWinner;
+  }, [announceWinner]);
+
   useEffect(
     () => () => {
-      if (announceRef.current.timer !== null) window.clearTimeout(announceRef.current.timer);
+      if (announceRef.current.timer !== null) latestAnnounceWinnerRef.current();
     },
     []
   );
