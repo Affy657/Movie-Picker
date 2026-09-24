@@ -39,6 +39,17 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
             return;
         }
 
+        if (context.Exception is BadHttpRequestException badRequest)
+        {
+            context.Result = new JsonResult(
+                ApiErrorResponse.FromHttpContext(http, badRequest.StatusCode, badRequest.Message, ErrorCodes.ValidationFailed))
+            {
+                StatusCode = badRequest.StatusCode
+            };
+            context.ExceptionHandled = true;
+            return;
+        }
+
         SentrySdk.CaptureException(context.Exception);
 
         var message = _env.IsDevelopment() ? context.Exception.Message : "An internal error occurred";

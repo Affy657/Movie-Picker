@@ -3,6 +3,9 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -30,6 +33,44 @@ public sealed class ErrorContractTests : IClassFixture<MoviePickerApplicationFac
         public Task RemoveAsync(string key) => _inner.RemoveAsync(key);
     }
 
+    private sealed class OversizedBodyStartupFilter : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
+        {
+            app.Use((context, nextMiddleware) =>
+            {
+                context.Request.Body = new OversizedRequestBody();
+                return nextMiddleware(context);
+            });
+            next(app);
+        };
+    }
+
+    private sealed class OversizedRequestBody : Stream
+    {
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+
+        public override int Read(byte[] buffer, int offset, int count) => throw TooLarge();
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+            throw TooLarge();
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+            throw TooLarge();
+
+        public override void Flush() { }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        private static BadHttpRequestException TooLarge() =>
+            new("Request body too large. The max request body size is 1048576 bytes.", StatusCodes.Status413PayloadTooLarge);
+    }
+
     private readonly MoviePickerApplicationFactory _factory;
 
     public ErrorContractTests(MoviePickerApplicationFactory factory) => _factory = factory;
@@ -52,6 +93,23 @@ public sealed class ErrorContractTests : IClassFixture<MoviePickerApplicationFac
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
         Assert.Equal("application/json", res.Content.Headers.ContentType?.MediaType);
         Assert.Equal("validation_failed", (await ReadErrorAsync(res)).GetProperty("reason").GetString());
+    }
+
+    [Fact]
+    public async Task BodyAboveTheServerLimit_Answers413InTheApiErrorFormat()
+    {
+        var client = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(services =>
+            services.AddSingleton<IStartupFilter, OversizedBodyStartupFilter>())).CreateClient();
+
+        var res = await client.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = "big@test.local", Password = "abcd1234", DisplayName = "Big" });
+
+        Assert.Equal(HttpStatusCode.RequestEntityTooLarge, res.StatusCode);
+        Assert.Equal("application/json", res.Content.Headers.ContentType?.MediaType);
+        var error = await ReadErrorAsync(res);
+        Assert.Equal("validation_failed", error.GetProperty("reason").GetString());
+        Assert.Equal(413, error.GetProperty("code").GetInt32());
     }
 
     [Fact]
