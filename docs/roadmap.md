@@ -250,28 +250,28 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.8, planifiée (46 points)
+## 📋 V1.8, planifiée (33 points)
 
-**Objectif** : donner à chacun ses listes de films, faites à la main, remplies par des règles ou tenues à plusieurs, et faire passer la soirée en temps réel, avec la sécurité du compte en complément.
+**Objectif** : la bibliothèque personnelle, avec des listes de films à soi, faites à la main, remplies par des règles ou tenues à plusieurs, et les films déjà vus repris de Letterboxd.
 
 - ⬜ `L` **Mes listes** : la page Ma liste devient Mes listes, où chacun crée, renomme et supprime ses propres listes de films à côté de la liste « À voir », chacune visible sur le profil ou privée. Un film s'ajoute à n'importe quelle liste depuis sa fiche.
 - ⬜ `L` **Listes intelligentes** : une liste qui se remplit toute seule dans tout le catalogue TMDB à partir de règles combinées (genres, décennie, note, durée, acteurs, réalisateur, plateformes de streaming). Elle se met à jour d'elle-même, et ses règles se modifient à tout moment.
 - ⬜ `L` **Listes collaboratives** : le créateur d'une liste y invite d'autres personnes, qui peuvent alors y ajouter et en retirer des films, et chaque film affiche qui l'a ajouté. Pensée pour la liste « à voir ensemble » d'un couple, d'une coloc ou d'une bande.
-- ⬜ `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
-- ⬜ `L` **Synchronisation temps réel** : remplacer le polling par une connexion temps réel ; propositions, votes et arrivées de participants apparaissent sans délai perceptible.
-- ⬜ `M` **Présence sur la page soirée** : avatars des participants actuellement connectés et signal « en train de proposer un film », posés sur la connexion temps réel.
-- ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
+- ⬜ `L` **Import des films vus depuis Letterboxd** : reprendre les films déjà vus d'un compte Letterboxd avec la note posée sur chacun, qui alimentent le marqueur « déjà vu » et les notes Movie Picker. Complète la synchronisation de watchlist livrée en V1.4.
+- ⬜ `S` **Écart watchlist Movie Picker / Letterboxd** : pour les comptes synchronisés, badge sur les films de la liste « À voir » absents de la watchlist Letterboxd, typiquement ceux ajoutés depuis une soirée.
 
 ---
 
-## 📋 V1.9, planifiée (20 points)
+## 📋 V1.9, planifiée (33 points)
 
-**Objectif** : la bibliothèque personnelle et le confort au quotidien.
+**Objectif** : une soirée en temps réel, lisible même hors-ligne et cadrée par le thème de l'hôte, avec la sécurité du compte et le confort au quotidien en complément.
 
-- ⬜ `L` **Import des films vus depuis Letterboxd** : reprendre les films déjà vus d'un compte Letterboxd avec la note posée sur chacun, qui alimentent le marqueur « déjà vu » et les notes Movie Picker. Complète la synchronisation de watchlist livrée en V1.4.
-- ⬜ `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation ; recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème.
+- ⬜ `L` **Synchronisation temps réel** : remplacer le polling par une connexion temps réel ; propositions, votes et arrivées de participants apparaissent sans délai perceptible.
+- ⬜ `M` **Présence sur la page soirée** : avatars des participants actuellement connectés et signal « en train de proposer un film », posés sur la connexion temps réel.
 - ⬜ `M` **Consultation hors-ligne de la dernière soirée** : la dernière vue soirée reste lisible sans réseau, avec une bannière « Données en cache, reconnexion en cours ». Lecture seule : les actions attendent le retour du réseau.
-- ⬜ `S` **Écart watchlist Movie Picker / Letterboxd** : pour les comptes synchronisés, badge sur les films de la watchlist Movie Picker absents de celle de Letterboxd, typiquement ceux ajoutés depuis une soirée.
+- ⬜ `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
+- ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
+- ⬜ `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation ; recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème.
 
 ---
 
@@ -279,7 +279,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 > **Note V2, application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
-- `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Depend de la synchronisation temps réel (V1.8) et de la consultation hors-ligne (V1.9).
+- `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Dépend de la synchronisation temps réel et de la consultation hors-ligne (V1.9).
 - `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion.
 - `M` **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
 - `L` **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
