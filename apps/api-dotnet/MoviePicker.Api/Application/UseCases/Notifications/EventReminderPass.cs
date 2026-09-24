@@ -269,9 +269,6 @@ public sealed class EventReminderPass : IEventReminderPass
         if (host is null || !host.NotifiesOn(UserNotificationType.EventPending))
             return;
 
-        if (await _notifications.ExistsAsync(host.Id, UserNotificationType.EventPending, evt.Id, ct))
-            return;
-
         var subs = await _subscriptions.ListByUserIdAsync(host.Id, ct);
         var message = new PushMessage(
             Title: "Soirée en suspens 😅",
@@ -279,7 +276,9 @@ public sealed class EventReminderPass : IEventReminderPass
             Tag: $"pending-{evt.Id}",
             Url: $"/e/{evt.Slug}");
         await DeliverOnceAsync(host.Id, UserNotificationType.EventPending, evt.Id, subs, message, failures, ct);
-        await AddToInboxOnceAsync(host.Id, UserNotificationType.EventPending, evt.Id, evt, now, ct);
+
+        if (!await _notifications.ExistsAsync(host.Id, UserNotificationType.EventPending, evt.Id, ct))
+            await AddToInboxOnceAsync(host.Id, UserNotificationType.EventPending, evt.Id, evt, now, ct);
     }
 
     private sealed record ReminderOccurrence(Event Event, DateTimeOffset StartUtc, string Key, bool NoMovieYet);

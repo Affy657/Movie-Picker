@@ -529,7 +529,27 @@ public sealed class EventReminderPassTests
     }
 
     [Fact]
-    public async Task RunAsync_PendingEventAlreadyInTheHostInbox_SendsNoPushAgainOnceTheMarkerExpired()
+    public async Task RunAsync_PendingPushReleasedAfterAFailure_IsRetriedWithoutASecondInboxItem()
+    {
+        var started = Now - EventSchedule.PendingDelay - TimeSpan.FromHours(3);
+        GivenOpenEvents(EventStartingAt("e1", started));
+        _users.Setup(r => r.GetByIdAsync("host", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Subscriber("host"));
+        _subscriptions.Setup(r => r.ListByUserIdAsync("host", It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new PushSubscription { Id = "s1", UserId = "host", Endpoint = "https://push/host", P256dh = "k", Auth = "a" }]);
+        _notifications.Setup(r => r.ExistsAsync("host", UserNotificationType.EventPending, "e1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        await CreatePass().RunAsync();
+
+        _sender.Verify(
+            s => s.SendAsync(It.IsAny<PushSubscription>(), It.Is<PushMessage>(m => m.Tag == "pending-e1"), It.IsAny<CancellationToken>()),
+            Times.Once);
+        VerifyInboxAdded("host", UserNotificationType.EventPending, Times.Never());
+    }
+
+    [Fact]
+    public async Task RunAsync_PendingPushAlreadyDelivered_IsNotSentAgain()
     {
         var started = Now - EventSchedule.PendingDelay - TimeSpan.FromDays(4);
         GivenOpenEvents(EventStartingAt("e1", started));
@@ -539,6 +559,8 @@ public sealed class EventReminderPassTests
             .ReturnsAsync([new PushSubscription { Id = "s1", UserId = "host", Endpoint = "https://push/host", P256dh = "k", Auth = "a" }]);
         _notifications.Setup(r => r.ExistsAsync("host", UserNotificationType.EventPending, "e1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+        _dedup.Setup(r => r.TryClaimAsync("host", UserNotificationType.EventPending, "e1", NotificationDedupChannel.Push, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
         await CreatePass().RunAsync();
 
