@@ -24,6 +24,7 @@ public sealed class CreateIdeaSuggestionRequest
     [MaxLength(20)]
     public string? AppVersion { get; init; }
 
+    [NoEmptyItems]
     public IReadOnlyList<IdeaSuggestionAttachmentDto>? Attachments { get; init; }
 }
 

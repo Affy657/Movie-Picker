@@ -95,6 +95,23 @@ public sealed class ErrorContractTests : IClassFixture<MoviePickerApplicationFac
         Assert.Equal("validation_failed", (await ReadErrorAsync(res)).GetProperty("reason").GetString());
     }
 
+    [Theory]
+    [InlineData("PATCH", "/api/v1/notifications/preferences", """{"preferences":[null]}""")]
+    [InlineData("POST", "/api/v1/letterboxd/confirm", """{"selections":[null]}""")]
+    [InlineData("POST", "/api/v1/idea-suggestions", """{"category":"idea","title":"Titre","description":"Description valide","attachments":[null]}""")]
+    public async Task EmptyItemInARequestList_AnswersValidationFailedInsteadOfAServerError(string method, string path, string json)
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "ListeVide");
+
+        var res = await client.SendAsync(new HttpRequestMessage(new HttpMethod(method), path)
+        {
+            Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+        Assert.Equal("validation_failed", (await ReadErrorAsync(res)).GetProperty("reason").GetString());
+    }
+
     [Fact]
     public async Task BodyAboveTheServerLimit_Answers413InTheApiErrorFormat()
     {
