@@ -17,10 +17,12 @@ public static class UnhandledExceptionResponse
 
         context.Response.StatusCode = StatusCodes.Status500InternalServerError;
         context.Response.ContentType = "application/json";
-        await context.Response.WriteAsync(ApiErrorJson.Serialize(
-            context,
-            StatusCodes.Status500InternalServerError,
-            "Internal server error",
-            ErrorCodes.InternalError));
+        await context.Response.WriteAsync(
+            ApiErrorJson.Serialize(
+                context,
+                StatusCodes.Status500InternalServerError,
+                "Internal server error",
+                ErrorCodes.InternalError),
+            context.RequestAborted);
     }
 }
