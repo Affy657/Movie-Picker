@@ -61,6 +61,10 @@ EXCL=$(sonar_join \
   'apps/api-dotnet/**/Infrastructure/Development/**'
 )
 
+TEST_EXCL=$(sonar_join \
+  'archive/**'
+)
+
 CPD=$(sonar_join \
   'apps/web/src/**/locales/fr.ts' \
   'apps/web/src/**/locales/en.ts' \

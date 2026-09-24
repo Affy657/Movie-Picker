@@ -3,6 +3,7 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
+import sonarjs from 'eslint-plugin-sonarjs';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
@@ -40,5 +41,21 @@ export default defineConfig(
       '@typescript-eslint/no-namespace': 'off',
       'no-empty': ['error', { allowEmptyCatch: true }],
     },
+  },
+  {
+    ...sonarjs.configs.recommended,
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    ignores: [
+      'apps/web/src/**/*.test.{ts,tsx}',
+      'apps/web/src/**/*.stub.ts',
+      'apps/web/src/test-setup.ts',
+      'apps/web/src/test-utils/**',
+      'apps/web/src/mocks/**',
+      'apps/web/src/__mocks__/**',
+      'apps/web/src/vite-env.d.ts',
+      'apps/web/src/features/auth/devQuickLoginCredentials.ts',
+      'apps/web/src/shared/i18n/locales/*.ts',
+      'apps/web/src/**/generated/**',
+    ],
   }
 );
