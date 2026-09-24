@@ -64,6 +64,30 @@ describe('InfoBubble', () => {
     expect(screen.queryByText('Explication détaillée.')).not.toBeInTheDocument();
   });
 
+  it('gives focus back to the trigger when closed with its close button', async () => {
+    const user = userEvent.setup();
+    renderBubble();
+    const trigger = screen.getByRole('button', { name: 'Comment ça marche' });
+
+    await user.click(trigger);
+    await user.click(screen.getByRole('button', { name: 'Fermer' }));
+
+    expect(trigger).toHaveFocus();
+  });
+
+  it('gives focus back to the trigger when Escape closes it from inside the panel', async () => {
+    const user = userEvent.setup();
+    renderBubble();
+    const trigger = screen.getByRole('button', { name: 'Comment ça marche' });
+
+    await user.click(trigger);
+    screen.getByRole('button', { name: 'Fermer' }).focus();
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByText('Explication détaillée.')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
   it('ties the content to the trigger through aria-controls', async () => {
     const user = userEvent.setup();
     renderBubble();

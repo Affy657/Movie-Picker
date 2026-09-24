@@ -294,7 +294,7 @@ Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches
 | Composant | Props | Rôle |
 |---|---|---|
 | `Tooltip` | `label` (le texte de la bulle), `placement` `top` / `bottom` / `left` / `right`, `delayMs`, `focusable`, `disabled` (ne rend pas la bulle) | apparaît au survol et au focus, jamais seul vecteur d'une information |
-| `InfoBubble` | `label` (titre visible du panneau et nom du bouton d'aide), contenu en enfants | l'aide contextuelle d'un champ ou d'un réglage ; le panneau se place par `menuGeometry.ts` (320 px au plus, 8 px du bord), se ferme par son `LinkButton`, Échap ou un clic dehors |
+| `InfoBubble` | `label` (titre visible du panneau et nom du bouton d'aide), contenu en enfants | l'aide contextuelle d'un champ ou d'un réglage ; le panneau se place par `menuGeometry.ts` (320 px au plus, 8 px du bord), se ferme par son `LinkButton`, Échap ou un clic dehors ; le bouton Fermer et Échap rendent le focus au bouton d'aide |
 
 ### États de page
 
