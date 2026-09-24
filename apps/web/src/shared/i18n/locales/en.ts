@@ -1799,6 +1799,7 @@ export const en: Locale = {
     attachmentsTooMany: 'You can only attach up to {{max}} images.',
     attachmentsTooLarge: 'Image too large (4 MB max): {{name}}',
     attachmentsUnsupportedType: 'Unsupported format (PNG, JPEG, WebP or GIF only): {{name}}',
+    attachmentsUnreadable: 'Could not read the image {{name}}. Remove it, then add it again.',
     publicNotice:
       'Your suggestion and screenshots will be published in a public GitHub issue, without your name. Do not include anything personal.',
     submit: 'Send',
