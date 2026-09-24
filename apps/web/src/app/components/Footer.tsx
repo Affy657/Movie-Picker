@@ -222,10 +222,19 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
 
         <div className={styles.settings}>
           <div className={styles.appearance}>
-            <label className={styles.appearanceLabel} htmlFor="footer-language">
+            <label
+              className={styles.appearanceLabel}
+              htmlFor="footer-language"
+              id="footer-language-label"
+            >
               {t('footer.languageTitle')}
             </label>
-            <LanguageSelector id="footer-language" inline placement="top" />
+            <LanguageSelector
+              id="footer-language"
+              ariaLabelledBy="footer-language-label"
+              inline
+              placement="top"
+            />
           </div>
           <div className={styles.appearance}>
             <span className={styles.appearanceLabel} id="footer-theme-label">

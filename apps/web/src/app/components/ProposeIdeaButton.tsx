@@ -210,9 +210,10 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
         <form className={styles.form} onSubmit={(e) => void handleSubmit(e)}>
           <div className={styles.body}>
             <Field label={t('proposeIdea.categoryLabel')} htmlFor={categoryFieldId}>
-              {({ id }) => (
+              {({ id, labelId }) => (
                 <Dropdown
                   id={id}
+                  ariaLabelledBy={labelId}
                   value={category}
                   options={categoryOptions}
                   onChange={setCategory}

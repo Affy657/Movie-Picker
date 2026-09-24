@@ -191,7 +191,7 @@ L'erreur d'un bloc qui n'a pas chargé, dans la page : `message`, `retryLabel`, 
 
 ### Field
 
-Câble `label`, `hint`, `error` et `aria-describedby` autour d'un champ rendu par la fonction enfant : `children({ id, describedBy, invalid })`. L'erreur porte `role="alert"` et son icône `AlertCircle` ; quand une erreur et une aide sont données, l'erreur passe en premier. `htmlFor` impose l'identifiant du champ quand l'appelant le connaît déjà. Tout `<label>` de formulaire du produit passe par là : un `<label className="label">` écrit à la main perd le câblage de l'aide. Un groupe (radiogroup, interrupteur) prend un `<span className="label" id>` et `ariaLabelledBy` à la place.
+Câble `label`, `hint`, `error` et `aria-describedby` autour d'un champ rendu par la fonction enfant : `children({ id, labelId, describedBy, invalid })`, où `labelId` est l'identifiant du `<label>`, pour un champ qui se nomme par `aria-labelledby` (`Dropdown`). L'erreur porte `role="alert"` et son icône `AlertCircle` ; quand une erreur et une aide sont données, l'erreur passe en premier. `htmlFor` impose l'identifiant du champ quand l'appelant le connaît déjà. Tout `<label>` de formulaire du produit passe par là : un `<label className="label">` écrit à la main perd le câblage de l'aide. Un groupe (radiogroup, interrupteur) prend un `<span className="label" id>` et `ariaLabelledBy` à la place.
 
 Le skin de champ est la classe globale `.input` de `02-forms-and-content.css` : bordure `--color-border-field`, corps `--font-size-md`, survol, `:focus` en `--ring-focus`, `:disabled` en `--opacity-disabled`. `SearchField` et `NumberInput` la portent, ils n'en redessinent rien.
 
@@ -249,15 +249,16 @@ Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue,
 
 ### Dropdown
 
-Liste déroulante maison avec `role="listbox"`.
+Liste déroulante maison avec `role="listbox"`. Le déclencheur est nommé par le libellé suivi de la valeur choisie (« Langue Français »), la liste ouverte par le libellé seul ; `ariaLabel` ou `ariaLabelledBy` est requis.
 
 | Prop | Type | Rôle |
 |---|---|---|
 | `value`, `onChange` | | requis |
+| `ariaLabelledBy` | `string` | identifiant du libellé visible (`labelId` de `Field`) |
+| `ariaLabel` | `string` | le libellé quand aucun n'est affiché |
 | `id` | `string` | identifiant du déclencheur, pour un `<label htmlFor>` |
 | `options` | `{ value, label, disabled? }[]` | une option désactivée porte `aria-disabled`, les flèches la sautent |
 | `placement` | `auto` / `bottom` / `top` | `auto` par défaut : la liste s'ouvre vers le haut quand la place manque dessous |
-| `ariaLabel` | `string` | |
 | `inline` | `boolean` | renonce à la pleine largeur du conteneur, pour un sélecteur posé dans une ligne (la langue du pied de page) |
 | `disabled` | `boolean` | le déclencheur passe en `--opacity-disabled` |
 

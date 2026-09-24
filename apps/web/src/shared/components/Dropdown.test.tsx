@@ -14,7 +14,8 @@ const OPTIONS = [
 const setup = (value: 'a' | 'b' | 'c' = 'a') => {
   const onChange = vi.fn();
   render(<Dropdown value={value} options={OPTIONS} onChange={onChange} ariaLabel="Choix" />);
-  return { onChange, trigger: screen.getByRole('button', { name: 'Choix' }) };
+  const selected = OPTIONS.find((option) => option.value === value)!;
+  return { onChange, trigger: screen.getByRole('button', { name: `Choix ${selected.label}` }) };
 };
 
 describe('Dropdown', () => {
@@ -105,7 +106,7 @@ describe('Dropdown', () => {
         ariaLabel="Choix"
       />
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Choix' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Choix Alpha' }));
     const listbox = screen.getByRole('listbox');
     expect(screen.getByRole('option', { name: 'Beta' })).toHaveAttribute('aria-disabled', 'true');
 
@@ -120,12 +121,14 @@ describe('Dropdown', () => {
   it('inline, gives up the full width of its container', () => {
     render(<Dropdown value="a" options={OPTIONS} onChange={vi.fn()} ariaLabel="Choix" inline />);
 
-    expect(screen.getByRole('button', { name: 'Choix' }).parentElement).toHaveClass(styles.inline!);
+    expect(screen.getByRole('button', { name: 'Choix Alpha' }).parentElement).toHaveClass(
+      styles.inline!
+    );
   });
 
   it('disables the trigger when the whole control is disabled', () => {
     render(<Dropdown value="a" options={OPTIONS} onChange={vi.fn()} ariaLabel="Choix" disabled />);
-    expect(screen.getByRole('button', { name: 'Choix' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Choix Alpha' })).toBeDisabled();
   });
 
   it('opens upward when the placement says so', async () => {
@@ -133,7 +136,7 @@ describe('Dropdown', () => {
       <Dropdown value="a" options={OPTIONS} onChange={vi.fn()} ariaLabel="Choix" placement="top" />
     );
 
-    await userEvent.click(screen.getByRole('button', { name: 'Choix' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Choix Alpha' }));
 
     expect(screen.getByRole('listbox')).toHaveClass(styles.menuUp!);
   });
@@ -174,6 +177,34 @@ describe('Dropdown', () => {
       rects.mockRestore();
       innerHeight.mockRestore();
     }
+  });
+
+  it('names the trigger after its label followed by the current value', () => {
+    render(<Dropdown value="b" options={OPTIONS} onChange={vi.fn()} ariaLabel="Choix" />);
+
+    expect(screen.getByRole('button', { name: 'Choix Beta' })).toBeInTheDocument();
+  });
+
+  it('names the listbox after the label', async () => {
+    render(<Dropdown value="b" options={OPTIONS} onChange={vi.fn()} ariaLabel="Choix" />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Choix Beta' }));
+
+    expect(screen.getByRole('listbox', { name: 'Choix' })).toBeInTheDocument();
+  });
+
+  it('builds both names from the visible label it is labelled by', async () => {
+    render(
+      <>
+        <span id="letter-label">Lettre</span>
+        <Dropdown ariaLabelledBy="letter-label" value="c" options={OPTIONS} onChange={vi.fn()} />
+      </>
+    );
+
+    const trigger = screen.getByRole('button', { name: 'Lettre Gamma' });
+    await userEvent.click(trigger);
+
+    expect(screen.getByRole('listbox', { name: 'Lettre' })).toBeInTheDocument();
   });
 
   it('closes when clicking outside', async () => {

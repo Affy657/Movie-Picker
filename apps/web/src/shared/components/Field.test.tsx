@@ -34,6 +34,20 @@ describe('Field', () => {
     expect(input.getAttribute('aria-describedby')).toBe(`${error.id} ${hint.id}`);
   });
 
+  it('hands the label id to a control named through aria-labelledby', () => {
+    render(
+      <Field label="Langue">
+        {({ labelId }) => (
+          <div role="group" aria-labelledby={labelId}>
+            <button type="button">Français</button>
+          </div>
+        )}
+      </Field>
+    );
+
+    expect(screen.getByRole('group', { name: 'Langue' })).toBeInTheDocument();
+  });
+
   it('honours an imposed htmlFor', () => {
     render(
       <Field label="Pseudo" htmlFor="handle">

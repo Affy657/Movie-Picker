@@ -29,7 +29,7 @@ function GuestPreferencesSection() {
       <h2 id="preferences-heading">{t('auth.account.preferencesTitle')}</h2>
       <div className="form">
         <Field label={t('auth.account.languageLabel')} htmlFor="account-language">
-          {({ id }) => <LanguageSelector id={id} />}
+          {({ id, labelId }) => <LanguageSelector id={id} ariaLabelledBy={labelId} />}
         </Field>
 
         <div className={styles.groupField}>
