@@ -69,6 +69,18 @@ public sealed class PatchEventConfigHandlerWinnerCountTests
     }
 
     [Fact]
+    public async Task HandleAsync_NoConfigYet_KeepsTheWheelModeAndPreviewTheNightWasShowing()
+    {
+        GivenEvent(Upcoming());
+        var before = EventConfigResponse.FromEvent(Upcoming());
+
+        var response = await _sut.HandleAsync("s", new PatchEventConfigRequest { Theme = "Horreur" });
+
+        Assert.Equal(before.WheelMode, response.WheelMode);
+        Assert.Equal(before.RichSharePreview, response.RichSharePreview);
+    }
+
+    [Fact]
     public async Task HandleAsync_HostRaisesTheCount_PersistsIt()
     {
         GivenEvent(Upcoming());

@@ -71,7 +71,7 @@ public sealed class LaunchWheelHandler : ILaunchWheelHandler
         if (drawableCount == 0)
             throw Errors.NothingLeftToDraw();
 
-        var mode = evt.Config?.WheelMode ?? WheelMode.StrictRandom;
+        var mode = (evt.Config ?? EventConfig.SavedWithoutSettings).WheelMode;
         var scores = await _voteRepository.AggregateScoresByMovieIdsAsync(
             movies.Select(m => m.Id).ToList(),
             ct);

@@ -71,6 +71,12 @@ public sealed record EventConfig
 
     public const int ThemeMaxLength = 100;
 
+    public static readonly EventConfig SavedWithoutSettings = new()
+    {
+        WheelMode = WheelMode.StrictRandom,
+        RichSharePreview = true
+    };
+
     public string? Theme { get; init; }
     public int? ThemeColor { get; init; }
     public int? MaxProposalsPerParticipant { get; init; }
