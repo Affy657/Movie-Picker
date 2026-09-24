@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 
@@ -8,7 +9,8 @@ public sealed record MovieShowcaseQuery(
     IReadOnlyList<int>? GenreIds = null,
     int? CollectionId = null,
     string? Provider = null,
-    int? SeedTmdbId = null);
+    int? SeedTmdbId = null,
+    MovieMediaType SeedMediaType = MovieMediaType.Movie);
 
 public interface IGetMovieShowcaseHandler
 {

@@ -49,7 +49,7 @@ public sealed partial class TmdbMovieSearch
         CancellationToken ct = default)
     {
         RequireCredentials();
-        return FetchPagesAsync(page => BuildDiscoverUrl(criteria, page), pages, ct);
+        return FetchPagesAsync(page => BuildDiscoverUrl(criteria, page), pages, MovieMediaType.Movie, ct);
     }
 
     public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default)
@@ -58,6 +58,7 @@ public sealed partial class TmdbMovieSearch
         return FetchPagesAsync(
             page => $"{ApiBase}/trending/movie/week?language=fr-FR&page={page}",
             pages,
+            MovieMediaType.Movie,
             ct);
     }
 
@@ -71,18 +72,29 @@ public sealed partial class TmdbMovieSearch
         return FetchPagesAsync(
             page => $"{ApiBase}/movie/now_playing?language=fr-FR&region={r}&page={page}",
             pages,
+            MovieMediaType.Movie,
             ct);
     }
 
-    public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(
+    public async Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(
         int tmdbId,
+        MovieMediaType mediaType,
         CancellationToken ct = default)
     {
         RequireCredentials();
-        return FetchPagesAsync(
-            page => $"{ApiBase}/movie/{tmdbId}/recommendations?language=fr-FR&page={page}",
-            2,
-            ct);
+        var typeSegment = MediaTypeSegment(mediaType);
+        try
+        {
+            return await FetchPagesAsync(
+                page => $"{ApiBase}/{typeSegment}/{tmdbId}/recommendations?language=fr-FR&page={page}",
+                2,
+                mediaType,
+                ct).ConfigureAwait(false);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return [];
+        }
     }
 
     public async Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default)
@@ -124,7 +136,7 @@ public sealed partial class TmdbMovieSearch
         var list = new List<TmdbSearchItem>();
         foreach (var item in parts.EnumerateArray())
         {
-            var mapped = MapDiscoverItem(item);
+            var mapped = MapListItem(item, MovieMediaType.Movie);
             if (mapped is not null)
                 list.Add(mapped);
         }
@@ -149,6 +161,7 @@ public sealed partial class TmdbMovieSearch
     private async Task<IReadOnlyList<TmdbSearchItem>> FetchPagesAsync(
         Func<int, string> urlForPage,
         int pages,
+        MovieMediaType mediaType,
         CancellationToken ct)
     {
         var pageCount = Math.Clamp(pages, 1, 10);
@@ -157,7 +170,7 @@ public sealed partial class TmdbMovieSearch
 
         for (var page = 1; page <= pageCount; page++)
         {
-            var items = await FetchPageAsync(urlForPage(page), ct).ConfigureAwait(false);
+            var items = await FetchPageAsync(urlForPage(page), mediaType, ct).ConfigureAwait(false);
             if (items.Count == 0)
                 break;
             foreach (var item in items)
@@ -170,7 +183,7 @@ public sealed partial class TmdbMovieSearch
         return list;
     }
 
-    private async Task<List<TmdbSearchItem>> FetchPageAsync(string url, CancellationToken ct)
+    private async Task<List<TmdbSearchItem>> FetchPageAsync(string url, MovieMediaType mediaType, CancellationToken ct)
     {
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         res.EnsureSuccessStatusCode();
@@ -183,25 +196,25 @@ public sealed partial class TmdbMovieSearch
         var list = new List<TmdbSearchItem>();
         foreach (var item in results.EnumerateArray())
         {
-            var mapped = MapDiscoverItem(item);
+            var mapped = MapListItem(item, mediaType);
             if (mapped is not null)
                 list.Add(mapped);
         }
         return list;
     }
 
-    private static TmdbSearchItem? MapDiscoverItem(JsonElement item)
+    private static TmdbSearchItem? MapListItem(JsonElement item, MovieMediaType mediaType)
     {
         var id = item.GetProperty("id").GetInt32();
-        var title = ReadTitle(item, MovieMediaType.Movie);
+        var title = ReadTitle(item, mediaType);
         if (string.IsNullOrEmpty(title))
             return null;
 
-        var year = ReadYear(item, MovieMediaType.Movie);
+        var year = ReadYear(item, mediaType);
         var posterPath = ReadPosterUrl(item);
         var voteAverage = ReadVoteAverage(item);
         var genreIds = ReadGenreIdArray(item);
-        return new TmdbSearchItem(id, MovieMediaType.Movie, title, year, posterPath, voteAverage, GenreIds: genreIds);
+        return new TmdbSearchItem(id, mediaType, title, year, posterPath, voteAverage, GenreIds: genreIds);
     }
 
     private static List<int> ReadGenreIdArray(JsonElement item)

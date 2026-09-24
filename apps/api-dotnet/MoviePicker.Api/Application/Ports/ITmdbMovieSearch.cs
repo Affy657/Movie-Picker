@@ -98,6 +98,7 @@ public interface ITmdbMovieSearch
 
     Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(
         int tmdbId,
+        MovieMediaType mediaType,
         CancellationToken ct = default);
 
     Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default);

@@ -158,7 +158,7 @@ public sealed class MovieDetailsEndpointTests : IClassFixture<MoviePickerApplica
         public Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(int collectionId, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
 
-        public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(int tmdbId, CancellationToken ct = default)
+        public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct = default)
             => Task.FromResult<IReadOnlyList<TmdbSearchItem>>(Array.Empty<TmdbSearchItem>());
     }
 }

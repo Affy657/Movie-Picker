@@ -243,13 +243,44 @@ public sealed class GetMovieShowcaseHandlerTests
     [Fact]
     public async Task HandleAsync_Recommendations_UsesSeedMovie()
     {
-        _tmdb.Setup(t => t.GetRecommendationsAsync(27_205, It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetRecommendationsAsync(27_205, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(12));
 
         var result = await Build().HandleAsync(
             new MovieShowcaseQuery(MovieShowcaseSections.Recommendations, SeedTmdbId: 27_205));
 
         Assert.Equal(12, result.Items.Count);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RecommendationsForASeries_AsksForSeriesLikeIt()
+    {
+        _tmdb.Setup(t => t.GetRecommendationsAsync(1_399, MovieMediaType.Tv, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(4));
+
+        var result = await Build().HandleAsync(new MovieShowcaseQuery(
+            MovieShowcaseSections.Recommendations, SeedTmdbId: 1_399, SeedMediaType: MovieMediaType.Tv));
+
+        Assert.Equal(4, result.Items.Count);
+        _tmdb.Verify(
+            t => t.GetRecommendationsAsync(It.IsAny<int>(), MovieMediaType.Movie, It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_FilmAndSeriesSeedsSharingAnId_DoNotShareAnEntry()
+    {
+        _tmdb.Setup(t => t.GetRecommendationsAsync(1_399, It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Items(2));
+        var handler = Build();
+
+        await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Recommendations, SeedTmdbId: 1_399));
+        await handler.HandleAsync(new MovieShowcaseQuery(
+            MovieShowcaseSections.Recommendations, SeedTmdbId: 1_399, SeedMediaType: MovieMediaType.Tv));
+
+        _tmdb.Verify(
+            t => t.GetRecommendationsAsync(1_399, It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
     }
 
     [Fact]
@@ -373,7 +404,7 @@ public sealed class GetMovieShowcaseHandlerTests
     [InlineData(MovieShowcaseSections.Collection)]
     public async Task HandleAsync_SectionKeyedOnAnArbitraryId_StaysOutOfTheSharedCache(string section)
     {
-        _tmdb.Setup(t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _tmdb.Setup(t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
         _tmdb.Setup(t => t.GetCollectionMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));

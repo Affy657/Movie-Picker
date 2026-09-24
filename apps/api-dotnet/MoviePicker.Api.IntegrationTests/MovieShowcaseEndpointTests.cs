@@ -2,13 +2,26 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Configuration;
+using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
 
 public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplicationFactory>
 {
+    private const int SeriesSeedId = 1_399;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -28,6 +41,65 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
         var body = await res.Content.ReadFromJsonAsync<MovieShowcaseListResponse>(JsonOptions);
         Assert.NotNull(body);
         return body!;
+    }
+
+    private sealed class TmdbRoutes(Func<string, HttpResponseMessage> route) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(route(request.RequestUri!.AbsolutePath + request.RequestUri.Query));
+    }
+
+    private static HttpResponseMessage SeriesRecommendationsOnly(string pathAndQuery)
+    {
+        if (pathAndQuery.StartsWith($"/3/tv/{SeriesSeedId}/recommendations", StringComparison.Ordinal))
+        {
+            var results = pathAndQuery.Contains("page=1", StringComparison.Ordinal)
+                ? """[{"id":66732,"media_type":"tv","name":"Stranger Things","first_air_date":"2016-07-15","genre_ids":[18,9648],"vote_average":8.6}]"""
+                : "[]";
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent($$"""{"results":{{results}}}""") };
+        }
+
+        return new HttpResponseMessage(HttpStatusCode.NotFound);
+    }
+
+    private HttpClient CreateClientOnTmdb(Func<string, HttpResponseMessage> route) =>
+        _factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<ITmdbMovieSearch>();
+            services.AddSingleton<ITmdbMovieSearch>(new TmdbMovieSearch(
+                new HttpClient(new TmdbRoutes(route)),
+                Options.Create(new MoviePickerOptions { TmdbApiKey = "test-key" }),
+                new MemoryCache(new MemoryCacheOptions()),
+                new InMemorySharedCache(),
+                NullLogger<TmdbMovieSearch>.Instance));
+        })).CreateClient();
+
+    [Fact]
+    public async Task Showcase_RecommendationsForASeries_ListsTheSeriesTmdbRecommends()
+    {
+        using var client = CreateClientOnTmdb(SeriesRecommendationsOnly);
+
+        var res = await client.GetAsync($"/api/v1/movies/showcase?section=recommendations&seedTmdbId={SeriesSeedId}&seedMediaType=tv");
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var body = await res.Content.ReadFromJsonAsync<MovieShowcaseListResponse>(JsonOptions);
+        var item = Assert.Single(body!.Items);
+        Assert.Equal(66_732, item.Id);
+        Assert.Equal(MovieMediaType.Tv, item.MediaType);
+        Assert.Equal("Stranger Things", item.Title);
+        Assert.Equal("2016", item.Year);
+    }
+
+    [Fact]
+    public async Task Showcase_RecommendationsForASeedTmdbDoesNotKnowAsAFilm_IsAnEmptyList()
+    {
+        using var client = CreateClientOnTmdb(SeriesRecommendationsOnly);
+
+        var res = await client.GetAsync($"/api/v1/movies/showcase?section=recommendations&seedTmdbId={SeriesSeedId}");
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var body = await res.Content.ReadFromJsonAsync<MovieShowcaseListResponse>(JsonOptions);
+        Assert.Empty(body!.Items);
     }
 
     [Fact]

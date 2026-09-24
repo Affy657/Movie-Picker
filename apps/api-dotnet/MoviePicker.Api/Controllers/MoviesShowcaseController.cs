@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
 
 namespace MoviePicker.Api.Controllers;
@@ -28,6 +29,7 @@ public sealed class MoviesShowcaseController : ControllerBase
         [FromQuery] int? collectionId,
         [FromQuery] string? provider,
         [FromQuery] int? seedTmdbId,
+        [FromQuery] MovieMediaType? seedMediaType,
         [FromServices] IGetMovieShowcaseHandler handler,
         CancellationToken ct)
     {
@@ -37,7 +39,8 @@ public sealed class MoviesShowcaseController : ControllerBase
             ParseGenreIds(genreIds),
             collectionId,
             provider,
-            seedTmdbId);
+            seedTmdbId,
+            seedMediaType ?? MovieMediaType.Movie);
         var result = await handler.HandleAsync(query, ct);
         Response.Headers.CacheControl = PublicCacheControl;
         return Ok(result);

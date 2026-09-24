@@ -101,7 +101,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
                     ct);
 
             case MovieShowcaseSections.Recommendations:
-                return _tmdb.GetRecommendationsAsync(section.SeedTmdbId ?? 0, ct);
+                return _tmdb.GetRecommendationsAsync(section.SeedTmdbId ?? 0, section.SeedMediaType, ct);
 
             case MovieShowcaseSections.NowPlaying:
                 return _tmdb.GetNowPlayingMoviesAsync(
@@ -235,7 +235,8 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         IReadOnlyList<int>? Genres = null,
         int? CollectionId = null,
         string? Provider = null,
-        int? SeedTmdbId = null)
+        int? SeedTmdbId = null,
+        MovieMediaType SeedMediaType = MovieMediaType.Movie)
     {
         public IReadOnlyList<int> GenreIds => Genres ?? [];
 
@@ -249,7 +250,14 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
 
         public string CacheKey =>
             $"showcase-v1:{Section}:{Theme ?? "-"}:{(GenreIds.Count == 0 ? "-" : string.Join(",", GenreIds))}"
-            + $":{CollectionId?.ToString() ?? "-"}:{Provider ?? "-"}:{SeedTmdbId?.ToString() ?? "-"}";
+            + $":{CollectionId?.ToString() ?? "-"}:{Provider ?? "-"}:{SeedKey}";
+
+        private string SeedKey => SeedTmdbId switch
+        {
+            int id when SeedMediaType == MovieMediaType.Tv => $"tv-{id}",
+            int id => $"{id}",
+            _ => "-",
+        };
 
         public static SectionRequest From(MovieShowcaseQuery query)
         {
@@ -269,7 +277,8 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
                     CollectionId: query.CollectionId is > 0 ? query.CollectionId : throw Errors.CollectionIdMissing()),
                 MovieShowcaseSections.Recommendations => new SectionRequest(
                     section,
-                    SeedTmdbId: query.SeedTmdbId is > 0 ? query.SeedTmdbId : throw Errors.ReferenceMovieMissing()),
+                    SeedTmdbId: query.SeedTmdbId is > 0 ? query.SeedTmdbId : throw Errors.ReferenceMovieMissing(),
+                    SeedMediaType: query.SeedMediaType == MovieMediaType.Tv ? MovieMediaType.Tv : MovieMediaType.Movie),
                 _ => throw Errors.UnknownSection(),
             };
         }

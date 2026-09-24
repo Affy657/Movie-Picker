@@ -3,6 +3,7 @@ using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Controllers;
+using MoviePicker.Api.Domain.Entities;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Controllers;
@@ -29,9 +30,10 @@ public sealed class MoviesShowcaseControllerTests
         string? genreIds = null,
         int? collectionId = null,
         string? provider = null,
-        int? seedTmdbId = null) =>
+        int? seedTmdbId = null,
+        MovieMediaType? seedMediaType = null) =>
         _controller.GetShowcase(
-            section, theme, genreIds, collectionId, provider, seedTmdbId, _showcase.Object, CancellationToken.None);
+            section, theme, genreIds, collectionId, provider, seedTmdbId, seedMediaType, _showcase.Object, CancellationToken.None);
 
     [Fact]
     public async Task GetShowcase_WithoutSection_FallsBackToTrending()
@@ -42,6 +44,7 @@ public sealed class MoviesShowcaseControllerTests
 
         Assert.IsType<OkObjectResult>(result);
         Assert.Equal(MovieShowcaseSections.Trending, _captured!.Section);
+        Assert.Equal(MovieMediaType.Movie, _captured.SeedMediaType);
     }
 
     [Fact]
@@ -54,13 +57,15 @@ public sealed class MoviesShowcaseControllerTests
             theme: "frissons",
             collectionId: 10,
             provider: "netflix",
-            seedTmdbId: 27_205);
+            seedTmdbId: 27_205,
+            seedMediaType: MovieMediaType.Tv);
 
         Assert.Equal(MovieShowcaseSections.Theme, _captured!.Section);
         Assert.Equal("frissons", _captured.Theme);
         Assert.Equal(10, _captured.CollectionId);
         Assert.Equal("netflix", _captured.Provider);
         Assert.Equal(27_205, _captured.SeedTmdbId);
+        Assert.Equal(MovieMediaType.Tv, _captured.SeedMediaType);
     }
 
     [Theory]

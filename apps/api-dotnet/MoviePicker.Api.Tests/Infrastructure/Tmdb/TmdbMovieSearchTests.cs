@@ -199,7 +199,8 @@ public sealed class TmdbMovieSearchTests
         await sut.DiscoverMoviesAsync(new TmdbDiscoveryCriteria([28], null, null, null, null, null, null), 1);
         await sut.GetTrendingMoviesAsync(1);
         await sut.GetNowPlayingMoviesAsync("FR", 1);
-        await sut.GetRecommendationsAsync(550);
+        await sut.GetRecommendationsAsync(550, MovieMediaType.Movie);
+        await sut.GetRecommendationsAsync(1399, MovieMediaType.Tv);
         await sut.GetCollectionAsync(10);
         await sut.GetDetailsAsync(550, MovieMediaType.Movie);
         await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
@@ -207,6 +208,56 @@ public sealed class TmdbMovieSearchTests
         Assert.NotEmpty(capturedRequests);
         Assert.All(capturedRequests, request =>
             Assert.DoesNotContain("my-secret-key", request.RequestUri!.ToString()));
+    }
+
+    [Fact]
+    public async Task GetRecommendationsAsync_SeriesSeed_ListsSeriesFromTheSeriesEndpoint()
+    {
+        var requested = new System.Collections.Concurrent.ConcurrentBag<string>();
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>((req, _) =>
+            {
+                requested.Add(req.RequestUri!.AbsolutePath);
+                var body = req.RequestUri.Query.Contains("page=1", StringComparison.Ordinal)
+                    ? """{"results":[{"id":66732,"name":"Stranger Things","first_air_date":"2016-07-15","vote_average":8.6,"genre_ids":[18]}]}"""
+                    : """{"results":[]}""";
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) });
+            });
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+
+        var result = await sut.GetRecommendationsAsync(1399, MovieMediaType.Tv);
+
+        var item = Assert.Single(result);
+        Assert.Equal(MovieMediaType.Tv, item.MediaType);
+        Assert.Equal("Stranger Things", item.Title);
+        Assert.Equal("2016", item.Year);
+        Assert.All(requested, path => Assert.Equal("/3/tv/1399/recommendations", path));
+    }
+
+    [Fact]
+    public async Task GetRecommendationsAsync_SeedUnknownToTmdb_IsAnEmptyList()
+    {
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.NotFound));
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+
+        Assert.Empty(await sut.GetRecommendationsAsync(1399, MovieMediaType.Movie));
+    }
+
+    [Fact]
+    public async Task GetRecommendationsAsync_TmdbDown_StillThrows()
+    {
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => sut.GetRecommendationsAsync(550, MovieMediaType.Movie));
     }
 
     [Fact]
