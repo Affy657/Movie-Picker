@@ -155,6 +155,79 @@ public sealed class OAuthLoginHandlerTests
         Assert.Contains(reloaded.Identities, i => i.Provider == "google" && i.Subject == "sub-4");
     }
 
+    private static User PasswordlessWithGoogleAndGitHub() => new()
+    {
+        Email = "neo@example.com",
+        DisplayName = "Neo",
+        Handle = "neo",
+        PasswordHash = string.Empty,
+        Identities =
+        [
+            new LinkedIdentity { Provider = "google", Subject = "g-1", Email = "neo@example.com", LinkedAt = TestEpoch.AddDays(-10) },
+            new LinkedIdentity { Provider = "github", Subject = "gh-1", Email = "neo@example.com", LinkedAt = TestEpoch.AddDays(-10) }
+        ],
+        CreatedAt = TestEpoch.AddDays(-10),
+        UpdatedAt = TestEpoch.AddDays(-10)
+    };
+
+    private static Task UnlinkAsync(Fixture f, string userId, string provider) =>
+        new OAuthUnlinkHandler(
+                f.Users,
+                new Mock<IAuthSessionInvalidator>().Object,
+                new FakeTimeProvider(TestEpoch.AddDays(-1)),
+                NullLogger<OAuthUnlinkHandler>.Instance)
+            .HandleAsync(userId, provider, "session-1");
+
+    private static ExternalLoginInfo GitHubSignIn(string subject) => new()
+    {
+        Provider = "github",
+        Subject = subject,
+        Email = "neo@example.com",
+        EmailVerified = true,
+        DisplayName = "Neo"
+    };
+
+    [Fact]
+    public async Task HandleAsync_IdentityTheUserUnlinked_IsNotLinkedBackBySigningInWithIt()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(PasswordlessWithGoogleAndGitHub());
+        await UnlinkAsync(f, user.Id, "github");
+
+        var outcome = await f.CreateHandler().HandleAsync(GitHubSignIn("gh-1"));
+
+        Assert.NotEqual(OAuthOutcomeKind.SignedIn, outcome.Kind);
+        Assert.Null(outcome.User);
+        var reloaded = await f.Users.GetByIdAsync(user.Id);
+        Assert.DoesNotContain(reloaded!.Identities, i => i.Provider == "github");
+    }
+
+    [Fact]
+    public async Task HandleAsync_IdentityTheUserUnlinked_AsksForAManualLink()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(PasswordlessWithGoogleAndGitHub());
+        await UnlinkAsync(f, user.Id, "github");
+
+        var outcome = await f.CreateHandler().HandleAsync(GitHubSignIn("gh-1"));
+
+        Assert.Equal(OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink, outcome.Kind);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnotherAccountOfAnUnlinkedProvider_IsStillLinkedByItsVerifiedEmail()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(PasswordlessWithGoogleAndGitHub());
+        await UnlinkAsync(f, user.Id, "github");
+
+        var outcome = await f.CreateHandler().HandleAsync(GitHubSignIn("gh-2"));
+
+        Assert.Equal(OAuthOutcomeKind.SignedIn, outcome.Kind);
+        Assert.Equal(user.Id, outcome.User!.Id);
+        Assert.Contains(outcome.User.Identities, i => i.Provider == "github" && i.Subject == "gh-2");
+    }
+
     [Fact]
     public async Task HandleAsync_VerifiedEmailNoExistingAccount_CreatesAccountWithoutPassword()
     {

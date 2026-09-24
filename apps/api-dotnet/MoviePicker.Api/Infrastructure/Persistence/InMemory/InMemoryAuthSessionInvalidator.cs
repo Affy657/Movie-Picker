@@ -15,4 +15,7 @@ public sealed class InMemoryAuthSessionInvalidator(
             userId);
         return Task.FromResult(0L);
     }
+
+    public Task<long> InvalidateOthersForUserAsync(string userId, string? keptSessionId, CancellationToken ct = default) =>
+        InvalidateAllForUserAsync(userId, ct);
 }

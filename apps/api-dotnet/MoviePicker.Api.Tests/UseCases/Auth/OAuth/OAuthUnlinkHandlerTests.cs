@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -21,16 +23,17 @@ public sealed class OAuthUnlinkHandlerTests
     private sealed class Fixture
     {
         public InMemoryUserRepository Users { get; } = new();
+        public Mock<IAuthSessionInvalidator> Sessions { get; } = new();
 
         public OAuthUnlinkHandler CreateHandler() =>
-            new(Users, new FakeTimeProvider(TestEpoch), NullLogger<OAuthUnlinkHandler>.Instance);
+            new(Users, Sessions.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthUnlinkHandler>.Instance);
     }
 
     [Fact]
     public async Task HandleAsync_UserMissing_ThrowsNotFound()
     {
         var f = new Fixture();
-        await Assert.ThrowsAsync<NotFoundException>(() => f.CreateHandler().HandleAsync("missing", "google"));
+        await Assert.ThrowsAsync<NotFoundException>(() => f.CreateHandler().HandleAsync("missing", "google", "session-1"));
     }
 
     [Fact]
@@ -47,7 +50,10 @@ public sealed class OAuthUnlinkHandlerTests
             UpdatedAt = TestEpoch
         });
 
-        await Assert.ThrowsAsync<NotFoundException>(() => f.CreateHandler().HandleAsync(user.Id, "google"));
+        await Assert.ThrowsAsync<NotFoundException>(() => f.CreateHandler().HandleAsync(user.Id, "google", "session-1"));
+        f.Sessions.Verify(
+            x => x.InvalidateOthersForUserAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -65,7 +71,7 @@ public sealed class OAuthUnlinkHandlerTests
             UpdatedAt = TestEpoch
         });
 
-        await f.CreateHandler().HandleAsync(user.Id, "google");
+        await f.CreateHandler().HandleAsync(user.Id, "google", "session-1");
 
         var reloaded = await f.Users.GetByIdAsync(user.Id);
         Assert.Empty(reloaded!.Identities);
@@ -89,7 +95,7 @@ public sealed class OAuthUnlinkHandlerTests
             UpdatedAt = TestEpoch
         });
 
-        await f.CreateHandler().HandleAsync(user.Id, "google");
+        await f.CreateHandler().HandleAsync(user.Id, "google", "session-1");
 
         var reloaded = await f.Users.GetByIdAsync(user.Id);
         var remaining = Assert.Single(reloaded!.Identities);
@@ -110,9 +116,55 @@ public sealed class OAuthUnlinkHandlerTests
             UpdatedAt = TestEpoch
         });
 
-        await Assert.ThrowsAsync<BadRequestException>(() => f.CreateHandler().HandleAsync(user.Id, "google"));
+        await Assert.ThrowsAsync<BadRequestException>(() => f.CreateHandler().HandleAsync(user.Id, "google", "session-1"));
 
         var reloaded = await f.Users.GetByIdAsync(user.Id);
         Assert.Single(reloaded!.Identities);
+        f.Sessions.Verify(
+            x => x.InvalidateOthersForUserAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RemembersTheUnlinkedIdentity()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "neo@example.com",
+            DisplayName = "Neo",
+            Handle = "neo",
+            PasswordHash = "hash",
+            Identities = [new LinkedIdentity { Provider = "github", Subject = "gh-1", Email = "neo@example.com", LinkedAt = TestEpoch }],
+            CreatedAt = TestEpoch,
+            UpdatedAt = TestEpoch
+        });
+
+        await f.CreateHandler().HandleAsync(user.Id, "github", "session-1");
+
+        var reloaded = await f.Users.GetByIdAsync(user.Id);
+        var unlinked = Assert.Single(reloaded!.UnlinkedIdentities);
+        Assert.Equal(("github", "gh-1", TestEpoch), (unlinked.Provider, unlinked.Subject, unlinked.UnlinkedAt));
+    }
+
+    [Fact]
+    public async Task HandleAsync_RevokesTheOtherSessionsButKeepsTheCurrentOne()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "neo@example.com",
+            DisplayName = "Neo",
+            Handle = "neo",
+            PasswordHash = "hash",
+            Identities = [new LinkedIdentity { Provider = "github", Subject = "gh-1", Email = "neo@example.com", LinkedAt = TestEpoch }],
+            CreatedAt = TestEpoch,
+            UpdatedAt = TestEpoch
+        });
+
+        await f.CreateHandler().HandleAsync(user.Id, "github", "session-1");
+
+        f.Sessions.Verify(x => x.InvalidateOthersForUserAsync(user.Id, "session-1", It.IsAny<CancellationToken>()), Times.Once);
+        f.Sessions.Verify(x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

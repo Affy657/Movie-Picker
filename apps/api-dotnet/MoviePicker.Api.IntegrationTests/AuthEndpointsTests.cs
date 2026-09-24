@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
@@ -426,5 +427,34 @@ public sealed class AuthEndpointsTests : IClassFixture<MoviePickerApplicationFac
 
         var res = await client.DeleteAsync("/api/v1/auth/me/identities/google");
         Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
+    [MongoFact]
+    public async Task UnlinkIdentity_KeepsTheCurrentSession_AndSignsOutEveryOtherOne()
+    {
+        var email = $"unlinkall{Guid.NewGuid():N}@test.local";
+        var current = _factory.CreateClient();
+        var reg = await current.PostAsJsonAsync(
+            "/api/v1/auth/register",
+            new RegisterRequest { Email = email, Password = "abcd1234", DisplayName = "U" });
+        ApplySessionCookie(current, reg);
+        var elsewhere = _factory.CreateClient();
+        var login = await elsewhere.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest { Email = email, Password = "abcd1234" });
+        ApplySessionCookie(elsewhere, login);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+            var user = await users.GetByEmailAsync(email);
+            await users.UpdateAsync(user! with
+            {
+                Identities = [new LinkedIdentity { Provider = "github", Subject = Guid.NewGuid().ToString("N"), Email = email, LinkedAt = DateTimeOffset.UtcNow }]
+            });
+        }
+
+        var unlink = await current.DeleteAsync("/api/v1/auth/me/identities/github");
+
+        Assert.Equal(HttpStatusCode.NoContent, unlink.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await current.GetAsync("/api/v1/auth/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await elsewhere.GetAsync("/api/v1/auth/me")).StatusCode);
     }
 }

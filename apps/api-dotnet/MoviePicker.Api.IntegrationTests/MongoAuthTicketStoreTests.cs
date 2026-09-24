@@ -88,4 +88,34 @@ public sealed class MongoAuthTicketStoreTests : IClassFixture<MoviePickerApplica
 
         await store.RemoveAsync(key);
     }
+
+    private static AuthenticationTicket TicketOf(string userId)
+    {
+        var now = DateTimeOffset.UtcNow;
+        return new AuthenticationTicket(
+            new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId)], CookieAuthenticationDefaults.AuthenticationScheme)),
+            new AuthenticationProperties { IsPersistent = true, IssuedUtc = now, ExpiresUtc = now + AuthConstants.SessionLifetime },
+            CookieAuthenticationDefaults.AuthenticationScheme);
+    }
+
+    [MongoFact]
+    public async Task InvalidateOthersForUser_KeepsTheNamedSession_AndEveryOtherUsersSessions()
+    {
+        var store = Store();
+        var user = ObjectId.GenerateNewId().ToString();
+        var neighbour = ObjectId.GenerateNewId().ToString();
+        var current = await store.StoreAsync(TicketOf(user));
+        var elsewhere = await store.StoreAsync(TicketOf(user));
+        var neighbours = await store.StoreAsync(TicketOf(neighbour));
+        var invalidator = new MongoAuthSessionInvalidator(
+            _factory.Services.GetRequiredService<MongoCollectionFactory>(),
+            _factory.Services.GetRequiredService<AuthTicketCache>());
+
+        var revoked = await invalidator.InvalidateOthersForUserAsync(user, current);
+
+        Assert.Equal(1, revoked);
+        Assert.NotNull(await store.RetrieveAsync(current));
+        Assert.Null(await store.RetrieveAsync(elsewhere));
+        Assert.NotNull(await store.RetrieveAsync(neighbours));
+    }
 }

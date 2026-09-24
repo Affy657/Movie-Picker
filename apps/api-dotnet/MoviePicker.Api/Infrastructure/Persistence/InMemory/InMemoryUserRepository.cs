@@ -260,6 +260,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
             Identities = user.Identities,
+            UnlinkedIdentities = user.UnlinkedIdentities,
             Handle = handle ?? string.Empty,
             Bio = user.Bio,
             IsProfilePublic = user.IsProfilePublic,

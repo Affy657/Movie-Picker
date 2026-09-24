@@ -206,6 +206,24 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task UserUpdate_KeepsTheUnlinkedIdentities()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var created = await users.AddAsync(NewUser("unlink"));
+        var unlinkedAt = new DateTimeOffset(2026, 9, 20, 8, 30, 0, TimeSpan.Zero);
+
+        await users.UpdateAsync(created with
+        {
+            UnlinkedIdentities = [new UnlinkedIdentity { Provider = "github", Subject = "gh-42", UnlinkedAt = unlinkedAt }]
+        });
+
+        var reloaded = await users.GetByIdAsync(created.Id);
+        var unlinked = Assert.Single(reloaded!.UnlinkedIdentities);
+        Assert.Equal(("github", "gh-42", unlinkedAt), (unlinked.Provider, unlinked.Subject, unlinked.UnlinkedAt));
+    }
+
+    [Fact]
     public async Task UserUpdate_WithAStaleCopy_ThrowsConflictAndKeepsTheFirstWrite()
     {
         using var scope = _factory.Services.CreateScope();

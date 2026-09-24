@@ -55,6 +55,15 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
             return new OAuthOutcome { Kind = OAuthOutcomeKind.PasswordAccountRequiresManualLink };
         }
 
+        if (byEmail is not null && byEmail.UnlinkedIdentities.Any(u => u.Provider == info.Provider && u.Subject == info.Subject))
+        {
+            _logger.LogWarning(
+                "OAuth login: {Provider} identity was unlinked from the account of this e-mail, manual link required (userId={UserId})",
+                info.Provider,
+                byEmail.Id);
+            return new OAuthOutcome { Kind = OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink };
+        }
+
         if (byEmail is not null)
         {
             User saved;

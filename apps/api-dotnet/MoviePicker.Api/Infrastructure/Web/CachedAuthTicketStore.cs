@@ -96,6 +96,14 @@ public sealed class CachedAuthTicketStore : ITicketStore
         _cache.Set(key, ticket);
     }
 
+    public async Task<AuthenticationTicket?> RetrieveAsync(string key, HttpContext httpContext, CancellationToken cancellationToken)
+    {
+        var ticket = await RetrieveAsync(key);
+        if (ticket is not null)
+            AuthSessionKey.Remember(httpContext, key);
+        return ticket;
+    }
+
     public async Task<AuthenticationTicket?> RetrieveAsync(string key)
     {
         var cached = _cache.TryGet(key);

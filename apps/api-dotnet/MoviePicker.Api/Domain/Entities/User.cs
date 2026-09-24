@@ -34,6 +34,13 @@ public sealed record LinkedIdentity
     public DateTimeOffset LinkedAt { get; init; }
 }
 
+public sealed record UnlinkedIdentity
+{
+    public string Provider { get; init; } = string.Empty;
+    public string Subject { get; init; } = string.Empty;
+    public DateTimeOffset UnlinkedAt { get; init; }
+}
+
 public sealed record User
 {
     public string Id { get; init; } = string.Empty;
@@ -41,6 +48,7 @@ public sealed record User
     public string PasswordHash { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
     public IReadOnlyList<LinkedIdentity> Identities { get; init; } = Array.Empty<LinkedIdentity>();
+    public IReadOnlyList<UnlinkedIdentity> UnlinkedIdentities { get; init; } = Array.Empty<UnlinkedIdentity>();
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;

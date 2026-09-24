@@ -253,6 +253,43 @@ public sealed class AuthControllerTests
         Assert.Equal($"{WebBase}/settings/integrations?{expectedQuery}", redirect.Url);
     }
 
+    private static Task<IActionResult> SignInCallback(IOAuthLoginHandler loginHandler) =>
+        new AuthController().WithContext(authentication: ExternalSignIn().Object).OAuthCallback(
+            "google",
+            loginHandler,
+            new Mock<IOAuthLinkHandler>().Object,
+            GoogleEnabled(),
+            Options(),
+            Clock,
+            CancellationToken.None);
+
+    [Fact]
+    public async Task OAuthCallback_IdentityTheUserUnlinked_SendsBackToTheLoginPageAskingForAManualLink()
+    {
+        var loginHandler = new Mock<IOAuthLoginHandler>();
+        loginHandler
+            .Setup(h => h.HandleAsync(It.IsAny<ExternalLoginInfo>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OAuthOutcome { Kind = OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink });
+
+        var result = await SignInCallback(loginHandler.Object);
+
+        var redirect = Assert.IsType<RedirectResult>(result);
+        Assert.Equal($"{WebBase}/login?oauthError=account_exists&returnTo=%2F", redirect.Url);
+    }
+
+    [Fact]
+    public async Task UnlinkIdentity_KeepsTheSessionTheRequestIsSignedInWith()
+    {
+        var handler = new Mock<IOAuthUnlinkHandler>();
+        var controller = Controller("u1");
+        AuthSessionKey.Remember(controller.HttpContext, "session-1");
+
+        var result = await controller.UnlinkIdentity("github", handler.Object, CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(result);
+        handler.Verify(h => h.HandleAsync("u1", "github", "session-1", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task Me_Authenticated_ReturnsOk()
     {

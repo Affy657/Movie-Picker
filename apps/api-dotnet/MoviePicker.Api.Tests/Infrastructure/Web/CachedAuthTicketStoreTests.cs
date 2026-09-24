@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using MoviePicker.Api.Infrastructure.Web;
@@ -126,6 +127,32 @@ public sealed class CachedAuthTicketStoreTests
         await store.RetrieveAsync("k1");
 
         inner.Verify(s => s.RetrieveAsync("k1"), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task RetrieveAsync_ForARequest_RemembersTheSessionTheRequestIsSignedInWith()
+    {
+        var (store, inner, _) = Build();
+        inner.Setup(s => s.RetrieveAsync("k1")).ReturnsAsync(Ticket("u1"));
+        var request = new DefaultHttpContext();
+
+        var ticket = await ((ITicketStore)store).RetrieveAsync("k1", request, CancellationToken.None);
+
+        Assert.NotNull(ticket);
+        Assert.Equal("k1", AuthSessionKey.Of(request));
+    }
+
+    [Fact]
+    public async Task RetrieveAsync_ForARequestOnADeadSession_RemembersNoSession()
+    {
+        var (store, inner, _) = Build();
+        inner.Setup(s => s.RetrieveAsync("gone")).ReturnsAsync((AuthenticationTicket?)null);
+        var request = new DefaultHttpContext();
+
+        var ticket = await ((ITicketStore)store).RetrieveAsync("gone", request, CancellationToken.None);
+
+        Assert.Null(ticket);
+        Assert.Null(AuthSessionKey.Of(request));
     }
 
     [Fact]

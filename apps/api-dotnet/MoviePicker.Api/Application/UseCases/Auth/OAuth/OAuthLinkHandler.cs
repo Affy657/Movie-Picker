@@ -52,7 +52,14 @@ public sealed class OAuthLinkHandler : IOAuthLinkHandler
             LinkedAt = now
         };
 
-        var updated = user with { Identities = [.. user.Identities, identity], UpdatedAt = now };
+        var updated = user with
+        {
+            Identities = [.. user.Identities, identity],
+            UnlinkedIdentities = user.UnlinkedIdentities
+                .Where(u => !(u.Provider == info.Provider && u.Subject == info.Subject))
+                .ToList(),
+            UpdatedAt = now
+        };
         User saved;
         try
         {

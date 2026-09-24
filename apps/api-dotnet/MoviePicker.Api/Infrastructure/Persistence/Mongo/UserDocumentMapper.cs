@@ -12,6 +12,7 @@ public static class UserDocumentMapper
             PasswordHash = doc.PasswordHash,
             DisplayName = doc.DisplayName,
             Identities = (doc.Identities ?? []).ConvertAll(ToIdentityDomain),
+            UnlinkedIdentities = (doc.UnlinkedIdentities ?? []).ConvertAll(ToUnlinkedIdentityDomain),
             Handle = doc.Handle ?? string.Empty,
             Bio = doc.Bio,
             IsProfilePublic = doc.IsProfilePublic ?? true,
@@ -44,6 +45,9 @@ public static class UserDocumentMapper
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
             Identities = user.Identities.Count == 0 ? null : user.Identities.Select(ToIdentityDocument).ToList(),
+            UnlinkedIdentities = user.UnlinkedIdentities.Count == 0
+                ? null
+                : user.UnlinkedIdentities.Select(ToUnlinkedIdentityDocument).ToList(),
             Handle = string.IsNullOrEmpty(user.Handle) ? null : user.Handle,
             Bio = string.IsNullOrEmpty(user.Bio) ? null : user.Bio,
             IsProfilePublic = user.IsProfilePublic,
@@ -98,6 +102,20 @@ public static class UserDocumentMapper
         Subject = identity.Subject,
         Email = identity.Email,
         LinkedAt = identity.LinkedAt.UtcDateTime
+    };
+
+    private static UnlinkedIdentity ToUnlinkedIdentityDomain(UnlinkedIdentityDocument doc) => new()
+    {
+        Provider = doc.Provider,
+        Subject = doc.Subject,
+        UnlinkedAt = new DateTimeOffset(doc.UnlinkedAt, TimeSpan.Zero)
+    };
+
+    private static UnlinkedIdentityDocument ToUnlinkedIdentityDocument(UnlinkedIdentity identity) => new()
+    {
+        Provider = identity.Provider,
+        Subject = identity.Subject,
+        UnlinkedAt = identity.UnlinkedAt.UtcDateTime
     };
 
     private static UiThemePreference ParseTheme(string? s) =>
