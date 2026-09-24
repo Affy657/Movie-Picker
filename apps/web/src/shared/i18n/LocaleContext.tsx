@@ -70,7 +70,10 @@ export function LocaleProvider({ children }: Readonly<{ children: ReactNode }>) 
     persistLocale(code);
   }, []);
 
-  useEffect(() => forgetActiveLocale, []);
+  useEffect(() => {
+    activeLocale = localeState;
+    return forgetActiveLocale;
+  }, [localeState]);
 
   useEffect(() => {
     document.documentElement.lang = localeState;
