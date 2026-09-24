@@ -262,6 +262,47 @@ describe('useEventWheel: remaining slots', () => {
   });
 });
 
+describe('useEventWheel: pending movie night', () => {
+  const second = { id: 'mov2', title: 'Alien', tmdbId: 2 } as MovieData;
+  const pendingNight = {
+    ...hostEvent,
+    lifecycle: 'pending',
+    winners: [],
+    config: { winnerCount: 3 },
+  } as unknown as EventData;
+
+  beforeEach(() => {
+    vi.mocked(postEventWheel).mockResolvedValue({ winner, message: 'Roue lancée.' });
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('treats the first draw as the last one, since the server finishes the night on it', async () => {
+    const { result } = renderHook(
+      () =>
+        useEventWheel({
+          slug: 'soiree',
+          event: pendingNight,
+          movies: [winner, second],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper }
+    );
+    expect(result.current.remainingDraws).toBe(1);
+
+    act(() => result.current.launch());
+    await waitFor(() => expect(result.current.spinWinner?.id).toBe('mov1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.remainingDraws).toBe(0);
+    expect(result.current.winnerCount).toBe(1);
+    expect(result.current.canRelaunchFromModal).toBe(false);
+  });
+});
+
 describe('useEventWheel: taking a winner out', () => {
   const drawn = {
     ...hostEvent,
