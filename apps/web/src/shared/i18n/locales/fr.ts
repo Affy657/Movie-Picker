@@ -1717,6 +1717,7 @@ export const fr = {
     legalTitle: 'Informations légales',
     legalNotice: 'Mentions légales',
     privacyPolicy: 'Politique de confidentialité',
+    manageCookies: 'Gérer les cookies',
   },
 
   legal: {

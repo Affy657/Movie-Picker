@@ -1684,6 +1684,7 @@ export const en: Locale = {
     legalTitle: 'Legal information',
     legalNotice: 'Legal notice',
     privacyPolicy: 'Privacy policy',
+    manageCookies: 'Manage cookies',
   },
 
   legal: {

@@ -65,6 +65,32 @@ describe('Footer language', () => {
   });
 });
 
+describe('Footer cookie consent', () => {
+  afterEach(() => {
+    localStorage.removeItem('moviepicker-consent');
+  });
+
+  it('reopens the cookie choices from the legal column once they are made', async () => {
+    localStorage.setItem('moviepicker-consent', JSON.stringify({ decided: true, analytics: true }));
+    const user = userEvent.setup();
+    renderFooter();
+
+    await user.click(screen.getByRole('button', { name: 'Gérer les cookies' }));
+    const dialog = screen.getByRole('dialog', { name: 'Gestion des cookies' });
+    const analytics = within(dialog).getByRole('checkbox', { name: 'Analyse' });
+    expect(analytics).toBeChecked();
+
+    await user.click(analytics);
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer mes préférences' }));
+
+    expect(JSON.parse(localStorage.getItem('moviepicker-consent') ?? 'null')).toEqual({
+      decided: true,
+      analytics: false,
+    });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
 describe('Footer PWA install', () => {
   it('affiche le bouton d’installation sous le slogan', () => {
     renderFooter();
