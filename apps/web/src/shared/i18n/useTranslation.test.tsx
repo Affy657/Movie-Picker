@@ -81,6 +81,26 @@ describe('useTranslation', () => {
     await waitFor(() => expect(result.current.t('common.loading')).toBe('Loading\u2026'));
   });
 
+  it('reports the chosen locale outside React when the storage is blocked', () => {
+    const refuseStorage = () => {
+      throw new DOMException('The operation is insecure.', 'SecurityError');
+    };
+    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(refuseStorage);
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(refuseStorage);
+    try {
+      const { result } = renderHook(() => useLocale(), { wrapper: Wrapper });
+      expect(preferredLocale()).toBe('fr');
+
+      act(() => result.current.setLocale('en'));
+
+      expect(result.current.locale).toBe('en');
+      expect(preferredLocale()).toBe('en');
+    } finally {
+      getItem.mockRestore();
+      setItem.mockRestore();
+    }
+  });
+
   it('ignores the browser language when nothing is stored, English is an explicit choice', () => {
     const original = Object.getOwnPropertyDescriptor(navigator, 'language');
     localStorage.removeItem('moviepicker-locale');

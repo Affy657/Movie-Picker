@@ -28,13 +28,28 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 const DEFAULT_LOCALE: LocaleCode = 'fr';
 
-export function preferredLocale(): LocaleCode {
+let activeLocale: LocaleCode | null = null;
+
+function storedLocale(): LocaleCode {
   if (globalThis.window === undefined) return DEFAULT_LOCALE;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored != null && isLocaleCode(stored)) return stored;
   } catch {}
   return DEFAULT_LOCALE;
+}
+
+export function preferredLocale(): LocaleCode {
+  return activeLocale ?? storedLocale();
+}
+
+function adoptStoredLocale(): LocaleCode {
+  activeLocale = storedLocale();
+  return activeLocale;
+}
+
+function forgetActiveLocale(): void {
+  activeLocale = null;
 }
 
 function persistLocale(code: LocaleCode): void {
@@ -44,15 +59,18 @@ function persistLocale(code: LocaleCode): void {
 }
 
 export function LocaleProvider({ children }: Readonly<{ children: ReactNode }>) {
-  const [localeState, setLocaleState] = useState<LocaleCode>(preferredLocale);
+  const [localeState, setLocaleState] = useState<LocaleCode>(adoptStoredLocale);
   const [translations, setTranslations] = useState<Locale | undefined>(() =>
     loadedLocale(localeState)
   );
 
   const setLocale = useCallback((code: LocaleCode) => {
+    activeLocale = code;
     setLocaleState(code);
     persistLocale(code);
   }, []);
+
+  useEffect(() => forgetActiveLocale, []);
 
   useEffect(() => {
     document.documentElement.lang = localeState;
