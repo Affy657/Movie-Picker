@@ -467,14 +467,25 @@ describe('CreateEvent', () => {
     expect(screen.queryByText('Donnez un titre à la soirée.')).not.toBeInTheDocument();
   });
 
-  it('starts the night tomorrow at midnight when the page opens after 23:30', () => {
+  it.each([
+    ['before 20:00 in Paris', '2026-09-24T10:00:00Z', '2026-09-24', '20:00'],
+    ['a Montréal afternoon, already 21:00 in Paris', '2026-09-24T19:00:00Z', '2026-09-24', '21:30'],
+    ['exactly on a Paris half hour', '2026-09-24T18:30:00Z', '2026-09-24', '21:00'],
+    [
+      'just past midnight in Paris, still the day before in UTC',
+      '2026-09-24T22:10:00Z',
+      '2026-09-25',
+      '20:00',
+    ],
+    ['after 23:30 in Paris, tomorrow at midnight', '2026-12-31T22:45:00Z', '2027-01-01', '00:00'],
+  ])('starts the night at the next Paris slot when the page opens %s', (_, instant, date, time) => {
     vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date(2026, 11, 31, 23, 45));
+    vi.setSystemTime(new Date(instant));
     try {
       RenderCreateEvent();
 
-      expect(screen.getByLabelText(/date/i)).toHaveValue('2027-01-01');
-      expect(screen.getByLabelText(/heure/i)).toHaveValue('00:00');
+      expect(screen.getByLabelText(/date/i)).toHaveValue(date);
+      expect(screen.getByLabelText(/heure/i)).toHaveValue(time);
       expect(screen.queryByText('Cette date est déjà passée.')).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
@@ -483,7 +494,7 @@ describe('CreateEvent', () => {
 
   it('starts the night at the next half hour when the page opens right on one', () => {
     vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date(2026, 8, 24, 20, 0, 30));
+    vi.setSystemTime(new Date('2026-09-24T18:00:30Z'));
     try {
       RenderCreateEvent();
 
@@ -497,12 +508,25 @@ describe('CreateEvent', () => {
 
   it('starts the night tomorrow at midnight when the page opens right at 23:30', () => {
     vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date(2026, 8, 24, 23, 30, 5));
+    vi.setSystemTime(new Date('2026-09-24T21:30:05Z'));
     try {
       RenderCreateEvent();
 
       expect(screen.getByLabelText(/date/i)).toHaveValue('2026-09-25');
       expect(screen.getByLabelText(/heure/i)).toHaveValue('00:00');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('warns about a start already past in Paris, even when it is still ahead in UTC', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-24T19:00:00Z'));
+    try {
+      RenderCreateEvent();
+
+      fireEvent.change(screen.getByLabelText(/heure/i), { target: { value: '20:00' } });
+      expect(screen.getByText('Cette date est déjà passée.')).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
