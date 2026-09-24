@@ -37,6 +37,9 @@ public sealed class MongoParticipantRepository : IParticipantRepository
 
     public async Task<Participant?> FindByIdAndEventIdAsync(string participantId, string eventId, CancellationToken ct = default)
     {
+        if (!MongoObjectIds.IsValid(participantId))
+            return null;
+
         var doc = await _collection.Find(x => x.Id == participantId && x.EventId == eventId).FirstOrDefaultAsync(ct);
         return doc is null ? null : ParticipantDocumentMapper.ToDomain(doc);
     }

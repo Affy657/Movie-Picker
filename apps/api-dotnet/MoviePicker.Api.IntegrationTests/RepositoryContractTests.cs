@@ -734,4 +734,21 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False(await dedup.WasClaimedSinceAsync(userId, UserNotificationType.EventReminder1h, key, channel, DateTimeOffset.UtcNow.AddHours(1)));
         Assert.False(await dedup.WasClaimedSinceAsync(userId, UserNotificationType.EventReminder24h, key, channel, before));
     }
+
+    [Theory]
+    [InlineData("not-an-id")]
+    [InlineData("zzzzzzzzzzzzzzzzzzzzzzzz")]
+    public async Task ByIdLookups_TreatAMalformedIdAsUnknown(string malformedId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var participants = scope.ServiceProvider.GetRequiredService<IParticipantRepository>();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+
+        Assert.Null(await movies.GetByIdAsync(malformedId));
+        Assert.Null(await movies.GetByIdAndEventIdAsync(malformedId, eventId));
+        Assert.Null(await participants.FindByIdAndEventIdAsync(malformedId, eventId));
+        await notifications.MarkReadAsync(ObjectId.GenerateNewId().ToString(), malformedId);
+    }
 }

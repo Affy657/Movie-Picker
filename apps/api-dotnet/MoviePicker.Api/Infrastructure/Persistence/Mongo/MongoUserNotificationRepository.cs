@@ -76,6 +76,9 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
 
     public async Task MarkReadAsync(string userId, string notificationId, CancellationToken ct = default)
     {
+        if (!MongoObjectIds.IsValid(notificationId))
+            return;
+
         var update = Builders<UserNotificationDocument>.Update.Set(x => x.IsRead, true);
         await _collection.UpdateOneAsync(
             x => x.Id == notificationId && x.UserId == userId, update, cancellationToken: ct);

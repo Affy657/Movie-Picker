@@ -19,6 +19,9 @@ public sealed class MongoMovieRepository : IMovieRepository
 
     public async Task<Movie?> GetByIdAsync(string movieId, CancellationToken ct = default)
     {
+        if (!MongoObjectIds.IsValid(movieId))
+            return null;
+
         var doc = await _collection.Find(x => x.Id == movieId).FirstOrDefaultAsync(ct);
         return doc is null ? null : MovieMapper.ToDomain(doc);
     }
@@ -38,6 +41,9 @@ public sealed class MongoMovieRepository : IMovieRepository
 
     public async Task<Movie?> GetByIdAndEventIdAsync(string movieId, string eventId, CancellationToken ct = default)
     {
+        if (!MongoObjectIds.IsValid(movieId))
+            return null;
+
         var doc = await _collection.Find(x => x.Id == movieId && x.EventId == eventId).FirstOrDefaultAsync(ct);
         return doc is null ? null : MovieMapper.ToDomain(doc);
     }
