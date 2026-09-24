@@ -54,6 +54,7 @@ if (!string.IsNullOrWhiteSpace(sentryDsn))
         options.AddLogEntryFilter(SentryBeforeSend.IsLogNoise);
         options.AddExceptionFilterForType<AuthenticationFailureException>();
         options.SetBeforeSend(SentryBeforeSend.Prepare);
+        options.SetBeforeSendTransaction(SentryBeforeSend.PrepareTransaction);
         options.SetBeforeBreadcrumb(SentryBeforeSend.RedactBreadcrumb);
         options.TracesSampler = context => SentryBeforeSend.SampleTrace(context.TransactionContext.Name);
         var revision = Environment.GetEnvironmentVariable("K_REVISION");
