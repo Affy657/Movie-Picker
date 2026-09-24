@@ -201,6 +201,31 @@ public sealed class RecurringEventPassTests
     }
 
     [Fact]
+    public async Task RunAsync_MonthlySeriesOnTheThirtyFirst_ComesBackToItAfterAShorterMonth()
+    {
+        GivenCandidates(FinishedWeekly() with
+        {
+            Date = "2026-09-30",
+            Recurrence = RecurrenceFrequency.Monthly,
+            RecurrenceAnchorDay = 31,
+            ClosedAt = new DateTimeOffset(2026, 9, 30, 22, 0, 0, TimeSpan.Zero)
+        });
+        var nextMorning = new RecurringEventPass(
+            _events.Object,
+            _participants.Object,
+            _users.Object,
+            new InMemoryUnitOfWork(),
+            new FakeTimeProvider(new DateTimeOffset(2026, 10, 1, 1, 15, 0, TimeSpan.Zero)),
+            NullLogger<RecurringEventPass>.Instance);
+
+        await nextMorning.RunAsync();
+
+        var created = CapturedNewEvent();
+        Assert.Equal("2026-10-31", created.Date);
+        Assert.Equal(31, created.RecurrenceAnchorDay);
+    }
+
+    [Fact]
     public async Task RunAsync_EventStillRunning_CreatesNothing()
     {
         GivenCandidates(FinishedWeekly() with { Date = "2026-09-30", ClosedAt = null });

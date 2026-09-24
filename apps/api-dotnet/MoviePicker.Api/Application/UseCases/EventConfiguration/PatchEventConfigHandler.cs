@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -91,6 +92,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var date = ResolveDate(request, evt.Date);
         var time = ResolveTime(request, evt.Time);
         var title = ResolveTitle(request, evt.Title);
+        var recurrence = ResolveRecurrence(request, evt.Recurrence);
 
         var updated = evt with
         {
@@ -98,7 +100,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             Date = date,
             Time = time,
             Config = nextConfig,
-            Recurrence = ResolveRecurrence(request, evt.Recurrence),
+            Recurrence = recurrence,
+            RecurrenceAnchorDay = ResolveRecurrenceAnchorDay(evt, recurrence, date),
             UpdatedAt = now
         };
 
@@ -183,6 +186,19 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         if (request.ClearRecurrence == true)
             return null;
         return request.Recurrence ?? current;
+    }
+
+    private static int? ResolveRecurrenceAnchorDay(Event evt, RecurrenceFrequency? recurrence, string date)
+    {
+        if (recurrence is null)
+            return null;
+
+        if (evt.RecurrenceAnchorDay is { } anchor && recurrence == evt.Recurrence && date == evt.Date)
+            return anchor;
+
+        return DateOnly.TryParse(date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
+            ? day.Day
+            : evt.RecurrenceAnchorDay;
     }
 
     private static void EnsurePatchAllowed(

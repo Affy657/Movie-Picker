@@ -57,6 +57,10 @@ public sealed class EventDocument
     [BsonIgnoreIfNull]
     public string? Recurrence { get; set; }
 
+    [BsonElement("recurrenceAnchorDay")]
+    [BsonIgnoreIfNull]
+    public int? RecurrenceAnchorDay { get; set; }
+
     [BsonElement("recurrenceParentEventId")]
     [BsonIgnoreIfNull]
     [BsonRepresentation(BsonType.ObjectId)]

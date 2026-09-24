@@ -51,6 +51,30 @@ public sealed class EventRecurrenceTests
     }
 
     [Fact]
+    public void NextDate_MonthlyFromAClampedOccurrence_ReturnsToTheAnchorDay()
+    {
+        var next = EventRecurrence.NextDate(new DateOnly(2026, 2, 28), RecurrenceFrequency.Monthly, FarPast, anchorDay: 31);
+
+        Assert.Equal(new DateOnly(2026, 3, 31), next);
+    }
+
+    [Fact]
+    public void NextDate_MonthlyAnchorDayMissingFromTheNextMonth_ClampsAgain()
+    {
+        var next = EventRecurrence.NextDate(new DateOnly(2026, 3, 31), RecurrenceFrequency.Monthly, FarPast, anchorDay: 31);
+
+        Assert.Equal(new DateOnly(2026, 4, 30), next);
+    }
+
+    [Fact]
+    public void NextDate_WeeklySeries_IgnoresTheAnchorDay()
+    {
+        var next = EventRecurrence.NextDate(new DateOnly(2026, 9, 9), RecurrenceFrequency.Weekly, FarPast, anchorDay: 31);
+
+        Assert.Equal(new DateOnly(2026, 9, 16), next);
+    }
+
+    [Fact]
     public void NextDate_SeriesLeftDormant_SkipsForwardToTheFirstFutureOccurrence()
     {
         var next = EventRecurrence.NextDate(

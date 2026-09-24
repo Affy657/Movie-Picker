@@ -18,6 +18,7 @@ public sealed record Event
     public DateTimeOffset? WinnerAnnouncedAt { get; init; }
     public DateTimeOffset? WatchlistCleanedAt { get; init; }
     public RecurrenceFrequency? Recurrence { get; init; }
+    public int? RecurrenceAnchorDay { get; init; }
     public string? RecurrenceParentEventId { get; init; }
     public string? NextOccurrenceEventId { get; init; }
 

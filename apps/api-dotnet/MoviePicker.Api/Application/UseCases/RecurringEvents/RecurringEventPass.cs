@@ -80,7 +80,7 @@ public sealed class RecurringEventPass : IRecurringEventPass
             if (!DateOnly.TryParse(parent.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parentDate))
                 continue;
 
-            if (EventRecurrence.NextDate(parentDate, frequency, today) is not { } nextDate)
+            if (EventRecurrence.NextDate(parentDate, frequency, today, parent.RecurrenceAnchorDay) is not { } nextDate)
             {
                 await StopSeriesAsync(parent, now, "series dormant beyond the catch-up limit", ct);
                 stopped++;

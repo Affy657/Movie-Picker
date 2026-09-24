@@ -29,6 +29,7 @@ public static class EventDocumentMapper
                 ? new DateTimeOffset(doc.WatchlistCleanedAt.Value, TimeSpan.Zero)
                 : null,
             Recurrence = ParseRecurrence(doc.Recurrence),
+            RecurrenceAnchorDay = doc.RecurrenceAnchorDay,
             RecurrenceParentEventId = doc.RecurrenceParentEventId,
             NextOccurrenceEventId = doc.NextOccurrenceEventId,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
@@ -65,6 +66,7 @@ public static class EventDocumentMapper
             WinnerAnnouncedAt = evt.WinnerAnnouncedAt?.UtcDateTime,
             WatchlistCleanedAt = evt.WatchlistCleanedAt?.UtcDateTime,
             Recurrence = ToRecurrenceString(evt.Recurrence),
+            RecurrenceAnchorDay = evt.RecurrenceAnchorDay,
             RecurrenceParentEventId = evt.RecurrenceParentEventId,
             NextOccurrenceEventId = evt.NextOccurrenceEventId,
             StartAtUtc = EventSchedule.TryGetStartUtc(evt.Date, evt.Time, out var startAt)
