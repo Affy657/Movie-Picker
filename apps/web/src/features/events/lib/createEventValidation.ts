@@ -1,4 +1,5 @@
 import type { Translate } from '@/shared/i18n';
+import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
 
 export type CreateEventDraft = {
   title: string;
@@ -11,26 +12,21 @@ export type CreateEventFieldErrors = Partial<Record<keyof CreateEventDraft, stri
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{2}:\d{2}$/;
 
-function parseLocalDateTime(date: string, time: string): Date | null {
-  if (!DATE_PATTERN.test(date) || !TIME_PATTERN.test(time)) return null;
-  const [year = 0, month = 0, day = 0] = date.split('-').map(Number);
-  const [hours = 0, minutes = 0] = time.split(':').map(Number);
-  const parsed = new Date(year, month - 1, day, hours, minutes);
-  const roundTrips =
-    parsed.getFullYear() === year &&
-    parsed.getMonth() === month - 1 &&
-    parsed.getDate() === day &&
-    parsed.getHours() === hours &&
-    parsed.getMinutes() === minutes;
-  return roundTrips ? parsed : null;
-}
-
 function isValidDate(date: string): boolean {
-  return parseLocalDateTime(date, '00:00') !== null;
+  if (!DATE_PATTERN.test(date)) return false;
+  const [year = 0, month = 0, day = 0] = date.split('-').map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return (
+    parsed.getUTCFullYear() === year &&
+    parsed.getUTCMonth() === month - 1 &&
+    parsed.getUTCDate() === day
+  );
 }
 
 function isValidTime(time: string): boolean {
-  return parseLocalDateTime('2000-01-01', time) !== null;
+  if (!TIME_PATTERN.test(time)) return false;
+  const [hours = 0, minutes = 0] = time.split(':').map(Number);
+  return hours < 24 && minutes < 60;
 }
 
 export function validateCreateEventDraft(
@@ -45,6 +41,7 @@ export function validateCreateEventDraft(
 }
 
 export function isPastEventDateTime(date: string, time: string, now: Date): boolean {
-  const moment = parseLocalDateTime(date, time);
-  return moment !== null && moment.getTime() < now.getTime();
+  if (!isValidDate(date) || !isValidTime(time)) return false;
+  const startMs = eventScheduledStartUtcMs({ date, time });
+  return startMs !== null && startMs < now.getTime();
 }

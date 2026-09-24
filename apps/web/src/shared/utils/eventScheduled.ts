@@ -1,6 +1,15 @@
 const EVENT_TIMEZONE = 'Europe/Paris';
 
-function timeZoneOffsetMs(utcMs: number, timeZone: string): number {
+export interface WallClock {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+}
+
+function wallClockIn(timeZone: string, utcMs: number): WallClock {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone,
     hourCycle: 'h23',
@@ -12,15 +21,24 @@ function timeZoneOffsetMs(utcMs: number, timeZone: string): number {
     second: '2-digit',
   }).formatToParts(new Date(utcMs));
   const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
-  const asUtc = Date.UTC(
-    get('year'),
-    get('month') - 1,
-    get('day'),
-    get('hour'),
-    get('minute'),
-    get('second')
-  );
+  return {
+    year: get('year'),
+    month: get('month'),
+    day: get('day'),
+    hour: get('hour'),
+    minute: get('minute'),
+    second: get('second'),
+  };
+}
+
+function timeZoneOffsetMs(utcMs: number, timeZone: string): number {
+  const wall = wallClockIn(timeZone, utcMs);
+  const asUtc = Date.UTC(wall.year, wall.month - 1, wall.day, wall.hour, wall.minute, wall.second);
   return asUtc - utcMs;
+}
+
+export function eventWallClockAt(utcMs: number): WallClock {
+  return wallClockIn(EVENT_TIMEZONE, utcMs);
 }
 
 export function eventScheduledStartUtcMs(event: { date: string; time: string }): number | null {

@@ -38,6 +38,7 @@ import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
+import { eventWallClockAt } from '@/shared/utils/eventScheduled';
 import { ROUTES } from '@/app/routes';
 import {
   DEFAULT_PARTICIPANT_LIMIT,
@@ -62,14 +63,24 @@ function pad2(value: number): string {
   return String(value).padStart(2, '0');
 }
 
+const DEFAULT_START_MINUTES = 20 * 60;
+const START_SLOT_MINUTES = 30;
+const MINUTES_PER_DAY = 24 * 60;
+
 function getDefaultStart(): { date: string; time: string } {
-  const start = new Date();
-  const totalMin = start.getHours() * 60 + start.getMinutes();
-  if (totalMin < 20 * 60) start.setHours(20, 0, 0, 0);
-  else start.setHours(0, (Math.floor(totalMin / 30) + 1) * 30, 0, 0);
+  const now = eventWallClockAt(Date.now());
+  const nowMinutes = now.hour * 60 + now.minute;
+  const startMinutes =
+    nowMinutes < DEFAULT_START_MINUTES
+      ? DEFAULT_START_MINUTES
+      : (Math.floor(nowMinutes / START_SLOT_MINUTES) + 1) * START_SLOT_MINUTES;
+  const startDay = new Date(
+    Date.UTC(now.year, now.month - 1, now.day + Math.floor(startMinutes / MINUTES_PER_DAY))
+  );
+  const startMinuteOfDay = startMinutes % MINUTES_PER_DAY;
   return {
-    date: `${start.getFullYear()}-${pad2(start.getMonth() + 1)}-${pad2(start.getDate())}`,
-    time: `${pad2(start.getHours())}:${pad2(start.getMinutes())}`,
+    date: `${startDay.getUTCFullYear()}-${pad2(startDay.getUTCMonth() + 1)}-${pad2(startDay.getUTCDate())}`,
+    time: `${pad2(Math.floor(startMinuteOfDay / 60))}:${pad2(startMinuteOfDay % 60)}`,
   };
 }
 
