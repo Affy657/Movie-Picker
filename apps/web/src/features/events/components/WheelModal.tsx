@@ -31,6 +31,8 @@ interface WheelModalProps {
   wheelKey: number;
   onClose: () => void;
   onRelaunch?: () => void;
+  relaunching?: boolean;
+  relaunchError?: string | null;
   onSpinComplete?: () => void;
   skipSpin?: boolean;
   winnerCount?: number;
@@ -45,6 +47,8 @@ export default function WheelModal({
   wheelKey,
   onClose,
   onRelaunch,
+  relaunching = false,
+  relaunchError = null,
   onSpinComplete,
   skipSpin = false,
   winnerCount = 1,
@@ -244,14 +248,25 @@ export default function WheelModal({
 
             {remainingLabel ? <p className={styles.remaining}>{remainingLabel}</p> : null}
 
+            {relaunchError ? (
+              <p className={`error ${styles.relaunchError}`} role="alert">
+                {relaunchError}
+              </p>
+            ) : null}
+
             <div className={styles.footer}>
               {onRelaunch ? (
                 <>
                   <Button type="button" onClick={onClose}>
                     {t('events.wheel.modal.finishHereButton')}
                   </Button>
-                  <Button type="button" variant="primary" onClick={onRelaunch}>
-                    <Disc3 size={ICON_SIZE.md} aria-hidden />
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={onRelaunch}
+                    loading={relaunching}
+                  >
+                    {relaunching ? null : <Disc3 size={ICON_SIZE.md} aria-hidden />}
                     <span className={styles.relaunchLabel}>
                       {t('events.wheel.modalRelaunchButton')}
                     </span>
