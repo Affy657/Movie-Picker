@@ -11,7 +11,6 @@ public sealed class InMemoryUserRepository : IUserRepository
     private readonly ConcurrentDictionary<string, User> _byId = new();
     private readonly ConcurrentDictionary<string, string> _emailToId = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _handleToId = new(StringComparer.OrdinalIgnoreCase);
-    private readonly object _templatesGate = new();
     private readonly object _uniqueKeysGate = new();
 
     public Task<User?> GetByIdAsync(string id, CancellationToken ct = default) =>
@@ -99,16 +98,12 @@ public sealed class InMemoryUserRepository : IUserRepository
         string? error,
         CancellationToken ct = default)
     {
-        if (_byId.TryGetValue(userId, out var user))
+        _byId.SwapIfPresent(userId, user => user with
         {
-            _byId[userId] = user with
-            {
-                LetterboxdLastSyncAt = syncedAt,
-                LetterboxdLastSyncError = error,
-                Version = user.Version + 1
-            };
-        }
-
+            LetterboxdLastSyncAt = syncedAt,
+            LetterboxdLastSyncError = error,
+            Version = user.Version + 1
+        });
         return Task.CompletedTask;
     }
 
@@ -117,11 +112,11 @@ public sealed class InMemoryUserRepository : IUserRepository
         int pendingCount,
         CancellationToken ct = default)
     {
-        if (_byId.TryGetValue(userId, out var user))
+        _byId.SwapIfPresent(userId, user => user with
         {
-            _byId[userId] = user with { LetterboxdPendingReconciliationCount = pendingCount, Version = user.Version + 1 };
-        }
-
+            LetterboxdPendingReconciliationCount = pendingCount,
+            Version = user.Version + 1
+        });
         return Task.CompletedTask;
     }
 
@@ -146,11 +141,10 @@ public sealed class InMemoryUserRepository : IUserRepository
 
     public Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default)
     {
-        if (!_byId.TryGetValue(userId, out var user) || user.SupporterSince is not null)
-            return Task.FromResult(false);
-
-        _byId[userId] = user with { SupporterSince = since, UpdatedAt = since, Version = user.Version + 1 };
-        return Task.FromResult(true);
+        var marked = _byId.SwapIfPresent(userId, user => user.SupporterSince is not null
+            ? null
+            : user with { SupporterSince = since, UpdatedAt = since, Version = user.Version + 1 });
+        return Task.FromResult(marked is not null);
     }
 
     public Task<bool> AddEventTemplateAsync(
@@ -160,14 +154,10 @@ public sealed class InMemoryUserRepository : IUserRepository
         DateTimeOffset now,
         CancellationToken ct = default)
     {
-        lock (_templatesGate)
-        {
-            if (!_byId.TryGetValue(userId, out var user) || user.EventTemplates.Count >= maxPerUser)
-                return Task.FromResult(false);
-
-            _byId[userId] = user with { EventTemplates = [.. user.EventTemplates, template], UpdatedAt = now, Version = user.Version + 1 };
-            return Task.FromResult(true);
-        }
+        var added = _byId.SwapIfPresent(userId, user => user.EventTemplates.Count >= maxPerUser
+            ? null
+            : WithEventTemplates(user, [.. user.EventTemplates, template], now));
+        return Task.FromResult(added is not null);
     }
 
     public Task<bool> ReplaceEventTemplateAsync(
@@ -176,20 +166,17 @@ public sealed class InMemoryUserRepository : IUserRepository
         DateTimeOffset now,
         CancellationToken ct = default)
     {
-        lock (_templatesGate)
+        var replaced = _byId.SwapIfPresent(userId, user =>
         {
-            if (!_byId.TryGetValue(userId, out var user))
-                return Task.FromResult(false);
-
             var next = user.EventTemplates.ToList();
             var index = next.FindIndex(t => t.Id == template.Id);
             if (index < 0)
-                return Task.FromResult(false);
+                return null;
 
             next[index] = template;
-            _byId[userId] = user with { EventTemplates = next, UpdatedAt = now, Version = user.Version + 1 };
-            return Task.FromResult(true);
-        }
+            return WithEventTemplates(user, next, now);
+        });
+        return Task.FromResult(replaced is not null);
     }
 
     public Task<bool> RemoveEventTemplateAsync(
@@ -198,19 +185,16 @@ public sealed class InMemoryUserRepository : IUserRepository
         DateTimeOffset now,
         CancellationToken ct = default)
     {
-        lock (_templatesGate)
+        var removed = _byId.SwapIfPresent(userId, user =>
         {
-            if (!_byId.TryGetValue(userId, out var user))
-                return Task.FromResult(false);
-
             var next = user.EventTemplates.Where(t => t.Id != templateId).ToList();
-            if (next.Count == user.EventTemplates.Count)
-                return Task.FromResult(false);
-
-            _byId[userId] = user with { EventTemplates = next, UpdatedAt = now, Version = user.Version + 1 };
-            return Task.FromResult(true);
-        }
+            return next.Count == user.EventTemplates.Count ? null : WithEventTemplates(user, next, now);
+        });
+        return Task.FromResult(removed is not null);
     }
+
+    private static User WithEventTemplates(User user, IReadOnlyList<EventTemplate> templates, DateTimeOffset now) =>
+        user with { EventTemplates = templates, UpdatedAt = now, Version = user.Version + 1 };
 
     public Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
     {

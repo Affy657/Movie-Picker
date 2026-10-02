@@ -1,6 +1,7 @@
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Persistence.InMemory;
@@ -499,5 +500,104 @@ public sealed class InMemoryUserRepositoryTests
         var added = await _repo.AddAsync(Mk());
 
         Assert.False(await _repo.RemoveEventTemplateAsync(added.Id, "nope", TemplateNow));
+    }
+
+    private Task TargetedWriteAsync(string writer, string userId, int write) => writer switch
+    {
+        "letterboxdSyncStatus" => _repo.SetLetterboxdSyncStatusAsync(userId, TemplateNow.AddSeconds(write), null),
+        "letterboxdPendingCount" => _repo.SetLetterboxdPendingReconciliationCountAsync(userId, write),
+        "addTemplate" => _repo.AddEventTemplateAsync(userId, Template($"t{write}", "Ajout"), int.MaxValue, TemplateNow),
+        _ => _repo.ReplaceEventTemplateAsync(userId, Template("t0", $"Remplacement {write}"), TemplateNow),
+    };
+
+    [Theory]
+    [InlineData("letterboxdSyncStatus")]
+    [InlineData("letterboxdPendingCount")]
+    [InlineData("addTemplate")]
+    [InlineData("replaceTemplate")]
+    public async Task TargetedWrites_RacingADelete_NeverBringTheUserBack(string writer)
+    {
+        for (var round = 0; round < 100; round++)
+        {
+            var user = await _repo.AddAsync(Mk(email: $"gone{round}@test.local", handle: $"gone{round}") with
+            {
+                EventTemplates = [Template("t0", "Initial")]
+            });
+            using var writing = new ManualResetEventSlim();
+
+            await StartingLine.RunTogetherAsync(
+                async () =>
+                {
+                    for (var write = 1; write <= 2_000; write++)
+                    {
+                        await TargetedWriteAsync(writer, user.Id, write);
+                        writing.Set();
+                    }
+                },
+                async () =>
+                {
+                    writing.Wait();
+                    await _repo.DeleteAsync(user.Id);
+                });
+
+            Assert.Null(await _repo.GetByIdAsync(user.Id));
+            Assert.Null(await _repo.GetByHandleAsync($"gone{round}"));
+        }
+    }
+
+    [Theory]
+    [InlineData("letterboxdSyncStatus")]
+    [InlineData("letterboxdPendingCount")]
+    [InlineData("addTemplate")]
+    [InlineData("replaceTemplate")]
+    public async Task TargetedWrites_RacingHandleChanges_NeverRollBackAChange(string writer)
+    {
+        const int writes = 5_000;
+        var user = await _repo.AddAsync(Mk(email: "busy@test.local", handle: "busy0") with
+        {
+            EventTemplates = [Template("t0", "Initial")]
+        });
+        var handleChanges = 0;
+        using var writesDone = new ManualResetEventSlim();
+
+        async Task<bool> TryChangeHandleAsync(string handle)
+        {
+            var current = await _repo.GetByIdAsync(user.Id);
+            try
+            {
+                await _repo.UpdateAsync(current! with { Handle = handle });
+                return true;
+            }
+            catch (ConflictException ex) when (ex.Reason == ErrorCodes.ConcurrentUpdate)
+            {
+                return false;
+            }
+        }
+
+        await StartingLine.RunTogetherAsync(
+            async () =>
+            {
+                for (var write = 1; write <= writes; write++)
+                {
+                    await TargetedWriteAsync(writer, user.Id, write);
+                    Thread.SpinWait(100);
+                }
+
+                writesDone.Set();
+            },
+            async () =>
+            {
+                while (!writesDone.IsSet)
+                {
+                    if (await TryChangeHandleAsync($"busy{handleChanges + 1}"))
+                        handleChanges++;
+                }
+            });
+
+        var reloaded = await _repo.GetByIdAsync(user.Id);
+        Assert.True(handleChanges > 0);
+        Assert.Equal(user.Version + writes + handleChanges, reloaded!.Version);
+        Assert.Equal($"busy{handleChanges}", reloaded.Handle);
+        Assert.Equal(user.Id, (await _repo.GetByHandleAsync(reloaded.Handle))!.Id);
     }
 }

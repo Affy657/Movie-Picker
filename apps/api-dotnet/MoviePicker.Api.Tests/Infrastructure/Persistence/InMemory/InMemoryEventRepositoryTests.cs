@@ -1,4 +1,5 @@
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
@@ -186,5 +187,75 @@ public sealed class InMemoryEventRepositoryTests
     public async Task MarkWatchlistCleanedAsync_UnknownEvent_ReturnsFalse()
     {
         Assert.False(await _repo.MarkWatchlistCleanedAsync("nope", DateTimeOffset.UtcNow));
+    }
+
+    [Fact]
+    public async Task WriteSequenceBumps_RacingUpdates_NeitherRefuseNorRollBackAnyUpdate()
+    {
+        const int updates = 2_000;
+        const int bumpsPerRacer = 5_000;
+        var created = await _repo.AddAsync(Mk(slug: "contended"));
+
+        await StartingLine.RunTogetherAsync(
+            async () =>
+            {
+                for (var update = 1; update <= updates; update++)
+                {
+                    var current = (await _repo.ListByIdsAsync([created.Id])).Single();
+                    await _repo.UpdateAsync(current with { Title = $"Update {update}" });
+                }
+            },
+            async () =>
+            {
+                for (var bump = 0; bump < bumpsPerRacer; bump++)
+                    await _repo.MarkChangedAsync(created.Id);
+            },
+            async () =>
+            {
+                for (var bump = 0; bump < bumpsPerRacer; bump++)
+                    await _repo.LockForWriteAsync(created.Id);
+            });
+
+        var reloaded = await _repo.GetByIdOrSlugAsync("contended");
+        Assert.Equal($"Update {updates}", reloaded!.Title);
+        Assert.Equal(created.Version + updates, reloaded.Version);
+        Assert.Equal(created.WriteSeq + updates + (2 * bumpsPerRacer), reloaded.WriteSeq);
+        Assert.Equal(reloaded, (await _repo.ListByIdsAsync([created.Id])).Single());
+    }
+
+    [Fact]
+    public async Task WriteSequenceBumps_RacingADelete_NeverBringTheEventBack()
+    {
+        for (var round = 0; round < 100; round++)
+        {
+            var created = await _repo.AddAsync(Mk(slug: $"deleted-{round}"));
+            using var bumping = new ManualResetEventSlim();
+
+            await StartingLine.RunTogetherAsync(
+                async () =>
+                {
+                    for (var bump = 0; bump < 2_000; bump++)
+                    {
+                        try
+                        {
+                            await _repo.MarkChangedAsync(created.Id);
+                        }
+                        catch (NotFoundException)
+                        {
+                            return;
+                        }
+
+                        bumping.Set();
+                    }
+                },
+                async () =>
+                {
+                    bumping.Wait();
+                    await _repo.DeleteAsync(created.Id);
+                });
+
+            Assert.Empty(await _repo.ListByIdsAsync([created.Id]));
+            Assert.Null(await _repo.GetByIdOrSlugAsync(created.Slug));
+        }
     }
 }
