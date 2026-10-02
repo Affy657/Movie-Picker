@@ -17,7 +17,7 @@ Les commandes brutes de chaque étape sont dans [references/commandes.md](refere
 
 Hors périmètre : corriger les bug reports GitHub. La passe les liste et les priorise, les traiter relève de `/dev-feature`.
 
-**Lancer la passe depuis `C:\ynov\movie-picker`, jamais depuis un worktree.** Le serveur MCP `sonarqube` est déclaré par projet dans `~/.claude.json` sur ce chemin exact : depuis un worktree les outils `mcp__sonarqube__*` n'existent pas et l'étape SonarCloud est impossible. Docker Desktop doit tourner.
+**Lancer la passe depuis `C:\dev\movie-picker`, jamais depuis un worktree.** Le serveur MCP `sonarqube` est déclaré par projet dans `~/.claude.json` sur ce chemin exact : depuis un worktree les outils `mcp__sonarqube__*` n'existent pas et l'étape SonarCloud est impossible. Docker Desktop doit tourner.
 
 ## Étape 1 : collecte
 
