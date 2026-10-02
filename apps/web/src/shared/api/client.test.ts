@@ -302,6 +302,49 @@ describe('fetchApi', () => {
     await expect(failure).rejects.toThrow(/API|connexion|impossible/i);
   });
 
+  function responseWhoseBodyBreaks(status: number, readFailure: unknown): Response {
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.error(readFailure);
+      },
+    });
+    return new Response(body, {
+      status,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
+  it.each([
+    { status: 401, message: fr.errors.generic },
+    { status: 409, message: fr.errors.generic },
+    { status: 503, message: fr.errors.api.unavailable },
+  ])(
+    'keeps the status $status of an error response whose body breaks while it is read',
+    async ({ status, message }) => {
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+        responseWhoseBodyBreaks(status, new TypeError('Load failed'))
+      );
+      const failure = fetchApi('/events');
+      await expect(failure).rejects.toBeInstanceOf(ApiError);
+      await expect(failure).rejects.toMatchObject({ code: status, message });
+    }
+  );
+
+  it('lets an abort during the read of an error body through as an AbortError', async () => {
+    const abortErr = new DOMException('The operation was aborted', 'AbortError');
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      responseWhoseBodyBreaks(401, abortErr)
+    );
+    await expect(fetchApi('/events')).rejects.toBe(abortErr);
+  });
+
+  it('still words a broken body of a successful response as a network error', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      responseWhoseBodyBreaks(200, new TypeError('Load failed'))
+    );
+    await expect(fetchApi('/events')).rejects.toMatchObject({ code: 0 });
+  });
+
   it('lets an abort during the body read through as an AbortError', async () => {
     const abortErr = new DOMException('The operation was aborted', 'AbortError');
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({

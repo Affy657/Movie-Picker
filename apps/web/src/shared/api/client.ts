@@ -145,9 +145,12 @@ function buildRequestHeaders(options?: RequestInit): Record<string, string> {
   return headers;
 }
 
+function isAbortError(e: unknown): boolean {
+  return (e instanceof DOMException || e instanceof Error) && e.name === 'AbortError';
+}
+
 function rethrowFetchError(e: unknown): never {
-  if (e instanceof DOMException && e.name === 'AbortError') throw e;
-  if (e instanceof Error && e.name === 'AbortError') throw e;
+  if (isAbortError(e)) throw e;
   const msg = e instanceof Error ? e.message : String(e);
   const isNetwork =
     typeof msg === 'string' &&
@@ -220,6 +223,7 @@ async function readResponseText(res: Response): Promise<string> {
   try {
     return await res.text();
   } catch (e) {
+    if (!res.ok && !isAbortError(e)) return '';
     rethrowFetchError(e);
   }
 }
