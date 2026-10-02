@@ -210,13 +210,9 @@ export default function AddMovieForm({
     executeSearch(trimmedForSearch, filters.activeFilters);
   }, [searchAllowed, trimmedForSearch, filters.activeFilters, executeSearch, clearDebounceTimer]);
 
-  const previousActiveFiltersRef = useRef(filters.activeFilters);
-
   useEffect(() => {
     const trimmed = trimmedForSearch;
-    const filtersChanged = previousActiveFiltersRef.current !== filters.activeFilters;
-    previousActiveFiltersRef.current = filters.activeFilters;
-    const filtersOnlySearch = trimmed.length === 0 && filters.hasApiFilters && filtersChanged;
+    const filtersOnlySearch = trimmed.length === 0 && filters.hasApiFilters;
     const shouldSearch = trimmed.length >= SEARCH_MIN_CHARS || filtersOnlySearch;
 
     if (!shouldSearch) {

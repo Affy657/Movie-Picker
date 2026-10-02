@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeAll, afterEach, afterAll, beforeEach } 
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
-import { LocaleProvider } from '@/shared/i18n';
+import { LocaleProvider, useLocale } from '@/shared/i18n';
 import AddMovieForm from '@/features/movies/components/AddMovieForm';
 import { TEST_API_V1, createSearchAndAddHandlers } from '@/mocks/handlers';
 import { http, HttpResponse } from 'msw';
@@ -19,6 +19,46 @@ function renderWithLocale(ui: React.ReactElement) {
 }
 
 const HISTORY_KEY = 'moviepicker_search_history_test-user';
+
+function SwitchToEnglishButton() {
+  const { setLocale } = useLocale();
+  return (
+    <button type="button" onClick={() => setLocale('en')}>
+      switch-to-english
+    </button>
+  );
+}
+
+const FILM_TEST_RESPONSE = {
+  items: [
+    {
+      id: 100,
+      title: 'Film Test',
+      year: '2024',
+      posterPath: null,
+      voteAverage: 7.5,
+      watchProviders: [],
+      tmdbWatchPageUrl: null,
+    },
+  ],
+  watchProvidersRegion: 'FR',
+  disclaimer: '',
+  tmdbAttributionUrl: 'https://www.themoviedb.org/',
+};
+
+type RecordedSearch = { q: string | null; genreIds: string | null; lang: string | null };
+
+function recordSearches(searches: RecordedSearch[]) {
+  return http.get(`${TEST_API_V1}/movies/search`, ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    searches.push({
+      q: params.get('q'),
+      genreIds: params.get('genreIds'),
+      lang: params.get('lang'),
+    });
+    return HttpResponse.json(FILM_TEST_RESPONSE);
+  });
+}
 
 describe('AddMovieForm (MSW)', () => {
   const slug = 'evt-add';
@@ -162,6 +202,44 @@ describe('AddMovieForm (MSW)', () => {
     await user.click(screen.getByRole('button', { name: 'Comédie' }));
 
     await waitFor(() => expect(searchedGenres.at(-1)).toBe('28'));
+    expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
+  });
+
+  it('erasing a typed letter while filters are set runs the filters-only search again', async () => {
+    const searches: RecordedSearch[] = [];
+    server.use(recordSearches(searches));
+    const user = userEvent.setup();
+    renderWithLocale(<AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />);
+    await user.click(screen.getByRole('button', { name: /filtres avancés/i }));
+    await user.click(screen.getByRole('button', { name: 'Action' }));
+    expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(searches).toHaveLength(1);
+
+    const input = screen.getByPlaceholderText(/ajouter un film/i);
+    await user.type(input, 'a');
+    await user.type(input, '{Backspace}');
+
+    expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(searches.at(-1)).toEqual({ q: '', genreIds: '28', lang: 'fr-FR' });
+  });
+
+  it('a language change while filters are set searches again in the new language instead of clearing', async () => {
+    const searches: RecordedSearch[] = [];
+    server.use(recordSearches(searches));
+    const user = userEvent.setup();
+    renderWithLocale(
+      <>
+        <SwitchToEnglishButton />
+        <AddMovieForm slug={slug} participantId="p1" onAdded={onAdded} />
+      </>
+    );
+    await user.click(screen.getByRole('button', { name: /filtres avancés/i }));
+    await user.click(screen.getByRole('button', { name: 'Action' }));
+    expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'switch-to-english' }));
+
+    await waitFor(() => expect(searches.at(-1)).toEqual({ q: '', genreIds: '28', lang: 'en-US' }));
     expect(await screen.findByText(/film test/i, {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
