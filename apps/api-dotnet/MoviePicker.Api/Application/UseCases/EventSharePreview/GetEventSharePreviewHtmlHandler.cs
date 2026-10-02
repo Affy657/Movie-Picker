@@ -35,7 +35,7 @@ public sealed class GetEventSharePreviewHtmlHandler : IGetEventSharePreviewHtmlH
 
         var apiBase = apiPublicBaseUrl.Trim().TrimEnd('/');
 
-        var rich = evt.Config?.RichSharePreview == true;
+        var rich = (evt.Config ?? EventConfig.SavedWithoutSettings).RichSharePreview;
         string ogTitle;
         string ogDescription;
         string pageTitle;
