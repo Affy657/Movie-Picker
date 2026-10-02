@@ -19,7 +19,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 - **Le serveur refuse une adresse e-mail de plus de 254 caractères et une adresse d'affiche démesurée**, qui remplissaient la base à chaque inscription ou chaque film proposé et repartaient vers chaque participant.
 - **Une suggestion d'idée ne crée plus de liens vers les tickets d'autres projets GitHub** et ne peut plus masquer la fin du ticket publié (référence, page, captures) par un commentaire HTML.
-- **Le jeton d'hôte et l'adresse IP ne partent plus vers le suivi d'erreurs** : les en-têtes qui les portaient étaient transmis tels quels à Sentry avec chaque erreur et chaque requête échantillonnée, et les requêtes échantillonnées gardaient aussi le `?host=` d'un ancien lien.
+- **Le jeton d'hôte et l'adresse IP ne partent plus vers le suivi d'erreurs** : les en-têtes qui les portaient étaient transmis tels quels à Sentry avec chaque erreur et chaque requête échantillonnée, et les requêtes échantillonnées gardaient aussi le `?host=` d'un ancien lien. Seuls quelques en-têtes sans donnée personnelle (langue, format, navigateur) y partent désormais, ce qui écarte aussi les autres en-têtes porteurs de l'adresse IP, les cookies et la page d'origine.
 - **Les codes de connexion Google et GitHub ne s'écrivent plus dans les journaux du serveur** au retour du fournisseur.
 - **Le pseudo d'un profil privé ne s'affiche plus dans les notifications des autres** : rejoindre une soirée, y proposer un film ou suivre quelqu'un laissait voir son pseudo, et un lien vers un profil introuvable.
 - **Retirer son consentement aux mesures d'audience est respecté même pendant le chargement** : un refus donné dans les premières secondes pouvait être annulé par la fin du chargement de PostHog, qui reprenait alors la mesure.
@@ -110,6 +110,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Un rappel de soirée n'arrive plus le lendemain** sur un téléphone resté éteint pendant la soirée : il expire au début de la soirée, et les autres notifications push au bout de deux jours.
 - **Une soirée reportée puis de nouveau restée sans film prévient encore l'hôte** qu'elle est en suspens.
 - **La notification d'un nouvel abonné au profil privé ouvre la boîte de réception** au lieu d'un profil introuvable.
+- **Une requête trop volumineuse est expliquée comme telle**, par exemple la confirmation de milliers de films Letterboxd d'un coup : le message demandait de corriger des informations « non valides ».
 - **Toutes les captures d'une suggestion d'idée sont publiées** : avec plusieurs images, certaines disparaissaient du ticket sans message.
 - **Un mot de passe trop long reçoit le message qui dit la limite** au lieu d'une erreur générique, et une liste envoyée avec un élément vide est refusée proprement au lieu d'une erreur serveur.
 - **Une soirée qui a atteint 1 000 films refuse le suivant avec un message clair** : au-delà, le film était enregistré mais n'apparaissait ni dans la liste ni dans la roue.
@@ -127,7 +128,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Une capture illisible est signalée par son nom, dans la langue de l'interface**, et un nom de fichier trop long est raccourci au lieu de faire échouer toute la suggestion.
 - **Le sommaire du dossier technique et le menu des réglages ne passent plus sous l'en-tête** en défilant, et un lien du sommaire amène la section sous l'en-tête plutôt que derrière.
 - **Un tirage relancé après une coupure réseau retrouve son gagnant** : quand la réponse d'un tirage se perdait sur une soirée déjà en suspens, le second clic répondait « soirée terminée », et le gagnant n'était jamais annoncé.
-- **Le gagnant de la roue est annoncé même si l'hôte quitte la page pendant qu'elle tourne**, et une erreur au tirage suivant s'affiche dans la fenêtre de la roue, avec un bouton qui montre son attente, au lieu de rester cachée derrière.
+- **Le gagnant de la roue est annoncé même si l'hôte quitte la page ou ferme l'application pendant qu'elle tourne** (au plus tard une demi-heure après le tirage), et une erreur au tirage suivant s'affiche dans la fenêtre de la roue, avec un bouton qui montre son attente, au lieu de rester cachée derrière.
 - **La roue s'ouvre sur les iPhone restés sous iOS 16** : les confettis faisaient planter la page de la soirée sur Safari avant la version 17.
 - **Un film exclu de la roue ne peut plus être tiré au même instant** par un second hôte, ni un film proposé par un participant retiré pendant son ajout survivre à ce retrait.
 - **Le plafond de participants tient face à une inscription simultanée** : baisser le plafond pendant qu'un invité rejoignait pouvait laisser six participants dans une soirée limitée à cinq.
@@ -138,11 +139,12 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Le thème d'une soirée garde son emoji** quand il n'a pas de texte (« 🎃 ») ou que l'emoji est composé (« 👨‍👩‍👧 Famille ») : il revenait dans le champ texte à la réouverture des réglages.
 - **Échap dans le nom d'un modèle de soirée n'annule que ce nom**, sans fermer toute la feuille des réglages.
 - **Une soirée commencée entre 1 h et 2 h un jour de changement d'heure** s'affiche, se compte à rebours et s'ajoute à l'agenda à la bonne heure.
+- **Une soirée fixée à une heure sautée au passage à l'heure d'été**, comme 2 h 30 le dernier dimanche de mars, commence à 3 h 30 pour le serveur comme pour l'application : ses rappels ne partaient pas, et elle ne passait jamais en suspens ni dans l'historique.
 - **La date proposée à la création d'une soirée n'est plus déjà passée** quand on ouvre le formulaire pile à l'heure ou à la demie.
 - **Proposer un film depuis Ma liste, l'accueil ou un profil met à jour la soirée et « Mes soirées »**, qui gardaient l'ancien nombre de films jusqu'à cinq minutes.
 - **Les réglages de notifications s'affichent sur un navigateur sans notifications push** : sur iPhone hors de l'app installée, on ne pouvait plus couper les notifications de la boîte de réception.
-- **Suivre à nouveau quelqu'un ne le notifie plus à chaque fois** : désabonner puis réabonner envoyait une nouvelle notification et un push à chaque clic.
-- **Les films Letterboxd à confirmer ne sont plus signalés chaque jour** tant qu'ils restent les mêmes, et les titres passés restent comptés comme en attente au lieu de disparaître du récapitulatif.
+- **Suivre à nouveau quelqu'un ne le notifie plus à chaque fois** : désabonner puis réabonner envoyait une nouvelle notification et un push à chaque clic. La première notification suffit tant qu'elle est dans la boîte de réception.
+- **Les films Letterboxd à confirmer ne sont plus signalés chaque jour** tant qu'ils restent les mêmes, un nouveau titre à confirmer est signalé même quand il en remplace un autre, et les titres passés restent comptés comme en attente au lieu de disparaître du récapitulatif.
 - **La synchronisation automatique de Letterboxd suit le compte connecté** : elle ne partait plus après un changement de compte sans rechargement, et partait en double pendant la première connexion.
 - **Le bouton « Suivre » disparaît sur un abonné au profil privé**, qui renvoyait toujours une erreur, et l'onglet « Rechercher » des abonnés n'est plus proposé sans être connecté.
 - **Suivre ou ne plus suivre quelqu'un met à jour toutes les listes et tous les compteurs** concernés, profils, abonnés, abonnements, recherche et invitations d'amis compris.
