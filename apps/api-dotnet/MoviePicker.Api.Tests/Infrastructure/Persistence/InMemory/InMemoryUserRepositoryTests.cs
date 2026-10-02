@@ -543,9 +543,16 @@ public sealed class InMemoryUserRepositoryTests
             await StartingLine.RunTogetherAsync(
                 async () =>
                 {
-                    for (var write = 1; write <= 2_000; write++)
+                    try
                     {
-                        await TargetedWriteAsync(writer, user.Id, write);
+                        for (var write = 1; write <= 2_000; write++)
+                        {
+                            await TargetedWriteAsync(writer, user.Id, write);
+                            writing.Set();
+                        }
+                    }
+                    finally
+                    {
                         writing.Set();
                     }
                 },
@@ -568,12 +575,13 @@ public sealed class InMemoryUserRepositoryTests
     public async Task TargetedWrites_RacingHandleChanges_NeverRollBackAChange(string writer)
     {
         const int writes = 5_000;
+        const int handleChanges = 50;
+        const int writesBetweenHandleChanges = writes / handleChanges;
         var user = await _repo.AddAsync(Mk(email: "busy@test.local", handle: "busy0") with
         {
             EventTemplates = [Template("t0", "Initial")]
         });
-        var handleChanges = 0;
-        using var writesDone = new ManualResetEventSlim();
+        var writesMade = 0;
 
         async Task<bool> TryChangeHandleAsync(string handle)
         {
@@ -595,22 +603,22 @@ public sealed class InMemoryUserRepositoryTests
                 for (var write = 1; write <= writes; write++)
                 {
                     await TargetedWriteAsync(writer, user.Id, write);
+                    Interlocked.Increment(ref writesMade);
                     Thread.SpinWait(100);
                 }
-
-                writesDone.Set();
             },
             async () =>
             {
-                while (!writesDone.IsSet)
+                for (var change = 1; change <= handleChanges; change++)
                 {
-                    if (await TryChangeHandleAsync($"busy{handleChanges + 1}"))
-                        handleChanges++;
+                    while (Volatile.Read(ref writesMade) < (change - 1) * writesBetweenHandleChanges)
+                        Thread.SpinWait(20);
+                    while (!await TryChangeHandleAsync($"busy{change}"))
+                        Thread.SpinWait(20);
                 }
             });
 
         var reloaded = await _repo.GetByIdAsync(user.Id);
-        Assert.True(handleChanges > 0);
         Assert.Equal(user.Version + writes + handleChanges, reloaded!.Version);
         Assert.Equal($"busy{handleChanges}", reloaded.Handle);
         Assert.Equal(user.Id, (await _repo.GetByHandleAsync(reloaded.Handle))!.Id);

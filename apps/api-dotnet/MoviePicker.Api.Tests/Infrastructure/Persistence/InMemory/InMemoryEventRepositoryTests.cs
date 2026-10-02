@@ -234,17 +234,20 @@ public sealed class InMemoryEventRepositoryTests
             await StartingLine.RunTogetherAsync(
                 async () =>
                 {
-                    for (var bump = 0; bump < 2_000; bump++)
+                    try
                     {
-                        try
+                        for (var bump = 0; bump < 2_000; bump++)
                         {
                             await _repo.MarkChangedAsync(created.Id);
+                            bumping.Set();
                         }
-                        catch (NotFoundException)
-                        {
-                            return;
-                        }
-
+                    }
+                    catch (NotFoundException)
+                    {
+                        return;
+                    }
+                    finally
+                    {
                         bumping.Set();
                     }
                 },
