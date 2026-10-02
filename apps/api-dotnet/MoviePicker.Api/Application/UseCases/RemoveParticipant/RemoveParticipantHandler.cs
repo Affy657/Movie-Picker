@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.RemoveParticipant;
@@ -49,12 +50,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             throw Errors.ParticipantRequired();
 
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-
-        if (evt.ClosedAt.HasValue)
-            throw Errors.EventClosedParticipantsLocked();
-
-        if (evt.HasWinner)
-            throw Errors.ParticipantsLockedWheel();
+        EnsureParticipantsCanChange(evt);
 
         var participant = await _participantRepository.FindByIdAndEventIdAsync(participantId, evt.Id, ct);
         if (participant is null)
@@ -73,28 +69,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         if (!isHost && !isSelfConnected)
             throw Errors.HostOrSelfOnly();
 
-        IReadOnlyList<string> movieIds = [];
-        await _unitOfWork.ExecuteAsync(
-            async token =>
-            {
-                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
-                if (current.ClosedAt.HasValue)
-                    throw Errors.EventClosedParticipantsLocked();
-                if (current.HasWinner)
-                    throw Errors.ParticipantsLockedWheel();
-
-                movieIds = await _movieRepository.ListIdsByEventAndParticipantAsync(evt.Id, participant.Id, token);
-
-                await _voteRepository.DeleteByMovieIdsAsync(movieIds, token);
-                await _seenMarkRepository.DeleteByMovieIdsAsync(evt.Id, movieIds, token);
-                await _movieRepository.DeleteByIdsAsync(movieIds, token);
-                await _voteRepository.DeleteByEventAndParticipantAsync(evt.Id, participant.Id, token);
-                await _seenMarkRepository.DeleteByEventAndParticipantAsync(evt.Id, participant.Id, token);
-                if (!await _participantRepository.DeleteAsync(participant.Id, evt.Id, token))
-                    throw Errors.ParticipantNotFound();
-                await _eventRepository.UpdateAsync(current with { UpdatedAt = _clock.GetUtcNow() }, token);
-            },
-            ct);
+        var movieIds = await RemoveWithItsMoviesAsync(idOrSlug, evt.Id, participant.Id, ct);
 
         _logger.LogInformation(
             "Participant removed: {ParticipantId} from event {EventId} (byHost={IsHost}, selfConnected={IsSelf}, cascadedMovies={MovieCount})",
@@ -111,5 +86,42 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
             RemovedMovies = movieIds.Count,
             Message = isSelfConnected && !isHost ? "You left the movie night" : "Participant removed"
         };
+    }
+
+    private static void EnsureParticipantsCanChange(Event evt)
+    {
+        if (evt.ClosedAt.HasValue)
+            throw Errors.EventClosedParticipantsLocked();
+
+        if (evt.HasWinner)
+            throw Errors.ParticipantsLockedWheel();
+    }
+
+    private async Task<IReadOnlyList<string>> RemoveWithItsMoviesAsync(
+        string idOrSlug,
+        string eventId,
+        string participantId,
+        CancellationToken ct)
+    {
+        IReadOnlyList<string> movieIds = [];
+        await _unitOfWork.ExecuteAsync(
+            async token =>
+            {
+                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                EnsureParticipantsCanChange(current);
+
+                movieIds = await _movieRepository.ListIdsByEventAndParticipantAsync(eventId, participantId, token);
+
+                await _voteRepository.DeleteByMovieIdsAsync(movieIds, token);
+                await _seenMarkRepository.DeleteByMovieIdsAsync(eventId, movieIds, token);
+                await _movieRepository.DeleteByIdsAsync(movieIds, token);
+                await _voteRepository.DeleteByEventAndParticipantAsync(eventId, participantId, token);
+                await _seenMarkRepository.DeleteByEventAndParticipantAsync(eventId, participantId, token);
+                if (!await _participantRepository.DeleteAsync(participantId, eventId, token))
+                    throw Errors.ParticipantNotFound();
+                await _eventRepository.UpdateAsync(current with { UpdatedAt = _clock.GetUtcNow() }, token);
+            },
+            ct);
+        return movieIds;
     }
 }

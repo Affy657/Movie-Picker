@@ -283,6 +283,12 @@ public sealed class MongoMovieRepository : IMovieRepository
         public List<int>? GenreIds { get; set; }
     }
 
+    private static readonly BsonDocument NormalizeMediaTypeStage = new(
+        "$set",
+        new BsonDocument(
+            "mediaType",
+            new BsonDocument("$toLower", new BsonDocument("$trim", new BsonDocument("input", "$mediaType")))));
+
     public async Task<IReadOnlyList<ProposedMovieRanking>> ListMostProposedAsync(
         int minEventCount,
         int limit,
@@ -293,11 +299,12 @@ public sealed class MongoMovieRepository : IMovieRepository
 
         var threshold = Math.Max(minEventCount, 1);
         var rows = await _collection.Aggregate()
+            .AppendStage<MovieDocument>(NormalizeMediaTypeStage)
             .Group(
                 doc => new MovieInEventKey
                 {
                     TmdbId = doc.TmdbId,
-                    MediaType = doc.MediaType.Trim().ToLowerInvariant() == MovieMapper.StoredTvMediaType
+                    MediaType = doc.MediaType == MovieMapper.StoredTvMediaType
                         ? MovieMapper.StoredTvMediaType
                         : MovieMapper.StoredMovieMediaType,
                     EventId = doc.EventId,

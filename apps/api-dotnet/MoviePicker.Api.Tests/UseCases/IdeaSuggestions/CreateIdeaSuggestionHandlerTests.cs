@@ -218,10 +218,10 @@ public sealed partial class CreateIdeaSuggestionHandlerTests
         var inFlight = 0;
         var mostAtOnce = 0;
         _github.Setup(g => g.UploadAttachmentAsync(It.IsAny<GitHubAttachmentUpload>(), It.IsAny<CancellationToken>()))
-            .Returns(async (GitHubAttachmentUpload a, CancellationToken _) =>
+            .Returns(async (GitHubAttachmentUpload a, CancellationToken ct) =>
             {
                 mostAtOnce = Math.Max(mostAtOnce, Interlocked.Increment(ref inFlight));
-                await Task.Delay(20);
+                await Task.Delay(20, ct);
                 Interlocked.Decrement(ref inFlight);
                 return $"https://raw.githubusercontent.com/x/{a.FileName}";
             });

@@ -22,41 +22,43 @@ import sharedStyles from '@/shared/components/SettingsSection.module.css';
 import styles from './NotificationsSection.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
+const PREF_LABEL_KEYS: Readonly<Record<NotificationTypeKey, TranslationKey>> = {
+  participantjoined: 'notifications.prefParticipantJoined',
+  movieadded: 'notifications.prefMovieAdded',
+  moviepicked: 'notifications.prefMoviePicked',
+  moviepickedmanually: 'notifications.prefMoviePickedManually',
+  eventdeleted: 'notifications.prefEventDeleted',
+  eventdatechanged: 'notifications.prefEventDateChanged',
+  eventpending: 'notifications.prefEventPending',
+  eventreminder1h: 'notifications.prefEventReminder1h',
+  eventreminder24h: 'notifications.prefEventReminder24h',
+  eventinvitation: 'notifications.prefEventInvitation',
+  newfollower: 'notifications.prefNewFollower',
+  letterboxdreconciliationpending: 'notifications.prefLetterboxdReconciliationPending',
+};
+
 interface PrefGroup {
   legendKey: TranslationKey;
-  items: ReadonlyArray<{ type: NotificationTypeKey; labelKey: TranslationKey }>;
+  types: ReadonlyArray<NotificationTypeKey>;
 }
 
 const PREF_GROUPS: readonly PrefGroup[] = [
   {
     legendKey: 'notifications.groupEvents',
-    items: [
-      { type: 'participantjoined', labelKey: 'notifications.prefParticipantJoined' },
-      { type: 'movieadded', labelKey: 'notifications.prefMovieAdded' },
-      { type: 'moviepicked', labelKey: 'notifications.prefMoviePicked' },
-      { type: 'moviepickedmanually', labelKey: 'notifications.prefMoviePickedManually' },
-      { type: 'eventdeleted', labelKey: 'notifications.prefEventDeleted' },
-      { type: 'eventdatechanged', labelKey: 'notifications.prefEventDateChanged' },
-      { type: 'eventpending', labelKey: 'notifications.prefEventPending' },
+    types: [
+      'participantjoined',
+      'movieadded',
+      'moviepicked',
+      'moviepickedmanually',
+      'eventdeleted',
+      'eventdatechanged',
+      'eventpending',
     ],
   },
-  {
-    legendKey: 'notifications.groupReminders',
-    items: [
-      { type: 'eventreminder1h', labelKey: 'notifications.prefEventReminder1h' },
-      { type: 'eventreminder24h', labelKey: 'notifications.prefEventReminder24h' },
-    ],
-  },
+  { legendKey: 'notifications.groupReminders', types: ['eventreminder1h', 'eventreminder24h'] },
   {
     legendKey: 'notifications.groupSocial',
-    items: [
-      { type: 'eventinvitation', labelKey: 'notifications.prefEventInvitation' },
-      { type: 'newfollower', labelKey: 'notifications.prefNewFollower' },
-      {
-        type: 'letterboxdreconciliationpending',
-        labelKey: 'notifications.prefLetterboxdReconciliationPending',
-      },
-    ],
+    types: ['eventinvitation', 'newfollower', 'letterboxdreconciliationpending'],
   },
 ];
 
@@ -187,10 +189,10 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
           {PREF_GROUPS.map((group) => (
             <fieldset className={styles.prefGroup} key={group.legendKey}>
               <legend className={styles.prefGroupLegend}>{t(group.legendKey)}</legend>
-              {group.items.map(({ type, labelKey }) => (
+              {group.types.map((type) => (
                 <div className={styles.prefRow} key={type}>
                   <span id={`notif-pref-${type}`} className={styles.prefLabel}>
-                    {t(labelKey)}
+                    {t(PREF_LABEL_KEYS[type])}
                   </span>
                   <Toggle
                     checked={prefs[type] ?? true}
