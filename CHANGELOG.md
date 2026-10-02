@@ -110,6 +110,10 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Un rappel de soirée n'arrive plus le lendemain** sur un téléphone resté éteint pendant la soirée : il expire au début de la soirée, et les autres notifications push au bout de deux jours.
 - **Une soirée reportée puis de nouveau restée sans film prévient encore l'hôte** qu'elle est en suspens.
 - **La notification d'un nouvel abonné au profil privé ouvre la boîte de réception** au lieu d'un profil introuvable.
+- **Le lien vers votre profil ne mène plus à une page introuvable quand il est privé** : l'onglet « Profil » sur mobile, le lien de l'invitation d'amis et les nouveautés ouvrent les réglages du compte, et l'adresse de votre propre profil y renvoie aussi.
+- **Le récapitulatif de l'historique n'affiche plus de faux zéros quand votre profil est privé** : les films regardés et la série de semaines n'y figurent pas plutôt que de valoir 0.
+- **Une session expirée est reconnue même quand la réponse du serveur arrive tronquée**, au lieu de passer pour une coupure réseau.
+- **La boîte de réception s'ouvre plus vite** quand ses notifications viennent de nombreuses personnes.
 - **Une requête trop volumineuse est expliquée comme telle**, par exemple la confirmation de milliers de films Letterboxd d'un coup : le message demandait de corriger des informations « non valides ».
 - **Toutes les captures d'une suggestion d'idée sont publiées** : avec plusieurs images, certaines disparaissaient du ticket sans message.
 - **Un mot de passe trop long reçoit le message qui dit la limite** au lieu d'une erreur générique, et une liste envoyée avec un élément vide est refusée proprement au lieu d'une erreur serveur.
@@ -120,7 +124,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Sur une soirée en suspens à plusieurs films, la roue n'annonce plus des tirages qui ne peuvent plus avoir lieu**, et la fenêtre du gagnant montre ses plateformes de streaming.
 - **L'heure proposée et l'alerte « date déjà passée » de la création d'une soirée suivent l'heure de Paris**, depuis un appareil réglé sur un autre fuseau.
 - **L'historique de « Mes soirées » range dans le bon ordre les soirées d'un même jour**, et le fichier d'agenda respecte la longueur de ligne des calendriers stricts, accents compris.
-- **Glisser le curseur de durée n'envoie plus une recherche à chaque cran**, ce qui bloquait la recherche plusieurs dizaines de secondes, et une recherche faite sur les seuls filtres se relance quand on change un filtre au lieu de se vider.
+- **Glisser le curseur de durée n'envoie plus une recherche à chaque cran**, ce qui bloquait la recherche plusieurs dizaines de secondes, et une recherche faite sur les seuls filtres se relance quand on change un filtre, qu'on efface ce qu'on avait tapé ou qu'on change de langue, au lieu de se vider.
 - **Les séries répondent aux filtres de genre** Action, Science-fiction, Aventure, Fantastique et Guerre, et un film et une série de même numéro TMDB s'affichent tous deux dans les résultats.
 - **Un film ajouté ou proposé depuis les rangées de l'accueil garde ses genres**, et la rangée « Vus par vos amis » se met à jour après un abonnement ou un désabonnement.
 - **« Connexion » dans la barre du bas d'une page d'inscription ramène à la soirée d'origine** après la connexion, et les réglages proposent de réessayer quand la session ne répond pas, au lieu d'afficher la page de connexion.
@@ -164,7 +168,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Une coupure réseau pendant la lecture d'une réponse affiche le message d'erreur réseau traduit** au lieu du texte anglais du navigateur, et les erreurs d'activation des notifications push sont traduites.
 - **Les erreurs de saisie refusées par le serveur sont traduites**, et une requête trop volumineuse reçoit une erreur 413 claire au lieu d'une erreur serveur.
 - **L'anglais choisi reste appliqué aux messages d'erreur quand le navigateur bloque le stockage local.**
-- **Une affiche TMDB en erreur n'est plus gardée un mois en cache** : elle est rechargée à l'affichage suivant.
+- **Une affiche TMDB en erreur n'est plus gardée un mois en cache** : seules les affiches bien reçues y entrent, et une affiche déjà affichée n'est plus retéléchargée à chaque affichage.
 - **Couper le cache d'affiches du serveur ne vide plus toutes les affiches** : elles sont servies directement par TMDB.
 - **Les préférences de notification refusent un type inconnu** au lieu de désactiver une autre préférence.
 - **Le plan du site reste sous la limite de 50 000 adresses** acceptée par les moteurs de recherche.
