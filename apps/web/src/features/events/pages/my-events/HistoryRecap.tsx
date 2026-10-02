@@ -2,6 +2,7 @@ import { Flame } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchUserStats } from '@/features/events/api/userStatsApi';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { ownProfileDestination } from '@/features/auth/utils/ownProfileDestination';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import styles from './HistoryRecap.module.css';
@@ -16,12 +17,14 @@ export default function HistoryRecap({ totalFinished }: Readonly<HistoryRecapPro
   const { t } = useTranslation();
   const { user } = useAuth();
   const handle = user?.handle;
+  const statsArePublic = user ? ownProfileDestination(user).isPublicProfile : false;
 
-  const { data } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: queryKeys.profile.stats(handle),
     queryFn: ({ signal }) => fetchUserStats(handle!, signal),
-    enabled: !!handle,
+    enabled: statsArePublic,
   });
+  const showStats = statsArePublic && !isError;
 
   return (
     <Card padding="none" className={styles.recap}>
@@ -29,19 +32,23 @@ export default function HistoryRecap({ totalFinished }: Readonly<HistoryRecapPro
         <span className={styles.value}>{totalFinished}</span>
         <span className={styles.label}>{t('events.myEvents.recapFinishedLabel')}</span>
       </div>
-      <span className={styles.divider} aria-hidden />
-      <div className={styles.stat}>
-        <span className={styles.value}>{data?.moviesSeen ?? 0}</span>
-        <span className={styles.label}>{t('events.myEvents.recapMoviesLabel')}</span>
-      </div>
-      <span className={styles.divider} aria-hidden />
-      <div className={styles.stat}>
-        <span className={styles.valueRow}>
-          <Flame aria-hidden size={ICON_SIZE.md} className={styles.flameIcon} />
-          <span className={styles.value}>{data?.currentStreakWeeks ?? 0}</span>
-        </span>
-        <span className={styles.label}>{t('events.myEvents.recapStreakLabel')}</span>
-      </div>
+      {showStats ? (
+        <>
+          <span className={styles.divider} aria-hidden />
+          <div className={styles.stat}>
+            <span className={styles.value}>{data?.moviesSeen ?? 0}</span>
+            <span className={styles.label}>{t('events.myEvents.recapMoviesLabel')}</span>
+          </div>
+          <span className={styles.divider} aria-hidden />
+          <div className={styles.stat}>
+            <span className={styles.valueRow}>
+              <Flame aria-hidden size={ICON_SIZE.md} className={styles.flameIcon} />
+              <span className={styles.value}>{data?.currentStreakWeeks ?? 0}</span>
+            </span>
+            <span className={styles.label}>{t('events.myEvents.recapStreakLabel')}</span>
+          </div>
+        </>
+      ) : null}
     </Card>
   );
 }
