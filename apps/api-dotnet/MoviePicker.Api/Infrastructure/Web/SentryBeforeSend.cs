@@ -7,7 +7,19 @@ namespace MoviePicker.Api.Infrastructure.Web;
 
 internal static partial class SentryBeforeSend
 {
-    private static readonly string[] SensitiveHeaderNames = [HostTokenAccessor.HostHeaderName, "X-Forwarded-For"];
+    private static readonly HashSet<string> AllowedHeaderNames = new(
+        [
+            "Accept",
+            "Accept-Encoding",
+            "Accept-Language",
+            "Content-Length",
+            "Content-Type",
+            "Host",
+            "Origin",
+            "User-Agent",
+            .. CorrelationIdConstants.IncomingHeaderNames,
+        ],
+        StringComparer.OrdinalIgnoreCase);
 
     internal static SentryEvent? Prepare(SentryEvent sentryEvent)
     {
@@ -28,12 +40,11 @@ internal static partial class SentryBeforeSend
         var request = eventLike.Request;
         request.Url = SensitiveQueryRedaction.RedactUrl(request.Url);
         request.QueryString = SensitiveQueryRedaction.RedactQueryString(request.QueryString);
-        foreach (var headerName in request.Headers.Keys.Where(IsSensitiveHeader).ToList())
-            request.Headers[headerName] = SensitiveQueryRedaction.Mask;
+        foreach (var headerName in request.Headers.Keys.Where(IsNotAllowedHeader).ToList())
+            request.Headers.Remove(headerName);
     }
 
-    private static bool IsSensitiveHeader(string headerName) =>
-        SensitiveHeaderNames.Contains(headerName, StringComparer.OrdinalIgnoreCase);
+    private static bool IsNotAllowedHeader(string headerName) => !AllowedHeaderNames.Contains(headerName);
 
     internal static bool IsLogNoise(string category, LogLevel level, EventId eventId, Exception? exception) =>
         string.Equals(category, typeof(MongoDatabaseHealthProbe).FullName, StringComparison.Ordinal);

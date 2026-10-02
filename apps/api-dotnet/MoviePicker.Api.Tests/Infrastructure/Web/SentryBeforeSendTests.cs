@@ -67,7 +67,7 @@ public sealed class SentryBeforeSendTests
     [Theory]
     [InlineData("X-Host-Token", "X-Forwarded-For")]
     [InlineData("x-host-token", "x-forwarded-for")]
-    public void Prepare_MasksHostTokenAndClientAddressHeaders(string hostTokenHeader, string forwardedForHeader)
+    public void Prepare_DropsHostTokenAndClientAddressHeaders(string hostTokenHeader, string forwardedForHeader)
     {
         var request = new SentryRequest();
         request.Headers[hostTokenHeader] = "SECRET-TOKEN";
@@ -78,11 +78,56 @@ public sealed class SentryBeforeSendTests
         var prepared = SentryBeforeSend.Prepare(sentryEvent);
 
         Assert.NotNull(prepared);
-        Assert.Equal(SensitiveQueryRedaction.Mask, prepared!.Request.Headers[hostTokenHeader]);
-        Assert.Equal(SensitiveQueryRedaction.Mask, prepared.Request.Headers[forwardedForHeader]);
+        Assert.Equal("Accept", Assert.Single(prepared!.Request.Headers.Keys));
         Assert.Equal("application/json", prepared.Request.Headers["Accept"]);
-        Assert.DoesNotContain(prepared.Request.Headers.Values, value => value.Contains("SECRET", StringComparison.Ordinal));
-        Assert.DoesNotContain(prepared.Request.Headers.Values, value => value.Contains("203.0.113.7", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("Forwarded", "for=\"203.0.113.7\";proto=https")]
+    [InlineData("X-Real-IP", "203.0.113.7")]
+    [InlineData("X-Client-IP", "203.0.113.7")]
+    [InlineData("CF-Connecting-IP", "203.0.113.7")]
+    [InlineData("True-Client-IP", "203.0.113.7")]
+    [InlineData("Cookie", "mp_session=SECRET")]
+    [InlineData("Authorization", "Bearer SECRET")]
+    [InlineData("Referer", "https://movie-picker.fr/soiree/abc?host=SECRET")]
+    [InlineData("X-Some-Proxy-Header", "203.0.113.7")]
+    public void Prepare_DropsEveryHeaderOutsideTheAllowlist(string headerName, string headerValue)
+    {
+        var request = new SentryRequest();
+        request.Headers[headerName] = headerValue;
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom")) { Request = request };
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        Assert.Empty(prepared!.Request.Headers);
+    }
+
+    [Theory]
+    [InlineData("Accept", "application/json")]
+    [InlineData("accept-encoding", "gzip, br")]
+    [InlineData("Accept-Language", "fr-FR,fr;q=0.9")]
+    [InlineData("Content-Length", "42")]
+    [InlineData("content-type", "application/json; charset=utf-8")]
+    [InlineData("Host", "api.movie-picker.fr")]
+    [InlineData("Origin", "https://movie-picker.fr")]
+    [InlineData("User-Agent", "Mozilla/5.0")]
+    [InlineData("X-Request-Id", "0123456789abcdef")]
+    [InlineData("X-Correlation-Id", "0123456789abcdef")]
+    public void Prepare_KeepsAllowedHeaders(string headerName, string headerValue)
+    {
+        var request = new SentryRequest();
+        request.Headers[headerName] = headerValue;
+        request.Headers["Forwarded"] = "for=\"203.0.113.7\"";
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom")) { Request = request };
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        var kept = Assert.Single(prepared!.Request.Headers);
+        Assert.Equal(headerName, kept.Key);
+        Assert.Equal(headerValue, kept.Value);
     }
 
     [Fact]
@@ -99,14 +144,16 @@ public sealed class SentryBeforeSendTests
         };
         transaction.Request.Headers[HostTokenAccessor.HostHeaderName] = "SECRET-TOKEN";
         transaction.Request.Headers["X-Forwarded-For"] = "203.0.113.7";
+        transaction.Request.Headers["Forwarded"] = "for=\"203.0.113.7\"";
+        transaction.Request.Headers["X-Unknown"] = "anything";
+        transaction.Request.Headers["User-Agent"] = "Mozilla/5.0";
 
         var prepared = SentryBeforeSend.PrepareTransaction(transaction);
 
         Assert.Same(transaction, prepared);
         Assert.Equal("https://api.test/api/v1/events/abc/wheel?host=***&x=1", prepared.Request.Url);
         Assert.Equal("?host=***&x=1", prepared.Request.QueryString);
-        Assert.Equal(SensitiveQueryRedaction.Mask, prepared.Request.Headers[HostTokenAccessor.HostHeaderName]);
-        Assert.Equal(SensitiveQueryRedaction.Mask, prepared.Request.Headers["X-Forwarded-For"]);
+        Assert.Equal("User-Agent", Assert.Single(prepared.Request.Headers.Keys));
         Assert.Null(prepared.User.Id);
         Assert.Null(prepared.User.IpAddress);
     }
