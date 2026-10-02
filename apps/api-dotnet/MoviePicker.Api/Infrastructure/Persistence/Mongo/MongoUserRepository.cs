@@ -37,7 +37,19 @@ public sealed class MongoUserRepository : IUserRepository
     {
         if (ids.Count == 0)
             return [];
-        var filter = Builders<UserDocument>.Filter.In(x => x.Id, ids);
+        return await FindCardsAsync(Builders<UserDocument>.Filter.In(x => x.Id, ids), ct);
+    }
+
+    public async Task<IReadOnlyList<UserCard>> ListCardsByHandlesAsync(IReadOnlyCollection<string> handles, CancellationToken ct = default)
+    {
+        var normalized = handles.Select(NormalizeHandle).OfType<string>().Distinct(StringComparer.Ordinal).ToList();
+        if (normalized.Count == 0)
+            return [];
+        return await FindCardsAsync(Builders<UserDocument>.Filter.In(x => x.Handle, normalized), ct);
+    }
+
+    private async Task<IReadOnlyList<UserCard>> FindCardsAsync(FilterDefinition<UserDocument> filter, CancellationToken ct)
+    {
         var card = Builders<UserDocument>.Projection
             .Include(x => x.AvatarId)
             .Include(x => x.Handle)

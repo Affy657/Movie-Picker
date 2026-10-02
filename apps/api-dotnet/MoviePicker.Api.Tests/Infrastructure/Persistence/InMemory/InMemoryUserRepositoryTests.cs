@@ -1,3 +1,4 @@
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -72,6 +73,20 @@ public sealed class InMemoryUserRepositoryTests
         var list = await _repo.ListByIdsAsync([a.Id, b.Id, "ghost"]);
 
         Assert.Equal(2, list.Count);
+    }
+
+    [Fact]
+    public async Task ListCardsByHandlesAsync_FindsEachKnownHandleOnce_WhateverItsCaseOrPadding()
+    {
+        var alice = await _repo.AddAsync(Mk(email: "a@test.local", handle: "alice") with { AvatarId = "avatar-1" });
+        var bob = await _repo.AddAsync(Mk(email: "b@test.local", handle: "bob") with { IsProfilePublic = false });
+
+        var cards = await _repo.ListCardsByHandlesAsync(["ALICE", " alice ", "bob", "nobody", "  "]);
+
+        Assert.Equal(
+            [new UserCard(alice.Id, "avatar-1", "alice", true), new UserCard(bob.Id, string.Empty, "bob", false)],
+            cards.OrderBy(card => card.Handle, StringComparer.Ordinal));
+        Assert.Empty(await _repo.ListCardsByHandlesAsync([]));
     }
 
     [Fact]

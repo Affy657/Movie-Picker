@@ -26,9 +26,22 @@ public sealed class InMemoryUserRepository : IUserRepository
     }
 
     public async Task<IReadOnlyList<UserCard>> ListCardsByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default) =>
-        (await ListByIdsAsync(ids, ct))
-            .Select(u => new UserCard(u.Id, u.AvatarId, u.Handle, u.IsProfilePublic))
+        (await ListByIdsAsync(ids, ct)).Select(ToCard).ToList();
+
+    public Task<IReadOnlyList<UserCard>> ListCardsByHandlesAsync(IReadOnlyCollection<string> handles, CancellationToken ct = default)
+    {
+        IReadOnlyList<UserCard> cards = handles
+            .Select(NormalizeHandle)
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .Select(handle => _handleToId.TryGetValue(handle, out var id) && _byId.TryGetValue(id, out var user) ? user : null)
+            .OfType<User>()
+            .Select(ToCard)
             .ToList();
+        return Task.FromResult(cards);
+    }
+
+    private static UserCard ToCard(User user) => new(user.Id, user.AvatarId, user.Handle, user.IsProfilePublic);
 
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {

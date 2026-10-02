@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.Notifications;
@@ -54,9 +55,17 @@ public sealed class GetInboxHandler : IGetInboxHandler
         IEnumerable<UserNotification> items,
         CancellationToken ct)
     {
-        var resolved = new Dictionary<string, string?>(StringComparer.Ordinal);
-        foreach (var handle in items.Select(n => n.ActorHandle).OfType<string>().Distinct(StringComparer.Ordinal))
-            resolved[handle] = PublicHandleResolver.Resolve(await _users.GetByHandleAsync(handle, ct));
-        return resolved;
+        var actorHandles = items.Select(n => n.ActorHandle).OfType<string>().Distinct(StringComparer.Ordinal).ToList();
+        if (actorHandles.Count == 0)
+            return new Dictionary<string, string?>(StringComparer.Ordinal);
+
+        var cardsByHandle = (await _users.ListCardsByHandlesAsync(actorHandles, ct))
+            .Where(card => !string.IsNullOrEmpty(card.Handle))
+            .DistinctBy(card => card.Handle, StringComparer.Ordinal)
+            .ToDictionary(card => card.Handle!, StringComparer.Ordinal);
+        return actorHandles.ToDictionary(
+            handle => handle,
+            handle => PublicHandleResolver.Resolve(cardsByHandle.GetValueOrDefault(HandlePolicy.Normalize(handle))),
+            StringComparer.Ordinal);
     }
 }

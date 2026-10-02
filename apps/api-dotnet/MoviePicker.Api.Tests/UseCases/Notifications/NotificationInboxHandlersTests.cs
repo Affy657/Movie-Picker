@@ -12,18 +12,21 @@ public sealed class GetInboxHandlerTests
     private readonly Mock<IUserRepository> _users = new();
     private readonly GetInboxHandler _sut;
 
+    private static readonly UserCard Bob = new("bob-id", "avatar-1", "bob", IsProfilePublic: true);
+    private static readonly UserCard Hidden = new("hidden-id", "avatar-2", "hidden", IsProfilePublic: false);
+    private static readonly string[] DistinctActorsOfThePage = ["hidden", "bob", "Bob ", "gone"];
+
     public GetInboxHandlerTests()
     {
-        _users.Setup(u => u.GetByHandleAsync("bob", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new User { Id = "bob-id", Handle = "bob", IsProfilePublic = true });
+        _users.Setup(u => u.ListCardsByHandlesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> handles, CancellationToken _) =>
+                new[] { Bob, Hidden }.Where(card => handles.Any(h => h.Trim().Equals(card.Handle, StringComparison.OrdinalIgnoreCase))).ToList());
         _sut = new GetInboxHandler(_notifications.Object, _users.Object);
     }
 
     [Fact]
     public async Task HandleAsync_AnActorWithAPrivateProfile_KeepsTheirHandleOutOfTheInbox()
     {
-        _users.Setup(u => u.GetByHandleAsync("hidden", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new User { Id = "hidden-id", Handle = "hidden", IsProfilePublic = false });
         _notifications.Setup(n => n.ListByUserIdAsync("u1", 31, 0, It.IsAny<CancellationToken>()))
             .ReturnsAsync(
             [
@@ -36,7 +39,44 @@ public sealed class GetInboxHandlerTests
 
         Assert.Equal([null, "bob", null], result.Items.Select(i => i.ActorHandle));
         Assert.Equal("Hidden", result.Items[0].ActorDisplayName);
-        _users.Verify(u => u.GetByHandleAsync("hidden", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ResolvesEveryActorOfThePageInOneLookup()
+    {
+        _notifications.Setup(n => n.ListByUserIdAsync("u1", 31, 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new UserNotification { Id = "n1", UserId = "u1", Type = UserNotificationType.NewFollower, ActorHandle = "hidden" },
+                new UserNotification { Id = "n2", UserId = "u1", Type = UserNotificationType.ParticipantJoined, ActorHandle = "bob" },
+                new UserNotification { Id = "n3", UserId = "u1", Type = UserNotificationType.MovieAdded, ActorHandle = "Bob " },
+                new UserNotification { Id = "n4", UserId = "u1", Type = UserNotificationType.MovieAdded, ActorHandle = "gone" },
+                new UserNotification { Id = "n5", UserId = "u1", Type = UserNotificationType.MovieAdded, ActorHandle = "bob" },
+                new UserNotification { Id = "n6", UserId = "u1", Type = UserNotificationType.EventPending }
+            ]);
+
+        var result = await _sut.HandleAsync("u1", limit: null, offset: null);
+
+        Assert.Equal([null, "bob", "bob", null, "bob", null], result.Items.Select(i => i.ActorHandle));
+        _users.Verify(
+            u => u.ListCardsByHandlesAsync(
+                It.Is<IReadOnlyCollection<string>>(handles =>
+                    handles.Count == DistinctActorsOfThePage.Length && DistinctActorsOfThePage.All(handles.Contains)),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _users.Verify(u => u.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_APageWithoutActors_LooksNobodyUp()
+    {
+        _notifications.Setup(n => n.ListByUserIdAsync("u1", 31, 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new UserNotification { Id = "n1", UserId = "u1", Type = UserNotificationType.EventPending }]);
+
+        var result = await _sut.HandleAsync("u1", limit: null, offset: null);
+
+        Assert.Null(Assert.Single(result.Items).ActorHandle);
+        _users.Verify(u => u.ListCardsByHandlesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

@@ -1033,6 +1033,25 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False(cards.Single(c => c.Id == hidden.Id).IsProfilePublic);
     }
 
+    [Fact]
+    public async Task UserCardsByHandles_FindEachHandleWhateverItsCaseOrPadding()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var visible = await users.AddAsync(NewUser("handlepublic") with { AvatarId = "avatar-3" });
+        var hidden = await users.AddAsync(NewUser("handleprivate") with { IsProfilePublic = false });
+
+        var cards = await users.ListCardsByHandlesAsync(
+            [visible.Handle.ToUpperInvariant(), $"  {hidden.Handle} ", hidden.Handle, "nobody" + Guid.NewGuid().ToString("N")[..12], "  "]);
+
+        Assert.Equal(2, cards.Count);
+        var visibleCard = cards.Single(c => c.Id == visible.Id);
+        Assert.Equal(("avatar-3", visible.Handle, true), (visibleCard.AvatarId, visibleCard.Handle, visibleCard.IsProfilePublic));
+        var hiddenCard = cards.Single(c => c.Id == hidden.Id);
+        Assert.Equal((hidden.Handle, false), (hiddenCard.Handle, hiddenCard.IsProfilePublic));
+        Assert.Empty(await users.ListCardsByHandlesAsync([]));
+    }
+
     [Theory]
     [InlineData(NotificationDedupChannel.Push)]
     [InlineData(NotificationDedupChannel.InApp)]
