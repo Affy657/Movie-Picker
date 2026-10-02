@@ -46,6 +46,19 @@ public sealed class MongoAuthTicketStoreTests : IClassFixture<MoviePickerApplica
     }
 
     [MongoFact]
+    public async Task RenewalOfARemovedSession_DoesNotBringItBack()
+    {
+        var store = Store();
+        var now = DateTimeOffset.UtcNow;
+        var key = await store.StoreAsync(Ticket(now, now + AuthConstants.SessionLifetime));
+        await store.RemoveAsync(key);
+
+        await store.RenewAsync(key, Ticket(now, now + AuthConstants.SessionLifetime));
+
+        Assert.Null(await store.RetrieveAsync(key));
+    }
+
+    [MongoFact]
     public async Task RetrieveAnExpiredSession_ReturnsNothingAndForgetsIt()
     {
         var store = Store();

@@ -92,4 +92,26 @@ public sealed class MemoryAuthTicketStoreTests
         Assert.Null(await _store.RetrieveAsync(revoked));
         Assert.NotNull(await _store.RetrieveAsync(otherUser));
     }
+
+    [Fact]
+    public async Task RenewAsync_OfASessionRevokedMeanwhile_DoesNotBringItBack()
+    {
+        var revoked = await _store.StoreAsync(SessionOf("u1"));
+        _store.RemoveAllForUser("u1", null);
+
+        await _store.RenewAsync(revoked, SessionOf("u1"));
+
+        Assert.Null(await _store.RetrieveAsync(revoked));
+    }
+
+    [Fact]
+    public async Task RenewAsync_OfASignedOutSession_DoesNotBringItBack()
+    {
+        var signedOut = await _store.StoreAsync(SessionOf("u1"));
+        await _store.RemoveAsync(signedOut);
+
+        await _store.RenewAsync(signedOut, SessionOf("u1"));
+
+        Assert.Null(await _store.RetrieveAsync(signedOut));
+    }
 }

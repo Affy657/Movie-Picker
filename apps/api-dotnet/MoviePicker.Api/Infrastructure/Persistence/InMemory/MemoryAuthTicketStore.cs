@@ -19,7 +19,7 @@ public sealed class MemoryAuthTicketStore : ITicketStore
 
     public Task RenewAsync(string key, AuthenticationTicket ticket)
     {
-        _tickets[key] = ticket;
+        _tickets.SwapIfPresent(key, _ => ticket);
         return Task.CompletedTask;
     }
 
