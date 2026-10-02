@@ -57,6 +57,9 @@ public sealed class FollowUserHandler : IFollowUserHandler
         if (!target.NotifiesOn(UserNotificationType.NewFollower))
             return;
 
+        if (await _notifications.ExistsFromActorAsync(target.Id, UserNotificationType.NewFollower, follower.Handle, ct))
+            return;
+
         var firstNoticeOfThisFollower = await _dedup.TryClaimAsync(
             target.Id, UserNotificationType.NewFollower, currentUserId, NotificationDedupChannel.InApp, ct);
         if (!firstNoticeOfThisFollower)
@@ -72,7 +75,16 @@ public sealed class FollowUserHandler : IFollowUserHandler
             IsRead = false,
             CreatedAt = _clock.GetUtcNow()
         };
-        await _notifications.AddAsync(notification, ct);
+        try
+        {
+            await _notifications.AddAsync(notification, ct);
+        }
+        catch (Exception)
+        {
+            await _dedup.ReleaseAsync(
+                target.Id, UserNotificationType.NewFollower, currentUserId, NotificationDedupChannel.InApp, CancellationToken.None);
+            throw;
+        }
 
         var subs = await _pushSubscriptions.ListByUserIdAsync(target.Id, ct);
         var message = new PushMessage(

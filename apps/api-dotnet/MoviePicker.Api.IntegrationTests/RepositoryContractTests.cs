@@ -109,6 +109,28 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task NotificationExistsFromActor_MatchesTheRecipientTheTypeAndTheActor()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var userId = ObjectId.GenerateNewId().ToString();
+        var otherUserId = ObjectId.GenerateNewId().ToString();
+        var actor = "actor" + Guid.NewGuid().ToString("N")[..12];
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = userId,
+            Type = UserNotificationType.NewFollower,
+            ActorHandle = actor,
+            CreatedAt = Now
+        });
+
+        Assert.True(await notifications.ExistsFromActorAsync(userId, UserNotificationType.NewFollower, actor));
+        Assert.False(await notifications.ExistsFromActorAsync(userId, UserNotificationType.NewFollower, actor + "x"));
+        Assert.False(await notifications.ExistsFromActorAsync(userId, UserNotificationType.ParticipantJoined, actor));
+        Assert.False(await notifications.ExistsFromActorAsync(otherUserId, UserNotificationType.NewFollower, actor));
+    }
+
+    [Fact]
     public async Task MovieCount_CountsOnlyTheFilmsOfThatNight()
     {
         using var scope = _factory.Services.CreateScope();

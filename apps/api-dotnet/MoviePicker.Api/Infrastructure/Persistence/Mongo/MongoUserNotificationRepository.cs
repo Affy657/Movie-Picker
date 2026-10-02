@@ -106,6 +106,19 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
         return count > 0;
     }
 
+    public async Task<bool> ExistsFromActorAsync(
+        string userId,
+        UserNotificationType type,
+        string actorHandle,
+        CancellationToken ct = default)
+    {
+        var count = await _collection.CountDocumentsAsync(
+            x => x.UserId == userId && x.Type == (int)type && x.ActorHandle == actorHandle,
+            new CountOptions { Limit = 1 },
+            ct);
+        return count > 0;
+    }
+
     public async Task<IReadOnlySet<string>> ListUserIdsByTypeAndEventAsync(UserNotificationType type, string eventId, CancellationToken ct = default)
     {
         var docs = await _collection
