@@ -193,6 +193,26 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.False(await movies.ExistsByEventAndTitleCaseInsensitiveAsync(eventId, "Le Roi lion", "2019"));
     }
 
+    [Theory]
+    [InlineData("2020", " 2020 ", true)]
+    [InlineData("", "  ", true)]
+    [InlineData("", null, true)]
+    [InlineData(" 2020", "2020", false)]
+    [InlineData("  ", null, false)]
+    [InlineData("  ", "", false)]
+    public async Task MovieTitleLookup_TrimsTheRequestedYearButComparesTheStoredOneAsWritten(
+        string storedYear,
+        string? requestedYear,
+        bool expected)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        await movies.InsertAsync(NewMovie(eventId, ObjectId.GenerateNewId().ToString(), 862, "Toy Story") with { Year = storedYear });
+
+        Assert.Equal(expected, await movies.ExistsByEventAndTitleCaseInsensitiveAsync(eventId, "Toy Story", requestedYear));
+    }
+
     [Fact]
     public async Task EventUpdate_WithTheVersionJustRead_SucceedsAndIncrementsVersion()
     {

@@ -94,6 +94,21 @@ public sealed class InMemoryMovieRepositoryTests
         Assert.False(await _repo.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "Tenet", "2010"));
     }
 
+    [Theory]
+    [InlineData("2010", " 2010 ", true)]
+    [InlineData("", null, true)]
+    [InlineData(" 2010", "2010", false)]
+    [InlineData("  ", "  ", false)]
+    public async Task ExistsByEventAndTitleCaseInsensitiveAsync_IsNoMoreLenientThanMongoOnTheStoredYear(
+        string storedYear,
+        string? requestedYear,
+        bool expected)
+    {
+        await _repo.InsertAsync(Mk() with { Year = storedYear });
+
+        Assert.Equal(expected, await _repo.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "Inception", requestedYear));
+    }
+
     [Fact]
     public async Task CountByEventAndParticipantAsync_CountsOnlyMatching()
     {

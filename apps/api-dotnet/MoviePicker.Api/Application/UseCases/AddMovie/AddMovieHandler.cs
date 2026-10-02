@@ -78,7 +78,8 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (await _movieRepository.ExistsByEventAndTmdbIdAsync(evt.Id, request.TmdbId, request.MediaType, ct))
             throw Errors.MovieAlreadyProposed();
 
-        if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), request.Year, ct))
+        var year = MovieYear.Normalize(request.Year);
+        if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), year, ct))
             throw Errors.MovieTitleAlreadyProposed();
 
         var now = _clock.GetUtcNow();
@@ -97,7 +98,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             TmdbId = request.TmdbId,
             MediaType = request.MediaType,
             Title = request.Title.Trim(),
-            Year = request.Year,
+            Year = year ?? string.Empty,
             PosterPath = poster,
             PitchNote = pitchNote,
             GenreIds = genreIds,

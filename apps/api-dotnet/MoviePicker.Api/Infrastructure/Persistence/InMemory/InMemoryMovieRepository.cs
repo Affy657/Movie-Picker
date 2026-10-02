@@ -63,9 +63,12 @@ public sealed class InMemoryMovieRepository : IMovieRepository
         lock (list)
         {
             return Task.FromResult(list.Any(m =>
-                string.Equals(m.Title, t, StringComparison.OrdinalIgnoreCase) && MovieYear.Normalize(m.Year) == y));
+                string.Equals(m.Title, t, StringComparison.OrdinalIgnoreCase) && IsStoredYear(m.Year, y)));
         }
     }
+
+    private static bool IsStoredYear(string? storedYear, string? normalizedYear) =>
+        normalizedYear is null ? string.IsNullOrEmpty(storedYear) : storedYear == normalizedYear;
 
     public Task<int> CountByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
     {

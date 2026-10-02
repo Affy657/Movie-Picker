@@ -44,12 +44,13 @@ public sealed class AddMovieHandlerTests
     private static AddMovieRequest Request(
         string participantId = "p123456789012345678901234",
         MovieMediaType mediaType = MovieMediaType.Movie,
-        IReadOnlyList<int>? genreIds = null) => new()
+        IReadOnlyList<int>? genreIds = null,
+        string year = "2010") => new()
         {
             TmdbId = 27205,
             MediaType = mediaType,
             Title = " Inception ",
-            Year = "2010",
+            Year = year,
             PosterPath = "https://image.tmdb.org/t/p/w154/abc.jpg",
             GenreIds = genreIds,
             ParticipantId = participantId
@@ -197,6 +198,30 @@ public sealed class AddMovieHandlerTests
         Assert.NotNull(inserted);
         Assert.Equal(GenreIds, inserted!.GenreIds);
         Assert.Equal(GenreIds, result.GenreIds);
+    }
+
+    [Theory]
+    [InlineData(" 2010 ", "2010")]
+    [InlineData("   ", "")]
+    [InlineData("", "")]
+    public async Task HandleAsync_StoresTheYearTrimmed(string requestedYear, string storedYear)
+    {
+        var evt = ActiveEvent();
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        Movie? inserted = null;
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
+        _movieRepo.Setup(r => r.ExistsByEventAndTmdbIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo.Setup(r => r.ExistsByEventAndTitleCaseInsensitiveAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _movieRepo
+            .Setup(r => r.InsertAsync(It.IsAny<Movie>(), It.IsAny<CancellationToken>()))
+            .Callback<Movie, CancellationToken>((m, _) => inserted = m)
+            .ReturnsAsync((Movie m, CancellationToken _) => m with { Id = "mov1" });
+
+        var result = await _sut.HandleAsync("evt1", Request(participant.Id, year: requestedYear), null);
+
+        Assert.Equal(storedYear, inserted!.Year);
+        Assert.Equal(storedYear, result.Year);
     }
 
     [Fact]
