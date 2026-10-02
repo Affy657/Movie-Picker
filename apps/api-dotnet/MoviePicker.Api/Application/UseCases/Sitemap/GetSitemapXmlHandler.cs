@@ -15,18 +15,21 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
     private const string Weekly = "weekly";
     private const string Monthly = "monthly";
 
-    private sealed record StaticPage(string Path, bool ChangesDaily, string ChangeFrequency, string Priority);
+    private sealed record StaticPage(string Path, string ChangeFrequency, string Priority)
+    {
+        public bool ChangesDaily => ChangeFrequency == Daily;
+    }
 
     private static readonly StaticPage[] StaticPages =
     [
-        new("/", true, Daily, "1.0"),
-        new("/decouvrir", false, Monthly, "0.8"),
-        new("/films/tendances", true, Daily, "0.8"),
-        new("/films/au-cinema", false, Weekly, "0.8"),
-        new("/films/les-plus-proposes", false, Weekly, "0.7"),
-        new("/films/collections", false, Monthly, "0.6"),
-        new("/tech", false, Monthly, "0.5"),
-        new("/soutenir", false, Monthly, "0.3"),
+        new("/", Daily, "1.0"),
+        new("/decouvrir", Monthly, "0.8"),
+        new("/films/tendances", Daily, "0.8"),
+        new("/films/au-cinema", Weekly, "0.8"),
+        new("/films/les-plus-proposes", Weekly, "0.7"),
+        new("/films/collections", Monthly, "0.6"),
+        new("/tech", Monthly, "0.5"),
+        new("/soutenir", Monthly, "0.3"),
     ];
 
     private static readonly int MaxProfileUrls = SitemapUrlLimit - StaticPages.Length;
