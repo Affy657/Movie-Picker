@@ -51,9 +51,18 @@ function pending(): { waitUntil: ReturnType<typeof vi.fn>; settled: () => Promis
 
 type RegisteredRoute = { matches: RouteMatcher; strategy: unknown };
 
+type TmdbImagePlugin = {
+  requestWillFetch?: (param: { request: Request }) => Promise<Request>;
+  handlerDidError?: (param: { request: Request; error: Error }) => Promise<Response | undefined>;
+};
+
+type StrategyOptions = { cacheName?: string; plugins?: unknown[] };
+
 const installation = {
   routes: [] as RegisteredRoute[],
   expirationOptions: [] as unknown[],
+  cacheableResponseOptions: [] as unknown[],
+  cacheFirstOptions: [] as StrategyOptions[],
   precacheCalls: 0,
   cleanupCalls: 0,
   networkFirstCalls: 0,
@@ -66,6 +75,18 @@ function showcaseRouteMatcher(): RouteMatcher {
 function tmdbRouteMatcher(): RouteMatcher {
   return installation.routes[1]!.matches;
 }
+
+function tmdbImagePlugin(): TmdbImagePlugin {
+  const plugins = installation.cacheFirstOptions[0]?.plugins ?? [];
+  const plugin = plugins.find(
+    (candidate): candidate is TmdbImagePlugin =>
+      typeof (candidate as TmdbImagePlugin).requestWillFetch === 'function'
+  );
+  if (!plugin) throw new Error('No requestWillFetch plugin on the TMDB image route');
+  return plugin;
+}
+
+const TMDB_POSTER_URL = 'https://image.tmdb.org/t/p/w500/a.jpg';
 
 function registeredRouteMatchers(): RouteMatcher[] {
   return installation.routes.map((route) => route.matches);
@@ -93,6 +114,12 @@ beforeAll(async () => {
     strategy: call[1],
   }));
   installation.expirationOptions = workbox.ExpirationPlugin.mock.calls.map((call) => call[0]);
+  installation.cacheableResponseOptions = workbox.CacheableResponsePlugin.mock.calls.map(
+    (call) => call[0]
+  );
+  installation.cacheFirstOptions = workbox.CacheFirst.mock.calls.map(
+    (call) => call[0] as StrategyOptions
+  );
   installation.precacheCalls = workbox.precacheAndRoute.mock.calls.length;
   installation.cleanupCalls = workbox.cleanupOutdatedCaches.mock.calls.length;
   installation.networkFirstCalls = workbox.NetworkFirst.mock.calls.length;
@@ -146,12 +173,46 @@ describe('service worker — mise en cache', () => {
     expect(matches({ url: new URL('https://evil.test/t/p/w500/a.jpg') })).toBe(false);
   });
 
-  it('refreshes a cached TMDB image behind its display, so a transient error is replaced on the next view', () => {
-    expect(installation.routes[1]!.strategy).toBeInstanceOf(workbox.StaleWhileRevalidate);
+  it('serves a cached TMDB image straight from the cache, its content never changes under a URL', () => {
+    expect(installation.routes[1]!.strategy).toBeInstanceOf(workbox.CacheFirst);
+    expect(installation.cacheFirstOptions[0]).toMatchObject({ cacheName: 'tmdb-images-v3' });
   });
 
-  it('lets the browser drop the cached TMDB images when the storage quota runs out', () => {
-    expect(installation.expirationOptions[1]).toMatchObject({ purgeOnQuotaError: true });
+  it('fetches a TMDB image in CORS mode without credentials, so its real status is known', async () => {
+    const original = new Request(TMDB_POSTER_URL, { mode: 'no-cors' });
+    const corsRequest = await tmdbImagePlugin().requestWillFetch!({ request: original });
+    expect(corsRequest.url).toBe(TMDB_POSTER_URL);
+    expect(corsRequest.mode).toBe('cors');
+    expect(corsRequest.credentials).toBe('omit');
+  });
+
+  it('stores only a successful TMDB image, never an opaque or failed response', () => {
+    expect(installation.cacheableResponseOptions[1]).toEqual({ statuses: [200] });
+  });
+
+  it('falls back to a plain network fetch, left out of the cache, when the CORS fetch fails', async () => {
+    const original = new Request(TMDB_POSTER_URL, { mode: 'no-cors' });
+    const opaque = new Response(null, { status: 200 });
+    const networkFetch = vi.fn(() => Promise.resolve(opaque));
+    vi.stubGlobal('fetch', networkFetch);
+    try {
+      const fallback = await tmdbImagePlugin().handlerDidError!({
+        request: original,
+        error: new TypeError('Failed to fetch'),
+      });
+      expect(fallback).toBe(opaque);
+      expect(networkFetch).toHaveBeenCalledWith(original);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('keeps 300 TMDB images for 30 days and lets the browser drop them when the quota runs out', () => {
+    expect(installation.expirationOptions[1]).toEqual({
+      maxEntries: 300,
+      maxAgeSeconds: 60 * 60 * 24 * 30,
+      purgeOnQuotaError: true,
+    });
   });
 });
 
@@ -167,6 +228,13 @@ describe('service worker — cycle de vie', () => {
     listeners.get('activate')!(event as unknown as Record<string, unknown>);
     await event.settled();
     expect(deleteCache).toHaveBeenCalledWith('api-cache-v2');
+  });
+
+  it('purges the TMDB image cache filled with opaque responses by earlier versions', async () => {
+    const event = pending();
+    listeners.get('activate')!(event as unknown as Record<string, unknown>);
+    await event.settled();
+    expect(deleteCache).toHaveBeenCalledWith('tmdb-images-v2');
   });
 
   it('applies the update on explicit request', () => {

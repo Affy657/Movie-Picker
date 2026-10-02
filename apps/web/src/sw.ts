@@ -1,13 +1,13 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate } from 'workbox-strategies';
+import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
 declare const self: ServiceWorkerGlobalScope;
 
-const RETIRED_CACHES = ['api-cache-v2'];
+const RETIRED_CACHES = ['api-cache-v2', 'tmdb-images-v2'];
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -35,17 +35,26 @@ registerRoute(
   })
 );
 
+function corsRequestWithoutCredentials({ request }: { request: Request }): Promise<Request> {
+  return Promise.resolve(new Request(request.url, { mode: 'cors', credentials: 'omit' }));
+}
+
+function uncachedNetworkFetch({ request }: { request: Request }): Promise<Response> {
+  return fetch(request);
+}
+
 registerRoute(
   ({ url }) => url.hostname === 'image.tmdb.org',
-  new StaleWhileRevalidate({
-    cacheName: 'tmdb-images-v2',
+  new CacheFirst({
+    cacheName: 'tmdb-images-v3',
     plugins: [
+      { requestWillFetch: corsRequestWithoutCredentials, handlerDidError: uncachedNetworkFetch },
       new ExpirationPlugin({
         maxEntries: 300,
         maxAgeSeconds: 60 * 60 * 24 * 30,
         purgeOnQuotaError: true,
       }),
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      new CacheableResponsePlugin({ statuses: [200] }),
     ],
   })
 );
