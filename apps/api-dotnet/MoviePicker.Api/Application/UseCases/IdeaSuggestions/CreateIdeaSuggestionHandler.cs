@@ -156,7 +156,7 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
 
         var bodyLines = new List<string>
         {
-            NeutralizeGitHubReferences(request.Description.Trim()),
+            EscapeHtmlCommentOpeners(NeutralizeGitHubReferences(request.Description.Trim())),
             string.Empty,
             "---",
             $"Référence : {reference}"
@@ -204,7 +204,9 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
         var neutralized = MentionPattern.Replace(text, "@\u200b");
         neutralized = IssueNumberPattern.Replace(neutralized, "#\u200b");
         neutralized = GitHubShorthandPattern.Replace(neutralized, match => match.Value + "\u200b");
-        neutralized = GitHubHostPattern.Replace(neutralized, match => match.Value + "\u200b");
-        return neutralized.Replace("<!--", "&lt;!--", StringComparison.Ordinal);
+        return GitHubHostPattern.Replace(neutralized, match => match.Value + "\u200b");
     }
+
+    private static string EscapeHtmlCommentOpeners(string markdown) =>
+        markdown.Replace("<!--", "&lt;!--", StringComparison.Ordinal);
 }

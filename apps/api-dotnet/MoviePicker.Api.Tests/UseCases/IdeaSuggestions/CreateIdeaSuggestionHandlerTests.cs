@@ -158,6 +158,25 @@ public sealed partial class CreateIdeaSuggestionHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_KeepsAnHtmlCommentOpenerAsTypedInThePlainTextTitle()
+    {
+        GitHubIssueDraft? captured = null;
+        _github.Setup(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()))
+            .Callback<GitHubIssueDraft, CancellationToken>((d, _) => captured = d)
+            .Returns(Task.CompletedTask);
+
+        await _sut.HandleAsync(UserId, new CreateIdeaSuggestionRequest
+        {
+            Category = IdeaSuggestionCategory.Bug,
+            Title = "Bug with <!-- in notes, see #12",
+            Description = "Repro"
+        });
+
+        Assert.NotNull(captured);
+        Assert.Equal("[Bug] Bug with <!-- in notes, see #​12", captured!.Title);
+    }
+
+    [Fact]
     public async Task HandleAsync_GitHubClientFails_PropagatesServiceUnavailable()
     {
         _github.Setup(g => g.CreateIssueAsync(It.IsAny<GitHubIssueDraft>(), It.IsAny<CancellationToken>()))
