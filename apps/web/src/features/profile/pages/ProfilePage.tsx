@@ -137,7 +137,7 @@ export default function ProfilePage() {
   }
 
   if (isNotFound) {
-    return <ProfileNotFoundState />;
+    return <ProfileNotFoundState handle={handle} />;
   }
 
   if (profileQuery.isError || !profile) {

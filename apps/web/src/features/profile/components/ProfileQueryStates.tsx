@@ -1,14 +1,20 @@
-import { Link } from 'react-router';
+import { Link, Navigate } from 'react-router';
 import { AlertCircle } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { ApiError } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { isOwnHandle } from '@/features/auth/utils/ownProfileDestination';
 import { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
-export function ProfileNotFoundState() {
+export function ProfileNotFoundState({ handle }: Readonly<{ handle: string | undefined }>) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  if (isOwnHandle(user, handle)) {
+    return <Navigate to={ROUTES.account} replace />;
+  }
   return (
     <PageLayout className="page--centered page--errorState">
       <span className="errorStateIcon" aria-hidden>

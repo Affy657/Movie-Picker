@@ -7,8 +7,8 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { ownProfileDestination } from '@/features/auth/utils/ownProfileDestination';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
-import { ROUTES } from '@/app/routes';
 import {
   getEligibleFollows,
   sendEventInvitation,
@@ -86,9 +86,9 @@ export default function EventInviteFriendsTab({ slug, onNavigate }: Readonly<Pro
           icon={<UserPlus aria-hidden size={ICON_SIZE['2xl']} />}
           message={t('events.invite.emptyLine1')}
           actions={
-            user?.handle ? (
+            user ? (
               <Link
-                to={ROUTES.profile(user.handle)}
+                to={ownProfileDestination(user).path}
                 onClick={onNavigate}
                 className={linkButtonClass()}
               >

@@ -53,6 +53,7 @@ function renderProfile(handle: string, client?: QueryClient) {
         <Routes>
           <Route path="/u/:handle" element={<ProfilePage />} />
           <Route path="/" element={<div data-testid="route-home" />} />
+          <Route path="/settings" element={<div data-testid="route-settings" />} />
         </Routes>
       </MemoryRouter>
     </AppTestProviders>
@@ -481,6 +482,39 @@ describe('ProfilePage (MSW)', () => {
       expect(screen.getByText(/n'existe pas ou n'est pas public/i)).toBeInTheDocument();
     });
     expect(screen.queryByRole('heading', { name: 'ghost' })).not.toBeInTheDocument();
+  });
+
+  it.each(['moi', ' Moi'])(
+    'takes me to my settings instead of a 404 when my own profile is private (%j)',
+    async (urlHandle) => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({ ...ME_PROFILE, isProfilePublic: false })
+        ),
+        http.get(`${TEST_API_V1}/users/:handle`, () =>
+          HttpResponse.json({ error: 'Profil introuvable' }, { status: 404 })
+        )
+      );
+
+      renderProfile(encodeURIComponent(urlHandle));
+
+      expect(await screen.findByTestId('route-settings')).toBeInTheDocument();
+      expect(screen.queryByText(/n'existe pas ou n'est pas public/i)).not.toBeInTheDocument();
+    }
+  );
+
+  it("still shows the not found state on someone else's private profile when signed in", async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ error: 'Profil introuvable' }, { status: 404 })
+      )
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByText(/n'existe pas ou n'est pas public/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('route-settings')).not.toBeInTheDocument();
   });
 
   it('masque la bio quand elle est absente', async () => {

@@ -115,7 +115,7 @@ export const WHATS_NEW: readonly WhatsNewRelease[] = [
 
 export function whatsNewLinkPath(
   target: WhatsNewLinkTarget | undefined,
-  profileHandle: string | null
+  ownProfilePath: string | null
 ): string | null {
   switch (target) {
     case 'watchlist':
@@ -133,7 +133,7 @@ export function whatsNewLinkPath(
     case 'notifications':
       return ROUTES.notifications;
     case 'profile':
-      return profileHandle ? ROUTES.profile(profileHandle) : null;
+      return ownProfilePath;
     default:
       return null;
   }

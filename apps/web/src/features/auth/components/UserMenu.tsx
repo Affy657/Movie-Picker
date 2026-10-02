@@ -20,6 +20,7 @@ import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { usePwaInstallClick } from '@/shared/hooks/usePwaInstall';
 import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
 import type { UserProfile } from '@/features/auth/types';
+import { ownProfileDestination } from '@/features/auth/utils/ownProfileDestination';
 import styles from './UserMenu.module.css';
 
 type UserMenuProps = {
@@ -30,6 +31,7 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
   const { t } = useTranslation();
   const { logout } = useAuth();
   const menu = useMenuState();
+  const ownProfile = ownProfileDestination(user);
   const [ideaDialogOpen, setIdeaDialogOpen] = useState(false);
 
   const {
@@ -73,8 +75,8 @@ export default function UserMenu({ user }: Readonly<UserMenuProps>) {
         <MenuPanel {...menu.panelProps} ariaLabel={t('nav.accountMenu')} className={styles.panel}>
           <p className={styles.heading}>{user.displayName}</p>
           <MenuSeparator />
-          {user.handle && user.isProfilePublic ? (
-            <MenuItem to={ROUTES.profile(user.handle)} icon={icon(UserRound)} onClick={menu.close}>
+          {ownProfile.isPublicProfile ? (
+            <MenuItem to={ownProfile.path} icon={icon(UserRound)} onClick={menu.close}>
               {t('profile.settings.viewMyProfile')}
             </MenuItem>
           ) : null}

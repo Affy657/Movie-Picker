@@ -5,8 +5,8 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import Avatar from '@/shared/components/Avatar';
 import AvatarPickerModal from '@/features/auth/components/AvatarPickerModal';
 import { useTranslation } from '@/shared/i18n';
-import { ROUTES } from '@/app/routes';
 import type { UserProfile } from '@/features/auth/types';
+import { ownProfileDestination } from '@/features/auth/utils/ownProfileDestination';
 import styles from './AccountIdentityHeader.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
@@ -19,7 +19,7 @@ export default function AccountIdentityHeader({
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [avatarSaveError, setAvatarSaveError] = useState<string | null>(null);
   const avatarSize = 'lg';
-  const linksToPublicProfile = Boolean(user.handle) && user.isProfilePublic;
+  const ownProfile = ownProfileDestination(user);
 
   return (
     <div className={styles.wrapper} data-variant={variant}>
@@ -41,8 +41,8 @@ export default function AccountIdentityHeader({
           {user.handle && <p className={styles.identityHandle}>@{user.handle}</p>}
         </div>
 
-        {linksToPublicProfile && variant === 'desktop' && (
-          <Link to={ROUTES.profile(user.handle)} className={styles.identityLink}>
+        {ownProfile.isPublicProfile && variant === 'desktop' && (
+          <Link to={ownProfile.path} className={styles.identityLink}>
             <Globe size={ICON_SIZE.md} aria-hidden />
             <span>{t('profile.settings.viewMyProfile')}</span>
           </Link>
@@ -68,8 +68,8 @@ export default function AccountIdentityHeader({
         onClose={() => setAvatarModalOpen(false)}
       />
 
-      {linksToPublicProfile && variant === 'mobile' && (
-        <Link to={ROUTES.profile(user.handle)} className={styles.identityLinkMobile}>
+      {ownProfile.isPublicProfile && variant === 'mobile' && (
+        <Link to={ownProfile.path} className={styles.identityLinkMobile}>
           <Globe size={ICON_SIZE.md} aria-hidden />
           <span>{t('profile.settings.viewMyProfile')}</span>
         </Link>

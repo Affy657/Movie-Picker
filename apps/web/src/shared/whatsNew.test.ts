@@ -101,6 +101,12 @@ describe('whatsNewLinkPath', () => {
   it('resolves discover to /decouvrir', () => {
     expect(whatsNewLinkPath('howItWorks', null)).toBe(ROUTES.howItWorks);
   });
+
+  it('resolves profile to the own-profile path it is given, settings included for a private profile', () => {
+    expect(whatsNewLinkPath('profile', ROUTES.profile('alice'))).toBe('/u/alice');
+    expect(whatsNewLinkPath('profile', ROUTES.account)).toBe(ROUTES.account);
+    expect(whatsNewLinkPath('profile', null)).toBeNull();
+  });
 });
 
 describe('WHATS_NEW 1.6.0', () => {

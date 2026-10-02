@@ -151,7 +151,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
   }
 
   if (isNotFound) {
-    return <ProfileNotFoundState />;
+    return <ProfileNotFoundState handle={handle} />;
   }
 
   if (profileQuery.isError || !profile) {

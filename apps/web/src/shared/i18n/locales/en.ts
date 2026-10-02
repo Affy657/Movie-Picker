@@ -869,7 +869,7 @@ export const en: Locale = {
       alreadyParticipant: 'Already joined',
       empty: "You're not following anyone yet. Follow users to invite them directly.",
       emptyLine1: "You're not following anyone yet.",
-      emptyLink: 'Go to your profile to follow users →',
+      emptyLink: 'Go to your profile to follow users',
       loadError: 'Unable to load the list.',
       inviteError: 'Invitation failed.',
       searchPlaceholder: 'Search a friend',

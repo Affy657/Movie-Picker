@@ -37,6 +37,7 @@ const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
     uiTheme: 'system',
     accentColor: 'default',
     handle: 'alice',
+    isProfilePublic: true,
   })
 );
 
@@ -429,6 +430,33 @@ describe('App (routes)', () => {
       expect(within(mobileNav).getByRole('link', { name: /^Profil$/i })).toHaveAttribute(
         'href',
         '/u/alice'
+      );
+    });
+
+    it('AppShell points the mobile Profil tab to the settings while my profile is private', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            handle: 'alice',
+            isProfilePublic: false,
+          })
+        ),
+        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      );
+      renderRoutes(['/my-events']);
+      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });
+      const mobileNav = screen
+        .getAllByRole('navigation', { name: /navigation principale/i })
+        .at(-1);
+      if (!mobileNav) throw new Error('Mobile nav introuvable');
+      expect(within(mobileNav).getByRole('link', { name: /^Profil$/i })).toHaveAttribute(
+        'href',
+        '/settings'
       );
     });
 
