@@ -22,12 +22,6 @@ public static class EventSchedule
         }
 
         var unspecified = DateTime.SpecifyKind(local, DateTimeKind.Unspecified);
-        if (ParisTimeZone.IsInvalidTime(unspecified))
-        {
-            startUtc = default;
-            return false;
-        }
-
         if (!TryConvertParisToUtc(unspecified, out var utc) || utc > LatestStartWithAWholeLifecycle)
         {
             startUtc = default;
@@ -42,7 +36,9 @@ public static class EventSchedule
     {
         try
         {
-            utc = TimeZoneInfo.ConvertTimeToUtc(parisTime, ParisTimeZone);
+            utc = ParisTimeZone.IsInvalidTime(parisTime)
+                ? SkippedParisTimeToUtc(parisTime)
+                : TimeZoneInfo.ConvertTimeToUtc(parisTime, ParisTimeZone);
             return true;
         }
         catch (ArgumentException)
@@ -50,6 +46,13 @@ public static class EventSchedule
             utc = default;
             return false;
         }
+    }
+
+    private static DateTime SkippedParisTimeToUtc(DateTime parisTime)
+    {
+        var wallClockAsUtc = DateTime.SpecifyKind(parisTime, DateTimeKind.Utc);
+        var firstGuess = wallClockAsUtc - ParisTimeZone.GetUtcOffset(wallClockAsUtc);
+        return wallClockAsUtc - ParisTimeZone.GetUtcOffset(firstGuess);
     }
 
     private static TimeZoneInfo ResolveParisTimeZone()
