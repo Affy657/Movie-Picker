@@ -139,16 +139,12 @@ public sealed class InMemoryUserRepository : IUserRepository
         IReadOnlyList<string> pendingChoiceKeys,
         CancellationToken ct = default)
     {
-        if (_byId.TryGetValue(userId, out var user))
+        _byId.SwapIfPresent(userId, user => user with
         {
-            _byId[userId] = user with
-            {
-                LetterboxdPendingReconciliationCount = pendingCount,
-                LetterboxdPendingChoiceKeys = [.. pendingChoiceKeys],
-                Version = user.Version + 1
-            };
-        }
-
+            LetterboxdPendingReconciliationCount = pendingCount,
+            LetterboxdPendingChoiceKeys = [.. pendingChoiceKeys],
+            Version = user.Version + 1
+        });
         return Task.CompletedTask;
     }
 
