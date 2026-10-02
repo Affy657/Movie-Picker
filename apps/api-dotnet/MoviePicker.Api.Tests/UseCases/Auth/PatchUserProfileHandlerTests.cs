@@ -399,7 +399,8 @@ public sealed class PatchUserProfileHandlerTests
         LetterboxdUsername = "dave_v",
         LetterboxdLastSyncAt = new DateTimeOffset(2024, 2, 1, 0, 0, 0, TimeSpan.Zero),
         LetterboxdLastSyncError = "letterboxd_sync_unavailable",
-        LetterboxdPendingReconciliationCount = 4
+        LetterboxdPendingReconciliationCount = 4,
+        LetterboxdPendingChoiceKeys = ["dune-part-two"]
     };
 
     private static (PatchUserProfileHandler Handler, Mock<IUserRepository> Users) HandlerFor(User user)
@@ -446,7 +447,9 @@ public sealed class PatchUserProfileHandlerTests
 
         Assert.Equal(0, res.LetterboxdPendingReconciliationCount);
         users.Verify(
-            x => x.UpdateAsync(It.Is<User>(y => y.LetterboxdPendingReconciliationCount == 0), It.IsAny<CancellationToken>()),
+            x => x.UpdateAsync(
+                It.Is<User>(y => y.LetterboxdPendingReconciliationCount == 0 && y.LetterboxdPendingChoiceKeys == null),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

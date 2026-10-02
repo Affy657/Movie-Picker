@@ -130,6 +130,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             LetterboxdLastSyncAt = letterboxdChanged ? null : user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = letterboxdChanged ? null : user.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = letterboxdChanged ? 0 : user.LetterboxdPendingReconciliationCount,
+            LetterboxdPendingChoiceKeys = letterboxdChanged ? null : user.LetterboxdPendingChoiceKeys,
             UpdatedAt = _clock.GetUtcNow()
         };
     }

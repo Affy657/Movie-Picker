@@ -101,6 +101,10 @@ public sealed class UserDocument
     [BsonIgnoreIfDefault]
     public int LetterboxdPendingReconciliationCount { get; set; }
 
+    [BsonElement("letterboxdPendingChoiceKeys")]
+    [BsonIgnoreIfNull]
+    public List<string>? LetterboxdPendingChoiceKeys { get; set; }
+
     [BsonElement("notificationPreferences")]
     [BsonIgnoreIfNull]
     public List<NotificationPreferenceEntryDocument>? NotificationPreferences { get; set; }

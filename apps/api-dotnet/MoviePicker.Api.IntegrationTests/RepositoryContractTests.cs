@@ -131,6 +131,23 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task LetterboxdPendingChoices_RecordsTheCountAndTheKeysWithoutTouchingTheRest()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var created = await users.AddAsync(NewUser("lbx") with { LetterboxdUsername = "lbx_user" });
+
+        await users.RecordLetterboxdPendingChoicesAsync(created.Id, 2, ["dune-part-two", "solaris"]);
+
+        var stored = await users.GetByIdAsync(created.Id);
+        Assert.NotNull(stored);
+        Assert.Equal(2, stored.LetterboxdPendingReconciliationCount);
+        Assert.Equal(["dune-part-two", "solaris"], stored.LetterboxdPendingChoiceKeys);
+        Assert.Equal("lbx_user", stored.LetterboxdUsername);
+        Assert.True(stored.Version > created.Version);
+    }
+
+    [Fact]
     public async Task MovieCount_CountsOnlyTheFilmsOfThatNight()
     {
         using var scope = _factory.Services.CreateScope();

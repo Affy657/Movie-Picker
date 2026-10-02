@@ -86,7 +86,8 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         string? username,
         DateTimeOffset? lastSyncAt,
         string? lastSyncError = null,
-        int pendingReconciliationCount = 0) =>
+        int pendingReconciliationCount = 0,
+        IReadOnlyList<string>? pendingChoiceKeys = null) =>
         _users
             .Setup(u => u.GetByIdAsync(UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new User
@@ -96,7 +97,8 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
                 LetterboxdUsername = username,
                 LetterboxdLastSyncAt = lastSyncAt,
                 LetterboxdLastSyncError = lastSyncError,
-                LetterboxdPendingReconciliationCount = pendingReconciliationCount
+                LetterboxdPendingReconciliationCount = pendingReconciliationCount,
+                LetterboxdPendingChoiceKeys = pendingChoiceKeys
             });
 
     private void GivenTmdbTimesOut()
@@ -230,7 +232,8 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
 
         Assert.False(result.Skipped);
         _users.Verify(
-            u => u.SetLetterboxdPendingReconciliationCountAsync(UserId, 0, It.IsAny<CancellationToken>()),
+            u => u.RecordLetterboxdPendingChoicesAsync(
+                UserId, 0, It.Is<IReadOnlyList<string>>(keys => keys.Count == 0), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -244,7 +247,8 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         Assert.False(result.Skipped);
         Assert.Single(result.PendingChoices);
         _users.Verify(
-            u => u.SetLetterboxdPendingReconciliationCountAsync(UserId, 1, It.IsAny<CancellationToken>()),
+            u => u.RecordLetterboxdPendingChoicesAsync(
+                UserId, 1, It.Is<IReadOnlyList<string>>(keys => keys.Count == 1 && keys[0] == "dune-part-two"), It.IsAny<CancellationToken>()),
             Times.Once);
         _notifications.Verify(
             n => n.AddAsync(
@@ -266,6 +270,34 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
         _notifications.Verify(
             n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AutoSyncFindsTheSameChoiceByItsKey_DoesNotNotifyAgain()
+    {
+        GivenUser(Username, Now.AddDays(-2), pendingReconciliationCount: 1, pendingChoiceKeys: ["dune-part-two"]);
+        GivenAmbiguousLetterboxdFilm();
+
+        await _sut.HandleAsync(UserId, force: false);
+
+        _notifications.Verify(
+            n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AutoSyncFindsANewChoiceReplacingAnOldOne_NotifiesAtTheSameCount()
+    {
+        GivenUser(Username, Now.AddDays(-2), pendingReconciliationCount: 1, pendingChoiceKeys: ["left-the-watchlist"]);
+        GivenAmbiguousLetterboxdFilm();
+
+        await _sut.HandleAsync(UserId, force: false);
+
+        _notifications.Verify(
+            n => n.AddAsync(
+                It.Is<UserNotification>(x => x.Type == UserNotificationType.LetterboxdReconciliationPending),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

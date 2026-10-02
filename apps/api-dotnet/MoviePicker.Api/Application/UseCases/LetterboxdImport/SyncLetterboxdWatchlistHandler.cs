@@ -60,9 +60,10 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
             throw Errors.LetterboxdSyncFailed(outcome.Error);
         }
 
-        await _users.SetLetterboxdPendingReconciliationCountAsync(userId, outcome.PendingChoices.Count, ct);
+        var pendingChoiceKeys = outcome.PendingChoices.Select(PendingChoiceKey).Distinct(StringComparer.Ordinal).ToList();
+        await _users.RecordLetterboxdPendingChoicesAsync(userId, outcome.PendingChoices.Count, pendingChoiceKeys, ct);
 
-        if (!force && outcome.PendingChoices.Count > user.LetterboxdPendingReconciliationCount
+        if (!force && HasPendingChoiceNotYetReported(user, outcome.PendingChoices.Count, pendingChoiceKeys)
             && user.NotifiesOn(UserNotificationType.LetterboxdReconciliationPending))
         {
             await _notifications.AddAsync(new UserNotification
@@ -101,6 +102,18 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
             await _users.SetLetterboxdSyncStatusAsync(user.Id, startedAt, ErrorCodes.LetterboxdSyncFailed, CancellationToken.None);
             throw;
         }
+    }
+
+    private static string PendingChoiceKey(LetterboxdImportRowResponse choice) =>
+        string.IsNullOrEmpty(choice.LetterboxdSlug) ? $"{choice.Title}|{choice.Year}" : choice.LetterboxdSlug;
+
+    private static bool HasPendingChoiceNotYetReported(User user, int pendingCount, List<string> pendingChoiceKeys)
+    {
+        if (user.LetterboxdPendingChoiceKeys is not { } reported)
+            return pendingCount > user.LetterboxdPendingReconciliationCount;
+
+        var alreadyReported = reported.ToHashSet(StringComparer.Ordinal);
+        return pendingChoiceKeys.Exists(key => !alreadyReported.Contains(key));
     }
 
     private static LetterboxdSyncResponse Skipped() => new() { Skipped = true };

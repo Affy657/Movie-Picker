@@ -122,6 +122,13 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
             inner.SetLetterboxdSyncStatusAsync(userId, syncedAt, error, ct);
         public Task SetLetterboxdPendingReconciliationCountAsync(string userId, int pendingCount, CancellationToken ct = default) =>
             inner.SetLetterboxdPendingReconciliationCountAsync(userId, pendingCount, ct);
+
+        public Task RecordLetterboxdPendingChoicesAsync(
+            string userId,
+            int pendingCount,
+            IReadOnlyList<string> pendingChoiceKeys,
+            CancellationToken ct = default) =>
+            inner.RecordLetterboxdPendingChoicesAsync(userId, pendingCount, pendingChoiceKeys, ct);
         public Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default) => inner.MarkSupporterAsync(userId, since, ct);
         public Task<bool> AddEventTemplateAsync(string userId, EventTemplate template, int maxPerUser, DateTimeOffset now, CancellationToken ct = default) =>
             inner.AddEventTemplateAsync(userId, template, maxPerUser, now, ct);

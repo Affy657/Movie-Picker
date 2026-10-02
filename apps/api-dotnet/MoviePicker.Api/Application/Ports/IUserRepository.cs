@@ -27,6 +27,11 @@ public interface IUserRepository
         string userId,
         int pendingCount,
         CancellationToken ct = default);
+    Task RecordLetterboxdPendingChoicesAsync(
+        string userId,
+        int pendingCount,
+        IReadOnlyList<string> pendingChoiceKeys,
+        CancellationToken ct = default);
     Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default);
     Task<bool> AddEventTemplateAsync(
         string userId,

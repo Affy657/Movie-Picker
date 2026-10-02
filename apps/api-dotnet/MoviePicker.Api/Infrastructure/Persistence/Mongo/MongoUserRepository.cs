@@ -166,6 +166,19 @@ public sealed class MongoUserRepository : IUserRepository
         await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
     }
 
+    public async Task RecordLetterboxdPendingChoicesAsync(
+        string userId,
+        int pendingCount,
+        IReadOnlyList<string> pendingChoiceKeys,
+        CancellationToken ct = default)
+    {
+        var update = Builders<UserDocument>.Update
+            .Set(x => x.LetterboxdPendingReconciliationCount, pendingCount)
+            .Set(x => x.LetterboxdPendingChoiceKeys, pendingChoiceKeys.ToList())
+            .Inc(x => x.Version, 1);
+        await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
+    }
+
     public async Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(userId))

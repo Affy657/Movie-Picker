@@ -125,6 +125,25 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.CompletedTask;
     }
 
+    public Task RecordLetterboxdPendingChoicesAsync(
+        string userId,
+        int pendingCount,
+        IReadOnlyList<string> pendingChoiceKeys,
+        CancellationToken ct = default)
+    {
+        if (_byId.TryGetValue(userId, out var user))
+        {
+            _byId[userId] = user with
+            {
+                LetterboxdPendingReconciliationCount = pendingCount,
+                LetterboxdPendingChoiceKeys = [.. pendingChoiceKeys],
+                Version = user.Version + 1
+            };
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default)
     {
         if (!_byId.TryGetValue(userId, out var user) || user.SupporterSince is not null)
@@ -306,6 +325,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
+            LetterboxdPendingChoiceKeys = user.LetterboxdPendingChoiceKeys,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt,
             Version = user.Version

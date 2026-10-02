@@ -32,6 +32,7 @@ public static class UserDocumentMapper
                 : new DateTimeOffset(doc.LetterboxdLastSyncAt.Value, TimeSpan.Zero),
             LetterboxdLastSyncError = doc.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = doc.LetterboxdPendingReconciliationCount,
+            LetterboxdPendingChoiceKeys = doc.LetterboxdPendingChoiceKeys,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero),
             Version = doc.Version
@@ -67,6 +68,7 @@ public static class UserDocumentMapper
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt?.UtcDateTime,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
+            LetterboxdPendingChoiceKeys = user.LetterboxdPendingChoiceKeys?.ToList(),
             CreatedAt = user.CreatedAt.UtcDateTime,
             UpdatedAt = user.UpdatedAt.UtcDateTime,
             Version = user.Version
