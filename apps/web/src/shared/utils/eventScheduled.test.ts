@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   eventScheduledStartUtcMs,
+  eventWallClockAt,
   formatEventStartInUserTimezone,
 } from '@/shared/utils/eventScheduled';
 
@@ -33,6 +34,42 @@ describe('eventScheduled', () => {
     expect(eventScheduledStartUtcMs({ date: '2026-10-25', time: '02:30' })).toBe(
       Date.parse('2026-10-25T01:30:00Z')
     );
+  });
+
+  it('builds the Europe/Paris formatter at most once across repeated conversions', () => {
+    const formatterSpy = vi.spyOn(Intl, 'DateTimeFormat');
+    try {
+      for (let minute = 0; minute < 10; minute += 1) {
+        eventScheduledStartUtcMs({
+          date: '2030-06-01',
+          time: `20:${String(minute).padStart(2, '0')}`,
+        });
+        eventWallClockAt(Date.parse('2030-06-01T18:00:00Z') + minute * 60_000);
+      }
+      expect(formatterSpy.mock.calls.length).toBeLessThanOrEqual(1);
+    } finally {
+      formatterSpy.mockRestore();
+    }
+  });
+
+  it('reads the same wall clock as a fresh formatter after the cache is warm', () => {
+    eventWallClockAt(0);
+    expect(eventWallClockAt(Date.parse('2026-10-25T00:30:00Z'))).toEqual({
+      year: 2026,
+      month: 10,
+      day: 25,
+      hour: 2,
+      minute: 30,
+      second: 0,
+    });
+    expect(eventWallClockAt(Date.parse('2026-10-25T01:30:00Z'))).toEqual({
+      year: 2026,
+      month: 10,
+      day: 25,
+      hour: 2,
+      minute: 30,
+      second: 0,
+    });
   });
 
   it('eventScheduledStartUtcMs : heure invalide', () => {

@@ -9,8 +9,12 @@ export interface WallClock {
   second: number;
 }
 
-function wallClockIn(timeZone: string, utcMs: number): WallClock {
-  const parts = new Intl.DateTimeFormat('en-US', {
+const wallClockFormatterByTimeZone = new Map<string, Intl.DateTimeFormat>();
+
+function wallClockFormatter(timeZone: string): Intl.DateTimeFormat {
+  const cached = wallClockFormatterByTimeZone.get(timeZone);
+  if (cached) return cached;
+  const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone,
     hourCycle: 'h23',
     year: 'numeric',
@@ -19,7 +23,13 @@ function wallClockIn(timeZone: string, utcMs: number): WallClock {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-  }).formatToParts(new Date(utcMs));
+  });
+  wallClockFormatterByTimeZone.set(timeZone, formatter);
+  return formatter;
+}
+
+function wallClockIn(timeZone: string, utcMs: number): WallClock {
+  const parts = wallClockFormatter(timeZone).formatToParts(new Date(utcMs));
   const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
   return {
     year: get('year'),
