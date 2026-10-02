@@ -125,7 +125,7 @@ public sealed class ErrorContractTests : IClassFixture<MoviePickerApplicationFac
         Assert.Equal(HttpStatusCode.RequestEntityTooLarge, res.StatusCode);
         Assert.Equal("application/json", res.Content.Headers.ContentType?.MediaType);
         var error = await ReadErrorAsync(res);
-        Assert.Equal("validation_failed", error.GetProperty("reason").GetString());
+        Assert.Equal("request_too_large", error.GetProperty("reason").GetString());
         Assert.Equal(413, error.GetProperty("code").GetInt32());
     }
 

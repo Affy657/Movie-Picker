@@ -193,6 +193,28 @@ describe('fetchApi', () => {
     });
   });
 
+  it('words a body over the server limit as too large, not as invalid input', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 413,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({
+            error: 'Request body too large. The max request body size is 1048576 bytes.',
+            code: 413,
+            reason: 'request_too_large',
+          })
+        ),
+    });
+    await expect(fetchApi('/letterboxd/confirm', { method: 'POST' })).rejects.toMatchObject({
+      code: 413,
+      reason: 'request_too_large',
+      message: fr.apiErrors.request_too_large,
+    });
+    expect(fr.apiErrors.request_too_large).not.toBe(fr.apiErrors.validation_failed);
+  });
+
   it('words an error without body by its status rather than an empty status text', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,

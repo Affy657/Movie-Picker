@@ -7,6 +7,7 @@ public static class ErrorCodes
     public const string Unauthorized = "unauthorized";
     public const string InternalError = "internal_error";
     public const string ValidationFailed = "validation_failed";
+    public const string RequestTooLarge = "request_too_large";
     public const string RateLimited = "rate_limited";
     public const string ConcurrentUpdate = "concurrent_update";
     public const string VoteLimitReached = "vote-limit-reached";

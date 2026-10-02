@@ -1436,6 +1436,8 @@ export const fr = {
     internal_error: "Une erreur interne s'est produite.",
     validation_failed:
       'Certaines informations envoyées ne sont pas valides. Vérifiez-les et réessayez.',
+    request_too_large:
+      "La requête envoyée est trop volumineuse. Envoyez moins d'éléments à la fois et réessayez.",
     rate_limited: 'Trop de requêtes. Réessayez dans un instant.',
     concurrent_update: 'Modifié entre-temps. Rechargez la page et réessayez.',
     'vote-limit-reached': 'Limite de {{max}} vote(s) par participant atteinte.',

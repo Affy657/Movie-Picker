@@ -42,7 +42,7 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
         if (context.Exception is BadHttpRequestException badRequest)
         {
             context.Result = new JsonResult(
-                ApiErrorResponse.FromHttpContext(http, badRequest.StatusCode, badRequest.Message, ErrorCodes.ValidationFailed))
+                ApiErrorResponse.FromHttpContext(http, badRequest.StatusCode, badRequest.Message, ReasonOf(badRequest)))
             {
                 StatusCode = badRequest.StatusCode
             };
@@ -60,6 +60,11 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
         };
         context.ExceptionHandled = true;
     }
+
+    private static string ReasonOf(BadHttpRequestException badRequest) =>
+        badRequest.StatusCode == StatusCodes.Status413PayloadTooLarge
+            ? ErrorCodes.RequestTooLarge
+            : ErrorCodes.ValidationFailed;
 
     private static int ToHttpStatus(ErrorKind kind) => kind switch
     {

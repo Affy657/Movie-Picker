@@ -61,9 +61,10 @@ public sealed class MoviePickerExceptionFilterTests
     }
 
     [Theory]
-    [InlineData("Request body too large.", 413)]
-    [InlineData("Unexpected end of request content.", 400)]
-    public void OnException_BadHttpRequest_AnswersItsClientErrorStatus(string message, int statusCode)
+    [InlineData("Request body too large.", 413, ErrorCodes.RequestTooLarge)]
+    [InlineData("Unexpected end of request content.", 400, ErrorCodes.ValidationFailed)]
+    [InlineData("Request headers too large.", 431, ErrorCodes.ValidationFailed)]
+    public void OnException_BadHttpRequest_AnswersItsClientErrorStatus(string message, int statusCode, string reason)
     {
         var filter = new MoviePickerExceptionFilter(new StubHostEnvironment { EnvironmentName = "Production" });
         var context = CreateContext(new BadHttpRequestException(message, statusCode));
@@ -76,7 +77,7 @@ public sealed class MoviePickerExceptionFilterTests
         var envelope = Assert.IsType<ApiErrorResponse>(result.Value);
         Assert.Equal(statusCode, envelope.Code);
         Assert.Equal(message, envelope.Error);
-        Assert.Equal(ErrorCodes.ValidationFailed, envelope.Reason);
+        Assert.Equal(reason, envelope.Reason);
     }
 
     [Fact]
