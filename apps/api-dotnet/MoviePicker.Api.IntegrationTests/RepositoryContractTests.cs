@@ -594,6 +594,33 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(2, row.EventCount);
     }
 
+    [MongoFact]
+    public async Task MostProposed_RanksASeriesStoredWithALegacyMediaTypeAsTheSeriesItIsReadAs()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var tmdbId = Random.Shared.Next(30_000_000, 40_000_000);
+        var (filmEvent, filmParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Film");
+        await movies.InsertAsync(NewMovie(filmEvent.Id, filmParticipant.Id, tmdbId, "Homonyme"));
+        var legacySeries = new List<Movie>();
+        foreach (var legacyMediaType in new[] { "TV", " tv " })
+        {
+            var (seriesEvent, seriesParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, legacyMediaType);
+            var series = await movies.InsertAsync(
+                NewMovie(seriesEvent.Id, seriesParticipant.Id, tmdbId, "Homonyme") with { MediaType = MovieMediaType.Tv });
+            await SetRawFieldAsync("movies", series.Id, "mediaType", legacyMediaType);
+            legacySeries.Add(series);
+        }
+
+        var ranking = await movies.ListMostProposedAsync(1, 1000);
+
+        var rows = ranking.Where(r => r.TmdbId == tmdbId).ToList();
+        Assert.Equal(2, rows.Single(r => r.MediaType == MovieMediaType.Tv).EventCount);
+        Assert.Equal(1, rows.Single(r => r.MediaType == MovieMediaType.Movie).EventCount);
+        foreach (var series in legacySeries)
+            Assert.Equal(MovieMediaType.Tv, (await movies.GetByIdAsync(series.Id))!.MediaType);
+    }
+
     [Fact]
     public async Task MostProposed_BreaksEventCountTiesByTmdbId()
     {

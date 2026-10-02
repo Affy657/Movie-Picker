@@ -23,7 +23,7 @@ public sealed class MovieDocument
 
     [BsonElement("mediaType")]
     [BsonIgnoreIfDefault]
-    public string MediaType { get; set; } = "movie";
+    public string MediaType { get; set; } = MovieMapper.StoredMovieMediaType;
 
     [BsonElement("title")]
     public string Title { get; set; } = string.Empty;

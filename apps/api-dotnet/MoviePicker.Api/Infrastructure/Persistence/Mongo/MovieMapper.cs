@@ -4,6 +4,9 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public static class MovieMapper
 {
+    public const string StoredTvMediaType = "tv";
+    public const string StoredMovieMediaType = "movie";
+
     public static Movie ToDomain(MovieDocument d) => new()
     {
         Id = d.Id,
@@ -39,10 +42,10 @@ public static class MovieMapper
     };
 
     public static string MediaTypeToString(MovieMediaType m) =>
-        m == MovieMediaType.Tv ? "tv" : "movie";
+        m == MovieMediaType.Tv ? StoredTvMediaType : StoredMovieMediaType;
 
     public static MovieMediaType ParseMediaType(string? raw) =>
-        string.Equals(raw?.Trim(), "tv", StringComparison.OrdinalIgnoreCase)
+        string.Equals(raw?.Trim(), StoredTvMediaType, StringComparison.OrdinalIgnoreCase)
             ? MovieMediaType.Tv
             : MovieMediaType.Movie;
 }
