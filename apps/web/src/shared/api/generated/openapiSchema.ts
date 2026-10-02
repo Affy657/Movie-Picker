@@ -6560,6 +6560,8 @@ export interface components {
             pendingEvents?: number;
             /** Format: int32 */
             deliveryFailures?: number;
+            /** Format: int32 */
+            wheelWinnersAnnounced?: number;
         };
         EventTemplateListResponse: {
             items?: components["schemas"]["EventTemplateResponse"][] | null;

@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -30,6 +32,7 @@ public sealed class EventReminderPassTests
     private readonly Mock<IPushNotificationSender> _sender = new();
     private readonly Mock<IUserNotificationRepository> _notifications = new();
     private readonly Mock<INotificationDedupRepository> _dedup = new();
+    private readonly Mock<IWheelWinnerAnnouncement> _wheelAnnouncement = new();
 
     public EventReminderPassTests()
     {
@@ -63,6 +66,7 @@ public sealed class EventReminderPassTests
         _sender.Object,
         _notifications.Object,
         _dedup.Object,
+        _wheelAnnouncement.Object,
         new FakeTimeProvider(now ?? Now),
         NullLogger<EventReminderPass>.Instance);
 
@@ -145,6 +149,75 @@ public sealed class EventReminderPassTests
         _notifications.Verify(
             n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == userId && u.Type == type), It.IsAny<CancellationToken>()),
             times);
+
+    private Event OpenNightWithAWheelPick(DateTimeOffset pickedAt, DateTimeOffset? announcedAt = null)
+    {
+        var (date, time) = ParisFields(Now.AddMinutes(-30));
+        var evt = new Event
+        {
+            Id = "evt-wheel",
+            Title = "Soirée roue",
+            Date = date,
+            Time = time,
+            Slug = "soiree-roue",
+            HostToken = "h",
+            Winners = [new EventWinner { MovieId = "mov1", Method = WinnerPickMethod.Wheel, PickedAt = pickedAt }],
+            WinnerAnnouncedAt = announcedAt,
+            CreatedAt = Now.AddDays(-3),
+            UpdatedAt = pickedAt
+        };
+        _events.Setup(r => r.ListOpenEventsStartingBetweenAsync(
+                It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([evt]);
+        return evt;
+    }
+
+    [Fact]
+    public async Task RunAsync_WheelPickTheHostPageNeverAnnounced_AnnouncesItOnceTheSpinIsLongOver()
+    {
+        var evt = OpenNightWithAWheelPick(pickedAt: Now.AddMinutes(-10));
+        _wheelAnnouncement.Setup(a => a.AnnounceAwaitingPicksAsync(evt, It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        var result = await CreatePass().RunAsync();
+
+        _wheelAnnouncement.Verify(a => a.AnnounceAwaitingPicksAsync(evt, It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal(1, result.WheelWinnersAnnounced);
+    }
+
+    [Fact]
+    public async Task RunAsync_WheelStillSpinningOnTheHostPage_LeavesTheAnnouncementToThePage()
+    {
+        OpenNightWithAWheelPick(pickedAt: Now.AddSeconds(-30));
+
+        await CreatePass().RunAsync();
+
+        _wheelAnnouncement.Verify(
+            a => a.AnnounceAwaitingPicksAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RunAsync_WheelPickAlreadyAnnounced_DoesNotAnnounceAgain()
+    {
+        OpenNightWithAWheelPick(pickedAt: Now.AddMinutes(-10), announcedAt: Now.AddMinutes(-10).AddSeconds(8));
+
+        await CreatePass().RunAsync();
+
+        _wheelAnnouncement.Verify(
+            a => a.AnnounceAwaitingPicksAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RunAsync_WheelAnnouncementRacesTheHostPage_CarriesOnWithoutFailing()
+    {
+        var evt = OpenNightWithAWheelPick(pickedAt: Now.AddMinutes(-10));
+        _wheelAnnouncement.Setup(a => a.AnnounceAwaitingPicksAsync(evt, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.ConcurrentUpdate());
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(0, result.WheelWinnersAnnounced);
+        Assert.Equal(0, result.DeliveryFailures);
+    }
 
     [Fact]
     public async Task RunAsync_NoOpenEvent_DoesNothing()

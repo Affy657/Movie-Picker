@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.Notifications;
 
@@ -15,7 +17,8 @@ public sealed record EventReminderPassResult(
     int Reminders1h,
     int Reminders24h,
     int PendingEvents,
-    int DeliveryFailures = 0);
+    int DeliveryFailures = 0,
+    int WheelWinnersAnnounced = 0);
 
 public sealed class EventReminderPass : IEventReminderPass
 {
@@ -25,6 +28,8 @@ public sealed class EventReminderPass : IEventReminderPass
     private static readonly TimeSpan Window24hMin = TimeSpan.FromHours(23) + TimeSpan.FromMinutes(50);
     private static readonly TimeSpan Window24hMax = TimeSpan.FromHours(24) + TimeSpan.FromMinutes(20);
 
+    private static readonly TimeSpan WheelSpinLongOver = TimeSpan.FromMinutes(5);
+
     private readonly IEventRepository _events;
     private readonly IParticipantRepository _participants;
     private readonly IUserRepository _users;
@@ -33,6 +38,7 @@ public sealed class EventReminderPass : IEventReminderPass
     private readonly IPushNotificationSender _sender;
     private readonly IUserNotificationRepository _notifications;
     private readonly INotificationDedupRepository _dedup;
+    private readonly IWheelWinnerAnnouncement _wheelAnnouncement;
     private readonly TimeProvider _clock;
     private readonly ILogger<EventReminderPass> _logger;
 
@@ -45,6 +51,7 @@ public sealed class EventReminderPass : IEventReminderPass
         IPushNotificationSender sender,
         IUserNotificationRepository notifications,
         INotificationDedupRepository dedup,
+        IWheelWinnerAnnouncement wheelAnnouncement,
         TimeProvider clock,
         ILogger<EventReminderPass> logger)
     {
@@ -56,6 +63,7 @@ public sealed class EventReminderPass : IEventReminderPass
         _sender = sender;
         _notifications = notifications;
         _dedup = dedup;
+        _wheelAnnouncement = wheelAnnouncement;
         _clock = clock;
         _logger = logger;
     }
@@ -86,9 +94,38 @@ public sealed class EventReminderPass : IEventReminderPass
             failures,
             ct);
 
+        var wheelWinnersAnnounced = await AnnounceWheelPicksTheHostPageLeftAsync(openEvents, now, ct);
+
         var pending = await ProcessPendingEventsAsync(openEvents, now, failures, ct);
 
-        return new EventReminderPassResult(openEvents.Count, sent1h, sent24h, pending, failures.Count);
+        return new EventReminderPassResult(
+            openEvents.Count, sent1h, sent24h, pending, failures.Count, wheelWinnersAnnounced);
+    }
+
+    private async Task<int> AnnounceWheelPicksTheHostPageLeftAsync(
+        IReadOnlyList<Event> openEvents,
+        DateTimeOffset now,
+        CancellationToken ct)
+    {
+        var announced = 0;
+        foreach (var evt in openEvents)
+        {
+            var awaiting = WheelWinnerAnnouncement.PicksAwaitingAnnouncement(evt);
+            if (awaiting.Count == 0 || awaiting.Exists(pick => now - pick.PickedAt < WheelSpinLongOver))
+                continue;
+
+            try
+            {
+                announced += await _wheelAnnouncement.AnnounceAwaitingPicksAsync(evt, ct);
+            }
+            catch (ConflictException ex)
+            {
+                _logger.LogInformation(
+                    ex, "Wheel announcement of event {EventId} lost a race with another write, the next pass retries", evt.Id);
+            }
+        }
+
+        return announced;
     }
 
     public static string OccurrenceKey(string eventId, DateTimeOffset startUtc) =>

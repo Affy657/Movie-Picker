@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MongoDB.Driver;
 using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
 using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
@@ -400,6 +401,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<LetterboxdWatchlistSynchronizer>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
+        services.AddScoped<IWheelWinnerAnnouncement, WheelWinnerAnnouncement>();
 
         var handlerNamespace = "MoviePicker.Api.Application.UseCases";
         var types = typeof(ServiceCollectionExtensions).Assembly.GetTypes()

@@ -60,12 +60,14 @@ public sealed class AnnounceWheelWinnerHandlerTests
                 _movies.Where(m => ids.Contains(m.Id)).ToList());
         _sut = new AnnounceWheelWinnerHandler(
             _eventRepo.Object,
-            _movieRepo.Object,
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
-            _winnerAnnouncer.Object,
-            NullLogger<AnnounceWheelWinnerHandler>.Instance,
-            TimeProvider.System);
+            new WheelWinnerAnnouncement(
+                _eventRepo.Object,
+                _movieRepo.Object,
+                _winnerAnnouncer.Object,
+                NullLogger<WheelWinnerAnnouncement>.Instance,
+                TimeProvider.System));
     }
 
     [Fact]
