@@ -125,20 +125,11 @@ public sealed class JoinEventHandler : IJoinEventHandler
         {
             rank++;
             var suffix = $" {rank}";
-            candidate = TruncateForSuffix(requested, MaxPseudoLength - suffix.Length) + suffix;
+            candidate = TextTruncation.ToMaxLength(requested, MaxPseudoLength - suffix.Length) + suffix;
         }
         while (taken.Contains(candidate));
 
         return candidate;
-    }
-
-    private static string TruncateForSuffix(string pseudo, int maxLength)
-    {
-        if (pseudo.Length <= maxLength)
-            return pseudo;
-
-        var cut = char.IsHighSurrogate(pseudo[maxLength - 1]) ? maxLength - 1 : maxLength;
-        return pseudo[..cut].TrimEnd();
     }
 
     private async Task<Participant> InsertAsync(string idOrSlug, Event evt, Participant participant, CancellationToken ct)

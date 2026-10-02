@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using MoviePicker.Api.Application.UseCases.Shared;
 
 namespace MoviePicker.Api.Application.UseCases.SearchUsers;
 
@@ -12,15 +13,8 @@ public static class UserSearchPolicy
 
     private const CompareOptions LooseComparison = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
 
-    public static string Normalize(string? raw)
-    {
-        var trimmed = (raw ?? string.Empty).Trim();
-        if (trimmed.Length <= MaxQueryLength)
-            return trimmed;
-
-        var cut = char.IsHighSurrogate(trimmed[MaxQueryLength - 1]) ? MaxQueryLength - 1 : MaxQueryLength;
-        return trimmed[..cut].TrimEnd();
-    }
+    public static string Normalize(string? raw) =>
+        TextTruncation.ToMaxLength((raw ?? string.Empty).Trim(), MaxQueryLength);
 
     public static bool Contains(string? value, string query) =>
         !string.IsNullOrEmpty(value)
