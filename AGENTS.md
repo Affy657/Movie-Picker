@@ -252,8 +252,8 @@ Outils configurés pour qu'un agent travaille sur le projet sans intervention ma
 | Sentry | connecteur applicatif | erreurs front et API ; org et projets se relèvent dans la console Sentry ou dans les variables Actions `SENTRY_ORG` et `SENTRY_PROJECT`, région UE |
 | Resend | connecteur applicatif | e-mails transactionnels ; domaine `movie-picker.fr` vérifié, `eu-west-1`, envoi seul |
 
-`sonarqube` et `mongodb` sont déclarés sur le projet `C:\ynov\movie-picker` : **ils ne sont pas montés dans un worktree**, qui a sa propre entrée de configuration. Y basculer depuis le checkout principal, ou passer par les CLI.
+`sonarqube` et `mongodb` sont déclarés sur le projet `C:\dev\movie-picker` : **ils ne sont pas montés dans un worktree**, qui a sa propre entrée de configuration. Y basculer depuis le checkout principal, ou passer par les CLI.
 
 ## Mémoire inter-sessions
 
-Spécifique à Claude Code. Quand un problème systématique est rencontré et résolu (erreur de config récurrente, comportement inattendu d'un outil, contrainte non documentée du projet), le sauvegarder en mémoire (`C:\Users\adrie\.claude\projects\C--ynov-movie-picker\memory\`) sous forme d'entrée `feedback` ou `project` selon le cas, pour que la prochaine session ne reparte pas de zéro. La dette constatée ne va pas là, elle va dans `docs/technical-debt.md`.
+Spécifique à Claude Code. Quand un problème systématique est rencontré et résolu (erreur de config récurrente, comportement inattendu d'un outil, contrainte non documentée du projet), le sauvegarder en mémoire (`C:\Users\adrie\.claude\projects\C--dev-movie-picker\memory\`) sous forme d'entrée `feedback` ou `project` selon le cas, pour que la prochaine session ne reparte pas de zéro. La dette constatée ne va pas là, elle va dans `docs/technical-debt.md`.
