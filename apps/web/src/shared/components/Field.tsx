@@ -6,6 +6,7 @@ import styles from './Field.module.css';
 
 type FieldRenderArgs = {
   id: string;
+  labelId: string;
   describedBy: string | undefined;
   invalid: boolean;
 };
@@ -29,16 +30,17 @@ export default function Field({
 }: Readonly<FieldProps>) {
   const reactId = useId();
   const id = htmlFor ?? `field-${reactId}`;
+  const labelId = `${id}-label`;
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [errorId, hintId].filter(Boolean).join(' ') || undefined;
 
   return (
     <div className={clsx(styles.field, className)}>
-      <label className={clsx('label', styles.label)} htmlFor={id}>
+      <label id={labelId} className={clsx('label', styles.label)} htmlFor={id}>
         {label}
       </label>
-      {children({ id, describedBy, invalid: Boolean(error) })}
+      {children({ id, labelId, describedBy, invalid: Boolean(error) })}
       {error ? (
         <p id={errorId} className={styles.error} role="alert">
           <AlertCircle size={ICON_SIZE.xs} aria-hidden className={styles.errorIcon} />

@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react';
 import clsx from 'clsx';
 import styles from './SearchField.module.css';
-import { ICON_SIZE } from '@/shared/components/iconSize';
+import { ICON_SIZE, type IconSizeValue } from '@/shared/components/iconSize';
 
 export interface SearchFieldProps {
   value: string;
@@ -10,7 +10,7 @@ export interface SearchFieldProps {
   id?: string;
   ariaLabel?: string;
   ariaDescribedBy?: string;
-  iconSize?: number;
+  iconSize?: IconSizeValue;
   className?: string;
   disabled?: boolean;
 }

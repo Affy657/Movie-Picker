@@ -39,18 +39,17 @@ function isExecutableInlineScript(attributes: string): boolean {
   return type === undefined || EXECUTABLE_SCRIPT_TYPES.has(type);
 }
 
+async function scriptHash(script: string): Promise<string> {
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(script));
+  return `'sha256-${btoa(String.fromCodePoint(...new Uint8Array(digest)))}'`;
+}
+
 export async function inlineScriptHashes(html: string): Promise<ReadonlyArray<string>> {
-  const hashes: Array<string> = [];
-  for (const match of html.matchAll(INLINE_SCRIPT)) {
-    if (!isExecutableInlineScript(match[1] ?? '')) continue;
-    const digest = await globalThis.crypto.subtle.digest(
-      'SHA-256',
-      new TextEncoder().encode(match[2] ?? '')
-    );
-    const hash = `'sha256-${btoa(String.fromCodePoint(...new Uint8Array(digest)))}'`;
-    if (!hashes.includes(hash)) hashes.push(hash);
-  }
-  return hashes;
+  const scripts = Array.from(html.matchAll(INLINE_SCRIPT))
+    .filter((match) => isExecutableInlineScript(match[1] ?? ''))
+    .map((match) => match[2] ?? '');
+  const hashes = await Promise.all(scripts.map(scriptHash));
+  return [...new Set(hashes)];
 }
 
 export function buildContentSecurityPolicy(

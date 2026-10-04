@@ -1,10 +1,11 @@
-import { splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
+import { eventDateTimeToLocal, splitDateTimeLocal } from '@/shared/utils/eventDateTimeLocal';
 import type { Translate } from '@/shared/i18n';
 import type {
   EventConfigData,
   EventConfigPatchPayload,
   EventData,
   EventRecurrence,
+  WheelMode,
 } from '@/features/events/types';
 import {
   DEFAULT_EVENT_CONFIG,
@@ -74,6 +75,77 @@ export function normalizeConfig(c: EventConfigData | undefined): EventConfigData
     recurrence: c?.recurrence ?? null,
     hasNextOccurrence: c?.hasNextOccurrence ?? false,
     winnerCount: c?.winnerCount ?? DEFAULT_EVENT_CONFIG.winnerCount,
+  };
+}
+
+export type SavedSettings = {
+  title: string;
+  theme: string;
+  maxProposalsPerParticipant: number | null;
+  maxParticipants: number | null;
+  maxVotesPerParticipant: number | null;
+  wheelMode: WheelMode;
+  allowSeries: boolean;
+  richSharePreview: boolean;
+  winnerCount: number;
+  recurrence: EventRecurrence | null;
+  dateLocal: string;
+};
+
+export function savedSettingsOf(event: EventData): SavedSettings {
+  const cfg = normalizeConfig(event.config);
+  return {
+    title: event.title,
+    theme: cfg.theme ?? '',
+    maxProposalsPerParticipant: cfg.maxProposalsPerParticipant,
+    maxParticipants: cfg.maxParticipants,
+    maxVotesPerParticipant: cfg.maxVotesPerParticipant ?? null,
+    wheelMode: cfg.wheelMode,
+    allowSeries: cfg.allowSeries ?? false,
+    richSharePreview: cfg.richSharePreview ?? true,
+    winnerCount: cfg.winnerCount,
+    recurrence: cfg.recurrence ?? null,
+    dateLocal: eventDateTimeToLocal(event.date, event.time),
+  };
+}
+
+function limitPatch(
+  key: 'maxProposalsPerParticipant' | 'maxParticipants' | 'maxVotesPerParticipant',
+  next: SavedSettings,
+  saved: SavedSettings
+): Partial<EventConfigPatchPayload> {
+  return next[key] === saved[key] ? {} : { [key]: next[key] ?? 0 };
+}
+
+function valuePatch(
+  key: 'theme' | 'wheelMode' | 'allowSeries' | 'richSharePreview' | 'winnerCount',
+  next: SavedSettings,
+  saved: SavedSettings
+): Partial<EventConfigPatchPayload> {
+  return next[key] === saved[key] ? {} : { [key]: next[key] };
+}
+
+export function settingsPatch(
+  next: SavedSettings,
+  saved: SavedSettings,
+  notifyParticipants: boolean
+): EventConfigPatchPayload {
+  return {
+    ...titlePatch(next.title, saved.title),
+    ...valuePatch('theme', next, saved),
+    ...limitPatch('maxProposalsPerParticipant', next, saved),
+    ...limitPatch('maxParticipants', next, saved),
+    ...limitPatch('maxVotesPerParticipant', next, saved),
+    ...valuePatch('wheelMode', next, saved),
+    ...valuePatch('allowSeries', next, saved),
+    ...valuePatch('richSharePreview', next, saved),
+    ...valuePatch('winnerCount', next, saved),
+    ...recurrencePatch(next.recurrence, saved.recurrence),
+    ...dateTimePatch(
+      splitDateTimeLocal(next.dateLocal),
+      next.dateLocal !== saved.dateLocal,
+      notifyParticipants
+    ),
   };
 }
 

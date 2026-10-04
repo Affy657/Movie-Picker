@@ -1,6 +1,7 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -9,11 +10,19 @@ namespace MoviePicker.Api.Application.UseCases.Auth;
 public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
 {
     private readonly IUserRepository _users;
+    private readonly IUserNotificationRepository _notifications;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
-    public PatchUserProfileHandler(IUserRepository users, TimeProvider clock)
+    public PatchUserProfileHandler(
+        IUserRepository users,
+        IUserNotificationRepository notifications,
+        IUnitOfWork unitOfWork,
+        TimeProvider clock)
     {
         _users = users;
+        _notifications = notifications;
+        _unitOfWork = unitOfWork;
         _clock = clock;
     }
 
@@ -37,20 +46,35 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             && request.LetterboxdUsername is null;
 
         if (nothingToUpdate)
-            return UserProfileResponses.From(user);
+            return UserProfileMapping.ToResponse(user);
 
         var updated = await ApplyRequestAsync(user, request, ct);
 
         User saved;
         try
         {
-            saved = await _users.UpdateAsync(updated, ct);
+            saved = string.Equals(updated.Handle, user.Handle, StringComparison.Ordinal)
+                ? await _users.UpdateAsync(updated, ct)
+                : await SaveWithNewHandleAsync(updated, user.Handle, ct);
         }
         catch (ConflictException ex) when (ex.Reason == ErrorCodes.HandleTaken)
         {
             throw Errors.HandleTaken();
         }
-        return UserProfileResponses.From(saved);
+        return UserProfileMapping.ToResponse(saved);
+    }
+
+    private async Task<User> SaveWithNewHandleAsync(User updated, string previousHandle, CancellationToken ct)
+    {
+        var saved = updated;
+        await _unitOfWork.ExecuteAsync(
+            async token =>
+            {
+                saved = await _users.UpdateAsync(updated, token);
+                await _notifications.RenameActorHandleAsync(previousHandle, saved.Handle, token);
+            },
+            ct);
+        return saved;
     }
 
     private async Task<User> ApplyRequestAsync(User user, PatchUserProfileRequest request, CancellationToken ct)
@@ -108,6 +132,8 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             LetterboxdUsername = letterboxdUsername,
             LetterboxdLastSyncAt = letterboxdChanged ? null : user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = letterboxdChanged ? null : user.LetterboxdLastSyncError,
+            LetterboxdPendingReconciliationCount = letterboxdChanged ? 0 : user.LetterboxdPendingReconciliationCount,
+            LetterboxdPendingChoiceKeys = letterboxdChanged ? null : user.LetterboxdPendingChoiceKeys,
             UpdatedAt = _clock.GetUtcNow()
         };
     }
@@ -139,7 +165,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
     }
 
     private static T ParseEnum<T>(string raw, T defaultValue) where T : struct, Enum =>
-        Enum.TryParse<T>(raw, ignoreCase: true, out var result) ? result : defaultValue;
+        EnumNames.TryParse<T>(raw, out var result) ? result : defaultValue;
 
     private static string? ApplyBio(string? current, string? requested)
     {

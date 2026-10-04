@@ -34,6 +34,13 @@ public sealed record LinkedIdentity
     public DateTimeOffset LinkedAt { get; init; }
 }
 
+public sealed record UnlinkedIdentity
+{
+    public string Provider { get; init; } = string.Empty;
+    public string Subject { get; init; } = string.Empty;
+    public DateTimeOffset UnlinkedAt { get; init; }
+}
+
 public sealed record User
 {
     public string Id { get; init; } = string.Empty;
@@ -41,6 +48,7 @@ public sealed record User
     public string PasswordHash { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
     public IReadOnlyList<LinkedIdentity> Identities { get; init; } = Array.Empty<LinkedIdentity>();
+    public IReadOnlyList<UnlinkedIdentity> UnlinkedIdentities { get; init; } = Array.Empty<UnlinkedIdentity>();
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;
@@ -50,7 +58,7 @@ public sealed record User
     public RatingScale RatingScale { get; init; } = RatingScale.Five;
     public string AvatarId { get; init; } = string.Empty;
     public AvatarPhoto? AvatarPhoto { get; init; }
-    public string DisplayedAvatarId => AvatarPhoto is { IsActive: true } photo ? photo.AvatarId : AvatarId;
+    public string DisplayedAvatarId => AvatarPhoto.DisplayedAvatarIdOf(AvatarId, AvatarPhoto);
     public IReadOnlyDictionary<UserNotificationType, bool> NotificationPreferences { get; init; }
         = NotificationPreferenceDefaults.All();
     public IReadOnlyList<EventTemplate> EventTemplates { get; init; } = Array.Empty<EventTemplate>();
@@ -60,6 +68,7 @@ public sealed record User
     public DateTimeOffset? LetterboxdLastSyncAt { get; init; }
     public string? LetterboxdLastSyncError { get; init; }
     public int LetterboxdPendingReconciliationCount { get; init; }
+    public IReadOnlyList<string>? LetterboxdPendingChoiceKeys { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
     public long Version { get; init; }

@@ -38,6 +38,7 @@ public sealed class LetterboxdSyncResponse
 public sealed class LetterboxdImportConfirmRequest
 {
     [Required]
+    [NoEmptyItems]
     public IReadOnlyList<AddWatchlistItemRequest> Selections { get; init; } = [];
 
     public int? RemainingUnresolvedCount { get; init; }

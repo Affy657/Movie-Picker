@@ -122,4 +122,95 @@ public sealed class DataMigrationRunnerTests
         Assert.True(await history.IsAppliedAsync("001-flaky"));
         Assert.Equal(2, flaky.Runs);
     }
+
+    [Fact]
+    public async Task Run_MigrationLeasedByAnotherInstance_LeavesItAndTheNextOnesToThatInstance()
+    {
+        var history = new InMemoryMigrationHistoryRepository();
+        await history.TryAcquireLeaseAsync("001-a", "other-instance", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(30));
+        var leased = new RecordingMigration("001-a", () => 1);
+        var next = new RecordingMigration("002-b", () => 1);
+
+        await RunAsync(history, leased, next);
+
+        Assert.Equal(0, leased.Runs);
+        Assert.Equal(0, next.Runs);
+        Assert.False(await history.IsAppliedAsync("001-a"));
+    }
+
+    [Fact]
+    public async Task Run_LeaseLeftByACrashedInstance_IsTakenOverOnceExpired()
+    {
+        var history = new InMemoryMigrationHistoryRepository();
+        await history.TryAcquireLeaseAsync("001-a", "crashed-instance", DateTimeOffset.UtcNow.AddHours(-1), TimeSpan.FromMinutes(30));
+        var migration = new RecordingMigration("001-a", () => 1);
+
+        await RunAsync(history, migration);
+
+        Assert.Equal(1, migration.Runs);
+        Assert.True(await history.IsAppliedAsync("001-a"));
+    }
+
+    [Fact]
+    public async Task Run_AppliedMigration_ReleasesItsLease()
+    {
+        var history = new InMemoryMigrationHistoryRepository();
+
+        await RunAsync(history, new RecordingMigration("001-a", () => 1));
+
+        Assert.True(await history.TryAcquireLeaseAsync("001-a", "other-instance", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(30)));
+    }
+
+    private sealed class RepeatableRepair : IRepeatableDataMigration
+    {
+        public string Id => "001-repair";
+
+        public int Runs { get; private set; }
+
+        public Task<long> ExecuteAsync(CancellationToken ct = default)
+        {
+            Runs++;
+            return Task.FromResult(0L);
+        }
+    }
+
+    private sealed class AppliedWhileWaitingForTheLease(InMemoryMigrationHistoryRepository inner) : IMigrationHistoryRepository
+    {
+        private int _checks;
+
+        public Task<bool> IsAppliedAsync(string migrationId, CancellationToken ct = default) =>
+            Task.FromResult(Interlocked.Increment(ref _checks) > 1);
+
+        public Task MarkAppliedAsync(string migrationId, long affectedCount, DateTimeOffset appliedAt, CancellationToken ct = default) =>
+            inner.MarkAppliedAsync(migrationId, affectedCount, appliedAt, ct);
+
+        public Task<bool> TryAcquireLeaseAsync(string migrationId, string holder, DateTimeOffset now, TimeSpan duration, CancellationToken ct = default) =>
+            inner.TryAcquireLeaseAsync(migrationId, holder, now, duration, ct);
+
+        public Task ReleaseLeaseAsync(string migrationId, string holder, CancellationToken ct = default) =>
+            inner.ReleaseLeaseAsync(migrationId, holder, ct);
+    }
+
+    [Fact]
+    public async Task Run_RepeatableMigration_RunsAtEveryStartupWithoutBeingRecorded()
+    {
+        var history = new InMemoryMigrationHistoryRepository();
+        var repair = new RepeatableRepair();
+
+        await RunAsync(history, repair);
+        await RunAsync(history, repair);
+
+        Assert.Equal(2, repair.Runs);
+        Assert.False(await history.IsAppliedAsync("001-repair"));
+    }
+
+    [Fact]
+    public async Task Run_MigrationAppliedByAnotherInstanceBeforeTheLease_IsNotReplayed()
+    {
+        var migration = new RecordingMigration("001-a", () => 1);
+
+        await RunAsync(new AppliedWhileWaitingForTheLease(new InMemoryMigrationHistoryRepository()), migration);
+
+        Assert.Equal(0, migration.Runs);
+    }
 }

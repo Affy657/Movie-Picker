@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { ChevronUp, MoreHorizontal } from 'lucide-react';
 import clsx from 'clsx';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useMenuHorizontalFit } from '@/shared/hooks/useMenuHorizontalFit';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { t as translate, SUPPORTED_LOCALES, useTranslation } from '@/shared/i18n';
@@ -49,6 +50,8 @@ export const THEME_EMOJIS = [
 
 const PRESETS_VISIBLE = 5;
 
+export const THEME_TEXT_MAX_LENGTH = 90;
+
 export const THEME_PRESETS = [
   { emoji: '🎃', slug: 'horror' },
   { emoji: '😂', slug: 'comedy' },
@@ -82,17 +85,20 @@ function isPresetSelected(
   );
 }
 
+const LATIN_1_LAST_CODE_POINT = 0x00ff;
+
+const LEADING_EMOJI_SEQUENCE =
+  /^(?:\p{Regional_Indicator}{2}|\p{Extended_Pictographic}[\u{FE0F}\p{Emoji_Modifier}\u{E0020}-\u{E007F}]*(?:\u200D\p{Extended_Pictographic}[\u{FE0F}\p{Emoji_Modifier}\u{E0020}-\u{E007F}]*)*)(?=\s|$)/u;
+
+function leadingEmojiOf(theme: string): string {
+  const emoji = LEADING_EMOJI_SEQUENCE.exec(theme)?.[0] ?? '';
+  return (emoji.codePointAt(0) ?? 0) > LATIN_1_LAST_CODE_POINT ? emoji : '';
+}
+
 export function parseTheme(s: string | null | undefined): { emoji: string; text: string } {
   const raw = (s ?? '').trim();
-  if (!raw) return { emoji: '', text: '' };
-  const spaceIdx = raw.indexOf(' ');
-  if (spaceIdx > 0) {
-    const maybeEmoji = raw.slice(0, spaceIdx);
-    if ([...maybeEmoji].length <= 2 && (maybeEmoji.codePointAt(0) ?? 0) > 0x00ff) {
-      return { emoji: maybeEmoji, text: raw.slice(spaceIdx + 1) };
-    }
-  }
-  return { emoji: '', text: raw };
+  const emoji = leadingEmojiOf(raw);
+  return { emoji, text: raw.slice(emoji.length).trim() };
 }
 
 type ThemeFieldProps = {
@@ -122,25 +128,9 @@ export default function ThemeField({
   const touchScreen = useMediaQuery('(pointer: coarse)');
   const fitLeft = useMenuHorizontalFit(pickerOpen && !touchScreen, pickerRef, emojiGridRef, 'left');
 
-  useEffect(() => {
-    if (!pickerOpen || touchScreen) return;
-    const closeOnPointerOutside = (e: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-        setPickerOpen(false);
-      }
-    };
-    const closeOnEscape = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      setPickerOpen(false);
-      emojiButtonRef.current?.focus();
-    };
-    document.addEventListener('mousedown', closeOnPointerOutside);
-    document.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('mousedown', closeOnPointerOutside);
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [pickerOpen, touchScreen]);
+  useClickOutside(pickerRef, () => setPickerOpen(false), pickerOpen && !touchScreen, {
+    returnFocusTo: emojiButtonRef,
+  });
 
   useEffect(() => {
     if (!pickerOpen) return;
@@ -215,6 +205,7 @@ export default function ThemeField({
           className={clsx('input', styles.textInput)}
           type="text"
           autoComplete="off"
+          maxLength={THEME_TEXT_MAX_LENGTH}
           placeholder={t('events.settings.themeFieldPlaceholder')}
           value={text}
           onChange={(e) => onTextChange(e.target.value)}
@@ -223,9 +214,7 @@ export default function ThemeField({
       </div>
       {!disabled && (
         <fieldset className={styles.presets}>
-          <legend className={styles.presetsLegend}>
-            {t('events.settings.themePresetsLegend')}
-          </legend>
+          <legend className="visually-hidden">{t('events.settings.themePresetsLegend')}</legend>
           {(presetsExpanded ? THEME_PRESETS : THEME_PRESETS.slice(0, PRESETS_VISIBLE)).map((p) => {
             const presetText = t(`events.settings.themePresets.${p.slug}`);
             return (

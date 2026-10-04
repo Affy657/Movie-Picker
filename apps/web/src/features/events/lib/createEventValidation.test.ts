@@ -25,7 +25,7 @@ describe('validateCreateEventDraft', () => {
 });
 
 describe('isPastEventDateTime', () => {
-  const now = new Date(2026, 8, 20, 18, 30);
+  const now = new Date('2026-09-20T16:30:00Z');
 
   it('is true for a moment before now', () => {
     expect(isPastEventDateTime('2026-09-20', '18:00', now)).toBe(true);
@@ -37,5 +37,16 @@ describe('isPastEventDateTime', () => {
     expect(isPastEventDateTime('2026-09-20', '21:00', now)).toBe(false);
     expect(isPastEventDateTime('', '21:00', now)).toBe(false);
     expect(isPastEventDateTime('2026-09-20', '', now)).toBe(false);
+    expect(isPastEventDateTime('2026-02-30', '12:00', now)).toBe(false);
+  });
+
+  it('reads the date and time as Paris wall-clock time, whatever the browser time zone', () => {
+    const montrealAfternoon = new Date('2026-09-24T19:00:00Z');
+    expect(isPastEventDateTime('2026-09-24', '20:00', montrealAfternoon)).toBe(true);
+    expect(isPastEventDateTime('2026-09-24', '21:30', montrealAfternoon)).toBe(false);
+
+    const parisNewYearsEve = new Date('2026-12-31T22:45:00Z');
+    expect(isPastEventDateTime('2026-12-31', '23:30', parisNewYearsEve)).toBe(true);
+    expect(isPastEventDateTime('2027-01-01', '00:00', parisNewYearsEve)).toBe(false);
   });
 });

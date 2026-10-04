@@ -18,6 +18,7 @@ public static class EventDocumentMapper
             HostToken = doc.HostToken,
             Slug = doc.Slug,
             CreatorUserId = doc.CreatorUserId,
+            CreationRequestId = doc.CreationRequestId,
             Config = config,
             ClosedAt = doc.ClosedAt.HasValue ? new DateTimeOffset(doc.ClosedAt.Value, TimeSpan.Zero) : null,
             Winners = ToWinners(doc),
@@ -28,6 +29,7 @@ public static class EventDocumentMapper
                 ? new DateTimeOffset(doc.WatchlistCleanedAt.Value, TimeSpan.Zero)
                 : null,
             Recurrence = ParseRecurrence(doc.Recurrence),
+            RecurrenceAnchorDay = doc.RecurrenceAnchorDay,
             RecurrenceParentEventId = doc.RecurrenceParentEventId,
             NextOccurrenceEventId = doc.NextOccurrenceEventId,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
@@ -50,6 +52,7 @@ public static class EventDocumentMapper
             HostToken = evt.HostToken,
             Slug = evt.Slug,
             CreatorUserId = evt.CreatorUserId,
+            CreationRequestId = evt.CreationRequestId,
             Config = config,
             ClosedAt = evt.ClosedAt?.UtcDateTime,
             Winners = evt.Winners
@@ -63,6 +66,7 @@ public static class EventDocumentMapper
             WinnerAnnouncedAt = evt.WinnerAnnouncedAt?.UtcDateTime,
             WatchlistCleanedAt = evt.WatchlistCleanedAt?.UtcDateTime,
             Recurrence = ToRecurrenceString(evt.Recurrence),
+            RecurrenceAnchorDay = evt.RecurrenceAnchorDay,
             RecurrenceParentEventId = evt.RecurrenceParentEventId,
             NextOccurrenceEventId = evt.NextOccurrenceEventId,
             StartAtUtc = EventSchedule.TryGetStartUtc(evt.Date, evt.Time, out var startAt)

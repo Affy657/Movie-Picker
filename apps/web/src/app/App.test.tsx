@@ -37,6 +37,7 @@ const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
     uiTheme: 'system',
     accentColor: 'default',
     handle: 'alice',
+    isProfilePublic: true,
   })
 );
 
@@ -288,6 +289,34 @@ describe('App (routes)', () => {
       );
     });
 
+    it('AppShell: on an auth page the mobile sign-in link keeps the pending returnTo', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/register?returnTo=%2Fe%2Fsoiree-horreur']);
+      await screen.findByRole('heading', { name: /^inscription$/i, level: 1 }, { timeout: 20000 });
+      const mobileNav = screen
+        .getAllByRole('navigation', { name: /navigation principale/i })
+        .at(-1);
+      if (!mobileNav) throw new Error('Mobile nav not found');
+      expect(within(mobileNav).getByRole('link', { name: /^Connexion$/i })).toHaveAttribute(
+        'href',
+        '/login?returnTo=%2Fe%2Fsoiree-horreur'
+      );
+    });
+
+    it('AppShell: on an auth page without returnTo the mobile sign-in link leads home afterwards', async () => {
+      server.use(authMeGuestHandler);
+      renderRoutes(['/forgot-password']);
+      await screen.findByRole('heading', { level: 1 }, { timeout: 20000 });
+      const mobileNav = screen
+        .getAllByRole('navigation', { name: /navigation principale/i })
+        .at(-1);
+      if (!mobileNav) throw new Error('Mobile nav not found');
+      expect(within(mobileNav).getByRole('link', { name: /^Connexion$/i })).toHaveAttribute(
+        'href',
+        '/login'
+      );
+    });
+
     it('AppShell : les boutons de connexion et inscription remplacent la cloche et le menu du compte', async () => {
       server.use(authMeGuestHandler);
       renderRoutes(['/']);
@@ -401,6 +430,33 @@ describe('App (routes)', () => {
       expect(within(mobileNav).getByRole('link', { name: /^Profil$/i })).toHaveAttribute(
         'href',
         '/u/alice'
+      );
+    });
+
+    it('AppShell points the mobile Profil tab to the settings while my profile is private', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({
+            userId: 'u1',
+            displayName: 'Alice',
+            emailMasked: 'a***@test.local',
+            uiTheme: 'system',
+            accentColor: 'default',
+            handle: 'alice',
+            isProfilePublic: false,
+          })
+        ),
+        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
+      );
+      renderRoutes(['/my-events']);
+      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });
+      const mobileNav = screen
+        .getAllByRole('navigation', { name: /navigation principale/i })
+        .at(-1);
+      if (!mobileNav) throw new Error('Mobile nav introuvable');
+      expect(within(mobileNav).getByRole('link', { name: /^Profil$/i })).toHaveAttribute(
+        'href',
+        '/settings'
       );
     });
 

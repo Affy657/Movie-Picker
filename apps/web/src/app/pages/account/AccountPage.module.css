@@ -3,7 +3,7 @@
 }
 
 .layoutWide {
-  --page-max-width: var(--container-lg);
+  --page-max-width: var(--container-xl);
 }
 
 .header {
@@ -11,12 +11,8 @@
 }
 
 .title {
+  composes: pageTitle from '@/shared/components/typography.module.css';
   margin: 0 0 var(--space-1);
-  font-size: clamp(1.5rem, 3vw, 1.875rem);
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-tight);
-  line-height: var(--leading-tight);
-  color: var(--color-text);
 }
 
 .groupField {

@@ -62,6 +62,9 @@ public static class Errors
     public static ConflictException ProposalLimitReached(int max) =>
         new($"Limit of {max} proposal(s) per participant reached", ErrorCodes.ProposalLimitReached, Params(("max", max)));
 
+    public static ConflictException EventMovieLimitReached(int max) =>
+        new($"Limit of {max} movies per movie night reached", ErrorCodes.EventMovieLimitReached, Params(("max", max)));
+
     public static ConflictException VoteLimitReached(int max) =>
         new($"Limit of {max} vote(s) per participant reached", ErrorCodes.VoteLimitReached, Params(("max", max)));
 
@@ -143,6 +146,9 @@ public static class Errors
     public static ConflictException WheelLockedDelete() =>
         new("The wheel has already been spun, removal is impossible", ErrorCodes.WheelLockedDelete);
 
+    public static TooManyRequestsException TooManySignInAttempts() =>
+        new("Too many failed sign-in attempts for this account, retry in a few minutes", ErrorCodes.RateLimited);
+
     public static ConflictException ConcurrentUpdate() =>
         new("Modified in the meantime, reload the page and retry", ErrorCodes.ConcurrentUpdate);
 
@@ -212,6 +218,9 @@ public static class Errors
     public static UnauthorizedException ConfirmationIncorrect() =>
         new("Confirmation is incorrect", ErrorCodes.ConfirmationIncorrect);
 
+    public static ForbiddenException ReauthenticationRequired() =>
+        new("A recent sign-in is required", ErrorCodes.ReauthenticationRequired);
+
     public static BadRequestException InvalidParticipant() =>
         new("Invalid participant for this movie night", ErrorCodes.InvalidParticipant);
 
@@ -272,6 +281,9 @@ public static class Errors
     public static BadRequestException LetterboxdSyncFailed(string? reason) =>
         new("Letterboxd synchronization failed", reason ?? ErrorCodes.LetterboxdSyncFailed);
 
+    public static ServiceUnavailableException LetterboxdSyncUnavailable() =>
+        new("Letterboxd or TMDB did not answer, the synchronization will resume on its own", ErrorCodes.LetterboxdSyncUnavailable);
+
     public static BadRequestException InvalidDateFormat() =>
         new("date must use the YYYY-MM-DD format", ErrorCodes.InvalidDateFormat);
 
@@ -286,6 +298,9 @@ public static class Errors
 
     public static BadRequestException EventTitleTooLong(int max) =>
         new($"Movie night title cannot exceed {max} characters", ErrorCodes.EventTitleTooLong, Params(("max", max)));
+
+    public static BadRequestException EventThemeTooLong(int max) =>
+        new($"Movie night theme cannot exceed {max} characters", ErrorCodes.EventThemeTooLong, Params(("max", max)));
 
     public static BadRequestException EventTemplateNameRequired() =>
         new("Template name cannot be empty", ErrorCodes.EventTemplateNameRequired);
@@ -316,6 +331,9 @@ public static class Errors
 
     public static BadRequestException AttachmentContentInvalid(string fileName) =>
         new($"Invalid content (malformed base64) for \"{fileName}\"", ErrorCodes.AttachmentContentInvalid, Params(("name", fileName)));
+
+    public static BadRequestException AttachmentImageUnreadable(string fileName) =>
+        new($"The image \"{fileName}\" could not be read", ErrorCodes.AttachmentImageUnreadable, Params(("name", fileName)));
 
     public static BadRequestException AttachmentContentMismatch(string fileName, string contentType) =>
         new($"The content of \"{fileName}\" does not match the declared format ({contentType})", ErrorCodes.AttachmentContentMismatch, Params(("name", fileName), ("type", contentType)));

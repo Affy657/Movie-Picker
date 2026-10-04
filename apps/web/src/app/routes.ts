@@ -40,7 +40,10 @@ export const ROUTES = {
   showcaseMostProposed: '/films/les-plus-proposes',
 
   showcaseRecommendationsPattern: '/films/similaires/:seedTmdbId',
-  showcaseRecommendations: (seedTmdbId: number) => `/films/similaires/${seedTmdbId}`,
+  showcaseRecommendations: (seedTmdbId: number, seedMediaType?: 'movie' | 'tv') =>
+    seedMediaType === 'tv'
+      ? `/films/similaires/${seedTmdbId}?type=tv`
+      : `/films/similaires/${seedTmdbId}`,
   showcaseProviderPattern: '/films/streaming/:provider',
   showcaseProvider: (provider: string) => `/films/streaming/${provider}`,
   showcaseThemePattern: '/films/theme/:theme',
@@ -58,8 +61,10 @@ export const ROUTES = {
 
   eventDetail: (slug: string) => `${EVENT_PREFIX}/${slug}`,
 
-  eventDetailRating: (slug: string, movieId?: string) =>
-    `${EVENT_PREFIX}/${slug}?${RATE_QUERY_PARAM}${movieId ? `=${movieId}` : ''}`,
+  eventDetailRating: (slug: string, movieId?: string) => {
+    const rateQuery = movieId ? `${RATE_QUERY_PARAM}=${movieId}` : RATE_QUERY_PARAM;
+    return `${EVENT_PREFIX}/${slug}?${rateQuery}`;
+  },
 
   nightRecapPattern: `${RECAP_PREFIX}/:slug`,
 

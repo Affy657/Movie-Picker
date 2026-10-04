@@ -1,17 +1,20 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using MoviePicker.Api.Application.UseCases.Shared;
 
 namespace MoviePicker.Api.Application.UseCases.SearchUsers;
 
 public static class UserSearchPolicy
 {
     public const int MinQueryLength = 2;
+    public const int MaxQueryLength = 64;
     public const int ResultLimit = 20;
 
     private const CompareOptions LooseComparison = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
 
-    public static string Normalize(string? raw) => (raw ?? string.Empty).Trim();
+    public static string Normalize(string? raw) =>
+        TextTruncation.ToMaxLength((raw ?? string.Empty).Trim(), MaxQueryLength);
 
     public static bool Contains(string? value, string query) =>
         !string.IsNullOrEmpty(value)
@@ -24,7 +27,22 @@ public static class UserSearchPolicy
     public static string ToRegexPattern(string query)
     {
         var builder = new StringBuilder();
-        foreach (var character in RemoveDiacritics(query))
+        foreach (var rune in query.Normalize(NormalizationForm.FormC).EnumerateRunes())
+        {
+            var original = rune.ToString();
+            var stripped = RemoveDiacritics(original);
+            if (stripped != original && stripped.Length == 1 && original.Length == 1)
+                AppendAccentedLetterClass(builder, stripped[0], original[0]);
+            else
+                AppendFolded(builder, stripped);
+        }
+
+        return builder.ToString();
+    }
+
+    private static void AppendFolded(StringBuilder builder, string text)
+    {
+        foreach (var character in text)
         {
             var variants = DiacriticVariants(char.ToLowerInvariant(character));
             if (variants is null)
@@ -32,8 +50,20 @@ public static class UserSearchPolicy
             else
                 builder.Append('[').Append(variants).Append(']');
         }
+    }
 
-        return builder.ToString();
+    private static void AppendAccentedLetterClass(StringBuilder builder, char baseLetter, char accented)
+    {
+        var lowerBase = char.ToLowerInvariant(baseLetter);
+        var variants = DiacriticVariants(lowerBase) ?? string.Concat(lowerBase, char.ToUpperInvariant(baseLetter));
+        builder.Append('[').Append(variants);
+        foreach (var form in new[] { char.ToLowerInvariant(accented), char.ToUpperInvariant(accented) })
+        {
+            if (!variants.Contains(form, StringComparison.Ordinal))
+                builder.Append(form);
+        }
+
+        builder.Append(']');
     }
 
     private static string RemoveDiacritics(string value)

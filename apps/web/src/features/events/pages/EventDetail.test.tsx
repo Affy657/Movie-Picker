@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { setupServer } from 'msw/node';
 import EventDetail from '@/features/events/pages/EventDetail';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
 import { onlineManager, QueryClient } from '@tanstack/react-query';
 import {
@@ -16,7 +16,11 @@ import {
 } from '@/mocks/handlers';
 import { http, HttpResponse } from 'msw';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
-import { setStoredParticipant, getStoredParticipant } from '@/shared/utils/eventIdentityStorage';
+import {
+  getStoredHostToken,
+  setStoredParticipant,
+  getStoredParticipant,
+} from '@/shared/utils/eventIdentityStorage';
 import { JOIN_PROMPT_ANCHOR_ID } from '@/features/events/joinPrompt';
 
 beforeAll(() => {
@@ -33,6 +37,10 @@ beforeAll(() => {
   }
 });
 
+function LocationSearch() {
+  return <output data-testid="location-search">{useLocation().search}</output>;
+}
+
 function renderEventDetail(
   initialPath: string,
   client?: QueryClient,
@@ -47,6 +55,7 @@ function renderEventDetail(
           <Route path="/my-events" element={<div data-testid="route-my-events" />} />
           <Route path="/" element={<div data-testid="route-home" />} />
         </Routes>
+        <LocationSearch />
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -186,6 +195,90 @@ describe('EventDetail (MSW)', () => {
     renderEventDetail(`/e/inconnu`);
     expect(await screen.findByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
     expect(document.title).toBe(pageTitle('Soirée introuvable'));
+  });
+
+  it('moves a legacy host token out of the address bar into the session', async () => {
+    renderEventDetail(`/e/${slug}?host=legacy-host-token&tab=movies`);
+    await waitFor(() => {
+      expect(screen.getByTestId('location-search').textContent).toBe('?tab=movies');
+    });
+    expect(getStoredHostToken(slug)).toBe('legacy-host-token');
+  });
+
+  it('treats a malformed slug as a missing movie night without calling the API', async () => {
+    const requested: string[] = [];
+    server.use(
+      http.all(`${TEST_API_V1}/events/*`, ({ request }) => {
+        requested.push(request.url);
+        return HttpResponse.json({ error: 'unexpected' }, { status: 500 });
+      })
+    );
+    renderEventDetail('/e/abc%3Fx%23y');
+    expect(await screen.findByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
+    expect(document.title).toBe(pageTitle('Soirée introuvable'));
+    expect(requested).toEqual([]);
+  });
+
+  it('keeps the movie night and its movies on screen when a refresh fails, and says so', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+        HttpResponse.json([
+          {
+            _id: 'm-stale-1',
+            eventId: 'evt-msw',
+            participantId: 'p-msw-host',
+            tmdbId: 42,
+            mediaType: 'movie',
+            title: 'Matrix',
+            year: '1999',
+            posterPath: null,
+            proposerPseudo: 'Hôte',
+            score: 2,
+            up: 2,
+            down: 0,
+          },
+        ])
+      )
+    );
+    const client = createTestQueryClient();
+    renderEventDetail(`/e/${slug}`, client);
+    expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
+        HttpResponse.json({ error: 'down' }, { status: 503 })
+      ),
+      http.get(`${TEST_API_V1}/events/:s/movies`, () =>
+        HttpResponse.json({ error: 'down' }, { status: 503 })
+      )
+    );
+    await client.refetchQueries();
+
+    expect(await screen.findByText(/connexion instable/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+    expect(screen.queryByText(/impossible de charger la liste des films/i)).not.toBeInTheDocument();
+
+    server.resetHandlers();
+    await user.click(screen.getByRole('button', { name: /réessayer/i }));
+
+    await waitFor(() => expect(screen.queryByText(/connexion instable/i)).not.toBeInTheDocument());
+  });
+
+  it('shows the missing movie night when it is deleted while being viewed', async () => {
+    const client = createTestQueryClient();
+    renderEventDetail(`/e/${slug}`, client);
+    expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/:s`, () =>
+        HttpResponse.json({ error: 'introuvable' }, { status: 404 })
+      )
+    );
+    await client.refetchQueries();
+
+    expect(await screen.findByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
   });
 
   it('shows the link and the QR code for a plain participant (without host token)', async () => {
@@ -798,6 +891,105 @@ describe('EventDetail (MSW)', () => {
       expect(deleteUrl).toContain(`/participants/${myPid}`);
       await waitFor(() => expect(getStoredParticipant(slug)).toBeNull());
       expect(await screen.findByTestId('route-my-events')).toBeInTheDocument();
+    });
+  });
+
+  describe('after a draw on a movie night still open', () => {
+    function drawnEventHandler(isHost: boolean, myParticipantId: string) {
+      return http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
+        HttpResponse.json({
+          _id: 'evt-msw',
+          title: 'Soirée démo',
+          date: '2030-12-15',
+          time: '21:00',
+          slug,
+          isHost,
+          isFinished: false,
+          lifecycle: 'live',
+          winners: [{ movieId: 'm-msw-1', pickMethod: 'manual', pickedAt: '2020-01-01T00:00:00Z' }],
+          participantCount: 3,
+          movieCount: 1,
+          myParticipant: { _id: myParticipantId, pseudo: 'Moi' },
+          participants: [
+            { _id: 'p-msw-host', pseudo: 'Hôte', isCreator: true },
+            { _id: 'p-msw-alice', pseudo: 'Alice' },
+            { _id: 'p-msw-bob', pseudo: 'Bob' },
+          ],
+          config: {
+            theme: null,
+            maxProposalsPerParticipant: null,
+            maxParticipants: null,
+            wheelMode: 'strictRandom',
+            winnerCount: 1,
+          },
+        })
+      );
+    }
+
+    const drawnMoviesHandler = http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+      HttpResponse.json([
+        {
+          _id: 'm-msw-1',
+          eventId: 'evt-msw',
+          participantId: 'p-msw-host',
+          tmdbId: 42,
+          mediaType: 'movie',
+          title: 'Matrix',
+          year: '1999',
+          posterPath: null,
+          proposerPseudo: 'Hôte',
+          score: 2,
+          up: 2,
+          down: 0,
+        },
+      ])
+    );
+
+    it('the host is offered no participant removal the API would refuse', async () => {
+      const user = userEvent.setup();
+      setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      server.use(
+        drawnEventHandler(true, 'p-msw-host'),
+        drawnMoviesHandler,
+        http.get(`${TEST_API_V1}/events/${slug}/invitations/eligible-follows`, () =>
+          HttpResponse.json({ follows: [] })
+        )
+      );
+
+      renderEventDetail(`/e/${slug}?host=host-token`);
+      expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+      await openParticipantsPanel(user);
+
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+      expect(screen.queryByTestId('manage-participants-toggle')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('remove-participant-p-msw-alice')).not.toBeInTheDocument();
+    });
+
+    it('a participant is offered no leave the API would refuse', async () => {
+      const user = userEvent.setup();
+      setStoredParticipant(slug, 'p-msw-bob', 'Bob');
+      server.use(drawnEventHandler(false, 'p-msw-bob'), drawnMoviesHandler);
+
+      renderEventDetail(`/e/${slug}`);
+      expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
+      await openParticipantsPanel(user);
+
+      expect(screen.getByText('Alice')).toBeInTheDocument();
+      expect(screen.queryByTestId('leave-event-button')).not.toBeInTheDocument();
+    });
+
+    it('the proposer is offered no movie removal the API would refuse', async () => {
+      const user = userEvent.setup();
+      setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      stubHoverCapability();
+      server.use(drawnEventHandler(false, 'p-msw-host'), drawnMoviesHandler);
+
+      renderEventDetail(`/e/${slug}`);
+      expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+
+      await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
+      expect(await screen.findByRole('menu')).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: /retirer matrix/i })).not.toBeInTheDocument();
     });
   });
 

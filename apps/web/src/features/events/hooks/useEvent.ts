@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchEventBySlug } from '@/features/events/api/eventsApi';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getLivePollingRefetchIntervalForEventQuery } from '@/features/events/hooks/useEventLive';
+import { pollIntervalAfterFailures } from '@/shared/api/retryPolicy';
 
 export type UseEventOptions = {
   live?: boolean;
@@ -17,7 +18,11 @@ export function useEvent(
     queryFn: () => fetchEventBySlug(slug!, hostToken),
     enabled: !!slug,
     refetchInterval: live
-      ? (query) => getLivePollingRefetchIntervalForEventQuery(query.state.data)
+      ? (query) =>
+          pollIntervalAfterFailures(
+            getLivePollingRefetchIntervalForEventQuery(query.state.data),
+            query
+          )
       : false,
   });
 }

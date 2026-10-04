@@ -125,10 +125,12 @@ public sealed class GetEventRecapDocumentHandlerTests
         Assert.DoesNotContain("Description du site", document.Html);
         Assert.DoesNotContain("Description OG du site", document.Html);
         Assert.DoesNotContain("ld+json", document.Html);
-        Assert.Single(Regex.Matches(document.Html, "property=\"og:title\""));
-        Assert.Single(Regex.Matches(document.Html, "<title>"));
-        Assert.Single(Regex.Matches(document.Html, "rel=\"canonical\""));
+        Assert.Equal(1, OccurrencesOf(document.Html, "property=\"og:title\""));
+        Assert.Equal(1, OccurrencesOf(document.Html, "<title>"));
+        Assert.Equal(1, OccurrencesOf(document.Html, "rel=\"canonical\""));
     }
+
+    private static int OccurrencesOf(string text, string needle) => text.Split(needle).Length - 1;
 
     [Fact]
     public async Task HandleAsync_WinnerWithoutRating_DescribesTheNightWithoutAnAverage()

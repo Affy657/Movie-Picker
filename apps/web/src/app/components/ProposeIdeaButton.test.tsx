@@ -39,7 +39,10 @@ describe('ProposeIdeaButton', () => {
   const server = setupServer();
 
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-  afterEach(() => server.resetHandlers());
+  afterEach(() => {
+    server.resetHandlers();
+    vi.unstubAllGlobals();
+  });
   afterAll(() => server.close());
 
   beforeAll(() => {
@@ -68,6 +71,13 @@ describe('ProposeIdeaButton', () => {
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
   });
 
+  it('warns before sending that the suggestion becomes a public GitHub issue', async () => {
+    renderButton();
+    await openDialog();
+
+    expect(await screen.findByText(/ticket public sur GitHub/i)).toBeInTheDocument();
+  });
+
   it('envoie la suggestion et affiche la confirmation', async () => {
     let receivedBody: unknown = null;
     server.use(
@@ -91,6 +101,27 @@ describe('ProposeIdeaButton', () => {
       description: 'Ce serait top !',
       pagePath: '/e/soiree-cine',
     });
+  });
+
+  it('cuts the page path to the 300 characters the API accepts', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, async ({ request }) => {
+        receivedBody = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+    const longPath = `/films/collection/${'a'.repeat(400)}`;
+
+    renderButton(longPath);
+    const user = await openDialog();
+    await fillForm(user);
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(/merci/i);
+    });
+    expect(receivedBody).toMatchObject({ pagePath: longPath.slice(0, 300) });
   });
 
   it('sends the selected category (Bug) rather than the default value', async () => {
@@ -248,6 +279,118 @@ describe('ProposeIdeaButton', () => {
       contentType: 'image/png',
     });
     expect(body.attachments?.[0]?.base64Content.length).toBeGreaterThan(0);
+  });
+
+  it('revokes every preview URL when the dialog closes', async () => {
+    let created = 0;
+    globalThis.URL.createObjectURL = () => `blob:preview-${++created}`;
+    const revokeObjectURL = vi.fn();
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+    const { container } = renderButton();
+    const user = await openDialog();
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, [pngFile('a.png'), pngFile('b.png')]);
+    await screen.findAllByRole('button', { name: /retirer cette image/i });
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: /^fermer$/i }));
+    await waitFor(() => expect(container.querySelector('dialog')).toBeNull());
+
+    expect(revokeObjectURL).toHaveBeenCalledTimes(2);
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:preview-1');
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:preview-2');
+  });
+
+  it('revokes the preview URLs once the suggestion is sent', async () => {
+    globalThis.URL.createObjectURL = () => 'blob:sent-preview';
+    const revokeObjectURL = vi.fn();
+    globalThis.URL.revokeObjectURL = revokeObjectURL;
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, () => new HttpResponse(null, { status: 204 }))
+    );
+    renderButton();
+    const user = await openDialog();
+    await fillForm(user);
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, pngFile('capture.png'));
+    await screen.findByRole('button', { name: /retirer cette image/i });
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/merci/i));
+    expect(revokeObjectURL).toHaveBeenCalledExactlyOnceWith('blob:sent-preview');
+  });
+
+  it('shortens an attachment name to the 150 characters the API accepts, keeping its extension', async () => {
+    type ReceivedBody = { attachments?: { fileName: string }[] };
+    let resolveReceived: (body: ReceivedBody) => void;
+    const receivedBody = new Promise<ReceivedBody>((resolve) => {
+      resolveReceived = resolve;
+    });
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, async ({ request }) => {
+        resolveReceived((await request.json()) as ReceivedBody);
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderButton();
+    const user = await openDialog();
+    await fillForm(user);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, [
+      pngFile(`${'x'.repeat(200)}.png`),
+      pngFile(`a${'😀'.repeat(80)}.png`),
+      pngFile('court.png'),
+    ]);
+    await waitFor(() =>
+      expect(screen.getAllByRole('button', { name: /retirer cette image/i })).toHaveLength(3)
+    );
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    const fileNames = (await receivedBody).attachments?.map((a) => a.fileName);
+    expect(fileNames).toEqual([`${'x'.repeat(146)}.png`, `a${'😀'.repeat(72)}.png`, 'court.png']);
+    for (const fileName of fileNames ?? []) expect(fileName.length).toBeLessThanOrEqual(150);
+  });
+
+  it('explains in the interface language that an image could not be read', async () => {
+    class UnreadableFileReader extends EventTarget {
+      error: Error | null = null;
+      result: string | ArrayBuffer | null = null;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      readAsDataURL() {
+        this.error = Object.assign(
+          new Error(
+            'A requested file or directory could not be found at the time an operation was processed.'
+          ),
+          { name: 'NotFoundError' }
+        );
+        queueMicrotask(() => this.onerror?.());
+      }
+    }
+    vi.stubGlobal('FileReader', UnreadableFileReader);
+    let suggestionSent = false;
+    server.use(
+      http.post(`${TEST_API_V1}/idea-suggestions`, () => {
+        suggestionSent = true;
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    renderButton();
+    const user = await openDialog();
+    await fillForm(user);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, pngFile('capture.png'));
+    await screen.findByRole('button', { name: /retirer cette image/i });
+    await user.click(screen.getByRole('button', { name: /envoyer/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Impossible de lire l’image capture.png');
+    expect(alert).not.toHaveTextContent(/requested file/i);
+    expect(suggestionSent).toBe(false);
   });
 
   it('se ferme via le bouton de fermeture', async () => {

@@ -4,23 +4,8 @@
 }
 
 .voteQuota {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
   margin: 0 0 var(--space-3);
-  padding: calc(var(--space-1) + var(--text-optical-nudge)) var(--space-2-5)
-    calc(var(--space-1) - var(--text-optical-nudge));
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-sunken);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--leading-none);
-  color: var(--color-text-muted);
-}
-
-.voteQuotaReached {
-  border-color: var(--color-primary-border-soft);
-  color: var(--color-primary-text);
 }
 
 .sectionHeader {
@@ -30,8 +15,6 @@
   margin-bottom: var(--space-3);
 }
 
-@media (hover: hover) {
-}
 
 .wheelDivider {
   display: flex;
@@ -41,17 +24,15 @@
 }
 
 .wheelDividerLabel {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-widest);
-  text-transform: uppercase;
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }
 
 .wheelDividerCount {
   font-size: var(--font-size-3xs);
   font-weight: var(--font-weight-bold);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
   font-variant-numeric: tabular-nums;
 }
 

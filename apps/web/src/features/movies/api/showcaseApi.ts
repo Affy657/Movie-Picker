@@ -79,6 +79,7 @@ export interface ShowcaseQuery {
   collectionId?: number;
   provider?: ShowcaseProvider;
   seedTmdbId?: number;
+  seedMediaType?: MovieMediaType;
 }
 
 export function showcaseQueryKey(query: ShowcaseQuery): readonly unknown[] {
@@ -91,6 +92,7 @@ export function showcaseQueryKey(query: ShowcaseQuery): readonly unknown[] {
     query.collectionId ?? 0,
     query.provider ?? '',
     query.seedTmdbId ?? 0,
+    query.seedMediaType ?? 'movie',
   ] as const;
 }
 
@@ -104,6 +106,7 @@ export async function fetchMovieShowcase(
   if (query.collectionId != null) params.set('collectionId', String(query.collectionId));
   if (query.provider) params.set('provider', query.provider);
   if (query.seedTmdbId != null) params.set('seedTmdbId', String(query.seedTmdbId));
+  if (query.seedMediaType === 'tv') params.set('seedMediaType', 'tv');
 
   const raw = await fetchApi<ShowcaseListResponse>(
     `/movies/showcase?${params.toString()}`,

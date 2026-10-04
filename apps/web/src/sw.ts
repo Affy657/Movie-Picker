@@ -7,7 +7,7 @@ import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
 declare const self: ServiceWorkerGlobalScope;
 
-const RETIRED_CACHES = ['api-cache-v2'];
+const RETIRED_CACHES = ['api-cache-v2', 'tmdb-images-v2'];
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
@@ -35,13 +35,26 @@ registerRoute(
   })
 );
 
+function corsRequestWithoutCredentials({ request }: { request: Request }): Promise<Request> {
+  return Promise.resolve(new Request(request.url, { mode: 'cors', credentials: 'omit' }));
+}
+
+function uncachedNetworkFetch({ request }: { request: Request }): Promise<Response> {
+  return fetch(request);
+}
+
 registerRoute(
   ({ url }) => url.hostname === 'image.tmdb.org',
   new CacheFirst({
-    cacheName: 'tmdb-images-v2',
+    cacheName: 'tmdb-images-v3',
     plugins: [
-      new ExpirationPlugin({ maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 30 }),
-      new CacheableResponsePlugin({ statuses: [0, 200] }),
+      { requestWillFetch: corsRequestWithoutCredentials, handlerDidError: uncachedNetworkFetch },
+      new ExpirationPlugin({
+        maxEntries: 300,
+        maxAgeSeconds: 60 * 60 * 24 * 30,
+        purgeOnQuotaError: true,
+      }),
+      new CacheableResponsePlugin({ statuses: [200] }),
     ],
   })
 );

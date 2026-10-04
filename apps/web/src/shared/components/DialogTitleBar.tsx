@@ -7,20 +7,25 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 export default function DialogTitleBar({
   titleId,
   title,
+  detail,
   onClose,
-  closeLabel,
+  closeAriaLabel,
 }: Readonly<{
   titleId: string;
   title: ReactNode;
+  detail?: ReactNode;
   onClose: () => void;
-  closeLabel: string;
+  closeAriaLabel: string;
 }>) {
   return (
     <div className={styles.header}>
-      <h2 id={titleId} className={styles.title}>
-        {title}
-      </h2>
-      <IconButton ariaLabel={closeLabel} onClick={onClose}>
+      <div className={styles.heading}>
+        <h2 id={titleId} className={styles.title}>
+          {title}
+        </h2>
+        {detail}
+      </div>
+      <IconButton ariaLabel={closeAriaLabel} onClick={onClose}>
         <X aria-hidden size={ICON_SIZE.lg} />
       </IconButton>
     </div>

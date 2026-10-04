@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { TabPanel } from '@/shared/components/Tabs';
 import { History } from 'lucide-react';
 import EmptyState from '@/shared/components/EmptyState';
+import InlineError from '@/shared/components/InlineError';
+import { getErrorMessage } from '@/shared/api/apiError';
 import type { MyEventSummary } from '@/features/events/types';
 import {
   groupEventsByMonth,
@@ -25,6 +27,9 @@ type HistoryToolbarState = ReturnType<typeof useHistoryToolbar>;
 
 interface HistoryQueryState {
   isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+  refetch: () => unknown;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => unknown;
@@ -86,6 +91,16 @@ function HistoryResults({
 
   if (query.isLoading) return <p className="placeholder">{t('common.loading')}</p>;
 
+  if (query.isError && events.length === 0) {
+    return (
+      <InlineError
+        message={getErrorMessage(query.error, t('events.myEvents.fallbackError'))}
+        retryLabel={t('common.retry')}
+        onRetry={() => query.refetch()}
+      />
+    );
+  }
+
   if (events.length === 0) {
     return (
       <EmptyState
@@ -144,7 +159,6 @@ export default function HistoryEventsPanel({
   const { t } = useTranslation();
   const handlers: HistoryEventHandlers = {
     onDelete: actions.handleDeleteEvent,
-    onRemove: actions.handleHistoryRemove,
     onReuse: actions.handleReuseEvent,
   };
 
@@ -153,11 +167,6 @@ export default function HistoryEventsPanel({
       {actions.deleteError ? (
         <p className="error" role="alert">
           {actions.deleteError}
-        </p>
-      ) : null}
-      {actions.historyRemoveError ? (
-        <p className="error" role="alert">
-          {actions.historyRemoveError}
         </p>
       ) : null}
 

@@ -6,8 +6,10 @@ export const queryKeys = {
     publicAll: ['profile', 'public'] as const,
     public: (handle: string | undefined) => ['profile', 'public', handle ?? '$pending'] as const,
     handleAvailability: (handle: string) => ['profile', 'handle-available', handle] as const,
+    followingAll: ['profile', 'following'] as const,
     following: (handle: string | undefined) =>
       ['profile', 'following', handle ?? '$pending'] as const,
+    followersAll: ['profile', 'followers'] as const,
     followers: (handle: string | undefined) =>
       ['profile', 'followers', handle ?? '$pending'] as const,
     stats: (handle: string | undefined) => ['profile', 'stats', handle ?? '$pending'] as const,
@@ -15,6 +17,7 @@ export const queryKeys = {
     userSearch: (query: string) => ['profile', 'user-search', query] as const,
     watchedMovies: (handle: string | undefined, take: number) =>
       ['profile', 'watchedMovies', handle ?? '$pending', take] as const,
+    watchlistOf: (handle: string) => ['profile', 'watchlist', handle] as const,
     watchlist: (handle: string | undefined, take: number) =>
       ['profile', 'watchlist', handle ?? '$pending', take] as const,
   },
@@ -36,6 +39,10 @@ export const queryKeys = {
     detail: (slug: string | undefined, hostToken: string | null) =>
       ['event', 'detail', slug ?? '$pending', hostToken ?? ''] as const,
 
+    detailForAnyHostToken: (slug: string) => ['event', 'detail', slug] as const,
+
+    eligibleFollowsAll: ['event', 'eligible-follows'] as const,
+
     eligibleFollows: (slug: string | undefined) =>
       ['event', 'eligible-follows', slug ?? '$pending'] as const,
 
@@ -47,6 +54,12 @@ export const queryKeys = {
     list: (slug: string | undefined) => ['movies', 'list', slug ?? '$pending'] as const,
     details: (tmdbId: number | undefined, mediaType?: string) =>
       ['movies', 'details', tmdbId ?? '$pending', mediaType ?? 'movie'] as const,
+  },
+  me: {
+    followingWatchedMoviesAll: ['users', 'me', 'following-watched-movies'] as const,
+    followingWatchedMovies: (take: number) =>
+      ['users', 'me', 'following-watched-movies', take] as const,
+    watchedMovies: (take: number) => ['users', 'me', 'watched-movies', take] as const,
   },
   watchlist: {
     list: ['watchlist', 'list'] as const,

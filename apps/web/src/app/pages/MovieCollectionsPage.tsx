@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router';
-import { ArrowLeft, Film } from 'lucide-react';
+import { Film } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
-import Button from '@/shared/components/Button';
+import InlineError from '@/shared/components/InlineError';
 import EmptyState from '@/shared/components/EmptyState';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { ROUTES } from '@/app/routes';
@@ -20,6 +19,7 @@ import type { MovieCollection } from '@/features/movies/api/showcaseApi';
 import styles from './ShowcaseListPage.module.css';
 import { collectionDisplayName } from '@/features/movies/utils/collectionName';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import BackLink from '@/shared/components/BackLink';
 
 const SKELETON_CARDS = 6;
 
@@ -90,10 +90,7 @@ export default function MovieCollectionsPage() {
 
   return (
     <PageLayout className={styles.layout}>
-      <Link to={ROUTES.home} className={styles.backLink}>
-        <ArrowLeft size={ICON_SIZE.md} aria-hidden />
-        <span>{t('showcase.backToHome')}</span>
-      </Link>
+      <BackLink to={ROUTES.home}>{t('showcase.backToHome')}</BackLink>
 
       <div className={styles.headerText}>
         <h1 className={styles.pageTitle}>{t('showcase.sections.collectionsTitle')}</h1>
@@ -113,12 +110,11 @@ export default function MovieCollectionsPage() {
       ) : null}
 
       {collections.isError ? (
-        <p className={styles.state} role="alert">
-          {t('showcase.error')}
-          <Button size="sm" variant="secondary" onClick={() => void collections.refetch()}>
-            {t('showcase.retry')}
-          </Button>
-        </p>
+        <InlineError
+          message={t('showcase.error')}
+          retryLabel={t('showcase.retry')}
+          onRetry={() => void collections.refetch()}
+        />
       ) : null}
 
       {!collections.isPending && !collections.isError && items.length === 0 ? (

@@ -39,6 +39,59 @@ describe('Button', () => {
     );
   });
 
+  it('stretches to its container with fullWidth, for a link as for a button', () => {
+    render(<Button fullWidth>Se connecter</Button>);
+
+    expect(screen.getByRole('button', { name: 'Se connecter' }).className).toContain(
+      styles.fullWidth
+    );
+    expect(buttonClass({ fullWidth: true })).toBe(`${styles.btn} ${styles.fullWidth}`);
+  });
+
+  it('says an engaged state with the soft variant, not with a class of its own', () => {
+    render(<Button variant="soft">Filtres</Button>);
+
+    expect(screen.getByRole('button', { name: 'Filtres' }).className).toContain(styles.soft);
+  });
+
+  it('nudges a text label optically, as capitals when it has no descender', () => {
+    render(
+      <>
+        <Button>Se connecter</Button>
+        <Button>Proposer</Button>
+      </>
+    );
+
+    const capsOnly = screen.getByText('Se connecter');
+    expect(capsOnly.tagName).toBe('SPAN');
+    expect(capsOnly.className.split(' ').sort()).toEqual([styles.label, styles.labelCaps].sort());
+    expect(screen.getByText('Proposer').className).toBe(styles.label);
+  });
+
+  it('keeps a label made of several text pieces in a single nudged span', () => {
+    const count = 3;
+    render(
+      <Button>
+        <strong>+</strong> Proposer ({count})
+      </Button>
+    );
+
+    const button = screen.getByRole('button');
+    const labels = button.querySelectorAll(`.${styles.label}`);
+    expect(labels).toHaveLength(1);
+    expect(labels[0]).toHaveTextContent('Proposer (3)');
+  });
+
+  it('leaves an element child as it is', () => {
+    render(
+      <Button>
+        <strong>Voir</strong>
+      </Button>
+    );
+
+    expect(screen.getByText('Voir').tagName).toBe('STRONG');
+  });
+
   it('stays disableable', async () => {
     const onClick = vi.fn();
     render(

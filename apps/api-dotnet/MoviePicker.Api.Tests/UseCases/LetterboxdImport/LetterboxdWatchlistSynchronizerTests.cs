@@ -6,6 +6,7 @@ using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.LetterboxdImport;
@@ -15,11 +16,15 @@ public sealed class LetterboxdWatchlistSynchronizerTests
     private const string UserId = "u1";
     private const string Username = "affy657";
     private static readonly int[] DramaMysteryGenreIds = [18, 9648];
+    private static readonly int[] AnimationSciFiGenreIds = [16, 878];
 
     private readonly Mock<IWatchlistRepository> _watchlist = new();
     private readonly Mock<ILetterboxdWatchlistClient> _letterboxd = new();
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
     private readonly Mock<IAddToWatchlistHandler> _addToWatchlist = new();
+    private readonly Mock<IParticipantRepository> _participants = new();
+    private readonly Mock<IEventRepository> _events = new();
+    private readonly Mock<IMovieRepository> _movies = new();
     private readonly LetterboxdWatchlistSynchronizer _sut;
 
     public LetterboxdWatchlistSynchronizerTests()
@@ -29,11 +34,17 @@ public sealed class LetterboxdWatchlistSynchronizerTests
                 It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         GivenWatchlist();
+        _participants
+            .Setup(p => p.ListDistinctEventIdsByUserIdAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<string>)[]);
         _sut = new LetterboxdWatchlistSynchronizer(
             _watchlist.Object,
             _letterboxd.Object,
             _tmdb.Object,
             _addToWatchlist.Object,
+            _participants.Object,
+            _events.Object,
+            _movies.Object,
             NullLogger<LetterboxdWatchlistSynchronizer>.Instance);
     }
 
@@ -64,17 +75,13 @@ public sealed class LetterboxdWatchlistSynchronizerTests
 
     private void GivenTmdbResults(string query, params TmdbSearchItem[] results) =>
         _tmdb
-            .Setup(t => t.SearchAsync(
-                query, true, null, It.IsAny<int?>(), It.IsAny<int?>(),
-                null, null, null, null, It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(query, true, It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)results);
 
     private void GivenTmdbFindsNothing() =>
         _tmdb
-            .Setup(t => t.SearchAsync(
-                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
+            .Setup(t => t.SearchTitlesAsync(
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<TmdbSearchItem>)[]);
 
     private void VerifyNothingAdded() =>
@@ -97,6 +104,29 @@ public sealed class LetterboxdWatchlistSynchronizerTests
                 It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
             Times.Never);
         VerifyNothingAdded();
+    }
+
+    [Fact]
+    public async Task SyncAsync_WatchlistLongerThanWhatWasRead_ImportsWithoutRemovingAnything()
+    {
+        const int announced = 2_000;
+        GivenWatchlist(Item(5255, "Le Pôle express", "the-polar-express"));
+        _letterboxd
+            .Setup(l => l.GetWatchlistAsync(Username, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(LetterboxdWatchlistSnapshot.Truncated([new LetterboxdFilm("akira", "Akira", "1988")], announced));
+        GivenTmdbResults("Akira", new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira"));
+
+        var outcome = await _sut.SyncAsync(TheUser());
+
+        Assert.True(outcome.Succeeded);
+        Assert.Equal(1, outcome.Added);
+        Assert.Equal(0, outcome.Removed);
+        Assert.Equal(announced, outcome.TotalOnLetterboxd);
+        Assert.Equal(announced - LetterboxdImportLimits.MaxRows, outcome.TotalTruncated);
+        _watchlist.Verify(
+            w => w.RemoveAsync(
+                It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -191,6 +221,67 @@ public sealed class LetterboxdWatchlistSynchronizerTests
     }
 
     [Fact]
+    public async Task SyncAsync_EntryRenamedOnLetterboxd_StaysInTheWatchlistUnderItsNewSlug()
+    {
+        var watchlist = new InMemoryWatchlistRepository();
+        var createdAt = new DateTimeOffset(2026, 1, 5, 20, 0, 0, TimeSpan.Zero);
+        await watchlist.AddAsync(Item(5255, "Le Pôle express", "the-polar-express") with { CreatedAt = createdAt });
+        GivenLetterboxd(true, new LetterboxdFilm("the-polar-express-2004", "The Polar Express", "2004"));
+        GivenTmdbResults(
+            "The Polar Express",
+            new TmdbSearchItem(5255, MovieMediaType.Movie, "Le Pôle express", "2004", null, 6.8, "The Polar Express"));
+        var sut = new LetterboxdWatchlistSynchronizer(
+            watchlist,
+            _letterboxd.Object,
+            _tmdb.Object,
+            _addToWatchlist.Object,
+            _participants.Object,
+            _events.Object,
+            _movies.Object,
+            NullLogger<LetterboxdWatchlistSynchronizer>.Instance);
+
+        var outcome = await sut.SyncAsync(TheUser());
+
+        var kept = await watchlist.GetOneAsync(UserId, 5255, MovieMediaType.Movie);
+        Assert.NotNull(kept);
+        Assert.Equal("the-polar-express-2004", kept.LetterboxdSlug);
+        Assert.Equal(createdAt, kept.CreatedAt);
+        Assert.Equal(0, outcome.Removed);
+        Assert.Equal(0, outcome.Added);
+    }
+
+    [Fact]
+    public async Task SyncAsync_TmdbDetailsDownWhileImporting_KeepsTheGenresOfTheSearchResult()
+    {
+        var watchlist = new InMemoryWatchlistRepository();
+        var posters = new Mock<IPosterImageStore>();
+        posters.Setup(p => p.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? path) => path);
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
+        GivenLetterboxd(true, new LetterboxdFilm("akira", "Akira", "1988"));
+        GivenTmdbResults(
+            "Akira",
+            new TmdbSearchItem(149, MovieMediaType.Movie, "Akira", "1988", null, 8.0, "Akira", GenreIds: AnimationSciFiGenreIds));
+        var sut = new LetterboxdWatchlistSynchronizer(
+            watchlist,
+            _letterboxd.Object,
+            _tmdb.Object,
+            new AddToWatchlistHandler(
+                watchlist, posters.Object, TimeProvider.System, _tmdb.Object, NullLogger<AddToWatchlistHandler>.Instance),
+            _participants.Object,
+            _events.Object,
+            _movies.Object,
+            NullLogger<LetterboxdWatchlistSynchronizer>.Instance);
+
+        var outcome = await sut.SyncAsync(TheUser());
+
+        Assert.Equal(1, outcome.Added);
+        var added = await watchlist.GetOneAsync(UserId, 149, MovieMediaType.Movie);
+        Assert.Equal(AnimationSciFiGenreIds, added!.GenreIds);
+    }
+
+    [Fact]
     public async Task SyncAsync_FilmAddedInMoviePickerOnly_IsNeverRemoved()
     {
         GivenWatchlist(Item(5255, "Le Pôle express", null));
@@ -260,10 +351,8 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         Assert.Equal(0, outcome.Added);
         Assert.Equal(0, outcome.Removed);
         _tmdb.Verify(
-            t => t.SearchAsync(
-                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<int>?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
-                It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
+            t => t.SearchTitlesAsync(
+                It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -281,5 +370,76 @@ public sealed class LetterboxdWatchlistSynchronizerTests
         Assert.Equal(LetterboxdImportLimits.MaxRows + 4, outcome.TotalOnLetterboxd);
         Assert.Equal(4, outcome.TotalTruncated);
         Assert.Equal(LetterboxdImportLimits.MaxRows, outcome.UnmatchedTitles.Count);
+    }
+
+    private void GivenWatchedAtAMovieNight(int tmdbId, bool cleanedUp)
+    {
+        _participants
+            .Setup(p => p.ListDistinctEventIdsByUserIdAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<string>)["evt1"]);
+        _events
+            .Setup(e => e.ListByIdsAsync(It.Is<IReadOnlyCollection<string>>(ids => ids.Contains("evt1")), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<Event>)
+            [
+                new Event
+                {
+                    Id = "evt1",
+                    Title = "Soirée",
+                    Date = "2026-09-01",
+                    Time = "20:00",
+                    Slug = "soiree",
+                    HostToken = "ht",
+                    Winners = [new EventWinner { MovieId = "m-win", PickedAt = DateTimeOffset.UnixEpoch }],
+                    WatchlistCleanedAt = cleanedUp ? DateTimeOffset.UnixEpoch : null
+                }
+            ]);
+        _movies
+            .Setup(m => m.ListByIdsAsync(It.Is<IReadOnlyCollection<string>>(ids => ids.Contains("m-win")), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<Movie>)
+            [
+                new Movie { Id = "m-win", EventId = "evt1", TmdbId = tmdbId, MediaType = MovieMediaType.Movie, Title = "The Polar Express" }
+            ]);
+    }
+
+    [Fact]
+    public async Task SyncAsync_FilmWatchedAtAMovieNight_IsNotImportedAgain()
+    {
+        GivenWatchedAtAMovieNight(5255, cleanedUp: true);
+        GivenLetterboxd(true, new LetterboxdFilm("the-polar-express", "The Polar Express", "2004"));
+        GivenTmdbResults(
+            "The Polar Express",
+            new TmdbSearchItem(5255, MovieMediaType.Movie, "Le Pôle express", "2004", null, 6.8, "The Polar Express"));
+
+        var outcome = await _sut.SyncAsync(TheUser());
+
+        Assert.Equal(0, outcome.Added);
+        VerifyNothingAdded();
+    }
+
+    [Fact]
+    public async Task SyncAsync_WinnerOfAMovieNightNotYetCleanedUp_IsStillImported()
+    {
+        GivenWatchedAtAMovieNight(5255, cleanedUp: false);
+        GivenLetterboxd(true, new LetterboxdFilm("the-polar-express", "The Polar Express", "2004"));
+        GivenTmdbResults(
+            "The Polar Express",
+            new TmdbSearchItem(5255, MovieMediaType.Movie, "Le Pôle express", "2004", null, 6.8, "The Polar Express"));
+
+        var outcome = await _sut.SyncAsync(TheUser());
+
+        Assert.Equal(1, outcome.Added);
+    }
+
+    [Fact]
+    public async Task SyncAsync_EveryFilmAlreadyTracked_DoesNotLookUpTheMovieNights()
+    {
+        GivenWatchlist(Item(5255, "Le Pôle express", "the-polar-express"));
+        GivenLetterboxd(true, new LetterboxdFilm("the-polar-express", "The Polar Express", "2004"));
+
+        await _sut.SyncAsync(TheUser());
+
+        _participants.Verify(
+            p => p.ListDistinctEventIdsByUserIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

@@ -38,6 +38,8 @@ public sealed class JoinEventHandlerNotificationTests
             .ReturnsAsync((Participant?)null);
         _participantRepo.Setup(r => r.FindByEventAndPseudoAsync("evt1", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Participant?)null);
+        _participantRepo.Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
         _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Participant p, CancellationToken _) => p with { Id = "pnew" });
 

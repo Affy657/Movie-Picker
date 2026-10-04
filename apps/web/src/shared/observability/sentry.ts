@@ -1,4 +1,7 @@
-import type { ErrorEvent } from '@sentry/react';
+import type { Breadcrumb, BrowserOptions, ErrorEvent } from '@sentry/react';
+import { redactSensitiveUrl } from '@/shared/utils/sensitiveUrl';
+
+type TransactionEvent = Parameters<NonNullable<BrowserOptions['beforeSendTransaction']>>[0];
 
 type SentryApi = typeof import('@sentry/react');
 
@@ -34,15 +37,42 @@ export function sentryTracePropagationTargets(
   }
 }
 
-function prepareEvent(event: ErrorEvent): ErrorEvent | null {
+function redactStringValues(data: Record<string, unknown> | undefined): void {
+  if (!data) return;
+  for (const [key, value] of Object.entries(data)) {
+    if (typeof value === 'string') data[key] = redactSensitiveUrl(value);
+  }
+}
+
+function scrubRequest(request: ErrorEvent['request']): void {
+  if (!request) return;
+  delete request.cookies;
+  delete request.headers;
+  delete request.data;
+  if (request.url) request.url = redactSensitiveUrl(request.url);
+  if (typeof request.query_string === 'string') {
+    request.query_string = redactSensitiveUrl(`?${request.query_string}`).slice(1);
+  }
+}
+
+export function prepareEvent(event: ErrorEvent): ErrorEvent | null {
   if (shouldDropSentryEvent(event)) return null;
   delete event.user;
-  if (event.request) {
-    delete event.request.cookies;
-    delete event.request.headers;
-    delete event.request.data;
-  }
+  scrubRequest(event.request);
   return event;
+}
+
+export function prepareTransaction(event: TransactionEvent): TransactionEvent {
+  delete event.user;
+  scrubRequest(event.request);
+  redactStringValues(event.contexts?.trace?.data);
+  for (const span of event.spans ?? []) redactStringValues(span.data);
+  return event;
+}
+
+export function prepareBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb {
+  redactStringValues(breadcrumb.data);
+  return breadcrumb;
 }
 
 function sendToSentry(sentry: SentryApi, { error, componentStack }: PendingCapture): void {
@@ -63,6 +93,8 @@ async function loadAndInit(dsn: string): Promise<void> {
     sendDefaultPii: false,
     ignoreErrors: ['SCDynimacBridge'],
     beforeSend: prepareEvent,
+    beforeSendTransaction: prepareTransaction,
+    beforeBreadcrumb: prepareBreadcrumb,
   });
   api = Sentry;
   for (const pending of capturedBeforeInit.splice(0)) sendToSentry(Sentry, pending);

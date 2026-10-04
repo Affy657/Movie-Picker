@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import type { MovieData } from '@/shared/types/movie';
 import { LocaleProvider } from '@/shared/i18n';
-import WheelModal from './WheelModal';
+import WheelModal, { confettiPalettes } from './WheelModal';
 
 vi.mock('canvas-confetti', () => ({
   default: Object.assign(vi.fn(), {
@@ -16,6 +16,7 @@ vi.mock('./SpinningWheel', () => ({
       Fin de roue
     </button>
   ),
+  WHEEL_SEGMENT_TOKENS: [],
 }));
 vi.mock('@/features/movies/components/WatchProviderChips', () => ({
   default: ({ providers }: { providers: unknown[] }) => (
@@ -43,7 +44,89 @@ function wrap(ui: ReactNode) {
   return render(<LocaleProvider>{ui}</LocaleProvider>);
 }
 
+function wheelDialog(): HTMLDialogElement {
+  const dialog = document.querySelector('dialog');
+  if (!dialog) throw new Error('No wheel dialog rendered');
+  return dialog;
+}
+
+function clickBackdrop(dialog: HTMLDialogElement) {
+  vi.spyOn(dialog, 'getBoundingClientRect').mockReturnValue(
+    DOMRect.fromRect({ x: 100, y: 100, width: 300, height: 300 })
+  );
+  fireEvent.pointerDown(dialog, { clientX: 20, clientY: 20 });
+  fireEvent.click(dialog, { clientX: 20, clientY: 20 });
+}
+
+function pressEscape(dialog: HTMLDialogElement) {
+  const cancel = new Event('cancel', { cancelable: true });
+  dialog.dispatchEvent(cancel);
+  if (!cancel.defaultPrevented) dialog.close();
+}
+
 describe('WheelModal', () => {
+  it('cannot be dismissed while the wheel spins, so the winner is not announced early', () => {
+    const onClose = vi.fn();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={onClose}
+      />
+    );
+    const dialog = wheelDialog();
+
+    pressEscape(dialog);
+    clickBackdrop(dialog);
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(dialog).toHaveAttribute('open');
+  });
+
+  it('shows the wheel again when the browser closes it anyway during the spin', () => {
+    const onClose = vi.fn();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={onClose}
+      />
+    );
+    const dialog = wheelDialog();
+
+    dialog.close();
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(dialog).toHaveAttribute('open');
+  });
+
+  it('closes once, on Escape or on the backdrop, when the winner is shown', () => {
+    const onClose = vi.fn();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={onClose}
+      />
+    );
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+
+    clickBackdrop(wheelDialog());
+    expect(onClose).toHaveBeenCalledOnce();
+
+    pressEscape(wheelDialog());
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+
   it("affiche le titre 'Tirage en cours' tant que la roue tourne", () => {
     wrap(
       <WheelModal
@@ -154,6 +237,73 @@ describe('WheelModal', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /tirer le suivant/i }));
     expect(onRelaunch).toHaveBeenCalledOnce();
+  });
+
+  it('shows inside the modal why the next draw failed, instead of behind the backdrop', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        onRelaunch={vi.fn()}
+        relaunchError="Tirage impossible"
+        winnerCount={3}
+        remainingDraws={2}
+      />
+    );
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+
+    const alert = screen.getByRole('alert');
+    expect(alert).toHaveTextContent('Tirage impossible');
+    expect(wheelDialog()).toContainElement(alert);
+  });
+
+  it('shows the next draw as pending and refuses a second click while it is requested', () => {
+    const onRelaunch = vi.fn();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        onRelaunch={onRelaunch}
+        relaunching
+        winnerCount={3}
+        remainingDraws={2}
+      />
+    );
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+
+    const relaunchButton = screen.getByRole('button', { name: /tirer le suivant/i });
+    expect(relaunchButton).toHaveAttribute('aria-busy', 'true');
+    expect(relaunchButton).toBeDisabled();
+    fireEvent.click(relaunchButton);
+    expect(onRelaunch).not.toHaveBeenCalled();
+  });
+
+  it('shows no alert while the next draw has not failed', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+        onRelaunch={vi.fn()}
+        relaunchError={null}
+        winnerCount={3}
+        remainingDraws={2}
+      />
+    );
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it(`goes back to "Let's go" without a possible rerun`, () => {
@@ -306,5 +456,117 @@ describe('WheelModal', () => {
       </LocaleProvider>
     );
     expect(onSpinComplete).toHaveBeenCalledOnce();
+  });
+});
+
+describe('WheelModal and the Popover API', () => {
+  type PopoverMethods = Partial<Pick<HTMLElement, 'showPopover' | 'hidePopover'>>;
+  const popoverDescriptors = {
+    showPopover: Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'showPopover'),
+    hidePopover: Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'hidePopover'),
+  };
+
+  beforeEach(() => {
+    const nativeMatches = Element.prototype.matches;
+    vi.spyOn(Element.prototype, 'matches').mockImplementation(function matchesWithoutPopover(
+      this: Element,
+      selector: string
+    ) {
+      if (selector.includes(':popover-open')) {
+        throw new DOMException('The string did not match the expected pattern.', 'SyntaxError');
+      }
+      return nativeMatches.call(this, selector);
+    });
+    delete (HTMLElement.prototype as PopoverMethods).showPopover;
+    delete (HTMLElement.prototype as PopoverMethods).hidePopover;
+    vi.useFakeTimers({
+      toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'setTimeout', 'clearTimeout'],
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    for (const [name, descriptor] of Object.entries(popoverDescriptors)) {
+      if (descriptor) Object.defineProperty(HTMLElement.prototype, name, descriptor);
+      else Reflect.deleteProperty(HTMLElement.prototype, name);
+    }
+  });
+
+  it('opens the wheel and reveals the winner without crashing the page on Safari before 17', () => {
+    const { unmount } = wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+    expect(wheelDialog()).toHaveAttribute('open');
+
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+    act(() => {
+      vi.advanceTimersToNextFrame();
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(screen.getByRole('heading', { name: /film sélectionné/i })).toBeInTheDocument();
+    expect(() => unmount()).not.toThrow();
+  });
+
+  it('still raises the confetti above the modal where the Popover API exists', () => {
+    const showPopover = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'showPopover', {
+      configurable: true,
+      value: showPopover,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'hidePopover', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    vi.mocked(Element.prototype.matches).mockImplementation(() => false);
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+    act(() => {
+      vi.advanceTimersToNextFrame();
+    });
+
+    expect(showPopover).toHaveBeenCalledOnce();
+  });
+});
+
+describe('confettiPalettes', () => {
+  it('splits the wheel colours between the two side bursts', () => {
+    const colors = Array.from({ length: 12 }, (_, index) => `c${index}`);
+    expect(confettiPalettes(colors)).toEqual({
+      burst: colors,
+      left: colors.slice(0, 6),
+      right: colors.slice(6),
+    });
+  });
+
+  it('never hands an empty palette to a side burst', () => {
+    expect(confettiPalettes(['a'])).toEqual({ burst: ['a'], left: ['a'], right: ['a'] });
+    expect(confettiPalettes(['a', 'b', 'c'])).toEqual({
+      burst: ['a', 'b', 'c'],
+      left: ['a', 'b'],
+      right: ['c'],
+    });
+  });
+
+  it('lets canvas-confetti pick its own colours when no token resolves', () => {
+    expect(confettiPalettes([])).toEqual({ burst: undefined, left: undefined, right: undefined });
   });
 });

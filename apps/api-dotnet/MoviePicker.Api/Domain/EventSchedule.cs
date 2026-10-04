@@ -5,6 +5,8 @@ public static class EventSchedule
     public static readonly TimeSpan PendingDelay = TimeSpan.FromHours(2);
     public static readonly TimeSpan AutoCloseDelay = TimeSpan.FromDays(7);
 
+    private static readonly DateTime LatestStartWithAWholeLifecycle = DateTime.MaxValue - PendingDelay - AutoCloseDelay;
+
     public static readonly TimeZoneInfo ParisTimeZone = ResolveParisTimeZone();
 
     public static bool TryGetStartUtc(string date, string time, out DateTimeOffset startUtc)
@@ -20,14 +22,37 @@ public static class EventSchedule
         }
 
         var unspecified = DateTime.SpecifyKind(local, DateTimeKind.Unspecified);
-        if (ParisTimeZone.IsInvalidTime(unspecified))
+        if (!TryConvertParisToUtc(unspecified, out var utc) || utc > LatestStartWithAWholeLifecycle)
         {
             startUtc = default;
             return false;
         }
 
-        startUtc = new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(unspecified, ParisTimeZone), TimeSpan.Zero);
+        startUtc = new DateTimeOffset(utc, TimeSpan.Zero);
         return true;
+    }
+
+    private static bool TryConvertParisToUtc(DateTime parisTime, out DateTime utc)
+    {
+        try
+        {
+            utc = ParisTimeZone.IsInvalidTime(parisTime)
+                ? SkippedParisTimeToUtc(parisTime)
+                : TimeZoneInfo.ConvertTimeToUtc(parisTime, ParisTimeZone);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            utc = default;
+            return false;
+        }
+    }
+
+    private static DateTime SkippedParisTimeToUtc(DateTime parisTime)
+    {
+        var wallClockAsUtc = DateTime.SpecifyKind(parisTime, DateTimeKind.Utc);
+        var firstGuess = wallClockAsUtc - ParisTimeZone.GetUtcOffset(wallClockAsUtc);
+        return wallClockAsUtc - ParisTimeZone.GetUtcOffset(firstGuess);
     }
 
     private static TimeZoneInfo ResolveParisTimeZone()

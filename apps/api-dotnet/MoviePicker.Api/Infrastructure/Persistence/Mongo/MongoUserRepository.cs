@@ -34,6 +34,36 @@ public sealed class MongoUserRepository : IUserRepository
         return docs.ConvertAll(UserDocumentMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<UserCard>> ListCardsByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default)
+    {
+        if (ids.Count == 0)
+            return [];
+        return await FindCardsAsync(Builders<UserDocument>.Filter.In(x => x.Id, ids), ct);
+    }
+
+    public async Task<IReadOnlyList<UserCard>> ListCardsByHandlesAsync(IReadOnlyCollection<string> handles, CancellationToken ct = default)
+    {
+        var normalized = handles.Select(NormalizeHandle).OfType<string>().Distinct(StringComparer.Ordinal).ToList();
+        if (normalized.Count == 0)
+            return [];
+        return await FindCardsAsync(Builders<UserDocument>.Filter.In(x => x.Handle, normalized), ct);
+    }
+
+    private async Task<IReadOnlyList<UserCard>> FindCardsAsync(FilterDefinition<UserDocument> filter, CancellationToken ct)
+    {
+        var card = Builders<UserDocument>.Projection
+            .Include(x => x.AvatarId)
+            .Include(x => x.AvatarPhoto)
+            .Include(x => x.Handle)
+            .Include(x => x.IsProfilePublic);
+        var docs = await _collection.Find(filter).Project<UserDocument>(card).ToListAsync(ct);
+        return docs.ConvertAll(d => new UserCard(
+            d.Id,
+            AvatarPhoto.DisplayedAvatarIdOf(d.AvatarId ?? string.Empty, UserDocumentMapper.ToAvatarPhotoDomain(d.AvatarPhoto)),
+            d.Handle,
+            d.IsProfilePublic ?? true));
+    }
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
         var normalized = NormalizeEmail(email);
@@ -150,6 +180,19 @@ public sealed class MongoUserRepository : IUserRepository
     {
         var update = Builders<UserDocument>.Update
             .Set(x => x.LetterboxdPendingReconciliationCount, pendingCount)
+            .Inc(x => x.Version, 1);
+        await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
+    }
+
+    public async Task RecordLetterboxdPendingChoicesAsync(
+        string userId,
+        int pendingCount,
+        IReadOnlyList<string> pendingChoiceKeys,
+        CancellationToken ct = default)
+    {
+        var update = Builders<UserDocument>.Update
+            .Set(x => x.LetterboxdPendingReconciliationCount, pendingCount)
+            .Set(x => x.LetterboxdPendingChoiceKeys, pendingChoiceKeys.ToList())
             .Inc(x => x.Version, 1);
         await _collection.UpdateOneAsync(x => x.Id == userId, update, cancellationToken: ct);
     }

@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   height: var(--space-1);
-  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-brand-secondary) 100%);
+  background: var(--gradient-accent);
 }
 
 .body {
@@ -20,7 +20,7 @@
   margin: 0;
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-tight);
+  letter-spacing: var(--tracking-tighter);
   color: var(--color-text);
 }
 
@@ -116,7 +116,7 @@
 
 .entryLink:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .entryText {
@@ -158,4 +158,14 @@
   flex-shrink: 0;
   padding: var(--space-4) var(--space-6) var(--space-6);
   border-top: 1px solid var(--color-border-subtle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entryChevron {
+    transition: none;
+  }
+
+  .entryLink:hover .entryChevron {
+    transform: none;
+  }
 }

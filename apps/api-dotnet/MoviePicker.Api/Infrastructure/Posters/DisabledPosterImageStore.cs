@@ -6,12 +6,12 @@ public sealed class DisabledPosterImageStore : IPosterImageStore
 {
     public string? ToPublicPosterPath(string? posterUrl) => posterUrl;
 
-    public Task RegisterTmdbSourceAsync(string normalizedTmdbHttpsUrl, CancellationToken ct = default) =>
-        Task.CompletedTask;
-
-    public Task RegisterTmdbSourcesAsync(IReadOnlyCollection<string> normalizedTmdbHttpsUrls, CancellationToken ct = default) =>
-        Task.CompletedTask;
+    public Task<PosterImageBlob?> GetOrFetchAsync(string normalizedTmdbHttpsUrl, CancellationToken ct = default) =>
+        Task.FromResult<PosterImageBlob?>(null);
 
     public Task<PosterImageBlob?> GetByKeyAsync(string posterKey, CancellationToken ct = default) =>
         Task.FromResult<PosterImageBlob?>(null);
+
+    public Task<string?> FindSourceUrlAsync(string posterKey, CancellationToken ct = default) =>
+        Task.FromResult<string?>(null);
 }

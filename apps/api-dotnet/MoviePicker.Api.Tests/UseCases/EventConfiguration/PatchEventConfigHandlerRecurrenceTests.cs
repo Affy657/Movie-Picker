@@ -39,6 +39,7 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
             _pushSubRepo.Object,
             _pushSender.Object,
             _notifications.Object,
+            new RecordingUnitOfWork(),
             NullLogger<PatchEventConfigHandler>.Instance,
             TimeProvider.System);
     }
@@ -72,6 +73,42 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
             r => r.UpdateAsync(
                 It.Is<Event>(e => e.Recurrence == RecurrenceFrequency.Weekly),
                 It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HostSetsAMonthlyRecurrence_AnchorsItOnTheDayOfTheNight()
+    {
+        GivenEvent(Upcoming() with { Date = "2035-01-31" });
+
+        await _sut.HandleAsync("s", new PatchEventConfigRequest { Recurrence = RecurrenceFrequency.Monthly });
+
+        _events.Verify(
+            r => r.UpdateAsync(It.Is<Event>(e => e.RecurrenceAnchorDay == 31), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_OccurrenceOnAClampedDay_KeepsTheAnchorOfItsSeries()
+    {
+        GivenEvent(Upcoming() with { Date = "2035-02-28", Recurrence = RecurrenceFrequency.Monthly, RecurrenceAnchorDay = 31 });
+
+        await _sut.HandleAsync("s", new PatchEventConfigRequest { Title = "Soirée de fin de mois" });
+
+        _events.Verify(
+            r => r.UpdateAsync(It.Is<Event>(e => e.RecurrenceAnchorDay == 31), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HostMovesARecurringNight_AnchorsTheSeriesOnTheNewDay()
+    {
+        GivenEvent(Upcoming() with { Date = "2035-01-31", Recurrence = RecurrenceFrequency.Monthly, RecurrenceAnchorDay = 31 });
+
+        await _sut.HandleAsync("s", new PatchEventConfigRequest { Date = "2035-01-15" });
+
+        _events.Verify(
+            r => r.UpdateAsync(It.Is<Event>(e => e.RecurrenceAnchorDay == 15), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

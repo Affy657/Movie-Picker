@@ -21,7 +21,7 @@ public sealed class UploadAvatarPhotoHandler : IUploadAvatarPhotoHandler
         if (!string.Equals(format.ContentType, request.ContentType, StringComparison.OrdinalIgnoreCase))
             throw Errors.AvatarPhotoInvalid();
 
-        return UserProfileResponses.From(await _writer.ReplaceAsync(userId, bytes, format, ct));
+        return UserProfileMapping.ToResponse(await _writer.ReplaceAsync(userId, bytes, format, ct));
     }
 
     private static byte[] Decode(string base64Content)

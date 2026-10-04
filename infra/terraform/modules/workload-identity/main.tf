@@ -62,4 +62,12 @@ resource "google_storage_bucket_iam_member" "bucket" {
   bucket = each.value.bucket
   role   = each.value.role
   member = "serviceAccount:${google_service_account.this.email}"
+
+  dynamic "condition" {
+    for_each = each.value.object_prefix == null ? [] : [each.value.object_prefix]
+    content {
+      title      = "objects under ${condition.value}"
+      expression = "resource.name.startsWith(\"projects/_/buckets/${each.value.bucket}/objects/${condition.value}\")"
+    }
+  }
 }

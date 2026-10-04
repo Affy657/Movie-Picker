@@ -84,7 +84,7 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
             image == fallbackImage ? EventRecapPreview.SiteName : $"Affiche de {first.Title}");
     }
 
-    private static string BuildDescription(Event evt, Movie movie, IReadOnlyList<int> ratings, int participantCount)
+    private static string BuildDescription(Event evt, Movie movie, List<int> ratings, int participantCount)
     {
         var film = string.IsNullOrWhiteSpace(movie.Year) ? movie.Title : $"{movie.Title} ({movie.Year})";
         var day = DateOnly.TryParse(evt.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
@@ -105,10 +105,7 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
         if (string.IsNullOrEmpty(movie.PosterPath))
             return fallback;
 
-        if (TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(movie.PosterPath, out var normalized))
-            await _posterImageStore.RegisterTmdbSourceAsync(normalized, ct);
-
-        var publicPath = _posterImageStore.ToPublicPosterPath(movie.PosterPath);
+        var publicPath = await _posterImageStore.ToStoredPosterPathAsync(movie.PosterPath, ct);
         if (string.IsNullOrEmpty(publicPath) || !publicPath.StartsWith('/'))
             return fallback;
 

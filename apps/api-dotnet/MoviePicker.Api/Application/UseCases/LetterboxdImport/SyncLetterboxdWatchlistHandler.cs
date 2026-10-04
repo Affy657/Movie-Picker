@@ -8,6 +8,7 @@ namespace MoviePicker.Api.Application.UseCases.LetterboxdImport;
 public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHandler
 {
     private static readonly TimeSpan MinimumInterval = TimeSpan.FromDays(1);
+    private static readonly TimeSpan RetryIntervalAfterFailure = TimeSpan.FromHours(1);
 
     private readonly IUserRepository _users;
     private readonly IUserNotificationRepository _notifications;
@@ -42,23 +43,27 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         }
 
         var now = _clock.GetUtcNow();
-        if (!force && user.LetterboxdLastSyncAt is { } last && now - last < MinimumInterval)
+        var interval = user.LetterboxdLastSyncError is null ? MinimumInterval : RetryIntervalAfterFailure;
+        if (!force && user.LetterboxdLastSyncAt is { } last && now - last < interval)
             return Skipped();
 
         await _users.SetLetterboxdSyncStatusAsync(userId, now, null, ct);
 
-        var outcome = await _synchronizer.SyncAsync(user, ct);
+        var outcome = await SyncRecordingFailuresAsync(user, now, ct);
         if (!outcome.Succeeded)
         {
             await _users.SetLetterboxdSyncStatusAsync(userId, now, outcome.Error, ct);
-            if (force)
-                throw Errors.LetterboxdSyncFailed(outcome.Error);
-            return Skipped();
+            if (!force)
+                return Skipped();
+            if (outcome.Error == ErrorCodes.LetterboxdSyncUnavailable)
+                throw Errors.LetterboxdSyncUnavailable();
+            throw Errors.LetterboxdSyncFailed(outcome.Error);
         }
 
-        await _users.SetLetterboxdPendingReconciliationCountAsync(userId, outcome.PendingChoices.Count, ct);
+        var pendingChoiceKeys = outcome.PendingChoices.Select(PendingChoiceKey).Distinct(StringComparer.Ordinal).ToList();
+        await _users.RecordLetterboxdPendingChoicesAsync(userId, outcome.PendingChoices.Count, pendingChoiceKeys, ct);
 
-        if (!force && outcome.PendingChoices.Count > 0
+        if (!force && HasPendingChoiceNotYetReported(user, outcome.PendingChoices.Count, pendingChoiceKeys)
             && user.NotifiesOn(UserNotificationType.LetterboxdReconciliationPending))
         {
             await _notifications.AddAsync(new UserNotification
@@ -80,6 +85,35 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
             TotalOnLetterboxd = outcome.TotalOnLetterboxd,
             TotalTruncated = outcome.TotalTruncated
         };
+    }
+
+    private async Task<LetterboxdSyncOutcome> SyncRecordingFailuresAsync(User user, DateTimeOffset startedAt, CancellationToken ct)
+    {
+        try
+        {
+            return await _synchronizer.SyncAsync(user, ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException || (ex is TaskCanceledException && !ct.IsCancellationRequested))
+        {
+            return LetterboxdWatchlistSynchronizer.Failed(ErrorCodes.LetterboxdSyncUnavailable);
+        }
+        catch
+        {
+            await _users.SetLetterboxdSyncStatusAsync(user.Id, startedAt, ErrorCodes.LetterboxdSyncFailed, CancellationToken.None);
+            throw;
+        }
+    }
+
+    private static string PendingChoiceKey(LetterboxdImportRowResponse choice) =>
+        string.IsNullOrEmpty(choice.LetterboxdSlug) ? $"{choice.Title}|{choice.Year}" : choice.LetterboxdSlug;
+
+    private static bool HasPendingChoiceNotYetReported(User user, int pendingCount, List<string> pendingChoiceKeys)
+    {
+        if (user.LetterboxdPendingChoiceKeys is not { } reported)
+            return pendingCount > user.LetterboxdPendingReconciliationCount;
+
+        var alreadyReported = reported.ToHashSet(StringComparer.Ordinal);
+        return pendingChoiceKeys.Exists(key => !alreadyReported.Contains(key));
     }
 
     private static LetterboxdSyncResponse Skipped() => new() { Skipped = true };

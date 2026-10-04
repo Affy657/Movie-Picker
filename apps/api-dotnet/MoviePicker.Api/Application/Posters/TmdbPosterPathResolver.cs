@@ -8,14 +8,9 @@ public static class TmdbPosterPathResolver
     public static async Task<string?> ResolveAsync(IPosterImageStore store, string? posterPath, CancellationToken ct)
     {
         var poster = string.IsNullOrWhiteSpace(posterPath) ? null : posterPath.Trim();
-        if (poster is null)
-            return null;
-
-        if (TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(poster, out var normalized))
-            await store.RegisterTmdbSourceAsync(normalized, ct);
-        else if (!TmdbPosterUrlNormalizer.TryParsePosterKey(poster, out _))
+        if (poster is not null && !TmdbPosterUrlNormalizer.IsAcceptedPosterReference(poster))
             throw Errors.InvalidPosterPath();
 
-        return store.ToPublicPosterPath(poster);
+        return await store.ToStoredPosterPathAsync(poster, ct);
     }
 }

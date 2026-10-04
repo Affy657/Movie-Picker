@@ -30,4 +30,14 @@ public sealed class MongoRateLimitCounterStore : IRateLimitCounterStore
 
         return updated?.Count ?? 1;
     }
+
+    public async Task DecrementAsync(string key, CancellationToken ct = default)
+    {
+        await _collection.UpdateOneAsync(
+            Builders<RateLimitCounterDocument>.Filter.And(
+                Builders<RateLimitCounterDocument>.Filter.Eq(x => x.Id, key),
+                Builders<RateLimitCounterDocument>.Filter.Gt(x => x.Count, 0)),
+            Builders<RateLimitCounterDocument>.Update.Inc(x => x.Count, -1),
+            cancellationToken: ct);
+    }
 }

@@ -37,6 +37,7 @@ export interface LetterboxdSelection {
   year: string;
   posterPath: string | null;
   voteAverage?: number | null;
+  genreIds?: number[];
   letterboxdSlug: string | null;
 }
 

@@ -26,6 +26,11 @@ variable "api_host" {
   type        = string
 }
 
+variable "staging_api_host" {
+  description = "Public host of the staging API, probed so that a broken recette is known before a delivery needs it."
+  type        = string
+}
+
 variable "web_host" {
   description = "Canonical host of the web app, probed by the front check. An alias that redirects would fail the check."
   type        = string

@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router';
+import { useCallback, useEffect, useId, useRef, useState, type SyntheticEvent } from 'react';
+import { useNavigate, useLocation } from 'react-router';
 import clsx from 'clsx';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ChevronDown, ListRestart, Settings2, Sparkles } from 'lucide-react';
+import { ChevronDown, ListRestart, Settings2, Sparkles } from 'lucide-react';
 import ThemeField from '@/features/events/components/ThemeField';
 import WheelModeField from '@/features/events/components/WheelModeField';
 import EventTemplatesRow from '@/features/events/components/EventTemplatesRow';
@@ -27,6 +27,7 @@ import {
 import NumberInput from '@/shared/components/NumberInput';
 import ToggleRow from '@/shared/components/ToggleRow';
 import PageLayout from '@/shared/components/PageLayout';
+import Card from '@/shared/components/Card';
 import {
   createEvent as createEventApi,
   fetchEventConfig,
@@ -37,6 +38,7 @@ import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
+import { eventWallClockAt } from '@/shared/utils/eventScheduled';
 import { ROUTES } from '@/app/routes';
 import {
   DEFAULT_PARTICIPANT_LIMIT,
@@ -53,26 +55,33 @@ import { formatEventTitleDate } from '@/shared/utils/formatMyEventsListDate';
 import styles from './CreateEvent.module.css';
 import templatesStyles from '@/features/events/components/EventTemplatesSection.module.css';
 import Button from '@/shared/components/Button';
-import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Field from '@/shared/components/Field';
+import FormPageShell from '@/shared/components/FormPageShell';
 
-function getDefaultDate(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+function pad2(value: number): string {
+  return String(value).padStart(2, '0');
 }
 
-function getDefaultTime(): string {
-  const now = new Date();
-  const totalMin = now.getHours() * 60 + now.getMinutes();
-  if (totalMin < 20 * 60) return '20:00';
-  const ceil = Math.ceil(totalMin / 30) * 30;
-  const h = Math.floor(ceil / 60) % 24;
-  const m = ceil % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+const DEFAULT_START_MINUTES = 20 * 60;
+const START_SLOT_MINUTES = 30;
+const MINUTES_PER_DAY = 24 * 60;
+
+function getDefaultStart(): { date: string; time: string } {
+  const now = eventWallClockAt(Date.now());
+  const nowMinutes = now.hour * 60 + now.minute;
+  const startMinutes =
+    nowMinutes < DEFAULT_START_MINUTES
+      ? DEFAULT_START_MINUTES
+      : (Math.floor(nowMinutes / START_SLOT_MINUTES) + 1) * START_SLOT_MINUTES;
+  const startDay = new Date(
+    Date.UTC(now.year, now.month - 1, now.day + Math.floor(startMinutes / MINUTES_PER_DAY))
+  );
+  const startMinuteOfDay = startMinutes % MINUTES_PER_DAY;
+  return {
+    date: `${startDay.getUTCFullYear()}-${pad2(startDay.getUTCMonth() + 1)}-${pad2(startDay.getUTCDate())}`,
+    time: `${pad2(Math.floor(startMinuteOfDay / 60))}:${pad2(startMinuteOfDay % 60)}`,
+  };
 }
 
 const INITIAL_FIELDS = defaultTemplateFields();
@@ -88,8 +97,9 @@ export default function CreateEvent() {
   const queryClient = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
   const { track } = useAnalytics();
-  const [date, setDate] = useState(getDefaultDate);
-  const [time, setTime] = useState(getDefaultTime);
+  const [defaultStart] = useState(getDefaultStart);
+  const [date, setDate] = useState(defaultStart.date);
+  const [time, setTime] = useState(defaultStart.time);
   const suggestedTitle = t('events.create.defaultTitle', {
     date: formatEventTitleDate(date, locale),
   });
@@ -193,8 +203,18 @@ export default function CreateEvent() {
   }, [applyFields, forgetAppliedTemplate]);
 
   const configPatch = draftToConfigPatch(templateDraft);
+  const creationRequest = useRef<{ draft: string; id: string } | null>(null);
   const createAction = useCallback(async () => {
-    const res = await createEventApi({ title, date, time });
+    const draft = JSON.stringify([title, date, time]);
+    if (creationRequest.current?.draft !== draft) {
+      creationRequest.current = { draft, id: crypto.randomUUID() };
+    }
+    const res = await createEventApi({
+      title,
+      date,
+      time,
+      clientRequestId: creationRequest.current.id,
+    });
     track('event_created');
     const publicUrl = `${globalThis.location.origin}${ROUTES.eventDetail(res.slug)}`;
     if (res.creatorParticipant) {
@@ -252,14 +272,11 @@ export default function CreateEvent() {
 
   return (
     <PageLayout className={styles.layout}>
-      <Link to={ROUTES.myEvents} className={styles.backLink}>
-        <ArrowLeft size={ICON_SIZE.md} aria-hidden />
-        <span className={styles.backLinkLabel}>{t('nav.myEvents')}</span>
-      </Link>
-      <Card padding="none" radius="lg" elevation="md" className={styles.card}>
-        <span className={styles.cardAccent} aria-hidden />
-        <h1 className={styles.title}>{t('events.create.title')}</h1>
-        <p className={styles.description}>{t('events.create.description')}</p>
+      <FormPageShell
+        title={t('events.create.title')}
+        description={t('events.create.description')}
+        back={{ to: ROUTES.myEvents, label: t('nav.myEvents') }}
+      >
         <form onSubmit={handleSubmit} className="form" noValidate>
           <Field
             label={t('events.create.titleLabel')}
@@ -334,10 +351,15 @@ export default function CreateEvent() {
             </Field>
           </div>
 
-          <details
+          <Card
+            as="details"
+            padding="none"
+            surface="sunken"
             className={styles.advanced}
             open={advancedOpen}
-            onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}
+            onToggle={(e: SyntheticEvent<HTMLDetailsElement>) =>
+              setAdvancedOpen(e.currentTarget.open)
+            }
           >
             <summary className={styles.advancedSummary}>
               <Settings2 size={ICON_SIZE.md} aria-hidden className={styles.advancedIcon} />
@@ -510,12 +532,12 @@ export default function CreateEvent() {
                 <div className={styles.resetRow}>
                   <Button variant="ghost" size="sm" onClick={resetOptions}>
                     <ListRestart size={ICON_SIZE.sm} aria-hidden />
-                    <span className={styles.resetLabel}>{t('events.create.resetOptions')}</span>
+                    {t('events.create.resetOptions')}
                   </Button>
                 </div>
               )}
             </div>
-          </details>
+          </Card>
 
           {showTemplates && (
             <section className={clsx(styles.templatesSection, templatesStyles.section)}>
@@ -564,11 +586,17 @@ export default function CreateEvent() {
               {error}
             </p>
           )}
-          <Button type="submit" variant="primary" className={styles.submit} loading={loading}>
+          <Button
+            type="submit"
+            variant="primary"
+            fullWidth
+            className={styles.submit}
+            loading={loading}
+          >
             {loading ? t('events.create.submitting') : t('events.create.submit')}
           </Button>
         </form>
-      </Card>
+      </FormPageShell>
     </PageLayout>
   );
 }

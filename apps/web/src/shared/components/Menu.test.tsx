@@ -7,7 +7,7 @@ import Menu, { MenuItem, MenuLabel, MenuPanel, MenuSeparator } from './Menu';
 describe('Menu', () => {
   it("n'affiche pas le panneau tant qu'il n'est pas ouvert", () => {
     render(
-      <Menu triggerLabel="Options" panelLabel="Options">
+      <Menu triggerLabel="Options" panelAriaLabel="Options">
         {() => <MenuItem>Un choix</MenuItem>}
       </Menu>
     );
@@ -17,7 +17,7 @@ describe('Menu', () => {
   it('opens the panel when clicking the trigger and shows the items', async () => {
     const user = userEvent.setup();
     render(
-      <Menu triggerLabel="Options" panelLabel="Options">
+      <Menu triggerLabel="Options" panelAriaLabel="Options">
         {() => <MenuItem>Un choix</MenuItem>}
       </Menu>
     );
@@ -32,7 +32,7 @@ describe('Menu', () => {
     const onSelect = vi.fn();
     const user = userEvent.setup();
     render(
-      <Menu triggerLabel="Options" panelLabel="Options">
+      <Menu triggerLabel="Options" panelAriaLabel="Options">
         {(close) => (
           <MenuItem
             onClick={() => {
@@ -57,7 +57,7 @@ describe('Menu', () => {
     const user = userEvent.setup();
     render(
       <div>
-        <Menu triggerLabel="Options" panelLabel="Options">
+        <Menu triggerLabel="Options" panelAriaLabel="Options">
           {() => <MenuItem>Un choix</MenuItem>}
         </Menu>
         <button type="button">Ailleurs</button>

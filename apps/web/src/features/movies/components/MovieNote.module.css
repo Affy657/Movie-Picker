@@ -8,13 +8,13 @@
 .noteQuote {
   flex-shrink: 0;
   margin-top: var(--space-0-5);
-  color: var(--mc-fg-subtle, var(--on-poster-fg-subtle));
+  color: var(--mc-fg-subtle, var(--color-on-poster-fg-subtle));
 }
 
 .noteText {
   font-size: var(--font-size-2xs);
   font-style: italic;
-  color: var(--mc-fg-soft, var(--on-poster-fg-soft));
+  color: var(--mc-fg-soft, var(--color-on-poster-fg-soft));
   line-height: var(--leading-snug);
   overflow-wrap: break-word;
 }
@@ -39,7 +39,7 @@
 
 .noteEditTrigger:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
   border-radius: var(--radius-sm);
 }
 
@@ -54,19 +54,19 @@
   padding: 0;
   background: none;
   border: none;
-  color: var(--mc-fg-subtle, var(--on-poster-fg-subtle));
+  color: var(--mc-fg-subtle, var(--color-on-poster-fg-subtle));
   cursor: pointer;
 }
 
 .noteExpand:focus-visible {
-  color: var(--mc-fg-soft, var(--on-poster-fg-soft));
+  color: var(--mc-fg-soft, var(--color-on-poster-fg-soft));
   outline: 2px solid currentColor;
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 @media (hover: hover) {
   .noteExpand:hover {
-    color: var(--mc-fg-soft, var(--on-poster-fg-soft));
+    color: var(--mc-fg-soft, var(--color-on-poster-fg-soft));
     outline: none;
   }
 }
@@ -83,9 +83,9 @@
   font-size: var(--font-size-2xs);
   font-family: inherit;
   line-height: var(--leading-comfortable);
-  color: var(--mc-fg-strong, var(--on-poster-fg-strong));
-  background: var(--mc-input-bg, var(--on-poster-input-bg));
-  border: 1px solid var(--mc-icon-muted, var(--on-poster-icon-muted));
+  color: var(--mc-fg-strong, var(--color-on-poster-fg-strong));
+  background: var(--mc-input-bg, var(--color-on-poster-input-bg));
+  border: 1px solid var(--mc-icon-muted, var(--color-on-poster-icon-muted));
   border-radius: var(--radius-sm);
   resize: vertical;
   min-height: var(--space-14);
@@ -100,7 +100,7 @@
 }
 
 .noteTextarea::placeholder {
-  color: var(--mc-icon-muted, var(--on-poster-icon-muted));
+  color: var(--mc-icon-muted, var(--color-on-poster-icon-muted));
 }
 
 .noteEditorFooter {
@@ -113,12 +113,12 @@
 
 .noteCharCount {
   font-size: var(--font-size-3xs);
-  color: var(--mc-fg-muted, var(--on-poster-fg-muted));
+  color: var(--mc-fg-muted, var(--color-on-poster-fg-muted));
   font-variant-numeric: tabular-nums;
 }
 
 .noteCharCountOver {
-  color: var(--on-poster-error);
+  color: var(--color-on-poster-error);
 }
 
 .noteEditorActions {
@@ -156,19 +156,19 @@
 
 .noteBtnGhost {
   background: transparent;
-  color: var(--mc-fg-soft, var(--on-poster-fg-soft));
-  border-color: var(--mc-border, var(--on-poster-border));
+  color: var(--mc-fg-soft, var(--color-on-poster-fg-soft));
+  border-color: var(--mc-border, var(--color-on-poster-border));
 }
 
 .noteBtnGhost:focus-visible {
-  background: var(--mc-overlay-hover-soft, var(--on-poster-overlay-hover-soft));
+  background: var(--mc-overlay-hover-soft, var(--color-on-poster-overlay-hover-soft));
   outline: 2px solid currentColor;
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 @media (hover: hover) {
   .noteBtnGhost:hover:not(:disabled) {
-    background: var(--mc-overlay-hover-soft, var(--on-poster-overlay-hover-soft));
+    background: var(--mc-overlay-hover-soft, var(--color-on-poster-overlay-hover-soft));
     outline: none;
   }
 }
@@ -182,7 +182,7 @@
 .noteBtnPrimary:focus-visible {
   filter: brightness(1.08);
   outline: 2px solid currentColor;
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 @media (hover: hover) {

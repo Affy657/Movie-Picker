@@ -126,6 +126,26 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     }
 
     [Fact]
+    public async Task PostMovie_PosterPathLongerThanAnyTmdbAddress_IsRefusedBeforeBeingStored()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "HôteAffiche");
+        var createRes = await client.PostAsJsonAsync("/api/v1/events", new { title = "Soirée affiche", date = "2030-06-16", time = "19:00" });
+        createRes.EnsureSuccessStatusCode();
+        var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+
+        var addMovieRes = await client.PostAsJsonAsync($"/api/v1/events/{created!.Slug}/movies", new
+        {
+            tmdbId = 603,
+            title = "The Matrix",
+            year = "1999",
+            posterPath = "https://image.tmdb.org/t/p/w500/" + new string('a', 60_000) + ".jpg",
+            participantId = created.CreatorParticipant!.Id
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, addMovieRes.StatusCode);
+    }
+
+    [Fact]
     public async Task PostWinner_WithMovieId_SetsManualWinner_VisibleInEventDetail()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "HôteManuel");

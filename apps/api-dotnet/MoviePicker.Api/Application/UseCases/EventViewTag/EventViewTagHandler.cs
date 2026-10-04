@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using MoviePicker.Api.Application.Ports;
@@ -34,16 +35,18 @@ public sealed class EventViewTagHandler : IEventViewTagHandler
 
         var currentUserId = _currentUserAccessor.GetUserId();
         var isHost = EventHost.IsHost(evt, _hostTokenAccessor.GetHostToken(), currentUserId);
-        var freshnessBucket = _clock.GetUtcNow().ToUnixTimeSeconds() / (long)FreshnessWindow.TotalSeconds;
-        var viewer = ViewerFingerprint(currentUserId, isHost);
+        var digest = ViewerDigest(currentUserId, isHost);
+        var windowSeconds = (long)FreshnessWindow.TotalSeconds;
+        var viewerOffsetSeconds = BinaryPrimitives.ReadUInt16BigEndian(digest.AsSpan(6, 2)) % windowSeconds;
+        var freshnessBucket = (_clock.GetUtcNow().ToUnixTimeSeconds() + viewerOffsetSeconds) / windowSeconds;
+        var viewer = Convert.ToHexString(digest, 0, 6).ToLowerInvariant();
 
         return $"W/\"{evt.WriteSeq}.{evt.Version}.{freshnessBucket}.{viewer}\"";
     }
 
-    private static string ViewerFingerprint(string? currentUserId, bool isHost)
+    private static byte[] ViewerDigest(string? currentUserId, bool isHost)
     {
         var identity = $"{currentUserId ?? string.Empty}|{(isHost ? "host" : "guest")}";
-        var digest = SHA256.HashData(Encoding.UTF8.GetBytes(identity));
-        return Convert.ToHexString(digest, 0, 6).ToLowerInvariant();
+        return SHA256.HashData(Encoding.UTF8.GetBytes(identity));
     }
 }

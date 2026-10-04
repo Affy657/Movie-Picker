@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Watchlist;
@@ -33,16 +34,58 @@ public sealed class AddToWatchlistHandlerTests
             NullLogger<AddToWatchlistHandler>.Instance);
     }
 
-    private static AddWatchlistItemRequest Request(double? voteAverage = 8.3, int? runtimeMinutes = 136) => new()
+    private static AddWatchlistItemRequest Request(
+        double? voteAverage = 8.3,
+        int? runtimeMinutes = 136,
+        string? posterPath = null,
+        IReadOnlyList<int>? genreIds = null) => new()
+        {
+            TmdbId = 42,
+            MediaType = MovieMediaType.Movie,
+            Title = "Matrix",
+            Year = "1999",
+            PosterPath = posterPath,
+            VoteAverage = voteAverage,
+            RuntimeMinutes = runtimeMinutes,
+            GenreIds = genreIds
+        };
+
+    private static readonly int[] SearchResultGenreIds = [878, 0, 28, 878];
+    private static readonly int[] SanitizedSearchResultGenreIds = [878, 28];
+    private static readonly int[] DocumentaryGenreIds = [99];
+
+    [Fact]
+    public async Task HandleAsync_TmdbDetailsDown_KeepsTheGenresOfTheSearchResult()
     {
-        TmdbId = 42,
-        MediaType = MovieMediaType.Movie,
-        Title = "Matrix",
-        Year = "1999",
-        PosterPath = null,
-        VoteAverage = voteAverage,
-        RuntimeMinutes = runtimeMinutes
-    };
+        WatchlistItem? stored = null;
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
+            .Callback<WatchlistItem, CancellationToken>((item, _) => stored = item)
+            .ReturnsAsync(true);
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("TMDB unavailable"));
+
+        var result = await _sut.HandleAsync(UserId, Request(genreIds: SearchResultGenreIds));
+
+        Assert.Equal(SanitizedSearchResultGenreIds, stored!.GenreIds);
+        Assert.Equal(SanitizedSearchResultGenreIds, result.GenreIds);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbDetailsAvailable_TheirGenresWinOverTheSearchResult()
+    {
+        WatchlistItem? stored = null;
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()))
+            .Callback<WatchlistItem, CancellationToken>((item, _) => stored = item)
+            .ReturnsAsync(true);
+        _tmdb
+            .Setup(t => t.GetDetailsAsync(42, MovieMediaType.Movie, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(MatrixDetails(136));
+
+        await _sut.HandleAsync(UserId, Request(genreIds: DocumentaryGenreIds));
+
+        Assert.Equal(GenreIds, stored!.GenreIds);
+    }
 
     private static TmdbMovieDetails MatrixDetails(int? runtime, double? voteAverage = null) =>
         new(42, "Matrix", null, null, null, [], runtime, [], GenreIds, "1999-03-31", VoteAverage: voteAverage);
@@ -213,5 +256,56 @@ public sealed class AddToWatchlistHandlerTests
 
         Assert.Null(inserted!.RuntimeMinutes);
         Assert.Null(inserted.VoteAverage);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LegacyPosterKey_IsStoredAsTheStatelessRoute()
+    {
+        var legacyKey = new string('c', 64);
+        _posterImageStore.Setup(p => p.FindSourceUrlAsync(legacyKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://image.tmdb.org/t/p/w500/kept.jpg");
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.HandleAsync(UserId, Request(posterPath: "/api/v1/posters/" + legacyKey));
+
+        _watchlist.Verify(
+            w => w.AddAsync(It.Is<WatchlistItem>(i => i.PosterPath == "/api/v1/posters/tmdb/w500/kept.jpg"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LegacyPosterKeyAlreadyGone_IsNotStored()
+    {
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.HandleAsync(UserId, Request(posterPath: "/api/v1/posters/" + new string('d', 64)));
+
+        _watchlist.Verify(
+            w => w.AddAsync(It.Is<WatchlistItem>(i => i.PosterPath == null), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData("https://collect.attacker.example/pixel.png")]
+    [InlineData("https://image.tmdb.org.attacker.example/t/p/w500/a.jpg")]
+    [InlineData("http://image.tmdb.org/t/p/w500/a.jpg")]
+    public async Task HandleAsync_PosterOutsideTmdb_IsRefused(string posterPath)
+    {
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(UserId, Request(posterPath: posterPath)));
+
+        Assert.Equal(ErrorCodes.InvalidPosterPath, ex.Reason);
+        _watchlist.Verify(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("https://image.tmdb.org/t/p/w500/a.jpg")]
+    [InlineData("/api/v1/posters/tmdb/w500/a.jpg")]
+    public async Task HandleAsync_TmdbPoster_IsAccepted(string posterPath)
+    {
+        _watchlist.Setup(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await _sut.HandleAsync(UserId, Request(posterPath: posterPath));
+
+        _watchlist.Verify(w => w.AddAsync(It.IsAny<WatchlistItem>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -1,5 +1,6 @@
 import Chip from '@/shared/components/Chip';
 import styles from './ActiveFilterChips.module.css';
+import LinkButton from '@/shared/components/LinkButton';
 
 interface ActiveFilterChipItem {
   key: string;
@@ -27,14 +28,19 @@ export default function ActiveFilterChips({
   return (
     <div className={styles.row} aria-label={groupAriaLabel}>
       {chips.map((chip) => (
-        <Chip key={chip.key} tone="primary" onRemove={chip.onRemove} removeLabel={removeAriaLabel}>
+        <Chip
+          key={chip.key}
+          tone="primary"
+          onRemove={chip.onRemove}
+          removeAriaLabel={removeAriaLabel}
+        >
           {chip.label}
         </Chip>
       ))}
       {onClearAll && clearAllLabel ? (
-        <button type="button" className={styles.clearAll} onClick={onClearAll}>
+        <LinkButton size="sm" onClick={onClearAll}>
           {clearAllLabel}
-        </button>
+        </LinkButton>
       ) : null}
     </div>
   );

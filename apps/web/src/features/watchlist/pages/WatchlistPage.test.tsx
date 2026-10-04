@@ -285,7 +285,7 @@ describe('WatchlistPage (MSW)', () => {
     });
   });
 
-  it('searches for a movie, adds it with rating/runtime, closes the search', async () => {
+  it('searches for a movie, adds it with rating, runtime and genres, closes the search', async () => {
     let addedBody: Record<string, unknown> | null = null;
     server.use(
       authedUserHandler,
@@ -300,6 +300,7 @@ describe('WatchlistPage (MSW)', () => {
               posterPath: null,
               voteAverage: 7.5,
               runtimeMinutes: 112,
+              genreIds: [18, 878],
               watchProviders: [],
               tmdbWatchPageUrl: null,
             },
@@ -333,6 +334,7 @@ describe('WatchlistPage (MSW)', () => {
       title: 'Film Test',
       voteAverage: 7.5,
       runtimeMinutes: 112,
+      genreIds: [18, 878],
     });
 
     await waitFor(() =>

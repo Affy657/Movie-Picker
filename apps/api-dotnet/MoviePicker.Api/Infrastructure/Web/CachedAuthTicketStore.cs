@@ -39,6 +39,11 @@ public sealed class AuthTicketCache
         _cache.Set(CacheKey(key), entry, _ttl);
     }
 
+    public bool IsKnownMissing(string key) =>
+        _cache.TryGetValue(CacheKey(key), out object? entry) && entry is MissingTicket;
+
+    public void SetMissing(string key) => _cache.Set(CacheKey(key), MissingTicket.Instance, _ttl);
+
     public void Remove(string key) => _cache.Remove(CacheKey(key));
 
     public void InvalidateUser(string userId)
@@ -60,6 +65,11 @@ public sealed class AuthTicketCache
         new(ticket.Principal, ticket.Properties.Clone(), ticket.AuthenticationScheme);
 
     private sealed record CachedTicket(AuthenticationTicket Ticket, string UserId, long Generation);
+
+    private sealed class MissingTicket
+    {
+        public static readonly MissingTicket Instance = new();
+    }
 }
 
 public sealed class CachedAuthTicketStore : ITicketStore
@@ -86,15 +96,27 @@ public sealed class CachedAuthTicketStore : ITicketStore
         _cache.Set(key, ticket);
     }
 
+    public async Task<AuthenticationTicket?> RetrieveAsync(string key, HttpContext httpContext, CancellationToken cancellationToken)
+    {
+        var ticket = await RetrieveAsync(key);
+        if (ticket is not null)
+            AuthSessionKey.Remember(httpContext, key);
+        return ticket;
+    }
+
     public async Task<AuthenticationTicket?> RetrieveAsync(string key)
     {
         var cached = _cache.TryGet(key);
         if (cached is not null)
             return cached;
+        if (_cache.IsKnownMissing(key))
+            return null;
 
         var ticket = await _inner.RetrieveAsync(key);
         if (ticket is not null)
             _cache.Set(key, ticket);
+        else
+            _cache.SetMissing(key);
         return ticket;
     }
 

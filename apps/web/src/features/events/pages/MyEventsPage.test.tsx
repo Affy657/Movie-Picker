@@ -179,6 +179,52 @@ describe('MyEventsPage (MSW)', () => {
     expect(document.title).toBe(pageTitle('Mes soirées'));
   });
 
+  it('offers no leave on a joined night whose wheel already picked a movie', async () => {
+    const joinedNight = {
+      slug: 'autre',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-03T00:00:00Z',
+      isCreator: false,
+      isParticipant: true,
+      lifecycle: 'live',
+      participantCount: 6,
+      movieCount: 1,
+    };
+    server.use(
+      authMeHandler,
+      myEventsHandler(
+        [
+          {
+            ...joinedNight,
+            id: 'e2',
+            title: 'Chez Bob',
+            date: '2035-09-01',
+            time: '20:00',
+            winnerMovies: [{ title: 'Parasite', posterPath: null }],
+          },
+          {
+            ...joinedNight,
+            id: 'e3',
+            slug: 'encore-ouverte',
+            title: 'Chez Chloé',
+            date: '2035-09-02',
+            time: '20:00',
+          },
+        ],
+        [],
+        { active: 2, finished: 0 }
+      )
+    );
+
+    renderMyEvents();
+
+    await screen.findByRole('link', { name: /Chez Bob/i }, { timeout: 5000 });
+    expect(screen.getByRole('button', { name: /Options pour Chez Chloé/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Options pour Chez Bob/i })
+    ).not.toBeInTheDocument();
+  });
+
   it('history: open the menu and delete a finished hosted movie night', async () => {
     const user = (await import('@testing-library/user-event')).default.setup();
     let deleteCalled = false;
@@ -234,7 +280,7 @@ describe('MyEventsPage (MSW)', () => {
     await waitFor(() => expect(deleteCalled).toBe(true));
   });
 
-  it('history: a participant removes a finished movie night from their history', async () => {
+  it('history: a participant is offered no removal the API would refuse on a finished night', async () => {
     const user = (await import('@testing-library/user-event')).default.setup();
     setStoredParticipant('rejointe-terminee', 'part-1', 'Alice');
     let removeCalled = false;
@@ -257,6 +303,7 @@ describe('MyEventsPage (MSW)', () => {
             lifecycle: 'finished',
             participantCount: 3,
             movieCount: 2,
+            winnerMovies: [{ title: 'Parasite', posterPath: null }],
           },
         ],
         { active: 0, finished: 1 }
@@ -273,13 +320,63 @@ describe('MyEventsPage (MSW)', () => {
     await user.click(historyTab);
     await screen.findByRole('link', { name: /Soirée rejointe/i });
 
-    await user.click(screen.getByRole('button', { name: /Options pour Soirée rejointe/i }));
-    await user.click(screen.getByRole('menuitem', { name: /retirer de mon historique/i }));
+    expect(
+      screen.queryByRole('button', { name: /Options pour Soirée rejointe/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('menuitem', { name: /retirer de mon historique/i })
+    ).not.toBeInTheDocument();
+    expect(removeCalled).toBe(false);
+  });
 
-    const openDialog = screen.getAllByTestId('confirm-dialog').find((d) => d.hasAttribute('open'))!;
-    await user.click(within(openDialog).getByTestId('confirm-dialog-confirm'));
+  it('history: a failed load offers a retry instead of an empty search result', async () => {
+    const user = (await import('@testing-library/user-event')).default.setup();
+    let historyCalls = 0;
+    server.use(
+      authMeHandler,
+      statsHandler,
+      http.get(`${TEST_API_V1}/events/mine`, ({ request }) => {
+        const finished = new URL(request.url).searchParams.get('scope') === 'finished';
+        if (finished && ++historyCalls === 1) {
+          return HttpResponse.json({ error: 'Historique indisponible' }, { status: 500 });
+        }
+        return HttpResponse.json({
+          events: finished
+            ? [
+                {
+                  id: 'e7',
+                  slug: 'passee',
+                  title: 'Soirée passée',
+                  date: '2020-01-01',
+                  time: '20:00',
+                  createdAt: '2019-01-01T00:00:00Z',
+                  updatedAt: '2020-01-02T00:00:00Z',
+                  isCreator: true,
+                  isParticipant: true,
+                  lifecycle: 'finished',
+                  participantCount: 2,
+                  movieCount: 1,
+                },
+              ]
+            : [],
+          hasMore: false,
+          totalActive: 0,
+          totalFinished: 1,
+        });
+      })
+    );
 
-    await waitFor(() => expect(removeCalled).toBe(true));
+    renderMyEvents();
+
+    await user.click(await screen.findByRole('tab', { name: /historique/i }, { timeout: 5000 }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Historique indisponible');
+    expect(screen.queryByText(/aucune soirée ne correspond/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /réessayer/i }));
+
+    expect(await screen.findByRole('link', { name: /Soirée passée/i })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('history: filter by outcome (with/without a chosen movie)', async () => {

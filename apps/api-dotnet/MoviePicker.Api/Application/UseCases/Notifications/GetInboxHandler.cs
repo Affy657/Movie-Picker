@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Profile;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.Notifications;
@@ -7,10 +8,12 @@ namespace MoviePicker.Api.Application.UseCases.Notifications;
 public sealed class GetInboxHandler : IGetInboxHandler
 {
     private readonly IUserNotificationRepository _notifications;
+    private readonly IUserRepository _users;
 
-    public GetInboxHandler(IUserNotificationRepository notifications)
+    public GetInboxHandler(IUserNotificationRepository notifications, IUserRepository users)
     {
         _notifications = notifications;
+        _users = users;
     }
 
     private const int DefaultPageSize = 30;
@@ -26,6 +29,7 @@ public sealed class GetInboxHandler : IGetInboxHandler
         var items = hasMore ? page.Take(pageSize).ToList() : page;
 
         var unreadCount = await _notifications.GetUnreadCountAsync(userId, ct);
+        var actors = await ResolveActorsAsync(items, ct);
 
         return new NotificationInboxResponse
         {
@@ -33,9 +37,9 @@ public sealed class GetInboxHandler : IGetInboxHandler
             {
                 Id = n.Id,
                 Type = n.Type.ToString().ToLowerInvariant(),
-                ActorHandle = n.ActorHandle,
+                ActorHandle = PublicHandleResolver.Resolve(ActorOf(n, actors)),
                 ActorDisplayName = n.ActorDisplayName,
-                ActorAvatarId = n.ActorAvatarId,
+                ActorAvatarId = ActorOf(n, actors)?.AvatarId ?? n.ActorAvatarId,
                 EventSlug = n.EventSlug,
                 EventTitle = n.EventTitle,
                 MovieTitle = n.MovieTitle,
@@ -45,5 +49,22 @@ public sealed class GetInboxHandler : IGetInboxHandler
             UnreadCount = unreadCount,
             HasMore = hasMore
         };
+    }
+
+    private static UserCard? ActorOf(UserNotification notification, Dictionary<string, UserCard> actors) =>
+        notification.ActorHandle is { } handle ? actors.GetValueOrDefault(HandlePolicy.Normalize(handle)) : null;
+
+    private async Task<Dictionary<string, UserCard>> ResolveActorsAsync(
+        IEnumerable<UserNotification> items,
+        CancellationToken ct)
+    {
+        var actorHandles = items.Select(n => n.ActorHandle).OfType<string>().Distinct(StringComparer.Ordinal).ToList();
+        if (actorHandles.Count == 0)
+            return new Dictionary<string, UserCard>(StringComparer.Ordinal);
+
+        return (await _users.ListCardsByHandlesAsync(actorHandles, ct))
+            .Where(card => !string.IsNullOrEmpty(card.Handle))
+            .DistinctBy(card => card.Handle, StringComparer.Ordinal)
+            .ToDictionary(card => card.Handle!, StringComparer.Ordinal);
     }
 }

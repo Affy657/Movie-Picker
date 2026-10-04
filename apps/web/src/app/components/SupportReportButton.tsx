@@ -1,6 +1,5 @@
 import { useId, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
-import { X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
 import {
@@ -12,8 +11,6 @@ import {
 import Modal from '@/shared/components/Modal';
 import styles from './SupportReportButton.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
-import IconButton from '@/shared/components/IconButton';
-import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type CopyState = 'idle' | 'copied' | 'failed';
 
@@ -84,17 +81,9 @@ export default function SupportReportButton({ className }: Readonly<Props>) {
           size="sm"
           column
           bottomSheetOnMobile
-          ariaLabelledBy={titleId}
+          title={t('support.dialogTitle')}
+          titleId={titleId}
         >
-          <header className={styles.header}>
-            <h2 id={titleId} className={styles.title}>
-              {t('support.dialogTitle')}
-            </h2>
-            <IconButton ariaLabel={t('common.close')} onClick={() => setOpen(false)}>
-              <X size={ICON_SIZE.lg} aria-hidden />
-            </IconButton>
-          </header>
-
           <div className={styles.body}>
             <p className={styles.intro}>{t('support.dialogIntro')}</p>
 

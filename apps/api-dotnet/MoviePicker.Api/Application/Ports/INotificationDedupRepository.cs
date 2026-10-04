@@ -16,4 +16,19 @@ public interface INotificationDedupRepository
         string eventId,
         NotificationDedupChannel channel = NotificationDedupChannel.Push,
         CancellationToken ct = default);
+
+    Task ReleaseAsync(
+        string userId,
+        UserNotificationType type,
+        string eventId,
+        NotificationDedupChannel channel = NotificationDedupChannel.Push,
+        CancellationToken ct = default);
+
+    Task<bool> WasClaimedSinceAsync(
+        string userId,
+        UserNotificationType type,
+        string eventId,
+        NotificationDedupChannel channel,
+        DateTimeOffset since,
+        CancellationToken ct = default);
 }

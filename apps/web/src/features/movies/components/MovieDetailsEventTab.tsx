@@ -11,6 +11,7 @@ import Button from '@/shared/components/Button';
 import SeenButton from '@/features/movies/components/SeenButton';
 import styles from './MovieDetailsEventTab.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import ScoreBar from '@/features/movies/components/ScoreBar';
 
 export interface MovieDetailsEventContext {
   movie: MovieData;
@@ -78,10 +79,7 @@ export default function MovieDetailsEventTab({
           {movie.score > 0 ? `+${movie.score}` : movie.score}
         </span>
         {total > 0 && (
-          <span className={styles.scoreBar}>
-            <span className={styles.scoreBarUp} style={{ flexBasis: `${upRatio}%` }} />
-            <span className={styles.scoreBarDown} style={{ flexBasis: `${downRatio}%` }} />
-          </span>
+          <ScoreBar upRatio={upRatio} downRatio={downRatio} className={styles.scoreBar} />
         )}
         <span className={styles.rowHint}>{breakdownText}</span>
       </div>
@@ -112,7 +110,7 @@ export default function MovieDetailsEventTab({
               aria-pressed={movie.myVote === 1}
             >
               <ThumbsUp aria-hidden size={ICON_SIZE.md} />
-              <span className={styles.voteBtnLabel}>{t('movies.list.voteUp')}</span>
+              {t('movies.list.voteUp')}
             </Button>
             <Button
               size="sm"
@@ -121,7 +119,7 @@ export default function MovieDetailsEventTab({
               aria-pressed={movie.myVote === -1}
             >
               <ThumbsDown aria-hidden size={ICON_SIZE.md} />
-              <span className={styles.voteBtnLabel}>{t('movies.list.voteDown')}</span>
+              {t('movies.list.voteDown')}
             </Button>
           </span>
         </div>

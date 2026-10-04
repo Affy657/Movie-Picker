@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Domain.Services;
 
 namespace MoviePicker.Api.Application.UseCases.RecurringEvents;
@@ -14,7 +15,7 @@ public interface IRecurringEventPass
     Task<RecurringEventPassResult> RunForCreatorAsync(string creatorUserId, CancellationToken ct = default);
 }
 
-public sealed record RecurringEventPassResult(int Candidates, int Created, int Stopped);
+public sealed record RecurringEventPassResult(int Candidates, int Created, int Stopped, int Failed = 0);
 
 public sealed class RecurringEventPass : IRecurringEventPass
 {
@@ -61,49 +62,90 @@ public sealed class RecurringEventPass : IRecurringEventPass
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to reload the recurring movie nights awaiting an occurrence");
-            return new RecurringEventPassResult(0, 0, 0);
+            _logger.LogError(ex, "Failed to reload the recurring movie nights awaiting an occurrence");
+            return new RecurringEventPassResult(0, 0, 0, Failed: 1);
         }
 
         var created = 0;
         var stopped = 0;
+        var failed = 0;
 
         foreach (var parent in candidates)
         {
-            if (parent.Recurrence is not { } frequency
-                || !string.IsNullOrEmpty(parent.NextOccurrenceEventId)
-                || !parent.IsFinished(now))
-                continue;
-
-            if (!DateOnly.TryParse(parent.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parentDate))
-                continue;
-
-            if (EventRecurrence.NextDate(parentDate, frequency, today) is not { } nextDate)
+            switch (await AdvanceSeriesAsync(parent, now, today, ct))
             {
-                await StopSeriesAsync(parent, now, "series dormant beyond the catch-up limit", ct);
-                stopped++;
-                continue;
+                case SeriesStep.Created:
+                    created++;
+                    break;
+                case SeriesStep.Stopped:
+                    stopped++;
+                    break;
+                case SeriesStep.Failed:
+                    failed++;
+                    break;
             }
-
-            var host = string.IsNullOrWhiteSpace(parent.CreatorUserId)
-                ? null
-                : await _users.GetByIdAsync(parent.CreatorUserId, ct);
-
-            if (host is null)
-            {
-                await StopSeriesAsync(parent, now, "host not found", ct);
-                stopped++;
-                continue;
-            }
-
-            if (await TryCreateNextOccurrenceAsync(parent, host, nextDate, now, ct))
-                created++;
         }
 
-        return new RecurringEventPassResult(candidates.Count, created, stopped);
+        return new RecurringEventPassResult(candidates.Count, created, stopped, failed);
     }
 
-    private async Task<bool> TryCreateNextOccurrenceAsync(
+    private enum SeriesStep
+    {
+        Skipped,
+        Created,
+        Stopped,
+        Failed
+    }
+
+    private async Task<SeriesStep> AdvanceSeriesAsync(Event parent, DateTimeOffset now, DateOnly today, CancellationToken ct)
+    {
+        if (SlotAwaitingItsSuccessor(parent, now) is not { } slot)
+            return SeriesStep.Skipped;
+
+        if (EventRecurrence.NextDate(slot.Date, slot.Frequency, today, parent.RecurrenceAnchorDay) is not { } nextDate)
+        {
+            await StopSeriesAsync(parent, now, "series dormant beyond the catch-up limit", ct);
+            return SeriesStep.Stopped;
+        }
+
+        var host = string.IsNullOrWhiteSpace(parent.CreatorUserId)
+            ? null
+            : await _users.GetByIdAsync(parent.CreatorUserId, ct);
+
+        if (host is null)
+        {
+            await StopSeriesAsync(parent, now, "host not found", ct);
+            return SeriesStep.Stopped;
+        }
+
+        return await TryCreateNextOccurrenceAsync(parent, host, nextDate, now, ct) switch
+        {
+            OccurrenceOutcome.Created => SeriesStep.Created,
+            OccurrenceOutcome.Failed => SeriesStep.Failed,
+            _ => SeriesStep.Skipped
+        };
+    }
+
+    private static (RecurrenceFrequency Frequency, DateOnly Date)? SlotAwaitingItsSuccessor(Event parent, DateTimeOffset now)
+    {
+        if (parent.Recurrence is not { } frequency
+            || !string.IsNullOrEmpty(parent.NextOccurrenceEventId)
+            || parent.Lifecycle(now) is not (EventLifecycle.Pending or EventLifecycle.Finished))
+            return null;
+
+        return DateOnly.TryParse(parent.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            ? (frequency, date)
+            : null;
+    }
+
+    private enum OccurrenceOutcome
+    {
+        Created,
+        CreatedElsewhere,
+        Failed
+    }
+
+    private async Task<OccurrenceOutcome> TryCreateNextOccurrenceAsync(
         Event parent,
         User host,
         DateOnly nextDate,
@@ -122,6 +164,7 @@ public sealed class RecurringEventPass : IRecurringEventPass
             WatchlistCleanedAt = null,
             RecurrenceParentEventId = parent.Id,
             NextOccurrenceEventId = null,
+            CreationRequestId = null,
             CreatedAt = now,
             UpdatedAt = now,
             Version = 0
@@ -150,20 +193,45 @@ public sealed class RecurringEventPass : IRecurringEventPass
                 },
                 ct);
         }
+        catch (ConflictException conflict)
+        {
+            if (await WasCreatedElsewhereAsync(parent.Id, ct))
+                return OccurrenceOutcome.CreatedElsewhere;
+
+            _logger.LogError(
+                conflict,
+                "Next occurrence of movie night {EventId} not created: the transaction gave up",
+                parent.Id);
+            return OccurrenceOutcome.Failed;
+        }
         catch (Exception ex)
         {
-            _logger.LogWarning(
+            _logger.LogError(
                 ex,
                 "Failed to create the next occurrence of movie night {EventId}",
                 parent.Id);
-            return false;
+            return OccurrenceOutcome.Failed;
         }
 
         _logger.LogInformation(
             "Next occurrence created for movie night {EventId} on {Date}",
             parent.Id,
             next.Date);
-        return true;
+        return OccurrenceOutcome.Created;
+    }
+
+    private async Task<bool> WasCreatedElsewhereAsync(string parentId, CancellationToken ct)
+    {
+        try
+        {
+            var reloaded = await _events.ListByIdsAsync([parentId], ct);
+            return reloaded.Any(evt => !string.IsNullOrEmpty(evt.NextOccurrenceEventId));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Movie night {EventId} could not be reloaded after a conflict", parentId);
+            return false;
+        }
     }
 
     private async Task StopSeriesAsync(Event parent, DateTimeOffset now, string reason, CancellationToken ct)

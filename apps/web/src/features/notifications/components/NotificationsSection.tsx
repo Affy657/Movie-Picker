@@ -22,42 +22,47 @@ import sharedStyles from '@/shared/components/SettingsSection.module.css';
 import styles from './NotificationsSection.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
+const PREF_LABEL_KEYS: Readonly<Record<NotificationTypeKey, TranslationKey>> = {
+  participantjoined: 'notifications.prefParticipantJoined',
+  movieadded: 'notifications.prefMovieAdded',
+  moviepicked: 'notifications.prefMoviePicked',
+  moviepickedmanually: 'notifications.prefMoviePickedManually',
+  eventdeleted: 'notifications.prefEventDeleted',
+  eventdatechanged: 'notifications.prefEventDateChanged',
+  eventpending: 'notifications.prefEventPending',
+  eventreminder1h: 'notifications.prefEventReminder1h',
+  eventreminder24h: 'notifications.prefEventReminder24h',
+  ratingreminder: 'notifications.prefRatingReminder',
+  eventinvitation: 'notifications.prefEventInvitation',
+  newfollower: 'notifications.prefNewFollower',
+  letterboxdreconciliationpending: 'notifications.prefLetterboxdReconciliationPending',
+};
+
 interface PrefGroup {
   legendKey: TranslationKey;
-  items: ReadonlyArray<{ type: NotificationTypeKey; labelKey: TranslationKey }>;
+  types: ReadonlyArray<NotificationTypeKey>;
 }
 
 const PREF_GROUPS: readonly PrefGroup[] = [
   {
     legendKey: 'notifications.groupEvents',
-    items: [
-      { type: 'participantjoined', labelKey: 'notifications.prefParticipantJoined' },
-      { type: 'movieadded', labelKey: 'notifications.prefMovieAdded' },
-      { type: 'moviepicked', labelKey: 'notifications.prefMoviePicked' },
-      { type: 'moviepickedmanually', labelKey: 'notifications.prefMoviePickedManually' },
-      { type: 'eventdeleted', labelKey: 'notifications.prefEventDeleted' },
-      { type: 'eventdatechanged', labelKey: 'notifications.prefEventDateChanged' },
-      { type: 'eventpending', labelKey: 'notifications.prefEventPending' },
+    types: [
+      'participantjoined',
+      'movieadded',
+      'moviepicked',
+      'moviepickedmanually',
+      'eventdeleted',
+      'eventdatechanged',
+      'eventpending',
     ],
   },
   {
     legendKey: 'notifications.groupReminders',
-    items: [
-      { type: 'eventreminder1h', labelKey: 'notifications.prefEventReminder1h' },
-      { type: 'eventreminder24h', labelKey: 'notifications.prefEventReminder24h' },
-      { type: 'ratingreminder', labelKey: 'notifications.prefRatingReminder' },
-    ],
+    types: ['eventreminder1h', 'eventreminder24h', 'ratingreminder'],
   },
   {
     legendKey: 'notifications.groupSocial',
-    items: [
-      { type: 'eventinvitation', labelKey: 'notifications.prefEventInvitation' },
-      { type: 'newfollower', labelKey: 'notifications.prefNewFollower' },
-      {
-        type: 'letterboxdreconciliationpending',
-        labelKey: 'notifications.prefLetterboxdReconciliationPending',
-      },
-    ],
+    types: ['eventinvitation', 'newfollower', 'letterboxdreconciliationpending'],
   },
 ];
 
@@ -100,7 +105,6 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
   const [prefsError, setPrefsError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!supported) return;
     fetchNotificationPreferences()
       .then((res) =>
         setPrefs(
@@ -111,7 +115,7 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
         )
       )
       .catch((err) => setPrefsError(getErrorMessage(err, t('notifications.prefsLoadError'))));
-  }, [supported, t]);
+  }, [t]);
 
   const handleTogglePref = useCallback(
     async (type: NotificationTypeKey) => {
@@ -137,10 +141,9 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
   );
 
   const togglePush = () => {
-    void (subscribed ? unsubscribe() : subscribe());
+    if (subscribed) void unsubscribe();
+    else void subscribe();
   };
-
-  if (!supported) return <NotificationsUnsupported />;
 
   return (
     <>
@@ -158,38 +161,42 @@ export default function NotificationsSection({ onSaved }: Readonly<{ onSaved?: (
 
       {permission === 'denied' && <p className="hint">{t('notifications.permissionDenied')}</p>}
 
-      <Card padding="none" elevation="sm" className={sharedStyles.card}>
-        <div className={clsx(sharedStyles.row, sharedStyles.noDivider)}>
-          {subscribed ? (
-            <Bell size={ICON_SIZE.lg} aria-hidden className={sharedStyles.rowIcon} />
-          ) : (
-            <BellOff size={ICON_SIZE.lg} aria-hidden className={sharedStyles.rowIcon} />
-          )}
-          <div className={sharedStyles.rowMain}>
-            <p className={sharedStyles.rowLabel}>
-              {subscribed ? t('notifications.enabledLabel') : t('notifications.disabledLabel')}
-            </p>
+      {supported ? (
+        <Card padding="none" elevation="sm" className={sharedStyles.card}>
+          <div className={clsx(sharedStyles.row, sharedStyles.noDivider)}>
+            {subscribed ? (
+              <Bell size={ICON_SIZE.lg} aria-hidden className={sharedStyles.rowIcon} />
+            ) : (
+              <BellOff size={ICON_SIZE.lg} aria-hidden className={sharedStyles.rowIcon} />
+            )}
+            <div className={sharedStyles.rowMain}>
+              <p className={sharedStyles.rowLabel}>
+                {subscribed ? t('notifications.enabledLabel') : t('notifications.disabledLabel')}
+              </p>
+            </div>
+            <Toggle
+              checked={subscribed}
+              disabled={pushLoading || permission === 'denied'}
+              onChange={togglePush}
+              ariaLabel={
+                subscribed ? t('notifications.disableButton') : t('notifications.enableButton')
+              }
+            />
           </div>
-          <Toggle
-            checked={subscribed}
-            disabled={pushLoading || permission === 'denied'}
-            onChange={togglePush}
-            ariaLabel={
-              subscribed ? t('notifications.disableButton') : t('notifications.enableButton')
-            }
-          />
-        </div>
-      </Card>
+        </Card>
+      ) : (
+        <NotificationsUnsupported />
+      )}
 
       {prefs && (
         <Card padding="none" elevation="sm" className={sharedStyles.card}>
           {PREF_GROUPS.map((group) => (
             <fieldset className={styles.prefGroup} key={group.legendKey}>
               <legend className={styles.prefGroupLegend}>{t(group.legendKey)}</legend>
-              {group.items.map(({ type, labelKey }) => (
+              {group.types.map((type) => (
                 <div className={styles.prefRow} key={type}>
                   <span id={`notif-pref-${type}`} className={styles.prefLabel}>
-                    {t(labelKey)}
+                    {t(PREF_LABEL_KEYS[type])}
                   </span>
                   <Toggle
                     checked={prefs[type] ?? true}

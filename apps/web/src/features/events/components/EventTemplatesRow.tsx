@@ -11,6 +11,7 @@ import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { MAX_EVENT_TEMPLATES, type EventTemplateData } from '@/features/events/types';
 import styles from './EventTemplatesRow.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import Card from '@/shared/components/Card';
 
 type Props = {
   templates: EventTemplateData[];
@@ -109,7 +110,7 @@ export default function EventTemplatesRow({
   };
 
   return (
-    <section className={clsx(styles.row, className)}>
+    <Card as="section" padding="none" surface="sunken" className={clsx(styles.row, className)}>
       <div className={styles.header}>
         <Sparkles size={ICON_SIZE.sm} aria-hidden className={styles.headerIcon} />
         <span className={styles.headerLabel}>{t('events.settings.templates.title')}</span>
@@ -132,7 +133,7 @@ export default function EventTemplatesRow({
       {managing ? (
         <ul className={styles.manageList}>
           {templates.map((template) => (
-            <li key={template.id} className={styles.manageItem}>
+            <Card as="li" key={template.id} padding="none" className={styles.manageItem}>
               {renamingId === template.id ? (
                 <TemplateNameEditor
                   id={`${nameFieldId}-${template.id}`}
@@ -167,7 +168,7 @@ export default function EventTemplatesRow({
                   </IconButton>
                 </>
               )}
-            </li>
+            </Card>
           ))}
         </ul>
       ) : (
@@ -177,7 +178,7 @@ export default function EventTemplatesRow({
             return (
               <Chip
                 key={template.id}
-                tone={applied ? 'primary' : 'neutral'}
+                tone={applied ? 'primary' : 'default'}
                 selected={applied}
                 icon={applied ? Check : undefined}
                 disabled={disabled || applyLocked}
@@ -210,6 +211,6 @@ export default function EventTemplatesRow({
         }}
         onCancel={() => setPendingDeletion(null)}
       />
-    </section>
+    </Card>
   );
 }

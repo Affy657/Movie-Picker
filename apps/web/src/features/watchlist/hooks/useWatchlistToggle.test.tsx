@@ -59,6 +59,17 @@ describe('useWatchlistToggle', () => {
     await waitFor(() => expect(addToWatchlist).toHaveBeenCalledWith(alien));
   });
 
+  it('passes along the genres a card already knows', async () => {
+    const { result } = setup();
+    await waitFor(() => expect(result.current.has(matrix)).toBe(true));
+
+    act(() => result.current.toggle({ ...alien, genreIds: [27, 878] }));
+
+    await waitFor(() =>
+      expect(addToWatchlist).toHaveBeenCalledWith(expect.objectContaining({ genreIds: [27, 878] }))
+    );
+  });
+
   it('surfaces the server message when an addition fails', async () => {
     vi.mocked(addToWatchlist).mockRejectedValueOnce(new Error('Liste pleine'));
     const { result } = setup();

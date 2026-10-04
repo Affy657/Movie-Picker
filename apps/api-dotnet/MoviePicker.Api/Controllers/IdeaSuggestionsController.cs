@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
@@ -16,6 +17,8 @@ namespace MoviePicker.Api.Controllers;
 public sealed class IdeaSuggestionsController : ControllerBase
 {
     [HttpPost]
+    [RequestSizeLimit(RequestBodyLimits.AttachmentsBytes)]
+    [RequestTimeout(RequestTimeoutPolicies.LongRunning)]
     [EnableRateLimiting(RateLimitingExtensions.IdeaSuggestionPolicy)]
     [SharedRateLimit(RateLimitingExtensions.IdeaSuggestionPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

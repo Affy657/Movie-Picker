@@ -63,7 +63,7 @@ variable "readable_secrets" {
 }
 
 variable "bucket_roles" {
-  description = "Roles granted on single buckets, keyed by a short name."
-  type        = map(object({ bucket = string, role = string }))
+  description = "Roles granted on single buckets, keyed by a short name. With object_prefix, the role only applies to the objects under that prefix (IAM condition)."
+  type        = map(object({ bucket = string, role = string, object_prefix = optional(string) }))
   default     = {}
 }

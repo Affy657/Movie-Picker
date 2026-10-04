@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { AlertTriangle, Check, RefreshCw, TriangleAlert, X } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
-import { useTranslation, type Translate } from '@/shared/i18n';
+import { useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
 import { API_ERROR_REASONS } from '@/shared/api/apiError';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -24,16 +24,22 @@ import Button from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import LinkButton from '@/shared/components/LinkButton';
 
 function formatSyncDate(iso: string, locale: string): string {
   return new Date(iso).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
 }
 
+const STORED_SYNC_ERROR_KEYS: Record<string, TranslationKey> = {
+  [API_ERROR_REASONS.letterboxdWatchlistIncomplete]: 'apiErrors.letterboxd_watchlist_incomplete',
+  [API_ERROR_REASONS.letterboxdSyncUnavailable]: 'apiErrors.letterboxd_sync_unavailable',
+  [API_ERROR_REASONS.letterboxdSyncFailed]: 'apiErrors.letterboxd_sync_failed',
+};
+
 function translateStoredSyncError(stored: string | null, t: Translate): string | null {
-  if (stored === API_ERROR_REASONS.letterboxdWatchlistIncomplete) {
-    return t('apiErrors.letterboxd_watchlist_incomplete');
-  }
-  return stored;
+  if (stored === null) return null;
+  const key = STORED_SYNC_ERROR_KEYS[stored];
+  return key ? t(key) : stored;
 }
 
 export default function LetterboxdImportSection() {
@@ -305,7 +311,13 @@ export default function LetterboxdImportSection() {
       )}
 
       {report && !syncError && (
-        <div className={styles.report} role="status" aria-live="polite">
+        <Card
+          padding="none"
+          surface="sunken"
+          className={styles.report}
+          role="status"
+          aria-live="polite"
+        >
           <span className={styles.reportRow}>
             <span className={styles.reportIconOk}>
               <Check size={ICON_SIZE.sm} aria-hidden />
@@ -319,15 +331,15 @@ export default function LetterboxdImportSection() {
           </span>
 
           {report.pendingChoices.length > 0 && (
-            <button
-              type="button"
+            <LinkButton
+              size="sm"
               className={styles.reportAction}
               onClick={() => setChoicesOpen(true)}
             >
               {t('auth.account.letterboxd.reportPending', {
                 count: String(report.pendingChoices.length),
               })}
-            </button>
+            </LinkButton>
           )}
 
           {report.unmatchedTitles.length > 0 && (
@@ -352,7 +364,7 @@ export default function LetterboxdImportSection() {
               })}
             </p>
           )}
-        </div>
+        </Card>
       )}
 
       {confirmResult && (

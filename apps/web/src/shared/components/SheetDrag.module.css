@@ -69,11 +69,11 @@
   }
 
   .surface[open] {
-    animation: sheet-enter var(--duration-sheet) var(--ease-reveal) both;
+    animation: sheetEnter var(--duration-sheet) var(--ease-reveal) both;
   }
 
   .surface[open]::backdrop {
-    animation: sheet-backdrop-enter var(--duration-sheet) var(--ease-out);
+    animation: sheetBackdropEnter var(--duration-sheet) var(--ease-out);
   }
 }
 
@@ -87,7 +87,7 @@
   }
 }
 
-@keyframes sheet-enter {
+@keyframes sheetEnter {
   from {
     transform: translateY(100%);
   }
@@ -97,7 +97,7 @@
   }
 }
 
-@keyframes sheet-backdrop-enter {
+@keyframes sheetBackdropEnter {
   from {
     opacity: 0;
   }

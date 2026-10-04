@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchEventMovies } from '@/features/movies/api/moviesApi';
 import { queryKeys } from '@/shared/hooks/queryKeys';
+import { pollIntervalAfterFailures } from '@/shared/api/retryPolicy';
 
 export type UseMoviesOptions = {
   enabled?: boolean;
@@ -18,6 +19,6 @@ export function useMovies(slug: string | undefined, options?: UseMoviesOptions) 
     queryKey: [...queryKeys.movies.list(slug), participantId ?? '$anon'] as const,
     queryFn: () => fetchEventMovies(slug!, participantId),
     enabled,
-    refetchInterval: options?.refetchInterval ?? false,
+    refetchInterval: (query) => pollIntervalAfterFailures(options?.refetchInterval ?? false, query),
   });
 }

@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import styles from './EventInfoBanner.module.css';
 
 type Props = {
-  tone: 'pending' | 'upcoming';
+  tone: 'pending' | 'warning' | 'upcoming';
   icon: ReactNode;
   kicker: string;
   text: string;

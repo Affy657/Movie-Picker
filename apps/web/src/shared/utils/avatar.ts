@@ -1,4 +1,4 @@
-import { apiUrl } from '@/shared/api/client';
+import { apiPath, apiUrl } from '@/shared/api/client';
 
 export const BOTTTS_IDS = [
   'alpha',
@@ -55,7 +55,7 @@ export function isAvatarPhotoId(avatarId: string | null | undefined): avatarId i
 
 export function avatarUrl(avatarId: string): string {
   if (isAvatarPhotoId(avatarId)) {
-    return apiUrl(`/avatars/${encodeURIComponent(avatarId.slice(AVATAR_PHOTO_PREFIX.length))}`);
+    return apiUrl(apiPath('avatars', avatarId.slice(AVATAR_PHOTO_PREFIX.length)));
   }
   const style = EMOJI_SET.has(avatarId) ? 'fun-emoji' : 'bottts-neutral';
   return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(avatarId)}&radius=50`;

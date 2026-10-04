@@ -42,6 +42,7 @@ import {
 import styles from './HomePage.module.css';
 import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import LinkButton from '@/shared/components/LinkButton';
 
 type GenreTabKey = 'all' | `${number}`;
 
@@ -113,7 +114,12 @@ export default function HomePage() {
   };
   const watchlistRow = useWatchlistRow(isAuthenticated);
   const friendsRow = useFriendsWatchedRow(isAuthenticated);
-  const { seedTmdbId, seedTitle, isPending: seedPending } = useRecommendationSeed(isAuthenticated);
+  const {
+    seedTmdbId,
+    seedMediaType,
+    seedTitle,
+    isPending: seedPending,
+  } = useRecommendationSeed(isAuthenticated);
   const firstRail = resolveFirstRail(
     watchlistRow.isPending || friendsRow.isPending || seedPending,
     watchlistRow.items.length > 0,
@@ -130,6 +136,7 @@ export default function HomePage() {
       posterPath: item.posterPath,
       voteAverage: item.voteAverage,
       runtimeMinutes: item.runtimeMinutes,
+      genreIds: item.genreIds,
     });
 
   const selectedGenreIds = genreTab === 'all' ? undefined : [Number(genreTab)];
@@ -143,6 +150,7 @@ export default function HomePage() {
       posterPath: item.posterPath,
       voteAverage: item.voteAverage,
       runtimeMinutes: item.runtimeMinutes,
+      genreIds: item.genreIds,
     });
 
   const runSearch = (term: string) => {
@@ -177,14 +185,9 @@ export default function HomePage() {
         <p className={styles.examples}>
           <span className={styles.examplesLabel}>{t('home.searchExamplesLabel')}</span>
           {SEARCH_EXAMPLES.map((example) => (
-            <button
-              key={example}
-              type="button"
-              className={styles.example}
-              onClick={() => runSearch(example)}
-            >
+            <LinkButton key={example} size="sm" onClick={() => runSearch(example)}>
               {example}
-            </button>
+            </LinkButton>
           ))}
         </p>
       </div>
@@ -209,8 +212,8 @@ export default function HomePage() {
       {seedTmdbId ? (
         <HomeShowcaseRow
           headingKey="showcase.sections.recommendationsTitle"
-          seeAllTo={ROUTES.showcaseRecommendations(seedTmdbId)}
-          query={{ section: 'recommendations', seedTmdbId }}
+          seeAllTo={ROUTES.showcaseRecommendations(seedTmdbId, seedMediaType)}
+          query={{ section: 'recommendations', seedTmdbId, seedMediaType }}
           library={library}
           onSelect={openDetails}
           eagerCount={eagerCountFor('recommendations', firstRail)}

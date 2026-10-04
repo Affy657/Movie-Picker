@@ -51,7 +51,9 @@ test.describe('Draw (host)', () => {
     await expect(page.getByText('Film gagnant', { exact: true })).toBeHidden();
   });
 
-  test('closes a night whose time has passed without picking a movie', async ({ page }) => {
+  test('closes a night whose time has passed without picking a movie, then files it in the history', async ({
+    page,
+  }) => {
     test.setTimeout(120_000);
     await registerAccount(page, 'HoteSuspens');
     await createEvent(page, 'Soirée en suspens E2E', isoDateDaysFromNow(-2));
@@ -71,5 +73,12 @@ test.describe('Draw (host)', () => {
     await expect(page.getByText(/la soirée est clôturée/i)).toBeVisible();
     await expect(banner).toBeHidden();
     await expect(page.getByRole('button', { name: /proposer un film/i })).toBeHidden();
+
+    await page.goto('/my-events');
+    await page.getByRole('tab', { name: /Historique/ }).click();
+    await page.getByRole('button', { name: 'Options pour Soirée en suspens E2E' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Supprimer la soirée' })).toBeInViewport({
+      ratio: 1,
+    });
   });
 });

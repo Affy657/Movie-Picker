@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
+using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Configuration;
@@ -10,13 +11,14 @@ public sealed class MemoryPosterImageStore : IPosterImageStore
 {
     private sealed class Entry
     {
-        public string SourceUrl { get; set; } = "";
-        public byte[]? Data { get; set; }
-        public string? ContentType { get; set; }
-        public DateTime ExpiresAtUtc { get; set; }
+        public string SourceUrl { get; init; } = "";
+        public byte[]? Data { get; init; }
+        public string? ContentType { get; init; }
+        public DateTime ExpiresAtUtc { get; init; }
     }
 
     private readonly ConcurrentDictionary<string, Entry> _entries = new(StringComparer.Ordinal);
+    private readonly SingleFlight _fetches = new();
     private readonly IHttpClientFactory _httpFactory;
     private readonly MoviePickerOptions _options;
     private readonly ILogger<MemoryPosterImageStore> _logger;
@@ -33,75 +35,71 @@ public sealed class MemoryPosterImageStore : IPosterImageStore
 
     public string? ToPublicPosterPath(string? posterUrl) => TmdbPosterUrlNormalizer.ToPublicPosterPath(posterUrl);
 
-    public Task RegisterTmdbSourceAsync(string normalizedTmdbHttpsUrl, CancellationToken ct = default) =>
-        RegisterTmdbSourcesAsync(new[] { normalizedTmdbHttpsUrl }, ct);
-
-    public Task RegisterTmdbSourcesAsync(IReadOnlyCollection<string> normalizedTmdbHttpsUrls, CancellationToken ct = default)
+    public async Task<PosterImageBlob?> GetOrFetchAsync(string normalizedTmdbHttpsUrl, CancellationToken ct = default)
     {
-        if (normalizedTmdbHttpsUrls.Count == 0)
-            return Task.CompletedTask;
+        if (!TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(normalizedTmdbHttpsUrl, out var source))
+            return null;
 
-        var expires = DateTime.UtcNow.AddDays(Math.Max(1, _options.PosterCacheTtlDays));
-        foreach (var norm in normalizedTmdbHttpsUrls.Distinct(StringComparer.Ordinal))
-        {
-            if (!TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(norm, out var verified))
-                continue;
-            var key = TmdbPosterUrlNormalizer.ComputeKey(verified);
-            _entries.AddOrUpdate(
-                key,
-                _ => new Entry { SourceUrl = verified, ExpiresAtUtc = expires },
-                (_, existing) =>
-                {
-                    existing.SourceUrl = verified;
-                    existing.ExpiresAtUtc = expires;
-                    return existing;
-                });
-        }
-
-        return Task.CompletedTask;
+        var key = TmdbPosterUrlNormalizer.ComputeKey(source);
+        _entries.TryGetValue(key, out var entry);
+        return FreshBlob(entry) ?? await _fetches.RunAsync(key, () => FetchAndStoreAsync(key, source, entry), ct);
     }
 
     public async Task<PosterImageBlob?> GetByKeyAsync(string posterKey, CancellationToken ct = default)
     {
-        var k = posterKey.ToLowerInvariant();
-        if (!TmdbPosterUrlNormalizer.IsValidPosterKey(k))
+        var key = posterKey.ToLowerInvariant();
+        if (!TmdbPosterUrlNormalizer.IsValidPosterKey(key) || !_entries.TryGetValue(key, out var entry))
             return null;
 
-        if (!_entries.TryGetValue(k, out var entry))
-            return null;
+        if (FreshBlob(entry) is { } fresh)
+            return fresh;
 
-        var now = DateTime.UtcNow;
-        if (entry.Data is { Length: > 0 } bytes
-            && !string.IsNullOrWhiteSpace(entry.ContentType)
-            && entry.ExpiresAtUtc > now)
-            return new PosterImageBlob(bytes, entry.ContentType);
+        return TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(entry.SourceUrl, out var source)
+            ? await _fetches.RunAsync(key, () => FetchAndStoreAsync(key, source, entry), ct)
+            : null;
+    }
 
-        if (string.IsNullOrWhiteSpace(entry.SourceUrl)
-            || !TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(entry.SourceUrl, out var source))
-            return null;
+    public Task<string?> FindSourceUrlAsync(string posterKey, CancellationToken ct = default) =>
+        Task.FromResult(
+            _entries.TryGetValue(posterKey.ToLowerInvariant(), out var entry) && !string.IsNullOrWhiteSpace(entry.SourceUrl)
+                ? entry.SourceUrl
+                : null);
 
+    private static PosterImageBlob? FreshBlob(Entry? entry) =>
+        entry is { Data.Length: > 0 } && !string.IsNullOrWhiteSpace(entry.ContentType) && entry.ExpiresAtUtc > DateTime.UtcNow
+            ? new PosterImageBlob(entry.Data, entry.ContentType)
+            : null;
+
+    private static PosterImageBlob? StaleBlob(Entry? entry) =>
+        entry is { Data.Length: > 0 } && !string.IsNullOrWhiteSpace(entry.ContentType)
+            ? new PosterImageBlob(entry.Data, entry.ContentType)
+            : null;
+
+    private async Task<PosterImageBlob?> FetchAndStoreAsync(string key, string source, Entry? previous)
+    {
         try
         {
             var http = _httpFactory.CreateClient(PosterFetchHttp.ClientName);
-            var blob = await PosterRemoteFetch.FetchAsync(http, source, _options.PosterCacheMaxBytes, ct);
+            var blob = await PosterRemoteFetch.FetchAsync(http, source, _options.PosterCacheMaxBytes, CancellationToken.None);
             if (blob is null)
-            {
-                if (entry.Data is { Length: > 0 } stale && !string.IsNullOrWhiteSpace(entry.ContentType))
-                    return new PosterImageBlob(stale, entry.ContentType);
-                return null;
-            }
+                return StaleBlob(previous);
 
-            entry.Data = blob.Data;
-            entry.ContentType = blob.ContentType;
-            entry.ExpiresAtUtc = DateTime.UtcNow.AddDays(Math.Max(1, _options.PosterCacheTtlDays));
+            if (previous is null && _entries.Count >= _options.PosterCacheMaxEntries)
+                return blob;
+
+            _entries[key] = new Entry
+            {
+                SourceUrl = source,
+                Data = blob.Data,
+                ContentType = blob.ContentType,
+                ExpiresAtUtc = DateTime.UtcNow.AddDays(Math.Max(1, _options.PosterCacheTtlDays))
+            };
             return blob;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "TMDB poster download failed (memory) from {Source}", source);
-            if (entry.Data is { Length: > 0 } fallback && !string.IsNullOrWhiteSpace(entry.ContentType))
-                return new PosterImageBlob(fallback, entry.ContentType);
-            return null;
+            return StaleBlob(previous);
         }
     }
 }

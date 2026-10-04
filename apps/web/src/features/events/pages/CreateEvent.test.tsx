@@ -65,6 +65,12 @@ function mockTemplates(items: unknown[]) {
   });
 }
 
+function createCallBodies(): Record<string, unknown>[] {
+  return mockFetchApi.mock.calls
+    .filter(([path]) => path === '/events')
+    .map(([, init]) => JSON.parse((init as { body: string }).body) as Record<string, unknown>);
+}
+
 function configCallBody(): Record<string, unknown> {
   const configCall = mockFetchApi.mock.calls.find(
     ([path]) => typeof path === 'string' && path.startsWith('/events/abc/config')
@@ -111,12 +117,74 @@ describe('CreateEvent', () => {
     await waitFor(() => {
       expect(mockFetchApi).toHaveBeenCalledWith(
         '/events',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ title: 'Ma soirée', date: '2030-12-31', time: '20:00' }),
-        })
+        expect.objectContaining({ method: 'POST' })
       );
     });
+    expect(createCallBodies()[0]).toEqual({
+      title: 'Ma soirée',
+      date: '2030-12-31',
+      time: '20:00',
+      clientRequestId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+    });
+  });
+
+  it('retries a failed creation under the same request id, so the server never creates it twice', async () => {
+    const user = userEvent.setup();
+    let attempts = 0;
+    mockFetchApi.mockImplementation((path: unknown) => {
+      if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
+      if (path === '/events') {
+        attempts += 1;
+        return attempts === 1
+          ? Promise.reject(new Error('Connexion perdue'))
+          : Promise.resolve({ slug: 'abc', shareUrl: 'x' });
+      }
+      return Promise.resolve({});
+    });
+    RenderCreateEvent();
+    await user.type(screen.getByLabelText(/titre/i), 'Ma soirée');
+    fireEvent.change(screen.getByLabelText(/date/i), { target: { value: '2030-12-31' } });
+    fireEvent.change(screen.getByLabelText(/heure/i), { target: { value: '20:00' } });
+
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/connexion perdue/i));
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    await waitFor(() => expect(createCallBodies()).toHaveLength(2));
+    const [first, second] = createCallBodies();
+    expect(first?.clientRequestId).toEqual(expect.any(String));
+    expect(second?.clientRequestId).toBe(first?.clientRequestId);
+  });
+
+  it('retries under a new request id once the title changed, so the edit is not answered with the first night', async () => {
+    const user = userEvent.setup();
+    let attempts = 0;
+    mockFetchApi.mockImplementation((path: unknown) => {
+      if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
+      if (path === '/events') {
+        attempts += 1;
+        return attempts === 1
+          ? Promise.reject(new Error('Connexion perdue'))
+          : Promise.resolve({ slug: 'abc', shareUrl: 'x' });
+      }
+      return Promise.resolve({});
+    });
+    RenderCreateEvent();
+    const titleInput = screen.getByLabelText(/titre/i);
+    await user.type(titleInput, 'Ma soirée');
+    fireEvent.change(screen.getByLabelText(/date/i), { target: { value: '2030-12-31' } });
+    fireEvent.change(screen.getByLabelText(/heure/i), { target: { value: '20:00' } });
+
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/connexion perdue/i));
+    await user.type(titleInput, ' bis');
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    await waitFor(() => expect(createCallBodies()).toHaveLength(2));
+    const [first, second] = createCallBodies();
+    expect(second?.title).toBe(`${String(first?.title)} bis`);
+    expect(second?.clientRequestId).toEqual(expect.stringMatching(/^[0-9a-f-]{36}$/));
+    expect(second?.clientRequestId).not.toBe(first?.clientRequestId);
   });
 
   it('sends the chosen number of winning movies at creation', async () => {
@@ -397,6 +465,71 @@ describe('CreateEvent', () => {
 
     await user.type(titleInput, 'Ma soirée');
     expect(screen.queryByText('Donnez un titre à la soirée.')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['before 20:00 in Paris', '2026-09-24T10:00:00Z', '2026-09-24', '20:00'],
+    ['a Montréal afternoon, already 21:00 in Paris', '2026-09-24T19:00:00Z', '2026-09-24', '21:30'],
+    ['exactly on a Paris half hour', '2026-09-24T18:30:00Z', '2026-09-24', '21:00'],
+    [
+      'just past midnight in Paris, still the day before in UTC',
+      '2026-09-24T22:10:00Z',
+      '2026-09-25',
+      '20:00',
+    ],
+    ['after 23:30 in Paris, tomorrow at midnight', '2026-12-31T22:45:00Z', '2027-01-01', '00:00'],
+  ])('starts the night at the next Paris slot when the page opens %s', (_, instant, date, time) => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(instant));
+    try {
+      RenderCreateEvent();
+
+      expect(screen.getByLabelText(/date/i)).toHaveValue(date);
+      expect(screen.getByLabelText(/heure/i)).toHaveValue(time);
+      expect(screen.queryByText('Cette date est déjà passée.')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('starts the night at the next half hour when the page opens right on one', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-24T18:00:30Z'));
+    try {
+      RenderCreateEvent();
+
+      expect(screen.getByLabelText(/date/i)).toHaveValue('2026-09-24');
+      expect(screen.getByLabelText(/heure/i)).toHaveValue('20:30');
+      expect(screen.queryByText('Cette date est déjà passée.')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('starts the night tomorrow at midnight when the page opens right at 23:30', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-24T21:30:05Z'));
+    try {
+      RenderCreateEvent();
+
+      expect(screen.getByLabelText(/date/i)).toHaveValue('2026-09-25');
+      expect(screen.getByLabelText(/heure/i)).toHaveValue('00:00');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('warns about a start already past in Paris, even when it is still ahead in UTC', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-24T19:00:00Z'));
+    try {
+      RenderCreateEvent();
+
+      fireEvent.change(screen.getByLabelText(/heure/i), { target: { value: '20:00' } });
+      expect(screen.getByText('Cette date est déjà passée.')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('warns about a date already in the past without blocking the creation', async () => {

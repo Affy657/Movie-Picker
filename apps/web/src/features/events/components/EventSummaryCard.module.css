@@ -1,5 +1,4 @@
 .card {
-  composes: card radiusMd elevationSm from '@/shared/components/Card.module.css';
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -10,23 +9,6 @@
   text-decoration: none;
   color: inherit;
   overflow: hidden;
-  transition:
-    transform var(--duration-base) var(--ease-default),
-    box-shadow var(--duration-base) var(--ease-default),
-    border-color var(--duration-base) var(--ease-default);
-}
-
-@media (hover: hover) {
-  .card:hover {
-    transform: translateY(var(--lift-md));
-    border-color: var(--color-primary-border-soft);
-    box-shadow: var(--shadow-md);
-  }
-}
-
-.card:focus-visible {
-  outline: var(--outline-focus);
-  outline-offset: 3px;
 }
 
 @media (hover: hover) {
@@ -186,14 +168,12 @@
 }
 
 .role {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
   line-height: var(--leading-none);
   white-space: nowrap;
 }

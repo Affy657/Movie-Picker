@@ -3,6 +3,7 @@ using Moq;
 using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -216,6 +217,99 @@ public sealed class OAuthLoginHandlerTests
         Assert.Contains(reloaded.Identities, i => i.Provider == "google" && i.Subject == "sub-4");
     }
 
+    private static User PasswordlessWithGoogleAndGitHub() => new()
+    {
+        Email = "neo@example.com",
+        DisplayName = "Neo",
+        Handle = "neo",
+        PasswordHash = string.Empty,
+        Identities =
+        [
+            new LinkedIdentity { Provider = "google", Subject = "g-1", Email = "neo@example.com", LinkedAt = TestEpoch.AddDays(-10) },
+            new LinkedIdentity { Provider = "github", Subject = "gh-1", Email = "neo@example.com", LinkedAt = TestEpoch.AddDays(-10) }
+        ],
+        CreatedAt = TestEpoch.AddDays(-10),
+        UpdatedAt = TestEpoch.AddDays(-10)
+    };
+
+    private static Task UnlinkAsync(Fixture f, string userId, string provider) =>
+        new OAuthUnlinkHandler(
+                f.Users,
+                new Mock<IAuthSessionInvalidator>().Object,
+                new FakeTimeProvider(TestEpoch.AddDays(-1)),
+                NullLogger<OAuthUnlinkHandler>.Instance)
+            .HandleAsync(userId, provider, "session-1");
+
+    private static ExternalLoginInfo GitHubSignIn(string subject) => new()
+    {
+        Provider = "github",
+        Subject = subject,
+        Email = "neo@example.com",
+        EmailVerified = true,
+        DisplayName = "Neo"
+    };
+
+    [Fact]
+    public async Task HandleAsync_IdentityTheUserUnlinked_IsNotLinkedBackBySigningInWithIt()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(PasswordlessWithGoogleAndGitHub());
+        await UnlinkAsync(f, user.Id, "github");
+
+        var outcome = await f.CreateHandler().HandleAsync(GitHubSignIn("gh-1"));
+
+        Assert.NotEqual(OAuthOutcomeKind.SignedIn, outcome.Kind);
+        Assert.Null(outcome.User);
+        var reloaded = await f.Users.GetByIdAsync(user.Id);
+        Assert.DoesNotContain(reloaded!.Identities, i => i.Provider == "github");
+    }
+
+    [Fact]
+    public async Task HandleAsync_IdentityTheUserUnlinked_AsksForAManualLink()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(PasswordlessWithGoogleAndGitHub());
+        await UnlinkAsync(f, user.Id, "github");
+
+        var outcome = await f.CreateHandler().HandleAsync(GitHubSignIn("gh-1"));
+
+        Assert.Equal(OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink, outcome.Kind);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnotherAccountOfAnUnlinkedProvider_IsStillLinkedByItsVerifiedEmail()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(PasswordlessWithGoogleAndGitHub());
+        await UnlinkAsync(f, user.Id, "github");
+
+        var outcome = await f.CreateHandler().HandleAsync(GitHubSignIn("gh-2"));
+
+        Assert.Equal(OAuthOutcomeKind.SignedIn, outcome.Kind);
+        Assert.Equal(user.Id, outcome.User!.Id);
+        Assert.Contains(outcome.User.Identities, i => i.Provider == "github" && i.Subject == "gh-2");
+    }
+
+    [Fact]
+    public async Task HandleAsync_ProviderNameLongerThanTheProfileAllows_IsCutToASaveableName()
+    {
+        var f = new Fixture();
+        var longName = new string('a', 79) + "🎬" + new string('b', 30);
+
+        var outcome = await f.CreateHandler().HandleAsync(new ExternalLoginInfo
+        {
+            Provider = "google",
+            Subject = "sub-long",
+            Email = "long@example.com",
+            EmailVerified = true,
+            DisplayName = longName
+        });
+
+        var saved = outcome.User!.DisplayName;
+        Assert.Null(AuthInputValidation.ValidateDisplayName(saved));
+        Assert.Equal(new string('a', 79), saved);
+    }
+
     [Fact]
     public async Task HandleAsync_VerifiedEmailNoExistingAccount_CreatesAccountWithoutPassword()
     {
@@ -267,6 +361,87 @@ public sealed class OAuthLoginHandlerTests
 
         Assert.Equal(OAuthOutcomeKind.SignedIn, outcome.Kind);
         Assert.Equal("u-winner", outcome.User!.Id);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RaceOnAutoLinkLostOnTheAccountVersion_SignsInTheRaceWinner()
+    {
+        var winner = new User { Id = "u-winner", Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" };
+        var users = new Mock<IUserRepository>();
+        users.SetupSequence(x => x.GetByIdentityAsync("google", "sub-race", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null)
+            .ReturnsAsync(winner);
+        users.Setup(x => x.GetByEmailAsync("neo@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = "u-winner", Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" });
+        users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.ConcurrentUpdate());
+
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+
+        var outcome = await handler.HandleAsync(new ExternalLoginInfo
+        {
+            Provider = "google",
+            Subject = "sub-race",
+            Email = "neo@example.com",
+            EmailVerified = true,
+            DisplayName = "Neo"
+        });
+
+        Assert.Equal(OAuthOutcomeKind.SignedIn, outcome.Kind);
+        Assert.Equal("u-winner", outcome.User!.Id);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RaceOnAccountCreationLostOnTheEmailIndex_SignsInTheRaceWinner()
+    {
+        var winner = new User { Id = "u-winner", Email = "smith@example.com", DisplayName = "Agent Smith", Handle = "agentsmith" };
+        var users = new Mock<IUserRepository>();
+        users.SetupSequence(x => x.GetByIdentityAsync("google", "sub-race", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null)
+            .ReturnsAsync(winner);
+        users.Setup(x => x.GetByEmailAsync("smith@example.com", It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.EmailTaken());
+
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+
+        var outcome = await handler.HandleAsync(new ExternalLoginInfo
+        {
+            Provider = "google",
+            Subject = "sub-race",
+            Email = "smith@example.com",
+            EmailVerified = true,
+            DisplayName = "Agent Smith"
+        });
+
+        Assert.Equal(OAuthOutcomeKind.SignedIn, outcome.Kind);
+        Assert.Equal("u-winner", outcome.User!.Id);
+        Assert.False(outcome.IsNewAccount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_EmailTakenByAnotherAccountMeanwhile_FailsWithABusinessError()
+    {
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdentityAsync("google", "sub-late", It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.GetByEmailAsync("late@example.com", It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+        users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(Errors.EmailTaken());
+
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => handler.HandleAsync(new ExternalLoginInfo
+        {
+            Provider = "google",
+            Subject = "sub-late",
+            Email = "late@example.com",
+            EmailVerified = true,
+            DisplayName = "Late"
+        }));
+
+        Assert.Equal(ErrorCodes.OAuthLinkFailed, ex.Reason);
     }
 
     [Fact]

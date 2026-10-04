@@ -1,6 +1,7 @@
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.Follow;
@@ -35,16 +36,25 @@ internal static class FollowListQuery
 
         var orderedItems = ids
             .Select(id => listed.FirstOrDefault(u => u.Id == id))
-            .Where(u => u is not null)
+            .Where(u => u is not null && (u.IsProfilePublic || u.Id == currentUserId || user.Id == currentUserId))
             .Select(u => new FollowUserItem
             {
                 Handle = u!.Handle,
                 DisplayName = u.DisplayName,
                 AvatarId = u.DisplayedAvatarId,
-                IsFollowedByMe = followingSet is null ? null : followingSet.Contains(u.Id)
+                IsFollowedByMe = FollowStateFor(u, followingSet)
             })
             .ToList();
 
         return new FollowListResponse { Items = orderedItems };
+    }
+
+    private static bool? FollowStateFor(User listed, HashSet<string>? followingSet)
+    {
+        if (followingSet is null)
+            return null;
+        if (followingSet.Contains(listed.Id))
+            return true;
+        return listed.IsProfilePublic ? false : null;
     }
 }

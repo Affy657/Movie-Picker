@@ -233,4 +233,48 @@ public sealed class TmdbMovieSearchPersonCreditsTests
                 request.RequestUri!.ToString().Contains("/search/person", StringComparison.Ordinal)),
             ItExpr.IsAny<CancellationToken>());
     }
+
+    [Fact]
+    public async Task SearchTitlesAsync_NamesakeOfAPerson_ReturnsTitleMatchesOnly()
+    {
+        var people = """
+            {"results":[{"id":21684,"name":"Bong Joon-ho","popularity":12.5}]}
+            """;
+        var credits = """
+            {"cast":[{"id":496243,"media_type":"movie","title":"Parasite","release_date":"2019-05-30","popularity":50}]}
+            """;
+        var handler = RouteBy(TitleMatchesJson, people, credits);
+        var sut = CreateSut(CreateHttpClient(handler.Object));
+
+        var result = await sut.SearchTitlesAsync("Bong Joon-ho", false);
+
+        Assert.Equal(FuzzyTitleOnly, result.Select(item => item.Title));
+        handler.Protected().Verify(
+            "SendAsync",
+            Times.Once(),
+            ItExpr.Is<HttpRequestMessage>(request =>
+                request.RequestUri!.ToString().Contains("/search/movie", StringComparison.Ordinal)),
+            ItExpr.IsAny<CancellationToken>());
+        handler.Protected().Verify(
+            "SendAsync",
+            Times.Once(),
+            ItExpr.IsAny<HttpRequestMessage>(),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SearchTitlesAsync_KeepsTheYearWindow()
+    {
+        var titles = """
+            {"results":[
+              {"id":1,"media_type":"movie","title":"Jackie","release_date":"2016-12-02"},
+              {"id":2,"media_type":"movie","title":"Jackie Brown","release_date":"1997-12-25"}
+            ]}
+            """;
+        var sut = CreateSut(CreateHttpClient(RouteBy(titles, """{"results":[]}""", """{"cast":[]}""").Object));
+
+        var result = await sut.SearchTitlesAsync("Jackie", true, yearFrom: 2015, yearTo: 2017);
+
+        Assert.Equal(1, Assert.Single(result).Id);
+    }
 }

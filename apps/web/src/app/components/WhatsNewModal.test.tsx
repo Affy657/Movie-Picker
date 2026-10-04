@@ -49,14 +49,14 @@ const RELEASE: WhatsNewRelease = {
   ],
 };
 
-function renderModal(profileHandle: string | null = null, onClose = vi.fn(), onAction = vi.fn()) {
+function renderModal(ownProfilePath: string | null = null, onClose = vi.fn(), onAction = vi.fn()) {
   render(
     <AppTestProviders>
       <MemoryRouter>
         <WhatsNewModal
           open
           release={RELEASE}
-          profileHandle={profileHandle}
+          ownProfilePath={ownProfilePath}
           onClose={onClose}
           onAction={onAction}
         />
@@ -89,21 +89,24 @@ describe('WhatsNewModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('shows no link when the destination cannot be resolved (profile without handle)', () => {
+  it('shows no link when the destination cannot be resolved (no own profile path)', () => {
     renderModal(null);
 
     expect(screen.queryByRole('link', { name: /flamme de série/i })).not.toBeInTheDocument();
     expect(screen.getByText('Flamme de série')).toBeInTheDocument();
   });
 
-  it('resolves the profile link once the handle is known', () => {
-    renderModal('utilisateur_dev');
+  it.each(['/u/utilisateur_dev', '/settings'])(
+    'resolves the profile link to the own profile path it is given (%s)',
+    (ownProfilePath) => {
+      renderModal(ownProfilePath);
 
-    expect(screen.getByRole('link', { name: /flamme de série/i })).toHaveAttribute(
-      'href',
-      '/u/utilisateur_dev'
-    );
-  });
+      expect(screen.getByRole('link', { name: /flamme de série/i })).toHaveAttribute(
+        'href',
+        ownProfilePath
+      );
+    }
+  );
 
   it('the "Got it" button closes the modal', async () => {
     const user = userEvent.setup();

@@ -4,11 +4,11 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoSessionAccessor
 {
-    private static readonly AsyncLocal<IClientSessionHandle?> Ambient = new();
+    private readonly AsyncLocal<IClientSessionHandle?> _ambient = new();
 
     public IClientSessionHandle? Session
     {
-        get => Ambient.Value;
-        set => Ambient.Value = value;
+        get => _ambient.Value;
+        set => _ambient.Value = value;
     }
 }

@@ -9,6 +9,7 @@
   white-space: nowrap;
   border: 1px solid transparent;
   border-radius: var(--radius-pill);
+  text-decoration: none;
 }
 
 .sm {
@@ -16,44 +17,48 @@
   font-size: var(--font-size-2xs);
 }
 
-.neutral {
+.toneDefault {
   color: var(--color-text-muted);
   background: transparent;
   border-color: var(--color-border);
 }
 
-.primary {
+.tonePrimary {
   color: var(--color-primary-text);
   background: var(--color-primary-soft);
   border-color: var(--color-primary-border);
 }
 
-.success {
+.toneSuccess {
   color: var(--color-success);
   background: var(--color-success-bg);
   border-color: var(--color-success-border);
 }
 
-.warning {
+.toneWarning {
   color: var(--color-warning);
   background: var(--color-warning-bg);
   border-color: var(--color-warning-border);
 }
 
-.pending {
+.tonePending {
   color: var(--color-badge-pending-text);
   background: var(--color-badge-pending-bg);
 }
 
-.danger {
+.toneDanger {
   color: var(--color-error);
   background: var(--color-error-bg);
   border-color: var(--color-error-border);
 }
 
-.muted {
+.toneMuted {
   color: var(--color-text-muted);
   background: var(--color-surface-active);
+}
+
+.dashed {
+  border-style: dashed;
 }
 
 .interactive {
@@ -68,7 +73,8 @@
 
 .interactive:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
+  border-radius: var(--radius-pill);
 }
 
 @media (hover: hover) {
@@ -110,7 +116,7 @@
 
 .remove:focus-visible {
   outline: 2px solid currentColor;
-  outline-offset: 1px;
+  outline-offset: var(--outline-offset);
 }
 
 @media (hover: hover) {

@@ -24,11 +24,11 @@ describe('AccountIdentityHeader', () => {
   });
   afterAll(() => server.close());
 
-  function renderHeader() {
+  function renderHeader({ saveFails = false } = {}) {
     server.use(
       http.patch(`${TEST_API_V1}/auth/me`, async ({ request }) => {
         patches.push(await request.json());
-        return HttpResponse.json(user);
+        return saveFails ? new HttpResponse(null, { status: 503 }) : HttpResponse.json(user);
       })
     );
     render(
@@ -58,5 +58,17 @@ describe('AccountIdentityHeader', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Utiliser ma photo' }));
 
     await waitFor(() => expect(patches).toEqual([{ useAvatarPhoto: true }]));
+  });
+
+  it('keeps the dialog open with an alert when the avatar cannot be saved', async () => {
+    renderHeader({ saveFails: true });
+    await userEvent.click(screen.getByRole('button', { name: 'Avatar' }));
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Choisir l’avatar beta' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'L’avatar n’a pas pu être enregistré. Vérifiez votre connexion, puis réessayez.'
+    );
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 });

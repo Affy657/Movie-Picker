@@ -22,7 +22,7 @@
 
 .rowTrigger:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: -2px;
+  outline-offset: var(--outline-offset-inset);
 }
 
 .aboveTrigger {
@@ -40,7 +40,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--font-size-xs);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }
 
 .mobileMeta {

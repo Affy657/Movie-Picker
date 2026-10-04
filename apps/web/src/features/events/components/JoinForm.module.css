@@ -10,7 +10,7 @@
   margin: 0 0 var(--space-1-5);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-close);
+  letter-spacing: var(--tracking-tight);
   color: var(--color-text);
   line-height: var(--leading-none);
 }
@@ -27,7 +27,7 @@
 .intro {
   margin: 0 0 var(--space-4);
   font-size: var(--font-size-md);
-  line-height: var(--leading-base);
+  line-height: var(--leading-comfortable);
   color: var(--color-text-muted);
 }
 

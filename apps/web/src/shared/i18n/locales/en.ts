@@ -427,6 +427,12 @@ export const en: Locale = {
         accountExists:
           'A Movie Picker account already exists with this email. Log in with your password, then link this provider from the Settings page.',
         identityTaken: 'This account is already linked to another Movie Picker profile.',
+        identityUnlinked:
+          'This account was unlinked from your Movie Picker profile. Sign in another way, then link it again from Settings / Integrations.',
+        providerAlreadyLinked:
+          'An account from this provider is already linked to your profile. Unlink it first to link another one.',
+        reauthenticationRequired:
+          'To link an account, log out and log in again first: this step protects your profile if someone else is using your session.',
         generic: 'Sign-in failed. Please try again.',
       },
     },
@@ -548,6 +554,7 @@ export const en: Locale = {
         indigo: 'Indigo',
       },
       ratingScaleLabel: 'Rating scale',
+      ratingScaleSaveError: 'The rating scale could not be saved. Try again.',
       ratingScaleOptions: {
         five: 'Out of 5',
         ten: 'Out of 10',
@@ -588,7 +595,7 @@ export const en: Locale = {
       avatarPhotoDeleteConfirm: 'Delete photo',
       avatarPhotoDeleteFailed:
         'The photo could not be deleted. Check your connection, then try again.',
-      avatarSaveFailed: 'The avatar could not be saved. Check your connection, then try again.',
+      avatarSaveError: 'The avatar could not be saved. Check your connection, then try again.',
       exportDataTitle: 'Export my data',
       exportDataDescription: 'Profile, notifications, follows, events and votes, as JSON.',
       exportDataButton: 'Download my data',
@@ -780,6 +787,9 @@ export const en: Locale = {
       participantsToggleOne: '1 participant',
       participantsToggle: '{{count}} participants',
       themeAria: 'Event theme: {{theme}}',
+      unstableKicker: 'Unstable connection',
+      unstableText: 'The latest changes to this movie night could not be loaded.',
+      unstableMeta: 'The page updates itself as soon as the server answers.',
     },
     myEvents: {
       title: 'My events',
@@ -829,12 +839,6 @@ export const en: Locale = {
       monthGroupCountOne: '1 event',
       monthGroupCountMany: '{{count}} events',
       historyFinishedWithoutMovie: 'Finished without a movie',
-      historyRemoveAction: 'Remove from my history',
-      historyRemoveConfirmTitle: 'Remove from your history?',
-      historyRemoveConfirmMessage:
-        '"{{title}}" will be removed from your history. You can still join it again if you have the link.',
-      historyRemoveConfirmAction: 'Remove',
-      historyRemoveError: 'Removal failed.',
       pendingAutoCloseIn: 'Automatic closing {{time}}',
       pendingAutoCloseInShort: 'Closes {{time}}',
       countdown: {
@@ -896,7 +900,7 @@ export const en: Locale = {
       alreadyParticipant: 'Already joined',
       empty: "You're not following anyone yet. Follow users to invite them directly.",
       emptyLine1: "You're not following anyone yet.",
-      emptyLink: 'Go to your profile to follow users →',
+      emptyLink: 'Go to your profile to follow users',
       loadError: 'Unable to load the list.',
       inviteError: 'Invitation failed.',
       searchPlaceholder: 'Search a friend',
@@ -1514,6 +1518,8 @@ export const en: Locale = {
     forbidden: 'Access denied.',
     unauthorized: 'Authentication required.',
     internal_error: 'An internal error occurred.',
+    validation_failed: 'Some of the information sent is not valid. Check it and try again.',
+    request_too_large: 'The request sent is too large. Send fewer items at once and try again.',
     rate_limited: 'Too many requests. Please try again in a moment.',
     concurrent_update: 'Modified in the meantime. Reload the page and try again.',
     'vote-limit-reached': 'Limit of {{max}} vote(s) per participant reached.',
@@ -1536,6 +1542,7 @@ export const en: Locale = {
     tv_shows_not_allowed: 'This movie night does not allow TV shows.',
     movie_already_proposed: 'This movie has already been proposed (same TMDB id)',
     movie_title_already_proposed: 'A movie with this title has already been proposed',
+    event_movie_limit_reached: 'This movie night has reached the limit of {{max}} proposed movies.',
     proposal_limit_reached: 'Limit of {{max}} proposal(s) per participant reached.',
     oauth_link_failed: 'This account could not be linked. Please try again.',
     handle_taken: 'This handle is already taken.',
@@ -1596,6 +1603,7 @@ export const en: Locale = {
     wrong_password: 'Wrong password.',
     current_password_incorrect: 'Current password is incorrect.',
     confirmation_incorrect: 'Confirmation is incorrect.',
+    reauthentication_required: 'For your security, log out and log in again, then try again.',
     invalid_participant: 'Invalid participant for this movie night',
     participant_required: 'Participant required.',
     participant_id_required: 'The participantId parameter is required.',
@@ -1618,6 +1626,8 @@ export const en: Locale = {
       'Letterboxd username can only contain letters, digits and underscores.',
     letterboxd_username_missing: 'No Letterboxd username saved on your account.',
     letterboxd_sync_failed: 'Synchronization failed.',
+    letterboxd_sync_unavailable:
+      'Letterboxd or TMDB is not answering right now. Try again in a few minutes.',
     letterboxd_watchlist_incomplete:
       'Letterboxd watchlist unreachable. Check the spelling of the username and that your Letterboxd profile is public.',
     invalid_date_format: 'date must use the YYYY-MM-DD format.',
@@ -1625,6 +1635,7 @@ export const en: Locale = {
     theme_color_out_of_range: 'themeColor must be a hue between 0 and 359.',
     event_title_required: 'The movie night title cannot be empty.',
     event_title_too_long: 'The movie night title cannot exceed {{max}} characters.',
+    event_theme_too_long: 'The movie night theme cannot exceed {{max}} characters.',
     event_template_name_required: 'The template name cannot be empty.',
     event_template_name_too_long: 'The template name cannot exceed {{max}} characters.',
     self_follow: 'You cannot follow yourself.',
@@ -1637,6 +1648,7 @@ export const en: Locale = {
     attachment_content_invalid: 'Invalid content (malformed base64) for “{{name}}”.',
     attachment_content_mismatch:
       'The content of “{{name}}” does not match the declared format ({{type}}).',
+    attachment_image_unreadable: 'The image “{{name}}” could not be read. Try another screenshot.',
     invite_only_followed: 'You can only invite users you follow.',
     no_movie_proposed: 'No movie proposed. Propose at least one movie to spin the wheel.',
     all_movies_excluded:
@@ -1728,6 +1740,7 @@ export const en: Locale = {
     inboxAriaLabelWithCount: 'Notifications, {{count}} unread',
     inboxTitle: 'Notifications',
     inboxEmpty: 'No notifications yet.',
+    inboxLoadError: 'Could not load your notifications.',
     signedOutTitle: 'Stay in the loop',
     signedOutMessage: 'Log in or create an account to receive your notifications.',
     markAllButton: 'Mark all as read',
@@ -1785,6 +1798,7 @@ export const en: Locale = {
     legalTitle: 'Legal information',
     legalNotice: 'Legal notice',
     privacyPolicy: 'Privacy policy',
+    manageCookies: 'Manage cookies',
   },
 
   legal: {
@@ -1822,6 +1836,9 @@ export const en: Locale = {
     privacyDonationsTitle: 'Donations through Ko-fi',
     privacyDonationsBody:
       'Payments are handled entirely by Ko-fi, which acts as the data controller for payment data: Movie Picker never has access to it. For each donation, Ko-fi notifies our server and passes on the donor’s email address. That address is used in memory only, to find the matching Movie Picker account and show the supporter badge on it; it is never stored. No amount, donor name or message is kept: only the date of the first donation is stored on the account concerned, along with a technical notification identifier that prevents the same donation from being processed twice.',
+    privacyIdeasTitle: 'Idea suggestions',
+    privacyIdeasBody:
+      'A suggestion sent from the “Suggest an idea” button becomes a public issue of the project’s GitHub repository, readable by anyone: its title, description, screenshots (without their metadata), the kind of page it was sent from and the app version. Your name, handle and email are not included, only a technical identifier that lets us reach you. Deleting your account does not remove that issue: write to the contact address to have it taken down.',
     privacyRetentionTitle: 'Data retention',
     privacyRetentionBody:
       'Your data is kept for as long as your account exists. Deleting your account, available from the Settings page, permanently erases your profile; events you created and your votes are kept but anonymised.',
@@ -1901,6 +1918,9 @@ export const en: Locale = {
     attachmentsTooMany: 'You can only attach up to {{max}} images.',
     attachmentsTooLarge: 'Image too large (4 MB max): {{name}}',
     attachmentsUnsupportedType: 'Unsupported format (PNG, JPEG, WebP or GIF only): {{name}}',
+    attachmentsUnreadable: 'Could not read the image {{name}}. Remove it, then add it again.',
+    publicNotice:
+      'Your suggestion and screenshots will be published in a public GitHub issue, without your name. Do not include anything personal.',
     submit: 'Send',
     submitting: 'Sending…',
     submitError: 'Could not send your suggestion right now. Please try again.',
@@ -1930,6 +1950,8 @@ export const en: Locale = {
       sheetTitle: 'Follow list',
       isMeBadge: 'You',
       empty: 'Nobody here yet.',
+      loadError: 'Could not load this list.',
+      privateHidden: 'Private profiles are not shown in this list.',
       followAriaLabel: 'Follow @{{handle}}',
       unfollowAriaLabel: 'Unfollow @{{handle}}',
       error: 'Action failed, please try again.',
@@ -2505,7 +2527,7 @@ export const en: Locale = {
       lead: '{{commits}} commits since February 2026. Every milestone reached production before the next one opened. The last {{planned}} markers are the plan ahead, not work already done.',
       plannedBadge: 'ahead',
       currentBadge: 'in progress',
-      unplannedSpan: 'Between V1.9 and V2',
+      unplannedSpan: 'Between V1.10 and V2',
       unplannedDetail:
         'Versions that are not scoped yet. How many there are, and what they carry, will depend on how the product gets used.',
       techHeading: 'The open technical work',
@@ -2644,30 +2666,44 @@ export const en: Locale = {
       v18When: 'Later',
       v18What: 'V1.8',
       v18Detail:
-        'Replace the periodic refresh with a real real-time connection, and give the host the tools still missing.',
-      v18Hint: 'Real time is the last platform project still open on the product trajectory.',
-      v18Item1: 'Real-time sync',
-      v18Item2: 'Presence on the night page',
-      v18Item3: 'Co-host',
-      v18Item4: 'Enforced theme',
-      v18Item5: 'Content warnings',
-      v18Item6: 'Two-factor authentication',
-      v18Item7: 'Help centre',
+        'The personal library: film lists of your own, built by hand, filled by rules or maintained together, and watched films pulled from Letterboxd.',
+      v18Hint:
+        'This Letterboxd import brings back watched films and their ratings, where V1.4 only synced the watchlist.',
+      v18Item1: 'My lists',
+      v18Item2: 'Smart lists',
+      v18Item3: 'Collaborative lists',
+      v18Item4: 'Watched films from Letterboxd',
+      v18Item5: 'Letterboxd watchlist gap',
       v19When: 'Later still',
       v19What: 'V1.9',
       v19Detail:
-        'The personal library and everyday comfort: watched films pulled from Letterboxd, the command palette, offline reading.',
-      v19Hint:
-        'This Letterboxd import brings back watched films and their ratings, where V1.4 only synced the watchlist.',
-      v19Item1: 'Watched films from Letterboxd',
-      v19Item2: 'Command palette',
+        "A true real-time connection in place of the periodic refresh, a night readable offline and framed by the host's theme, then the command palette.",
+      v19Hint: 'Real time is the last platform project still open on the product trajectory.',
+      v19Item1: 'Real-time sync',
+      v19Item2: 'Presence on the night page',
       v19Item3: 'Offline reading',
-      v19Item4: 'Letterboxd watchlist gap',
+      v19Item4: 'Enforced theme',
+      v19Item5: 'Command palette',
+      v110When: 'Beyond',
+      v110What: 'V1.10',
+      v110Detail:
+        'Opening the app beyond your own circle, with a news feed and public nights, and the trust that takes: two-factor authentication, passkeys, visible sessions, new sign-in alerts, service status and online help.',
+      v110Hint:
+        'Nights open to everyone come after real time: under polling, the cost of a night grows with every participant.',
+      v110Item1: 'Offline replay',
+      v110Item2: 'News feed',
+      v110Item3: 'Public night',
+      v110Item4: 'Two-factor authentication',
+      v110Item5: 'Passkeys',
+      v110Item6: 'Active sessions',
+      v110Item7: 'New sign-in alert',
+      v110Item8: 'Help centre',
+      v110Item9: 'Service status',
       v2When: 'No date announced',
       v2What: 'V2',
       v2Detail:
         'A native mobile application, fully integrated with the platform. The coursework prototype was archived rather than patched up.',
-      v2Hint: 'No date announced: the scope will depend on what V1.9 leaves behind.',
+      v2Hint: 'No date announced: the scope will depend on what V1.10 leaves behind.',
       v2Item1: 'Native application',
       v2Item2: 'System notifications',
       v2Item3: 'Full journey outside the browser',
@@ -2691,9 +2727,9 @@ export const en: Locale = {
       loadingHint:
         'The first screen does not carry the rest of the application, and the dependency bundles stay in the browser cache from one version to the next.',
       offline: 'Offline',
-      offlineValue: 'Installable, shell and posters cached, browsable without a network.',
+      offlineValue: 'Installable, shell and showcase cached; a movie night needs the network.',
       offlineHint:
-        'The service worker serves the app shell and already-seen posters when the network is missing.',
+        'The service worker keeps the app shell and the catalogue showcase for a fast start; offline, a movie night shows an error instead of loading forever.',
       languages: 'Languages',
       languagesValue: 'French and English, switched without reloading.',
       languagesHint:

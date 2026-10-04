@@ -56,6 +56,29 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
         return Task.FromResult(exists);
     }
 
+    public Task<bool> ExistsSinceAsync(
+        string userId,
+        UserNotificationType type,
+        string eventId,
+        DateTimeOffset since,
+        CancellationToken ct = default)
+    {
+        var exists = _store.Values.Any(n =>
+            n.UserId == userId && n.Type == type && n.EventId == eventId && n.CreatedAt >= since);
+        return Task.FromResult(exists);
+    }
+
+    public Task<bool> ExistsFromActorAsync(
+        string userId,
+        UserNotificationType type,
+        string actorHandle,
+        CancellationToken ct = default)
+    {
+        var exists = _store.Values.Any(n =>
+            n.UserId == userId && n.Type == type && n.ActorHandle == actorHandle);
+        return Task.FromResult(exists);
+    }
+
     public Task<IReadOnlySet<string>> ListUserIdsByTypeAndEventAsync(UserNotificationType type, string eventId, CancellationToken ct = default)
     {
         IReadOnlySet<string> result = _store.Values
@@ -63,6 +86,36 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
             .Select(n => n.UserId)
             .ToHashSet();
         return Task.FromResult(result);
+    }
+
+    public Task<long> AnonymizeActorAsync(string actorHandle, string anonymizedName, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(actorHandle))
+            return Task.FromResult(0L);
+
+        return Task.FromResult(RewriteActor(
+            actorHandle,
+            n => n with { ActorHandle = null, ActorDisplayName = anonymizedName, ActorAvatarId = null }));
+    }
+
+    public Task<long> RenameActorHandleAsync(string previousHandle, string newHandle, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(previousHandle) || string.IsNullOrWhiteSpace(newHandle))
+            return Task.FromResult(0L);
+
+        return Task.FromResult(RewriteActor(previousHandle, n => n with { ActorHandle = newHandle }));
+    }
+
+    private long RewriteActor(string actorHandle, Func<UserNotification, UserNotification> rewrite)
+    {
+        long count = 0;
+        foreach (var (key, n) in _store.ToList())
+        {
+            if (n.ActorHandle == actorHandle && _store.TryUpdate(key, rewrite(n), n))
+                count++;
+        }
+
+        return count;
     }
 
     public Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default)

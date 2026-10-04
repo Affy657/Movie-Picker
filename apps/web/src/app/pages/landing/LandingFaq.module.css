@@ -5,7 +5,7 @@
 .faq {
   display: flex;
   flex-direction: column;
-  max-width: var(--container-lg);
+  max-width: var(--container-xl);
   margin-inline: auto;
   border-top: 1px solid var(--color-border-subtle);
 }
@@ -22,7 +22,7 @@
   cursor: pointer;
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-md);
-  letter-spacing: var(--tracking-close);
+  letter-spacing: var(--tracking-tight);
   list-style: none;
 }
 

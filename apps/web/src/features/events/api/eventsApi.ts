@@ -1,5 +1,5 @@
 import { ROUTES } from '@/app/routes';
-import { fetchApi, apiUrl, withHostToken } from '@/shared/api/client';
+import { fetchApi, apiPath, withHostToken } from '@/shared/api/client';
 import {
   mapEventData,
   mapParticipantData,
@@ -18,11 +18,19 @@ import type {
 import type { MovieData, ParticipantData } from '@/shared/types/movie';
 
 export async function fetchEventBySlug(slug: string, hostToken: string | null): Promise<EventData> {
-  const raw = await fetchApi<RawEventData>(`/events/slug/${slug}`, withHostToken(hostToken));
+  const raw = await fetchApi<RawEventData>(
+    apiPath('events', 'slug', slug),
+    withHostToken(hostToken)
+  );
   return mapEventData(raw);
 }
 
-export type CreateEventBody = { title: string; date: string; time: string };
+export type CreateEventBody = {
+  title: string;
+  date: string;
+  time: string;
+  clientRequestId?: string;
+};
 
 export type CreateEventResponse = {
   slug: string;
@@ -71,7 +79,7 @@ type RawJoinEventResponse = {
 };
 
 export async function joinEvent(slug: string, pseudo: string): Promise<JoinEventResponse> {
-  const raw = await fetchApi<RawJoinEventResponse>(`/events/${slug}/join`, {
+  const raw = await fetchApi<RawJoinEventResponse>(apiPath('events', slug, 'join'), {
     method: 'POST',
     body: JSON.stringify({ pseudo }),
   });
@@ -83,7 +91,7 @@ export async function joinEvent(slug: string, pseudo: string): Promise<JoinEvent
 }
 
 export function fetchEventConfig(slug: string): Promise<EventConfigData> {
-  return fetchApi<EventConfigData>(`/events/${slug}/config`);
+  return fetchApi<EventConfigData>(apiPath('events', slug, 'config'));
 }
 
 export function patchEventConfig(
@@ -92,18 +100,19 @@ export function patchEventConfig(
   body: EventConfigPatchPayload
 ): Promise<EventConfigData> {
   return fetchApi<EventConfigData>(
-    `/events/${slug}/config`,
+    apiPath('events', slug, 'config'),
     withHostToken(hostToken, { method: 'PATCH', body: JSON.stringify(body) })
   );
 }
 
 export async function postEventWheel(
   slug: string,
-  hostToken: string | null
+  hostToken: string | null,
+  expectedWinnerCount?: number
 ): Promise<{ winner: MovieData; message: string }> {
   const raw = await fetchApi<{ winner: RawMovieData; message: string }>(
-    `/events/${slug}/wheel`,
-    withHostToken(hostToken, { method: 'POST', body: '{}' })
+    apiPath('events', slug, 'wheel'),
+    withHostToken(hostToken, { method: 'POST', body: JSON.stringify({ expectedWinnerCount }) })
   );
   return { winner: mapMovieData(raw.winner), message: raw.message };
 }
@@ -113,7 +122,7 @@ export async function postEventWheelAnnounce(
   hostToken: string | null
 ): Promise<void> {
   await fetchApi(
-    `/events/${slug}/wheel/announce`,
+    apiPath('events', slug, 'wheel', 'announce'),
     withHostToken(hostToken, { method: 'POST', body: '{}' })
   );
 }
@@ -124,18 +133,21 @@ export async function postEventWinner(
   hostToken: string | null
 ): Promise<{ winner: MovieData; message: string }> {
   const raw = await fetchApi<{ winner: RawMovieData; message: string }>(
-    `/events/${slug}/winner`,
+    apiPath('events', slug, 'winner'),
     withHostToken(hostToken, { method: 'POST', body: JSON.stringify({ movieId }) })
   );
   return { winner: mapMovieData(raw.winner), message: raw.message };
 }
 
 export async function postEventClose(slug: string, hostToken: string | null): Promise<void> {
-  await fetchApi(`/events/${slug}/close`, withHostToken(hostToken, { method: 'POST', body: '{}' }));
+  await fetchApi(
+    apiPath('events', slug, 'close'),
+    withHostToken(hostToken, { method: 'POST', body: '{}' })
+  );
 }
 
 export async function deleteEventWheel(slug: string, hostToken: string | null): Promise<void> {
-  await fetchApi(`/events/${slug}/wheel`, withHostToken(hostToken, { method: 'DELETE' }));
+  await fetchApi(apiPath('events', slug, 'wheel'), withHostToken(hostToken, { method: 'DELETE' }));
 }
 
 export async function deleteEventWinner(
@@ -144,7 +156,7 @@ export async function deleteEventWinner(
   hostToken: string | null
 ): Promise<void> {
   await fetchApi(
-    `/events/${slug}/winners/${movieId}`,
+    apiPath('events', slug, 'winners', movieId),
     withHostToken(hostToken, { method: 'DELETE' })
   );
 }
@@ -162,7 +174,7 @@ export async function removeEventParticipant(
   hostToken: string | null
 ): Promise<RemoveParticipantResponse> {
   return fetchApi<RemoveParticipantResponse>(
-    `/events/${idOrSlug}/participants/${participantId}`,
+    apiPath('events', idOrSlug, 'participants', participantId),
     withHostToken(hostToken, { method: 'DELETE' })
   );
 }
@@ -178,19 +190,15 @@ export type DeleteEventResponse = {
 };
 
 export async function deleteEvent(idOrSlug: string): Promise<DeleteEventResponse> {
-  return fetchApi<DeleteEventResponse>(`/events/${idOrSlug}`, { method: 'DELETE' });
-}
-
-export function eventSharePreviewUrl(slug: string): string {
-  return apiUrl(`/events/slug/${slug}/share-preview`);
+  return fetchApi<DeleteEventResponse>(apiPath('events', idOrSlug), { method: 'DELETE' });
 }
 
 export function eventFrontendUrl(slug: string): string {
-  return `${globalThis.location.origin}${ROUTES.eventDetail(slug)}`;
+  return `${globalThis.location.origin}${ROUTES.eventDetail(encodeURIComponent(slug))}`;
 }
 
 export function nightRecapFrontendUrl(slug: string): string {
-  return `${globalThis.location.origin}${ROUTES.nightRecap(slug)}`;
+  return `${globalThis.location.origin}${ROUTES.nightRecap(encodeURIComponent(slug))}`;
 }
 
 export interface EligibleFollowItem {
@@ -207,11 +215,13 @@ export interface EligibleFollowsResponse {
 }
 
 export async function getEligibleFollows(idOrSlug: string): Promise<EligibleFollowsResponse> {
-  return fetchApi<EligibleFollowsResponse>(`/events/${idOrSlug}/invitations/eligible-follows`);
+  return fetchApi<EligibleFollowsResponse>(
+    apiPath('events', idOrSlug, 'invitations', 'eligible-follows')
+  );
 }
 
 export async function sendEventInvitation(idOrSlug: string, targetUserId: string): Promise<void> {
-  await fetchApi(`/events/${idOrSlug}/invitations`, {
+  await fetchApi(apiPath('events', idOrSlug, 'invitations'), {
     method: 'POST',
     body: JSON.stringify({ targetUserId }),
   });

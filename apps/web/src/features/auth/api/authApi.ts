@@ -1,10 +1,11 @@
-import { apiUrl, fetchApi } from '@/shared/api/client';
+import { apiPath, apiUrl, fetchApi } from '@/shared/api/client';
 import { blobToBase64 } from '@/shared/utils/blobToBase64';
 import { downloadBlob } from '@/shared/utils/downloadBlob';
 import { ApiError } from '@/shared/api/apiError';
 import type { AccentColor, RatingScale, UiThemePreference } from '@/shared/types/theme';
 import type { UserProfile } from '@/features/auth/types';
 import { clearSessionHint, hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
+import { currentBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
 
 export async function fetchAuthMeForSession(): Promise<UserProfile | null> {
   if (!hasSessionHint()) return null;
@@ -51,9 +52,18 @@ export async function postAuthRegister(
   setSessionHint();
 }
 
-export async function postAuthLogout(): Promise<void> {
+async function currentPushEndpoint(): Promise<string | undefined> {
   try {
-    await fetchApi('/auth/logout', { method: 'POST' });
+    return (await currentBrowserPushSubscription())?.endpoint;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function postAuthLogout(): Promise<void> {
+  const pushEndpoint = await currentPushEndpoint();
+  try {
+    await fetchApi('/auth/logout', { method: 'POST', body: JSON.stringify({ pushEndpoint }) });
   } finally {
     clearSessionHint();
   }
@@ -65,11 +75,13 @@ export async function fetchOAuthProviders(): Promise<string[]> {
 }
 
 export function oauthStartUrl(provider: string, returnTo: string): string {
-  return apiUrl(`/auth/oauth/${provider}/start?returnTo=${encodeURIComponent(returnTo)}`);
+  return apiUrl(
+    `${apiPath('auth', 'oauth', provider, 'start')}?returnTo=${encodeURIComponent(returnTo)}`
+  );
 }
 
 export async function unlinkOAuthProvider(provider: string): Promise<void> {
-  await fetchApi(`/auth/me/identities/${provider}`, { method: 'DELETE' });
+  await fetchApi(apiPath('auth', 'me', 'identities', provider), { method: 'DELETE' });
 }
 
 export interface ProfilePatch {

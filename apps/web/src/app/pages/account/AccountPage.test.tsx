@@ -116,6 +116,23 @@ describe('AccountPage (MSW)', () => {
     expect(screen.queryByText('Échelle des notes')).not.toBeInTheDocument();
   });
 
+  it('failed session check: retry screen instead of the signed-out settings', async () => {
+    localStorage.setItem('mp.session-hint', '1');
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({ error: 'Panne' }, { status: 503 })
+      )
+    );
+
+    renderAccount();
+
+    expect(
+      await screen.findByRole('button', { name: /^réessayer$/i }, { timeout: 12000 })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Se connecter' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /retour à l.accueil/i })).toHaveAttribute('href', '/');
+  });
+
   it('une rubrique inconnue renvoie vers le profil sans empiler de segments', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>

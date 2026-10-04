@@ -4,6 +4,7 @@ import JoinForm from '@/features/events/components/JoinForm';
 import EventDetailHeader from '@/features/events/pages/event-detail/EventDetailHeader';
 import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMoviesLoadError';
 import EventPendingBanner from '@/features/events/components/EventPendingBanner';
+import EventConnectionBanner from '@/features/events/components/EventConnectionBanner';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
 import { getEligibleFollows } from '@/features/events/api/eventsApi';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -99,7 +100,7 @@ function EventDetailSessionOverlays({
           />
         </Suspense>
       ) : null}
-      {moviesQuery.isError ? (
+      {moviesQuery.isError && moviesQuery.data === undefined ? (
         <EventMoviesLoadError error={moviesQuery.error} onRetry={() => moviesQuery.refetch()} />
       ) : null}
       {join.needsJoin ? (
@@ -111,6 +112,28 @@ function EventDetailSessionOverlays({
         />
       ) : null}
     </>
+  );
+}
+
+function SessionPendingBanner({
+  isHost,
+  wheel,
+  settings,
+  onRequestCloseWithoutMovie,
+}: Readonly<{
+  isHost: boolean;
+  wheel: WheelApi;
+  settings: SettingsOverlay;
+  onRequestCloseWithoutMovie: () => void;
+}>) {
+  const canLaunch = wheel.canSpin && !wheel.spinDisabled;
+  return (
+    <EventPendingBanner
+      isHost={isHost}
+      onLaunchWheel={canLaunch ? wheel.launch : undefined}
+      onReschedule={settings.canConfigure ? settings.onOpen : undefined}
+      onCloseWithoutMovie={settings.canConfigure ? onRequestCloseWithoutMovie : undefined}
+    />
   );
 }
 
@@ -133,6 +156,8 @@ export default function EventDetailSessionChrome({
   onRequestCloseWithoutMovie,
   viewMode,
   onViewModeChange,
+  connectionUnstable,
+  onRetryConnection,
 }: Readonly<{
   slug: string;
   hostToken: string | null;
@@ -152,6 +177,8 @@ export default function EventDetailSessionChrome({
   onRequestCloseWithoutMovie: () => void;
   viewMode: MoviesViewMode;
   onViewModeChange: (mode: MoviesViewMode) => void;
+  connectionUnstable: boolean;
+  onRetryConnection: () => void;
 }>) {
   return (
     <>
@@ -180,12 +207,13 @@ export default function EventDetailSessionChrome({
         viewMode={viewMode}
         onViewModeChange={onViewModeChange}
       />
+      {connectionUnstable ? <EventConnectionBanner onRetry={onRetryConnection} /> : null}
       {lifecycle === 'pending' ? (
-        <EventPendingBanner
+        <SessionPendingBanner
           isHost={!!event.isHost}
-          onLaunchWheel={wheel.canSpin && !wheel.spinDisabled ? wheel.launch : undefined}
-          onReschedule={settings.canConfigure ? settings.onOpen : undefined}
-          onCloseWithoutMovie={settings.canConfigure ? onRequestCloseWithoutMovie : undefined}
+          wheel={wheel}
+          settings={settings}
+          onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
         />
       ) : null}
       <EventDetailSessionOverlays

@@ -62,7 +62,8 @@ export default function AvatarPhotoPanel({
         <div className={styles.photo}>
           <ChoiceGroup
             value={selected ? photoAvatarId : null}
-            onChange={onSelectPhoto}
+            onChange={() => undefined}
+            onSelect={onSelectPhoto}
             ariaLabel={t('auth.account.avatarCategoryPhoto')}
           >
             <ChoiceCard

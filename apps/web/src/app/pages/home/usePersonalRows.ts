@@ -4,6 +4,7 @@ import {
   fetchMyWatchedMovies,
 } from '@/features/profile/api/profileApi';
 import { useWatchlist } from '@/features/movies/hooks/useWatchlist';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
 import type { PersonalRowItem } from './HomePersonalRow';
 
@@ -19,7 +20,8 @@ function bestRatedFirst(a: WatchlistItem, b: WatchlistItem): number {
 
 export function useWatchlistRow(enabled: boolean) {
   const watchlist = useWatchlist({ enabled });
-  const items: PersonalRowItem[] = [...(watchlist.data ?? [])]
+  const movies = enabled ? (watchlist.data ?? []) : [];
+  const items: PersonalRowItem[] = [...movies]
     .sort(bestRatedFirst)
     .slice(0, WATCHLIST_TAKE)
     .map((movie): PersonalRowItem => ({
@@ -37,11 +39,12 @@ export function useWatchlistRow(enabled: boolean) {
 
 export function useFriendsWatchedRow(enabled: boolean) {
   const query = useQuery({
-    queryKey: ['users', 'me', 'following-watched-movies', FRIENDS_TAKE],
+    queryKey: queryKeys.me.followingWatchedMovies(FRIENDS_TAKE),
     queryFn: ({ signal }) => fetchFollowingWatchedMovies(FRIENDS_TAKE, signal),
     enabled,
   });
-  const items: PersonalRowItem[] = (query.data?.items ?? []).map((movie) => ({
+  const movies = enabled ? (query.data?.items ?? []) : [];
+  const items: PersonalRowItem[] = movies.map((movie) => ({
     tmdbId: movie.tmdbId,
     mediaType: movie.mediaType,
     title: movie.title,
@@ -56,13 +59,14 @@ export function useFriendsWatchedRow(enabled: boolean) {
 
 export function useRecommendationSeed(enabled: boolean) {
   const query = useQuery({
-    queryKey: ['users', 'me', 'watched-movies', RECOMMENDATION_SEED_TAKE],
+    queryKey: queryKeys.me.watchedMovies(RECOMMENDATION_SEED_TAKE),
     queryFn: ({ signal }) => fetchMyWatchedMovies(RECOMMENDATION_SEED_TAKE, signal),
     enabled,
   });
-  const seed = query.data?.items?.[0];
+  const seed = enabled ? query.data?.items?.[0] : undefined;
   return {
     seedTmdbId: seed?.tmdbId,
+    seedMediaType: seed?.mediaType,
     seedTitle: seed?.title,
     isPending: enabled && query.isPending,
   };

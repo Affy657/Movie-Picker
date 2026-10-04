@@ -5,8 +5,10 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import ProfilePage from '@/features/profile/pages/ProfilePage';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, createUserStatsHandler } from '@/mocks/handlers';
+import { queryKeys } from '@/shared/hooks/queryKeys';
+import type { QueryClient } from '@tanstack/react-query';
 
 const EMPTY_STATS = {
   eventsCreated: 0,
@@ -44,13 +46,14 @@ const ME_PROFILE = {
   isProfilePublic: true,
 };
 
-function renderProfile(handle: string) {
+function renderProfile(handle: string, client?: QueryClient) {
   return render(
-    <AppTestProviders>
+    <AppTestProviders client={client}>
       <MemoryRouter initialEntries={[`/u/${handle}`]}>
         <Routes>
           <Route path="/u/:handle" element={<ProfilePage />} />
           <Route path="/" element={<div data-testid="route-home" />} />
+          <Route path="/settings" element={<div data-testid="route-settings" />} />
         </Routes>
       </MemoryRouter>
     </AppTestProviders>
@@ -267,6 +270,50 @@ describe('ProfilePage (MSW)', () => {
     expect(await screen.findByRole('button', { name: /ne plus suivre/i })).toBeInTheDocument();
   });
 
+  it.each([
+    { action: 'a follow', isFollowedByMe: false, button: 'Suivre @alice', method: 'post' as const },
+    {
+      action: 'an unfollow',
+      isFollowedByMe: true,
+      button: 'Ne plus suivre @alice',
+      method: 'delete' as const,
+    },
+  ])(
+    'after $action, refreshes my own profile, both follow lists, the user searches and the friends home row',
+    async ({ isFollowedByMe, button, method }) => {
+      const user = userEvent.setup();
+      const client = createTestQueryClient();
+      const touchedKeys = [
+        queryKeys.profile.public('moi'),
+        queryKeys.profile.following('moi'),
+        queryKeys.profile.followers('alice'),
+        queryKeys.profile.userSearch('ali'),
+        queryKeys.event.eligibleFollows('movie-night'),
+        queryKeys.me.followingWatchedMovies(20),
+      ];
+      for (const key of touchedKeys) client.setQueryData(key, { items: [] });
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({ ...ALICE_PROFILE, isFollowedByMe })
+        ),
+        http[method](
+          `${TEST_API_V1}/users/alice/follow`,
+          () => new HttpResponse(null, { status: 204 })
+        )
+      );
+
+      renderProfile('alice', client);
+      await user.click(await screen.findByRole('button', { name: button }));
+
+      await waitFor(() => {
+        for (const key of touchedKeys) {
+          expect(client.getQueryState(key)?.isInvalidated, JSON.stringify(key)).toBe(true);
+        }
+      });
+    }
+  );
+
   it("n'affiche pas de bouton Suivre sur son propre profil", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
@@ -435,6 +482,39 @@ describe('ProfilePage (MSW)', () => {
       expect(screen.getByText(/n'existe pas ou n'est pas public/i)).toBeInTheDocument();
     });
     expect(screen.queryByRole('heading', { name: 'ghost' })).not.toBeInTheDocument();
+  });
+
+  it.each(['moi', ' Moi'])(
+    'takes me to my settings instead of a 404 when my own profile is private (%j)',
+    async (urlHandle) => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({ ...ME_PROFILE, isProfilePublic: false })
+        ),
+        http.get(`${TEST_API_V1}/users/:handle`, () =>
+          HttpResponse.json({ error: 'Profil introuvable' }, { status: 404 })
+        )
+      );
+
+      renderProfile(encodeURIComponent(urlHandle));
+
+      expect(await screen.findByTestId('route-settings')).toBeInTheDocument();
+      expect(screen.queryByText(/n'existe pas ou n'est pas public/i)).not.toBeInTheDocument();
+    }
+  );
+
+  it("still shows the not found state on someone else's private profile when signed in", async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME_PROFILE)),
+      http.get(`${TEST_API_V1}/users/alice`, () =>
+        HttpResponse.json({ error: 'Profil introuvable' }, { status: 404 })
+      )
+    );
+
+    renderProfile('alice');
+
+    expect(await screen.findByText(/n'existe pas ou n'est pas public/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('route-settings')).not.toBeInTheDocument();
   });
 
   it('masque la bio quand elle est absente', async () => {

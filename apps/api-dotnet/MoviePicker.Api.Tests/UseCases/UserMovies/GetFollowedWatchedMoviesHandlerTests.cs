@@ -207,8 +207,7 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
         Assert.Equal(111, result.Items[0].TmdbId);
     }
 
-    [Fact]
-    public async Task DeduplicatesAMovieSeenInSeveralNights()
+    private void FollowedFriendsWatchedEachNight(params (string Date, Movie Movie)[] nights)
     {
         _follows.Setup(r => r.GetFollowingIdsAsync("me", It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(["a", "b"]);
@@ -218,15 +217,55 @@ public sealed class GetFollowedWatchedMoviesHandlerTests
                 It.IsAny<IReadOnlyCollection<string>>(),
                 It.IsAny<int>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync([Part("p1", "e1", "a"), Part("p2", "e2", "b")]);
+            .ReturnsAsync(nights.Select((night, index) => Part($"p{index}", night.Movie.EventId, index % 2 == 0 ? "a" : "b")).ToList());
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([Evt("e1", "2026-06-01", "m1"), Evt("e2", "2026-06-02", "m1")]);
+            .ReturnsAsync(nights.Select(night => Evt(night.Movie.EventId, night.Date, night.Movie.Id)).ToList());
         _movies.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([Mov("m1", 111)]);
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
+                nights.Select(night => night.Movie).Where(movie => ids.Contains(movie.Id)).ToList());
+    }
+
+    private static Movie ProposedAt(string eventId, string movieId, int tmdbId, MovieMediaType mediaType = MovieMediaType.Movie) =>
+        Mov(movieId, tmdbId) with { EventId = eventId, MediaType = mediaType };
+
+    [Fact]
+    public async Task DeduplicatesAFilmSeenInSeveralNights_KeepingTheLatestNight()
+    {
+        FollowedFriendsWatchedEachNight(
+            ("2026-06-01", ProposedAt("e1", "m1", 111)),
+            ("2026-06-02", ProposedAt("e2", "m2", 111)));
 
         var result = await Build().HandleAsync("me", 20);
 
-        Assert.Single(result.Items);
+        var item = Assert.Single(result.Items);
+        Assert.Equal(111, item.TmdbId);
+        Assert.Equal(new DateOnly(2026, 6, 2), DateOnly.FromDateTime(item.WatchedAt.UtcDateTime));
+    }
+
+    [Fact]
+    public async Task AFilmAndASeriesSharingATmdbId_StayTwoEntries()
+    {
+        FollowedFriendsWatchedEachNight(
+            ("2026-06-01", ProposedAt("e1", "m1", 111)),
+            ("2026-06-02", ProposedAt("e2", "m2", 111, MovieMediaType.Tv)));
+
+        var result = await Build().HandleAsync("me", 20);
+
+        Assert.Equal(2, result.Items.Count);
+    }
+
+    [Fact]
+    public async Task TheTakeCountsFilms_NotNights()
+    {
+        FollowedFriendsWatchedEachNight(
+            ("2026-06-01", ProposedAt("e1", "m1", 333)),
+            ("2026-06-02", ProposedAt("e2", "m2", 222)),
+            ("2026-06-03", ProposedAt("e3", "m3", 111)),
+            ("2026-06-04", ProposedAt("e4", "m4", 111)));
+
+        var result = await Build().HandleAsync("me", 3);
+
+        Assert.Equal([111, 222, 333], result.Items.Select(item => item.TmdbId));
     }
 
     [Fact]

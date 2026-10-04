@@ -57,7 +57,7 @@
   padding: 0;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 8.4rem;
+  grid-auto-columns: var(--poster-column-sm);
   gap: var(--space-3);
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -69,34 +69,25 @@
 }
 
 .railMd {
-  grid-auto-columns: 9rem;
+  grid-auto-columns: var(--poster-column-md);
   gap: var(--space-3-5);
 }
 
 .railWide {
-  grid-auto-columns: 17rem;
+  grid-auto-columns: var(--collection-column);
   gap: var(--space-3-5);
 }
 
 .railArrow {
-  composes: expanded from '@/shared/components/tapTarget.module.css';
   position: absolute;
   top: 50%;
   transform: translateY(calc(-50% - var(--space-8)));
   z-index: var(--z-raised-above);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-9);
-  height: var(--space-9);
-  padding: 0;
-  color: var(--on-poster-kebab-fg);
-  background: var(--on-poster-kebab-bg);
-  border: 1px solid var(--on-poster-border);
-  border-radius: var(--radius-pill);
   box-shadow: var(--shadow-md);
-  cursor: pointer;
-  transition: opacity var(--duration-base) var(--ease-default);
+  transition:
+    opacity var(--duration-base) var(--ease-default),
+    background var(--duration-base) var(--ease-default),
+    color var(--duration-base) var(--ease-default);
 }
 
 .railViewportWide .railArrow {
@@ -114,13 +105,6 @@
 
 .railArrowForward {
   right: calc(-1 * var(--space-3));
-}
-
-@media (hover: hover) {
-  .railArrow:hover:not(:disabled) {
-    background: var(--on-poster-kebab-bg-hover);
-    border-color: var(--color-primary);
-  }
 }
 
 @media (max-width: 39.9375rem) {

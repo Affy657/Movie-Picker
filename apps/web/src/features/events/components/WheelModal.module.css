@@ -9,7 +9,7 @@
   margin: 0;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-  color: var(--on-poster-fg-soft);
+  color: var(--color-on-poster-fg-soft);
   letter-spacing: var(--tracking-wide);
 }
 
@@ -104,6 +104,10 @@
   color: var(--color-text-muted);
 }
 
+.relaunchError {
+  margin: 0 var(--space-6) var(--space-3);
+}
+
 .footer {
   display: flex;
   justify-content: flex-end;
@@ -154,7 +158,7 @@
     justify-content: stretch;
   }
 
-  .footer .btn {
+  .footer > * {
     width: 100%;
   }
 }

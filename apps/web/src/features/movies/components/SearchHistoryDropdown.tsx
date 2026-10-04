@@ -1,4 +1,4 @@
-import { useId, useRef, type KeyboardEvent, type RefObject } from 'react';
+import { useEffect, useId, useRef, type RefObject } from 'react';
 import { History, X } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import IconButton from '@/shared/components/IconButton';
@@ -32,6 +32,7 @@ export default function SearchHistoryDropdown({
 }: Readonly<SearchHistoryDropdownProps>) {
   const { t } = useTranslation();
   const titleId = useId();
+  const panelRef = useRef<HTMLFieldSetElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
 
   const itemButtons = () =>
@@ -72,7 +73,7 @@ export default function SearchHistoryDropdown({
     onClose();
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+  const onKeyDown = (event: KeyboardEvent) => {
     const buttons = itemButtons();
     const index = focusedIndex();
     switch (event.key) {
@@ -91,7 +92,7 @@ export default function SearchHistoryDropdown({
         return;
       case 'End':
         event.preventDefault();
-        buttons[buttons.length - 1]?.focus();
+        buttons.at(-1)?.focus();
         return;
       case 'Escape':
         event.preventDefault();
@@ -109,19 +110,27 @@ export default function SearchHistoryDropdown({
     }
   };
 
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    const keepInputFocused = (event: MouseEvent) => event.preventDefault();
+    panel.addEventListener('keydown', onKeyDown);
+    panel.addEventListener('mousedown', keepInputFocused);
+    return () => {
+      panel.removeEventListener('keydown', onKeyDown);
+      panel.removeEventListener('mousedown', keepInputFocused);
+    };
+  });
+
   return (
-    <div
-      className={styles.historyDropdown}
-      role="group"
-      aria-labelledby={titleId}
-      onKeyDown={onKeyDown}
-      onMouseDown={(event) => event.preventDefault()}
-    >
+    <fieldset ref={panelRef} className={styles.historyDropdown} aria-labelledby={titleId}>
       <div className={styles.historyHeader}>
         <span className={styles.historyTitle} id={titleId}>
           {t('movies.search.historyTitle')}
         </span>
-        <LinkButton onClick={clear}>{t('movies.search.historyClear')}</LinkButton>
+        <LinkButton size="sm" onClick={clear}>
+          {t('movies.search.historyClear')}
+        </LinkButton>
       </div>
       <ul className={styles.historyList} ref={listRef}>
         {history.map((query, index) => (
@@ -147,6 +156,6 @@ export default function SearchHistoryDropdown({
           </li>
         ))}
       </ul>
-    </div>
+    </fieldset>
   );
 }

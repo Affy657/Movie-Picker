@@ -7,10 +7,10 @@ public static class EventRepositoryExtensions
 {
     public static async Task<Event> GetRequiredByIdOrSlugAsync(
         this IEventRepository repo,
-        string idOrSlug,
+        string slug,
         CancellationToken ct = default)
     {
-        return await repo.GetByIdOrSlugAsync(idOrSlug, ct)
+        return await repo.GetByIdOrSlugAsync(slug, ct)
             ?? throw Errors.EventNotFound();
     }
 }

@@ -41,6 +41,21 @@ describe('GenresBar', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(8);
   });
 
+  it('colours each genre from the --color-genre-* tokens, looping after the sixth', () => {
+    const genres = Array.from({ length: 7 }, (_, i) => ({ genreId: i + 1, count: i + 1 }));
+    const { container } = renderBar(genres);
+    const segments = [...container.querySelectorAll<HTMLElement>('[role="img"] > span')];
+    expect(segments.map((segment) => segment.style.background)).toEqual([
+      'var(--color-genre-0)',
+      'var(--color-genre-1)',
+      'var(--color-genre-2)',
+      'var(--color-genre-3)',
+      'var(--color-genre-4)',
+      'var(--color-genre-5)',
+      'var(--color-genre-0)',
+    ]);
+  });
+
   it('shows the cumulative total of the displayed genres', () => {
     renderBar([
       { genreId: 28, count: 5 },

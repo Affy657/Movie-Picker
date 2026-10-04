@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -18,6 +19,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
     private readonly IUserNotificationRepository _notifications;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<PatchEventConfigHandler> _logger;
     private readonly TimeProvider _clock;
 
@@ -30,6 +32,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
+        IUnitOfWork unitOfWork,
         ILogger<PatchEventConfigHandler> logger,
         TimeProvider clock)
     {
@@ -41,6 +44,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
         _notifications = notifications;
+        _unitOfWork = unitOfWork;
         _logger = logger;
         _clock = clock;
     }
@@ -73,14 +77,14 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             && !hasWinnerCountChange)
             return EventConfigResponse.FromEvent(evt);
 
-        var current = evt.Config ?? new EventConfig();
+        var current = evt.Config ?? EventConfig.SavedWithoutSettings;
 
         var nextConfig = new EventConfig
         {
             Theme = ResolveTheme(request, current.Theme),
             ThemeColor = ResolveThemeColor(request, current.ThemeColor),
             MaxProposalsPerParticipant = ResolveMaxProposals(request, current.MaxProposalsPerParticipant),
-            MaxParticipants = await ResolveMaxParticipantsAsync(request, current.MaxParticipants, evt, ct),
+            MaxParticipants = ResolveMaxParticipants(request, current.MaxParticipants),
             MaxVotesPerParticipant = ResolveMaxVotes(request, current.MaxVotesPerParticipant),
             WheelMode = request.WheelMode ?? current.WheelMode,
             RichSharePreview = request.RichSharePreview ?? current.RichSharePreview,
@@ -91,6 +95,7 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         var date = ResolveDate(request, evt.Date);
         var time = ResolveTime(request, evt.Time);
         var title = ResolveTitle(request, evt.Title);
+        var recurrence = ResolveRecurrence(request, evt.Recurrence);
 
         var updated = evt with
         {
@@ -98,11 +103,14 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             Date = date,
             Time = time,
             Config = nextConfig,
-            Recurrence = ResolveRecurrence(request, evt.Recurrence),
+            Recurrence = recurrence,
+            RecurrenceAnchorDay = ResolveRecurrenceAnchorDay(evt, recurrence, date),
             UpdatedAt = now
         };
 
-        var saved = await _events.UpdateAsync(updated, ct);
+        var saved = request.MaxParticipants.HasValue && nextConfig.MaxParticipants is { } participantLimit
+            ? await SaveWithinParticipantLimitAsync(updated, participantLimit, ct)
+            : await _events.UpdateAsync(updated, ct);
 
         var dateChanged = date != evt.Date || time != evt.Time;
         if (dateChanged && request.NotifyParticipantsOfDateChange == true)
@@ -185,6 +193,19 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         return request.Recurrence ?? current;
     }
 
+    private static int? ResolveRecurrenceAnchorDay(Event evt, RecurrenceFrequency? recurrence, string date)
+    {
+        if (recurrence is null)
+            return null;
+
+        if (evt.RecurrenceAnchorDay is { } anchor && recurrence == evt.Recurrence && date == evt.Date)
+            return anchor;
+
+        return DateOnly.TryParse(date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
+            ? day.Day
+            : evt.RecurrenceAnchorDay;
+    }
+
     private static void EnsurePatchAllowed(
         Event evt,
         DateTimeOffset utcNow,
@@ -251,28 +272,28 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
             ? EventConfigLimits.ResolveLimit(request.MaxVotesPerParticipant.Value, null, "maxVotesPerParticipant")
             : current;
 
-    private async Task<int?> ResolveMaxParticipantsAsync(
-        PatchEventConfigRequest request,
-        int? current,
-        Event evt,
-        CancellationToken ct)
+    private static int? ResolveMaxParticipants(PatchEventConfigRequest request, int? current) =>
+        request.MaxParticipants.HasValue
+            ? EventConfigLimits.ResolveLimit(
+                request.MaxParticipants.Value,
+                EventConfig.MaxParticipantsCap,
+                "maxParticipants")
+            : current;
+
+    private async Task<Event> SaveWithinParticipantLimitAsync(Event updated, int limit, CancellationToken ct)
     {
-        if (!request.MaxParticipants.HasValue)
-            return current;
-
-        var limit = EventConfigLimits.ResolveLimit(
-            request.MaxParticipants.Value,
-            EventConfig.MaxParticipantsCap,
-            "maxParticipants");
-
-        if (limit.HasValue)
-        {
-            var currentCount = await _participants.CountByEventIdAsync(evt.Id, ct);
-            if (limit.Value < currentCount)
-                throw Errors.ParticipantLimitBelowCurrent(limit.Value, currentCount);
-        }
-
-        return limit;
+        var saved = updated;
+        await _unitOfWork.ExecuteAsync(
+            async token =>
+            {
+                await _events.LockForWriteAsync(updated.Id, token);
+                var currentCount = await _participants.CountByEventIdAsync(updated.Id, token);
+                if (limit < currentCount)
+                    throw Errors.ParticipantLimitBelowCurrent(limit, currentCount);
+                saved = await _events.UpdateAsync(updated, token);
+            },
+            ct);
+        return saved;
     }
 
     private static string ResolveTitle(PatchEventConfigRequest request, string current)

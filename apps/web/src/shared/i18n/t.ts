@@ -15,6 +15,16 @@ export type TranslationKey = NestedKeys<Locale>;
 
 export type Translate = (key: TranslationKey, vars?: Record<string, string | number>) => string;
 
+type TemplateVars = Record<string, string | number>;
+
+const PLACEHOLDER = /\{\{(\w+)\}\}/g;
+
+export function interpolate(template: string, vars: TemplateVars): string {
+  return template.replaceAll(PLACEHOLDER, (placeholder, name: string) =>
+    Object.hasOwn(vars, name) ? String(vars[name]) : placeholder
+  );
+}
+
 export function t(
   key: TranslationKey,
   vars?: Record<string, string | number>,
@@ -44,11 +54,5 @@ export function translate(
     return key;
   }
 
-  if (!vars) return node;
-
-  let result = node;
-  for (const [k, v] of Object.entries(vars)) {
-    result = result.replaceAll(`{{${k}}}`, String(v));
-  }
-  return result;
+  return vars ? interpolate(node, vars) : node;
 }

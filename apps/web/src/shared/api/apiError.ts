@@ -3,6 +3,8 @@ export const API_ERROR_REASONS = {
   invalidResetToken: 'invalid_reset_token',
   letterboxdWatchlistIncomplete: 'letterboxd_watchlist_incomplete',
   favoritesLimitReached: 'favorites_limit_reached',
+  letterboxdSyncUnavailable: 'letterboxd_sync_unavailable',
+  letterboxdSyncFailed: 'letterboxd_sync_failed',
 } as const;
 
 export class ApiError extends Error {
@@ -10,11 +12,17 @@ export class ApiError extends Error {
 
   readonly reason?: string;
 
-  constructor(message: string, options?: { code?: number; reason?: string; cause?: unknown }) {
+  readonly retryAfterMs?: number;
+
+  constructor(
+    message: string,
+    options?: { code?: number; reason?: string; retryAfterMs?: number; cause?: unknown }
+  ) {
     super(message, options?.cause === undefined ? undefined : { cause: options.cause });
     this.name = 'ApiError';
     this.code = options?.code;
     this.reason = options?.reason;
+    this.retryAfterMs = options?.retryAfterMs;
   }
 
   static is(e: unknown): e is ApiError {

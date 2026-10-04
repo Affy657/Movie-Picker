@@ -3,7 +3,10 @@
   "trailingSlashBehavior": "REMOVE",
   "rewrites": [
     { "glob": "/r/**", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } },
-    { "glob": "**", "path": "/index.html" }
+    {
+      "regex": "^/(?:[^a].*|a(?:[^s].*)?|as(?:[^s].*)?|ass(?:[^e].*)?|asse(?:[^t].*)?|asset(?:[^s].*)?|assets(?:[^/].*)?)?$",
+      "path": "/index.html"
+    }
   ],
   "headers": [
     {
@@ -19,7 +22,7 @@
       }
     },
     {
-      "glob": "/@(assets|icons|avatars)/**",
+      "glob": "/@(assets|icons)/**",
       "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
     },
     {

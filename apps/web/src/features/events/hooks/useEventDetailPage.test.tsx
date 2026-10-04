@@ -1,12 +1,17 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { MemoryRouter, useLocation, type InitialEntry } from 'react-router';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import type { ReactNode } from 'react';
-import { QueryClientWrapper } from '@/test-utils/queryWrapper';
+import { QueryClientWrapper, createTestQueryClient } from '@/test-utils/queryWrapper';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import { createEventDetailHandlers, TEST_API_V1 } from '@/mocks/handlers';
-import { getStoredParticipant, setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
+import {
+  getStoredHostToken,
+  getStoredParticipant,
+  setStoredParticipant,
+} from '@/shared/utils/eventIdentityStorage';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 
 const slug = 'soiree-perf';
@@ -23,12 +28,22 @@ describe('useEventDetailPage', () => {
   });
   afterAll(() => server.close());
 
-  function wrapper({ children }: Readonly<{ children: ReactNode }>) {
-    return (
-      <QueryClientWrapper>
-        <MemoryRouter initialEntries={[`/e/${slug}`]}>{children}</MemoryRouter>
-      </QueryClientWrapper>
-    );
+  function wrapperAt(initialEntry: InitialEntry) {
+    return function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
+      return (
+        <QueryClientWrapper>
+          <MemoryRouter initialEntries={[initialEntry]}>{children}</MemoryRouter>
+        </QueryClientWrapper>
+      );
+    };
+  }
+
+  const wrapper = wrapperAt(`/e/${slug}`);
+
+  function renderPageWithLocation(initialEntry: InitialEntry) {
+    return renderHook(() => ({ page: useEventDetailPage(slug), location: useLocation() }), {
+      wrapper: wrapperAt(initialEntry),
+    });
   }
 
   function serveEventNever(): void {
@@ -85,5 +100,56 @@ describe('useEventDetailPage', () => {
     await waitFor(() => expect(result.current.event).not.toBeNull());
     expect(result.current.participant).toEqual({ participantId: 'p-msw-bob', pseudo: 'Bob' });
     expect(getStoredParticipant(slug)).toEqual({ participantId: 'p-msw-bob', pseudo: 'Bob' });
+  });
+
+  it('marks my movie nights stale when it refreshes the movie night after a draw', async () => {
+    serveEventNever();
+    const client = createTestQueryClient();
+    client.setQueryData(queryKeys.myEvents.active, { pages: [], pageParams: [] });
+    const { result } = renderHook(() => useEventDetailPage(slug), {
+      wrapper: ({ children }: Readonly<{ children: ReactNode }>) => (
+        <QueryClientWrapper client={client}>
+          <MemoryRouter initialEntries={[`/e/${slug}`]}>{children}</MemoryRouter>
+        </QueryClientWrapper>
+      ),
+    });
+
+    act(() => result.current.refreshAll());
+
+    expect(client.getQueryState(queryKeys.myEvents.active)?.isInvalidated).toBe(true);
+  });
+
+  it('keeps the fragment and the navigation state when it moves a legacy host token into the session', async () => {
+    serveEventNever();
+
+    const { result } = renderPageWithLocation({
+      pathname: `/e/${slug}`,
+      search: '?host=legacy-host-token&tab=movies',
+      hash: '#movies',
+      state: { justCreated: true },
+    });
+
+    await waitFor(() => expect(result.current.location.search).toBe('?tab=movies'));
+    expect(result.current.location.pathname).toBe(`/e/${slug}`);
+    expect(result.current.location.hash).toBe('#movies');
+    expect(result.current.location.state).toEqual({ justCreated: true });
+    expect(getStoredHostToken(slug)).toBe('legacy-host-token');
+    expect(result.current.page.hostToken).toBe('legacy-host-token');
+  });
+
+  it('leaves a legacy host token in the address bar when the session refuses to store it', async () => {
+    serveEventNever();
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('Storage is blocked', 'SecurityError');
+    });
+    try {
+      const { result } = renderPageWithLocation(`/e/${slug}?host=legacy-host-token&tab=movies`);
+
+      await waitFor(() => expect(requested).toContain('event'));
+      expect(result.current.location.search).toBe('?host=legacy-host-token&tab=movies');
+      expect(result.current.page.hostToken).toBe('legacy-host-token');
+    } finally {
+      setItem.mockRestore();
+    }
   });
 });

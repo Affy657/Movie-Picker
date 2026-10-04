@@ -17,6 +17,7 @@ import type { MovieDetailsTabKey } from '@/features/movies/components/MovieDetai
 import { letterboxdUrl } from '@/features/movies/utils/movieExternalLinks';
 import type { MovieData } from '@/shared/types/movie';
 import type { MovieWheelExclusion } from '@/features/movies/types';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import styles from './MovieCardKebab.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -223,27 +224,13 @@ export function CardKebab({
     repositionMenu();
   }, [open, repositionMenu]);
 
+  useClickOutside([rootRef, menuRef], close, open, { returnFocusTo: btnRef });
+
   useEffect(() => {
     if (!open) return;
-    const handlePointer = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (!rootRef.current?.contains(target) && !menuRef.current?.contains(target)) close();
-    };
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        close();
-        btnRef.current?.focus();
-      }
-    };
-    document.addEventListener('mousedown', handlePointer);
-    document.addEventListener('keydown', handleKey);
     window.addEventListener('scroll', repositionMenu, { capture: true, passive: true });
-    return () => {
-      document.removeEventListener('mousedown', handlePointer);
-      document.removeEventListener('keydown', handleKey);
-      window.removeEventListener('scroll', repositionMenu, true);
-    };
-  }, [open, close, repositionMenu]);
+    return () => window.removeEventListener('scroll', repositionMenu, true);
+  }, [open, repositionMenu]);
 
   useEffect(() => {
     if (!open || !menuPos.ready) return;

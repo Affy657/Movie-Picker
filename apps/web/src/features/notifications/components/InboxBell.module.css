@@ -1,36 +1,5 @@
-.bellButton {
-  composes: expanded from '@/shared/components/tapTarget.module.css';
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-9);
-  height: var(--space-9);
-  border-radius: var(--radius-sm);
-  color: var(--color-text);
-  position: relative;
-  transition: background var(--duration-base) var(--ease-default);
-}
-
-@media (hover: hover) {
-  .bellButton:hover {
-    background: var(--color-surface-hover-strong);
-  }
-}
-
 .badge {
   position: absolute;
   top: 2px;
   right: 2px;
-  min-width: var(--space-4);
-  height: var(--space-4);
-  padding: 0 var(--space-1);
-  background: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border-radius: var(--radius-pill);
-  font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: var(--leading-none);
 }

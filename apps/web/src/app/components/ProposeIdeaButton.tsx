@@ -12,7 +12,7 @@ import {
 } from 'react';
 import { useLocation } from 'react-router';
 import { ImagePlus, X } from 'lucide-react';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { APP_VERSION } from '@/shared/appVersion';
 import { blobToBase64 } from '@/shared/utils/blobToBase64';
@@ -21,13 +21,14 @@ import { createIdeaSuggestion, type IdeaSuggestionCategory } from '@/shared/api/
 import styles from './ProposeIdeaButton.module.css';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
-import IconButton from '@/shared/components/IconButton';
 import clsx from 'clsx';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import Field from '@/shared/components/Field';
 
 const TITLE_MAX_LENGTH = 100;
 const DESCRIPTION_MAX_LENGTH = 2000;
+const PAGE_PATH_MAX_LENGTH = 300;
+const ATTACHMENT_FILE_NAME_MAX_LENGTH = 150;
 const MAX_ATTACHMENTS = 4;
 const MAX_ATTACHMENT_SIZE_BYTES = 4 * 1024 * 1024;
 const ACCEPTED_ATTACHMENT_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
@@ -45,6 +46,58 @@ type DialogProps = {
   onClose: () => void;
 };
 
+class UnreadableAttachmentError extends Error {
+  constructor(
+    readonly fileName: string,
+    options?: ErrorOptions
+  ) {
+    super(`Attachment ${fileName} could not be read`, options);
+    this.name = 'UnreadableAttachmentError';
+  }
+}
+
+function revokePreviewUrls(attachments: readonly Attachment[]) {
+  for (const attachment of attachments) URL.revokeObjectURL(attachment.previewUrl);
+}
+
+function leadingCodeUnits(text: string, maxLength: number): string {
+  let kept = '';
+  for (const character of text) {
+    if (kept.length + character.length > maxLength) break;
+    kept += character;
+  }
+  return kept;
+}
+
+function fileNameWithinApiLimit(fileName: string): string {
+  if (fileName.length <= ATTACHMENT_FILE_NAME_MAX_LENGTH) return fileName;
+  const extensionStart = fileName.lastIndexOf('.');
+  const extension = extensionStart > 0 ? fileName.slice(extensionStart) : '';
+  const keptExtension = extension.length < ATTACHMENT_FILE_NAME_MAX_LENGTH ? extension : '';
+  const stem = fileName.slice(0, fileName.length - keptExtension.length);
+  return (
+    leadingCodeUnits(stem, ATTACHMENT_FILE_NAME_MAX_LENGTH - keptExtension.length) + keptExtension
+  );
+}
+
+async function toAttachmentPayload(attachment: Attachment) {
+  try {
+    return {
+      fileName: fileNameWithinApiLimit(attachment.file.name),
+      contentType: attachment.file.type,
+      base64Content: await blobToBase64(attachment.file),
+    };
+  } catch (readError) {
+    throw new UnreadableAttachmentError(attachment.file.name, { cause: readError });
+  }
+}
+
+function submitErrorMessage(err: unknown, t: Translate): string {
+  if (err instanceof UnreadableAttachmentError)
+    return t('proposeIdea.attachmentsUnreadable', { name: err.fileName });
+  return getErrorMessage(err, t('proposeIdea.submitError'));
+}
+
 export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   const { t } = useTranslation();
   const location = useLocation();
@@ -54,6 +107,8 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const attachmentsRef = useRef(attachments);
+  attachmentsRef.current = attachments;
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const titleId = useId();
@@ -135,6 +190,8 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
     [t]
   );
 
+  useEffect(() => () => revokePreviewUrls(attachmentsRef.current), []);
+
   useEffect(() => {
     if (!open) return;
     setCategory('idea');
@@ -155,24 +212,22 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
     setError(null);
     try {
       const attachmentPayload = await Promise.all(
-        attachments.map(async (a) => ({
-          fileName: a.file.name,
-          contentType: a.file.type,
-          base64Content: await blobToBase64(a.file),
-        }))
+        attachments.map((attachment) => toAttachmentPayload(attachment))
       );
       await createIdeaSuggestion({
         category,
         title: title.trim(),
         description: description.trim(),
-        pagePath: location.pathname,
+        pagePath: location.pathname.slice(0, PAGE_PATH_MAX_LENGTH),
         appVersion: APP_VERSION,
         attachments: attachmentPayload.length > 0 ? attachmentPayload : undefined,
       });
       setStatus('success');
+      revokePreviewUrls(attachmentsRef.current);
+      setAttachments([]);
     } catch (err) {
       setStatus('error');
-      setError(getErrorMessage(err, t('proposeIdea.submitError')));
+      setError(submitErrorMessage(err, t));
     }
   };
 
@@ -183,17 +238,9 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
       size="sm"
       column
       bottomSheetOnMobile
-      ariaLabelledBy={titleId}
+      title={t('proposeIdea.dialogTitle')}
+      titleId={titleId}
     >
-      <header className={styles.header}>
-        <h2 id={titleId} className={styles.title}>
-          {t('proposeIdea.dialogTitle')}
-        </h2>
-        <IconButton ariaLabel={t('common.close')} onClick={onClose}>
-          <X size={ICON_SIZE.lg} aria-hidden />
-        </IconButton>
-      </header>
-
       {status === 'success' ? (
         <div className={styles.successState}>
           <p className={styles.successMessage} role="status" aria-live="polite">
@@ -207,9 +254,10 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
         <form className={styles.form} onSubmit={(e) => void handleSubmit(e)}>
           <div className={styles.body}>
             <Field label={t('proposeIdea.categoryLabel')} htmlFor={categoryFieldId}>
-              {({ id }) => (
+              {({ id, labelId }) => (
                 <Dropdown
                   id={id}
+                  ariaLabelledBy={labelId}
                   value={category}
                   options={categoryOptions}
                   onChange={setCategory}
@@ -310,6 +358,8 @@ export function ProposeIdeaDialog({ open, onClose }: Readonly<DialogProps>) {
                 </p>
               ) : null}
             </fieldset>
+
+            <p className="hint">{t('proposeIdea.publicNotice')}</p>
 
             {error ? (
               <p className="error" role="alert">

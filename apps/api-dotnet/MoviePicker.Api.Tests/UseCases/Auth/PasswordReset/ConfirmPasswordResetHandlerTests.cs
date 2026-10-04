@@ -51,8 +51,16 @@ public sealed class ConfirmPasswordResetHandlerTests
         IPasswordResetTokenRepository tokens,
         IPasswordHasher hasher,
         IAuthSessionInvalidator sessions,
-        TimeProvider clock) =>
-        new(users, tokens, hasher, sessions, clock, NullLogger<ConfirmPasswordResetHandler>.Instance);
+        TimeProvider clock,
+        IPushSubscriptionRepository? pushSubscriptions = null) =>
+        new(
+            users,
+            tokens,
+            hasher,
+            sessions,
+            pushSubscriptions ?? new Mock<IPushSubscriptionRepository>().Object,
+            clock,
+            NullLogger<ConfirmPasswordResetHandler>.Instance);
 
     [Fact]
     public async Task HandleAsync_EmptyToken_ThrowsBadRequest()
@@ -412,6 +420,83 @@ public sealed class ConfirmPasswordResetHandlerTests
         await handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abcd1234" });
 
         sessions.Verify(x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HappyPath_RevokesThePushSubscriptions()
+    {
+        var clock = new FakeTimeProvider(TestEpoch);
+        var user = SampleUser();
+        var hash = PasswordResetTokenFactory.Hash(PlainToken);
+        var stored = new PasswordResetToken
+        {
+            Id = "tok-1",
+            UserId = user.Id,
+            TokenHash = hash,
+            CreatedAt = TestEpoch,
+            ExpiresAtUtc = TestEpoch.AddMinutes(30),
+            ConsumedAt = null
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>())).ReturnsAsync((User u, CancellationToken _) => u);
+        var tokens = new Mock<IPasswordResetTokenRepository>();
+        tokens.Setup(x => x.GetByTokenHashAsync(hash, It.IsAny<CancellationToken>())).ReturnsAsync(stored);
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("hash");
+        var pushSubscriptions = new Mock<IPushSubscriptionRepository>();
+
+        var handler = CreateHandler(
+            users.Object,
+            tokens.Object,
+            hasher.Object,
+            new Mock<IAuthSessionInvalidator>().Object,
+            clock,
+            pushSubscriptions.Object);
+
+        await handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abcd1234" });
+
+        pushSubscriptions.Verify(x => x.DeleteByUserIdAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PushRevocationFails_TheResetStillSucceeds()
+    {
+        var clock = new FakeTimeProvider(TestEpoch);
+        var user = SampleUser();
+        var hash = PasswordResetTokenFactory.Hash(PlainToken);
+        var stored = new PasswordResetToken
+        {
+            Id = "tok-1",
+            UserId = user.Id,
+            TokenHash = hash,
+            CreatedAt = TestEpoch,
+            ExpiresAtUtc = TestEpoch.AddMinutes(30),
+            ConsumedAt = null
+        };
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>())).ReturnsAsync((User u, CancellationToken _) => u);
+        var tokens = new Mock<IPasswordResetTokenRepository>();
+        tokens.Setup(x => x.GetByTokenHashAsync(hash, It.IsAny<CancellationToken>())).ReturnsAsync(stored);
+        var hasher = new Mock<IPasswordHasher>();
+        hasher.Setup(x => x.Hash(It.IsAny<string>())).Returns("hash");
+        var pushSubscriptions = new Mock<IPushSubscriptionRepository>();
+        pushSubscriptions.Setup(x => x.DeleteByUserIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("store unavailable"));
+
+        var handler = CreateHandler(
+            users.Object,
+            tokens.Object,
+            hasher.Object,
+            new Mock<IAuthSessionInvalidator>().Object,
+            clock,
+            pushSubscriptions.Object);
+
+        var response = await handler.HandleAsync(new PasswordResetConfirmRequest { Token = PlainToken, NewPassword = "abcd1234" });
+
+        Assert.False(string.IsNullOrEmpty(response.Message));
+        tokens.Verify(x => x.MarkConsumedAsync("tok-1", TestEpoch, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

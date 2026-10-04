@@ -2,12 +2,14 @@ import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
 import { Bookmark, CalendarPlus, Inbox } from 'lucide-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { queryRetryDelay, shouldRetryQuery } from '@/shared/api/retryPolicy';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { useTranslation, LocaleProvider } from '@/shared/i18n';
 import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import UserThemeSync from '@/app/components/UserThemeSync';
 import AnalyticsSync from '@/app/components/AnalyticsSync';
+import PushSubscriptionSync from '@/app/components/PushSubscriptionSync';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import AppShell from '@/app/components/AppShell';
 import SessionGate from '@/app/components/SessionGate';
@@ -56,7 +58,8 @@ function createAppQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        retry: 1,
+        retry: shouldRetryQuery,
+        retryDelay: queryRetryDelay,
         staleTime: 1000 * 60 * 5,
         gcTime: 1000 * 60 * 30,
         refetchOnWindowFocus: false,
@@ -132,7 +135,7 @@ export function AppRoutes() {
               titleKey="events.myEvents.signedOutTitle"
               messageKey="events.myEvents.signedOutMessage"
               returnTo={ROUTES.myEvents}
-              maxWidth="min(var(--container-xl), 100%)"
+              maxWidth="min(var(--container-2xl), 100%)"
             >
               <MyEventsPage />
             </SessionGate>
@@ -147,7 +150,7 @@ export function AppRoutes() {
               titleKey="watchlist.signedOutTitle"
               messageKey="watchlist.signedOutMessage"
               returnTo={ROUTES.watchlist}
-              maxWidth="var(--container-base)"
+              maxWidth="var(--container-lg)"
             >
               <WatchlistPage />
             </SessionGate>
@@ -204,6 +207,7 @@ export function AppProviders({ children }: Readonly<{ children: ReactNode }>) {
             <AuthProvider>
               <UserThemeSync />
               <AnalyticsSync />
+              <PushSubscriptionSync />
               {children}
             </AuthProvider>
           </ConsentProvider>

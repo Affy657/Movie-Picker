@@ -21,13 +21,19 @@ public static class LetterboxdTmdbMatcher
 
         try
         {
-            var results = await tmdb.SearchAsync(
+            var results = await tmdb.SearchTitlesAsync(
                 title,
                 allowSeries: true,
                 yearFrom: parsedYear is null ? null : parsedYear - YearTolerance,
                 yearTo: parsedYear is null ? null : parsedYear + YearTolerance,
                 ct: ct);
-            return results.Take(MaxCandidates).ToList();
+            var expected = Normalize(title);
+            var sameYear = year.Trim();
+            return results
+                .OrderByDescending(c => HasTitle(c, expected))
+                .ThenByDescending(c => sameYear.Length > 0 && c.Year == sameYear)
+                .Take(MaxCandidates)
+                .ToList();
         }
         catch (HttpRequestException)
         {
@@ -46,7 +52,7 @@ public static class LetterboxdTmdbMatcher
 
         var exactMovies = candidates
             .Where(c => c.MediaType == MovieMediaType.Movie)
-            .Where(c => Normalize(c.OriginalTitle) == expected || Normalize(c.Title) == expected)
+            .Where(c => HasTitle(c, expected))
             .ToList();
 
         if (exactMovies.Count == 1)
@@ -59,6 +65,10 @@ public static class LetterboxdTmdbMatcher
         var sameYear = exactMovies.Where(c => c.Year == year).ToList();
         return sameYear.Count == 1 ? sameYear[0] : null;
     }
+
+    private static bool HasTitle(TmdbSearchItem candidate, string normalizedTitle) =>
+        normalizedTitle.Length > 0
+        && (Normalize(candidate.OriginalTitle) == normalizedTitle || Normalize(candidate.Title) == normalizedTitle);
 
     private static string Normalize(string? value)
     {

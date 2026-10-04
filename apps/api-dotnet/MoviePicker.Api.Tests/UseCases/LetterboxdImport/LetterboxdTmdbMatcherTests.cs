@@ -1,17 +1,81 @@
+using System.Net;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Moq;
+using Moq.Protected;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.LetterboxdImport;
 
 public sealed class LetterboxdTmdbMatcherTests
 {
+    private const int JackieTmdbId = 376_660;
+
     private static TmdbSearchItem Item(int id, string title, string? originalTitle = null) =>
         new(id, MovieMediaType.Movie, title, "2004", null, 7.0, originalTitle);
 
     private static TmdbSearchItem Item(int id, MovieMediaType mediaType, string title, string year) =>
         new(id, mediaType, title, year, null, 7.0, title);
+
+    private static string TmdbMovie(int id, string title, string releaseDate, double popularity) =>
+        $$"""{"id":{{id}},"media_type":"movie","title":"{{title}}","original_title":"{{title}}","release_date":"{{releaseDate}}","popularity":{{popularity}}}""";
+
+    private static TmdbMovieSearch TmdbAnswering(string titles, string people, string credits)
+    {
+        var handler = new Mock<HttpMessageHandler>();
+        handler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Returns<HttpRequestMessage, CancellationToken>((request, _) =>
+            {
+                var url = request.RequestUri!.ToString();
+                var body = url.Contains("/search/person", StringComparison.Ordinal) ? people
+                    : url.Contains("/combined_credits", StringComparison.Ordinal) ? credits
+                    : titles;
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) });
+            });
+        return new TmdbMovieSearch(
+            new HttpClient(handler.Object),
+            Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }),
+            new MemoryCache(new MemoryCacheOptions()),
+            new InMemorySharedCache(),
+            NullLogger<TmdbMovieSearch>.Instance);
+    }
+
+    [Fact]
+    public async Task FindCandidatesAsync_TitleThatIsAlsoAPersonsName_KeepsTheFilm()
+    {
+        var titles = $$"""{"results":[{{TmdbMovie(JackieTmdbId, "Jackie", "2016-12-02", 12)}}]}""";
+        var people = """{"results":[{"id":18897,"name":"Jackie Chan","popularity":40}]}""";
+        var filmography = string.Join(",", Enumerable.Range(1, 6)
+            .Select(i => TmdbMovie(900 + i, $"Jackie Chan film {i}", "2016-06-01", 60 - i)));
+        var credits = $$"""{"cast":[{{filmography}}],"crew":[]}""";
+
+        var candidates = await LetterboxdTmdbMatcher.FindCandidatesAsync(
+            TmdbAnswering(titles, people, credits), "Jackie", "2016", CancellationToken.None);
+
+        Assert.Contains(candidates, candidate => candidate.Id == JackieTmdbId);
+        Assert.Equal(JackieTmdbId, LetterboxdTmdbMatcher.SelectConfident("Jackie", "2016", candidates)?.Id);
+    }
+
+    [Fact]
+    public async Task FindCandidatesAsync_ExactTitleRankedBelowFivePartialMatches_KeepsTheFilm()
+    {
+        var partials = Enumerable.Range(1, 5).Select(i => TmdbMovie(800 + i, $"Jackie {i}", "2016-01-01", 30));
+        var titles = $$"""{"results":[{{string.Join(",", partials)}},{{TmdbMovie(JackieTmdbId, "Jackie", "2016-12-02", 12)}}]}""";
+
+        var candidates = await LetterboxdTmdbMatcher.FindCandidatesAsync(
+            TmdbAnswering(titles, """{"results":[]}""", """{"cast":[]}"""), "Jackie", "2016", CancellationToken.None);
+
+        Assert.Equal(LetterboxdTmdbMatcher.MaxCandidates, candidates.Count);
+        Assert.Equal(JackieTmdbId, candidates[0].Id);
+    }
 
     [Fact]
     public void SelectConfident_SingleCandidateMatchingOriginalTitle_IsConfident()

@@ -9,9 +9,15 @@ public sealed class StructuredHttpRequestLoggingMiddleware(
     public async Task InvokeAsync(HttpContext context)
     {
         var sw = Stopwatch.StartNew();
+        var failed = false;
         try
         {
             await next(context);
+        }
+        catch
+        {
+            failed = true;
+            throw;
         }
         finally
         {
@@ -19,14 +25,15 @@ public sealed class StructuredHttpRequestLoggingMiddleware(
             var endpoint = context.GetEndpoint()?.DisplayName;
             var routeKind = ObservabilityRouteKind.ForPath(context.Request.Path);
             logger.LogInformation(
-                "HTTP {HttpMethod} {Path}{QueryString} → {StatusCode} en {ElapsedMs} ms ({Endpoint}) [kind={ApiRouteKind}]",
+                "HTTP {HttpMethod} {Path}{QueryString} → {StatusCode} en {ElapsedMs} ms ({Endpoint}) [kind={ApiRouteKind}, caller={Caller}]",
                 SingleLine(context.Request.Method),
                 SingleLine(context.Request.Path.Value),
                 SingleLine(SensitiveQueryRedaction.RedactQueryString(context.Request.QueryString.Value)),
-                context.Response.StatusCode,
+                failed && !context.Response.HasStarted ? StatusCodes.Status500InternalServerError : context.Response.StatusCode,
                 sw.ElapsedMilliseconds,
                 endpoint ?? "n/a",
-                routeKind);
+                routeKind,
+                context.User.Identity?.IsAuthenticated == true ? "account" : "anonymous");
         }
     }
 

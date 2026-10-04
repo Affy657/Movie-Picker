@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import type { MyEventLifecycle } from '@/shared/types/event';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import styles from './EventLifecyclePill.module.css';
+import StatusDot from './StatusDot';
 
 const LIFECYCLE_LABEL_KEYS: Record<MyEventLifecycle, TranslationKey> = {
   upcoming: 'events.lifecycle.upcoming',
@@ -37,7 +38,7 @@ export default function EventLifecyclePill({
 
   return (
     <span className={clsx(styles.pill, LIFECYCLE_CLASSES[lifecycle], className)}>
-      {lifecycle === 'live' && <span className={styles.pulse} aria-hidden />}
+      {lifecycle === 'live' && <StatusDot pulsing />}
       {label ?? t(LIFECYCLE_LABEL_KEYS[lifecycle])}
       {detail ? <span className={styles.detail}> {detail}</span> : null}
     </span>

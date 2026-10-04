@@ -18,13 +18,18 @@ describe('AvatarStack', () => {
     expect(screen.getByText('+2').parentElement).toHaveClass(styles.more!);
   });
 
-  it('is decorative by default and an image when labelled', () => {
+  it('is decorative by default and announces its label when labelled', () => {
     const { container, rerender } = render(<AvatarStack people={PEOPLE.slice(0, 2)} />);
     expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true');
     expect(screen.queryByText(/^\+/)).toBeNull();
 
     rerender(<AvatarStack people={PEOPLE.slice(0, 2)} ariaLabel="Alice et Bob" />);
-    expect(screen.getByRole('img', { name: 'Alice et Bob' })).toBeInTheDocument();
+    expect(container.firstElementChild).not.toHaveAttribute('aria-hidden');
+    expect(screen.getByText('Alice et Bob')).toHaveClass('visually-hidden');
+    expect(screen.getByText('Alice et Bob').nextElementSibling).toHaveAttribute(
+      'aria-hidden',
+      'true'
+    );
   });
 
   it('takes an explicit hidden count when the list is only a sample', () => {

@@ -13,6 +13,9 @@ public sealed record AvatarPhoto
 
     public string AvatarId => AvatarIdPrefix + Key;
 
+    public static string DisplayedAvatarIdOf(string generatedAvatarId, AvatarPhoto? photo) =>
+        photo is { IsActive: true } ? photo.AvatarId : generatedAvatarId;
+
     public static string NewKey() => Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(KeyByteLength));
 
     public static bool IsValidKey(string key) =>

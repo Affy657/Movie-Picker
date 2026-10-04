@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
-import { apiUrl, fetchApi } from '@/shared/api/client';
+import { apiPath, apiUrl, fetchApi } from '@/shared/api/client';
 import { ApiError } from '@/shared/api/apiError';
 import { loadLocale } from '@/shared/i18n/locales';
 import { fr } from '@/shared/i18n/locales/fr';
@@ -10,6 +10,30 @@ describe('apiUrl', () => {
     expect(apiUrl('/events')).toMatch(/^https?:\/\/.+\/api\/v1\/events$/);
     expect(apiUrl('events')).toMatch(/\/api\/v1\/events$/);
     expect(apiUrl('/health')).toMatch(/\/health$/);
+  });
+});
+
+describe('apiPath', () => {
+  it('joins the segments into an absolute path', () => {
+    expect(apiPath('events', 'Ab3dE_9xYz', 'movies', 42)).toBe('/events/Ab3dE_9xYz/movies/42');
+  });
+
+  it('encodes every character that would move the path, query or fragment boundary', () => {
+    expect(apiPath('events', 'a?b', 'wheel')).toBe('/events/a%3Fb/wheel');
+    expect(apiPath('events', 'a#b')).toBe('/events/a%23b');
+    expect(apiPath('events', '../users/me')).toBe('/events/..%2Fusers%2Fme');
+    expect(apiPath('events', 'a\r\nb')).toBe('/events/a%0D%0Ab');
+    expect(apiPath('events', '100%')).toBe('/events/100%25');
+  });
+
+  it('refuses a segment the URL parser would drop or collapse into its parent', () => {
+    expect(() => apiPath('events', '..', 'movies')).toThrow(new Error('Invalid API path segment'));
+    expect(() => apiPath('events', '.')).toThrow(new Error('Invalid API path segment'));
+    expect(() => apiPath('events', '', 'movies')).toThrow(new Error('Invalid API path segment'));
+  });
+
+  it('keeps a segment that only contains dots among other characters', () => {
+    expect(apiPath('events', '...', 'a.b', '.x', 0)).toBe('/events/.../a.b/.x/0');
   });
 });
 
@@ -43,6 +67,26 @@ describe('fetchApi', () => {
       code: 409,
       reason: 'proposal_limit_reached',
       message: fr.apiErrors.proposal_limit_reached.replace('{{max}}', '3'),
+    });
+  });
+
+  it('inserts a reason param holding replacement patterns verbatim', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({
+            error: 'A template named Tom $& Jerry already exists',
+            code: 409,
+            reason: 'event_template_name_taken',
+            params: { name: 'Tom $& Jerry' },
+          })
+        ),
+    });
+    await expect(fetchApi('/event-templates')).rejects.toMatchObject({
+      message: fr.apiErrors.event_template_name_taken.split('{{name}}').join('Tom $& Jerry'),
     });
   });
 
@@ -112,6 +156,112 @@ describe('fetchApi', () => {
     });
   });
 
+  it('reads a problem+json error and words it by status, never with its English title', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      headers: new Headers({ 'content-type': 'application/problem+json; charset=utf-8' }),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({ title: 'Service Unavailable', status: 503, traceId: '00-abc-01' })
+        ),
+    });
+    await expect(fetchApi('/events')).rejects.toMatchObject({
+      code: 503,
+      message: fr.errors.api.unavailable,
+    });
+  });
+
+  it('translates the business reason carried by a problem+json error', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      headers: new Headers({ 'content-type': 'application/problem+json' }),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({
+            title: 'Conflict',
+            status: 409,
+            reason: 'proposal_limit_reached',
+            params: { max: 3 },
+          })
+        ),
+    });
+    await expect(fetchApi('/events')).rejects.toMatchObject({
+      reason: 'proposal_limit_reached',
+      message: fr.apiErrors.proposal_limit_reached.replace('{{max}}', '3'),
+    });
+  });
+
+  it('words a body over the server limit as too large, not as invalid input', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 413,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({
+            error: 'Request body too large. The max request body size is 1048576 bytes.',
+            code: 413,
+            reason: 'request_too_large',
+          })
+        ),
+    });
+    await expect(fetchApi('/letterboxd/confirm', { method: 'POST' })).rejects.toMatchObject({
+      code: 413,
+      reason: 'request_too_large',
+      message: fr.apiErrors.request_too_large,
+    });
+    expect(fr.apiErrors.request_too_large).not.toBe(fr.apiErrors.validation_failed);
+  });
+
+  it('words an error without body by its status rather than an empty status text', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 502,
+      statusText: '',
+      headers: new Headers(),
+      text: () => Promise.resolve(''),
+    });
+    await expect(fetchApi('/events')).rejects.toMatchObject({
+      code: 502,
+      message: fr.errors.api.server,
+    });
+  });
+
+  it('carries the Retry-After delay given in seconds', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      headers: new Headers({ 'content-type': 'application/json', 'retry-after': '12' }),
+      text: () =>
+        Promise.resolve(
+          JSON.stringify({ error: 'Too many requests', code: 429, reason: 'rate_limited' })
+        ),
+    });
+    await expect(fetchApi('/events')).rejects.toMatchObject({
+      code: 429,
+      retryAfterMs: 12_000,
+      message: fr.apiErrors.rate_limited,
+    });
+  });
+
+  it('carries the Retry-After delay given as an HTTP date', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-23T12:00:00Z'));
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      headers: new Headers({ 'retry-after': 'Wed, 23 Sep 2026 12:00:30 GMT' }),
+      text: () => Promise.resolve(''),
+    });
+    try {
+      await expect(fetchApi('/events')).rejects.toMatchObject({ retryAfterMs: 30_000 });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('a 5xx response returns an error', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
@@ -137,6 +287,73 @@ describe('fetchApi', () => {
       new TypeError('fetch failed')
     );
     await expect(fetchApi('/events')).rejects.toThrow(/API|connexion|impossible/i);
+  });
+
+  it('words a connection dropped while the body is read as a network error', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () => Promise.reject(new TypeError('Load failed')),
+    });
+    const failure = fetchApi('/events');
+    await expect(failure).rejects.toBeInstanceOf(ApiError);
+    await expect(failure).rejects.toMatchObject({ code: 0 });
+    await expect(failure).rejects.toThrow(/API|connexion|impossible/i);
+  });
+
+  function responseWhoseBodyBreaks(status: number, readFailure: unknown): Response {
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.error(readFailure);
+      },
+    });
+    return new Response(body, {
+      status,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
+  it.each([
+    { status: 401, message: fr.errors.generic },
+    { status: 409, message: fr.errors.generic },
+    { status: 503, message: fr.errors.api.unavailable },
+  ])(
+    'keeps the status $status of an error response whose body breaks while it is read',
+    async ({ status, message }) => {
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+        responseWhoseBodyBreaks(status, new TypeError('Load failed'))
+      );
+      const failure = fetchApi('/events');
+      await expect(failure).rejects.toBeInstanceOf(ApiError);
+      await expect(failure).rejects.toMatchObject({ code: status, message });
+    }
+  );
+
+  it('lets an abort during the read of an error body through as an AbortError', async () => {
+    const abortErr = new DOMException('The operation was aborted', 'AbortError');
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      responseWhoseBodyBreaks(401, abortErr)
+    );
+    await expect(fetchApi('/events')).rejects.toBe(abortErr);
+  });
+
+  it('still words a broken body of a successful response as a network error', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      responseWhoseBodyBreaks(200, new TypeError('Load failed'))
+    );
+    await expect(fetchApi('/events')).rejects.toMatchObject({ code: 0 });
+  });
+
+  it('lets an abort during the body read through as an AbortError', async () => {
+    const abortErr = new DOMException('The operation was aborted', 'AbortError');
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () => Promise.reject(abortErr),
+    });
+    await expect(fetchApi('/events')).rejects.toBe(abortErr);
   });
 
   it('a 200 JSON response with an empty body returns undefined', async () => {
@@ -215,7 +432,7 @@ describe('fetchApi', () => {
       expect(ApiError.is(e)).toBe(true);
       if (ApiError.is(e)) {
         expect(e.code).toBe(502);
-        expect(e.message).toContain('Bad Gateway');
+        expect(e.message).toBe(fr.errors.api.server);
       }
     }
   });

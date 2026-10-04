@@ -50,6 +50,7 @@ export function useEventWatchlistToggle(
         posterPath: m.posterPath,
         voteAverage: m.voteAverage,
         runtimeMinutes: m.runtimeMinutes,
+        genreIds: m.genreIds,
       });
     },
     [watchlistKeys, addToWatchlist, removeFromWatchlist, setActionError]

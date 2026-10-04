@@ -43,10 +43,6 @@ public sealed class LaunchWheelHandlerTests
             .ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
         _posterStore = new Mock<IPosterImageStore>();
         _posterStore.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
-        _posterStore.Setup(s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
-        _posterStore
-            .Setup(s => s.RegisterTmdbSourcesAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
         _sut = new LaunchWheelHandler(
             _eventRepo.Object,
             _movieRepo.Object,

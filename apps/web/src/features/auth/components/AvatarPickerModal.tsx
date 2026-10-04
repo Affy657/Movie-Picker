@@ -1,10 +1,9 @@
 import { useId, useRef, useState } from 'react';
-import { Check, X } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { BOTTTS_IDS, EMOJI_IDS, avatarUrl, isAvatarPhotoId } from '@/shared/utils/avatar';
 import { ApiError } from '@/shared/api/apiError';
 import Modal from '@/shared/components/Modal';
-import IconButton from '@/shared/components/IconButton';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { TabPanel, Tabs } from '@/shared/components/Tabs';
 import { ChoiceCard, ChoiceGroup } from '@/shared/components/ChoiceCard';
@@ -72,6 +71,7 @@ export default function AvatarPickerModal({
   const tabsId = `avatar-category-${reactId}`;
 
   const [category, setCategory] = useState<Category>(() => initialCategory(currentAvatarId));
+  const [browsedAvatarId, setBrowsedAvatarId] = useState<string | null>(null);
   const [cropPhoto, setCropPhoto] = useState<LoadedAvatarPhoto | null>(null);
   const [panelError, setPanelError] = useState<string | null>(null);
   const [selectError, setSelectError] = useState<string | null>(null);
@@ -83,6 +83,7 @@ export default function AvatarPickerModal({
 
   const photoIsActive = photoAvatarId !== null && currentAvatarId === photoAvatarId;
   const generatedIds = category === 'emoji' ? EMOJI_IDS : BOTTTS_IDS;
+  const selectedAvatarId = browsedAvatarId ?? currentAvatarId;
 
   function closeCrop() {
     if (cropPhoto) URL.revokeObjectURL(cropPhoto.url);
@@ -117,12 +118,13 @@ export default function AvatarPickerModal({
   }
 
   async function handleSelect(id: string) {
+    setBrowsedAvatarId(null);
     setSelectError(null);
     try {
       await onSelect(id);
       onClose();
     } catch (error) {
-      setSelectError(reasonOf(error) ?? t('auth.account.avatarSaveFailed'));
+      setSelectError(reasonOf(error) ?? t('auth.account.avatarSaveError'));
     }
   }
 
@@ -167,107 +169,110 @@ export default function AvatarPickerModal({
 
   function handleClose() {
     closeCrop();
+    setBrowsedAvatarId(null);
     onClose();
   }
 
   return (
-    <Modal open={open} onClose={handleClose} size="sm" padded ariaLabelledBy={titleId}>
-      <div className={styles.header}>
-        <h2 id={titleId} className={styles.title}>
-          {cropPhoto ? t('auth.account.avatarPhotoCropTitle') : t('auth.account.avatarLabel')}
-        </h2>
-        <IconButton ariaLabel={t('common.close')} onClick={cropPhoto ? closeCrop : handleClose}>
-          <X size={ICON_SIZE.lg} aria-hidden />
-        </IconButton>
-      </div>
-
-      {cropPhoto ? (
-        <AvatarPhotoCropper
-          photo={cropPhoto}
-          saving={saving}
-          error={uploadError}
-          onCancel={closeCrop}
-          onConfirm={(rect) => void handleConfirm(rect)}
-        />
-      ) : (
-        <>
-          <Tabs
-            idBase={tabsId}
-            variant="pill"
-            className={styles.tabs}
-            ariaLabel={t('auth.account.avatarLabel')}
-            active={category}
-            onChange={setCategory}
-            tabs={[
-              { key: 'photo', label: t('auth.account.avatarCategoryPhoto') },
-              { key: 'bottts', label: t('auth.account.avatarCategoryRobots') },
-              { key: 'emoji', label: t('auth.account.avatarCategoryEmoji') },
-            ]}
+    <Modal
+      open={open}
+      onClose={cropPhoto ? closeCrop : handleClose}
+      size="sm"
+      title={cropPhoto ? t('auth.account.avatarPhotoCropTitle') : t('auth.account.avatarLabel')}
+      titleId={titleId}
+    >
+      <div className={styles.body}>
+        {cropPhoto ? (
+          <AvatarPhotoCropper
+            photo={cropPhoto}
+            saving={saving}
+            error={uploadError}
+            onCancel={closeCrop}
+            onConfirm={(rect) => void handleConfirm(rect)}
           />
-
-          <TabPanel idBase={tabsId} tabKey="photo" active={category === 'photo'}>
-            <AvatarPhotoPanel
-              photoAvatarId={photoAvatarId}
-              selected={photoIsActive}
-              error={panelError}
-              onChooseFile={(file) => void handleFile(file)}
-              onSelectPhoto={(id) => void handleSelect(id)}
-              onDeleteRequest={() => setConfirmingDelete(true)}
-            />
-          </TabPanel>
-
-          <TabPanel idBase={tabsId} tabKey={category} active={category !== 'photo'}>
-            <ChoiceGroup
-              value={currentAvatarId}
-              onChange={(id) => void handleSelect(id)}
+        ) : (
+          <>
+            <Tabs
+              idBase={tabsId}
+              variant="pill"
+              className={styles.tabs}
               ariaLabel={t('auth.account.avatarLabel')}
-              className={styles.grid}
-            >
-              {generatedIds.map((id) => {
-                const selected = id === currentAvatarId;
-                return (
-                  <ChoiceCard
-                    key={id}
-                    value={id}
-                    layout="tile"
-                    ariaLabel={t('auth.account.avatarOptionAriaLabel', { name: id })}
-                  >
-                    <img
-                      src={avatarUrl(id)}
-                      alt=""
-                      aria-hidden="true"
-                      width={AVATAR_OPTION_PX}
-                      height={AVATAR_OPTION_PX}
-                      loading="lazy"
-                      decoding="async"
-                      className={styles.img}
-                    />
-                    {selected && <Check size={ICON_SIZE.md} className={styles.check} aria-hidden />}
-                  </ChoiceCard>
-                );
-              })}
-            </ChoiceGroup>
-          </TabPanel>
+              active={category}
+              onChange={setCategory}
+              tabs={[
+                { key: 'photo', label: t('auth.account.avatarCategoryPhoto') },
+                { key: 'bottts', label: t('auth.account.avatarCategoryRobots') },
+                { key: 'emoji', label: t('auth.account.avatarCategoryEmoji') },
+              ]}
+            />
 
-          {selectError && (
-            <p role="alert" className={`${styles.error} ${styles.selectError}`}>
-              {selectError}
-            </p>
-          )}
-        </>
-      )}
+            <TabPanel idBase={tabsId} tabKey="photo" active={category === 'photo'}>
+              <AvatarPhotoPanel
+                photoAvatarId={photoAvatarId}
+                selected={photoIsActive}
+                error={panelError}
+                onChooseFile={(file) => void handleFile(file)}
+                onSelectPhoto={(id) => void handleSelect(id)}
+                onDeleteRequest={() => setConfirmingDelete(true)}
+              />
+            </TabPanel>
 
-      <ConfirmDialog
-        open={confirmingDelete}
-        title={t('auth.account.avatarPhotoDeleteTitle')}
-        message={deleteMessage()}
-        confirmLabel={t('auth.account.avatarPhotoDeleteConfirm')}
-        confirmTone="danger"
-        loading={deleting}
-        onConfirm={() => void handleDelete()}
-        onCancel={() => setConfirmingDelete(false)}
-        testId="avatar-photo-delete"
-      />
+            <TabPanel idBase={tabsId} tabKey={category} active={category !== 'photo'}>
+              <ChoiceGroup
+                value={selectedAvatarId}
+                onChange={setBrowsedAvatarId}
+                onSelect={(id) => void handleSelect(id)}
+                ariaLabel={t('auth.account.avatarLabel')}
+                className={styles.grid}
+              >
+                {generatedIds.map((id) => {
+                  const selected = id === selectedAvatarId;
+                  return (
+                    <ChoiceCard
+                      key={id}
+                      value={id}
+                      layout="tile"
+                      ariaLabel={t('auth.account.avatarOptionAriaLabel', { name: id })}
+                    >
+                      <img
+                        src={avatarUrl(id)}
+                        alt=""
+                        aria-hidden="true"
+                        width={AVATAR_OPTION_PX}
+                        height={AVATAR_OPTION_PX}
+                        loading="lazy"
+                        decoding="async"
+                        className={styles.img}
+                      />
+                      {selected && (
+                        <Check size={ICON_SIZE.md} className={styles.check} aria-hidden />
+                      )}
+                    </ChoiceCard>
+                  );
+                })}
+              </ChoiceGroup>
+            </TabPanel>
+
+            {selectError && (
+              <p role="alert" className={`${styles.error} ${styles.selectError}`}>
+                {selectError}
+              </p>
+            )}
+          </>
+        )}
+
+        <ConfirmDialog
+          open={confirmingDelete}
+          title={t('auth.account.avatarPhotoDeleteTitle')}
+          message={deleteMessage()}
+          confirmLabel={t('auth.account.avatarPhotoDeleteConfirm')}
+          confirmTone="danger"
+          loading={deleting}
+          onConfirm={() => void handleDelete()}
+          onCancel={() => setConfirmingDelete(false)}
+          testId="avatar-photo-delete"
+        />
+      </div>
     </Modal>
   );
 }

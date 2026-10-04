@@ -9,7 +9,6 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import clsx from 'clsx';
 import { Film, Plus } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -28,12 +27,13 @@ import EmptyState from '@/shared/components/EmptyState';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import EventActionErrorBanner from '@/features/events/pages/event-detail/EventActionErrorBanner';
-import { Skeleton } from '@/shared/components/Skeleton';
+import { SkeletonScreen, Skeleton } from '@/shared/components/Skeleton';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useEventMovieVoting } from './useEventMovieVoting';
 import { useEventWatchlistToggle } from './useEventWatchlistToggle';
 import styles from './EventMoviesSection.module.css';
+import Chip from '@/shared/components/Chip';
 
 const loadAddMoviePanel = () => import('@/features/movies/components/AddMoviePanel');
 const AddMoviePanel = lazy(loadAddMoviePanel);
@@ -97,7 +97,7 @@ export type EventMoviesSectionProps = {
   movies: MovieData[];
   moviesQuery: Pick<
     UseQueryResult<MovieData[]>,
-    'isPending' | 'isError' | 'isSuccess' | 'error' | 'refetch'
+    'data' | 'isPending' | 'isError' | 'isSuccess' | 'error' | 'refetch'
   >;
   actionError: string | null;
   onDismissActionError: () => void;
@@ -111,6 +111,7 @@ export type EventMoviesSectionProps = {
   addMovieTriggerRef: RefObject<HTMLButtonElement | null>;
   winnerMovieIds?: string[];
   isFull?: boolean;
+  wheelLocked?: boolean;
 };
 
 function emptyStateMessageKey(input: {
@@ -220,6 +221,7 @@ export default function EventMoviesSection({
   addMovieTriggerRef,
   winnerMovieIds,
   isFull = false,
+  wheelLocked = false,
 }: Readonly<EventMoviesSectionProps>) {
   const isFinished = !!event.isFinished;
   const { user } = useAuth();
@@ -295,8 +297,8 @@ export default function EventMoviesSection({
     { key: 'releaseDate' as const, label: t('movies.list.sortReleaseDate') },
   ];
 
-  const showSortControl =
-    moviesQuery.isSuccess && (layout === 'grid' || isMobile) && movies.length > 1;
+  const moviesLoaded = moviesQuery.data !== undefined;
+  const showSortControl = moviesLoaded && (layout === 'grid' || isMobile) && movies.length > 1;
   const canAddFromEmptyState = !!participant && !addMovieOpen;
   const emptyState = isFinished ? null : (
     <EmptyState
@@ -320,6 +322,7 @@ export default function EventMoviesSection({
     canVote: !isFinished,
     participantPseudo: participant?.pseudo ?? null,
     isFinished,
+    wheelLocked,
     isHost: !!event.isHost,
     onActionError: handleActionError,
     onVote: handleVote,
@@ -371,13 +374,12 @@ export default function EventMoviesSection({
       )}
 
       {moviesQuery.isPending && !moviesQuery.isError && (
-        <div className={styles.loadingState} aria-busy="true">
-          <span className="visually-hidden">{t('movies.list.loadingPlaceholder')}</span>
+        <SkeletonScreen label={t('movies.list.loadingPlaceholder')} className={styles.loadingState}>
           <Skeleton variant="block" height={48} className={styles.skeletonHeader} />
           <Skeleton variant="block" height={90} className={styles.skeletonRow} />
           <Skeleton variant="block" height={90} className={styles.skeletonRow} />
           <Skeleton variant="block" height={90} className={styles.skeletonRow} />
-        </div>
+        </SkeletonScreen>
       )}
 
       {showSortControl && (
@@ -396,16 +398,15 @@ export default function EventMoviesSection({
         </div>
       )}
 
-      {moviesQuery.isSuccess && voteQuota ? (
-        <output
-          className={clsx(styles.voteQuota, voteQuotaLockedHint && styles.voteQuotaReached)}
-          data-testid="vote-quota"
-        >
-          {t('movies.list.voteQuota', { used: voteQuota.used, max: voteQuota.max })}
+      {moviesLoaded && voteQuota ? (
+        <output className={styles.voteQuota}>
+          <Chip tone={voteQuotaLockedHint ? 'primary' : 'default'} data-testid="vote-quota">
+            {t('movies.list.voteQuota', { used: voteQuota.used, max: voteQuota.max })}
+          </Chip>
         </output>
       ) : null}
 
-      {moviesQuery.isSuccess && (
+      {moviesLoaded && (
         <EventMovieLists
           layout={layout}
           inWheelMovies={inWheelMovies}

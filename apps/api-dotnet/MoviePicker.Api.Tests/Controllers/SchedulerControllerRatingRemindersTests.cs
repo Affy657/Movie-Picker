@@ -64,7 +64,7 @@ public sealed class SchedulerControllerRatingRemindersTests
 
         Assert.IsType<UnauthorizedResult>(result);
         _authenticator.Verify(
-            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, null), It.IsAny<CancellationToken>()),
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -79,7 +79,7 @@ public sealed class SchedulerControllerRatingRemindersTests
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Equal(new RatingReminderPassResult(2, 5), ok.Value);
         _authenticator.Verify(
-            a => a.AuthenticateAsync(new SchedulerCallerCredentials(null, "jwt"), It.IsAny<CancellationToken>()),
+            a => a.AuthenticateAsync(new SchedulerCallerCredentials("jwt"), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

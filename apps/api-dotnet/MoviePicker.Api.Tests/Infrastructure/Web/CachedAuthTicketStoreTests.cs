@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using MoviePicker.Api.Infrastructure.Web;
@@ -40,7 +41,7 @@ public sealed class CachedAuthTicketStoreTests
     }
 
     [Fact]
-    public async Task RetrieveAsync_DoesNotCacheAMiss()
+    public async Task RetrieveAsync_ReplayedDeadSession_IsLookedUpOncePerTtl()
     {
         var (store, inner, _) = Build();
         inner.Setup(s => s.RetrieveAsync("missing")).ReturnsAsync((AuthenticationTicket?)null);
@@ -48,7 +49,19 @@ public sealed class CachedAuthTicketStoreTests
         Assert.Null(await store.RetrieveAsync("missing"));
         Assert.Null(await store.RetrieveAsync("missing"));
 
-        inner.Verify(s => s.RetrieveAsync("missing"), Times.Exactly(2));
+        inner.Verify(s => s.RetrieveAsync("missing"), Times.Once);
+    }
+
+    [Fact]
+    public async Task RenewAsync_AfterAMiss_ServesTheRenewedTicket()
+    {
+        var (store, inner, _) = Build();
+        inner.Setup(s => s.RetrieveAsync("k1")).ReturnsAsync((AuthenticationTicket?)null);
+        await store.RetrieveAsync("k1");
+
+        await store.RenewAsync("k1", Ticket("u1"));
+
+        Assert.Equal("u1", (await store.RetrieveAsync("k1"))!.Principal.FindFirstValue(ClaimTypes.NameIdentifier));
     }
 
     [Fact]
@@ -114,6 +127,32 @@ public sealed class CachedAuthTicketStoreTests
         await store.RetrieveAsync("k1");
 
         inner.Verify(s => s.RetrieveAsync("k1"), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task RetrieveAsync_ForARequest_RemembersTheSessionTheRequestIsSignedInWith()
+    {
+        var (store, inner, _) = Build();
+        inner.Setup(s => s.RetrieveAsync("k1")).ReturnsAsync(Ticket("u1"));
+        var request = new DefaultHttpContext();
+
+        var ticket = await ((ITicketStore)store).RetrieveAsync("k1", request, CancellationToken.None);
+
+        Assert.NotNull(ticket);
+        Assert.Equal("k1", AuthSessionKey.Of(request));
+    }
+
+    [Fact]
+    public async Task RetrieveAsync_ForARequestOnADeadSession_RemembersNoSession()
+    {
+        var (store, inner, _) = Build();
+        inner.Setup(s => s.RetrieveAsync("gone")).ReturnsAsync((AuthenticationTicket?)null);
+        var request = new DefaultHttpContext();
+
+        var ticket = await ((ITicketStore)store).RetrieveAsync("gone", request, CancellationToken.None);
+
+        Assert.Null(ticket);
+        Assert.Null(AuthSessionKey.Of(request));
     }
 
     [Fact]

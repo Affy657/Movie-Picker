@@ -41,12 +41,8 @@ public sealed partial class TmdbMovieSearch
                 1,
                 ct);
 
-        var q = Uri.EscapeDataString(trimmedQuery);
-        var endpoint = allowSeries ? "search/multi" : "search/movie";
-        var url = $"{ApiBase}/{endpoint}?query={q}&language=fr-FR";
-
         var titleMatchesTask = FetchAndMapResultsAsync(
-            url,
+            TitleSearchUrl(trimmedQuery, allowSeries),
             item => TryMapSearchItem(item, allowSeries, genreIds, yearFrom, yearTo, voteMin, originalLanguage),
             ct);
         var creditMatchesTask = SearchByPersonCreditsAsync(
@@ -56,6 +52,28 @@ public sealed partial class TmdbMovieSearch
 
         return MergeTitleAndCreditMatches(await titleMatchesTask, await creditMatchesTask);
     }
+
+    public async Task<IReadOnlyList<TmdbSearchItem>> SearchTitlesAsync(
+        string query,
+        bool allowSeries,
+        int? yearFrom = null,
+        int? yearTo = null,
+        CancellationToken ct = default)
+    {
+        RequireCredentials();
+
+        var trimmedQuery = query.Trim();
+        if (trimmedQuery.Length == 0)
+            return [];
+
+        return await FetchAndMapResultsAsync(
+            TitleSearchUrl(trimmedQuery, allowSeries),
+            item => TryMapSearchItem(item, allowSeries, null, yearFrom, yearTo, null, null),
+            ct);
+    }
+
+    private static string TitleSearchUrl(string query, bool allowSeries) =>
+        $"{ApiBase}/{(allowSeries ? "search/multi" : "search/movie")}?query={Uri.EscapeDataString(query)}&language=fr-FR";
 
     private async Task<List<TmdbSearchItem>> FetchAndMapResultsAsync(
         string url,

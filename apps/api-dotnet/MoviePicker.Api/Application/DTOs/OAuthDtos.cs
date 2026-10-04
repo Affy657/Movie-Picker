@@ -15,7 +15,9 @@ public enum OAuthOutcomeKind
     Linked,
     EmailNotVerified,
     PasswordAccountRequiresManualLink,
-    IdentityLinkedToOtherAccount
+    UnlinkedIdentityRequiresManualLink,
+    IdentityLinkedToOtherAccount,
+    ProviderAlreadyLinked
 }
 
 public sealed record OAuthOutcome

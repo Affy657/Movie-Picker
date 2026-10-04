@@ -4,7 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import type { ReactElement } from 'react';
 import JoinForm from '@/features/events/components/JoinForm';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import { ApiError } from '@/shared/api/apiError';
 import type { UserProfile } from '@/features/auth/types';
 
@@ -108,6 +109,36 @@ describe('JoinForm', () => {
       expect(mockSetStoredParticipant).toHaveBeenCalledWith('soiree', 'p1', 'ProfilCompte');
       expect(onJoined).toHaveBeenCalledWith('p1', 'ProfilCompte');
     });
+  });
+
+  it('signed in: joining marks my movie nights stale', async () => {
+    const user = userEvent.setup();
+    mockFetchApi.mockImplementation(async (path: string) => {
+      if (path === '/auth/me') return profile;
+      if (path === '/events/soiree/join')
+        return {
+          participant: { _id: 'p1', eventId: 'e1', pseudo: 'ProfilCompte' },
+          isNew: true,
+          message: '',
+        };
+      throw new Error(`fetchApi inattendu: ${path}`);
+    });
+    const client = createTestQueryClient();
+    client.setQueryData(queryKeys.myEvents.active, { pages: [], pageParams: [] });
+    render(
+      <AppTestProviders client={client}>
+        <MemoryRouter>
+          <JoinForm slug="soiree" onJoined={onJoined} />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+    const joinButton = await screen.findByRole('button', { name: /rejoindre/i });
+    expect(client.getQueryState(queryKeys.myEvents.active)?.isInvalidated).toBe(false);
+
+    await user.click(joinButton);
+
+    await waitFor(() => expect(onJoined).toHaveBeenCalledWith('p1', 'ProfilCompte'));
+    expect(client.getQueryState(queryKeys.myEvents.active)?.isInvalidated).toBe(true);
   });
 
   it('signed in without displayName: sends "Participant" by default', async () => {

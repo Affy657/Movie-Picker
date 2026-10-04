@@ -275,16 +275,6 @@ public sealed class ServiceCollectionExtensionsBranchTests
     }
 
     [Fact]
-    public void SchedulerToken_BlankReadsAsAbsentAndIsOtherwiseTrimmed()
-    {
-        Assert.Null(OptionsFrom([]).SchedulerToken);
-        Assert.Null(OptionsFrom(new Dictionary<string, string?> { ["SCHEDULER_TOKEN"] = "  " }).SchedulerToken);
-        Assert.Equal(
-            "secret",
-            OptionsFrom(new Dictionary<string, string?> { ["SCHEDULER_TOKEN"] = " secret " }).SchedulerToken);
-    }
-
-    [Fact]
     public void SchedulerOidc_BlankReadsAsAbsent_AudienceLosesItsTrailingSlash()
     {
         Assert.Null(OptionsFrom([]).SchedulerOidcAudience);
@@ -400,7 +390,6 @@ public sealed class ServiceCollectionExtensionsBranchTests
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IEventRepository>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IUnitOfWork>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IPasswordHasher>());
-        Assert.NotNull(scope.ServiceProvider.GetRequiredService<ISchedulerTokenValidator>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<ISchedulerCallerAuthenticator>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IGoogleOidcSchedulerTokenValidator>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IPushNotificationSender>());
@@ -415,6 +404,18 @@ public sealed class ServiceCollectionExtensionsBranchTests
         var client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(WebPushSender.HttpClientName);
 
         Assert.Equal(TimeSpan.FromSeconds(15), client.Timeout);
+    }
+
+    [Fact]
+    public void WebPush_NeverFollowsARedirect()
+    {
+        using var provider = Wire([]).BuildServiceProvider();
+
+        HttpMessageHandler handler = provider.GetRequiredService<IHttpMessageHandlerFactory>().CreateHandler(WebPushSender.HttpClientName);
+        while (handler is DelegatingHandler delegating)
+            handler = delegating.InnerHandler!;
+
+        Assert.False(Assert.IsType<SocketsHttpHandler>(handler).AllowAutoRedirect);
     }
 
     [Fact]

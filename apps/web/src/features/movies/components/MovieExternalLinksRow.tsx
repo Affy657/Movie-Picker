@@ -8,7 +8,7 @@ import {
   tmdbPageUrl,
 } from '@/features/movies/utils/movieExternalLinks';
 import styles from './MovieExternalLinksRow.module.css';
-import { ICON_SIZE } from '@/shared/components/iconSize';
+import Chip from '@/shared/components/Chip';
 
 interface MovieExternalLinksRowProps {
   tmdbId: number;
@@ -52,17 +52,15 @@ export default function MovieExternalLinksRow({
       <p className={styles.label}>{t('movies.details.externalLinksLabel')}</p>
       <div className={styles.links}>
         {links.map((link) => (
-          <a
+          <Chip
             key={link.label}
             href={link.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.link}
-            aria-label={link.aria}
+            external
+            ariaLabel={link.aria}
+            icon={ExternalLink}
           >
-            <ExternalLink aria-hidden size={ICON_SIZE.sm} />
-            <span className={styles.linkLabel}>{link.label}</span>
-          </a>
+            {link.label}
+          </Chip>
         ))}
       </div>
     </div>

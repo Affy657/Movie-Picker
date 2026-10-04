@@ -5,14 +5,12 @@
 }
 
 .heading {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   display: flex;
   align-items: center;
   gap: var(--space-2);
   margin: 0;
   font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-widest);
-  text-transform: uppercase;
   color: var(--color-warning);
   line-height: var(--leading-none);
 }

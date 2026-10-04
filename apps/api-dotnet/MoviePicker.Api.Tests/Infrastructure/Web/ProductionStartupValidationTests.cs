@@ -8,12 +8,38 @@ namespace MoviePicker.Api.Tests.Infrastructure.Web;
 
 public sealed class ProductionStartupValidationTests
 {
-    private static WebApplication BuildApp(string environment, string? allowedOrigins, string? mongoUri)
+    private static WebApplication BuildApp(
+        string environment,
+        string? allowedOrigins,
+        string? mongoUri,
+        string? emailProvider = "resend",
+        string? resendApiKey = "re_test")
     {
         var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions { EnvironmentName = environment });
         builder.Configuration["ALLOWED_ORIGINS"] = allowedOrigins;
         builder.Configuration["MONGODB_URI"] = mongoUri;
+        builder.Configuration["EMAIL_PROVIDER"] = emailProvider;
+        builder.Configuration["RESEND_API_KEY"] = resendApiKey;
         return builder.Build();
+    }
+
+    [Theory]
+    [InlineData(null, "re_test")]
+    [InlineData("log", "re_test")]
+    [InlineData("resend", "")]
+    [InlineData("resend", null)]
+    public async Task Validate_Production_WithoutARealEmailProvider_Throws(string? emailProvider, string? resendApiKey)
+    {
+        await using var app = BuildApp(
+            Environments.Production,
+            "https://app.example",
+            "mongodb://localhost:27017",
+            emailProvider,
+            resendApiKey);
+
+        var ex = Assert.Throws<InvalidOperationException>(() => ProductionStartupValidation.Validate(app));
+
+        Assert.Contains("EMAIL_PROVIDER=resend", ex.Message);
     }
 
     [Fact]

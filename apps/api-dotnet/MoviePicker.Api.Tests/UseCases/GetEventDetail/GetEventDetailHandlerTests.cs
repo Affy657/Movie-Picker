@@ -59,8 +59,8 @@ public sealed class GetEventDetailHandlerTests
             .ReturnsAsync(0);
         _userRepo = new Mock<IUserRepository>();
         _userRepo
-            .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IReadOnlyList<User>)Array.Empty<User>());
+            .Setup(r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<UserCard>)[]);
         _sut = new GetEventDetailHandler(
             _eventRepo.Object,
             _movieRepo.Object,
@@ -319,5 +319,37 @@ public sealed class GetEventDetailHandlerTests
         Assert.Equal(3, result.VotersCount);
         Assert.Equal(12, result.Participants.Count);
         Assert.Equal("User1", result.Participants[0].Pseudo);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LinkedParticipants_ReadOnlyTheUserCards()
+    {
+        var evt = Event();
+        var now = DateTimeOffset.UtcNow;
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _participantRepo
+            .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<ParticipantEntity>)
+            [
+                new ParticipantEntity { Id = "p-1", EventId = evt.Id, Pseudo = "Camille", UserId = "u1", CreatedAt = now, UpdatedAt = now },
+                new ParticipantEntity { Id = "p-2", EventId = evt.Id, Pseudo = "Sam", UserId = "u2", CreatedAt = now, UpdatedAt = now }
+            ]);
+        _userRepo
+            .Setup(r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<UserCard>)
+            [
+                new UserCard("u1", "avatar-3", "camille", IsProfilePublic: true),
+                new UserCard("u2", "avatar-5", "sam", IsProfilePublic: false)
+            ]);
+
+        var result = await _sut.HandleAsync("evt1");
+
+        Assert.Equal("avatar-3", result.Participants[0].AvatarId);
+        Assert.Equal("camille", result.Participants[0].Handle);
+        Assert.Equal("avatar-5", result.Participants[1].AvatarId);
+        Assert.Null(result.Participants[1].Handle);
+        _userRepo.Verify(
+            r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

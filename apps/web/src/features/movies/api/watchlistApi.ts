@@ -1,4 +1,4 @@
-import { fetchApi } from '@/shared/api/client';
+import { apiPath, fetchApi } from '@/shared/api/client';
 import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
 
 export interface WatchlistItem {
@@ -15,6 +15,30 @@ export interface WatchlistItem {
 
 export interface WatchlistResponse {
   items: WatchlistItem[];
+  total?: number;
+  hasMore?: boolean;
+}
+
+interface WatchlistPage<T> {
+  items?: T[] | null;
+  hasMore?: boolean;
+}
+
+const WATCHLIST_PAGE_SIZE = 500;
+
+const WATCHLIST_MAX_PAGES = 20;
+
+export async function readAllWatchlistPages<T>(
+  fetchPage: (skip: number) => Promise<WatchlistPage<T> | null | undefined>
+): Promise<T[]> {
+  const items: T[] = [];
+  for (let page = 0; page < WATCHLIST_MAX_PAGES; page++) {
+    const response = await fetchPage(items.length);
+    const pageItems = Array.isArray(response?.items) ? response.items : [];
+    items.push(...pageItems);
+    if (response?.hasMore !== true || pageItems.length === 0) break;
+  }
+  return items;
 }
 
 export interface WatchlistAvailabilityItem {
@@ -39,11 +63,16 @@ export interface AddWatchlistItemBody {
   posterPath: string | null;
   voteAverage?: number | null;
   runtimeMinutes?: number | null;
+  genreIds?: number[];
 }
 
 export async function fetchWatchlist(signal?: AbortSignal): Promise<WatchlistItem[]> {
-  const res = await fetchApi<WatchlistResponse>('/watchlist', signal ? { signal } : undefined);
-  return Array.isArray(res?.items) ? res.items : [];
+  return readAllWatchlistPages((skip) =>
+    fetchApi<WatchlistResponse | null>(
+      `/watchlist?skip=${skip}&take=${WATCHLIST_PAGE_SIZE}`,
+      signal ? { signal } : undefined
+    )
+  );
 }
 
 export async function fetchWatchlistAvailability(
@@ -68,5 +97,5 @@ export async function removeFromWatchlist(
   mediaType: MovieMediaType = 'movie'
 ): Promise<void> {
   const params = new URLSearchParams({ mediaType });
-  await fetchApi(`/watchlist/${tmdbId}?${params.toString()}`, { method: 'DELETE' });
+  await fetchApi(`${apiPath('watchlist', tmdbId)}?${params.toString()}`, { method: 'DELETE' });
 }

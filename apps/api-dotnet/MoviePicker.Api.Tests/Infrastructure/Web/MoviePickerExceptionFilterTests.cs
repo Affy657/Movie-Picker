@@ -34,6 +34,53 @@ public sealed class MoviePickerExceptionFilterTests
     }
 
     [Fact]
+    public void OnException_RequestCancelled_LeavesTheExceptionToTheTimeoutAndAbortHandling()
+    {
+        var filter = new MoviePickerExceptionFilter(new StubHostEnvironment());
+        var context = CreateContext(new OperationCanceledException());
+        using var aborted = new CancellationTokenSource();
+        aborted.Cancel();
+        context.HttpContext.RequestAborted = aborted.Token;
+
+        filter.OnException(context);
+
+        Assert.False(context.ExceptionHandled);
+        Assert.Null(context.Result);
+    }
+
+    [Fact]
+    public void OnException_CancellationWhileTheRequestIsAlive_IsAnInternalError()
+    {
+        var filter = new MoviePickerExceptionFilter(new StubHostEnvironment());
+        var context = CreateContext(new TaskCanceledException("outbound call timed out"));
+
+        filter.OnException(context);
+
+        Assert.True(context.ExceptionHandled);
+        Assert.Equal(500, Assert.IsType<JsonResult>(context.Result).StatusCode);
+    }
+
+    [Theory]
+    [InlineData("Request body too large.", 413, ErrorCodes.RequestTooLarge)]
+    [InlineData("Unexpected end of request content.", 400, ErrorCodes.ValidationFailed)]
+    [InlineData("Request headers too large.", 431, ErrorCodes.ValidationFailed)]
+    public void OnException_BadHttpRequest_AnswersItsClientErrorStatus(string message, int statusCode, string reason)
+    {
+        var filter = new MoviePickerExceptionFilter(new StubHostEnvironment { EnvironmentName = "Production" });
+        var context = CreateContext(new BadHttpRequestException(message, statusCode));
+
+        filter.OnException(context);
+
+        Assert.True(context.ExceptionHandled);
+        var result = Assert.IsType<JsonResult>(context.Result);
+        Assert.Equal(statusCode, result.StatusCode);
+        var envelope = Assert.IsType<ApiErrorResponse>(result.Value);
+        Assert.Equal(statusCode, envelope.Code);
+        Assert.Equal(message, envelope.Error);
+        Assert.Equal(reason, envelope.Reason);
+    }
+
+    [Fact]
     public void OnException_NotFoundException_Sets404AndJsonError()
     {
         var env = new StubHostEnvironment { EnvironmentName = "Production" };

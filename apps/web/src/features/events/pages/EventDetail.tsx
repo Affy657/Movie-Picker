@@ -9,9 +9,11 @@ import { absoluteUrl } from '@/shared/seo/siteMeta';
 import PageLayout from '@/shared/components/PageLayout';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
+import { isWellFormedEventSlug } from '@/features/events/utils/eventSlug';
 import EventDetailSession from '@/features/events/pages/event-detail/EventDetailSession';
 import { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { ApiError } from '@/shared/api/apiError';
 
 function getDocumentTitle(
   slug: string | undefined,
@@ -29,11 +31,25 @@ function getDocumentTitle(
   return APP_DOCUMENT_TITLE;
 }
 
+function eventUnavailableMessage(
+  state: { isNetworkPaused: boolean; isMalformedSlug: boolean; error: unknown },
+  t: (key: TranslationKey) => string
+): string {
+  if (state.isNetworkPaused) return t('errors.network');
+  if (state.isMalformedSlug) return t('events.detail.missing');
+  return friendlyEventError(state.error, {
+    notFound: t('events.detail.missing'),
+    fallback: t('errors.generic'),
+  });
+}
+
 type ArrivalState = { configNotSaved?: boolean } | null;
 
 export default function EventDetail() {
   const { t } = useTranslation();
-  const { slug } = useParams<{ slug: string }>();
+  const { slug: slugParam } = useParams<{ slug: string }>();
+  const isMalformedSlug = slugParam !== undefined && !isWellFormedEventSlug(slugParam);
+  const slug = isMalformedSlug ? undefined : slugParam;
   const arrival = useLocation().state as ArrivalState;
   const {
     hostToken,
@@ -49,11 +65,15 @@ export default function EventDetail() {
   } = useEventDetailPage(slug, arrival?.configNotSaved ? t('events.create.configNotSaved') : null);
 
   const isNetworkPaused = eventQuery.isPending && eventQuery.fetchStatus === 'paused';
-  const isLoadingEvent = eventQuery.isPending && !isNetworkPaused;
-  const isEventUnavailable = eventQuery.isError || isNetworkPaused;
+  const isLoadingEvent = !isMalformedSlug && eventQuery.isPending && !isNetworkPaused;
+  const isEventGone = ApiError.is(eventQuery.error) && eventQuery.error.code === 404;
+  const isEventUnavailable =
+    isMalformedSlug || (eventQuery.isError && (!event || isEventGone)) || isNetworkPaused;
+  const isShowingStaleData =
+    eventQuery.isError || (moviesQuery.isError && moviesQuery.data !== undefined);
 
   const documentTitle = getDocumentTitle(
-    slug,
+    slugParam,
     isLoadingEvent,
     isEventUnavailable,
     isNetworkPaused,
@@ -66,7 +86,7 @@ export default function EventDetail() {
     canonical: slug ? absoluteUrl(ROUTES.eventDetail(slug)) : undefined,
   });
 
-  if (!slug) return null;
+  if (!slugParam) return null;
 
   if (isLoadingEvent) {
     return (
@@ -83,12 +103,10 @@ export default function EventDetail() {
           <AlertCircle size={ICON_SIZE['4xl']} />
         </span>
         <p className="errorStateMessage" role="alert">
-          {isNetworkPaused
-            ? t('errors.network')
-            : friendlyEventError(eventQuery.error, {
-                notFound: t('events.detail.missing'),
-                fallback: t('errors.generic'),
-              })}
+          {eventUnavailableMessage(
+            { isNetworkPaused, isMalformedSlug, error: eventQuery.error },
+            t
+          )}
         </p>
         <Link to={ROUTES.home} className={buttonClass()}>
           {t('events.detail.backHome')}
@@ -97,7 +115,7 @@ export default function EventDetail() {
     );
   }
 
-  if (!event) return null;
+  if (!event || !slug) return null;
 
   return (
     <EventDetailSession
@@ -111,6 +129,7 @@ export default function EventDetail() {
       actionError={actionError}
       setActionError={setActionError}
       refreshAll={refreshAll}
+      connectionUnstable={isShowingStaleData}
     />
   );
 }

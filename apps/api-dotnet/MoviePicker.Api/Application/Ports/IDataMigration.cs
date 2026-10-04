@@ -6,3 +6,5 @@ public interface IDataMigration
 
     Task<long> ExecuteAsync(CancellationToken ct = default);
 }
+
+public interface IRepeatableDataMigration : IDataMigration;

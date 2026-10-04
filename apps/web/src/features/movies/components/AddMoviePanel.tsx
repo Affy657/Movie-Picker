@@ -9,6 +9,7 @@ import styles from './AddMoviePanel.module.css';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import Card from '@/shared/components/Card';
 
 type AddMoviePanelProps = AddMovieFormProps & {
   triggerLabel: string;
@@ -60,7 +61,7 @@ export default function AddMoviePanel({
       )}
 
       {open && !isMobile && (
-        <div id={panelId} className={styles.panel}>
+        <Card id={panelId} elevation="md" padding="none" className={styles.panel}>
           <div className={styles.panelHead}>
             <h3 className={styles.panelTitle}>{panelTitle}</h3>
             <IconButton ariaLabel={t('common.close')} onClick={close}>
@@ -68,7 +69,7 @@ export default function AddMoviePanel({
             </IconButton>
           </div>
           <AddMovieForm {...formProps} />
-        </div>
+        </Card>
       )}
     </div>
   );

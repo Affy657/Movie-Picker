@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
-import ThemeField, { parseTheme, THEME_PRESETS } from './ThemeField';
+import ThemeField, {
+  parseTheme,
+  THEME_EMOJIS,
+  THEME_PRESETS,
+  THEME_TEXT_MAX_LENGTH,
+} from './ThemeField';
 
 function renderField(
   overrides: Partial<{
@@ -41,6 +46,31 @@ describe('parseTheme', () => {
   it('traite un texte sans emoji', () => {
     expect(parseTheme('Comédie')).toEqual({ emoji: '', text: 'Comédie' });
   });
+
+  it('reads a theme made of an emoji alone as that emoji', () => {
+    expect(parseTheme('🎃')).toEqual({ emoji: '🎃', text: '' });
+    expect(parseTheme(' ❤️ ')).toEqual({ emoji: '❤️', text: '' });
+  });
+
+  it('keeps an emoji of several code points whole', () => {
+    expect(parseTheme('👨‍👩‍👧 Famille')).toEqual({ emoji: '👨‍👩‍👧', text: 'Famille' });
+    expect(parseTheme('🕵️ Thriller')).toEqual({ emoji: '🕵️', text: 'Thriller' });
+    expect(parseTheme('👍🏽 Validé')).toEqual({ emoji: '👍🏽', text: 'Validé' });
+    expect(parseTheme('🇫🇷 Cinéma français')).toEqual({ emoji: '🇫🇷', text: 'Cinéma français' });
+  });
+
+  it('reads back every emoji of the picker, alone or before a text', () => {
+    for (const emoji of THEME_EMOJIS) {
+      expect(parseTheme(emoji)).toEqual({ emoji, text: '' });
+      expect(parseTheme(`${emoji} Soirée`)).toEqual({ emoji, text: 'Soirée' });
+    }
+  });
+
+  it('leaves a text that only starts with a letter or a symbol untouched', () => {
+    expect(parseTheme('日本 映画')).toEqual({ emoji: '', text: '日本 映画' });
+    expect(parseTheme('© Studio Ghibli')).toEqual({ emoji: '', text: '© Studio Ghibli' });
+    expect(parseTheme('🎃Horreur')).toEqual({ emoji: '', text: '🎃Horreur' });
+  });
 });
 
 describe('ThemeField', () => {
@@ -72,6 +102,44 @@ describe('ThemeField', () => {
     expect(screen.getByRole('radiogroup')).toBeInTheDocument();
 
     await user.keyboard('{Escape}');
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
+  });
+
+  it('closes on a press elsewhere in the settings sheet that holds it', async () => {
+    const user = userEvent.setup();
+    render(
+      <LocaleProvider>
+        <dialog open aria-label="Paramètres">
+          <ThemeField emoji="" text="" onEmojiChange={vi.fn()} onTextChange={vi.fn()} />
+          <button type="button">Enregistrer</button>
+        </dialog>
+      </LocaleProvider>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Choisir un emoji' }));
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+  });
+
+  it('closes the picker on Escape without closing the settings sheet around it', async () => {
+    const user = userEvent.setup();
+    render(
+      <LocaleProvider>
+        <dialog open aria-label="Paramètres">
+          <ThemeField emoji="🎃" text="" onEmojiChange={vi.fn()} onTextChange={vi.fn()} />
+        </dialog>
+      </LocaleProvider>
+    );
+
+    const opener = screen.getByRole('button', { name: 'Choisir un emoji' });
+    await user.click(opener);
+    const sheetKeepsOpen = !fireEvent.keyDown(screen.getByRole('radio', { name: '🎃' }), {
+      key: 'Escape',
+    });
+
+    expect(sheetKeepsOpen).toBe(true);
     expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     expect(opener).toHaveFocus();
   });
@@ -117,6 +185,14 @@ describe('ThemeField', () => {
       expect(onEmojiChange).toHaveBeenCalledWith('🎃');
       expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     });
+  });
+
+  it('caps the text so that the longest emoji and the text fit the server limit of 100', () => {
+    renderField();
+
+    const longestEmoji = Math.max(...THEME_EMOJIS.map((emoji) => emoji.length));
+    expect(screen.getByRole('textbox')).toHaveAttribute('maxLength', String(THEME_TEXT_MAX_LENGTH));
+    expect(longestEmoji + 1 + THEME_TEXT_MAX_LENGTH).toBeLessThanOrEqual(100);
   });
 
   it('hides the suggested themes when disabled', () => {

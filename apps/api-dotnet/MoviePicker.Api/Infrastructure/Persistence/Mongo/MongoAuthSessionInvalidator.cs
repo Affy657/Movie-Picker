@@ -24,4 +24,14 @@ public sealed class MongoAuthSessionInvalidator : IAuthSessionInvalidator
         _ticketCache.InvalidateUser(userId);
         return result.DeletedCount;
     }
+
+    public async Task<long> InvalidateOthersForUserAsync(string userId, string? keptSessionId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return 0;
+
+        var result = await _collection.DeleteManyAsync(d => d.UserId == userId && d.Id != keptSessionId, ct);
+        _ticketCache.InvalidateUser(userId);
+        return result.DeletedCount;
+    }
 }

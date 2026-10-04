@@ -1,6 +1,6 @@
 import { UserPlus } from 'lucide-react';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-import { Tabs } from '@/shared/components/Tabs';
+import { Tabs, type TabDef } from '@/shared/components/Tabs';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
 import styles from './FollowListModal.module.css';
@@ -13,6 +13,7 @@ type Props = {
   tab: Tab;
   followingCount: number;
   followersCount: number;
+  canSearch: boolean;
   onSelect: (tab: Tab) => void;
 };
 
@@ -20,10 +21,28 @@ export default function FollowListTabs({
   tab,
   followingCount,
   followersCount,
+  canSearch,
   onSelect,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+
+  const countTabs: TabDef<Tab>[] = [
+    {
+      key: 'following',
+      label: t('profile.follow.followingCount', { count: String(followingCount) }),
+    },
+    {
+      key: 'followers',
+      label: t('profile.follow.followersCount', { count: String(followersCount) }),
+    },
+  ];
+  const searchTab: TabDef<Tab> = {
+    key: 'search',
+    label: isMobile ? t('profile.follow.search.tabAriaLabel') : t('profile.follow.search.tab'),
+    icon: isMobile ? <UserPlus size={ICON_SIZE.md} aria-hidden /> : undefined,
+    iconOnly: isMobile,
+  };
 
   return (
     <Tabs
@@ -32,24 +51,7 @@ export default function FollowListTabs({
       ariaLabel={t('profile.follow.listTitle')}
       active={tab}
       onChange={onSelect}
-      tabs={[
-        {
-          key: 'following',
-          label: t('profile.follow.followingCount', { count: String(followingCount) }),
-        },
-        {
-          key: 'followers',
-          label: t('profile.follow.followersCount', { count: String(followersCount) }),
-        },
-        {
-          key: 'search',
-          label: isMobile
-            ? t('profile.follow.search.tabAriaLabel')
-            : t('profile.follow.search.tab'),
-          icon: isMobile ? <UserPlus size={ICON_SIZE.md} aria-hidden /> : undefined,
-          iconOnly: isMobile,
-        },
-      ]}
+      tabs={canSearch ? [...countTabs, searchTab] : countTabs}
     />
   );
 }

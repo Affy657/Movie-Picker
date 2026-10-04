@@ -1,8 +1,11 @@
-import { parseEventLocalStartMs } from '@/shared/utils/eventScheduleLocal';
+import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
 
 export const DEFAULT_EVENT_DURATION_MINUTES = 120;
 
-const ICS_LINE_LIMIT = 74;
+const ICS_LINE_OCTET_LIMIT = 75;
+const ICS_CONTINUATION_PREFIX = ' ';
+
+const utf8 = new TextEncoder();
 
 export interface CalendarEvent {
   title: string;
@@ -19,7 +22,7 @@ interface EventRange {
 }
 
 function resolveRange(event: CalendarEvent): EventRange | null {
-  const startMs = parseEventLocalStartMs(event.date, event.time);
+  const startMs = eventScheduledStartUtcMs(event);
   if (startMs == null) return null;
   const minutes = event.durationMinutes ?? DEFAULT_EVENT_DURATION_MINUTES;
   return { start: new Date(startMs), end: new Date(startMs + minutes * 60_000) };
@@ -29,13 +32,6 @@ function pad(value: number): string {
   return String(value).padStart(2, '0');
 }
 
-function formatLocalStamp(date: Date): string {
-  return (
-    `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}` +
-    `T${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`
-  );
-}
-
 function formatUtcStamp(date: Date): string {
   return (
     `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}` +
@@ -43,11 +39,8 @@ function formatUtcStamp(date: Date): string {
   );
 }
 
-function formatIsoLocal(date: Date): string {
-  return (
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
-    `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-  );
+function formatIsoUtc(date: Date): string {
+  return `${date.toISOString().slice(0, 19)}Z`;
 }
 
 function slugForUid(value: string): string {
@@ -60,22 +53,47 @@ function slugForUid(value: string): string {
   return slug || 'soiree';
 }
 
+const LINE_BREAKS = /\r\n|[\r\n\u{85}\u{2028}\u{2029}]/gu;
+
+function isControlOrLineSeparator(code: number): boolean {
+  return code <= 0x1f || (code >= 0x7f && code <= 0x9f) || code === 0x2028 || code === 0x2029;
+}
+
+function withoutControlCharacters(value: string): string {
+  return Array.from(value)
+    .filter((char) => !isControlOrLineSeparator(char.codePointAt(0) ?? 0))
+    .join('');
+}
+
 function escapeIcsText(value: string): string {
-  return value
-    .replaceAll('\\', String.raw`\\`)
-    .replaceAll(';', String.raw`\;`)
-    .replaceAll(',', String.raw`\,`)
-    .replaceAll(/\r?\n/g, String.raw`\n`);
+  return withoutControlCharacters(
+    value
+      .replaceAll('\\', String.raw`\\`)
+      .replaceAll(';', String.raw`\;`)
+      .replaceAll(',', String.raw`\,`)
+      .replaceAll(LINE_BREAKS, String.raw`\n`)
+  );
 }
 
 function foldIcsLine(line: string): string {
-  const chars = Array.from(line);
-  if (chars.length <= ICS_LINE_LIMIT) return line;
+  if (utf8.encode(line).length <= ICS_LINE_OCTET_LIMIT) return line;
   const parts: string[] = [];
-  for (let index = 0; index < chars.length; index += ICS_LINE_LIMIT) {
-    parts.push(chars.slice(index, index + ICS_LINE_LIMIT).join(''));
+  let part = '';
+  let partOctets = 0;
+  let partBudget = ICS_LINE_OCTET_LIMIT;
+  for (const codePoint of line) {
+    const octets = utf8.encode(codePoint).length;
+    if (partOctets + octets > partBudget) {
+      parts.push(part);
+      part = '';
+      partOctets = 0;
+      partBudget = ICS_LINE_OCTET_LIMIT - ICS_CONTINUATION_PREFIX.length;
+    }
+    part += codePoint;
+    partOctets += octets;
   }
-  return parts.join('\r\n ');
+  parts.push(part);
+  return parts.join(`\r\n${ICS_CONTINUATION_PREFIX}`);
 }
 
 export function buildIcsContent(event: CalendarEvent, now: Date = new Date()): string | null {
@@ -91,13 +109,16 @@ export function buildIcsContent(event: CalendarEvent, now: Date = new Date()): s
     'BEGIN:VEVENT',
     `UID:${slugForUid(event.url ?? event.title)}@movie-picker`,
     `DTSTAMP:${formatUtcStamp(now)}`,
-    `DTSTART:${formatLocalStamp(range.start)}`,
-    `DTEND:${formatLocalStamp(range.end)}`,
+    `DTSTART:${formatUtcStamp(range.start)}`,
+    `DTEND:${formatUtcStamp(range.end)}`,
     `SUMMARY:${escapeIcsText(event.title)}`,
   ];
   if (event.description) lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`);
   if (event.url) {
-    lines.push(`URL:${event.url}`, `LOCATION:${escapeIcsText(event.url)}`);
+    lines.push(
+      `URL:${withoutControlCharacters(event.url)}`,
+      `LOCATION:${escapeIcsText(event.url)}`
+    );
   }
   lines.push('END:VEVENT', 'END:VCALENDAR');
 
@@ -111,7 +132,7 @@ export function googleCalendarUrl(event: CalendarEvent): string | null {
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: event.title,
-    dates: `${formatLocalStamp(range.start)}/${formatLocalStamp(range.end)}`,
+    dates: `${formatUtcStamp(range.start)}/${formatUtcStamp(range.end)}`,
   });
   if (event.description) params.set('details', event.description);
   if (event.url) params.set('location', event.url);
@@ -127,8 +148,8 @@ export function outlookCalendarUrl(event: CalendarEvent): string | null {
     path: '/calendar/action/compose',
     rru: 'addevent',
     subject: event.title,
-    startdt: formatIsoLocal(range.start),
-    enddt: formatIsoLocal(range.end),
+    startdt: formatIsoUtc(range.start),
+    enddt: formatIsoUtc(range.end),
   });
   if (event.description) params.set('body', event.description);
   if (event.url) params.set('location', event.url);

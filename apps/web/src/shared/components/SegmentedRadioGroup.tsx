@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useRef, type KeyboardEvent, type ReactNode } from 'react';
 import clsx from 'clsx';
 import styles from './SegmentedRadioGroup.module.css';
 
@@ -9,6 +9,23 @@ export interface SegmentedOption<T extends string> {
 }
 
 export type SegmentedSize = 'md' | 'sm';
+
+function arrowTargetIndex(key: string, current: number, count: number): number | null {
+  switch (key) {
+    case 'ArrowRight':
+    case 'ArrowDown':
+      return (current + 1) % count;
+    case 'ArrowLeft':
+    case 'ArrowUp':
+      return (current - 1 + count) % count;
+    case 'Home':
+      return 0;
+    case 'End':
+      return count - 1;
+    default:
+      return null;
+  }
+}
 
 export default function SegmentedRadioGroup<T extends string>({
   options,
@@ -21,34 +38,29 @@ export default function SegmentedRadioGroup<T extends string>({
   size = 'md',
   iconOnly = false,
   disabled = false,
-}: Readonly<{
-  options: readonly SegmentedOption<T>[];
-  value: T;
-  onChange: (value: T) => void;
-  ariaLabel: string;
-  ariaLabelledBy?: string;
-  className?: string;
-  id?: string;
-  size?: SegmentedSize;
-  iconOnly?: boolean;
-  disabled?: boolean;
-}>) {
-  const handleKey = (e: React.KeyboardEvent, idx: number) => {
+}: Readonly<
+  {
+    options: readonly SegmentedOption<T>[];
+    value: T;
+    onChange: (value: T) => void;
+    className?: string;
+    id?: string;
+    size?: SegmentedSize;
+    iconOnly?: boolean;
+    disabled?: boolean;
+  } & (
+    { ariaLabel: string; ariaLabelledBy?: string } | { ariaLabelledBy: string; ariaLabel?: string }
+  )
+>) {
+  const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const handleKey = (e: KeyboardEvent<HTMLButtonElement>, idx: number) => {
     if (disabled) return;
-    const last = options.length - 1;
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-      e.preventDefault();
-      onChange(options[idx === last ? 0 : idx + 1]!.value);
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      onChange(options[idx === 0 ? last : idx - 1]!.value);
-    } else if (e.key === 'Home') {
-      e.preventDefault();
-      onChange(options[0]!.value);
-    } else if (e.key === 'End') {
-      e.preventDefault();
-      onChange(options[last]!.value);
-    }
+    const target = arrowTargetIndex(e.key, idx, options.length);
+    if (target === null) return;
+    e.preventDefault();
+    onChange(options[target]!.value);
+    optionRefs.current[target]?.focus();
   };
 
   const compact = size === 'sm';
@@ -67,6 +79,9 @@ export default function SegmentedRadioGroup<T extends string>({
         return (
           <button
             key={opt.value}
+            ref={(el) => {
+              optionRefs.current[idx] = el;
+            }}
             type="button"
             role="radio"
             aria-checked={selected}

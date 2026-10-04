@@ -8,9 +8,10 @@ namespace MoviePicker.Api.Controllers;
 
 [ApiController]
 [ApiExplorerSettings(IgnoreApi = true)]
+[Route("r")]
 public sealed class EventRecapController : ControllerBase
 {
-    [HttpGet("/r/{slug}")]
+    [HttpGet("{slug}")]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitingExtensions.RecapDocumentPolicy)]
     [SharedRateLimit(RateLimitingExtensions.RecapDocumentPolicy)]

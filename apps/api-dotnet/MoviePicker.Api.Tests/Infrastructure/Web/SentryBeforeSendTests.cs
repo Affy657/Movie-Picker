@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Logging;
+using MoviePicker.Api.Application.UseCases.RecurringEvents;
+using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Infrastructure.Web;
 using Sentry;
 using Xunit;
@@ -59,6 +62,146 @@ public sealed class SentryBeforeSendTests
         Assert.NotNull(prepared);
         Assert.Equal("https://api.test/api/v1/events/abc/wheel?host=***&x=1", prepared!.Request.Url);
         Assert.Equal("host=***&x=1", prepared.Request.QueryString);
+    }
+
+    [Theory]
+    [InlineData("X-Host-Token", "X-Forwarded-For")]
+    [InlineData("x-host-token", "x-forwarded-for")]
+    public void Prepare_DropsHostTokenAndClientAddressHeaders(string hostTokenHeader, string forwardedForHeader)
+    {
+        var request = new SentryRequest();
+        request.Headers[hostTokenHeader] = "SECRET-TOKEN";
+        request.Headers[forwardedForHeader] = "203.0.113.7, 10.0.0.1";
+        request.Headers["Accept"] = "application/json";
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom")) { Request = request };
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        Assert.Equal("Accept", Assert.Single(prepared!.Request.Headers.Keys));
+        Assert.Equal("application/json", prepared.Request.Headers["Accept"]);
+    }
+
+    [Theory]
+    [InlineData("Forwarded", "for=\"203.0.113.7\";proto=https")]
+    [InlineData("X-Real-IP", "203.0.113.7")]
+    [InlineData("X-Client-IP", "203.0.113.7")]
+    [InlineData("CF-Connecting-IP", "203.0.113.7")]
+    [InlineData("True-Client-IP", "203.0.113.7")]
+    [InlineData("Cookie", "mp_session=SECRET")]
+    [InlineData("Authorization", "Bearer SECRET")]
+    [InlineData("Referer", "https://movie-picker.fr/soiree/abc?host=SECRET")]
+    [InlineData("X-Some-Proxy-Header", "203.0.113.7")]
+    public void Prepare_DropsEveryHeaderOutsideTheAllowlist(string headerName, string headerValue)
+    {
+        var request = new SentryRequest();
+        request.Headers[headerName] = headerValue;
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom")) { Request = request };
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        Assert.Empty(prepared!.Request.Headers);
+    }
+
+    [Theory]
+    [InlineData("Accept", "application/json")]
+    [InlineData("accept-encoding", "gzip, br")]
+    [InlineData("Accept-Language", "fr-FR,fr;q=0.9")]
+    [InlineData("Content-Length", "42")]
+    [InlineData("content-type", "application/json; charset=utf-8")]
+    [InlineData("Host", "api.movie-picker.fr")]
+    [InlineData("Origin", "https://movie-picker.fr")]
+    [InlineData("User-Agent", "Mozilla/5.0")]
+    [InlineData("X-Request-Id", "0123456789abcdef")]
+    [InlineData("X-Correlation-Id", "0123456789abcdef")]
+    public void Prepare_KeepsAllowedHeaders(string headerName, string headerValue)
+    {
+        var request = new SentryRequest();
+        request.Headers[headerName] = headerValue;
+        request.Headers["Forwarded"] = "for=\"203.0.113.7\"";
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom")) { Request = request };
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        var kept = Assert.Single(prepared!.Request.Headers);
+        Assert.Equal(headerName, kept.Key);
+        Assert.Equal(headerValue, kept.Value);
+    }
+
+    [Fact]
+    public void PrepareTransaction_RedactsQueryStringHeadersAndUser()
+    {
+        var transaction = new SentryTransaction("GET /api/v1/events/{idOrSlug}/wheel", "http.server")
+        {
+            Request = new SentryRequest
+            {
+                Url = "https://api.test/api/v1/events/abc/wheel?host=SECRET-TOKEN&x=1",
+                QueryString = "?host=SECRET-TOKEN&x=1"
+            },
+            User = new SentryUser { Id = "000000000000", IpAddress = "203.0.113.7" }
+        };
+        transaction.Request.Headers[HostTokenAccessor.HostHeaderName] = "SECRET-TOKEN";
+        transaction.Request.Headers["X-Forwarded-For"] = "203.0.113.7";
+        transaction.Request.Headers["Forwarded"] = "for=\"203.0.113.7\"";
+        transaction.Request.Headers["X-Unknown"] = "anything";
+        transaction.Request.Headers["User-Agent"] = "Mozilla/5.0";
+
+        var prepared = SentryBeforeSend.PrepareTransaction(transaction);
+
+        Assert.Same(transaction, prepared);
+        Assert.Equal("https://api.test/api/v1/events/abc/wheel?host=***&x=1", prepared.Request.Url);
+        Assert.Equal("?host=***&x=1", prepared.Request.QueryString);
+        Assert.Equal("User-Agent", Assert.Single(prepared.Request.Headers.Keys));
+        Assert.Null(prepared.User.Id);
+        Assert.Null(prepared.User.IpAddress);
+    }
+
+    [Fact]
+    public void Prepare_EventFromALog_KeepsTheTemplateWithoutTheLoggedValues()
+    {
+        const string template = "Incomplete read of the watchlist of {Username}: {Collected:N0} film(s) out of {@Expected}";
+        var sentryEvent = new SentryEvent
+        {
+            Message = new SentryMessage
+            {
+                Message = template,
+                Formatted = "Incomplete read of the watchlist of jdoe: 3 film(s) out of 12"
+            }
+        };
+        sentryEvent.SetTag("Username", "jdoe");
+        sentryEvent.SetTag("Collected", "3");
+        sentryEvent.SetTag("@Expected", "12");
+        sentryEvent.SetTag("route.action", "Import");
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.NotNull(prepared);
+        Assert.Equal(template, prepared!.Message!.Formatted);
+        Assert.Equal(template, prepared.Message.Message);
+        Assert.Equal("route.action", Assert.Single(prepared.Tags.Keys));
+    }
+
+    [Fact]
+    public void IsLogNoise_DropsTheReadinessProbeWhichTheUptimeCheckAlreadyWatches()
+    {
+        Assert.True(SentryBeforeSend.IsLogNoise(
+            typeof(MongoDatabaseHealthProbe).FullName!, LogLevel.Error, default, new TimeoutException()));
+        Assert.False(SentryBeforeSend.IsLogNoise(
+            typeof(RecurringEventPass).FullName!, LogLevel.Error, default, new TimeoutException()));
+    }
+
+    [Fact]
+    public void Prepare_EventWithoutMessage_KeepsItsTags()
+    {
+        var sentryEvent = new SentryEvent(new InvalidOperationException("boom"));
+        sentryEvent.SetTag("route.action", "Import");
+
+        var prepared = SentryBeforeSend.Prepare(sentryEvent);
+
+        Assert.Equal("Import", prepared!.Tags["route.action"]);
+        Assert.Null(prepared.Message);
     }
 
     [Theory]

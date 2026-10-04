@@ -24,14 +24,14 @@ import {
 } from '@/features/events/types';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import {
-  dateTimePatch,
   isCreatorParticipant,
   maxParticipantsHintFor,
   normalizeConfig,
-  recurrencePatch,
-  titlePatch,
+  savedSettingsOf,
+  settingsPatch,
   validateSettingsDraft,
   type FieldErrors,
+  type SavedSettings,
   type SaveState,
 } from './hostEventSettingsDraft';
 
@@ -40,6 +40,11 @@ type HostEventSettingsDraftInput = {
   hostToken: string | null;
   event: EventData;
   open: boolean;
+};
+
+type SettingsSave = {
+  body: EventConfigPatchPayload;
+  settings: SavedSettings;
 };
 
 export function useHostEventSettingsDraft({
@@ -62,7 +67,10 @@ export function useHostEventSettingsDraft({
   const [eventDateLocal, setEventDateLocal] = useState(
     eventDateTimeToLocal(event.date, event.time)
   );
-  const initialDateLocalRef = useRef(eventDateTimeToLocal(event.date, event.time));
+  const committedDateLocalRef = useRef(eventDateTimeToLocal(event.date, event.time));
+  const savedRef = useRef<SavedSettings>(savedSettingsOf(event));
+  const saveInFlightRef = useRef(false);
+  const saveQueuedRef = useRef(false);
   const [notifyDateChange, setNotifyDateChange] = useState(true);
   const [proposalLimitEnabled, setProposalLimitEnabled] = useState(
     initialFields.proposalLimitEnabled
@@ -81,6 +89,7 @@ export function useHostEventSettingsDraft({
   const [winnerCount, setWinnerCount] = useState(initialFields.winnerCount);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const performSaveRef = useRef<() => void>(() => {});
+  const commitEventDateRef = useRef<(immediate: boolean) => void>(() => {});
 
   useEffect(() => () => clearTimeout(saveTimerRef.current), []);
 
@@ -126,17 +135,25 @@ export function useHostEventSettingsDraft({
   }, []);
 
   const mutation = useMutation({
-    mutationFn: (body: EventConfigPatchPayload) => patchEventConfig(slug, hostToken, body),
-    onSuccess: async (_config, body) => {
-      if (body.date && body.time)
-        initialDateLocalRef.current = eventDateTimeToLocal(body.date, body.time);
-      setSaveState('saved');
+    mutationFn: ({ body }: SettingsSave) => patchEventConfig(slug, hostToken, body),
+    onSuccess: async (_config, { settings }) => {
+      savedRef.current = settings;
+      if (!saveQueuedRef.current) setSaveState('saved');
       setSaveError(null);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list }),
+      ]);
     },
     onError: (e) => {
       setSaveState('error');
       setSaveError(getErrorMessage(e, t('events.settings.fallbackError')));
+    },
+    onSettled: () => {
+      saveInFlightRef.current = false;
+      if (!saveQueuedRef.current) return;
+      saveQueuedRef.current = false;
+      performSaveRef.current();
     },
   });
 
@@ -184,35 +201,49 @@ export function useHostEventSettingsDraft({
     setEventTitle(event.title);
     applyFields(normalizeConfig(event.config));
     setThemeOpen(false);
-    const nextDateLocal = eventDateTimeToLocal(event.date, event.time);
-    setEventDateLocal(nextDateLocal);
-    initialDateLocalRef.current = nextDateLocal;
+    const saved = savedSettingsOf(event);
+    savedRef.current = saved;
+    committedDateLocalRef.current = saved.dateLocal;
+    setEventDateLocal(saved.dateLocal);
     setNotifyDateChange(true);
     setRecurrence(event.config?.recurrence ?? null);
     forgetAppliedTemplate();
     setFieldErrors({});
     setSaveError(null);
     setSaveState('saved');
-  }, [event.title, event.config, event.date, event.time, applyFields, forgetAppliedTemplate]);
+  }, [event, applyFields, forgetAppliedTemplate]);
+
+  commitEventDateRef.current = (immediate) => {
+    if (eventDateLocal === committedDateLocalRef.current) return;
+    committedDateLocalRef.current = eventDateLocal;
+    scheduleAutoSave(immediate);
+  };
+  const commitEventDate = useCallback(() => commitEventDateRef.current(false), []);
 
   const wasOpenRef = useRef(false);
   useEffect(() => {
     if (open && !wasOpenRef.current) hydrateFromEvent();
+    if (!open && wasOpenRef.current) commitEventDateRef.current(true);
     wasOpenRef.current = open;
   }, [open, hydrateFromEvent]);
 
   performSaveRef.current = () => {
+    if (saveInFlightRef.current) {
+      saveQueuedRef.current = true;
+      return;
+    }
+
+    const committedDateLocal = committedDateLocalRef.current;
     const {
       errors,
       maxProposalsPerParticipant,
       maxParticipantsValue,
       maxVotesPerParticipant,
       winnerCount: winnerCountValue,
-      eventDateTime,
     } = validateSettingsDraft(
       {
         eventTitle,
-        eventDateLocal,
+        eventDateLocal: committedDateLocal,
         proposalLimitEnabled,
         maxProp,
         participantLimitEnabled,
@@ -233,33 +264,27 @@ export function useHostEventSettingsDraft({
       return;
     }
 
-    const theme = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
+    const settings: SavedSettings = {
+      title: eventTitle.trim(),
+      theme: [themeEmoji, themeText.trim()].filter(Boolean).join(' '),
+      maxProposalsPerParticipant,
+      maxParticipants: maxParticipantsValue,
+      maxVotesPerParticipant,
+      wheelMode,
+      allowSeries,
+      richSharePreview,
+      winnerCount: winnerCountValue ?? savedRef.current.winnerCount,
+      recurrence,
+      dateLocal: committedDateLocal,
+    };
+    const body = settingsPatch(settings, savedRef.current, notifyDateChange);
+    if (Object.keys(body).length === 0) {
+      setSaveState('saved');
+      return;
+    }
 
-    mutation.mutate({
-      ...titlePatch(eventTitle.trim(), event.title),
-      ...(theme !== (cfg.theme ?? '') ? { theme } : {}),
-      ...(maxProposalsPerParticipant !== cfg.maxProposalsPerParticipant
-        ? { maxProposalsPerParticipant: maxProposalsPerParticipant ?? 0 }
-        : {}),
-      ...(maxParticipantsValue !== cfg.maxParticipants
-        ? { maxParticipants: maxParticipantsValue ?? 0 }
-        : {}),
-      ...(maxVotesPerParticipant !== (cfg.maxVotesPerParticipant ?? null)
-        ? { maxVotesPerParticipant: maxVotesPerParticipant ?? 0 }
-        : {}),
-      ...(wheelMode !== cfg.wheelMode ? { wheelMode } : {}),
-      ...(allowSeries !== (cfg.allowSeries ?? false) ? { allowSeries } : {}),
-      ...(richSharePreview !== (cfg.richSharePreview ?? true) ? { richSharePreview } : {}),
-      ...(winnerCountValue !== null && winnerCountValue !== cfg.winnerCount
-        ? { winnerCount: winnerCountValue }
-        : {}),
-      ...recurrencePatch(recurrence, cfg.recurrence ?? null),
-      ...dateTimePatch(
-        eventDateTime,
-        eventDateLocal !== initialDateLocalRef.current,
-        notifyDateChange
-      ),
-    });
+    saveInFlightRef.current = true;
+    mutation.mutate({ body, settings });
   };
 
   const configLocked = drawnWinnerCount > 0;
@@ -269,7 +294,7 @@ export function useHostEventSettingsDraft({
   const relativeDateLabel = liveDateTime
     ? formatRelativeEventDate(liveDateTime.date, locale)
     : null;
-  const dateWasEdited = eventDateLocal !== initialDateLocalRef.current;
+  const dateWasEdited = eventDateLocal !== savedRef.current.dateLocal;
   const themePreview = [themeEmoji, themeText.trim()].filter(Boolean).join(' ');
 
   return {
@@ -284,6 +309,7 @@ export function useHostEventSettingsDraft({
     themePreview,
     eventDateLocal,
     setEventDateLocal,
+    commitEventDate,
     relativeDateLabel,
     dateWasEdited,
     notifyDateChange,

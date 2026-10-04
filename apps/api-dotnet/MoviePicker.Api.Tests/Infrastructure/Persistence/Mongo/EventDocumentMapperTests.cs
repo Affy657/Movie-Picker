@@ -1,4 +1,5 @@
 using MongoDB.Bson;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
 using MoviePicker.Api.Tests.Builders;
@@ -225,6 +226,28 @@ public sealed class EventDocumentMapperTests
         Assert.Equal("mov1", winner.MovieId);
         Assert.Equal(WinnerPickMethod.Wheel, winner.Method);
         Assert.Equal(pickedAt, winner.PickedAt);
+    }
+
+    [Fact]
+    public void ToDocument_WithRecurrenceAnchorDay_RoundTrips()
+    {
+        var evt = new Event
+        {
+            Id = "507f1f77bcf86cd799439011",
+            Title = "Fin de mois",
+            Date = "2026-02-28",
+            Time = "20:30",
+            Slug = "fin-de-mois",
+            HostToken = "ht",
+            Recurrence = RecurrenceFrequency.Monthly,
+            RecurrenceAnchorDay = 31,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+
+        var back = EventDocumentMapper.ToDomain(EventDocumentMapper.ToDocument(evt));
+
+        Assert.Equal(31, back.RecurrenceAnchorDay);
     }
 
     [Fact]

@@ -38,6 +38,7 @@ public sealed class PatchEventConfigHandlerWinnerCountTests
             _pushSubRepo.Object,
             _pushSender.Object,
             _notifications.Object,
+            new RecordingUnitOfWork(),
             NullLogger<PatchEventConfigHandler>.Instance,
             TimeProvider.System);
     }
@@ -66,6 +67,18 @@ public sealed class PatchEventConfigHandlerWinnerCountTests
         var response = await _sut.HandleAsync("s", new PatchEventConfigRequest());
 
         Assert.Equal(EventConfig.DefaultWinnerCount, response.WinnerCount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoConfigYet_KeepsTheWheelModeAndPreviewTheNightWasShowing()
+    {
+        GivenEvent(Upcoming());
+        var before = EventConfigResponse.FromEvent(Upcoming());
+
+        var response = await _sut.HandleAsync("s", new PatchEventConfigRequest { Theme = "Horreur" });
+
+        Assert.Equal(before.WheelMode, response.WheelMode);
+        Assert.Equal(before.RichSharePreview, response.RichSharePreview);
     }
 
     [Fact]

@@ -2,28 +2,57 @@ import { useEffect, useRef } from 'react';
 import type { MovieData } from '@/shared/types/movie';
 import { WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
 import { randomCenteredUnit } from '@/shared/utils/random';
+import { readCssToken } from '@/shared/utils/cssToken';
 import styles from './SpinningWheel.module.css';
 
 const SIZE = 460;
 const RADIUS = 200;
 const SPIN_ROTATIONS = 8;
 
-export const WHEEL_SEGMENT_COLORS = [
-  '#2563EB',
-  '#C2410C',
-  '#0F766E',
-  '#BE185D',
-  '#B45309',
-  '#0369A1',
-  '#A21CAF',
-  '#047857',
-  '#0E7490',
-  '#4F46E5',
-  '#6D28D9',
-  '#9A3412',
-];
+export const WHEEL_SEGMENT_TOKENS = [
+  '--color-wheel-0',
+  '--color-wheel-1',
+  '--color-wheel-2',
+  '--color-wheel-3',
+  '--color-wheel-4',
+  '--color-wheel-5',
+  '--color-wheel-6',
+  '--color-wheel-7',
+  '--color-wheel-8',
+  '--color-wheel-9',
+  '--color-wheel-10',
+  '--color-wheel-11',
+] as const;
 
-const LABEL_COLOR = '#ffffff';
+type WheelPalette = Readonly<{
+  segments: readonly string[];
+  label: string;
+  labelShadow: string;
+  divider: string;
+  hub: string;
+  hubStroke: string;
+  hubShadow: string;
+  pointer: string;
+  pointerStroke: string;
+  pointerShadow: string;
+  fontFamily: string;
+}>;
+
+function readWheelPalette(element: Element): WheelPalette {
+  return {
+    segments: WHEEL_SEGMENT_TOKENS.map((token) => readCssToken(token, element)),
+    label: readCssToken('--color-wheel-label', element),
+    labelShadow: readCssToken('--color-wheel-label-shadow', element),
+    divider: readCssToken('--color-wheel-divider', element),
+    hub: readCssToken('--color-wheel-hub', element),
+    hubStroke: readCssToken('--color-wheel-hub-stroke', element),
+    hubShadow: readCssToken('--color-wheel-hub-shadow', element),
+    pointer: readCssToken('--color-wheel-pointer', element),
+    pointerStroke: readCssToken('--color-wheel-pointer-stroke', element),
+    pointerShadow: readCssToken('--color-wheel-pointer-shadow', element),
+    fontFamily: readCssToken('--font-body', element),
+  };
+}
 
 function easeOutQuint(t: number): number {
   return 1 - Math.pow(1 - t, 5);
@@ -36,16 +65,21 @@ const LABEL_MID_RADIUS = (LABEL_OUTER + LABEL_INNER) / 2;
 const MAX_FONT = 18;
 const MIN_FONT = 10;
 
-function setFont(ctx: CanvasRenderingContext2D, size: number): void {
-  ctx.font = `700 ${size}px Overpass, system-ui, sans-serif`;
+function setFont(ctx: CanvasRenderingContext2D, size: number, fontFamily: string): void {
+  ctx.font = `700 ${size}px ${fontFamily}`;
 }
 
-function applyFittedFont(ctx: CanvasRenderingContext2D, title: string, maxFont: number): void {
+function applyFittedFont(
+  ctx: CanvasRenderingContext2D,
+  title: string,
+  maxFont: number,
+  fontFamily: string
+): void {
   let size = maxFont;
-  setFont(ctx, size);
+  setFont(ctx, size, fontFamily);
   while (size > MIN_FONT && ctx.measureText(title).width > TEXT_MAX_W) {
     size--;
-    setFont(ctx, size);
+    setFont(ctx, size, fontFamily);
   }
 }
 
@@ -74,7 +108,12 @@ function maxFontForSegment(segAngle: number): number {
   return Math.max(MIN_FONT, Math.min(MAX_FONT, fromArc));
 }
 
-function drawSegments(ctx: CanvasRenderingContext2D, movies: MovieData[], rotation: number): void {
+function drawSegments(
+  ctx: CanvasRenderingContext2D,
+  movies: MovieData[],
+  rotation: number,
+  palette: WheelPalette
+): void {
   const cx = SIZE / 2;
   const cy = SIZE / 2;
   const N = movies.length;
@@ -83,7 +122,7 @@ function drawSegments(ctx: CanvasRenderingContext2D, movies: MovieData[], rotati
   for (let i = 0; i < N; i++) {
     const startA = -Math.PI / 2 + rotation + i * segAngle;
     const endA = startA + segAngle;
-    const color = WHEEL_SEGMENT_COLORS[i % WHEEL_SEGMENT_COLORS.length] ?? '#2563EB';
+    const color = palette.segments[i % palette.segments.length] ?? '';
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -91,7 +130,7 @@ function drawSegments(ctx: CanvasRenderingContext2D, movies: MovieData[], rotati
     ctx.closePath();
     ctx.fillStyle = color;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.strokeStyle = palette.divider;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
@@ -105,29 +144,29 @@ function drawSegments(ctx: CanvasRenderingContext2D, movies: MovieData[], rotati
     ctx.textAlign = readsRightToLeft ? 'left' : 'right';
 
     const title = movies[i]?.title ?? '';
-    applyFittedFont(ctx, title, maxFontForSegment(segAngle));
+    applyFittedFont(ctx, title, maxFontForSegment(segAngle), palette.fontFamily);
     const label = truncateToWidth(ctx, title);
 
-    ctx.shadowColor = 'rgba(0,0,0,0.85)';
+    ctx.shadowColor = palette.labelShadow;
     ctx.shadowBlur = 4;
-    ctx.fillStyle = LABEL_COLOR;
+    ctx.fillStyle = palette.label;
     ctx.fillText(label, readsRightToLeft ? -LABEL_OUTER : LABEL_OUTER, 0);
     ctx.restore();
   }
 }
 
-function drawHubAndPointer(ctx: CanvasRenderingContext2D): void {
+function drawHubAndPointer(ctx: CanvasRenderingContext2D, palette: WheelPalette): void {
   const cx = SIZE / 2;
   const cy = SIZE / 2;
 
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, 14, 0, 2 * Math.PI);
-  ctx.fillStyle = '#f8fafc';
-  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.fillStyle = palette.hub;
+  ctx.shadowColor = palette.hubShadow;
   ctx.shadowBlur = 6;
   ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+  ctx.strokeStyle = palette.hubStroke;
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.restore();
@@ -140,11 +179,11 @@ function drawHubAndPointer(ctx: CanvasRenderingContext2D): void {
   ctx.lineTo(cx - 10, baseY);
   ctx.lineTo(cx + 10, baseY);
   ctx.closePath();
-  ctx.fillStyle = '#EF4444';
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.fillStyle = palette.pointer;
+  ctx.shadowColor = palette.pointerShadow;
   ctx.shadowBlur = 5;
   ctx.fill();
-  ctx.strokeStyle = '#fff';
+  ctx.strokeStyle = palette.pointerStroke;
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.restore();
@@ -165,11 +204,16 @@ function createLayer(dpr: number): [HTMLCanvasElement, CanvasRenderingContext2D 
   return [layer, ctx];
 }
 
-function renderLayers(movies: MovieData[], restRotation: number, dpr: number): WheelLayers {
+function renderLayers(
+  movies: MovieData[],
+  restRotation: number,
+  dpr: number,
+  palette: WheelPalette
+): WheelLayers {
   const [disc, discCtx] = createLayer(dpr);
-  if (discCtx) drawSegments(discCtx, movies, restRotation);
+  if (discCtx) drawSegments(discCtx, movies, restRotation, palette);
   const [overlay, overlayCtx] = createLayer(dpr);
-  if (overlayCtx) drawHubAndPointer(overlayCtx);
+  if (overlayCtx) drawHubAndPointer(overlayCtx, palette);
   return { disc, overlay, restRotation };
 }
 
@@ -218,7 +262,7 @@ export default function SpinningWheel({
     const segAngle = (2 * Math.PI) / N;
     const jitter = randomCenteredUnit() * segAngle * 0.4;
     const targetRotation = SPIN_ROTATIONS * 2 * Math.PI - (winnerIndex + 0.5) * segAngle + jitter;
-    const layers = renderLayers(movies, targetRotation, dpr);
+    const layers = renderLayers(movies, targetRotation, dpr, readWheelPalette(canvas));
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       drawFrame(ctx, layers, targetRotation);

@@ -5,8 +5,8 @@
   margin-top: var(--space-3);
   padding: var(--space-2) var(--space-2-5);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-streak-soft) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-streak-soft) 26%, transparent);
+  background: var(--color-streak-bg);
+  border: 1px solid var(--color-streak-border);
 }
 
 .out {
@@ -19,9 +19,21 @@
   width: var(--space-6);
   height: var(--space-7);
   display: block;
-  filter: drop-shadow(0 5px 12px color-mix(in srgb, var(--color-streak) 50%, transparent));
+  filter: var(--filter-streak-glow);
   --flame-flicker-duration: 3.2s;
   animation: flicker var(--flame-flicker-duration) var(--ease-in-out) infinite;
+}
+
+.flameBase {
+  stop-color: var(--color-streak-flame-base);
+}
+
+.flameMiddle {
+  stop-color: var(--color-streak-flame-middle);
+}
+
+.flameTip {
+  stop-color: var(--color-streak-flame-tip);
 }
 
 .out .flame {
@@ -57,12 +69,12 @@
 @keyframes flicker {
   0%,
   100% {
-    filter: drop-shadow(0 5px 12px color-mix(in srgb, var(--color-streak) 50%, transparent));
+    filter: var(--filter-streak-glow);
     transform: scale(1);
   }
 
   50% {
-    filter: drop-shadow(0 7px 18px color-mix(in srgb, var(--color-streak) 70%, transparent));
+    filter: var(--filter-streak-glow-strong);
     transform: scale(1.035);
   }
 }

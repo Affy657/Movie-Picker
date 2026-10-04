@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Infrastructure.Web;
+using MoviePicker.Api.Tests.Logging;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Web;
@@ -24,6 +26,23 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
         Assert.True(nextCalled);
         var entry = Assert.Single(logger.Entries);
         Assert.Equal(LogLevel.Information, entry.Level);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_UnhandledFailure_IsLoggedAsA500AndRethrown()
+    {
+        var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Method = "GET";
+        ctx.Request.Path = "/api/v1/auth/me";
+        var mw = new StructuredHttpRequestLoggingMiddleware(
+            _ => throw new InvalidOperationException("session store unreachable"),
+            logger);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => mw.InvokeAsync(ctx));
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.Contains("→ 500 ", entry.Message);
     }
 
     [Fact]
@@ -62,6 +81,26 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
         Assert.Contains("?host=***&participantId=p1", entry.Message);
     }
 
+    [Theory]
+    [InlineData("/signin-google")]
+    [InlineData("/signin-github")]
+    public async Task InvokeAsync_RedactsTheOAuthCodeAndStateOfASignInCallback(string callbackPath)
+    {
+        var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Method = "GET";
+        ctx.Request.Path = callbackPath;
+        ctx.Request.QueryString = new QueryString("?state=CfDJ8-STATE&code=4%2F0AUTH-CODE&scope=email");
+        var mw = new StructuredHttpRequestLoggingMiddleware(_ => Task.CompletedTask, logger);
+
+        await mw.InvokeAsync(ctx);
+
+        var entry = Assert.Single(logger.Entries);
+        Assert.DoesNotContain("CfDJ8-STATE", entry.Message);
+        Assert.DoesNotContain("AUTH-CODE", entry.Message);
+        Assert.Contains("?state=***&code=***&scope=email", entry.Message);
+    }
+
     [Fact]
     public async Task InvokeAsync_StillLogs_WhenNextThrows()
     {
@@ -75,19 +114,30 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
         Assert.Single(logger.Entries);
     }
 
-    private sealed class CapturingLogger<T> : ILogger<T>
+    [Theory]
+    [InlineData(true, "account")]
+    [InlineData(false, "anonymous")]
+    public async Task InvokeAsync_TellsASignedInCallerFromAnAnonymousOne(bool signedIn, string expectedCaller)
     {
-        public List<(LogLevel Level, string Message)> Entries { get; } = [];
-        public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
-        public bool IsEnabled(LogLevel logLevel) => true;
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-            => Entries.Add((logLevel, formatter(state, exception)));
+        var logger = new CapturingLogger<StructuredHttpRequestLoggingMiddleware>();
+        var ctx = new DefaultHttpContext();
+        ctx.Request.Method = "POST";
+        ctx.Request.Path = "/api/v1/events/soiree/movies/m1/vote";
+        var mw = new StructuredHttpRequestLoggingMiddleware(
+            c =>
+            {
+                if (signedIn)
+                    c.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "u1")], "Cookies"));
+                c.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                return Task.CompletedTask;
+            },
+            logger);
 
-        private sealed class NullScope : IDisposable
-        {
-            public static readonly NullScope Instance = new();
-            public void Dispose() { }
-        }
+        await mw.InvokeAsync(ctx);
+
+        var state = Assert.Single(logger.States);
+        Assert.Contains(state, pair => pair.Key == "Caller" && Equals(pair.Value, expectedCaller));
+        Assert.Contains(state, pair => pair.Key == "StatusCode" && Equals(pair.Value, 429));
     }
 
     [Theory]
@@ -95,6 +145,8 @@ public sealed class StructuredHttpRequestLoggingMiddlewareTests
     [InlineData("?token=SECRET", "?token=***")]
     [InlineData("?api_key=SECRET&language=fr-FR", "?api_key=***&language=fr-FR")]
     [InlineData("?API_KEY=SECRET", "?API_KEY=***")]
+    [InlineData("?code=SECRET&state=OPAQUE", "?code=***&state=***")]
+    [InlineData("?Code=SECRET&State=OPAQUE", "?Code=***&State=***")]
     [InlineData("?language=fr-FR", "?language=fr-FR")]
     public void SensitiveQueryRedaction_MasksEverySecretBearingKey(string query, string expected)
     {

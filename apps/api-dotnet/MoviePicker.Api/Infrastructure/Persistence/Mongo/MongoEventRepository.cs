@@ -9,6 +9,8 @@ namespace MoviePicker.Api.Infrastructure.Persistence.Mongo;
 
 public sealed class MongoEventRepository : IEventRepository
 {
+    internal const string CreationRequestIndexName = "events_creator_creationRequest_unique";
+
     private const string WriteSeqElement = "writeSeq";
 
     private readonly TransactionalCollection<EventDocument> _collection;
@@ -18,21 +20,12 @@ public sealed class MongoEventRepository : IEventRepository
         _collection = collections.GetCollection<EventDocument>("events");
     }
 
-    public async Task<Event?> GetByIdOrSlugAsync(string idOrSlug, CancellationToken ct = default)
+    public async Task<Event?> GetByIdOrSlugAsync(string slug, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(idOrSlug))
+        if (string.IsNullOrWhiteSpace(slug))
             return null;
 
-        var filters = new List<FilterDefinition<EventDocument>>
-        {
-            Builders<EventDocument>.Filter.Eq(x => x.Slug, idOrSlug)
-        };
-
-        if (ObjectId.TryParse(idOrSlug, out _))
-            filters.Add(Builders<EventDocument>.Filter.Eq(x => x.Id, idOrSlug));
-
-        var filter = Builders<EventDocument>.Filter.Or(filters);
-        var doc = await _collection.Find(filter).FirstOrDefaultAsync(ct);
+        var doc = await _collection.Find(Builders<EventDocument>.Filter.Eq(x => x.Slug, slug)).FirstOrDefaultAsync(ct);
 
         return doc is null ? null : EventDocumentMapper.ToDomain(doc);
     }
@@ -43,8 +36,29 @@ public sealed class MongoEventRepository : IEventRepository
         if (string.IsNullOrEmpty(doc.Id))
             doc.Id = ObjectId.GenerateNewId().ToString();
 
-        await _collection.InsertOneAsync(doc, cancellationToken: ct);
+        try
+        {
+            await _collection.InsertOneAsync(doc, cancellationToken: ct);
+        }
+        catch (MongoWriteException ex) when (
+            ex.WriteError?.Category == ServerErrorCategory.DuplicateKey
+            && ex.WriteError.Message.Contains(CreationRequestIndexName, StringComparison.Ordinal))
+        {
+            throw new EventCreationReplayedException();
+        }
+
         return EventDocumentMapper.ToDomain(doc);
+    }
+
+    public async Task<Event?> FindByCreationRequestAsync(
+        string creatorUserId,
+        string creationRequestId,
+        CancellationToken ct = default)
+    {
+        var doc = await _collection
+            .Find(x => x.CreatorUserId == creatorUserId && x.CreationRequestId == creationRequestId)
+            .FirstOrDefaultAsync(ct);
+        return doc is null ? null : EventDocumentMapper.ToDomain(doc);
     }
 
     public async Task<Event> UpdateAsync(Event evt, CancellationToken ct = default)
@@ -220,14 +234,14 @@ public sealed class MongoEventRepository : IEventRepository
         if (limit <= 0)
             return [];
 
-        var autoClosedStartedBefore = (utcNow - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay).UtcDateTime;
+        var wonAndOverStartedBefore = (utcNow - EventSchedule.PendingDelay).UtcDateTime;
         var builder = Builders<EventDocument>.Filter;
         var filter = builder.And(
             builder.SizeGt(x => x.Winners, 0),
             builder.Eq(x => x.WatchlistCleanedAt, (DateTime?)null),
             builder.Or(
                 builder.Ne(x => x.ClosedAt, (DateTime?)null),
-                builder.Lte(x => x.StartAtUtc, autoClosedStartedBefore)));
+                builder.Lte(x => x.StartAtUtc, wonAndOverStartedBefore)));
         var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }

@@ -7,6 +7,7 @@ public static class ErrorCodes
     public const string Unauthorized = "unauthorized";
     public const string InternalError = "internal_error";
     public const string ValidationFailed = "validation_failed";
+    public const string RequestTooLarge = "request_too_large";
     public const string RateLimited = "rate_limited";
     public const string ConcurrentUpdate = "concurrent_update";
     public const string VoteLimitReached = "vote-limit-reached";
@@ -30,6 +31,7 @@ public static class ErrorCodes
     public const string MovieAlreadyProposed = "movie_already_proposed";
     public const string MovieTitleAlreadyProposed = "movie_title_already_proposed";
     public const string ProposalLimitReached = "proposal_limit_reached";
+    public const string EventMovieLimitReached = "event_movie_limit_reached";
     public const string OAuthLinkFailed = "oauth_link_failed";
     public const string HandleTaken = "handle_taken";
     public const string IdentityConflict = "identity_conflict";
@@ -81,6 +83,7 @@ public static class ErrorCodes
     public const string WrongPassword = "wrong_password";
     public const string CurrentPasswordIncorrect = "current_password_incorrect";
     public const string ConfirmationIncorrect = "confirmation_incorrect";
+    public const string ReauthenticationRequired = "reauthentication_required";
 
     public const string InvalidParticipant = "invalid_participant";
     public const string ParticipantRequired = "participant_required";
@@ -101,12 +104,14 @@ public static class ErrorCodes
     public const string LetterboxdUsernameInvalid = "letterboxd_username_invalid";
     public const string LetterboxdUsernameMissing = "letterboxd_username_missing";
     public const string LetterboxdSyncFailed = "letterboxd_sync_failed";
+    public const string LetterboxdSyncUnavailable = "letterboxd_sync_unavailable";
     public const string LetterboxdWatchlistIncomplete = "letterboxd_watchlist_incomplete";
     public const string InvalidDateFormat = "invalid_date_format";
     public const string InvalidTimeFormat = "invalid_time_format";
     public const string ThemeColorOutOfRange = "theme_color_out_of_range";
     public const string EventTitleRequired = "event_title_required";
     public const string EventTitleTooLong = "event_title_too_long";
+    public const string EventThemeTooLong = "event_theme_too_long";
     public const string EventTemplateNameRequired = "event_template_name_required";
     public const string EventTemplateNameTooLong = "event_template_name_too_long";
     public const string SelfFollow = "self_follow";
@@ -118,6 +123,7 @@ public static class ErrorCodes
     public const string TooManyAttachments = "too_many_attachments";
     public const string AttachmentContentInvalid = "attachment_content_invalid";
     public const string AttachmentContentMismatch = "attachment_content_mismatch";
+    public const string AttachmentImageUnreadable = "attachment_image_unreadable";
     public const string InviteOnlyFollowed = "invite_only_followed";
     public const string NoMovieProposed = "no_movie_proposed";
     public const string AllMoviesExcluded = "all_movies_excluded";

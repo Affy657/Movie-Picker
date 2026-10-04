@@ -55,6 +55,165 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     };
 
     [Fact]
+    public async Task EventLookup_ResolvesTheSlug_ButNeverTheEventId()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var created = await events.AddAsync(NewEvent("Lookup"));
+
+        Assert.Equal(created.Id, (await events.GetByIdOrSlugAsync(created.Slug))?.Id);
+        Assert.Null(await events.GetByIdOrSlugAsync(created.Id));
+    }
+
+    [Fact]
+    public async Task PushSubscriptionUpsert_ForAnotherUser_MovesTheEndpointToThatUser()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var subscriptions = scope.ServiceProvider.GetRequiredService<IPushSubscriptionRepository>();
+        var previousOwner = ObjectId.GenerateNewId().ToString();
+        var newOwner = ObjectId.GenerateNewId().ToString();
+        var endpoint = "https://fcm.googleapis.com/fcm/send/" + Guid.NewGuid().ToString("N");
+        PushSubscription Subscription(string userId) => new()
+        {
+            UserId = userId,
+            Endpoint = endpoint,
+            P256dh = "key",
+            Auth = "auth",
+            CreatedAt = Now
+        };
+
+        await subscriptions.UpsertAsync(Subscription(previousOwner));
+        await subscriptions.UpsertAsync(Subscription(newOwner));
+
+        Assert.Empty(await subscriptions.ListByUserIdAsync(previousOwner));
+        Assert.Equal(endpoint, (await subscriptions.ListByUserIdAsync(newOwner)).Single().Endpoint);
+    }
+
+    [Fact]
+    public async Task NotificationExistsSince_IgnoresTheNoticesOfAnEarlierWindow()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var userId = ObjectId.GenerateNewId().ToString();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = userId,
+            Type = UserNotificationType.EventPending,
+            EventId = eventId,
+            CreatedAt = Now.AddDays(-7)
+        });
+
+        Assert.True(await notifications.ExistsSinceAsync(userId, UserNotificationType.EventPending, eventId, Now.AddDays(-8)));
+        Assert.False(await notifications.ExistsSinceAsync(userId, UserNotificationType.EventPending, eventId, Now.AddDays(-1)));
+    }
+
+    [Fact]
+    public async Task NotificationExistsFromActor_MatchesTheRecipientTheTypeAndTheActor()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var userId = ObjectId.GenerateNewId().ToString();
+        var otherUserId = ObjectId.GenerateNewId().ToString();
+        var actor = "actor" + Guid.NewGuid().ToString("N")[..12];
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = userId,
+            Type = UserNotificationType.NewFollower,
+            ActorHandle = actor,
+            CreatedAt = Now
+        });
+
+        Assert.True(await notifications.ExistsFromActorAsync(userId, UserNotificationType.NewFollower, actor));
+        Assert.False(await notifications.ExistsFromActorAsync(userId, UserNotificationType.NewFollower, actor + "x"));
+        Assert.False(await notifications.ExistsFromActorAsync(userId, UserNotificationType.ParticipantJoined, actor));
+        Assert.False(await notifications.ExistsFromActorAsync(otherUserId, UserNotificationType.NewFollower, actor));
+    }
+
+    [Fact]
+    public async Task LetterboxdPendingChoices_RecordsTheCountAndTheKeysWithoutTouchingTheRest()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var created = await users.AddAsync(NewUser("lbx") with { LetterboxdUsername = "lbx_user" });
+
+        await users.RecordLetterboxdPendingChoicesAsync(created.Id, 2, ["dune-part-two", "solaris"]);
+
+        var stored = await users.GetByIdAsync(created.Id);
+        Assert.NotNull(stored);
+        Assert.Equal(2, stored.LetterboxdPendingReconciliationCount);
+        Assert.Equal(["dune-part-two", "solaris"], stored.LetterboxdPendingChoiceKeys);
+        Assert.Equal("lbx_user", stored.LetterboxdUsername);
+        Assert.True(stored.Version > created.Version);
+    }
+
+    [Fact]
+    public async Task MovieCount_CountsOnlyTheFilmsOfThatNight()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        foreach (var (targetEvent, tmdbId) in new[] { (eventId, 1), (eventId, 2), (ObjectId.GenerateNewId().ToString(), 3) })
+        {
+            await movies.InsertAsync(new Movie
+            {
+                Id = string.Empty,
+                EventId = targetEvent,
+                ParticipantId = ObjectId.GenerateNewId().ToString(),
+                TmdbId = tmdbId,
+                Title = $"Film {tmdbId}",
+                Year = "2001",
+                CreatedAt = Now,
+                UpdatedAt = Now
+            });
+        }
+
+        Assert.Equal(2, await movies.CountByEventIdAsync(eventId));
+    }
+
+    [Fact]
+    public async Task MovieTitleLookup_TellsARemakeFromTheFilmAlreadyProposed()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        await movies.InsertAsync(new Movie
+        {
+            Id = string.Empty,
+            EventId = eventId,
+            ParticipantId = ObjectId.GenerateNewId().ToString(),
+            TmdbId = 8587,
+            Title = "Le Roi lion",
+            Year = "1994",
+            CreatedAt = Now,
+            UpdatedAt = Now
+        });
+
+        Assert.True(await movies.ExistsByEventAndTitleCaseInsensitiveAsync(eventId, "le roi LION", "1994"));
+        Assert.False(await movies.ExistsByEventAndTitleCaseInsensitiveAsync(eventId, "Le Roi lion", "2019"));
+    }
+
+    [Theory]
+    [InlineData("2020", " 2020 ", true)]
+    [InlineData("", "  ", true)]
+    [InlineData("", null, true)]
+    [InlineData(" 2020", "2020", false)]
+    [InlineData("  ", null, false)]
+    [InlineData("  ", "", false)]
+    public async Task MovieTitleLookup_TrimsTheRequestedYearButComparesTheStoredOneAsWritten(
+        string storedYear,
+        string? requestedYear,
+        bool expected)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        await movies.InsertAsync(NewMovie(eventId, ObjectId.GenerateNewId().ToString(), 862, "Toy Story") with { Year = storedYear });
+
+        Assert.Equal(expected, await movies.ExistsByEventAndTitleCaseInsensitiveAsync(eventId, "Toy Story", requestedYear));
+    }
+
+    [Fact]
     public async Task EventUpdate_WithTheVersionJustRead_SucceedsAndIncrementsVersion()
     {
         using var scope = _factory.Services.CreateScope();
@@ -64,7 +223,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var updated = await events.UpdateAsync(created with { Title = "Version 1" });
 
         Assert.Equal(created.Version + 1, updated.Version);
-        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.Equal("Version 1", reloaded!.Title);
         Assert.Equal(updated.Version, reloaded.Version);
     }
@@ -75,15 +234,15 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var created = await events.AddAsync(NewEvent("Original"));
-        var hostA = await events.GetByIdOrSlugAsync(created.Id);
-        var hostB = await events.GetByIdOrSlugAsync(created.Id);
+        var hostA = await events.GetByIdOrSlugAsync(created.Slug);
+        var hostB = await events.GetByIdOrSlugAsync(created.Slug);
 
         await events.UpdateAsync(hostA! with { Title = "Écrit par A" });
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
             events.UpdateAsync(hostB! with { Title = "Écrit par B" }));
 
         Assert.Equal("concurrent_update", ex.Reason);
-        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.Equal("Écrit par A", reloaded!.Title);
     }
 
@@ -93,13 +252,13 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var created = await events.AddAsync(NewEvent("Nettoyage"));
-        var stale = await events.GetByIdOrSlugAsync(created.Id);
+        var stale = await events.GetByIdOrSlugAsync(created.Slug);
 
         Assert.True(await events.MarkWatchlistCleanedAsync(created.Id, Now.AddHours(1)));
 
         await Assert.ThrowsAsync<ConflictException>(() =>
             events.UpdateAsync(stale! with { Title = "Écrasement" }));
-        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.NotNull(reloaded!.WatchlistCleanedAt);
         Assert.Equal("Nettoyage", reloaded.Title);
     }
@@ -114,7 +273,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         await events.MarkChangedAsync(created.Id);
         await events.MarkChangedAsync(created.Id);
 
-        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.Equal(created.WriteSeq + 2, reloaded!.WriteSeq);
         Assert.Equal(created.Version, reloaded.Version);
     }
@@ -134,12 +293,12 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         using var scope = _factory.Services.CreateScope();
         var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
         var created = await events.AddAsync(NewEvent("Seq"));
-        var read = await events.GetByIdOrSlugAsync(created.Id);
+        var read = await events.GetByIdOrSlugAsync(created.Slug);
 
         await events.MarkChangedAsync(created.Id);
         await events.UpdateAsync(read! with { Title = "Seq 2" });
 
-        var reloaded = await events.GetByIdOrSlugAsync(created.Id);
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.Equal("Seq 2", reloaded!.Title);
         Assert.Equal(read.WriteSeq + 2, reloaded.WriteSeq);
     }
@@ -152,9 +311,9 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var created = await events.AddAsync(NewEvent("Targeted") with { CreatorUserId = ObjectId.GenerateNewId().ToString() });
 
         Assert.True(await events.MarkWatchlistCleanedAsync(created.Id, Now.AddHours(1)));
-        var afterCleanup = await events.GetByIdOrSlugAsync(created.Id);
+        var afterCleanup = await events.GetByIdOrSlugAsync(created.Slug);
         Assert.Equal(1, await events.AnonymizeCreatorAsync(created.CreatorUserId!));
-        var afterAnonymize = await events.GetByIdOrSlugAsync(created.Id);
+        var afterAnonymize = await events.GetByIdOrSlugAsync(created.Slug);
 
         Assert.Equal(created.WriteSeq + 1, afterCleanup!.WriteSeq);
         Assert.Equal(created.WriteSeq + 2, afterAnonymize!.WriteSeq);
@@ -168,6 +327,24 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var ghost = NewEvent("Fantôme") with { Id = "64f000000000000000000001" };
 
         await Assert.ThrowsAsync<NotFoundException>(() => events.UpdateAsync(ghost));
+    }
+
+    [Fact]
+    public async Task UserUpdate_KeepsTheUnlinkedIdentities()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var created = await users.AddAsync(NewUser("unlink"));
+        var unlinkedAt = new DateTimeOffset(2026, 9, 20, 8, 30, 0, TimeSpan.Zero);
+
+        await users.UpdateAsync(created with
+        {
+            UnlinkedIdentities = [new UnlinkedIdentity { Provider = "github", Subject = "gh-42", UnlinkedAt = unlinkedAt }]
+        });
+
+        var reloaded = await users.GetByIdAsync(created.Id);
+        var unlinked = Assert.Single(reloaded!.UnlinkedIdentities);
+        Assert.Equal(("github", "gh-42", unlinkedAt), (unlinked.Provider, unlinked.Subject, unlinked.UnlinkedAt));
     }
 
     [Fact]
@@ -203,6 +380,74 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
             users.UpdateAsync(stale! with { Bio = "Écrasement" }));
         var reloaded = await users.GetByIdAsync(created.Id);
         Assert.NotNull(reloaded!.SupporterSince);
+    }
+
+    private const int RaceRounds = 40;
+    private const int RacersPerRound = 6;
+
+    private static async Task<int> CountWinnersOfARaceAsync(Func<int, Task> update)
+    {
+        using var startingLine = new Barrier(RacersPerRound);
+        async Task<bool> AttemptAsync(int racer)
+        {
+            try
+            {
+                await update(racer);
+                return true;
+            }
+            catch (ConflictException ex) when (ex.Reason == ErrorCodes.ConcurrentUpdate)
+            {
+                return false;
+            }
+        }
+
+        var outcomes = await Task.WhenAll(Enumerable.Range(0, RacersPerRound).Select(racer =>
+            Task.Factory.StartNew(
+                () =>
+                {
+                    startingLine.SignalAndWait();
+                    return AttemptAsync(racer);
+                },
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default).Unwrap()));
+        return outcomes.Count(won => won);
+    }
+
+    [Fact]
+    public async Task EventUpdate_RacingCopiesOfTheSameVersion_LetExactlyOneWin()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var winnersPerRound = new List<int>();
+
+        for (var round = 0; round < RaceRounds; round++)
+        {
+            var created = await events.AddAsync(NewEvent($"Race {round}"));
+            winnersPerRound.Add(await CountWinnersOfARaceAsync(racer =>
+                events.UpdateAsync(created with { Title = $"Racer {racer}" })));
+            Assert.Equal(created.Version + 1, (await events.GetByIdOrSlugAsync(created.Slug))!.Version);
+        }
+
+        Assert.Equal(Enumerable.Repeat(1, RaceRounds), winnersPerRound);
+    }
+
+    [Fact]
+    public async Task UserUpdate_RacingCopiesOfTheSameVersion_LetExactlyOneWin()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var winnersPerRound = new List<int>();
+
+        for (var round = 0; round < RaceRounds; round++)
+        {
+            var created = await users.AddAsync(NewUser("race"));
+            winnersPerRound.Add(await CountWinnersOfARaceAsync(racer =>
+                users.UpdateAsync(created with { Bio = $"Racer {racer}" })));
+            Assert.Equal(created.Version + 1, (await users.GetByIdAsync(created.Id))!.Version);
+        }
+
+        Assert.Equal(Enumerable.Repeat(1, RaceRounds), winnersPerRound);
     }
 
     [Fact]
@@ -251,6 +496,8 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var winners = new[] { new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now } };
         var closed = await events.AddAsync(NewEvent("closed-" + marker) with { Winners = winners, ClosedAt = Now });
         var autoClosed = await events.AddAsync(NewEvent("auto-" + marker) with { Winners = winners, Date = "2020-01-01" });
+        var endedThreeHoursAgo = await events.AddAsync(NewEvent("ended-" + marker) with { Winners = winners, Date = "2026-09-15", Time = "11:00" });
+        await events.AddAsync(NewEvent("live-" + marker) with { Winners = winners, Date = "2026-09-15", Time = "13:00" });
         var cleaned = await events.AddAsync(NewEvent("cleaned-" + marker) with { Winners = winners, ClosedAt = Now });
         Assert.True(await events.MarkWatchlistCleanedAsync(cleaned.Id, Now));
         await events.AddAsync(NewEvent("no-winner-" + marker) with { ClosedAt = Now });
@@ -259,7 +506,7 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var found = await events.ListAwaitingWatchlistCleanupAsync(Now, 1000);
 
         var mine = found.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet();
-        HashSet<string> expected = [closed.Id, autoClosed.Id];
+        HashSet<string> expected = [closed.Id, autoClosed.Id, endedThreeHoursAgo.Id];
         Assert.Equal(expected, mine);
     }
 
@@ -342,6 +589,294 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(0, await votes.DeleteByMovieIdsAsync([]));
     }
 
+    private static async Task<(Event Event, Participant Participant)> NewEventWithParticipantAsync(IServiceProvider services, string title)
+    {
+        var evt = await services.GetRequiredService<IEventRepository>().AddAsync(NewEvent(title));
+        var participant = await services.GetRequiredService<IParticipantRepository>().AddAsync(new Participant
+        {
+            Id = string.Empty,
+            EventId = evt.Id,
+            Pseudo = "Alice",
+            UserId = ObjectId.GenerateNewId().ToString(),
+            CreatedAt = Now,
+            UpdatedAt = Now
+        });
+        return (evt, participant);
+    }
+
+    [Fact]
+    public async Task MovieInsert_SameTitleProposedTwiceInAnEvent_IsRefusedAsAlreadyProposed()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var (evt, participant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Doublon");
+        await movies.InsertAsync(NewMovie(evt.Id, participant.Id, 603, "Matrix"));
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+            movies.InsertAsync(NewMovie(evt.Id, participant.Id, 603, "Matrix")));
+
+        Assert.Equal(ErrorCodes.MovieAlreadyProposed, ex.Reason);
+    }
+
+    [MongoFact]
+    public async Task MostProposed_CountsAFilmStoredBeforeSeriesSupportWithTheSameFilm()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var tmdbId = Random.Shared.Next(10_000_000, 20_000_000);
+        var (legacyEvent, legacyParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Legacy");
+        var (currentEvent, currentParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Current");
+        var legacy = await movies.InsertAsync(NewMovie(legacyEvent.Id, legacyParticipant.Id, tmdbId, "Legacy film"));
+        await UnsetRawFieldAsync("movies", legacy.Id, "mediaType");
+        await movies.InsertAsync(NewMovie(currentEvent.Id, currentParticipant.Id, tmdbId, "Legacy film"));
+
+        var ranking = await movies.ListMostProposedAsync(2, 1000);
+
+        var row = Assert.Single(ranking, r => r.TmdbId == tmdbId);
+        Assert.Equal(MovieMediaType.Movie, row.MediaType);
+        Assert.Equal(2, row.EventCount);
+    }
+
+    [MongoFact]
+    public async Task MostProposed_RanksASeriesStoredWithALegacyMediaTypeAsTheSeriesItIsReadAs()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var tmdbId = Random.Shared.Next(30_000_000, 40_000_000);
+        var (filmEvent, filmParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Film");
+        await movies.InsertAsync(NewMovie(filmEvent.Id, filmParticipant.Id, tmdbId, "Homonyme"));
+        var legacySeries = new List<Movie>();
+        foreach (var legacyMediaType in new[] { "TV", " tv " })
+        {
+            var (seriesEvent, seriesParticipant) = await NewEventWithParticipantAsync(scope.ServiceProvider, legacyMediaType);
+            var series = await movies.InsertAsync(
+                NewMovie(seriesEvent.Id, seriesParticipant.Id, tmdbId, "Homonyme") with { MediaType = MovieMediaType.Tv });
+            await SetRawFieldAsync("movies", series.Id, "mediaType", legacyMediaType);
+            legacySeries.Add(series);
+        }
+
+        var ranking = await movies.ListMostProposedAsync(1, 1000);
+
+        var rows = ranking.Where(r => r.TmdbId == tmdbId).ToList();
+        Assert.Equal(2, rows.Single(r => r.MediaType == MovieMediaType.Tv).EventCount);
+        Assert.Equal(1, rows.Single(r => r.MediaType == MovieMediaType.Movie).EventCount);
+        foreach (var series in legacySeries)
+            Assert.Equal(MovieMediaType.Tv, (await movies.GetByIdAsync(series.Id))!.MediaType);
+    }
+
+    [Fact]
+    public async Task MostProposed_BreaksEventCountTiesByTmdbId()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var lowerTmdbId = Random.Shared.Next(20_000_000, 30_000_000);
+        int[] insertionOrder = [lowerTmdbId + 2, lowerTmdbId, lowerTmdbId + 1];
+        for (var round = 0; round < 2; round++)
+        {
+            var (evt, participant) = await NewEventWithParticipantAsync(scope.ServiceProvider, $"Tie {round}");
+            foreach (var tmdbId in insertionOrder)
+                await movies.InsertAsync(NewMovie(evt.Id, participant.Id, tmdbId, $"Film {tmdbId}"));
+        }
+
+        var ranking = await movies.ListMostProposedAsync(2, 1000);
+
+        Assert.Equal(
+            [lowerTmdbId, lowerTmdbId + 1, lowerTmdbId + 2],
+            ranking.Where(r => insertionOrder.Contains(r.TmdbId)).Select(r => r.TmdbId));
+    }
+
+    [Fact]
+    public async Task MovieInsert_SeriesSharingTheTmdbIdOfAProposedMovie_IsAccepted()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var (evt, participant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Film et série");
+        await movies.InsertAsync(NewMovie(evt.Id, participant.Id, 1399, "Un film"));
+
+        await movies.InsertAsync(NewMovie(evt.Id, participant.Id, 1399, "Une série") with { MediaType = MovieMediaType.Tv });
+
+        Assert.Equal(2, await movies.CountByEventIdAsync(evt.Id));
+    }
+
+    [Fact]
+    public async Task VoteUpsert_ParallelIdenticalVotes_AllSucceedAndStoreOneVote()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var votes = scope.ServiceProvider.GetRequiredService<IVoteRepository>();
+        var (evt, participant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Votes");
+        var movie = await movies.InsertAsync(NewMovie(evt.Id, participant.Id, 27205, "Inception"));
+        var vote = new Vote { EventId = evt.Id, MovieId = movie.Id, ParticipantId = participant.Id, Value = 1, CreatedAt = Now, UpdatedAt = Now };
+
+        await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => votes.UpsertAsync(vote)));
+
+        Assert.Single(await votes.ListByParticipantIdsAsync([participant.Id]));
+    }
+
+    [Fact]
+    public async Task ParticipantAdd_SamePseudoInTheEvent_IsRefusedAsASamePseudoConflict()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var participants = scope.ServiceProvider.GetRequiredService<IParticipantRepository>();
+        var (evt, _) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Homonymes");
+
+        var ex = await Assert.ThrowsAsync<ParticipantConflictException>(() => participants.AddAsync(new Participant
+        {
+            Id = string.Empty,
+            EventId = evt.Id,
+            Pseudo = "Alice",
+            UserId = ObjectId.GenerateNewId().ToString(),
+            CreatedAt = Now,
+            UpdatedAt = Now
+        }));
+
+        Assert.Equal(ParticipantCollision.SamePseudo, ex.Collision);
+    }
+
+    [Fact]
+    public async Task ParticipantAdd_SameAccountInTheEvent_IsRefusedAsASameAccountConflict()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var participants = scope.ServiceProvider.GetRequiredService<IParticipantRepository>();
+        var (evt, first) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Double inscription");
+
+        var ex = await Assert.ThrowsAsync<ParticipantConflictException>(() => participants.AddAsync(new Participant
+        {
+            Id = string.Empty,
+            EventId = evt.Id,
+            Pseudo = "Alice 2",
+            UserId = first.UserId,
+            CreatedAt = Now,
+            UpdatedAt = Now
+        }));
+
+        Assert.Equal(ParticipantCollision.SameAccount, ex.Collision);
+    }
+
+    [Fact]
+    public async Task LegacyPosterPaths_AreListedThenRewritten()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var watchlist = scope.ServiceProvider.GetRequiredService<IWatchlistRepository>();
+        var (evt, participant) = await NewEventWithParticipantAsync(scope.ServiceProvider, "Affiches");
+        var legacyPath = "/api/v1/posters/" + new string('c', 64);
+        var movie = await movies.InsertAsync(NewMovie(evt.Id, participant.Id, 77, "Ancien") with { PosterPath = legacyPath });
+        var userId = ObjectId.GenerateNewId().ToString();
+        await watchlist.AddAsync(NewWatchlistItem(userId, 77, 100, 7.0) with { PosterPath = legacyPath });
+
+        Assert.Contains(await movies.ListWithLegacyPosterPathAsync(1000), m => m.Id == movie.Id);
+        var item = Assert.Single(await watchlist.ListWithLegacyPosterPathAsync(1000), i => i.UserId == userId);
+
+        await movies.UpdatePosterPathAsync(movie.Id, "/api/v1/posters/tmdb/w500/new.jpg");
+        await watchlist.UpdatePosterPathAsync(item.Id, "/api/v1/posters/tmdb/w500/new.jpg");
+
+        Assert.DoesNotContain(await movies.ListWithLegacyPosterPathAsync(1000), m => m.Id == movie.Id);
+        Assert.DoesNotContain(await watchlist.ListWithLegacyPosterPathAsync(1000), i => i.UserId == userId);
+        Assert.Equal("/api/v1/posters/tmdb/w500/new.jpg", (await movies.GetByIdAsync(movie.Id))!.PosterPath);
+    }
+
+    [Fact]
+    public async Task EventAdd_SameCreationRequestTwice_IsRefusedAsAReplay()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var creator = ObjectId.GenerateNewId().ToString();
+        var first = await events.AddAsync(NewEvent("Rejeu") with { CreatorUserId = creator, CreationRequestId = "req-1" });
+
+        await Assert.ThrowsAsync<EventCreationReplayedException>(() =>
+            events.AddAsync(NewEvent("Rejeu") with { CreatorUserId = creator, CreationRequestId = "req-1" }));
+
+        Assert.Equal(first.Id, (await events.FindByCreationRequestAsync(creator, "req-1"))!.Id);
+        Assert.Null(await events.FindByCreationRequestAsync(creator, "req-2"));
+    }
+
+    [Fact]
+    public async Task EventAdd_WithoutCreationRequest_NeverCollides()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var creator = ObjectId.GenerateNewId().ToString();
+
+        await events.AddAsync(NewEvent("Sans clé") with { CreatorUserId = creator });
+        await events.AddAsync(NewEvent("Sans clé") with { CreatorUserId = creator });
+
+        Assert.Equal(2, (await events.ListAllByCreatorUserIdAsync(creator)).Count);
+    }
+
+    [Fact]
+    public async Task NotificationAnonymizeActor_RewritesTheActorOfEveryNotificationItAppearsIn()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var recipient = ObjectId.GenerateNewId().ToString();
+        var handle = "gone" + Guid.NewGuid().ToString("N")[..8];
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = recipient,
+            Type = UserNotificationType.NewFollower,
+            ActorHandle = handle,
+            ActorDisplayName = "Parti",
+            ActorAvatarId = "fox",
+            CreatedAt = Now
+        });
+
+        Assert.Equal(1, await notifications.AnonymizeActorAsync(handle, "Compte supprimé"));
+
+        var kept = Assert.Single(await notifications.ListByUserIdAsync(recipient));
+        Assert.Null(kept.ActorHandle);
+        Assert.Null(kept.ActorAvatarId);
+        Assert.Equal("Compte supprimé", kept.ActorDisplayName);
+    }
+
+    private static async Task<string> AddActorNotificationAsync(IUserNotificationRepository notifications, string actorHandle)
+    {
+        var recipient = ObjectId.GenerateNewId().ToString();
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = recipient,
+            Type = UserNotificationType.NewFollower,
+            ActorHandle = actorHandle,
+            ActorDisplayName = "Acteur",
+            ActorAvatarId = "fox",
+            CreatedAt = Now
+        });
+        return recipient;
+    }
+
+    [Fact]
+    public async Task NotificationRenameActorHandle_PointsEveryNotificationOfThePreviousHandleToTheNewOne()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var previous = "avant" + Guid.NewGuid().ToString("N")[..8];
+        var renamed = "apres" + Guid.NewGuid().ToString("N")[..8];
+        var unrelatedHandle = "autre" + Guid.NewGuid().ToString("N")[..8];
+        var first = await AddActorNotificationAsync(notifications, previous);
+        var second = await AddActorNotificationAsync(notifications, previous);
+        var unrelated = await AddActorNotificationAsync(notifications, unrelatedHandle);
+
+        Assert.Equal(2, await notifications.RenameActorHandleAsync(previous, renamed));
+
+        Assert.Equal(renamed, Assert.Single(await notifications.ListByUserIdAsync(first)).ActorHandle);
+        Assert.Equal(renamed, Assert.Single(await notifications.ListByUserIdAsync(second)).ActorHandle);
+        Assert.Equal(unrelatedHandle, Assert.Single(await notifications.ListByUserIdAsync(unrelated)).ActorHandle);
+    }
+
+    [MongoFact]
+    public async Task NotificationRead_KeepsWorkingOnAFieldWrittenByANewerApiVersion()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var recipient = await AddActorNotificationAsync(notifications, "neuf" + Guid.NewGuid().ToString("N")[..8]);
+        var stored = Assert.Single(await notifications.ListByUserIdAsync(recipient));
+        await SetRawFieldAsync("user_notifications", stored.Id, "fieldFromANewerVersion", "kept");
+
+        var read = await notifications.ListByUserIdAsync(recipient);
+
+        Assert.Equal(stored.Id, Assert.Single(read).Id);
+    }
+
     private static Movie NewMovie(string eventId, string participantId, int tmdbId, string title) => new()
     {
         Id = string.Empty,
@@ -371,6 +906,15 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         await database.GetCollection<BsonDocument>(collection).UpdateOneAsync(
             Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(id)),
             Builders<BsonDocument>.Update.Set(field, value));
+    }
+
+    private async Task UnsetRawFieldAsync(string collection, string id, string field)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+        await database.GetCollection<BsonDocument>(collection).UpdateOneAsync(
+            Builders<BsonDocument>.Filter.Eq("_id", ObjectId.Parse(id)),
+            Builders<BsonDocument>.Update.Unset(field));
     }
 
     [MongoFact]
@@ -499,5 +1043,128 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         Assert.Equal(
             [2, 3],
             (await watchlist.ListMissingFactsAsync(1000)).Where(i => i.UserId == userId).Select(i => i.TmdbId).Order());
+    }
+
+    [Fact]
+    public async Task MigrationLease_IsHeldByOneInstanceUntilReleasedOrExpired()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var history = scope.ServiceProvider.GetRequiredService<IMigrationHistoryRepository>();
+        var migrationId = "contract-lease-" + Guid.NewGuid().ToString("N");
+        var lease = TimeSpan.FromMinutes(30);
+
+        Assert.True(await history.TryAcquireLeaseAsync(migrationId, "instance-a", Now, lease));
+        Assert.False(await history.TryAcquireLeaseAsync(migrationId, "instance-b", Now.AddMinutes(1), lease));
+        Assert.True(await history.TryAcquireLeaseAsync(migrationId, "instance-a", Now.AddMinutes(1), lease));
+        Assert.True(await history.TryAcquireLeaseAsync(migrationId, "instance-b", Now.AddMinutes(32), lease));
+
+        await history.ReleaseLeaseAsync(migrationId, "instance-a");
+        Assert.False(await history.TryAcquireLeaseAsync(migrationId, "instance-a", Now.AddMinutes(33), lease));
+
+        await history.ReleaseLeaseAsync(migrationId, "instance-b");
+        Assert.True(await history.TryAcquireLeaseAsync(migrationId, "instance-a", Now.AddMinutes(33), lease));
+    }
+
+    [Fact]
+    public async Task MigrationLease_ConcurrentClaims_OnlyOneInstanceWins()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var history = scope.ServiceProvider.GetRequiredService<IMigrationHistoryRepository>();
+        var migrationId = "contract-lease-" + Guid.NewGuid().ToString("N");
+
+        var claims = await Task.WhenAll(Enumerable.Range(0, 8).Select(i =>
+            history.TryAcquireLeaseAsync(migrationId, $"instance-{i}", Now, TimeSpan.FromMinutes(30))));
+
+        Assert.Single(claims, won => won);
+    }
+
+    [Fact]
+    public async Task UserCards_CarryTheAvatarTheHandleAndTheProfileVisibility()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var visible = await users.AddAsync(NewUser("cardpublic") with { AvatarId = "avatar-7" });
+        var hidden = await users.AddAsync(NewUser("cardprivate") with { IsProfilePublic = false });
+
+        var cards = await users.ListCardsByIdsAsync([visible.Id, hidden.Id, ObjectId.GenerateNewId().ToString()]);
+
+        Assert.Equal(2, cards.Count);
+        var visibleCard = cards.Single(c => c.Id == visible.Id);
+        Assert.Equal("avatar-7", visibleCard.AvatarId);
+        Assert.Equal(visible.Handle, visibleCard.Handle);
+        Assert.True(visibleCard.IsProfilePublic);
+        Assert.False(cards.Single(c => c.Id == hidden.Id).IsProfilePublic);
+    }
+
+    [Fact]
+    public async Task UserCardsByHandles_FindEachHandleWhateverItsCaseOrPadding()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+        var visible = await users.AddAsync(NewUser("handlepublic") with { AvatarId = "avatar-3" });
+        var hidden = await users.AddAsync(NewUser("handleprivate") with { IsProfilePublic = false });
+
+        var cards = await users.ListCardsByHandlesAsync(
+            [visible.Handle.ToUpperInvariant(), $"  {hidden.Handle} ", hidden.Handle, "nobody" + Guid.NewGuid().ToString("N")[..12], "  "]);
+
+        Assert.Equal(2, cards.Count);
+        var visibleCard = cards.Single(c => c.Id == visible.Id);
+        Assert.Equal(("avatar-3", visible.Handle, true), (visibleCard.AvatarId, visibleCard.Handle, visibleCard.IsProfilePublic));
+        var hiddenCard = cards.Single(c => c.Id == hidden.Id);
+        Assert.Equal((hidden.Handle, false), (hiddenCard.Handle, hiddenCard.IsProfilePublic));
+        Assert.Empty(await users.ListCardsByHandlesAsync([]));
+    }
+
+    [Theory]
+    [InlineData(NotificationDedupChannel.Push)]
+    [InlineData(NotificationDedupChannel.InApp)]
+    public async Task NotificationDedup_ReleasedClaim_CanBeClaimedAgain(NotificationDedupChannel channel)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dedup = scope.ServiceProvider.GetRequiredService<INotificationDedupRepository>();
+        var userId = ObjectId.GenerateNewId().ToString();
+        var key = "evt-" + Guid.NewGuid().ToString("N");
+
+        Assert.True(await dedup.TryClaimAsync(userId, UserNotificationType.EventReminder1h, key, channel));
+        Assert.False(await dedup.TryClaimAsync(userId, UserNotificationType.EventReminder1h, key, channel));
+        await dedup.ReleaseAsync(userId, UserNotificationType.EventReminder1h, key, channel);
+
+        Assert.True(await dedup.TryClaimAsync(userId, UserNotificationType.EventReminder1h, key, channel));
+    }
+
+    [Theory]
+    [InlineData(NotificationDedupChannel.Push)]
+    [InlineData(NotificationDedupChannel.InApp)]
+    public async Task NotificationDedup_WasClaimedSince_SeesOnlyClaimsFromThatTimeOn(NotificationDedupChannel channel)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dedup = scope.ServiceProvider.GetRequiredService<INotificationDedupRepository>();
+        var userId = ObjectId.GenerateNewId().ToString();
+        var key = "evt-" + Guid.NewGuid().ToString("N");
+        var before = DateTimeOffset.UtcNow.AddMinutes(-5);
+
+        Assert.False(await dedup.WasClaimedSinceAsync(userId, UserNotificationType.EventReminder1h, key, channel, before));
+        Assert.True(await dedup.TryClaimAsync(userId, UserNotificationType.EventReminder1h, key, channel));
+
+        Assert.True(await dedup.WasClaimedSinceAsync(userId, UserNotificationType.EventReminder1h, key, channel, before));
+        Assert.False(await dedup.WasClaimedSinceAsync(userId, UserNotificationType.EventReminder1h, key, channel, DateTimeOffset.UtcNow.AddHours(1)));
+        Assert.False(await dedup.WasClaimedSinceAsync(userId, UserNotificationType.EventReminder24h, key, channel, before));
+    }
+
+    [Theory]
+    [InlineData("not-an-id")]
+    [InlineData("zzzzzzzzzzzzzzzzzzzzzzzz")]
+    public async Task ByIdLookups_TreatAMalformedIdAsUnknown(string malformedId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var participants = scope.ServiceProvider.GetRequiredService<IParticipantRepository>();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+
+        Assert.Null(await movies.GetByIdAsync(malformedId));
+        Assert.Null(await movies.GetByIdAndEventIdAsync(malformedId, eventId));
+        Assert.Null(await participants.FindByIdAndEventIdAsync(malformedId, eventId));
+        await notifications.MarkReadAsync(ObjectId.GenerateNewId().ToString(), malformedId);
     }
 }

@@ -14,3 +14,8 @@
 *.eot binary
 *.pdf binary
 *.zip binary
+
+# Barre de langages GitHub : le contrat d'API généré et les dossiers gelés ne sont pas du code
+# écrit pour ce produit, ils faussent la mesure.
+apps/web/src/shared/api/generated/** linguist-generated=true
+archive/** linguist-vendored=true

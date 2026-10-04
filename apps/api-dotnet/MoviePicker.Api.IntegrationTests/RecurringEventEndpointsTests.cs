@@ -92,6 +92,25 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
     }
 
     [Fact]
+    public async Task ClosingARecurringEvent_CreatedLikeTheWebAppWithARequestId_OpensTheNextOccurrence()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var start = TwoDaysAgo();
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/events",
+            new { title = "Ciné-club du jeudi", date = Iso(start), time = "20:00", clientRequestId = Guid.NewGuid().ToString() });
+        var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        await client.PatchAsJsonAsync($"/api/v1/events/{created!.Slug}/config", new { recurrence = "weekly" });
+
+        var close = await client.PostAsJsonAsync($"/api/v1/events/{created.Slug}/close", new { });
+        Assert.Equal(HttpStatusCode.OK, close.StatusCode);
+
+        var mine = await client.GetAsync("/api/v1/events/mine");
+        var list = await mine.Content.ReadFromJsonAsync<MyEventsListResponse>(JsonOptions);
+        Assert.Single(list!.Events, e => e.Date == Iso(start.AddDays(7)));
+    }
+
+    [Fact]
     public async Task ClosingARecurringEvent_CarriesTheConfigurationOverAndKeepsTheSeriesGoing()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);

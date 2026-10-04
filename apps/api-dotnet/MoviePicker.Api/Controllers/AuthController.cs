@@ -6,7 +6,9 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
@@ -24,24 +26,37 @@ namespace MoviePicker.Api.Controllers;
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class AuthController : ControllerBase
 {
-    private static ClaimsPrincipal CreatePrincipal(string userId, string displayName)
+    private static ClaimsPrincipal CreatePrincipal(string userId, string displayName, DateTimeOffset authenticatedAt)
     {
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, userId),
-            new(ClaimTypes.Name, displayName)
+            new(ClaimTypes.Name, displayName),
+            RecentAuthentication.ClaimFor(authenticatedAt)
         };
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         return new ClaimsPrincipal(identity);
     }
 
-    private static AuthenticationProperties AuthProps() =>
+    private static AuthenticationProperties AuthProps(DateTimeOffset now) =>
         new()
         {
             IsPersistent = true,
-            ExpiresUtc = DateTimeOffset.UtcNow.Add(AuthConstants.SessionLifetime),
+            ExpiresUtc = now.Add(AuthConstants.SessionLifetime),
             AllowRefresh = true
         };
+
+    private Task SignInAsync(string userId, string displayName, TimeProvider clock)
+    {
+        var now = clock.GetUtcNow();
+        return HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            CreatePrincipal(userId, displayName, now),
+            AuthProps(now));
+    }
+
+    private bool IsRecentlyAuthenticated(TimeProvider clock) =>
+        RecentAuthentication.IsRecent(User, clock.GetUtcNow());
 
     private static readonly JsonSerializerOptions DataExportJsonOptions = new()
     {
@@ -61,13 +76,11 @@ public sealed class AuthController : ControllerBase
     public async Task<IActionResult> Register(
         [FromBody] RegisterRequest request,
         [FromServices] IRegisterUserHandler handler,
+        [FromServices] TimeProvider clock,
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(request, ct);
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            CreatePrincipal(result.UserId, result.DisplayName),
-            AuthProps());
+        await SignInAsync(result.UserId, result.DisplayName, clock);
         return CreatedAtAction(nameof(Me), null, result);
     }
 
@@ -81,13 +94,11 @@ public sealed class AuthController : ControllerBase
     public async Task<IActionResult> Login(
         [FromBody] LoginRequest request,
         [FromServices] ILoginUserHandler handler,
+        [FromServices] TimeProvider clock,
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(request, ct);
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            CreatePrincipal(result.UserId, result.DisplayName),
-            AuthProps());
+        await SignInAsync(result.UserId, result.DisplayName, clock);
         return Ok(result);
     }
 
@@ -96,17 +107,22 @@ public sealed class AuthController : ControllerBase
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> Logout(
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] LogoutRequest? request,
+        [FromServices] ILogoutHandler handler)
     {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await handler.HandleAsync(userId, request?.PushEndpoint, CancellationToken.None);
         return NoContent();
     }
 
     private const string FrontLoginPath = "/login";
-    private const string FrontAccountPath = "/settings";
+    private const string FrontIntegrationsPath = "/settings/integrations";
     private const string FrontCallbackPath = "/auth/callback";
     private const string ReturnToItemKey = "returnTo";
     private const string OauthErrorQueryKey = "oauthError";
+    private const string ReauthenticationRequiredError = "reauthentication_required";
 
     [HttpGet("oauth/providers")]
     [ProducesResponseType(typeof(OAuthProvidersResponse), StatusCodes.Status200OK)]
@@ -120,10 +136,15 @@ public sealed class AuthController : ControllerBase
     public IActionResult OAuthStart(
         string provider,
         [FromQuery] string? returnTo,
-        [FromServices] OAuthProviderCatalog catalog)
+        [FromServices] OAuthProviderCatalog catalog,
+        [FromServices] IOptions<MoviePickerOptions> options,
+        [FromServices] TimeProvider clock)
     {
         if (!OAuthProviders.TryResolve(provider, out var knownProvider) || !catalog.IsEnabled(knownProvider))
             return NotFound();
+
+        if (User.Identity?.IsAuthenticated == true && !IsRecentlyAuthenticated(clock))
+            return Redirect(BuildFrontUrl(options.Value.ResolvedWebBaseUrl(), FrontIntegrationsPath, (OauthErrorQueryKey, ReauthenticationRequiredError)));
 
         var props = new AuthenticationProperties
         {
@@ -142,6 +163,8 @@ public sealed class AuthController : ControllerBase
         [FromServices] IOAuthLinkHandler linkHandler,
         [FromServices] OAuthProviderCatalog catalog,
         [FromServices] IOptions<MoviePickerOptions> options,
+        [FromServices] TimeProvider clock,
+        [FromServices] ILogger<AuthController> logger,
         CancellationToken ct)
     {
         var webBase = options.Value.ResolvedWebBaseUrl();
@@ -166,27 +189,35 @@ public sealed class AuthController : ControllerBase
 
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!string.IsNullOrEmpty(currentUserId))
+            return await LinkToSignedInAccountAsync(currentUserId, knownProvider, info, linkHandler, clock, webBase, logger, ct);
+
+        OAuthOutcome loginOutcome;
+        try
         {
-            var linkOutcome = await linkHandler.HandleAsync(currentUserId, info, ct);
-            return linkOutcome.Kind == OAuthOutcomeKind.Linked
-                ? Redirect(BuildFrontUrl(webBase, FrontAccountPath, ("oauthLinked", knownProvider)))
-                : Redirect(BuildFrontUrl(webBase, FrontAccountPath, (OauthErrorQueryKey, "identity_taken")));
+            loginOutcome = await loginHandler.HandleAsync(info, externalResult.Properties?.GetTokenValue("access_token"), ct);
+        }
+        catch (MoviePickerException ex)
+        {
+            logger.LogWarning(ex, "OAuth callback: {Provider} sign-in failed ({Reason})", knownProvider, ex.Reason);
+            return Redirect(BuildFrontUrl(
+                webBase,
+                FrontLoginPath,
+                (OauthErrorQueryKey, ex.Reason ?? ErrorCodes.OAuthLinkFailed),
+                (ReturnToItemKey, returnTo)));
         }
 
-        var accessToken = externalResult.Properties?.GetTokenValue("access_token");
-        var loginOutcome = await loginHandler.HandleAsync(info, accessToken, ct);
         if (loginOutcome.Kind != OAuthOutcomeKind.SignedIn || loginOutcome.User is null)
         {
-            var errorCode = loginOutcome.Kind == OAuthOutcomeKind.PasswordAccountRequiresManualLink
-                ? "account_exists"
-                : "email_not_verified";
+            var errorCode = loginOutcome.Kind switch
+            {
+                OAuthOutcomeKind.PasswordAccountRequiresManualLink => "account_exists",
+                OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink => "identity_unlinked",
+                _ => "email_not_verified"
+            };
             return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, errorCode), (ReturnToItemKey, returnTo)));
         }
 
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            CreatePrincipal(loginOutcome.User.Id, loginOutcome.User.DisplayName),
-            AuthProps());
+        await SignInAsync(loginOutcome.User.Id, loginOutcome.User.DisplayName, clock);
 
         return Redirect(BuildFrontUrl(
             webBase,
@@ -194,6 +225,41 @@ public sealed class AuthController : ControllerBase
             (ReturnToItemKey, returnTo),
             ("provider", knownProvider),
             ("event", loginOutcome.IsNewAccount ? "signup" : "login")));
+    }
+
+    private async Task<IActionResult> LinkToSignedInAccountAsync(
+        string currentUserId,
+        string provider,
+        ExternalLoginInfo info,
+        IOAuthLinkHandler linkHandler,
+        TimeProvider clock,
+        string webBase,
+        ILogger<AuthController> logger,
+        CancellationToken ct)
+    {
+        if (!IsRecentlyAuthenticated(clock))
+            return Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, ReauthenticationRequiredError)));
+
+        OAuthOutcome linkOutcome;
+        try
+        {
+            linkOutcome = await linkHandler.HandleAsync(currentUserId, info, ct);
+        }
+        catch (MoviePickerException ex)
+        {
+            logger.LogWarning(ex, "OAuth callback: {Provider} link failed ({Reason})", provider, ex.Reason);
+            return Redirect(BuildFrontUrl(
+                webBase,
+                FrontIntegrationsPath,
+                (OauthErrorQueryKey, ex.Reason ?? ErrorCodes.OAuthLinkFailed)));
+        }
+
+        return linkOutcome.Kind switch
+        {
+            OAuthOutcomeKind.Linked => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, ("oauthLinked", provider))),
+            OAuthOutcomeKind.ProviderAlreadyLinked => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, "provider_already_linked"))),
+            _ => Redirect(BuildFrontUrl(webBase, FrontIntegrationsPath, (OauthErrorQueryKey, "identity_taken")))
+        };
     }
 
     [HttpDelete("me/identities/{provider}")]
@@ -212,7 +278,7 @@ public sealed class AuthController : ControllerBase
             return Unauthorized();
         if (!OAuthProviders.TryResolve(provider, out var knownProvider))
             return NotFound();
-        await handler.HandleAsync(userId, knownProvider, ct);
+        await handler.HandleAsync(userId, knownProvider, AuthSessionKey.Of(HttpContext), ct);
         return NoContent();
     }
 
@@ -290,11 +356,13 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> ChangePassword(
         [FromBody] ChangePasswordRequest? request,
         [FromServices] IChangePasswordHandler handler,
+        [FromServices] TimeProvider clock,
         CancellationToken ct)
     {
         if (request is null)
@@ -304,7 +372,7 @@ public sealed class AuthController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        await handler.HandleAsync(userId, request, ct);
+        await handler.HandleAsync(userId, request, IsRecentlyAuthenticated(clock), ct);
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -312,6 +380,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpGet("me/export")]
+    [RequestTimeout(RequestTimeoutPolicies.LongRunning)]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.AuthExportDataPolicy)]
     [SharedRateLimit(RateLimitingExtensions.AuthExportDataPolicy)]

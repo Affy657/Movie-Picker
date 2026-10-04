@@ -24,35 +24,9 @@
   white-space: nowrap;
 }
 
-.filterBtnLabel {
-  line-height: var(--leading-none);
-  transform: translateY(var(--text-optical-nudge));
-}
 
-.filterBtnActive {
-  color: var(--color-primary-text);
-  background: var(--color-primary-soft);
-  border-color: var(--color-primary);
-}
 
-.badgeCount {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: var(--space-5);
-  height: var(--space-5);
-  padding: 0 var(--space-1);
-  border-radius: var(--radius-pill);
-  background: var(--color-primary);
-  color: var(--color-primary-contrast);
-  font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--leading-none);
-}
 
-.badgeCountText {
-  transform: translateY(var(--text-optical-nudge));
-}
 
 .divider {
   width: 1px;
@@ -66,7 +40,7 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--font-size-xs);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
   white-space: nowrap;
 }
 

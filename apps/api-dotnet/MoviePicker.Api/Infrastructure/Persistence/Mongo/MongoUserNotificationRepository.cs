@@ -76,6 +76,9 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
 
     public async Task MarkReadAsync(string userId, string notificationId, CancellationToken ct = default)
     {
+        if (!MongoObjectIds.IsValid(notificationId))
+            return;
+
         var update = Builders<UserNotificationDocument>.Update.Set(x => x.IsRead, true);
         await _collection.UpdateOneAsync(
             x => x.Id == notificationId && x.UserId == userId, update, cancellationToken: ct);
@@ -86,6 +89,33 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
         var count = await _collection.CountDocumentsAsync(
             x => x.UserId == userId && x.Type == (int)type && x.EventId == eventId,
             cancellationToken: ct);
+        return count > 0;
+    }
+
+    public async Task<bool> ExistsSinceAsync(
+        string userId,
+        UserNotificationType type,
+        string eventId,
+        DateTimeOffset since,
+        CancellationToken ct = default)
+    {
+        var sinceUtc = since.UtcDateTime;
+        var count = await _collection.CountDocumentsAsync(
+            x => x.UserId == userId && x.Type == (int)type && x.EventId == eventId && x.CreatedAt >= sinceUtc,
+            cancellationToken: ct);
+        return count > 0;
+    }
+
+    public async Task<bool> ExistsFromActorAsync(
+        string userId,
+        UserNotificationType type,
+        string actorHandle,
+        CancellationToken ct = default)
+    {
+        var count = await _collection.CountDocumentsAsync(
+            x => x.UserId == userId && x.Type == (int)type && x.ActorHandle == actorHandle,
+            new CountOptions { Limit = 1 },
+            ct);
         return count > 0;
     }
 
@@ -104,6 +134,31 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
             return 0;
         var res = await _collection.DeleteManyAsync(x => x.UserId == userId, ct);
         return res.IsAcknowledged ? res.DeletedCount : 0;
+    }
+
+    public async Task<long> AnonymizeActorAsync(string actorHandle, string anonymizedName, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(actorHandle))
+            return 0;
+        var res = await _collection.UpdateManyAsync(
+            x => x.ActorHandle == actorHandle,
+            Builders<UserNotificationDocument>.Update
+                .Set(x => x.ActorHandle, null)
+                .Set(x => x.ActorDisplayName, anonymizedName)
+                .Set(x => x.ActorAvatarId, null),
+            cancellationToken: ct);
+        return res.IsAcknowledged ? res.ModifiedCount : 0;
+    }
+
+    public async Task<long> RenameActorHandleAsync(string previousHandle, string newHandle, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(previousHandle) || string.IsNullOrWhiteSpace(newHandle))
+            return 0;
+        var res = await _collection.UpdateManyAsync(
+            x => x.ActorHandle == previousHandle,
+            Builders<UserNotificationDocument>.Update.Set(x => x.ActorHandle, newHandle),
+            cancellationToken: ct);
+        return res.IsAcknowledged ? res.ModifiedCount : 0;
     }
 
     public async Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)

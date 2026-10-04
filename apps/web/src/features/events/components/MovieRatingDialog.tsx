@@ -132,7 +132,7 @@ export default function MovieRatingDialog({
         titleId={titleId}
         title={title}
         onClose={onClose}
-        closeLabel={t('common.close')}
+        closeAriaLabel={t('common.close')}
       />
       <div className={styles.modalBody}>{body}</div>
       {footer ? <div className={styles.modalFooter}>{footer}</div> : null}

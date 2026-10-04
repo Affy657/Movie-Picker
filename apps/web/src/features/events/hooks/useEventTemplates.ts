@@ -22,6 +22,12 @@ type Options = {
   onApply: (template: EventTemplateData) => void;
 };
 
+type TemplateUpdate = { id: string; body: SaveEventTemplateBody };
+
+function putTemplate({ id, body }: TemplateUpdate) {
+  return updateEventTemplate(id, body);
+}
+
 export function useEventTemplates(enabled: boolean, { draft, onError, onApply }: Options) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -56,9 +62,18 @@ export function useEventTemplates(enabled: boolean, { draft, onError, onApply }:
   });
 
   const updateMutation = useMutation({
-    mutationFn: (variables: { id: string; body: SaveEventTemplateBody }) =>
-      updateEventTemplate(variables.id, variables.body),
+    mutationFn: putTemplate,
     onSuccess: succeed,
+    onError: fail,
+  });
+
+  const renameMutation = useMutation({
+    mutationFn: putTemplate,
+    onSuccess: (template) => {
+      onError(null);
+      setLastSaved((current) => (current?.id === template.id ? template : current));
+      invalidate();
+    },
     onError: fail,
   });
 
@@ -84,7 +99,11 @@ export function useEventTemplates(enabled: boolean, { draft, onError, onApply }:
     appliedTemplate,
     matchingTemplate,
     lastSaved,
-    isBusy: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    isBusy:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      renameMutation.isPending ||
+      deleteMutation.isPending,
     apply: (template: EventTemplateData) => {
       setAppliedId(template.id);
       onApply(template);
@@ -93,7 +112,7 @@ export function useEventTemplates(enabled: boolean, { draft, onError, onApply }:
     updateApplied: (template: EventTemplateData) =>
       updateMutation.mutate({ id: template.id, body: { ...draft, name: template.name } }),
     rename: (template: EventTemplateData, name: string) =>
-      updateMutation.mutate({ id: template.id, body: { ...templateToDraft(template), name } }),
+      renameMutation.mutate({ id: template.id, body: { ...templateToDraft(template), name } }),
     remove: (template: EventTemplateData) => deleteMutation.mutate(template.id),
     forget: useCallback(() => setAppliedId(null), []),
   };

@@ -77,7 +77,6 @@ public sealed class AddFavoriteHandlerTests
         Assert.Equal("1995", written.Year);
         Assert.Equal(TmdbPosterUrlNormalizer.ToPublicPosterPath(FavoriteFixtures.TmdbPoster), written.PosterPath);
         _users.Verify(u => u.AddFavoriteAsync("u1", It.IsAny<FavoriteTitle>(), FavoriteTitle.MaxPerUser, FavoriteFixtures.Now, It.IsAny<CancellationToken>()));
-        _posters.Verify(p => p.RegisterTmdbSourceAsync(FavoriteFixtures.TmdbPoster, It.IsAny<CancellationToken>()));
     }
 
     [Fact]

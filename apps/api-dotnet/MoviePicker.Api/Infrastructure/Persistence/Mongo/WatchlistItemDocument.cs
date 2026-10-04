@@ -18,7 +18,7 @@ public sealed class WatchlistItemDocument
     public int TmdbId { get; set; }
 
     [BsonElement("mediaType")]
-    public string MediaType { get; set; } = "movie";
+    public string MediaType { get; set; } = MovieMapper.StoredMovieMediaType;
 
     [BsonElement("title")]
     public string Title { get; set; } = string.Empty;

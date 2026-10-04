@@ -10,7 +10,7 @@ describe('DialogTitleBar', () => {
         titleId="share-title"
         title="Partager"
         onClose={vi.fn()}
-        closeLabel="Fermer"
+        closeAriaLabel="Fermer"
       />
     );
 
@@ -20,9 +20,24 @@ describe('DialogTitleBar', () => {
 
   it('the close button carries its label and triggers onClose', async () => {
     const onClose = vi.fn();
-    render(<DialogTitleBar titleId="t" title="Titre" onClose={onClose} closeLabel="Fermer" />);
+    render(<DialogTitleBar titleId="t" title="Titre" onClose={onClose} closeAriaLabel="Fermer" />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Fermer' }));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders a detail under the title, outside the heading', () => {
+    render(
+      <DialogTitleBar
+        titleId="t"
+        title="Films à confirmer"
+        detail={<span data-testid="progress">1 sur 3</span>}
+        onClose={vi.fn()}
+        closeAriaLabel="Fermer"
+      />
+    );
+
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Films à confirmer');
+    expect(screen.getByTestId('progress').closest('h2')).toBeNull();
   });
 });

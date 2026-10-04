@@ -11,6 +11,7 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
     private readonly IMovieRepository _movieRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
     public SetMovieWheelExclusionHandler(
@@ -18,12 +19,14 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
         IMovieRepository movieRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
+        IUnitOfWork unitOfWork,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _movieRepository = movieRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
+        _unitOfWork = unitOfWork;
         _clock = clock;
     }
 
@@ -50,7 +53,13 @@ public sealed class SetMovieWheelExclusionHandler : ISetMovieWheelExclusionHandl
         if (movie.ExcludedFromWheel == request.Excluded)
             return;
 
-        await _movieRepository.UpdateWheelExclusionAsync(movieId, request.Excluded, ct);
-        await _eventRepository.MarkChangedAsync(evt.Id, ct);
+        await _unitOfWork.ExecuteAsync(
+            async token =>
+            {
+                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                await _movieRepository.UpdateWheelExclusionAsync(movieId, request.Excluded, token);
+                await _eventRepository.UpdateAsync(current with { UpdatedAt = _clock.GetUtcNow() }, token);
+            },
+            ct);
     }
 }

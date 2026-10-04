@@ -32,7 +32,7 @@
   display: block;
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-narrow);
+  letter-spacing: var(--tracking-tight);
   line-height: var(--leading-tight);
 }
 
@@ -40,7 +40,7 @@
   display: block;
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }
 
 .flame {
@@ -50,8 +50,8 @@
   gap: var(--space-1-5);
   padding: var(--space-1-5) var(--space-3);
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--color-streak) 16%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-streak) 35%, transparent);
+  background: var(--color-streak-bg);
+  border: 1px solid var(--color-streak-border);
   color: var(--color-streak-fg);
   font-weight: var(--font-weight-extrabold);
   font-size: var(--font-size-sm);
@@ -70,9 +70,6 @@
 
 .stat {
   padding: var(--space-3) var(--space-2-5);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-sunken);
-  border: 1px solid var(--color-border-subtle);
   text-align: center;
 }
 
@@ -80,7 +77,7 @@
   font-family: var(--font-mono);
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-narrow);
+  letter-spacing: var(--tracking-tight);
   font-variant-numeric: tabular-nums;
   line-height: var(--leading-tight);
 }
@@ -103,10 +100,8 @@
 }
 
 .lastSeenLabel {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   font-family: var(--font-mono);
   font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-extra);
-  text-transform: uppercase;
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }

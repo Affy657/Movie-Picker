@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Tmdb;
 using Xunit;
 
@@ -73,7 +74,7 @@ public sealed class StubTmdbMovieSearchShowcaseTests
     [Fact]
     public async Task GetRecommendationsAsync_ReturnsSixFilmsTiedToTheSeed()
     {
-        var items = await _stub.GetRecommendationsAsync(27_205);
+        var items = await _stub.GetRecommendationsAsync(27_205, MovieMediaType.Movie);
 
         Assert.Equal(6, items.Count);
         Assert.All(items, item => Assert.Contains("27205", item.Title));

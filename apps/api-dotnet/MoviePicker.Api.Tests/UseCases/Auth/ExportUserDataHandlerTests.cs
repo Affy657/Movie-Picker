@@ -30,6 +30,7 @@ public sealed class ExportUserDataHandlerTests
         public InMemoryPushSubscriptionRepository Push { get; } = new();
         public InMemoryWatchlistRepository Watchlist { get; } = new();
         public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
+        public InMemoryMovieRepository Movies { get; } = new();
 
         public ExportUserDataHandler CreateHandler() =>
             new(
@@ -44,6 +45,7 @@ public sealed class ExportUserDataHandlerTests
                 Push,
                 Watchlist,
                 AvatarPhotos,
+                Movies,
                 new FakeTimeProvider(TestEpoch));
     }
 
@@ -191,5 +193,55 @@ public sealed class ExportUserDataHandlerTests
         Assert.Equal(
             [(603, "movie", "Matrix", "1999"), (1920, "tv", "Twin Peaks", "1990")],
             export.Favorites.Select(x => (x.TmdbId, x.MediaType, x.Title, x.Year)));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheProposedFilmsTheLetterboxdAccountAndTheTemplates()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "neo@example.com",
+            DisplayName = "Neo",
+            Handle = "neo",
+            RatingScale = RatingScale.Ten,
+            LetterboxdUsername = "neo-lb",
+            EventTemplates =
+            [
+                new EventTemplate
+                {
+                    Id = "tpl1",
+                    Name = "Vendredi frissons",
+                    Config = new EventConfig { Theme = "🎃 Horreur" },
+                    CreatedAt = TestEpoch.AddDays(-5)
+                }
+            ]
+        });
+        var joined = await f.Events.AddAsync(new Event { Title = "Soirée amie", Slug = "soiree-amie", CreatorUserId = "someone" });
+        var participant = await f.Participants.AddAsync(new Participant { EventId = joined.Id, Pseudo = "Neo", UserId = user.Id });
+        await f.Movies.InsertAsync(new Movie
+        {
+            EventId = joined.Id,
+            ParticipantId = participant.Id,
+            TmdbId = 603,
+            Title = "Matrix",
+            Year = "1999",
+            PitchNote = "Pilule rouge ou bleue ?",
+            CreatedAt = TestEpoch.AddDays(-2)
+        });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.Equal("Ten", export.Profile.RatingScale);
+        Assert.Equal("neo-lb", export.Profile.LetterboxdUsername);
+        var template = Assert.Single(export.Profile.EventTemplates);
+        Assert.Equal("Vendredi frissons", template.Name);
+        Assert.Equal("🎃 Horreur", template.Theme);
+        var proposed = Assert.Single(Assert.Single(export.Participations).ProposedMovies);
+        Assert.Equal("Matrix", proposed.Title);
+        Assert.Equal(603, proposed.TmdbId);
+        Assert.Equal("movie", proposed.MediaType);
+        Assert.Equal("Pilule rouge ou bleue ?", proposed.PitchNote);
+
     }
 }

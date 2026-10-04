@@ -7,7 +7,7 @@ import { buildSystemBrowserOpenUrl, isKnownInAppBrowser } from '@/shared/utils/i
 import { safeLocalStorageGet, safeLocalStorageSet } from '@/shared/utils/safeStorage';
 import styles from './InAppBrowserBanner.module.css';
 import Button, { buttonClass } from '@/shared/components/Button';
-import TopNotice from '@/shared/components/TopNotice';
+import Notice from '@/shared/components/Notice';
 
 export const IN_APP_BANNER_DISMISSED_KEY = 'moviepicker_in_app_browser_dismissed_at';
 export const IN_APP_BANNER_DISMISSAL_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -44,10 +44,10 @@ export default function InAppBrowserBanner() {
   const systemBrowserUrl = buildSystemBrowserOpenUrl(currentUrl, navigator.userAgent);
 
   return (
-    <TopNotice
+    <Notice
       title={t('inAppBrowser.banner.title')}
       description={t('inAppBrowser.banner.description')}
-      onDismiss={dismiss}
+      onClose={dismiss}
     >
       {systemBrowserUrl ? (
         <a
@@ -67,6 +67,6 @@ export default function InAppBrowserBanner() {
       >
         {copied ? t('inAppBrowser.banner.copied') : t('inAppBrowser.banner.copyLink')}
       </Button>
-    </TopNotice>
+    </Notice>
   );
 }

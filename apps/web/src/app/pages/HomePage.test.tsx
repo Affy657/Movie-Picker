@@ -242,6 +242,90 @@ describe('HomePage', () => {
     expect(await screen.findByText(/aucune soirée active/i)).toBeInTheDocument();
   });
 
+  function watchlistAddRecorder() {
+    const bodies: unknown[] = [];
+    const handler = http.post(`${TEST_API_V1}/watchlist`, async ({ request }) => {
+      bodies.push(await request.json());
+      return new HttpResponse(null, { status: 204 });
+    });
+    return { bodies, handler };
+  }
+
+  it('hover, signed-in: adding a showcase card to the watchlist sends its genres', async () => {
+    stubHoverCapability();
+    const added = watchlistAddRecorder();
+    server.use(
+      authedUserHandler,
+      showcaseHandler,
+      collectionsHandler,
+      ...personalHandlers,
+      added.handler
+    );
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(
+      await screen.findByRole('button', { name: /plus d’actions pour «\s*trending 1\s*»/i })
+    );
+    await user.click(screen.getByRole('menuitem', { name: 'Ajouter à ma liste' }));
+
+    await waitFor(() =>
+      expect(added.bodies).toEqual([
+        expect.objectContaining({ tmdbId: 1000, title: 'trending 1', genreIds: [18] }),
+      ])
+    );
+  });
+
+  it('signed-in: adding from the details of a showcase card sends its genres', async () => {
+    const added = watchlistAddRecorder();
+    server.use(
+      authedUserHandler,
+      showcaseHandler,
+      collectionsHandler,
+      detailsHandler,
+      ...personalHandlers,
+      added.handler
+    );
+    renderPage();
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /voir les détails de « trending 1 »/i })
+    );
+    await screen.findByRole('heading', { name: 'trending 1', level: 2 });
+    await userEvent.click(screen.getByRole('button', { name: 'Ajouter à ma liste' }));
+
+    await waitFor(() =>
+      expect(added.bodies).toEqual([
+        expect.objectContaining({ tmdbId: 1000, title: 'trending 1', genreIds: [18] }),
+      ])
+    );
+  });
+
+  it('signed-in: adding from the details of a friends row card sends its genres', async () => {
+    const added = watchlistAddRecorder();
+    server.use(
+      authedUserHandler,
+      showcaseHandler,
+      collectionsHandler,
+      detailsHandler,
+      ...personalHandlers,
+      added.handler
+    );
+    renderPage();
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /voir les détails de « film d'un ami »/i })
+    );
+    await screen.findByRole('heading', { name: "Film d'un ami", level: 2 });
+    await userEvent.click(screen.getByRole('button', { name: 'Ajouter à ma liste' }));
+
+    await waitFor(() =>
+      expect(added.bodies).toEqual([
+        expect.objectContaining({ tmdbId: 502, title: "Film d'un ami", genreIds: [18] }),
+      ])
+    );
+  });
+
   it('a ?film address opens the details from TMDB alone, even for a title outside the rails', async () => {
     server.use(
       authMeGuestHandler,

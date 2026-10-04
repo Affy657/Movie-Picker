@@ -28,6 +28,7 @@
          suppressed in ../Directory.Build.props). -->
     <PackageReference Include="Snappier" Version="1.3.1" />
     <PackageReference Include="SharpCompress" Version="0.50.4" />
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.34.0.3385" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
   </ItemGroup>
 
 </Project>

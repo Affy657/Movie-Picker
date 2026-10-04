@@ -37,13 +37,13 @@ export function LibraryMovieRowHeader<K extends string>({
 }>) {
   const single = (sort?: MovieTableSort<K>) => (sort ? [sort] : []);
   const columns: MovieTableColumn<K>[] = [
-    {},
-    { sorts: sorts.title, inset: true },
-    { sorts: single(sorts.vote), align: 'end' },
-    { sorts: single(sorts.runtime), align: 'end' },
-    { sorts: single(sorts.year), align: 'end' },
-    { sorts: single(sorts.availability), inset: true },
-    {},
+    { id: 'poster' },
+    { id: 'title', sorts: sorts.title, inset: true },
+    { id: 'vote', sorts: single(sorts.vote), align: 'end' },
+    { id: 'runtime', sorts: single(sorts.runtime), align: 'end' },
+    { id: 'year', sorts: single(sorts.year), align: 'end' },
+    { id: 'availability', sorts: single(sorts.availability), inset: true },
+    { id: 'actions' },
   ];
   return (
     <MovieTableHeader
@@ -70,6 +70,36 @@ interface LibraryMovieRowProps {
   isMobile?: boolean;
   onOpenDetails: () => void;
   kebab?: ReactNode;
+}
+
+function LibraryRowMeta({ badge, genres }: Readonly<{ badge?: ReactNode; genres: string[] }>) {
+  return (
+    <>
+      {badge != null ? <span className={styles.badge}>{badge}</span> : null}
+      {genres.length > 0 ? <span className={styles.genres}>{genres.join(', ')}</span> : null}
+    </>
+  );
+}
+
+function MobileFacts({
+  year,
+  runtimeLabel,
+  voteLabel,
+  availability,
+}: Readonly<{
+  year?: string;
+  runtimeLabel: string | null;
+  voteLabel: string | null;
+  availability?: ReactNode;
+}>) {
+  return (
+    <div className={table.mobileFacts}>
+      {year ? <span>{year}</span> : null}
+      {runtimeLabel ? <span>{runtimeLabel}</span> : null}
+      {voteLabel ? <span>{voteLabel}</span> : null}
+      {availability ? <span className={styles.aboveTrigger}>{availability}</span> : null}
+    </div>
+  );
 }
 
 export default function LibraryMovieRow({
@@ -107,12 +137,7 @@ export default function LibraryMovieRow({
       {title}
     </h3>
   );
-  const meta = hasMeta ? (
-    <>
-      {badge != null ? <span className={styles.badge}>{badge}</span> : null}
-      {genres.length > 0 ? <span className={styles.genres}>{genres.join(', ')}</span> : null}
-    </>
-  ) : null;
+  const meta = hasMeta ? <LibraryRowMeta badge={badge} genres={genres} /> : null;
 
   if (isMobile) {
     return (
@@ -123,12 +148,12 @@ export default function LibraryMovieRow({
         </div>
         <div className={table.mobileContent}>
           <div className={table.mobileTitleRow}>{heading}</div>
-          <div className={table.mobileFacts}>
-            {year ? <span>{year}</span> : null}
-            {runtimeLabel ? <span>{runtimeLabel}</span> : null}
-            {voteLabel ? <span>{voteLabel}</span> : null}
-            {availability ? <span className={styles.aboveTrigger}>{availability}</span> : null}
-          </div>
+          <MobileFacts
+            year={year}
+            runtimeLabel={runtimeLabel}
+            voteLabel={voteLabel}
+            availability={availability}
+          />
           {meta ? <div className={clsx(table.metaRow, styles.mobileMeta)}>{meta}</div> : null}
         </div>
         <span className={table.disclosure} aria-hidden>

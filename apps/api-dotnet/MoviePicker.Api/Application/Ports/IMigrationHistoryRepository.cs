@@ -9,4 +9,13 @@ public interface IMigrationHistoryRepository
         long affectedCount,
         DateTimeOffset appliedAt,
         CancellationToken ct = default);
+
+    Task<bool> TryAcquireLeaseAsync(
+        string migrationId,
+        string holder,
+        DateTimeOffset now,
+        TimeSpan duration,
+        CancellationToken ct = default);
+
+    Task ReleaseLeaseAsync(string migrationId, string holder, CancellationToken ct = default);
 }

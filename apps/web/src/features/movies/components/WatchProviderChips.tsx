@@ -84,6 +84,31 @@ function OverflowToggle({
   );
 }
 
+type GroupLabelProps = {
+  type: string;
+  label: string;
+  labelStyle: 'icon' | 'text';
+  showTypeIcon: boolean;
+  compact: boolean;
+};
+
+function GroupLabel({ type, label, labelStyle, showTypeIcon, compact }: Readonly<GroupLabelProps>) {
+  if (labelStyle === 'text') {
+    return (
+      <dt className={styles.labelText}>
+        <ModeIcon type={type} size={ICON_SIZE.sm} />
+        <span>{label}</span>
+      </dt>
+    );
+  }
+  if (!showTypeIcon) return null;
+  return (
+    <dt className={styles.label} aria-label={label} title={label}>
+      <ModeIcon type={type} size={compact ? ICON_SIZE.md : ICON_SIZE.lg} />
+    </dt>
+  );
+}
+
 export default function WatchProviderChips({
   providers,
   className,
@@ -194,16 +219,13 @@ export default function WatchProviderChips({
               separators && i > 0 && styles.groupSep
             )}
           >
-            {labelStyle === 'text' ? (
-              <dt className={styles.labelText}>
-                <ModeIcon type={g.type} size={ICON_SIZE.sm} />
-                <span>{label}</span>
-              </dt>
-            ) : showTypeIcon ? (
-              <dt className={styles.label} aria-label={label} title={label}>
-                <ModeIcon type={g.type} size={compact ? ICON_SIZE.md : ICON_SIZE.lg} />
-              </dt>
-            ) : null}
+            <GroupLabel
+              type={g.type}
+              label={label}
+              labelStyle={labelStyle}
+              showTypeIcon={showTypeIcon}
+              compact={compact}
+            />
             <dd className={styles.logos}>
               {limited.map(renderChip)}
               {hadOverflow ? (

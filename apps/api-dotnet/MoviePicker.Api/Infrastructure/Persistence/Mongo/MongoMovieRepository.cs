@@ -19,6 +19,9 @@ public sealed class MongoMovieRepository : IMovieRepository
 
     public async Task<Movie?> GetByIdAsync(string movieId, CancellationToken ct = default)
     {
+        if (!MongoObjectIds.IsValid(movieId))
+            return null;
+
         var doc = await _collection.Find(x => x.Id == movieId).FirstOrDefaultAsync(ct);
         return doc is null ? null : MovieMapper.ToDomain(doc);
     }
@@ -38,8 +41,9 @@ public sealed class MongoMovieRepository : IMovieRepository
 
     public async Task<Movie?> GetByIdAndEventIdAsync(string movieId, string eventId, CancellationToken ct = default)
     {
-        if (!ObjectId.TryParse(movieId, out _))
+        if (!MongoObjectIds.IsValid(movieId))
             return null;
+
         var doc = await _collection.Find(x => x.Id == movieId && x.EventId == eventId).FirstOrDefaultAsync(ct);
         return doc is null ? null : MovieMapper.ToDomain(doc);
     }
@@ -73,12 +77,17 @@ public sealed class MongoMovieRepository : IMovieRepository
         return count > 0;
     }
 
-    public async Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, CancellationToken ct = default)
+    public async Task<bool> ExistsByEventAndTitleCaseInsensitiveAsync(string eventId, string title, string? year, CancellationToken ct = default)
     {
         var escaped = Regex.Escape(title);
+        var normalizedYear = MovieYear.Normalize(year);
+        var sameYear = normalizedYear is null
+            ? Builders<MovieDocument>.Filter.In("year", new BsonValue[] { BsonNull.Value, string.Empty })
+            : Builders<MovieDocument>.Filter.Eq(x => x.Year, normalizedYear);
         var filter = Builders<MovieDocument>.Filter.And(
             Builders<MovieDocument>.Filter.Eq(x => x.EventId, eventId),
-            Builders<MovieDocument>.Filter.Regex(x => x.Title, new BsonRegularExpression($"^{escaped}$", "i")));
+            Builders<MovieDocument>.Filter.Regex(x => x.Title, new BsonRegularExpression($"^{escaped}$", "i")),
+            sameYear);
         var count = await _collection.CountDocumentsAsync(filter, cancellationToken: ct);
         return count > 0;
     }
@@ -96,7 +105,15 @@ public sealed class MongoMovieRepository : IMovieRepository
         var doc = MovieMapper.ToDocument(movie);
         if (string.IsNullOrEmpty(doc.Id))
             doc.Id = ObjectId.GenerateNewId().ToString();
-        await _collection.InsertOneAsync(doc, cancellationToken: ct);
+        try
+        {
+            await _collection.InsertOneAsync(doc, cancellationToken: ct);
+        }
+        catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
+        {
+            throw Errors.MovieAlreadyProposed();
+        }
+
         return MovieMapper.ToDomain(doc);
     }
 
@@ -158,6 +175,24 @@ public sealed class MongoMovieRepository : IMovieRepository
         var filter = Builders<MovieDocument>.Filter.In(x => x.ParticipantId, ids);
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(MovieMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<Movie>> ListWithLegacyPosterPathAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return [];
+
+        var filter = Builders<MovieDocument>.Filter.Regex(x => x.PosterPath, LegacyPosterPaths.Pattern);
+        var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
+        return docs.ConvertAll(MovieMapper.ToDomain);
+    }
+
+    public async Task UpdatePosterPathAsync(string movieId, string? posterPath, CancellationToken ct = default)
+    {
+        var update = Builders<MovieDocument>.Update
+            .Set(x => x.PosterPath, posterPath)
+            .Set(x => x.UpdatedAt, DateTime.UtcNow);
+        await _collection.UpdateOneAsync(x => x.Id == movieId, update, cancellationToken: ct);
     }
 
     public async Task<IReadOnlyList<Movie>> ListMissingGenresAsync(int limit, CancellationToken ct = default)
@@ -248,6 +283,12 @@ public sealed class MongoMovieRepository : IMovieRepository
         public List<int>? GenreIds { get; set; }
     }
 
+    private static readonly BsonDocument NormalizeMediaTypeStage = new(
+        "$set",
+        new BsonDocument(
+            "mediaType",
+            new BsonDocument("$toLower", new BsonDocument("$trim", new BsonDocument("input", "$mediaType")))));
+
     public async Task<IReadOnlyList<ProposedMovieRanking>> ListMostProposedAsync(
         int minEventCount,
         int limit,
@@ -258,11 +299,14 @@ public sealed class MongoMovieRepository : IMovieRepository
 
         var threshold = Math.Max(minEventCount, 1);
         var rows = await _collection.Aggregate()
+            .AppendStage<MovieDocument>(NormalizeMediaTypeStage)
             .Group(
                 doc => new MovieInEventKey
                 {
                     TmdbId = doc.TmdbId,
-                    MediaType = doc.MediaType,
+                    MediaType = doc.MediaType == MovieMapper.StoredTvMediaType
+                        ? MovieMapper.StoredTvMediaType
+                        : MovieMapper.StoredMovieMediaType,
                     EventId = doc.EventId,
                 },
                 g => new MovieInEventRow
@@ -286,6 +330,7 @@ public sealed class MongoMovieRepository : IMovieRepository
                 })
             .Match(row => row.EventCount >= threshold)
             .SortByDescending(row => row.EventCount)
+            .ThenBy(row => row.Key.TmdbId)
             .Limit(limit)
             .ToListAsync(ct);
 

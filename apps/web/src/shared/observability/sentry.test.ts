@@ -1,8 +1,102 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Breadcrumb, ErrorEvent } from '@sentry/react';
 import {
+  prepareBreadcrumb,
+  prepareEvent,
+  prepareTransaction,
   sentryTracePropagationTargets,
   shouldDropSentryEvent,
 } from '@/shared/observability/sentry';
+
+describe('token redaction', () => {
+  it('masks the tokens of the request URL of an error event', () => {
+    const event = {
+      type: undefined,
+      request: {
+        url: 'https://www.movie-picker.fr/reset?token=abc123',
+        query_string: 'token=abc123&lang=fr',
+      },
+    } as ErrorEvent;
+
+    const prepared = prepareEvent(event);
+
+    expect(prepared?.request?.url).toBe('https://www.movie-picker.fr/reset?token=***');
+    expect(prepared?.request?.query_string).toBe('token=***&lang=fr');
+  });
+
+  it('masks the tokens of a transaction, its trace context and its spans', () => {
+    const transaction = {
+      type: 'transaction',
+      request: { url: 'https://www.movie-picker.fr/reset?token=abc123' },
+      contexts: {
+        trace: { data: { 'url.full': 'https://www.movie-picker.fr/reset?token=abc123' } },
+      },
+      spans: [
+        {
+          data: {
+            'url.full': 'https://api.movie-picker.fr/api/v1/x?host=secret',
+            'http.method': 'GET',
+          },
+        },
+      ],
+    } as unknown as Parameters<typeof prepareTransaction>[0];
+
+    const prepared = prepareTransaction(transaction);
+
+    expect(prepared.request?.url).toBe('https://www.movie-picker.fr/reset?token=***');
+    expect(prepared.contexts?.trace?.data?.['url.full']).toBe(
+      'https://www.movie-picker.fr/reset?token=***'
+    );
+    expect(prepared.spans?.[0]?.data).toEqual({
+      'url.full': 'https://api.movie-picker.fr/api/v1/x?host=***',
+      'http.method': 'GET',
+    });
+  });
+
+  it('drops the request headers of a transaction, where the Referer carries the page URL', () => {
+    const transaction = {
+      type: 'transaction',
+      request: {
+        url: 'https://www.movie-picker.fr/login',
+        headers: {
+          Referer: 'https://www.movie-picker.fr/reset?token=abc123',
+          'User-Agent': 'Mozilla/5.0',
+        },
+      },
+    } as unknown as Parameters<typeof prepareTransaction>[0];
+
+    const prepared = prepareTransaction(transaction);
+
+    expect(prepared.request).toEqual({ url: 'https://www.movie-picker.fr/login' });
+  });
+
+  it('masks the tokens of navigation and request breadcrumbs', () => {
+    const navigation: Breadcrumb = {
+      category: 'navigation',
+      data: { from: '/reset?token=abc123', to: '/login', status_code: 200 },
+    };
+    const request: Breadcrumb = {
+      category: 'fetch',
+      type: 'http',
+      data: {
+        method: 'GET',
+        url: 'https://api.movie-picker.fr/api/v1/events/slug/Ab3dE_9xYz?host=secret',
+        status_code: 200,
+      },
+    };
+
+    expect(prepareBreadcrumb(navigation).data).toEqual({
+      from: '/reset?token=***',
+      to: '/login',
+      status_code: 200,
+    });
+    expect(prepareBreadcrumb(request).data).toEqual({
+      method: 'GET',
+      url: 'https://api.movie-picker.fr/api/v1/events/slug/Ab3dE_9xYz?host=***',
+      status_code: 200,
+    });
+  });
+});
 
 describe('shouldDropSentryEvent', () => {
   it('discards the bridge injected by the Snapchat in-app browser', () => {

@@ -209,7 +209,7 @@ export default function WatchlistPage() {
     filtersPanelRef,
     () => toolbar.setFiltersOpen(false),
     toolbar.filtersOpen && !isMobile,
-    '[data-filters-toggle]'
+    { ignoreSelector: '[data-filters-toggle]' }
   );
 
   const addMutation = useAddToWatchlist();
@@ -340,6 +340,7 @@ export default function WatchlistPage() {
               posterPath: item.posterPath,
               voteAverage: item.voteAverage,
               runtimeMinutes: item.runtimeMinutes,
+              genreIds: item.genreIds,
             });
           }}
           isItemAlreadyAdded={(item) => inWatchlistKeys.has(itemKey(item.id, item.mediaType))}

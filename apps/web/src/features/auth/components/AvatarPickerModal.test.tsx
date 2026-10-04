@@ -467,3 +467,52 @@ describe('AvatarPickerModal, photo tab', () => {
     );
   });
 });
+
+describe('AvatarPickerModal, robots and emojis', () => {
+  const avatarRadio = (id: string) => screen.getByRole('radio', { name: `Choisir l’avatar ${id}` });
+
+  it('moves the selection with the arrows without saving or closing', async () => {
+    const user = userEvent.setup();
+    const props = renderPicker({ currentAvatarId: 'alpha' });
+
+    avatarRadio('alpha').focus();
+    await user.keyboard('{ArrowRight}');
+
+    expect(avatarRadio('beta')).toHaveFocus();
+    expect(avatarRadio('beta')).toHaveAttribute('aria-checked', 'true');
+    expect(props.onSelect).not.toHaveBeenCalled();
+    expect(props.onClose).not.toHaveBeenCalled();
+  });
+
+  it('saves the avatar reached with the arrows once it is activated', async () => {
+    const user = userEvent.setup();
+    const props = renderPicker({ currentAvatarId: 'alpha' });
+
+    avatarRadio('alpha').focus();
+    await user.keyboard('{ArrowRight}{ArrowRight}{Enter}');
+
+    expect(props.onSelect).toHaveBeenCalledExactlyOnceWith('bolt');
+  });
+
+  it('saves the clicked avatar', async () => {
+    const user = userEvent.setup();
+    const props = renderPicker({ currentAvatarId: 'alpha' });
+
+    await user.click(avatarRadio('gamma'));
+
+    expect(props.onSelect).toHaveBeenCalledExactlyOnceWith('gamma');
+  });
+
+  it('drops the browsed avatar when the dialog is closed without saving', async () => {
+    const user = userEvent.setup();
+    const props = renderPicker({ currentAvatarId: 'alpha' });
+
+    avatarRadio('alpha').focus();
+    await user.keyboard('{ArrowRight}');
+    await user.click(screen.getByRole('button', { name: 'Fermer' }));
+
+    expect(props.onClose).toHaveBeenCalledTimes(1);
+    expect(props.onSelect).not.toHaveBeenCalled();
+    expect(avatarRadio('alpha')).toHaveAttribute('aria-checked', 'true');
+  });
+});

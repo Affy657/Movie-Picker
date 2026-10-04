@@ -8,7 +8,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 - **MVP** : parcours minimal utilisable côté utilisateur.
 - **V1, V1.1, V1.2** : releases produit progressives sur la spec complète, sans casser le cœur métier.
-- **V1.3 à V1.9** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
+- **V1.3 à V1.10** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
 - **Backlog** : idées et sujets non planifiés sur une date de release, triés régulièrement. Un backlog produit et un backlog tech, séparés, à la fin du fichier.
 - **Une branche par version** : chaque version se développe sur une branche qui porte son nom (`v1.6`, `v1.7`, …). Toutes les features de la version sont livrées sur cette branche, et elle n'est fusionnée dans `master` qu'une fois la version complète. Sur cette branche, la CI GitHub Actions n'est pas bloquante ; la fusion dans `master` rend la version déployable, et le déploiement reste un geste manuel (`deploy.yml`, voir `AGENTS.md`).
 - **Tailles t-shirt** : chaque item porte une estimation de charge, indépendante de sa valeur produit, pour comparer les versions autrement qu'au nombre de tickets. Échelle calibrée sur l'empreinte réelle des features déjà livrées.
@@ -167,7 +167,7 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 
 **Objectif** : home page inspirationnelle, qui transforme l'accueil en vrai point d'entrée du produit, accessible sans compte et enrichi une fois connecté.
 
-Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est nécessaire pour que la home tienne debout, et deux dépendent d'un chantier d'une autre version.
+Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est nécessaire pour que la home tienne debout, et deux dépendent d'un chantier d'une autre version. Quatre en ont depuis été retirés, et le cinquième est devenu le fil d'actualité de la V1.10.
 
 ### 🏠 Home page
 
@@ -219,7 +219,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (24 points produit, 23 points tech, 1 restant)
+## 📋 V1.7, planifiée (24 points produit, 34 points tech, 1 restant)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
@@ -244,42 +244,57 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ✅ 📊 `M` **Terraform 7, supervision décrite en IaC** : les trois sondes, les six politiques d'alerte avec leur documentation et leurs seuils justifiés, le canal e-mail et le tableau de bord de MCO décrits puis importés, les conditions et les tuiles lisant l'identifiant des sondes sur la ressource ; appliqué par le workflow du lot 6.
 - ✅ 🏗️ `L` **Terraform 8, environnement de recette** : second module racine `environments/staging` qui instancie les modules des lots 2, 3 et 5 dans le même projet (service, site, secrets propres, identités d'exécution et de déploiement dédiées, liées à la fédération et au dépôt d'images de la production par son état distant), `staging.movie-picker.fr` et `api.staging.movie-picker.fr`, et `deploy.yml` qui prend une étape : la production refuse tant que la recette ne sert pas ce commit et redéploie le digest que la recette exécute.
 - ✅ 🔒 `M` **Audit de l'infrastructure et frontières d'identité** : audit complet du 2026-09-20 (Terraform, workflows, IAM réel, DNS, TLS, en-têtes, coûts) et ses vingt-cinq constats corrigés dans la foulée : une identité par environnement GitHub (`backup`, `infra-apply`), fédération liée à `master`, identités Terraform sans lecture d'objets, liaisons résiduelles retirées et revue hebdomadaire `check:iam`, jeton OIDC pour Cloud Scheduler et alerte sur ses échecs, lien contre la suppression du projet, journaux d'accès aux secrets, bucket de sauvegarde décrit avec copie mensuelle, retours arrière répétables en recette, build du site hors du job qui déploie, lockfile NuGet, CSP sans `unsafe-inline`, HSTS sur les sous-domaines.
+- ✅ ♿ `L` **Design system audité et outillé** : texte des boutons et liens lisible sur chaque couleur d'accent, en clair comme en sombre, écrans alignés sur les mêmes composants (retour, titres, compteurs, erreurs, états vides), et des garde-fous qui empêchent de réintroduire une couleur, une taille ou une animation hors du système.
 
 > **Note, cible d'hébergement du front (lot 3)** : Firebase Hosting plutôt que Cloud Storage et Cloud CDN, dont la règle de transfert coûte près de 18 $ par mois avant le premier octet servi et ferait sortir le projet du « 0 €/mois » suivi comme indicateur. Seul point à surveiller : 360 Mo par jour, loin du trafic mesuré.
 
 ---
 
-## 📋 V1.8, planifiée (34 points)
+## 📋 V1.8, planifiée (33 points)
 
-**Objectif** : faire passer la soirée en temps réel et armer l'hôte, avec la sécurité du compte en complément.
+**Objectif** : la bibliothèque personnelle, avec des listes de films à soi, faites à la main, remplies par des règles ou tenues à plusieurs, et les films déjà vus repris de Letterboxd.
 
-- ⬜ `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
-- ⬜ `M` **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
-- ⬜ `L` **Co-hôte** : l'hôte peut désigner un ou plusieurs participants comme co-hôtes ; mêmes droits que l'hôte (lancer la roue, expulser un participant, modifier les paramètres) sauf supprimer la soirée.
+- ⬜ `L` **Mes listes** : la page Ma liste devient Mes listes, où chacun crée, renomme et supprime ses propres listes de films à côté de la liste « À voir », chacune visible sur le profil ou privée. Un film s'ajoute à n'importe quelle liste depuis sa fiche.
+- ⬜ `L` **Listes intelligentes** : une liste qui se remplit toute seule dans tout le catalogue TMDB à partir de règles combinées (genres, décennie, note, durée, acteurs, réalisateur, plateformes de streaming). Elle se met à jour d'elle-même, et ses règles se modifient à tout moment.
+- ⬜ `L` **Listes collaboratives** : le créateur d'une liste y invite d'autres personnes, qui peuvent alors y ajouter et en retirer des films, et chaque film affiche qui l'a ajouté. Pensée pour la liste « à voir ensemble » d'un couple, d'une coloc ou d'une bande.
+- ⬜ `L` **Import des films vus depuis Letterboxd** : reprendre les films déjà vus d'un compte Letterboxd avec la note posée sur chacun, qui alimentent le marqueur « déjà vu » et les notes Movie Picker. Complète la synchronisation de watchlist livrée en V1.4.
+- ⬜ `S` **Écart watchlist Movie Picker / Letterboxd** : pour les comptes synchronisés, badge sur les films de la liste « À voir » absents de la watchlist Letterboxd, typiquement ceux ajoutés depuis une soirée.
+
+---
+
+## 📋 V1.9, planifiée (30 points)
+
+**Objectif** : une soirée en temps réel, lisible même hors-ligne et cadrée par le thème de l'hôte, avec le confort au quotidien en complément.
+
 - ⬜ `L` **Synchronisation temps réel** : remplacer le polling par une connexion temps réel ; propositions, votes et arrivées de participants apparaissent sans délai perceptible.
 - ⬜ `M` **Présence sur la page soirée** : avatars des participants actuellement connectés et signal « en train de proposer un film », posés sur la connexion temps réel.
-- ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
-- ⬜ `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
-
----
-
-## 📋 V1.9, planifiée (20 points)
-
-**Objectif** : la bibliothèque personnelle et le confort au quotidien.
-
-- ⬜ `L` **Import des films vus depuis Letterboxd** : reprendre les films déjà vus d'un compte Letterboxd avec la note posée sur chacun, qui alimentent le marqueur « déjà vu » et les notes Movie Picker. Complète la synchronisation de watchlist livrée en V1.4.
-- ⬜ `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation ; recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème.
 - ⬜ `M` **Consultation hors-ligne de la dernière soirée** : la dernière vue soirée reste lisible sans réseau, avec une bannière « Données en cache, reconnexion en cours ». Lecture seule : les actions attendent le retour du réseau.
-- ⬜ `S` **Écart watchlist Movie Picker / Letterboxd** : pour les comptes synchronisés, badge sur les films de la watchlist Movie Picker absents de celle de Letterboxd, typiquement ceux ajoutés depuis une soirée.
+- ⬜ `L` **Thème imposé par l'hôte** : contrainte de proposition posée par l'hôte (genre, décennie, acteur, réalisateur ou classification d'âge maximale) ; les films qui ne la respectent pas sont refusés avec un message explicite, et la contrainte s'affiche en bannière sur la page soirée.
+- ⬜ `L` **Palette de commandes (Cmd+K)** : accès clavier global aux actions et à la navigation ; recherche floue sur les soirées, les films et les utilisateurs, création de soirée, changement de thème.
 
 ---
 
-## Backlog produit (non priorisé sur une release) (161 points, 1 non estimé)
+## 📋 V1.10, planifiée (45 points)
+
+**Objectif** : ouvrir Movie Picker au-delà de son cercle, avec la confiance que cela demande : des comptes mieux protégés, un état du service consultable, une aide en ligne et des actions qui survivent à une coupure de réseau.
+
+- ⬜ `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Dépend de la synchronisation temps réel et de la consultation hors-ligne (V1.9).
+- ⬜ `L` **Fil d'actualité** : un fil qui rassemble l'activité des comptes suivis (soirées créées et terminées, films notés, listes publiées) et les soirées publiques à venir. Il prolonge la rangée « Vos amis ont vu » de la home, limitée aux films vus.
+- ⬜ `L` **Soirée publique** : une soirée que l'hôte rend publique apparaît sur une page de découverte, et n'importe quel compte peut la rejoindre. L'hôte peut bannir un participant, qui ne peut alors plus revenir par le lien.
+- ⬜ `M` **Double authentification (2FA/TOTP)** : code à six chiffres généré par une application d'authentification, activable en option dans les paramètres de compte.
+- ⬜ `L` **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
+- ⬜ `M` **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
+- ⬜ `M` **Alerte nouvelle connexion** : e-mail automatique envoyé à l'utilisateur lors d'une connexion depuis un nouvel appareil ou navigateur.
+- ⬜ `S` **FAQ / Centre d'aide** : page qui répond aux questions récurrentes (fonctionnement de la roue, invitation, votes), accessible depuis le footer.
+- ⬜ `M` **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
+
+---
+
+## Backlog produit (non priorisé sur une release) (140 points, 1 non estimé)
 
 > **Note V2, application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
 - `S` **Noter aussi sur Letterboxd ou IMDb** : depuis la note d'un film vu, un bouton ouvre la fiche du film sur Letterboxd ou IMDb pour y reporter sa note.
-- `L` **Reprise des actions faites hors-ligne** : file d'attente des votes et propositions passés sans réseau, rejoués et arbitrés à la reconnexion. Depend de la synchronisation temps réel (V1.8) et de la consultation hors-ligne (V1.9).
 - `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion.
 - `M` **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
 - `L` **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
@@ -287,29 +302,22 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - `L` **Badges / achievements** : 4 badges (Organisateur, Cinéphile, Faiseur de rois, Juré assidu), code de calcul supprimé ; à concevoir avec un design abouti et réimplémenter.
 - `M` **Compatibilité ciné** : score de compatibilité cinématographique avec un ami basé sur les films « déjà vu » en commun ; nécessite les statistiques utilisateur et potentiellement l'intégration Letterboxd pour être complet.
 - `S` **Statistique : note moyenne des films gagnants** : ajouter dans la section stats du profil public la moyenne des notes TMDB des films tirés gagnants dans les soirées auxquelles l'utilisateur a participé ; aucune infra supplémentaire, les notes TMDB sont déjà stockées avec les films.
-- `S` **Home : prochaine soirée mise en avant** : carte principale avec titre, heure et accès direct à la soirée imminente, ce qui évite de passer par « Mes soirées ». La rangée « À voir avant votre prochaine soirée » livrée en V1.5 donne déjà l'accès, sans la mise en avant.
-- `S` **Home : invitations en attente** : rappel des invitations non répondues directement sur la home, plus visible que les notifications seules.
-- `S` **Home : soirée rapide** : bouton « Créer une soirée » avec la dernière config utilisée en un clic ; dépend des templates de soirée (V1.6).
-- `S` **Home : derniers films gagnants** : les 3-4 films tirés dans ses propres soirées récentes, ce qui évite de reproposer un film qu'on vient de voir. Distinct de « Vos amis ont vu », livré en V1.5, qui couvre les soirées des comptes suivis.
-- `M` **Fil d'activité des follows** : événements sociaux (soirée créée par un ami, soirée clôturée) au-delà des seuls films vus, dont la rangée « Vos amis ont vu » couvre déjà la moitié.
 - `L` **Sondage de disponibilité** : avant de créer une soirée, l'hôte propose plusieurs créneaux à ses follows et chacun coche ses disponibilités. L'hôte retient le créneau final, qui crée la soirée.
 - `L` **Plateformes streaming par compte** : chaque utilisateur renseigne ses abonnements dans ses paramètres, et la page d'une soirée affiche les plateformes communes à tous les participants. Les films peuvent être filtrés à celles-ci.
 - `XL` **Messages privés** : messagerie directe entre deux utilisateurs qui se suivent mutuellement ; accessible depuis le profil public ou la liste de follows ; permet d'organiser une soirée ou d'échanger en dehors du contexte d'une soirée existante.
+- `L` **Co-hôte** : l'hôte peut désigner un ou plusieurs participants comme co-hôtes ; mêmes droits que l'hôte (lancer la roue, expulser un participant, modifier les paramètres) sauf supprimer la soirée.
 - `M` **Proposition de film anonyme** : option dans les paramètres de la soirée activable par l'hôte ; le nom du proposant n'est plus affiché sur les cards de films tant que la roue n'a pas été lancée, pour éviter les votes d'affinité plutôt que de goût.
 - `L` **Chat de soirée** : panneau de discussion en temps réel sur la page soirée, latéral sur desktop et en onglet sur mobile. Destiné à remplacer les mini-commentaires par film par un seul espace d'échange.
 - `?` **Événements hebdomadaires** : dépend de la home page V1.5, événement qui change chaque semaine, sous différentes formes possibles (thème à respecter dans le film gagnant d'une soirée, événement saisonnier type Halloween ou Noël, etc.) ; à définir plus précisément une fois la home page livrée.
 - `S` **Description de soirée** : champ de description libre en complément du titre à la création d'une soirée, modifiable ensuite par l'hôte ; affiché sur la page soirée pour donner du contexte (thème de la soirée, consignes, etc.).
 - `M` **Soirée à distance synchronisée** : intégrer dans le parcours soirée l'usage d'une extension de visionnage synchronisé existante (Teleparty, Scener…) ; une fois le film gagnant désigné, la page soirée guide l'hôte pour lancer une session et partage le lien généré aux participants via le mécanisme d'invitation existant.
-- `M` **Trigger warnings sur les fiches films** : avertissements précis (violence sexuelle, mort d'un animal, lumières clignotantes, suicide) tirés d'une base communautaire, affichés sur la fiche film et sur la card une fois le film tiré, avec un réglage par compte pour les masquer. Prolonge les badges d'âge et de genre des avertissements de contenu (V1.8).
+- `M` **Avertissements de contenu** : badges violence / horreur / 18+ sur les fiches films ; option hôte « masquer les films 18+ » pour soirées familiales.
+- `M` **Trigger warnings sur les fiches films** : avertissements précis (violence sexuelle, mort d'un animal, lumières clignotantes, suicide) tirés d'une base communautaire, affichés sur la fiche film et sur la card une fois le film tiré, avec un réglage par compte pour les masquer. Prolonge les badges d'âge et de genre des avertissements de contenu.
 - `S` **Serveur Discord Movie Picker** : un serveur communautaire pour les retours, les idées et l'annonce des versions, avec un lien d'invitation dans le pied de page et le centre d'aide. Les salons reprennent les entrées « Proposer une idée » et « Signaler un problème » sans remplacer les tickets GitHub.
 - `XL` **Vrai support des séries (progression par épisode)** : suivre la saison et l'épisode en cours d'une série et le prochain à voir, via les endpoints TMDB dédiés. Remplace le traitement actuel d'une série comme un simple film.
 - `M` **Connexion Discord, Meta et Twitch** : trois fournisseurs OAuth supplémentaires aux côtés de Google et GitHub, dans la section « Connexions » existante.
-- `L` **Passkeys (WebAuthn)** : connexion sans mot de passe via biométrie ou PIN de l'appareil, en complément de l'e-mail / mot de passe et des fournisseurs OAuth.
-- `M` **Sessions actives** : liste des appareils et navigateurs connectés dans la section « Connexions », avec révocation individuelle.
-- `M` **Alerte nouvelle connexion** : e-mail automatique envoyé à l'utilisateur lors d'une connexion depuis un nouvel appareil ou navigateur.
 - `S` **Contact / Support** : formulaire ou adresse dédiée pour signaler un problème, distinct du bouton « Proposer une idée » réservé aux suggestions de features.
 - `M` **Onboarding pour nouveaux utilisateurs** : mini tour guidé ou écran de bienvenue à la première connexion, expliquant le concept (créer une soirée, voter, la roue).
-- `M` **Statut du service** : page publique indiquant si l'API et le site sont opérationnels.
 
 ---
 

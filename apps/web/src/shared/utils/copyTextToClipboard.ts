@@ -1,3 +1,9 @@
+type LegacyCopyDocument = { execCommand(commandId: 'copy'): boolean };
+
+function copyFallbackHost(): HTMLElement {
+  return document.activeElement?.closest<HTMLElement>('dialog[open]') ?? document.body;
+}
+
 function copyWithExecCommand(text: string): boolean {
   const textarea = document.createElement('textarea');
   textarea.value = text;
@@ -7,12 +13,13 @@ function copyWithExecCommand(text: string): boolean {
   textarea.style.top = '0';
   textarea.style.left = '-9999px';
   textarea.style.opacity = '0';
-  document.body.appendChild(textarea);
+  copyFallbackHost().appendChild(textarea);
   textarea.focus();
   textarea.select();
   textarea.setSelectionRange(0, text.length);
+  const legacyDocument: LegacyCopyDocument = document;
   try {
-    return document.execCommand('copy');
+    return legacyDocument.execCommand('copy');
   } catch {
     return false;
   } finally {

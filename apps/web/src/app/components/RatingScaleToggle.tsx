@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type { RatingScale } from '@/shared/types/theme';
 import { RATING_SCALES } from '@/shared/types/theme';
@@ -24,6 +24,7 @@ export default function RatingScaleToggle({
   const { user, patchProfile } = useAuth();
   const { t } = useTranslation();
   const current: RatingScale = user?.ratingScale ?? 'five';
+  const [error, setError] = useState<string | null>(null);
 
   const options = useMemo(
     () =>
@@ -36,18 +37,28 @@ export default function RatingScaleToggle({
 
   const commit = (value: RatingScale) => {
     if (!user || value === current) return;
-    void patchProfile({ ratingScale: value }).then(() => onSaved?.());
+    setError(null);
+    void patchProfile({ ratingScale: value })
+      .then(() => onSaved?.())
+      .catch(() => setError(t('auth.account.ratingScaleSaveError')));
   };
 
   return (
-    <SegmentedRadioGroup
-      options={options}
-      value={current}
-      onChange={commit}
-      ariaLabel={t('auth.account.ratingScaleLabel')}
-      ariaLabelledBy={ariaLabelledBy}
-      className={className}
-      id={id}
-    />
+    <>
+      <SegmentedRadioGroup
+        options={options}
+        value={current}
+        onChange={commit}
+        ariaLabel={t('auth.account.ratingScaleLabel')}
+        ariaLabelledBy={ariaLabelledBy}
+        className={className}
+        id={id}
+      />
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+    </>
   );
 }

@@ -44,21 +44,8 @@
 }
 
 .scoreBar {
-  display: flex;
   width: var(--space-24);
-  height: var(--space-1);
   flex-shrink: 0;
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-  background: var(--color-surface-active);
-}
-
-.scoreBarUp {
-  background: var(--color-primary);
-}
-
-.scoreBarDown {
-  background: var(--color-error);
 }
 
 .avatarStack {
@@ -70,10 +57,6 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-}
-
-.voteBtnLabel {
-  transform: translateY(var(--text-optical-nudge));
 }
 
 .proposer {
@@ -109,5 +92,5 @@
 
 .proposerLink:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }

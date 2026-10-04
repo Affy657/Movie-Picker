@@ -1,10 +1,12 @@
 import { useCallback, type ReactNode } from 'react';
 import { Link } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { UserPlus, Users } from 'lucide-react';
 import { joinEvent } from '@/features/events/api/eventsApi';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useAsyncAction } from '@/shared/hooks/useAsyncAction';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import { setStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES, withReturnTo } from '@/app/routes';
@@ -32,15 +34,17 @@ export default function JoinForm({
   const { t } = useTranslation();
   const { user } = useAuth();
   const { track } = useAnalytics();
+  const queryClient = useQueryClient();
 
   const joinAction = useCallback(async () => {
     const pseudoToSend = user?.displayName.trim() || 'Participant';
     const res = await joinEvent(slug, pseudoToSend);
     const { id } = res.participant;
     setStoredParticipant(slug, id, res.participant.pseudo);
+    queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     track('event_joined');
     onJoined(id, res.participant.pseudo);
-  }, [user, slug, onJoined, track]);
+  }, [user, slug, onJoined, track, queryClient]);
 
   const {
     run: submit,

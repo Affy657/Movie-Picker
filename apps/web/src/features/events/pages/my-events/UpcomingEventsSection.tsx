@@ -11,6 +11,11 @@ import type { MyEventSummary } from '@/features/events/types';
 import { useTranslation } from '@/shared/i18n';
 import styles from '@/features/events/pages/MyEventsPage.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import Card from '@/shared/components/Card';
+
+function canLeaveNight(event: MyEventSummary): boolean {
+  return !event.isCreator && (event.winnerMovies?.length ?? 0) === 0;
+}
 
 interface UpcomingEventsSectionProps {
   events: MyEventSummary[];
@@ -33,13 +38,20 @@ export default function UpcomingEventsSection({
       <ul className={styles.list}>
         {events.map((ev) => (
           <li key={ev.id} className={styles.item}>
-            <Link
+            <Card
+              as={Link}
               to={ROUTES.eventDetail(ev.slug)}
-              className={clsx(eventSummaryCardStyles.card, !ev.isCreator && styles.linkWithKebab)}
+              interactive
+              elevation="sm"
+              padding="none"
+              className={clsx(
+                eventSummaryCardStyles.card,
+                canLeaveNight(ev) && styles.linkWithKebab
+              )}
             >
               <EventSummaryCardBody event={ev} />
-            </Link>
-            {!ev.isCreator ? (
+            </Card>
+            {canLeaveNight(ev) ? (
               <EventCardMenu
                 title={ev.title}
                 className={styles.itemKebab}

@@ -18,6 +18,7 @@ import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import styles from './EventWinnerSummary.module.css';
+import CountBadge from '@/shared/components/CountBadge';
 
 export type WinnerRatingContext = {
   scale: RatingScale;
@@ -211,7 +212,9 @@ export default function EventWinnerSummary({
             >
               <span className={styles.posterCol}>
                 <WinnerPoster posterPath={movie.posterPath} large={posterSize === 'lg'} />
-                {several ? <span className={styles.rank}>{index + 1}</span> : null}
+                {several ? (
+                  <CountBadge value={index + 1} tone="success" className={styles.rank} />
+                ) : null}
               </span>
               <div className={styles.body}>
                 <span className={styles.title}>{movie.title}</span>

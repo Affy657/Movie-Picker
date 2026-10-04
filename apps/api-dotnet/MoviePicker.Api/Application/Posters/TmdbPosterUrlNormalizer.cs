@@ -10,12 +10,22 @@ public static partial class TmdbPosterUrlNormalizer
 
     public const string ApiPosterPathPrefix = "/api/v1/posters/";
 
+    public const string ApiTmdbPosterPathPrefix = "/api/v1/posters/tmdb/";
+
     public const int PosterKeyHexLength = 64;
 
     public const string PreferredPosterSize = "w500";
 
+    private const string TmdbImagePathPrefix = "/t/p/";
+
     [GeneratedRegex(@"/t/p/(w\d+|original)/", RegexOptions.IgnoreCase)]
     private static partial Regex TmdbSizeSegmentRegex();
+
+    [GeneratedRegex(@"^(w[0-9]{2,4}|original)$", RegexOptions.CultureInvariant)]
+    private static partial Regex TmdbStoredSizeRegex();
+
+    [GeneratedRegex(@"^[A-Za-z0-9_-]{1,100}\.(jpg|jpeg|png|webp)$", RegexOptions.CultureInvariant)]
+    private static partial Regex TmdbRouteFileRegex();
 
     public static string UpgradeTmdbSize(string url, string targetSize)
     {
@@ -86,6 +96,52 @@ public static partial class TmdbPosterUrlNormalizer
         return true;
     }
 
+    public static bool TryResolveTmdbRoute(string? size, string? file, out string normalizedUrl)
+    {
+        normalizedUrl = "";
+        if (!string.Equals(size, PreferredPosterSize, StringComparison.Ordinal) || string.IsNullOrEmpty(file))
+            return false;
+        if (!TmdbRouteFileRegex().IsMatch(file))
+            return false;
+
+        normalizedUrl = $"https://{TmdbImageHost}{TmdbImagePathPrefix}{size}/{file}";
+        return true;
+    }
+
+    public static bool TryParseTmdbRoutePath(string? path, out string normalizedUrl)
+    {
+        normalizedUrl = "";
+        if (string.IsNullOrEmpty(path))
+            return false;
+        var trimmed = path.Trim();
+        if (!trimmed.StartsWith(ApiTmdbPosterPathPrefix, StringComparison.Ordinal))
+            return false;
+
+        var segments = trimmed[ApiTmdbPosterPathPrefix.Length..].Split('/');
+        return segments.Length == 2 && TryResolveTmdbRoute(segments[0], segments[1], out normalizedUrl);
+    }
+
+    public static bool TryBuildTmdbRoutePath(string? tmdbUrl, out string path)
+    {
+        path = "";
+        if (!TryNormalizeToHttpsTmdb(tmdbUrl, out var normalized))
+            return false;
+
+        var segments = normalized[("https://" + TmdbImageHost + TmdbImagePathPrefix).Length..].Split('/');
+        if (segments.Length != 2
+            || !TmdbStoredSizeRegex().IsMatch(segments[0])
+            || !TryResolveTmdbRoute(PreferredPosterSize, segments[1], out _))
+            return false;
+
+        path = $"{ApiTmdbPosterPathPrefix}{PreferredPosterSize}/{segments[1]}";
+        return true;
+    }
+
+    public static bool IsAcceptedPosterReference(string? posterPath) =>
+        TryNormalizeToHttpsTmdb(posterPath, out _)
+        || TryParsePosterKey(posterPath, out _)
+        || TryParseTmdbRoutePath(posterPath, out _);
+
     public static string? ToPublicPosterPath(string? posterUrl)
     {
         if (string.IsNullOrWhiteSpace(posterUrl))
@@ -95,10 +151,9 @@ public static partial class TmdbPosterUrlNormalizer
         if (TryParsePosterKey(trimmed, out var parsedKey))
             return ApiPosterPathPrefix + parsedKey;
 
-        if (!TryNormalizeToHttpsTmdb(trimmed, out var normalized))
-            return posterUrl;
+        if (TryParseTmdbRoutePath(trimmed, out _))
+            return trimmed;
 
-        var key = ComputeKey(normalized);
-        return ApiPosterPathPrefix + key;
+        return TryBuildTmdbRoutePath(trimmed, out var route) ? route : posterUrl;
     }
 }

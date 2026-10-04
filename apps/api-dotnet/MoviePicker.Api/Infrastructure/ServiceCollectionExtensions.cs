@@ -7,7 +7,9 @@ using MongoDB.Driver;
 using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.FinishedEvents;
+using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Application.UseCases.Notifications;
 using MoviePicker.Api.Application.UseCases.RecurringEvents;
@@ -15,6 +17,7 @@ using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.BackgroundServices;
+using MoviePicker.Api.Infrastructure.Caching;
 using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Email;
 using MoviePicker.Api.Infrastructure.GitHub;
@@ -46,8 +49,13 @@ public static class ServiceCollectionExtensions
             .Configure<IConfiguration>(ConfigureMoviePickerOptions);
 
         services.AddMemoryCache();
+        services.AddSingleton<TmdbEntryCache>();
+        services.AddSingleton<CatalogEntryCache>();
         services.AddSingleton<SingleFlight>();
-        services.AddSingleton<SharedCacheReadThrough>();
+        services.AddSingleton(sp => new SharedCacheReadThrough(
+            sp.GetRequiredService<CatalogEntryCache>(),
+            sp.GetRequiredService<ISharedCache>(),
+            sp.GetRequiredService<SingleFlight>()));
 
         services.AddCors(o =>
             o.AddPolicy(
@@ -76,13 +84,15 @@ public static class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddScoped<IHostTokenAccessor, HostTokenAccessor>();
         services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
+        services.AddScoped<IClientAddressAccessor, ClientAddressAccessor>();
 
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
         services.AddEmailSender(configuration, environment);
-        services.AddHttpClient(WebPushSender.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15));
+        services
+            .AddHttpClient(WebPushSender.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15))
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false });
         services.AddSingleton<IPushNotificationSender, WebPushSender>();
-        services.AddSingleton<ISchedulerTokenValidator, SchedulerTokenValidator>();
         services.AddSingleton<IConfigurationManager<OpenIdConnectConfiguration>>(_ =>
             new ConfigurationManager<OpenIdConnectConfiguration>(
                 GoogleOidcSchedulerTokenValidator.GoogleDiscoveryDocument,
@@ -98,6 +108,7 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient(GoogleProfilePhotoSource.HttpClientName);
         services.AddSingleton<IGoogleProfilePhotoSource, GoogleProfilePhotoSource>();
         services.AddSingleton<IWebShellSource, HttpWebShellSource>();
+        services.AddScoped<ICatalogWarmPass, CatalogWarmPass>();
 
         var runsRemindersInProcess = environment.IsDevelopment()
             || IsInProcessRemindersEnabled(configuration);
@@ -166,8 +177,6 @@ public static class ServiceCollectionExtensions
         if (!string.IsNullOrWhiteSpace(kofiToken))
             opts.KofiWebhookToken = kofiToken.Trim();
 
-        var schedulerToken = cfg["SCHEDULER_TOKEN"];
-        opts.SchedulerToken = string.IsNullOrWhiteSpace(schedulerToken) ? null : schedulerToken.Trim();
         var schedulerAudience = cfg["SCHEDULER_OIDC_AUDIENCE"];
         opts.SchedulerOidcAudience = string.IsNullOrWhiteSpace(schedulerAudience) ? null : schedulerAudience.Trim().TrimEnd('/');
         var schedulerServiceAccount = cfg["SCHEDULER_OIDC_SERVICE_ACCOUNT"];
@@ -365,19 +374,22 @@ public static class ServiceCollectionExtensions
         }
 
         services.AddTransient<TmdbAuthenticationHandler>();
-        services.AddHttpClient<ITmdbMovieSearch, TmdbMovieSearch>((sp, client) =>
-            {
-                var timeoutSeconds = sp.GetRequiredService<IOptions<MoviePickerOptions>>()
-                    .Value.TmdbHttpTimeoutSeconds;
-                client.Timeout = TimeSpan.FromSeconds(Math.Clamp(timeoutSeconds, 1, 30));
-            })
+        services.AddHttpClient(nameof(TmdbMovieSearch), static client => client.Timeout = Timeout.InfiniteTimeSpan)
+            .AddHttpMessageHandler(static sp => new RequestTimeoutHandler(TimeSpan.FromSeconds(
+                Math.Clamp(sp.GetRequiredService<IOptions<MoviePickerOptions>>().Value.TmdbHttpTimeoutSeconds, 1, 30))))
             .AddHttpMessageHandler<TmdbAuthenticationHandler>()
             .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
             {
                 AutomaticDecompression = System.Net.DecompressionMethods.GZip
                     | System.Net.DecompressionMethods.Deflate
                     | System.Net.DecompressionMethods.Brotli,
-            });
+            })
+            .AddTypedClient<ITmdbMovieSearch>(static (http, sp) => new TmdbMovieSearch(
+                http,
+                sp.GetRequiredService<IOptions<MoviePickerOptions>>(),
+                sp.GetRequiredService<TmdbEntryCache>(),
+                sp.GetRequiredService<ISharedCache>(),
+                sp.GetRequiredService<ILogger<TmdbMovieSearch>>()));
     }
 
     private static void RegisterPosterStore(
@@ -402,6 +414,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AvatarPhotoWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
+        services.AddScoped<IWheelWinnerAnnouncement, WheelWinnerAnnouncement>();
 
         var handlerNamespace = "MoviePicker.Api.Application.UseCases";
         var types = typeof(ServiceCollectionExtensions).Assembly.GetTypes()

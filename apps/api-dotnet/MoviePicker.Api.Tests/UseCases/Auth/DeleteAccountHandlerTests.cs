@@ -206,7 +206,7 @@ public sealed class DeleteAccountHandlerTests
 
         Assert.Null(await f.Users.GetByIdAsync(user.Id));
 
-        var keptCreatedEvent = await f.Events.GetByIdOrSlugAsync(createdEvent.Id);
+        var keptCreatedEvent = await f.Events.GetByIdOrSlugAsync(createdEvent.Slug);
         Assert.NotNull(keptCreatedEvent);
         Assert.Null(keptCreatedEvent!.CreatorUserId);
 
@@ -229,5 +229,138 @@ public sealed class DeleteAccountHandlerTests
         f.Sessions.Verify(
             x => x.InvalidateAllForUserAsync(user.Id, It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnonymizesTheDeletedActorInOtherUsersNotifications()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        await f.Notifications.AddAsync(new UserNotification
+        {
+            UserId = "someone-else",
+            Type = UserNotificationType.NewFollower,
+            ActorHandle = user.Handle,
+            ActorDisplayName = user.DisplayName,
+            ActorAvatarId = "fox",
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        var kept = Assert.Single(await f.Notifications.ListByUserIdAsync("someone-else"));
+        Assert.Null(kept.ActorHandle);
+        Assert.Null(kept.ActorAvatarId);
+        Assert.Equal(DeleteAccountHandler.AnonymizedParticipantPseudo, kept.ActorDisplayName);
+    }
+
+    [Fact]
+    public async Task HandleAsync_AfterAHandleChange_StillAnonymizesTheNotificationsTheUserActedIn()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        await f.Notifications.AddAsync(new UserNotification
+        {
+            UserId = "someone-else",
+            Type = UserNotificationType.NewFollower,
+            ActorHandle = user.Handle,
+            ActorDisplayName = user.DisplayName,
+            ActorAvatarId = "fox",
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+        var renaming = new PatchUserProfileHandler(f.Users, f.Notifications, new InMemoryUnitOfWork(), TimeProvider.System);
+        await renaming.HandleAsync(user.Id, new PatchUserProfileRequest { Handle = "neo_apres" });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        var kept = Assert.Single(await f.Notifications.ListByUserIdAsync("someone-else"));
+        Assert.Null(kept.ActorHandle);
+        Assert.Null(kept.ActorAvatarId);
+        Assert.Equal(DeleteAccountHandler.AnonymizedParticipantPseudo, kept.ActorDisplayName);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MarksEveryJoinedNightAsChanged()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        await f.Participants.AddAsync(new Participant { EventId = "joined-1", Pseudo = "Neo", UserId = user.Id });
+        await f.Participants.AddAsync(new Participant { EventId = "joined-2", Pseudo = "Neo", UserId = user.Id });
+        var events = new Mock<IEventRepository>();
+        events
+            .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
+                ids.Select(id => new Event { Id = id, Title = id, Slug = id }).ToList());
+        var handler = new DeleteAccountHandler(
+            f.Users,
+            f.Hasher,
+            events.Object,
+            f.Participants,
+            f.Notifications,
+            f.Push,
+            f.Follows,
+            f.Watchlist,
+            f.ResetTokens,
+            f.AvatarPhotos,
+            f.Sessions.Object,
+            new InMemoryUnitOfWork(),
+            NullLogger<DeleteAccountHandler>.Instance);
+
+        await handler.HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        events.Verify(r => r.MarkChangedAsync("joined-1", It.IsAny<CancellationToken>()), Times.Once);
+        events.Verify(r => r.MarkChangedAsync("joined-2", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_JoinedNight_ServesTheAnonymousPseudoUnderANewWriteSequence()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var joined = await f.Events.AddAsync(new Event { Title = "Soirée amie", Slug = "soiree-amie", CreatorUserId = "other-1" });
+        await f.Participants.AddAsync(new Participant { EventId = joined.Id, Pseudo = "Neo", UserId = user.Id });
+        var before = (await f.Events.GetByIdOrSlugAsync(joined.Slug))!.WriteSeq;
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        Assert.True((await f.Events.GetByIdOrSlugAsync(joined.Slug))!.WriteSeq > before);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ParticipationInADeletedNight_DoesNotBlockTheDeletion()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        await f.Participants.AddAsync(new Participant { EventId = "deleted-night", Pseudo = "Neo", UserId = user.Id });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        Assert.Null(await f.Users.GetByIdAsync(user.Id));
+    }
+
+    [Fact]
+    public async Task HandleAsync_SecondDeletedAccountOfTheSameEvent_GetsADistinctAnonymousPseudo()
+    {
+        var f = new Fixture();
+        var first = await SeedUserAsync(f, "abcd1234");
+        var second = await f.Users.AddAsync(new User
+        {
+            Email = "trinity@example.com",
+            DisplayName = "Trinity",
+            Handle = "trinity",
+            PasswordHash = f.Hasher.Hash("abcd1234"),
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        });
+        var evt = await f.Events.AddAsync(new Event { Title = "Soirée", Slug = "soiree-partagee" });
+        await f.Participants.AddAsync(new Participant { EventId = evt.Id, Pseudo = "Neo", UserId = first.Id });
+        await f.Participants.AddAsync(new Participant { EventId = evt.Id, Pseudo = "Trinity", UserId = second.Id });
+
+        await f.CreateHandler().HandleAsync(first.Id, new DeleteAccountRequest { Password = "abcd1234" });
+        await f.CreateHandler().HandleAsync(second.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        var pseudos = (await f.Participants.ListByEventIdAsync(evt.Id)).Select(p => p.Pseudo).ToList();
+        Assert.Equal(2, pseudos.Distinct().Count());
+        Assert.All(pseudos, p => Assert.StartsWith(DeleteAccountHandler.AnonymizedParticipantPseudo, p));
     }
 }

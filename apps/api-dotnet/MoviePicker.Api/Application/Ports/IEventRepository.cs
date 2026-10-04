@@ -4,7 +4,7 @@ namespace MoviePicker.Api.Application.Ports;
 
 public interface IEventRepository
 {
-    Task<Event?> GetByIdOrSlugAsync(string idOrSlug, CancellationToken ct = default);
+    Task<Event?> GetByIdOrSlugAsync(string slug, CancellationToken ct = default);
     Task<Event> AddAsync(Event evt, CancellationToken ct = default);
     Task<Event> UpdateAsync(Event evt, CancellationToken ct = default);
 
@@ -15,6 +15,7 @@ public interface IEventRepository
     Task<IReadOnlyList<Event>> ListByCreatorUserIdAsync(string creatorUserId, int limit, CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListAllByCreatorUserIdAsync(string creatorUserId, CancellationToken ct = default);
+    Task<Event?> FindByCreationRequestAsync(string creatorUserId, string creationRequestId, CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListByIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
 

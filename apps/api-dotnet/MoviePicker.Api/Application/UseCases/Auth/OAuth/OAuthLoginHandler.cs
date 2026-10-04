@@ -3,6 +3,7 @@ using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -62,6 +63,15 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
             return new OAuthOutcome { Kind = OAuthOutcomeKind.PasswordAccountRequiresManualLink };
         }
 
+        if (byEmail is not null && byEmail.UnlinkedIdentities.Any(u => u.Provider == info.Provider && u.Subject == info.Subject))
+        {
+            _logger.LogWarning(
+                "OAuth login: {Provider} identity was unlinked from the account of this e-mail, manual link required (userId={UserId})",
+                info.Provider,
+                byEmail.Id);
+            return new OAuthOutcome { Kind = OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink };
+        }
+
         if (byEmail is not null)
         {
             User saved;
@@ -70,9 +80,9 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
                 var updated = byEmail with { Identities = [.. byEmail.Identities, identity], UpdatedAt = now };
                 saved = await _users.UpdateAsync(updated, ct);
             }
-            catch (ConflictException ex) when (ex.Reason == ErrorCodes.IdentityConflict)
+            catch (ConflictException ex) when (IsLostFirstSignInRace(ex))
             {
-                saved = await ResolveIdentityRaceAsync(info, ct);
+                saved = await ResolveIdentityRaceAsync(info, ex, ct);
             }
             _logger.LogInformation(
                 "OAuth login: auto-linked {Provider} to existing account (userId={UserId})", info.Provider, saved.Id);
@@ -94,7 +104,9 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
         DateTimeOffset now,
         CancellationToken ct)
     {
-        var displayName = string.IsNullOrWhiteSpace(info.DisplayName) ? "Membre" : info.DisplayName.Trim();
+        var displayName = string.IsNullOrWhiteSpace(info.DisplayName)
+            ? "Membre"
+            : TextTruncation.ToMaxLength(info.DisplayName.Trim(), AuthInputValidation.DisplayNameMaxLength);
 
         try
         {
@@ -114,13 +126,23 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
                 ct);
             return (created, true);
         }
-        catch (ConflictException ex) when (ex.Reason == ErrorCodes.IdentityConflict)
+        catch (ConflictException ex) when (IsLostFirstSignInRace(ex))
         {
-            return (await ResolveIdentityRaceAsync(info, ct), false);
+            return (await ResolveIdentityRaceAsync(info, ex, ct), false);
         }
     }
 
-    private async Task<User> ResolveIdentityRaceAsync(ExternalLoginInfo info, CancellationToken ct) =>
-        await _users.GetByIdentityAsync(info.Provider, info.Subject, ct)
-        ?? throw Errors.OAuthLinkFailed();
+    private static bool IsLostFirstSignInRace(ConflictException ex) =>
+        ex.Reason is ErrorCodes.IdentityConflict or ErrorCodes.EmailTaken or ErrorCodes.ConcurrentUpdate;
+
+    private async Task<User> ResolveIdentityRaceAsync(ExternalLoginInfo info, ConflictException conflict, CancellationToken ct)
+    {
+        var winner = await _users.GetByIdentityAsync(info.Provider, info.Subject, ct);
+        _logger.LogWarning(
+            "OAuth login: first {Provider} sign-in lost a race ({Reason}), identity found on re-read: {Found}",
+            info.Provider,
+            conflict.Reason,
+            winner is not null);
+        return winner ?? throw Errors.OAuthLinkFailed();
+    }
 }

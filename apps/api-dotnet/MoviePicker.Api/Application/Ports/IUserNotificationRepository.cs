@@ -10,7 +10,11 @@ public interface IUserNotificationRepository
     Task MarkAllReadAsync(string userId, CancellationToken ct = default);
     Task MarkReadAsync(string userId, string notificationId, CancellationToken ct = default);
     Task<bool> ExistsAsync(string userId, UserNotificationType type, string eventId, CancellationToken ct = default);
+    Task<bool> ExistsSinceAsync(string userId, UserNotificationType type, string eventId, DateTimeOffset since, CancellationToken ct = default);
+    Task<bool> ExistsFromActorAsync(string userId, UserNotificationType type, string actorHandle, CancellationToken ct = default);
     Task<IReadOnlySet<string>> ListUserIdsByTypeAndEventAsync(UserNotificationType type, string eventId, CancellationToken ct = default);
     Task<long> DeleteByUserIdAsync(string userId, CancellationToken ct = default);
+    Task<long> AnonymizeActorAsync(string actorHandle, string anonymizedName, CancellationToken ct = default);
+    Task<long> RenameActorHandleAsync(string previousHandle, string newHandle, CancellationToken ct = default);
     Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);
 }

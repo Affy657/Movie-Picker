@@ -51,6 +51,7 @@ export interface MovieCardCommonProps {
   canVote?: boolean;
   participantPseudo: string | null;
   isFinished: boolean;
+  wheelLocked?: boolean;
   isHost: boolean;
   onVote: (movieId: string, value: 1 | -1) => Promise<void>;
   onRemove: (movie: MovieData) => void;
@@ -104,6 +105,7 @@ export function useMovieCardState({
   canVote,
   participantPseudo,
   isFinished,
+  wheelLocked = false,
   isHost,
   participantAvatars,
   ratingScale,
@@ -117,6 +119,7 @@ export function useMovieCardState({
   canVote?: boolean;
   participantPseudo: string | null;
   isFinished: boolean;
+  wheelLocked?: boolean;
   isHost: boolean;
   participantAvatars?: Record<string, string>;
   ratingScale?: RatingScale;
@@ -126,8 +129,9 @@ export function useMovieCardState({
 }>) {
   const isMine = !!participantId && getParticipantId(m) === participantId;
   const proposerAvatarId = participantAvatars?.[getParticipantId(m)] ?? '';
-  const canRemove = !isFinished && (isMine || isHost);
+  const canRemove = !isFinished && !wheelLocked && (isMine || isHost);
   const canAct = !isFinished && !!participantId;
+  const canEditNote = canAct && isMine && !wheelLocked;
   const votingAvailable = canVote ?? canAct;
   const iMarkedSeen = !!(participantPseudo && m.seenByPseudos?.includes(participantPseudo));
   const others = (m.seenByPseudos ?? []).filter((p) => p !== participantPseudo);
@@ -151,7 +155,7 @@ export function useMovieCardState({
   const hasDetails = m.tmdbId > 0;
   const detailsOpen =
     hasDetails && detailsTarget?.tmdbId === m.tmdbId && detailsTarget.mediaType === mediaType;
-  const showAddNote = canAct && isMine && !m.pitchNote && !noteEditing;
+  const showAddNote = canEditNote && !m.pitchNote && !noteEditing;
 
   const openDetails = useCallback(
     (tab: MovieDetailsTabKey = 'event') => {
@@ -184,6 +188,7 @@ export function useMovieCardState({
     proposerAvatarId,
     canRemove,
     canAct,
+    canEditNote,
     canVote: votingAvailable,
     iMarkedSeen,
     others,
@@ -261,22 +266,55 @@ export function VoteBar({
   );
 }
 
-export function PaidOfferChip({
-  type,
-  count,
-  onClick,
-  ariaLabel,
-}: Readonly<{
-  type: 'rent' | 'buy';
-  count: number;
-  onClick: () => void;
-  ariaLabel: string;
-}>) {
-  return (
-    <button type="button" className={styles.paidChip} onClick={onClick} aria-label={ariaLabel}>
+export function PaidOfferChip(
+  props: Readonly<
+    {
+      type: 'rent' | 'buy';
+      count: number;
+      ariaLabel: string;
+    } & ({ onClick: () => void; href?: never } | { href?: string; onClick?: never })
+  >
+) {
+  const { type, count, ariaLabel } = props;
+  const content = (
+    <>
       <ModeIcon type={type} size={ICON_SIZE.sm} />
       <span className={styles.paidChipCount}>{count}</span>
-    </button>
+    </>
+  );
+  if (props.onClick) {
+    return (
+      <button
+        type="button"
+        className={styles.paidChip}
+        onClick={props.onClick}
+        aria-label={ariaLabel}
+      >
+        {content}
+      </button>
+    );
+  }
+  if (props.href) {
+    return (
+      <a
+        href={props.href}
+        className={styles.paidChip}
+        aria-label={ariaLabel}
+        target="_blank"
+        rel="noreferrer noopener"
+      >
+        {content}
+      </a>
+    );
+  }
+  return (
+    <span
+      className={clsx(styles.paidChip, styles.paidChipStatic)}
+      role="img"
+      aria-label={ariaLabel}
+    >
+      {content}
+    </span>
   );
 }
 

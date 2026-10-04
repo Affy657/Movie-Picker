@@ -10,7 +10,29 @@ namespace MoviePicker.Api.Application.UseCases.Sitemap;
 
 public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
 {
-    private const int MaxProfileUrls = 49_999;
+    private const int SitemapUrlLimit = 50_000;
+    private const string Daily = "daily";
+    private const string Weekly = "weekly";
+    private const string Monthly = "monthly";
+
+    private sealed record StaticPage(string Path, string ChangeFrequency, string Priority)
+    {
+        public bool ChangesDaily => ChangeFrequency == Daily;
+    }
+
+    private static readonly StaticPage[] StaticPages =
+    [
+        new("/", Daily, "1.0"),
+        new("/decouvrir", Monthly, "0.8"),
+        new("/films/tendances", Daily, "0.8"),
+        new("/films/au-cinema", Weekly, "0.8"),
+        new("/films/les-plus-proposes", Weekly, "0.7"),
+        new("/films/collections", Monthly, "0.6"),
+        new("/tech", Monthly, "0.5"),
+        new("/soutenir", Monthly, "0.3"),
+    ];
+
+    private static readonly int MaxProfileUrls = SitemapUrlLimit - StaticPages.Length;
 
     private readonly IUserRepository _users;
     private readonly MoviePickerOptions _options;
@@ -46,18 +68,12 @@ public sealed class GetSitemapXmlHandler : IGetSitemapXmlHandler
         sb.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.Append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n");
         var today = _clock.GetUtcNow();
-        AppendUrl(sb, $"{webBase}/", today, "daily", "1.0");
-        AppendUrl(sb, $"{webBase}/decouvrir", null, "monthly", "0.8");
-        AppendUrl(sb, $"{webBase}/films/tendances", today, "daily", "0.8");
-        AppendUrl(sb, $"{webBase}/films/au-cinema", null, "weekly", "0.8");
-        AppendUrl(sb, $"{webBase}/films/les-plus-proposes", null, "weekly", "0.7");
-        AppendUrl(sb, $"{webBase}/films/collections", null, "monthly", "0.6");
-        AppendUrl(sb, $"{webBase}/tech", null, "monthly", "0.5");
-        AppendUrl(sb, $"{webBase}/soutenir", null, "monthly", "0.3");
+        foreach (var page in StaticPages)
+            AppendUrl(sb, $"{webBase}{page.Path}", page.ChangesDaily ? today : null, page.ChangeFrequency, page.Priority);
         foreach (var profile in profiles)
         {
             var loc = $"{webBase}/u/{Uri.EscapeDataString(profile.Handle)}";
-            AppendUrl(sb, loc, profile.UpdatedAt, "weekly", "0.6");
+            AppendUrl(sb, loc, profile.UpdatedAt, Weekly, "0.6");
         }
         sb.Append("</urlset>\n");
         return sb.ToString();

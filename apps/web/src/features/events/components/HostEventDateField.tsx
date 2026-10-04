@@ -9,6 +9,7 @@ type Props = {
   showNotifyRow: boolean;
   notifyDateChange: boolean;
   onValueChange: (value: string) => void;
+  onCommit: () => void;
   onNotifyChange: (checked: boolean) => void;
 };
 
@@ -19,12 +20,18 @@ export default function HostEventDateField({
   showNotifyRow,
   notifyDateChange,
   onValueChange,
+  onCommit,
   onNotifyChange,
 }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
-    <div className={styles.field}>
+    <div
+      className={styles.field}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) onCommit();
+      }}
+    >
       <Field
         label={t('events.settings.dateTimeLabel')}
         htmlFor="host-cfg-datetime"

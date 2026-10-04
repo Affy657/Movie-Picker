@@ -1,5 +1,5 @@
 import { ApiError } from '@/shared/api/apiError';
-import { loadedLocale, preferredLocale, t, type TranslationKey } from '@/shared/i18n';
+import { interpolate, loadedLocale, preferredLocale, t, type TranslationKey } from '@/shared/i18n';
 
 function hostLooksLocal(host: string): boolean {
   const h = (host.split(':')[0] ?? host).toLowerCase();
@@ -46,6 +46,18 @@ export function apiUrl(path: string): string {
   return `${base}${API_VERSION_PREFIX}${p}`;
 }
 
+const COLLAPSIBLE_PATH_SEGMENTS = new Set(['', '.', '..']);
+
+function encodePathSegment(segment: string | number): string {
+  const text = String(segment);
+  if (COLLAPSIBLE_PATH_SEGMENTS.has(text)) throw new Error('Invalid API path segment');
+  return encodeURIComponent(text);
+}
+
+export function apiPath(...segments: ReadonlyArray<string | number>): string {
+  return `/${segments.map(encodePathSegment).join('/')}`;
+}
+
 function userFacing(key: TranslationKey): string {
   return t(key, undefined, preferredLocale());
 }
@@ -59,11 +71,7 @@ function translateApiReason(
   const messages = loadedLocale(preferredLocale())?.apiErrors;
   if (!messages || !Object.hasOwn(messages, reason)) return undefined;
   const template = messages[reason as keyof typeof messages];
-  if (!params) return template;
-  return Object.entries(params).reduce(
-    (text, [key, value]) => text.replaceAll(`{{${key}}}`, String(value)),
-    template
-  );
+  return params ? interpolate(template, params) : template;
 }
 
 function readApiErrorParams(raw: unknown): ApiErrorParams | undefined {
@@ -137,9 +145,12 @@ function buildRequestHeaders(options?: RequestInit): Record<string, string> {
   return headers;
 }
 
+function isAbortError(e: unknown): boolean {
+  return (e instanceof DOMException || e instanceof Error) && e.name === 'AbortError';
+}
+
 function rethrowFetchError(e: unknown): never {
-  if (e instanceof DOMException && e.name === 'AbortError') throw e;
-  if (e instanceof Error && e.name === 'AbortError') throw e;
+  if (isAbortError(e)) throw e;
   const msg = e instanceof Error ? e.message : String(e);
   const isNetwork =
     typeof msg === 'string' &&
@@ -149,23 +160,49 @@ function rethrowFetchError(e: unknown): never {
   throw new ApiError(isNetwork ? networkErrorMessage() : msg, { code: 0 });
 }
 
+function statusMessage(status: number): string {
+  if (status === 429) return userFacing('apiErrors.rate_limited');
+  if (status === 503) return userFacing('errors.api.unavailable');
+  if (status >= 500) return userFacing('errors.api.server');
+  return userFacing('errors.generic');
+}
+
+function readRetryAfterMs(res: Response): number | undefined {
+  const raw = res.headers.get('retry-after')?.trim();
+  if (!raw) return undefined;
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
+  const at = Date.parse(raw);
+  return Number.isNaN(at) ? undefined : Math.max(0, at - Date.now());
+}
+
+type ErrorBody = { error?: unknown; reason?: unknown; params?: unknown };
+
+function parseErrorBody(text: string, isJson: boolean): ErrorBody {
+  if (!isJson || !text.trim()) return {};
+  try {
+    const parsed: unknown = JSON.parse(text);
+    return parsed !== null && typeof parsed === 'object' ? (parsed as ErrorBody) : {};
+  } catch {
+    return {};
+  }
+}
+
 function handleErrorResponse(res: Response, text: string, isJson: boolean): never {
   if (looksLikeHtml(isJson, text)) {
     throw new ApiError(htmlResponseMessage(), { code: res.status });
   }
-  let parsed: { error?: string; reason?: string; params?: unknown } = { error: res.statusText };
-  if (isJson && text.trim()) {
-    try {
-      parsed = JSON.parse(text) as { error?: string; reason?: string; params?: unknown };
-    } catch {}
-  }
+  const parsed = parseErrorBody(text, isJson);
   const reason = typeof parsed.reason === 'string' ? parsed.reason : undefined;
   const translated = reason
     ? translateApiReason(reason, readApiErrorParams(parsed.params))
     : undefined;
-  throw new ApiError(translated ?? parsed.error ?? `HTTP ${res.status}`, {
+  const serverMessage =
+    typeof parsed.error === 'string' && parsed.error.trim() ? parsed.error : undefined;
+  throw new ApiError(translated ?? serverMessage ?? statusMessage(res.status), {
     code: res.status,
     reason,
+    retryAfterMs: readRetryAfterMs(res),
   });
 }
 
@@ -179,6 +216,15 @@ function parseSuccessBody<T>(res: Response, text: string, isJson: boolean): T {
     return JSON.parse(text) as T;
   } catch {
     throw new ApiError(userFacing('errors.api.invalidJson'), { code: res.status });
+  }
+}
+
+async function readResponseText(res: Response): Promise<string> {
+  try {
+    return await res.text();
+  } catch (e) {
+    if (!res.ok && !isAbortError(e)) return '';
+    rethrowFetchError(e);
   }
 }
 
@@ -196,8 +242,8 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
     rethrowFetchError(e);
   }
   const contentType = res.headers.get('content-type') ?? '';
-  const isJson = contentType.includes('application/json');
-  const text = await res.text();
+  const isJson = /application\/(?:[\w.-]+\+)?json/i.test(contentType);
+  const text = await readResponseText(res);
 
   if (!res.ok) handleErrorResponse(res, text, isJson);
   return parseSuccessBody<T>(res, text, isJson);

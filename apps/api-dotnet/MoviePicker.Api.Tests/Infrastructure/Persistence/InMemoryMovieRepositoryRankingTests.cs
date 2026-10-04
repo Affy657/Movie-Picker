@@ -48,7 +48,7 @@ public sealed class InMemoryMovieRepositoryRankingTests
     {
         var repo = await SeedAsync(
             Proposal("m1", "e1", 300),
-            Proposal("m2", "e1", 300),
+            Proposal("m2", "e1", 300) with { MediaType = MovieMediaType.Tv },
             Proposal("m3", "e2", 300));
 
         var ranking = await repo.ListMostProposedAsync(2, 10);

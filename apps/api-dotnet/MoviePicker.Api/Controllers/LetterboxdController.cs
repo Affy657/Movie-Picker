@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
@@ -12,6 +13,7 @@ namespace MoviePicker.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route(ApiRoutePrefix.V1 + "/letterboxd")]
+[RequestTimeout(RequestTimeoutPolicies.LongRunning)]
 [ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class LetterboxdController : ControllerBase

@@ -1,5 +1,8 @@
+using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 using static MoviePicker.Api.Tests.UseCases.Favorites.FavoriteFixtures;
 
@@ -74,6 +77,38 @@ public sealed class InMemoryUserRepositoryTests
     }
 
     [Fact]
+    public async Task ListCardsByHandlesAsync_FindsEachKnownHandleOnce_WhateverItsCaseOrPadding()
+    {
+        var alice = await _repo.AddAsync(Mk(email: "a@test.local", handle: "alice") with { AvatarId = "avatar-1" });
+        var bob = await _repo.AddAsync(Mk(email: "b@test.local", handle: "bob") with { IsProfilePublic = false });
+
+        var cards = await _repo.ListCardsByHandlesAsync(["ALICE", " alice ", "bob", "nobody", "  "]);
+
+        Assert.Equal(
+            [new UserCard(alice.Id, "avatar-1", "alice", true), new UserCard(bob.Id, string.Empty, "bob", false)],
+            cards.OrderBy(card => card.Handle, StringComparer.Ordinal));
+        Assert.Empty(await _repo.ListCardsByHandlesAsync([]));
+    }
+
+    [Fact]
+    public async Task ListCardsByIdsAsync_ShowsTheActivePhotoAndOtherwiseTheGeneratedAvatar()
+    {
+        var photo = new AvatarPhoto { Key = "0123456789abcdef0123456789abcdef", IsActive = true, UpdatedAt = TemplateNow };
+        var withPhoto = await _repo.AddAsync(Mk(email: "p@test.local", handle: "photo") with { AvatarId = "bolt", AvatarPhoto = photo });
+        var setAside = await _repo.AddAsync(Mk(email: "s@test.local", handle: "aside") with
+        {
+            AvatarId = "cute",
+            AvatarPhoto = photo with { IsActive = false }
+        });
+
+        var cards = await _repo.ListCardsByIdsAsync([withPhoto.Id, setAside.Id]);
+
+        Assert.Equal(
+            [(withPhoto.Id, photo.AvatarId), (setAside.Id, "cute")],
+            cards.OrderBy(card => card.Handle == "aside").Select(card => (card.Id, card.AvatarId)));
+    }
+
+    [Fact]
     public async Task ListMissingHandleAsync_ReturnsOnlyHandleless()
     {
         await _repo.AddAsync(Mk(email: "a@test.local", handle: "a"));
@@ -96,6 +131,86 @@ public sealed class InMemoryUserRepositoryTests
         Assert.Null(await _repo.GetByHandleAsync("alice"));
         Assert.NotNull(await _repo.GetByEmailAsync("alice2@test.local"));
         Assert.NotNull(await _repo.GetByHandleAsync("alice2"));
+    }
+
+    private static LinkedIdentity Google(string subject) => new()
+    {
+        Provider = "google",
+        Subject = subject,
+        Email = "linked@test.local",
+        LinkedAt = DateTimeOffset.UtcNow
+    };
+
+    [Theory]
+    [InlineData("ALICE@test.local", "alice", "google-alice", ErrorCodes.EmailTaken)]
+    [InlineData("ALICE@test.local", "bob", "google-bob", ErrorCodes.EmailTaken)]
+    [InlineData("bob@test.local", "ALICE", "google-alice", ErrorCodes.HandleTaken)]
+    [InlineData("bob@test.local", "bob", "google-alice", ErrorCodes.IdentityConflict)]
+    public async Task AddAsync_OnATakenKey_IsRefusedLikeTheMongoUniqueIndexes(
+        string email,
+        string handle,
+        string subject,
+        string expectedReason)
+    {
+        var alice = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice") with { Identities = [Google("google-alice")] });
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+            _repo.AddAsync(Mk(email: email, handle: handle) with { Identities = [Google(subject)] }));
+
+        Assert.Equal(expectedReason, ex.Reason);
+        Assert.Equal(alice.Id, (await _repo.GetByEmailAsync("alice@test.local"))!.Id);
+        Assert.Equal(alice.Id, (await _repo.GetByHandleAsync("alice"))!.Id);
+        Assert.Null(await _repo.GetByEmailAsync("bob@test.local"));
+        Assert.Null(await _repo.GetByHandleAsync("bob"));
+    }
+
+    [Theory]
+    [InlineData("ALICE@test.local", "alice", "google-alice", ErrorCodes.EmailTaken)]
+    [InlineData("bob@test.local", "Alice", "google-alice", ErrorCodes.HandleTaken)]
+    [InlineData("bob@test.local", "bob", "google-alice", ErrorCodes.IdentityConflict)]
+    public async Task UpdateAsync_TowardsAKeyOfAnotherUser_IsRefusedAndKeepsBothUsers(
+        string email,
+        string handle,
+        string subject,
+        string expectedReason)
+    {
+        var alice = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice") with { Identities = [Google("google-alice")] });
+        var bob = await _repo.AddAsync(Mk(email: "bob@test.local", handle: "bob"));
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+            _repo.UpdateAsync(bob with { Email = email, Handle = handle, Identities = [Google(subject)] }));
+
+        Assert.Equal(expectedReason, ex.Reason);
+        Assert.Equal(alice.Id, (await _repo.GetByEmailAsync("alice@test.local"))!.Id);
+        Assert.Equal(alice.Id, (await _repo.GetByHandleAsync("alice"))!.Id);
+        Assert.Equal(alice.Id, (await _repo.GetByIdentityAsync("google", "google-alice"))!.Id);
+        Assert.Equal(bob, await _repo.GetByIdAsync(bob.Id));
+        Assert.Equal(bob.Id, (await _repo.GetByEmailAsync("bob@test.local"))!.Id);
+        Assert.Equal(bob.Id, (await _repo.GetByHandleAsync("bob"))!.Id);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_KeepingItsOwnEmailHandleAndIdentity_Succeeds()
+    {
+        var alice = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice") with { Identities = [Google("google-alice")] });
+
+        var updated = await _repo.UpdateAsync(alice with { Email = "ALICE@test.local", Handle = "Alice", DisplayName = "Alice bis" });
+
+        Assert.Equal("Alice bis", updated.DisplayName);
+        Assert.Equal(alice.Id, (await _repo.GetByEmailAsync("alice@test.local"))!.Id);
+        Assert.Equal(alice.Id, (await _repo.GetByHandleAsync("alice"))!.Id);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ReleasesThePreviousEmailAndHandleForOtherUsers()
+    {
+        var alice = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice"));
+        await _repo.UpdateAsync(alice with { Email = "alice2@test.local", Handle = "alice2" });
+
+        var newcomer = await _repo.AddAsync(Mk(email: "alice@test.local", handle: "alice"));
+
+        Assert.Equal(newcomer.Id, (await _repo.GetByEmailAsync("alice@test.local"))!.Id);
+        Assert.Equal(newcomer.Id, (await _repo.GetByHandleAsync("alice"))!.Id);
     }
 
     [Fact]
@@ -524,5 +639,112 @@ public sealed class InMemoryUserRepositoryTests
         await _repo.UpdateAsync(current with { Bio = "Cinéphile" });
 
         Assert.Equal(["Heat"], (await _repo.GetByIdAsync(added.Id))!.Favorites.Select(f => f.Title));
+    }
+
+    private Task TargetedWriteAsync(string writer, string userId, int write) => writer switch
+    {
+        "letterboxdSyncStatus" => _repo.SetLetterboxdSyncStatusAsync(userId, TemplateNow.AddSeconds(write), null),
+        "letterboxdPendingCount" => _repo.SetLetterboxdPendingReconciliationCountAsync(userId, write),
+        "addTemplate" => _repo.AddEventTemplateAsync(userId, Template($"t{write}", "Ajout"), int.MaxValue, TemplateNow),
+        _ => _repo.ReplaceEventTemplateAsync(userId, Template("t0", $"Remplacement {write}"), TemplateNow),
+    };
+
+    [Theory]
+    [InlineData("letterboxdSyncStatus")]
+    [InlineData("letterboxdPendingCount")]
+    [InlineData("addTemplate")]
+    [InlineData("replaceTemplate")]
+    public async Task TargetedWrites_RacingADelete_NeverBringTheUserBack(string writer)
+    {
+        for (var round = 0; round < 100; round++)
+        {
+            var user = await _repo.AddAsync(Mk(email: $"gone{round}@test.local", handle: $"gone{round}") with
+            {
+                EventTemplates = [Template("t0", "Initial")]
+            });
+            using var writing = new ManualResetEventSlim();
+
+            await StartingLine.RunTogetherAsync(
+                async () =>
+                {
+                    try
+                    {
+                        for (var write = 1; write <= 2_000; write++)
+                        {
+                            await TargetedWriteAsync(writer, user.Id, write);
+                            writing.Set();
+                        }
+                    }
+                    finally
+                    {
+                        writing.Set();
+                    }
+                },
+                async () =>
+                {
+                    writing.Wait();
+                    await _repo.DeleteAsync(user.Id);
+                });
+
+            Assert.Null(await _repo.GetByIdAsync(user.Id));
+            Assert.Null(await _repo.GetByHandleAsync($"gone{round}"));
+        }
+    }
+
+    [Theory]
+    [InlineData("letterboxdSyncStatus")]
+    [InlineData("letterboxdPendingCount")]
+    [InlineData("addTemplate")]
+    [InlineData("replaceTemplate")]
+    public async Task TargetedWrites_RacingHandleChanges_NeverRollBackAChange(string writer)
+    {
+        const int writes = 5_000;
+        const int handleChanges = 50;
+        const int writesBetweenHandleChanges = writes / handleChanges;
+        var user = await _repo.AddAsync(Mk(email: "busy@test.local", handle: "busy0") with
+        {
+            EventTemplates = [Template("t0", "Initial")]
+        });
+        var writesMade = 0;
+
+        async Task<bool> TryChangeHandleAsync(string handle)
+        {
+            var current = await _repo.GetByIdAsync(user.Id);
+            try
+            {
+                await _repo.UpdateAsync(current! with { Handle = handle });
+                return true;
+            }
+            catch (ConflictException ex) when (ex.Reason == ErrorCodes.ConcurrentUpdate)
+            {
+                return false;
+            }
+        }
+
+        await StartingLine.RunTogetherAsync(
+            async () =>
+            {
+                for (var write = 1; write <= writes; write++)
+                {
+                    await TargetedWriteAsync(writer, user.Id, write);
+                    Interlocked.Increment(ref writesMade);
+                    Thread.SpinWait(100);
+                }
+            },
+            async () =>
+            {
+                for (var change = 1; change <= handleChanges; change++)
+                {
+                    while (Volatile.Read(ref writesMade) < (change - 1) * writesBetweenHandleChanges)
+                        Thread.SpinWait(20);
+                    while (!await TryChangeHandleAsync($"busy{change}"))
+                        Thread.SpinWait(20);
+                }
+            });
+
+        var reloaded = await _repo.GetByIdAsync(user.Id);
+        Assert.Equal(user.Version + writes + handleChanges, reloaded!.Version);
+        Assert.Equal($"busy{handleChanges}", reloaded.Handle);
+        Assert.Equal(user.Id, (await _repo.GetByHandleAsync(reloaded.Handle))!.Id);
     }
 }

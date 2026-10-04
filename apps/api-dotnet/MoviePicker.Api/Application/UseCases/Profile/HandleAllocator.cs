@@ -14,19 +14,32 @@ public static class HandleAllocator
         Func<string, User> buildDraft,
         CancellationToken ct = default)
     {
-        for (var attempt = 1; attempt <= MaxHandleAttempts; attempt++)
+        for (var attempt = 1; attempt < MaxHandleAttempts; attempt++)
         {
-            var handle = await AllocateFromDisplayNameAsync(users, displayName, ct);
-            try
-            {
-                return await users.AddAsync(buildDraft(handle), ct);
-            }
-            catch (ConflictException ex) when (ex.Reason == ErrorCodes.HandleTaken && attempt < MaxHandleAttempts)
-            {
-            }
+            var created = await TryCreateAsync(users, displayName, buildDraft, ct);
+            if (created is not null)
+                return created;
         }
 
-        throw Errors.HandleAllocationFailed();
+        var handle = await AllocateFromDisplayNameAsync(users, displayName, ct);
+        return await users.AddAsync(buildDraft(handle), ct);
+    }
+
+    private static async Task<User?> TryCreateAsync(
+        IUserRepository users,
+        string? displayName,
+        Func<string, User> buildDraft,
+        CancellationToken ct)
+    {
+        var handle = await AllocateFromDisplayNameAsync(users, displayName, ct);
+        try
+        {
+            return await users.AddAsync(buildDraft(handle), ct);
+        }
+        catch (ConflictException ex) when (ex.Reason == ErrorCodes.HandleTaken)
+        {
+            return null;
+        }
     }
 
     public static async Task<string> AllocateFromDisplayNameAsync(

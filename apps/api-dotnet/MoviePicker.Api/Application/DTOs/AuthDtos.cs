@@ -9,11 +9,12 @@ public sealed class RegisterRequest
 {
     [Required(ErrorMessage = "E-mail is required")]
     [EmailAddress(ErrorMessage = "Invalid e-mail format")]
+    [MaxLength(254)]
     public string Email { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Password is required")]
     [MinLength(1)]
-    [MaxLength(128)]
+    [MaxLength(1024)]
     public string Password { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Display name is required")]
@@ -31,6 +32,7 @@ public sealed class LoginRequest
 {
     [Required(ErrorMessage = "E-mail is required")]
     [EmailAddress(ErrorMessage = "Invalid e-mail format")]
+    [MaxLength(254)]
     public string Email { get; init; } = string.Empty;
 
     [Required(ErrorMessage = "Password is required")]
@@ -111,7 +113,7 @@ public sealed class ChangePasswordRequest
     public string? CurrentPassword { get; init; }
 
     [Required(ErrorMessage = "New password is required")]
-    [MaxLength(128)]
+    [MaxLength(1024)]
     public string NewPassword { get; init; } = string.Empty;
 }
 

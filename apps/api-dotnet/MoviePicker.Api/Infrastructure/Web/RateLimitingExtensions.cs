@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Net;
+using System.Net.Sockets;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
@@ -44,53 +46,59 @@ public static class RateLimitingExtensions
     public const string NotificationMutationPolicy = "notification-mutation";
     public const string AuthLogoutPolicy = "auth-logout";
     public const string HealthReadyPolicy = "health-ready";
+    public const string EventViewPollPolicy = "event-view-poll";
     public const string RecapDocumentPolicy = "recap-document";
     public const string AvatarPhotoUploadPolicy = "avatar-photo-upload";
     public const string AvatarPhotosPolicy = "avatar-photos-get";
 
+    private const string ProxiedPartition = "proxied";
+
     public const int GlobalPermitLimitPerMinute = 900;
+
+    public const int AddressCeilingPerMinute = 1_800;
 
     private static readonly PolicySpec[] Policies =
     [
-        new(CreateEventPolicy, 20, 1, false),
-        new(JoinEventPolicy, 60, 1, false),
-        new(SearchMoviesPolicy, 40, 1, false),
-        new(MovieDetailsPolicy, 120, 1, false),
-        new(MovieShowcasePolicy, 240, 1, false),
-        new(AuthRegisterPolicy, 10, 1, false),
-        new(AuthLoginPolicy, 30, 1, false),
-        new(AuthPasswordResetRequestPolicy, 5, 1, false),
-        new(AuthPasswordResetConfirmPolicy, 30, 1, false),
-        new(AuthChangePasswordPolicy, 10, 1, false),
-        new(AuthPatchProfilePolicy, 60, 1, false),
-        new(AuthExportDataPolicy, 5, 1, false),
-        new(AuthDeleteAccountPolicy, 5, 1, false),
-        new(PatchEventConfigPolicy, 40, 1, false),
-        new(VoteMutationPolicy, 120, 1, false),
-        new(SeenMarksMutationPolicy, 120, 1, false),
-        new(NoteMutationPolicy, 60, 1, false),
-        new(RatingMutationPolicy, 60, 1, false),
-        new(RemoveParticipantPolicy, 40, 1, false),
-        new(DeleteEventPolicy, 10, 1, false),
-        new(PostersPolicy, 300, 1, false),
-        new(PublicProfilePolicy, 120, 1, false),
-        new(SearchUsersPolicy, 40, 1, false),
-        new(FollowMutationPolicy, 60, 1, false),
-        new(InviteUserPolicy, 60, 1, false),
-        new(WatchlistReadPolicy, 120, 1, false),
-        new(WatchlistMutationPolicy, 60, 1, false),
-        new(LetterboxdImportPolicy, 10, 1, false),
-        new(KofiWebhookPolicy, 20, 1, false),
-        new(IdeaSuggestionPolicy, 10, 60, true),
-        new(SchedulerPolicy, 10, 1, false),
-        new(HostActionPolicy, 60, 1, false),
-        new(MovieMutationPolicy, 60, 1, false),
-        new(NotificationMutationPolicy, 60, 1, false),
-        new(AuthLogoutPolicy, 30, 1, false),
-        new(HealthReadyPolicy, 30, 1, false),
-        new(RecapDocumentPolicy, 120, 1, false, BySlug: true),
-        new(AvatarPhotoUploadPolicy, 10, 60, true),
-        new(AvatarPhotosPolicy, 300, 1, false)
+        new(CreateEventPolicy, 20, 1),
+        new(JoinEventPolicy, 60, 1),
+        new(SearchMoviesPolicy, 40, 1),
+        new(MovieDetailsPolicy, 120, 1),
+        new(MovieShowcasePolicy, 240, 1),
+        new(AuthRegisterPolicy, 10, 1, QuotaScope.Address),
+        new(AuthLoginPolicy, 30, 1, QuotaScope.Address),
+        new(AuthPasswordResetRequestPolicy, 5, 1, QuotaScope.Address),
+        new(AuthPasswordResetConfirmPolicy, 30, 1, QuotaScope.Address),
+        new(AuthChangePasswordPolicy, 10, 1),
+        new(AuthPatchProfilePolicy, 60, 1),
+        new(AuthExportDataPolicy, 5, 1),
+        new(AuthDeleteAccountPolicy, 5, 1),
+        new(PatchEventConfigPolicy, 40, 1),
+        new(VoteMutationPolicy, 120, 1),
+        new(SeenMarksMutationPolicy, 120, 1),
+        new(NoteMutationPolicy, 60, 1),
+        new(RemoveParticipantPolicy, 40, 1),
+        new(DeleteEventPolicy, 10, 1),
+        new(PostersPolicy, 300, 1),
+        new(PublicProfilePolicy, 120, 1),
+        new(SearchUsersPolicy, 40, 1),
+        new(FollowMutationPolicy, 60, 1),
+        new(InviteUserPolicy, 60, 1),
+        new(WatchlistReadPolicy, 120, 1),
+        new(WatchlistMutationPolicy, 60, 1),
+        new(LetterboxdImportPolicy, 10, 1),
+        new(KofiWebhookPolicy, 20, 1, QuotaScope.Address),
+        new(IdeaSuggestionPolicy, 10, 60),
+        new(SchedulerPolicy, 10, 1, QuotaScope.Address),
+        new(HostActionPolicy, 60, 1),
+        new(MovieMutationPolicy, 60, 1),
+        new(NotificationMutationPolicy, 60, 1),
+        new(AuthLogoutPolicy, 30, 1),
+        new(HealthReadyPolicy, 30, 1, QuotaScope.Address),
+        new(EventViewPollPolicy, 600, 1),
+        new(RatingMutationPolicy, 60, 1),
+        new(RecapDocumentPolicy, 120, 1, QuotaScope.Slug),
+        new(AvatarPhotoUploadPolicy, 10, 60),
+        new(AvatarPhotosPolicy, 300, 1)
     ];
 
     public static IServiceCollection AddMoviePickerRateLimiter(
@@ -103,7 +111,7 @@ public static class RateLimitingExtensions
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.OnRejected = WriteRejectedAsync;
             if (!isDevelopment)
-                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(CreateGlobalPartition);
+                options.GlobalLimiter = CreateGlobalLimiter();
             foreach (var spec in Policies)
             {
                 var captured = spec;
@@ -147,20 +155,43 @@ public static class RateLimitingExtensions
         return null;
     }
 
-    internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec)
+    internal static string PartitionKeyFor(HttpContext httpContext) => UserOrIpPartitionKey.Get(httpContext);
+
+    internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec) => spec.Scope switch
     {
-        if (spec.BySlug)
-            return RouteSlugPartitionKey.Get(httpContext) ?? ClientIpPartitionKey.Get(httpContext);
-        return spec.ByUser ? UserOrIpPartitionKey.Get(httpContext) : ClientIpPartitionKey.Get(httpContext);
-    }
+        QuotaScope.Address => AddressPartitionKey(httpContext),
+        QuotaScope.Slug => RouteSlugPartitionKey.Get(httpContext) ?? AddressPartitionKey(httpContext),
+        _ => PartitionKeyFor(httpContext)
+    };
+
+    private static string AddressPartitionKey(HttpContext httpContext) => $"ip:{ClientIpPartitionKey.Get(httpContext)}";
+
+    internal static PartitionedRateLimiter<HttpContext> CreateGlobalLimiter() =>
+        PartitionedRateLimiter.CreateChained(
+            PartitionedRateLimiter.Create<HttpContext, string>(CreateAddressCeilingPartition),
+            PartitionedRateLimiter.Create<HttpContext, string>(CreateGlobalPartition));
+
+    internal static RateLimitPartition<string> CreateAddressCeilingPartition(HttpContext httpContext) =>
+        IsProxied(httpContext)
+            ? RateLimitPartition.GetNoLimiter(ProxiedPartition)
+            : BuildFixedWindow(AddressPartitionKey(httpContext), AddressCeilingPerMinute, 1);
 
     internal static RateLimitPartition<string> CreateGlobalPartition(HttpContext httpContext)
     {
-        var policyName = httpContext.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
-        if (policyName is not null && FindPolicy(policyName) is { BySlug: true })
-            return RateLimitPartition.GetNoLimiter("proxied");
-        return BuildFixedWindow(ClientIpPartitionKey.Get(httpContext), GlobalPermitLimitPerMinute, 1);
+        if (IsPolledEventView(httpContext))
+            return RateLimitPartition.GetNoLimiter(EventViewPollPolicy);
+        return IsProxied(httpContext)
+            ? RateLimitPartition.GetNoLimiter(ProxiedPartition)
+            : BuildFixedWindow(PartitionKeyFor(httpContext), GlobalPermitLimitPerMinute, 1);
     }
+
+    private static string? PolicyNameOf(HttpContext httpContext) =>
+        httpContext.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
+
+    private static bool IsPolledEventView(HttpContext httpContext) => PolicyNameOf(httpContext) == EventViewPollPolicy;
+
+    private static bool IsProxied(HttpContext httpContext) =>
+        PolicyNameOf(httpContext) is { } policyName && FindPolicy(policyName) is { Scope: QuotaScope.Slug };
 
     internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec) =>
         BuildFixedWindow(PartitionKeyFor(httpContext, spec), spec.PermitLimit, spec.WindowMinutes);
@@ -177,20 +208,36 @@ public static class RateLimitingExtensions
                 AutoReplenishment = true
             });
 
-    internal readonly record struct PolicySpec(
-        string Name,
-        int PermitLimit,
-        int WindowMinutes,
-        bool ByUser,
-        bool BySlug = false);
+    internal enum QuotaScope
+    {
+        Account,
+        Address,
+        Slug
+    }
+
+    internal readonly record struct PolicySpec(string Name, int PermitLimit, int WindowMinutes, QuotaScope Scope = QuotaScope.Account);
+
 }
 
 internal static class ClientIpPartitionKey
 {
+    private const int Ipv6NetworkPrefixBytes = 8;
+
     internal static string Get(HttpContext httpContext)
     {
         var ip = httpContext.Connection.RemoteIpAddress;
-        return ip?.ToString() ?? "unknown";
+        if (ip is null)
+            return "unknown";
+        if (ip.IsIPv4MappedToIPv6)
+            return ip.MapToIPv4().ToString();
+        return ip.AddressFamily == AddressFamily.InterNetworkV6 ? Ipv6NetworkOf(ip) : ip.ToString();
+    }
+
+    private static string Ipv6NetworkOf(IPAddress address)
+    {
+        var bytes = address.GetAddressBytes();
+        Array.Clear(bytes, Ipv6NetworkPrefixBytes, bytes.Length - Ipv6NetworkPrefixBytes);
+        return $"{new IPAddress(bytes)}/{Ipv6NetworkPrefixBytes * 8}";
     }
 }
 

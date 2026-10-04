@@ -8,6 +8,7 @@ locals {
   api_health_passed = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.api_health.uptime_check_id}\""
   api_ready_passed  = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.api_readiness.uptime_check_id}\""
   web_passed        = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.web.uptime_check_id}\""
+  staging_passed    = "${local.uptime_passed} AND metric.label.check_id = \"${google_monitoring_uptime_check_config.staging_api_health.uptime_check_id}\""
   channels          = concat([google_monitoring_notification_channel.email.name], google_monitoring_notification_channel.sms[*].name)
   backup_published  = "storage_googleapis_com:api_request_count{monitored_resource=\"gcs_bucket\", bucket_name=\"${var.backup_bucket}\", method=\"MoveObject\", response_code=\"OK\"}"
 }
@@ -129,6 +130,34 @@ resource "google_monitoring_uptime_check_config" "web" {
 
   http_check {
     path           = "/"
+    port           = 443
+    request_method = "GET"
+    use_ssl        = true
+    validate_ssl   = true
+
+    accepted_response_status_codes {
+      status_class = "STATUS_CLASS_2XX"
+    }
+  }
+}
+
+resource "google_monitoring_uptime_check_config" "staging_api_health" {
+  project          = var.project_id
+  display_name     = "Recette API - disponibilite (/health)"
+  period           = "300s"
+  timeout          = "10s"
+  selected_regions = var.regions
+
+  monitored_resource {
+    type = "uptime_url"
+    labels = {
+      host       = var.staging_api_host
+      project_id = var.project_id
+    }
+  }
+
+  http_check {
+    path           = "/health"
     port           = 443
     request_method = "GET"
     use_ssl        = true
@@ -521,7 +550,7 @@ resource "google_monitoring_alert_policy" "scheduler_failure" {
     display_name = "Tentative d'un job Cloud Scheduler terminee en erreur"
 
     condition_matched_log {
-      filter = "resource.type=\"cloud_scheduler_job\" AND severity>=ERROR"
+      filter = "resource.type=\"cloud_scheduler_job\" AND severity>=ERROR AND resource.labels.job_id!=\"movie-picker-warm-catalog\""
 
       label_extractors = {
         job    = "EXTRACT(resource.labels.job_id)"
@@ -533,16 +562,111 @@ resource "google_monitoring_alert_policy" "scheduler_failure" {
   documentation {
     mime_type = "text/markdown"
     content = chomp(<<-EOT
-      **Indicateur** : une ligne de journal de Cloud Scheduler (`resource.type = cloud_scheduler_job`) en sévérité `ERROR`, écrite quand une tentative d'un job se termine sur autre chose qu'un 2xx : la cible a répondu 401, 503 ou pas du tout avant le délai de 300 s.
+      **Indicateur** : une ligne de journal de Cloud Scheduler (`resource.type = cloud_scheduler_job`) en sévérité `ERROR`, écrite quand une tentative d'un job se termine sur autre chose qu'un 2xx : la cible a répondu 401, 503 ou pas du tout avant le délai de 300 s. Une passe qui a tourné mais laissé des éléments en échec (rappel non remis, occurrence non créée, watchlist non nettoyée) répond aussi 503, avec ses compteurs dans le corps, pour que le job la rejoue. Le rechargement du catalogue (`movie-picker-warm-catalog`, toutes les 5 heures) est exclu : son échec tient à TMDB, sans geste possible, et la home garde son instantané précédent ; un défaut d'authentification se verrait sur les trois autres jobs, qui partagent le même jeton.
 
       **Pourquoi une alerte dédiée** : les trois passes planifiées (`movie-picker-event-reminders` toutes les 30 minutes, `movie-picker-recurring-events` et `movie-picker-finished-events` chaque nuit) appellent les routes `/api/v1/scheduler/*` de l'API. Un échec toutes les 30 minutes reste sous les seuils de l'alerte 5xx (plus de 2 réponses 5xx sur 30 minutes, ou plus de 20 % du trafic, que les sondes gonflent) : sans cette politique, les rappels de soirée cesseraient en silence, ce qui est déjà arrivé une fois avec un jeton absent.
 
       **Déclencheur** : chaque ligne correspondante, avec au plus une notification toutes les 30 minutes et fermeture automatique après 30 minutes.
 
       **Conduite à tenir** :
-      1. Lire le `status` porté par la notification : `UNAUTHENTICATED` ou `PERMISSION_DENIED` (401) signifie que l'API refuse le jeton OIDC du job (audience, compte de service `movie-picker-scheduler@` ou variables `SCHEDULER_OIDC_*` de la révision) ; `UNAVAILABLE` (503) que la révision active n'a pas la configuration OIDC ; `DEADLINE_EXCEEDED` que la passe dépasse 300 s.
+      1. Lire le `status` porté par la notification : `UNAUTHENTICATED` ou `PERMISSION_DENIED` (401) signifie que l'API refuse le jeton OIDC du job (audience, compte de service `movie-picker-scheduler@` ou variables `SCHEDULER_OIDC_*` de la révision) ; `UNAVAILABLE` (503) que la révision active n'a pas la configuration OIDC, ou que la passe a laissé des éléments en échec (journal `jsonPayload` de l'API au même instant : `Failed to` suivi de l'élément) ; `DEADLINE_EXCEEDED` que la passe dépasse 300 s.
       2. Vérifier la révision active du service `${var.api_service_name}` et ses variables `SCHEDULER_OIDC_AUDIENCE` et `SCHEDULER_OIDC_SERVICE_ACCOUNT`, posées par `deploy.yml`.
       3. Relancer la passe à la main (`gcloud scheduler jobs run <job> --location europe-west1`) une fois la cause corrigée : une passe manquée n'est pas rejouée d'elle-même.
+    EOT
+    )
+  }
+}
+
+resource "google_monitoring_alert_policy" "staging_down" {
+  project               = var.project_id
+  display_name          = "Recette indisponible (${var.staging_api_host})"
+  combiner              = "OR"
+  severity              = "WARNING"
+  notification_channels = [google_monitoring_notification_channel.email.name]
+
+  alert_strategy {
+    auto_close = "3600s"
+  }
+
+  conditions {
+    display_name = "Sonde /health de la recette en échec sur au moins 2 points de contrôle pendant 15 minutes"
+
+    condition_threshold {
+      filter          = local.staging_passed
+      comparison      = "COMPARISON_GT"
+      threshold_value = 1
+      duration        = "900s"
+
+      aggregations {
+        alignment_period     = "600s"
+        per_series_aligner   = "ALIGN_NEXT_OLDER"
+        cross_series_reducer = "REDUCE_COUNT_FALSE"
+        group_by_fields      = ["resource.label.host"]
+      }
+
+      trigger {
+        count = 1
+      }
+    }
+  }
+
+  documentation {
+    mime_type = "text/markdown"
+    content = chomp(<<-EOT
+      **Sonde** : uptime check `Recette API - disponibilite (/health)`, toutes les 5 minutes, sur l'API de recette.
+
+      **Pourquoi** : chaque mise en production passe d'abord par la recette (`deploy.yml`, étape `staging`), et la production refuse de partir tant que la recette ne sert pas le commit à livrer. Une recette tombée bloque donc la prochaine livraison ; mieux vaut l'apprendre avant de la lancer. Aucun utilisateur n'y accède : l'alerte part par e-mail seulement, en sévérité `WARNING`.
+
+      **Déclenchement** : au moins 2 points de contrôle en échec pendant 15 minutes.
+
+      **Conduite à tenir** :
+      1. Vérifier `https://${var.staging_api_host}/health` et les journaux Cloud Run du service de recette.
+      2. Relancer `deploy.yml` avec l'étape `staging` : la recette se remet en état en redéployant, il n'y a pas de retour arrière dédié.
+    EOT
+    )
+  }
+}
+
+resource "google_monitoring_alert_policy" "account_throttled" {
+  project               = var.project_id
+  display_name          = "Compte limite par l'API (429)"
+  combiner              = "OR"
+  severity              = "WARNING"
+  notification_channels = [google_monitoring_notification_channel.email.name]
+
+  alert_strategy {
+    auto_close = "3600s"
+
+    notification_rate_limit {
+      period = "3600s"
+    }
+  }
+
+  conditions {
+    display_name = "Requête d'un compte connecté refusée en 429, ou connexion bloquée après trop d'échecs"
+
+    condition_matched_log {
+      filter = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${var.api_service_name}\" AND ((jsonPayload.State.StatusCode=429 AND jsonPayload.State.Caller=\"account\") OR jsonPayload.State.\"{OriginalFormat}\"=\"Sign-in refused: too many failed attempts on one account\")"
+
+      label_extractors = {
+        path = "EXTRACT(jsonPayload.State.Path)"
+      }
+    }
+  }
+
+  documentation {
+    mime_type = "text/markdown"
+    content = chomp(<<-EOT
+      **Indicateur** : une ligne du journal de requêtes de l'API (`${var.api_service_name}`) en statut 429 pour un appelant connecté (`jsonPayload.State.Caller = account`), ou l'avertissement `Sign-in refused: too many failed attempts on one account` de `LoginUserHandler`.
+
+      **Pourquoi** : les quotas sont comptés par compte une fois la session lue, par adresse IP sinon. Un 429 anonyme est le plus souvent un robot, sans geste à faire. Un 429 sur un compte veut dire qu'un vrai utilisateur est bloqué (une soirée très active, un quota trop serré) ou qu'un compte est utilisé de façon abusive ; une connexion bloquée veut dire que quelqu'un essaie des mots de passe sur un compte.
+
+      **Déclencheur** : chaque ligne correspondante, au plus une notification par heure.
+
+      **Conduite à tenir** :
+      1. Lire le chemin (`path`) porté par la notification et les lignes voisines du journal : une seule route, ou tout le trafic d'un compte.
+      2. Quota trop serré pour un usage normal : relever la politique concernée dans `RateLimitingExtensions` (`apps/api-dotnet`).
+      3. Connexions bloquées en série : le blocage protège déjà le compte (10 échecs par fenêtre) ; prévenir la personne si elle se manifeste, le journal ne porte ni e-mail ni identifiant.
     EOT
     )
   }

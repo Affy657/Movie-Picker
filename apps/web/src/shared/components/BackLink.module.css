@@ -1,0 +1,42 @@
+.root {
+  composes: expanded from './tapTarget.module.css';
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--space-1-5);
+  padding: var(--space-1-5) var(--space-2-5) var(--space-1-5) var(--space-1-5);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-none);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color var(--duration-base) var(--ease-default),
+    background var(--duration-base) var(--ease-default);
+}
+
+.label {
+  transform: translateY(var(--text-optical-nudge));
+}
+
+.labelCaps {
+  transform: translateY(var(--text-optical-nudge-caps));
+}
+
+@media (hover: hover) {
+  .root:hover {
+    color: var(--color-primary-text);
+    background: var(--color-primary-tint);
+  }
+}
+
+.root:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset);
+  border-radius: var(--radius-pill);
+}

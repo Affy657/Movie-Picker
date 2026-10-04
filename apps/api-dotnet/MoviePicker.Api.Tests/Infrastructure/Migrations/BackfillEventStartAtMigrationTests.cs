@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Entities;
@@ -14,7 +15,7 @@ public sealed class BackfillEventStartAtMigrationTests
 
     public BackfillEventStartAtMigrationTests()
     {
-        _sut = new BackfillEventStartAtMigration(_events.Object);
+        _sut = new BackfillEventStartAtMigration(_events.Object, NullLogger<BackfillEventStartAtMigration>.Instance);
     }
 
     [Fact]

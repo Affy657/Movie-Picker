@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from 'react';
 import { hashKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   fetchAuthMeForSession,
@@ -8,7 +16,9 @@ import {
   postAuthRegister,
   type ProfilePatch,
 } from '@/features/auth/api/authApi';
+import { ApiError } from '@/shared/api/apiError';
 import { clearStoredEventIdentities } from '@/shared/utils/eventIdentityStorage';
+import { dropBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { applyUpdatedProfile } from '@/features/auth/utils/profileCache';
@@ -22,6 +32,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
+  endSession: () => Promise<void>;
   patchProfile: (patch: ProfilePatch) => Promise<UserProfile>;
 };
 
@@ -29,6 +40,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function signedOutStateRendered(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+function sessionGoneOrUnreachable(error: unknown): boolean {
+  return ApiError.is(error) && (error.code === 401 || error.code === 0);
 }
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
@@ -58,6 +73,33 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     void refetchSession();
   }, [refetchSession]);
 
+  const resetAccountQueries = useCallback(
+    () =>
+      queryClient.resetQueries({
+        predicate: (query) => query.queryHash !== hashKey(queryKeys.auth.me),
+      }),
+    [queryClient]
+  );
+
+  const signedInUserId = user?.userId ?? null;
+  const lastSignedInUserIdRef = useRef(signedInUserId);
+
+  useEffect(() => {
+    const previousUserId = lastSignedInUserIdRef.current;
+    lastSignedInUserIdRef.current = signedInUserId;
+    if (previousUserId === null || previousUserId === signedInUserId) return;
+    clearStoredEventIdentities();
+    void resetAccountQueries();
+  }, [signedInUserId, resetAccountQueries]);
+
+  const endSession = useCallback(async () => {
+    lastSignedInUserIdRef.current = null;
+    clearStoredEventIdentities();
+    queryClient.setQueryData(queryKeys.auth.me, null);
+    await signedOutStateRendered();
+    await resetAccountQueries();
+  }, [queryClient, resetAccountQueries]);
+
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       await postAuthLogin(email, password);
@@ -84,13 +126,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await postAuthLogout();
-      clearStoredEventIdentities();
-      queryClient.setQueryData(queryKeys.auth.me, null);
-      await signedOutStateRendered();
-      await queryClient.resetQueries({
-        predicate: (query) => query.queryHash !== hashKey(queryKeys.auth.me),
-      });
+      try {
+        await postAuthLogout();
+      } catch (error) {
+        if (!sessionGoneOrUnreachable(error)) throw error;
+      } finally {
+        void dropBrowserPushSubscription();
+      }
+      await endSession();
     },
     onSuccess: () => track('user_logged_out'),
   });
@@ -130,9 +173,20 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       login,
       register,
       logout,
+      endSession,
       patchProfile,
     }),
-    [user, isLoading, authCheckFailed, retryAuthCheck, login, register, logout, patchProfile]
+    [
+      user,
+      isLoading,
+      authCheckFailed,
+      retryAuthCheck,
+      login,
+      register,
+      logout,
+      endSession,
+      patchProfile,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

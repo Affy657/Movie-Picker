@@ -20,7 +20,10 @@ internal static class PosterRemoteFetch
             || fetchUri.Scheme != Uri.UriSchemeHttps
             || !string.Equals(fetchUri.Host, "image.tmdb.org", StringComparison.OrdinalIgnoreCase))
             return null;
-        using var res = await http.GetAsync(fetchUri, HttpCompletionOption.ResponseHeadersRead, ct);
+
+        using var download = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        download.CancelAfter(http.Timeout);
+        using var res = await http.GetAsync(fetchUri, HttpCompletionOption.ResponseHeadersRead, download.Token);
         if (!res.IsSuccessStatusCode)
             return null;
 
@@ -28,7 +31,7 @@ internal static class PosterRemoteFetch
         if (!IsAllowedContentType(declared))
             return null;
 
-        var bytes = await res.Content.ReadAtMostAsync(maxBytes, ct);
+        var bytes = await res.Content.ReadAtMostAsync(maxBytes, download.Token);
         return bytes is { Length: > 0 } ? new PosterImageBlob(bytes, declared!) : null;
     }
 

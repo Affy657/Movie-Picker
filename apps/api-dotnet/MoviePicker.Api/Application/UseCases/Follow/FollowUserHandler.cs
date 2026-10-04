@@ -1,5 +1,6 @@
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -12,6 +13,7 @@ public sealed class FollowUserHandler : IFollowUserHandler
     private readonly IUserNotificationRepository _notifications;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IPushNotificationSender _pushSender;
+    private readonly INotificationDedupRepository _dedup;
     private readonly TimeProvider _clock;
 
     public FollowUserHandler(
@@ -20,6 +22,7 @@ public sealed class FollowUserHandler : IFollowUserHandler
         IUserNotificationRepository notifications,
         IPushSubscriptionRepository pushSubscriptions,
         IPushNotificationSender pushSender,
+        INotificationDedupRepository dedup,
         TimeProvider clock)
     {
         _follows = follows;
@@ -27,6 +30,7 @@ public sealed class FollowUserHandler : IFollowUserHandler
         _notifications = notifications;
         _pushSubscriptions = pushSubscriptions;
         _pushSender = pushSender;
+        _dedup = dedup;
         _clock = clock;
     }
 
@@ -53,6 +57,14 @@ public sealed class FollowUserHandler : IFollowUserHandler
         if (!target.NotifiesOn(UserNotificationType.NewFollower))
             return;
 
+        if (await _notifications.ExistsFromActorAsync(target.Id, UserNotificationType.NewFollower, follower.Handle, ct))
+            return;
+
+        var firstNoticeOfThisFollower = await _dedup.TryClaimAsync(
+            target.Id, UserNotificationType.NewFollower, currentUserId, NotificationDedupChannel.InApp, ct);
+        if (!firstNoticeOfThisFollower)
+            return;
+
         var notification = new UserNotification
         {
             UserId = target.Id,
@@ -63,15 +75,23 @@ public sealed class FollowUserHandler : IFollowUserHandler
             IsRead = false,
             CreatedAt = _clock.GetUtcNow()
         };
-        await _notifications.AddAsync(notification, ct);
+        try
+        {
+            await _notifications.AddAsync(notification, ct);
+        }
+        catch (Exception)
+        {
+            await _dedup.ReleaseAsync(
+                target.Id, UserNotificationType.NewFollower, currentUserId, NotificationDedupChannel.InApp, CancellationToken.None);
+            throw;
+        }
 
         var subs = await _pushSubscriptions.ListByUserIdAsync(target.Id, ct);
         var message = new PushMessage(
             Title: "Nouveau follower 👀",
             Body: $"{follower.DisplayName} a commencé à vous suivre.",
             Tag: "new-follower",
-            Url: $"/u/{follower.Handle}");
-        foreach (var sub in subs)
-            await _pushSender.SendAsync(sub, message, ct);
+            Url: PublicHandleResolver.Resolve(follower) is { } publicHandle ? $"/u/{publicHandle}" : "/notifications");
+        await PushFanOut.SendToAllAsync(_pushSender, subs, message, ct);
     }
 }

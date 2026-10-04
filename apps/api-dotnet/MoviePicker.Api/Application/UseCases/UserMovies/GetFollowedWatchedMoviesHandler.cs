@@ -2,7 +2,6 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
-using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.UserMovies;
@@ -67,44 +66,38 @@ public sealed class GetFollowedWatchedMoviesHandler : IGetFollowedWatchedMoviesH
 
         var eventIds = participants.Select(p => p.EventId).Distinct().ToList();
         var events = await _events.ListByIdsAsync(eventIds, ct);
-        var now = _clock.GetUtcNow();
 
-        var watched = events
-            .Where(e => e.HasWinner && e.IsFinished(now))
-            .SelectMany(e => e.GetWinnerMovieIds().Select(id => (MovieId: id, WatchedAt: WatchedAtOf(e))))
-            .GroupBy(x => x.MovieId)
-            .Select(g => g.OrderByDescending(x => x.WatchedAt).First())
+        var latestFirst = WatchedMoviesFacts.FinishedWinners(events, _clock.GetUtcNow())
             .OrderByDescending(x => x.WatchedAt)
-            .Take(take <= 0 ? DefaultTake : Math.Min(take, MaxTake))
             .ToList();
+        var watched = await LatestNightPerFilmAsync(
+            latestFirst,
+            take <= 0 ? DefaultTake : Math.Min(take, MaxTake),
+            ct);
 
-        if (watched.Count == 0)
-            return empty;
-
-        var movies = await _movies.ListByIdsAsync(watched.Select(x => x.MovieId).ToList(), ct);
-        var movieById = movies.ToDictionary(m => m.Id);
-
-        var items = watched
-            .Select(x => (x.WatchedAt, Movie: movieById.GetValueOrDefault(x.MovieId)))
-            .Where(x => x.Movie is not null)
-            .Select(x => new UserWatchedMovieItem
-            {
-                TmdbId = x.Movie!.TmdbId,
-                Title = x.Movie.Title,
-                Year = x.Movie.Year,
-                PosterPath = x.Movie.PosterPath,
-                GenreIds = x.Movie.GenreIds,
-                MediaType = x.Movie.MediaType,
-                WatchedAt = x.WatchedAt,
-            })
-            .ToList();
-
-        return new UserWatchedMoviesResponse
-        {
-            Items = await WatchedMoviesFacts.WithTmdbFactsAsync(items, _tmdb, _options, ct)
-        };
+        return await WatchedMoviesFacts.ToResponseAsync(watched, _tmdb, _options, ct);
     }
 
-    private static DateTimeOffset WatchedAtOf(Event evt) =>
-        EventSchedule.TryGetStartUtc(evt.Date, evt.Time, out var start) ? start : evt.ClosedAt ?? evt.UpdatedAt;
+    private async Task<List<(Movie Movie, DateTimeOffset WatchedAt)>> LatestNightPerFilmAsync(
+        List<(string MovieId, DateTimeOffset WatchedAt)> latestFirst,
+        int limit,
+        CancellationToken ct)
+    {
+        var films = new List<(Movie Movie, DateTimeOffset WatchedAt)>(limit);
+        var seen = new HashSet<(int TmdbId, MovieMediaType MediaType)>();
+        foreach (var nights in latestFirst.Chunk(limit))
+        {
+            var movies = await _movies.ListByIdsAsync(nights.Select(x => x.MovieId).Distinct().ToList(), ct);
+            var movieById = movies.ToDictionary(m => m.Id);
+            foreach (var (movieId, watchedAt) in nights)
+            {
+                if (movieById.TryGetValue(movieId, out var movie) && seen.Add((movie.TmdbId, movie.MediaType)))
+                    films.Add((movie, watchedAt));
+                if (films.Count == limit)
+                    return films;
+            }
+        }
+
+        return films;
+    }
 }

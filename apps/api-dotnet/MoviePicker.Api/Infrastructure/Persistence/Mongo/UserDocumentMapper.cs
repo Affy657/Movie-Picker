@@ -12,6 +12,7 @@ public static class UserDocumentMapper
             PasswordHash = doc.PasswordHash,
             DisplayName = doc.DisplayName,
             Identities = (doc.Identities ?? []).ConvertAll(ToIdentityDomain),
+            UnlinkedIdentities = (doc.UnlinkedIdentities ?? []).ConvertAll(ToUnlinkedIdentityDomain),
             Handle = doc.Handle ?? string.Empty,
             Bio = doc.Bio,
             IsProfilePublic = doc.IsProfilePublic ?? true,
@@ -20,7 +21,7 @@ public static class UserDocumentMapper
             AccentColor = ParseAccent(doc.AccentColor),
             RatingScale = ParseRatingScale(doc.RatingScale),
             AvatarId = doc.AvatarId ?? string.Empty,
-            AvatarPhoto = doc.AvatarPhoto is null ? null : ToAvatarPhotoDomain(doc.AvatarPhoto),
+            AvatarPhoto = ToAvatarPhotoDomain(doc.AvatarPhoto),
             NotificationPreferences = BuildNotificationPreferences(doc),
             EventTemplates = (doc.EventTemplates ?? []).ConvertAll(ToTemplateDomain),
             Favorites = (doc.Favorites ?? []).ConvertAll(ToFavoriteDomain),
@@ -33,6 +34,7 @@ public static class UserDocumentMapper
                 : new DateTimeOffset(doc.LetterboxdLastSyncAt.Value, TimeSpan.Zero),
             LetterboxdLastSyncError = doc.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = doc.LetterboxdPendingReconciliationCount,
+            LetterboxdPendingChoiceKeys = doc.LetterboxdPendingChoiceKeys,
             CreatedAt = new DateTimeOffset(doc.CreatedAt, TimeSpan.Zero),
             UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero),
             Version = doc.Version
@@ -46,6 +48,9 @@ public static class UserDocumentMapper
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
             Identities = user.Identities.Count == 0 ? null : user.Identities.Select(ToIdentityDocument).ToList(),
+            UnlinkedIdentities = user.UnlinkedIdentities.Count == 0
+                ? null
+                : user.UnlinkedIdentities.Select(ToUnlinkedIdentityDocument).ToList(),
             Handle = string.IsNullOrEmpty(user.Handle) ? null : user.Handle,
             Bio = string.IsNullOrEmpty(user.Bio) ? null : user.Bio,
             IsProfilePublic = user.IsProfilePublic,
@@ -69,6 +74,7 @@ public static class UserDocumentMapper
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt?.UtcDateTime,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
+            LetterboxdPendingChoiceKeys = user.LetterboxdPendingChoiceKeys?.ToList(),
             CreatedAt = user.CreatedAt.UtcDateTime,
             UpdatedAt = user.UpdatedAt.UtcDateTime,
             Version = user.Version
@@ -90,12 +96,14 @@ public static class UserDocumentMapper
         CreatedAt = template.CreatedAt.UtcDateTime
     };
 
-    private static AvatarPhoto ToAvatarPhotoDomain(AvatarPhotoDocument doc) => new()
-    {
-        Key = doc.Key,
-        IsActive = doc.IsActive,
-        UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
-    };
+    internal static AvatarPhoto? ToAvatarPhotoDomain(AvatarPhotoDocument? doc) => doc is null
+        ? null
+        : new AvatarPhoto
+        {
+            Key = doc.Key,
+            IsActive = doc.IsActive,
+            UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
+        };
 
     private static AvatarPhotoDocument ToAvatarPhotoDocument(AvatarPhoto photo) => new()
     {
@@ -136,6 +144,20 @@ public static class UserDocumentMapper
         Subject = identity.Subject,
         Email = identity.Email,
         LinkedAt = identity.LinkedAt.UtcDateTime
+    };
+
+    private static UnlinkedIdentity ToUnlinkedIdentityDomain(UnlinkedIdentityDocument doc) => new()
+    {
+        Provider = doc.Provider,
+        Subject = doc.Subject,
+        UnlinkedAt = new DateTimeOffset(doc.UnlinkedAt, TimeSpan.Zero)
+    };
+
+    private static UnlinkedIdentityDocument ToUnlinkedIdentityDocument(UnlinkedIdentity identity) => new()
+    {
+        Provider = identity.Provider,
+        Subject = identity.Subject,
+        UnlinkedAt = identity.UnlinkedAt.UtcDateTime
     };
 
     private static UiThemePreference ParseTheme(string? s) =>

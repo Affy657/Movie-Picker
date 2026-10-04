@@ -23,6 +23,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public List<UserIdentityDocument>? Identities { get; set; }
 
+    [BsonElement("unlinkedIdentities")]
+    [BsonIgnoreIfNull]
+    public List<UnlinkedIdentityDocument>? UnlinkedIdentities { get; set; }
+
     [BsonElement("handle")]
     [BsonIgnoreIfNull]
     public string? Handle { get; set; }
@@ -101,6 +105,10 @@ public sealed class UserDocument
     [BsonIgnoreIfDefault]
     public int LetterboxdPendingReconciliationCount { get; set; }
 
+    [BsonElement("letterboxdPendingChoiceKeys")]
+    [BsonIgnoreIfNull]
+    public List<string>? LetterboxdPendingChoiceKeys { get; set; }
+
     [BsonElement("notificationPreferences")]
     [BsonIgnoreIfNull]
     public List<NotificationPreferenceEntryDocument>? NotificationPreferences { get; set; }
@@ -123,6 +131,7 @@ public sealed class UserDocument
     public long Version { get; set; }
 }
 
+[BsonIgnoreExtraElements]
 public sealed class EventTemplateDocument
 {
     [BsonElement("id")]
@@ -157,6 +166,7 @@ public sealed class FavoriteTitleDocument
     public string? PosterPath { get; set; }
 }
 
+[BsonIgnoreExtraElements]
 public sealed class UserIdentityDocument
 {
     [BsonElement("provider")]
@@ -172,6 +182,20 @@ public sealed class UserIdentityDocument
     public DateTime LinkedAt { get; set; }
 }
 
+[BsonIgnoreExtraElements]
+public sealed class UnlinkedIdentityDocument
+{
+    [BsonElement("provider")]
+    public string Provider { get; set; } = string.Empty;
+
+    [BsonElement("subject")]
+    public string Subject { get; set; } = string.Empty;
+
+    [BsonElement("unlinkedAt")]
+    public DateTime UnlinkedAt { get; set; }
+}
+
+[BsonIgnoreExtraElements]
 public sealed class NotificationPreferenceEntryDocument
 {
     [BsonElement("type")]

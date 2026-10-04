@@ -35,7 +35,7 @@
   max-width: 34ch;
   margin: 0;
   font-size: var(--font-size-md);
-  line-height: var(--leading-loose);
+  line-height: var(--leading-relaxed);
   color: var(--color-text-muted);
 }
 

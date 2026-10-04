@@ -4,10 +4,12 @@ import { Bookmark, CalendarDays, Compass, HelpCircle, LogIn, Plus, UserRound } f
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { ownProfileDestination } from '@/features/auth/utils/ownProfileDestination';
 import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxdAutoSync';
 import { useWhatsNew } from '@/shared/hooks/useWhatsNew';
 import { shouldShowWhatsNewNavChip } from '@/shared/whatsNew';
 import { withReturnTo, ROUTES } from '@/app/routes';
+import { safeReturnTo } from '@/shared/utils/returnTo';
 import { routeIntentHandlers } from '@/app/routeChunks';
 import { LANDING_ANCHORS } from '@/app/pages/landing/anchors';
 import UserMenu from '@/features/auth/components/UserMenu';
@@ -179,11 +181,14 @@ export default function AppShell() {
   const [proposeIdeaOpen, setProposeIdeaOpen] = useState(false);
 
   const isAuthenticated = !!user;
+  const ownProfilePath = user ? ownProfileDestination(user).path : null;
   const isLandingRoute = location.pathname === ROUTES.howItWorks && !isAuthenticated;
-  const returnTo = `${location.pathname}${location.search}`;
   const isOnAuthRoute = (
     [ROUTES.login, ROUTES.register, ROUTES.forgotPassword, ROUTES.resetPassword] as string[]
   ).includes(location.pathname);
+  const returnTo = isOnAuthRoute
+    ? safeReturnTo(new URLSearchParams(location.search).get('returnTo'))
+    : `${location.pathname}${location.search}`;
 
   const exploreItem: NavItemDef = {
     to: ROUTES.home,
@@ -198,9 +203,9 @@ export default function AppShell() {
     toNavItem(spec, t(spec.mobileLabelKey ?? spec.labelKey))
   );
 
-  const accountItem: NavItemDef = user
+  const accountItem: NavItemDef = ownProfilePath
     ? {
-        to: user.handle ? ROUTES.profile(user.handle) : ROUTES.account,
+        to: ownProfilePath,
         label: t('nav.profile'),
         Icon: UserRound,
       }
@@ -280,7 +285,7 @@ export default function AppShell() {
           <WhatsNewModal
             open={whatsNewOpen}
             release={whatsNewRelease}
-            profileHandle={user.handle}
+            ownProfilePath={ownProfilePath}
             onClose={closeWhatsNew}
             onAction={(action) => {
               if (action === 'proposeIdea') setProposeIdeaOpen(true);

@@ -11,11 +11,13 @@ import {
 export default function LanguageSelector({
   className = '',
   id,
+  ariaLabelledBy,
   inline = false,
   placement,
 }: Readonly<{
   className?: string;
   id?: string;
+  ariaLabelledBy?: string;
   inline?: boolean;
   placement?: DropdownPlacement;
 }>) {
@@ -31,15 +33,17 @@ export default function LanguageSelector({
     []
   );
 
+  const naming = ariaLabelledBy ? { ariaLabelledBy } : { ariaLabel: t('common.languageLabel') };
+
   return (
     <Dropdown
+      {...naming}
       id={id}
       value={locale}
       options={options}
       onChange={(v) => {
         if (isLocaleCode(v)) setLocale(v);
       }}
-      ariaLabel={id ? undefined : t('common.languageLabel')}
       className={className || undefined}
       inline={inline}
       placement={placement}

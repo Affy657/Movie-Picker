@@ -27,7 +27,7 @@ public sealed class AvatarPhotoHandlersTests
         var writer = new AvatarPhotoWriter(_users, _photos, new InMemoryUnitOfWork(), clock);
         _upload = new UploadAvatarPhotoHandler(writer);
         _delete = new DeleteAvatarPhotoHandler(writer);
-        _patch = new PatchUserProfileHandler(_users, clock);
+        _patch = new PatchUserProfileHandler(_users, new InMemoryUserNotificationRepository(), new InMemoryUnitOfWork(), clock);
     }
 
     private async Task<User> UserAsync(string avatarId = "bolt") =>

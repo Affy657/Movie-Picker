@@ -23,6 +23,14 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
         return Task.FromResult(list);
     }
 
+    public Task<IReadOnlyList<TmdbSearchItem>> SearchTitlesAsync(
+        string query,
+        bool allowSeries,
+        int? yearFrom = null,
+        int? yearTo = null,
+        CancellationToken ct = default) =>
+        SearchAsync(query, allowSeries, ct: ct);
+
     private static TmdbMovieEnrichment StubEnrichment()
     {
         var offers = new[]
@@ -69,28 +77,31 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
     }
 
     public Task<IReadOnlyList<TmdbSearchItem>> GetTrendingMoviesAsync(int pages, CancellationToken ct = default) =>
-        Task.FromResult(BuildSection(700_000, "Tendance stub", pages));
+        Section(700_000, "Tendance stub", pages);
 
     public Task<IReadOnlyList<TmdbSearchItem>> GetNowPlayingMoviesAsync(string region, int pages, CancellationToken ct = default) =>
-        Task.FromResult(BuildSection(710_000, "En salles stub", pages));
+        Section(710_000, "En salles stub", pages);
 
     public Task<IReadOnlyList<TmdbSearchItem>> DiscoverMoviesAsync(TmdbDiscoveryCriteria criteria, int pages, CancellationToken ct = default)
     {
         var firstGenre = criteria.GenreIds is { Count: > 0 } ? criteria.GenreIds[0] : 0;
-        return Task.FromResult(BuildSection(720_000 + (firstGenre * 1_000), "Sélection stub", pages, firstGenre));
+        return Section(720_000 + (firstGenre * 1_000), "Sélection stub", pages, firstGenre);
     }
 
     public Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default) =>
         Task.FromResult<TmdbCollectionSummary?>(
             new TmdbCollectionSummary(collectionId, $"Saga stub {collectionId}", "Collection générée par le stub TMDB.", null, 4));
 
-    public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(int tmdbId, CancellationToken ct = default) =>
-        Task.FromResult(BuildSection(740_000 + tmdbId, $"Recommandation stub {tmdbId}", 1, itemCount: 6));
+    public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        CancellationToken ct = default) =>
+        Section(740_000 + tmdbId, $"Recommandation stub {tmdbId}", 1, itemCount: 6);
 
     public Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(int collectionId, CancellationToken ct = default) =>
-        Task.FromResult(BuildSection(730_000 + collectionId, $"Saga stub {collectionId}", 1, itemCount: 4));
+        Section(730_000 + collectionId, $"Saga stub {collectionId}", 1, itemCount: 4);
 
-    private static IReadOnlyList<TmdbSearchItem> BuildSection(
+    private static Task<IReadOnlyList<TmdbSearchItem>> Section(
         int idBase,
         string titlePrefix,
         int pages,
@@ -111,6 +122,6 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
                 Math.Round(9.0 - (index % 30) * 0.1, 1),
                 GenreIds: genreIds));
         }
-        return items;
+        return Task.FromResult<IReadOnlyList<TmdbSearchItem>>(items);
     }
 }

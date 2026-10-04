@@ -57,11 +57,11 @@ public sealed class MongoVoteRepository : IVoteRepository
     {
         var now = DateTime.UtcNow;
         var filter = Builders<VoteDocument>.Filter.And(
+            Builders<VoteDocument>.Filter.Eq(x => x.EventId, vote.EventId),
             Builders<VoteDocument>.Filter.Eq(x => x.MovieId, vote.MovieId),
             Builders<VoteDocument>.Filter.Eq(x => x.ParticipantId, vote.ParticipantId));
 
         var update = Builders<VoteDocument>.Update
-            .Set(x => x.EventId, vote.EventId)
             .Set(x => x.Value, vote.Value)
             .Set(x => x.UpdatedAt, now)
             .SetOnInsert(x => x.MovieId, vote.MovieId)

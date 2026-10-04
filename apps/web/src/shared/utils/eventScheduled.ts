@@ -1,7 +1,20 @@
 const EVENT_TIMEZONE = 'Europe/Paris';
 
-function timeZoneOffsetMs(utcMs: number, timeZone: string): number {
-  const parts = new Intl.DateTimeFormat('en-US', {
+export interface WallClock {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+}
+
+const wallClockFormatterByTimeZone = new Map<string, Intl.DateTimeFormat>();
+
+function wallClockFormatter(timeZone: string): Intl.DateTimeFormat {
+  const cached = wallClockFormatterByTimeZone.get(timeZone);
+  if (cached) return cached;
+  const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone,
     hourCycle: 'h23',
     year: 'numeric',
@@ -10,23 +23,42 @@ function timeZoneOffsetMs(utcMs: number, timeZone: string): number {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-  }).formatToParts(new Date(utcMs));
+  });
+  wallClockFormatterByTimeZone.set(timeZone, formatter);
+  return formatter;
+}
+
+function wallClockIn(timeZone: string, utcMs: number): WallClock {
+  const parts = wallClockFormatter(timeZone).formatToParts(new Date(utcMs));
   const get = (type: string) => Number(parts.find((p) => p.type === type)?.value);
-  const asUtc = Date.UTC(
-    get('year'),
-    get('month') - 1,
-    get('day'),
-    get('hour'),
-    get('minute'),
-    get('second')
-  );
+  return {
+    year: get('year'),
+    month: get('month'),
+    day: get('day'),
+    hour: get('hour'),
+    minute: get('minute'),
+    second: get('second'),
+  };
+}
+
+function timeZoneOffsetMs(utcMs: number, timeZone: string): number {
+  const wall = wallClockIn(timeZone, utcMs);
+  const asUtc = Date.UTC(wall.year, wall.month - 1, wall.day, wall.hour, wall.minute, wall.second);
   return asUtc - utcMs;
 }
 
+export function eventWallClockAt(utcMs: number): WallClock {
+  return wallClockIn(EVENT_TIMEZONE, utcMs);
+}
+
 export function eventScheduledStartUtcMs(event: { date: string; time: string }): number | null {
-  const guessMs = Date.parse(`${event.date}T${event.time}:00Z`);
-  if (Number.isNaN(guessMs)) return null;
-  return guessMs - timeZoneOffsetMs(guessMs, EVENT_TIMEZONE);
+  const wallClockAsUtcMs = Date.parse(`${event.date}T${event.time}:00Z`);
+  if (Number.isNaN(wallClockAsUtcMs)) return null;
+  const offsetAtWallClockMs = timeZoneOffsetMs(wallClockAsUtcMs, EVENT_TIMEZONE);
+  const firstGuessMs = wallClockAsUtcMs - offsetAtWallClockMs;
+  const offsetAtFirstGuessMs = timeZoneOffsetMs(firstGuessMs, EVENT_TIMEZONE);
+  if (offsetAtFirstGuessMs === offsetAtWallClockMs) return firstGuessMs;
+  return wallClockAsUtcMs - offsetAtFirstGuessMs;
 }
 
 export function formatEventStartInUserTimezone(

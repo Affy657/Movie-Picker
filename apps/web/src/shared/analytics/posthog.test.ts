@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import type { PostHog } from 'posthog-js';
+import type { CaptureResult, PostHog } from 'posthog-js';
 import {
   bindPostHogForTests,
   capture,
@@ -7,6 +7,7 @@ import {
   initPostHog,
   optIn,
   optOut,
+  redactCapturedUrls,
   resetIdentity,
   resetPostHogForTests,
   stripPersonPii,
@@ -123,6 +124,132 @@ describe('initPostHog', () => {
 
     idle[0]!();
     await pending;
-    expect(init).toHaveBeenCalledWith('phc_test', expect.objectContaining({ autocapture: false }));
+    expect(init).toHaveBeenCalledWith(
+      'phc_test',
+      expect.objectContaining({ autocapture: false, before_send: redactCapturedUrls })
+    );
+  });
+
+  it('keeps heatmaps, dead clicks and exceptions off whatever the project settings, and masks the tokens', async () => {
+    vi.stubEnv('PROD', true);
+    vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test');
+    vi.stubGlobal('requestIdleCallback', (callback: () => void) => {
+      callback();
+      return 1;
+    });
+    const init = vi.fn();
+    vi.doMock('posthog-js', () => ({ default: { ...createStub(), init } }));
+
+    await initPostHog();
+
+    expect(init).toHaveBeenCalledWith(
+      'phc_test',
+      expect.objectContaining({
+        capture_heatmaps: false,
+        capture_dead_clicks: false,
+        capture_exceptions: false,
+        mask_personal_data_properties: true,
+        custom_personal_data_properties: expect.arrayContaining(['token', 'host', 'api_key']),
+      })
+    );
+  });
+});
+
+describe('redactCapturedUrls', () => {
+  it('masks the tokens of every URL an event carries, person properties included', () => {
+    const event = {
+      uuid: 'u1',
+      event: '$pageview',
+      properties: {
+        $current_url: 'https://www.movie-picker.fr/reset?token=abc123',
+        $pathname: '/reset',
+        count: 2,
+      },
+      $set: { $current_url: 'https://www.movie-picker.fr/e/Ab3dE_9xYz?host=secret' },
+      $set_once: { $initial_current_url: 'https://www.movie-picker.fr/reset?token=abc123' },
+    } as CaptureResult;
+
+    const redacted = redactCapturedUrls(event);
+
+    expect(redacted?.properties).toEqual({
+      $current_url: 'https://www.movie-picker.fr/reset?token=***',
+      $pathname: '/reset',
+      count: 2,
+    });
+    expect(redacted?.$set).toEqual({
+      $current_url: 'https://www.movie-picker.fr/e/Ab3dE_9xYz?host=***',
+    });
+    expect(redacted?.$set_once).toEqual({
+      $initial_current_url: 'https://www.movie-picker.fr/reset?token=***',
+    });
+  });
+
+  it('masks the tokens of the URLs nested in objects and arrays, web vitals included', () => {
+    const event = {
+      uuid: 'u2',
+      event: '$web_vitals',
+      properties: {
+        $web_vitals_LCP_value: 1200,
+        $web_vitals_LCP_event: {
+          name: 'LCP',
+          value: 1200,
+          $current_url: 'https://www.movie-picker.fr/reset?token=abc123',
+          attribution: { url: 'https://www.movie-picker.fr/e/Ab3dE_9xYz?host=secret' },
+        },
+        $urls: ['https://www.movie-picker.fr/reset?token=abc123', 42, null],
+      },
+      $set: { $last_page: { href: 'https://www.movie-picker.fr/x?api_key=k' } },
+    } as CaptureResult;
+
+    const redacted = redactCapturedUrls(event);
+
+    expect(redacted?.properties).toEqual({
+      $web_vitals_LCP_value: 1200,
+      $web_vitals_LCP_event: {
+        name: 'LCP',
+        value: 1200,
+        $current_url: 'https://www.movie-picker.fr/reset?token=***',
+        attribution: { url: 'https://www.movie-picker.fr/e/Ab3dE_9xYz?host=***' },
+      },
+      $urls: ['https://www.movie-picker.fr/reset?token=***', 42, null],
+    });
+    expect(redacted?.$set).toEqual({
+      $last_page: { href: 'https://www.movie-picker.fr/x?api_key=***' },
+    });
+  });
+
+  it('stops at a bounded depth and leaves the values that are not plain data untouched', () => {
+    const cyclic: Record<string, unknown> = { url: '/reset?token=abc123' };
+    cyclic.self = cyclic;
+    const timestamp = new Date('2026-09-23T10:00:00Z');
+    const event = {
+      uuid: 'u3',
+      event: 'custom',
+      properties: { cyclic, when: timestamp },
+      timestamp,
+    } as CaptureResult;
+
+    const redacted = redactCapturedUrls(event);
+
+    expect(redacted?.properties.cyclic.url).toBe('/reset?token=***');
+    expect(redacted?.properties.cyclic.self.url).toBe('/reset?token=***');
+    expect(redacted?.properties.when).toBe(timestamp);
+    expect(redacted?.timestamp).toBe(timestamp);
+  });
+
+  it('drops an event it cannot read rather than sending it unmasked', () => {
+    const properties = {};
+    Object.defineProperty(properties, '$current_url', {
+      enumerable: true,
+      get: () => {
+        throw new Error('unreadable');
+      },
+    });
+
+    expect(redactCapturedUrls({ uuid: 'u4', event: '$pageview', properties })).toBeNull();
+  });
+
+  it('keeps a dropped event dropped', () => {
+    expect(redactCapturedUrls(null)).toBeNull();
   });
 });

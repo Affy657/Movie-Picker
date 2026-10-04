@@ -4,6 +4,7 @@ import { Inbox } from 'lucide-react';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Avatar from '@/shared/components/Avatar';
 import EmptyState from '@/shared/components/EmptyState';
+import InlineError from '@/shared/components/InlineError';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -31,11 +32,20 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 
 const GROUP_PREVIEW_COUNT = 3;
 
+function withoutRepeatedIds(items: UserNotificationItem[]): UserNotificationItem[] {
+  const seenIds = new Set<string>();
+  return items.filter((item) => {
+    if (seenIds.has(item.id)) return false;
+    seenIds.add(item.id);
+    return true;
+  });
+}
+
 function notifDestination(item: UserNotificationItem): string | null {
   if (item.type === 'newfollower')
     return item.actorHandle ? ROUTES.profile(item.actorHandle) : null;
   if (item.type === 'eventdeleted') return null;
-  if (item.type === 'letterboxdreconciliationpending') return ROUTES.account;
+  if (item.type === 'letterboxdreconciliationpending') return ROUTES.accountIntegrations;
   if (!item.eventSlug) return null;
   if (item.type === 'ratingreminder') return ROUTES.eventDetailRating(item.eventSlug);
   return ROUTES.eventDetail(item.eventSlug);
@@ -209,6 +219,43 @@ function NotifCard({
   );
 }
 
+function InboxList({
+  groups,
+  loading,
+  t,
+  locale,
+  onRead,
+}: Readonly<{
+  groups: InboxGroup[];
+  loading: boolean;
+  t: Translate;
+  locale: LocaleCode;
+  onRead: (id: string) => void;
+}>) {
+  if (groups.length === 0 && !loading) {
+    return (
+      <EmptyState
+        icon={<Inbox size={ICON_SIZE['3xl']} aria-hidden />}
+        message={t('notifications.inboxEmpty')}
+      />
+    );
+  }
+
+  return (
+    <div className={styles.list}>
+      {groups.map((group) => (
+        <NotifCard
+          key={group.kind === 'event' ? group.eventSlug : group.item.id}
+          group={group}
+          t={t}
+          locale={locale}
+          onRead={onRead}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function NotificationsPage() {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -252,7 +299,7 @@ export default function NotificationsPage() {
   });
 
   const items = useMemo(
-    () => inboxQuery.data?.pages.flatMap((p) => p.items) ?? [],
+    () => withoutRepeatedIds(inboxQuery.data?.pages.flatMap((p) => p.items) ?? []),
     [inboxQuery.data]
   );
   const unreadCount = inboxQuery.data?.pages[0]?.unreadCount ?? 0;
@@ -290,23 +337,20 @@ export default function NotificationsPage() {
         </p>
       )}
 
-      {groups.length === 0 && !inboxQuery.isLoading ? (
-        <EmptyState
-          icon={<Inbox size={ICON_SIZE['3xl']} aria-hidden />}
-          message={t('notifications.inboxEmpty')}
+      {inboxQuery.isError && !inboxQuery.data ? (
+        <InlineError
+          message={t('notifications.inboxLoadError')}
+          retryLabel={t('common.retry')}
+          onRetry={() => void inboxQuery.refetch()}
         />
       ) : (
-        <div className={styles.list}>
-          {groups.map((group) => (
-            <NotifCard
-              key={group.kind === 'event' ? group.eventSlug : group.item.id}
-              group={group}
-              t={t}
-              locale={locale}
-              onRead={handleRead}
-            />
-          ))}
-        </div>
+        <InboxList
+          groups={groups}
+          loading={inboxQuery.isLoading}
+          t={t}
+          locale={locale}
+          onRead={handleRead}
+        />
       )}
 
       {inboxQuery.hasNextPage && (

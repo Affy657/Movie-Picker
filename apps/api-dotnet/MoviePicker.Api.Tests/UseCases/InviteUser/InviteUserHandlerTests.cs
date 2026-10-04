@@ -21,14 +21,19 @@ public sealed class InviteUserHandlerTests
     private readonly Mock<IPushSubscriptionRepository> _pushSubs = new();
     private readonly Mock<IPushNotificationSender> _pushSender = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
+    private readonly Mock<INotificationDedupRepository> _dedup = new();
     private readonly InviteUserHandler _sut;
 
     public InviteUserHandlerTests()
     {
         _currentUser.Setup(c => c.GetUserId()).Returns(HostId);
+        _dedup.Setup(d => d.TryClaimAsync(
+                It.IsAny<string>(), It.IsAny<UserNotificationType>(), It.IsAny<string>(),
+                It.IsAny<NotificationDedupChannel>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         _sut = new InviteUserHandler(
             _events.Object, _participants.Object, _follows.Object, _users.Object,
-            _notifications.Object, _pushSubs.Object, _pushSender.Object, _currentUser.Object, TimeProvider.System);
+            _notifications.Object, _pushSubs.Object, _pushSender.Object, _currentUser.Object, _dedup.Object, TimeProvider.System);
     }
 
     private static Event Evt(DateTimeOffset? closedAt = null) =>
@@ -101,6 +106,61 @@ public sealed class InviteUserHandlerTests
             .ReturnsAsync(true);
 
         await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request()));
+    }
+
+    [Fact]
+    public async Task HandleAsync_ConcurrentInvitationAlreadyClaimed_ThrowsWithoutSendingASecondOne()
+    {
+        SetupEvent(Evt());
+        _follows.Setup(f => f.IsFollowingAsync(HostId, TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _participants.Setup(p => p.FindByEventAndUserIdAsync("evt1", TargetId, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
+        _notifications.Setup(n => n.ExistsAsync(TargetId, UserNotificationType.EventInvitation, "evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _dedup.Setup(d => d.TryClaimAsync(
+                TargetId, UserNotificationType.EventInvitation, "evt1",
+                NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1", Request()));
+
+        Assert.Equal(ErrorCodes.InvitationAlreadySent, ex.Reason);
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NotificationNotWritten_ReleasesTheClaimSoTheHostCanRetry()
+    {
+        SetupEvent(Evt());
+        _follows.Setup(f => f.IsFollowingAsync(HostId, TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _participants.Setup(p => p.FindByEventAndUserIdAsync("evt1", TargetId, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
+        _notifications.Setup(n => n.ExistsAsync(TargetId, UserNotificationType.EventInvitation, "evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _notifications.Setup(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("store down"));
+
+        await Assert.ThrowsAsync<TimeoutException>(() => _sut.HandleAsync("evt1", Request()));
+
+        _dedup.Verify(d => d.ReleaseAsync(
+            TargetId, UserNotificationType.EventInvitation, "evt1",
+            NotificationDedupChannel.InApp, CancellationToken.None), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PushFailsAfterTheNotification_KeepsTheClaim()
+    {
+        SetupEvent(Evt());
+        _follows.Setup(f => f.IsFollowingAsync(HostId, TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _participants.Setup(p => p.FindByEventAndUserIdAsync("evt1", TargetId, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
+        _notifications.Setup(n => n.ExistsAsync(TargetId, UserNotificationType.EventInvitation, "evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _users.Setup(u => u.GetByIdAsync(TargetId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("store down"));
+
+        await Assert.ThrowsAsync<TimeoutException>(() => _sut.HandleAsync("evt1", Request()));
+
+        _dedup.Verify(d => d.ReleaseAsync(
+            It.IsAny<string>(), It.IsAny<UserNotificationType>(), It.IsAny<string>(),
+            It.IsAny<NotificationDedupChannel>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

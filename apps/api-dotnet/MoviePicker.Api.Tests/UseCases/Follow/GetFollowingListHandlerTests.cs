@@ -56,4 +56,18 @@ public sealed class GetFollowingListHandlerTests
         Assert.False(result.Items.Single(i => i.Handle == "carla").IsFollowedByMe);
         Assert.True(result.Items.Single(i => i.Handle == "bob").IsFollowedByMe);
     }
+
+    [Fact]
+    public async Task HandleAsync_LeavesPrivateAccountsOut()
+    {
+        _users.Setup(u => u.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(U("target", "alice"));
+        _follows.Setup(f => f.GetFollowingIdsAsync("target", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(["u1", "u2"]);
+        _users.Setup(u => u.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([U("u1", "carla"), U("u2", "turned-private") with { IsProfilePublic = false }]);
+
+        var result = await _sut.HandleAsync("alice", null);
+
+        Assert.Equal(["carla"], result.Items.Select(i => i.Handle));
+    }
 }

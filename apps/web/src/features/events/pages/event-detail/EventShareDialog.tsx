@@ -23,9 +23,9 @@ type Props = {
   timeFormatted: string;
   dateLabel: string;
   participantsLabel: string;
-  initialTab?: EventShareTab | undefined;
+  initialTab?: EventShareTab;
   hostCanInvite?: boolean;
-  friendsBadge?: number | undefined;
+  friendsBadge?: number;
   recap?: RecapShare | null;
 };
 
@@ -104,7 +104,7 @@ export default function EventShareDialog({
           meta: movie ? [movie.title, ratingsLabel] : [dateFormatted],
         }}
         shareText={shareText}
-        surface="event"
+        analyticsSurface="event"
         initialTab="link"
         extraTab={storyTab}
       />
@@ -129,7 +129,7 @@ export default function EventShareDialog({
         time: timeFormatted,
         date: dateLabel,
       })}
-      surface="event"
+      analyticsSurface="event"
       initialTab={initialTab}
       extraTab={friendsTab}
     />

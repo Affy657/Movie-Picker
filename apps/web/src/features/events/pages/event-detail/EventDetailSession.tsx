@@ -48,6 +48,7 @@ type EventDetailSessionProps = {
   actionError: string | null;
   setActionError: Dispatch<SetStateAction<string | null>>;
   refreshAll: () => void;
+  connectionUnstable?: boolean;
 };
 
 const COUNTDOWN_TICK_MS = 60_000;
@@ -57,6 +58,28 @@ const COUNTDOWN_KEYS = {
   minutes: 'events.detail.countdownMinutes',
   hours: 'events.detail.countdownHours',
 } as const satisfies Record<EventCountdown['unit'], TranslationKey>;
+
+function wheelSelection(wheel: ReturnType<typeof useEventWheel>): MovieCardSelection | undefined {
+  if (wheel.manualMode) {
+    return {
+      active: true,
+      mode: 'pick',
+      pending: wheel.loading,
+      selectableIds: wheel.drawableMovies.map((m) => m.id),
+      onSelect: wheel.pickWinnerManually,
+    };
+  }
+  if (wheel.removalMode) {
+    return {
+      active: true,
+      mode: 'remove',
+      pending: wheel.loading,
+      selectableIds: wheel.winnerIds,
+      onSelect: wheel.removeWinner,
+    };
+  }
+  return undefined;
+}
 
 function countdownParams(countdown: EventCountdown) {
   if (countdown.unit === 'imminent') return undefined;
@@ -74,6 +97,7 @@ export default function EventDetailSession({
   actionError,
   setActionError,
   refreshAll,
+  connectionUnstable = false,
 }: Readonly<EventDetailSessionProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -91,12 +115,9 @@ export default function EventDetailSession({
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const participantsRef = useRef<HTMLDivElement>(null);
   const closeParticipants = useCallback(() => setParticipantsOpen(false), []);
-  useClickOutside(
-    participantsRef,
-    closeParticipants,
-    participantsOpen,
-    '[data-participants-toggle]'
-  );
+  useClickOutside(participantsRef, closeParticipants, participantsOpen, {
+    ignoreSelector: '[data-participants-toggle]',
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [viewMode, setViewMode] = useState<MoviesViewMode>(readMoviesViewMode);
@@ -138,24 +159,7 @@ export default function EventDetailSession({
     }
   }, [addMovieOpen]);
 
-  let selection: MovieCardSelection | undefined;
-  if (wheel.manualMode) {
-    selection = {
-      active: true,
-      mode: 'pick',
-      pending: wheel.loading,
-      selectableIds: wheel.drawableMovies.map((m) => m.id),
-      onSelect: wheel.pickWinnerManually,
-    };
-  } else if (wheel.removalMode) {
-    selection = {
-      active: true,
-      mode: 'remove',
-      pending: wheel.loading,
-      selectableIds: wheel.winnerIds,
-      onSelect: wheel.removeWinner,
-    };
-  }
+  const selection = wheelSelection(wheel);
 
   const isConnectedSelf =
     !!event.myParticipant?.id && participant?.participantId === event.myParticipant.id;
@@ -207,11 +211,13 @@ export default function EventDetailSession({
       ? event.participants.find((p) => p.id === participant.participantId)
       : null;
   const isCreatorSelf = !!myParticipantSummary?.isCreator;
-  const canShowLeave = !event.isFinished && !!participant && !isCreatorSelf;
+  const participantsLocked = !!event.isFinished || wheel.wheelLocked;
+  const canShowLeave = !participantsLocked && !!participant && !isCreatorSelf;
 
   const participantCount = event.participantCount ?? event.participants?.length ?? 0;
   let moviesCount = event.movieCount ?? 0;
-  if (moviesQuery.isSuccess) moviesCount = movies.length;
+  const moviesLoaded = moviesQuery.data !== undefined;
+  if (moviesLoaded) moviesCount = movies.length;
   const votersCount = event.votersCount ?? 0;
   const lifecycle = normalizeMyEventLifecycle(event.lifecycle);
   const countdown = eventCountdown(event.date, event.time, nowMs);
@@ -219,7 +225,7 @@ export default function EventDetailSession({
     ? t(COUNTDOWN_KEYS[countdown.unit], countdownParams(countdown))
     : null;
   const canConfigure = !!event.isHost && !event.isFinished;
-  const emptyStateCarriesAddMovie = moviesQuery.isSuccess && movies.length === 0;
+  const emptyStateCarriesAddMovie = moviesLoaded && movies.length === 0;
   const canAddMovie = !event.isFinished && !!participant && !emptyStateCarriesAddMovie;
   const isFull =
     typeof maxParticipants === 'number' &&
@@ -267,6 +273,8 @@ export default function EventDetailSession({
         onRequestCloseWithoutMovie={requestCloseWithoutMovie}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
+        connectionUnstable={connectionUnstable}
+        onRetryConnection={refreshAll}
       />
       <EventDetailSessionBody
         slug={slug}
@@ -286,6 +294,7 @@ export default function EventDetailSession({
           pendingRemovalId,
           removePending,
           canShowLeave,
+          canRemove: !participantsLocked,
           isConnectedSelf,
           onRemove: handleRemoveParticipant,
           onInviteFriends: () => openShare('friends'),
@@ -299,6 +308,7 @@ export default function EventDetailSession({
           onAddMovieOpenChange: setAddMovieOpen,
           addMovieTriggerRef,
           isFull,
+          wheelLocked: wheel.wheelLocked,
           onRequestRemove: handleRequestRemoveMovie,
         }}
       />

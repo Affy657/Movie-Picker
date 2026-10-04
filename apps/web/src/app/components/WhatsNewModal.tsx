@@ -19,7 +19,7 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 type Props = {
   open: boolean;
   release: WhatsNewRelease;
-  profileHandle?: string | null;
+  ownProfilePath?: string | null;
   onClose: () => void;
   onAction?: (action: WhatsNewAction) => void;
 };
@@ -59,7 +59,7 @@ function EntryChevron() {
 export default function WhatsNewModal({
   open,
   release,
-  profileHandle = null,
+  ownProfilePath = null,
   onClose,
   onAction,
 }: Readonly<Props>) {
@@ -75,7 +75,7 @@ export default function WhatsNewModal({
   );
 
   const renderEntryBody = (entry: WhatsNewEntry) => {
-    const to = whatsNewLinkPath(entry.link, profileHandle);
+    const to = whatsNewLinkPath(entry.link, ownProfilePath);
     const action = entry.action;
     if (action && onAction) {
       return (

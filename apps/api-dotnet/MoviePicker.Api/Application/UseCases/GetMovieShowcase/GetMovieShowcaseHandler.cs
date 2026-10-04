@@ -32,62 +32,59 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         MovieShowcaseQuery query,
         CancellationToken ct = default)
     {
-        var section = (query.Section ?? string.Empty).Trim().ToLowerInvariant();
-        if (!MovieShowcaseSections.IsKnown(section))
-            throw Errors.UnknownSection();
+        var section = SectionRequest.From(query);
 
-        var genreIds = NormalizeGenreIds(query.GenreIds);
-        var theme = string.IsNullOrWhiteSpace(query.Theme) ? null : query.Theme.Trim();
-        var provider = string.IsNullOrWhiteSpace(query.Provider) ? null : query.Provider.Trim();
-        RejectInvalidQuery(section, theme, provider, query);
-        var cacheKey = BuildCacheKey(section, theme, genreIds, query.CollectionId, provider, query.SeedTmdbId);
-
-        var items = await _cache.GetOrLoadAsync(
-            cacheKey,
-            CacheTtl(),
-            token => LoadSectionAsync(section, theme, genreIds, query, provider, token),
-            IsCatalogSection(section, genreIds),
-            ct);
-
-        return BuildResponse(section, theme, items);
-    }
-
-    private void RejectInvalidQuery(string section, string? theme, string? provider, MovieShowcaseQuery query)
-    {
-        switch (section)
+        try
         {
-            case MovieShowcaseSections.Provider
-                when MovieShowcaseCatalog.CriteriaForProvider(provider, _options.TmdbWatchProvidersRegion) is null:
-                throw Errors.UnknownPlatform();
-            case MovieShowcaseSections.Recommendations when query.SeedTmdbId is not > 0:
-                throw Errors.ReferenceMovieMissing();
-            case MovieShowcaseSections.Collection when query.CollectionId is not > 0:
-                throw Errors.CollectionIdMissing();
-            case MovieShowcaseSections.Theme when MovieShowcaseCatalog.CriteriaForTheme(theme) is null:
-                throw Errors.UnknownTheme();
+            var items = await _cache.GetOrLoadAsync(
+                section.CacheKey,
+                CacheTtl(),
+                token => LoadSectionAsync(section, token),
+                section.IsSharedAcrossInstances,
+                ct);
+
+            return BuildResponse(section, items);
+        }
+        catch (TimeoutException)
+        {
+            throw Errors.ShowcaseUnavailable();
         }
     }
 
-    private static bool IsCatalogSection(string section, List<int> genreIds) =>
-        section is not (MovieShowcaseSections.Recommendations or MovieShowcaseSections.Collection)
-        && genreIds.Count <= 1;
+    public async Task<bool> RefreshAsync(MovieShowcaseQuery query, CancellationToken ct = default)
+    {
+        try
+        {
+            var section = SectionRequest.From(query);
+            if (!section.IsSharedAcrossInstances)
+                return false;
+
+            return await _cache.RefreshAsync(
+                section.CacheKey,
+                CacheTtl(),
+                async token => new CacheLoad<IReadOnlyList<MovieShowcaseItemResponse>>(
+                    await LoadSectionAsync(section, token),
+                    IsComplete: true),
+                ct);
+        }
+        catch (MoviePickerException)
+        {
+            return false;
+        }
+    }
 
     private async Task<IReadOnlyList<MovieShowcaseItemResponse>> LoadSectionAsync(
-        string section,
-        string? theme,
-        IReadOnlyList<int> genreIds,
-        MovieShowcaseQuery query,
-        string? provider,
+        SectionRequest section,
         CancellationToken ct)
     {
-        if (section == MovieShowcaseSections.MostProposed)
+        if (section.Section == MovieShowcaseSections.MostProposed)
             return await LoadMostProposedAsync(ct);
 
         RequireTmdbConfigured();
 
         try
         {
-            var rows = await FetchTmdbSectionAsync(section, theme, genreIds, query, provider, ct);
+            var rows = await FetchTmdbSectionAsync(section, ct);
             return await WithRuntimesAsync(rows.Select(MapItem).ToList(), ct);
         }
         catch (HttpRequestException)
@@ -96,19 +93,13 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         }
     }
 
-    private Task<IReadOnlyList<TmdbSearchItem>> FetchTmdbSectionAsync(
-        string section,
-        string? theme,
-        IReadOnlyList<int> genreIds,
-        MovieShowcaseQuery query,
-        string? provider,
-        CancellationToken ct)
+    private Task<IReadOnlyList<TmdbSearchItem>> FetchTmdbSectionAsync(SectionRequest section, CancellationToken ct)
     {
-        switch (section)
+        switch (section.Section)
         {
             case MovieShowcaseSections.Provider:
                 var providerCriteria = MovieShowcaseCatalog.CriteriaForProvider(
-                    provider,
+                    section.Provider,
                     _options.TmdbWatchProvidersRegion)
                     ?? throw Errors.UnknownPlatform();
                 return _tmdb.DiscoverMoviesAsync(
@@ -117,9 +108,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
                     ct);
 
             case MovieShowcaseSections.Recommendations:
-                if (query.SeedTmdbId is not > 0)
-                    throw Errors.ReferenceMovieMissing();
-                return _tmdb.GetRecommendationsAsync(query.SeedTmdbId.Value, ct);
+                return _tmdb.GetRecommendationsAsync(section.SeedTmdbId ?? 0, section.SeedMediaType, ct);
 
             case MovieShowcaseSections.NowPlaying:
                 return _tmdb.GetNowPlayingMoviesAsync(
@@ -128,20 +117,18 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
                     ct);
 
             case MovieShowcaseSections.Collection:
-                if (query.CollectionId is not > 0)
-                    throw Errors.CollectionIdMissing();
-                return _tmdb.GetCollectionMoviesAsync(query.CollectionId.Value, ct);
+                return _tmdb.GetCollectionMoviesAsync(section.CollectionId ?? 0, ct);
 
             case MovieShowcaseSections.Theme:
-                var criteria = MovieShowcaseCatalog.CriteriaForTheme(theme)
+                var criteria = MovieShowcaseCatalog.CriteriaForTheme(section.Theme)
                     ?? throw Errors.UnknownTheme();
                 return _tmdb.DiscoverMoviesAsync(criteria, MovieShowcaseCatalog.PagesPerSection, ct);
 
             default:
-                if (genreIds.Count == 0)
+                if (section.GenreIds.Count == 0)
                     return _tmdb.GetTrendingMoviesAsync(MovieShowcaseCatalog.PagesPerSection, ct);
                 return _tmdb.DiscoverMoviesAsync(
-                    new TmdbDiscoveryCriteria(GenreIds: genreIds),
+                    new TmdbDiscoveryCriteria(GenreIds: section.GenreIds),
                     MovieShowcaseCatalog.PagesPerSection,
                     ct);
         }
@@ -240,26 +227,70 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
     };
 
     private static MovieShowcaseListResponse BuildResponse(
-        string section,
-        string? theme,
+        SectionRequest section,
         IReadOnlyList<MovieShowcaseItemResponse> items) => new()
         {
-            Section = section,
-            Theme = theme,
+            Section = section.Section,
+            Theme = section.Theme,
             Items = items,
             Disclaimer = TmdbIndicativeCopy.Disclaimer,
         };
 
-    private static List<int> NormalizeGenreIds(IReadOnlyList<int>? genreIds) =>
-        genreIds is null ? [] : genreIds.Where(id => id > 0).Distinct().Order().ToList();
+    private sealed record SectionRequest(
+        string Section,
+        string? Theme = null,
+        IReadOnlyList<int>? Genres = null,
+        int? CollectionId = null,
+        string? Provider = null,
+        int? SeedTmdbId = null,
+        MovieMediaType SeedMediaType = MovieMediaType.Movie)
+    {
+        public IReadOnlyList<int> GenreIds => Genres ?? [];
 
-    private static string BuildCacheKey(
-        string section,
-        string? theme,
-        List<int> genreIds,
-        int? collectionId,
-        string? provider,
-        int? seedTmdbId) =>
-        $"showcase-v1:{section}:{theme ?? "-"}:{(genreIds.Count == 0 ? "-" : string.Join(",", genreIds))}"
-        + $":{collectionId?.ToString() ?? "-"}:{provider ?? "-"}:{seedTmdbId?.ToString() ?? "-"}";
+        public bool IsSharedAcrossInstances => Section switch
+        {
+            MovieShowcaseSections.Recommendations or MovieShowcaseSections.Collection => false,
+            MovieShowcaseSections.Trending => GenreIds.Count == 0
+                || (GenreIds.Count == 1 && MovieShowcaseCatalog.IsTmdbMovieGenre(GenreIds[0])),
+            _ => true,
+        };
+
+        public string CacheKey =>
+            $"showcase-v1:{Section}:{Theme ?? "-"}:{(GenreIds.Count == 0 ? "-" : string.Join(",", GenreIds))}"
+            + $":{CollectionId?.ToString() ?? "-"}:{Provider ?? "-"}:{SeedKey}";
+
+        private string SeedKey => SeedTmdbId switch
+        {
+            int id when SeedMediaType == MovieMediaType.Tv => $"tv-{id}",
+            int id => $"{id}",
+            _ => "-",
+        };
+
+        public static SectionRequest From(MovieShowcaseQuery query)
+        {
+            var section = (query.Section ?? string.Empty).Trim().ToLowerInvariant();
+            return section switch
+            {
+                MovieShowcaseSections.Trending => new SectionRequest(section, Genres: NormalizeGenreIds(query.GenreIds)),
+                MovieShowcaseSections.NowPlaying or MovieShowcaseSections.MostProposed => new SectionRequest(section),
+                MovieShowcaseSections.Theme => new SectionRequest(
+                    section,
+                    Theme: MovieShowcaseCatalog.ThemeKey(query.Theme) ?? throw Errors.UnknownTheme()),
+                MovieShowcaseSections.Provider => new SectionRequest(
+                    section,
+                    Provider: MovieShowcaseCatalog.ProviderKey(query.Provider) ?? throw Errors.UnknownPlatform()),
+                MovieShowcaseSections.Collection => new SectionRequest(
+                    section,
+                    CollectionId: query.CollectionId is > 0 ? query.CollectionId : throw Errors.CollectionIdMissing()),
+                MovieShowcaseSections.Recommendations => new SectionRequest(
+                    section,
+                    SeedTmdbId: query.SeedTmdbId is > 0 ? query.SeedTmdbId : throw Errors.ReferenceMovieMissing(),
+                    SeedMediaType: query.SeedMediaType == MovieMediaType.Tv ? MovieMediaType.Tv : MovieMediaType.Movie),
+                _ => throw Errors.UnknownSection(),
+            };
+        }
+
+        private static List<int> NormalizeGenreIds(IReadOnlyList<int>? genreIds) =>
+            genreIds is null ? [] : genreIds.Where(id => id > 0).Distinct().Order().ToList();
+    }
 }

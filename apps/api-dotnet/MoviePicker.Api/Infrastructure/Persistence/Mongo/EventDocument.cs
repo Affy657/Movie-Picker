@@ -30,6 +30,10 @@ public sealed class EventDocument
     [BsonRepresentation(BsonType.ObjectId)]
     public string? CreatorUserId { get; set; }
 
+    [BsonElement("creationRequestId")]
+    [BsonIgnoreIfNull]
+    public string? CreationRequestId { get; set; }
+
     [BsonElement("config")]
     [BsonIgnoreIfNull]
     public EventConfigDocument? Config { get; set; }
@@ -52,6 +56,10 @@ public sealed class EventDocument
     [BsonElement("recurrence")]
     [BsonIgnoreIfNull]
     public string? Recurrence { get; set; }
+
+    [BsonElement("recurrenceAnchorDay")]
+    [BsonIgnoreIfNull]
+    public int? RecurrenceAnchorDay { get; set; }
 
     [BsonElement("recurrenceParentEventId")]
     [BsonIgnoreIfNull]

@@ -80,6 +80,23 @@ public sealed class PatchNotificationPreferencesHandlerTests
             }));
     }
 
+    [Theory]
+    [InlineData("99")]
+    [InlineData("3")]
+    [InlineData("newFollower,movieAdded")]
+    public async Task HandleAsync_TypeThatIsNotANamedType_ThrowsWithoutSaving(string type)
+    {
+        _users.Setup(u => u.GetByIdAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(new User { Id = "u1" });
+
+        await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync(
+            "u1",
+            new PatchNotificationPreferencesRequest
+            {
+                Preferences = [new NotificationTypePreferencePatch { Type = type, Enabled = false }]
+            }));
+        _users.Verify(u => u.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     [Fact]
     public async Task HandleAsync_OnlyPatchesProvidedFields()
     {

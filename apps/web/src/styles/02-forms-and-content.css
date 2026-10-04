@@ -11,27 +11,6 @@
   gap: var(--space-3);
 }
 
-.back-link {
-  display: inline-block;
-  margin-bottom: var(--space-3);
-  color: var(--color-primary-text);
-  text-decoration: none;
-  font-size: var(--font-size-md);
-}
-
-@media (hover: hover) {
-  .back-link:hover {
-    text-decoration: underline;
-  }
-}
-
-button.back-link-button {
-  font: inherit;
-  background: none;
-  border: none;
-  padding: 0;
-}
-
 .section {
   margin-bottom: var(--space-8);
 }
@@ -84,10 +63,6 @@ button.back-link-button {
   border-radius: var(--radius-md);
 }
 
-.movies-load-error p {
-  margin: 0 0 var(--space-3-5);
-}
-
 .error-dismiss {
   display: flex;
   align-items: center;
@@ -97,7 +72,7 @@ button.back-link-button {
 
 .muted {
   font-size: var(--font-size-sm);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
   margin: var(--space-3) 0 var(--space-4);
 }
 
@@ -113,7 +88,7 @@ a {
 
 a:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
   border-radius: var(--radius-xs);
 }
 

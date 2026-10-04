@@ -1,26 +1,9 @@
 .title {
+  composes: pageTitle from '@/shared/components/typography.module.css';
   margin: 0 0 var(--space-5);
-  font-size: clamp(1.5rem, 4vw, 1.875rem);
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-tight);
-  line-height: var(--leading-tight);
-  color: var(--color-text);
 }
 
 .backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
   margin: 0 0 var(--space-3-5) clamp(var(--space-2), 2vw, var(--space-4));
-  padding: var(--space-1-5) var(--space-2-5) var(--space-1-5) var(--space-1-5);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-muted);
-  text-decoration: none;
-  border-radius: var(--radius-pill);
-  line-height: var(--leading-none);
 }
 
-.backLinkLabel {
-  transform: translateY(var(--text-optical-nudge));
-}

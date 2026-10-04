@@ -64,7 +64,7 @@
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
   line-height: var(--leading-snug);
-  letter-spacing: var(--tracking-close);
+  letter-spacing: var(--tracking-tight);
   color: var(--color-text);
 }
 

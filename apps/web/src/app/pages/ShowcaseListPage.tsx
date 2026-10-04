@@ -1,7 +1,6 @@
 import { useCallback, useId, useMemo, useState, type ReactNode } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
 import PageLayout from '@/shared/components/PageLayout';
 import Button from '@/shared/components/Button';
@@ -41,7 +40,6 @@ import {
   THEME_LABEL_KEYS,
   type ShowcaseListVariant,
 } from '@/features/movies/showcaseSections';
-import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type { ShowcaseListVariant };
 import { useWatchlistToggle } from '@/features/watchlist/hooks/useWatchlistToggle';
@@ -54,6 +52,7 @@ import ShowcaseListStates from './ShowcaseListStates';
 import type { MovieMediaType } from '@/shared/types/movie';
 import styles from './ShowcaseListPage.module.css';
 import { collectionDisplayName } from '@/features/movies/utils/collectionName';
+import BackLink from '@/shared/components/BackLink';
 
 interface ShowcaseListItem {
   tmdbId: number;
@@ -110,15 +109,24 @@ type ShowcaseRouteSelection = {
   themeKey: ShowcaseTheme | undefined;
   providerKey: ShowcaseProvider | undefined;
   seedTmdbId: number | undefined;
+  seedMediaType: MovieMediaType;
   collectionId: number | undefined;
   genreId: number | undefined;
 };
 
 function buildShowcaseQuery(
   variant: Props['variant'],
-  { themeKey, providerKey, seedTmdbId, collectionId, genreId }: ShowcaseRouteSelection
+  {
+    themeKey,
+    providerKey,
+    seedTmdbId,
+    seedMediaType,
+    collectionId,
+    genreId,
+  }: ShowcaseRouteSelection
 ): ShowcaseQuery {
-  if (variant === 'recommendations') return { section: 'recommendations', seedTmdbId };
+  if (variant === 'recommendations')
+    return { section: 'recommendations', seedTmdbId, seedMediaType };
   if (variant === 'provider') return { section: 'provider', provider: providerKey };
   if (variant === 'theme') return { section: 'theme', theme: themeKey };
   if (variant === 'collection') return { section: 'collection', collectionId };
@@ -143,6 +151,7 @@ type ShowcaseRouteInputs = {
   theme: string | undefined;
   provider: string | undefined;
   seedTmdbId: string | undefined;
+  seedType: string | null;
   collectionId: string | undefined;
   genreParam: number;
 };
@@ -152,6 +161,7 @@ function parseRouteSelection({
   theme,
   provider,
   seedTmdbId,
+  seedType,
   collectionId,
   genreParam,
 }: ShowcaseRouteInputs): ShowcaseRouteSelection {
@@ -160,6 +170,7 @@ function parseRouteSelection({
     themeKey: isShowcaseTheme(theme) ? theme : undefined,
     providerKey: isShowcaseProvider(provider) ? provider : undefined,
     seedTmdbId: seedTmdbId ? Number(seedTmdbId) : undefined,
+    seedMediaType: seedType === 'tv' ? 'tv' : 'movie',
     collectionId: collectionId ? Number(collectionId) : undefined,
     genreId: variant === 'trending' && genreUsable ? genreParam : undefined,
   };
@@ -225,6 +236,14 @@ function resolveSubtitle({
   return t(SUBTITLE_KEYS[variant]);
 }
 
+function seedTitleForRoute(
+  seed: ReturnType<typeof useRecommendationSeed>,
+  { seedTmdbId, seedMediaType }: ShowcaseRouteSelection
+): string | undefined {
+  const seedMatchesRoute = seed.seedTmdbId === seedTmdbId && seed.seedMediaType === seedMediaType;
+  return seedMatchesRoute ? seed.seedTitle : undefined;
+}
+
 function showcaseToolbarLabels(
   toolbar: { isFiltered: boolean; visibleCount: number; totalCount: number },
   t: Translate
@@ -276,6 +295,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
   const searchQuery = (searchParams.get('q') ?? '').trim();
   const genreParam = Number(searchParams.get('genre'));
+  const seedType = searchParams.get('type');
   const { theme, provider, seedTmdbId: seedParam, collectionId: collectionParam } = params;
 
   const routeSelection: ShowcaseRouteSelection = useMemo(
@@ -285,10 +305,11 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
         theme,
         provider,
         seedTmdbId: seedParam,
+        seedType,
         collectionId: collectionParam,
         genreParam,
       }),
-    [variant, theme, provider, seedParam, collectionParam, genreParam]
+    [variant, theme, provider, seedParam, seedType, collectionParam, genreParam]
   );
   const { themeKey, providerKey, collectionId, genreId } = routeSelection;
 
@@ -349,7 +370,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
     variant,
     genreId,
     tmdbLanguage,
-    seedTitle: recommendationSeed.seedTitle,
+    seedTitle: seedTitleForRoute(recommendationSeed, routeSelection),
     t,
   });
 
@@ -367,10 +388,7 @@ export default function ShowcaseListPage({ variant }: Readonly<Props>) {
 
   return (
     <PageLayout className={styles.layout}>
-      <Link to={ROUTES.home} className={styles.backLink}>
-        <ArrowLeft size={ICON_SIZE.md} aria-hidden />
-        <span>{t('showcase.backToHome')}</span>
-      </Link>
+      <BackLink to={ROUTES.home}>{t('showcase.backToHome')}</BackLink>
 
       <div className={styles.headerText}>
         <h1 className={styles.pageTitle}>{headingText}</h1>

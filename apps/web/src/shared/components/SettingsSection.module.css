@@ -10,27 +10,14 @@
   margin: 0;
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-close);
+  letter-spacing: var(--tracking-tight);
   line-height: var(--leading-none);
   transform: translateY(var(--text-optical-nudge));
 }
 
 .saved {
   display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
   margin-left: auto;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-success-bg);
-  color: var(--color-success);
-  font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--leading-none);
-}
-
-.saved span {
-  transform: translateY(var(--text-optical-nudge));
 }
 
 .card {
@@ -42,14 +29,12 @@
 }
 
 .cardTitle {
+  composes: sectionLabel from './typography.module.css';
   display: flex;
   align-items: center;
   gap: var(--space-2);
   margin: var(--space-4) 0 var(--space-0-5);
   font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-widest);
-  text-transform: uppercase;
   color: var(--color-text-muted);
   line-height: var(--leading-none);
 }
@@ -76,7 +61,7 @@
   border-top: 1px solid var(--color-border-subtle);
 }
 
-.row > :global(.btn),
+.row > button,
 .row > a {
   flex-shrink: 0;
   margin-left: auto;
@@ -155,6 +140,6 @@
 .dangerZone p {
   margin: var(--space-2) 0 var(--space-4);
   font-size: var(--font-size-xs);
-  line-height: var(--leading-base);
+  line-height: var(--leading-comfortable);
   color: var(--color-text-muted);
 }

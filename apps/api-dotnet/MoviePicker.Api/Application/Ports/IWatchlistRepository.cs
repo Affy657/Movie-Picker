@@ -35,6 +35,10 @@ public interface IWatchlistRepository
 
     Task<IReadOnlyList<WatchlistItem>> ListMissingGenresAsync(int limit, CancellationToken ct = default);
 
+    Task<IReadOnlyList<WatchlistItem>> ListWithLegacyPosterPathAsync(int limit, CancellationToken ct = default);
+
+    Task UpdatePosterPathAsync(string itemId, string? posterPath, CancellationToken ct = default);
+
     Task UpdateFactsAsync(string itemId, int runtimeMinutes, double? voteAverage, CancellationToken ct = default);
 
     Task<IReadOnlyList<WatchlistItem>> ListMissingFactsAsync(int limit, CancellationToken ct = default);

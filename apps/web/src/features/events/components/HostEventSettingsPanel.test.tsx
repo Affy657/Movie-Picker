@@ -1,12 +1,13 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
+import { queryKeys } from '@/shared/hooks/queryKeys';
 import HostEventSettingsPanel from '@/features/events/components/HostEventSettingsPanel';
 import type { EventData } from '@/features/events/types';
 import {
@@ -131,6 +132,135 @@ describe('HostEventSettingsPanel', () => {
     await user.click(screen.getByRole('radio', { name: /pondéré par les votes/i }));
 
     await waitFor(() => expect(patched).toBe(true));
+  });
+
+  it('saves a setting switched back before the movie night is reloaded', async () => {
+    const user = userEvent.setup();
+    const bodies: Record<string, unknown>[] = [];
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        bodies.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />
+    );
+    const allowSeries = screen.getByRole('switch', { name: /autoriser les séries tv/i });
+
+    await user.click(allowSeries);
+    await waitFor(() => expect(bodies).toHaveLength(1));
+    await user.click(allowSeries);
+
+    await waitFor(() => expect(bodies).toHaveLength(2));
+    expect(bodies).toEqual([{ allowSeries: true }, { allowSeries: false }]);
+  });
+
+  it('sends nothing when a change is undone before it is saved', async () => {
+    const user = userEvent.setup();
+    let patchCalled = false;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => {
+        patchCalled = true;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />
+    );
+    const title = screen.getByLabelText(/nom de la soir/i);
+
+    await user.type(title, 'x{Backspace}');
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    expect(patchCalled).toBe(false);
+    expect(screen.getByText('Enregistré')).toBeInTheDocument();
+  });
+
+  it('holds a change until the save in flight is done, then sends it', async () => {
+    const user = userEvent.setup();
+    const bodies: Record<string, unknown>[] = [];
+    let releaseFirstSave: () => void = () => {};
+    const firstSaveHeld = new Promise<void>((resolve) => {
+      releaseFirstSave = resolve;
+    });
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        bodies.push((await request.json()) as Record<string, unknown>);
+        if (bodies.length === 1) await firstSaveHeld;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />
+    );
+    const allowSeries = screen.getByRole('switch', { name: /autoriser les séries tv/i });
+
+    await user.click(allowSeries);
+    await waitFor(() => expect(bodies).toHaveLength(1));
+    await user.click(allowSeries);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(bodies).toHaveLength(1);
+    expect(screen.getByText('Enregistrement…')).toBeInTheDocument();
+
+    releaseFirstSave();
+
+    await waitFor(() => expect(bodies).toHaveLength(2));
+    expect(bodies[1]).toEqual({ allowSeries: false });
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+  });
+
+  it('marks my movie nights stale once a new title is saved', async () => {
+    const user = userEvent.setup();
+    let patchedBody: Record<string, unknown> | null = null;
+    server.use(
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+        patchedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...baseEvent.config });
+      })
+    );
+    const qc = createTestQueryClient();
+    qc.setQueryData(queryKeys.myEvents.active, { pages: [], pageParams: [] });
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        slug={slug}
+        hostToken={null}
+        event={baseEvent}
+        open
+        onClose={() => {}}
+      />,
+      qc
+    );
+
+    await user.type(screen.getByLabelText(/nom de la soir/i), ' ciné');
+
+    await waitFor(() => expect(patchedBody).toEqual({ title: 'Test ciné' }), { timeout: 3000 });
+    await waitFor(() =>
+      expect(qc.getQueryState(queryKeys.myEvents.active)?.isInvalidated).toBe(true)
+    );
   });
 
   it('enabling the participants limit sends the default cap, then the typed one', async () => {
@@ -413,7 +543,7 @@ describe('HostEventSettingsPanel', () => {
     expect(body).toEqual({ winnerCount: 3 });
   });
 
-  it("envoie la date, l'heure et le choix de notification seulement quand la date change", async () => {
+  it('sends the date, the time and the notify choice once the host leaves the date field', async () => {
     const user = userEvent.setup();
     let body: Record<string, unknown> | null = null;
     server.use(
@@ -437,12 +567,127 @@ describe('HostEventSettingsPanel', () => {
     const dateField = screen.getByLabelText(/date et heure/i);
     await user.clear(dateField);
     await user.type(dateField, '2030-02-01T21:30');
+    await user.click(screen.getByLabelText(/nom de la soir/i));
 
     await waitFor(() => expect(body).not.toBeNull(), { timeout: 3000 });
     expect(body).toEqual({
       date: '2030-02-01',
       time: '21:30',
       notifyParticipantsOfDateChange: true,
+    });
+  });
+
+  describe('rescheduling', () => {
+    function capturePatchBodies() {
+      const bodies: Record<string, unknown>[] = [];
+      server.use(
+        http.patch(`${TEST_API_V1}/events/${slug}/config`, async ({ request }) => {
+          bodies.push((await request.json()) as Record<string, unknown>);
+          return HttpResponse.json({ ...baseEvent.config });
+        })
+      );
+      return bodies;
+    }
+
+    function renderPanel() {
+      renderWithRouter(
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={null}
+          event={baseEvent}
+          open
+          onClose={() => {}}
+        />
+      );
+      return screen.getByLabelText(/date et heure/i);
+    }
+
+    const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    it('sends a single new date, so a single notification, however long the host pauses while editing it', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBodies();
+      const dateField = renderPanel();
+
+      await user.click(dateField);
+      fireEvent.change(dateField, { target: { value: '2030-02-01T20:00' } });
+      await pause(800);
+      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+      await pause(800);
+
+      expect(bodies).toEqual([]);
+
+      await user.click(screen.getByLabelText(/nom de la soir/i));
+
+      await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
+      expect(bodies[0]).toEqual({
+        date: '2030-02-01',
+        time: '21:30',
+        notifyParticipantsOfDateChange: true,
+      });
+    });
+
+    it('keeps the notify choice on screen until the new date is saved, and sends it', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBodies();
+      const dateField = renderPanel();
+
+      await user.click(dateField);
+      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+      await pause(800);
+      await user.click(screen.getByRole('checkbox', { name: /prévenir les participants/i }));
+      await user.click(screen.getByLabelText(/nom de la soir/i));
+
+      await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
+      expect(bodies[0]).toEqual({
+        date: '2030-02-01',
+        time: '21:30',
+        notifyParticipantsOfDateChange: false,
+      });
+    });
+
+    function ClosablePanel() {
+      const [open, setOpen] = useState(true);
+      return (
+        <HostEventSettingsPanel
+          slug={slug}
+          hostToken={null}
+          event={baseEvent}
+          open={open}
+          onClose={() => setOpen(false)}
+        />
+      );
+    }
+
+    it('saves a date still being edited when the sheet closes', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBodies();
+      renderWithRouter(<ClosablePanel />);
+      const dateField = screen.getByLabelText(/date et heure/i);
+
+      await user.click(dateField);
+      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Fermer' }));
+
+      await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
+      expect(bodies[0]).toEqual({
+        date: '2030-02-01',
+        time: '21:30',
+        notifyParticipantsOfDateChange: true,
+      });
+    });
+
+    it('leaves a date still being edited out of the save of another field', async () => {
+      const user = userEvent.setup();
+      const bodies = capturePatchBodies();
+      const dateField = renderPanel();
+
+      await user.type(screen.getByLabelText(/nom de la soir/i), ' ciné');
+      await user.click(dateField);
+      fireEvent.change(dateField, { target: { value: '2030-02-01T21:30' } });
+
+      await waitFor(() => expect(bodies).toHaveLength(1), { timeout: 3000 });
+      expect(bodies[0]).toEqual({ title: 'Test ciné' });
     });
   });
 
@@ -736,6 +981,47 @@ describe('HostEventSettingsPanel', () => {
     expect(
       screen.getByRole('button', { name: /Supprimer le template « Soirée horreur »/ })
     ).toBeInTheDocument();
+  });
+
+  it('renaming a template that is not applied does not offer to overwrite it', async () => {
+    const user = userEvent.setup();
+    let templates = [templateFixture];
+    let putBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () =>
+        HttpResponse.json({ items: templates })
+      ),
+      http.put(`${TEST_API_V1}/users/me/event-templates/tpl1`, async ({ request }) => {
+        putBody = (await request.json()) as Record<string, unknown>;
+        templates = [{ ...templateFixture, name: 'Soirée frissons' }];
+        return HttpResponse.json(templates[0]);
+      })
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Gérer' }));
+    await user.click(
+      screen.getByRole('button', { name: /Renommer le template « Soirée horreur »/ })
+    );
+    const nameField = screen.getByRole('textbox', { name: /Nom du template/ });
+    await user.clear(nameField);
+    await user.type(nameField, 'Soirée frissons');
+    await user.click(screen.getByRole('button', { name: 'Valider' }));
+
+    await waitFor(() => expect(putBody).toMatchObject({ name: 'Soirée frissons' }));
+    expect(await screen.findByText('Soirée frissons')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mettre à jour' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Vous avez modifié la configuration/)).not.toBeInTheDocument();
+    expect(screen.getByText('Cette configuration marche bien ?')).toBeInTheDocument();
   });
 
   it('updates the applied template after a settings tweak', async () => {

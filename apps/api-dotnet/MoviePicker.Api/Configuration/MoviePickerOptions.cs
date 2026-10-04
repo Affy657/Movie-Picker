@@ -35,6 +35,8 @@ public sealed class MoviePickerOptions
 
     public int PosterCacheMaxBytes { get; set; } = 524_288;
 
+    public int PosterCacheMaxEntries { get; set; } = 2_000;
+
     public string PublicWebBaseUrl { get; set; } = "https://www.movie-picker.fr";
 
     public string ResolvedWebBaseUrl() =>
@@ -59,8 +61,6 @@ public sealed class MoviePickerOptions
     public string VapidSubject { get; set; } = "mailto:noreply@movie-picker.fr";
 
     public string? KofiWebhookToken { get; set; }
-
-    public string? SchedulerToken { get; set; }
 
     public string? SchedulerOidcAudience { get; set; }
 

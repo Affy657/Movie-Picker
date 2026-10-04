@@ -31,7 +31,7 @@ public sealed partial class TmdbMovieSearch
         {
             var fresh = await FetchDetailsUncachedAsync(tmdbId, mediaType, ct).ConfigureAwait(false);
             if (fresh is not null)
-                _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl });
+                _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl, Size = 1 });
             return fresh;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -55,7 +55,8 @@ public sealed partial class TmdbMovieSearch
         CancellationToken ct)
     {
         var typeSegment = MediaTypeSegment(mediaType);
-        var url = $"{ApiBase}/{typeSegment}/{tmdbId}?language=fr-FR&append_to_response=credits,videos";
+        var url = $"{ApiBase}/{typeSegment}/{tmdbId}?language=fr-FR&append_to_response=credits,videos"
+            + "&include_video_language=fr,en,null";
 
         using var res = await _http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
         if (res.StatusCode == System.Net.HttpStatusCode.NotFound)

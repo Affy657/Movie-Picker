@@ -51,7 +51,10 @@ public sealed class MongoAuthTicketStore : ITicketStore
         var doc = await _collection.Find(x => x.Id == key).FirstOrDefaultAsync();
         if (doc is null)
             return null;
-        if (doc.ExpiresAtUtc < DateTime.UtcNow)
+
+        var createdAt = new DateTimeOffset(DateTime.SpecifyKind(doc.CreatedAtUtc, DateTimeKind.Utc));
+        var expiresAt = new DateTimeOffset(DateTime.SpecifyKind(doc.ExpiresAtUtc, DateTimeKind.Utc));
+        if (SessionWindow.IsExpired(createdAt, expiresAt, DateTimeOffset.UtcNow))
         {
             await _collection.DeleteOneAsync(x => x.Id == key);
             return null;
@@ -64,8 +67,8 @@ public sealed class MongoAuthTicketStore : ITicketStore
         var props = new AuthenticationProperties
         {
             IsPersistent = true,
-            ExpiresUtc = new DateTimeOffset(DateTime.SpecifyKind(doc.ExpiresAtUtc, DateTimeKind.Utc)),
-            IssuedUtc = new DateTimeOffset(DateTime.SpecifyKind(doc.CreatedAtUtc, DateTimeKind.Utc))
+            ExpiresUtc = expiresAt,
+            IssuedUtc = SessionWindow.IssuedAt(createdAt, expiresAt)
         };
         return new AuthenticationTicket(principal, props, CookieAuthenticationDefaults.AuthenticationScheme);
     }

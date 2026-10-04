@@ -13,6 +13,6 @@ public sealed class GetUserProfileHandler : IGetUserProfileHandler
     public async Task<UserProfileResponse> HandleAsync(string userId, CancellationToken ct = default)
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
-        return UserProfileResponses.From(user);
+        return UserProfileMapping.ToResponse(user);
     }
 }

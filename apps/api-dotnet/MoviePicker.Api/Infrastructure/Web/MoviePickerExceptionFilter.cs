@@ -20,6 +20,9 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
     {
         var http = context.HttpContext;
 
+        if (context.Exception is OperationCanceledException && http.RequestAborted.IsCancellationRequested)
+            return;
+
         if (context.Exception is MoviePickerException ex)
         {
             var statusCode = ToHttpStatus(ex.Kind);
@@ -36,6 +39,17 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
             return;
         }
 
+        if (context.Exception is BadHttpRequestException badRequest)
+        {
+            context.Result = new JsonResult(
+                ApiErrorResponse.FromHttpContext(http, badRequest.StatusCode, badRequest.Message, ReasonOf(badRequest)))
+            {
+                StatusCode = badRequest.StatusCode
+            };
+            context.ExceptionHandled = true;
+            return;
+        }
+
         SentrySdk.CaptureException(context.Exception);
 
         var message = _env.IsDevelopment() ? context.Exception.Message : "An internal error occurred";
@@ -47,6 +61,11 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
         context.ExceptionHandled = true;
     }
 
+    private static string ReasonOf(BadHttpRequestException badRequest) =>
+        badRequest.StatusCode == StatusCodes.Status413PayloadTooLarge
+            ? ErrorCodes.RequestTooLarge
+            : ErrorCodes.ValidationFailed;
+
     private static int ToHttpStatus(ErrorKind kind) => kind switch
     {
         ErrorKind.InvalidInput => StatusCodes.Status400BadRequest,
@@ -54,6 +73,7 @@ public sealed class MoviePickerExceptionFilter : IExceptionFilter
         ErrorKind.Forbidden => StatusCodes.Status403Forbidden,
         ErrorKind.NotFound => StatusCodes.Status404NotFound,
         ErrorKind.Conflict => StatusCodes.Status409Conflict,
+        ErrorKind.TooManyRequests => StatusCodes.Status429TooManyRequests,
         ErrorKind.ServiceUnavailable => StatusCodes.Status503ServiceUnavailable,
         _ => StatusCodes.Status500InternalServerError
     };

@@ -426,6 +426,12 @@ export const fr = {
         accountExists:
           'Un compte Movie Picker existe déjà avec cette adresse e-mail. Connectez-vous avec votre mot de passe, puis liez ce fournisseur depuis la page Paramètres.',
         identityTaken: 'Ce compte est d\u00e9j\u00e0 li\u00e9 \u00e0 un autre profil Movie Picker.',
+        identityUnlinked:
+          'Ce compte a \u00e9t\u00e9 d\u00e9li\u00e9 de votre profil Movie Picker. Connectez-vous autrement, puis liez-le de nouveau depuis Param\u00e8tres / Int\u00e9grations.',
+        providerAlreadyLinked:
+          'Un compte de ce fournisseur est d\u00e9j\u00e0 li\u00e9 \u00e0 votre profil. D\u00e9liez-le d\u2019abord pour en lier un autre.',
+        reauthenticationRequired:
+          'Pour lier un compte, d\u00e9connectez-vous puis reconnectez-vous d\u2019abord : cette \u00e9tape prot\u00e8ge votre profil si quelqu\u2019un d\u2019autre utilise votre session.',
         generic: 'Connexion impossible. R\u00e9essayez.',
       },
     },
@@ -552,6 +558,7 @@ export const fr = {
         indigo: 'Indigo',
       },
       ratingScaleLabel: 'Échelle des notes',
+      ratingScaleSaveError: 'L’échelle des notes n’a pas pu être enregistrée. Réessayez.',
       ratingScaleOptions: {
         five: 'Sur 5',
         ten: 'Sur 10',
@@ -593,7 +600,7 @@ export const fr = {
       avatarPhotoDeleteConfirm: 'Supprimer la photo',
       avatarPhotoDeleteFailed:
         'La photo n’a pas pu être supprimée. Vérifiez votre connexion, puis réessayez.',
-      avatarSaveFailed:
+      avatarSaveError:
         'L’avatar n’a pas pu être enregistré. Vérifiez votre connexion, puis réessayez.',
       exportDataTitle: 'Exporter mes données',
       exportDataDescription:
@@ -792,6 +799,9 @@ export const fr = {
       participantsToggleOne: '1 participant',
       participantsToggle: '{{count}} participants',
       themeAria: 'Thème de soirée : {{theme}}',
+      unstableKicker: 'Connexion instable',
+      unstableText: 'Les dernières modifications de la soirée n’ont pas pu être chargées.',
+      unstableMeta: 'La page se remet à jour d’elle-même dès que le serveur répond.',
     },
     myEvents: {
       title: 'Mes soirées',
@@ -843,12 +853,6 @@ export const fr = {
       monthGroupCountOne: '1 soir\u00e9e',
       monthGroupCountMany: '{{count}} soir\u00e9es',
       historyFinishedWithoutMovie: 'Termin\u00e9e sans film choisi',
-      historyRemoveAction: 'Retirer de mon historique',
-      historyRemoveConfirmTitle: 'Retirer de votre historique\u00a0?',
-      historyRemoveConfirmMessage:
-        '\u00ab\u202f{{title}}\u202f\u00bb sera retir\u00e9e de votre historique. Vous pourrez toujours la rejoindre si vous avez le lien.',
-      historyRemoveConfirmAction: 'Retirer',
-      historyRemoveError: 'Suppression impossible.',
       pendingAutoCloseIn: 'Cl\u00f4ture automatique {{time}}',
       pendingAutoCloseInShort: 'Cl\u00f4ture {{time}}',
       countdown: {
@@ -911,7 +915,7 @@ export const fr = {
       empty:
         'Vous ne suivez encore personne. Suivez des utilisateurs pour pouvoir les inviter directement.',
       emptyLine1: 'Vous ne suivez encore personne.',
-      emptyLink: 'Allez sur votre profil pour suivre des utilisateurs →',
+      emptyLink: 'Allez sur votre profil pour suivre des utilisateurs',
       loadError: 'Impossible de charger la liste.',
       inviteError: 'Invitation impossible.',
       searchPlaceholder: 'Rechercher un ami',
@@ -1538,6 +1542,10 @@ export const fr = {
     forbidden: 'Accès refusé.',
     unauthorized: 'Authentification requise.',
     internal_error: "Une erreur interne s'est produite.",
+    validation_failed:
+      'Certaines informations envoyées ne sont pas valides. Vérifiez-les et réessayez.',
+    request_too_large:
+      "La requête envoyée est trop volumineuse. Envoyez moins d'éléments à la fois et réessayez.",
     rate_limited: 'Trop de requêtes. Réessayez dans un instant.',
     concurrent_update: 'Modifié entre-temps. Rechargez la page et réessayez.',
     'vote-limit-reached': 'Limite de {{max}} vote(s) par participant atteinte.',
@@ -1560,6 +1568,7 @@ export const fr = {
     tv_shows_not_allowed: "Cette soirée n'autorise pas les séries TV.",
     movie_already_proposed: 'Ce film a déjà été proposé (même id TMDB)',
     movie_title_already_proposed: 'Un film avec ce titre a déjà été proposé',
+    event_movie_limit_reached: 'Cette soirée a atteint la limite de {{max}} films proposés.',
     proposal_limit_reached: 'Limite de {{max}} proposition(s) par participant atteinte.',
     oauth_link_failed: 'Impossible de connecter ce compte. Réessayez.',
     handle_taken: 'Ce handle est déjà pris.',
@@ -1623,6 +1632,8 @@ export const fr = {
     wrong_password: 'Mot de passe incorrect.',
     current_password_incorrect: 'Mot de passe actuel incorrect.',
     confirmation_incorrect: 'Confirmation incorrecte.',
+    reauthentication_required:
+      'Par sécurité, déconnectez-vous puis reconnectez-vous avant de réessayer.',
     invalid_participant: 'Participant invalide pour cette soirée',
     participant_required: 'Participant requis.',
     participant_id_required: 'Le paramètre participantId est requis.',
@@ -1646,6 +1657,8 @@ export const fr = {
       'Le pseudo Letterboxd ne peut contenir que des lettres, chiffres et underscores.',
     letterboxd_username_missing: 'Aucun pseudo Letterboxd enregistré sur votre compte.',
     letterboxd_sync_failed: 'Synchronisation impossible.',
+    letterboxd_sync_unavailable:
+      'Letterboxd ou TMDB ne répond pas pour le moment. Réessayez dans quelques minutes.',
     letterboxd_watchlist_incomplete:
       "Watchlist Letterboxd inaccessible. Vérifiez l'orthographe du pseudo et que votre profil Letterboxd est public.",
     invalid_date_format: 'date doit être au format YYYY-MM-DD.',
@@ -1653,6 +1666,7 @@ export const fr = {
     theme_color_out_of_range: 'themeColor doit être une teinte entre 0 et 359.',
     event_title_required: 'Le titre de la soirée ne peut pas être vide.',
     event_title_too_long: 'Le titre de la soirée ne peut pas dépasser {{max}} caractères.',
+    event_theme_too_long: 'Le thème de la soirée ne peut pas dépasser {{max}} caractères.',
     event_template_name_required: 'Le nom du template ne peut pas être vide.',
     event_template_name_too_long: 'Le nom du template ne peut pas dépasser {{max}} caractères.',
     self_follow: 'Vous ne pouvez pas vous suivre vous-même.',
@@ -1665,6 +1679,8 @@ export const fr = {
     attachment_content_invalid: 'Contenu invalide (base64 malformé) pour « {{name}} ».',
     attachment_content_mismatch:
       'Le contenu de « {{name}} » ne correspond pas au format déclaré ({{type}}).',
+    attachment_image_unreadable:
+      'Impossible de lire l’image « {{name}} ». Essayez une autre capture.',
     invite_only_followed: 'Vous ne pouvez inviter que des utilisateurs que vous suivez.',
     no_movie_proposed: 'Aucun film proposé. Proposez au moins un film pour lancer la roue.',
     all_movies_excluded:
@@ -1759,6 +1775,7 @@ export const fr = {
     inboxAriaLabelWithCount: 'Notifications, {{count}} non lues',
     inboxTitle: 'Notifications',
     inboxEmpty: 'Aucune notification pour le moment.',
+    inboxLoadError: 'Impossible de charger vos notifications.',
     signedOutTitle: 'Restez informé',
     signedOutMessage: 'Connectez-vous ou créez un compte pour recevoir vos notifications.',
     markAllButton: 'Tout marquer comme lu',
@@ -1818,6 +1835,7 @@ export const fr = {
     legalTitle: 'Informations légales',
     legalNotice: 'Mentions légales',
     privacyPolicy: 'Politique de confidentialité',
+    manageCookies: 'Gérer les cookies',
   },
 
   legal: {
@@ -1856,6 +1874,9 @@ export const fr = {
     privacyDonationsTitle: 'Dons via Ko-fi',
     privacyDonationsBody:
       'Les paiements sont traités intégralement par Ko-fi, qui agit comme responsable de traitement pour les données de paiement : Movie Picker n’y a jamais accès. À chaque don, Ko-fi notifie notre serveur et transmet l’adresse e-mail du donateur. Cette adresse est utilisée uniquement, en mémoire, pour retrouver le compte Movie Picker correspondant et y afficher le badge de soutien ; elle n’est jamais enregistrée. Aucun montant, nom de donateur ni message n’est conservé : seule la date du premier don est stockée sur le compte concerné, ainsi qu’un identifiant technique de notification qui évite de traiter deux fois le même don.',
+    privacyIdeasTitle: 'Suggestions d’idées',
+    privacyIdeasBody:
+      'Une suggestion envoyée depuis le bouton « Proposer une idée » devient un ticket public du dépôt GitHub du projet, lisible par tous : son titre, sa description, ses captures d’écran (sans leurs métadonnées), le type de page d’où elle part et la version de l’application. Votre nom, votre handle et votre e-mail n’y figurent pas, seulement un identifiant technique qui permet de vous recontacter. La suppression de votre compte n’efface pas ce ticket : écrivez à l’adresse de contact pour le faire retirer.',
     privacyRetentionTitle: 'Durée de conservation',
     privacyRetentionBody:
       'Vos données sont conservées tant que votre compte existe. La suppression de compte, disponible depuis la page Paramètres, efface définitivement votre profil ; les soirées créées et vos votes sont conservés mais anonymisés.',
@@ -1936,6 +1957,10 @@ export const fr = {
     attachmentsTooLarge: 'Image trop lourde (4 Mo maximum) : {{name}}',
     attachmentsUnsupportedType:
       'Format non supporté (PNG, JPEG, WebP ou GIF uniquement) : {{name}}',
+    attachmentsUnreadable:
+      'Impossible de lire l’image {{name}}. Retirez-la puis ajoutez-la de nouveau.',
+    publicNotice:
+      'Votre suggestion et vos captures seront publiées dans un ticket public sur GitHub, sans votre nom. N’y mettez rien de personnel.',
     submit: 'Envoyer',
     submitting: 'Envoi…',
     submitError: 'Impossible d’envoyer votre suggestion pour le moment. Réessayez.',
@@ -1965,6 +1990,8 @@ export const fr = {
       sheetTitle: 'Abonnements',
       isMeBadge: 'Vous',
       empty: 'Aucun utilisateur ici.',
+      loadError: 'Impossible de charger cette liste.',
+      privateHidden: 'Les profils privés n’apparaissent pas dans cette liste.',
       followAriaLabel: 'Suivre @{{handle}}',
       unfollowAriaLabel: 'Ne plus suivre @{{handle}}',
       error: 'Action impossible, réessayez.',
@@ -2548,7 +2575,7 @@ export const fr = {
       lead: "{{commits}} commits depuis février 2026. Chaque palier est parti en production avant que le suivant ne s'ouvre. Les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
       plannedBadge: 'à venir',
       currentBadge: 'en cours',
-      unplannedSpan: 'Entre la V1.9 et la V2',
+      unplannedSpan: 'Entre la V1.10 et la V2',
       unplannedDetail:
         'Des versions qui ne sont pas encore cadrées. Leur nombre et leur contenu dépendront des retours d’usage.',
       techHeading: 'Les chantiers techniques ouverts',
@@ -2687,32 +2714,46 @@ export const fr = {
       v18When: 'Plus tard',
       v18What: 'V1.8',
       v18Detail:
-        "Remplacer le rafraîchissement périodique par une vraie connexion temps réel, et armer l'hôte des outils qui lui manquent.",
+        'La bibliothèque personnelle : des listes de films à soi, faites à la main, remplies par des règles ou tenues à plusieurs, et les films déjà vus repris de Letterboxd.',
       v18Hint:
-        'Le temps réel est le dernier chantier de plateforme encore ouvert sur la trajectoire produit.',
-      v18Item1: 'Synchronisation temps réel',
-      v18Item2: 'Présence sur la page soirée',
-      v18Item3: 'Co-hôte',
-      v18Item4: 'Thème imposé',
-      v18Item5: 'Avertissements de contenu',
-      v18Item6: 'Double authentification',
-      v18Item7: "Centre d'aide",
+        "L'import Letterboxd remonte cette fois les films vus et leur note, là où la V1.4 ne synchronisait que la liste à voir.",
+      v18Item1: 'Mes listes',
+      v18Item2: 'Listes intelligentes',
+      v18Item3: 'Listes collaboratives',
+      v18Item4: 'Films vus importés de Letterboxd',
+      v18Item5: 'Écart watchlist Letterboxd',
       v19When: 'Plus tard encore',
       v19What: 'V1.9',
       v19Detail:
-        'La bibliothèque personnelle et le confort au quotidien : les films déjà vus repris de Letterboxd, la palette de commandes, la lecture hors-ligne.',
+        "Une vraie connexion temps réel à la place du rafraîchissement périodique, une soirée lisible hors-ligne et cadrée par le thème de l'hôte, puis la palette de commandes.",
       v19Hint:
-        "L'import Letterboxd remonte cette fois les films vus et leur note, là où la V1.4 ne synchronisait que la liste à voir.",
-      v19Item1: 'Films vus importés de Letterboxd',
-      v19Item2: 'Palette de commandes',
+        'Le temps réel est le dernier chantier de plateforme encore ouvert sur la trajectoire produit.',
+      v19Item1: 'Synchronisation temps réel',
+      v19Item2: 'Présence sur la page soirée',
       v19Item3: 'Consultation hors-ligne',
-      v19Item4: 'Écart watchlist Letterboxd',
+      v19Item4: 'Thème imposé',
+      v19Item5: 'Palette de commandes',
+      v110When: 'Au-delà',
+      v110What: 'V1.10',
+      v110Detail:
+        "Ouvrir l'application au-delà de son cercle, avec un fil d'actualité et des soirées publiques, et la confiance que cela demande : double authentification, passkeys, sessions visibles, alerte de connexion, état du service et aide en ligne.",
+      v110Hint:
+        "Les soirées ouvertes à tous arrivent après le temps réel : en sondage, le coût d'une soirée croît avec chaque participant.",
+      v110Item1: 'Reprise hors-ligne',
+      v110Item2: "Fil d'actualité",
+      v110Item3: 'Soirée publique',
+      v110Item4: 'Double authentification',
+      v110Item5: 'Passkeys',
+      v110Item6: 'Sessions actives',
+      v110Item7: 'Alerte nouvelle connexion',
+      v110Item8: "Centre d'aide",
+      v110Item9: 'Statut du service',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:
         'Une application mobile native, pleinement intégrée à la plateforme. Le prototype de cours a été archivé plutôt que rafistolé.',
       v2Hint:
-        'Aucune date annoncée : le périmètre dépendra de ce que la V1.9 aura laissé derrière elle.',
+        'Aucune date annoncée : le périmètre dépendra de ce que la V1.10 aura laissé derrière elle.',
       v2Item1: 'Application native',
       v2Item2: 'Notifications système',
       v2Item3: 'Parcours complet hors navigateur',
@@ -2736,9 +2777,9 @@ export const fr = {
       loadingHint:
         "Le premier écran n'emporte pas le reste de l'application, et les paquets de dépendances restent en cache du navigateur d'une version à la suivante.",
       offline: 'Hors ligne',
-      offlineValue: 'Installable, coquille et affiches en cache, consultable sans réseau.',
+      offlineValue: 'Installable, coquille et vitrine en cache ; une soirée demande le réseau.',
       offlineHint:
-        "Le service worker sert la coquille de l'app et les affiches déjà vues quand le réseau manque.",
+        "Le service worker garde la coquille de l'app et la vitrine du catalogue pour démarrer vite ; sans réseau, une soirée affiche une erreur au lieu d'un chargement sans fin.",
       languages: 'Langues',
       languagesValue: 'Français et anglais, bascule sans rechargement.',
       languagesHint:

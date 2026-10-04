@@ -57,6 +57,40 @@ public sealed class OAuthLinkHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_LinkingAnUnlinkedIdentityAgain_ForgetsTheUnlink()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "neo@example.com",
+            DisplayName = "Neo",
+            Handle = "neo",
+            PasswordHash = "hash",
+            UnlinkedIdentities =
+            [
+                new UnlinkedIdentity { Provider = "github", Subject = "gh-1", UnlinkedAt = TestEpoch.AddDays(-2) },
+                new UnlinkedIdentity { Provider = "google", Subject = "g-1", UnlinkedAt = TestEpoch.AddDays(-2) }
+            ],
+            CreatedAt = TestEpoch.AddDays(-5),
+            UpdatedAt = TestEpoch.AddDays(-2)
+        });
+
+        var outcome = await f.CreateHandler().HandleAsync(user.Id, new ExternalLoginInfo
+        {
+            Provider = "github",
+            Subject = "gh-1",
+            Email = "neo@example.com",
+            EmailVerified = true,
+            DisplayName = "Neo"
+        });
+
+        Assert.Equal(OAuthOutcomeKind.Linked, outcome.Kind);
+        var reloaded = await f.Users.GetByIdAsync(user.Id);
+        var stillUnlinked = Assert.Single(reloaded!.UnlinkedIdentities);
+        Assert.Equal("google", stillUnlinked.Provider);
+    }
+
+    [Fact]
     public async Task HandleAsync_IdentityAlreadyLinkedToSameUser_IsNoOp()
     {
         var f = new Fixture();
@@ -125,7 +159,7 @@ public sealed class OAuthLinkHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_RelinkingSameProviderWithDifferentAccount_ReplacesPreviousIdentity()
+    public async Task HandleAsync_RelinkingSameProviderWithDifferentAccount_IsRefusedUntilTheFirstIsUnlinked()
     {
         var f = new Fixture();
         var user = await f.Users.AddAsync(new User
@@ -148,11 +182,11 @@ public sealed class OAuthLinkHandlerTests
             DisplayName = "Neo"
         });
 
-        Assert.Equal(OAuthOutcomeKind.Linked, outcome.Kind);
+        Assert.Equal(OAuthOutcomeKind.ProviderAlreadyLinked, outcome.Kind);
         var reloaded = await f.Users.GetByIdAsync(user.Id);
         var identity = Assert.Single(reloaded!.Identities);
-        Assert.Equal("g-new", identity.Subject);
-        Assert.Null(await f.Users.GetByIdentityAsync("google", "g-old"));
+        Assert.Equal("g-old", identity.Subject);
+        Assert.Null(await f.Users.GetByIdentityAsync("google", "g-new"));
     }
 
     [Fact]

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
@@ -8,6 +9,9 @@ namespace MoviePicker.Api.Application.UseCases.JoinEvent;
 
 public sealed class JoinEventHandler : IJoinEventHandler
 {
+    private const int MaxPseudoLength = 100;
+    private const int MaxJoinAttempts = 3;
+
     private readonly IEventRepository _eventRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IUserRepository _userRepository;
@@ -53,67 +57,99 @@ public sealed class JoinEventHandler : IJoinEventHandler
         var userId = authenticatedUserId;
         var alreadyLinked = await _participantRepository.FindByEventAndUserIdAsync(evt.Id, userId, ct);
         if (alreadyLinked is not null)
+            return AlreadyJoined(alreadyLinked);
+
+        var requestedPseudo = request.Pseudo.Trim();
+        for (var attempt = 0; attempt < MaxJoinAttempts; attempt++)
         {
-            return new JoinEventResult
+            var pseudo = await AvailablePseudoAsync(evt.Id, requestedPseudo, ct);
+            try
             {
-                Participant = ParticipantResponse.FromDomain(alreadyLinked),
-                IsNew = false,
-                Message = "Already joined with this account"
-            };
+                var created = await InsertAsync(idOrSlug, evt, NewParticipant(evt.Id, pseudo, userId), ct);
+                await NotifyHostAsync(evt, created.Pseudo, userId, CancellationToken.None);
+                return new JoinEventResult
+                {
+                    Participant = ParticipantResponse.FromDomain(created),
+                    IsNew = true,
+                    Message = string.Empty
+                };
+            }
+            catch (ParticipantConflictException conflict) when (conflict.Collision == ParticipantCollision.SameAccount)
+            {
+                var linked = await _participantRepository.FindByEventAndUserIdAsync(evt.Id, userId, ct);
+                if (linked is not null)
+                    return AlreadyJoined(linked);
+                throw;
+            }
+            catch (ParticipantConflictException conflict) when (conflict.Collision == ParticipantCollision.SamePseudo)
+            {
+                _logger.LogInformation(conflict, "Pseudo taken concurrently in movie night {EventId}, joining again", evt.Id);
+            }
         }
 
-        var pseudo = request.Pseudo.Trim();
-        var existing = await _participantRepository.FindByEventAndPseudoAsync(evt.Id, pseudo, ct);
+        throw Errors.ConcurrentUpdate();
+    }
 
-        if (existing is not null)
-        {
-            return new JoinEventResult
-            {
-                Participant = ParticipantResponse.FromDomain(existing),
-                IsNew = false,
-                Message = "Already joined with this pseudo"
-            };
-        }
+    private static JoinEventResult AlreadyJoined(Participant participant) => new()
+    {
+        Participant = ParticipantResponse.FromDomain(participant),
+        IsNew = false,
+        Message = "Already joined with this account"
+    };
 
+    private Participant NewParticipant(string eventId, string pseudo, string userId)
+    {
         var now = _clock.GetUtcNow();
-        var participant = new Participant
+        return new Participant
         {
             Id = string.Empty,
-            EventId = evt.Id,
+            EventId = eventId,
             Pseudo = pseudo,
             UserId = userId,
             CreatedAt = now,
             UpdatedAt = now
         };
+    }
 
-        Participant created = participant;
-        if (evt.Config?.MaxParticipants is { } cap && cap > 0)
+    private async Task<string> AvailablePseudoAsync(string eventId, string requested, CancellationToken ct)
+    {
+        var taken = (await _participantRepository.ListByEventIdAsync(eventId, ct))
+            .Select(p => p.Pseudo)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (!taken.Contains(requested))
+            return requested;
+
+        var rank = 1;
+        string candidate;
+        do
         {
-            await _unitOfWork.ExecuteAsync(
-                async token =>
+            rank++;
+            var suffix = $" {rank}";
+            candidate = TextTruncation.ToMaxLength(requested, MaxPseudoLength - suffix.Length) + suffix;
+        }
+        while (taken.Contains(candidate));
+
+        return candidate;
+    }
+
+    private async Task<Participant> InsertAsync(string idOrSlug, Event evt, Participant participant, CancellationToken ct)
+    {
+        var inserted = participant;
+        await _unitOfWork.ExecuteAsync(
+            async token =>
+            {
+                await _eventRepository.LockForWriteAsync(evt.Id, token);
+                var current = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, token);
+                if (current.Config?.MaxParticipants is { } cap && cap > 0)
                 {
-                    await _eventRepository.LockForWriteAsync(evt.Id, token);
                     var currentCount = await _participantRepository.CountByEventIdAsync(evt.Id, token);
                     if (currentCount >= cap)
                         throw Errors.EventFull(cap);
-                    created = await _participantRepository.AddAsync(participant, token);
-                },
-                ct);
-        }
-        else
-        {
-            created = await _participantRepository.AddAsync(participant, ct);
-            await _eventRepository.MarkChangedAsync(evt.Id, ct);
-        }
-
-        await NotifyHostAsync(evt, pseudo, userId, CancellationToken.None);
-
-        return new JoinEventResult
-        {
-            Participant = ParticipantResponse.FromDomain(created),
-            IsNew = true,
-            Message = string.Empty
-        };
+                }
+                inserted = await _participantRepository.AddAsync(participant, token);
+            },
+            ct);
+        return inserted;
     }
 
     private async Task NotifyHostAsync(Event evt, string joinerPseudo, string joinerUserId, CancellationToken ct)
@@ -139,8 +175,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
                     Url: $"/e/{evt.Slug}"
                 );
 
-                foreach (var sub in subscriptions)
-                    await _pushSender.SendAsync(sub, message, ct);
+                await PushFanOut.SendToAllAsync(_pushSender, subscriptions, message, ct);
             }
 
             await _notifications.AddAsync(new UserNotification

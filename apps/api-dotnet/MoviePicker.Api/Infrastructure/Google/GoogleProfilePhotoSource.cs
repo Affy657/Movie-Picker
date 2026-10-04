@@ -57,9 +57,9 @@ public sealed partial class GoogleProfilePhotoSource : IGoogleProfilePhotoSource
             using var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
             return FindPersonalPhotoUrl(payload.RootElement) is { } url ? ToSizedPhotoUri(url) : null;
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            _logger.LogWarning("Google profile photo: the People API answered an unreadable payload");
+            _logger.LogWarning(ex, "Google profile photo: the People API answered an unreadable payload");
             return null;
         }
     }

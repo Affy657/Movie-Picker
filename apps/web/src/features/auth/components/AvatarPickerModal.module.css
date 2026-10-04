@@ -1,16 +1,5 @@
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 0 var(--space-1-5);
-}
-
-.title {
-  margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-close);
-  color: var(--color-text);
+.body {
+  padding: var(--space-3) var(--space-5) var(--space-5);
 }
 
 .tabs {

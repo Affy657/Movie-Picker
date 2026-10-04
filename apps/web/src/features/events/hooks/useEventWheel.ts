@@ -37,6 +37,7 @@ export type EventWheelState = {
   showReset: boolean;
   noMovie: boolean;
   canRelaunchFromModal: boolean;
+  wheelLocked: boolean;
   launch: () => void;
   reset: () => void;
   dismissModal: () => void;
@@ -86,6 +87,10 @@ function spinDisabledHintOf(s: SpinAvailability, t: Translate): string | null {
     );
   if (s.drawableCount === 0) return t('events.wheel.nothingLeftToDrawHint');
   return null;
+}
+
+function listedMovieOrWinner(winner: MovieData, listed: readonly MovieData[]): MovieData {
+  return listed.find((m) => m.id === winner.id) ?? winner;
 }
 
 function primaryActionOf(input: {
@@ -159,7 +164,8 @@ export function useEventWheel({
     [eligibleMovies, drawnIds]
   );
 
-  const winnerCount = event?.config?.winnerCount ?? 1;
+  const finishesOnFirstDraw = event?.lifecycle === 'pending';
+  const winnerCount = finishesOnFirstDraw ? 1 : (event?.config?.winnerCount ?? 1);
   const remainingDraws = Math.max(0, winnerCount - drawnIds.length);
 
   const lastPickedAt = last?.pickedAt;
@@ -196,9 +202,14 @@ export function useEventWheel({
     postEventWheelAnnounce(slug, hostToken).catch(() => undefined);
   }, [slug, hostToken]);
 
+  const latestAnnounceWinnerRef = useRef(announceWinner);
+  useEffect(() => {
+    latestAnnounceWinnerRef.current = announceWinner;
+  }, [announceWinner]);
+
   useEffect(
     () => () => {
-      if (announceRef.current.timer !== null) window.clearTimeout(announceRef.current.timer);
+      if (announceRef.current.timer !== null) latestAnnounceWinnerRef.current();
     },
     []
   );
@@ -228,15 +239,16 @@ export function useEventWheel({
   const launch = useCallback(() => {
     setError(null);
     setLoading(true);
-    postEventWheel(slug, hostToken)
+    postEventWheel(slug, hostToken, drawnIds.length)
       .then((res) => {
-        const pool = drawableMovies;
-        const idx = pool.findIndex((m) => m.id === res.winner.id);
+        const drawn = listedMovieOrWinner(res.winner, safeMovies);
+        const drawnNow = drawableMovies.some((m) => m.id === drawn.id);
+        const pool = drawnNow ? drawableMovies : [drawn];
         setSpinPool(pool);
-        setLocallyDrawnIds((ids) => (ids.includes(res.winner.id) ? ids : [...ids, res.winner.id]));
-        setPendingRevealId(res.winner.id);
-        setSpinWinner(res.winner);
-        setWinnerIndex(Math.max(idx, 0));
+        setLocallyDrawnIds((ids) => (ids.includes(drawn.id) ? ids : [...ids, drawn.id]));
+        setPendingRevealId(drawn.id);
+        setSpinWinner(drawn);
+        setWinnerIndex(pool.findIndex((m) => m.id === drawn.id));
         setManualReveal(false);
         setWheelKey((k) => k + 1);
         setIsModalOpen(true);
@@ -246,7 +258,7 @@ export function useEventWheel({
       })
       .catch((err) => setError(getErrorMessage(err, t('events.wheel.launchError'))))
       .finally(() => setLoading(false));
-  }, [slug, hostToken, drawableMovies, announceWinner, track, t]);
+  }, [slug, hostToken, drawnIds.length, safeMovies, drawableMovies, announceWinner, track, t]);
 
   const pickWinnerManually = useCallback(
     (movie: MovieData) => {
@@ -254,12 +266,11 @@ export function useEventWheel({
       setLoading(true);
       postEventWinner(slug, movie.id, hostToken)
         .then((res) => {
+          const picked = listedMovieOrWinner(res.winner, [movie]);
           setPendingRevealId(null);
-          setSpinPool([res.winner]);
-          setLocallyDrawnIds((ids) =>
-            ids.includes(res.winner.id) ? ids : [...ids, res.winner.id]
-          );
-          setSpinWinner(res.winner);
+          setSpinPool([picked]);
+          setLocallyDrawnIds((ids) => (ids.includes(picked.id) ? ids : [...ids, picked.id]));
+          setSpinWinner(picked);
           setWinnerIndex(0);
           setManualReveal(true);
           setWheelKey((k) => k + 1);
@@ -361,6 +372,7 @@ export function useEventWheel({
     noMovie: moviesCount === 0,
     canRelaunchFromModal:
       isOpenForActions && !manualReveal && remainingDraws > 0 && drawableMovies.length > 0,
+    wheelLocked: drawnIds.length > 0,
     launch,
     reset,
     dismissModal,

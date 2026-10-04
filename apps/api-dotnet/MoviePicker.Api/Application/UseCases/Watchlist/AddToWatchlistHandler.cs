@@ -48,7 +48,7 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
             LetterboxdSlug = string.IsNullOrWhiteSpace(request.LetterboxdSlug)
                 ? null
                 : request.LetterboxdSlug.Trim(),
-            GenreIds = details?.GenreIds ?? [],
+            GenreIds = details?.GenreIds ?? SearchResultGenres(request.GenreIds),
             CreatedAt = _clock.GetUtcNow()
         };
 
@@ -66,22 +66,16 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
     private async Task<string?> ResolvePosterAsync(string? posterPath, CancellationToken ct)
     {
         var poster = string.IsNullOrWhiteSpace(posterPath) ? null : posterPath.Trim();
-        if (poster is not null && !IsAcceptablePosterPath(poster))
+        if (poster is not null && !TmdbPosterUrlNormalizer.IsAcceptedPosterReference(poster))
             throw Errors.InvalidPosterPath();
 
-        if (poster is not null && TmdbPosterUrlNormalizer.TryNormalizeToHttpsTmdb(poster, out var norm))
-            await _posterImageStore.RegisterTmdbSourceAsync(norm, ct);
-        return _posterImageStore.ToPublicPosterPath(poster);
-    }
-
-    private static bool IsAcceptablePosterPath(string p)
-    {
-        if (Uri.TryCreate(p, UriKind.Absolute, out var u) && u.Scheme == Uri.UriSchemeHttps)
-            return true;
-        return TmdbPosterUrlNormalizer.TryParsePosterKey(p, out _);
+        return await _posterImageStore.ToStoredPosterPathAsync(poster, ct);
     }
 
     private static int? KnownRuntime(int? runtimeMinutes) => runtimeMinutes is > 0 ? runtimeMinutes : null;
+
+    private static List<int> SearchResultGenres(IReadOnlyList<int>? genreIds) =>
+        genreIds is null ? [] : genreIds.Where(id => id > 0).Distinct().ToList();
 
     private async Task<TmdbMovieDetails?> FetchDetailsBestEffortAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
     {
@@ -91,7 +85,10 @@ public sealed class AddToWatchlistHandler : IAddToWatchlistHandler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "TMDB details lookup failed for {TmdbId}, item added to the watchlist without genres nor facts", tmdbId);
+            _logger.LogWarning(
+                ex,
+                "TMDB details lookup failed for {TmdbId}, item added to the watchlist with the genres of its search result and without facts",
+                tmdbId);
             return null;
         }
     }

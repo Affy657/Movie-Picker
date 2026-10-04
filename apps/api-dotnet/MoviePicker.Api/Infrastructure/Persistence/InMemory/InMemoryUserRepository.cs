@@ -11,7 +11,7 @@ public sealed class InMemoryUserRepository : IUserRepository
     private readonly ConcurrentDictionary<string, User> _byId = new();
     private readonly ConcurrentDictionary<string, string> _emailToId = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _handleToId = new(StringComparer.OrdinalIgnoreCase);
-    private readonly object _embeddedListsGate = new();
+    private readonly object _uniqueKeysGate = new();
 
     public Task<User?> GetByIdAsync(string id, CancellationToken ct = default) =>
         Task.FromResult(_byId.TryGetValue(id, out var u) ? u : null);
@@ -24,6 +24,24 @@ public sealed class InMemoryUserRepository : IUserRepository
             .ToList();
         return Task.FromResult(result);
     }
+
+    public async Task<IReadOnlyList<UserCard>> ListCardsByIdsAsync(IReadOnlyCollection<string> ids, CancellationToken ct = default) =>
+        (await ListByIdsAsync(ids, ct)).Select(ToCard).ToList();
+
+    public Task<IReadOnlyList<UserCard>> ListCardsByHandlesAsync(IReadOnlyCollection<string> handles, CancellationToken ct = default)
+    {
+        IReadOnlyList<UserCard> cards = handles
+            .Select(NormalizeHandle)
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .Select(handle => _handleToId.TryGetValue(handle, out var id) && _byId.TryGetValue(id, out var user) ? user : null)
+            .OfType<User>()
+            .Select(ToCard)
+            .ToList();
+        return Task.FromResult(cards);
+    }
+
+    private static UserCard ToCard(User user) => new(user.Id, user.DisplayedAvatarId, user.Handle, user.IsProfilePublic);
 
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
@@ -93,16 +111,12 @@ public sealed class InMemoryUserRepository : IUserRepository
         string? error,
         CancellationToken ct = default)
     {
-        if (_byId.TryGetValue(userId, out var user))
+        _byId.SwapIfPresent(userId, user => user with
         {
-            _byId[userId] = user with
-            {
-                LetterboxdLastSyncAt = syncedAt,
-                LetterboxdLastSyncError = error,
-                Version = user.Version + 1
-            };
-        }
-
+            LetterboxdLastSyncAt = syncedAt,
+            LetterboxdLastSyncError = error,
+            Version = user.Version + 1
+        });
         return Task.CompletedTask;
     }
 
@@ -111,21 +125,35 @@ public sealed class InMemoryUserRepository : IUserRepository
         int pendingCount,
         CancellationToken ct = default)
     {
-        if (_byId.TryGetValue(userId, out var user))
+        _byId.SwapIfPresent(userId, user => user with
         {
-            _byId[userId] = user with { LetterboxdPendingReconciliationCount = pendingCount, Version = user.Version + 1 };
-        }
+            LetterboxdPendingReconciliationCount = pendingCount,
+            Version = user.Version + 1
+        });
+        return Task.CompletedTask;
+    }
 
+    public Task RecordLetterboxdPendingChoicesAsync(
+        string userId,
+        int pendingCount,
+        IReadOnlyList<string> pendingChoiceKeys,
+        CancellationToken ct = default)
+    {
+        _byId.SwapIfPresent(userId, user => user with
+        {
+            LetterboxdPendingReconciliationCount = pendingCount,
+            LetterboxdPendingChoiceKeys = [.. pendingChoiceKeys],
+            Version = user.Version + 1
+        });
         return Task.CompletedTask;
     }
 
     public Task<bool> MarkSupporterAsync(string userId, DateTimeOffset since, CancellationToken ct = default)
     {
-        if (!_byId.TryGetValue(userId, out var user) || user.SupporterSince is not null)
-            return Task.FromResult(false);
-
-        _byId[userId] = user with { SupporterSince = since, UpdatedAt = since, Version = user.Version + 1 };
-        return Task.FromResult(true);
+        var marked = _byId.SwapIfPresent(userId, user => user.SupporterSince is not null
+            ? null
+            : user with { SupporterSince = since, UpdatedAt = since, Version = user.Version + 1 });
+        return Task.FromResult(marked is not null);
     }
 
     public Task<bool> AddEventTemplateAsync(
@@ -135,14 +163,10 @@ public sealed class InMemoryUserRepository : IUserRepository
         DateTimeOffset now,
         CancellationToken ct = default)
     {
-        lock (_embeddedListsGate)
-        {
-            if (!_byId.TryGetValue(userId, out var user) || user.EventTemplates.Count >= maxPerUser)
-                return Task.FromResult(false);
-
-            _byId[userId] = user with { EventTemplates = [.. user.EventTemplates, template], UpdatedAt = now, Version = user.Version + 1 };
-            return Task.FromResult(true);
-        }
+        var added = _byId.SwapIfPresent(userId, user => user.EventTemplates.Count >= maxPerUser
+            ? null
+            : WithEventTemplates(user, [.. user.EventTemplates, template], now));
+        return Task.FromResult(added is not null);
     }
 
     public Task<bool> ReplaceEventTemplateAsync(
@@ -151,20 +175,17 @@ public sealed class InMemoryUserRepository : IUserRepository
         DateTimeOffset now,
         CancellationToken ct = default)
     {
-        lock (_embeddedListsGate)
+        var replaced = _byId.SwapIfPresent(userId, user =>
         {
-            if (!_byId.TryGetValue(userId, out var user))
-                return Task.FromResult(false);
-
             var next = user.EventTemplates.ToList();
             var index = next.FindIndex(t => t.Id == template.Id);
             if (index < 0)
-                return Task.FromResult(false);
+                return null;
 
             next[index] = template;
-            _byId[userId] = user with { EventTemplates = next, UpdatedAt = now, Version = user.Version + 1 };
-            return Task.FromResult(true);
-        }
+            return WithEventTemplates(user, next, now);
+        });
+        return Task.FromResult(replaced is not null);
     }
 
     public Task<bool> RemoveEventTemplateAsync(
@@ -173,19 +194,16 @@ public sealed class InMemoryUserRepository : IUserRepository
         DateTimeOffset now,
         CancellationToken ct = default)
     {
-        lock (_embeddedListsGate)
+        var removed = _byId.SwapIfPresent(userId, user =>
         {
-            if (!_byId.TryGetValue(userId, out var user))
-                return Task.FromResult(false);
-
             var next = user.EventTemplates.Where(t => t.Id != templateId).ToList();
-            if (next.Count == user.EventTemplates.Count)
-                return Task.FromResult(false);
-
-            _byId[userId] = user with { EventTemplates = next, UpdatedAt = now, Version = user.Version + 1 };
-            return Task.FromResult(true);
-        }
+            return next.Count == user.EventTemplates.Count ? null : WithEventTemplates(user, next, now);
+        });
+        return Task.FromResult(removed is not null);
     }
+
+    private static User WithEventTemplates(User user, IReadOnlyList<EventTemplate> templates, DateTimeOffset now) =>
+        user with { EventTemplates = templates, UpdatedAt = now, Version = user.Version + 1 };
 
     public Task<bool> AddFavoriteAsync(
         string userId,
@@ -194,16 +212,11 @@ public sealed class InMemoryUserRepository : IUserRepository
         DateTimeOffset now,
         CancellationToken ct = default)
     {
-        lock (_embeddedListsGate)
-        {
-            if (!_byId.TryGetValue(userId, out var user)
-                || user.Favorites.Count >= maxPerUser
-                || user.Favorites.Any(f => f.Is(favorite.TmdbId, favorite.MediaType)))
-                return Task.FromResult(false);
-
-            _byId[userId] = user with { Favorites = [.. user.Favorites, favorite], UpdatedAt = now, Version = user.Version + 1 };
-            return Task.FromResult(true);
-        }
+        var added = _byId.SwapIfPresent(userId, user =>
+            user.Favorites.Count >= maxPerUser || user.Favorites.Any(f => f.Is(favorite.TmdbId, favorite.MediaType))
+                ? null
+                : WithFavorites(user, [.. user.Favorites, favorite], now));
+        return Task.FromResult(added is not null);
     }
 
     public Task<bool> RemoveFavoriteAsync(
@@ -213,19 +226,17 @@ public sealed class InMemoryUserRepository : IUserRepository
         DateTimeOffset now,
         CancellationToken ct = default)
     {
-        lock (_embeddedListsGate)
+        var removed = _byId.SwapIfPresent(userId, user =>
         {
-            if (!_byId.TryGetValue(userId, out var user))
-                return Task.FromResult(false);
-
             var next = user.Favorites.Where(f => !f.Is(tmdbId, mediaType)).ToList();
-            if (next.Count == user.Favorites.Count)
-                return Task.FromResult(false);
-
-            _byId[userId] = user with { Favorites = next, UpdatedAt = now, Version = user.Version + 1 };
-            return Task.FromResult(true);
-        }
+            return next.Count == user.Favorites.Count ? null : WithFavorites(user, next, now);
+        });
+        return Task.FromResult(removed is not null);
     }
+
+    private static User WithFavorites(User user, IReadOnlyList<FavoriteTitle> favorites, DateTimeOffset now) =>
+        user with { Favorites = favorites, UpdatedAt = now, Version = user.Version + 1 };
+
 
     public Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
     {
@@ -244,47 +255,76 @@ public sealed class InMemoryUserRepository : IUserRepository
         var email = Normalize(user.Email) ?? user.Email.Trim();
         var handle = NormalizeHandle(user.Handle);
         var created = Copy(user, id, email, handle);
-        _byId[id] = created;
-        _emailToId[email] = id;
-        if (handle is not null)
-            _handleToId[handle] = id;
+        lock (_uniqueKeysGate)
+        {
+            EnsureUniqueKeysAreFree(id, email, handle, created.Identities);
+            _byId[id] = created;
+            _emailToId[email] = id;
+            if (handle is not null)
+                _handleToId[handle] = id;
+        }
+
         return Task.FromResult(created);
     }
 
     public Task<User> UpdateAsync(User user, CancellationToken ct = default)
     {
-        if (!_byId.TryGetValue(user.Id, out var previous))
-            throw Errors.UserNotFound();
-        if (previous.Version != user.Version)
-            throw Errors.ConcurrentUpdate();
+        lock (_uniqueKeysGate)
+        {
+            if (!_byId.TryGetValue(user.Id, out var previous))
+                throw Errors.UserNotFound();
+            if (previous.Version != user.Version)
+                throw Errors.ConcurrentUpdate();
 
-        var prevEmail = Normalize(previous.Email) ?? previous.Email.Trim();
-        _emailToId.TryRemove(prevEmail, out _);
-        var prevHandle = NormalizeHandle(previous.Handle);
-        if (prevHandle is not null)
-            _handleToId.TryRemove(prevHandle, out _);
+            var email = Normalize(user.Email) ?? user.Email.Trim();
+            var handle = NormalizeHandle(user.Handle);
+            EnsureUniqueKeysAreFree(user.Id, email, handle, user.Identities);
+            var updated = Copy(user with { Version = user.Version + 1 }, user.Id, email, handle);
+            if (!_byId.TryUpdate(user.Id, updated, previous))
+                throw Errors.ConcurrentUpdate();
 
-        var email = Normalize(user.Email) ?? user.Email.Trim();
-        var handle = NormalizeHandle(user.Handle);
-        var updated = Copy(user with { Version = user.Version + 1 }, user.Id, email, handle);
-        _byId[user.Id] = updated;
-        _emailToId[email] = user.Id;
-        if (handle is not null)
-            _handleToId[handle] = user.Id;
-        return Task.FromResult(updated);
+            ReleaseUniqueKeys(previous);
+            _emailToId[email] = user.Id;
+            if (handle is not null)
+                _handleToId[handle] = user.Id;
+            return Task.FromResult(updated);
+        }
     }
 
     public Task<bool> DeleteAsync(string id, CancellationToken ct = default)
     {
-        if (!_byId.TryRemove(id, out var removed))
-            return Task.FromResult(false);
+        lock (_uniqueKeysGate)
+        {
+            if (!_byId.TryRemove(id, out var removed))
+                return Task.FromResult(false);
 
-        var email = Normalize(removed.Email) ?? removed.Email.Trim();
-        _emailToId.TryRemove(email, out _);
-        var handle = NormalizeHandle(removed.Handle);
+            ReleaseUniqueKeys(removed);
+            return Task.FromResult(true);
+        }
+    }
+
+    private void EnsureUniqueKeysAreFree(string userId, string email, string? handle, IReadOnlyList<LinkedIdentity> identities)
+    {
+        if (_emailToId.TryGetValue(email, out var emailOwner) && emailOwner != userId)
+            throw Errors.EmailTaken();
+        if (handle is not null && _handleToId.TryGetValue(handle, out var handleOwner) && handleOwner != userId)
+            throw Errors.HandleTaken();
+        if (identities.Count > 0 && _byId.Values.Any(other => other.Id != userId && SharesAnIdentity(other, identities)))
+            throw Errors.IdentityConflict();
+    }
+
+    private static bool SharesAnIdentity(User other, IReadOnlyList<LinkedIdentity> identities) =>
+        other.Identities.Any(owned => identities.Any(wanted =>
+            string.Equals(owned.Provider, wanted.Provider, StringComparison.Ordinal)
+            && string.Equals(owned.Subject, wanted.Subject, StringComparison.Ordinal)));
+
+    private void ReleaseUniqueKeys(User user)
+    {
+        var email = Normalize(user.Email) ?? user.Email.Trim();
+        _emailToId.TryRemove(new KeyValuePair<string, string>(email, user.Id));
+        var handle = NormalizeHandle(user.Handle);
         if (handle is not null)
-            _handleToId.TryRemove(handle, out _);
-        return Task.FromResult(true);
+            _handleToId.TryRemove(new KeyValuePair<string, string>(handle, user.Id));
     }
 
     private static User Copy(User user, string id, string email, string? handle) =>
@@ -295,6 +335,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             PasswordHash = user.PasswordHash,
             DisplayName = user.DisplayName,
             Identities = user.Identities,
+            UnlinkedIdentities = user.UnlinkedIdentities,
             Handle = handle ?? string.Empty,
             Bio = user.Bio,
             IsProfilePublic = user.IsProfilePublic,
@@ -312,6 +353,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,
             LetterboxdLastSyncError = user.LetterboxdLastSyncError,
             LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
+            LetterboxdPendingChoiceKeys = user.LetterboxdPendingChoiceKeys,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt,
             Version = user.Version

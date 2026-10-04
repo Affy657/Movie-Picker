@@ -65,6 +65,7 @@ export const EventMovieCard = memo(function EventMovieCard({
   canVote,
   participantPseudo,
   isFinished,
+  wheelLocked,
   isHost,
   onVote,
   onRemove,
@@ -91,6 +92,7 @@ export const EventMovieCard = memo(function EventMovieCard({
     canVote,
     participantPseudo,
     isFinished,
+    wheelLocked,
     isHost,
     participantAvatars,
     ratingScale,
@@ -227,7 +229,7 @@ export const EventMovieCard = memo(function EventMovieCard({
               movieId={m.id}
               slug={slug}
               pitchNote={m.pitchNote}
-              isMine={s.isMine}
+              editable={s.canEditNote}
               participantId={participantId}
               editing={s.noteEditing}
               onEditingChange={s.setNoteEditing}

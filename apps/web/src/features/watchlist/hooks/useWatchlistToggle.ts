@@ -16,6 +16,7 @@ export interface WatchlistToggleItem {
   posterPath: string | null;
   voteAverage?: number | null;
   runtimeMinutes?: number | null;
+  genreIds?: number[];
 }
 
 type WatchlistToggleRef = Pick<WatchlistToggleItem, 'tmdbId' | 'mediaType'>;
@@ -55,6 +56,7 @@ export function useWatchlistToggle(enabled: boolean) {
       posterPath: item.posterPath,
       voteAverage: item.voteAverage,
       runtimeMinutes: item.runtimeMinutes,
+      genreIds: item.genreIds,
     });
   };
 

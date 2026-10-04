@@ -30,12 +30,6 @@
   --color-letterboxd-fg: color-mix(in srgb, var(--brand-letterboxd) 62%, black);
   --color-letterboxd-bg: color-mix(in srgb, var(--brand-letterboxd) 14%, transparent);
 
-  --wheel-1: var(--blue-600);
-  --wheel-2: var(--violet-600);
-  --wheel-3: var(--cyan-500);
-  --wheel-4: var(--pink-500);
-  --wheel-5: var(--orange-500);
-  --wheel-6: var(--emerald-500);
   --swatch-ring-inner: rgba(15, 23, 42, 0.15);
 }
 

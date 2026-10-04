@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import styles from '@/shared/components/EventLifecyclePill.module.css';
 import { LocaleProvider } from '@/shared/i18n';
+import dotStyles from '@/shared/components/StatusDot.module.css';
 
 function renderPill(element: React.ReactElement) {
   return render(<LocaleProvider>{element}</LocaleProvider>);
@@ -33,7 +34,7 @@ describe('EventLifecyclePill', () => {
       </>
     );
 
-    const pulses = container.querySelectorAll(`.${styles.pulse}`);
+    const pulses = container.querySelectorAll(`.${dotStyles.pulsing}`);
     expect(pulses).toHaveLength(1);
     expect(pulses[0]).toHaveAttribute('aria-hidden', 'true');
   });

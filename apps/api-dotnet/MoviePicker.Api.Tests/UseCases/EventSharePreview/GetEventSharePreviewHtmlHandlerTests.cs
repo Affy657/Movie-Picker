@@ -40,6 +40,7 @@ public sealed class GetEventSharePreviewHtmlHandlerTests
             Time = "20:00",
             Slug = "slug1",
             HostToken = "h",
+            Config = new EventConfig { RichSharePreview = false },
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -77,5 +78,30 @@ public sealed class GetEventSharePreviewHtmlHandlerTests
 
         Assert.Contains("property=\"og:title\" content=\"&lt;script&gt;alert(1)&lt;/script&gt;", html);
         Assert.Contains("Movie Picker", html);
+    }
+
+    [Fact]
+    public async Task BuildHtmlAsync_EventSavedWithoutSettings_ServesTheRichPreviewItsSettingsShow()
+    {
+        var evt = new Event
+        {
+            Id = "1",
+            Title = "Night saved without settings",
+            Date = "2030-03-03",
+            Time = "20:00",
+            Slug = "s3",
+            HostToken = "h",
+            Config = null,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        _events.Setup(r => r.GetByIdOrSlugAsync("s3", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movies.Setup(m => m.GetByIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Movie?)null);
+        var sut = CreateSut();
+        var html = await sut.BuildHtmlAsync("s3", "https://api.example", default);
+
+        Assert.True(EventConfig.SavedWithoutSettings.RichSharePreview);
+        Assert.Contains("property=\"og:title\" content=\"Night saved without settings", html);
     }
 }

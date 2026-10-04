@@ -10,58 +10,60 @@ namespace MoviePicker.Api.Infrastructure.Persistence.InMemory;
 public sealed class InMemoryEventRepository : IEventRepository
 {
     private readonly ConcurrentDictionary<string, Event> _byId = new();
-    private readonly ConcurrentDictionary<string, Event> _bySlug = new();
+    private readonly ConcurrentDictionary<string, string> _idBySlug = new();
 
-    public Task<Event?> GetByIdOrSlugAsync(string idOrSlug, CancellationToken ct = default)
+    public Task<Event?> GetByIdOrSlugAsync(string slug, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(idOrSlug))
+        if (string.IsNullOrWhiteSpace(slug))
             return Task.FromResult<Event?>(null);
-        if (_byId.TryGetValue(idOrSlug, out var e))
-            return Task.FromResult<Event?>(e);
-        if (_bySlug.TryGetValue(idOrSlug, out e))
-            return Task.FromResult<Event?>(e);
-        return Task.FromResult<Event?>(null);
+        return Task.FromResult(
+            _idBySlug.TryGetValue(slug, out var id) && _byId.TryGetValue(id, out var e) && e.Slug == slug ? e : null);
     }
 
     public Task<Event> AddAsync(Event evt, CancellationToken ct = default)
     {
+        if (evt.CreationRequestId is { } requestId
+            && _byId.Values.Any(e => e.CreatorUserId == evt.CreatorUserId && e.CreationRequestId == requestId))
+            throw new EventCreationReplayedException();
+
         var id = string.IsNullOrEmpty(evt.Id) ? Guid.NewGuid().ToString("N")[..24] : evt.Id;
         var created = evt with { Id = id };
         _byId[id] = created;
         if (!string.IsNullOrEmpty(created.Slug))
-            _bySlug[created.Slug] = created;
+            _idBySlug[created.Slug] = id;
         return Task.FromResult(created);
     }
 
+    public Task<Event?> FindByCreationRequestAsync(
+        string creatorUserId,
+        string creationRequestId,
+        CancellationToken ct = default) =>
+        Task.FromResult(_byId.Values.FirstOrDefault(e =>
+            e.CreatorUserId == creatorUserId && e.CreationRequestId == creationRequestId));
+
     public Task<bool> MarkWatchlistCleanedAsync(string eventId, DateTimeOffset cleanedAt, CancellationToken ct = default)
     {
-        if (!_byId.TryGetValue(eventId, out var evt) || evt.WatchlistCleanedAt is not null)
-            return Task.FromResult(false);
-
-        var stamped = evt with
-        {
-            WatchlistCleanedAt = cleanedAt,
-            UpdatedAt = cleanedAt,
-            Version = evt.Version + 1,
-            WriteSeq = evt.WriteSeq + 1
-        };
-        _byId[eventId] = stamped;
-        if (!string.IsNullOrEmpty(stamped.Slug))
-            _bySlug[stamped.Slug] = stamped;
-        return Task.FromResult(true);
+        var stamped = _byId.SwapIfPresent(eventId, evt => evt.WatchlistCleanedAt is not null
+            ? null
+            : evt with
+            {
+                WatchlistCleanedAt = cleanedAt,
+                UpdatedAt = cleanedAt,
+                Version = evt.Version + 1,
+                WriteSeq = evt.WriteSeq + 1
+            });
+        return Task.FromResult(stamped is not null);
     }
 
     public Task<Event> UpdateAsync(Event evt, CancellationToken ct = default)
     {
-        if (!_byId.TryGetValue(evt.Id, out var current))
+        var saved = _byId.SwapIfPresent(evt.Id, current => current.Version == evt.Version
+            ? evt with { Version = evt.Version + 1, WriteSeq = current.WriteSeq + 1 }
+            : throw Errors.ConcurrentUpdate());
+        if (saved is null)
             throw Errors.EventNotFound();
-        if (current.Version != evt.Version)
-            throw Errors.ConcurrentUpdate();
-
-        var saved = evt with { Version = evt.Version + 1, WriteSeq = current.WriteSeq + 1 };
-        _byId[saved.Id] = saved;
         if (!string.IsNullOrEmpty(saved.Slug))
-            _bySlug[saved.Slug] = saved;
+            _idBySlug.TryAdd(saved.Slug, saved.Id);
         return Task.FromResult(saved);
     }
 
@@ -73,13 +75,8 @@ public sealed class InMemoryEventRepository : IEventRepository
 
     private Task IncrementWriteSeqAsync(string eventId)
     {
-        if (!_byId.TryGetValue(eventId, out var evt))
+        if (_byId.SwapIfPresent(eventId, evt => evt with { WriteSeq = evt.WriteSeq + 1 }) is null)
             throw Errors.EventNotFound();
-
-        var bumped = evt with { WriteSeq = evt.WriteSeq + 1 };
-        _byId[eventId] = bumped;
-        if (!string.IsNullOrEmpty(bumped.Slug))
-            _bySlug[bumped.Slug] = bumped;
         return Task.CompletedTask;
     }
 
@@ -148,7 +145,7 @@ public sealed class InMemoryEventRepository : IEventRepository
             return Task.FromResult(false);
 
         if (!string.IsNullOrEmpty(removed.Slug))
-            _bySlug.TryRemove(removed.Slug, out _);
+            _idBySlug.TryRemove(new KeyValuePair<string, string>(removed.Slug, removed.Id));
 
         return Task.FromResult(true);
     }
@@ -213,13 +210,13 @@ public sealed class InMemoryEventRepository : IEventRepository
             return Task.FromResult(0L);
 
         long count = 0;
-        foreach (var e in _byId.Values.Where(e => e.CreatorUserId == creatorUserId).ToList())
+        foreach (var eventId in _byId.Values.Where(e => e.CreatorUserId == creatorUserId).Select(e => e.Id).ToList())
         {
-            var anonymized = e with { CreatorUserId = null, Version = e.Version + 1, WriteSeq = e.WriteSeq + 1 };
-            _byId[e.Id] = anonymized;
-            if (!string.IsNullOrEmpty(anonymized.Slug))
-                _bySlug[anonymized.Slug] = anonymized;
-            count++;
+            var anonymized = _byId.SwapIfPresent(eventId, e => e.CreatorUserId == creatorUserId
+                ? e with { CreatorUserId = null, Version = e.Version + 1, WriteSeq = e.WriteSeq + 1 }
+                : null);
+            if (anonymized is not null)
+                count++;
         }
 
         return Task.FromResult(count);

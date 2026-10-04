@@ -42,6 +42,7 @@ function renderPage(handle: string) {
           <Route path="/u/:handle/films" element={<ProfileMoviesPage />} />
           <Route path="/u/:handle" element={<div data-testid="route-profile" />} />
           <Route path="/" element={<div data-testid="route-home" />} />
+          <Route path="/settings" element={<div data-testid="route-settings" />} />
         </Routes>
       </MemoryRouter>
     </AppTestProviders>
@@ -135,6 +136,28 @@ describe('ProfileMoviesPage (MSW)', () => {
     renderPage('ghost');
 
     expect(await screen.findByText(/ce profil n'existe pas/i)).toBeInTheDocument();
+  });
+
+  it('takes me to my settings instead of a 404 when my own profile is private', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({
+          userId: 'u-me',
+          displayName: 'Moi',
+          emailMasked: 'm***@test.local',
+          uiTheme: 'system',
+          accentColor: 'default',
+          handle: 'moi',
+          isProfilePublic: false,
+        })
+      ),
+      http.get(`${TEST_API_V1}/users/:handle`, () =>
+        HttpResponse.json({ code: 'NOT_FOUND', message: 'Introuvable' }, { status: 404 })
+      )
+    );
+    renderPage('moi');
+
+    expect(await screen.findByTestId('route-settings')).toBeInTheDocument();
   });
 
   it('reveals the rest of the movies when clicking "Load"', async () => {

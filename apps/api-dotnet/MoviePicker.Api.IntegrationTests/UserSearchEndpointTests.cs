@@ -68,6 +68,18 @@ public sealed class UserSearchEndpointTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task Search_FindsANameWrittenWithAccentsOutsideTheFrenchAlphabet()
+    {
+        var marker = $"Zeph{Guid.NewGuid():N}"[..14];
+        var (_, target) = await NewUserAsync($"Šárka Dvořák {marker}");
+        var (searcher, _) = await NewUserAsync("CzechSeeker");
+
+        var result = await SearchAsync(searcher, $"Šárka Dvořák {marker}");
+
+        Assert.Contains(result.Items, i => i.Handle == target.Handle);
+    }
+
+    [Fact]
     public async Task Search_ExcludesPrivateProfiles()
     {
         var marker = $"Zeph{Guid.NewGuid():N}"[..14];
@@ -95,6 +107,16 @@ public sealed class UserSearchEndpointTests : IClassFixture<MoviePickerApplicati
 
         Assert.True(result.Items.Single(i => i.Handle == followed.Handle).IsFollowedByMe);
         Assert.False(result.Items.Single(i => i.Handle == stranger.Handle).IsFollowedByMe);
+    }
+
+    [Fact]
+    public async Task Search_AVeryLongAccentFoldedQuery_AnswersInsteadOfFailing()
+    {
+        var (searcher, _) = await NewUserAsync("LongQuerySeeker");
+
+        var response = await searcher.GetAsync($"/api/v1/users/search?q={new string('a', 2_000)}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]

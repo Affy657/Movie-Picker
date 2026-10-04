@@ -30,9 +30,6 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
                 It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
         _posters.Setup(s => s.ToPublicPosterPath(It.IsAny<string?>())).Returns((string? u) => u);
-        _posters
-            .Setup(s => s.RegisterTmdbSourceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
         _events.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Event e, CancellationToken _) => e);
 
@@ -62,13 +59,16 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
     private void GivenEvent(int winnerCount, params string[] alreadyWon) =>
         GivenEvent(winnerCount, announcedAt: null, alreadyWon);
 
-    private void GivenEvent(int winnerCount, DateTimeOffset? announcedAt, params string[] alreadyWon)
+    private void GivenEvent(int winnerCount, DateTimeOffset? announcedAt, params string[] alreadyWon) =>
+        GivenEventOn("2030-01-01", winnerCount, announcedAt, alreadyWon);
+
+    private void GivenEventOn(string date, int winnerCount, DateTimeOffset? announcedAt, params string[] alreadyWon)
     {
         var evt = new Event
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = date,
             Time = "20:00",
             Slug = "soiree",
             HostToken = "ht1",
@@ -101,6 +101,69 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
     private void GivenMovies(params string[] ids) =>
         _movies.Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(ids.Select(Film).ToList());
+
+    [Fact]
+    public async Task HandleAsync_ReplayedAfterTheDrawWentThrough_ReturnsTheLatestWinnerWithoutDrawingAgain()
+    {
+        GivenEvent(3, "m1", "m2");
+        GivenMovies("m1", "m2", "m3");
+        _movies.Setup(r => r.GetByIdAsync("m2", It.IsAny<CancellationToken>())).ReturnsAsync(Film("m2"));
+
+        var result = await _sut.HandleAsync("evt1", expectedWinnerCount: 1);
+
+        Assert.Equal("m2", result.Winner.Id);
+        _events.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReplayedAfterTheLastSlotWasDrawn_ReturnsTheWinnerInsteadOfRefusing()
+    {
+        GivenEvent(2, "m1", "m2");
+        GivenMovies("m1", "m2", "m3");
+        _movies.Setup(r => r.GetByIdAsync("m2", It.IsAny<CancellationToken>())).ReturnsAsync(Film("m2"));
+
+        var result = await _sut.HandleAsync("evt1", expectedWinnerCount: 1);
+
+        Assert.Equal("m2", result.Winner.Id);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReplayedAfterTheDrawFinishedAPendingNight_ReturnsTheWinnerInsteadOfEventFinished()
+    {
+        var twoDaysAgo = DateTimeOffset.UtcNow.AddDays(-2).ToString("yyyy-MM-dd");
+        GivenEventOn(twoDaysAgo, 1, announcedAt: null, "m1");
+        GivenMovies("m1", "m2");
+        _movies.Setup(r => r.GetByIdAsync("m1", It.IsAny<CancellationToken>())).ReturnsAsync(Film("m1"));
+
+        var result = await _sut.HandleAsync("evt1", expectedWinnerCount: 0);
+
+        Assert.Equal("m1", result.Winner.Id);
+        _events.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_FinishedNightWithoutAReplay_StillRefuses()
+    {
+        var twoDaysAgo = DateTimeOffset.UtcNow.AddDays(-2).ToString("yyyy-MM-dd");
+        GivenEventOn(twoDaysAgo, 1, announcedAt: null, "m1");
+        GivenMovies("m1", "m2");
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("evt1"));
+
+        Assert.Equal(ErrorCodes.EventFinished, ex.Reason);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExpectedCountStillCurrent_DrawsANewWinner()
+    {
+        GivenEvent(3, "m1");
+        GivenMovies("m1", "m2");
+
+        var result = await _sut.HandleAsync("evt1", expectedWinnerCount: 1);
+
+        Assert.Equal("m2", result.Winner.Id);
+        _events.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 
     [Fact]
     public async Task HandleAsync_ConfiguredCountReached_Throws()

@@ -1,6 +1,4 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { Link } from 'react-router';
-import { ArrowLeft } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import SignedOutState from '@/shared/components/SignedOutState';
 import SessionCheckErrorState from '@/features/auth/components/SessionCheckErrorState';
@@ -8,7 +6,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { hasSessionHint } from '@/features/auth/session-hint';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import styles from './SessionGate.module.css';
-import { ICON_SIZE } from '@/shared/components/iconSize';
+import BackLink from '@/shared/components/BackLink';
 
 type SessionGateProps = {
   icon: ReactNode;
@@ -46,10 +44,9 @@ export default function SessionGate({
     <PageLayout style={layoutStyle}>
       <h1 className={headingHidden ? 'visually-hidden' : styles.title}>{t(headingKey)}</h1>
       {back ? (
-        <Link to={back.to} className={styles.backLink}>
-          <ArrowLeft size={ICON_SIZE.md} aria-hidden />
-          <span className={styles.backLinkLabel}>{t(back.labelKey)}</span>
-        </Link>
+        <BackLink to={back.to} className={styles.backLink}>
+          {t(back.labelKey)}
+        </BackLink>
       ) : null}
       <SignedOutState icon={icon} title={t(titleKey)} message={t(messageKey)} returnTo={returnTo} />
     </PageLayout>

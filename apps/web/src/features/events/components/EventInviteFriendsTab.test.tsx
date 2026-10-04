@@ -147,21 +147,30 @@ describe('EventInviteFriendsTab (MSW)', () => {
     expect(screen.queryByRole('link', { name: /profil/i })).not.toBeInTheDocument();
   });
 
-  it('etat vide avec lien profil pour un utilisateur connecte', async () => {
-    server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u-me',
-          displayName: 'Moi',
-          handle: 'moi',
-          emailMasked: 'm***@x.fr',
-          uiTheme: 'system',
-          accentColor: 'default',
-        })
-      ),
-      eligible([])
-    );
-    renderTab();
-    expect(await screen.findByRole('link', { name: /profil/i })).toBeInTheDocument();
-  });
+  it.each([
+    { isProfilePublic: true, href: '/u/moi' },
+    { isProfilePublic: false, href: '/settings' },
+  ])(
+    'etat vide avec lien profil pour un utilisateur connecte (profil public: $isProfilePublic)',
+    async ({ isProfilePublic, href }) => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({
+            userId: 'u-me',
+            displayName: 'Moi',
+            handle: 'moi',
+            emailMasked: 'm***@x.fr',
+            uiTheme: 'system',
+            accentColor: 'default',
+            isProfilePublic,
+          })
+        ),
+        eligible([])
+      );
+      renderTab();
+      const link = await screen.findByRole('link', { name: /profil/i });
+      expect(link).toHaveAttribute('href', href);
+      expect(link.textContent).not.toContain('→');
+    }
+  );
 });

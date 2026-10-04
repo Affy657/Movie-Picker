@@ -10,6 +10,7 @@ public sealed record Event
     public string Slug { get; init; } = string.Empty;
 
     public string? CreatorUserId { get; init; }
+    public string? CreationRequestId { get; init; }
 
     public EventConfig? Config { get; init; }
     public DateTimeOffset? ClosedAt { get; init; }
@@ -17,6 +18,7 @@ public sealed record Event
     public DateTimeOffset? WinnerAnnouncedAt { get; init; }
     public DateTimeOffset? WatchlistCleanedAt { get; init; }
     public RecurrenceFrequency? Recurrence { get; init; }
+    public int? RecurrenceAnchorDay { get; init; }
     public string? RecurrenceParentEventId { get; init; }
     public string? NextOccurrenceEventId { get; init; }
 
@@ -66,6 +68,14 @@ public sealed record EventConfig
     public const int MaxProposalsPerParticipantCap = 100;
 
     public const int MaxMoviesPerEventCap = 1000;
+
+    public const int ThemeMaxLength = 100;
+
+    public static readonly EventConfig SavedWithoutSettings = new()
+    {
+        WheelMode = WheelMode.StrictRandom,
+        RichSharePreview = true
+    };
 
     public string? Theme { get; init; }
     public int? ThemeColor { get; init; }

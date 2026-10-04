@@ -16,7 +16,7 @@
 .skipLink:focus {
   left: var(--space-4);
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .root {
@@ -49,8 +49,8 @@
   z-index: var(--z-header);
   background: var(--color-nav-bg);
   border-bottom: 1px solid var(--color-border-subtle);
-  backdrop-filter: saturate(180%) blur(12px);
-  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  backdrop-filter: var(--backdrop-blur-bar);
+  -webkit-backdrop-filter: var(--backdrop-blur-bar);
 }
 
 .headerInner {
@@ -90,7 +90,7 @@
 .brandName {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-narrow);
+  letter-spacing: var(--tracking-tight);
   color: var(--color-text);
   transform: translateY(var(--text-optical-nudge));
 }
@@ -211,7 +211,7 @@
 
 .navLink:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
   border-radius: var(--radius-sm);
 }
 

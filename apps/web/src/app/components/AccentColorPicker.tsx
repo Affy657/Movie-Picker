@@ -23,14 +23,14 @@ const PICKER_COLORS = [
 type PickerColor = (typeof PICKER_COLORS)[number];
 
 const SWATCH_COLORS: Record<PickerColor, string> = {
-  blue: 'var(--accent-swatch-blue)',
-  green: 'var(--accent-swatch-green)',
-  purple: 'var(--accent-swatch-purple)',
-  pink: 'var(--accent-swatch-pink)',
-  orange: 'var(--accent-swatch-orange)',
-  red: 'var(--accent-swatch-red)',
-  cyan: 'var(--accent-swatch-cyan)',
-  indigo: 'var(--accent-swatch-indigo)',
+  blue: 'var(--color-accent-swatch-blue)',
+  green: 'var(--color-accent-swatch-green)',
+  purple: 'var(--color-accent-swatch-purple)',
+  pink: 'var(--color-accent-swatch-pink)',
+  orange: 'var(--color-accent-swatch-orange)',
+  red: 'var(--color-accent-swatch-red)',
+  cyan: 'var(--color-accent-swatch-cyan)',
+  indigo: 'var(--color-accent-swatch-indigo)',
 };
 
 const ACCENT_LABEL_KEY: Record<PickerColor, TranslationKey> = {
@@ -66,13 +66,17 @@ export default function AccentColorPicker({
   const accentRef = useRef(accent);
   accentRef.current = accent;
   const patchTimerRef = useRef<number | null>(null);
+  const sendPendingPatchRef = useRef<(() => void) | null>(null);
   const userId = user?.userId;
   useEffect(() => {
     if (userId) lastCommittedRef.current = accentRef.current;
   }, [userId]);
   useEffect(
     () => () => {
-      if (patchTimerRef.current !== null) clearTimeout(patchTimerRef.current);
+      if (patchTimerRef.current === null) return;
+      clearTimeout(patchTimerRef.current);
+      patchTimerRef.current = null;
+      sendPendingPatchRef.current?.();
     },
     []
   );
@@ -92,8 +96,7 @@ export default function AccentColorPicker({
         return;
       }
       if (patchTimerRef.current !== null) clearTimeout(patchTimerRef.current);
-      patchTimerRef.current = globalThis.setTimeout(() => {
-        patchTimerRef.current = null;
+      sendPendingPatchRef.current = () => {
         const rollback = lastCommittedRef.current;
         void patchProfile({ accentColor: next })
           .then(() => {
@@ -109,6 +112,10 @@ export default function AccentColorPicker({
               })
             );
           });
+      };
+      patchTimerRef.current = globalThis.setTimeout(() => {
+        patchTimerRef.current = null;
+        sendPendingPatchRef.current?.();
       }, PATCH_DEBOUNCE_MS);
     },
     [effectiveSelection, setAccent, user, patchProfile, onSaved, t]

@@ -40,7 +40,10 @@ export default function TemplateNameEditor({
             event.preventDefault();
             onConfirm();
           }
-          if (event.key === 'Escape') onCancel();
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            onCancel();
+          }
         }}
       />
       <Button

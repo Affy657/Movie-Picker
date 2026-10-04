@@ -50,6 +50,7 @@ public sealed class OpenApiContractTests : IClassFixture<MoviePickerApplicationF
         Assert.True(paths.TryGetProperty("/api/v1/movies/search", out var mSearch) && mSearch.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/movies/tmdb/{tmdbId}/details", out var mDetails) && mDetails.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/posters/{posterKey}", out var posters) && posters.TryGetProperty("get", out _));
+        Assert.True(paths.TryGetProperty("/api/v1/posters/tmdb/{size}/{file}", out var tmdbPosters) && tmdbPosters.TryGetProperty("get", out _));
         Assert.True(paths.TryGetProperty("/api/v1/users/{handle}/stats", out var userStats) && userStats.TryGetProperty("get", out _));
         var schemas = doc.RootElement.GetProperty("components").GetProperty("schemas");
         Assert.True(schemas.TryGetProperty("MovieSearchListResponse", out _));

@@ -74,18 +74,16 @@
 }
 
 .resultLabel {
+  composes: overline from '@/shared/components/typography.module.css';
   font-family: var(--font-mono);
   font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
   color: var(--color-brand-secondary);
 }
 
 .resultTitle {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-narrow);
+  letter-spacing: var(--tracking-tight);
 }
 
 .hint {

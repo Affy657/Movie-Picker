@@ -25,6 +25,7 @@ export default function PrivacyPolicyPage() {
         },
         { title: t('legal.privacyOAuthTitle'), body: t('legal.privacyOAuthBody') },
         { title: t('legal.privacyDonationsTitle'), body: t('legal.privacyDonationsBody') },
+        { title: t('legal.privacyIdeasTitle'), body: t('legal.privacyIdeasBody') },
         { title: t('legal.privacyRetentionTitle'), body: t('legal.privacyRetentionBody') },
         {
           title: t('legal.privacyRightsTitle'),

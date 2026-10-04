@@ -7,12 +7,13 @@ namespace MoviePicker.Api.Tests.Infrastructure.Persistence.InMemory;
 public sealed class InMemoryMovieRepositoryTests
 {
     private readonly InMemoryMovieRepository _repo = new();
+    private static int _nextTmdbId = 1000;
 
     private static Movie Mk(
         string id = "",
         string eventId = "evt1",
         string participantId = "p1",
-        int tmdbId = 100,
+        int? tmdbId = null,
         MovieMediaType mediaType = MovieMediaType.Movie,
         string title = "Inception",
         IReadOnlyList<int>? genreIds = null,
@@ -21,7 +22,7 @@ public sealed class InMemoryMovieRepositoryTests
             Id = id,
             EventId = eventId,
             ParticipantId = participantId,
-            TmdbId = tmdbId,
+            TmdbId = tmdbId ?? Interlocked.Increment(ref _nextTmdbId),
             MediaType = mediaType,
             Title = title,
             Year = "2010",
@@ -89,8 +90,23 @@ public sealed class InMemoryMovieRepositoryTests
     {
         await _repo.InsertAsync(Mk(title: "Inception"));
 
-        Assert.True(await _repo.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "  inception  "));
-        Assert.False(await _repo.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "Tenet"));
+        Assert.True(await _repo.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "  inception  ", "2010"));
+        Assert.False(await _repo.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "Tenet", "2010"));
+    }
+
+    [Theory]
+    [InlineData("2010", " 2010 ", true)]
+    [InlineData("", null, true)]
+    [InlineData(" 2010", "2010", false)]
+    [InlineData("  ", "  ", false)]
+    public async Task ExistsByEventAndTitleCaseInsensitiveAsync_IsNoMoreLenientThanMongoOnTheStoredYear(
+        string storedYear,
+        string? requestedYear,
+        bool expected)
+    {
+        await _repo.InsertAsync(Mk() with { Year = storedYear });
+
+        Assert.Equal(expected, await _repo.ExistsByEventAndTitleCaseInsensitiveAsync("evt1", "Inception", requestedYear));
     }
 
     [Fact]

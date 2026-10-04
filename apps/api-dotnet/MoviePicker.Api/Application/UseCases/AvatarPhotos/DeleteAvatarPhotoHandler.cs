@@ -11,5 +11,5 @@ public sealed class DeleteAvatarPhotoHandler : IDeleteAvatarPhotoHandler
     public DeleteAvatarPhotoHandler(AvatarPhotoWriter writer) => _writer = writer;
 
     public async Task<UserProfileResponse> HandleAsync(string userId, CancellationToken ct = default) =>
-        UserProfileResponses.From(await _writer.RemoveAsync(userId, ct));
+        UserProfileMapping.ToResponse(await _writer.RemoveAsync(userId, ct));
 }

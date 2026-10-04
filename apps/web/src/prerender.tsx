@@ -19,17 +19,22 @@ const READY_TIMEOUT_MS = 15_000;
 const READY_POLL_MS = 25;
 const EFFECT_FLUSH_TURNS = 5;
 
-function nextTurn(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+function nextTurns(count: number): Promise<void> {
+  if (count <= 0) return Promise.resolve();
+  return new Promise<void>((resolve) => setTimeout(resolve, 0)).then(() => nextTurns(count - 1));
 }
 
-async function waitForHeading(container: HTMLElement): Promise<void> {
+function waitForHeading(container: HTMLElement): Promise<void> {
   const deadline = Date.now() + READY_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    if (container.querySelector('h1')) return;
-    await new Promise((resolve) => setTimeout(resolve, READY_POLL_MS));
-  }
-  throw new Error(`no <h1> rendered after ${READY_TIMEOUT_MS} ms`);
+  return new Promise((resolve, reject) => {
+    const poll = () => {
+      if (container.querySelector('h1')) resolve();
+      else if (Date.now() >= deadline)
+        reject(new Error(`no <h1> rendered after ${READY_TIMEOUT_MS} ms`));
+      else setTimeout(poll, READY_POLL_MS);
+    };
+    poll();
+  });
 }
 
 export async function renderRoute(url: string): Promise<PrerenderedPage> {
@@ -49,7 +54,7 @@ export async function renderRoute(url: string): Promise<PrerenderedPage> {
   );
 
   await waitForHeading(container);
-  for (let turn = 0; turn < EFFECT_FLUSH_TURNS; turn += 1) await nextTurn();
+  await nextTurns(EFFECT_FLUSH_TURNS);
 
   const page = { head: document.head.innerHTML, body: container.innerHTML };
   root.unmount();

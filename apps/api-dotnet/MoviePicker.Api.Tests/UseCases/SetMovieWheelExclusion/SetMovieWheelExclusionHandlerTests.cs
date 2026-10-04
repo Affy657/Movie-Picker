@@ -15,6 +15,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
     private readonly Mock<IMovieRepository> _movieRepo = new();
     private readonly Mock<IHostTokenAccessor> _hostTokenAccessor = new();
     private readonly Mock<ICurrentUserAccessor> _currentUserAccessor = new();
+    private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly SetMovieWheelExclusionHandler _sut;
 
     private static Event ActiveEvent(string hostToken = "ht1") => new()
@@ -47,11 +48,14 @@ public sealed class SetMovieWheelExclusionHandlerTests
     public SetMovieWheelExclusionHandlerTests()
     {
         _currentUserAccessor.Setup(c => c.GetUserId()).Returns((string?)null);
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
         _sut = new SetMovieWheelExclusionHandler(
             _eventRepo.Object,
             _movieRepo.Object,
             _hostTokenAccessor.Object,
             _currentUserAccessor.Object,
+            _unitOfWork,
             TimeProvider.System);
     }
 
@@ -107,7 +111,26 @@ public sealed class SetMovieWheelExclusionHandlerTests
         await _sut.HandleAsync("evt1", "mov1", Request(true));
 
         _movieRepo.Verify(r => r.UpdateWheelExclusionAsync("mov1", true, It.IsAny<CancellationToken>()), Times.Once);
-        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt1"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_Excludes_InsideTheUnitOfWorkThatMovesTheEventVersion()
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
+        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", "evt1", It.IsAny<CancellationToken>())).ReturnsAsync(MovieOf("mov1"));
+        var steps = new List<string>();
+        _movieRepo.Setup(r => r.UpdateWheelExclusionAsync("mov1", true, It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "exclude" : "exclude-outside"))
+            .Returns(Task.CompletedTask);
+        _eventRepo.Setup(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "event" : "event-outside"))
+            .ReturnsAsync((Event e, CancellationToken _) => e);
+
+        await _sut.HandleAsync("evt1", "mov1", Request(true));
+
+        Assert.Equal(["exclude", "event"], steps);
     }
 
     [Fact]
@@ -136,7 +159,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         _movieRepo.Verify(
             r => r.UpdateWheelExclusionAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()),
             Times.Never);
-        _eventRepo.Verify(r => r.MarkChangedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _eventRepo.Verify(r => r.UpdateAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -150,7 +173,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
         await _sut.HandleAsync("evt1", "mov1", Request(true));
 
         _movieRepo.Verify(r => r.UpdateWheelExclusionAsync("mov1", true, It.IsAny<CancellationToken>()), Times.Once);
-        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt1"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -165,6 +188,6 @@ public sealed class SetMovieWheelExclusionHandlerTests
         await _sut.HandleAsync("evt1", "mov1", Request(true));
 
         _movieRepo.Verify(r => r.UpdateWheelExclusionAsync("mov1", true, It.IsAny<CancellationToken>()), Times.Once);
-        _eventRepo.Verify(r => r.MarkChangedAsync("evt1", It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.UpdateAsync(It.Is<Event>(e => e.Id == "evt1"), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

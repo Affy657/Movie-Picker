@@ -87,7 +87,7 @@ export default function RatingNotes({
         <h3 className={styles.notesTitle}>{t('events.ratings.listTitle')}</h3>
         {average !== null ? (
           <span className={styles.summary}>
-            <Chip tone="neutral" size="sm">
+            <Chip tone="default" size="sm">
               {t('events.ratings.average', {
                 value: formatRating(average, scale, locale, { decimals: 1 }),
               })}

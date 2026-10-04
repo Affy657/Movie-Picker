@@ -1,5 +1,8 @@
 .historyDropdown {
   composes: card radiusMd elevationLg from '@/shared/components/Card.module.css';
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
   position: absolute;
   top: calc(100% + var(--space-1-5));
   left: 0;
@@ -44,10 +47,8 @@
 }
 
 .historyTitle {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-wider);
-  text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
@@ -108,7 +109,7 @@
 
 .historyItemBtn:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: -2px;
+  outline-offset: var(--outline-offset-inset);
 }
 
 .historyIcon {

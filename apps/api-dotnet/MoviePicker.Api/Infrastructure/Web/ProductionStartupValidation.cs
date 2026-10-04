@@ -22,6 +22,15 @@ public static class ProductionStartupValidation
             throw new InvalidOperationException(
                 "MONGODB_URI is required outside development. On GCP: a Secret Manager secret referenced by Cloud Run, or an environment variable for a manual deployment.");
         }
+
+        var emailProvider = app.Configuration["EMAIL_PROVIDER"]?.Trim();
+        if (!string.Equals(emailProvider, "resend", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(app.Configuration["RESEND_API_KEY"]))
+        {
+            throw new InvalidOperationException(
+                "EMAIL_PROVIDER=resend and RESEND_API_KEY are required outside development: without them the API falls back to the log sender, "
+                + "which writes password reset links, token included, to the logs instead of sending them.");
+        }
     }
 
     public static void EnsureTimeZoneData(TimeZoneInfo parisTimeZone)

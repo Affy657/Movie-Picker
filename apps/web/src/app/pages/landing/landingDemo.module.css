@@ -27,7 +27,7 @@
   width: var(--space-2-5);
   height: var(--space-2-5);
   border-radius: 50%;
-  background: var(--color-meta);
+  background: var(--color-text-subtle);
   opacity: var(--opacity-muted);
 }
 
@@ -35,7 +35,7 @@
   margin-left: var(--space-2-5);
   font-family: var(--font-mono);
   font-size: var(--font-size-demo-sm);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }
 
 .appBody {
@@ -52,8 +52,8 @@
 .eventTitle {
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-narrow);
-  line-height: var(--leading-compact);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
 }
 
 .metaRow {
@@ -63,7 +63,7 @@
   gap: var(--space-2);
   margin-top: var(--space-1-5);
   font-size: var(--font-size-xs);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }
 
 .avatars {
@@ -79,7 +79,7 @@
 
 .movieRow {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-columns: calc(var(--space-10) + var(--space-1)) minmax(0, 1fr) auto;
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-2-5);
@@ -93,14 +93,14 @@
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-md);
   letter-spacing: var(--tracking-snug);
-  line-height: var(--leading-compact);
+  line-height: var(--leading-tight);
 }
 
 .movieMeta {
   display: block;
   font-family: var(--font-mono);
   font-size: var(--font-size-demo-sm);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
 }
 
 .votes {
@@ -116,7 +116,7 @@
   border-radius: var(--radius-pill);
   border: 1px solid var(--color-border-subtle);
   background: var(--color-surface-sunken);
-  color: var(--color-meta);
+  color: var(--color-text-subtle);
   font-family: var(--font-mono);
   font-size: var(--font-size-demo-sm);
   font-weight: var(--font-weight-bold);
@@ -187,7 +187,7 @@
   font-family: var(--font-mono);
   font-size: var(--font-size-demo-xs);
   font-weight: var(--font-weight-bold);
-  line-height: var(--leading-compact);
+  line-height: var(--leading-tight);
   letter-spacing: var(--tracking-slight);
   text-transform: uppercase;
   color: var(--poster-label-fg);
@@ -206,14 +206,14 @@
   gap: var(--space-2);
   padding: var(--space-2-5) var(--space-3);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-media-letterbox) 88%, transparent);
+  background: var(--color-on-poster-scrim-strong);
   border: 1px solid var(--color-primary-border);
   box-shadow: var(--shadow-hero-card);
   color: var(--color-on-dark);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: var(--backdrop-blur-overlay);
+  -webkit-backdrop-filter: var(--backdrop-blur-overlay);
   animation: bob var(--demo-float-duration) var(--ease-in-out) infinite;
 }
 
@@ -246,7 +246,7 @@
 
 .listRow {
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) auto;
+  grid-template-columns: var(--space-7) minmax(0, 1fr) auto;
   gap: var(--space-2-5);
   align-items: center;
   padding: var(--space-1-5) var(--space-2);
@@ -259,7 +259,7 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-snug);
-  line-height: var(--leading-compact);
+  line-height: var(--leading-tight);
 }
 
 .listMeta {
@@ -270,11 +270,9 @@
 }
 
 .listSource {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   font-family: var(--font-mono);
   font-size: var(--font-size-demo-xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-extra);
-  text-transform: uppercase;
   padding: var(--space-0-5) var(--space-1);
   border-radius: var(--radius-sm);
   background: var(--color-letterboxd-bg);
@@ -382,22 +380,22 @@
 }
 
 .swatchBlue {
-  background: var(--accent-swatch-blue);
+  background: var(--color-accent-swatch-blue);
 }
 .swatchGreen {
-  background: var(--accent-swatch-green);
+  background: var(--color-accent-swatch-green);
 }
 .swatchPurple {
-  background: var(--accent-swatch-purple);
+  background: var(--color-accent-swatch-purple);
 }
 .swatchPink {
-  background: var(--accent-swatch-pink);
+  background: var(--color-accent-swatch-pink);
 }
 .swatchOrange {
-  background: var(--accent-swatch-orange);
+  background: var(--color-accent-swatch-orange);
 }
 .swatchCyan {
-  background: var(--accent-swatch-cyan);
+  background: var(--color-accent-swatch-cyan);
 }
 
 .swatchActive {
@@ -414,11 +412,9 @@
 }
 
 .fieldLabel {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
   font-family: var(--font-mono);
   font-size: var(--font-size-demo-xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-extra);
-  text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
@@ -482,12 +478,12 @@
   margin-inline: auto;
   position: relative;
   background: conic-gradient(
-    var(--wheel-1) 0deg 60deg,
-    var(--wheel-2) 60deg 120deg,
-    var(--wheel-3) 120deg 180deg,
-    var(--wheel-4) 180deg 240deg,
-    var(--wheel-5) 240deg 300deg,
-    var(--wheel-6) 300deg 360deg
+    var(--color-wheel-0) 0deg 60deg,
+    var(--color-wheel-1) 60deg 120deg,
+    var(--color-wheel-2) 120deg 180deg,
+    var(--color-wheel-3) 180deg 240deg,
+    var(--color-wheel-4) 240deg 300deg,
+    var(--color-wheel-5) 300deg 360deg
   );
   animation: slowspin var(--demo-spin-duration) var(--ease-linear) infinite;
 }

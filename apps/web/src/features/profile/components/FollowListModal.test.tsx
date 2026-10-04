@@ -5,12 +5,30 @@ import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import FollowListModal from '@/features/profile/components/FollowListModal';
-import { AppTestProviders } from '@/test-utils/queryWrapper';
+import { AppTestProviders, createTestQueryClient } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
+import { queryKeys } from '@/shared/hooks/queryKeys';
+import type { QueryClient } from '@tanstack/react-query';
+
+const SIGNED_IN_ALICE = {
+  userId: 'u-alice',
+  displayName: 'Alice',
+  emailMasked: 'a***@test.local',
+  uiTheme: 'system',
+  accentColor: 'default',
+  avatarId: '',
+  handle: 'alice',
+  bio: null,
+  isProfilePublic: true,
+};
+
+const signedInAsAlice = () =>
+  http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(SIGNED_IN_ALICE));
 
 function renderModal(
   overrides: Partial<Parameters<typeof FollowListModal>[0]> = {},
-  onClose = vi.fn()
+  onClose = vi.fn(),
+  client?: QueryClient
 ) {
   const props = {
     handle: 'alice',
@@ -21,7 +39,7 @@ function renderModal(
     ...overrides,
   };
   return render(
-    <AppTestProviders>
+    <AppTestProviders client={client}>
       <MemoryRouter>
         <FollowListModal {...props} />
       </MemoryRouter>
@@ -61,6 +79,67 @@ describe('FollowListModal (MSW)', () => {
     });
   });
 
+  it('says the list could not load and retries, instead of an empty list', async () => {
+    const user = userEvent.setup();
+    let calls = 0;
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => {
+        calls += 1;
+        if (calls === 1) return new HttpResponse(null, { status: 500 });
+        return HttpResponse.json({
+          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
+        });
+      })
+    );
+
+    renderModal({ followingCount: 2 });
+
+    expect(await screen.findByText('Impossible de charger cette liste.')).toBeInTheDocument();
+    expect(screen.queryByText(/aucun utilisateur/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/profils privés/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByText('Bob')).toBeInTheDocument();
+    expect(screen.queryByText('Impossible de charger cette liste.')).not.toBeInTheDocument();
+  });
+
+  it('says the search failed and retries, instead of claiming nobody matches', async () => {
+    const user = userEvent.setup();
+    let calls = 0;
+    server.use(
+      signedInAsAlice(),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
+      http.get(`${TEST_API_V1}/users/search`, () => {
+        calls += 1;
+        if (calls === 1) return new HttpResponse(null, { status: 500 });
+        return HttpResponse.json({
+          items: [
+            {
+              handle: 'sofiamorgane',
+              displayName: 'Sofia Benali',
+              avatarId: '',
+              isFollowedByMe: false,
+            },
+          ],
+        });
+      })
+    );
+
+    renderModal();
+    await screen.findByText(/aucun utilisateur/i);
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
+    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
+
+    expect(await screen.findByText('Recherche impossible, réessayez.')).toBeInTheDocument();
+    expect(screen.queryByText('Personne ne correspond')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByText('Sofia Benali')).toBeInTheDocument();
+  });
+
   it('affiche les utilisateurs dans la liste', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
@@ -75,6 +154,40 @@ describe('FollowListModal (MSW)', () => {
 
     expect(await screen.findByText('Bob')).toBeInTheDocument();
     expect(screen.getByText('@bob')).toBeInTheDocument();
+  });
+
+  it('explains the gap when the list is shorter than the count', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () =>
+        HttpResponse.json({
+          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
+        })
+      )
+    );
+
+    renderModal({ followingCount: 2 });
+
+    expect(await screen.findByText('Bob')).toBeInTheDocument();
+    expect(
+      screen.getByText('Les profils privés n’apparaissent pas dans cette liste.')
+    ).toBeInTheDocument();
+  });
+
+  it('says nothing about private profiles when the list matches the count', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () =>
+        HttpResponse.json({
+          items: [{ handle: 'bob', displayName: 'Bob', avatarId: '', isFollowedByMe: null }],
+        })
+      )
+    );
+
+    renderModal({ followingCount: 1 });
+
+    expect(await screen.findByText('Bob')).toBeInTheDocument();
+    expect(screen.queryByText(/profils privés/i)).not.toBeInTheDocument();
   });
 
   it("bascule vers l'onglet Followers au clic", async () => {
@@ -193,17 +306,49 @@ describe('FollowListModal (MSW)', () => {
     });
   });
 
-  it("affiche l'invitation a chercher sur l'onglet Rechercher", async () => {
-    const user = userEvent.setup();
+  it('offers no search tab to a signed-out visitor, since the search needs an account', async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
     );
 
     renderModal();
+
+    expect(await screen.findByText(/aucun utilisateur/i)).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /2 abonnements/i })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Rechercher' })).not.toBeInTheDocument();
+  });
+
+  it('never runs the user search for a signed-out visitor opened on the search tab', async () => {
+    const searchCalls: string[] = [];
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
+      http.get(`${TEST_API_V1}/users/search`, ({ request }) => {
+        searchCalls.push(new URL(request.url).searchParams.get('q') ?? '');
+        return new HttpResponse(null, { status: 401 });
+      })
+    );
+
+    renderModal({ initialTab: 'search' });
+
+    expect(await screen.findByText(/aucun utilisateur/i)).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Pseudo ou @handle')).not.toBeInTheDocument();
+    expect(screen.queryByText('Recherche impossible, réessayez.')).not.toBeInTheDocument();
+    expect(searchCalls).toEqual([]);
+  });
+
+  it("affiche l'invitation a chercher sur l'onglet Rechercher", async () => {
+    const user = userEvent.setup();
+    server.use(
+      signedInAsAlice(),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
+    );
+
+    renderModal();
     await screen.findByText(/aucun utilisateur/i);
 
-    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
 
     expect(await screen.findByText('Cherchez un pseudo')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Pseudo ou @handle')).toBeInTheDocument();
@@ -213,7 +358,7 @@ describe('FollowListModal (MSW)', () => {
     const user = userEvent.setup();
     const searchCalls: string[] = [];
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      signedInAsAlice(),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
       http.get(`${TEST_API_V1}/users/search`, ({ request }) => {
         searchCalls.push(new URL(request.url).searchParams.get('q') ?? '');
@@ -223,7 +368,7 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
 
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'm');
 
@@ -234,7 +379,7 @@ describe('FollowListModal (MSW)', () => {
   it('surligne la portion trouvee dans le pseudo et le handle', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      signedInAsAlice(),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
       http.get(`${TEST_API_V1}/users/search`, () =>
         HttpResponse.json({
@@ -253,7 +398,7 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
 
     expect(await screen.findByText('Sofia Benali')).toBeInTheDocument();
@@ -264,19 +409,7 @@ describe('FollowListModal (MSW)', () => {
   it('propose de suivre un compte trouve qui ne l est pas encore', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () =>
-        HttpResponse.json({
-          userId: 'u-alice',
-          displayName: 'Alice',
-          emailMasked: 'a***@test.local',
-          uiTheme: 'system',
-          accentColor: 'default',
-          avatarId: '',
-          handle: 'alice',
-          bio: null,
-          isProfilePublic: true,
-        })
-      ),
+      signedInAsAlice(),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
       http.get(`${TEST_API_V1}/users/search`, () =>
         HttpResponse.json({
@@ -289,23 +422,59 @@ describe('FollowListModal (MSW)', () => {
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
 
     expect(await screen.findByRole('button', { name: 'Suivre @lea_m' })).toBeInTheDocument();
   });
 
+  it('refreshes every cached profile and follow list touched by a follow, not only the viewed one', async () => {
+    const user = userEvent.setup();
+    const client = createTestQueryClient();
+    const touchedKeys = [
+      queryKeys.profile.public('lea_m'),
+      queryKeys.profile.followers('lea_m'),
+      queryKeys.profile.following('bob'),
+      queryKeys.event.eligibleFollows('movie-night'),
+    ];
+    for (const key of touchedKeys) client.setQueryData(key, { items: [] });
+    server.use(
+      signedInAsAlice(),
+      http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
+      http.get(`${TEST_API_V1}/users/search`, () =>
+        HttpResponse.json({
+          items: [
+            { handle: 'lea_m', displayName: 'Léa Moreau', avatarId: '', isFollowedByMe: false },
+          ],
+        })
+      ),
+      http.post(`${TEST_API_V1}/users/lea_m/follow`, () => new HttpResponse(null, { status: 204 }))
+    );
+
+    renderModal({}, vi.fn(), client);
+    await screen.findByText(/aucun utilisateur/i);
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
+    await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'mor');
+    await user.click(await screen.findByRole('button', { name: 'Suivre @lea_m' }));
+
+    await waitFor(() => {
+      for (const key of touchedKeys) {
+        expect(client.getQueryState(key)?.isInvalidated, JSON.stringify(key)).toBe(true);
+      }
+    });
+  });
+
   it('explique une recherche sans resultat', async () => {
     const user = userEvent.setup();
     server.use(
-      http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+      signedInAsAlice(),
       http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] })),
       http.get(`${TEST_API_V1}/users/search`, () => HttpResponse.json({ items: [] }))
     );
 
     renderModal();
     await screen.findByText(/aucun utilisateur/i);
-    await user.click(screen.getByRole('tab', { name: 'Rechercher' }));
+    await user.click(await screen.findByRole('tab', { name: 'Rechercher' }));
     await user.type(screen.getByPlaceholderText('Pseudo ou @handle'), 'zephyrin');
 
     expect(await screen.findByText('Personne ne correspond')).toBeInTheDocument();
@@ -324,7 +493,7 @@ describe('FollowListModal (MSW)', () => {
     );
     try {
       server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),
+        signedInAsAlice(),
         http.get(`${TEST_API_V1}/users/alice/following`, () => HttpResponse.json({ items: [] }))
       );
 

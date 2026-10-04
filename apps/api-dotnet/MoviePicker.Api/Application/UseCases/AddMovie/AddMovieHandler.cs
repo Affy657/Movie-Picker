@@ -78,12 +78,13 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (await _movieRepository.ExistsByEventAndTmdbIdAsync(evt.Id, request.TmdbId, request.MediaType, ct))
             throw Errors.MovieAlreadyProposed();
 
-        if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), ct))
+        var year = MovieYear.Normalize(request.Year);
+        if (await _movieRepository.ExistsByEventAndTitleCaseInsensitiveAsync(evt.Id, request.Title.Trim(), year, ct))
             throw Errors.MovieTitleAlreadyProposed();
 
         var now = _clock.GetUtcNow();
         var pitchNote = string.IsNullOrWhiteSpace(request.PitchNote) ? null : request.PitchNote.Trim();
-        var genreIdsTask = FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, ct);
+        var genreIdsTask = FetchGenreIdsBestEffortAsync(request.TmdbId, request.MediaType, request.GenreIds, ct);
         var proposerUserTask = _userRepository.GetByIdAsync(currentUserId, ct);
         await Task.WhenAll(genreIdsTask, proposerUserTask);
         var genreIds = await genreIdsTask;
@@ -97,7 +98,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
             TmdbId = request.TmdbId,
             MediaType = request.MediaType,
             Title = request.Title.Trim(),
-            Year = request.Year,
+            Year = year ?? string.Empty,
             PosterPath = poster,
             PitchNote = pitchNote,
             GenreIds = genreIds,
@@ -141,38 +142,45 @@ public sealed class AddMovieHandler : IAddMovieHandler
         CancellationToken ct)
     {
         var maxProp = evt.Config?.MaxProposalsPerParticipant;
-        if (maxProp is not > 0)
-        {
-            var inserted = await _movieRepository.InsertAsync(movie, ct);
-            await _eventRepository.MarkChangedAsync(evt.Id, ct);
-            return inserted;
-        }
-
         Movie created = movie;
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
                 await _eventRepository.LockForWriteAsync(evt.Id, token);
-                var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, token);
-                if (count >= maxProp)
-                    throw Errors.ProposalLimitReached(maxProp.Value);
+                if (await _participantRepository.FindByIdAndEventIdAsync(participant.Id, evt.Id, token) is null)
+                    throw Errors.InvalidParticipant();
+                if (await _movieRepository.CountByEventIdAsync(evt.Id, token) >= EventConfig.MaxMoviesPerEventCap)
+                    throw Errors.EventMovieLimitReached(EventConfig.MaxMoviesPerEventCap);
+                if (maxProp is > 0)
+                {
+                    var count = await _movieRepository.CountByEventAndParticipantAsync(evt.Id, participant.Id, token);
+                    if (count >= maxProp)
+                        throw Errors.ProposalLimitReached(maxProp.Value);
+                }
                 created = await _movieRepository.InsertAsync(movie, token);
             },
             ct);
         return created;
     }
 
-    private async Task<IReadOnlyList<int>> FetchGenreIdsBestEffortAsync(int tmdbId, MovieMediaType mediaType, CancellationToken ct)
+    private async Task<IReadOnlyList<int>> FetchGenreIdsBestEffortAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        IReadOnlyList<int>? searchResultGenreIds,
+        CancellationToken ct)
     {
+        var knownGenreIds = searchResultGenreIds is null
+            ? []
+            : searchResultGenreIds.Where(id => id > 0).Distinct().ToList();
         try
         {
             var details = await _tmdb.GetDetailsAsync(tmdbId, mediaType, ct);
-            return details?.GenreIds ?? [];
+            return details?.GenreIds ?? knownGenreIds;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "TMDB genre lookup failed for {TmdbId}, movie added without genres", tmdbId);
-            return [];
+            _logger.LogWarning(ex, "TMDB genre lookup failed for {TmdbId}, movie added with the genres of its search result", tmdbId);
+            return knownGenreIds;
         }
     }
 

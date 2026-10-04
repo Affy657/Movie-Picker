@@ -40,8 +40,18 @@ public sealed record ExportedProfile
     public IReadOnlyDictionary<string, bool> NotificationPreferences { get; init; } =
         new Dictionary<string, bool>();
     public DateTimeOffset? SupporterSince { get; init; }
+    public string RatingScale { get; init; } = string.Empty;
+    public string? LetterboxdUsername { get; init; }
+    public IReadOnlyList<ExportedEventTemplate> EventTemplates { get; init; } = Array.Empty<ExportedEventTemplate>();
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
+}
+
+public sealed record ExportedEventTemplate
+{
+    public string Name { get; init; } = string.Empty;
+    public string? Theme { get; init; }
+    public DateTimeOffset CreatedAt { get; init; }
 }
 
 public sealed record ExportedNotification
@@ -81,6 +91,18 @@ public sealed record ExportedParticipation
     public IReadOnlyList<ExportedVote> Votes { get; init; } = Array.Empty<ExportedVote>();
     public IReadOnlyList<ExportedSeenMark> SeenMarks { get; init; } = Array.Empty<ExportedSeenMark>();
     public IReadOnlyList<ExportedRating> Ratings { get; init; } = Array.Empty<ExportedRating>();
+    public IReadOnlyList<ExportedProposedMovie> ProposedMovies { get; init; } = Array.Empty<ExportedProposedMovie>();
+}
+
+public sealed record ExportedProposedMovie
+{
+    public string MovieId { get; init; } = string.Empty;
+    public int TmdbId { get; init; }
+    public string MediaType { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Year { get; init; } = string.Empty;
+    public string? PitchNote { get; init; }
+    public DateTimeOffset CreatedAt { get; init; }
 }
 
 public sealed record ExportedVote

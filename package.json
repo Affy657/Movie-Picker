@@ -24,6 +24,8 @@
     "terraform": "node scripts/terraform.mjs",
     "check:tools": "node scripts/check-tool-versions.mjs",
     "check:iam": "node scripts/check-iam.mjs",
+    "test:scripts": "node --test scripts/*.test.mjs",
+    "check:sonar": "node scripts/check-sonar.mjs",
     "format": "prettier --write --cache \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:check": "prettier --check --cache \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:dotnet": "dotnet format apps/api-dotnet/MoviePicker.slnx --verbosity minimal",
@@ -40,7 +42,8 @@
     "test:e2e:mongo": "cross-env VITE_API_URL=http://127.0.0.1:5010 pnpm --filter \"./apps/web\" run build && cross-env CI=1 pnpm exec playwright test e2e/critical-flow.spec.ts",
     "audit": "pnpm audit --audit-level=high",
     "verify:local": "node scripts/verify-local.cjs",
-    "lighthouse": "node scripts/lighthouse-run.mjs"
+    "lighthouse": "node scripts/lighthouse-run.mjs",
+    "capture:screenshots": "node scripts/capture-screenshots.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -51,6 +54,7 @@
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-sonarjs": "^4.2.1",
     "globals": "^17.12.0",
     "lighthouse": "^13.4.1",
     "openapi-typescript": "^7.13.0",

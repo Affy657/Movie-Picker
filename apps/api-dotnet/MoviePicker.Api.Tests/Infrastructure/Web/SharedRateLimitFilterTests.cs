@@ -182,6 +182,23 @@ public sealed class SharedRateLimitFilterTests
     }
 
     [Fact]
+    public async Task CounterKey_AnonymousFacingPolicy_KeysByAddressEvenWithASession()
+    {
+        string? capturedKey = null;
+        _counters.Setup(c => c.IncrementAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Callback((string key, DateTimeOffset _, CancellationToken _) => capturedKey = key)
+            .ReturnsAsync(1);
+        var context = BuildContext(new SharedRateLimitAttribute(RateLimitingExtensions.AuthLoginPolicy));
+        context.HttpContext.User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(
+            [new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "alice")], "test"));
+        var (next, _) = TrackedNext();
+
+        await CreateFilter().OnActionExecutionAsync(context, next);
+
+        Assert.Equal("ip:203.0.113.7", capturedKey!.Split('|')[1]);
+    }
+
+    [Fact]
     public async Task TwoRequestsInTheSameWindow_ShareTheSameCounterKey()
     {
         var keys = new List<string>();
