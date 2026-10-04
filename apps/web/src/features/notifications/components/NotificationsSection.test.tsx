@@ -114,7 +114,7 @@ describe('NotificationsSection', () => {
       await screen.findByRole('switch', { name: 'notifications.prefNewFollower' })
     ).toBeInTheDocument();
     expect(mockFetchPrefs).toHaveBeenCalled();
-    expect(screen.getAllByRole('switch')).toHaveLength(12);
+    expect(screen.getAllByRole('switch')).toHaveLength(13);
   });
 
   it('on an iPhone in Safari, points to the home screen and opens the install guide', async () => {
