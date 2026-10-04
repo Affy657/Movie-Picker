@@ -8,6 +8,7 @@ using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth.OAuth;
@@ -44,7 +45,7 @@ public sealed class OAuthLoginHandlerTests
     public async Task HandleAsync_NewAccount_ImportsTheProviderPhotoWithTheAccessToken()
     {
         var f = new Fixture();
-        var withPhoto = new AvatarPhoto { Key = "0123456789abcdef0123456789abcdef", IsActive = true };
+        var withPhoto = new AvatarPhoto { Key = AvatarPhotoKeys.Sample, IsActive = true };
         f.Importer.Setup(i => i.ImportAsync(It.IsAny<User>(), It.IsAny<ExternalLoginInfo>(), "ya29.token", It.IsAny<CancellationToken>()))
             .ReturnsAsync((User user, ExternalLoginInfo _, string? _, CancellationToken _) => user with { AvatarPhoto = withPhoto });
 

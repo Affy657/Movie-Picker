@@ -2,6 +2,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.Mongo;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Infrastructure.Persistence.Mongo;
@@ -24,7 +25,7 @@ public sealed class UserDocumentMapperAvatarPhotoTests
     [InlineData(false)]
     public void RoundTrip_KeepsTheKeyTheActiveFlagAndTheDate(bool isActive)
     {
-        var photo = new AvatarPhoto { Key = "0123456789abcdef0123456789abcdef", IsActive = isActive, UpdatedAt = UpdatedAt };
+        var photo = new AvatarPhoto { Key = AvatarPhotoKeys.Sample, IsActive = isActive, UpdatedAt = UpdatedAt };
 
         var restored = UserDocumentMapper.ToDomain(UserDocumentMapper.ToDocument(UserWith(photo)));
 
@@ -51,7 +52,7 @@ public sealed class UserDocumentMapperAvatarPhotoTests
                 "avatarPhoto",
                 new BsonDocument
                 {
-                    { "key", "0123456789abcdef0123456789abcdef" },
+                    { "key", AvatarPhotoKeys.Sample },
                     { "isActive", true },
                     { "updatedAt", UpdatedAt.UtcDateTime },
                     { "moderation", "pending" }
@@ -61,7 +62,7 @@ public sealed class UserDocumentMapperAvatarPhotoTests
 
         var document = BsonSerializer.Deserialize<UserDocument>(stored);
 
-        Assert.Equal("0123456789abcdef0123456789abcdef", document.AvatarPhoto!.Key);
+        Assert.Equal(AvatarPhotoKeys.Sample, document.AvatarPhoto!.Key);
     }
 
     [Fact]
@@ -69,7 +70,7 @@ public sealed class UserDocumentMapperAvatarPhotoTests
     {
         var stored = new BsonDocument
         {
-            { "_id", "0123456789abcdef0123456789abcdef" },
+            { "_id", AvatarPhotoKeys.Sample },
             { "userId", "507f1f77bcf86cd799439011" },
             { "contentType", "image/webp" },
             { "data", new BsonBinaryData([0x52]) },

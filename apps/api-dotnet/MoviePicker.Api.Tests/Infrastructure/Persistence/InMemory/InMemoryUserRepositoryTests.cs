@@ -93,7 +93,7 @@ public sealed class InMemoryUserRepositoryTests
     [Fact]
     public async Task ListCardsByIdsAsync_ShowsTheActivePhotoAndOtherwiseTheGeneratedAvatar()
     {
-        var photo = new AvatarPhoto { Key = "0123456789abcdef0123456789abcdef", IsActive = true, UpdatedAt = TemplateNow };
+        var photo = new AvatarPhoto { Key = AvatarPhotoKeys.Sample, IsActive = true, UpdatedAt = TemplateNow };
         var withPhoto = await _repo.AddAsync(Mk(email: "p@test.local", handle: "photo") with { AvatarId = "bolt", AvatarPhoto = photo });
         var setAside = await _repo.AddAsync(Mk(email: "s@test.local", handle: "aside") with
         {
@@ -539,7 +539,7 @@ public sealed class InMemoryUserRepositoryTests
     [Fact]
     public async Task AddAndUpdate_KeepTheAvatarPhoto()
     {
-        var photo = new AvatarPhoto { Key = "0123456789abcdef0123456789abcdef", IsActive = true, UpdatedAt = TemplateNow };
+        var photo = new AvatarPhoto { Key = AvatarPhotoKeys.Sample, IsActive = true, UpdatedAt = TemplateNow };
         var added = await _repo.AddAsync(Mk() with { AvatarPhoto = photo });
 
         Assert.Equal(photo, (await _repo.GetByIdAsync(added.Id))!.AvatarPhoto);

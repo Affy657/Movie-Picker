@@ -7,6 +7,7 @@ using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Security;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth;
@@ -96,7 +97,7 @@ public sealed class DeleteAccountHandlerTests
     {
         var f = new Fixture();
         var user = await SeedUserAsync(f, "abcd1234");
-        const string key = "0123456789abcdef0123456789abcdef";
+        var key = AvatarPhotoKeys.Sample;
         await f.AvatarPhotos.SaveAsync(new StoredAvatarPhoto { Key = key, UserId = user.Id, ContentType = "image/webp", Data = [1] });
 
         await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });

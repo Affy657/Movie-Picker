@@ -2,6 +2,7 @@ using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth;
@@ -53,7 +54,7 @@ public sealed class ExportUserDataHandlerTests
     public async Task HandleAsync_WithPhoto_ExportsTheImageItself()
     {
         var f = new Fixture();
-        const string key = "0123456789abcdef0123456789abcdef";
+        var key = AvatarPhotoKeys.Sample;
         var user = await f.Users.AddAsync(new User
         {
             Email = "photo@example.com",

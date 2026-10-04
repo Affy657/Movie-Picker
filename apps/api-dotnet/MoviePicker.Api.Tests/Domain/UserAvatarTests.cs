@@ -1,11 +1,12 @@
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.Domain;
 
 public sealed class UserAvatarTests
 {
-    private const string PhotoKey = "0123456789abcdef0123456789abcdef";
+    private static readonly string PhotoKey = AvatarPhotoKeys.Sample;
 
     [Fact]
     public void DisplayedAvatarId_WithoutPhoto_IsTheGeneratedAvatar()
