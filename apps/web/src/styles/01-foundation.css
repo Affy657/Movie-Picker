@@ -201,6 +201,27 @@
   --color-wheel-hub: var(--slate-50);
   --color-wheel-hub-stroke: rgba(0, 0, 0, 0.12);
   --color-wheel-hub-shadow: rgba(0, 0, 0, 0.3);
+
+  --color-story-ink: var(--slate-50);
+  --color-story-muted: #a3b1c6;
+  --color-story-accent: var(--blue-300);
+  --color-story-star: var(--amber-400);
+  --color-story-star-dim: rgba(251, 191, 36, 0.22);
+  --color-story-chip-bg: rgba(147, 197, 253, 0.16);
+  --color-story-chip-text: #bfdbfe;
+  --color-story-host-bg: rgba(99, 102, 241, 0.25);
+  --color-story-host-text: var(--indigo-200);
+  --color-story-placeholder: var(--slate-800);
+  --color-story-placeholder-ink: var(--slate-400);
+  --color-story-row-line: rgba(255, 255, 255, 0.08);
+  --color-story-bg-top: #0a0f1c;
+  --color-story-bg-middle: #111631;
+  --color-story-bg-bottom: #191a40;
+  --color-story-glow-blue: rgba(37, 99, 235, 0.42);
+  --color-story-glow-blue-end: rgba(37, 99, 235, 0);
+  --color-story-glow-violet: rgba(109, 40, 217, 0.34);
+  --color-story-glow-violet-end: rgba(109, 40, 217, 0);
+  --color-story-qr-bg: var(--white);
   --color-wheel-pointer: var(--red-500);
   --color-wheel-pointer-stroke: var(--white);
   --color-wheel-pointer-shadow: rgba(0, 0, 0, 0.5);

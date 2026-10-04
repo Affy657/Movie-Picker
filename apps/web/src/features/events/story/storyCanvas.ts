@@ -1,3 +1,4 @@
+import { readCssToken } from '@/shared/utils/cssToken';
 import { STORY_LOGO_SRC, type StoryAssets } from './storyAssets';
 import {
   filmsGrid,
@@ -14,19 +15,46 @@ import {
 } from './storyLayout';
 import type { StoryImageSpec, StoryRating, StorySpecFilm, StorySpecRow } from './storySpec';
 
-const INK = '#f8fafc';
-const MUTED = '#a3b1c6';
-const ACCENT = '#93c5fd';
-const STAR = '#fbbf24';
-const STAR_DIM = 'rgba(251, 191, 36, 0.22)';
-const CHIP_BG = 'rgba(147, 197, 253, 0.16)';
-const CHIP_TEXT = '#bfdbfe';
-const HOST_BG = 'rgba(99, 102, 241, 0.25)';
-const HOST_TEXT = '#c7d2fe';
-const PLACEHOLDER = '#1e293b';
-const PLACEHOLDER_INK = '#94a3b8';
-const ROW_LINE = 'rgba(255, 255, 255, 0.08)';
-const STACK_RING = '#111631';
+const STORY_COLOR_TOKENS = {
+  ink: '--color-story-ink',
+  muted: '--color-story-muted',
+  accent: '--color-story-accent',
+  star: '--color-story-star',
+  starDim: '--color-story-star-dim',
+  chipBg: '--color-story-chip-bg',
+  chipText: '--color-story-chip-text',
+  hostBg: '--color-story-host-bg',
+  hostText: '--color-story-host-text',
+  placeholder: '--color-story-placeholder',
+  placeholderInk: '--color-story-placeholder-ink',
+  rowLine: '--color-story-row-line',
+  bgTop: '--color-story-bg-top',
+  bgMiddle: '--color-story-bg-middle',
+  bgBottom: '--color-story-bg-bottom',
+  glowBlue: '--color-story-glow-blue',
+  glowBlueEnd: '--color-story-glow-blue-end',
+  glowViolet: '--color-story-glow-violet',
+  glowVioletEnd: '--color-story-glow-violet-end',
+  qrBg: '--color-story-qr-bg',
+} as const;
+
+type StoryPalette = Record<keyof typeof STORY_COLOR_TOKENS, string>;
+
+const palettes = new WeakMap<CanvasRenderingContext2D, StoryPalette>();
+
+function readStoryPalette(): StoryPalette {
+  const entries = Object.entries(STORY_COLOR_TOKENS).map(([key, token]) => [
+    key,
+    readCssToken(token),
+  ]);
+  return Object.fromEntries(entries) as StoryPalette;
+}
+
+function colors(ctx: CanvasRenderingContext2D): StoryPalette {
+  const palette = palettes.get(ctx) ?? readStoryPalette();
+  palettes.set(ctx, palette);
+  return palette;
+}
 
 const FONT = "'Overpass', system-ui, sans-serif";
 const CONTENT_WIDTH = STORY_WIDTH - STORY_SIDE * 2;
@@ -124,15 +152,15 @@ function fillRounded(
 
 function drawBackground(ctx: CanvasRenderingContext2D): void {
   const base = ctx.createLinearGradient(0, 0, 0, STORY_HEIGHT);
-  base.addColorStop(0, '#0a0f1c');
-  base.addColorStop(0.58, '#111631');
-  base.addColorStop(1, '#191a40');
+  base.addColorStop(0, colors(ctx).bgTop);
+  base.addColorStop(0.58, colors(ctx).bgMiddle);
+  base.addColorStop(1, colors(ctx).bgBottom);
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, STORY_WIDTH, STORY_HEIGHT);
 
   const top = ctx.createRadialGradient(140, 180, 0, 140, 180, 500);
-  top.addColorStop(0, 'rgba(37, 99, 235, 0.42)');
-  top.addColorStop(1, 'rgba(37, 99, 235, 0)');
+  top.addColorStop(0, colors(ctx).glowBlue);
+  top.addColorStop(1, colors(ctx).glowBlueEnd);
   ctx.fillStyle = top;
   ctx.fillRect(0, 0, STORY_WIDTH, STORY_HEIGHT);
 
@@ -144,8 +172,8 @@ function drawBackground(ctx: CanvasRenderingContext2D): void {
     STORY_HEIGHT - 170,
     550
   );
-  bottom.addColorStop(0, 'rgba(109, 40, 217, 0.34)');
-  bottom.addColorStop(1, 'rgba(109, 40, 217, 0)');
+  bottom.addColorStop(0, colors(ctx).glowViolet);
+  bottom.addColorStop(1, colors(ctx).glowVioletEnd);
   ctx.fillStyle = bottom;
   ctx.fillRect(0, 0, STORY_WIDTH, STORY_HEIGHT);
 }
@@ -173,10 +201,10 @@ function drawPoster(
     ctx.restore();
     return;
   }
-  fillRounded(ctx, x, y, width, height, radius, PLACEHOLDER);
+  fillRounded(ctx, x, y, width, height, radius, colors(ctx).placeholder);
   text(ctx, '🎞', x + width / 2, y + height / 2, {
     size: Math.round(width * 0.34),
-    color: PLACEHOLDER_INK,
+    color: colors(ctx).placeholderInk,
     align: 'center',
     baseline: 'middle',
   });
@@ -193,7 +221,7 @@ function drawAvatar(
   ring: boolean
 ): void {
   if (ring) {
-    ctx.fillStyle = STACK_RING;
+    ctx.fillStyle = colors(ctx).bgMiddle;
     ctx.beginPath();
     ctx.arc(x + size / 2, y + size / 2, size / 2 + 4, 0, Math.PI * 2);
     ctx.fill();
@@ -208,14 +236,14 @@ function drawAvatar(
     ctx.restore();
     return;
   }
-  ctx.fillStyle = PLACEHOLDER;
+  ctx.fillStyle = colors(ctx).placeholder;
   ctx.beginPath();
   ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
   ctx.fill();
   text(ctx, initials, x + size / 2, y + size / 2 + 1, {
     size: Math.round(size * 0.38),
     weight: 700,
-    color: INK,
+    color: colors(ctx).ink,
     align: 'center',
     baseline: 'middle',
   });
@@ -248,7 +276,7 @@ function drawStar(
     }
     ctx.closePath();
   };
-  ctx.fillStyle = STAR_DIM;
+  ctx.fillStyle = colors(ctx).starDim;
   path();
   ctx.fill();
   if (fill <= 0) return;
@@ -256,7 +284,7 @@ function drawStar(
   ctx.beginPath();
   ctx.rect(x, y, size * Math.min(fill, 1), size);
   ctx.clip();
-  ctx.fillStyle = STAR;
+  ctx.fillStyle = colors(ctx).star;
   path();
   ctx.fill();
   ctx.restore();
@@ -309,7 +337,7 @@ function drawRating(
     text(ctx, rating.fallbackText, x, centerY, {
       size: rating.countSize,
       weight: 600,
-      color: MUTED,
+      color: colors(ctx).muted,
       baseline: 'middle',
     });
     return;
@@ -322,14 +350,14 @@ function drawRating(
     text(ctx, rating.ratingText, cursor, centerY, {
       size: rating.size,
       weight: 800,
-      color: INK,
+      color: colors(ctx).ink,
       baseline: 'middle',
     }) + gap;
   if (rating.countText) {
     text(ctx, rating.countText, cursor, centerY, {
       size: rating.countSize,
       weight: 500,
-      color: MUTED,
+      color: colors(ctx).muted,
       baseline: 'middle',
     });
   }
@@ -348,17 +376,17 @@ function drawHead(
   text(ctx, spec.brand, STORY_SIDE + logoSize + 16, y + logoSize / 2, {
     size: 40,
     weight: 800,
-    color: INK,
+    color: colors(ctx).ink,
     baseline: 'middle',
   });
 
   const qrX = STORY_WIDTH - STORY_SIDE - QR_SIZE;
-  fillRounded(ctx, qrX, y, QR_SIZE, QR_SIZE, 22, '#ffffff');
+  fillRounded(ctx, qrX, y, QR_SIZE, QR_SIZE, 22, colors(ctx).qrBg);
   if (qr) ctx.drawImage(qr, qrX + QR_PAD, y + QR_PAD, QR_SIZE - QR_PAD * 2, QR_SIZE - QR_PAD * 2);
   text(ctx, spec.qr.caption, qrX + QR_SIZE / 2, y + QR_SIZE + 34, {
     size: 22,
     weight: 600,
-    color: MUTED,
+    color: colors(ctx).muted,
     align: 'center',
   });
 
@@ -367,7 +395,7 @@ function drawHead(
   text(ctx, spec.eyebrow.toLocaleUpperCase(), STORY_SIDE, y + 20, {
     size: 26,
     weight: 700,
-    color: ACCENT,
+    color: colors(ctx).accent,
     spacing: '3px',
   });
 
@@ -375,11 +403,16 @@ function drawHead(
   const titleFont: Font = { size: 72, weight: 800 };
   for (const line of textLines(ctx, spec.title, titleFont, maxWidth, MAX_TITLE_LINES)) {
     y += 80;
-    text(ctx, line, STORY_SIDE, y, { ...titleFont, color: INK });
+    text(ctx, line, STORY_SIDE, y, { ...titleFont, color: colors(ctx).ink });
   }
 
   y += 62;
-  text(ctx, spec.date, STORY_SIDE, y, { size: 34, weight: 500, color: MUTED, maxWidth });
+  text(ctx, spec.date, STORY_SIDE, y, {
+    size: 34,
+    weight: 500,
+    color: colors(ctx).muted,
+    maxWidth,
+  });
 
   return y + 34;
 }
@@ -395,8 +428,16 @@ function drawChip(
   const cut = truncateLine(label, { maxWidth: 360, measure: measureWith(ctx, font) });
   const width = textWidth(ctx, cut, font) + 36;
   const x = align === 'right' ? edge - width : edge;
-  fillRounded(ctx, x, centerY - CHIP_HEIGHT / 2, width, CHIP_HEIGHT, CHIP_HEIGHT / 2, CHIP_BG);
-  text(ctx, cut, x + 18, centerY + 1, { ...font, color: CHIP_TEXT, baseline: 'middle' });
+  fillRounded(
+    ctx,
+    x,
+    centerY - CHIP_HEIGHT / 2,
+    width,
+    CHIP_HEIGHT,
+    CHIP_HEIGHT / 2,
+    colors(ctx).chipBg
+  );
+  text(ctx, cut, x + 18, centerY + 1, { ...font, color: colors(ctx).chipText, baseline: 'middle' });
 }
 
 function drawPeople(
@@ -423,7 +464,12 @@ function drawPeople(
     x += AVATAR_SIZE - AVATAR_OVERLAP;
   });
   x += AVATAR_OVERLAP + 22;
-  text(ctx, people.label, x, centerY, { size: 32, weight: 600, color: INK, baseline: 'middle' });
+  text(ctx, people.label, x, centerY, {
+    size: 32,
+    weight: 600,
+    color: colors(ctx).ink,
+    baseline: 'middle',
+  });
   if (spec.theme) drawChip(ctx, spec.theme, STORY_WIDTH - STORY_SIDE, centerY);
   return centerY + AVATAR_SIZE / 2;
 }
@@ -473,7 +519,7 @@ function drawFilm(
   text(ctx, film.title, centerX, y, {
     size: grid.titleSize,
     weight: 800,
-    color: INK,
+    color: colors(ctx).ink,
     align: 'center',
     maxWidth: grid.posterWidth,
   });
@@ -482,7 +528,7 @@ function drawFilm(
     text(ctx, film.year, centerX, y, {
       size: grid.yearSize,
       weight: 500,
-      color: MUTED,
+      color: colors(ctx).muted,
       align: 'center',
     });
   }
@@ -545,10 +591,10 @@ function drawFilmHead(
   const titleWidth = CONTENT_WIDTH - posterWidth - 34;
   let cursor = y + 46;
   for (const line of textLines(ctx, film.title, titleFont, titleWidth, MAX_TITLE_LINES)) {
-    text(ctx, line, x, cursor, { ...titleFont, color: INK });
+    text(ctx, line, x, cursor, { ...titleFont, color: colors(ctx).ink });
     cursor += 52;
   }
-  text(ctx, film.year, x, cursor, { size: 30, weight: 500, color: MUTED });
+  text(ctx, film.year, x, cursor, { size: 30, weight: 500, color: colors(ctx).muted });
 
   const ratingY = cursor + 42;
   drawRating(
@@ -572,7 +618,7 @@ function drawRow(
 ): void {
   const centerY = top + ROW_HEIGHT / 2;
   if (!first) {
-    ctx.strokeStyle = ROW_LINE;
+    ctx.strokeStyle = colors(ctx).rowLine;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(STORY_SIDE, top);
@@ -601,17 +647,17 @@ function drawRow(
   const nameStyle: TextStyle = {
     size: 34,
     weight: 600,
-    color: INK,
+    color: colors(ctx).ink,
     baseline: 'middle',
     maxWidth: nameWidth,
   };
   const drawnWidth = text(ctx, row.name, nameX, centerY, nameStyle);
   if (badgeWidth) {
     const badgeX = nameX + drawnWidth + 12;
-    fillRounded(ctx, badgeX, centerY - 17, badgeWidth, 34, 17, HOST_BG);
+    fillRounded(ctx, badgeX, centerY - 17, badgeWidth, 34, 17, colors(ctx).hostBg);
     text(ctx, row.hostText, badgeX + 12, centerY + 1, {
       ...badgeFont,
-      color: HOST_TEXT,
+      color: colors(ctx).hostText,
       baseline: 'middle',
     });
   }
@@ -631,16 +677,21 @@ function drawRows(
     y += ROW_HEIGHT;
   });
   if (!spec.moreText) return;
-  text(ctx, spec.moreText, STORY_SIDE, y + 36, { size: 28, weight: 500, color: MUTED });
+  text(ctx, spec.moreText, STORY_SIDE, y + 36, { size: 28, weight: 500, color: colors(ctx).muted });
 }
 
 function drawFoot(ctx: CanvasRenderingContext2D, spec: StoryImageSpec): void {
   const y = STORY_HEIGHT - STORY_SAFE_BOTTOM - 20;
-  text(ctx, spec.url, STORY_SIDE, y, { size: 30, weight: 600, color: INK, baseline: 'middle' });
+  text(ctx, spec.url, STORY_SIDE, y, {
+    size: 30,
+    weight: 600,
+    color: colors(ctx).ink,
+    baseline: 'middle',
+  });
   text(ctx, spec.footer, STORY_WIDTH - STORY_SIDE, y, {
     size: 26,
     weight: 500,
-    color: MUTED,
+    color: colors(ctx).muted,
     align: 'right',
     baseline: 'middle',
   });
@@ -662,6 +713,7 @@ export function drawStory(
   assets: StoryAssets,
   qr?: CanvasImageSource | null
 ): void {
+  palettes.set(ctx, readStoryPalette());
   drawBackground(ctx);
   const headBottom = drawHead(ctx, spec, qr, assets);
   const filmsBottom = STORY_HEIGHT - STORY_SAFE_BOTTOM - 70;

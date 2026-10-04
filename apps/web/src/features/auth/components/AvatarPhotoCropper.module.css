@@ -24,7 +24,7 @@
 
 .frame:focus-visible {
   outline: var(--outline-focus);
-  outline-offset: 2px;
+  outline-offset: var(--outline-offset);
 }
 
 .image {
@@ -52,7 +52,7 @@
 .mask {
   position: absolute;
   inset: var(--space-3);
-  border: 2px solid var(--on-poster-fg-strong);
+  border: 2px solid var(--color-on-poster-fg-strong);
   border-radius: var(--radius-pill);
   pointer-events: none;
 }

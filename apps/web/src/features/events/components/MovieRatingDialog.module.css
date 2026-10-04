@@ -51,7 +51,7 @@
 .movieTitle {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);
-  line-height: var(--leading-compact);
+  line-height: var(--leading-tight);
   color: var(--color-text);
 }
 
