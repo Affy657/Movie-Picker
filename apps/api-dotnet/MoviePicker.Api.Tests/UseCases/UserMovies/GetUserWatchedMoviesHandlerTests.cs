@@ -219,6 +219,38 @@ public sealed class GetUserWatchedMoviesHandlerTests
     }
 
     [Fact]
+    public async Task KeepsTheOwnersRatingOnceTmdbFactsAreAdded()
+    {
+        var handler = Build();
+        _users.Setup(r => r.GetByHandleAsync("alice", It.IsAny<CancellationToken>())).ReturnsAsync(PublicUser());
+        _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Part("p1", "A") });
+        _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Evt("A", date: "2026-01-01", winnerMovieId: "m-rated") });
+        _movies.Setup(m => m.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Mov("m-rated", tmdbId: 10) });
+        _ratings.Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new MovieRating { Id = "r1", EventId = "A", MovieId = "m-rated", ParticipantId = "p1", Value = 7, CreatedAt = _now, UpdatedAt = _now }
+            });
+        _tmdb.Setup(s => s.GetEnrichmentsAsync(
+                It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>
+            {
+                [(10, MovieMediaType.Movie)] = new TmdbMovieEnrichment(8.1, [], null, 112)
+            });
+
+        var item = Assert.Single((await handler.HandleAsync("alice", 6)).Items);
+
+        Assert.Equal(8.1, item.VoteAverage);
+        Assert.Equal(112, item.RuntimeMinutes);
+        Assert.Equal(7, item.MyRating);
+    }
+
+    [Fact]
     public async Task MissingWinnerMovie_IsSkipped()
     {
         var handler = Build();

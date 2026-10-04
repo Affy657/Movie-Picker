@@ -96,5 +96,6 @@ internal static class WatchedMoviesFacts
         GenreIds = item.GenreIds,
         MediaType = item.MediaType,
         WatchedAt = item.WatchedAt,
+        MyRating = item.MyRating,
     };
 }
