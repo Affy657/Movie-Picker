@@ -8,7 +8,6 @@ public static class AvatarPhotoImage
 {
     public const int MaxBytes = 512 * 1024;
     public const int MaxBase64Length = (MaxBytes + 2) / 3 * 4;
-    public const int MaxRequestBytes = MaxBase64Length + 16 * 1024;
     public const int MinSide = 128;
     public const int MaxSide = 1024;
 

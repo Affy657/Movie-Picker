@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AvatarPhotos;
@@ -284,7 +283,6 @@ public sealed class UsersController : ControllerBase
     [HttpPut("me/avatar-photo")]
     [EnableRateLimiting(RateLimitingExtensions.AvatarPhotoUploadPolicy)]
     [SharedRateLimit(RateLimitingExtensions.AvatarPhotoUploadPolicy)]
-    [RequestSizeLimit(AvatarPhotoImage.MaxRequestBytes)]
     [Authorize]
     [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

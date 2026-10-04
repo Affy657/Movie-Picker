@@ -295,7 +295,7 @@ public sealed class RateLimitingExtensionsTests
         http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
         var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.RecapDocumentPolicy)!.Value;
 
-        Assert.Equal("192.0.2.8", RateLimitingExtensions.CreatePartition(http, spec).PartitionKey);
+        Assert.Equal("ip:192.0.2.8", RateLimitingExtensions.CreatePartition(http, spec).PartitionKey);
     }
 
     [Fact]
@@ -335,7 +335,20 @@ public sealed class RateLimitingExtensionsTests
             new EndpointMetadataCollection(new EnableRateLimitingAttribute(RateLimitingExtensions.PublicProfilePolicy)),
             "profile"));
 
-        Assert.Equal("192.0.2.8", RateLimitingExtensions.CreateGlobalPartition(http).PartitionKey);
+        Assert.Equal("ip:192.0.2.8", RateLimitingExtensions.CreateGlobalPartition(http).PartitionKey);
+    }
+
+    [Fact]
+    public void CreateAddressCeilingPartition_LeavesTheProxiedDocumentsToTheirOwnPolicy()
+    {
+        var http = new DefaultHttpContext();
+        http.Connection.RemoteIpAddress = IPAddress.Parse("192.0.2.8");
+        http.SetEndpoint(new Endpoint(
+            null,
+            new EndpointMetadataCollection(new EnableRateLimitingAttribute(RateLimitingExtensions.RecapDocumentPolicy)),
+            "recap"));
+
+        Assert.Equal("proxied", RateLimitingExtensions.CreateAddressCeilingPartition(http).PartitionKey);
     }
 
     [Fact]

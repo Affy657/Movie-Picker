@@ -1,4 +1,5 @@
 using MoviePicker.Api.Application.Avatars;
+using MoviePicker.Api.Infrastructure.Web;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -94,6 +95,12 @@ public sealed class AvatarPhotoImageTests
     public void Inspect_Empty_IsRejected()
     {
         Assert.Null(AvatarPhotoImage.Inspect([]));
+    }
+
+    [Fact]
+    public void TheLargestAcceptedUpload_FitsTheDefaultRequestBodyLimit()
+    {
+        Assert.True(AvatarPhotoImage.MaxBase64Length + 1024 < RequestBodyLimits.DefaultBytes);
     }
 
     [Theory]

@@ -147,6 +147,7 @@ public sealed class EventTemplateDocument
     public DateTime CreatedAt { get; set; }
 }
 
+[BsonIgnoreExtraElements]
 public sealed class FavoriteTitleDocument
 {
     [BsonElement("tmdbId")]
