@@ -35,6 +35,9 @@ public static class Errors
     public static NotFoundException EventTemplateNotFound() =>
         new("Movie night template not found", ErrorCodes.EventTemplateNotFound);
 
+    public static NotFoundException AvatarPhotoNotFound() =>
+        new("No profile photo to use", ErrorCodes.AvatarPhotoNotFound);
+
     public static NotFoundException OAuthProviderNotLinked() =>
         new("This account is not linked to this provider", ErrorCodes.OAuthProviderNotLinked);
 
@@ -352,6 +355,9 @@ public static class Errors
 
     public static BadRequestException WinnerCountOutOfRange(int min, int max) =>
         new($"The number of winning movies must be between {min} and {max}", ErrorCodes.WinnerCountOutOfRange, Params(("min", min), ("max", max)));
+
+    public static BadRequestException AvatarPhotoInvalid() =>
+        new("The profile photo must be a JPEG, PNG or WebP image of 128 to 1024 pixels per side and at most 512 KB", ErrorCodes.AvatarPhotoInvalid);
 
     public static BadRequestException LastLoginMethod() =>
         new("The last sign-in method of the account cannot be removed", ErrorCodes.LastLoginMethod);

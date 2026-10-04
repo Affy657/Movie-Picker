@@ -48,23 +48,9 @@ public sealed class CreateIdeaSuggestionHandler : ICreateIdeaSuggestionHandler
             throw Errors.AttachmentContentInvalid(attachment.FileName);
         }
 
-        if (!MatchesContentType(bytes, attachment.ContentType))
+        if (ImageSignature.Detect(bytes) != attachment.ContentType)
             throw Errors.AttachmentContentMismatch(attachment.FileName, attachment.ContentType);
     }
-
-    private static bool MatchesContentType(ReadOnlySpan<byte> bytes, string contentType) => contentType switch
-    {
-        "image/png" => bytes.Length >= 8
-            && bytes[..8].SequenceEqual(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }),
-        "image/jpeg" => bytes.Length >= 3 && bytes[..3].SequenceEqual(new byte[] { 0xFF, 0xD8, 0xFF }),
-        "image/gif" => bytes.Length >= 6
-            && bytes[..3].SequenceEqual("GIF"u8)
-            && (bytes[3..6].SequenceEqual("87a"u8) || bytes[3..6].SequenceEqual("89a"u8)),
-        "image/webp" => bytes.Length >= 12
-            && bytes[..4].SequenceEqual("RIFF"u8)
-            && bytes[8..12].SequenceEqual("WEBP"u8),
-        _ => false
-    };
 
     private async Task<List<string>> UploadAttachmentsAsync(
         IReadOnlyList<IdeaSuggestionAttachmentDto>? attachments, CancellationToken ct)

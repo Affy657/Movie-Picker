@@ -19,6 +19,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
     private readonly IFollowRepository _follows;
     private readonly IWatchlistRepository _watchlist;
     private readonly IPasswordResetTokenRepository _resetTokens;
+    private readonly IAvatarPhotoRepository _avatarPhotos;
     private readonly IAuthSessionInvalidator _sessionInvalidator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteAccountHandler> _logger;
@@ -33,6 +34,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         IFollowRepository follows,
         IWatchlistRepository watchlist,
         IPasswordResetTokenRepository resetTokens,
+        IAvatarPhotoRepository avatarPhotos,
         IAuthSessionInvalidator sessionInvalidator,
         IUnitOfWork unitOfWork,
         ILogger<DeleteAccountHandler> logger)
@@ -46,6 +48,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _follows = follows;
         _watchlist = watchlist;
         _resetTokens = resetTokens;
+        _avatarPhotos = avatarPhotos;
         _sessionInvalidator = sessionInvalidator;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -91,6 +94,7 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
                 await _follows.DeleteAllForUserAsync(userId, token);
                 await _watchlist.DeleteAllForUserAsync(userId, token);
                 await _resetTokens.DeleteByUserIdAsync(userId, token);
+                await _avatarPhotos.DeleteByUserIdAsync(userId, token);
                 await _users.DeleteAsync(userId, token);
             },
             ct);

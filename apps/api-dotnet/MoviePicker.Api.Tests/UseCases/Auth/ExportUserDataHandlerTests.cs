@@ -29,6 +29,7 @@ public sealed class ExportUserDataHandlerTests
         public InMemoryMovieRatingRepository Ratings { get; } = new();
         public InMemoryPushSubscriptionRepository Push { get; } = new();
         public InMemoryWatchlistRepository Watchlist { get; } = new();
+        public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
 
         public ExportUserDataHandler CreateHandler() =>
             new(
@@ -42,7 +43,46 @@ public sealed class ExportUserDataHandlerTests
                 Ratings,
                 Push,
                 Watchlist,
+                AvatarPhotos,
                 new FakeTimeProvider(TestEpoch));
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithPhoto_ExportsTheImageItself()
+    {
+        var f = new Fixture();
+        const string key = "0123456789abcdef0123456789abcdef";
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "photo@example.com",
+            Handle = "photo",
+            AvatarPhoto = new AvatarPhoto { Key = key, IsActive = true, UpdatedAt = TestEpoch }
+        });
+        await f.AvatarPhotos.SaveAsync(new StoredAvatarPhoto
+        {
+            Key = key,
+            UserId = user.Id,
+            ContentType = "image/webp",
+            Data = [1, 2, 3],
+            CreatedAt = TestEpoch
+        });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.NotNull(export.AvatarPhoto);
+        Assert.Equal("image/webp", export.AvatarPhoto!.ContentType);
+        Assert.Equal(Convert.ToBase64String([1, 2, 3]), export.AvatarPhoto.Base64Content);
+        Assert.True(export.AvatarPhoto.IsActive);
+        Assert.Equal(TestEpoch, export.AvatarPhoto.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithoutPhoto_ExportsNoImage()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "nophoto@example.com", Handle = "nophoto" });
+
+        Assert.Null((await f.CreateHandler().HandleAsync(user.Id)).AvatarPhoto);
     }
 
     [Fact]

@@ -34,6 +34,24 @@
   height: var(--space-12);
 }
 
+.hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-muted);
+}
+
+.error {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-error);
+}
+
+.selectError {
+  margin-top: var(--space-3);
+}
+
 .check {
   position: absolute;
   bottom: var(--space-0-5);

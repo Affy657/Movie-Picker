@@ -19,6 +19,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     private readonly IMovieRatingRepository _ratings;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IWatchlistRepository _watchlist;
+    private readonly IAvatarPhotoRepository _avatarPhotos;
     private readonly TimeProvider _clock;
 
     public ExportUserDataHandler(
@@ -32,6 +33,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         IMovieRatingRepository ratings,
         IPushSubscriptionRepository pushSubscriptions,
         IWatchlistRepository watchlist,
+        IAvatarPhotoRepository avatarPhotos,
         TimeProvider clock)
     {
         _users = users;
@@ -44,6 +46,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         _ratings = ratings;
         _pushSubscriptions = pushSubscriptions;
         _watchlist = watchlist;
+        _avatarPhotos = avatarPhotos;
         _clock = clock;
     }
 
@@ -71,6 +74,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var eventTitleById = participationEvents.ToDictionary(e => e.Id, e => e.Title);
 
         var watchlist = await _watchlist.ListByUserIdAsync(userId, MaxItems, ct);
+        var avatarPhoto = await ExportAvatarPhotoAsync(user, ct);
 
         var votesByParticipant = votes
             .GroupBy(v => v.ParticipantId)
@@ -97,7 +101,8 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
                 .Select(s => new ExportedPushSubscription { Endpoint = s.Endpoint, CreatedAt = s.CreatedAt })
                 .ToList(),
             Watchlist = watchlist.Select(MapWatchlistItem).ToList(),
-            Favorites = user.Favorites.Select(MapFavorite).ToList()
+            Favorites = user.Favorites.Select(MapFavorite).ToList(),
+            AvatarPhoto = avatarPhoto
         };
     }
 
@@ -119,6 +124,22 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         Title = favorite.Title,
         Year = favorite.Year
     };
+
+    private async Task<ExportedAvatarPhoto?> ExportAvatarPhotoAsync(User user, CancellationToken ct)
+    {
+        if (user.AvatarPhoto is not { } photo)
+            return null;
+        var stored = await _avatarPhotos.GetByKeyAsync(photo.Key, ct);
+        return stored is null
+            ? null
+            : new ExportedAvatarPhoto
+            {
+                ContentType = stored.ContentType,
+                Base64Content = Convert.ToBase64String(stored.Data),
+                IsActive = photo.IsActive,
+                UpdatedAt = photo.UpdatedAt
+            };
+    }
 
     private static ExportedProfile MapProfile(User user) => new()
     {

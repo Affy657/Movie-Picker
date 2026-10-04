@@ -74,6 +74,7 @@ public sealed class MongoIndexInitializer : IHostedService
         EnsureRateLimitCounterIndexes(plan);
         EnsureSharedCacheIndexes(plan);
         EnsurePosterCacheIndexes(plan);
+        EnsureAvatarPhotoIndexes(plan);
         return plan;
     }
 
@@ -350,6 +351,14 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<PosterCacheDocument>.IndexKeys.Ascending(x => x.ExpiresAtUtc),
             new CreateIndexOptions { Name = "poster_cache_expiresAtUtc_ttl", ExpireAfter = TimeSpan.Zero });
         plan.Create(MongoPosterImageStore.CollectionName, ttl);
+    }
+
+    private static void EnsureAvatarPhotoIndexes(MongoIndexPlan plan)
+    {
+        var userId = new CreateIndexModel<AvatarPhotoBlobDocument>(
+            Builders<AvatarPhotoBlobDocument>.IndexKeys.Ascending(x => x.UserId),
+            new CreateIndexOptions { Name = "avatar_photos_userId" });
+        plan.Create(MongoAvatarPhotoRepository.CollectionName, userId);
     }
 
     private static void EnsureKofiWebhookLogIndexes(MongoIndexPlan plan)

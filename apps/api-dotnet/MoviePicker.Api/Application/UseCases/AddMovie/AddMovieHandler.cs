@@ -224,7 +224,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
                     Type = UserNotificationType.MovieAdded,
                     ActorHandle = proposer?.Handle,
                     ActorDisplayName = proposer?.DisplayName,
-                    ActorAvatarId = proposer?.AvatarId,
+                    ActorAvatarId = proposer?.DisplayedAvatarId,
                     EventId = evt.Id,
                     EventSlug = evt.Slug,
                     EventTitle = evt.Title,

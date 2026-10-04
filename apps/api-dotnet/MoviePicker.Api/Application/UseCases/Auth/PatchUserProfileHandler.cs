@@ -29,6 +29,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             && request.AccentColor is null
             && request.RatingScale is null
             && request.AvatarId is null
+            && request.UseAvatarPhoto is null
             && request.Handle is null
             && request.Bio is null
             && request.IsProfilePublic is null
@@ -76,6 +77,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             ratingScale = ParseEnum(request.RatingScale, RatingScale.Five);
 
         var avatarId = request.AvatarId ?? user.AvatarId;
+        var avatarPhoto = ApplyAvatarPhoto(user.AvatarPhoto, request);
 
         var handle = user.Handle;
         if (request.Handle is not null)
@@ -98,6 +100,7 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             AccentColor = accent,
             RatingScale = ratingScale,
             AvatarId = avatarId,
+            AvatarPhoto = avatarPhoto,
             Handle = handle,
             Bio = bio,
             IsProfilePublic = isProfilePublic,
@@ -124,6 +127,15 @@ public sealed class PatchUserProfileHandler : IPatchUserProfileHandler
             throw Errors.HandleTaken();
 
         return normalized;
+    }
+
+    private static AvatarPhoto? ApplyAvatarPhoto(AvatarPhoto? current, PatchUserProfileRequest request)
+    {
+        if (request.UseAvatarPhoto == true)
+            return (current ?? throw Errors.AvatarPhotoNotFound()) with { IsActive = true };
+        if (request.UseAvatarPhoto == false || request.AvatarId is not null)
+            return current is null ? null : current with { IsActive = false };
+        return current;
     }
 
     private static T ParseEnum<T>(string raw, T defaultValue) where T : struct, Enum =>

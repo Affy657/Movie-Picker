@@ -59,7 +59,7 @@ public sealed class FollowUserHandler : IFollowUserHandler
             Type = UserNotificationType.NewFollower,
             ActorHandle = follower.Handle,
             ActorDisplayName = follower.DisplayName,
-            ActorAvatarId = follower.AvatarId,
+            ActorAvatarId = follower.DisplayedAvatarId,
             IsRead = false,
             CreatedAt = _clock.GetUtcNow()
         };

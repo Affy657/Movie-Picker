@@ -12,6 +12,15 @@ public sealed record UserDataExportResponse
     public IReadOnlyList<ExportedPushSubscription> PushSubscriptions { get; init; } = Array.Empty<ExportedPushSubscription>();
     public IReadOnlyList<ExportedWatchlistItem> Watchlist { get; init; } = Array.Empty<ExportedWatchlistItem>();
     public IReadOnlyList<ExportedFavorite> Favorites { get; init; } = Array.Empty<ExportedFavorite>();
+    public ExportedAvatarPhoto? AvatarPhoto { get; init; }
+}
+
+public sealed record ExportedAvatarPhoto
+{
+    public string ContentType { get; init; } = string.Empty;
+    public string Base64Content { get; init; } = string.Empty;
+    public bool IsActive { get; init; }
+    public DateTimeOffset UpdatedAt { get; init; }
 }
 
 public sealed record ExportedProfile

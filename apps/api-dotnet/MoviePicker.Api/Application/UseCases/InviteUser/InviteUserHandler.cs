@@ -75,7 +75,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
             Type = UserNotificationType.EventInvitation,
             ActorHandle = actor?.Handle,
             ActorDisplayName = actor?.DisplayName,
-            ActorAvatarId = actor?.AvatarId,
+            ActorAvatarId = actor?.DisplayedAvatarId,
             EventId = evt.Id,
             EventSlug = evt.Slug,
             EventTitle = evt.Title,

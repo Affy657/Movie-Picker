@@ -4,6 +4,8 @@ import { Globe, Pencil } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import Avatar from '@/shared/components/Avatar';
 import AvatarPickerModal from '@/features/auth/components/AvatarPickerModal';
+import { useAvatarPhotoActions } from '@/features/auth/hooks/useAvatarPhotoActions';
+import { isAvatarPhotoId } from '@/shared/utils/avatar';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import type { UserProfile } from '@/features/auth/types';
@@ -16,6 +18,7 @@ export default function AccountIdentityHeader({
 }: Readonly<{ user: UserProfile; variant?: 'desktop' | 'mobile' }>) {
   const { t } = useTranslation();
   const { patchProfile } = useAuth();
+  const { uploadPhoto, deletePhoto } = useAvatarPhotoActions();
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const avatarSize = 'lg';
 
@@ -47,15 +50,20 @@ export default function AccountIdentityHeader({
         )}
       </div>
 
-      <AvatarPickerModal
-        open={avatarModalOpen}
-        currentAvatarId={user.avatarId}
-        onSelect={async (id) => {
-          setAvatarModalOpen(false);
-          await patchProfile({ avatarId: id });
-        }}
-        onClose={() => setAvatarModalOpen(false)}
-      />
+      {avatarModalOpen && (
+        <AvatarPickerModal
+          open
+          currentAvatarId={user.avatarId}
+          photoAvatarId={user.avatarPhotoId ?? null}
+          generatedAvatarId={user.generatedAvatarId ?? ''}
+          onSelect={async (id) => {
+            await patchProfile(isAvatarPhotoId(id) ? { useAvatarPhoto: true } : { avatarId: id });
+          }}
+          onUploadPhoto={uploadPhoto}
+          onDeletePhoto={deletePhoto}
+          onClose={() => setAvatarModalOpen(false)}
+        />
+      )}
 
       {user.handle && variant === 'mobile' && (
         <Link to={ROUTES.profile(user.handle)} className={styles.identityLinkMobile}>

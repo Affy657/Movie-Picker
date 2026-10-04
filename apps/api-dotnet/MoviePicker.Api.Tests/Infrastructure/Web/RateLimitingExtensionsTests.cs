@@ -136,6 +136,16 @@ public sealed class RateLimitingExtensionsTests
     }
 
     [Fact]
+    public void AvatarPhotoUpload_AllowsTenPhotosPerHourAndPerUser()
+    {
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.AvatarPhotoUploadPolicy)!.Value;
+
+        Assert.Equal(10, spec.PermitLimit);
+        Assert.Equal(60, spec.WindowMinutes);
+        Assert.True(spec.ByUser);
+    }
+
+    [Fact]
     public void CreateGlobalPartition_LeavesTheProxiedDocumentsToTheirOwnPolicy()
     {
         var http = new DefaultHttpContext();

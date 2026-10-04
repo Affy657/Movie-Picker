@@ -131,7 +131,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             Id = p.Id,
             Pseudo = p.Pseudo,
             IsCreator = !string.IsNullOrEmpty(creatorUserId) && p.UserId == creatorUserId,
-            AvatarId = linkedUser?.AvatarId ?? string.Empty,
+            AvatarId = linkedUser?.DisplayedAvatarId ?? string.Empty,
             Handle = PublicHandleResolver.Resolve(linkedUser),
         };
     }

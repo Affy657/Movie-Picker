@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import clsx from 'clsx';
 import { avatarUrl } from '@/shared/utils/avatar';
 import { initialsOf } from '@/shared/utils/initials';
@@ -31,8 +32,9 @@ export default function Avatar({
   className,
 }: Readonly<AvatarProps>) {
   const px = SIZE_PX[size];
+  const [failedAvatarId, setFailedAvatarId] = useState<string | null>(null);
 
-  if (!avatarId) {
+  if (!avatarId || failedAvatarId === avatarId) {
     if (pseudo) {
       return (
         <span
@@ -62,6 +64,7 @@ export default function Avatar({
       className={clsx(styles.avatar, styles[size], className)}
       loading="lazy"
       decoding="async"
+      onError={() => setFailedAvatarId(avatarId)}
     />
   );
 }

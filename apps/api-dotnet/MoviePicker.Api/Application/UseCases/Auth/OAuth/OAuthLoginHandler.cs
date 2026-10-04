@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Profile;
@@ -10,17 +11,23 @@ namespace MoviePicker.Api.Application.UseCases.Auth.OAuth;
 public sealed class OAuthLoginHandler : IOAuthLoginHandler
 {
     private readonly IUserRepository _users;
+    private readonly IOAuthProfilePhotoImporter _photoImporter;
     private readonly TimeProvider _clock;
     private readonly ILogger<OAuthLoginHandler> _logger;
 
-    public OAuthLoginHandler(IUserRepository users, TimeProvider clock, ILogger<OAuthLoginHandler> logger)
+    public OAuthLoginHandler(
+        IUserRepository users,
+        IOAuthProfilePhotoImporter photoImporter,
+        TimeProvider clock,
+        ILogger<OAuthLoginHandler> logger)
     {
         _users = users;
+        _photoImporter = photoImporter;
         _clock = clock;
         _logger = logger;
     }
 
-    public async Task<OAuthOutcome> HandleAsync(ExternalLoginInfo info, CancellationToken ct = default)
+    public async Task<OAuthOutcome> HandleAsync(ExternalLoginInfo info, string? accessToken = null, CancellationToken ct = default)
     {
         var existing = await _users.GetByIdentityAsync(info.Provider, info.Subject, ct);
         if (existing is not null)
@@ -73,6 +80,8 @@ public sealed class OAuthLoginHandler : IOAuthLoginHandler
         }
 
         var (createdUser, isNewAccount) = await CreateAccountAsync(info, email, identity, now, ct);
+        if (isNewAccount)
+            createdUser = await _photoImporter.ImportAsync(createdUser, info, accessToken, ct);
         _logger.LogInformation(
             "OAuth login: created account via {Provider} (userId={UserId})", info.Provider, createdUser.Id);
         return new OAuthOutcome { Kind = OAuthOutcomeKind.SignedIn, User = createdUser, IsNewAccount = isNewAccount };

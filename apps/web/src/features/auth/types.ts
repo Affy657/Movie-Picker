@@ -10,6 +10,8 @@ export interface UserProfile {
   accentColor: AccentColor;
   ratingScale: RatingScale;
   avatarId: string;
+  avatarPhotoId?: string | null;
+  generatedAvatarId?: string | null;
   handle: string;
   bio: string | null;
   isProfilePublic: boolean;

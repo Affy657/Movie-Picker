@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import Avatar from '@/shared/components/Avatar';
 import styles from '@/shared/components/Avatar.module.css';
 import { avatarUrl } from '@/shared/utils/avatar';
@@ -14,6 +14,37 @@ describe('Avatar', () => {
     expect(img).toHaveAttribute('aria-hidden', 'true');
     expect(img).toHaveAttribute('width', '56');
     expect(img).toHaveAttribute('loading', 'lazy');
+  });
+
+  it('shows a profile photo served by the API', () => {
+    const { container } = render(<Avatar avatarId="photo:0123456789abcdef0123456789abcdef" />);
+
+    expect(container.querySelector('img')).toHaveAttribute(
+      'src',
+      avatarUrl('photo:0123456789abcdef0123456789abcdef')
+    );
+  });
+
+  it('falls back to the initials when the image no longer answers', () => {
+    const { container } = render(
+      <Avatar avatarId="photo:0123456789abcdef0123456789abcdef" pseudo="léa martin" />
+    );
+
+    fireEvent.error(container.querySelector('img')!);
+
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.textContent).toBe('LM');
+  });
+
+  it('shows the new image again once the avatar changes after a failure', () => {
+    const { container, rerender } = render(
+      <Avatar avatarId="photo:0123456789abcdef0123456789abcdef" pseudo="léa" />
+    );
+    fireEvent.error(container.querySelector('img')!);
+
+    rerender(<Avatar avatarId="bolt" pseudo="léa" />);
+
+    expect(container.querySelector('img')).toHaveAttribute('src', avatarUrl('bolt'));
   });
 
   it('sans avatar, affiche les initiales du pseudo en majuscules', () => {

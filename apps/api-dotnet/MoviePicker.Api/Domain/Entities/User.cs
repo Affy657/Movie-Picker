@@ -49,6 +49,8 @@ public sealed record User
     public AccentColor AccentColor { get; init; } = AccentColor.Default;
     public RatingScale RatingScale { get; init; } = RatingScale.Five;
     public string AvatarId { get; init; } = string.Empty;
+    public AvatarPhoto? AvatarPhoto { get; init; }
+    public string DisplayedAvatarId => AvatarPhoto is { IsActive: true } photo ? photo.AvatarId : AvatarId;
     public IReadOnlyDictionary<UserNotificationType, bool> NotificationPreferences { get; init; }
         = NotificationPreferenceDefaults.All();
     public IReadOnlyList<EventTemplate> EventTemplates { get; init; } = Array.Empty<EventTemplate>();

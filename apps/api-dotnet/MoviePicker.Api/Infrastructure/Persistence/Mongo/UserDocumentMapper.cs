@@ -20,6 +20,7 @@ public static class UserDocumentMapper
             AccentColor = ParseAccent(doc.AccentColor),
             RatingScale = ParseRatingScale(doc.RatingScale),
             AvatarId = doc.AvatarId ?? string.Empty,
+            AvatarPhoto = doc.AvatarPhoto is null ? null : ToAvatarPhotoDomain(doc.AvatarPhoto),
             NotificationPreferences = BuildNotificationPreferences(doc),
             EventTemplates = (doc.EventTemplates ?? []).ConvertAll(ToTemplateDomain),
             Favorites = (doc.Favorites ?? []).ConvertAll(ToFavoriteDomain),
@@ -53,6 +54,7 @@ public static class UserDocumentMapper
             AccentColor = AccentToString(user.AccentColor),
             RatingScale = RatingScaleToString(user.RatingScale),
             AvatarId = string.IsNullOrEmpty(user.AvatarId) ? null : user.AvatarId,
+            AvatarPhoto = user.AvatarPhoto is null ? null : ToAvatarPhotoDocument(user.AvatarPhoto),
             NotificationPreferences = user.NotificationPreferences
                 .Select(kv => new NotificationPreferenceEntryDocument { Type = (int)kv.Key, Enabled = kv.Value })
                 .ToList(),
@@ -86,6 +88,20 @@ public static class UserDocumentMapper
         Name = template.Name,
         Config = EventDocumentMapper.ToConfigDocument(template.Config),
         CreatedAt = template.CreatedAt.UtcDateTime
+    };
+
+    private static AvatarPhoto ToAvatarPhotoDomain(AvatarPhotoDocument doc) => new()
+    {
+        Key = doc.Key,
+        IsActive = doc.IsActive,
+        UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
+    };
+
+    private static AvatarPhotoDocument ToAvatarPhotoDocument(AvatarPhoto photo) => new()
+    {
+        Key = photo.Key,
+        IsActive = photo.IsActive,
+        UpdatedAt = photo.UpdatedAt.UtcDateTime
     };
 
     private static FavoriteTitle ToFavoriteDomain(FavoriteTitleDocument doc) => new()

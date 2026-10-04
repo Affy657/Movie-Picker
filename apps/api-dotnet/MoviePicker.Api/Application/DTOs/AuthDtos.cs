@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
@@ -53,6 +54,8 @@ public sealed class UserProfileResponse
     public AccentColor AccentColor { get; init; }
     public RatingScale RatingScale { get; init; }
     public string AvatarId { get; init; } = string.Empty;
+    public string? AvatarPhotoId { get; init; }
+    public string GeneratedAvatarId { get; init; } = string.Empty;
     public string Handle { get; init; } = string.Empty;
     public string? Bio { get; init; }
     public bool IsProfilePublic { get; init; } = true;
@@ -88,6 +91,8 @@ public sealed class PatchUserProfileRequest
         ErrorMessage = "avatarId is invalid")]
     public string? AvatarId { get; init; }
 
+    public bool? UseAvatarPhoto { get; init; }
+
     [MaxLength(20, ErrorMessage = "Handle is too long")]
     public string? Handle { get; init; }
 
@@ -115,4 +120,15 @@ public sealed class DeleteAccountRequest
     public string? Password { get; init; }
 
     public string? Confirmation { get; init; }
+}
+
+public sealed class UploadAvatarPhotoRequest
+{
+    [Required(ErrorMessage = "contentType is required")]
+    [RegularExpression("^image/(jpeg|png|webp)$", ErrorMessage = "contentType must be image/jpeg, image/png or image/webp")]
+    public string ContentType { get; init; } = string.Empty;
+
+    [Required(ErrorMessage = "base64Content is required")]
+    [MaxLength(AvatarPhotoImage.MaxBase64Length, ErrorMessage = "base64Content is too long")]
+    public string Base64Content { get; init; } = string.Empty;
 }

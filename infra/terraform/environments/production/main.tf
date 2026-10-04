@@ -33,6 +33,7 @@ resource "google_project_service" "platform" {
     "cloudscheduler.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
+    "people.googleapis.com",
     "run.googleapis.com",
     "secretmanager.googleapis.com",
   ])

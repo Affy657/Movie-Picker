@@ -40,7 +40,7 @@ internal static class FollowListQuery
             {
                 Handle = u!.Handle,
                 DisplayName = u.DisplayName,
-                AvatarId = u.AvatarId,
+                AvatarId = u.DisplayedAvatarId,
                 IsFollowedByMe = followingSet is null ? null : followingSet.Contains(u.Id)
             })
             .ToList();

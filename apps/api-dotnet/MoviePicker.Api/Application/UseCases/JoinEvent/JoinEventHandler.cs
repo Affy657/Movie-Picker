@@ -149,7 +149,7 @@ public sealed class JoinEventHandler : IJoinEventHandler
                 Type = UserNotificationType.ParticipantJoined,
                 ActorHandle = joiner?.Handle,
                 ActorDisplayName = joiner?.DisplayName,
-                ActorAvatarId = joiner?.AvatarId,
+                ActorAvatarId = joiner?.DisplayedAvatarId,
                 EventId = evt.Id,
                 EventSlug = evt.Slug,
                 EventTitle = evt.Title,

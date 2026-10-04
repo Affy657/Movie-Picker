@@ -173,7 +173,8 @@ public sealed class AuthController : ControllerBase
                 : Redirect(BuildFrontUrl(webBase, FrontAccountPath, (OauthErrorQueryKey, "identity_taken")));
         }
 
-        var loginOutcome = await loginHandler.HandleAsync(info, ct);
+        var accessToken = externalResult.Properties?.GetTokenValue("access_token");
+        var loginOutcome = await loginHandler.HandleAsync(info, accessToken, ct);
         if (loginOutcome.Kind != OAuthOutcomeKind.SignedIn || loginOutcome.User is null)
         {
             var errorCode = loginOutcome.Kind == OAuthOutcomeKind.PasswordAccountRequiresManualLink

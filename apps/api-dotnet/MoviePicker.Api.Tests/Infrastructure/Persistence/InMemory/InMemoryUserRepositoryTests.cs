@@ -422,6 +422,20 @@ public sealed class InMemoryUserRepositoryTests
     }
 
     [Fact]
+    public async Task AddAndUpdate_KeepTheAvatarPhoto()
+    {
+        var photo = new AvatarPhoto { Key = "0123456789abcdef0123456789abcdef", IsActive = true, UpdatedAt = TemplateNow };
+        var added = await _repo.AddAsync(Mk() with { AvatarPhoto = photo });
+
+        Assert.Equal(photo, (await _repo.GetByIdAsync(added.Id))!.AvatarPhoto);
+
+        var inactive = photo with { IsActive = false };
+        await _repo.UpdateAsync((await _repo.GetByIdAsync(added.Id))! with { AvatarPhoto = inactive });
+
+        Assert.Equal(inactive, (await _repo.GetByIdAsync(added.Id))!.AvatarPhoto);
+    }
+
+    [Fact]
     public async Task AddFavoriteAsync_AppendsInOrderAndTouchesUpdatedAt()
     {
         var added = await _repo.AddAsync(Mk());

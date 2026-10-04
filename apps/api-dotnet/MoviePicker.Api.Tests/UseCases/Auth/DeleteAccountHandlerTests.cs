@@ -25,6 +25,7 @@ public sealed class DeleteAccountHandlerTests
         public InMemoryPasswordResetTokenRepository ResetTokens { get; } = new();
         public InMemoryVoteRepository Votes { get; } = new();
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
+        public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
         public Mock<IAuthSessionInvalidator> Sessions { get; } = new();
         public IdentityPasswordHasher Hasher { get; } = new IdentityPasswordHasher();
 
@@ -39,6 +40,7 @@ public sealed class DeleteAccountHandlerTests
                 Follows,
                 Watchlist,
                 ResetTokens,
+                AvatarPhotos,
                 Sessions.Object,
                 new InMemoryUnitOfWork(),
             NullLogger<DeleteAccountHandler>.Instance);
@@ -87,6 +89,19 @@ public sealed class DeleteAccountHandlerTests
             UpdatedAt = DateTimeOffset.UtcNow
         };
         return await f.Users.AddAsync(user);
+    }
+
+    [Fact]
+    public async Task HandleAsync_DeletesTheProfilePhoto()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        const string key = "0123456789abcdef0123456789abcdef";
+        await f.AvatarPhotos.SaveAsync(new StoredAvatarPhoto { Key = key, UserId = user.Id, ContentType = "image/webp", Data = [1] });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        Assert.Null(await f.AvatarPhotos.GetByKeyAsync(key));
     }
 
     [Fact]

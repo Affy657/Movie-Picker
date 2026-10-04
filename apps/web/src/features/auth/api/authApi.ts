@@ -1,4 +1,5 @@
 import { apiUrl, fetchApi } from '@/shared/api/client';
+import { blobToBase64 } from '@/shared/utils/blobToBase64';
 import { downloadBlob } from '@/shared/utils/downloadBlob';
 import { ApiError } from '@/shared/api/apiError';
 import type { AccentColor, RatingScale, UiThemePreference } from '@/shared/types/theme';
@@ -77,6 +78,7 @@ export interface ProfilePatch {
   accentColor?: AccentColor;
   ratingScale?: RatingScale;
   avatarId?: string;
+  useAvatarPhoto?: boolean;
   handle?: string;
   bio?: string | null;
   isProfilePublic?: boolean;
@@ -84,17 +86,34 @@ export interface ProfilePatch {
   letterboxdUsername?: string | null;
 }
 
-export async function patchAuthProfile(patch: ProfilePatch): Promise<UserProfile> {
-  const profile = await fetchApi<UserProfile>('/auth/me', {
-    method: 'PATCH',
-    body: JSON.stringify(patch),
-  });
+function withProfileDefaults(profile: UserProfile): UserProfile {
   return {
     ...profile,
     hasPassword: profile.hasPassword ?? true,
     linkedProviders: profile.linkedProviders ?? [],
     letterboxdPendingReconciliationCount: profile.letterboxdPendingReconciliationCount ?? 0,
   };
+}
+
+export async function patchAuthProfile(patch: ProfilePatch): Promise<UserProfile> {
+  const profile = await fetchApi<UserProfile>('/auth/me', {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  });
+  return withProfileDefaults(profile);
+}
+
+export async function putAvatarPhoto(photo: Blob): Promise<UserProfile> {
+  const profile = await fetchApi<UserProfile>('/users/me/avatar-photo', {
+    method: 'PUT',
+    body: JSON.stringify({ contentType: photo.type, base64Content: await blobToBase64(photo) }),
+  });
+  return withProfileDefaults(profile);
+}
+
+export async function deleteAvatarPhoto(): Promise<UserProfile> {
+  const profile = await fetchApi<UserProfile>('/users/me/avatar-photo', { method: 'DELETE' });
+  return withProfileDefaults(profile);
 }
 
 export async function patchChangePassword(

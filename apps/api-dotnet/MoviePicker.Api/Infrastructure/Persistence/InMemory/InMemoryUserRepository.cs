@@ -303,6 +303,7 @@ public sealed class InMemoryUserRepository : IUserRepository
             AccentColor = user.AccentColor,
             RatingScale = user.RatingScale,
             AvatarId = user.AvatarId,
+            AvatarPhoto = user.AvatarPhoto,
             NotificationPreferences = user.NotificationPreferences,
             EventTemplates = user.EventTemplates,
             Favorites = user.Favorites,

@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-058`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-070`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -355,6 +355,28 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -rn "posterImageSrc\|avatarUrl" apps/web/src --include=*.tsx` ; encore ouvert tant qu'un de ces `<img>` n'a pas `crossOrigin="anonymous"`
 - fix: poser `crossOrigin="anonymous"` sur les `<img>` d'affiche et d'avatar, vérifier que l'API et DiceBear répondent bien `Access-Control-Allow-Origin` sur ces routes, puis repasser la story en `cache: 'default'`
 - piege: une seule route sans en-tête CORS et l'image ne s'affiche plus du tout sur la page, pas seulement dans la story : contrôler chaque origine avant de basculer
+
+## DEBT-068 les photos de profil ne sont ni modérées ni signalables
+
+- state: differe
+- declencheur: un premier signalement d'une photo choquante, ou l'ouverture de la soirée publique et du fil d'actualité qui montrent les photos à des inconnus
+- impact: une photo téléversée s'affiche sans contrôle sur le profil public, dans les participants des soirées, sur le recap public et dans l'image story ; personne ne peut la signaler, et l'administrateur ne peut la retirer qu'à la main en base
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/AvatarPhotos/`, collection `avatar_photos`
+- verify: `grep -rlE "Report|Flag" apps/api-dotnet/MoviePicker.Api/Application/UseCases/AvatarPhotos` ; encore ouvert tant que la commande ne sort rien
+- fix: un « Signaler cette photo » sur le profil public qui prévient l'administrateur, et un geste de retrait qui supprime la photo et rend l'avatar généré
+- piege: retirer une photo à la main demande d'effacer le document de `avatar_photos` et de remettre `avatarPhoto` à `null` sur l'utilisateur ; sans le second geste, le profil pointe vers une image en 404 et retombe sans bruit sur les initiales
+- refs: cadrage du 2026-10-03 de la feature « Photo de profil personnalisée » (modération écartée de la V1.7)
+
+## DEBT-069 les notifications figent l'avatar de leur auteur
+
+- state: differe
+- declencheur: une plainte sur une photo retirée ou désactivée qui reste visible dans la cloche d'un autre membre, ou le fil d'actualité qui relit les notifications
+- impact: une notification garde l'avatar que son auteur avait au moment de l'action ; après un remplacement ou une suppression de photo, elle retombe sur les initiales, et une photo mise de côté au profit d'un robot y reste affichée
+- ou: `ActorAvatarId` écrit par `FollowUserHandler`, `JoinEventHandler`, `InviteUserHandler` et `AddMovieHandler`, relu tel quel par `GetInboxHandler`
+- verify: `grep -n "ActorAvatarId = n.ActorAvatarId" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/GetInboxHandler.cs` ; encore ouvert tant que la ligne sort
+- fix: stocker l'identifiant de l'auteur sur la notification et relire son `DisplayedAvatarId` à la lecture de la boîte, en un seul aller-retour pour toute la page
+- piege: les notifications existantes n'ont que le handle de l'auteur, qui peut changer ; garder l'instantané en repli pour elles
+- refs: revue de code de la feature « Photo de profil personnalisée », 2026-10-04
 
 ---
 

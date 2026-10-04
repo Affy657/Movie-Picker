@@ -44,7 +44,8 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         string FollowedUserId,
         string EventId,
         string EventSlug,
-        string ParticipantId);
+        string ParticipantId,
+        string PhotoKey);
 
     private static async Task<Fixture> SeedAsync(IServiceProvider services)
     {
@@ -55,6 +56,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         var pushSubscriptions = services.GetRequiredService<IPushSubscriptionRepository>();
         var follows = services.GetRequiredService<IFollowRepository>();
         var watchlist = services.GetRequiredService<IWatchlistRepository>();
+        var photos = services.GetRequiredService<IAvatarPhotoRepository>();
         var hasher = services.GetRequiredService<IPasswordHasher>();
 
         var suffix = Guid.NewGuid().ToString("N")[..8];
@@ -137,7 +139,17 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             CreatedAt = now
         });
 
-        return new Fixture(user.Id, followed.Id, evt.Id, evt.Slug, participant.Id);
+        var photoKey = AvatarPhoto.NewKey();
+        await photos.SaveAsync(new StoredAvatarPhoto
+        {
+            Key = photoKey,
+            UserId = user.Id,
+            ContentType = "image/webp",
+            Data = [0x52, 0x49, 0x46, 0x46],
+            CreatedAt = now
+        });
+
+        return new Fixture(user.Id, followed.Id, evt.Id, evt.Slug, participant.Id, photoKey);
     }
 
     private static DeleteAccountHandler BuildHandlerFailingOnResetTokens(IServiceProvider services) =>
@@ -151,6 +163,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             services.GetRequiredService<IFollowRepository>(),
             services.GetRequiredService<IWatchlistRepository>(),
             new ThrowingResetTokenRepository(),
+            services.GetRequiredService<IAvatarPhotoRepository>(),
             services.GetRequiredService<IAuthSessionInvalidator>(),
             services.GetRequiredService<IUnitOfWork>(),
             NullLogger<DeleteAccountHandler>.Instance);
@@ -190,6 +203,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.NotEmpty(await pushSubscriptions.ListByUserIdAsync(fixture.UserId));
         Assert.True(await follows.IsFollowingAsync(fixture.UserId, fixture.FollowedUserId));
         Assert.NotEmpty(await watchlist.ListByUserIdAsync(fixture.UserId));
+        Assert.NotNull(await services.GetRequiredService<IAvatarPhotoRepository>().GetByKeyAsync(fixture.PhotoKey));
     }
 
     [MongoFact]
@@ -216,6 +230,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         Assert.Empty(await pushSubscriptions.ListByUserIdAsync(fixture.UserId));
         Assert.False(await follows.IsFollowingAsync(fixture.UserId, fixture.FollowedUserId));
         Assert.Empty(await watchlist.ListByUserIdAsync(fixture.UserId));
+        Assert.Null(await services.GetRequiredService<IAvatarPhotoRepository>().GetByKeyAsync(fixture.PhotoKey));
 
         var evt = await events.GetByIdOrSlugAsync(fixture.EventSlug);
         Assert.NotNull(evt);
@@ -243,5 +258,6 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
 
         Assert.NotNull(await users.GetByIdAsync(fixture.UserId));
         Assert.NotEmpty(await watchlist.ListByUserIdAsync(fixture.UserId));
+        Assert.NotNull(await services.GetRequiredService<IAvatarPhotoRepository>().GetByKeyAsync(fixture.PhotoKey));
     }
 }

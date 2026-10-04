@@ -53,6 +53,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public string? AvatarId { get; set; }
 
+    [BsonElement("avatarPhoto")]
+    [BsonIgnoreIfNull]
+    public AvatarPhotoDocument? AvatarPhoto { get; set; }
+
     [BsonElement("notifyOnParticipantJoined")]
     [BsonIgnoreIfNull]
     public bool? NotifyOnParticipantJoined { get; set; }
@@ -175,4 +179,17 @@ public sealed class NotificationPreferenceEntryDocument
 
     [BsonElement("enabled")]
     public bool Enabled { get; set; }
+}
+
+[BsonIgnoreExtraElements]
+public sealed class AvatarPhotoDocument
+{
+    [BsonElement("key")]
+    public string Key { get; set; } = string.Empty;
+
+    [BsonElement("isActive")]
+    public bool IsActive { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
 }

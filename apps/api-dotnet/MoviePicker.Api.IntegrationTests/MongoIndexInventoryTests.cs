@@ -80,6 +80,8 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
 
         new("poster_cache", "poster_cache_expiresAtUtc_ttl", ExpireAfterSeconds: 0),
 
+        new("avatar_photos", "avatar_photos_userId"),
+
         new("kofi_webhook_log", "kofi_webhook_log_receivedAt_ttl", ExpireAfterSeconds: OneYear)
     ];
 

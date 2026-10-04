@@ -561,6 +561,40 @@ export const fr = {
       avatarOptionAriaLabel: 'Choisir l’avatar {{name}}',
       avatarCategoryRobots: '🤖 Robots',
       avatarCategoryEmoji: '😄 Emoji',
+      avatarCategoryPhoto: '📷 Ma photo',
+      avatarPhotoAddTitle: 'Ajoutez votre photo',
+      avatarPhotoDropHint: 'Glissez une image ici ou choisissez-la.',
+      avatarPhotoFormatsHint: 'JPEG, PNG ou WebP, {{max}} Mo maximum.',
+      avatarPhotoChoose: 'Choisir une photo',
+      avatarPhotoTooLarge: 'Cette image dépasse {{max}} Mo. Choisissez-en une plus légère.',
+      avatarPhotoUnsupported:
+        'Ce format n’est pas pris en charge. Choisissez une image JPEG, PNG ou WebP.',
+      avatarPhotoTooSmall:
+        'Cette image est trop petite. Choisissez-en une d’au moins {{min}} pixels de côté.',
+      avatarPhotoCropTitle: 'Recadrer la photo',
+      avatarPhotoCropHint: 'Faites glisser la photo pour la placer dans le cercle.',
+      avatarPhotoCropAreaLabel: 'Position de la photo dans le cercle',
+      avatarPhotoCropKeyboardHint: 'Flèches pour déplacer la photo, plus et moins pour zoomer.',
+      avatarPhotoZoom: 'Zoom',
+      avatarPhotoUse: 'Utiliser cette photo',
+      avatarPhotoUploadFailed:
+        'La photo n’a pas pu être enregistrée. Vérifiez votre connexion, puis réessayez.',
+      avatarPhotoRateLimited:
+        'Vous avez changé de photo plusieurs fois de suite. Réessayez dans quelques minutes.',
+      avatarPhotoVisibility: 'Visible sur votre profil et dans vos soirées.',
+      avatarPhotoSelectHint: 'Sélectionnez-la pour l’utiliser comme avatar.',
+      avatarPhotoUseAriaLabel: 'Utiliser ma photo',
+      avatarPhotoReplace: 'Remplacer',
+      avatarPhotoDelete: 'Supprimer',
+      avatarPhotoDeleteTitle: 'Supprimer votre photo ?',
+      avatarPhotoDeleteBackToAvatar: 'Votre avatar précédent reprend sa place.',
+      avatarPhotoDeleteBackToInitials: 'Vos initiales reprennent leur place.',
+      avatarPhotoDeleteInactive: 'Elle disparaît de vos avatars.',
+      avatarPhotoDeleteConfirm: 'Supprimer la photo',
+      avatarPhotoDeleteFailed:
+        'La photo n’a pas pu être supprimée. Vérifiez votre connexion, puis réessayez.',
+      avatarSaveFailed:
+        'L’avatar n’a pas pu être enregistré. Vérifiez votre connexion, puis réessayez.',
       exportDataTitle: 'Exporter mes données',
       exportDataDescription:
         'Profil, notifications, abonnements, soirées et votes, au format JSON.',
@@ -1647,6 +1681,9 @@ export const fr = {
     winner_count_out_of_range:
       'Le nombre de films gagnants doit être compris entre {{min}} et {{max}}.',
     last_login_method: 'Impossible de retirer la dernière méthode de connexion du compte.',
+    avatar_photo_invalid:
+      'Cette image ne peut pas servir de photo de profil. Choisissez une image JPEG, PNG ou WebP d’au moins 128 pixels de côté.',
+    avatar_photo_not_found: 'Cette photo n’existe plus. Ajoutez-en une nouvelle.',
     movie_details_unavailable: 'Détails film temporairement indisponibles',
     showcase_unavailable: 'Sélections de films temporairement indisponibles',
     search_unavailable: 'Recherche films temporairement indisponible',

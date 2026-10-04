@@ -45,6 +45,8 @@ public static class RateLimitingExtensions
     public const string AuthLogoutPolicy = "auth-logout";
     public const string HealthReadyPolicy = "health-ready";
     public const string RecapDocumentPolicy = "recap-document";
+    public const string AvatarPhotoUploadPolicy = "avatar-photo-upload";
+    public const string AvatarPhotosPolicy = "avatar-photos-get";
 
     public const int GlobalPermitLimitPerMinute = 900;
 
@@ -86,7 +88,9 @@ public static class RateLimitingExtensions
         new(NotificationMutationPolicy, 60, 1, false),
         new(AuthLogoutPolicy, 30, 1, false),
         new(HealthReadyPolicy, 30, 1, false),
-        new(RecapDocumentPolicy, 120, 1, false, BySlug: true)
+        new(RecapDocumentPolicy, 120, 1, false, BySlug: true),
+        new(AvatarPhotoUploadPolicy, 10, 60, true),
+        new(AvatarPhotosPolicy, 300, 1, false)
     ];
 
     public static IServiceCollection AddMoviePickerRateLimiter(

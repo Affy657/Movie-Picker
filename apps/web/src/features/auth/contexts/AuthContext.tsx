@@ -11,6 +11,7 @@ import {
 import { clearStoredEventIdentities } from '@/shared/utils/eventIdentityStorage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { applyUpdatedProfile } from '@/features/auth/utils/profileCache';
 import type { UserProfile } from '@/features/auth/types';
 
 type AuthContextValue = {
@@ -97,8 +98,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const patchProfileMutation = useMutation({
     mutationFn: (patch: ProfilePatch) => patchAuthProfile(patch),
     onSuccess: (updated) => {
-      queryClient.setQueryData(queryKeys.auth.me, updated);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.publicAll });
+      applyUpdatedProfile(queryClient, updated);
       track('profile_updated');
     },
   });

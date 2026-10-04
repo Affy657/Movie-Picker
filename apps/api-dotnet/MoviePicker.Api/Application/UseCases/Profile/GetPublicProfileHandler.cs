@@ -32,7 +32,7 @@ public sealed class GetPublicProfileHandler : IGetPublicProfileHandler
         {
             Handle = user.Handle,
             DisplayName = user.DisplayName,
-            AvatarId = user.AvatarId,
+            AvatarId = user.DisplayedAvatarId,
             Bio = user.Bio,
             MemberSince = user.CreatedAt,
             FollowingCount = followingCount,

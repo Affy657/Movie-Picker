@@ -75,7 +75,7 @@ public sealed class GetEligibleFollowsForEventHandler : IGetEligibleFollowsForEv
                 UserId = userId,
                 Handle = user.Handle,
                 DisplayName = user.DisplayName,
-                AvatarId = user.AvatarId,
+                AvatarId = user.DisplayedAvatarId,
                 IsAlreadyParticipant = isParticipant,
                 IsAlreadyInvited = isInvited
             });

@@ -25,17 +25,14 @@ public sealed class PostersController : ControllerBase
             return NotFound();
 
         var entityTag = $"\"{k}\"";
-        Response.Headers.CacheControl = "public,max-age=86400,immutable";
-        Response.Headers.ETag = entityTag;
-
-        if (Request.Headers.IfNoneMatch.Contains(entityTag))
+        ConditionalGet.StampImmutable(Response, entityTag);
+        if (ConditionalGet.IsNotModified(Request, entityTag))
             return StatusCode(StatusCodes.Status304NotModified);
 
         var blob = await store.GetByKeyAsync(k, ct);
         if (blob is null)
         {
-            Response.Headers.CacheControl = "no-store";
-            Response.Headers.Remove("ETag");
+            ConditionalGet.Unstamp(Response);
             return NotFound();
         }
 

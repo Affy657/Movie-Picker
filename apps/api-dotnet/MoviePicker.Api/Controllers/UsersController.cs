@@ -2,8 +2,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.AvatarPhotos;
 using MoviePicker.Api.Application.UseCases.EventTemplates;
 using MoviePicker.Api.Application.UseCases.Favorites;
 using MoviePicker.Api.Application.UseCases.Follow;
@@ -277,6 +279,48 @@ public sealed class UsersController : ControllerBase
             return Unauthorized();
 
         return Ok(await handler.HandleAsync(userId, tmdbId, mediaType, ct));
+    }
+
+    [HttpPut("me/avatar-photo")]
+    [EnableRateLimiting(RateLimitingExtensions.AvatarPhotoUploadPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AvatarPhotoUploadPolicy)]
+    [RequestSizeLimit(AvatarPhotoImage.MaxRequestBytes)]
+    [Authorize]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> UploadAvatarPhoto(
+        [FromBody] UploadAvatarPhotoRequest request,
+        [FromServices] IUploadAvatarPhotoHandler handler,
+        [FromServices] ICurrentUserAccessor currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        return Ok(await handler.HandleAsync(userId, request, ct));
+    }
+
+    [HttpDelete("me/avatar-photo")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPatchProfilePolicy)]
+    [Authorize]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> DeleteAvatarPhoto(
+        [FromServices] IDeleteAvatarPhotoHandler handler,
+        [FromServices] ICurrentUserAccessor currentUser,
+        CancellationToken ct)
+    {
+        var userId = currentUser.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        return Ok(await handler.HandleAsync(userId, ct));
     }
 
     [HttpPost("{handle}/follow")]
