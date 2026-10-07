@@ -28,7 +28,7 @@ RUN dotnet publish MoviePicker.Api/MoviePicker.Api.csproj -c Release -r linux-x6
 # Chiseled runtime: no shell, no package manager, non-root by default. The `-extra` variant is
 # required, it ships ICU and tzdata: EventSchedule resolves Europe/Paris and the API talks to TMDB
 # in fr-FR. ProductionStartupValidation refuses to start when tzdata is missing.
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:6385dc0eaef704fad88d3f65c334e791a371bbe448f52ca39d83d2df49251e28
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:00e0ad6a7ef8c0c1391b87f05c7ac757a15740455688f2bfcd146a3f4b987efd
 WORKDIR /app
 
 COPY --from=build /app/publish .
