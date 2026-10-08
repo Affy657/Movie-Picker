@@ -69,10 +69,10 @@ env:
   SONARSCANNER_VERSION: "11.3.0"
   # Same Terraform as `scripts/terraform.mjs` (image tag) and as `required_version` in the root
   # modules of `infra/terraform/environments/`: `scripts/check-tool-versions.mjs` compares the three.
-  TERRAFORM_VERSION: "1.16.3"
+  TERRAFORM_VERSION: "1.16.5"
   # `mongo:8` resolved on 2026-09-17 (8.3.11). A floating tag would let a MongoDB release change
   # what the transaction and index tests run against without any commit saying so.
-  MONGO_IMAGE: "mongo:8@sha256:5d7043a4ffe02b9ed1b6e0bab057546981af5ca0a79107e9c461e49bc44c0a7b"
+  MONGO_IMAGE: "mongo:8@sha256:d731d77bfd7afd66bd487bdf627b5bf7ce4c3602ec461d635977021db529ebbc"
 
 jobs:
   # Solo project: no external contribution is accepted, the licence forbids it and
