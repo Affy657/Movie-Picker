@@ -1,7 +1,7 @@
 import type { Breadcrumb, BrowserOptions, ErrorEvent } from '@sentry/react';
 import { redactSensitiveUrl } from '@/shared/utils/sensitiveUrl';
 
-type TransactionEvent = Parameters<NonNullable<BrowserOptions['beforeSendTransaction']>>[0];
+type StreamedSpan = Parameters<NonNullable<BrowserOptions['beforeSendSpan']>>[0];
 
 type SentryApi = typeof import('@sentry/react');
 
@@ -62,12 +62,10 @@ export function prepareEvent(event: ErrorEvent): ErrorEvent | null {
   return event;
 }
 
-export function prepareTransaction(event: TransactionEvent): TransactionEvent {
-  delete event.user;
-  scrubRequest(event.request);
-  redactStringValues(event.contexts?.trace?.data);
-  for (const span of event.spans ?? []) redactStringValues(span.data);
-  return event;
+export function prepareSpan(span: StreamedSpan): StreamedSpan {
+  span.name = redactSensitiveUrl(span.name);
+  redactStringValues(span.attributes);
+  return span;
 }
 
 export function prepareBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb {
@@ -90,10 +88,16 @@ async function loadAndInit(dsn: string): Promise<void> {
     tracesSampleRate: 0.1,
     tracePropagationTargets: sentryTracePropagationTargets(),
     integrations: [Sentry.browserTracingIntegration()],
-    sendDefaultPii: false,
+    dataCollection: {
+      userInfo: false,
+      cookies: false,
+      httpHeaders: false,
+      httpBodies: [],
+      stackFrameVariables: false,
+    },
     ignoreErrors: ['SCDynimacBridge'],
     beforeSend: prepareEvent,
-    beforeSendTransaction: prepareTransaction,
+    beforeSendSpan: prepareSpan,
     beforeBreadcrumb: prepareBreadcrumb,
   });
   api = Sentry;

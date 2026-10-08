@@ -3,7 +3,7 @@ import type { Breadcrumb, ErrorEvent } from '@sentry/react';
 import {
   prepareBreadcrumb,
   prepareEvent,
-  prepareTransaction,
+  prepareSpan,
   sentryTracePropagationTargets,
   shouldDropSentryEvent,
 } from '@/shared/observability/sentry';
@@ -24,50 +24,27 @@ describe('token redaction', () => {
     expect(prepared?.request?.query_string).toBe('token=***&lang=fr');
   });
 
-  it('masks the tokens of a transaction, its trace context and its spans', () => {
-    const transaction = {
-      type: 'transaction',
-      request: { url: 'https://www.movie-picker.fr/reset?token=abc123' },
-      contexts: {
-        trace: { data: { 'url.full': 'https://www.movie-picker.fr/reset?token=abc123' } },
+  it('masks the tokens of a streamed span name and of its string attributes', () => {
+    const span = {
+      name: '/reset?token=abc123',
+      is_segment: true,
+      attributes: {
+        'url.full': 'https://api.movie-picker.fr/api/v1/x?host=secret',
+        'http.request.header.referer': 'https://www.movie-picker.fr/reset?token=abc123',
+        'http.method': 'GET',
+        'http.response.status_code': 200,
       },
-      spans: [
-        {
-          data: {
-            'url.full': 'https://api.movie-picker.fr/api/v1/x?host=secret',
-            'http.method': 'GET',
-          },
-        },
-      ],
-    } as unknown as Parameters<typeof prepareTransaction>[0];
+    } as unknown as Parameters<typeof prepareSpan>[0];
 
-    const prepared = prepareTransaction(transaction);
+    const prepared = prepareSpan(span);
 
-    expect(prepared.request?.url).toBe('https://www.movie-picker.fr/reset?token=***');
-    expect(prepared.contexts?.trace?.data?.['url.full']).toBe(
-      'https://www.movie-picker.fr/reset?token=***'
-    );
-    expect(prepared.spans?.[0]?.data).toEqual({
+    expect(prepared.name).toBe('/reset?token=***');
+    expect(prepared.attributes).toEqual({
       'url.full': 'https://api.movie-picker.fr/api/v1/x?host=***',
+      'http.request.header.referer': 'https://www.movie-picker.fr/reset?token=***',
       'http.method': 'GET',
+      'http.response.status_code': 200,
     });
-  });
-
-  it('drops the request headers of a transaction, where the Referer carries the page URL', () => {
-    const transaction = {
-      type: 'transaction',
-      request: {
-        url: 'https://www.movie-picker.fr/login',
-        headers: {
-          Referer: 'https://www.movie-picker.fr/reset?token=abc123',
-          'User-Agent': 'Mozilla/5.0',
-        },
-      },
-    } as unknown as Parameters<typeof prepareTransaction>[0];
-
-    const prepared = prepareTransaction(transaction);
-
-    expect(prepared.request).toEqual({ url: 'https://www.movie-picker.fr/login' });
   });
 
   it('masks the tokens of navigation and request breadcrumbs', () => {
@@ -217,6 +194,47 @@ describe('initSentry', () => {
     expect(browserTracingIntegration).toHaveBeenCalledTimes(1);
     expect(init).toHaveBeenCalledWith(
       expect.objectContaining({ integrations: [{ name: 'BrowserTracing' }] })
+    );
+  });
+
+  it('scrubs the streamed spans, since the SDK no longer sends transaction events', async () => {
+    const init = vi.fn();
+    vi.doMock('@sentry/react', () => ({
+      init,
+      captureException: vi.fn(),
+      browserTracingIntegration: () => ({ name: 'BrowserTracing' }),
+    }));
+    const sentry = await import('./sentry');
+
+    await sentry.initSentry();
+
+    const options = init.mock.calls[0]![0] as Record<string, unknown>;
+    expect(options.beforeSendSpan).toBe(sentry.prepareSpan);
+    expect(options).not.toHaveProperty('traceLifecycle');
+    expect(options).not.toHaveProperty('beforeSendTransaction');
+  });
+
+  it('turns off every personal data collection the SDK enables by default', async () => {
+    const init = vi.fn();
+    vi.doMock('@sentry/react', () => ({
+      init,
+      captureException: vi.fn(),
+      browserTracingIntegration: () => ({ name: 'BrowserTracing' }),
+    }));
+    const sentry = await import('./sentry');
+
+    await sentry.initSentry();
+
+    expect(init).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dataCollection: expect.objectContaining({
+          userInfo: false,
+          cookies: false,
+          httpHeaders: false,
+          httpBodies: [],
+          stackFrameVariables: false,
+        }),
+      })
     );
   });
 
