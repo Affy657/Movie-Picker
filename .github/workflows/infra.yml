@@ -64,7 +64,7 @@ permissions:
   contents: read
 
 env:
-  TERRAFORM_VERSION: "1.16.3"
+  TERRAFORM_VERSION: "1.16.5"
   TF_IN_AUTOMATION: "1"
   TF_INPUT: "0"
 

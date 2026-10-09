@@ -476,7 +476,7 @@ function checkDesignTokens(cssFiles) {
       if (/^(?:inherit|100%)$/.test(shown)) continue;
       if (
         /var\(--font-size/.test(shown) &&
-        /^(?:clamp\(|[\s,()]|\d*\.?\d+vw)*$/.test(stripTokenCalls(shown))
+        /^(?:clamp\(|[\s,()]|(?:\d+(?:\.\d+)?|\.\d+)vw)*$/.test(stripTokenCalls(shown))
       )
         continue;
       violations.push(

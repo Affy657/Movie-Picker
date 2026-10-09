@@ -45,7 +45,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const TERRAFORM_IMAGE =
-  'hashicorp/terraform:1.16.3@sha256:c9a9d991c113f3bda5269de1506983d45ce1409dfe702df433acf10a5ea9f6bc';
+  'hashicorp/terraform:1.16.5@sha256:c7926feace05d0f7e73542842bf3945924e955a1f782cf000ccbb8d18fa42d77';
 export const TERRAFORM_DIR = 'infra/terraform';
 export const ENVIRONMENTS_DIR = `${TERRAFORM_DIR}/environments`;
 export const LOCK_PLATFORMS = [

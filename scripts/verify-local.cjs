@@ -211,7 +211,7 @@ const dockerLane = () =>
           './pnpm-lock.yaml:/repo/pnpm-lock.yaml:ro',
           '-v',
           'trivy-cache:/root/.cache/trivy',
-          'aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969',
+          'aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa',
           'fs',
           '--scanners',
           'vuln',
