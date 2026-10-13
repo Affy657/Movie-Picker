@@ -66,7 +66,7 @@ describe('AddMovieForm (MSW)', () => {
 
   const server = setupServer(...createSearchAndAddHandlers(slug));
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => localStorage.removeItem(HISTORY_KEY));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());

@@ -9,7 +9,7 @@ import { TEST_API_V1 } from '@/mocks/handlers';
 describe('OAuthProviderButtons (MSW)', () => {
   const server = setupServer();
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => localStorage.setItem('moviepicker-locale', 'fr'));
   afterEach(() => {
     server.resetHandlers();

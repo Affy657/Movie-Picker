@@ -24,7 +24,7 @@ function renderCallback(initialPath: string) {
 describe('OAuthCallbackPage (MSW)', () => {
   const server = setupServer();
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => localStorage.setItem('moviepicker-locale', 'fr'));
   afterEach(() => {
     server.resetHandlers();

@@ -23,7 +23,7 @@ function renderForgot(initialPath = '/forgot-password') {
 
 describe('ForgotPasswordPage', () => {
   const server = setupServer();
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {
     localStorage.setItem('moviepicker-locale', 'fr');
     server.use(authMeGuestHandler);

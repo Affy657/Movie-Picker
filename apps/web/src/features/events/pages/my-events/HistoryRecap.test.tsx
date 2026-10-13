@@ -32,7 +32,7 @@ describe('HistoryRecap (MSW)', () => {
   const server = setupServer();
   const statsRequests: string[] = [];
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   afterEach(() => {
     server.resetHandlers();
     statsRequests.length = 0;

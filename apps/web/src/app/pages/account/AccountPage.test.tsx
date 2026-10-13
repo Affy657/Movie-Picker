@@ -23,7 +23,7 @@ function renderAccount(initialPath = '/settings') {
 describe('AccountPage (MSW)', () => {
   const server = setupServer();
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {
     localStorage.setItem('moviepicker-locale', 'fr');
     localStorage.setItem('moviepicker-ui-preference', 'light');

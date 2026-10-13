@@ -55,7 +55,7 @@ describe('accessibility (axe)', () => {
     http.get(`${TEST_API_V1}/auth/oauth/providers`, () => HttpResponse.json({ providers: [] }))
   );
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'bypass' }));
   afterEach(() => {
     cleanup();
     server.resetHandlers();

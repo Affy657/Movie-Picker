@@ -119,7 +119,7 @@ function renderSection(
 describe('EventMoviesSection (MSW)', () => {
   const server = setupServer();
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => track.mockReset());
   afterEach(() => {
     server.resetHandlers();

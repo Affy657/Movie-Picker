@@ -66,7 +66,7 @@ describe('ProfilePage (MSW)', () => {
     http.get(`${TEST_API_V1}/users/:handle/watched-movies`, () => HttpResponse.json({ items: [] }))
   );
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'warn' }));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 

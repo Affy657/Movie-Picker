@@ -39,7 +39,7 @@ describe('invite link: back to the movie night after authentication', () => {
   const server = setupServer();
   let sessionActive = false;
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'bypass' }));
   beforeEach(() => {
     sessionActive = false;
     resetSessionHintMemoryForTests();

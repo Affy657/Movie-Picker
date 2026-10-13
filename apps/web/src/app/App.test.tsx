@@ -44,7 +44,7 @@ const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
 describe('App (routes)', () => {
   const server = setupServer();
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'bypass' }));
   afterEach(() => {
     server.resetHandlers();
     vi.restoreAllMocks();

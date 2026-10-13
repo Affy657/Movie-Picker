@@ -72,7 +72,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
     )
   );
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'warn' }));
   afterEach(() => {
     server.resetHandlers();
     vi.unstubAllGlobals();
