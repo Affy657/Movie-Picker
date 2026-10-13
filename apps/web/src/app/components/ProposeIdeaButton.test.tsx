@@ -279,6 +279,7 @@ describe('ProposeIdeaButton', () => {
       contentType: 'image/png',
     });
     expect(body.attachments?.[0]?.base64Content.length).toBeGreaterThan(0);
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/merci/i));
   });
 
   it('revokes every preview URL when the dialog closes', async () => {
