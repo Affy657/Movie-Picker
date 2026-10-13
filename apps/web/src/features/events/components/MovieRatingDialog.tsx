@@ -1,12 +1,9 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import { Film } from 'lucide-react';
 import Button from '@/shared/components/Button';
-import DialogTitleBar from '@/shared/components/DialogTitleBar';
-import Modal from '@/shared/components/Modal';
-import Sheet from '@/shared/components/Sheet';
+import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import StarRating from '@/shared/components/StarRating';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { RatingScale } from '@/shared/types/theme';
@@ -43,8 +40,6 @@ export default function MovieRatingDialog({
   onClear,
 }: Readonly<Props>) {
   const { t, locale } = useTranslation();
-  const isMobile = useIsMobile();
-  const titleId = useId();
   const [draft, setDraft] = useState<number | null>(mine);
   const title = t(canRate ? 'events.ratings.dialogTitleRate' : 'events.ratings.dialogTitleRead');
   const poster = posterImageSrc(movie.posterPath);
@@ -118,24 +113,9 @@ export default function MovieRatingDialog({
     </div>
   ) : null;
 
-  if (isMobile) {
-    return (
-      <Sheet open={open} title={title} onClose={onClose} footer={footer}>
-        {body}
-      </Sheet>
-    );
-  }
-
   return (
-    <Modal open={open} onClose={onClose} size="sm" column ariaLabelledBy={titleId}>
-      <DialogTitleBar
-        titleId={titleId}
-        title={title}
-        onClose={onClose}
-        closeAriaLabel={t('common.close')}
-      />
-      <div className={styles.modalBody}>{body}</div>
-      {footer ? <div className={styles.modalFooter}>{footer}</div> : null}
-    </Modal>
+    <ResponsiveDialog open={open} title={title} onClose={onClose} footer={footer}>
+      {body}
+    </ResponsiveDialog>
   );
 }

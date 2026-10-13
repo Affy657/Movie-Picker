@@ -178,6 +178,10 @@ Dialogues déjà câblés dessus :
 
 Feuille ancrée en bas, glissable : le geste est `useSheetDrag` (`shared/hooks/`), `SheetDrag.module.css` porte la surface, la poignée et les animations d'entrée (`sheetEnter`, `sheetBackdropEnter`, retirées sous `prefers-reduced-motion`). `open`, `title`, `onClose`, `footer`, `size` `md` / `lg`. Sa croix est un `IconButton`.
 
+### ResponsiveDialog
+
+Le dialogue qui est une `Sheet` sur téléphone et une `Modal` `sm` en colonne sur grand écran, avec le même contenu : `open`, `title`, `onClose`, `footer`. Sur grand écran, le corps défile entre la barre de titre et le pied, que sépare un filet, et sans `footer` il n'y a pas de pied. C'est la note d'un film vu et la pioche dans la watchlist. Un dialogue dont l'en-tête change d'un format à l'autre (onglets à la place du titre, taille `xs`) garde sa propre bascule.
+
 ### Notice
 
 Le bandeau d'information flottant : `title`, `description`, `placement` `top` (défaut, glisse du haut) / `bottom` (glisse du bas), `onClose` (sans lui, pas de croix : le bandeau attend une décision), les actions en enfants, pleine largeur sur mobile. C'est le consentement, l'avertissement du navigateur intégré et celui de l'ancienne adresse.

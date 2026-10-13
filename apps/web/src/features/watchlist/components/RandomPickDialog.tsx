@@ -1,10 +1,9 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import clsx from 'clsx';
 import { CalendarPlus, Clock, Dices, Film, Star } from 'lucide-react';
 import Button from '@/shared/components/Button';
 import LinkButton from '@/shared/components/LinkButton';
-import Modal from '@/shared/components/Modal';
-import Sheet from '@/shared/components/Sheet';
+import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import { Skeleton } from '@/shared/components/Skeleton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
@@ -133,7 +132,6 @@ export default function RandomPickDialog({
 }: Readonly<RandomPickDialogProps>) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  const titleId = useId();
   const [{ pool, keys }] = useState(() => {
     const byKey = new Map(
       items.map((item) => [watchlistItemKey(item.tmdbId, item.mediaType), item])
@@ -185,18 +183,9 @@ export default function RandomPickDialog({
     />
   );
 
-  if (isMobile) {
-    return (
-      <Sheet open title={title} onClose={onClose} footer={actions}>
-        {body}
-      </Sheet>
-    );
-  }
-
   return (
-    <Modal open onClose={onClose} size="sm" column title={title} titleId={titleId}>
-      <div className={styles.modalBody}>{body}</div>
-      <div className={styles.modalFooter}>{actions}</div>
-    </Modal>
+    <ResponsiveDialog open title={title} onClose={onClose} footer={actions}>
+      {body}
+    </ResponsiveDialog>
   );
 }

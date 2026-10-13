@@ -41,6 +41,7 @@ Si on ne peut pas exprimer l'intention via le nommage ou la structure, refactori
 | Fenêtre modale | `Modal` | seul endroit du projet où `<dialog>` et `::backdrop` sont autorisés ; une modale à titre passe par `title` (+ `titleDetail`), jamais par une barre de titre recopiée |
 | Dialogue déjà câblé | `ConfirmDialog`, `ShareDialog`, `ConsentDialog`, `DialogTitleBar` | bâtis sur `Modal` |
 | Feuille mobile | `Sheet` | modale ancrée en bas, glissable |
+| Dialogue feuille sur téléphone, modale sur grand écran | `ResponsiveDialog` | `title`, `footer` ; jamais une bascule `useIsMobile` entre `Sheet` et `Modal` recopiée pour un dialogue à titre, corps et pied |
 | Bandeau flottant | `Notice` | `placement` `top` / `bottom`, `onClose` facultatif, actions en enfants |
 | Pastille, badge, filtre, lien externe | `Chip` | tones `default` / `primary` / `success` / `warning` / `pending` / `danger` / `muted`, `dashed`, `dot`, quatre formes (étiquette, `onClick`, `onRemove`, `href`), centrage optique déjà intégré |
 | Compteur, point d'état | `CountBadge`, `StatusDot` | `CountBadge` `tone` `primary` / `success` / `neutral`, `size` `sm` / `md` ; `StatusDot` `pulsing` ; jamais une pastille de compteur ni une `@keyframes` de pulsation locales |
