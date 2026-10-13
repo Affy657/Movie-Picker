@@ -7,10 +7,7 @@ import {
   useWatchlist,
 } from '@/features/movies/hooks/useWatchlist';
 import { useTranslation } from '@/shared/i18n';
-
-function watchlistKey(tmdbId: number, mediaType: MovieData['mediaType']): string {
-  return `${tmdbId}|${mediaType ?? 'movie'}`;
-}
+import { watchlistItemKey } from '@/features/movies/utils/watchlistItemKey';
 
 export function useEventWatchlistToggle(
   enabled: boolean,
@@ -19,7 +16,7 @@ export function useEventWatchlistToggle(
   const { t } = useTranslation();
   const watchlistQuery = useWatchlist({ enabled });
   const watchlistKeys = useMemo(
-    () => new Set((watchlistQuery.data ?? []).map((i) => watchlistKey(i.tmdbId, i.mediaType))),
+    () => new Set((watchlistQuery.data ?? []).map((i) => watchlistItemKey(i.tmdbId, i.mediaType))),
     [watchlistQuery.data]
   );
 
@@ -31,14 +28,14 @@ export function useEventWatchlistToggle(
   });
 
   const isInWatchlist = useCallback(
-    (m: MovieData) => watchlistKeys.has(watchlistKey(m.tmdbId, m.mediaType)),
+    (m: MovieData) => watchlistKeys.has(watchlistItemKey(m.tmdbId, m.mediaType)),
     [watchlistKeys]
   );
 
   const toggleWatchlist = useCallback(
     (m: MovieData) => {
       setActionError(null);
-      if (watchlistKeys.has(watchlistKey(m.tmdbId, m.mediaType))) {
+      if (watchlistKeys.has(watchlistItemKey(m.tmdbId, m.mediaType))) {
         removeFromWatchlist({ tmdbId: m.tmdbId, mediaType: m.mediaType });
         return;
       }

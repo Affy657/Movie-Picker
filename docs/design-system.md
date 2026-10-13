@@ -84,7 +84,7 @@ Le bouton du produit. `buttonClass()` donne la même composition de classes à u
 | `loading` | `boolean` | `false` | désactive, pose `aria-busy` et un `Spinner` devant le libellé ; le libellé reste |
 | `type` | | `button` | à poser à `submit` explicitement |
 
-Les enfants texte qui se suivent (`Proposer ({count})`) sont réunis dans un seul libellé centré optiquement (`--text-optical-nudge`, ou `-caps` sans jambage), les blancs seuls sont ignorés ; un appelant n'ajoute jamais de `<span>` de décalage. États : repos, survol (sous `(hover: hover)`, soulèvement `--lift-sm` annulé sous `prefers-reduced-motion`), focus (`--outline-focus`), désactivé (`--opacity-disabled`), chargement (`--opacity-dimmed`). Hauteur minimale `--tap-target-min` ; `sm` dessine 40 px et étend sa zone tactile à 44 px.
+Les enfants texte qui se suivent (`Proposer ({count})`) sont réunis dans un seul libellé centré optiquement (`--text-optical-nudge`, ou `-caps` sans jambage), les blancs seuls sont ignorés ; un appelant n'ajoute jamais de `<span>` de décalage. États : repos, survol (sous `(hover: hover)`, soulèvement `--lift-sm` annulé sous `prefers-reduced-motion`), focus (`--outline-focus`), désactivé (`--opacity-disabled`), inerte (`aria-disabled` : le rendu du désactivé, mais le bouton garde le focus et ignore le clic, soumission comprise ; pour une action indisponible un instant, comme pendant une animation), chargement (`--opacity-dimmed`). Hauteur minimale `--tap-target-min` ; `sm` dessine 40 px et étend sa zone tactile à 44 px.
 
 ### IconButton
 

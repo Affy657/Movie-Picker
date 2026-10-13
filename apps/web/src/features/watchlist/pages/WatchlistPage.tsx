@@ -1,8 +1,8 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import { Bookmark, Import, Plus } from 'lucide-react';
+import { Bookmark, Dices, Import, Plus } from 'lucide-react';
 import PageLayout from '@/shared/components/PageLayout';
 import EmptyState from '@/shared/components/EmptyState';
-import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
+import { useLocale, useTranslation, type Translate, type TranslationKey } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ROUTES } from '@/app/routes';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
@@ -20,7 +20,6 @@ import FilteredCollectionLayout, {
 import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import LetterboxdConnectModal from '@/features/letterboxd/components/LetterboxdConnectModal';
-import type { MovieMediaType } from '@/shared/types/movie';
 import {
   useAddToWatchlist,
   useWatchlist,
@@ -44,6 +43,10 @@ import { MovieTable } from '@/features/movies/components/MovieTable';
 import WatchlistSkeleton from '@/features/watchlist/components/WatchlistSkeleton';
 import ViewModeToggle, { type MovieViewMode } from '@/shared/components/ViewModeToggle';
 import ProposeToEventModal from '@/features/events/components/ProposeToEventModal';
+import RandomPickDialog, {
+  type RandomPickScope,
+} from '@/features/watchlist/components/RandomPickDialog';
+import { watchlistItemKey as itemKey } from '@/features/movies/utils/watchlistItemKey';
 import LibraryMovieDetails, {
   useLibraryMovieDetails,
   type LibraryMovieSeed,
@@ -51,11 +54,8 @@ import LibraryMovieDetails, {
 import styles from './WatchlistPage.module.css';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import Button from '@/shared/components/Button';
+import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
-
-function itemKey(tmdbId: number, mediaType: MovieMediaType | undefined): string {
-  return `${tmdbId}|${mediaType ?? 'movie'}`;
-}
 
 function mergeAvailability(
   items: WatchlistItem[],
@@ -135,6 +135,64 @@ function WatchlistFiltersPanel({
   );
 }
 
+interface RandomPick {
+  items: WatchlistEntry[];
+  scope: RandomPickScope;
+}
+
+function randomPickLabelKey(compact: boolean, isFiltered: boolean): TranslationKey {
+  if (compact) return 'watchlist.randomPick.triggerShort';
+  return isFiltered ? 'watchlist.randomPick.triggerSelection' : 'watchlist.randomPick.trigger';
+}
+
+function RandomPickButton({
+  toolbar,
+  compact,
+  onOpen,
+}: Readonly<{
+  toolbar: ReturnType<typeof useWatchlistToolbar>;
+  compact: boolean;
+  onOpen: (pick: RandomPick) => void;
+}>) {
+  const { t } = useTranslation();
+  if (toolbar.visibleItems.length === 0) return null;
+  return (
+    <Button
+      type="button"
+      size={compact ? 'sm' : 'md'}
+      onClick={() =>
+        onOpen({
+          items: toolbar.visibleItems,
+          scope: toolbar.isFiltered ? 'selection' : 'list',
+        })
+      }
+    >
+      <Dices size={ICON_SIZE.md} aria-hidden />
+      <span>{t(randomPickLabelKey(compact, toolbar.isFiltered))}</span>
+    </Button>
+  );
+}
+
+function MobileLetterboxdButton({
+  iconOnly,
+  onOpen,
+}: Readonly<{ iconOnly: boolean; onOpen: () => void }>) {
+  const { t } = useTranslation();
+  if (iconOnly) {
+    return (
+      <IconButton ariaLabel={t('watchlist.letterboxdCta')} onClick={onOpen}>
+        <Import size={ICON_SIZE.md} aria-hidden />
+      </IconButton>
+    );
+  }
+  return (
+    <Button type="button" variant="ghost" size="sm" onClick={onOpen}>
+      <Import size={ICON_SIZE.sm} aria-hidden />
+      <span>{t('watchlist.letterboxdCtaShort')}</span>
+    </Button>
+  );
+}
+
 const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
 
 export default function WatchlistPage() {
@@ -157,6 +215,7 @@ export default function WatchlistPage() {
   );
 
   const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
+  const [randomPick, setRandomPick] = useState<RandomPick | null>(null);
   const details = useLibraryMovieDetails();
   const detailsEntry = details.target
     ? entries.find(
@@ -284,16 +343,12 @@ export default function WatchlistPage() {
           {isMobile ? (
             <div className={styles.headerActionsMobile}>
               {!user?.letterboxdUsername && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setLetterboxdModalOpen(true)}
-                >
-                  <Import size={ICON_SIZE.sm} aria-hidden />
-                  <span>{t('watchlist.letterboxdCtaShort')}</span>
-                </Button>
+                <MobileLetterboxdButton
+                  iconOnly={entries.length > 0}
+                  onOpen={() => setLetterboxdModalOpen(true)}
+                />
               )}
+              <RandomPickButton toolbar={toolbar} compact onOpen={setRandomPick} />
               <Button
                 type="button"
                 ref={addButtonRef}
@@ -313,6 +368,7 @@ export default function WatchlistPage() {
                   <span>{t('watchlist.letterboxdCta')}</span>
                 </Button>
               )}
+              <RandomPickButton toolbar={toolbar} compact={false} onOpen={setRandomPick} />
               <Button type="button" ref={addButtonRef} variant="primary" onClick={openAddPanel}>
                 <Plus size={ICON_SIZE.md} aria-hidden />
                 <span>{t('watchlist.addPanel.trigger')}</span>
@@ -459,6 +515,23 @@ export default function WatchlistPage() {
           </FilteredCollectionLayout>
         )}
       </section>
+
+      {randomPick && (
+        <RandomPickDialog
+          items={randomPick.items}
+          scope={randomPick.scope}
+          ratingScale={user?.ratingScale}
+          onClose={() => setRandomPick(null)}
+          onPropose={(item) => {
+            setRandomPick(null);
+            setProposeTarget(item);
+          }}
+          onOpenDetails={(item) => {
+            setRandomPick(null);
+            details.open(item);
+          }}
+        />
+      )}
 
       {proposeTarget && (
         <ProposeToEventModal

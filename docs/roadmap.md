@@ -219,7 +219,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## 📋 V1.7, planifiée (24 points produit, 34 points tech, 1 restant)
+## 📋 V1.7, planifiée (24 points produit, 34 points tech, 0 restant)
 
 **Objectif** : fermer la boucle après la soirée, chaque participant note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.
 
@@ -229,7 +229,7 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 - ✅ `L` **Partage de soirée en story** : image au format des stories des réseaux sociaux générée depuis le recap, avec le lien de la page recap, envoyée par le partage natif du téléphone ou téléchargée depuis la page soirée.
 - ✅ `M` **Top 3 films préférés sur le profil** : jusqu'à trois films ou séries choisis par une recherche TMDB s'affichent sur le profil public `/u/:handle`, visibles par tous et modifiables depuis les paramètres.
 - ✅ `M` **Photo de profil personnalisée** : téléverser une photo, la recadrer dans un cercle et en faire son avatar partout dans l'app, robots et emojis restant sous la main ; un compte créé avec Google part avec sa photo Google.
-- ⬜ `S` **Pioche aléatoire dans la watchlist** : bouton qui tire un film au hasard parmi les films à voir de la watchlist, proposable dans une soirée en un clic.
+- ✅ `S` **Pioche aléatoire dans la watchlist** : bouton qui tire un film au hasard parmi les films à voir de la watchlist, proposable dans une soirée en un clic.
 
 **Tech**
 

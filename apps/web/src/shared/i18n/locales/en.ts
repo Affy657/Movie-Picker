@@ -1474,6 +1474,18 @@ export const en: Locale = {
       proposedDone: 'Proposed',
       viewMore: 'View all my events',
     },
+    randomPick: {
+      trigger: 'Pick a random movie',
+      triggerSelection: 'Pick from the selection',
+      triggerShort: 'Pick',
+      title: 'Pick a random movie',
+      poolList: 'Picked at random from the {{count}} titles on your watchlist.',
+      poolListOne: 'The only title on your watchlist.',
+      poolSelection: 'Picked at random from the {{count}} titles in your selection.',
+      poolSelectionOne: 'The only title in your selection.',
+      announce: 'Picked at random: {{title}}',
+      again: 'Pick another',
+    },
     filter: {
       toggleAria: 'Filter my to-watch list',
       empty: 'No results for this filter.',

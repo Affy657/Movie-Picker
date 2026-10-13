@@ -1498,6 +1498,18 @@ export const fr = {
       proposedDone: 'Proposé',
       viewMore: 'Voir toutes mes soirées',
     },
+    randomPick: {
+      trigger: 'Piocher un film',
+      triggerSelection: 'Piocher dans la sélection',
+      triggerShort: 'Piocher',
+      title: 'Piocher un film',
+      poolList: 'Au hasard parmi les {{count}} titres de votre liste.',
+      poolListOne: 'Le seul titre de votre liste.',
+      poolSelection: 'Au hasard parmi les {{count}} titres de votre sélection.',
+      poolSelectionOne: 'Le seul titre de votre sélection.',
+      announce: 'Tiré au hasard : {{title}}',
+      again: 'Piocher un autre',
+    },
     filter: {
       toggleAria: 'Filtrer ma liste',
       empty: 'Aucun film pour ce filtre.',

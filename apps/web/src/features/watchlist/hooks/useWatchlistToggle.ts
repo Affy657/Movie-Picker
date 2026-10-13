@@ -7,6 +7,7 @@ import {
   useRemoveFromWatchlist,
   useWatchlist,
 } from '@/features/movies/hooks/useWatchlist';
+import { watchlistItemKey } from '@/features/movies/utils/watchlistItemKey';
 
 export interface WatchlistToggleItem {
   tmdbId: number;
@@ -21,16 +22,12 @@ export interface WatchlistToggleItem {
 
 type WatchlistToggleRef = Pick<WatchlistToggleItem, 'tmdbId' | 'mediaType'>;
 
-export function watchlistKey(tmdbId: number, mediaType: string): string {
-  return `${tmdbId}|${mediaType}`;
-}
-
 export function useWatchlistToggle(enabled: boolean) {
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const watchlistQuery = useWatchlist({ enabled });
   const keys = useMemo(
-    () => new Set((watchlistQuery.data ?? []).map((i) => watchlistKey(i.tmdbId, i.mediaType))),
+    () => new Set((watchlistQuery.data ?? []).map((i) => watchlistItemKey(i.tmdbId, i.mediaType))),
     [watchlistQuery.data]
   );
   const { mutate: add } = useAddToWatchlist({
@@ -40,7 +37,7 @@ export function useWatchlistToggle(enabled: boolean) {
     onError: (err) => setError(getErrorMessage(err, t('watchlist.card.removeError'))),
   });
 
-  const has = (item: WatchlistToggleRef) => keys.has(watchlistKey(item.tmdbId, item.mediaType));
+  const has = (item: WatchlistToggleRef) => keys.has(watchlistItemKey(item.tmdbId, item.mediaType));
 
   const toggle = (item: WatchlistToggleItem) => {
     setError(null);
