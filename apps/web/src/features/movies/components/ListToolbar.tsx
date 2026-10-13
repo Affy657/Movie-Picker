@@ -111,16 +111,20 @@ export default function ListToolbar<TSortKey extends string>({
           />
         )}
 
-        {isFiltered ? (
-          <span className={styles.resultCount}>
-            {resultCountText}
-            <LinkButton size="sm" onClick={onClearAll}>
-              {clearAllLabel}
-            </LinkButton>
-          </span>
-        ) : null}
+        {isFiltered || trailing ? (
+          <div className={styles.end}>
+            {isFiltered ? (
+              <span className={styles.resultCount}>
+                {resultCountText}
+                <LinkButton size="sm" onClick={onClearAll}>
+                  {clearAllLabel}
+                </LinkButton>
+              </span>
+            ) : null}
 
-        {trailing ? <span className={styles.trailing}>{trailing}</span> : null}
+            {trailing ? <span className={styles.trailing}>{trailing}</span> : null}
+          </div>
+        ) : null}
       </div>
     </Card>
   );
