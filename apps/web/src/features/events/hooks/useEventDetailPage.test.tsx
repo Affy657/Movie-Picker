@@ -20,7 +20,7 @@ describe('useEventDetailPage', () => {
   const server = setupServer();
   const requested: Array<string> = [];
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'bypass' }));
   afterEach(() => {
     server.resetHandlers();
     requested.length = 0;

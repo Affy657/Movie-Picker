@@ -38,7 +38,7 @@ function pngFile(name = 'screenshot.png', sizeBytes = 100): File {
 describe('ProposeIdeaButton', () => {
   const server = setupServer();
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   afterEach(() => {
     server.resetHandlers();
     vi.unstubAllGlobals();
@@ -279,6 +279,7 @@ describe('ProposeIdeaButton', () => {
       contentType: 'image/png',
     });
     expect(body.attachments?.[0]?.base64Content.length).toBeGreaterThan(0);
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/merci/i));
   });
 
   it('revokes every preview URL when the dialog closes', async () => {

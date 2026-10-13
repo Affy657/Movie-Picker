@@ -25,7 +25,7 @@ describe('LoginPage (MSW)', () => {
   const server = setupServer();
   let sessionActive = false;
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {
     sessionActive = false;
     localStorage.setItem('moviepicker-locale', 'fr');

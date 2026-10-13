@@ -41,7 +41,7 @@ describe('home personal rows once the account is gone', () => {
     http.get(`${TEST_API_V1}/users/me/watched-movies`, () => HttpResponse.json({ items: [matrix] }))
   );
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 

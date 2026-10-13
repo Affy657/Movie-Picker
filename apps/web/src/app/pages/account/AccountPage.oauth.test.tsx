@@ -41,7 +41,7 @@ function renderAccount(initialPath = '/settings', client?: QueryClient) {
 describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
   const server = setupServer();
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {
     localStorage.setItem('moviepicker-locale', 'fr');
     localStorage.setItem('moviepicker-ui-preference', 'light');

@@ -53,7 +53,7 @@ function renderAccount() {
 describe('AccountIndexPage (MSW)', () => {
   const server = setupServer();
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {
     setSessionHint();
     server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));

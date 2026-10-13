@@ -39,7 +39,7 @@ function renderAccount(initialPath = '/settings/securite', client?: QueryClient)
 describe('AccountPage — zone de danger (MSW)', () => {
   const server = setupServer();
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   beforeEach(() => {
     localStorage.setItem('moviepicker-locale', 'fr');
     localStorage.setItem('moviepicker-ui-preference', 'light');

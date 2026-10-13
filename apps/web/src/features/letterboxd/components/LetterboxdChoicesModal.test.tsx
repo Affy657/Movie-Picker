@@ -75,7 +75,7 @@ describe('LetterboxdChoicesModal (MSW)', () => {
   const server = setupServer();
 
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: 'error' });
+    server.listen({ onUnhandledFrame: 'error' });
     if (!HTMLDialogElement.prototype.showModal) {
       HTMLDialogElement.prototype.showModal = function showModal() {
         this.setAttribute('open', '');

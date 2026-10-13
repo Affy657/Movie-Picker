@@ -34,7 +34,7 @@ const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
 describe('NotificationsPage (MSW)', () => {
   const server = setupServer();
 
-  beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
+  beforeAll(() => server.listen({ onUnhandledFrame: 'warn' }));
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
