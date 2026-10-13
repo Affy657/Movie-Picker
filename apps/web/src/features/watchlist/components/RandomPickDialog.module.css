@@ -31,7 +31,7 @@
 
 .slotFitted {
   width: auto;
-  height: clamp(8rem, calc(min(85dvh, 40rem) - 25rem), 16.5rem);
+  height: clamp(8rem, calc(var(--sheet-max-height) - 25rem), 16.5rem);
 }
 
 .landed {
