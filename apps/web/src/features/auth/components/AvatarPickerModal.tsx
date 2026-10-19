@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { useTranslation } from '@/shared/i18n';
 import { BOTTTS_IDS, EMOJI_IDS, avatarUrl, isAvatarPhotoId } from '@/shared/utils/avatar';
@@ -55,6 +55,10 @@ function initialCategory(currentAvatarId: string): Category {
   return EMOJI_IDS.includes(currentAvatarId as never) ? 'emoji' : 'bottts';
 }
 
+function keepDroppedFilesInTheApp(event: DragEvent) {
+  event.preventDefault();
+}
+
 export default function AvatarPickerModal({
   open,
   currentAvatarId,
@@ -78,6 +82,16 @@ export default function AvatarPickerModal({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    globalThis.addEventListener('dragover', keepDroppedFilesInTheApp);
+    globalThis.addEventListener('drop', keepDroppedFilesInTheApp);
+    return () => {
+      globalThis.removeEventListener('dragover', keepDroppedFilesInTheApp);
+      globalThis.removeEventListener('drop', keepDroppedFilesInTheApp);
+    };
+  }, [open]);
   const [deleting, setDeleting] = useState(false);
   const fileRequest = useRef(0);
 

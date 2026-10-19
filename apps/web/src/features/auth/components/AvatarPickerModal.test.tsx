@@ -147,6 +147,17 @@ describe('AvatarPickerModal, photo tab', () => {
     expect(await screen.findByRole('heading', { name: 'Recadrer la photo' })).toBeInTheDocument();
   });
 
+  it('keeps the app open when an image is dropped outside the drop zone', () => {
+    renderPicker();
+
+    const title = screen.getByRole('heading', { name: 'Avatar' });
+    const dragOverKept = fireEvent.dragOver(title, { dataTransfer: { files: [jpeg()] } });
+    const dropKept = fireEvent.drop(title, { dataTransfer: { files: [jpeg()] } });
+
+    expect(dragOverKept).toBe(false);
+    expect(dropKept).toBe(false);
+  });
+
   it('cancelling the crop changes nothing', async () => {
     const props = renderPicker();
     await choose(jpeg());
@@ -289,6 +300,14 @@ describe('AvatarPickerModal, photo tab', () => {
 
       expect(image.style.height).toBe('160px');
     });
+  });
+
+  it('puts the keyboard on the crop area once a photo is chosen', async () => {
+    renderPicker();
+    await choose(jpeg());
+
+    const area = await screen.findByRole('group', { name: 'Position de la photo dans le cercle' });
+    expect(area).toHaveFocus();
   });
 
   it('moves the photo with the arrow keys', async () => {

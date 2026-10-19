@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useId,
   useLayoutEffect,
   useRef,
@@ -72,6 +73,10 @@ export default function AvatarPhotoCropper({
   const [frame, setFrame] = useState(FALLBACK_FRAME);
   const [inset, setInset] = useState(FALLBACK_MASK_INSET);
   const [crop, setCrop] = useState<Crop>(() => centeredCrop(photo, FALLBACK_FRAME));
+
+  useEffect(() => {
+    frameRef.current?.focus({ preventScroll: true });
+  }, []);
 
   useLayoutEffect(() => {
     const element = frameRef.current;
