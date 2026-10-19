@@ -11,7 +11,7 @@ public interface IRatingReminderPass
     Task<RatingReminderPassResult> RunAsync(CancellationToken ct = default);
 }
 
-public sealed record RatingReminderPassResult(int FinishedNights, int Reminded);
+public sealed record RatingReminderPassResult(int FinishedNights, int Reminded, int DeliveryFailures = 0);
 
 public sealed class RatingReminderPass : IRatingReminderPass
 {
@@ -55,9 +55,10 @@ public sealed class RatingReminderPass : IRatingReminderPass
     {
         var now = _clock.GetUtcNow();
         var today = EventRecurrence.TodayInParis(now);
+        var todayStartUtc = ParisMidnightUtc(today);
         var candidates = await _events.ListWithWinnerStartingBetweenAsync(
             ParisMidnightUtc(today.AddDays(-CatchUpDays)),
-            ParisMidnightUtc(today),
+            todayStartUtc,
             ct);
         var finishedNights = candidates
             .Where(e => e.HasWinner && e.IsFinished(now))
@@ -69,10 +70,15 @@ public sealed class RatingReminderPass : IRatingReminderPass
         _logger.LogInformation("Rating reminders: {Count} finished movie night(s) to look at", finishedNights.Count);
 
         var reminded = 0;
+        var failures = 0;
         foreach (var evt in finishedNights)
-            reminded += await RemindNightAsync(evt, now, ct);
+        {
+            var night = await RemindNightAsync(evt, now, todayStartUtc, ct);
+            reminded += night.Reminded;
+            failures += night.Failures;
+        }
 
-        return new RatingReminderPassResult(finishedNights.Count, reminded);
+        return new RatingReminderPassResult(finishedNights.Count, reminded, failures);
     }
 
     private static DateTimeOffset ParisMidnightUtc(DateOnly day)
@@ -83,17 +89,21 @@ public sealed class RatingReminderPass : IRatingReminderPass
             : new DateTimeOffset(day.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
     }
 
-    private async Task<int> RemindNightAsync(Event evt, DateTimeOffset now, CancellationToken ct)
+    private async Task<(int Reminded, int Failures)> RemindNightAsync(
+        Event evt,
+        DateTimeOffset now,
+        DateTimeOffset todayStartUtc,
+        CancellationToken ct)
     {
         var participants = (await _participants.ListByEventIdAsync(evt.Id, ct))
             .Where(p => !string.IsNullOrEmpty(p.UserId))
             .ToList();
         if (participants.Count == 0)
-            return 0;
+            return (0, 0);
 
         var winners = await WinnerMovies.ListAsync(_movies, evt, ct);
         if (winners.Count == 0)
-            return 0;
+            return (0, 0);
 
         var ratedMovieIds = (await _ratings.ListByEventIdAsync(evt.Id, ct))
             .GroupBy(r => r.ParticipantId)
@@ -109,33 +119,38 @@ public sealed class RatingReminderPass : IRatingReminderPass
         }
 
         if (pendingByUserId.Count == 0)
-            return 0;
+            return (0, 0);
 
         var users = (await _users.ListByIdsAsync(pendingByUserId.Keys.ToList(), ct))
             .Where(u => u.NotifiesOn(UserNotificationType.RatingReminder))
             .ToList();
         if (users.Count == 0)
-            return 0;
+            return (0, 0);
 
         var subsByUser = (await _subscriptions.ListByUserIdsAsync(users.Select(u => u.Id).ToHashSet(), ct))
             .GroupBy(s => s.UserId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
         var reminded = 0;
+        var failures = 0;
         foreach (var user in users)
         {
-            if (await RemindUserAsync(user, evt, pendingByUserId[user.Id], now, subsByUser, ct))
+            var delivery = await RemindUserAsync(user, evt, pendingByUserId[user.Id], now, todayStartUtc, subsByUser, ct);
+            if (delivery.Reminded)
                 reminded++;
+            if (delivery.PushFailed)
+                failures++;
         }
 
-        return reminded;
+        return (reminded, failures);
     }
 
-    private Task<bool> RemindUserAsync(
+    private Task<ReminderDeliveryResult> RemindUserAsync(
         User user,
         Event evt,
         Movie movie,
         DateTimeOffset now,
+        DateTimeOffset todayStartUtc,
         Dictionary<string, List<PushSubscription>> subsByUser,
         CancellationToken ct)
     {
@@ -156,6 +171,6 @@ public sealed class RatingReminderPass : IRatingReminderPass
             IsRead = false,
             CreatedAt = now
         };
-        return _delivery.DeliverAsync(inApp, subsByUser.GetValueOrDefault(user.Id) ?? [], push, ct);
+        return _delivery.DeliverAsync(inApp, subsByUser.GetValueOrDefault(user.Id) ?? [], push, todayStartUtc, ct);
     }
 }

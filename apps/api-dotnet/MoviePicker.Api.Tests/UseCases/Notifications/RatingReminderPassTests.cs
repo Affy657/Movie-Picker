@@ -49,6 +49,8 @@ public sealed class RatingReminderPassTests
             .ReturnsAsync(false);
         _dedup.Setup(r => r.TryClaimAsync(It.IsAny<string>(), It.IsAny<UserNotificationType>(), It.IsAny<string>(), It.IsAny<NotificationDedupChannel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+        _sender.Setup(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
     }
 
     private RatingReminderPass CreatePass(DateTimeOffset? now = null) => new(
@@ -378,6 +380,77 @@ public sealed class RatingReminderPassTests
         _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u1" && u.EventId == "e1"), It.IsAny<CancellationToken>()), Times.Once);
         _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u1" && u.EventId == "e2"), It.IsAny<CancellationToken>()), Times.Once);
         _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u2"), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RunAsync_PushRefusedByEveryDevice_ReleasesThePushClaimAndReportsTheFailure()
+    {
+        GivenOneUnratedNight();
+        _sender.Setup(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(1, result.DeliveryFailures);
+        _dedup.Verify(r => r.ReleaseAsync("u1", UserNotificationType.RatingReminder, "e1", NotificationDedupChannel.Push, It.IsAny<CancellationToken>()), Times.Once);
+        _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u1"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RunAsync_PushTakenByOneDevice_KeepsTheClaim()
+    {
+        GivenOneUnratedNight();
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(0, result.DeliveryFailures);
+        _dedup.Verify(r => r.ReleaseAsync(It.IsAny<string>(), It.IsAny<UserNotificationType>(), It.IsAny<string>(), It.IsAny<NotificationDedupChannel>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RunAsync_InboxWriteFails_ReleasesTheInboxClaimSoTheRetryWritesIt()
+    {
+        GivenOneUnratedNight();
+        _notifications.Setup(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException());
+
+        await Assert.ThrowsAsync<TimeoutException>(() => CreatePass().RunAsync());
+
+        _dedup.Verify(r => r.ReleaseAsync("u1", UserNotificationType.RatingReminder, "e1", NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RunAsync_RemindedInTheInboxOnAnEarlierDay_SendsNoPushNow()
+    {
+        GivenOneUnratedNight();
+        _dedup.Setup(r => r.TryClaimAsync("u1", UserNotificationType.RatingReminder, "e1", NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _notifications.Setup(r => r.ExistsAsync("u1", UserNotificationType.RatingReminder, "e1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(new RatingReminderPassResult(1, 0), result);
+        VerifyNothingSent();
+    }
+
+    [Fact]
+    public async Task RunAsync_RetriedTheSameDayAfterAFailedPush_SendsThePushWithoutASecondInboxEntry()
+    {
+        GivenOneUnratedNight();
+        var parisMidnight = new DateTimeOffset(2026, 3, 9, 23, 0, 0, TimeSpan.Zero);
+        _dedup.Setup(r => r.TryClaimAsync("u1", UserNotificationType.RatingReminder, "e1", NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _dedup.Setup(r => r.WasClaimedSinceAsync("u1", UserNotificationType.RatingReminder, "e1", NotificationDedupChannel.InApp, parisMidnight, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _notifications.Setup(r => r.ExistsAsync("u1", UserNotificationType.RatingReminder, "e1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(new RatingReminderPassResult(1, 1), result);
+        _sender.Verify(s => s.SendAsync(It.Is<PushSubscription>(p => p.UserId == "u1"), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

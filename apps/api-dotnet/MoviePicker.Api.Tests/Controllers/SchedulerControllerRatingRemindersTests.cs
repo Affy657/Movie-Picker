@@ -84,6 +84,21 @@ public sealed class SchedulerControllerRatingRemindersTests
     }
 
     [Fact]
+    public async Task RunRatingReminders_SomeDeliveryFailed_Returns503SoTheSchedulerRetries()
+    {
+        Verdict(SchedulerCallerVerdict.Accepted);
+        PresentBearer("jwt");
+        _pass.Setup(p => p.RunAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RatingReminderPassResult(2, 5, DeliveryFailures: 1));
+
+        var result = await Run();
+
+        var response = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, response.StatusCode);
+        Assert.Equal(new RatingReminderPassResult(2, 5, DeliveryFailures: 1), response.Value);
+    }
+
+    [Fact]
     public async Task RunRatingReminders_ForwardsTheCancellationTokenToThePass()
     {
         Verdict(SchedulerCallerVerdict.Accepted);

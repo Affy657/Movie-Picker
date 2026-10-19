@@ -5294,7 +5294,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["RatingReminderPassResult"];
+                        "application/json": components["schemas"]["RatingReminderPassResult"];
+                        "text/json": components["schemas"]["RatingReminderPassResult"];
+                    };
                 };
             };
         };
@@ -7836,6 +7840,8 @@ export interface components {
             finishedNights?: number;
             /** Format: int32 */
             reminded?: number;
+            /** Format: int32 */
+            deliveryFailures?: number;
         };
         /** @enum {string} */
         RatingScale: "five" | "ten";

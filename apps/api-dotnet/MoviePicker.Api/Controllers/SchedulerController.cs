@@ -98,22 +98,12 @@ public sealed class SchedulerController : ControllerBase
     [ProducesResponseType(typeof(RatingReminderPassResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-    public async Task<IActionResult> RunRatingReminders(
+    [ProducesResponseType(typeof(RatingReminderPassResult), StatusCodes.Status503ServiceUnavailable)]
+    public Task<IActionResult> RunRatingReminders(
         [FromServices] ISchedulerCallerAuthenticator authenticator,
         [FromServices] IRatingReminderPass pass,
-        CancellationToken ct)
-    {
-        var verdict = await authenticator.AuthenticateAsync(PresentedCredentials(), ct);
-        if (verdict == SchedulerCallerVerdict.NotConfigured)
-            return StatusCode(StatusCodes.Status503ServiceUnavailable);
-
-        if (verdict != SchedulerCallerVerdict.Accepted)
-            return Unauthorized();
-
-        var result = await pass.RunAsync(ct);
-        return Ok(result);
-    }
+        CancellationToken ct) =>
+        RunPassAsync(authenticator, () => pass.RunAsync(ct), result => result.DeliveryFailures > 0, ct);
 
     private const string BearerPrefix = "Bearer ";
 
