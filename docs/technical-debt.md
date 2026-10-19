@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-069`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-076`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -432,6 +432,64 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: un « Signaler cette photo » sur le profil public qui prévient l'administrateur, et un geste de retrait qui supprime la photo et rend l'avatar généré
 - piege: retirer une photo à la main demande d'effacer le document de `avatar_photos` et de remettre `avatarPhoto` à `null` sur l'utilisateur ; sans le second geste, le profil pointe vers une image en 404 et retombe sans bruit sur les initiales
 - refs: cadrage du 2026-10-03 de la feature « Photo de profil personnalisée » (modération écartée de la V1.7)
+
+
+## DEBT-070 la pioche perd le focus quand l'écran change de format, et tire dans une liste figée
+
+- state: agent
+- impact: deux défauts de la pioche aléatoire de Ma liste. Si l'écran franchit 768 px pendant que la pioche est ouverte (téléphone tourné en paysage), `ResponsiveDialog` remplace la feuille par la modale et l'en-tête de la page change de branche : à la fermeture, le focus clavier tombe sur `body` au lieu de revenir sur « Piocher », et l'animation d'atterrissage rejoue. Le tirage se fait aussi sur la copie de la liste prise à l'ouverture : un titre retiré pendant que la pioche est ouverte (synchro Letterboxd lancée au chargement, retrait encore en cours) peut encore être tiré et proposé à une soirée.
+- ou: `apps/web/src/shared/components/ResponsiveDialog.tsx`, `apps/web/src/features/watchlist/components/RandomPickDialog.tsx` (pool initialisé une fois), `apps/web/src/features/watchlist/pages/WatchlistPage.tsx`
+- verify: `grep -n "const \[{ pool, keys }\] = useState(" apps/web/src/features/watchlist/components/RandomPickDialog.tsx` ; encore ouvert tant que la ligne sort
+- fix: retirer du pool les clés absentes des `items` courants, sans re-tirer tant que le titre affiché y reste ; rendre le focus au bouton « Piocher » de la branche montée à la fermeture
+
+
+## DEBT-071 la relance du lendemain oublie une soirée dont le film est tiré tard
+
+- state: differe
+- declencheur: un participant qui signale ne jamais avoir été relancé, ou des tirages fréquents plusieurs jours après la soirée
+- impact: la passe de 10 h ne regarde que les soirées commencées dans les trois jours de Paris précédents. Une soirée restée en suspens (sept jours possibles) dont l'hôte tire le film trois jours ou plus après la date n'est jamais relancée, alors qu'elle vient de se terminer.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs`, `ListWithWinnerStartingBetweenAsync` de `MongoEventRepository`
+- verify: `grep -n "ListWithWinnerStartingBetweenAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs` ; encore ouvert tant que la ligne sort
+- fix: borner la fenêtre sur le tirage le plus récent (`Winners[].PickedAt`) ou sur la fin effective de la soirée plutôt que sur son début, avec l'index qui va avec
+
+
+## DEBT-072 le serveur croit le titre et l'année d'un favori envoyés par le client
+
+- state: differe
+- declencheur: un favori au titre fantaisiste vu sur un profil public
+- impact: `POST /api/v1/users/me/favorites` enregistre `title` et `year` tels quels ; seuls l'identifiant TMDB et l'affiche sont contrôlés. Un appel forgé à la main affiche n'importe quel texte (500 caractères au plus) sous « Ses favoris » pour tous les visiteurs, et la fiche ouverte au clic est celle de l'identifiant, pas du titre affiché. La watchlist fait la même confiance au client.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Favorites/AddFavoriteHandler.cs`
+- verify: `grep -c "ITmdbMovieSearch" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Favorites/AddFavoriteHandler.cs` ; encore ouvert tant que la commande rend `0`
+- fix: relire titre, année et affiche chez TMDB par l'identifiant et le type, en ignorant ceux du client
+
+
+## DEBT-073 une photo de profil envoyée hors de l'app garde ses métadonnées, et l'ancienne disparaît trop tôt
+
+- state: differe
+- declencheur: une photo servie avec ses coordonnées GPS, ou un signalement d'avatars passés aux initiales juste après un changement de photo
+- impact: le serveur vérifie le format, l'en-tête et les dimensions, mais stocke les octets reçus. L'app réencode toujours sur canvas, donc l'usage normal n'est pas touché ; un envoi forgé garde EXIF et GPS, et peut glisser jusqu'à 512 Ko de données arbitraires derrière un en-tête valide, servies en `public, immutable`. Au remplacement, l'ancienne image est supprimée aussitôt : les vues qui ont encore l'ancienne clé (participants d'une soirée jusqu'à une minute, listes du propriétaire en cache) affichent les initiales jusqu'au prochain rechargement.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/Avatars/AvatarPhotoImage.cs`, `Application/Avatars/AvatarPhotoWriter.cs`, `Application/UseCases/AvatarPhotos/UploadAvatarPhotoHandler.cs`
+- verify: `grep -c "ImageMetadataStripper" apps/api-dotnet/MoviePicker.Api/Application/UseCases/AvatarPhotos/UploadAvatarPhotoHandler.cs` ; encore ouvert tant que la commande rend `0`
+- fix: passer les octets par `ImageMetadataStripper` (déjà utilisé pour les pièces jointes des suggestions) ou les réencoder côté serveur ; garder l'ancienne image quelques minutes avant de la supprimer
+
+
+## DEBT-074 l'aperçu du recap `/r/<slug>` n'a de quota que par slug
+
+- state: agent
+- impact: le document `/r/<slug>` (page recap et son aperçu de partage) échappe au plafond par adresse et au limiteur global, parce que derrière Firebase Hosting toutes les requêtes arrivent des adresses de Google. Seul compte un quota de 120 requêtes par minute et par slug, partagé dans Mongo. La route répond pourtant aussi en direct sur l'adresse de l'API : un client peut boucler sur des slugs au hasard sans frein (une lecture `events` et un upsert de compteur à chaque fois), ou épuiser le quota d'un recap connu, et chaque visiteur sans cache CDN reçoit alors un 429 brut au lieu de la page.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` (`IsProxied`, `RecapDocumentPolicy`), `Infrastructure/Web/SharedRateLimitFilter.cs`, `Controllers/EventRecapController.cs`
+- verify: `grep -n "Scope: QuotaScope.Slug }" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` ; encore ouvert tant que la ligne sort
+- fix: distinguer l'appel relayé par Hosting de l'appel direct (en-tête posé par la réécriture, ou entrée réservée à Hosting) et garder le plafond par adresse pour l'appel direct
+
+
+## DEBT-075 juste après un déploiement du front, `/r/<slug>` peut servir une coquille périmée
+
+- state: differe
+- declencheur: un recap signalé bloqué sur l'écran de démarrage, ou des 404 sur `/assets/index-*.js` dans les journaux de Hosting après un déploiement
+- impact: l'API garde `index.html` 60 s en mémoire et sert le document du recap en `public, max-age=60`. `deploy-front` passe après `deploy-api`, et les anciens `/assets/index-<hash>.js` répondent 404 sur la nouvelle version de Hosting : pendant une à deux minutes après chaque déploiement du front (ou retour arrière), un visiteur sans service worker qui ouvre un recap reste sur l'écran de démarrage.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` (`CacheTtl`), `Controllers/EventRecapController.cs`, `.github/workflows/deploy.yml`
+- verify: `grep -n "CacheTtl = TimeSpan.FromSeconds(60)" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` ; encore ouvert tant que la ligne sort
+- fix: relire la coquille quand elle désigne un fichier absent (un 404 sur ses assets vide le cache), ou garder les assets de la version précédente servis quelques minutes après le déploiement
 
 ---
 
