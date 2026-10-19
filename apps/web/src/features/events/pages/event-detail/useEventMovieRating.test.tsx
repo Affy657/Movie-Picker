@@ -98,6 +98,22 @@ describe('useEventMovieRating', () => {
     expect(refreshAll).toHaveBeenCalledTimes(1);
   });
 
+  it('treats a rating already cleared elsewhere as cleared, and refreshes', async () => {
+    mockDelete.mockRejectedValueOnce(
+      new ApiError('Note introuvable.', { code: 404, reason: 'rating_not_found' })
+    );
+    const { hook, refreshAll } = renderRating();
+
+    let done = false;
+    await act(async () => {
+      done = await hook.result.current.clear('m1');
+    });
+
+    expect(done).toBe(true);
+    expect(refreshAll).toHaveBeenCalledTimes(1);
+    expect(hook.result.current.error).toBeNull();
+  });
+
   it('does nothing without a participation', async () => {
     const { hook } = renderRating(vi.fn(), null);
 

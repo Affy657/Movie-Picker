@@ -30,6 +30,8 @@ function fillOf(tenths: number, star: number): StarFill {
   return 'empty';
 }
 
+const PRESSED: Record<StarFill, boolean | 'mixed'> = { full: true, half: 'mixed', empty: false };
+
 function hasFinePointer(): boolean {
   return typeof window.matchMedia === 'function' && window.matchMedia('(pointer: fine)').matches;
 }
@@ -84,7 +86,7 @@ export default function StarRating({
             className={styles.star}
             data-fill={fill}
             aria-label={starLabel(star)}
-            aria-pressed={value !== null && value >= star * 2 - 1}
+            aria-pressed={PRESSED[fillOf(value ?? 0, star)]}
             onClick={(event) => pick(event, star)}
             onKeyDown={step}
             onMouseMove={(event) => {

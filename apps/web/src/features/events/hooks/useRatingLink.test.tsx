@@ -116,4 +116,36 @@ describe('useRatingLink', () => {
     expect(result.current.search).toBe('?host=abc');
     expect(result.current.movieId).toBeNull();
   });
+
+  it('drops the parameter when every winner is already rated, so clearing one later opens nothing', () => {
+    const { result, rerender } = renderHook(
+      ({ winners }: { winners: MovieData[] }) => useLinkWithSearch(winners, 'p1', true),
+      {
+        wrapper: wrapperAt('?tab=movies&rate'),
+        initialProps: { winners: [movie('m1', ['p1'])] },
+      }
+    );
+
+    expect(result.current.search).toBe('?tab=movies');
+
+    rerender({ winners: [movie('m1')] });
+
+    expect(result.current.movieId).toBeNull();
+  });
+
+  it('keeps the parameter while the winners are not known yet', () => {
+    const { result } = renderHook(() => useLinkWithSearch([], 'p1', true), {
+      wrapper: wrapperAt('?rate'),
+    });
+
+    expect(result.current.search).toBe('?rate');
+  });
+
+  it('keeps the parameter until the participant is known', () => {
+    const { result } = renderHook(() => useLinkWithSearch([movie('m1', ['p1'])], null, true), {
+      wrapper: wrapperAt('?rate'),
+    });
+
+    expect(result.current.search).toBe('?rate');
+  });
 });

@@ -1,9 +1,17 @@
 import { useCallback, useState } from 'react';
 import { deleteMovieRating, setMovieRating } from '@/features/movies/api/moviesApi';
-import { getErrorMessage } from '@/shared/api/apiError';
+import { API_ERROR_REASONS, ApiError, getErrorMessage } from '@/shared/api/apiError';
 import { useTranslation } from '@/shared/i18n';
 
 type ParticipantRef = { participantId: string; pseudo: string };
+
+async function deleteIfStillThere(slug: string, movieId: string, participantId: string) {
+  try {
+    await deleteMovieRating(slug, movieId, participantId);
+  } catch (e) {
+    if (!ApiError.is(e) || e.reason !== API_ERROR_REASONS.ratingNotFound) throw e;
+  }
+}
 
 interface EventMovieRatingInput {
   slug: string;
@@ -47,7 +55,7 @@ export function useEventMovieRating({ slug, participant, refreshAll }: EventMovi
   const clear = useCallback(
     (movieId: string) =>
       run(
-        (participantId) => deleteMovieRating(slug, movieId, participantId),
+        (participantId) => deleteIfStillThere(slug, movieId, participantId),
         t('events.ratings.clearError')
       ),
     [run, slug, t]

@@ -1170,6 +1170,7 @@ export const fr = {
       starAriaMany: 'Noter {{count}} étoiles',
       pickHint: 'Touchez une étoile',
       halfHint: 'Un second tap sur la même étoile donne une demi-étoile.',
+      halfHintPointer: "Cliquez sur la moitié gauche d'une étoile pour une demi-étoile.",
       listTitle: 'Les notes de la soirée',
       average: 'Moyenne {{value}}',
       nobodyYet: "Personne n'a encore noté ce film.",

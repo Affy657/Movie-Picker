@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router';
 import { RATE_QUERY_PARAM } from '@/app/routes';
 import type { MovieData } from '@/shared/types/movie';
@@ -33,5 +33,10 @@ export function useRatingLink(
     next.delete(RATE_QUERY_PARAM);
     setSearchParams(next, { replace: true });
   }, [requested, searchParams, setSearchParams]);
+  const nothingLeftToRate =
+    requested && movieId === null && !!participantId && isFinished && winners.length > 0;
+  useEffect(() => {
+    if (nothingLeftToRate) consume();
+  }, [nothingLeftToRate, consume]);
   return { movieId, consume };
 }

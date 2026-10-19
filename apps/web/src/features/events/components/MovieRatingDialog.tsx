@@ -4,6 +4,7 @@ import Button from '@/shared/components/Button';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import StarRating from '@/shared/components/StarRating';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { RatingScale } from '@/shared/types/theme';
@@ -40,6 +41,7 @@ export default function MovieRatingDialog({
   onClear,
 }: Readonly<Props>) {
   const { t, locale } = useTranslation();
+  const finePointer = useMediaQuery('(pointer: fine)');
   const [draft, setDraft] = useState<number | null>(mine);
   const title = t(canRate ? 'events.ratings.dialogTitleRate' : 'events.ratings.dialogTitleRead');
   const poster = posterImageSrc(movie.posterPath);
@@ -78,7 +80,9 @@ export default function MovieRatingDialog({
               formatRating(draft, scale, locale)
             )}
           </output>
-          <p className={styles.hint}>{t('events.ratings.halfHint')}</p>
+          <p className={styles.hint}>
+            {t(finePointer ? 'events.ratings.halfHintPointer' : 'events.ratings.halfHint')}
+          </p>
         </div>
       ) : null}
 

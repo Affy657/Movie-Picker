@@ -34,6 +34,18 @@ describe('StarRating', () => {
       expect(b).toHaveAttribute('aria-pressed', 'false');
   });
 
+  it('tells assistive technology which star is only half pressed', () => {
+    renderStars(7);
+
+    expect(screen.getAllByRole('button').map((b) => b.getAttribute('aria-pressed'))).toEqual([
+      'true',
+      'true',
+      'true',
+      'mixed',
+      'false',
+    ]);
+  });
+
   it('a tap on a star gives that many full stars', async () => {
     const onChange = renderStars(null);
 

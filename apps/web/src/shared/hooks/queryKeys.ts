@@ -15,6 +15,7 @@ export const queryKeys = {
     stats: (handle: string | undefined) => ['profile', 'stats', handle ?? '$pending'] as const,
     userSearches: ['profile', 'user-search'] as const,
     userSearch: (query: string) => ['profile', 'user-search', query] as const,
+    watchedMoviesAll: ['profile', 'watchedMovies'] as const,
     watchedMovies: (handle: string | undefined, take: number) =>
       ['profile', 'watchedMovies', handle ?? '$pending', take] as const,
     watchlistOf: (handle: string) => ['profile', 'watchlist', handle] as const,

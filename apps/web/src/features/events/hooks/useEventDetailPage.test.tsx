@@ -119,6 +119,29 @@ describe('useEventDetailPage', () => {
     expect(client.getQueryState(queryKeys.myEvents.active)?.isInvalidated).toBe(true);
   });
 
+  it('marks the watched movies of the profiles stale, so a new rating shows there', async () => {
+    serveEventNever();
+    const client = createTestQueryClient();
+    client.setQueryData(queryKeys.profile.watchedMovies('me', 6), { items: [] });
+    client.setQueryData(queryKeys.profile.watchedMovies('me', 500), { items: [] });
+    const { result } = renderHook(() => useEventDetailPage(slug), {
+      wrapper: ({ children }: Readonly<{ children: ReactNode }>) => (
+        <QueryClientWrapper client={client}>
+          <MemoryRouter initialEntries={[`/e/${slug}`]}>{children}</MemoryRouter>
+        </QueryClientWrapper>
+      ),
+    });
+
+    act(() => result.current.refreshAll());
+
+    expect(client.getQueryState(queryKeys.profile.watchedMovies('me', 6))?.isInvalidated).toBe(
+      true
+    );
+    expect(client.getQueryState(queryKeys.profile.watchedMovies('me', 500))?.isInvalidated).toBe(
+      true
+    );
+  });
+
   it('keeps the fragment and the navigation state when it moves a legacy host token into the session', async () => {
     serveEventNever();
 

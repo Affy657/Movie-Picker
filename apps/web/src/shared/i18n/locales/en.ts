@@ -1149,6 +1149,7 @@ export const en: Locale = {
       starAriaMany: 'Rate {{count}} stars',
       pickHint: 'Tap a star',
       halfHint: 'Tap the same star again for a half star.',
+      halfHintPointer: 'Click the left half of a star for a half star.',
       listTitle: "The night's ratings",
       average: 'Average {{value}}',
       nobodyYet: 'Nobody has rated this movie yet.',

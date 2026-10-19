@@ -3,6 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
 import MovieRatingDialog from '@/features/events/components/MovieRatingDialog';
+import { stubMatchMedia } from '@/test-utils/matchMedia';
 import type { ParticipantRating } from '@/features/events/components/RatingNotes';
 
 const movie = { title: 'The Matrix', year: '1999', posterPath: null };
@@ -48,6 +49,25 @@ describe('MovieRatingDialog', () => {
     expect(screen.getByText('Touchez une étoile')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Effacer ma note' })).not.toBeInTheDocument();
+  });
+
+  it('on a touch screen, explains the second tap for a half star', () => {
+    stubMatchMedia(false);
+    renderDialog();
+
+    expect(
+      screen.getByText('Un second tap sur la même étoile donne une demi-étoile.')
+    ).toBeInTheDocument();
+  });
+
+  it('with a mouse, explains the left half of a star instead', () => {
+    stubMatchMedia((query) => query.includes('pointer: fine'));
+    renderDialog();
+
+    expect(
+      screen.getByText("Cliquez sur la moitié gauche d'une étoile pour une demi-étoile.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/second tap/)).not.toBeInTheDocument();
   });
 
   it('shows the picked value in the reader scale and saves it out of 10', async () => {
