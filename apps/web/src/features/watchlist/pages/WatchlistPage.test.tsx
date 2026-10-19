@@ -767,7 +767,7 @@ describe('WatchlistPage (MSW)', () => {
     async function openPick(name: string) {
       const user = userEvent.setup();
       await user.click(await screen.findByRole('button', { name }));
-      return { user, dialog: await screen.findByRole('dialog', { name: 'Piocher un film' }) };
+      return { user, dialog: await screen.findByRole('dialog', { name: 'Piocher un titre' }) };
     }
 
     it('draws a title of the list and proposes it to an event', async () => {

@@ -1504,7 +1504,7 @@ export const fr = {
       trigger: 'Piocher un film',
       triggerSelection: 'Piocher dans la sélection',
       triggerShort: 'Piocher',
-      title: 'Piocher un film',
+      title: 'Piocher un titre',
       poolList: 'Au hasard parmi les {{count}} titres de votre liste.',
       poolListOne: 'Le seul titre de votre liste.',
       poolSelection: 'Au hasard parmi les {{count}} titres de votre sélection.',

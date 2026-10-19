@@ -1480,7 +1480,7 @@ export const en: Locale = {
       trigger: 'Pick a random movie',
       triggerSelection: 'Pick from the selection',
       triggerShort: 'Pick',
-      title: 'Pick a random movie',
+      title: 'Pick a random title',
       poolList: 'Picked at random from the {{count}} titles on your watchlist.',
       poolListOne: 'The only title on your watchlist.',
       poolSelection: 'Picked at random from the {{count}} titles in your selection.',

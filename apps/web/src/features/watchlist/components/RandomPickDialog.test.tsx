@@ -58,7 +58,7 @@ describe('RandomPickDialog, reduced motion', () => {
   it('shows the drawn title at once with its year, rating and runtime', () => {
     renderDialog();
 
-    const dialog = screen.getByRole('dialog', { name: 'Piocher un film' });
+    const dialog = screen.getByRole('dialog', { name: 'Piocher un titre' });
     expect(within(dialog).getByRole('heading', { name: 'Beetlejuice', level: 3 })).toBeVisible();
     expect(dialog).toHaveTextContent('1988');
     expect(dialog).toHaveTextContent('7.4/10');
@@ -70,10 +70,38 @@ describe('RandomPickDialog, reduced motion', () => {
     );
   });
 
-  it('announces the drawn title to screen readers', () => {
+  it('names the dialog after a title rather than a movie, since it can draw a series', () => {
     renderDialog();
 
-    expect(screen.getByText('Tiré au hasard : Beetlejuice')).toHaveAttribute('aria-live', 'polite');
+    expect(screen.getByRole('dialog', { name: 'Piocher un titre' })).toBeInTheDocument();
+  });
+
+  it('marks a drawn series as one, so it is not proposed to a night that refuses series', () => {
+    renderDialog({ items: [film(9, 'Severance', { mediaType: 'tv' })] });
+
+    expect(within(screen.getByRole('dialog')).getByText('Série')).toBeVisible();
+  });
+
+  it('adds no series mark to a movie', () => {
+    renderDialog();
+
+    expect(within(screen.getByRole('dialog')).queryByText('Série')).not.toBeInTheDocument();
+  });
+
+  it('announces the drawn title to screen readers once the live region is in place', async () => {
+    renderDialog();
+
+    const region = screen.getByRole('dialog').querySelector('[aria-live="polite"]');
+    expect(region).toHaveTextContent(/^$/);
+    expect(await screen.findByText('Tiré au hasard : Beetlejuice')).toBe(region);
+  });
+
+  it('announces the only title of a list too, though nothing shuffles', async () => {
+    renderDialog({ items: [WHIPLASH] });
+
+    const region = screen.getByRole('dialog').querySelector('[aria-live="polite"]');
+    expect(region).toHaveTextContent(/^$/);
+    expect(await screen.findByText('Tiré au hasard : Whiplash')).toBe(region);
   });
 
   it('draws a title not seen yet with Piocher un autre', async () => {
@@ -89,7 +117,7 @@ describe('RandomPickDialog, reduced motion', () => {
       items: [film(9, 'Sans infos', { voteAverage: null, runtimeMinutes: null }), NOPE],
     });
 
-    const dialog = screen.getByRole('dialog', { name: 'Piocher un film' });
+    const dialog = screen.getByRole('dialog', { name: 'Piocher un titre' });
     expect(within(dialog).getByRole('heading', { name: 'Sans infos', level: 3 })).toBeVisible();
     expect(dialog).not.toHaveTextContent('/10');
     expect(dialog).not.toHaveTextContent(/\dh/);

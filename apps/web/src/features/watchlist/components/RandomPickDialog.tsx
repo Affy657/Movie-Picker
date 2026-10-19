@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { CalendarPlus, Clock, Dices, Film, Star } from 'lucide-react';
 import Button from '@/shared/components/Button';
+import Chip from '@/shared/components/Chip';
 import LinkButton from '@/shared/components/LinkButton';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import { Skeleton } from '@/shared/components/Skeleton';
@@ -53,6 +54,15 @@ function DrawnPoster({ item }: Readonly<{ item: WatchlistEntry | undefined }>) {
   return <img src={src} alt="" className={styles.poster} decoding="async" />;
 }
 
+function useLiveRegionReady() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const frame = globalThis.requestAnimationFrame(() => setReady(true));
+    return () => globalThis.cancelAnimationFrame(frame);
+  }, []);
+  return ready;
+}
+
 function DrawnFacts({
   item,
   ratingScale,
@@ -70,6 +80,11 @@ function DrawnFacts({
       <h3 className={styles.title}>{item.title}</h3>
       <p className={styles.meta}>
         {item.year ? <span>{item.year}</span> : null}
+        {item.mediaType === 'tv' ? (
+          <Chip size="sm" tone="muted">
+            {t('movies.list.tvBadge')}
+          </Chip>
+        ) : null}
         {vote ? (
           <span>
             <Star size={ICON_SIZE.sm} aria-hidden />
@@ -139,6 +154,7 @@ export default function RandomPickDialog({
     return { pool: byKey, keys: [...byKey.keys()] };
   });
   const { current, shown, shuffling, canDrawAgain, drawAgain } = useRandomPick(keys, pickIndex);
+  const announceReady = useLiveRegionReady();
   const drawn = current === null ? undefined : pool.get(current);
   if (!drawn) return null;
 
@@ -167,7 +183,9 @@ export default function RandomPickDialog({
           <DrawnFacts item={drawn} ratingScale={ratingScale} onOpenDetails={onOpenDetails} />
         )}
         <p className="visually-hidden" aria-live="polite">
-          {shuffling ? '' : t('watchlist.randomPick.announce', { title: drawn.title })}
+          {announceReady && !shuffling
+            ? t('watchlist.randomPick.announce', { title: drawn.title })
+            : ''}
         </p>
       </div>
     </div>
