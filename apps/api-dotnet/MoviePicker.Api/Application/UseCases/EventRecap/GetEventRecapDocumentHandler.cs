@@ -19,6 +19,7 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
     private readonly IPosterImageStore _posterImageStore;
     private readonly IWebShellSource _shell;
     private readonly MoviePickerOptions _options;
+    private readonly TimeProvider _clock;
 
     public GetEventRecapDocumentHandler(
         IEventRepository events,
@@ -27,7 +28,8 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
         IMovieRatingRepository ratings,
         IPosterImageStore posterImageStore,
         IWebShellSource shell,
-        IOptions<MoviePickerOptions> options)
+        IOptions<MoviePickerOptions> options,
+        TimeProvider clock)
     {
         _events = events;
         _movies = movies;
@@ -36,12 +38,13 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
         _posterImageStore = posterImageStore;
         _shell = shell;
         _options = options.Value;
+        _clock = clock;
     }
 
     public async Task<EventRecapDocument> HandleAsync(string slug, string apiPublicBaseUrl, CancellationToken ct = default)
     {
         var webBase = _options.ResolvedWebBaseUrl();
-        var evt = await _events.GetByIdOrSlugAsync(slug, ct);
+        var evt = await _events.GetByRecapSlugAsync(slug, ct);
         var preview = evt is null
             ? EventRecapPreview.Generic(webBase)
             : await DescribeAsync(evt, webBase, apiPublicBaseUrl.Trim().TrimEnd('/'), ct);
@@ -54,8 +57,8 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
 
     private async Task<EventRecapPreview> DescribeAsync(Event evt, string webBase, string apiBase, CancellationToken ct)
     {
-        var canonical = $"{webBase}/r/{evt.Slug}";
-        var fallbackUrl = $"{webBase}/e/{evt.Slug}";
+        var canonical = $"{webBase}/r/{evt.RecapSlug}";
+        var fallbackUrl = $"{webBase}/";
         var title = $"{evt.Title}, le recap";
         var fallbackImage = $"{webBase}/og-image.png";
         var first = evt.HasWinner ? (await WinnerMovies.ListAsync(_movies, evt, ct)).FirstOrDefault() : null;
@@ -79,17 +82,19 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
             canonical,
             fallbackUrl,
             title,
-            BuildDescription(evt, first, ratings, participantCount),
+            BuildDescription(evt, first, ratings, participantCount, evt.IsFinished(_clock.GetUtcNow())),
             image,
             image == fallbackImage ? EventRecapPreview.SiteName : $"Affiche de {first.Title}");
     }
 
-    private static string BuildDescription(Event evt, Movie movie, List<int> ratings, int participantCount)
+    private static string BuildDescription(Event evt, Movie movie, List<int> ratings, int participantCount, bool finished)
     {
         var film = string.IsNullOrWhiteSpace(movie.Year) ? movie.Title : $"{movie.Title} ({movie.Year})";
         var day = DateOnly.TryParse(evt.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
             ? date.ToString("dddd d MMMM yyyy", FrCulture)
             : evt.Date;
+        if (!finished)
+            return $"Au programme : {film} le {day}, avec {Participants(participantCount)}.";
         if (ratings.Count == 0)
             return $"On a vu {film} le {day}, avec {Participants(participantCount)}.";
 

@@ -96,9 +96,9 @@ export default function NightRecapHeader({
         <EventShareDialog
           open={shareOpen}
           onClose={() => setShareOpen(false)}
-          slug={event.slug}
+          slug={event.recapSlug ?? ''}
           event={event}
-          shareUrl={nightRecapFrontendUrl(event.slug)}
+          shareUrl={nightRecapFrontendUrl(event.recapSlug ?? '')}
           recap={{ winners }}
           dateFormatted={dateFormatted}
           timeFormatted={formatEventTime(event.time)}

@@ -10,6 +10,7 @@ public sealed class EventDetailResponse
     public string Date { get; init; } = string.Empty;
     public string Time { get; init; } = string.Empty;
     public string Slug { get; init; } = string.Empty;
+    public string? RecapSlug { get; init; }
     public required EventConfigResponse Config { get; init; }
     public DateTimeOffset? ClosedAt { get; init; }
     public IReadOnlyList<EventWinnerResponse> Winners { get; init; } =

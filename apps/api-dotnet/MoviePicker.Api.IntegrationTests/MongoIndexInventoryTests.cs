@@ -28,6 +28,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("users", "users_identities_provider_subject_unique", Unique: true),
 
         new("events", "events_slug_unique", Unique: true),
+        new("events", "events_recapSlug_unique", Unique: true),
         new("events", "events_creatorUserId"),
         new("events", "events_recurrence_creatorUserId"),
         new("events", "events_startAtUtc"),

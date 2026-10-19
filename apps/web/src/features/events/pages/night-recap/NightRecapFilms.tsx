@@ -11,6 +11,7 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useTranslation } from '@/shared/i18n';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
+import type { RatingScale } from '@/shared/types/theme';
 import styles from './NightRecap.module.css';
 
 function recapRows(movie: MovieData, event: EventData, myParticipantId: string | null) {
@@ -27,14 +28,50 @@ function recapRows(movie: MovieData, event: EventData, myParticipantId: string |
   return [...rows.filter((r) => r.isSelf), ...rows.filter((r) => !r.isSelf)];
 }
 
+function RecapRatings({
+  movie,
+  event,
+  myParticipantId,
+  scale,
+}: Readonly<{
+  movie: MovieData;
+  event: EventData;
+  myParticipantId: string | null;
+  scale: RatingScale;
+}>) {
+  const { t } = useTranslation();
+  return (
+    <RatingNotes
+      participants={recapRows(movie, event, myParticipantId)}
+      scale={scale}
+      alwaysList
+      selfAction={
+        myParticipantId ? (
+          <Link
+            to={ROUTES.eventDetailRating(event.slug, movie.id)}
+            className={buttonClass({
+              variant: 'primary',
+              size: 'sm',
+              className: styles.rateLink,
+            })}
+          >
+            <Star size={ICON_SIZE.sm} aria-hidden />
+            {t('events.recap.rateAction')}
+          </Link>
+        ) : null
+      }
+    />
+  );
+}
+
 export default function NightRecapFilms({
   event,
   winners,
 }: Readonly<{ event: EventData; winners: MovieData[] }>) {
-  const { t } = useTranslation();
   const { user } = useAuth();
   const myParticipantId = event.myParticipant?.id ?? null;
   const scale = user?.ratingScale ?? 'five';
+  const isFinished = !!event.isFinished;
   const participantAvatars = useMemo(
     () =>
       Object.fromEntries(
@@ -49,31 +86,21 @@ export default function NightRecapFilms({
     <div className={styles.films}>
       <EventWinnerSummary
         winners={winners}
-        isFinished={!!event.isFinished}
+        isFinished={isFinished}
         participantAvatars={participantAvatars}
         posterSize="lg"
-        renderRating={(movie) => (
-          <RatingNotes
-            participants={recapRows(movie, event, myParticipantId)}
-            scale={scale}
-            alwaysList
-            selfAction={
-              myParticipantId ? (
-                <Link
-                  to={ROUTES.eventDetailRating(event.slug, movie.id)}
-                  className={buttonClass({
-                    variant: 'primary',
-                    size: 'sm',
-                    className: styles.rateLink,
-                  })}
-                >
-                  <Star size={ICON_SIZE.sm} aria-hidden />
-                  {t('events.recap.rateAction')}
-                </Link>
-              ) : null
-            }
-          />
-        )}
+        renderRating={
+          isFinished
+            ? (movie) => (
+                <RecapRatings
+                  movie={movie}
+                  event={event}
+                  myParticipantId={myParticipantId}
+                  scale={scale}
+                />
+              )
+            : undefined
+        }
       />
     </div>
   );

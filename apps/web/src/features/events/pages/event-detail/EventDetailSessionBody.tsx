@@ -164,13 +164,15 @@ export default function EventDetailSessionBody({
           participantAvatars={participantAvatars}
           rating={rating}
           action={
-            <Link
-              to={ROUTES.nightRecap(slug)}
-              className={buttonClass({ variant: 'ghost', size: 'sm' })}
-            >
-              {t('events.recap.viewRecap')}
-              <ArrowRight size={ICON_SIZE.sm} aria-hidden />
-            </Link>
+            event.recapSlug ? (
+              <Link
+                to={ROUTES.nightRecap(event.recapSlug)}
+                className={buttonClass({ variant: 'ghost', size: 'sm' })}
+              >
+                {t('events.recap.viewRecap')}
+                <ArrowRight size={ICON_SIZE.sm} aria-hidden />
+              </Link>
+            ) : undefined
           }
         />
       )}

@@ -635,6 +635,7 @@ describe('EventDetail (MSW)', () => {
 
   describe('the recap of the night', () => {
     const myPid = 'p-msw-alice';
+    const recapSlug = 'recap-msw-1';
 
     function serveNightWithWinner(isFinished: boolean, withWinner = true) {
       server.use(
@@ -645,6 +646,7 @@ describe('EventDetail (MSW)', () => {
             date: '2026-09-19',
             time: '21:00',
             slug,
+            recapSlug,
             isHost: false,
             isFinished,
             lifecycle: isFinished ? 'finished' : 'live',
@@ -697,14 +699,14 @@ describe('EventDetail (MSW)', () => {
       const card = await screen.findByRole('region', { name: 'Le film de la soirée' });
       expect(within(card).getByRole('link', { name: 'Voir le recap' })).toHaveAttribute(
         'href',
-        `/r/${slug}`
+        `/r/${recapSlug}`
       );
 
       await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
 
       const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
       expect(
-        within(dialog).getByText(`${globalThis.location.origin}/r/${slug}`)
+        within(dialog).getByText(`${globalThis.location.origin}/r/${recapSlug}`)
       ).toBeInTheDocument();
       expect(within(dialog).getByText('Matrix')).toBeInTheDocument();
       expect(within(dialog).getByText('Moyenne 4,0/5, 1 note')).toBeInTheDocument();
@@ -718,7 +720,7 @@ describe('EventDetail (MSW)', () => {
       const card = await screen.findByRole('region', { name: 'Ce soir, vous regardez' });
       expect(within(card).getByRole('link', { name: 'Voir le recap' })).toHaveAttribute(
         'href',
-        `/r/${slug}`
+        `/r/${recapSlug}`
       );
 
       await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
@@ -740,7 +742,7 @@ describe('EventDetail (MSW)', () => {
 
       const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
       expect(
-        within(dialog).getByText(`${globalThis.location.origin}/r/${slug}`)
+        within(dialog).getByText(`${globalThis.location.origin}/r/${recapSlug}`)
       ).toBeInTheDocument();
       expect(within(dialog).queryByText('Matrix')).not.toBeInTheDocument();
     });

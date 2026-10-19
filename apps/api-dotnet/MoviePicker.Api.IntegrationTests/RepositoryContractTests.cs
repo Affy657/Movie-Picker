@@ -66,6 +66,34 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task RecapLookup_ResolvesTheRecapSlug_ButNeverTheNightSlug()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var created = await events.AddAsync(NewEvent("Recap") with { RecapSlug = "recap-" + Guid.NewGuid().ToString("N")[..10] });
+
+        Assert.Equal(created.Id, (await events.GetByRecapSlugAsync(created.RecapSlug!))?.Id);
+        Assert.Null(await events.GetByRecapSlugAsync(created.Slug));
+        Assert.Null(await events.GetByRecapSlugAsync(" "));
+    }
+
+    [Fact]
+    public async Task NightWithoutRecapSlug_IsListedForTheBackfill_UntilItKeepsOne()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var bare = await events.AddAsync(NewEvent("Sans recap"));
+
+        Assert.Contains(await events.ListMissingRecapSlugAsync(10_000), e => e.Id == bare.Id);
+
+        var recapSlug = "recap-" + Guid.NewGuid().ToString("N")[..10];
+        await events.UpdateAsync(bare with { RecapSlug = recapSlug });
+
+        Assert.DoesNotContain(await events.ListMissingRecapSlugAsync(10_000), e => e.Id == bare.Id);
+        Assert.Equal(recapSlug, (await events.GetByIdOrSlugAsync(bare.Slug))?.RecapSlug);
+    }
+
+    [Fact]
     public async Task PushSubscriptionUpsert_ForAnotherUser_MovesTheEndpointToThatUser()
     {
         using var scope = _factory.Services.CreateScope();

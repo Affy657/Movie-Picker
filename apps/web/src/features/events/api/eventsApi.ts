@@ -25,6 +25,28 @@ export async function fetchEventBySlug(slug: string, hostToken: string | null): 
   return mapEventData(raw);
 }
 
+type RawNightRecap = Omit<RawEventData, '_id' | 'slug' | 'recapSlug'> & {
+  recapSlug: string;
+  eventSlug: string | null;
+  winnerMovies: RawMovieData[];
+};
+
+export type NightRecap = { event: EventData; winners: MovieData[]; eventSlug: string | null };
+
+export async function fetchNightRecap(recapSlug: string): Promise<NightRecap> {
+  const {
+    recapSlug: ownSlug,
+    eventSlug,
+    winnerMovies,
+    ...night
+  } = await fetchApi<RawNightRecap>(apiPath('recaps', recapSlug));
+  return {
+    event: mapEventData({ ...night, _id: '', slug: eventSlug ?? '', recapSlug: ownSlug }),
+    winners: winnerMovies.map(mapMovieData),
+    eventSlug,
+  };
+}
+
 export type CreateEventBody = {
   title: string;
   date: string;

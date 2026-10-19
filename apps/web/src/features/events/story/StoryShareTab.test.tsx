@@ -18,7 +18,8 @@ const movie = (id: string, title: string): MovieData =>
 const winners = [movie('1', 'Inception'), movie('2', 'Heat'), movie('3', 'Matrix')];
 
 const event = {
-  slug: 'abc',
+  slug: 'soiree-privee',
+  recapSlug: 'abc',
   title: 'Soirée du vendredi',
   date: '2026-09-18',
   time: '20:30',

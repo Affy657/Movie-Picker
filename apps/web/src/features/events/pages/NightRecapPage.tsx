@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
@@ -7,9 +6,7 @@ import { APP_DOCUMENT_TITLE, pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useTranslation } from '@/shared/i18n';
-import { useEvent } from '@/features/events/hooks/useEvent';
-import { useMovies } from '@/features/movies/hooks/useMovies';
-import type { MovieData } from '@/shared/types/movie';
+import { useNightRecap } from '@/features/events/hooks/useNightRecap';
 import NightRecapHeader from './night-recap/NightRecapHeader';
 import NightRecapFilms from './night-recap/NightRecapFilms';
 import NightRecapCta from './night-recap/NightRecapCta';
@@ -27,49 +24,36 @@ function isNotFound(error: unknown): boolean {
 export default function NightRecapPage() {
   const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
-  const eventQuery = useEvent(slug, null, { live: false });
-  const event = eventQuery.data ?? null;
-  const winnerIds = useMemo(() => event?.winners?.map((w) => w.movieId) ?? [], [event]);
-  const moviesQuery = useMovies(slug, {
-    enabled: winnerIds.length > 0,
-    participantId: event?.myParticipant?.id ?? null,
-  });
-  const winners = useMemo(
-    () =>
-      winnerIds
-        .map((id) => moviesQuery.data?.find((movie) => movie.id === id))
-        .filter((movie): movie is MovieData => movie !== undefined),
-    [winnerIds, moviesQuery.data]
-  );
+  const recapQuery = useNightRecap(slug);
+  const recap = recapQuery.data ?? null;
 
   usePageSeo({
-    title: event
-      ? pageTitle(t('events.recap.documentTitle', { title: event.title }))
+    title: recap
+      ? pageTitle(t('events.recap.documentTitle', { title: recap.event.title }))
       : APP_DOCUMENT_TITLE,
     noindex: true,
     canonical: slug ? absoluteUrl(ROUTES.nightRecap(slug)) : undefined,
   });
 
   if (!slug) return null;
-  if (eventQuery.isPending) return <NightRecapSkeleton />;
-  if (eventQuery.isError) {
-    if (isNotFound(eventQuery.error)) return <NightRecapNotFound />;
-    return <NightRecapLoadError onRetry={() => void eventQuery.refetch()} />;
+  if (recapQuery.isPending) return <NightRecapSkeleton />;
+  if (recapQuery.isError) {
+    if (isNotFound(recapQuery.error)) return <NightRecapNotFound />;
+    return <NightRecapLoadError onRetry={() => void recapQuery.refetch()} />;
   }
-  if (!event) return null;
-  if (winnerIds.length === 0) {
-    return <NightRecapWaiting slug={slug} title={event.title} finished={!!event.isFinished} />;
+  if (!recap) return null;
+  const { event, winners, eventSlug } = recap;
+  if (winners.length === 0) {
+    return (
+      <NightRecapWaiting eventSlug={eventSlug} title={event.title} finished={!!event.isFinished} />
+    );
   }
-  if (moviesQuery.isError) {
-    return <NightRecapLoadError onRetry={() => void moviesQuery.refetch()} />;
-  }
-  if (moviesQuery.isPending) return <NightRecapSkeleton />;
 
   return (
     <PageLayout>
       <NightRecapHeader event={event} winners={winners} />
       <NightRecapFilms event={event} winners={winners} />
-      <NightRecapCta slug={slug} />
+      <NightRecapCta eventSlug={eventSlug} />
     </PageLayout>
   );
 }

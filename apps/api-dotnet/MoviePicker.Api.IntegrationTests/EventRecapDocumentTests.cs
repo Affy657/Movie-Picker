@@ -20,6 +20,9 @@ public sealed class EventRecapDocumentTests : IClassFixture<MoviePickerApplicati
         return (json.GetProperty("slug").GetString()!, json.GetProperty("creatorParticipant").GetProperty("_id").GetString()!);
     }
 
+    private static async Task<string> RecapSlugOfAsync(HttpClient client, string slug) =>
+        (await client.GetFromJsonAsync<JsonElement>($"/api/v1/events/slug/{slug}")).GetProperty("recapSlug").GetString()!;
+
     private static async Task<string> AddMovieAsync(HttpClient client, string slug, string participantId)
     {
         var res = await client.PostAsJsonAsync(
@@ -40,8 +43,9 @@ public sealed class EventRecapDocumentTests : IClassFixture<MoviePickerApplicati
         (await host.PostAsJsonAsync($"/api/v1/events/{slug}/winner", new { movieId })).EnsureSuccessStatusCode();
         (await host.PostAsJsonAsync($"/api/v1/events/{slug}/close", new { })).EnsureSuccessStatusCode();
         (await host.PutAsJsonAsync($"/api/v1/events/{slug}/movies/{movieId}/rating", new { participantId, value = 9 })).EnsureSuccessStatusCode();
+        var recapSlug = await RecapSlugOfAsync(host, slug);
 
-        var res = await _factory.CreateClient().GetAsync($"/r/{slug}");
+        var res = await _factory.CreateClient().GetAsync($"/r/{recapSlug}");
 
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
         Assert.Equal("text/html", res.Content.Headers.ContentType?.MediaType);
@@ -49,11 +53,24 @@ public sealed class EventRecapDocumentTests : IClassFixture<MoviePickerApplicati
         Assert.Equal("frame-ancestors 'none'", string.Join(", ", res.Headers.GetValues("Content-Security-Policy")));
         var html = await res.Content.ReadAsStringAsync();
         Assert.Contains("<meta property=\"og:title\" content=\"Soirée du vendredi, le recap\" />", html);
-        Assert.Contains($"<meta property=\"og:url\" content=\"https://web.integration.test/r/{slug}\" />", html);
+        Assert.Contains($"<meta property=\"og:url\" content=\"https://web.integration.test/r/{recapSlug}\" />", html);
+        Assert.DoesNotContain(slug, html, StringComparison.Ordinal);
         Assert.Contains("noté 4,5/5 par 1 participant", html);
         Assert.Contains("<div id=\"root\"></div>", html);
         Assert.Contains("src=\"/assets/index.js\"", html);
         Assert.DoesNotContain("Titre du site", html);
+    }
+
+    [Fact]
+    public async Task Recap_TheLinkOfTheNight_IsNotARecapLink()
+    {
+        _factory.FakeWebShell.Next = FakeWebShellSource.Shell;
+        var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var (slug, _) = await CreateEventAsync(host, "Soirée privée");
+
+        var res = await _factory.CreateClient().GetAsync($"/r/{slug}");
+
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
     }
 
     [Fact]
@@ -71,20 +88,22 @@ public sealed class EventRecapDocumentTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
-    public async Task Recap_ShellUnavailable_SendsTheReaderToTheNightPage()
+    public async Task Recap_ShellUnavailable_SendsTheReaderHomeWithoutTheLinkOfTheNight()
     {
         _factory.FakeWebShell.Next = null;
         try
         {
             var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
             var (slug, _) = await CreateEventAsync(host, "Nuit Nolan");
+            var recapSlug = await RecapSlugOfAsync(host, slug);
 
-            var res = await _factory.CreateClient().GetAsync($"/r/{slug}");
+            var res = await _factory.CreateClient().GetAsync($"/r/{recapSlug}");
 
             Assert.Equal(HttpStatusCode.OK, res.StatusCode);
             var html = await res.Content.ReadAsStringAsync();
             Assert.Contains("<meta property=\"og:title\" content=\"Nuit Nolan, le recap\" />", html);
-            Assert.Contains($"url=https://web.integration.test/e/{slug}", html);
+            Assert.Contains("url=https://web.integration.test/\"", html);
+            Assert.DoesNotContain(slug, html, StringComparison.Ordinal);
             Assert.DoesNotContain("id=\"root\"", html);
         }
         finally

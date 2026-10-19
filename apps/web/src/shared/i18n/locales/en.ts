@@ -1182,6 +1182,7 @@ export const en: Locale = {
       share: {
         dialogTitle: 'Share the recap',
         shareText: 'We watched {{movie}} during {{title}}, here is the recap!',
+        shareTextUpcoming: 'On the menu for {{title}}: {{movie}}!',
         shareTextNoMovie: 'Here is the recap of {{title}}!',
         qrHint: 'Open the camera to open the recap on mobile.',
         noRating: 'No rating yet',

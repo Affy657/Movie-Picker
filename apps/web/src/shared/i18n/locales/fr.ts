@@ -1203,6 +1203,7 @@ export const fr = {
       share: {
         dialogTitle: 'Partager le recap',
         shareText: 'On a vu {{movie}} pendant {{title}}, voici le recap !',
+        shareTextUpcoming: 'Au programme de {{title}} : {{movie}} !',
         shareTextNoMovie: 'Voici le recap de {{title}} !',
         qrHint: "Ouvrez l'appareil photo pour ouvrir le recap sur mobile.",
         noRating: 'Pas encore de note',

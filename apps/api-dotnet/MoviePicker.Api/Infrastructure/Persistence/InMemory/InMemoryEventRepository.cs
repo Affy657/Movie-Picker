@@ -153,6 +153,14 @@ public sealed class InMemoryEventRepository : IEventRepository
     public Task<IReadOnlyList<Event>> ListMissingStartAtAsync(int limit, CancellationToken ct = default) =>
         Task.FromResult<IReadOnlyList<Event>>([]);
 
+    public Task<Event?> GetByRecapSlugAsync(string recapSlug, CancellationToken ct = default) =>
+        Task.FromResult(string.IsNullOrWhiteSpace(recapSlug)
+            ? null
+            : _byId.Values.FirstOrDefault(e => e.RecapSlug == recapSlug));
+
+    public Task<IReadOnlyList<Event>> ListMissingRecapSlugAsync(int limit, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<Event>>(_byId.Values.Where(e => e.RecapSlug is null).Take(Math.Max(limit, 0)).ToList());
+
     public Task<IReadOnlyList<Event>> ListOpenEventsStartingBetweenAsync(
         DateTimeOffset fromInclusive,
         DateTimeOffset toInclusive,

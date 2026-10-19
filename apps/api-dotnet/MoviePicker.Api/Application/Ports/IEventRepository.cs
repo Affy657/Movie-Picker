@@ -5,6 +5,7 @@ namespace MoviePicker.Api.Application.Ports;
 public interface IEventRepository
 {
     Task<Event?> GetByIdOrSlugAsync(string slug, CancellationToken ct = default);
+    Task<Event?> GetByRecapSlugAsync(string recapSlug, CancellationToken ct = default);
     Task<Event> AddAsync(Event evt, CancellationToken ct = default);
     Task<Event> UpdateAsync(Event evt, CancellationToken ct = default);
 
@@ -31,6 +32,8 @@ public interface IEventRepository
         CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListMissingStartAtAsync(int limit, CancellationToken ct = default);
+
+    Task<IReadOnlyList<Event>> ListMissingRecapSlugAsync(int limit, CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListWithWinnerStartingBetweenAsync(
         DateTimeOffset fromInclusive,

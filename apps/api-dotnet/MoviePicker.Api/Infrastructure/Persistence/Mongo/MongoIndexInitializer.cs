@@ -107,6 +107,9 @@ public sealed class MongoIndexInitializer : IHostedService
         var slug = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.Slug),
             new CreateIndexOptions { Name = "events_slug_unique", Unique = true });
+        var recapSlug = new CreateIndexModel<EventDocument>(
+            Builders<EventDocument>.IndexKeys.Ascending(x => x.RecapSlug),
+            new CreateIndexOptions { Name = "events_recapSlug_unique", Unique = true, Sparse = true });
         var creator = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.CreatorUserId),
             new CreateIndexOptions { Name = "events_creatorUserId", Sparse = true });
@@ -127,7 +130,7 @@ public sealed class MongoIndexInitializer : IHostedService
         var byWinner = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending("winners.movieId"),
             new CreateIndexOptions { Name = "events_winners_movieId" });
-        plan.Create("events", slug, creator, recurrence, startAt, creationRequest, byWinner);
+        plan.Create("events", slug, recapSlug, creator, recurrence, startAt, creationRequest, byWinner);
     }
 
     private static void EnsureMovieIndexes(MongoIndexPlan plan)

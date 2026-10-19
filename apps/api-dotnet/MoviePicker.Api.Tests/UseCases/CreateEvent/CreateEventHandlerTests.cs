@@ -177,4 +177,62 @@ public sealed class CreateEventHandlerTests
         Assert.NotNull(captured);
         Assert.Equal("Titre", captured!.Title);
     }
+
+    [Fact]
+    public async Task HandleAsync_GivesTheNightARecapLinkOfItsOwn()
+    {
+        var request = new CreateEventRequestBuilder()
+            .WithTitle("  Titre  ")
+            .WithDate("2025-01-01")
+            .WithTime("19:00")
+            .Build();
+        Event? captured = null;
+        _eventRepo
+            .Setup(r => r.AddAsync(It.IsAny<Event>(), It.IsAny<CancellationToken>()))
+            .Callback<Event, CancellationToken>((e, _) => captured = e)
+            .ReturnsAsync((Event e, CancellationToken _) => new Event
+            {
+                Id = "id",
+                Title = e.Title,
+                Date = e.Date,
+                Time = e.Time,
+                HostToken = e.HostToken,
+                Slug = e.Slug,
+                CreatorUserId = e.CreatorUserId,
+                Config = e.Config,
+                ClosedAt = e.ClosedAt,
+                Winners = e.Winners,
+                CreatedAt = e.CreatedAt,
+                UpdatedAt = e.UpdatedAt
+            });
+        _userRepo
+            .Setup(u => u.GetByIdAsync("u", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new User
+                {
+                    Id = "u",
+                    Email = "x@y.z",
+                    PasswordHash = "h",
+                    DisplayName = "Nom",
+                    CreatedAt = default,
+                    UpdatedAt = default
+                });
+        _participantRepo
+            .Setup(p => p.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Participant p, CancellationToken _) => new Participant
+            {
+                Id = "p",
+                EventId = "id",
+                Pseudo = p.Pseudo,
+                UserId = p.UserId,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt
+            });
+
+        await _sut.HandleAsync(request, "u");
+
+        Assert.NotNull(captured);
+        Assert.Equal(10, captured!.RecapSlug?.Length);
+        Assert.NotEqual(captured.Slug, captured.RecapSlug);
+    }
 }

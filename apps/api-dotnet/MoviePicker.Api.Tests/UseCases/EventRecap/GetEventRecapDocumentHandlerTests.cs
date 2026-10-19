@@ -45,7 +45,14 @@ public sealed class GetEventRecapDocumentHandlerTests
             .Returns((string? url) => url is null ? null : "/api/v1/posters/abc");
     }
 
-    private GetEventRecapDocumentHandler CreateSut() =>
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
+
+    private static readonly DateTimeOffset AfterTheNight = new(2026, 10, 1, 12, 0, 0, TimeSpan.Zero);
+
+    private GetEventRecapDocumentHandler CreateSut(DateTimeOffset? now = null) =>
         new(
             _events.Object,
             _movies.Object,
@@ -53,13 +60,15 @@ public sealed class GetEventRecapDocumentHandlerTests
             _ratings.Object,
             _posters.Object,
             _shell.Object,
-            Options.Create(new MoviePickerOptions { PublicWebBaseUrl = "https://web.example/" }));
+            Options.Create(new MoviePickerOptions { PublicWebBaseUrl = "https://web.example/" }),
+            new FixedClock(now ?? AfterTheNight));
 
     private static Event Night(string slug, string title, params string[] winnerMovieIds) => new()
     {
         Id = "evt-" + slug,
         Title = title,
-        Slug = slug,
+        Slug = "night-" + slug,
+        RecapSlug = slug,
         HostToken = "h",
         Date = "2026-09-18",
         Time = "20:30",
@@ -76,7 +85,7 @@ public sealed class GetEventRecapDocumentHandlerTests
     };
 
     private void GivenNight(Event evt) =>
-        _events.Setup(r => r.GetByIdOrSlugAsync(evt.Slug, It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _events.Setup(r => r.GetByRecapSlugAsync(evt.RecapSlug!, It.IsAny<CancellationToken>())).ReturnsAsync(evt);
 
     private void GivenWinner(Event evt, string movieId, string title, string year, string? poster = "https://image.tmdb.org/t/p/w500/heat.jpg") =>
         _movies.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -118,6 +127,7 @@ public sealed class GetEventRecapDocumentHandlerTests
         Assert.Equal("Soirée du vendredi, le recap", Meta(document.Html, "twitter:title"));
         Assert.Contains("<title>Soirée du vendredi, le recap | Movie Picker</title>", document.Html);
         Assert.Contains("<link rel=\"canonical\" href=\"https://web.example/r/7fKq2p\" />", document.Html);
+        Assert.DoesNotContain("night-7fKq2p", document.Html);
         Assert.Contains("<div id=\"root\"></div>", document.Html);
         Assert.Contains("<link rel=\"stylesheet\" href=\"/assets/index.css\" />", document.Html);
         Assert.Contains("<meta charset=\"UTF-8\" />", document.Html);
@@ -131,6 +141,21 @@ public sealed class GetEventRecapDocumentHandlerTests
     }
 
     private static int OccurrencesOf(string text, string needle) => text.Split(needle).Length - 1;
+
+    [Fact]
+    public async Task HandleAsync_MovieDrawnBeforeTheNight_AnnouncesItInsteadOfSayingItWasSeen()
+    {
+        var evt = Night("abc", "Soirée du vendredi", "m1");
+        GivenNight(evt);
+        GivenWinner(evt, "m1", "Heat", "1995");
+
+        var document = await CreateSut(new DateTimeOffset(2026, 9, 18, 12, 0, 0, TimeSpan.Zero))
+            .HandleAsync("abc", "https://api.example", default);
+
+        Assert.Equal(
+            "Au programme : Heat (1995) le vendredi 18 septembre 2026, avec 4 participants.",
+            Meta(document.Html, "og:description"));
+    }
 
     [Fact]
     public async Task HandleAsync_WinnerWithoutRating_DescribesTheNightWithoutAnAverage()
@@ -193,7 +218,7 @@ public sealed class GetEventRecapDocumentHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_ShellUnavailable_AnswersAMinimalDocumentThatSendsToTheNight()
+    public async Task HandleAsync_ShellUnavailable_SendsHomeWithoutGivingAwayTheLinkOfTheNight()
     {
         _shell.Setup(s => s.GetShellAsync(It.IsAny<CancellationToken>())).ReturnsAsync((string?)null);
         var evt = Night("7fKq2p", "Soirée du vendredi", "m1");
@@ -204,8 +229,9 @@ public sealed class GetEventRecapDocumentHandlerTests
 
         Assert.Equal(200, document.StatusCode);
         Assert.Equal("Soirée du vendredi, le recap", Meta(document.Html, "og:title"));
-        Assert.Contains("<meta http-equiv=\"refresh\" content=\"0; url=https://web.example/e/7fKq2p\" />", document.Html);
-        Assert.Contains("<a href=\"https://web.example/e/7fKq2p\">", document.Html);
+        Assert.Contains("<meta http-equiv=\"refresh\" content=\"0; url=https://web.example/\" />", document.Html);
+        Assert.Contains("<a href=\"https://web.example/\">", document.Html);
+        Assert.DoesNotContain("night-7fKq2p", document.Html);
         Assert.DoesNotContain("id=\"root\"", document.Html);
     }
 

@@ -8,7 +8,7 @@ import { ROUTES, withReturnTo } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import styles from './NightRecap.module.css';
 
-export default function NightRecapCta({ slug }: Readonly<{ slug: string }>) {
+export default function NightRecapCta({ eventSlug }: Readonly<{ eventSlug: string | null }>) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const hostYourOwn = user ? ROUTES.createEvent : withReturnTo(ROUTES.register, ROUTES.createEvent);
@@ -21,10 +21,12 @@ export default function NightRecapCta({ slug }: Readonly<{ slug: string }>) {
         <Link to={hostYourOwn} className={buttonClass({ variant: 'primary', size: 'lg' })}>
           {t('events.recap.ctaButton')}
         </Link>
-        <Link to={ROUTES.eventDetail(slug)} className={buttonClass({ variant: 'ghost' })}>
-          {t('events.recap.viewNight')}
-          <ArrowRight size={ICON_SIZE.sm} aria-hidden />
-        </Link>
+        {eventSlug ? (
+          <Link to={ROUTES.eventDetail(eventSlug)} className={buttonClass({ variant: 'ghost' })}>
+            {t('events.recap.viewNight')}
+            <ArrowRight size={ICON_SIZE.sm} aria-hidden />
+          </Link>
+        ) : null}
       </div>
     </Card>
   );

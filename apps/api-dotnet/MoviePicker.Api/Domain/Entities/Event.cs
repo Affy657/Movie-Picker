@@ -8,6 +8,7 @@ public sealed record Event
     public string Time { get; init; } = string.Empty;
     public string HostToken { get; init; } = string.Empty;
     public string Slug { get; init; } = string.Empty;
+    public string? RecapSlug { get; init; }
 
     public string? CreatorUserId { get; init; }
     public string? CreationRequestId { get; init; }

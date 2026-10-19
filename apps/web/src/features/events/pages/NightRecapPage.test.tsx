@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, afterAll, beforeEach, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -10,6 +10,7 @@ import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
 import { setSessionHint } from '@/features/auth/session-hint';
 
 const slug = 'recap-msw';
+const NIGHT_SLUG = 'soiree-privee';
 const ME = {
   userId: 'u-sofia',
   displayName: 'Sofia',
@@ -31,17 +32,23 @@ type NightOptions = {
   theme?: string | null;
 };
 
-function nightPayload(options: NightOptions) {
+function recapPayload(options: NightOptions) {
+  const ratings = options.ratings ?? { 'm-heat': RATED };
+  const movies: Record<string, ReturnType<typeof movie>> = {
+    'm-heat': movie('m-heat', 'Heat', '1995', ratings['m-heat'] ?? []),
+    'm-inception': movie('m-inception', 'Inception', '2010', ratings['m-inception'] ?? []),
+  };
+  const winners = options.winners ?? ['m-heat'];
   return {
-    _id: 'evt-recap',
+    recapSlug: slug,
+    eventSlug: options.myParticipantId ? NIGHT_SLUG : null,
     title: 'Soirée du vendredi',
     date: '2026-09-18',
     time: '20:30',
-    slug,
-    isHost: false,
+    winnerMovies: winners.map((movieId) => movies[movieId]),
     isFinished: options.isFinished ?? true,
     lifecycle: options.isFinished === false ? 'live' : 'finished',
-    winners: (options.winners ?? ['m-heat']).map((movieId) => ({
+    winners: winners.map((movieId) => ({
       movieId,
       pickMethod: 'wheel',
       pickedAt: '2026-09-18T19:00:00Z',
@@ -123,18 +130,8 @@ describe('NightRecapPage (MSW)', () => {
   const server = setupServer(authMeGuestHandler);
 
   function serveNight(options: NightOptions = {}) {
-    const ratings = options.ratings ?? { 'm-heat': RATED };
     server.use(
-      http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
-        HttpResponse.json(nightPayload(options))
-      ),
-      http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
-        HttpResponse.json([
-          movie('m-heat', 'Heat', '1995', ratings['m-heat'] ?? []),
-          movie('m-inception', 'Inception', '2010', ratings['m-inception'] ?? []),
-          movie('m-other', 'Collateral', '2004', []),
-        ])
-      )
+      http.get(`${TEST_API_V1}/recaps/${slug}`, () => HttpResponse.json(recapPayload(options)))
     );
   }
 
@@ -190,9 +187,25 @@ describe('NightRecapPage (MSW)', () => {
       'href',
       `/register?returnTo=${encodeURIComponent('/new')}`
     );
+  });
+
+  it('keeps the night itself out of reach of a visitor', async () => {
+    serveNight();
+    renderRecap();
+    await screen.findByRole('heading', { name: 'Soirée du vendredi' });
+
+    expect(screen.queryByRole('link', { name: 'Voir la soirée' })).not.toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain(NIGHT_SLUG);
+  });
+
+  it('gives a participant the way back to the night', async () => {
+    serveNight({ myParticipantId: 'p-sofia' });
+    renderRecap();
+    await screen.findByRole('heading', { name: 'Soirée du vendredi' });
+
     expect(screen.getByRole('link', { name: 'Voir la soirée' })).toHaveAttribute(
       'href',
-      `/e/${slug}`
+      `/e/${NIGHT_SLUG}`
     );
   });
 
@@ -217,11 +230,25 @@ describe('NightRecapPage (MSW)', () => {
 
     const card = await screen.findByRole('region', { name: 'Le film de la soirée' });
     const rate = await within(card).findByRole('link', { name: 'Noter' });
-    expect(rate).toHaveAttribute('href', `/e/${slug}?rate=m-heat`);
+    expect(rate).toHaveAttribute('href', `/e/${NIGHT_SLUG}?rate=m-heat`);
     const rows = ratingRows(card);
     expect(rows[0]).toHaveTextContent('Vous');
     expect(within(card).getByText('Moyenne 8,7/10')).toBeInTheDocument();
     expect(rows[1]).toHaveTextContent('9/10');
+  });
+
+  it('waits for the end of the night before offering to rate the movie already drawn', async () => {
+    setSessionHint();
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    serveNight({ myParticipantId: 'p-sofia', isFinished: false, ratings: { 'm-heat': [] } });
+    renderRecap();
+
+    const card = await screen.findByRole('region', { name: 'Ce soir, vous regardez' });
+    expect(within(card).getByText('Heat')).toBeInTheDocument();
+    expect(within(card).queryByRole('link', { name: 'Noter' })).not.toBeInTheDocument();
+    expect(
+      within(card).queryByRole('region', { name: 'Les notes de la soirée' })
+    ).not.toBeInTheDocument();
   });
 
   it('shows no rating action to a participant who already rated', async () => {
@@ -273,33 +300,53 @@ describe('NightRecapPage (MSW)', () => {
     expect(within(dialog).getByRole('radio', { name: 'Les notes' })).toBeInTheDocument();
   });
 
+  it('shares a movie drawn for a night still to come as the plan, not as a movie already seen', async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'share', { value: share, configurable: true });
+    try {
+      serveNight({ isFinished: false, ratings: { 'm-heat': [] } });
+      renderRecap();
+
+      await screen.findByRole('region', { name: 'Ce soir, vous regardez' });
+      await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
+      const dialog = await screen.findByRole('dialog', { name: 'Partager le recap' });
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Partager' }));
+
+      expect(share).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text: 'Au programme de Soirée du vendredi : Heat !',
+          url: expect.stringMatching(new RegExp(`/r/${slug}$`)),
+        })
+      );
+    } finally {
+      Reflect.deleteProperty(navigator, 'share');
+    }
+  });
+
   it('waits for the movie when none is chosen yet', async () => {
     serveNight({ winners: [], isFinished: false });
     renderRecap();
 
     expect(await screen.findByText("Le film n'est pas encore choisi")).toBeInTheDocument();
     expect(screen.getByText(/arrive après la soirée/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Voir la soirée' })).toHaveAttribute(
-      'href',
-      `/e/${slug}`
-    );
+    expect(screen.queryByRole('link', { name: 'Voir la soirée' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Organise la tienne' })).not.toBeInTheDocument();
   });
 
   it('says so when the night ended without a movie', async () => {
-    serveNight({ winners: [], isFinished: true });
+    serveNight({ winners: [], isFinished: true, myParticipantId: 'p-sofia' });
     renderRecap();
 
     expect(await screen.findByText('Terminée sans film')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Voir la soirée' })).toHaveAttribute(
       'href',
-      `/e/${slug}`
+      `/e/${NIGHT_SLUG}`
     );
   });
 
   it('tells an unknown link apart and sends home', async () => {
     server.use(
-      http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
+      http.get(`${TEST_API_V1}/recaps/${slug}`, () =>
         HttpResponse.json({ error: 'Not found', code: 404, reason: 'not_found' }, { status: 404 })
       )
     );
@@ -312,13 +359,10 @@ describe('NightRecapPage (MSW)', () => {
   it('offers to retry after a failure, and recovers', async () => {
     let failures = 1;
     server.use(
-      http.get(`${TEST_API_V1}/events/slug/${slug}`, () => {
+      http.get(`${TEST_API_V1}/recaps/${slug}`, () => {
         if (failures-- > 0) return HttpResponse.json({ error: 'boom', code: 500 }, { status: 500 });
-        return HttpResponse.json(nightPayload({}));
-      }),
-      http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
-        HttpResponse.json([movie('m-heat', 'Heat', '1995', RATED)])
-      )
+        return HttpResponse.json(recapPayload({}));
+      })
     );
     renderRecap();
 

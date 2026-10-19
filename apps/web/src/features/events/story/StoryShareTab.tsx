@@ -57,7 +57,7 @@ export default function StoryShareTab({ event, winners, recapUrl, shareText }: R
   );
 
   const image = useStoryImage(`${slide?.key ?? 'none'}-${locale}-${scale}`, spec, qrRef);
-  const fileName = slide ? storyFileName(event.slug, slide) : '';
+  const fileName = slide ? storyFileName(event.recapSlug ?? '', slide) : '';
   const canShareFile = useMemo(
     () => image.blob !== null && canShareStoryFile(image.blob, fileName),
     [image.blob, fileName]

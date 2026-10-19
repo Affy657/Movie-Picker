@@ -23,10 +23,10 @@ export function NightRecapSkeleton() {
 }
 
 export function NightRecapWaiting({
-  slug,
+  eventSlug,
   title,
   finished,
-}: Readonly<{ slug: string; title: string; finished: boolean }>) {
+}: Readonly<{ eventSlug: string | null; title: string; finished: boolean }>) {
   const { t } = useTranslation();
   return (
     <PageLayout>
@@ -37,9 +37,11 @@ export function NightRecapWaiting({
         title={t(finished ? 'events.recap.noMovieTitle' : 'events.recap.notChosenTitle')}
         message={t(finished ? 'events.recap.noMovieText' : 'events.recap.notChosenText', { title })}
         actions={
-          <Link to={ROUTES.eventDetail(slug)} className={buttonClass()}>
-            {t('events.recap.viewNight')}
-          </Link>
+          eventSlug ? (
+            <Link to={ROUTES.eventDetail(eventSlug)} className={buttonClass()}>
+              {t('events.recap.viewNight')}
+            </Link>
+          ) : undefined
         }
       />
     </PageLayout>

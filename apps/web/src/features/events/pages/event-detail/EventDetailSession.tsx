@@ -202,8 +202,9 @@ export default function EventDetailSession({
       .filter((movie): movie is MovieData => !!movie);
   }, [event.winners, movies]);
   const recap: RecapShare | null =
-    event.isFinished && firstWinnerId ? { winners: winnerMovies } : null;
-  const shareUrl = recap ? nightRecapFrontendUrl(slug) : eventFrontendUrl(slug);
+    event.isFinished && firstWinnerId && event.recapSlug ? { winners: winnerMovies } : null;
+  const shareUrl =
+    recap && event.recapSlug ? nightRecapFrontendUrl(event.recapSlug) : eventFrontendUrl(slug);
   const needsJoin = !event.isFinished && !participant;
   const maxParticipants = event.config?.maxParticipants ?? null;
   const myParticipantSummary =

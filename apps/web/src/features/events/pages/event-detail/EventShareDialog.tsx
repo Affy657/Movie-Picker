@@ -4,7 +4,7 @@ import EventInviteFriendsTab from '@/features/events/components/EventInviteFrien
 import StoryShareTab from '@/features/events/story/StoryShareTab';
 import { ratingCountLabel } from '@/features/events/components/RatingNotes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import type { RecapShare } from './eventDetailSessionTypes';
@@ -28,6 +28,14 @@ type Props = {
   friendsBadge?: number;
   recap?: RecapShare | null;
 };
+
+function recapShareText(t: Translate, event: EventData, movie: MovieData | null): string {
+  if (!movie) return t('events.recap.share.shareTextNoMovie', { title: event.title });
+  const key = event.isFinished
+    ? 'events.recap.share.shareText'
+    : 'events.recap.share.shareTextUpcoming';
+  return t(key, { movie: movie.title, title: event.title });
+}
 
 function useRecapRatingsLabel(movie: MovieData | null | undefined): string {
   const { t, locale } = useTranslation();
@@ -70,10 +78,7 @@ export default function EventShareDialog({
       : undefined;
 
   if (recap) {
-    const movie = recapMovie;
-    const shareText = movie
-      ? t('events.recap.share.shareText', { movie: movie.title, title: event.title })
-      : t('events.recap.share.shareTextNoMovie', { title: event.title });
+    const shareText = recapShareText(t, event, recapMovie);
     const storyTab =
       recap.winners.length > 0
         ? {
@@ -97,11 +102,11 @@ export default function EventShareDialog({
         title={t('events.recap.share.dialogTitle')}
         url={shareUrl}
         qrHint={t('events.recap.share.qrHint')}
-        fileSlug={`recap-${slug}`}
+        fileSlug={`recap-${event.recapSlug ?? ''}`}
         preview={{
           icon: <Clapperboard size={ICON_SIZE.xl} aria-hidden />,
           name: event.title,
-          meta: movie ? [movie.title, ratingsLabel] : [dateFormatted],
+          meta: recapMovie ? [recapMovie.title, ratingsLabel] : [dateFormatted],
         }}
         shareText={shareText}
         analyticsSurface="event"
