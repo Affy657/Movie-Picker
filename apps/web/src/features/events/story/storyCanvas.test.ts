@@ -151,6 +151,22 @@ describe('drawStory', () => {
     );
   });
 
+  it('drops the rating count in a crowded grid rather than running into the next column', () => {
+    const { ctx, drawn } = recordingContext();
+    const wide = {
+      ...film('Inception', null),
+      ratingValue: 10,
+      ratingText: '10.0/10',
+      countText: '12 ratings',
+    };
+    const films = ['Inception', 'Heat', 'Matrix', 'Alien'].map((title) => ({ ...wide, title }));
+
+    drawStory(ctx, { ...baseSpec, films }, new Map());
+
+    expect(drawn.texts).toContain('10.0/10');
+    expect(drawn.texts).not.toContain('12 ratings');
+  });
+
   it('says when a movie has no rating', () => {
     const { ctx, drawn } = recordingContext();
 

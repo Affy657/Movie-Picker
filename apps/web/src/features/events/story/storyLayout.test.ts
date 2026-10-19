@@ -32,6 +32,16 @@ describe('wrapLines', () => {
     expect(lines).toEqual(['Anticonst…']);
   });
 
+  it('cuts a first word too wide for its line instead of letting it run over', () => {
+    const lines = wrapLines('Anticonstitutionnellement ce soir', {
+      maxWidth: 120,
+      maxLines: 2,
+      measure,
+    });
+
+    expect(lines).toEqual(['Anticonstit…', 'ce soir']);
+  });
+
   it('keeps a title typed with a double space whole', () => {
     expect(wrapLines('Soirée  du vendredi', { maxWidth: 500, maxLines: 2, measure })).toEqual([
       'Soirée du vendredi',

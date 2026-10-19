@@ -39,11 +39,12 @@ export function wrapLines(text: string, { maxWidth, maxLines, measure }: WrapOpt
   if (lines.length < maxLines && current) lines.push(current);
 
   const kept = lines.slice(0, maxLines);
-  const last = kept.at(-1);
-  if (last !== undefined && (kept.join(' ') !== words.join(' ') || measure(last) > maxWidth)) {
-    kept[kept.length - 1] = withEllipsis(last, maxWidth, measure);
-  }
-  return kept;
+  const cutShort = kept.join(' ') !== words.join(' ');
+  return kept.map((line, index) =>
+    measure(line) > maxWidth || (cutShort && index === kept.length - 1)
+      ? withEllipsis(line, maxWidth, measure)
+      : line
+  );
 }
 
 export const POSTER_RATIO = 1.5;

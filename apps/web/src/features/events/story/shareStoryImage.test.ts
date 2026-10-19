@@ -72,6 +72,18 @@ describe('shareStoryImage', () => {
     expect(downloaded).not.toHaveBeenCalled();
   });
 
+  it('downloads nothing on a second tap while the sheet is still opening', async () => {
+    withShare(true);
+    share.mockRejectedValueOnce(
+      Object.assign(new Error('An earlier share has not yet completed.'), {
+        name: 'InvalidStateError',
+      })
+    );
+
+    expect(await shareStoryImage(input)).toBe('cancelled');
+    expect(downloaded).not.toHaveBeenCalled();
+  });
+
   it('downloads the image when the sheet fails', async () => {
     withShare(true);
     share.mockRejectedValueOnce(new Error('boom'));

@@ -65,6 +65,7 @@ export function buildContentSecurityPolicy(
     'https://eu.i.posthog.com',
     'https://eu-assets.i.posthog.com',
     'https://image.tmdb.org',
+    'https://api.dicebear.com',
   ]
     .filter(Boolean)
     .join(' ');

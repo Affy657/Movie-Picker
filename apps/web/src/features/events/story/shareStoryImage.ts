@@ -11,6 +11,8 @@ export type ShareStoryInput = {
   url: string;
 };
 
+const NOT_A_FAILURE = new Set(['AbortError', 'InvalidStateError']);
+
 function storyFile(blob: Blob, fileName: string): File {
   return new File([blob], fileName, { type: blob.type || STORY_MIME });
 }
@@ -41,7 +43,7 @@ export async function shareStoryImage({
       await navigator.share({ files: [file], title, text, url });
       return 'shared';
     } catch (error) {
-      if ((error as { name?: string })?.name === 'AbortError') return 'cancelled';
+      if (NOT_A_FAILURE.has((error as { name?: string })?.name ?? '')) return 'cancelled';
     }
   }
   downloadBlob(blob, fileName);

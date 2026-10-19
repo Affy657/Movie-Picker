@@ -49,6 +49,46 @@ describe('useStoryImage', () => {
     expect(rendered).toHaveBeenCalledTimes(2);
   });
 
+  it('shows the slide asked for after a quick back and forth, never the previous one', async () => {
+    const pendingB: Array<(blob: Blob) => void> = [];
+    const blobA = new Blob(['a'], { type: 'image/jpeg' });
+    const blobB = new Blob(['b'], { type: 'image/jpeg' });
+    rendered
+      .mockResolvedValueOnce(blobA)
+      .mockImplementationOnce(() => new Promise<Blob | null>((resolve) => pendingB.push(resolve)));
+    const { rerender, result } = renderHook(({ key }) => useStoryImage(key, spec, qrRef), {
+      initialProps: { key: 'film-1' },
+    });
+    await waitFor(() => expect(result.current.blob).toBe(blobA));
+
+    rerender({ key: 'film-2' });
+    rerender({ key: 'film-1' });
+    rerender({ key: 'film-2' });
+
+    expect(result.current.status).toBe('pending');
+    expect(result.current.blob).toBeNull();
+    await act(async () => pendingB[0]?.(blobB));
+    expect(result.current.blob).toBe(blobB);
+    expect(rendered).toHaveBeenCalledTimes(2);
+  });
+
+  it('draws a slide left before it was ready only once', async () => {
+    const pendingA: Array<(blob: Blob) => void> = [];
+    rendered.mockImplementationOnce(
+      () => new Promise<Blob | null>((resolve) => pendingA.push(resolve))
+    );
+    const { rerender, result } = renderHook(({ key }) => useStoryImage(key, spec, qrRef), {
+      initialProps: { key: 'film-1' },
+    });
+
+    rerender({ key: 'film-2' });
+    rerender({ key: 'film-1' });
+    await act(async () => pendingA[0]?.(new Blob(['a'], { type: 'image/jpeg' })));
+
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    expect(rendered).toHaveBeenCalledTimes(2);
+  });
+
   it('keeps drawing the slide while the night refreshes underneath', async () => {
     const { rerender, result } = renderHook(
       ({ current }) => useStoryImage('films', current, qrRef),

@@ -23,7 +23,7 @@ export function useStoryImage(
 ): StoryImageState {
   const cache = useRef(new Map<string, Drawn>());
   const assets = useRef<StoryAssetCache>(new Map());
-  const drawing = useRef<string | null>(null);
+  const drawing = useRef(new Set<string>());
   const alive = useRef(true);
   const [attempt, setAttempt] = useState(0);
   const [shown, setShown] = useState<{ key: string; drawn: Drawn }>(() => ({
@@ -51,9 +51,13 @@ export function useStoryImage(
       setShown((previous) => (previous.key === key ? previous : { key, drawn: known }));
       return;
     }
-    if (!spec || drawing.current === key) return;
+    if (!spec) return;
+    if (drawing.current.has(key)) {
+      setShown((previous) => (previous.key === key ? previous : { key, drawn: PENDING }));
+      return;
+    }
 
-    drawing.current = key;
+    drawing.current.add(key);
     setShown({ key, drawn: PENDING });
     void renderStoryImage(spec, qrRef.current?.querySelector('svg') ?? null, assets.current)
       .then((blob): Drawn =>
@@ -61,7 +65,7 @@ export function useStoryImage(
       )
       .catch((): Drawn => FAILED)
       .then((drawn) => {
-        if (drawing.current === key) drawing.current = null;
+        drawing.current.delete(key);
         if (!alive.current) {
           if (drawn.url) URL.revokeObjectURL(drawn.url);
           return;
@@ -75,7 +79,7 @@ export function useStoryImage(
     const stale = cache.current.get(key);
     if (stale?.url) URL.revokeObjectURL(stale.url);
     cache.current.delete(key);
-    drawing.current = null;
+    drawing.current.delete(key);
     setAttempt((count) => count + 1);
   }, [key]);
 

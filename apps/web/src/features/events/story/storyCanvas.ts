@@ -496,6 +496,10 @@ function ratingOf(film: StorySpecFilm, grid: FilmsGrid): Rating {
   };
 }
 
+function fittedRating(ctx: CanvasRenderingContext2D, rating: Rating, room: number): Rating {
+  return ratingWidth(ctx, rating) > room ? { ...rating, countText: null } : rating;
+}
+
 function drawFilm(
   ctx: CanvasRenderingContext2D,
   film: StorySpecFilm,
@@ -533,7 +537,7 @@ function drawFilm(
     });
   }
 
-  const rating = ratingOf(film, grid);
+  const rating = fittedRating(ctx, ratingOf(film, grid), grid.posterWidth + grid.gapX);
   const width = ratingWidth(ctx, rating);
   const centerY = y + 18 + Math.max(grid.ratingSize, grid.starSize) / 2;
   drawRating(ctx, rating, centerX - width / 2, centerY);
