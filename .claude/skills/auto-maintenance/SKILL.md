@@ -9,6 +9,8 @@ description: Passe de maintenance autonome de Movie Picker, sans aucun go de l'u
 
 L'utilisateur n'entend parler de la passe **que s'il y a un problème** : un retour arrière, ou quelque chose qui attend son geste ou sa décision. Un run sans histoire se termine sans notification.
 
+**Réparer plutôt que signaler.** Tout ce qui empêche master d'être vert ou la prod d'être à jour est le travail de la passe, pas celui de l'utilisateur : une CI cassée par une nouvelle image de runner, un outil ou une dépendance se diagnostique dans les logs du run et se corrige, les étapes des workflows comprises (pas leurs `permissions:` ni leurs environnements). La passe ne notifie que ce qu'elle ne peut pas régler dans ses garde-fous, avec ce qu'elle a essayé.
+
 Les règles du dépôt (test d'abord, zéro commentaire, `verify:local` avant push, jamais skip les hooks) sont dans [AGENTS.md](../../../AGENTS.md). La collecte, ses commandes et la vérification d'un déploiement sont celles de [/weekly-maintenance](../weekly-maintenance/SKILL.md) et de ses [commandes](../weekly-maintenance/references/commandes.md) : ce skill les réutilise sans les recopier, et en retire tous les STOP.
 
 ## Deux modes
@@ -80,7 +82,7 @@ Sources indépendantes, interrogées en parallèle. En `hebdo`, ajouter toute l'
 | Issue SonarCloud (`hebdo`) | corriger dans le code, master doit rester à zéro |
 | `check:tools` en retard (`hebdo`) | monter l'épinglage avec digest ou somme prise à la source officielle |
 | `check:iam`, Atlas, certificat, domaine, workflow planifié rouge | notifier |
-| CI de master rouge | en premier. Échec intermittent : `gh run rerun <id> --repo Affy657/Movie-Picker --failed` une fois. Causé par un commit de la passe : `git revert`. Sinon notifier, et ne rien déployer |
+| CI de master rouge | en premier, rien ne se déploie tant qu'elle l'est. Échec intermittent : `gh run rerun <id> --repo Affy657/Movie-Picker --failed` une fois. Causé par un commit de la passe : `git revert`. Toute autre cause (image du runner, outil, dépendance, test devenu faux) : la diagnostiquer dans les logs et la corriger, en ajoutant au besoin ce qui manque pour la voir (logs d'un conteneur qui s'arrête). Notifier seulement après un correctif qui n'a pas suffi |
 
 Rien à corriger et la prod sert master : le run s'arrête là, sans notification.
 
