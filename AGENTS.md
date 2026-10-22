@@ -127,7 +127,7 @@ Pièges déjà rencontrés, à passer en revue sur tout code nouveau :
 
 **Aucune contribution externe.** Projet solo : `CONTRIBUTING.md` refuse les PR de fork et la licence les rend infusionnables. Les jobs d'entrée de `ci-cd.yml` portent `github.event.pull_request.head.repo.fork != true`, donc une PR de fork ne déclenche aucun run. Ne pas retirer cette condition ni l'oublier sur un job d'entrée ajouté plus tard : un job sans `needs: changes` ne l'hérite pas. Elle n'est qu'un confort : sur `pull_request`, GitHub exécute le workflow du commit de fusion, donc une PR qui modifie `ci-cd.yml` la contourne. Les vrais verrous sont l'approbation manuelle de tout run externe (réglage GitHub, table de `docs/technical-debt.md`) et le filtre de provenance de `rollback-front.yml`, qui ne republie que les archives d'un run de `deploy.yml` sur `master`.
 
-**Pousser sur master ne déploie rien.** La mise en production est un geste manuel en deux temps, `gh workflow run deploy.yml --ref master -f stage=staging -f target=all` puis, la recette vérifiée, le même avec `-f stage=production` (cibles : `all`, `front`, `api`) ; la production refuse de partir si le run `ci-cd.yml` du commit visé n'est pas vert ou si la recette (`staging.movie-picker.fr`) ne sert pas ce commit. Une cible partielle (`front` ou `api`) est refusée dès que l'autre lane a changé entre la release que l'étape sert et le commit visé (comparaison GitHub dans `verify-ci`) : la sortie est toujours `target=all`. Ne jamais la déclencher sans demande explicite de l'utilisateur : le découpage existe pour qu'il groupe plusieurs livraisons dans un seul déploiement, héritage du temps où le dépôt était privé et ses minutes GitHub Actions facturées. Corollaire à annoncer en fin de tâche : **la production est en retard sur master par défaut**, et rien ne le signale.
+**Pousser sur master ne déploie rien.** La mise en production est un geste manuel en deux temps, `gh workflow run deploy.yml --ref master -f stage=staging -f target=all` puis, la recette vérifiée, le même avec `-f stage=production` (cibles : `all`, `front`, `api`) ; la production refuse de partir si le run `ci-cd.yml` du commit visé n'est pas vert ou si la recette (`staging.movie-picker.fr`) ne sert pas ce commit. Une cible partielle (`front` ou `api`) est refusée dès que l'autre lane a changé entre la release que l'étape sert et le commit visé (comparaison GitHub dans `verify-ci`) : la sortie est toujours `target=all`. Ne jamais la déclencher sans demande explicite de l'utilisateur : le découpage existe pour qu'il groupe plusieurs livraisons dans un seul déploiement, héritage du temps où le dépôt était privé et ses minutes GitHub Actions facturées. **Une seule exception, la passe `/auto-maintenance`** : l'utilisateur lui a donné le 2026-10-22 une délégation permanente pour merger, pousser sur master, déployer la recette puis la production et revenir en arrière sans demander, dans les garde-fous de son skill. Elle tourne chaque jour en tâche planifiée locale et ne s'étend à aucune autre session. Corollaire à annoncer en fin de tâche : **la production peut être en retard sur master jusqu'à la passe suivante**, au plus un jour quand le poste est allumé.
 
 **Un run master joue toutes les lanes.** Le filtre par chemin de `ci-cd.yml` ne s'applique qu'aux PR et aux branches `v*` ; sur master, un commit qui ne touche que la documentation rejoue quand même lint, tests, E2E et Sonar, parce que `deploy.yml` ne lit que la conclusion du run et qu'un run vert par vacuité posé sur un commit rouge autorisait un déploiement jamais validé. Ne pas remettre le filtre sur master pour gagner sept minutes : les minutes sont gratuites, le trou ne l'était pas.
 
@@ -140,13 +140,14 @@ Pièges déjà rencontrés, à passer en revue sur tout code nouveau :
 - Ne jamais skip les hooks pre-push.
 - Préférer éditer les fichiers existants à en créer de nouveaux.
 
-Trois procédures sont rappelées par leur nom plutôt que réexpliquées à chaque fois. Ce sont des skills du dépôt, dans `.claude/skills/` :
+Quatre procédures sont rappelées par leur nom plutôt que réexpliquées à chaque fois. Ce sont des skills du dépôt, dans `.claude/skills/` :
 
 | Procédure | Quand |
 |---|---|
 | `/dev-feature <feature>` | cycle complet d'une feature de roadmap, du scope au déploiement |
 | `/verify` | lancer web + API pour vérifier un changement à l'exécution |
 | `/weekly-maintenance` | passe hebdomadaire : Dependabot, SonarCloud, Sentry, alertes sécurité, métriques. À lancer depuis le checkout principal, pas depuis un worktree |
+| `/auto-maintenance quotidien` ou `hebdo` | la même passe sans aucun go, jusqu'au déploiement en production et au retour arrière, lancée par deux tâches planifiées locales. Le label `maintenance-freeze` sur une issue ouverte la gèle |
 
 ## Portes de qualité
 

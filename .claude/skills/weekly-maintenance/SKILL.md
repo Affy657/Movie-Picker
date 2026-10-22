@@ -15,6 +15,8 @@ Les commandes brutes de chaque étape sont dans [references/commandes.md](refere
 - **Tout le reste vit sur une branche unique**, `chore/maintenance-<AAAA-MM-JJ>`, et part en une seule PR. Elle est créée **après** le merge des PR Dependabot, pour partir d'un master à jour.
 - Rien de ce qui est écrit pendant la passe ne va sur master sans le go de l'utilisateur.
 
+La même passe tourne aussi sans l'utilisateur, tous ses STOP retirés et le déploiement compris : c'est [/auto-maintenance](../auto-maintenance/SKILL.md), lancée par deux tâches planifiées locales. Ce skill-ci reste la passe accompagnée, à la demande.
+
 Hors périmètre : corriger les bug reports GitHub. La passe les liste et les priorise, les traiter relève de `/dev-feature`.
 
 **Lancer la passe depuis `C:\dev\movie-picker`, jamais depuis un worktree.** Le serveur MCP `sonarqube` est déclaré par projet dans `~/.claude.json` sur ce chemin exact : depuis un worktree les outils `mcp__sonarqube__*` n'existent pas et l'étape SonarCloud est impossible. Docker Desktop doit tourner.
@@ -107,8 +109,10 @@ Attendre que les checks de la PR soient verts : ce sont eux que le déploiement 
 **Merger ne déploie rien.** Le déploiement est manuel depuis le 2026-09-10, héritage du temps où les minutes GitHub Actions étaient facturées, gardé pour grouper les livraisons. Attendre que le run `ci-cd.yml` du commit de merge soit **terminé et vert** (le workflow de déploiement le vérifie et refuse de partir sinon), puis :
 
 ```bash
-rtk gh workflow run deploy.yml --ref master -f target=all
+rtk gh workflow run deploy.yml --ref master -f stage=staging -f target=all
 ```
+
+Puis, la recette servant le commit, le même avec `-f stage=production` : la production refuse de partir avant.
 
 **STOP. Le déploiement met la production à jour : attendre le go de l'utilisateur avant de le déclencher.**
 
