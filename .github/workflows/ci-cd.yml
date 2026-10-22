@@ -70,9 +70,10 @@ env:
   # Same Terraform as `scripts/terraform.mjs` (image tag) and as `required_version` in the root
   # modules of `infra/terraform/environments/`: `scripts/check-tool-versions.mjs` compares the three.
   TERRAFORM_VERSION: "1.16.5"
-  # `mongo:8` resolved on 2026-09-17 (8.3.11). A floating tag would let a MongoDB release change
-  # what the transaction and index tests run against without any commit saying so.
-  MONGO_IMAGE: "mongo:8@sha256:d731d77bfd7afd66bd487bdf627b5bf7ce4c3602ec461d635977021db529ebbc"
+  # `mongo:8` resolved on 2026-10-22 (8.3.13): 8.3.11 refuses to start on the Linux 7.0 kernel
+  # of the runners (SERVER-121912). A floating tag would let a MongoDB release change what the
+  # transaction and index tests run against without any commit saying so.
+  MONGO_IMAGE: "mongo:8@sha256:0e900a3364da37b76d642b73b0bba56bd4c6c509ab470cf700436fd866bee3ff"
 
 jobs:
   # Solo project: no external contribution is accepted, the licence forbids it and
