@@ -70,9 +70,11 @@ env:
   # Same Terraform as `scripts/terraform.mjs` (image tag) and as `required_version` in the root
   # modules of `infra/terraform/environments/`: `scripts/check-tool-versions.mjs` compares the three.
   TERRAFORM_VERSION: "1.16.5"
-  # `mongo:8` resolved on 2026-10-22 (8.3.13): 8.3.11 refuses to start on the Linux 7.0 kernel
-  # of the runners (SERVER-121912). A floating tag would let a MongoDB release change what the
-  # transaction and index tests run against without any commit saying so.
+  # `mongo:8` resolved on 2026-10-22 (8.3.13). A floating tag would let a MongoDB release change
+  # what the transaction and index tests run against without any commit saying so. MongoDB 8
+  # refuses to start on the Linux 6.19+ kernels of the runners while TCMalloc owns rseq
+  # (SERVER-121912): `GLIBC_TUNABLES=glibc.pthread.rseq=1` on each `docker run` hands rseq to
+  # glibc until a fixed TCMalloc ships.
   MONGO_IMAGE: "mongo:8@sha256:0e900a3364da37b76d642b73b0bba56bd4c6c509ab470cf700436fd866bee3ff"
 
 jobs:
@@ -445,7 +447,7 @@ jobs:
       - name: Start MongoDB as a replica set (transactions)
         run: |
           set -eo pipefail
-          docker run -d --name mongo-it -p 27017:27017 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
+          docker run -d --name mongo-it -p 27017:27017 -e GLIBC_TUNABLES=glibc.pthread.rseq=1 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
           for _ in $(seq 1 30); do
             if docker exec mongo-it mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
               break
@@ -537,7 +539,7 @@ jobs:
       - name: Start MongoDB as a replica set (transactions)
         run: |
           set -eo pipefail
-          docker run -d --name mongo-e2e -p 27017:27017 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
+          docker run -d --name mongo-e2e -p 27017:27017 -e GLIBC_TUNABLES=glibc.pthread.rseq=1 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
           for _ in $(seq 1 30); do
             if docker exec mongo-e2e mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
               break
