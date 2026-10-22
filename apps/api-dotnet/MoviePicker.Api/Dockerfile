@@ -13,7 +13,7 @@
 #   ASPNETCORE_ENVIRONMENT   (optional, defaults to Production)
 #   PORT                     (Cloud Run injects 8080; Kestrel listens on 8080 through ASPNETCORE_URLS)
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:35d40304542c8689331f8cab17c65926cdf48fe711e289321d71924b230a7d29 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:747cbade5bfd918a175ac32f8f1d931edec2c7d0d5397a3de72eaef1ac1f66d2 AS build
 WORKDIR /src
 
 COPY Directory.Build.props ./
@@ -28,7 +28,7 @@ RUN dotnet publish MoviePicker.Api/MoviePicker.Api.csproj -c Release -r linux-x6
 # Chiseled runtime: no shell, no package manager, non-root by default. The `-extra` variant is
 # required, it ships ICU and tzdata: EventSchedule resolves Europe/Paris and the API talks to TMDB
 # in fr-FR. ProductionStartupValidation refuses to start when tzdata is missing.
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:00e0ad6a7ef8c0c1391b87f05c7ac757a15740455688f2bfcd146a3f4b987efd
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:9e3919aff68057f3e45125c5255a71d3b5f40364e45ede883348688851b9f0df
 WORKDIR /app
 
 COPY --from=build /app/publish .
