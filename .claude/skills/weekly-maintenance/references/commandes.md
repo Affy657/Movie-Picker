@@ -86,8 +86,10 @@ Erreurs applicatives :
 
 ```bash
 gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="movie-picker-api" AND severity>=ERROR' \
-  --project <PROJET_GCP> --freshness=7d --limit=50 --format="value(timestamp,severity,textPayload)"
+  --project <PROJET_GCP> --freshness=7d --limit=50 --format=json
 ```
+
+L'API journalise en `jsonPayload` (`Category`, `Message`, `State."{OriginalFormat}"`), jamais en `textPayload`, qui revient vide : regrouper les erreurs par `jsonPayload.State."{OriginalFormat}"`.
 
 Révision active et image déployée :
 
