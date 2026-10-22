@@ -451,6 +451,13 @@ jobs:
             fi
             sleep 2
           done
+          if [ "$(docker inspect -f '{{.State.Running}}' mongo-it)" != "true" ]; then
+            uname -r
+            docker version --format '{{.Server.Version}}'
+            docker inspect -f '{{.State.ExitCode}} {{.State.OOMKilled}} {{.State.Error}}' mongo-it
+            docker logs --tail 80 mongo-it
+            exit 1
+          fi
           docker exec mongo-it mongosh --quiet --eval 'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
           for _ in $(seq 1 30); do
             if [ "$(docker exec mongo-it mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
@@ -536,6 +543,13 @@ jobs:
             fi
             sleep 2
           done
+          if [ "$(docker inspect -f '{{.State.Running}}' mongo-e2e)" != "true" ]; then
+            uname -r
+            docker version --format '{{.Server.Version}}'
+            docker inspect -f '{{.State.ExitCode}} {{.State.OOMKilled}} {{.State.Error}}' mongo-e2e
+            docker logs --tail 80 mongo-e2e
+            exit 1
+          fi
           docker exec mongo-e2e mongosh --quiet --eval 'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
           for _ in $(seq 1 30); do
             if [ "$(docker exec mongo-e2e mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
