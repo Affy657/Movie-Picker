@@ -70,9 +70,12 @@ env:
   # Same Terraform as `scripts/terraform.mjs` (image tag) and as `required_version` in the root
   # modules of `infra/terraform/environments/`: `scripts/check-tool-versions.mjs` compares the three.
   TERRAFORM_VERSION: "1.16.5"
-  # `mongo:8` resolved on 2026-09-17 (8.3.11). A floating tag would let a MongoDB release change
-  # what the transaction and index tests run against without any commit saying so.
-  MONGO_IMAGE: "mongo:8@sha256:d731d77bfd7afd66bd487bdf627b5bf7ce4c3602ec461d635977021db529ebbc"
+  # `mongo:8` resolved on 2026-10-22 (8.3.13). A floating tag would let a MongoDB release change
+  # what the transaction and index tests run against without any commit saying so. MongoDB 8
+  # refuses to start on the Linux 6.19+ kernels of the runners while TCMalloc owns rseq
+  # (SERVER-121912): `GLIBC_TUNABLES=glibc.pthread.rseq=1` on each `docker run` hands rseq to
+  # glibc until a fixed TCMalloc ships.
+  MONGO_IMAGE: "mongo:8@sha256:0e900a3364da37b76d642b73b0bba56bd4c6c509ab470cf700436fd866bee3ff"
 
 jobs:
   # Solo project: no external contribution is accepted, the licence forbids it and
@@ -444,13 +447,20 @@ jobs:
       - name: Start MongoDB as a replica set (transactions)
         run: |
           set -eo pipefail
-          docker run -d --name mongo-it -p 27017:27017 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
+          docker run -d --name mongo-it -p 27017:27017 -e GLIBC_TUNABLES=glibc.pthread.rseq=1 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
           for _ in $(seq 1 30); do
             if docker exec mongo-it mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
               break
             fi
             sleep 2
           done
+          if [ "$(docker inspect -f '{{.State.Running}}' mongo-it)" != "true" ]; then
+            uname -r
+            docker version --format '{{.Server.Version}}'
+            docker inspect -f '{{.State.ExitCode}} {{.State.OOMKilled}} {{.State.Error}}' mongo-it
+            docker logs --tail 80 mongo-it
+            exit 1
+          fi
           docker exec mongo-it mongosh --quiet --eval 'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
           for _ in $(seq 1 30); do
             if [ "$(docker exec mongo-it mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
@@ -529,13 +539,20 @@ jobs:
       - name: Start MongoDB as a replica set (transactions)
         run: |
           set -eo pipefail
-          docker run -d --name mongo-e2e -p 27017:27017 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
+          docker run -d --name mongo-e2e -p 27017:27017 -e GLIBC_TUNABLES=glibc.pthread.rseq=1 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
           for _ in $(seq 1 30); do
             if docker exec mongo-e2e mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
               break
             fi
             sleep 2
           done
+          if [ "$(docker inspect -f '{{.State.Running}}' mongo-e2e)" != "true" ]; then
+            uname -r
+            docker version --format '{{.Server.Version}}'
+            docker inspect -f '{{.State.ExitCode}} {{.State.OOMKilled}} {{.State.Error}}' mongo-e2e
+            docker logs --tail 80 mongo-e2e
+            exit 1
+          fi
           docker exec mongo-e2e mongosh --quiet --eval 'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
           for _ in $(seq 1 30); do
             if [ "$(docker exec mongo-e2e mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then

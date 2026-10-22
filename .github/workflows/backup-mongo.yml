@@ -67,7 +67,7 @@ env:
   # Pinned by digest: this instance receives a full copy of the production database. Same digest
   # as the MongoDB of the CI test jobs (`ci-cd.yml`), `scripts/check-tool-versions.mjs` keeps
   # both on the digest `mongo:8` currently resolves to.
-  MONGO_IMAGE: "mongo:8@sha256:d731d77bfd7afd66bd487bdf627b5bf7ce4c3602ec461d635977021db529ebbc"
+  MONGO_IMAGE: "mongo:8@sha256:0e900a3364da37b76d642b73b0bba56bd4c6c509ab470cf700436fd866bee3ff"
 
 jobs:
   backup:
@@ -201,7 +201,7 @@ jobs:
           fi
           # Replica set as in production: the only topology where IUnitOfWork transactions work,
           # hence the only one proving that the restore gives a database the API can really run on.
-          docker run -d --name mongo-verify -p 27017:27017 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
+          docker run -d --name mongo-verify -p 27017:27017 -e GLIBC_TUNABLES=glibc.pthread.rseq=1 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
           READY=0
           for _ in $(seq 1 30); do
             if docker exec mongo-verify mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
