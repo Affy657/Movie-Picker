@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import EventWinnerSummary, {
@@ -103,6 +103,42 @@ describe('EventWinnerSummary', () => {
     expect(screen.queryByRole('button', { name: 'Noter ce film' })).not.toBeInTheDocument();
   });
 
+  function isoInDays(days: number): string {
+    const day = new Date();
+    day.setDate(day.getDate() + days);
+    return [
+      day.getFullYear(),
+      String(day.getMonth() + 1).padStart(2, '0'),
+      String(day.getDate()).padStart(2, '0'),
+    ].join('-');
+  }
+
+  it('says tonight on the day of the night', () => {
+    renderSummary(
+      <EventWinnerSummary winners={[movie({})]} isFinished={false} date={isoInDays(0)} />
+    );
+
+    expect(screen.getByRole('heading', { name: 'Ce soir, vous regardez' })).toBeInTheDocument();
+  });
+
+  it('says tomorrow the day before the night', () => {
+    renderSummary(
+      <EventWinnerSummary winners={[movie({})]} isFinished={false} date={isoInDays(1)} />
+    );
+
+    expect(screen.getByRole('heading', { name: 'Demain, vous regardez' })).toBeInTheDocument();
+  });
+
+  it('names a later night by its date', () => {
+    renderSummary(
+      <EventWinnerSummary winners={[movie({})]} isFinished={false} date="2035-06-03" />
+    );
+
+    expect(
+      screen.getByRole('heading', { name: 'Le 3 juin 2035, vous regardez' })
+    ).toBeInTheDocument();
+  });
+
   it('numbers several winners in draw order and keeps the night open when not finished', () => {
     renderSummary(
       <EventWinnerSummary
@@ -138,9 +174,20 @@ describe('EventWinnerSummary', () => {
       renderSummary(<EventWinnerSummary winners={[rated]} isFinished rating={ratingContext()} />);
 
       expect(screen.getByRole('button', { name: 'Votre note 3,5/5' })).toBeInTheDocument();
-      const group = screen.getByRole('button', { name: 'Voir les notes, moyenne 4,0/5, 2 notes' });
-      expect(group).toHaveTextContent('4,0/5');
-      expect(group).toHaveTextContent('2 notes');
+      expect(screen.getByText('Moyenne 4,0/5, 2 notes')).toBeInTheDocument();
+    });
+
+    it('gives a participant a single button into the ratings', () => {
+      const rated = movie({
+        ratings: [
+          { participantId: 'p1', value: 7, updatedAt: '2026-09-20T10:00:00Z' },
+          { participantId: 'p2', value: 9, updatedAt: '2026-09-20T10:00:00Z' },
+        ],
+      });
+      renderSummary(<EventWinnerSummary winners={[rated]} isFinished rating={ratingContext()} />);
+
+      expect(screen.getAllByRole('button')).toHaveLength(1);
+      expect(screen.queryByRole('button', { name: /Voir les notes/ })).not.toBeInTheDocument();
     });
 
     it('reads the ten scale', () => {
@@ -152,9 +199,7 @@ describe('EventWinnerSummary', () => {
       );
 
       expect(screen.getByRole('button', { name: 'Votre note 7/10' })).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: 'Voir les notes, moyenne 7,0/10, 1 note' })
-      ).toBeInTheDocument();
+      expect(screen.getByText('Moyenne 7,0/10, 1 note')).toBeInTheDocument();
     });
 
     it('lets a visitor read the ratings without rating', () => {
@@ -170,7 +215,86 @@ describe('EventWinnerSummary', () => {
       );
 
       expect(screen.queryByRole('button', { name: 'Noter ce film' })).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Voir les notes/ })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Voir les notes, moyenne 4,5/5, 1 note' })
+      ).toBeInTheDocument();
+    });
+
+    it('lets a participant rate while the night is underway', () => {
+      renderSummary(
+        <EventWinnerSummary
+          winners={[movie({})]}
+          isFinished={false}
+          ratingOpen
+          rating={ratingContext()}
+        />
+      );
+
+      expect(screen.getByRole('button', { name: 'Noter ce film' })).toBeInTheDocument();
+    });
+
+    it('invites someone signed out to sign in to rate that movie', () => {
+      renderSummary(
+        <EventWinnerSummary
+          winners={[movie({ id: 'm-win' })]}
+          isFinished
+          rating={ratingContext({
+            currentParticipantId: null,
+            signInHref: (movieId) => `/login?returnTo=%2Fe%2Fsoiree%3Frate%3D${movieId}`,
+          })}
+        />
+      );
+
+      expect(screen.getByRole('link', { name: 'Se connecter pour noter' })).toHaveAttribute(
+        'href',
+        '/login?returnTo=%2Fe%2Fsoiree%3Frate%3Dm-win'
+      );
+      expect(screen.queryByRole('button', { name: 'Noter ce film' })).not.toBeInTheDocument();
+    });
+
+    it('offers the next drawn movie not rated yet once a rating is saved', async () => {
+      renderSummary(
+        <EventWinnerSummary
+          winners={[movie({ id: 'm1', title: 'Matrix' }), movie({ id: 'm2', title: 'Alien' })]}
+          isFinished
+          rating={ratingContext()}
+        />
+      );
+
+      await userEvent.click(screen.getAllByRole('button', { name: 'Noter ce film' })[0]!);
+      const first = screen.getByRole('dialog', { name: 'Noter ce film' });
+      expect(within(first).getByText('Matrix')).toBeInTheDocument();
+      await userEvent.click(within(first).getByRole('button', { name: 'Noter 4 étoiles' }));
+      await userEvent.click(within(first).getByRole('button', { name: 'Enregistrer' }));
+
+      await waitFor(() =>
+        expect(
+          within(screen.getByRole('dialog', { name: 'Noter ce film' })).getByText('Alien')
+        ).toBeInTheDocument()
+      );
+    });
+
+    it('stops once every drawn movie carries my rating', async () => {
+      const context = ratingContext();
+      const rated = { participantId: 'p1', value: 6, updatedAt: '2026-09-20T10:00:00Z' };
+      renderSummary(
+        <EventWinnerSummary
+          winners={[
+            movie({ id: 'm1', title: 'Matrix' }),
+            movie({ id: 'm2', title: 'Alien', ratings: [rated] }),
+          ]}
+          isFinished
+          rating={context}
+        />
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: 'Noter ce film' }));
+      const dialog = screen.getByRole('dialog', { name: 'Noter ce film' });
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Noter 4 étoiles' }));
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Enregistrer' }));
+
+      expect(context.onSave).toHaveBeenCalledWith('m1', 8);
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     });
 
     it('shows nothing about ratings before the night is over', () => {
@@ -243,13 +367,13 @@ describe('EventWinnerSummary', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
-    it('opens the group list from the average, with who has not rated yet', async () => {
+    it('lists the group in the rating dialog, with who has not rated yet', async () => {
       const rated = movie({
         ratings: [{ participantId: 'p2', value: 9, updatedAt: '2026-09-20T10:00:00Z' }],
       });
       renderSummary(<EventWinnerSummary winners={[rated]} isFinished rating={ratingContext()} />);
 
-      await userEvent.click(screen.getByRole('button', { name: /Voir les notes/ }));
+      await userEvent.click(screen.getByRole('button', { name: 'Noter ce film' }));
 
       const dialog = screen.getByRole('dialog');
       const items = within(dialog).getAllByRole('listitem');

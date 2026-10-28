@@ -109,7 +109,7 @@ public sealed class MovieRatingEndpointsTests : IClassFixture<MoviePickerApplica
     }
 
     [Fact]
-    public async Task Rate_BeforeTheNightIsOver_Is409()
+    public async Task Rate_BeforeTheNightStarts_Is409()
     {
         var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var (slug, participantId) = await CreateEventAsync(host, "Soirée à venir");
@@ -120,7 +120,7 @@ public sealed class MovieRatingEndpointsTests : IClassFixture<MoviePickerApplica
 
         Assert.Equal(HttpStatusCode.Conflict, res.StatusCode);
         var body = await res.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal("rating_only_after_event", body.GetProperty("reason").GetString());
+        Assert.Equal("rating_only_once_started", body.GetProperty("reason").GetString());
     }
 
     [Fact]

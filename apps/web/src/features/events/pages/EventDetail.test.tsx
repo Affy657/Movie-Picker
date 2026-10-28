@@ -531,18 +531,39 @@ describe('EventDetail (MSW)', () => {
   describe('arriving from the next-day rating reminder', () => {
     const myPid = 'p-msw-alice';
 
-    function serveFinishedNightWithWinner(ratedByMe: boolean, asParticipant = true) {
+    function serveFinishedNightWithWinner(
+      ratedByMe: boolean,
+      asParticipant = true,
+      date = '2026-09-19',
+      {
+        signedIn = asParticipant,
+        lifecycle = 'finished',
+      }: { signedIn?: boolean; lifecycle?: 'finished' | 'live' } = {}
+    ) {
+      if (signedIn) {
+        server.use(
+          http.get(`${TEST_API_V1}/auth/me`, () =>
+            HttpResponse.json({
+              userId: 'u-alice',
+              displayName: 'Alice',
+              emailMasked: 'a***@test.local',
+              uiTheme: 'system',
+              accentColor: 'default',
+            })
+          )
+        );
+      }
       server.use(
         http.get(`${TEST_API_V1}/events/slug/${slug}`, () =>
           HttpResponse.json({
             _id: 'evt-msw',
             title: 'Soirée démo',
-            date: '2026-09-19',
+            date,
             time: '21:00',
             slug,
             isHost: false,
-            isFinished: true,
-            lifecycle: 'finished',
+            isFinished: lifecycle === 'finished',
+            lifecycle,
             winners: [{ movieId: 'm-win', pickMethod: 'wheel', pickedAt: '2026-09-19T20:00:00Z' }],
             participantCount: 2,
             movieCount: 1,
@@ -618,6 +639,79 @@ describe('EventDetail (MSW)', () => {
       renderEventDetail(`/e/${slug}?rate`);
 
       expect(await screen.findByRole('button', { name: 'Votre note 4/5' })).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    function yesterday(): string {
+      const day = new Date();
+      day.setDate(day.getDate() - 1);
+      return [
+        day.getFullYear(),
+        String(day.getMonth() + 1).padStart(2, '0'),
+        String(day.getDate()).padStart(2, '0'),
+      ].join('-');
+    }
+
+    it('opens the rating by itself when a participant comes back after the night', async () => {
+      localStorage.removeItem('moviepicker_rating_prompted');
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveFinishedNightWithWinner(false, true, yesterday());
+
+      renderEventDetail(`/e/${slug}`);
+
+      const dialog = await screen.findByRole('dialog', { name: 'Noter ce film' });
+      expect(within(dialog).getByText('Matrix')).toBeInTheDocument();
+    });
+
+    it('opens the rating by itself only once for a movie', async () => {
+      localStorage.removeItem('moviepicker_rating_prompted');
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveFinishedNightWithWinner(false, true, yesterday());
+      const firstVisit = renderEventDetail(`/e/${slug}`);
+      await screen.findByRole('dialog', { name: 'Noter ce film' });
+      firstVisit.unmount();
+
+      renderEventDetail(`/e/${slug}`);
+
+      expect(await screen.findByRole('button', { name: 'Noter ce film' })).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('lets a participant rate while the night is underway, without opening it by itself', async () => {
+      localStorage.removeItem('moviepicker_rating_prompted');
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveFinishedNightWithWinner(false, true, yesterday(), { lifecycle: 'live' });
+
+      renderEventDetail(`/e/${slug}`);
+
+      expect(await screen.findByRole('button', { name: 'Noter ce film' })).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('asks a participant who is signed out to sign in before rating', async () => {
+      localStorage.removeItem('moviepicker_rating_prompted');
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveFinishedNightWithWinner(false, true, yesterday(), { signedIn: false });
+
+      renderEventDetail(`/e/${slug}`);
+
+      const signIn = await screen.findByRole('link', { name: 'Se connecter pour noter' });
+      expect(signIn).toHaveAttribute(
+        'href',
+        `/login?returnTo=${encodeURIComponent(`/e/${slug}?rate=m-win`)}`
+      );
+      expect(screen.queryByRole('button', { name: 'Noter ce film' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('leaves the rating closed on a night older than a week', async () => {
+      localStorage.removeItem('moviepicker_rating_prompted');
+      setStoredParticipant(slug, myPid, 'Alice');
+      serveFinishedNightWithWinner(false);
+
+      renderEventDetail(`/e/${slug}`);
+
+      expect(await screen.findByRole('button', { name: 'Noter ce film' })).toBeInTheDocument();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 

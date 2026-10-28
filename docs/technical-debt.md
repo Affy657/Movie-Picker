@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-076`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-079`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -490,6 +490,33 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` (`CacheTtl`), `Controllers/EventRecapController.cs`, `.github/workflows/deploy.yml`
 - verify: `grep -n "CacheTtl = TimeSpan.FromSeconds(60)" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` ; encore ouvert tant que la ligne sort
 - fix: relire la coquille quand elle désigne un fichier absent (un 404 sur ses assets vide le cache), ou garder les assets de la version précédente servis quelques minutes après le déploiement
+
+## DEBT-076 une soirée passe « finie » 2 h après son début, quelle que soit la durée du film
+
+- state: differe
+- declencheur: un participant qui voit la feuille de note s'ouvrir, ou le recap passer à « Le film de la soirée », pendant qu'il regarde encore un film long
+- impact: `Event.Lifecycle` rend `Finished` à début + `EventSchedule.PendingDelay` (2 h) dès qu'un film est tiré. Pour Interstellar (2 h 49) lancé à 20 h 30, la soirée est finie à 22 h 30 : la feuille de note s'ouvre d'elle-même si quelqu'un ouvre la page, et le titre de l'encadré change en plein film. La note elle-même est ouverte dès le début de la soirée, ce n'est que l'invitation qui arrive trop tôt.
+- ou: `apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` (`Lifecycle`), `apps/api-dotnet/MoviePicker.Api/Domain/EventSchedule.cs`, `apps/web/src/features/events/hooks/useRatingLink.ts`
+- verify: `grep -n "PendingDelay = TimeSpan.FromHours(2)" apps/api-dotnet/MoviePicker.Api/Domain/EventSchedule.cs` ; encore ouvert tant que la fin ne tient pas compte de la durée des films tirés
+- fix: finir la soirée à début + max(2 h, durée du plus long film tiré), et garder la feuille automatique pour cette fin-là
+
+## DEBT-077 trois délais différents autour de la note d'un film
+
+- state: differe
+- declencheur: un participant qui reçoit la relance sans la feuille automatique, ou l'inverse, sur une soirée de 4 à 7 jours
+- impact: la relance du lendemain rattrape les soirées des 3 derniers jours (`RatingReminderPass.CatchUpDays`), la feuille automatique s'ouvre sur les soirées des 7 derniers jours (`RECENT_NIGHT_DAYS`), et la note reste possible sans limite. Rien de faux, mais deux règles à expliquer au lieu d'une.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs`, `apps/web/src/features/events/hooks/useRatingLink.ts`
+- verify: `grep -n "CatchUpDays = 3" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs` ; encore ouvert tant que les deux délais diffèrent
+- fix: aligner les deux sur une même fenêtre, portée par une seule constante côté API et rendue au front
+
+## DEBT-078 la feuille de note automatique se souvient par appareil
+
+- state: differe
+- declencheur: un participant qui voit la feuille de note s'ouvrir une seconde fois sur un autre appareil ou un autre navigateur
+- impact: les films déjà proposés sont gardés dans `localStorage` (`moviepicker_rating_prompted`), donc sur chaque appareil la feuille s'ouvre une fois de plus pour le même film. Sans effet si le film est déjà noté.
+- ou: `apps/web/src/features/events/hooks/useRatingLink.ts`
+- verify: `grep -n "moviepicker_rating_prompted" apps/web/src/features/events/hooks/useRatingLink.ts` ; encore ouvert tant que la mémoire reste locale
+- fix: garder la date de la dernière proposition côté serveur, sur la participation, et la rendre avec la soirée
 
 ---
 

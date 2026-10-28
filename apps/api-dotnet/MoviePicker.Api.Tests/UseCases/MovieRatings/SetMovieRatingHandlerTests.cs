@@ -2,6 +2,7 @@ using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.MovieRatings;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Tests.Builders;
@@ -90,7 +91,7 @@ public sealed class SetMovieRatingHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_EventStillRunning_ThrowsConflict()
+    public async Task HandleAsync_NightNotStartedYet_ThrowsConflict()
     {
         var evt = new EventEntityBuilder().WithId("evt1").WithSlug("soiree").Build() with
         {
@@ -99,7 +100,7 @@ public sealed class SetMovieRatingHandlerTests
         Arrange(evt, MovieIn(evt, WinnerMovieId), ParticipantIn(evt));
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.HandleAsync("soiree", WinnerMovieId, Request()));
-        Assert.Equal(ErrorCodes.RatingOnlyAfterEvent, ex.Reason);
+        Assert.Equal(ErrorCodes.RatingOnlyOnceStarted, ex.Reason);
         _ratingRepo.Verify(r => r.UpsertAsync(It.IsAny<MovieRating>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -172,6 +173,23 @@ public sealed class SetMovieRatingHandlerTests
                 It.IsAny<CancellationToken>()),
             Times.Once);
         _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NightUnderway_IsRatable()
+    {
+        var startedHalfAnHourAgo = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow.AddMinutes(-30), EventSchedule.ParisTimeZone);
+        var underway = new EventEntityBuilder().WithId("evt1").WithSlug("soiree").Build() with
+        {
+            Date = startedHalfAnHourAgo.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            Time = startedHalfAnHourAgo.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture),
+            Winners = TestWinners.Won(WinnerMovieId)
+        };
+        Arrange(underway, MovieIn(underway, WinnerMovieId), ParticipantIn(underway));
+
+        var res = await _sut.HandleAsync("soiree", WinnerMovieId, Request(9));
+
+        Assert.Equal(9, res.Value);
     }
 
     [Fact]

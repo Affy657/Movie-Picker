@@ -1,8 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router';
 import type { ReactNode } from 'react';
-import { ratingLinkTarget, useRatingLink } from '@/features/events/hooks/useRatingLink';
+import {
+  isRecentNight,
+  ratingLinkTarget,
+  useRatingLink,
+} from '@/features/events/hooks/useRatingLink';
 import type { MovieData } from '@/shared/types/movie';
 
 function movie(id: string, ratedBy: string[] = []): MovieData {
@@ -147,5 +151,84 @@ describe('useRatingLink', () => {
     });
 
     expect(result.current.search).toBe('?rate');
+  });
+});
+
+function daysAgo(days: number): string {
+  const day = new Date();
+  day.setDate(day.getDate() - days);
+  return [
+    day.getFullYear(),
+    String(day.getMonth() + 1).padStart(2, '0'),
+    String(day.getDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+describe('isRecentNight', () => {
+  it('counts a night of the last seven days as recent', () => {
+    expect(isRecentNight(daysAgo(0))).toBe(true);
+    expect(isRecentNight(daysAgo(1))).toBe(true);
+    expect(isRecentNight(daysAgo(7))).toBe(true);
+  });
+
+  it('counts an older night, or one without a date, as past', () => {
+    expect(isRecentNight(daysAgo(8))).toBe(false);
+    expect(isRecentNight(undefined)).toBe(false);
+  });
+});
+
+describe('useRatingLink, prompting once the night is over', () => {
+  beforeEach(() => localStorage.removeItem('moviepicker_rating_prompted'));
+
+  function visit(winners: MovieData[], participantId: string | null = 'p1', isFinished = true) {
+    return renderHook(() => useRatingLink(winners, participantId, isFinished, true), {
+      wrapper: function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
+        return <MemoryRouter initialEntries={['/e/soiree']}>{children}</MemoryRouter>;
+      },
+    });
+  }
+
+  it('opens the first winner the participant has not rated, without any link', () => {
+    const { result } = visit([movie('m1', ['p1']), movie('m2')]);
+
+    expect(result.current.movieId).toBe('m2');
+  });
+
+  it('opens nothing more during the same visit once it has prompted', () => {
+    const { result } = visit([movie('m1'), movie('m2')]);
+
+    act(() => result.current.consume());
+
+    expect(result.current.movieId).toBeNull();
+  });
+
+  it('never prompts twice for the same movie, moving on to the next one on a later visit', () => {
+    const first = visit([movie('m1'), movie('m2')]);
+    act(() => first.result.current.consume());
+    first.unmount();
+
+    const second = visit([movie('m1'), movie('m2')]);
+    expect(second.result.current.movieId).toBe('m2');
+    act(() => second.result.current.consume());
+    second.unmount();
+
+    expect(visit([movie('m1'), movie('m2')]).result.current.movieId).toBeNull();
+  });
+
+  it('counts a movie opened from the reminder link as already prompted', () => {
+    const link = renderHook(() => useRatingLink([movie('m1')], 'p1', true, true), {
+      wrapper: function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
+        return <MemoryRouter initialEntries={['/e/soiree?rate']}>{children}</MemoryRouter>;
+      },
+    });
+    act(() => link.result.current.consume());
+    link.unmount();
+
+    expect(visit([movie('m1')]).result.current.movieId).toBeNull();
+  });
+
+  it('opens nothing while the night is not over, or for a visitor', () => {
+    expect(visit([movie('m1')], 'p1', false).result.current.movieId).toBeNull();
+    expect(visit([movie('m1')], null).result.current.movieId).toBeNull();
   });
 });

@@ -53,6 +53,9 @@ public sealed record Event
 
     public bool IsFinished(DateTimeOffset utcNow) => Lifecycle(utcNow) == EventLifecycle.Finished;
 
+    public bool IsRatingOpen(DateTimeOffset utcNow) =>
+        HasWinner && Lifecycle(utcNow) is EventLifecycle.Live or EventLifecycle.Finished;
+
     public bool HasWinner => Winners.Count > 0;
 
     public IReadOnlyList<string> GetWinnerMovieIds() => Winners.Select(w => w.MovieId).ToList();

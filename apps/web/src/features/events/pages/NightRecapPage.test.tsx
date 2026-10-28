@@ -30,6 +30,8 @@ type NightOptions = {
   myParticipantId?: string | null;
   ratings?: Record<string, Array<{ participantId: string; value: number }>>;
   theme?: string | null;
+  date?: string;
+  lifecycle?: 'upcoming' | 'live' | 'finished';
 };
 
 function recapPayload(options: NightOptions) {
@@ -43,11 +45,11 @@ function recapPayload(options: NightOptions) {
     recapSlug: slug,
     eventSlug: options.myParticipantId ? NIGHT_SLUG : null,
     title: 'Soirée du vendredi',
-    date: '2026-09-18',
+    date: options.date ?? '2026-09-18',
     time: '20:30',
     winnerMovies: winners.map((movieId) => movies[movieId]),
     isFinished: options.isFinished ?? true,
-    lifecycle: options.isFinished === false ? 'live' : 'finished',
+    lifecycle: options.lifecycle ?? (options.isFinished === false ? 'live' : 'finished'),
     winners: winners.map((movieId) => ({
       movieId,
       pickMethod: 'wheel',
@@ -237,10 +239,42 @@ describe('NightRecapPage (MSW)', () => {
     expect(rows[1]).toHaveTextContent('9/10');
   });
 
-  it('waits for the end of the night before offering to rate the movie already drawn', async () => {
+  it('names a night planned for a later day by its date, not by tonight', async () => {
+    serveNight({
+      isFinished: false,
+      lifecycle: 'upcoming',
+      date: '2035-06-03',
+      ratings: { 'm-heat': [] },
+    });
+
+    renderRecap();
+
+    const card = await screen.findByRole('region', { name: 'Le 3 juin 2035, vous regardez' });
+    expect(within(card).getByText('Heat')).toBeInTheDocument();
+  });
+
+  it('offers to rate the movie already drawn while the night is underway', async () => {
     setSessionHint();
     server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
     serveNight({ myParticipantId: 'p-sofia', isFinished: false, ratings: { 'm-heat': [] } });
+    renderRecap();
+
+    const card = await screen.findByRole('region', { name: 'Ce soir, vous regardez' });
+    expect(await within(card).findByRole('link', { name: 'Noter' })).toHaveAttribute(
+      'href',
+      `/e/${NIGHT_SLUG}?rate=m-heat`
+    );
+  });
+
+  it('waits for the night to start before offering to rate the movie already drawn', async () => {
+    setSessionHint();
+    server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json(ME)));
+    serveNight({
+      myParticipantId: 'p-sofia',
+      isFinished: false,
+      lifecycle: 'upcoming',
+      ratings: { 'm-heat': [] },
+    });
     renderRecap();
 
     const card = await screen.findByRole('region', { name: 'Ce soir, vous regardez' });

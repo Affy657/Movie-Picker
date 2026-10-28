@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router';
 import { Star } from 'lucide-react';
 import EventWinnerSummary from '@/features/events/pages/event-detail/EventWinnerSummary';
+import { isRatingOpen } from '@/features/events/hooks/useRatingLink';
 import RatingNotes from '@/features/events/components/RatingNotes';
 import type { ParticipantRating } from '@/features/events/components/RatingNotes';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -72,6 +73,7 @@ export default function NightRecapFilms({
   const myParticipantId = event.myParticipant?.id ?? null;
   const scale = user?.ratingScale ?? 'five';
   const isFinished = !!event.isFinished;
+  const ratingOpen = isRatingOpen(event);
   const participantAvatars = useMemo(
     () =>
       Object.fromEntries(
@@ -87,10 +89,11 @@ export default function NightRecapFilms({
       <EventWinnerSummary
         winners={winners}
         isFinished={isFinished}
+        date={event.date}
         participantAvatars={participantAvatars}
         posterSize="lg"
         renderRating={
-          isFinished
+          ratingOpen
             ? (movie) => (
                 <RecapRatings
                   movie={movie}

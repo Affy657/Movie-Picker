@@ -38,8 +38,8 @@ public sealed class SetMovieRatingHandler : ISetMovieRatingHandler
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
         var now = _clock.GetUtcNow();
-        if (!evt.IsFinished(now))
-            throw Errors.RatingOnlyAfterEvent();
+        if (!evt.IsRatingOpen(now))
+            throw Errors.RatingOnlyOnceStarted();
 
         var movie = await _movieRepository.GetByIdAndEventIdAsync(movieId, evt.Id, ct)
             ?? throw Errors.MovieNotFound();

@@ -7,11 +7,11 @@ import EventWinnerSummary, {
   type WinnerRatingContext,
 } from '@/features/events/pages/event-detail/EventWinnerSummary';
 import { useEventMovieRating } from '@/features/events/pages/event-detail/useEventMovieRating';
-import { useRatingLink } from '@/features/events/hooks/useRatingLink';
+import { isRatingOpen, isRecentNight, useRatingLink } from '@/features/events/hooks/useRatingLink';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { Link } from 'react-router';
 import { ArrowRight } from 'lucide-react';
-import { ROUTES } from '@/app/routes';
+import { ROUTES, withReturnTo } from '@/app/routes';
 import { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useTranslation } from '@/shared/i18n';
@@ -129,17 +129,27 @@ export default function EventDetailSessionBody({
   const { user } = useAuth();
   const { t } = useTranslation();
   const movieRating = useEventMovieRating({ slug, participant, refreshAll });
-  const ratingLink = useRatingLink(winners, participant?.participantId ?? null, !!event.isFinished);
+  const ratingOpen = isRatingOpen(event);
+  const signedInParticipantId = user ? (participant?.participantId ?? null) : null;
+  const ratingLink = useRatingLink(
+    winners,
+    signedInParticipantId,
+    ratingOpen,
+    !!event.isFinished && isRecentNight(event.date)
+  );
   const rating: WinnerRatingContext = {
     scale: user?.ratingScale ?? 'five',
     participants: event.participants ?? [],
-    currentParticipantId: participant?.participantId ?? null,
+    currentParticipantId: signedInParticipantId,
     saving: movieRating.saving,
     error: movieRating.error,
     onSave: movieRating.save,
     onClear: movieRating.clear,
     autoOpenMovieId: ratingLink.movieId,
     onAutoOpen: ratingLink.consume,
+    signInHref: user
+      ? undefined
+      : (movieId) => withReturnTo(ROUTES.login, ROUTES.eventDetailRating(slug, movieId)),
   };
   return (
     <>
@@ -161,6 +171,8 @@ export default function EventDetailSessionBody({
         <EventWinnerSummary
           winners={winners}
           isFinished={!!event.isFinished}
+          ratingOpen={ratingOpen}
+          date={event.date}
           participantAvatars={participantAvatars}
           rating={rating}
           action={

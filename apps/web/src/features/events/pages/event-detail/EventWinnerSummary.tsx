@@ -1,19 +1,23 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { Link } from 'react-router';
 import clsx from 'clsx';
-import { Film, Star, Trophy } from 'lucide-react';
+import { Film, LogIn, Star, Trophy } from 'lucide-react';
 import AvatarStack from '@/shared/components/AvatarStack';
-import Button from '@/shared/components/Button';
+import Button, { buttonClass } from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { ProposerBadge } from '@/features/movies/components/movieCardParts';
 import MovieRatingDialog from '@/features/events/components/MovieRatingDialog';
 import { ratingCountLabel, type ParticipantRating } from '@/features/events/components/RatingNotes';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
+import type { LocaleCode } from '@/shared/i18n/locales';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import type { MovieData } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
 import { averageRating, formatRating } from '@/shared/utils/formatRating';
+import { formatShortDate } from '@/shared/utils/formatMyEventsListDate';
+import { daysUntilEventDate } from '@/shared/utils/formatRelativeEventDate';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
@@ -30,11 +34,15 @@ export type WinnerRatingContext = {
   onClear: (movieId: string) => Promise<boolean>;
   autoOpenMovieId?: string | null;
   onAutoOpen?: () => void;
+  onRated?: (movieId: string) => void;
+  signInHref?: (movieId: string) => string;
 };
 
 type Props = {
   winners: MovieData[];
   isFinished: boolean;
+  ratingOpen?: boolean;
+  date?: string;
   participantAvatars?: Record<string, string>;
   rating?: WinnerRatingContext;
   action?: ReactNode;
@@ -54,11 +62,104 @@ function participantRatings(movie: MovieData, context: WinnerRatingContext): Par
   return [...rows.filter((r) => r.isSelf), ...rows.filter((r) => !r.isSelf)];
 }
 
+function RatingAverage({
+  raters,
+  average,
+  scale,
+  onOpen,
+}: Readonly<{
+  raters: ParticipantRating[];
+  average: number;
+  scale: RatingScale;
+  onOpen?: () => void;
+}>) {
+  const { t, locale } = useTranslation();
+  const averageLabel = formatRating(average, scale, locale, { decimals: 1 });
+  const countLabel = ratingCountLabel(raters.length, t);
+  const parts = (
+    <>
+      <AvatarStack
+        people={raters.map((r) => ({
+          key: r.participantId,
+          avatarId: r.avatarId,
+          pseudo: r.pseudo,
+        }))}
+        max={3}
+      />
+      <span className={styles.averageValue}>{averageLabel}</span>
+      <span className={styles.averageCount}>{countLabel}</span>
+    </>
+  );
+
+  if (!onOpen) {
+    return (
+      <>
+        <span className="visually-hidden">
+          {`${t('events.ratings.average', { value: averageLabel })}, ${countLabel}`}
+        </span>
+        <span className={styles.averageSummary} aria-hidden>
+          {parts}
+        </span>
+      </>
+    );
+  }
+
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="ghost"
+      className={styles.averageButton}
+      onClick={onOpen}
+      aria-label={t('events.ratings.groupAria', { average: averageLabel, count: countLabel })}
+    >
+      {parts}
+    </Button>
+  );
+}
+
+function MyRatingButton({
+  mine,
+  scale,
+  onOpen,
+}: Readonly<{ mine: number | null; scale: RatingScale; onOpen: () => void }>) {
+  const { t, locale } = useTranslation();
+  const rated = mine !== null;
+  return (
+    <Button type="button" size="sm" variant={rated ? 'secondary' : 'primary'} onClick={onOpen}>
+      <Star size={ICON_SIZE.sm} aria-hidden className={rated ? styles.ratedStar : undefined} />
+      {rated
+        ? t('events.ratings.myRating', { value: formatRating(mine, scale, locale) })
+        : t('events.ratings.rateAction')}
+    </Button>
+  );
+}
+
+function SignInToRateLink({ href }: Readonly<{ href: string }>) {
+  const { t } = useTranslation();
+  return (
+    <Link to={href} className={buttonClass({ variant: 'primary', size: 'sm' })}>
+      <LogIn size={ICON_SIZE.sm} aria-hidden />
+      {t('events.ratings.signInToRate')}
+    </Link>
+  );
+}
+
+function nextUnrated(winners: MovieData[], participantId: string, after: string): string | null {
+  const index = winners.findIndex((movie) => movie.id === after);
+  const ordered = [...winners.slice(index + 1), ...winners.slice(0, Math.max(index, 0))];
+  const next = ordered.find(
+    (movie) =>
+      movie.id !== after &&
+      !(movie.ratings ?? []).some((rating) => rating.participantId === participantId)
+  );
+  return next?.id ?? null;
+}
+
 function WinnerRatingActions({
   movie,
   context,
 }: Readonly<{ movie: MovieData; context: WinnerRatingContext }>) {
-  const { t, locale } = useTranslation();
   const [open, setOpen] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const rows = participantRatings(movie, context);
@@ -66,6 +167,7 @@ function WinnerRatingActions({
   const average = averageRating(raters.map((r) => r.value as number));
   const mine = rows.find((r) => r.isSelf)?.value ?? null;
   const canRate = context.currentParticipantId !== null;
+  const signInHref = canRate ? undefined : context.signInHref?.(movie.id);
   const autoOpen = canRate && context.autoOpenMovieId === movie.id;
   const { onAutoOpen } = context;
   useEffect(() => {
@@ -74,63 +176,32 @@ function WinnerRatingActions({
     setAttempted(false);
     setOpen(true);
   }, [autoOpen, onAutoOpen]);
-  if (!canRate && average === null) return null;
+  if (!canRate && average === null && !signInHref) return null;
 
   const openDialog = () => {
     setAttempted(false);
     setOpen(true);
   };
   const close = () => setOpen(false);
-  const closeWhen = async (done: Promise<boolean>) => {
+  const closeWhen = async (done: Promise<boolean>, then?: () => void) => {
     setAttempted(true);
-    if (await done) close();
+    if (!(await done)) return;
+    close();
+    then?.();
   };
 
   return (
     <div className={styles.ratingActions}>
-      {canRate ? (
-        <Button
-          type="button"
-          size="sm"
-          variant={mine === null ? 'primary' : 'secondary'}
-          onClick={openDialog}
-        >
-          <Star
-            size={ICON_SIZE.sm}
-            aria-hidden
-            className={mine === null ? undefined : styles.ratedStar}
-          />
-          {mine === null
-            ? t('events.ratings.rateAction')
-            : t('events.ratings.myRating', { value: formatRating(mine, context.scale, locale) })}
-        </Button>
-      ) : null}
-      {average !== null ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          className={styles.averageButton}
-          onClick={openDialog}
-          aria-label={t('events.ratings.groupAria', {
-            average: formatRating(average, context.scale, locale, { decimals: 1 }),
-            count: ratingCountLabel(raters.length, t),
-          })}
-        >
-          <AvatarStack
-            people={raters.map((r) => ({
-              key: r.participantId,
-              avatarId: r.avatarId,
-              pseudo: r.pseudo,
-            }))}
-            max={3}
-          />
-          <span className={styles.averageValue}>
-            {formatRating(average, context.scale, locale, { decimals: 1 })}
-          </span>
-          <span className={styles.averageCount}>{ratingCountLabel(raters.length, t)}</span>
-        </Button>
-      ) : null}
+      {canRate ? <MyRatingButton mine={mine} scale={context.scale} onOpen={openDialog} /> : null}
+      {signInHref ? <SignInToRateLink href={signInHref} /> : null}
+      {average === null ? null : (
+        <RatingAverage
+          raters={raters}
+          average={average}
+          scale={context.scale}
+          onOpen={canRate ? undefined : openDialog}
+        />
+      )}
       {open ? (
         <MovieRatingDialog
           open
@@ -142,7 +213,9 @@ function WinnerRatingActions({
           canRate={canRate}
           saving={context.saving}
           error={attempted ? context.error : null}
-          onSave={(value) => void closeWhen(context.onSave(movie.id, value))}
+          onSave={(value) =>
+            void closeWhen(context.onSave(movie.id, value), () => context.onRated?.(movie.id))
+          }
           onClear={() => void closeWhen(context.onClear(movie.id))}
         />
       ) : null}
@@ -177,21 +250,51 @@ function WinnerPoster({
   );
 }
 
+function upcomingHeading(date: string | undefined, t: Translate, locale: LocaleCode): string {
+  const days = date ? daysUntilEventDate(date) : null;
+  if (!date || days === null || days <= 0) return t('events.winners.upcoming');
+  if (days === 1) return t('events.winners.upcomingTomorrow');
+  return t('events.winners.upcomingOn', { date: formatShortDate(date, locale) });
+}
+
+function useChainedRating(
+  winners: MovieData[],
+  rating: WinnerRatingContext | undefined
+): WinnerRatingContext | undefined {
+  const [nextToRate, setNextToRate] = useState<string | null>(null);
+  const clearNext = useCallback(() => setNextToRate(null), []);
+  if (!rating) return undefined;
+  const linked = rating.autoOpenMovieId ?? null;
+  const participantId = rating.currentParticipantId;
+  return {
+    ...rating,
+    autoOpenMovieId: linked ?? nextToRate,
+    onAutoOpen: linked ? rating.onAutoOpen : clearNext,
+    onRated: (movieId) => {
+      if (participantId) setNextToRate(nextUnrated(winners, participantId, movieId));
+    },
+  };
+}
+
 export default function EventWinnerSummary({
   winners,
   isFinished,
+  ratingOpen,
+  date,
   participantAvatars,
   rating,
   action,
   renderRating,
   posterSize = 'md',
 }: Readonly<Props>) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const ratingContext = useChainedRating(winners, rating);
   if (winners.length === 0) return null;
+  const showRating = ratingOpen ?? isFinished;
   const several = winners.length > 1;
   const heading = isFinished
     ? pluralizeCount(winners.length, 'events.winners.finishedOne', 'events.winners.finishedMany', t)
-    : t('events.winners.upcoming');
+    : upcomingHeading(date, t, locale);
 
   return (
     <Card as="section" padding="md" elevation="sm" className={styles.root} aria-label={heading}>
@@ -231,8 +334,8 @@ export default function EventWinnerSummary({
                   handle={movie.proposerHandle}
                   t={t}
                 />
-                {!renderRating && isFinished && rating ? (
-                  <WinnerRatingActions movie={movie} context={rating} />
+                {!renderRating && showRating && ratingContext ? (
+                  <WinnerRatingActions movie={movie} context={ratingContext} />
                 ) : null}
               </div>
               {renderRating ? <div className={styles.below}>{renderRating(movie)}</div> : null}

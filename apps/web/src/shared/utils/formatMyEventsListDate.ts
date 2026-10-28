@@ -30,6 +30,10 @@ export function formatMyEventsListDate(isoDate: string, locale: LocaleCode): str
   return formatIsoDate(isoDate, locale, { weekday: 'short', month: 'short' }) ?? isoDate.trim();
 }
 
+export function formatShortDate(isoDate: string, locale: LocaleCode): string {
+  return formatIsoDate(isoDate, locale, { month: 'short' }) ?? isoDate.trim();
+}
+
 export function formatEventTime(time: string): string {
   const [hStr, mStr] = time.split(':');
   const h = Number.parseInt(hStr ?? '', 10);

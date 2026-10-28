@@ -71,7 +71,7 @@ public static class ErrorCodes
     public const string SeenMarkOwnOnly = "seen_mark_own_only";
     public const string SeenMarkOwnParticipationOnly = "seen_mark_own_participation_only";
     public const string RatingOwnParticipationOnly = "rating_own_participation_only";
-    public const string RatingOnlyAfterEvent = "rating_only_after_event";
+    public const string RatingOnlyOnceStarted = "rating_only_once_started";
     public const string RatingOnlyChosenMovie = "rating_only_chosen_movie";
     public const string RatingOutOfRange = "rating_out_of_range";
     public const string RatingNotFound = "rating_not_found";

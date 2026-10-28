@@ -188,8 +188,8 @@ public static class Errors
     public static ForbiddenException RatingOwnParticipationOnly() =>
         new("You can only rate a movie for your own participation", ErrorCodes.RatingOwnParticipationOnly);
 
-    public static ConflictException RatingOnlyAfterEvent() =>
-        new("A movie can only be rated once the movie night is over", ErrorCodes.RatingOnlyAfterEvent);
+    public static ConflictException RatingOnlyOnceStarted() =>
+        new("A movie can only be rated once the movie night has started", ErrorCodes.RatingOnlyOnceStarted);
 
     public static ConflictException RatingOnlyChosenMovie() =>
         new("Only the chosen movies of the night can be rated", ErrorCodes.RatingOnlyChosenMovie);
