@@ -1,11 +1,12 @@
 import clsx from 'clsx';
-import { useState, type ComponentType, type SVGProps } from 'react';
+import { useRef, useState, type ComponentType, type SVGProps } from 'react';
 import { Bookmark, CalendarDays, Compass, HelpCircle, LogIn, Plus, UserRound } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ownProfileDestination } from '@/features/auth/utils/ownProfileDestination';
 import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxdAutoSync';
+import { useAnotherDialogOpen } from '@/shared/hooks/useAnotherDialogOpen';
 import { useWhatsNew } from '@/shared/hooks/useWhatsNew';
 import { shouldShowWhatsNewNavChip } from '@/shared/whatsNew';
 import { withReturnTo, ROUTES } from '@/app/routes';
@@ -178,6 +179,8 @@ export default function AppShell() {
     openOnDemand: openWhatsNew,
     close: closeWhatsNew,
   } = useWhatsNew(user?.userId);
+  const whatsNewRef = useRef<HTMLDialogElement>(null);
+  const anotherDialogOpen = useAnotherDialogOpen(whatsNewRef);
   const [proposeIdeaOpen, setProposeIdeaOpen] = useState(false);
 
   const isAuthenticated = !!user;
@@ -283,7 +286,8 @@ export default function AppShell() {
       {isAuthenticated ? (
         <>
           <WhatsNewModal
-            open={whatsNewOpen}
+            open={whatsNewOpen && !anotherDialogOpen}
+            dialogRef={whatsNewRef}
             release={whatsNewRelease}
             ownProfilePath={ownProfilePath}
             onClose={closeWhatsNew}
