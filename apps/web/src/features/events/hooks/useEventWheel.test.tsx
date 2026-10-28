@@ -130,6 +130,35 @@ describe('useEventWheel : annonce du gagnant', () => {
     expect(result.current.winnerIndex).toBe(0);
   });
 
+  it.each([
+    { wheelMode: 'weightedByVotes', expected: [5, 1] },
+    { wheelMode: 'strictRandom', expected: [1, 1] },
+  ])('sizes the slices of a $wheelMode wheel as the server weighs the draw', async (mode) => {
+    const liked = { ...winner, score: 4 } as MovieData;
+    const unvoted = { id: 'mov2', title: 'Alien', tmdbId: 2, score: 0 } as MovieData;
+    const { result } = renderHook(
+      () =>
+        useEventWheel({
+          slug: 'soiree',
+          event: {
+            ...hostEvent,
+            winners: [],
+            config: { winnerCount: 1, wheelMode: mode.wheelMode },
+          } as unknown as EventData,
+          movies: [liked, unvoted],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper }
+    );
+
+    act(() => result.current.launch());
+
+    await waitFor(() => expect(result.current.spinWinner?.id).toBe('mov1'));
+    expect(result.current.spinPool.map((m) => m.id)).toEqual(['mov1', 'mov2']);
+    expect(result.current.spinWeights).toEqual(mode.expected);
+  });
+
   it('announces the winner when the wheel stops', async () => {
     const { result } = renderWheel();
 

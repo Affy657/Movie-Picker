@@ -106,6 +106,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Fixed
 
+- **La roue pondérée montre enfin le poids de chaque film** : en mode « Pondéré par les votes », le tirage tenait déjà compte des votes, mais la roue dessinait toutes les parts de la même taille. Chaque film y occupe désormais une part à la mesure de ses chances, comme au tirage : un film à +4 a une part cinq fois plus grande qu'un film sans vote, et un film à 0 ou en négatif garde la plus petite.
 - **Le menu d'une soirée de l'historique s'ouvre en entier** : dans Mes soirées, les trois points d'une soirée passée ouvraient le menu à l'intérieur de la carte, qui le rognait et décalait son contenu ; « Supprimer la soirée » restait hors de portée. Le menu passe désormais par-dessus la liste.
 - **Un rappel de soirée n'arrive plus le lendemain** sur un téléphone resté éteint pendant la soirée : il expire au début de la soirée, et les autres notifications push au bout de deux jours.
 - **Une soirée reportée puis de nouveau restée sans film prévient encore l'hôte** qu'elle est en suspens.

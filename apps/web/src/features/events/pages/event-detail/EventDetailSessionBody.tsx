@@ -54,6 +54,7 @@ function EventWheelModalGate({ wheel }: Readonly<{ wheel: WheelApi }>) {
       <WheelModal
         open={wheel.isModalOpen}
         movies={wheel.spinPool}
+        weights={wheel.spinWeights}
         winnerIndex={wheel.winnerIndex}
         winner={wheel.spinWinner}
         wheelKey={wheel.wheelKey}

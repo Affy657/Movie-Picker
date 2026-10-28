@@ -30,6 +30,7 @@ export function confettiPalettes(colors: string[]) {
 interface WheelModalProps {
   open: boolean;
   movies: MovieData[];
+  weights?: readonly number[];
   winnerIndex: number;
   winner: MovieData;
   wheelKey: number;
@@ -46,6 +47,7 @@ interface WheelModalProps {
 export default function WheelModal({
   open,
   movies,
+  weights,
   winnerIndex,
   winner,
   wheelKey,
@@ -209,6 +211,7 @@ export default function WheelModal({
             <SpinningWheel
               key={wheelKey}
               movies={movies}
+              weights={weights}
               winnerIndex={winnerIndex}
               onDone={handleWheelDone}
             />
