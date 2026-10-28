@@ -6,9 +6,6 @@ export type ShareStoryOutcome = 'shared' | 'downloaded' | 'cancelled';
 export type ShareStoryInput = {
   blob: Blob;
   fileName: string;
-  title: string;
-  text: string;
-  url: string;
 };
 
 const NOT_A_FAILURE = new Set(['AbortError', 'InvalidStateError']);
@@ -33,14 +30,11 @@ export function canShareStoryFile(blob: Blob, fileName: string): boolean {
 export async function shareStoryImage({
   blob,
   fileName,
-  title,
-  text,
-  url,
 }: ShareStoryInput): Promise<ShareStoryOutcome> {
   const file = storyFile(blob, fileName);
   if (canShareFile(file)) {
     try {
-      await navigator.share({ files: [file], title, text, url });
+      await navigator.share({ files: [file] });
       return 'shared';
     } catch (error) {
       if (NOT_A_FAILURE.has((error as { name?: string })?.name ?? '')) return 'cancelled';

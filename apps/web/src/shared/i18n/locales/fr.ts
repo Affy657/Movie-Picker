@@ -1224,6 +1224,7 @@ export const fr = {
         preparing: "Préparation de l'image…",
         preview: 'Story de {{title}}',
         hint: 'Au format story, pour Instagram, Snapchat ou WhatsApp.',
+        linkCopied: 'Lien du recap copié. Collez-le dans un sticker Lien de votre story.',
         hintSwipe: "Balayez pour passer d'une story \u00e0 l'autre.",
         share: 'Partager',
         download: "Télécharger l'image",

@@ -10,6 +10,7 @@ import { useTranslation } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
+import { copyTextToClipboard } from '@/shared/utils/copyTextToClipboard';
 import { downloadBlob } from '@/shared/utils/downloadBlob';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import StoryCarousel from './StoryCarousel';
@@ -35,10 +36,9 @@ type Props = {
   event: EventData;
   winners: readonly MovieData[];
   recapUrl: string;
-  shareText: string;
 };
 
-export default function StoryShareTab({ event, winners, recapUrl, shareText }: Readonly<Props>) {
+export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Props>) {
   const { t, locale } = useTranslation();
   const { user } = useAuth();
   const { track } = useAnalytics();
@@ -46,6 +46,7 @@ export default function StoryShareTab({ event, winners, recapUrl, shareText }: R
   const families = useMemo(() => storyFamilies(winners), [winners]);
   const [family, setFamily] = useState<StoryFamilyKey>(() => families[0]?.key ?? 'film');
   const [index, setIndex] = useState(0);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const slides = useMemo(() => storySlides(family, winners), [family, winners]);
   const scale = user?.ratingScale ?? 'five';
@@ -76,14 +77,11 @@ export default function StoryShareTab({ event, winners, recapUrl, shareText }: R
 
   const share = async () => {
     if (!image.blob) return;
-    const outcome = await shareStoryImage({
-      blob: image.blob,
-      fileName,
-      title: event.title,
-      text: shareText,
-      url: recapUrl,
-    });
-    if (outcome !== 'cancelled') track('link_shared', { method: 'story', surface: 'event' });
+    const copied = copyTextToClipboard(recapUrl);
+    const outcome = await shareStoryImage({ blob: image.blob, fileName });
+    if (outcome === 'cancelled') return;
+    track('link_shared', { method: 'story', surface: 'event' });
+    setLinkCopied(await copied);
   };
 
   const renderSlide = (item: StorySlide, current: boolean) => {
@@ -175,9 +173,9 @@ export default function StoryShareTab({ event, winners, recapUrl, shareText }: R
             previousLabel={t('events.recap.story.previous')}
             nextLabel={t('events.recap.story.next')}
           />
-          <p className={styles.hint}>
-            {t('events.recap.story.hint')}
-            {slides.length > 1 ? ` ${t('events.recap.story.hintSwipe')}` : ''}
+          <p className={styles.hint} role="status">
+            {linkCopied ? t('events.recap.story.linkCopied') : t('events.recap.story.hint')}
+            {!linkCopied && slides.length > 1 ? ` ${t('events.recap.story.hintSwipe')}` : ''}
           </p>
           <div className={styles.actions}>
             {canShareFile ? (

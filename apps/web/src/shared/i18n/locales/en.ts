@@ -1203,6 +1203,7 @@ export const en: Locale = {
         preparing: 'Preparing the image…',
         preview: 'Story of {{title}}',
         hint: 'In story format, for Instagram, Snapchat or WhatsApp.',
+        linkCopied: 'Recap link copied. Paste it into a Link sticker on your story.',
         hintSwipe: 'Swipe to move from one story to the next.',
         share: 'Share',
         download: 'Download the image',

@@ -7,9 +7,6 @@ const blob = new Blob(['png'], { type: 'image/png' });
 const input = {
   blob,
   fileName: 'movie-picker-story-abc-films.jpg',
-  title: 'Soirée du vendredi',
-  text: 'On a vu Inception pendant Soirée du vendredi, voici le recap !',
-  url: 'https://www.movie-picker.fr/r/abc',
 };
 
 let share: ReturnType<typeof vi.fn>;
@@ -52,15 +49,14 @@ describe('canShareStoryFile', () => {
 });
 
 describe('shareStoryImage', () => {
-  it('sends the image, the text and the recap link to the share sheet', async () => {
+  it('sends the image alone, so the story apps of the phone take it', async () => {
     withShare(true);
 
     expect(await shareStoryImage(input)).toBe('shared');
-    const call = share.mock.calls[0]?.[0] as { files: File[]; text: string; url: string };
+    const call = share.mock.calls[0]?.[0] as Record<string, unknown> & { files: File[] };
+    expect(Object.keys(call)).toEqual(['files']);
     expect(call.files[0]?.name).toBe('movie-picker-story-abc-films.jpg');
     expect(call.files[0]?.type).toBe('image/png');
-    expect(call.text).toBe(input.text);
-    expect(call.url).toBe(input.url);
     expect(downloaded).not.toHaveBeenCalled();
   });
 

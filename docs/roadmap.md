@@ -290,9 +290,11 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## Backlog produit (non priorisé sur une release) (140 points, 1 non estimé)
+## Backlog produit (non priorisé sur une release) (143 points, 1 non estimé)
 
 > **Note V2, application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
+
+- `M` **Story Instagram en un geste (app mobile V2)** : depuis l'app mobile, un bouton pose l'image du recap directement dans une story Instagram, avec un lien Movie Picker cliquable qui ramène au recap.
 
 - `S` **Noter aussi sur Letterboxd ou IMDb** : depuis la note d'un film vu, un bouton ouvre la fiche du film sur Letterboxd ou IMDb pour y reporter sa note.
 - `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion.

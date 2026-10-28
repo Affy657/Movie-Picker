@@ -35,7 +35,6 @@ function setup(over: { winners?: MovieData[] } = {}) {
         event={event}
         winners={over.winners ?? winners}
         recapUrl="https://www.movie-picker.fr/r/abc"
-        shareText="On a vu Inception pendant Soirée du vendredi, voici le recap !"
       />
     </AppTestProviders>
   );
@@ -147,9 +146,47 @@ describe('StoryShareTab', () => {
     await user.click(await screen.findByRole('button', { name: 'Partager' }));
 
     await waitFor(() => expect(share).toHaveBeenCalled());
-    const call = share.mock.calls[0]?.[0] as { files: File[]; url: string };
+    const call = share.mock.calls[0]?.[0] as { files: File[]; url?: string; text?: string };
     expect(call.files[0]?.name).toBe('movie-picker-story-abc-films.jpg');
-    expect(call.url).toBe('https://www.movie-picker.fr/r/abc');
+    expect(call.url).toBeUndefined();
+    expect(call.text).toBeUndefined();
+  });
+
+  it('copies the recap link and tells how to make it tappable in the story', async () => {
+    const user = userEvent.setup();
+    withFileShare();
+    setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Partager' }));
+
+    expect(
+      await screen.findByText('Lien du recap copié. Collez-le dans un sticker Lien de votre story.')
+    ).toBeVisible();
+    expect(await navigator.clipboard.readText()).toBe('https://www.movie-picker.fr/r/abc');
+  });
+
+  it('says nothing about the link when it could not be copied', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'));
+    withFileShare();
+    setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Partager' }));
+
+    await waitFor(() => expect(share).toHaveBeenCalled());
+    expect(screen.queryByText(/Lien du recap copié/)).not.toBeInTheDocument();
+  });
+
+  it('says nothing about the link when the share sheet is dismissed', async () => {
+    const user = userEvent.setup();
+    withFileShare();
+    share.mockRejectedValueOnce(Object.assign(new Error('nope'), { name: 'AbortError' }));
+    setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Partager' }));
+
+    await waitFor(() => expect(share).toHaveBeenCalled());
+    expect(screen.queryByText(/Lien du recap copié/)).not.toBeInTheDocument();
   });
 
   it('says when the image could not be created', async () => {

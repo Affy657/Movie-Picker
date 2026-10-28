@@ -85,14 +85,7 @@ export default function EventShareDialog({
             id: 'story',
             label: t('events.recap.story.tab'),
             icon: <ImageIcon size={ICON_SIZE.md} aria-hidden />,
-            content: (
-              <StoryShareTab
-                event={event}
-                winners={recap.winners}
-                recapUrl={shareUrl}
-                shareText={shareText}
-              />
-            ),
+            content: <StoryShareTab event={event} winners={recap.winners} recapUrl={shareUrl} />,
           }
         : undefined;
     return (
