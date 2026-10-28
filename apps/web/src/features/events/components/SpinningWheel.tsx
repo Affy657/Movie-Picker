@@ -108,19 +108,34 @@ function maxFontForSegment(segAngle: number): number {
   return Math.max(MIN_FONT, Math.min(MAX_FONT, fromArc));
 }
 
+type WheelSlice = Readonly<{ start: number; sweep: number }>;
+
+function wheelSlices(count: number, weights: readonly number[] | undefined): WheelSlice[] {
+  const sliceWeights = Array.from({ length: count }, (_, i) => weights?.[i] ?? 1);
+  const totalWeight = sliceWeights.reduce((sum, weight) => sum + weight, 0);
+  const slices: WheelSlice[] = [];
+  let start = 0;
+  for (const weight of sliceWeights) {
+    const sweep = (weight / totalWeight) * 2 * Math.PI;
+    slices.push({ start, sweep });
+    start += sweep;
+  }
+  return slices;
+}
+
 function drawSegments(
   ctx: CanvasRenderingContext2D,
   movies: MovieData[],
+  slices: readonly WheelSlice[],
   rotation: number,
   palette: WheelPalette
 ): void {
   const cx = SIZE / 2;
   const cy = SIZE / 2;
-  const N = movies.length;
-  const segAngle = (2 * Math.PI) / N;
 
-  for (let i = 0; i < N; i++) {
-    const startA = -Math.PI / 2 + rotation + i * segAngle;
+  for (const [i, slice] of slices.entries()) {
+    const segAngle = slice.sweep;
+    const startA = -Math.PI / 2 + rotation + slice.start;
     const endA = startA + segAngle;
     const color = palette.segments[i % palette.segments.length] ?? '';
 
@@ -206,12 +221,13 @@ function createLayer(dpr: number): [HTMLCanvasElement, CanvasRenderingContext2D 
 
 function renderLayers(
   movies: MovieData[],
+  slices: readonly WheelSlice[],
   restRotation: number,
   dpr: number,
   palette: WheelPalette
 ): WheelLayers {
   const [disc, discCtx] = createLayer(dpr);
-  if (discCtx) drawSegments(discCtx, movies, restRotation, palette);
+  if (discCtx) drawSegments(discCtx, movies, slices, restRotation, palette);
   const [overlay, overlayCtx] = createLayer(dpr);
   if (overlayCtx) drawHubAndPointer(overlayCtx, palette);
   return { disc, overlay, restRotation };
@@ -232,12 +248,14 @@ function drawFrame(ctx: CanvasRenderingContext2D, layers: WheelLayers, rotation:
 
 interface SpinningWheelProps {
   movies: MovieData[];
+  weights?: readonly number[];
   winnerIndex: number;
   onDone: () => void;
 }
 
 export default function SpinningWheel({
   movies,
+  weights,
   winnerIndex,
   onDone,
 }: Readonly<SpinningWheelProps>) {
@@ -257,12 +275,13 @@ export default function SpinningWheel({
     canvas.height = SIZE * dpr;
     ctx.scale(dpr, dpr);
 
-    const N = movies.length;
-    if (N === 0) return;
-    const segAngle = (2 * Math.PI) / N;
-    const jitter = randomCenteredUnit() * segAngle * 0.4;
-    const targetRotation = SPIN_ROTATIONS * 2 * Math.PI - (winnerIndex + 0.5) * segAngle + jitter;
-    const layers = renderLayers(movies, targetRotation, dpr, readWheelPalette(canvas));
+    if (movies.length === 0) return;
+    const slices = wheelSlices(movies.length, weights);
+    const winnerSlice = slices[winnerIndex] ?? slices[0]!;
+    const jitter = randomCenteredUnit() * winnerSlice.sweep * 0.4;
+    const targetRotation =
+      SPIN_ROTATIONS * 2 * Math.PI - (winnerSlice.start + winnerSlice.sweep / 2) + jitter;
+    const layers = renderLayers(movies, slices, targetRotation, dpr, readWheelPalette(canvas));
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       drawFrame(ctx, layers, targetRotation);
@@ -292,7 +311,7 @@ export default function SpinningWheel({
     return () => {
       if (rafRef.current !== undefined) cancelAnimationFrame(rafRef.current);
     };
-  }, [movies, winnerIndex]);
+  }, [movies, weights, winnerIndex]);
 
   return (
     <div className={styles.wrapper} aria-hidden>

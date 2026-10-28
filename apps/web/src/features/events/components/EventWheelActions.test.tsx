@@ -11,6 +11,7 @@ function wheelState(overrides: Partial<EventWheelState> = {}): EventWheelState {
     winnerIds: [],
     spinWinner: null,
     spinPool: [],
+    spinWeights: [],
     winnerIndex: -1,
     wheelKey: 0,
     loading: false,

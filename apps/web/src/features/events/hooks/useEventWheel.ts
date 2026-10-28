@@ -13,6 +13,7 @@ import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { remainingWheelRevealDelayMs, WHEEL_SPIN_DURATION_MS } from '@/shared/utils/wheelSpin';
+import { wheelSliceWeights } from '@/features/events/lib/wheelSliceWeights';
 
 export type EventPrimaryAction = 'add' | 'spin' | null;
 
@@ -21,6 +22,7 @@ export type EventWheelState = {
   winnerIds: string[];
   spinWinner: MovieData | null;
   spinPool: MovieData[];
+  spinWeights: number[];
   winnerIndex: number;
   wheelKey: number;
   loading: boolean;
@@ -122,6 +124,8 @@ export function useEventWheel({
   );
   const [spinWinner, setSpinWinner] = useState<MovieData | null>(null);
   const [spinPool, setSpinPool] = useState<MovieData[]>([]);
+  const wheelMode = event?.config?.wheelMode ?? 'strictRandom';
+  const spinWeights = useMemo(() => wheelSliceWeights(spinPool, wheelMode), [spinPool, wheelMode]);
   const [locallyDrawnIds, setLocallyDrawnIds] = useState<string[]>([]);
   const [manualReveal, setManualReveal] = useState(false);
   const [manualMode, setManualMode] = useState(false);
@@ -356,6 +360,7 @@ export function useEventWheel({
     winnerIds,
     spinWinner,
     spinPool,
+    spinWeights,
     winnerIndex,
     wheelKey,
     loading,

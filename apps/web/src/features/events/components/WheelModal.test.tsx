@@ -11,8 +11,8 @@ vi.mock('canvas-confetti', () => ({
   }),
 }));
 vi.mock('./SpinningWheel', () => ({
-  default: ({ onDone }: { onDone: () => void }) => (
-    <button data-testid="spin-done-trigger" onClick={onDone}>
+  default: ({ onDone, weights }: { onDone: () => void; weights?: readonly number[] }) => (
+    <button data-testid="spin-done-trigger" data-weights={weights?.join(',')} onClick={onDone}>
       Fin de roue
     </button>
   ),
@@ -65,6 +65,22 @@ function pressEscape(dialog: HTMLDialogElement) {
 }
 
 describe('WheelModal', () => {
+  it('hands the slice weights to the wheel', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={[baseMovie, { ...baseMovie, id: 'm2' }]}
+        weights={[5, 1]}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('spin-done-trigger')).toHaveAttribute('data-weights', '5,1');
+  });
+
   it('cannot be dismissed while the wheel spins, so the winner is not announced early', () => {
     const onClose = vi.fn();
     wrap(
