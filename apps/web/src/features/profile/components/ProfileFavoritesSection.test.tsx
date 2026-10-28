@@ -65,9 +65,17 @@ describe('ProfileFavoritesSection', () => {
         .getAllByRole('heading', { level: 3 })
         .map((heading) => heading.textContent)
     ).toEqual(['Heat', 'Inception', 'Twin Peaks']);
-    expect(within(section).getByText('1995')).toBeInTheDocument();
     expect(within(section).queryByText(/^[123]$/)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /modifier/i })).not.toBeInTheDocument();
+  });
+
+  it('shows each favorite by its poster and title alone, without a year', () => {
+    renderSection([HEAT, INCEPTION, TWIN_PEAKS]);
+
+    const section = screen.getByRole('region', { name: 'Ses favoris' });
+    expect(within(section).queryByText('1995')).not.toBeInTheDocument();
+    expect(within(section).queryByText('2010')).not.toBeInTheDocument();
+    expect(within(section).queryByText('1990')).not.toBeInTheDocument();
   });
 
   it('renders nothing for a visitor when there is no favorite', () => {

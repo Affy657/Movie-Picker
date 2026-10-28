@@ -17,6 +17,7 @@ interface ShowcaseMovieCardProps {
   ratingScale?: RatingScale;
   runtimeMinutes?: number | null;
   meta?: ReactNode;
+  showMeta?: boolean;
   eager?: boolean;
   onOpenDetails: () => void;
   badges?: ReactNode;
@@ -45,6 +46,7 @@ export default function ShowcaseMovieCard({
   ratingScale,
   runtimeMinutes,
   meta,
+  showMeta = true,
   eager = false,
   onOpenDetails,
   badges,
@@ -89,25 +91,27 @@ export default function ShowcaseMovieCard({
 
       <div className={styles.cardBody}>
         <h3 className={styles.cardTitle}>{title}</h3>
-        <span className={styles.cardMeta}>
-          {meta != null ? (
-            <span className={styles.metaText}>{meta}</span>
-          ) : (
-            <>
-              {year && <span className={styles.metaStart}>{year}</span>}
-              {voteLabel && (
-                <span className={styles.metaCenter} title={t('movies.list.tmdbVoteTitle')}>
-                  {voteLabel}
-                </span>
-              )}
-              {runtimeLabel && (
-                <span className={styles.metaEnd} title={t('movies.list.runtimeTitle')}>
-                  {runtimeLabel}
-                </span>
-              )}
-            </>
-          )}
-        </span>
+        {showMeta ? (
+          <span className={styles.cardMeta}>
+            {meta != null ? (
+              <span className={styles.metaText}>{meta}</span>
+            ) : (
+              <>
+                {year && <span className={styles.metaStart}>{year}</span>}
+                {voteLabel && (
+                  <span className={styles.metaCenter} title={t('movies.list.tmdbVoteTitle')}>
+                    {voteLabel}
+                  </span>
+                )}
+                {runtimeLabel && (
+                  <span className={styles.metaEnd} title={t('movies.list.runtimeTitle')}>
+                    {runtimeLabel}
+                  </span>
+                )}
+              </>
+            )}
+          </span>
+        ) : null}
       </div>
     </>
   );
