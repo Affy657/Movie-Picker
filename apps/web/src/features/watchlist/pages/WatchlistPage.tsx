@@ -518,18 +518,13 @@ export default function WatchlistPage() {
 
       {randomPick && (
         <RandomPickDialog
+          open={proposeTarget === null && details.target === null}
           items={randomPick.items}
           scope={randomPick.scope}
           ratingScale={user?.ratingScale}
           onClose={() => setRandomPick(null)}
-          onPropose={(item) => {
-            setRandomPick(null);
-            setProposeTarget(item);
-          }}
-          onOpenDetails={(item) => {
-            setRandomPick(null);
-            details.open(item);
-          }}
+          onPropose={setProposeTarget}
+          onOpenDetails={details.open}
         />
       )}
 

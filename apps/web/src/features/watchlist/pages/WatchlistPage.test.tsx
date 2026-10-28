@@ -789,8 +789,34 @@ describe('WatchlistPage (MSW)', () => {
 
       await user.click(within(dialog).getByRole('button', { name: 'Proposer dans une soirée' }));
 
-      expect(await screen.findByText(`Proposer « ${drawn} » dans une soirée`)).toBeInTheDocument();
-      expect(screen.queryByRole('dialog', { name: 'Piocher un film' })).not.toBeInTheDocument();
+      expect(
+        await screen.findByRole('dialog', { name: `Proposer « ${drawn} » dans une soirée` })
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Piocher un titre' })).not.toBeInTheDocument();
+    });
+
+    it('comes back to the same draw once the proposal is closed', async () => {
+      reduceMotion();
+      server.use(
+        authedUserHandler,
+        ...watchlistHandler([ITEM_A, ITEM_B]),
+        ...proposeHandlers(vi.fn())
+      );
+      renderPage();
+      const { user, dialog } = await openPick('Piocher un film');
+      const drawn = within(dialog).getByRole('heading', { level: 3 }).textContent ?? '';
+      await user.click(within(dialog).getByRole('button', { name: 'Proposer dans une soirée' }));
+      const propose = await screen.findByRole('dialog', {
+        name: `Proposer « ${drawn} » dans une soirée`,
+      });
+
+      await user.click(within(propose).getByRole('button', { name: 'Fermer' }));
+
+      const back = await screen.findByRole('dialog', { name: 'Piocher un titre' });
+      expect(within(back).getByRole('heading', { level: 3 })).toHaveTextContent(drawn);
+      expect(
+        screen.queryByRole('dialog', { name: `Proposer « ${drawn} » dans une soirée` })
+      ).not.toBeInTheDocument();
     });
 
     it('offers no random pick for an empty list', async () => {
@@ -849,7 +875,23 @@ describe('WatchlistPage (MSW)', () => {
       expect(
         await screen.findByRole('heading', { name: ITEM_A.title, level: 2 })
       ).toBeInTheDocument();
-      expect(screen.queryByRole('dialog', { name: 'Piocher un film' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Piocher un titre' })).not.toBeInTheDocument();
+    });
+
+    it('comes back to the same draw once the details are closed', async () => {
+      reduceMotion();
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A]), detailsHandler);
+      renderPage();
+      const { user, dialog } = await openPick('Piocher un film');
+      await user.click(within(dialog).getByRole('button', { name: 'Voir les détails' }));
+      const heading = await screen.findByRole('heading', { name: ITEM_A.title, level: 2 });
+      const details = heading.closest('dialog');
+      expect(details).not.toBeNull();
+
+      await user.click(within(details as HTMLElement).getByRole('button', { name: 'Fermer' }));
+
+      const back = await screen.findByRole('dialog', { name: 'Piocher un titre' });
+      expect(within(back).getByRole('heading', { level: 3 })).toHaveTextContent(ITEM_A.title);
     });
 
     it('on mobile, shows a short Piocher next to Add', async () => {

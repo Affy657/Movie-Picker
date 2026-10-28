@@ -24,6 +24,7 @@ import styles from './RandomPickDialog.module.css';
 export type RandomPickScope = 'list' | 'selection';
 
 interface RandomPickDialogProps {
+  open?: boolean;
   items: readonly WatchlistEntry[];
   scope: RandomPickScope;
   ratingScale?: RatingScale;
@@ -137,6 +138,7 @@ function PickActions({
 }
 
 export default function RandomPickDialog({
+  open = true,
   items,
   scope,
   ratingScale,
@@ -202,7 +204,7 @@ export default function RandomPickDialog({
   );
 
   return (
-    <ResponsiveDialog open title={title} onClose={onClose} footer={actions}>
+    <ResponsiveDialog open={open} title={title} onClose={onClose} footer={actions}>
       {body}
     </ResponsiveDialog>
   );
