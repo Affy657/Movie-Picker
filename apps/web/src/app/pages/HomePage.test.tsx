@@ -213,7 +213,7 @@ describe('HomePage', () => {
     const trendingCard = screen
       .getByRole('heading', { name: 'trending 1', level: 3 })
       .closest('li') as HTMLElement;
-    expect(within(trendingCard).getByText('2024')).toBeInTheDocument();
+    expect(within(trendingCard).queryByText('2024')).not.toBeInTheDocument();
   });
 
   it('signed-in: the details modal offers the watchlist and the proposal', async () => {
@@ -432,7 +432,7 @@ describe('HomePage', () => {
     await waitFor(() => expect(removedPath).toContain('/watchlist/501'));
   });
 
-  it('signed-in: the personal rails read the same facts line as the showcase cards', async () => {
+  it('signed-in: the personal rails show the title alone, without year, vote or runtime', async () => {
     server.use(authedUserHandler, showcaseHandler, collectionsHandler, ...personalHandlers);
     renderPage();
 
@@ -443,12 +443,14 @@ describe('HomePage', () => {
       'section'
     );
 
-    expect(within(mine!).getByText('Film de ma liste').closest('li')).toHaveTextContent(
-      '20213.7/52h08'
-    );
-    expect(within(friends!).getByText("Film d'un ami").closest('li')).toHaveTextContent(
-      '20193.1/51h35'
-    );
+    const mineCard = within(mine!).getByText('Film de ma liste').closest('li');
+    expect(mineCard).not.toHaveTextContent('2021');
+    expect(mineCard).not.toHaveTextContent('3.7/5');
+    expect(mineCard).not.toHaveTextContent('2h08');
+    const friendCard = within(friends!).getByText("Film d'un ami").closest('li');
+    expect(friendCard).not.toHaveTextContent('2019');
+    expect(friendCard).not.toHaveTextContent('3.1/5');
+    expect(friendCard).not.toHaveTextContent('1h35');
   });
 
   it('hover, visitor: the kebab keeps only the details and Letterboxd', async () => {

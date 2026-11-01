@@ -17,6 +17,7 @@ interface ShowcaseMovieCardProps {
   ratingScale?: RatingScale;
   runtimeMinutes?: number | null;
   meta?: ReactNode;
+  showFacts?: boolean;
   eager?: boolean;
   onOpenDetails: () => void;
   badges?: ReactNode;
@@ -45,6 +46,7 @@ export default function ShowcaseMovieCard({
   ratingScale,
   runtimeMinutes,
   meta,
+  showFacts = true,
   eager = false,
   onOpenDetails,
   badges,
@@ -56,6 +58,7 @@ export default function ShowcaseMovieCard({
   const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
   const voteLabel = formatTmdbVote(voteAverage, ratingScale);
   const runtimeLabel = formatRuntimeMinutes(runtimeMinutes);
+  const hasMetaLine = meta != null || showFacts;
 
   const body = (
     <>
@@ -89,25 +92,27 @@ export default function ShowcaseMovieCard({
 
       <div className={styles.cardBody}>
         <h3 className={styles.cardTitle}>{title}</h3>
-        <span className={styles.cardMeta}>
-          {meta != null ? (
-            <span className={styles.metaText}>{meta}</span>
-          ) : (
-            <>
-              {year && <span className={styles.metaStart}>{year}</span>}
-              {voteLabel && (
-                <span className={styles.metaCenter} title={t('movies.list.tmdbVoteTitle')}>
-                  {voteLabel}
-                </span>
-              )}
-              {runtimeLabel && (
-                <span className={styles.metaEnd} title={t('movies.list.runtimeTitle')}>
-                  {runtimeLabel}
-                </span>
-              )}
-            </>
-          )}
-        </span>
+        {hasMetaLine && (
+          <span className={styles.cardMeta}>
+            {meta != null ? (
+              <span className={styles.metaText}>{meta}</span>
+            ) : (
+              <>
+                {year && <span className={styles.metaStart}>{year}</span>}
+                {voteLabel && (
+                  <span className={styles.metaCenter} title={t('movies.list.tmdbVoteTitle')}>
+                    {voteLabel}
+                  </span>
+                )}
+                {runtimeLabel && (
+                  <span className={styles.metaEnd} title={t('movies.list.runtimeTitle')}>
+                    {runtimeLabel}
+                  </span>
+                )}
+              </>
+            )}
+          </span>
+        )}
       </div>
     </>
   );

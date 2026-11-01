@@ -5,7 +5,6 @@ import MovieBrowseCard, {
   type MovieLibraryActions,
 } from '@/features/movies/components/MovieBrowseCard';
 import type { MovieMediaType } from '@/shared/types/movie';
-import type { RatingScale } from '@/shared/types/theme';
 
 export interface PersonalRowItem {
   tmdbId: number;
@@ -25,7 +24,6 @@ interface Props {
   items: PersonalRowItem[];
   isPending: boolean;
   eagerCount?: number;
-  ratingScale?: RatingScale;
   library: MovieLibraryActions;
   onSelect: (item: PersonalRowItem) => void;
 }
@@ -50,7 +48,6 @@ export default function HomePersonalRow({
   items,
   isPending,
   eagerCount = 0,
-  ratingScale,
   library,
   onSelect,
 }: Readonly<Props>) {
@@ -67,7 +64,7 @@ export default function HomePersonalRow({
             <MovieBrowseCard
               key={`${cardItem.tmdbId}|${cardItem.mediaType}`}
               item={cardItem}
-              ratingScale={ratingScale}
+              showFacts={false}
               eager={index < eagerCount}
               hasHover={library.hasHover}
               isLoggedIn={library.isLoggedIn}

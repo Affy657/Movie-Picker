@@ -65,6 +65,16 @@ describe('MoviePreviewRow', () => {
     );
   });
 
+  it('ends the see-all link with a chevron kept out of its accessible name', () => {
+    mockRailMetrics(0, 0);
+    renderRow(2);
+
+    const link = screen.getByRole('link', { name: 'Voir les 100 films' });
+    const chevron = link.querySelector('svg');
+    expect(chevron).not.toBeNull();
+    expect(chevron).toHaveAttribute('aria-hidden', 'true');
+  });
+
   it('ties the row to its heading', () => {
     mockRailMetrics(0, 0);
     renderRow(2);

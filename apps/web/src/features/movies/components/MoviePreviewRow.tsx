@@ -30,7 +30,13 @@ export function MoviePreviewRail({ size = 'sm', itemCount, label, children }: Re
   const scrollable = canScrollBack || canScrollForward;
 
   return (
-    <div className={clsx(styles.railViewport, size === 'wide' && styles.railViewportWide)}>
+    <div
+      className={clsx(
+        styles.railViewport,
+        size === 'md' && styles.railViewportMd,
+        size === 'wide' && styles.railViewportWide
+      )}
+    >
       <ul
         ref={railRef}
         className={clsx(styles.rail, RAIL_SIZE_CLASS[size])}
@@ -103,6 +109,7 @@ export default function MoviePreviewRow({
         {seeAllTo && seeAllLabel ? (
           <Link to={seeAllTo} className={styles.seeAllLink}>
             {seeAllLabel}
+            <ChevronRight size={ICON_SIZE.sm} className={styles.seeAllChevron} aria-hidden />
           </Link>
         ) : null}
       </div>

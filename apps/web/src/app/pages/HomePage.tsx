@@ -205,7 +205,6 @@ export default function HomePage() {
         seeAllTo={ROUTES.watchlist}
         seeAllLabel={t('showcase.seeWatchlist')}
         eagerCount={eagerCountFor('watchlist', firstRail)}
-        ratingScale={user?.ratingScale}
         library={library}
         onSelect={openPersonalDetails}
       />
@@ -217,7 +216,6 @@ export default function HomePage() {
           library={library}
           onSelect={openDetails}
           eagerCount={eagerCountFor('recommendations', firstRail)}
-          ratingScale={user?.ratingScale}
           subtitle={seedTitle}
         />
       ) : null}
@@ -226,7 +224,6 @@ export default function HomePage() {
         items={friendsRow.items}
         isPending={friendsRow.isPending}
         eagerCount={eagerCountFor('friends', firstRail)}
-        ratingScale={user?.ratingScale}
         library={library}
         onSelect={openPersonalDetails}
       />
@@ -237,7 +234,6 @@ export default function HomePage() {
         library={library}
         onSelect={openDetails}
         eagerCount={eagerCountFor('provider', firstRail)}
-        ratingScale={user?.ratingScale}
         tabConfig={{
           ariaLabel: t('showcase.providerLabel'),
           tabs: providerTabs,
@@ -251,7 +247,6 @@ export default function HomePage() {
         query={{ section: 'trending', genreIds: selectedGenreIds }}
         library={library}
         onSelect={openDetails}
-        ratingScale={user?.ratingScale}
         tabConfig={{
           ariaLabel: t('showcase.genreLabel'),
           tabs: genreTabs,
@@ -265,7 +260,6 @@ export default function HomePage() {
         query={{ section: 'now-playing' }}
         library={library}
         onSelect={openDetails}
-        ratingScale={user?.ratingScale}
       />
       <HomeShowcaseRow
         headingKey="showcase.sections.themeTitle"
@@ -273,7 +267,6 @@ export default function HomePage() {
         query={{ section: 'theme', theme: themeTab }}
         library={library}
         onSelect={openDetails}
-        ratingScale={user?.ratingScale}
         tabConfig={{
           ariaLabel: t('showcase.themeLabel'),
           tabs: themeTabs,
@@ -289,7 +282,6 @@ export default function HomePage() {
         showRank
         library={library}
         onSelect={openDetails}
-        ratingScale={user?.ratingScale}
       />
 
       <Card
