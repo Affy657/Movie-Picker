@@ -75,7 +75,7 @@ env:
   # refuses to start on the Linux 6.19+ kernels of the runners while TCMalloc owns rseq
   # (SERVER-121912): `GLIBC_TUNABLES=glibc.pthread.rseq=1` on each `docker run` hands rseq to
   # glibc until a fixed TCMalloc ships.
-  MONGO_IMAGE: "mongo:8@sha256:0e900a3364da37b76d642b73b0bba56bd4c6c509ab470cf700436fd866bee3ff"
+  MONGO_IMAGE: "mongo:8@sha256:e16e606f792ea89d2b4907b54e5e31eb86a7a23e27231dce3a982cc8f2d73cd2"
 
 jobs:
   # Solo project: no external contribution is accepted, the licence forbids it and
