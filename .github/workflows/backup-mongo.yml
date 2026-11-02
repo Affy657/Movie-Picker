@@ -62,12 +62,12 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  MDB_TOOLS_VERSION: "100.19.1"
-  MDB_TOOLS_SHA256: "f34b84a67ab96b4ff52571ec5d15e2148d96cb140b1ea9ef8c29ac33c48e3480"
+  MDB_TOOLS_VERSION: "100.20.0"
+  MDB_TOOLS_SHA256: "0cee7b5bf3e986a01f5b4fcc750d056064a619ba7131cf1b22fef139558cc4be"
   # Pinned by digest: this instance receives a full copy of the production database. Same digest
   # as the MongoDB of the CI test jobs (`ci-cd.yml`), `scripts/check-tool-versions.mjs` keeps
   # both on the digest `mongo:8` currently resolves to.
-  MONGO_IMAGE: "mongo:8@sha256:0e900a3364da37b76d642b73b0bba56bd4c6c509ab470cf700436fd866bee3ff"
+  MONGO_IMAGE: "mongo:8@sha256:e16e606f792ea89d2b4907b54e5e31eb86a7a23e27231dce3a982cc8f2d73cd2"
 
 jobs:
   backup:
