@@ -54,6 +54,7 @@ interface MovieBrowseCardProps {
   leadingBadge?: ReactNode;
   ratingScale?: RatingScale;
   meta?: ReactNode;
+  showFacts?: boolean;
   eager?: boolean;
 }
 
@@ -115,6 +116,7 @@ export default function MovieBrowseCard({
   leadingBadge,
   ratingScale,
   meta,
+  showFacts,
   eager,
 }: Readonly<MovieBrowseCardProps>) {
   const { t } = useTranslation();
@@ -184,6 +186,7 @@ export default function MovieBrowseCard({
       ratingScale={ratingScale}
       runtimeMinutes={item.runtimeMinutes}
       meta={meta}
+      showFacts={showFacts}
       eager={eager}
       onOpenDetails={onOpenDetails}
       badges={

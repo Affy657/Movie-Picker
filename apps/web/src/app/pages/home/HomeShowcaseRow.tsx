@@ -3,7 +3,6 @@ import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { Tabs, TabPanel, type TabDef } from '@/shared/components/Tabs';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
-import type { RatingScale } from '@/shared/types/theme';
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
 import { MovieRankBadge } from '@/features/movies/components/ShowcaseMovieCard';
 import MovieBrowseCard, {
@@ -35,7 +34,6 @@ interface Props<T extends string> {
   query: ShowcaseQuery;
   showRank?: boolean;
   eagerCount?: number;
-  ratingScale?: RatingScale;
   library: MovieLibraryActions;
   onSelect: (item: ShowcaseItem) => void;
   tabConfig?: TabConfig<T>;
@@ -83,7 +81,6 @@ export default function HomeShowcaseRow<T extends string>({
   query,
   showRank = false,
   eagerCount = 0,
-  ratingScale,
   library,
   onSelect,
   tabConfig,
@@ -109,7 +106,7 @@ export default function HomeShowcaseRow<T extends string>({
           <MovieBrowseCard
             key={`${cardItem.tmdbId}|${cardItem.mediaType}`}
             item={cardItem}
-            ratingScale={ratingScale}
+            showFacts={false}
             meta={
               showRank && item.eventCount != null
                 ? pluralizeCount(

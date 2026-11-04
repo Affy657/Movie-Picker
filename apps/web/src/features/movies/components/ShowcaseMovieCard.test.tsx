@@ -41,6 +41,22 @@ describe('ShowcaseMovieCard', () => {
     expect(screen.queryByTitle(/durée du film/i)).toBeNull();
   });
 
+  it('leaves the title alone under the poster when the facts are turned off', () => {
+    const { container } = renderCard({ showFacts: false, voteAverage: 8.1, runtimeMinutes: 155 });
+
+    expect(screen.queryByText('2021')).toBeNull();
+    expect(screen.queryByTitle(/note moyenne tmdb/i)).toBeNull();
+    expect(screen.queryByTitle(/durée du film/i)).toBeNull();
+    expect(container.querySelector('li')).toHaveTextContent(/^Dune$/);
+  });
+
+  it('keeps the meta slot when the facts are turned off', () => {
+    renderCard({ showFacts: false, meta: 'Dans 3 soirées', voteAverage: 8.1 });
+
+    expect(screen.getByText('Dans 3 soirées')).toBeInTheDocument();
+    expect(screen.queryByTitle(/note moyenne tmdb/i)).toBeNull();
+  });
+
   it('forwards the eager hint to the poster image', () => {
     const { container, unmount } = renderCard({ eager: true });
     const eagerImg = container.querySelector('img');
