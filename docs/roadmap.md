@@ -290,10 +290,11 @@ Les cinq blocs connecté restants ont été renvoyés au backlog : aucun n'est n
 
 ---
 
-## Backlog produit (non priorisé sur une release) (139 points, 1 non estimé)
+## Backlog produit (non priorisé sur une release) (159 points, 1 non estimé)
 
 > **Note V2, application mobile** : l'app mobile (Expo / React Native) était un projet de cours, archivée dans `archive/mobile` (mai 2026). Pour la V2, l'objectif est une app mobile propre, pleinement intégrée à la plateforme. Pas d'engagement de date.
 
+- `XL` **Refonte visuelle de la plateforme** : Movie Picker prend l'allure d'une salle de cinéma : fond noir neutre, film à la une en grand, affiches vivantes au survol, rangées jusqu'au bord de l'écran et interface plus légère autour des films.
 - `XL` **Mode Battle / Tournoi** : alternative à la roue, l'hôte lance un tournoi en duels ; deux films s'affrontent, les participants votent, et le gagnant passe au tour suivant jusqu'au champion.
 - `M` **i18n étendue** : langues supplémentaires au-delà de FR / EN ; variantes régionales, RTL si besoin.
 - `L` **Cercles d'amis** : groupes persistants d'utilisateurs réutilisables d'une soirée à l'autre ; invitation en un clic de tout le cercle.
