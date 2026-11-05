@@ -61,7 +61,7 @@ export type FittedTitle = { size: number; lines: string[] };
 
 export function fitTitle(text: string, options: FitOptions): FittedTitle {
   const { sizes, maxWidth, maxLines, measureAt } = options;
-  const whole = text.trim().split(/\s+/).join(' ');
+  const whole = text.trim().replaceAll(/\s+/g, ' ');
   let fitted: FittedTitle = { size: 0, lines: [] };
   for (const size of sizes) {
     fitted = { size, lines: wrapLines(text, { maxWidth, maxLines, measure: measureAt(size) }) };

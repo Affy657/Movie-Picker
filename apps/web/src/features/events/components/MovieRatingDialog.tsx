@@ -189,10 +189,10 @@ export default function MovieRatingDialog({
               <>
                 <span className={styles.valueNumber}>{formatRating(draft, scale, locale)}</span>
                 {status === 'saved' ? (
-                  <span className={styles.saved} role="status">
+                  <output className={styles.saved}>
                     <Check size={ICON_SIZE.sm} aria-hidden />
                     <span>{t('events.ratings.saved')}</span>
-                  </span>
+                  </output>
                 ) : null}
               </>
             )}

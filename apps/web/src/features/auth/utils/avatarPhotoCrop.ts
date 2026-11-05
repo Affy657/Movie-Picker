@@ -70,15 +70,16 @@ export function zoomCrop(
   zoom: number,
   image: ImageSize,
   frame: number,
-  anchor: CropPoint = { x: frame / 2, y: frame / 2 }
+  anchor?: CropPoint
 ): Crop {
+  const center = anchor ?? { x: frame / 2, y: frame / 2 };
   const nextZoom = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
   const ratio = nextZoom / crop.zoom;
   return clampCrop(
     {
       zoom: nextZoom,
-      x: anchor.x - (anchor.x - crop.x) * ratio,
-      y: anchor.y - (anchor.y - crop.y) * ratio,
+      x: center.x - (center.x - crop.x) * ratio,
+      y: center.y - (center.y - crop.y) * ratio,
     },
     image,
     frame

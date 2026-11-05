@@ -104,11 +104,7 @@ export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Pro
         />
       );
     }
-    return (
-      <span className={styles.placeholder} role="status">
-        {t('events.recap.story.preparing')}
-      </span>
-    );
+    return <output className={styles.placeholder}>{t('events.recap.story.preparing')}</output>;
   };
 
   const slideLabel = (item: StorySlide) =>
@@ -154,7 +150,7 @@ export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Pro
             onIndexChange={setIndex}
             label={t('events.recap.story.carouselAria')}
             roleDescription={t('events.recap.story.carouselRole')}
-            slideLabel={(item) => (
+            renderSlideLabel={(item) => (
               <>
                 {slideLabel(item)}
                 {slides.length > 1 ? (
@@ -171,10 +167,10 @@ export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Pro
             previousLabel={t('events.recap.story.previous')}
             nextLabel={t('events.recap.story.next')}
           />
-          <p className={styles.hint} role="status">
+          <output className={styles.hint}>
             {linkCopied ? t('events.recap.story.linkCopied') : t('events.recap.story.hint')}
             {!linkCopied && slides.length > 1 ? ` ${t('events.recap.story.hintSwipe')}` : ''}
-          </p>
+          </output>
           <div className={styles.actions}>
             {canShareFile ? (
               <Button type="button" variant="primary" onClick={() => void share()}>

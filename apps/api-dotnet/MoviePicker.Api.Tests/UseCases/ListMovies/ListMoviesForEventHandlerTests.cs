@@ -298,11 +298,11 @@ public sealed class ListMoviesForEventHandlerTests
         _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string>());
         _ratingRepo
             .Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<MovieRating>
-            {
+            .ReturnsAsync(
+            [
                 new() { Id = "r1", EventId = evt.Id, MovieId = "mov1", ParticipantId = "p1", Value = 7, CreatedAt = updatedAt, UpdatedAt = updatedAt },
                 new() { Id = "r2", EventId = evt.Id, MovieId = "mov1", ParticipantId = "p2", Value = 9, CreatedAt = updatedAt, UpdatedAt = updatedAt }
-            });
+            ]);
 
         var result = await _sut.HandleAsync("evt1");
 

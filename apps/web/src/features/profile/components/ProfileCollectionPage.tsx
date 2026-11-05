@@ -63,7 +63,7 @@ interface ProfileCollectionPageProps<T extends MovieListItemLike> {
   itemKey: (item: T) => string;
   canonicalPath: (handle: string) => string;
   texts: ProfileCollectionTexts;
-  leadingBadge?: (item: T, handle: string) => ReactNode;
+  renderLeadingBadge?: (item: T, handle: string) => ReactNode;
 }
 
 function collectionSeo(
@@ -95,7 +95,7 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
   itemKey,
   canonicalPath,
   texts,
-  leadingBadge,
+  renderLeadingBadge,
 }: Readonly<ProfileCollectionPageProps<T>>) {
   const { t } = useTranslation();
   useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
@@ -230,7 +230,9 @@ export default function ProfileCollectionPage<T extends MovieListItemLike>({
                 onToggleWatchlist={() => watchlist.toggle(item)}
                 onProposeToEvent={() => setProposeTarget(item)}
                 onOpenDetails={() => details.open(item)}
-                leadingBadge={leadingBadge && handle ? leadingBadge(item, handle) : undefined}
+                leadingBadge={
+                  renderLeadingBadge && handle ? renderLeadingBadge(item, handle) : undefined
+                }
               />
             ))}
           </ul>

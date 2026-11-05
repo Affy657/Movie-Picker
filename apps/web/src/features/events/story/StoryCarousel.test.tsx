@@ -24,7 +24,7 @@ function setup(index = 0, onIndexChange = vi.fn()) {
       onIndexChange={onIndexChange}
       label="Stories de la soirée"
       roleDescription="carrousel"
-      slideLabel={(slide) => `Story, ${slide.movie?.title}`}
+      renderSlideLabel={(slide) => `Story, ${slide.movie?.title}`}
       renderSlide={(slide, current) => (
         <span>{current ? `courant ${slide.movie?.title}` : `voisin ${slide.movie?.title}`}</span>
       )}
@@ -47,7 +47,7 @@ describe('StoryCarousel', () => {
   it('tells where the reader stands', () => {
     setup(1);
 
-    expect(screen.getByRole('group', { name: 'Stories de la soirée' })).toBeInTheDocument();
+    expect(screen.getByRole('toolbar', { name: 'Stories de la soirée' })).toBeInTheDocument();
     expect(screen.getByText('Story, Heat')).toBeInTheDocument();
   });
 
@@ -73,7 +73,7 @@ describe('StoryCarousel', () => {
 
   it('moves with the keyboard', () => {
     const onIndexChange = setup(1);
-    const group = screen.getByRole('group', { name: 'Stories de la soirée' });
+    const group = screen.getByRole('toolbar', { name: 'Stories de la soirée' });
 
     fireEvent.keyDown(group, { key: 'ArrowRight' });
     expect(onIndexChange).toHaveBeenCalledWith(2);
@@ -84,7 +84,7 @@ describe('StoryCarousel', () => {
 
   it('follows a swipe to the left', () => {
     const onIndexChange = setup(0);
-    const group = screen.getByRole('group', { name: 'Stories de la soirée' });
+    const group = screen.getByRole('toolbar', { name: 'Stories de la soirée' });
 
     fireEvent.pointerDown(group, { clientX: 200, pointerId: 1 });
     fireEvent.pointerUp(group, { clientX: 100, pointerId: 1 });
@@ -94,7 +94,7 @@ describe('StoryCarousel', () => {
 
   it('ignores a finger that barely moved', () => {
     const onIndexChange = setup(1);
-    const group = screen.getByRole('group', { name: 'Stories de la soirée' });
+    const group = screen.getByRole('toolbar', { name: 'Stories de la soirée' });
 
     fireEvent.pointerDown(group, { clientX: 200, pointerId: 1 });
     fireEvent.pointerUp(group, { clientX: 190, pointerId: 1 });
@@ -110,7 +110,7 @@ describe('StoryCarousel', () => {
         onIndexChange={vi.fn()}
         label="Stories de la soirée"
         roleDescription="carrousel"
-        slideLabel={() => 'Story, les films'}
+        renderSlideLabel={() => 'Story, les films'}
         renderSlide={() => <span>les films</span>}
         previousLabel="Story précédente"
         nextLabel="Story suivante"

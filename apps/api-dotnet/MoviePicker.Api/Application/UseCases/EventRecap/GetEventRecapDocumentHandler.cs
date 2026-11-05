@@ -61,7 +61,8 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
         var fallbackUrl = $"{webBase}/";
         var title = $"{evt.Title}, le recap";
         var fallbackImage = $"{webBase}/og-image.png";
-        var first = evt.HasWinner ? (await WinnerMovies.ListAsync(_movies, evt, ct)).FirstOrDefault() : null;
+        IReadOnlyList<Movie> winners = evt.HasWinner ? await WinnerMovies.ListAsync(_movies, evt, ct) : [];
+        var first = winners.Count > 0 ? winners[0] : null;
         if (first is null)
         {
             return new EventRecapPreview(

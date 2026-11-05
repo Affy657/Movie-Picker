@@ -63,7 +63,7 @@ export default function ProfileMoviesPage() {
       itemKey={watchedKey}
       canonicalPath={ROUTES.profileMovies}
       texts={texts}
-      leadingBadge={(item, ownerHandle) =>
+      renderLeadingBadge={(item, ownerHandle) =>
         item.myRating != null ? (
           <OwnerRatingBadge handle={ownerHandle} value={item.myRating} scale={scale} />
         ) : undefined

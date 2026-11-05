@@ -88,7 +88,7 @@ public sealed class AvatarPhotoImageTests
     [Fact]
     public void Inspect_TruncatedPng_IsRejected()
     {
-        Assert.Null(AvatarPhotoImage.Inspect(ImageHeaders.Png(256, 256)[..12]));
+        Assert.Null(AvatarPhotoImage.Inspect(ImageHeaders.Png(256, 256).AsSpan(..12)));
     }
 
     [Fact]

@@ -176,7 +176,7 @@ export default function AvatarPhotoCropper({
       <p className={pickerStyles.hint}>{t('auth.account.avatarPhotoCropHint')}</p>
       <div
         ref={frameRef}
-        role="group"
+        role="toolbar"
         aria-label={t('auth.account.avatarPhotoCropAreaLabel')}
         aria-describedby={hintId}
         tabIndex={0}

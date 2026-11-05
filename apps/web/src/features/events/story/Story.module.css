@@ -159,6 +159,7 @@
 
 .hint {
   composes: hint from '@/shared/components/ShareDialog.module.css';
+  display: block;
 }
 
 .actions {

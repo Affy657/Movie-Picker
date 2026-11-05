@@ -251,15 +251,14 @@ function drawPoster(
   });
 }
 
+type AvatarPlace = { x: number; y: number; size: number; ring: boolean };
+
 function drawAvatar(
   ctx: CanvasRenderingContext2D,
   src: string | null,
   assets: StoryAssets,
   initials: string,
-  x: number,
-  y: number,
-  size: number,
-  ring: boolean
+  { x, y, size, ring }: AvatarPlace
 ): void {
   if (ring) {
     ctx.fillStyle = colors(ctx).ground;
@@ -531,16 +530,12 @@ function drawPeople(
 
   let x = (STORY_WIDTH - rowWidth) / 2;
   people.avatars.forEach((avatar, index) => {
-    drawAvatar(
-      ctx,
-      avatar.src,
-      assets,
-      avatar.initials,
-      x + index * (AVATAR_SIZE - AVATAR_OVERLAP),
-      centerY - AVATAR_SIZE / 2,
-      AVATAR_SIZE,
-      index > 0
-    );
+    drawAvatar(ctx, avatar.src, assets, avatar.initials, {
+      x: x + index * (AVATAR_SIZE - AVATAR_OVERLAP),
+      y: centerY - AVATAR_SIZE / 2,
+      size: AVATAR_SIZE,
+      ring: index > 0,
+    });
   });
   x += avatarsWidth;
   x += text(ctx, people.label, x, centerY, {
@@ -894,16 +889,12 @@ function drawRow(
   ctx.lineTo(right, top);
   ctx.stroke();
 
-  drawAvatar(
-    ctx,
-    row.avatarSrc,
-    assets,
-    row.initials,
-    STORY_SIDE,
-    centerY - layout.avatarSize / 2,
-    layout.avatarSize,
-    false
-  );
+  drawAvatar(ctx, row.avatarSrc, assets, row.initials, {
+    x: STORY_SIDE,
+    y: centerY - layout.avatarSize / 2,
+    size: layout.avatarSize,
+    ring: false,
+  });
 
   const starsX = right - valueWidth - layout.rowGap - starsWidth(layout.rowStarSize);
   const nameX = STORY_SIDE + layout.avatarSize + layout.rowGap;

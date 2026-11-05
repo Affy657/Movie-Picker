@@ -269,7 +269,7 @@ describe('AvatarPickerModal, photo tab', () => {
       vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
         this: HTMLElement
       ) {
-        const side = this.closest('[role="group"]') ? frameWidth : 0;
+        const side = this.closest('[role="toolbar"]') ? frameWidth : 0;
         return { width: side, height: side, top: 0, left: 0, right: side, bottom: side } as DOMRect;
       });
       vi.stubGlobal(
@@ -306,14 +306,18 @@ describe('AvatarPickerModal, photo tab', () => {
     renderPicker();
     await choose(jpeg());
 
-    const area = await screen.findByRole('group', { name: 'Position de la photo dans le cercle' });
+    const area = await screen.findByRole('toolbar', {
+      name: 'Position de la photo dans le cercle',
+    });
     expect(area).toHaveFocus();
   });
 
   it('moves the photo with the arrow keys', async () => {
     renderPicker();
     await choose(jpeg());
-    const area = await screen.findByRole('group', { name: 'Position de la photo dans le cercle' });
+    const area = await screen.findByRole('toolbar', {
+      name: 'Position de la photo dans le cercle',
+    });
     const image = within(area).getByTestId('avatar-photo-crop-image');
     const before = image.style.transform;
 
@@ -331,7 +335,9 @@ describe('AvatarPickerModal, photo tab', () => {
     });
     renderPicker();
     await choose(jpeg());
-    const area = await screen.findByRole('group', { name: 'Position de la photo dans le cercle' });
+    const area = await screen.findByRole('toolbar', {
+      name: 'Position de la photo dans le cercle',
+    });
     const image = within(area).getByTestId('avatar-photo-crop-image');
     const before = image.style.transform;
 
@@ -346,7 +352,9 @@ describe('AvatarPickerModal, photo tab', () => {
     Reflect.deleteProperty(HTMLElement.prototype, 'setPointerCapture');
     renderPicker();
     await choose(jpeg());
-    const area = await screen.findByRole('group', { name: 'Position de la photo dans le cercle' });
+    const area = await screen.findByRole('toolbar', {
+      name: 'Position de la photo dans le cercle',
+    });
     const image = within(area).getByTestId('avatar-photo-crop-image');
     fireEvent.pointerDown(area, {
       pointerId: 4,

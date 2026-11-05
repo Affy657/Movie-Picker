@@ -77,9 +77,8 @@ export default function StarRating({
   };
 
   return (
-    <div
+    <fieldset
       className={clsx(styles.root, SIZE_CLASS[size], className)}
-      role="group"
       aria-label={ariaLabel}
       onMouseLeave={() => setPreview(null)}
     >
@@ -112,6 +111,6 @@ export default function StarRating({
           </button>
         );
       })}
-    </div>
+    </fieldset>
   );
 }

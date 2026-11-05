@@ -4,6 +4,10 @@
   --star-color: var(--color-rating);
   --star-empty: var(--color-border-field);
   display: inline-flex;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
   align-items: center;
   margin-left: calc((var(--star-cell) - var(--star-size)) / -2);
 }

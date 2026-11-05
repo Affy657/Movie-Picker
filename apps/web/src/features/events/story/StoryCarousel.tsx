@@ -14,7 +14,7 @@ type Props = {
   onIndexChange: (index: number) => void;
   label: string;
   roleDescription: string;
-  slideLabel: (slide: StorySlide) => ReactNode;
+  renderSlideLabel: (slide: StorySlide) => ReactNode;
   renderSlide: (slide: StorySlide, current: boolean) => ReactNode;
   previousLabel: string;
   nextLabel: string;
@@ -26,7 +26,7 @@ export default function StoryCarousel({
   onIndexChange,
   label,
   roleDescription,
-  slideLabel,
+  renderSlideLabel,
   renderSlide,
   previousLabel,
   nextLabel,
@@ -66,7 +66,7 @@ export default function StoryCarousel({
     <div className={styles.carousel}>
       <div
         className={styles.viewport}
-        role="group"
+        role="toolbar"
         aria-roledescription={roleDescription}
         aria-label={label}
         tabIndex={0}
@@ -122,7 +122,7 @@ export default function StoryCarousel({
         </>
       )}
       <p className={styles.caption} aria-live="polite">
-        {slideLabel(current)}
+        {renderSlideLabel(current)}
       </p>
     </div>
   );
