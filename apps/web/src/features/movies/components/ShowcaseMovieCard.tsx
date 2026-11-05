@@ -53,10 +53,10 @@ export default function ShowcaseMovieCard({
   kebab,
   className,
 }: Readonly<ShowcaseMovieCardProps>) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const posterRaw = posterImageSrc(posterPath);
   const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
-  const voteLabel = formatTmdbVote(voteAverage, ratingScale);
+  const voteLabel = formatTmdbVote(voteAverage, ratingScale, locale);
   const runtimeLabel = formatRuntimeMinutes(runtimeMinutes);
   const hasMetaLine = meta != null || showFacts;
 

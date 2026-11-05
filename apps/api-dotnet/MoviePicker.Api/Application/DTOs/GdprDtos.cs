@@ -11,6 +11,16 @@ public sealed record UserDataExportResponse
     public IReadOnlyList<ExportedParticipation> Participations { get; init; } = Array.Empty<ExportedParticipation>();
     public IReadOnlyList<ExportedPushSubscription> PushSubscriptions { get; init; } = Array.Empty<ExportedPushSubscription>();
     public IReadOnlyList<ExportedWatchlistItem> Watchlist { get; init; } = Array.Empty<ExportedWatchlistItem>();
+    public IReadOnlyList<ExportedFavorite> Favorites { get; init; } = Array.Empty<ExportedFavorite>();
+    public ExportedAvatarPhoto? AvatarPhoto { get; init; }
+}
+
+public sealed record ExportedAvatarPhoto
+{
+    public string ContentType { get; init; } = string.Empty;
+    public string Base64Content { get; init; } = string.Empty;
+    public bool IsActive { get; init; }
+    public DateTimeOffset UpdatedAt { get; init; }
 }
 
 public sealed record ExportedProfile
@@ -80,6 +90,7 @@ public sealed record ExportedParticipation
     public DateTimeOffset JoinedAt { get; init; }
     public IReadOnlyList<ExportedVote> Votes { get; init; } = Array.Empty<ExportedVote>();
     public IReadOnlyList<ExportedSeenMark> SeenMarks { get; init; } = Array.Empty<ExportedSeenMark>();
+    public IReadOnlyList<ExportedRating> Ratings { get; init; } = Array.Empty<ExportedRating>();
     public IReadOnlyList<ExportedProposedMovie> ProposedMovies { get; init; } = Array.Empty<ExportedProposedMovie>();
 }
 
@@ -107,10 +118,25 @@ public sealed record ExportedSeenMark
     public DateTimeOffset CreatedAt { get; init; }
 }
 
+public sealed record ExportedRating
+{
+    public string MovieId { get; init; } = string.Empty;
+    public int Value { get; init; }
+    public DateTimeOffset UpdatedAt { get; init; }
+}
+
 public sealed record ExportedPushSubscription
 {
     public string Endpoint { get; init; } = string.Empty;
     public DateTimeOffset CreatedAt { get; init; }
+}
+
+public sealed record ExportedFavorite
+{
+    public int TmdbId { get; init; }
+    public string MediaType { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public string Year { get; init; } = string.Empty;
 }
 
 public sealed record ExportedWatchlistItem

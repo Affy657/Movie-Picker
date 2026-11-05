@@ -12,6 +12,7 @@ using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteMovie;
 using MoviePicker.Api.Application.UseCases.EventTemplates;
+using MoviePicker.Api.Application.UseCases.Favorites;
 using MoviePicker.Api.Application.UseCases.Follow;
 using MoviePicker.Api.Application.UseCases.JoinEvent;
 using MoviePicker.Api.Application.UseCases.LaunchWheel;
@@ -68,6 +69,7 @@ internal static class DevelopmentScenarioSeed
             await RunStepAsync(logger, "profils enrichis", () => TryEnrichProfilesAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "follows", () => TrySeedFollowsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "watchlists", () => TrySeedWatchlistsAsync(sp, actors, logger, ct)).ConfigureAwait(false);
+            await RunStepAsync(logger, "favoris", () => TrySeedFavoritesAsync(sp, actors, logger, ct)).ConfigureAwait(false);
 
             await RunStepAsync(logger, "multi-participants", () => TrySeedMultiParticipantScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
             await RunStepAsync(logger, "wheel and closing", () => TrySeedWheelAndCloseScenarioAsync(sp, actors, logger, ct)).ConfigureAwait(false);
@@ -286,6 +288,30 @@ internal static class DevelopmentScenarioSeed
         }
 
         logger.LogInformation("DevelopmentSeed: watchlists (Alice public, 5 films; Bob hidden, 2 films; dev, 3 films; Zoé public, 2 films).");
+    }
+
+    private static async Task TrySeedFavoritesAsync(
+        IServiceProvider sp,
+        DevelopmentSeedActors actors,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        var favorites = sp.GetRequiredService<IAddFavoriteHandler>();
+
+        AddFavoriteRequest[] aliceFavorites =
+        [
+            new() { TmdbId = 27205, Title = "Inception", Year = "2010" },
+            new() { TmdbId = 157336, Title = "Interstellar", Year = "2014" },
+            new() { TmdbId = 1920, MediaType = MovieMediaType.Tv, Title = "Twin Peaks", Year = "1990" }
+        ];
+        foreach (var favorite in aliceFavorites)
+            await favorites.HandleAsync(actors.Alice.Id, favorite, ct).ConfigureAwait(false);
+
+        await favorites
+            .HandleAsync(actors.Zoe.Id, new AddFavoriteRequest { TmdbId = 194, Title = "Le Fabuleux Destin d'Amélie Poulain", Year = "2001" }, ct)
+            .ConfigureAwait(false);
+
+        logger.LogInformation("DevelopmentSeed: favorites (Alice three with a series, Zoé one, dev none for the invitation).");
     }
 
     private static async Task TrySeedFollowsAsync(

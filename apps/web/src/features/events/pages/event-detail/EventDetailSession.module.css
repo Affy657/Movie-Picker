@@ -3,3 +3,23 @@
     var(--header-height) + var(--event-sticky-bar-height, 0px) + var(--space-3)
   );
 }
+
+.moviesToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+.moviesLabel {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 47.9375rem) {
+  .moviesToolbar {
+    display: none;
+  }
+}

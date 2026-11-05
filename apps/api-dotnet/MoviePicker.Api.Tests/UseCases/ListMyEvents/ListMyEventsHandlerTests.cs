@@ -17,6 +17,7 @@ public sealed class ListMyEventsHandlerTests
     private readonly Mock<IEventRepository> _eventRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
+    private readonly Mock<IMovieRatingRepository> _ratingRepo;
     private readonly ListMyEventsHandler _sut;
     private static readonly string[] value = new[] { "e1", "e2" };
 
@@ -25,6 +26,13 @@ public sealed class ListMyEventsHandlerTests
         _eventRepo = new Mock<IEventRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
         _movieRepo = new Mock<IMovieRepository>();
+        _ratingRepo = new Mock<IMovieRatingRepository>();
+        _ratingRepo
+            .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<MovieRating>());
+        _participantRepo
+            .Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Participant>());
         _participantRepo
             .Setup(r => r.CountByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
@@ -37,6 +45,7 @@ public sealed class ListMyEventsHandlerTests
             _eventRepo.Object,
             _participantRepo.Object,
             _movieRepo.Object,
+            _ratingRepo.Object,
             TimeProvider.System);
     }
 
@@ -367,5 +376,210 @@ public sealed class ListMyEventsHandlerTests
 
         Assert.Equal("f1", Assert.Single(byTitleResult.Events).Id);
         Assert.Equal("f2", Assert.Single(byWinnerResult.Events).Id);
+    }
+
+    private static Event FinishedNight(string id, params string[] winnerMovieIds) => new()
+    {
+        Id = id,
+        Title = id,
+        Date = "2025-06-01",
+        Time = "20:00",
+        Slug = id,
+        HostToken = "h",
+        CreatorUserId = "u1",
+        Winners = TestWinners.Won(winnerMovieIds),
+        ClosedAt = DateTimeOffset.Parse("2025-06-02T00:00:00Z"),
+        CreatedAt = DateTimeOffset.UtcNow,
+        UpdatedAt = DateTimeOffset.UtcNow
+    };
+
+    private void GivenCreatedNights(params Event[] nights)
+    {
+        _eventRepo.Setup(r => r.ListAllByCreatorUserIdAsync("u1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(nights);
+        _participantRepo.Setup(r => r.ListDistinctEventIdsByUserIdAsync("u1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(nights.Select(n => n.Id).ToArray());
+        _movieRepo
+            .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) =>
+                ids.Select(id => new Movie { Id = id, Title = id }).ToArray());
+    }
+
+    private void GivenViewerJoined(string eventId, string participantId) =>
+        _participantRepo
+            .Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new Participant { Id = participantId, EventId = eventId, UserId = "u1" }]);
+
+    private void GivenRatings(params MovieRating[] ratings) =>
+        _ratingRepo
+            .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ratings);
+
+    private static MovieRating Rating(string eventId, string movieId, string participantId, int value) => new()
+    {
+        EventId = eventId,
+        MovieId = movieId,
+        ParticipantId = participantId,
+        Value = value
+    };
+
+    [Fact]
+    public async Task HandleAsync_AveragesTheWinnerNamedOnTheRow()
+    {
+        GivenCreatedNights(FinishedNight("e1", "m1", "m2"));
+        GivenViewerJoined("e1", "me");
+        GivenRatings(
+            Rating("e1", "m1", "me", 8),
+            Rating("e1", "m2", "me", 9),
+            Rating("e1", "m1", "other", 4));
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Finished, limit: 10, offset: 0, q: null);
+
+        var row = Assert.Single(result.Events);
+        Assert.Equal(6, row.AverageRating);
+        Assert.Equal(8, row.MyRating);
+        Assert.False(row.HasWinnerToRate);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ViewerWhoRatedOneOfTwoWinners_StillHasAWinnerToRate()
+    {
+        GivenCreatedNights(FinishedNight("e1", "m1", "m2"));
+        GivenViewerJoined("e1", "me");
+        GivenRatings(Rating("e1", "m1", "me", 8));
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Finished, limit: 10, offset: 0, q: null);
+
+        var row = Assert.Single(result.Events);
+        Assert.Equal(8, row.MyRating);
+        Assert.True(row.HasWinnerToRate);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoRatingYet_LeavesTheAveragesEmptyAndAsksTheViewerToRate()
+    {
+        GivenCreatedNights(FinishedNight("e1", "m1"));
+        GivenViewerJoined("e1", "me");
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Finished, limit: 10, offset: 0, q: null);
+
+        var row = Assert.Single(result.Events);
+        Assert.Null(row.AverageRating);
+        Assert.Null(row.MyRating);
+        Assert.True(row.HasWinnerToRate);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HostWhoNeverJoined_HasNothingToRateButSeesTheAverage()
+    {
+        GivenCreatedNights(FinishedNight("e1", "m1"));
+        GivenRatings(Rating("e1", "m1", "other", 6));
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Finished, limit: 10, offset: 0, q: null);
+
+        var row = Assert.Single(result.Events);
+        Assert.Equal(6, row.AverageRating);
+        Assert.Null(row.MyRating);
+        Assert.False(row.HasWinnerToRate);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RatingNotOpenYet_HasNothingToRate()
+    {
+        GivenCreatedNights(FinishedNight("e1", "m1") with { Date = "2035-06-01", ClosedAt = null });
+        GivenViewerJoined("e1", "me");
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Active, limit: 10, offset: 0, q: null);
+
+        Assert.False(Assert.Single(result.Events).HasWinnerToRate);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ActiveScope_LeavesTheRatingsUnread()
+    {
+        GivenCreatedNights(FinishedNight("e1", "m1") with { Date = "2035-06-01", ClosedAt = null });
+
+        await _sut.HandleAsync("u1", MyEventListScope.Active, limit: 10, offset: 0, q: null);
+
+        _ratingRepo.Verify(
+            r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_RatingOfAMovieThatNoLongerWon_CountsForNothing()
+    {
+        GivenCreatedNights(FinishedNight("e1", "m1"));
+        GivenViewerJoined("e1", "me");
+        GivenRatings(Rating("e1", "former-winner", "me", 10));
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Finished, limit: 10, offset: 0, q: null);
+
+        var row = Assert.Single(result.Events);
+        Assert.Null(row.AverageRating);
+        Assert.Null(row.MyRating);
+        Assert.True(row.HasWinnerToRate);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WinnerMovieGoneFromTheEvent_IsNotAskedToBeRated()
+    {
+        GivenCreatedNights(FinishedNight("e1", "m1", "gone"));
+        GivenViewerJoined("e1", "me");
+        GivenRatings(Rating("e1", "m1", "me", 8));
+        _movieRepo
+            .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new Movie { Id = "m1", Title = "m1" }]);
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Finished, limit: 10, offset: 0, q: null);
+
+        Assert.False(Assert.Single(result.Events).HasWinnerToRate);
+    }
+
+    [Fact]
+    public async Task HandleAsync_KeepsEachRatingOnItsOwnEvent()
+    {
+        GivenCreatedNights(FinishedNight("e1", "m1"), FinishedNight("e2", "m2"));
+        GivenRatings(Rating("e1", "m1", "other", 4), Rating("e2", "m2", "other", 10));
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Finished, limit: 10, offset: 0, q: null);
+
+        Assert.Equal(4, result.Events.Single(e => e.Id == "e1").AverageRating);
+        Assert.Equal(10, result.Events.Single(e => e.Id == "e2").AverageRating);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LoadsTheRatingsOfThePageInOneRead()
+    {
+        GivenCreatedNights(
+            FinishedNight("e1", "m1"),
+            FinishedNight("e2", "m2"),
+            FinishedNight("e3", "m3"));
+
+        await _sut.HandleAsync("u1", MyEventListScope.Finished, limit: 2, offset: 0, q: null);
+
+        _ratingRepo.Verify(
+            r => r.ListByEventIdsAsync(
+                It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 2),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _ratingRepo.Verify(
+            r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _participantRepo.Verify(
+            r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PageWithoutAnyWinner_ReadsNoRating()
+    {
+        GivenCreatedNights(FinishedNight("e1"));
+
+        await _sut.HandleAsync("u1", MyEventListScope.Finished, limit: 10, offset: 0, q: null);
+
+        _ratingRepo.Verify(
+            r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

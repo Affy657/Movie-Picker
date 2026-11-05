@@ -58,26 +58,20 @@ public sealed class PostersController : ControllerBase
     private async Task<IActionResult> ServeAsync(string key, Func<Task<PosterImageBlob?>> load)
     {
         var entityTag = $"\"{key}\"";
-        if (Request.Headers.IfNoneMatch.Contains(entityTag))
+        if (ConditionalGet.IsNotModified(Request, entityTag))
         {
-            MarkImmutable(entityTag);
+            ConditionalGet.StampImmutable(Response, entityTag);
             return StatusCode(StatusCodes.Status304NotModified);
         }
 
         var blob = await load();
         if (blob is null)
         {
-            Response.Headers.CacheControl = "no-store";
+            ConditionalGet.Unstamp(Response);
             return NotFound();
         }
 
-        MarkImmutable(entityTag);
+        ConditionalGet.StampImmutable(Response, entityTag);
         return File(blob.Data, blob.ContentType);
-    }
-
-    private void MarkImmutable(string entityTag)
-    {
-        Response.Headers.CacheControl = "public,max-age=86400,immutable";
-        Response.Headers.ETag = entityTag;
     }
 }

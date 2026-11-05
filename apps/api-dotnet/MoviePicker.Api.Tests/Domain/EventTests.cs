@@ -134,6 +134,42 @@ public sealed class EventTests
     }
 
     [Fact]
+    public void IsRatingOpen_BeforeStart_WithWinner_False()
+    {
+        var evt = WithSchedule("2026-06-30", "20:00", winnerMovieId: "m1");
+        var now = new DateTimeOffset(2026, 6, 30, 10, 0, 0, TimeSpan.Zero);
+
+        Assert.False(evt.IsRatingOpen(now));
+    }
+
+    [Fact]
+    public void IsRatingOpen_NightUnderway_WithWinner_True()
+    {
+        var evt = WithSchedule("2026-06-30", "20:00", winnerMovieId: "m1");
+        var tenMinutesIn = new DateTimeOffset(2026, 6, 30, 18, 10, 0, TimeSpan.Zero);
+
+        Assert.True(evt.IsRatingOpen(tenMinutesIn));
+    }
+
+    [Fact]
+    public void IsRatingOpen_NightUnderway_NoWinner_False()
+    {
+        var evt = WithSchedule("2026-06-30", "20:00");
+        var tenMinutesIn = new DateTimeOffset(2026, 6, 30, 18, 10, 0, TimeSpan.Zero);
+
+        Assert.False(evt.IsRatingOpen(tenMinutesIn));
+    }
+
+    [Fact]
+    public void IsRatingOpen_NightOver_WithWinner_True()
+    {
+        var evt = WithSchedule("2026-06-30", "20:00", winnerMovieId: "m1");
+        var nextDay = new DateTimeOffset(2026, 7, 1, 10, 0, 0, TimeSpan.Zero);
+
+        Assert.True(evt.IsRatingOpen(nextDay));
+    }
+
+    [Fact]
     public void HasWinner_NoWinnerYet_False()
     {
         Assert.False(new Event().HasWinner);

@@ -8,12 +8,21 @@ import ProfileMoviesSection from './ProfileMoviesSection';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1 } from '@/mocks/handlers';
 import { stubHoverCapability } from '@/test-utils/matchMedia';
+import type { FavoriteTitle } from '@/shared/types/movie';
 
-function renderSection(handle: string) {
+const HEAT: FavoriteTitle = {
+  tmdbId: 949,
+  mediaType: 'movie',
+  title: 'Heat',
+  year: '1995',
+  posterPath: null,
+};
+
+function renderSection(handle: string, favorites: FavoriteTitle[] = []) {
   return render(
     <AppTestProviders>
       <MemoryRouter>
-        <ProfileMoviesSection handle={handle} />
+        <ProfileMoviesSection handle={handle} favorites={favorites} />
       </MemoryRouter>
     </AppTestProviders>
   );
@@ -76,6 +85,35 @@ describe('ProfileMoviesSection (MSW)', () => {
     await waitFor(() => expect(container.firstChild).toBeNull());
   });
 
+  it('shows the favorites even when nothing was watched yet', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => HttpResponse.json({ items: [] }))
+    );
+
+    renderSection('alice', [HEAT]);
+
+    expect(await screen.findByRole('heading', { name: 'Ses favoris' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /derniers films vus/i })).not.toBeInTheDocument();
+  });
+
+  it('says so when adding a favorite to the watchlist fails', async () => {
+    server.use(
+      authedBobHandler,
+      http.get(`${TEST_API_V1}/watchlist`, () => HttpResponse.json({ items: [] })),
+      http.post(`${TEST_API_V1}/watchlist`, () =>
+        HttpResponse.json({ error: 'Ajout impossible' }, { status: 500 })
+      ),
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => HttpResponse.json({ items: [] }))
+    );
+    const user = userEvent.setup();
+
+    renderSection('alice', [HEAT]);
+    await user.click(await screen.findByRole('button', { name: /voir les détails de « heat »/i }));
+    await user.click(await screen.findByRole('button', { name: 'Ajouter à ma liste' }));
+
+    expect(await screen.findByText('Ajout impossible')).toHaveAttribute('role', 'alert');
+  });
+
   it('shows the title and the recently watched movies', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
@@ -113,6 +151,43 @@ describe('ProfileMoviesSection (MSW)', () => {
       'href',
       '/u/alice/films'
     );
+  });
+
+  it("wears the owner's rating on the poster, in the reader's scale, and nothing without one", async () => {
+    server.use(
+      authedBobHandler,
+      http.get(`${TEST_API_V1}/users/alice/watched-movies`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              tmdbId: 27205,
+              title: 'Inception',
+              year: '2010',
+              posterPath: null,
+              genreIds: [28],
+              mediaType: 'movie',
+              watchedAt: '2026-06-01T00:00:00Z',
+              myRating: 7,
+            },
+            {
+              tmdbId: 157336,
+              title: 'Interstellar',
+              year: '2014',
+              posterPath: null,
+              genreIds: [],
+              mediaType: 'movie',
+              watchedAt: '2026-05-01T00:00:00Z',
+              myRating: null,
+            },
+          ],
+        })
+      )
+    );
+
+    renderSection('alice');
+
+    expect(await screen.findByText('Note de @alice : 7/10')).toBeInTheDocument();
+    expect(screen.queryAllByText(/^Note de @alice/)).toHaveLength(1);
   });
 
   it('renders one unified card per movie with its title as a level-three heading and the year', async () => {
@@ -175,7 +250,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     renderSection('alice');
 
     expect(await screen.findByRole('heading', { name: 'Inception', level: 3 })).toBeInTheDocument();
-    expect(await screen.findByText('8.4/10')).toBeInTheDocument();
+    expect(await screen.findByText('8,4/10')).toBeInTheDocument();
     expect(screen.getByText('2h28')).toBeInTheDocument();
   });
 

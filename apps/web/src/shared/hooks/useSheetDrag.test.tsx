@@ -3,6 +3,8 @@ import { useEffect, useRef } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useSheetDrag } from '@/shared/hooks/useSheetDrag';
 
+const DRAG_START_MS = 1_000;
+
 function stubMatchMedia(matchesFor: (query: string) => boolean) {
   vi.stubGlobal(
     'matchMedia',
@@ -16,6 +18,17 @@ function stubMatchMedia(matchesFor: (query: string) => boolean) {
       dispatchEvent: vi.fn(),
     }))
   );
+}
+
+function drag(
+  target: HTMLElement,
+  { fromY, toY, durationMs }: { fromY: number; toY: number; durationMs: number }
+) {
+  const now = vi.spyOn(performance, 'now').mockReturnValue(DRAG_START_MS);
+  fireEvent.pointerDown(target, { pointerId: 1, button: 0, clientY: fromY });
+  now.mockReturnValue(DRAG_START_MS + durationMs);
+  fireEvent.pointerMove(window, { pointerId: 1, clientY: toY });
+  fireEvent.pointerUp(window, { pointerId: 1, clientY: toY });
 }
 
 function DragHarness({
@@ -55,67 +68,69 @@ function DragHarness({
 }
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
 describe('useSheetDrag', () => {
-  it('closes the sheet after a sufficient downward drag', () => {
+  it('closes the sheet after a long slow drag', () => {
     stubMatchMedia(
       (query) => query.includes('max-width') || query.includes('prefers-reduced-motion')
     );
     const onClose = vi.fn();
     render(<DragHarness onClose={onClose} />);
 
-    const zone = screen.getByTestId('drag-zone');
-    fireEvent.pointerDown(zone, { pointerId: 1, button: 0, clientY: 80 });
-    fireEvent.pointerMove(window, { pointerId: 1, clientY: 240 });
-    fireEvent.pointerUp(window, { pointerId: 1, clientY: 240 });
+    drag(screen.getByTestId('drag-zone'), { fromY: 80, toY: 240, durationMs: 400 });
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('ne ferme pas si le glissement est trop court', () => {
+  it('keeps the sheet open after a short slow drag', () => {
     stubMatchMedia(
       (query) => query.includes('max-width') || query.includes('prefers-reduced-motion')
     );
     const onClose = vi.fn();
     render(<DragHarness onClose={onClose} />);
 
-    const zone = screen.getByTestId('drag-zone');
-    fireEvent.pointerDown(zone, { pointerId: 1, button: 0, clientY: 80 });
-    fireEvent.pointerMove(window, { pointerId: 1, clientY: 90 });
-    fireEvent.pointerUp(window, { pointerId: 1, clientY: 90 });
+    drag(screen.getByTestId('drag-zone'), { fromY: 80, toY: 90, durationMs: 200 });
 
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('n’active pas le drag hors viewport mobile', () => {
+  it('closes the sheet after a short fast flick', () => {
+    stubMatchMedia(
+      (query) => query.includes('max-width') || query.includes('prefers-reduced-motion')
+    );
+    const onClose = vi.fn();
+    render(<DragHarness onClose={onClose} />);
+
+    drag(screen.getByTestId('drag-zone'), { fromY: 80, toY: 120, durationMs: 16 });
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not drag outside the mobile viewport', () => {
     stubMatchMedia(() => false);
     const onClose = vi.fn();
     render(<DragHarness onClose={onClose} />);
 
-    const zone = screen.getByTestId('drag-zone');
-    fireEvent.pointerDown(zone, { pointerId: 1, button: 0, clientY: 80 });
-    fireEvent.pointerMove(window, { pointerId: 1, clientY: 300 });
-    fireEvent.pointerUp(window, { pointerId: 1, clientY: 300 });
+    drag(screen.getByTestId('drag-zone'), { fromY: 80, toY: 300, durationMs: 400 });
 
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('ignore un pointerdown sur un bouton', () => {
+  it('ignores a pointerdown on a button', () => {
     stubMatchMedia(
       (query) => query.includes('max-width') || query.includes('prefers-reduced-motion')
     );
     const onClose = vi.fn();
     render(<DragHarness onClose={onClose} />);
 
-    fireEvent.pointerDown(screen.getByRole('button', { name: 'fermer' }), {
-      pointerId: 1,
-      button: 0,
-      clientY: 80,
+    drag(screen.getByRole('button', { name: 'fermer' }), {
+      fromY: 80,
+      toY: 300,
+      durationMs: 400,
     });
-    fireEvent.pointerMove(window, { pointerId: 1, clientY: 300 });
-    fireEvent.pointerUp(window, { pointerId: 1, clientY: 300 });
 
     expect(onClose).not.toHaveBeenCalled();
   });

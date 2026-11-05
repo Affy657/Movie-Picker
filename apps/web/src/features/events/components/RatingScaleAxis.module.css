@@ -1,0 +1,95 @@
+.axis {
+  --line-y: var(--space-16);
+  position: relative;
+  height: calc(var(--space-16) + var(--space-8));
+  margin: var(--space-1) var(--space-4) var(--space-2);
+}
+
+.line {
+  position: absolute;
+  top: var(--line-y);
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-border);
+}
+
+.tick {
+  position: absolute;
+  top: calc(var(--line-y) - var(--space-1));
+  left: var(--at);
+  width: 2px;
+  height: var(--space-2-5);
+  margin-left: -1px;
+  background: var(--color-border);
+}
+
+.tickLabel {
+  position: absolute;
+  top: var(--space-6);
+  left: 50%;
+  font-size: var(--font-size-2xs);
+  line-height: var(--leading-none);
+  color: var(--color-text-muted);
+  transform: translateX(-50%);
+}
+
+.mean {
+  position: absolute;
+  top: 0;
+  left: clamp(var(--space-12), var(--at), calc(100% - var(--space-12)));
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-sunken);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-none);
+  color: var(--color-text);
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.meanLine {
+  position: absolute;
+  top: var(--space-5);
+  left: var(--at);
+  width: 2px;
+  height: calc(var(--line-y) - var(--space-5));
+  margin-left: -1px;
+  background: var(--color-rating);
+}
+
+.mark {
+  position: absolute;
+  bottom: calc(100% - var(--line-y) - var(--space-3-5));
+  left: var(--at);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+.person {
+  display: flex;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 0 2px var(--color-bg);
+}
+
+.person[data-self] {
+  position: relative;
+  z-index: var(--z-base);
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.person + .person {
+  margin-top: calc(var(--space-4) * -1);
+}
+
+.more {
+  margin-bottom: var(--space-0-5);
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-none);
+  color: var(--color-text-muted);
+}

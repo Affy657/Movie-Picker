@@ -9,6 +9,7 @@
 
 .top > .backLink {
   align-self: center;
+  margin-left: calc(var(--space-1-5) * -1);
 }
 
 .sentinel {
@@ -26,8 +27,7 @@
   min-height: var(--space-16);
   margin-inline: calc(50% - 50vw);
   margin-bottom: var(--space-3);
-  padding: var(--space-3)
-    max(var(--space-4), calc(50vw - var(--container-3xl) / 2 + var(--space-4)));
+  padding: var(--space-3) calc(50vw - 50%);
   background: var(--color-bg);
   border-bottom: 1px solid transparent;
 }
@@ -211,6 +211,18 @@
   transform: rotate(180deg);
 }
 
+@media (min-width: 48rem) {
+  .bar:not([data-condensed]) .lifecycle {
+    margin-top: var(--space-1);
+  }
+
+  .bar:not([data-condensed]) .actions:has(> .wheelActions:empty) {
+    flex: 0 0 auto;
+    margin-top: calc(var(--space-1) * -1);
+    margin-left: auto;
+  }
+}
+
 @media (max-width: 47.9375rem) {
   .bar {
     position: static;
@@ -222,7 +234,7 @@
   }
 
   .heading {
-    flex: 1 1 100%;
+    flex: 1 1 12rem;
   }
 
   .theme {

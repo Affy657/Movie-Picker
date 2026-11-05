@@ -108,6 +108,33 @@ describe('AuthProvider logout', () => {
   });
 });
 
+describe('AuthProvider sign in', () => {
+  it('forgets what a night looked like signed out, so it knows the participant on return', async () => {
+    const client = new QueryClient();
+    const nightKey = queryKeys.event.detail('soiree', null);
+    client.setQueryData(nightKey, { slug: 'soiree', myParticipant: null });
+    let login: ReturnType<typeof useAuth>['login'] | undefined;
+    function ExposeLogin() {
+      login = useAuth().login;
+      return null;
+    }
+    render(
+      <QueryClientProvider client={client}>
+        <AuthProvider>
+          <ExposeLogin />
+        </AuthProvider>
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(login).toBeDefined());
+
+    await act(async () => {
+      await login!('a@test.local', 'secret');
+    });
+
+    expect(client.getQueryState(nightKey)?.isInvalidated).toBe(true);
+  });
+});
+
 describe('AuthProvider session end', () => {
   const accountDataKey = queryKeys.watchlist.list;
 

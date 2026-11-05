@@ -17,5 +17,6 @@ public interface ISearchMoviesHandler
         string query,
         string? eventSlug,
         MovieSearchFilters? filters = null,
+        bool includeSeries = false,
         CancellationToken ct = default);
 }

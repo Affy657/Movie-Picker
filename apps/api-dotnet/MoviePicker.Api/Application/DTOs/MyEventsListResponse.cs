@@ -33,6 +33,12 @@ public sealed class MyEventSummaryDto
     public IReadOnlyList<MyEventWinnerMovieDto> WinnerMovies { get; init; } =
         Array.Empty<MyEventWinnerMovieDto>();
 
+    public double? AverageRating { get; init; }
+
+    public double? MyRating { get; init; }
+
+    public bool HasWinnerToRate { get; init; }
+
     public DateTimeOffset? AutoCloseAt { get; init; }
 }
 

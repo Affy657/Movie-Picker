@@ -47,10 +47,10 @@ Lire les comptes : c'est l'état vers lequel la production va revenir. Si le doc
 
 ## 3. Couper les écritures
 
-1. Mettre en pause les quatre jobs Cloud Scheduler, sinon les rappels, les balayages nocturnes et le rechargement du catalogue écrivent pendant la restauration :
+1. Mettre en pause les cinq jobs Cloud Scheduler, sinon les rappels, la relance du lendemain, les balayages nocturnes et le rechargement du catalogue écrivent pendant la restauration :
 
    ```bash
-   for job in movie-picker-event-reminders movie-picker-recurring-events movie-picker-finished-events movie-picker-warm-catalog; do
+   for job in movie-picker-event-reminders movie-picker-recurring-events movie-picker-finished-events movie-picker-warm-catalog movie-picker-rating-reminders; do
      gcloud scheduler jobs pause "$job" --location <REGION>
    done
    ```
@@ -106,7 +106,7 @@ Puis :
 ## 6. Reprendre le service
 
 ```bash
-for job in movie-picker-event-reminders movie-picker-recurring-events movie-picker-finished-events movie-picker-warm-catalog; do
+for job in movie-picker-event-reminders movie-picker-recurring-events movie-picker-finished-events movie-picker-warm-catalog movie-picker-rating-reminders; do
   gcloud scheduler jobs resume "$job" --location <REGION>
 done
 docker rm -f mongo-restore-check

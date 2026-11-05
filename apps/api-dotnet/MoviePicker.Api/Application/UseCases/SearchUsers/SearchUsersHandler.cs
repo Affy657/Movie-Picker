@@ -40,7 +40,7 @@ public sealed class SearchUsersHandler : ISearchUsersHandler
             {
                 Handle = user.Handle,
                 DisplayName = user.DisplayName,
-                AvatarId = user.AvatarId,
+                AvatarId = user.DisplayedAvatarId,
                 IsFollowedByMe = followingSet is null ? null : followingSet.Contains(user.Id)
             })
             .ToList();

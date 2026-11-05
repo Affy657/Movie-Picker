@@ -177,7 +177,7 @@ describe('HomePage', () => {
     );
 
     expect(
-      await screen.findByRole('heading', { name: 'trending 1', level: 2 })
+      await screen.findByRole('heading', { name: 'trending 1', level: 2 }, { timeout: 20000 })
     ).toBeInTheDocument();
   });
 

@@ -68,6 +68,10 @@ describe('buildContentSecurityPolicy', () => {
     expect(connectSrc).toContain('https://image.tmdb.org');
   });
 
+  it('lets the story image fetch the preset avatars it draws', () => {
+    expect(directive(policy, 'connect-src')).toContain('https://api.dicebear.com');
+  });
+
   it('autorise les modules distants de PostHog comme scripts', () => {
     expect(directive(policy, 'script-src')).toContain('https://eu-assets.i.posthog.com');
   });

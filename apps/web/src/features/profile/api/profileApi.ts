@@ -1,6 +1,6 @@
 import { fetchApi } from '@/shared/api/client';
 import { readAllWatchlistPages } from '@/features/movies/api/watchlistApi';
-import type { MovieMediaType } from '@/shared/types/movie';
+import type { FavoriteTitle, MovieMediaType } from '@/shared/types/movie';
 
 export interface PublicProfile {
   handle: string;
@@ -14,6 +14,13 @@ export interface PublicProfile {
   isFollowedByMe: boolean | null;
   isWatchlistPublic: boolean;
   watchlistCount: number | null;
+  favorites?: FavoriteTitle[];
+}
+
+export const FAVORITES_MAX = 3;
+
+export interface FavoriteListResponse {
+  items: FavoriteTitle[];
 }
 
 export interface HandleAvailability {
@@ -51,6 +58,23 @@ export async function unfollowUser(handle: string): Promise<void> {
   await fetchApi(`/users/${encodeURIComponent(handle)}/follow`, { method: 'DELETE' });
 }
 
+export async function addFavorite(favorite: FavoriteTitle): Promise<FavoriteListResponse> {
+  return fetchApi<FavoriteListResponse>('/users/me/favorites', {
+    method: 'POST',
+    body: JSON.stringify(favorite),
+  });
+}
+
+export async function removeFavorite(
+  tmdbId: number,
+  mediaType: MovieMediaType
+): Promise<FavoriteListResponse> {
+  const params = new URLSearchParams({ mediaType });
+  return fetchApi<FavoriteListResponse>(`/users/me/favorites/${tmdbId}?${params.toString()}`, {
+    method: 'DELETE',
+  });
+}
+
 export async function fetchFollowing(handle: string): Promise<FollowListResponse> {
   return fetchApi<FollowListResponse>(`/users/${encodeURIComponent(handle)}/following`);
 }
@@ -73,6 +97,7 @@ export interface UserWatchedMovieItem {
   genreIds: number[];
   mediaType: MovieMediaType;
   watchedAt: string;
+  myRating?: number | null;
 }
 
 export interface UserWatchedMoviesResponse {

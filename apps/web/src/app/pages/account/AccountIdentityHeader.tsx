@@ -4,6 +4,8 @@ import { Globe, Pencil } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import Avatar from '@/shared/components/Avatar';
 import AvatarPickerModal from '@/features/auth/components/AvatarPickerModal';
+import { useAvatarPhotoActions } from '@/features/auth/hooks/useAvatarPhotoActions';
+import { isAvatarPhotoId } from '@/shared/utils/avatar';
 import { useTranslation } from '@/shared/i18n';
 import type { UserProfile } from '@/features/auth/types';
 import { ownProfileDestination } from '@/features/auth/utils/ownProfileDestination';
@@ -16,8 +18,8 @@ export default function AccountIdentityHeader({
 }: Readonly<{ user: UserProfile; variant?: 'desktop' | 'mobile' }>) {
   const { t } = useTranslation();
   const { patchProfile } = useAuth();
+  const { uploadPhoto, deletePhoto } = useAvatarPhotoActions();
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
-  const [avatarSaveError, setAvatarSaveError] = useState<string | null>(null);
   const avatarSize = 'lg';
   const ownProfile = ownProfileDestination(user);
 
@@ -49,24 +51,20 @@ export default function AccountIdentityHeader({
         )}
       </div>
 
-      {avatarSaveError && (
-        <p className={`error ${styles.avatarSaveError}`} role="alert">
-          {avatarSaveError}
-        </p>
+      {avatarModalOpen && (
+        <AvatarPickerModal
+          open
+          currentAvatarId={user.avatarId}
+          photoAvatarId={user.avatarPhotoId ?? null}
+          generatedAvatarId={user.generatedAvatarId ?? ''}
+          onSelect={async (id) => {
+            await patchProfile(isAvatarPhotoId(id) ? { useAvatarPhoto: true } : { avatarId: id });
+          }}
+          onUploadPhoto={uploadPhoto}
+          onDeletePhoto={deletePhoto}
+          onClose={() => setAvatarModalOpen(false)}
+        />
       )}
-
-      <AvatarPickerModal
-        open={avatarModalOpen}
-        currentAvatarId={user.avatarId}
-        onSelect={(id) => {
-          setAvatarModalOpen(false);
-          setAvatarSaveError(null);
-          void patchProfile({ avatarId: id }).catch(() =>
-            setAvatarSaveError(t('auth.account.avatarSaveError'))
-          );
-        }}
-        onClose={() => setAvatarModalOpen(false)}
-      />
 
       {ownProfile.isPublicProfile && variant === 'mobile' && (
         <Link to={ownProfile.path} className={styles.identityLinkMobile}>

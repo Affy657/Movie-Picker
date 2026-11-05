@@ -60,10 +60,6 @@
   }
 }
 
-.avatarSaveError {
-  margin-top: var(--space-4);
-}
-
 .identityText {
   min-width: 0;
   line-height: var(--leading-tight);

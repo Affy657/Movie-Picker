@@ -59,6 +59,7 @@ public sealed class CreateEventHandler : ICreateEventHandler
             Time = request.Time,
             HostToken = hostToken,
             Slug = slug,
+            RecapSlug = SlugGenerator.NewSlug(),
             CreatorUserId = ownerId,
             CreationRequestId = requestId,
             Config = new EventConfig

@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.Auth.OAuth;
 
 public interface IOAuthLoginHandler
 {
-    Task<OAuthOutcome> HandleAsync(ExternalLoginInfo info, CancellationToken ct = default);
+    Task<OAuthOutcome> HandleAsync(ExternalLoginInfo info, string? accessToken = null, CancellationToken ct = default);
 }

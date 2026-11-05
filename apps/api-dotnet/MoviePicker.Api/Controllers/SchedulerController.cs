@@ -91,6 +91,20 @@ public sealed class SchedulerController : ControllerBase
         return failed(result) ? StatusCode(StatusCodes.Status503ServiceUnavailable, result) : Ok(result);
     }
 
+    [HttpPost("rating-reminders")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.SchedulerPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.SchedulerPolicy)]
+    [ProducesResponseType(typeof(RatingReminderPassResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType(typeof(RatingReminderPassResult), StatusCodes.Status503ServiceUnavailable)]
+    public Task<IActionResult> RunRatingReminders(
+        [FromServices] ISchedulerCallerAuthenticator authenticator,
+        [FromServices] IRatingReminderPass pass,
+        CancellationToken ct) =>
+        RunPassAsync(authenticator, () => pass.RunAsync(ct), result => result.DeliveryFailures > 0, ct);
+
     private const string BearerPrefix = "Bearer ";
 
     private SchedulerCallerCredentials PresentedCredentials()

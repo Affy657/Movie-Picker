@@ -564,7 +564,7 @@ describe('WatchlistPage (MSW)', () => {
         .map((h) => h.textContent);
     expect(titles()).toEqual(['Recent Mais Mal Noté', 'Ancien Mais Bien Noté']);
     expect(within(list).getByText('1h30')).toBeInTheDocument();
-    expect(within(list).getByText('9.0/10')).toBeInTheDocument();
+    expect(within(list).getByText('9,0/10')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Note' }));
     expect(titles()).toEqual(['Ancien Mais Bien Noté', 'Recent Mais Mal Noté']);
@@ -735,9 +735,9 @@ describe('WatchlistPage (MSW)', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('on mobile, shows Import next to Add with a short label', async () => {
+  it('on mobile with an empty list, shows Import next to Add with a short label', async () => {
     stubMatchMedia(true);
-    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+    server.use(authedUserHandler, ...watchlistHandler([]));
 
     renderPage();
 
@@ -745,5 +745,165 @@ describe('WatchlistPage (MSW)', () => {
     const addBtn = screen.getByRole('button', { name: 'Ajouter' });
     expect(importBtn.parentElement).toBe(addBtn.parentElement);
     expect(screen.queryByText('Importer depuis Letterboxd')).not.toBeInTheDocument();
+  });
+
+  it('on mobile with titles, shrinks Import to an icon so Pick and Add fit beside it', async () => {
+    stubMatchMedia(true);
+    server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+
+    renderPage();
+
+    await screen.findByRole('button', { name: 'Piocher' });
+    const importBtn = screen.getByRole('button', { name: 'Importer depuis Letterboxd' });
+    expect(importBtn).toHaveTextContent(/^$/);
+    expect(importBtn.parentElement).toBe(
+      screen.getByRole('button', { name: 'Ajouter' }).parentElement
+    );
+  });
+
+  describe('random pick', () => {
+    const reduceMotion = () => stubMatchMedia((query) => query.includes('reduce'));
+
+    async function openPick(name: string) {
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole('button', { name }));
+      return { user, dialog: await screen.findByRole('dialog', { name: 'Piocher un titre' }) };
+    }
+
+    it('draws a title of the list and proposes it to an event', async () => {
+      reduceMotion();
+      server.use(
+        authedUserHandler,
+        ...watchlistHandler([ITEM_A, ITEM_B]),
+        ...proposeHandlers(vi.fn())
+      );
+      renderPage();
+
+      const { user, dialog } = await openPick('Piocher un film');
+
+      expect(
+        within(dialog).getByText('Au hasard parmi les 2 titres de votre liste.')
+      ).toBeVisible();
+      const drawn = within(dialog).getByRole('heading', { level: 3 }).textContent ?? '';
+      expect([ITEM_A.title, ITEM_B.title]).toContain(drawn);
+
+      await user.click(within(dialog).getByRole('button', { name: 'Proposer dans une soirée' }));
+
+      expect(
+        await screen.findByRole('dialog', { name: `Proposer « ${drawn} » dans une soirée` })
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Piocher un titre' })).not.toBeInTheDocument();
+    });
+
+    it('comes back to the same draw once the proposal is closed', async () => {
+      reduceMotion();
+      server.use(
+        authedUserHandler,
+        ...watchlistHandler([ITEM_A, ITEM_B]),
+        ...proposeHandlers(vi.fn())
+      );
+      renderPage();
+      const { user, dialog } = await openPick('Piocher un film');
+      const drawn = within(dialog).getByRole('heading', { level: 3 }).textContent ?? '';
+      await user.click(within(dialog).getByRole('button', { name: 'Proposer dans une soirée' }));
+      const propose = await screen.findByRole('dialog', {
+        name: `Proposer « ${drawn} » dans une soirée`,
+      });
+
+      await user.click(within(propose).getByRole('button', { name: 'Fermer' }));
+
+      const back = await screen.findByRole('dialog', { name: 'Piocher un titre' });
+      expect(within(back).getByRole('heading', { level: 3 })).toHaveTextContent(drawn);
+      expect(
+        screen.queryByRole('dialog', { name: `Proposer « ${drawn} » dans une soirée` })
+      ).not.toBeInTheDocument();
+    });
+
+    it('offers no random pick for an empty list', async () => {
+      server.use(authedUserHandler, ...watchlistHandler([]));
+      renderPage();
+
+      await screen.findByText(/votre liste est vide/i);
+
+      expect(screen.queryByRole('button', { name: /piocher/i })).not.toBeInTheDocument();
+    });
+
+    it('draws within the search results only, named as a selection', async () => {
+      reduceMotion();
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+      renderPage();
+      await screen.findByRole('list', { name: /films de ma liste/i });
+      await userEvent.type(
+        screen.getByRole('searchbox', { name: /rechercher dans ma liste/i }),
+        'Ancien'
+      );
+
+      const { dialog } = await openPick('Piocher dans la sélection');
+
+      expect(
+        within(dialog).getByRole('heading', { name: ITEM_A.title, level: 3 })
+      ).toBeInTheDocument();
+      expect(within(dialog).getByText('Le seul titre de votre sélection.')).toBeVisible();
+      expect(
+        within(dialog).queryByRole('button', { name: 'Piocher un autre' })
+      ).not.toBeInTheDocument();
+    });
+
+    it('offers no random pick when the search matches nothing', async () => {
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A, ITEM_B]));
+      renderPage();
+      await screen.findByRole('list', { name: /films de ma liste/i });
+
+      await userEvent.type(
+        screen.getByRole('searchbox', { name: /rechercher dans ma liste/i }),
+        'Introuvable'
+      );
+      await screen.findByText(/aucun titre ne correspond/i);
+
+      expect(screen.queryByRole('button', { name: /piocher/i })).not.toBeInTheDocument();
+    });
+
+    it('opens the details of the drawn title', async () => {
+      reduceMotion();
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A]), detailsHandler);
+      renderPage();
+
+      const { user, dialog } = await openPick('Piocher un film');
+      expect(within(dialog).getByText('Le seul titre de votre liste.')).toBeVisible();
+      await user.click(within(dialog).getByRole('button', { name: 'Voir les détails' }));
+
+      expect(
+        await screen.findByRole('heading', { name: ITEM_A.title, level: 2 })
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Piocher un titre' })).not.toBeInTheDocument();
+    });
+
+    it('comes back to the same draw once the details are closed', async () => {
+      reduceMotion();
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A]), detailsHandler);
+      renderPage();
+      const { user, dialog } = await openPick('Piocher un film');
+      await user.click(within(dialog).getByRole('button', { name: 'Voir les détails' }));
+      const heading = await screen.findByRole('heading', { name: ITEM_A.title, level: 2 });
+      const details = heading.closest('dialog');
+      expect(details).not.toBeNull();
+
+      await user.click(within(details as HTMLElement).getByRole('button', { name: 'Fermer' }));
+
+      const back = await screen.findByRole('dialog', { name: 'Piocher un titre' });
+      expect(within(back).getByRole('heading', { level: 3 })).toHaveTextContent(ITEM_A.title);
+    });
+
+    it('on mobile, shows a short Piocher next to Add', async () => {
+      stubMatchMedia(true);
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+      renderPage();
+
+      const pickBtn = await screen.findByRole('button', { name: 'Piocher' });
+
+      expect(pickBtn.parentElement).toBe(
+        screen.getByRole('button', { name: 'Ajouter' }).parentElement
+      );
+    });
   });
 });

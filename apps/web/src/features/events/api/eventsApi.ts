@@ -1,3 +1,4 @@
+import { ROUTES } from '@/app/routes';
 import { fetchApi, apiPath, withHostToken } from '@/shared/api/client';
 import {
   mapEventData,
@@ -22,6 +23,28 @@ export async function fetchEventBySlug(slug: string, hostToken: string | null): 
     withHostToken(hostToken)
   );
   return mapEventData(raw);
+}
+
+type RawNightRecap = Omit<RawEventData, '_id' | 'slug' | 'recapSlug'> & {
+  recapSlug: string;
+  eventSlug: string | null;
+  winnerMovies: RawMovieData[];
+};
+
+export type NightRecap = { event: EventData; winners: MovieData[]; eventSlug: string | null };
+
+export async function fetchNightRecap(recapSlug: string): Promise<NightRecap> {
+  const {
+    recapSlug: ownSlug,
+    eventSlug,
+    winnerMovies,
+    ...night
+  } = await fetchApi<RawNightRecap>(apiPath('recaps', recapSlug));
+  return {
+    event: mapEventData({ ...night, _id: '', slug: eventSlug ?? '', recapSlug: ownSlug }),
+    winners: winnerMovies.map(mapMovieData),
+    eventSlug,
+  };
 }
 
 export type CreateEventBody = {
@@ -193,7 +216,11 @@ export async function deleteEvent(idOrSlug: string): Promise<DeleteEventResponse
 }
 
 export function eventFrontendUrl(slug: string): string {
-  return `${globalThis.location.origin}/e/${encodeURIComponent(slug)}`;
+  return `${globalThis.location.origin}${ROUTES.eventDetail(encodeURIComponent(slug))}`;
+}
+
+export function nightRecapFrontendUrl(slug: string): string {
+  return `${globalThis.location.origin}${ROUTES.nightRecap(encodeURIComponent(slug))}`;
 }
 
 export interface EligibleFollowItem {

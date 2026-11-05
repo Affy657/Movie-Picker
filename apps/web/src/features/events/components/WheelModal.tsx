@@ -1,13 +1,16 @@
+import clsx from 'clsx';
 import confetti from 'canvas-confetti';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Disc3, Film, X } from 'lucide-react';
 import type { MovieData } from '@/shared/types/movie';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
+import { keepPunctuationAttached } from '@/shared/utils/keepPunctuationAttached';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import SpinningWheel, { WHEEL_SEGMENT_TOKENS } from './SpinningWheel';
 import { readCssToken } from '@/shared/utils/cssToken';
+import PosterBackdrop from '@/shared/components/PosterBackdrop';
 import Modal from '@/shared/components/Modal';
 import styles from './WheelModal.module.css';
 import Button from '@/shared/components/Button';
@@ -200,11 +203,11 @@ export default function WheelModal({
         open={open}
         onClose={closeUnlessSpinning}
         size="md"
-        surface={animDone ? 'surface' : 'bare'}
+        surface={animDone ? 'media' : 'bare'}
         strongBackdrop
         ariaLabelledBy="wheel-modal-title"
         dialogRef={dialogRef}
-        className={animDone ? styles.dialogDone : undefined}
+        className={animDone ? clsx('on-dark', styles.dialogDone) : undefined}
       >
         {!animDone && (
           <div className={styles.spinPhase}>
@@ -222,12 +225,13 @@ export default function WheelModal({
         )}
 
         {animDone && (
-          <>
+          <div className={styles.reveal}>
+            <PosterBackdrop posterPath={winner.posterPath} />
             <div className={styles.header}>
               <h2 id="wheel-modal-title" className={styles.title}>
                 {title}
               </h2>
-              <IconButton ariaLabel={t('common.close')} onClick={onClose}>
+              <IconButton tone="onPoster" ariaLabel={t('common.close')} onClick={onClose}>
                 <X size={ICON_SIZE.xl} />
               </IconButton>
             </div>
@@ -241,7 +245,7 @@ export default function WheelModal({
                 </div>
               )}
               <div className={styles.info}>
-                <p className={styles.winnerTitle}>{winner.title}</p>
+                <p className={styles.winnerTitle}>{keepPunctuationAttached(winner.title)}</p>
                 {winner.year && <p className={styles.winnerYear}>{winner.year}</p>}
                 {providers.length > 0 && (
                   <div className={styles.providers}>
@@ -266,7 +270,7 @@ export default function WheelModal({
             <div className={styles.footer}>
               {onRelaunch ? (
                 <>
-                  <Button type="button" onClick={onClose}>
+                  <Button type="button" variant="ghost" onClick={onClose}>
                     {t('events.wheel.modal.finishHereButton')}
                   </Button>
                   <Button
@@ -287,7 +291,7 @@ export default function WheelModal({
                 </Button>
               )}
             </div>
-          </>
+          </div>
         )}
       </Modal>
       <div

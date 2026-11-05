@@ -1,6 +1,11 @@
 import { fetchApi, apiPath, withHostToken } from '@/shared/api/client';
 import { mapMovieData, type RawMovieData } from '@/shared/api/apiMapping';
-import type { MovieData, MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
+import type {
+  MovieData,
+  MovieMediaType,
+  MovieRating,
+  WatchProviderOffer,
+} from '@/shared/types/movie';
 
 export async function fetchEventMovies(
   slug: string,
@@ -43,11 +48,18 @@ export interface MovieSearchFilters {
 
 export async function searchMovies(
   query: string,
-  opts?: { signal?: AbortSignal; lang?: string; eventSlug?: string; filters?: MovieSearchFilters }
+  opts?: {
+    signal?: AbortSignal;
+    lang?: string;
+    eventSlug?: string;
+    includeSeries?: boolean;
+    filters?: MovieSearchFilters;
+  }
 ): Promise<MovieSearchListResponse> {
   const params = new URLSearchParams({ q: query.trim() });
   if (opts?.lang) params.set('lang', opts.lang);
   if (opts?.eventSlug) params.set('eventSlug', opts.eventSlug);
+  if (opts?.includeSeries) params.set('includeSeries', 'true');
   if (opts?.filters?.genreIds?.length) params.set('genreIds', opts.filters.genreIds.join(','));
   if (opts?.filters?.yearFrom != null) params.set('yearFrom', String(opts.filters.yearFrom));
   if (opts?.filters?.yearTo != null) params.set('yearTo', String(opts.filters.yearTo));
@@ -256,6 +268,29 @@ export async function unmarkMovieAsSeen(
   participantId: string
 ): Promise<void> {
   await fetchApi(apiPath('events', slug, 'movies', movieId, 'seen'), {
+    method: 'DELETE',
+    body: JSON.stringify({ participantId }),
+  });
+}
+
+export async function setMovieRating(
+  slug: string,
+  movieId: string,
+  participantId: string,
+  value: number
+): Promise<MovieRating> {
+  return fetchApi<MovieRating>(apiPath('events', slug, 'movies', movieId, 'rating'), {
+    method: 'PUT',
+    body: JSON.stringify({ participantId, value }),
+  });
+}
+
+export async function deleteMovieRating(
+  slug: string,
+  movieId: string,
+  participantId: string
+): Promise<void> {
+  await fetchApi(apiPath('events', slug, 'movies', movieId, 'rating'), {
     method: 'DELETE',
     body: JSON.stringify({ participantId }),
   });

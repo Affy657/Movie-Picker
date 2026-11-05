@@ -277,6 +277,75 @@ describe('accessibility (axe)', () => {
     await assertNoViolations(container, queryClient);
   });
 
+  describe('favorites', () => {
+    const HEAT = { tmdbId: 949, mediaType: 'movie', title: 'Heat', year: '1995', posterPath: null };
+    const TWIN_PEAKS = {
+      tmdbId: 1920,
+      mediaType: 'tv',
+      title: 'Twin Peaks',
+      year: '1990',
+      posterPath: null,
+    };
+    const OWNER = { ...AUTH_USER, handle: 'alice', isProfilePublic: true, isWatchlistPublic: true };
+
+    it('the profile of an owner with free places has no violations', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({ ...OWNER, favorites: [HEAT, TWIN_PEAKS] })
+        ),
+        http.get(`${TEST_API_V1}/users/alice`, () =>
+          HttpResponse.json({
+            handle: 'alice',
+            displayName: 'Alice',
+            avatarId: 'alpha',
+            bio: null,
+            memberSince: '2024-03-15T00:00:00Z',
+            followingCount: 0,
+            followersCount: 0,
+            isSupporter: false,
+            isFollowedByMe: null,
+            isWatchlistPublic: true,
+            watchlistCount: 0,
+            favorites: [HEAT, TWIN_PEAKS],
+          })
+        )
+      );
+      const queryClient = createTestQueryClient();
+      const { container } = render(
+        <AppTestProviders client={queryClient}>
+          <MemoryRouter initialEntries={['/u/alice']}>
+            <Routes>
+              <Route path="/u/:handle" element={<ProfilePage />} />
+            </Routes>
+          </MemoryRouter>
+        </AppTestProviders>
+      );
+      await screen.findByRole('link', { name: /^modifier mes favoris$/i });
+      await assertNoViolations(container, queryClient);
+    });
+
+    it('the favorites settings with the search open have no violations', async () => {
+      server.use(
+        http.get(`${TEST_API_V1}/auth/me`, () =>
+          HttpResponse.json({ ...OWNER, favorites: [HEAT, TWIN_PEAKS] })
+        )
+      );
+      const queryClient = createTestQueryClient();
+      const { container } = render(
+        <AppTestProviders client={queryClient}>
+          <MemoryRouter initialEntries={['/settings/profil']}>
+            <Routes>
+              <Route path="/settings/*" element={<AccountPage />} />
+            </Routes>
+          </MemoryRouter>
+        </AppTestProviders>
+      );
+      await userEvent.click(await screen.findByRole('button', { name: 'Ajouter un favori' }));
+      await screen.findByRole('searchbox', { name: 'Rechercher un favori' });
+      await assertNoViolations(container, queryClient);
+    });
+  });
+
   it("ProfileMoviesPage n'a pas de violations", async () => {
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })),

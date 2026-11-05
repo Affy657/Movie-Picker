@@ -86,6 +86,17 @@ public sealed class GetEventDetailHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_GivesTheRecapLinkOfTheNight()
+    {
+        var evt = new EventEntityBuilder().WithId("evt-1").WithSlug("soiree").Build() with { RecapSlug = "recap-xyz1" };
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+
+        var result = await _sut.HandleAsync("soiree");
+
+        Assert.Equal("recap-xyz1", result.RecapSlug);
+    }
+
+    [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("bad", It.IsAny<CancellationToken>())).ReturnsAsync((Event?)null);

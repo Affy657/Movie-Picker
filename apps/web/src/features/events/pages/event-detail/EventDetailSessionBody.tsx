@@ -1,9 +1,10 @@
-import { Suspense, useMemo, type Dispatch, type SetStateAction } from 'react';
+import { Suspense, type Dispatch, type SetStateAction } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import EventParticipantsList from '@/features/events/components/EventParticipantsList';
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
 import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
-import EventWinnerSummary from '@/features/events/pages/event-detail/EventWinnerSummary';
+import ViewModeToggle from '@/shared/components/ViewModeToggle';
+import { useTranslation } from '@/shared/i18n';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import styles from './EventDetailSession.module.css';
@@ -100,22 +101,7 @@ export default function EventDetailSessionBody({
   participantsPanel: ParticipantsPanelState;
   moviesSection: MoviesSectionState;
 }>) {
-  const winners = useMemo(
-    () =>
-      wheel.winnerIds
-        .map((id) => movies.find((movie) => movie.id === id))
-        .filter((movie): movie is MovieData => movie !== undefined),
-    [wheel.winnerIds, movies]
-  );
-  const participantAvatars = useMemo(
-    () =>
-      Object.fromEntries(
-        (event.participants ?? [])
-          .filter((p) => p.avatarId)
-          .map((p) => [p.id, p.avatarId as string])
-      ),
-    [event.participants]
-  );
+  const { t } = useTranslation();
   return (
     <>
       {participantsPanel.open ? (
@@ -132,14 +118,18 @@ export default function EventDetailSessionBody({
         </p>
       ) : null}
       <EventWheelModalGate wheel={wheel} />
-      {wheel.manualMode || wheel.removalMode ? null : (
-        <EventWinnerSummary
-          winners={winners}
-          isFinished={!!event.isFinished}
-          participantAvatars={participantAvatars}
-        />
-      )}
       <div ref={moviesSection.ref} className={styles.moviesSection}>
+        {moviesSection.titled ? (
+          <div className={styles.moviesToolbar}>
+            <span className={styles.moviesLabel} aria-hidden>
+              {t('movies.list.sectionLabel')}
+            </span>
+            <ViewModeToggle
+              value={moviesSection.viewMode}
+              onChange={moviesSection.onViewModeChange}
+            />
+          </div>
+        ) : null}
         <EventMoviesSection
           slug={slug}
           event={event}

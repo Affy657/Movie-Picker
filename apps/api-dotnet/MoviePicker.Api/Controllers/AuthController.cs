@@ -194,7 +194,7 @@ public sealed class AuthController : ControllerBase
         OAuthOutcome loginOutcome;
         try
         {
-            loginOutcome = await loginHandler.HandleAsync(info, ct);
+            loginOutcome = await loginHandler.HandleAsync(info, externalResult.Properties?.GetTokenValue("access_token"), ct);
         }
         catch (MoviePickerException ex)
         {

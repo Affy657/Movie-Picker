@@ -27,6 +27,7 @@ public static class RateLimitingExtensions
     public const string VoteMutationPolicy = "vote-mutation";
     public const string SeenMarksMutationPolicy = "seen-marks-mutation";
     public const string NoteMutationPolicy = "note-mutation";
+    public const string RatingMutationPolicy = "rating-mutation";
     public const string RemoveParticipantPolicy = "remove-participant";
     public const string DeleteEventPolicy = "delete-event";
     public const string PostersPolicy = "posters-get";
@@ -46,6 +47,11 @@ public static class RateLimitingExtensions
     public const string AuthLogoutPolicy = "auth-logout";
     public const string HealthReadyPolicy = "health-ready";
     public const string EventViewPollPolicy = "event-view-poll";
+    public const string RecapDocumentPolicy = "recap-document";
+    public const string AvatarPhotoUploadPolicy = "avatar-photo-upload";
+    public const string AvatarPhotosPolicy = "avatar-photos-get";
+
+    private const string ProxiedPartition = "proxied";
 
     public const int GlobalPermitLimitPerMinute = 900;
 
@@ -88,7 +94,11 @@ public static class RateLimitingExtensions
         new(NotificationMutationPolicy, 60, 1),
         new(AuthLogoutPolicy, 30, 1),
         new(HealthReadyPolicy, 30, 1, QuotaScope.Address),
-        new(EventViewPollPolicy, 600, 1)
+        new(EventViewPollPolicy, 600, 1),
+        new(RatingMutationPolicy, 60, 1),
+        new(RecapDocumentPolicy, 120, 1, QuotaScope.Slug),
+        new(AvatarPhotoUploadPolicy, 10, 60),
+        new(AvatarPhotosPolicy, 300, 1)
     ];
 
     public static IServiceCollection AddMoviePickerRateLimiter(
@@ -147,24 +157,41 @@ public static class RateLimitingExtensions
 
     internal static string PartitionKeyFor(HttpContext httpContext) => UserOrIpPartitionKey.Get(httpContext);
 
-    internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec) =>
-        spec.Scope == QuotaScope.Address ? AddressPartitionKey(httpContext) : PartitionKeyFor(httpContext);
+    internal static string PartitionKeyFor(HttpContext httpContext, PolicySpec spec) => spec.Scope switch
+    {
+        QuotaScope.Address => AddressPartitionKey(httpContext),
+        QuotaScope.Slug => RouteSlugPartitionKey.Get(httpContext) ?? AddressPartitionKey(httpContext),
+        _ => PartitionKeyFor(httpContext)
+    };
 
     private static string AddressPartitionKey(HttpContext httpContext) => $"ip:{ClientIpPartitionKey.Get(httpContext)}";
 
     internal static PartitionedRateLimiter<HttpContext> CreateGlobalLimiter() =>
         PartitionedRateLimiter.CreateChained(
-            PartitionedRateLimiter.Create<HttpContext, string>(
-                httpContext => BuildFixedWindow(AddressPartitionKey(httpContext), AddressCeilingPerMinute, 1)),
+            PartitionedRateLimiter.Create<HttpContext, string>(CreateAddressCeilingPartition),
             PartitionedRateLimiter.Create<HttpContext, string>(CreateGlobalPartition));
 
-    internal static RateLimitPartition<string> CreateGlobalPartition(HttpContext httpContext) =>
-        IsPolledEventView(httpContext)
-            ? RateLimitPartition.GetNoLimiter(EventViewPollPolicy)
-            : BuildFixedWindow(PartitionKeyFor(httpContext), GlobalPermitLimitPerMinute, 1);
+    internal static RateLimitPartition<string> CreateAddressCeilingPartition(HttpContext httpContext) =>
+        IsProxied(httpContext)
+            ? RateLimitPartition.GetNoLimiter(ProxiedPartition)
+            : BuildFixedWindow(AddressPartitionKey(httpContext), AddressCeilingPerMinute, 1);
 
-    private static bool IsPolledEventView(HttpContext httpContext) =>
-        httpContext.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName == EventViewPollPolicy;
+    internal static RateLimitPartition<string> CreateGlobalPartition(HttpContext httpContext)
+    {
+        if (IsPolledEventView(httpContext))
+            return RateLimitPartition.GetNoLimiter(EventViewPollPolicy);
+        return IsProxied(httpContext)
+            ? RateLimitPartition.GetNoLimiter(ProxiedPartition)
+            : BuildFixedWindow(PartitionKeyFor(httpContext), GlobalPermitLimitPerMinute, 1);
+    }
+
+    private static string? PolicyNameOf(HttpContext httpContext) =>
+        httpContext.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
+
+    private static bool IsPolledEventView(HttpContext httpContext) => PolicyNameOf(httpContext) == EventViewPollPolicy;
+
+    private static bool IsProxied(HttpContext httpContext) =>
+        PolicyNameOf(httpContext) is { } policyName && FindPolicy(policyName) is { Scope: QuotaScope.Slug };
 
     internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec) =>
         BuildFixedWindow(PartitionKeyFor(httpContext, spec), spec.PermitLimit, spec.WindowMinutes);
@@ -184,10 +211,12 @@ public static class RateLimitingExtensions
     internal enum QuotaScope
     {
         Account,
-        Address
+        Address,
+        Slug
     }
 
     internal readonly record struct PolicySpec(string Name, int PermitLimit, int WindowMinutes, QuotaScope Scope = QuotaScope.Account);
+
 }
 
 internal static class ClientIpPartitionKey
@@ -209,6 +238,15 @@ internal static class ClientIpPartitionKey
         var bytes = address.GetAddressBytes();
         Array.Clear(bytes, Ipv6NetworkPrefixBytes, bytes.Length - Ipv6NetworkPrefixBytes);
         return $"{new IPAddress(bytes)}/{Ipv6NetworkPrefixBytes * 8}";
+    }
+}
+
+internal static class RouteSlugPartitionKey
+{
+    internal static string? Get(HttpContext httpContext)
+    {
+        var slug = httpContext.Request.RouteValues["slug"]?.ToString();
+        return string.IsNullOrWhiteSpace(slug) ? null : $"slug:{slug}";
     }
 }
 

@@ -65,7 +65,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         if (request.MediaType == MovieMediaType.Tv && evt.Config?.AllowSeries != true)
             throw Errors.TvShowsNotAllowed();
 
-        var poster = await ResolvePosterAsync(request, ct);
+        var poster = await TmdbPosterPathResolver.ResolveAsync(_posterImageStore, request.PosterPath, ct);
 
         var participant = await _participantRepository.FindByIdAndEventIdAsync(request.ParticipantId, evt.Id, ct);
         if (participant is null)
@@ -133,15 +133,6 @@ public sealed class AddMovieHandler : IAddMovieHandler
             SeenByPseudos = Array.Empty<string>(),
             VotersUpPseudos = Array.Empty<string>()
         };
-    }
-
-    private async Task<string?> ResolvePosterAsync(AddMovieRequest request, CancellationToken ct)
-    {
-        var poster = string.IsNullOrWhiteSpace(request.PosterPath) ? null : request.PosterPath.Trim();
-        if (poster is not null && !TmdbPosterUrlNormalizer.IsAcceptedPosterReference(poster))
-            throw Errors.InvalidPosterPath();
-
-        return await _posterImageStore.ToStoredPosterPathAsync(poster, ct);
     }
 
     private async Task<Movie> InsertWithinProposalLimitAsync(
@@ -241,7 +232,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
                     Type = UserNotificationType.MovieAdded,
                     ActorHandle = proposer?.Handle,
                     ActorDisplayName = proposer?.DisplayName,
-                    ActorAvatarId = proposer?.AvatarId,
+                    ActorAvatarId = proposer?.DisplayedAvatarId,
                     EventId = evt.Id,
                     EventSlug = evt.Slug,
                     EventTitle = evt.Title,

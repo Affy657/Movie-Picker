@@ -4,7 +4,11 @@ import type {
   RemoveParticipantResponse,
   DeleteEventResponse,
 } from '@/features/events/api/eventsApi';
-import type { FollowListResponse, PublicProfile } from '@/features/profile/api/profileApi';
+import type {
+  FavoriteListResponse,
+  FollowListResponse,
+  PublicProfile,
+} from '@/features/profile/api/profileApi';
 import type { UserStats } from '@/features/events/api/userStatsApi';
 import type {
   WatchlistAvailabilityItem,
@@ -15,7 +19,8 @@ import type { NotificationInbox } from '@/features/notifications/api/notificatio
 import type { MovieSearchListResponse } from '@/features/movies/api/moviesApi';
 import type { UserProfile } from '@/features/auth/types';
 import type { EventConfigData } from '@/shared/types/event';
-import type { WatchProviderOffer } from '@/shared/types/movie';
+import type { FavoriteTitle, MovieRating, WatchProviderOffer } from '@/shared/types/movie';
+import type { UserWatchedMovieItem } from '@/features/profile/api/profileApi';
 
 export type ApiSchemas = components['schemas'];
 
@@ -46,7 +51,31 @@ const frontTypesMatchTheOpenApiContract: [
   ServedBy<MovieSearchListResponse, ApiSchemas['MovieSearchListResponse']>,
   ServedBy<EventConfigData, ApiSchemas['EventConfigResponse']>,
   ServedBy<WatchProviderOffer, ApiSchemas['WatchProviderOfferResponse']>,
-] = [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
+  ServedBy<MovieRating, ApiSchemas['MovieRatingResponse']>,
+  ServedBy<UserWatchedMovieItem, ApiSchemas['UserWatchedMovieItem']>,
+  ServedBy<FavoriteTitle, ApiSchemas['FavoriteTitleResponse']>,
+  ServedBy<FavoriteListResponse, ApiSchemas['FavoriteListResponse']>,
+] = [
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+];
 
 const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/auth/register',
@@ -60,6 +89,7 @@ const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/auth/oauth/{provider}/start',
   '/api/v1/auth/password-reset/request',
   '/api/v1/auth/password-reset/confirm',
+  '/api/v1/avatars/{key}',
   '/api/v1/events',
   '/api/v1/events/mine',
   '/api/v1/events/slug/{idOrSlug}',
@@ -72,6 +102,7 @@ const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/events/{idOrSlug}/movies',
   '/api/v1/events/{idOrSlug}/movies/{movieId}',
   '/api/v1/events/{idOrSlug}/movies/{movieId}/note',
+  '/api/v1/events/{idOrSlug}/movies/{movieId}/rating',
   '/api/v1/events/{idOrSlug}/movies/{movieId}/seen',
   '/api/v1/events/{idOrSlug}/movies/{movieId}/vote',
   '/api/v1/events/{idOrSlug}/movies/{movieId}/wheel-exclusion',
@@ -92,6 +123,9 @@ const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/notifications/subscriptions',
   '/api/v1/notifications/vapid-public-key',
   '/api/v1/users/handle-available',
+  '/api/v1/users/me/avatar-photo',
+  '/api/v1/users/me/favorites',
+  '/api/v1/users/me/favorites/{tmdbId}',
   '/api/v1/users/me/following-watched-movies',
   '/api/v1/users/me/watched-movies',
   '/api/v1/users/{handle}',

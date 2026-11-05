@@ -57,6 +57,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public string? AvatarId { get; set; }
 
+    [BsonElement("avatarPhoto")]
+    [BsonIgnoreIfNull]
+    public AvatarPhotoDocument? AvatarPhoto { get; set; }
+
     [BsonElement("notifyOnParticipantJoined")]
     [BsonIgnoreIfNull]
     public bool? NotifyOnParticipantJoined { get; set; }
@@ -113,6 +117,10 @@ public sealed class UserDocument
     [BsonIgnoreIfNull]
     public List<EventTemplateDocument>? EventTemplates { get; set; }
 
+    [BsonElement("favorites")]
+    [BsonIgnoreIfNull]
+    public List<FavoriteTitleDocument>? Favorites { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 
@@ -137,6 +145,26 @@ public sealed class EventTemplateDocument
 
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
+}
+
+[BsonIgnoreExtraElements]
+public sealed class FavoriteTitleDocument
+{
+    [BsonElement("tmdbId")]
+    public int TmdbId { get; set; }
+
+    [BsonElement("mediaType")]
+    public string MediaType { get; set; } = "movie";
+
+    [BsonElement("title")]
+    public string Title { get; set; } = string.Empty;
+
+    [BsonElement("year")]
+    public string Year { get; set; } = string.Empty;
+
+    [BsonElement("posterPath")]
+    [BsonIgnoreIfNull]
+    public string? PosterPath { get; set; }
 }
 
 [BsonIgnoreExtraElements]
@@ -176,4 +204,17 @@ public sealed class NotificationPreferenceEntryDocument
 
     [BsonElement("enabled")]
     public bool Enabled { get; set; }
+}
+
+[BsonIgnoreExtraElements]
+public sealed class AvatarPhotoDocument
+{
+    [BsonElement("key")]
+    public string Key { get; set; } = string.Empty;
+
+    [BsonElement("isActive")]
+    public bool IsActive { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; }
 }

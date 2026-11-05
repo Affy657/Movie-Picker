@@ -33,6 +33,8 @@ public sealed class MovieWithScoreResponse
 
     public IReadOnlyList<string> VotersUpPseudos { get; init; } = Array.Empty<string>();
 
+    public IReadOnlyList<MovieRatingResponse> Ratings { get; init; } = Array.Empty<MovieRatingResponse>();
+
     public double? VoteAverage { get; init; }
     public IReadOnlyList<WatchProviderOfferResponse> WatchProviders { get; init; } =
         Array.Empty<WatchProviderOfferResponse>();

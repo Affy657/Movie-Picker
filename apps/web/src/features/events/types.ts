@@ -92,6 +92,12 @@ export interface MyEventSummary {
 
   winnerMovies?: MyEventWinnerMovie[];
 
+  averageRating?: number | null;
+
+  myRating?: number | null;
+
+  hasWinnerToRate?: boolean;
+
   autoCloseAt?: string | null;
 }
 

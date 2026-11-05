@@ -57,9 +57,12 @@ public sealed record User
     public AccentColor AccentColor { get; init; } = AccentColor.Default;
     public RatingScale RatingScale { get; init; } = RatingScale.Five;
     public string AvatarId { get; init; } = string.Empty;
+    public AvatarPhoto? AvatarPhoto { get; init; }
+    public string DisplayedAvatarId => AvatarPhoto.DisplayedAvatarIdOf(AvatarId, AvatarPhoto);
     public IReadOnlyDictionary<UserNotificationType, bool> NotificationPreferences { get; init; }
         = NotificationPreferenceDefaults.All();
     public IReadOnlyList<EventTemplate> EventTemplates { get; init; } = Array.Empty<EventTemplate>();
+    public IReadOnlyList<FavoriteTitle> Favorites { get; init; } = Array.Empty<FavoriteTitle>();
     public DateTimeOffset? SupporterSince { get; init; }
     public string? LetterboxdUsername { get; init; }
     public DateTimeOffset? LetterboxdLastSyncAt { get; init; }

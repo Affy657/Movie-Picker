@@ -46,6 +46,7 @@ export interface EventData {
   date: string;
   time: string;
   slug: string;
+  recapSlug?: string | null;
   isHost?: boolean;
   isFinished?: boolean;
   lifecycle?: MyEventLifecycle;

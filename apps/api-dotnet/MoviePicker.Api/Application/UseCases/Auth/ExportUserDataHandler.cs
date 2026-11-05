@@ -16,8 +16,10 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
     private readonly IParticipantRepository _participants;
     private readonly IVoteRepository _votes;
     private readonly ISeenMarkRepository _seenMarks;
+    private readonly IMovieRatingRepository _ratings;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
     private readonly IWatchlistRepository _watchlist;
+    private readonly IAvatarPhotoRepository _avatarPhotos;
     private readonly IMovieRepository _movies;
     private readonly TimeProvider _clock;
 
@@ -29,8 +31,10 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         IParticipantRepository participants,
         IVoteRepository votes,
         ISeenMarkRepository seenMarks,
+        IMovieRatingRepository ratings,
         IPushSubscriptionRepository pushSubscriptions,
         IWatchlistRepository watchlist,
+        IAvatarPhotoRepository avatarPhotos,
         IMovieRepository movies,
         TimeProvider clock)
     {
@@ -41,8 +45,10 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         _participants = participants;
         _votes = votes;
         _seenMarks = seenMarks;
+        _ratings = ratings;
         _pushSubscriptions = pushSubscriptions;
         _watchlist = watchlist;
+        _avatarPhotos = avatarPhotos;
         _movies = movies;
         _clock = clock;
     }
@@ -63,6 +69,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var participantIds = participations.Select(p => p.Id).ToList();
         var votes = await _votes.ListByParticipantIdsAsync(participantIds, ct);
         var seenMarks = await _seenMarks.ListByParticipantIdsAsync(participantIds, ct);
+        var ratings = await _ratings.ListByParticipantIdsAsync(participantIds, ct);
         var proposedMovies = await _movies.ListByParticipantIdsAsync(participantIds, ct);
         var pushSubscriptions = await _pushSubscriptions.ListByUserIdAsync(userId, ct);
 
@@ -71,12 +78,16 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         var eventTitleById = participationEvents.ToDictionary(e => e.Id, e => e.Title);
 
         var watchlist = await _watchlist.ListByUserIdAsync(userId, MaxItems, ct);
+        var avatarPhoto = await ExportAvatarPhotoAsync(user, ct);
 
         var votesByParticipant = votes
             .GroupBy(v => v.ParticipantId)
             .ToDictionary(g => g.Key, g => g.ToList());
         var seenByParticipant = seenMarks
             .GroupBy(s => s.ParticipantId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+        var ratingsByParticipant = ratings
+            .GroupBy(r => r.ParticipantId)
             .ToDictionary(g => g.Key, g => g.ToList());
         var proposedByParticipant = proposedMovies
             .GroupBy(m => m.ParticipantId)
@@ -91,12 +102,20 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
             Followers = MapConnections(followerUsers),
             CreatedEvents = createdEvents.Select(MapCreatedEvent).ToList(),
             Participations = participations
-                .Select(p => MapParticipation(p, eventTitleById, votesByParticipant, seenByParticipant, proposedByParticipant))
+                .Select(p => MapParticipation(
+                    p,
+                    eventTitleById,
+                    votesByParticipant,
+                    seenByParticipant,
+                    ratingsByParticipant,
+                    proposedByParticipant))
                 .ToList(),
             PushSubscriptions = pushSubscriptions
                 .Select(s => new ExportedPushSubscription { Endpoint = s.Endpoint, CreatedAt = s.CreatedAt })
                 .ToList(),
-            Watchlist = watchlist.Select(MapWatchlistItem).ToList()
+            Watchlist = watchlist.Select(MapWatchlistItem).ToList(),
+            Favorites = user.Favorites.Select(MapFavorite).ToList(),
+            AvatarPhoto = avatarPhoto
         };
     }
 
@@ -110,6 +129,30 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         Year = item.Year,
         CreatedAt = item.CreatedAt
     };
+
+    private static ExportedFavorite MapFavorite(FavoriteTitle favorite) => new()
+    {
+        TmdbId = favorite.TmdbId,
+        MediaType = MediaTypeName(favorite.MediaType),
+        Title = favorite.Title,
+        Year = favorite.Year
+    };
+
+    private async Task<ExportedAvatarPhoto?> ExportAvatarPhotoAsync(User user, CancellationToken ct)
+    {
+        if (user.AvatarPhoto is not { } photo)
+            return null;
+        var stored = await _avatarPhotos.GetByKeyAsync(photo.Key, ct);
+        return stored is null
+            ? null
+            : new ExportedAvatarPhoto
+            {
+                ContentType = stored.ContentType,
+                Base64Content = Convert.ToBase64String(stored.Data),
+                IsActive = photo.IsActive,
+                UpdatedAt = photo.UpdatedAt
+            };
+    }
 
     private static ExportedProfile MapProfile(User user) => new()
     {
@@ -169,10 +212,12 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
         Dictionary<string, string> eventTitleById,
         Dictionary<string, List<Vote>> votesByParticipant,
         Dictionary<string, List<SeenMark>> seenByParticipant,
+        Dictionary<string, List<MovieRating>> ratingsByParticipant,
         Dictionary<string, List<Movie>> proposedByParticipant)
     {
         var votes = votesByParticipant.TryGetValue(p.Id, out var v) ? v : [];
         var seen = seenByParticipant.TryGetValue(p.Id, out var s) ? s : [];
+        var ratings = ratingsByParticipant.TryGetValue(p.Id, out var r) ? r : [];
         var proposed = proposedByParticipant.TryGetValue(p.Id, out var m) ? m : [];
         return new ExportedParticipation
         {
@@ -186,6 +231,9 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
             SeenMarks = seen
                 .Select(x => new ExportedSeenMark { MovieId = x.MovieId, CreatedAt = x.CreatedAt })
                 .ToList(),
+            Ratings = ratings
+                .Select(x => new ExportedRating { MovieId = x.MovieId, Value = x.Value, UpdatedAt = x.UpdatedAt })
+                .ToList(),
             ProposedMovies = proposed
                 .Select(x => new ExportedProposedMovie
                 {
@@ -198,6 +246,7 @@ public sealed class ExportUserDataHandler : IExportUserDataHandler
                     CreatedAt = x.CreatedAt
                 })
                 .ToList()
+
         };
     }
 }

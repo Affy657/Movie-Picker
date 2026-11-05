@@ -968,6 +968,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/avatars/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    key: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Modified */
+                304: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "image/jpeg": components["schemas"]["ProblemDetails"];
+                        "image/png": components["schemas"]["ProblemDetails"];
+                        "image/webp": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{idOrSlug}/movies": {
         parameters: {
             query?: never;
@@ -1930,6 +1983,213 @@ export interface paths {
         };
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{idOrSlug}/movies/{movieId}/rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    idOrSlug: string;
+                    movieId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetMovieRatingRequest"];
+                    "text/json": components["schemas"]["SetMovieRatingRequest"];
+                    "application/*+json": components["schemas"]["SetMovieRatingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MovieRatingResponse"];
+                        "application/json": components["schemas"]["MovieRatingResponse"];
+                        "text/json": components["schemas"]["MovieRatingResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    idOrSlug: string;
+                    movieId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["DeleteMovieRatingRequest"];
+                    "text/json": components["schemas"]["DeleteMovieRatingRequest"];
+                    "application/*+json": components["schemas"]["DeleteMovieRatingRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -3878,6 +4138,7 @@ export interface paths {
                     language?: string;
                     runtimeMin?: number;
                     runtimeMax?: number;
+                    includeSeries?: boolean;
                 };
                 header?: never;
                 path?: never;
@@ -4662,6 +4923,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/recaps/{recapSlug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    recapSlug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["NightRecapResponse"];
+                        "application/json": components["schemas"]["NightRecapResponse"];
+                        "text/json": components["schemas"]["NightRecapResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scheduler/event-reminders": {
         parameters: {
             query?: never;
@@ -4960,6 +5271,83 @@ export interface paths {
                         "text/plain": components["schemas"]["CatalogWarmPassResult"];
                         "application/json": components["schemas"]["CatalogWarmPassResult"];
                         "text/json": components["schemas"]["CatalogWarmPassResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/scheduler/rating-reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RatingReminderPassResult"];
+                        "application/json": components["schemas"]["RatingReminderPassResult"];
+                        "text/json": components["schemas"]["RatingReminderPassResult"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["RatingReminderPassResult"];
+                        "application/json": components["schemas"]["RatingReminderPassResult"];
+                        "text/json": components["schemas"]["RatingReminderPassResult"];
                     };
                 };
             };
@@ -5823,6 +6211,358 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/me/favorites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AddFavoriteRequest"];
+                    "text/json": components["schemas"]["AddFavoriteRequest"];
+                    "application/*+json": components["schemas"]["AddFavoriteRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["FavoriteListResponse"];
+                        "application/json": components["schemas"]["FavoriteListResponse"];
+                        "text/json": components["schemas"]["FavoriteListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/favorites/{tmdbId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: {
+                    mediaType?: components["schemas"]["MovieMediaType"];
+                };
+                header?: never;
+                path: {
+                    tmdbId: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["FavoriteListResponse"];
+                        "application/json": components["schemas"]["FavoriteListResponse"];
+                        "text/json": components["schemas"]["FavoriteListResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/avatar-photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UploadAvatarPhotoRequest"];
+                    "text/json": components["schemas"]["UploadAvatarPhotoRequest"];
+                    "application/*+json": components["schemas"]["UploadAvatarPhotoRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserProfileResponse"];
+                        "application/json": components["schemas"]["UserProfileResponse"];
+                        "text/json": components["schemas"]["UserProfileResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserProfileResponse"];
+                        "application/json": components["schemas"]["UserProfileResponse"];
+                        "text/json": components["schemas"]["UserProfileResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{handle}/follow": {
         parameters: {
             query?: never;
@@ -6378,6 +7118,14 @@ export interface components {
     schemas: {
         /** @enum {string} */
         AccentColor: "default" | "blue" | "green" | "purple" | "pink" | "orange" | "red" | "cyan" | "indigo";
+        AddFavoriteRequest: {
+            /** Format: int32 */
+            tmdbId: number;
+            mediaType?: components["schemas"]["MovieMediaType"];
+            title: string;
+            year?: string | null;
+            posterPath?: string | null;
+        };
         AddMovieRequest: {
             /** Format: int32 */
             tmdbId: number;
@@ -6480,9 +7228,14 @@ export interface components {
             removedVotes?: number;
             /** Format: int64 */
             removedSeenMarks?: number;
+            /** Format: int64 */
+            removedRatings?: number;
         };
         DeleteMoviePitchNoteRequest: {
             participantId?: string | null;
+        };
+        DeleteMovieRatingRequest: {
+            participantId: string;
         };
         DeleteMovieRequest: {
             participantId: string;
@@ -6522,6 +7275,7 @@ export interface components {
             date?: string | null;
             time?: string | null;
             slug?: string | null;
+            recapSlug?: string | null;
             config: components["schemas"]["EventConfigResponse"];
             /** Format: date-time */
             closedAt?: string | null;
@@ -6588,6 +7342,13 @@ export interface components {
             /** Format: date-time */
             pickedAt?: string;
         };
+        ExportedAvatarPhoto: {
+            contentType?: string | null;
+            base64Content?: string | null;
+            isActive?: boolean;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         ExportedConnection: {
             handle?: string | null;
             displayName?: string | null;
@@ -6609,6 +7370,13 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        ExportedFavorite: {
+            /** Format: int32 */
+            tmdbId?: number;
+            mediaType?: string | null;
+            title?: string | null;
+            year?: string | null;
+        };
         ExportedNotification: {
             type?: string | null;
             actorHandle?: string | null;
@@ -6627,6 +7395,7 @@ export interface components {
             joinedAt?: string;
             votes?: components["schemas"]["ExportedVote"][] | null;
             seenMarks?: components["schemas"]["ExportedSeenMark"][] | null;
+            ratings?: components["schemas"]["ExportedRating"][] | null;
             proposedMovies?: components["schemas"]["ExportedProposedMovie"][] | null;
         };
         ExportedProfile: {
@@ -6671,6 +7440,13 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        ExportedRating: {
+            movieId?: string | null;
+            /** Format: int32 */
+            value?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         ExportedSeenMark: {
             movieId?: string | null;
             /** Format: date-time */
@@ -6691,6 +7467,17 @@ export interface components {
             year?: string | null;
             /** Format: date-time */
             createdAt?: string;
+        };
+        FavoriteListResponse: {
+            items?: components["schemas"]["FavoriteTitleResponse"][] | null;
+        };
+        FavoriteTitleResponse: {
+            /** Format: int32 */
+            tmdbId?: number;
+            mediaType?: components["schemas"]["MovieMediaType"];
+            title?: string | null;
+            year?: string | null;
+            posterPath?: string | null;
         };
         FinishedEventWatchlistPassResult: {
             /** Format: int32 */
@@ -6864,6 +7651,13 @@ export interface components {
         };
         /** @enum {string} */
         MovieMediaType: "movie" | "tv";
+        MovieRatingResponse: {
+            participantId?: string | null;
+            /** Format: int32 */
+            value?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         MovieSearchItemResponse: {
             /** Format: int32 */
             id?: number;
@@ -6940,6 +7734,7 @@ export interface components {
             seenCount?: number;
             seenByPseudos?: string[] | null;
             votersUpPseudos?: string[] | null;
+            ratings?: components["schemas"]["MovieRatingResponse"][] | null;
             /** Format: double */
             voteAverage?: number | null;
             watchProviders?: components["schemas"]["WatchProviderOfferResponse"][] | null;
@@ -6969,6 +7764,11 @@ export interface components {
             maxParticipants?: number | null;
             theme?: string | null;
             winnerMovies?: components["schemas"]["MyEventWinnerMovieDto"][] | null;
+            /** Format: double */
+            averageRating?: number | null;
+            /** Format: double */
+            myRating?: number | null;
+            hasWinnerToRate?: boolean;
             /** Format: date-time */
             autoCloseAt?: string | null;
         };
@@ -6983,6 +7783,26 @@ export interface components {
             totalActive?: number;
             /** Format: int32 */
             totalFinished?: number;
+        };
+        NightRecapResponse: {
+            recapSlug?: string | null;
+            eventSlug?: string | null;
+            title?: string | null;
+            date?: string | null;
+            time?: string | null;
+            config?: components["schemas"]["EventConfigResponse"];
+            /** Format: date-time */
+            closedAt?: string | null;
+            isFinished?: boolean;
+            lifecycle?: string | null;
+            winners?: components["schemas"]["EventWinnerResponse"][] | null;
+            myParticipant?: components["schemas"]["ParticipantResponse"];
+            /** Format: int32 */
+            participantCount?: number;
+            /** Format: int32 */
+            movieCount?: number;
+            participants?: components["schemas"]["EventParticipantSummaryResponse"][] | null;
+            winnerMovies?: components["schemas"]["MovieWithScoreResponse"][] | null;
         };
         NotificationInboxResponse: {
             items?: components["schemas"]["UserNotificationItem"][] | null;
@@ -7056,6 +7876,7 @@ export interface components {
             accentColor?: string | null;
             ratingScale?: string | null;
             avatarId?: string | null;
+            useAvatarPhoto?: boolean | null;
             handle?: string | null;
             bio?: string | null;
             isProfilePublic?: boolean | null;
@@ -7088,6 +7909,15 @@ export interface components {
             isWatchlistPublic?: boolean;
             /** Format: int32 */
             watchlistCount?: number | null;
+            favorites?: components["schemas"]["FavoriteTitleResponse"][] | null;
+        };
+        RatingReminderPassResult: {
+            /** Format: int32 */
+            finishedNights?: number;
+            /** Format: int32 */
+            reminded?: number;
+            /** Format: int32 */
+            deliveryFailures?: number;
         };
         /** @enum {string} */
         RatingScale: "five" | "ten";
@@ -7155,6 +7985,11 @@ export interface components {
             participantId: string;
             pitchNote: string;
         };
+        SetMovieRatingRequest: {
+            participantId: string;
+            /** Format: int32 */
+            value?: number;
+        };
         SetMovieWheelExclusionRequest: {
             excluded: boolean;
         };
@@ -7173,6 +8008,10 @@ export interface components {
             /** Format: uri */
             endpoint: string;
         };
+        UploadAvatarPhotoRequest: {
+            contentType: string;
+            base64Content: string;
+        };
         UserDataExportResponse: {
             /** Format: date-time */
             exportedAt?: string;
@@ -7184,6 +8023,8 @@ export interface components {
             participations?: components["schemas"]["ExportedParticipation"][] | null;
             pushSubscriptions?: components["schemas"]["ExportedPushSubscription"][] | null;
             watchlist?: components["schemas"]["ExportedWatchlistItem"][] | null;
+            favorites?: components["schemas"]["ExportedFavorite"][] | null;
+            avatarPhoto?: components["schemas"]["ExportedAvatarPhoto"];
         };
         UserNotificationItem: {
             id?: string | null;
@@ -7207,6 +8048,8 @@ export interface components {
             accentColor?: components["schemas"]["AccentColor"];
             ratingScale?: components["schemas"]["RatingScale"];
             avatarId?: string | null;
+            avatarPhotoId?: string | null;
+            generatedAvatarId?: string | null;
             handle?: string | null;
             bio?: string | null;
             isProfilePublic?: boolean;
@@ -7219,6 +8062,7 @@ export interface components {
             letterboxdPendingReconciliationCount?: number;
             hasPassword?: boolean;
             linkedProviders?: string[] | null;
+            favorites?: components["schemas"]["FavoriteTitleResponse"][] | null;
             /** Format: date-time */
             createdAt?: string;
         };
@@ -7256,6 +8100,8 @@ export interface components {
             mediaType?: components["schemas"]["MovieMediaType"];
             /** Format: date-time */
             watchedAt?: string;
+            /** Format: int32 */
+            myRating?: number | null;
         };
         UserWatchedMoviesResponse: {
             items?: components["schemas"]["UserWatchedMovieItem"][] | null;

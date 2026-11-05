@@ -66,6 +66,34 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task RecapLookup_ResolvesTheRecapSlug_ButNeverTheNightSlug()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var created = await events.AddAsync(NewEvent("Recap") with { RecapSlug = "recap-" + Guid.NewGuid().ToString("N")[..10] });
+
+        Assert.Equal(created.Id, (await events.GetByRecapSlugAsync(created.RecapSlug!))?.Id);
+        Assert.Null(await events.GetByRecapSlugAsync(created.Slug));
+        Assert.Null(await events.GetByRecapSlugAsync(" "));
+    }
+
+    [Fact]
+    public async Task NightWithoutRecapSlug_IsListedForTheBackfill_UntilItKeepsOne()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var bare = await events.AddAsync(NewEvent("Sans recap"));
+
+        Assert.Contains(await events.ListMissingRecapSlugAsync(10_000), e => e.Id == bare.Id);
+
+        var recapSlug = "recap-" + Guid.NewGuid().ToString("N")[..10];
+        await events.UpdateAsync(bare with { RecapSlug = recapSlug });
+
+        Assert.DoesNotContain(await events.ListMissingRecapSlugAsync(10_000), e => e.Id == bare.Id);
+        Assert.Equal(recapSlug, (await events.GetByIdOrSlugAsync(bare.Slug))?.RecapSlug);
+    }
+
+    [Fact]
     public async Task PushSubscriptionUpsert_ForAnotherUser_MovesTheEndpointToThatUser()
     {
         using var scope = _factory.Services.CreateScope();
@@ -511,6 +539,29 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task ListWithWinnerStartingBetween_KeepsTheWinnersOfTheWindow_WhetherClosedOrNot()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        var winners = new[] { new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now } };
+        var yesterday = await events.AddAsync(NewEvent("yesterday-" + marker) with { Winners = winners, Date = "2041-03-09" });
+        var threeDaysAgo = await events.AddAsync(NewEvent("three-days-" + marker) with { Winners = winners, Date = "2041-03-07", Time = "00:00" });
+        var closedByHost = await events.AddAsync(NewEvent("closed-" + marker) with { Winners = winners, Date = "2041-03-08", ClosedAt = Now });
+        await events.AddAsync(NewEvent("four-days-" + marker) with { Winners = winners, Date = "2041-03-06", Time = "23:30" });
+        await events.AddAsync(NewEvent("today-" + marker) with { Winners = winners, Date = "2041-03-10", Time = "00:00" });
+        await events.AddAsync(NewEvent("no-winner-" + marker) with { Date = "2041-03-09" });
+
+        var found = await events.ListWithWinnerStartingBetweenAsync(
+            new DateTimeOffset(2041, 3, 6, 23, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2041, 3, 9, 23, 0, 0, TimeSpan.Zero));
+
+        var mine = found.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet();
+        HashSet<string> expected = [yesterday.Id, threeDaysAgo.Id, closedByHost.Id];
+        Assert.Equal(expected, mine);
+    }
+
+    [Fact]
     public async Task ListAllByCreatorUserId_ReturnsEveryCreatedEvent_EvenBeyondTwoHundred()
     {
         using var scope = _factory.Services.CreateScope();
@@ -950,6 +1001,49 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
 
         var stored = await ReadRawAsync("users", created.Id);
         Assert.False(stored.Contains("bio"));
+    }
+
+    [Fact]
+    public async Task MovieRatingUpsert_ReplacesTheValueAndKeepsOneDocumentPerParticipant()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var ratings = scope.ServiceProvider.GetRequiredService<IMovieRatingRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        var movieId = ObjectId.GenerateNewId().ToString();
+        var participantId = ObjectId.GenerateNewId().ToString();
+        var rating = new MovieRating { EventId = eventId, MovieId = movieId, ParticipantId = participantId, Value = 6 };
+
+        var first = await ratings.UpsertAsync(rating);
+        var second = await ratings.UpsertAsync(rating with { Value = 9 });
+
+        Assert.Equal(first.Id, second.Id);
+        Assert.Equal(9, second.Value);
+        Assert.Equal(first.CreatedAt, second.CreatedAt);
+        var listed = Assert.Single(await ratings.ListByEventIdAsync(eventId));
+        Assert.Equal(9, listed.Value);
+        Assert.Equal(participantId, Assert.Single(await ratings.ListByParticipantIdsAsync([participantId])).ParticipantId);
+        Assert.Equal(eventId, Assert.Single(await ratings.ListByEventIdsAsync([eventId])).EventId);
+        Assert.Empty(await ratings.ListByEventIdsAsync([ObjectId.GenerateNewId().ToString()]));
+        Assert.Empty(await ratings.ListByEventIdsAsync(["not-an-object-id"]));
+
+        Assert.True(await ratings.DeleteAsync(eventId, movieId, participantId));
+        Assert.False(await ratings.DeleteAsync(eventId, movieId, participantId));
+        Assert.Empty(await ratings.ListByEventIdAsync(eventId));
+    }
+
+    [Fact]
+    public async Task MalformedObjectIds_ReadAsAbsent_InsteadOfThrowing()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var participants = scope.ServiceProvider.GetRequiredService<IParticipantRepository>();
+        var ratings = scope.ServiceProvider.GetRequiredService<IMovieRatingRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        var participantId = ObjectId.GenerateNewId().ToString();
+
+        Assert.Null(await movies.GetByIdAndEventIdAsync("not-an-id", eventId));
+        Assert.Null(await participants.FindByIdAndEventIdAsync(new string('z', 24), eventId));
+        Assert.False(await ratings.DeleteAsync(eventId, "not-an-id", participantId));
     }
 
     [Fact]

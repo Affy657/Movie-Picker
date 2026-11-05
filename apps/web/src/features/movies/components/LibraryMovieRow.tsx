@@ -117,10 +117,10 @@ export default function LibraryMovieRow({
   onOpenDetails,
   kebab,
 }: Readonly<LibraryMovieRowProps>) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const posterSrc = posterImageSrc(posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);
-  const voteLabel = formatTmdbVote(voteAverage, ratingScale);
+  const voteLabel = formatTmdbVote(voteAverage, ratingScale, locale);
   const runtimeLabel = formatRuntimeMinutes(runtimeMinutes);
   const hasMeta = badge != null || genres.length > 0;
 

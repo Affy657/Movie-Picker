@@ -8,7 +8,7 @@ const LOCALE_TAG: Record<LocaleCode, string> = {
 function formatIsoDate(
   isoDate: string,
   locale: LocaleCode,
-  style: Pick<Intl.DateTimeFormatOptions, 'weekday' | 'month'>
+  style: Pick<Intl.DateTimeFormatOptions, 'weekday' | 'month' | 'year'>
 ): string | null {
   const parts = isoDate
     .trim()
@@ -21,13 +21,17 @@ function formatIsoDate(
   const options: Intl.DateTimeFormatOptions = {
     ...style,
     day: 'numeric',
-    ...(y !== new Date().getFullYear() && { year: 'numeric' }),
+    ...(style.year === undefined && y !== new Date().getFullYear() && { year: 'numeric' }),
   };
   return new Intl.DateTimeFormat(LOCALE_TAG[locale], options).format(dt);
 }
 
 export function formatMyEventsListDate(isoDate: string, locale: LocaleCode): string {
   return formatIsoDate(isoDate, locale, { weekday: 'short', month: 'short' }) ?? isoDate.trim();
+}
+
+export function formatShortDate(isoDate: string, locale: LocaleCode): string {
+  return formatIsoDate(isoDate, locale, { month: 'short' }) ?? isoDate.trim();
 }
 
 export function formatEventTime(time: string): string {
@@ -42,9 +46,14 @@ export function formatEventDateLong(
   isoDate: string,
   time: string,
   locale: LocaleCode,
-  joiner: string
+  joiner: string,
+  { keepsake = false }: { keepsake?: boolean } = {}
 ): string {
-  const datePart = formatIsoDate(isoDate, locale, { weekday: 'long', month: 'short' });
+  const datePart = formatIsoDate(isoDate, locale, {
+    weekday: 'long',
+    month: keepsake ? 'long' : 'short',
+    ...(keepsake && { year: 'numeric' }),
+  });
   return datePart === null ? isoDate.trim() : `${datePart} ${joiner} ${formatEventTime(time)}`;
 }
 

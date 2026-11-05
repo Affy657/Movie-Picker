@@ -187,6 +187,25 @@ public sealed class MongoEventRepository : IEventRepository
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 
+    public async Task<Event?> GetByRecapSlugAsync(string recapSlug, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(recapSlug))
+            return null;
+
+        var doc = await _collection.Find(Builders<EventDocument>.Filter.Eq(x => x.RecapSlug, recapSlug)).FirstOrDefaultAsync(ct);
+        return doc is null ? null : EventDocumentMapper.ToDomain(doc);
+    }
+
+    public async Task<IReadOnlyList<Event>> ListMissingRecapSlugAsync(int limit, CancellationToken ct = default)
+    {
+        if (limit <= 0)
+            return [];
+
+        var filter = Builders<EventDocument>.Filter.Exists(x => x.RecapSlug, false);
+        var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
     public async Task<IReadOnlyList<Event>> ListMissingStartAtAsync(int limit, CancellationToken ct = default)
     {
         if (limit <= 0)
@@ -194,6 +213,20 @@ public sealed class MongoEventRepository : IEventRepository
 
         var filter = Builders<EventDocument>.Filter.Exists(x => x.StartAtUtc, false);
         var docs = await _collection.Find(filter).Limit(limit).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<Event>> ListWithWinnerStartingBetweenAsync(
+        DateTimeOffset fromInclusive,
+        DateTimeOffset toExclusive,
+        CancellationToken ct = default)
+    {
+        var builder = Builders<EventDocument>.Filter;
+        var filter = builder.And(
+            builder.SizeGt(x => x.Winners, 0),
+            builder.Gte(x => x.StartAtUtc, fromInclusive.UtcDateTime),
+            builder.Lt(x => x.StartAtUtc, toExclusive.UtcDateTime));
+        var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }
 

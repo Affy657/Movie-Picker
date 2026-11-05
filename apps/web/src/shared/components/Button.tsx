@@ -1,4 +1,10 @@
-import { Children, forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import {
+  Children,
+  forwardRef,
+  type ButtonHTMLAttributes,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
 import clsx from 'clsx';
 import Spinner from './Spinner';
 import styles from './Button.module.css';
@@ -81,6 +87,10 @@ export function withNudgedText(children: ReactNode): ReactNode[] {
   return parts;
 }
 
+function ignoreClick(event: MouseEvent<HTMLButtonElement>) {
+  event.preventDefault();
+}
+
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   tone?: ButtonTone;
@@ -100,11 +110,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     disabled,
     className,
     type = 'button',
+    onClick,
     children,
     ...rest
   },
   ref
 ) {
+  const inert = rest['aria-disabled'] === true || rest['aria-disabled'] === 'true';
   return (
     <button
       ref={ref}
@@ -113,6 +125,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...rest}
+      onClick={inert ? ignoreClick : onClick}
     >
       {loading ? <Spinner /> : null}
       {withNudgedText(children)}

@@ -13,6 +13,7 @@ public sealed class PublicProfileResponse
     public bool? IsFollowedByMe { get; init; }
     public bool IsWatchlistPublic { get; init; }
     public int? WatchlistCount { get; init; }
+    public IReadOnlyList<FavoriteTitleResponse> Favorites { get; init; } = [];
 }
 
 public sealed class HandleAvailabilityResponse

@@ -150,13 +150,15 @@ function summarizeMovie(
   props: MovieDetailsModalProps,
   details: MovieDetails | undefined,
   userRatingScale: RatingScale | undefined,
-  t: Translate
+  t: Translate,
+  locale: string
 ): MovieSummary {
   const year = props.year ?? yearFromDate(details?.releaseDate);
   const posterSrc = posterImageSrc(props.posterPath ?? details?.posterPath);
   const voteLabel = formatTmdbVote(
     props.voteAverage ?? details?.voteAverage,
-    props.ratingScale ?? userRatingScale
+    props.ratingScale ?? userRatingScale,
+    locale
   );
   const facts = [year, lengthLabelOf(props, details, t), voteLabel].filter(
     (fact): fact is string => !!fact
@@ -360,7 +362,7 @@ function LibraryDetailsFooter({
 
 export default function MovieDetailsModal(props: Readonly<MovieDetailsModalProps>) {
   const { open, tmdbId, mediaType, initialTab, eventContext, libraryContext, onClose } = props;
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { user } = useAuth();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const dragBind = useSheetDrag(dialogRef, onClose, open);
@@ -386,7 +388,7 @@ export default function MovieDetailsModal(props: Readonly<MovieDetailsModalProps
   }, [open]);
 
   const detailsQuery = useMovieDetails(tmdbId, open, mediaType);
-  const summary = summarizeMovie(props, detailsQuery.data, user?.ratingScale, t);
+  const summary = summarizeMovie(props, detailsQuery.data, user?.ratingScale, t, locale);
   const { title, year, providers } = summary;
   const tabs = buildDetailsTabs(!!eventContext, mediaType === 'tv', providers.length, t);
   const hasFooterActions = hasEventFooterActions(eventContext);

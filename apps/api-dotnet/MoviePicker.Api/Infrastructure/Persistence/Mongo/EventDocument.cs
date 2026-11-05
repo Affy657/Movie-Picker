@@ -25,6 +25,10 @@ public sealed class EventDocument
     [BsonElement("slug")]
     public string Slug { get; set; } = string.Empty;
 
+    [BsonElement("recapSlug")]
+    [BsonIgnoreIfNull]
+    public string? RecapSlug { get; set; }
+
     [BsonElement("creatorUserId")]
     [BsonIgnoreIfNull]
     [BsonRepresentation(BsonType.ObjectId)]

@@ -1,10 +1,11 @@
 import type { RatingScale } from '@/shared/types/theme';
+import { formatRating } from '@/shared/utils/formatRating';
 
 export function formatTmdbVote(
   v: number | null | undefined,
-  scale: RatingScale = 'five'
+  scale: RatingScale | undefined,
+  locale: string
 ): string | null {
   if (v == null || Number.isNaN(v) || v === 0) return null;
-  if (scale === 'ten') return `${v.toFixed(1)}/10`;
-  return `${(v / 2).toFixed(1)}/5`;
+  return formatRating(v, scale ?? 'five', locale, { decimals: 1 });
 }

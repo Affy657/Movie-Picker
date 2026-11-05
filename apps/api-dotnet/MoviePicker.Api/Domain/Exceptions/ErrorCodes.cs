@@ -46,6 +46,7 @@ public static class ErrorCodes
     public const string ParticipantLimitBelowCurrent = "participant_limit_below_current";
     public const string EventTemplateNameTaken = "event_template_name_taken";
     public const string EventTemplateLimitReached = "event_template_limit_reached";
+    public const string FavoritesLimitReached = "favorites_limit_reached";
     public const string InviteEventFinished = "invite_event_finished";
     public const string AlreadyParticipant = "already_participant";
     public const string InvitationAlreadySent = "invitation_already_sent";
@@ -69,6 +70,11 @@ public static class ErrorCodes
     public const string HostOrSelfOnly = "host_or_self_only";
     public const string SeenMarkOwnOnly = "seen_mark_own_only";
     public const string SeenMarkOwnParticipationOnly = "seen_mark_own_participation_only";
+    public const string RatingOwnParticipationOnly = "rating_own_participation_only";
+    public const string RatingOnlyOnceStarted = "rating_only_once_started";
+    public const string RatingOnlyChosenMovie = "rating_only_chosen_movie";
+    public const string RatingOutOfRange = "rating_out_of_range";
+    public const string RatingNotFound = "rating_not_found";
     public const string VoteOwnOnly = "vote_own_only";
     public const string VoteOwnParticipationOnly = "vote_own_participation_only";
 
@@ -131,6 +137,8 @@ public static class ErrorCodes
     public const string ConfigLimitOutOfRange = "config_limit_out_of_range";
     public const string WinnerCountOutOfRange = "winner_count_out_of_range";
     public const string LastLoginMethod = "last_login_method";
+    public const string AvatarPhotoInvalid = "avatar_photo_invalid";
+    public const string AvatarPhotoNotFound = "avatar_photo_not_found";
     public const string ParticipantIdRequired = "participant_id_required";
 
     public const string MovieDetailsUnavailable = "movie_details_unavailable";

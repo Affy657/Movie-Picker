@@ -14,6 +14,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IVoteRepository _voteRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
+    private readonly IMovieRatingRepository _ratingRepository;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IUserRepository _userRepository;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
@@ -29,6 +30,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         IMovieRepository movieRepository,
         IVoteRepository voteRepository,
         ISeenMarkRepository seenMarkRepository,
+        IMovieRatingRepository ratingRepository,
         ICurrentUserAccessor currentUserAccessor,
         IUserRepository userRepository,
         IPushSubscriptionRepository pushSubscriptions,
@@ -43,6 +45,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _movieRepository = movieRepository;
         _voteRepository = voteRepository;
         _seenMarkRepository = seenMarkRepository;
+        _ratingRepository = ratingRepository;
         _currentUserAccessor = currentUserAccessor;
         _userRepository = userRepository;
         _pushSubscriptions = pushSubscriptions;
@@ -77,6 +80,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             {
                 cascade.Votes = await _voteRepository.DeleteByEventIdAsync(evt.Id, token);
                 cascade.SeenMarks = await _seenMarkRepository.DeleteByEventIdAsync(evt.Id, token);
+                cascade.Ratings = await _ratingRepository.DeleteByEventIdAsync(evt.Id, token);
                 cascade.Movies = await _movieRepository.DeleteByEventIdAsync(evt.Id, token);
                 cascade.Participants = await _participantRepository.DeleteByEventIdAsync(evt.Id, token);
                 await _notifications.DeleteByEventIdAsync(evt.Id, token);
@@ -113,7 +117,8 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             RemovedParticipants = cascade.Participants,
             RemovedMovies = cascade.Movies,
             RemovedVotes = cascade.Votes,
-            RemovedSeenMarks = cascade.SeenMarks
+            RemovedSeenMarks = cascade.SeenMarks,
+            RemovedRatings = cascade.Ratings
         };
     }
 
@@ -136,6 +141,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
     {
         public long Votes { get; set; }
         public long SeenMarks { get; set; }
+        public long Ratings { get; set; }
         public long Movies { get; set; }
         public long Participants { get; set; }
         public bool EventDeleted { get; set; }

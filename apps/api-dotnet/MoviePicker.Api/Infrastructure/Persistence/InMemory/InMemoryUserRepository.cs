@@ -41,7 +41,7 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(cards);
     }
 
-    private static UserCard ToCard(User user) => new(user.Id, user.AvatarId, user.Handle, user.IsProfilePublic);
+    private static UserCard ToCard(User user) => new(user.Id, user.DisplayedAvatarId, user.Handle, user.IsProfilePublic);
 
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
@@ -205,6 +205,39 @@ public sealed class InMemoryUserRepository : IUserRepository
     private static User WithEventTemplates(User user, IReadOnlyList<EventTemplate> templates, DateTimeOffset now) =>
         user with { EventTemplates = templates, UpdatedAt = now, Version = user.Version + 1 };
 
+    public Task<bool> AddFavoriteAsync(
+        string userId,
+        FavoriteTitle favorite,
+        int maxPerUser,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        var added = _byId.SwapIfPresent(userId, user =>
+            user.Favorites.Count >= maxPerUser || user.Favorites.Any(f => f.Is(favorite.TmdbId, favorite.MediaType))
+                ? null
+                : WithFavorites(user, [.. user.Favorites, favorite], now));
+        return Task.FromResult(added is not null);
+    }
+
+    public Task<bool> RemoveFavoriteAsync(
+        string userId,
+        int tmdbId,
+        MovieMediaType mediaType,
+        DateTimeOffset now,
+        CancellationToken ct = default)
+    {
+        var removed = _byId.SwapIfPresent(userId, user =>
+        {
+            var next = user.Favorites.Where(f => !f.Is(tmdbId, mediaType)).ToList();
+            return next.Count == user.Favorites.Count ? null : WithFavorites(user, next, now);
+        });
+        return Task.FromResult(removed is not null);
+    }
+
+    private static User WithFavorites(User user, IReadOnlyList<FavoriteTitle> favorites, DateTimeOffset now) =>
+        user with { Favorites = favorites, UpdatedAt = now, Version = user.Version + 1 };
+
+
     public Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default)
     {
         IReadOnlyList<PublicProfileRef> result = _byId.Values
@@ -311,8 +344,10 @@ public sealed class InMemoryUserRepository : IUserRepository
             AccentColor = user.AccentColor,
             RatingScale = user.RatingScale,
             AvatarId = user.AvatarId,
+            AvatarPhoto = user.AvatarPhoto,
             NotificationPreferences = user.NotificationPreferences,
             EventTemplates = user.EventTemplates,
+            Favorites = user.Favorites,
             SupporterSince = user.SupporterSince,
             LetterboxdUsername = user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt,

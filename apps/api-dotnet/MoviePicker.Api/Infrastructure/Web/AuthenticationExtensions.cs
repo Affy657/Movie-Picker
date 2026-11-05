@@ -48,6 +48,7 @@ public static class AuthenticationExtensions
                 options.ClientSecret = googleClientSecret;
                 options.Scope.Add("email");
                 options.Scope.Add("profile");
+                options.SaveTokens = true;
                 options.ClaimActions.MapCustomJson(
                     "email_verified",
                     user => IsGoogleEmailVerified(user) ? "true" : "false");

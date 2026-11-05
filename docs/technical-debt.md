@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-067`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-080`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -140,10 +140,10 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 ## DEBT-037 les jobs Cloud Scheduler restent décrits par le pipeline, et le secret de l'ancien jeton partagé survit
 
 - state: agent
-- impact: l'API n'accepte plus qu'un jeton OIDC signé par le compte du planificateur (`GoogleOidcSchedulerTokenValidator`, `SchedulerCallerAuthenticator`) : le chemin `X-Scheduler-Token` et `SchedulerTokenValidator` ont été retirés le 2026-09-24, après vérification que les trois jobs de production envoient le jeton OIDC sans en-tête partagé. Deux restes : les quatre jobs (rappels, soirées récurrentes, soirées terminées, rechargement du catalogue) sont encore créés par `deploy.yml` et non décrits en Terraform, et le secret `SCHEDULER_TOKEN` existe toujours dans Secret Manager et dans `api_secret_names`.
+- impact: l'API n'accepte plus qu'un jeton OIDC signé par le compte du planificateur (`GoogleOidcSchedulerTokenValidator`, `SchedulerCallerAuthenticator`) : le chemin `X-Scheduler-Token` et `SchedulerTokenValidator` ont été retirés le 2026-09-24, après vérification que les trois jobs de production envoient le jeton OIDC sans en-tête partagé. Deux restes : les cinq jobs (rappels, soirées récurrentes, soirées terminées, rechargement du catalogue, relance de notation) sont encore créés par `deploy.yml` et non décrits en Terraform, et le secret `SCHEDULER_TOKEN` existe toujours dans Secret Manager et dans `api_secret_names`.
 - ou: `.github/workflows/deploy.yml` (étape « Scheduled passes: Cloud Scheduler »), `infra/terraform/environments/production/main.tf` (`api_secret_names` porte encore `SCHEDULER_TOKEN`, `module.ci` porte encore `roles/cloudscheduler.admin` et `serviceAccountUser` sur le compte du planificateur)
 - verify: `grep -c "Scheduled passes: Cloud Scheduler" .github/workflows/deploy.yml` ; encore ouvert tant que la commande rend autre chose que 0
-- fix: en un seul lot : décrire les quatre jobs en Terraform (`google_cloud_scheduler_job`, `http_target` avec `oidc_token { service_account_email, audience }`, schedules `*/30 * * * *`, `15 3 * * *`, `45 3 * * *` et `20 */5 * * *`, fuseau `Europe/Paris`, `attempt_deadline` 300 s, `retry_config { retry_count = 3, min_backoff_duration = "30s", max_backoff_duration = "300s" }`, comme `deploy.yml` les pose, URI `<URL run.app du service>/api/v1/scheduler/<passe>`) et les importer (`pnpm run terraform -- import 'google_cloud_scheduler_job.<nom>' projects/<PROJET_GCP>/locations/europe-west1/jobs/<job>`, geste qui écrit l'état : à faire avec l'accord de l'utilisateur, puis `apply` par `infra.yml`) ; retirer l'étape de `deploy.yml`, `roles/cloudscheduler.admin` et le `serviceAccountUser` sur le planificateur de `module.ci`. Le secret se détruit en dernier, à partir du 2026-10-21 (voir `piege`) : `pnpm run terraform -- state rm 'module.api_secrets.google_secret_manager_secret_iam_member.accessor["SCHEDULER_TOKEN"]'`, idem pour `google_secret_manager_secret.this["SCHEDULER_TOKEN"]`, `gcloud secrets delete SCHEDULER_TOKEN`, retrait de `api_secret_names`.
+- fix: en un seul lot : décrire les cinq jobs en Terraform (`google_cloud_scheduler_job`, `http_target` avec `oidc_token { service_account_email, audience }`, schedules `*/30 * * * *`, `15 3 * * *`, `45 3 * * *`, `20 */5 * * *` et `0 10 * * *`, fuseau `Europe/Paris`, `attempt_deadline` 300 s, `retry_config { retry_count = 3, min_backoff_duration = "30s", max_backoff_duration = "300s" }`, comme `deploy.yml` les pose, URI `<URL run.app du service>/api/v1/scheduler/<passe>`) et les importer (`pnpm run terraform -- import 'google_cloud_scheduler_job.<nom>' projects/<PROJET_GCP>/locations/europe-west1/jobs/<job>`, geste qui écrit l'état : à faire avec l'accord de l'utilisateur, puis `apply` par `infra.yml`) ; retirer l'étape de `deploy.yml`, `roles/cloudscheduler.admin` et le `serviceAccountUser` sur le planificateur de `module.ci`. Le secret se détruit en dernier, à partir du 2026-10-21 (voir `piege`) : `pnpm run terraform -- state rm 'module.api_secrets.google_secret_manager_secret_iam_member.accessor["SCHEDULER_TOKEN"]'`, idem pour `google_secret_manager_secret.this["SCHEDULER_TOKEN"]`, `gcloud secrets delete SCHEDULER_TOKEN`, retrait de `api_secret_names`.
 - fini-quand: `SCHEDULER_TOKEN` n'existe plus dans Secret Manager, ni dans `main.tf`, les jobs sont dans l'état Terraform, `deploy.yml` ne les crée plus et `plan` est vide
 - piege: une révision antérieure au 2026-09-21 ramenée par `rollback.yml` monte encore `SCHEDULER_TOKEN:latest` et attend l'en-tête : le secret doit survivre tant qu'une telle révision est dans le dépôt d'images (30 jours), et les jobs, qui n'envoient plus l'en-tête, recevraient de toute façon un 401 d'une telle révision. L'audience attendue est `VITE_API_URL` sans barre finale (`SCHEDULER_OIDC_AUDIENCE`), pas l'URL `run.app` que les jobs appellent. Le service est en `--allow-unauthenticated`, la vérification du jeton se fait dans l'API, pas par IAM Cloud Run ; le webhook Ko-fi reste sur son jeton, Ko-fi ne signe pas.
 
@@ -193,23 +193,22 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: `DateOnly Date` et `TimeOnly Time` sur l'entité, ou un `StartUtc` calculé et validé à l'écriture, avec conversion aux frontières (document Mongo, DTO) pour ne changer ni le contrat OpenAPI ni les documents existants ; la validation du format remonte dans le handler de création et rend une `Errors.<Cas>()` au lieu d'un `Upcoming` silencieux
 - piege: les documents de production portent les chaînes : garder la lecture de l'ancien format ou passer par une `IDataMigration`, jamais les deux à moitié. Le seed (`DevelopmentScenarioSeed`, DEBT-040), les fixtures et les tests écrivent ces chaînes en dur : compter les occurrences avant de changer le type, le chantier est plus large qu'il ne paraît depuis `Event.cs`.
 
-## DEBT-042 les aperçus de partage d'une soirée sont génériques, l'option « aperçu riche » n'a plus d'effet
+## DEBT-042 les aperçus de partage d'une invitation sont génériques, l'option « aperçu riche » n'a plus d'effet
 
-- state: humain
-- bloque: une décision sur la route `/e/*` : Firebase Hosting ne route pas selon l'user agent, la réécriture `/e/**` vers Cloud Run enverrait humains et robots à l'API, qui devrait servir la coquille aux premiers ; le code de l'aperçu est déjà là
-- impact: le lien partagé est `https://<front>/e/<slug>` et Hosting lui répond la coquille SPA, donc WhatsApp, Messenger, Discord et consorts affichent le titre et l'image génériques du site quelle que soit la soirée. `GET /api/v1/events/slug/{slug}/share-preview`, qui rend le HTML Open Graph de la soirée, n'est plus appelé par personne depuis `9a1ecc87` (le lien de partage est passé de l'URL API à l'URL front, et l'assistant front qui construisait l'URL de l'API a été supprimé le 2026-09-23) : le réglage `richSharePreview` de la soirée ne change rien pour l'utilisateur.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventSharePreview/GetEventSharePreviewHtmlHandler.cs`, `infra/firebase-hosting.json` (réécritures)
+- state: agent
+- impact: le lien d'invitation est `https://<front>/e/<slug>` et Hosting lui répond la coquille SPA, donc WhatsApp, Messenger, Discord et consorts affichent le titre et l'image génériques du site quelle que soit la soirée. `GET /api/v1/events/slug/{slug}/share-preview`, qui rend le HTML Open Graph de la soirée, n'est plus appelé par personne depuis `9a1ecc87` (le lien de partage est passé de l'URL API à l'URL front, et l'assistant front qui construisait l'URL de l'API a été supprimé le 2026-09-23) : le réglage `richSharePreview` de la soirée ne change rien pour l'utilisateur. Depuis la V1.7, le recap `/r/<slug>` a son aperçu : Hosting réécrit `/r/**` vers Cloud Run et `GET /r/{slug}` rend la coquille du site avec les balises de la soirée (`GetEventRecapDocumentHandler`, coquille lue sur `PUBLIC_WEB_BASE_URL/index.html` par `HttpWebShellSource`), ce qui est le mécanisme à reprendre pour l'invitation.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventSharePreview/GetEventSharePreviewHtmlHandler.cs`, `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventRecap/`, `infra/firebase-hosting.json` (réécritures)
 - verify: encore ouvert tant que la commande ne renvoie pas une balise `og:title` propre à la soirée (la coquille rend le titre du site).
   ```bash
   curl -sS -A "facebookexternalhit/1.1" https://www.movie-picker.fr/e/<SLUG_PUBLIC> | grep -o '<meta property="og:title" content="[^"]*"'
   ```
-- fix: une réécriture Hosting `{ "glob": "/e/**", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } }` dans `infra/firebase-hosting.json`, l'API servant l'aperçu aux robots (`facebookexternalhit`, `WhatsApp`, `Discordbot`, `Twitterbot`, `Slackbot`, `LinkedInBot`, `TelegramBot`) et la coquille `index.html` aux humains, lue depuis Hosting ou embarquée ; le 404 des soirées inconnues (DEBT-043) vient avec. À défaut, supprimer l'endpoint et le réglage `richSharePreview` pour ne pas promettre un aperçu qui n'existe pas.
-- piege: `robots.txt` interdit `/e/` : seuls les robots d'aperçu (qui ignorent `robots.txt`) sont concernés. Ne pas servir le HTML de l'API aux navigateurs, il n'a ni style ni application.
+- fix: une réécriture Hosting `{ "glob": "/e/**", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } }` devant le repli `**`, et une route `GET /e/{slug}` de l'API qui rend la coquille avec les balises de l'invitation (titre, date, thème selon `richSharePreview`) sur le modèle de `EventRecapController`, image générique du site tant que la soirée n'a pas de film ; supprimer alors `share-preview` et `GetEventSharePreviewHtmlHandler`, dont `GetEventRecapDocumentHandler` reprend la description. Le 404 des soirées inconnues (DEBT-043) vient avec.
+- piege: `robots.txt` interdit `/e/` : un robot d'indexation n'y va pas, seuls les robots d'aperçu (qui ignorent `robots.txt`) sont concernés. Tout document navigateur passe alors par Cloud Run (démarrage à froid possible sur chaque lien d'invitation, là où le recap n'expose qu'un lien partagé) : c'est le coût à peser avant de l'étendre. Les documents servis par l'API remplacent les en-têtes du middleware de sécurité (`Content-Security-Policy: frame-ancestors 'none'`, `Referrer-Policy`) par ceux de Hosting, sinon la coquille est bloquée par `default-src 'none'`.
 
 ## DEBT-043 toute adresse inconnue répond 200
 
 - state: differe
-- declencheur: la réécriture Hosting `/e/**` vers Cloud Run de DEBT-042, ou une page de la coquille vue indexée dans Search Console
+- declencheur: la réécriture Hosting `/e/**` vers Cloud Run de DEBT-042, ou une page de la coquille vue indexée dans Search Console. Depuis la V1.7, `/r/<slug-inconnu>` répond déjà `404` avec la coquille (document rendu par l'API derrière la réécriture `/r/**`), la même voie vaut pour `/e/`.
 - impact: `/page-inexistante` et `/e/<slug-inconnu>` répondent `200` avec la coquille SPA, le `noindex` de `NotFoundPage` n'est posé qu'en JavaScript : un moteur qui n'exécute pas le rendu peut indexer une page vide (mesuré le 2026-09-18, une `/films/collection/…` indexée avec la coquille brute)
 - ou: `infra/firebase-hosting.json` (repli vers `/index.html` en 200, sauf sous `/assets/`)
 - verify: `curl -sS -o /dev/null -w '%{http_code}\n' https://www.movie-picker.fr/page-inexistante` ; encore ouvert tant que la commande affiche `200`
@@ -349,6 +348,15 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: cocher « Validity checks » (et « Non-provider patterns » si elle est proposée) dans Settings / Code security, puis rejouer `verify`
 - piege: une alerte marquée « active » par la vérification est à traiter comme une fuite en cours, pas comme un rappel
 
+## DEBT-057 les images de la page bloquent la lecture CORS du canvas de la story
+
+- state: agent
+- impact: les `<img>` de l'app chargent affiches et avatars sans attribut `crossorigin`, donc le navigateur range une réponse inutilisable par un canvas dans son cache HTTP. La génération d'une story doit rappeler chaque ressource avec `cache: 'reload'` (`apps/web/src/features/events/story/storyAssets.ts`) pour éviter cette entrée, soit jusqu'à onze requêtes revalidées par ouverture de la fenêtre de partage. Un cache de ressources par session de dialogue absorbe déjà le coût des slides suivantes
+- ou: `apps/web/src/shared/components/` et les composants d'affiche et d'avatar qui rendent un `<img>`
+- verify: `grep -rn "posterImageSrc\|avatarUrl" apps/web/src --include=*.tsx` ; encore ouvert tant qu'un de ces `<img>` n'a pas `crossOrigin="anonymous"`
+- fix: poser `crossOrigin="anonymous"` sur les `<img>` d'affiche et d'avatar, vérifier que l'API et DiceBear répondent bien `Access-Control-Allow-Origin` sur ces routes, puis repasser la story en `cache: 'default'`
+- piege: une seule route sans en-tête CORS et l'image ne s'affiche plus du tout sur la page, pas seulement dans la story : contrôler chaque origine avant de basculer
+
 ## DEBT-060 aucun parcours utilisateur n'est vérifié en production
 
 - state: differe
@@ -412,6 +420,112 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -n "ListPageByUserIdAsync(userId, 0, GetWatchlistHandler.MaxTake" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Watchlist/GetWatchlistAvailabilityHandler.cs` ; encore ouvert tant que la ligne sort
 - fix: paginer la route (`skip`, `take`) comme `GET /watchlist` et laisser le front la lire page par page, ou n'enrichir que les films visibles
 - piege: chaque page enrichie coûte jusqu'à 500 appels TMDB en cache froid ; garder le plafond par requête, ne pas le relever d'un coup
+
+
+## DEBT-068 les photos de profil ne sont ni modérées ni signalables
+
+- state: differe
+- declencheur: un premier signalement d'une photo choquante, ou l'ouverture de la soirée publique et du fil d'actualité qui montrent les photos à des inconnus
+- impact: une photo téléversée s'affiche sans contrôle sur le profil public, dans les participants des soirées, sur le recap public et dans l'image story ; personne ne peut la signaler, et l'administrateur ne peut la retirer qu'à la main en base
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/AvatarPhotos/`, collection `avatar_photos`
+- verify: `grep -rlE "Report|Flag" apps/api-dotnet/MoviePicker.Api/Application/UseCases/AvatarPhotos` ; encore ouvert tant que la commande ne sort rien
+- fix: un « Signaler cette photo » sur le profil public qui prévient l'administrateur, et un geste de retrait qui supprime la photo et rend l'avatar généré
+- piege: retirer une photo à la main demande d'effacer le document de `avatar_photos` et de remettre `avatarPhoto` à `null` sur l'utilisateur ; sans le second geste, le profil pointe vers une image en 404 et retombe sans bruit sur les initiales
+- refs: cadrage du 2026-10-03 de la feature « Photo de profil personnalisée » (modération écartée de la V1.7)
+
+
+## DEBT-070 la pioche perd le focus quand l'écran change de format, et tire dans une liste figée
+
+- state: agent
+- impact: deux défauts de la pioche aléatoire de Ma liste. Si l'écran franchit 768 px pendant que la pioche est ouverte (téléphone tourné en paysage), `ResponsiveDialog` remplace la feuille par la modale et l'en-tête de la page change de branche : à la fermeture, le focus clavier tombe sur `body` au lieu de revenir sur « Piocher », et l'animation d'atterrissage rejoue. Le tirage se fait aussi sur la copie de la liste prise à l'ouverture : un titre retiré pendant que la pioche est ouverte (synchro Letterboxd lancée au chargement, retrait encore en cours) peut encore être tiré et proposé à une soirée.
+- ou: `apps/web/src/shared/components/ResponsiveDialog.tsx`, `apps/web/src/features/watchlist/components/RandomPickDialog.tsx` (pool initialisé une fois), `apps/web/src/features/watchlist/pages/WatchlistPage.tsx`
+- verify: `grep -n "const \[{ pool, keys }\] = useState(" apps/web/src/features/watchlist/components/RandomPickDialog.tsx` ; encore ouvert tant que la ligne sort
+- fix: retirer du pool les clés absentes des `items` courants, sans re-tirer tant que le titre affiché y reste ; rendre le focus au bouton « Piocher » de la branche montée à la fermeture
+
+
+## DEBT-071 la relance du lendemain oublie une soirée dont le film est tiré tard
+
+- state: differe
+- declencheur: un participant qui signale ne jamais avoir été relancé, ou des tirages fréquents plusieurs jours après la soirée
+- impact: la passe de 10 h ne regarde que les soirées commencées dans les trois jours de Paris précédents. Une soirée restée en suspens (sept jours possibles) dont l'hôte tire le film trois jours ou plus après la date n'est jamais relancée, alors qu'elle vient de se terminer.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs`, `ListWithWinnerStartingBetweenAsync` de `MongoEventRepository`
+- verify: `grep -n "ListWithWinnerStartingBetweenAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs` ; encore ouvert tant que la ligne sort
+- fix: borner la fenêtre sur le tirage le plus récent (`Winners[].PickedAt`) ou sur la fin effective de la soirée plutôt que sur son début, avec l'index qui va avec
+
+
+## DEBT-072 le serveur croit le titre et l'année d'un favori envoyés par le client
+
+- state: differe
+- declencheur: un favori au titre fantaisiste vu sur un profil public
+- impact: `POST /api/v1/users/me/favorites` enregistre `title` et `year` tels quels ; seuls l'identifiant TMDB et l'affiche sont contrôlés. Un appel forgé à la main affiche n'importe quel texte (500 caractères au plus) sous « Ses favoris » pour tous les visiteurs, et la fiche ouverte au clic est celle de l'identifiant, pas du titre affiché. La watchlist fait la même confiance au client.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Favorites/AddFavoriteHandler.cs`
+- verify: `grep -c "ITmdbMovieSearch" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Favorites/AddFavoriteHandler.cs` ; encore ouvert tant que la commande rend `0`
+- fix: relire titre, année et affiche chez TMDB par l'identifiant et le type, en ignorant ceux du client
+
+
+## DEBT-073 une photo de profil envoyée hors de l'app garde ses métadonnées, et l'ancienne disparaît trop tôt
+
+- state: differe
+- declencheur: une photo servie avec ses coordonnées GPS, ou un signalement d'avatars passés aux initiales juste après un changement de photo
+- impact: le serveur vérifie le format, l'en-tête et les dimensions, mais stocke les octets reçus. L'app réencode toujours sur canvas, donc l'usage normal n'est pas touché ; un envoi forgé garde EXIF et GPS, et peut glisser jusqu'à 512 Ko de données arbitraires derrière un en-tête valide, servies en `public, immutable`. Au remplacement, l'ancienne image est supprimée aussitôt : les vues qui ont encore l'ancienne clé (participants d'une soirée jusqu'à une minute, listes du propriétaire en cache) affichent les initiales jusqu'au prochain rechargement.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/Avatars/AvatarPhotoImage.cs`, `Application/Avatars/AvatarPhotoWriter.cs`, `Application/UseCases/AvatarPhotos/UploadAvatarPhotoHandler.cs`
+- verify: `grep -c "ImageMetadataStripper" apps/api-dotnet/MoviePicker.Api/Application/UseCases/AvatarPhotos/UploadAvatarPhotoHandler.cs` ; encore ouvert tant que la commande rend `0`
+- fix: passer les octets par `ImageMetadataStripper` (déjà utilisé pour les pièces jointes des suggestions) ou les réencoder côté serveur ; garder l'ancienne image quelques minutes avant de la supprimer
+
+
+## DEBT-074 l'aperçu du recap `/r/<slug>` n'a de quota que par slug
+
+- state: agent
+- impact: le document `/r/<slug>` (page recap et son aperçu de partage) échappe au plafond par adresse et au limiteur global, parce que derrière Firebase Hosting toutes les requêtes arrivent des adresses de Google. Seul compte un quota de 120 requêtes par minute et par slug, partagé dans Mongo. La route répond pourtant aussi en direct sur l'adresse de l'API : un client peut boucler sur des slugs au hasard sans frein (une lecture `events` et un upsert de compteur à chaque fois), ou épuiser le quota d'un recap connu, et chaque visiteur sans cache CDN reçoit alors un 429 brut au lieu de la page.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` (`IsProxied`, `RecapDocumentPolicy`), `Infrastructure/Web/SharedRateLimitFilter.cs`, `Controllers/EventRecapController.cs`
+- verify: `grep -n "Scope: QuotaScope.Slug }" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` ; encore ouvert tant que la ligne sort
+- fix: distinguer l'appel relayé par Hosting de l'appel direct (en-tête posé par la réécriture, ou entrée réservée à Hosting) et garder le plafond par adresse pour l'appel direct
+
+
+## DEBT-075 juste après un déploiement du front, `/r/<slug>` peut servir une coquille périmée
+
+- state: differe
+- declencheur: un recap signalé bloqué sur l'écran de démarrage, ou des 404 sur `/assets/index-*.js` dans les journaux de Hosting après un déploiement
+- impact: l'API garde `index.html` 60 s en mémoire et sert le document du recap en `public, max-age=60`. `deploy-front` passe après `deploy-api`, et les anciens `/assets/index-<hash>.js` répondent 404 sur la nouvelle version de Hosting : pendant une à deux minutes après chaque déploiement du front (ou retour arrière), un visiteur sans service worker qui ouvre un recap reste sur l'écran de démarrage.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` (`CacheTtl`), `Controllers/EventRecapController.cs`, `.github/workflows/deploy.yml`
+- verify: `grep -n "CacheTtl = TimeSpan.FromSeconds(60)" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` ; encore ouvert tant que la ligne sort
+- fix: relire la coquille quand elle désigne un fichier absent (un 404 sur ses assets vide le cache), ou garder les assets de la version précédente servis quelques minutes après le déploiement
+
+## DEBT-076 une soirée passe « finie » 2 h après son début, quelle que soit la durée du film
+
+- state: differe
+- declencheur: un participant qui voit la feuille de note s'ouvrir, ou le recap passer à « Le film de la soirée », pendant qu'il regarde encore un film long
+- impact: `Event.Lifecycle` rend `Finished` à début + `EventSchedule.PendingDelay` (2 h) dès qu'un film est tiré. Pour Interstellar (2 h 49) lancé à 20 h 30, la soirée est finie à 22 h 30 : la feuille de note s'ouvre d'elle-même si quelqu'un ouvre la page, et le titre de l'encadré change en plein film. La note elle-même est ouverte dès le début de la soirée, ce n'est que l'invitation qui arrive trop tôt.
+- ou: `apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs` (`Lifecycle`), `apps/api-dotnet/MoviePicker.Api/Domain/EventSchedule.cs`, `apps/web/src/features/events/hooks/useRatingLink.ts`
+- verify: `grep -n "PendingDelay = TimeSpan.FromHours(2)" apps/api-dotnet/MoviePicker.Api/Domain/EventSchedule.cs` ; encore ouvert tant que la fin ne tient pas compte de la durée des films tirés
+- fix: finir la soirée à début + max(2 h, durée du plus long film tiré), et garder la feuille automatique pour cette fin-là
+
+## DEBT-077 trois délais différents autour de la note d'un film
+
+- state: differe
+- declencheur: un participant qui reçoit la relance sans la feuille automatique, ou l'inverse, sur une soirée de 4 à 7 jours
+- impact: la relance du lendemain rattrape les soirées des 3 derniers jours (`RatingReminderPass.CatchUpDays`), la feuille automatique s'ouvre sur les soirées des 7 derniers jours (`RECENT_NIGHT_DAYS`), et la note reste possible sans limite. Rien de faux, mais deux règles à expliquer au lieu d'une.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs`, `apps/web/src/features/events/hooks/useRatingLink.ts`
+- verify: `grep -n "CatchUpDays = 3" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs` ; encore ouvert tant que les deux délais diffèrent
+- fix: aligner les deux sur une même fenêtre, portée par une seule constante côté API et rendue au front
+
+## DEBT-078 la feuille de note automatique se souvient par appareil
+
+- state: differe
+- declencheur: un participant qui voit la feuille de note s'ouvrir une seconde fois sur un autre appareil ou un autre navigateur
+- impact: les films déjà proposés sont gardés dans `localStorage` (`moviepicker_rating_prompted`), donc sur chaque appareil la feuille s'ouvre une fois de plus pour le même film. Sans effet si le film est déjà noté.
+- ou: `apps/web/src/features/events/hooks/useRatingLink.ts`
+- verify: `grep -n "moviepicker_rating_prompted" apps/web/src/features/events/hooks/useRatingLink.ts` ; encore ouvert tant que la mémoire reste locale
+- fix: garder la date de la dernière proposition côté serveur, sur la participation, et la rendre avec la soirée
+
+## DEBT-079 les colonnes de la liste de films se chevauchent entre 768 et 1024 px
+
+- state: agent
+- impact: sur tablette et dans une petite fenêtre, les en-têtes « Ajout » et « Note » de la liste d'une soirée se superposent et la colonne « Score » sort du cadre
+- ou: `apps/web/src/features/movies/components/MovieList.module.css`, `apps/web/src/features/movies/components/EventMovieRow.module.css`
+- verify: ouvrir une soirée en vue liste à 820 px de large ; encore ouvert si les en-têtes se touchent
+- fix: passer la liste en présentation compacte sous 64rem, ou retirer une colonne à cette largeur
+- fini-quand: à 768, 820 et 1023 px, tous les en-têtes sont lisibles et la colonne « Score » reste dans le cadre
 
 ---
 

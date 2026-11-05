@@ -90,6 +90,7 @@ export function useEventDetailPage(
     queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
     queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+    queryClient.invalidateQueries({ queryKey: queryKeys.profile.watchedMoviesAll });
   }, [slug, hostToken, queryClient]);
 
   return {

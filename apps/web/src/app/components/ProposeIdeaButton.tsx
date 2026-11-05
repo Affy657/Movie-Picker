@@ -15,6 +15,7 @@ import { ImagePlus, X } from 'lucide-react';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { APP_VERSION } from '@/shared/appVersion';
+import { blobToBase64 } from '@/shared/utils/blobToBase64';
 import Dropdown from '@/shared/components/Dropdown';
 import { createIdeaSuggestion, type IdeaSuggestionCategory } from '@/shared/api/ideaSuggestionsApi';
 import styles from './ProposeIdeaButton.module.css';
@@ -55,18 +56,6 @@ class UnreadableAttachmentError extends Error {
   }
 }
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
-      resolve(dataUrl.split(',')[1] ?? '');
-    };
-    reader.onerror = () => reject(reader.error ?? new Error('Attachment could not be read'));
-    reader.readAsDataURL(file);
-  });
-}
-
 function revokePreviewUrls(attachments: readonly Attachment[]) {
   for (const attachment of attachments) URL.revokeObjectURL(attachment.previewUrl);
 }
@@ -96,7 +85,7 @@ async function toAttachmentPayload(attachment: Attachment) {
     return {
       fileName: fileNameWithinApiLimit(attachment.file.name),
       contentType: attachment.file.type,
-      base64Content: await fileToBase64(attachment.file),
+      base64Content: await blobToBase64(attachment.file),
     };
   } catch (readError) {
     throw new UnreadableAttachmentError(attachment.file.name, { cause: readError });

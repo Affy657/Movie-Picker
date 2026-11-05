@@ -29,7 +29,7 @@ test.describe('Draw (host)', () => {
     await dialog.getByRole('button', { name: /c.est parti/i }).click();
     await expect(dialog).toBeHidden();
 
-    await expect(page.getByRole('region', { name: /ce soir, vous regardez/i })).toBeVisible({
+    await expect(page.getByRole('region', { name: /vous regardez/i })).toBeVisible({
       timeout: 15_000,
     });
     await expect(page.getByText('Film gagnant désigné')).toBeVisible();
@@ -47,7 +47,7 @@ test.describe('Draw (host)', () => {
     await expect(page.getByRole('button', { name: 'Lancer la roue' })).toBeVisible({
       timeout: 15_000,
     });
-    await expect(page.getByRole('region', { name: /ce soir, vous regardez/i })).toBeHidden();
+    await expect(page.getByRole('region', { name: /vous regardez/i })).toBeHidden();
     await expect(page.getByText('Film gagnant', { exact: true })).toBeHidden();
   });
 

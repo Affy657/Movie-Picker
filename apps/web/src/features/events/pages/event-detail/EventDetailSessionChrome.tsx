@@ -9,7 +9,7 @@ import EventWheelActions from '@/features/events/components/EventWheelActions';
 import { getEligibleFollows } from '@/features/events/api/eventsApi';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
-import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
+import { participantsCountLabel } from '@/features/events/utils/eventLabels';
 import { useEverOpened } from '@/shared/hooks/useEverOpened';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
@@ -58,12 +58,7 @@ function EventDetailSessionOverlays({
     enabled: hostCanInvite,
     staleTime: 30_000,
   });
-  const participantsLabel = pluralizeCount(
-    participantCount,
-    'events.detail.participantsToggleOne',
-    'events.detail.participantsToggle',
-    t
-  );
+  const participantsLabel = participantsCountLabel(participantCount, t);
 
   const settingsEverOpened = useEverOpened(settings.open);
   const shareEverOpened = useEverOpened(share.open);
@@ -94,6 +89,7 @@ function EventDetailSessionOverlays({
             slug={slug}
             event={event}
             shareUrl={share.url}
+            recap={share.recap}
             dateFormatted={dates.dateFormatted}
             timeFormatted={dates.timeFormatted}
             dateLabel={dates.dateLabel}
@@ -160,6 +156,7 @@ export default function EventDetailSessionChrome({
   onRequestCloseWithoutMovie,
   viewMode,
   onViewModeChange,
+  viewToggleInHeader,
   connectionUnstable,
   onRetryConnection,
 }: Readonly<{
@@ -181,6 +178,7 @@ export default function EventDetailSessionChrome({
   onRequestCloseWithoutMovie: () => void;
   viewMode: MoviesViewMode;
   onViewModeChange: (mode: MoviesViewMode) => void;
+  viewToggleInHeader: boolean;
   connectionUnstable: boolean;
   onRetryConnection: () => void;
 }>) {
@@ -208,8 +206,8 @@ export default function EventDetailSessionChrome({
         onAddMovie={addMovie.canAdd ? addMovie.onOpen : undefined}
         addMoviePrimary={wheel.primaryAction === 'add'}
         addMovieTriggerRef={addMovie.triggerRef}
-        viewMode={viewMode}
-        onViewModeChange={onViewModeChange}
+        viewMode={viewToggleInHeader ? viewMode : undefined}
+        onViewModeChange={viewToggleInHeader ? onViewModeChange : undefined}
       />
       {connectionUnstable ? <EventConnectionBanner onRetry={onRetryConnection} /> : null}
       {lifecycle === 'pending' ? (

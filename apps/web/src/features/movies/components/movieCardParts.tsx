@@ -28,7 +28,7 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 export { MovieNote, PITCH_MAX } from './MovieNote';
 export { CardKebab, MovieCardKebab } from './MovieCardKebab';
 import { deriveWheelToggle } from './MovieCardKebab';
-import type { Translate } from '@/shared/i18n';
+import { useLocale, type Translate } from '@/shared/i18n';
 export type { MovieWheelExclusion } from '@/features/movies/types';
 
 export interface MovieCardSelection {
@@ -127,6 +127,7 @@ export function useMovieCardState({
   onActionError: (message: string) => void;
   t: Translate;
 }>) {
+  const { locale } = useLocale();
   const isMine = !!participantId && getParticipantId(m) === participantId;
   const proposerAvatarId = participantAvatars?.[getParticipantId(m)] ?? '';
   const canRemove = !isFinished && !wheelLocked && (isMine || isHost);
@@ -136,7 +137,7 @@ export function useMovieCardState({
   const iMarkedSeen = !!(participantPseudo && m.seenByPseudos?.includes(participantPseudo));
   const others = (m.seenByPseudos ?? []).filter((p) => p !== participantPseudo);
   const othersHint = othersAlreadySeenHint(m.seenByPseudos, participantPseudo, t);
-  const voteLabel = formatTmdbVote(m.voteAverage, ratingScale);
+  const voteLabel = formatTmdbVote(m.voteAverage, ratingScale, locale);
   const runtimeLabel = formatRuntimeMinutes(m.runtimeMinutes);
   const posterSrc = posterImageSrc(m.posterPath);
   const posterSrcSet = tmdbPosterSrcSetForList(posterSrc);

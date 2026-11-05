@@ -7,6 +7,7 @@ using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Infrastructure.Security;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth;
@@ -25,6 +26,7 @@ public sealed class DeleteAccountHandlerTests
         public InMemoryPasswordResetTokenRepository ResetTokens { get; } = new();
         public InMemoryVoteRepository Votes { get; } = new();
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
+        public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
         public Mock<IAuthSessionInvalidator> Sessions { get; } = new();
         public IdentityPasswordHasher Hasher { get; } = new IdentityPasswordHasher();
 
@@ -39,6 +41,7 @@ public sealed class DeleteAccountHandlerTests
                 Follows,
                 Watchlist,
                 ResetTokens,
+                AvatarPhotos,
                 Sessions.Object,
                 new InMemoryUnitOfWork(),
             NullLogger<DeleteAccountHandler>.Instance);
@@ -87,6 +90,19 @@ public sealed class DeleteAccountHandlerTests
             UpdatedAt = DateTimeOffset.UtcNow
         };
         return await f.Users.AddAsync(user);
+    }
+
+    [Fact]
+    public async Task HandleAsync_DeletesTheProfilePhoto()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+        var key = AvatarPhotoKeys.Sample;
+        await f.AvatarPhotos.SaveAsync(new StoredAvatarPhoto { Key = key, UserId = user.Id, ContentType = "image/webp", Data = [1] });
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+
+        Assert.Null(await f.AvatarPhotos.GetByKeyAsync(key));
     }
 
     [Fact]
@@ -286,6 +302,7 @@ public sealed class DeleteAccountHandlerTests
             f.Follows,
             f.Watchlist,
             f.ResetTokens,
+            f.AvatarPhotos,
             f.Sessions.Object,
             new InMemoryUnitOfWork(),
             NullLogger<DeleteAccountHandler>.Instance);

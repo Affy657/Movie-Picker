@@ -28,6 +28,7 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("users", "users_identities_provider_subject_unique", Unique: true),
 
         new("events", "events_slug_unique", Unique: true),
+        new("events", "events_recapSlug_unique", Unique: true),
         new("events", "events_creatorUserId"),
         new("events", "events_recurrence_creatorUserId"),
         new("events", "events_startAtUtc"),
@@ -56,6 +57,8 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
 
         new("seen_marks", "seen_marks_event_movie_participant_unique", Unique: true),
         new("seen_marks", "seen_marks_movieId"),
+        new("movie_ratings", "movie_ratings_event_movie_participant_unique", Unique: true),
+        new("movie_ratings", "movie_ratings_participantId"),
         new("seen_marks", "seen_marks_participantId"),
 
         new("push_subscriptions", "push_subscriptions_userId_endpoint_unique", Unique: true),
@@ -83,6 +86,8 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("shared_cache", "shared_cache_expiresAt_ttl", ExpireAfterSeconds: 0),
 
         new("poster_cache", "poster_cache_expiresAtUtc_ttl", ExpireAfterSeconds: 0),
+
+        new("avatar_photos", "avatar_photos_userId"),
 
         new("kofi_webhook_log", "kofi_webhook_log_receivedAt_ttl", ExpireAfterSeconds: OneYear)
     ];

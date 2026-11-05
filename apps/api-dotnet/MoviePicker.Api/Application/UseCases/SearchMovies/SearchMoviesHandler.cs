@@ -30,12 +30,15 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
         string query,
         string? eventSlug,
         MovieSearchFilters? filters = null,
+        bool includeSeries = false,
         CancellationToken ct = default)
     {
         if (!_options.HasTmdbCredentials)
             throw Errors.SearchUnavailable();
 
-        var allowSeries = await AllowsSeriesAsync(eventSlug, ct);
+        var allowSeries = string.IsNullOrWhiteSpace(eventSlug)
+            ? includeSeries
+            : await AllowsSeriesAsync(eventSlug, ct);
 
         IReadOnlyList<TmdbSearchItem> rows;
         try

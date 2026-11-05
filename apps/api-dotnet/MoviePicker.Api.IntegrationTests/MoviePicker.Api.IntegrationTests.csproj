@@ -26,4 +26,8 @@
     <ProjectReference Include="..\MoviePicker.Api\MoviePicker.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\MoviePicker.Api.Tests\Builders\ImageHeaders.cs" Link="Builders\ImageHeaders.cs" />
+  </ItemGroup>
+
 </Project>

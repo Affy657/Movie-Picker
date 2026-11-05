@@ -2,8 +2,10 @@ export const API_ERROR_REASONS = {
   voteLimitReached: 'vote-limit-reached',
   invalidResetToken: 'invalid_reset_token',
   letterboxdWatchlistIncomplete: 'letterboxd_watchlist_incomplete',
+  favoritesLimitReached: 'favorites_limit_reached',
   letterboxdSyncUnavailable: 'letterboxd_sync_unavailable',
   letterboxdSyncFailed: 'letterboxd_sync_failed',
+  ratingNotFound: 'rating_not_found',
 } as const;
 
 export class ApiError extends Error {

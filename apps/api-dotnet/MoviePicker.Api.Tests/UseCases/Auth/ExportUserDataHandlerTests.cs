@@ -2,6 +2,7 @@ using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth;
@@ -26,8 +27,10 @@ public sealed class ExportUserDataHandlerTests
         public InMemoryParticipantRepository Participants { get; } = new();
         public InMemoryVoteRepository Votes { get; } = new();
         public InMemorySeenMarkRepository SeenMarks { get; } = new();
+        public InMemoryMovieRatingRepository Ratings { get; } = new();
         public InMemoryPushSubscriptionRepository Push { get; } = new();
         public InMemoryWatchlistRepository Watchlist { get; } = new();
+        public InMemoryAvatarPhotoRepository AvatarPhotos { get; } = new();
         public InMemoryMovieRepository Movies { get; } = new();
 
         public ExportUserDataHandler CreateHandler() =>
@@ -39,10 +42,50 @@ public sealed class ExportUserDataHandlerTests
                 Participants,
                 Votes,
                 SeenMarks,
+                Ratings,
                 Push,
                 Watchlist,
+                AvatarPhotos,
                 Movies,
                 new FakeTimeProvider(TestEpoch));
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithPhoto_ExportsTheImageItself()
+    {
+        var f = new Fixture();
+        var key = AvatarPhotoKeys.Sample;
+        var user = await f.Users.AddAsync(new User
+        {
+            Email = "photo@example.com",
+            Handle = "photo",
+            AvatarPhoto = new AvatarPhoto { Key = key, IsActive = true, UpdatedAt = TestEpoch }
+        });
+        await f.AvatarPhotos.SaveAsync(new StoredAvatarPhoto
+        {
+            Key = key,
+            UserId = user.Id,
+            ContentType = "image/webp",
+            Data = [1, 2, 3],
+            CreatedAt = TestEpoch
+        });
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.NotNull(export.AvatarPhoto);
+        Assert.Equal("image/webp", export.AvatarPhoto!.ContentType);
+        Assert.Equal(Convert.ToBase64String([1, 2, 3]), export.AvatarPhoto.Base64Content);
+        Assert.True(export.AvatarPhoto.IsActive);
+        Assert.Equal(TestEpoch, export.AvatarPhoto.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithoutPhoto_ExportsNoImage()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "nophoto@example.com", Handle = "nophoto" });
+
+        Assert.Null((await f.CreateHandler().HandleAsync(user.Id)).AvatarPhoto);
     }
 
     [Fact]
@@ -86,6 +129,7 @@ public sealed class ExportUserDataHandlerTests
         });
         await f.Votes.UpsertAsync(new Vote { EventId = joined.Id, MovieId = "movie-1", ParticipantId = participant.Id, Value = 1 });
         await f.SeenMarks.AddAsync(new SeenMark { EventId = joined.Id, MovieId = "movie-2", ParticipantId = participant.Id });
+        await f.Ratings.UpsertAsync(new MovieRating { EventId = joined.Id, MovieId = "movie-1", ParticipantId = participant.Id, Value = 8 });
         await f.Notifications.AddAsync(new UserNotification
         {
             UserId = user.Id,
@@ -119,6 +163,9 @@ public sealed class ExportUserDataHandlerTests
         Assert.Equal("Soirée amie", participation.EventTitle);
         Assert.Single(participation.Votes);
         Assert.Single(participation.SeenMarks);
+        var rating = Assert.Single(participation.Ratings);
+        Assert.Equal("movie-1", rating.MovieId);
+        Assert.Equal(8, rating.Value);
 
         var following = Assert.Single(export.Following);
         Assert.Equal("trinity", following.Handle);
@@ -129,6 +176,26 @@ public sealed class ExportUserDataHandlerTests
         var push = Assert.Single(export.PushSubscriptions);
         Assert.Equal("https://push.example/abc", push.Endpoint);
     }
+
+    [Fact]
+    public async Task HandleAsync_ExportsTheFavorites()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(new User { Email = "neo@example.com", DisplayName = "Neo", Handle = "neo" });
+        await f.Users.AddFavoriteAsync(user.Id, new FavoriteTitle { TmdbId = 603, Title = "Matrix", Year = "1999" }, 3, TestEpoch);
+        await f.Users.AddFavoriteAsync(
+            user.Id,
+            new FavoriteTitle { TmdbId = 1920, MediaType = MovieMediaType.Tv, Title = "Twin Peaks", Year = "1990" },
+            3,
+            TestEpoch);
+
+        var export = await f.CreateHandler().HandleAsync(user.Id);
+
+        Assert.Equal(
+            [(603, "movie", "Matrix", "1999"), (1920, "tv", "Twin Peaks", "1990")],
+            export.Favorites.Select(x => (x.TmdbId, x.MediaType, x.Title, x.Year)));
+    }
+
     [Fact]
     public async Task HandleAsync_ExportsTheProposedFilmsTheLetterboxdAccountAndTheTemplates()
     {
@@ -176,5 +243,6 @@ public sealed class ExportUserDataHandlerTests
         Assert.Equal(603, proposed.TmdbId);
         Assert.Equal("movie", proposed.MediaType);
         Assert.Equal("Pilule rouge ou bleue ?", proposed.PitchNote);
+
     }
 }

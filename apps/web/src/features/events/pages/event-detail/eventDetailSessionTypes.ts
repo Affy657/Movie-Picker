@@ -7,6 +7,8 @@ export type ParticipantRef = { participantId: string; pseudo: string };
 
 export type ShareTab = 'link' | 'friends';
 
+export type RecapShare = { winners: MovieData[] };
+
 export type MoviesViewMode = 'grid' | 'list';
 
 export type WheelApi = ReturnType<typeof useEventWheel>;
@@ -25,6 +27,7 @@ export type ShareOverlay = {
   open: boolean;
   initialTab: ShareTab;
   url: string;
+  recap: RecapShare | null;
   onOpen: (tab?: ShareTab) => void;
   onClose: () => void;
 };
@@ -83,6 +86,8 @@ export type ParticipantsPanelState = {
 export type MoviesSectionState = {
   ref: RefObject<HTMLDivElement | null>;
   viewMode: MoviesViewMode;
+  titled: boolean;
+  onViewModeChange: (mode: MoviesViewMode) => void;
   selection: MovieCardSelection | undefined;
   addMovieOpen: boolean;
   onAddMovieOpenChange: (open: boolean) => void;

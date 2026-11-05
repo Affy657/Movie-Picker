@@ -89,6 +89,7 @@ public sealed class GetEventDetailHandler : IGetEventDetailHandler
             Date = evt.Date,
             Time = evt.Time,
             Slug = evt.Slug,
+            RecapSlug = evt.RecapSlug,
             Config = EventConfigResponse.FromEvent(evt),
             ClosedAt = evt.ClosedAt,
             CreatedAt = evt.CreatedAt,

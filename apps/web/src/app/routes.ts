@@ -1,4 +1,9 @@
 const EVENT_PREFIX = '/e';
+const RECAP_PREFIX = '/r';
+
+export const RATE_QUERY_PARAM = 'rate';
+
+export const FAVORITES_ANCHOR = 'favoris';
 
 export const ROUTES = {
   home: '/',
@@ -10,6 +15,7 @@ export const ROUTES = {
   oauthCallback: '/auth/callback',
   account: '/settings',
   accountProfile: '/settings/profil',
+  accountFavorites: `/settings/profil#${FAVORITES_ANCHOR}`,
   accountPreferences: '/settings/preferences',
   accountNotifications: '/settings/notifications',
   accountIntegrations: '/settings/integrations',
@@ -54,6 +60,15 @@ export const ROUTES = {
   eventDetailPattern: `${EVENT_PREFIX}/:slug`,
 
   eventDetail: (slug: string) => `${EVENT_PREFIX}/${slug}`,
+
+  eventDetailRating: (slug: string, movieId?: string) => {
+    const rateQuery = movieId ? `${RATE_QUERY_PARAM}=${movieId}` : RATE_QUERY_PARAM;
+    return `${EVENT_PREFIX}/${slug}?${rateQuery}`;
+  },
+
+  nightRecapPattern: `${RECAP_PREFIX}/:slug`,
+
+  nightRecap: (slug: string) => `${RECAP_PREFIX}/${slug}`,
 
   profilePattern: '/u/:handle',
 

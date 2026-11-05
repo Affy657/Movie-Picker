@@ -16,6 +16,7 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
     private readonly IParticipantRepository _participants;
     private readonly IEventRepository _events;
     private readonly IMovieRepository _movies;
+    private readonly IMovieRatingRepository _ratings;
     private readonly ITmdbMovieSearch _tmdb;
     private readonly MoviePickerOptions _options;
     private readonly TimeProvider _clock;
@@ -25,6 +26,7 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
         IParticipantRepository participants,
         IEventRepository events,
         IMovieRepository movies,
+        IMovieRatingRepository ratings,
         ITmdbMovieSearch tmdb,
         IOptions<MoviePickerOptions> options,
         TimeProvider clock)
@@ -33,6 +35,7 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
         _participants = participants;
         _events = events;
         _movies = movies;
+        _ratings = ratings;
         _tmdb = tmdb;
         _options = options.Value;
         _clock = clock;
@@ -63,6 +66,38 @@ public sealed class GetUserWatchedMoviesHandler : IGetUserWatchedMoviesHandler
             .Take(effectiveTake)
             .ToList();
 
-        return await WatchedMoviesFacts.ToResponseAsync(qualifying, _movies, _tmdb, _options, ct);
+        if (qualifying.Count == 0)
+            return new UserWatchedMoviesResponse { Items = [] };
+
+        var winnerMovieIds = qualifying.Select(x => x.MovieId).Distinct().ToList();
+        var moviesTask = _movies.ListByIdsAsync(winnerMovieIds, ct);
+        var ratingsTask = _ratings.ListByParticipantIdsAsync(participants.Select(p => p.Id).ToList(), ct);
+        await Task.WhenAll(moviesTask, ratingsTask);
+        var movies = await moviesTask;
+        var movieById = movies.ToDictionary(m => m.Id);
+        var myRatingByMovie = (await ratingsTask)
+            .GroupBy(r => r.MovieId)
+            .ToDictionary(g => g.Key, g => g.First().Value);
+
+        var items = qualifying
+            .Select(x => (x.WatchedAt, Movie: movieById.GetValueOrDefault(x.MovieId)))
+            .Where(x => x.Movie is not null)
+            .Select(x => new UserWatchedMovieItem
+            {
+                TmdbId = x.Movie!.TmdbId,
+                Title = x.Movie.Title,
+                Year = x.Movie.Year,
+                PosterPath = x.Movie.PosterPath,
+                GenreIds = x.Movie.GenreIds,
+                MediaType = x.Movie.MediaType,
+                WatchedAt = x.WatchedAt,
+                MyRating = myRatingByMovie.TryGetValue(x.Movie.Id, out var myRating) ? myRating : null,
+            })
+            .ToList();
+
+        return new UserWatchedMoviesResponse
+        {
+            Items = await WatchedMoviesFacts.WithTmdbFactsAsync(items, _tmdb, _options, ct)
+        };
     }
 }

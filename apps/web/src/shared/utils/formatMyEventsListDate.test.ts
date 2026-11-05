@@ -80,4 +80,20 @@ describe('formatEventDateLong', () => {
   it('returns the raw string when the date is invalid', () => {
     expect(formatEventDateLong('nope', '20:00', 'fr', 'à')).toBe('nope');
   });
+
+  it('writes the month in full and always the year when asked for a keepsake', () => {
+    const currentYear = new Date().getFullYear();
+    expect(
+      formatEventDateLong(`${currentYear}-09-18`, '20:30', 'fr', 'à', { keepsake: true })
+    ).toBe(
+      `vendredi 18 septembre ${currentYear} à 20h30`.replace('vendredi', dayName(currentYear))
+    );
+    expect(formatEventDateLong('2026-09-18', '20:30', 'en', 'at', { keepsake: true })).toBe(
+      'Friday, 18 September 2026 at 20h30'
+    );
+  });
 });
+
+function dayName(year: number): string {
+  return new Intl.DateTimeFormat('fr-FR', { weekday: 'long' }).format(new Date(year, 8, 18));
+}

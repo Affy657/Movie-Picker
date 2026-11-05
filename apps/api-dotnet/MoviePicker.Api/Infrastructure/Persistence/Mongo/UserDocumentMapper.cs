@@ -21,8 +21,10 @@ public static class UserDocumentMapper
             AccentColor = ParseAccent(doc.AccentColor),
             RatingScale = ParseRatingScale(doc.RatingScale),
             AvatarId = doc.AvatarId ?? string.Empty,
+            AvatarPhoto = ToAvatarPhotoDomain(doc.AvatarPhoto),
             NotificationPreferences = BuildNotificationPreferences(doc),
             EventTemplates = (doc.EventTemplates ?? []).ConvertAll(ToTemplateDomain),
+            Favorites = (doc.Favorites ?? []).ConvertAll(ToFavoriteDomain),
             SupporterSince = doc.SupporterSince is null
                 ? null
                 : new DateTimeOffset(doc.SupporterSince.Value, TimeSpan.Zero),
@@ -57,12 +59,16 @@ public static class UserDocumentMapper
             AccentColor = AccentToString(user.AccentColor),
             RatingScale = RatingScaleToString(user.RatingScale),
             AvatarId = string.IsNullOrEmpty(user.AvatarId) ? null : user.AvatarId,
+            AvatarPhoto = user.AvatarPhoto is null ? null : ToAvatarPhotoDocument(user.AvatarPhoto),
             NotificationPreferences = user.NotificationPreferences
                 .Select(kv => new NotificationPreferenceEntryDocument { Type = (int)kv.Key, Enabled = kv.Value })
                 .ToList(),
             EventTemplates = user.EventTemplates.Count == 0
                 ? null
                 : user.EventTemplates.Select(ToTemplateDocument).ToList(),
+            Favorites = user.Favorites.Count == 0
+                ? null
+                : user.Favorites.Select(ToFavoriteDocument).ToList(),
             SupporterSince = user.SupporterSince?.UtcDateTime,
             LetterboxdUsername = string.IsNullOrEmpty(user.LetterboxdUsername) ? null : user.LetterboxdUsername,
             LetterboxdLastSyncAt = user.LetterboxdLastSyncAt?.UtcDateTime,
@@ -88,6 +94,40 @@ public static class UserDocumentMapper
         Name = template.Name,
         Config = EventDocumentMapper.ToConfigDocument(template.Config),
         CreatedAt = template.CreatedAt.UtcDateTime
+    };
+
+    internal static AvatarPhoto? ToAvatarPhotoDomain(AvatarPhotoDocument? doc) => doc is null
+        ? null
+        : new AvatarPhoto
+        {
+            Key = doc.Key,
+            IsActive = doc.IsActive,
+            UpdatedAt = new DateTimeOffset(doc.UpdatedAt, TimeSpan.Zero)
+        };
+
+    private static AvatarPhotoDocument ToAvatarPhotoDocument(AvatarPhoto photo) => new()
+    {
+        Key = photo.Key,
+        IsActive = photo.IsActive,
+        UpdatedAt = photo.UpdatedAt.UtcDateTime
+    };
+
+    private static FavoriteTitle ToFavoriteDomain(FavoriteTitleDocument doc) => new()
+    {
+        TmdbId = doc.TmdbId,
+        MediaType = MovieMapper.ParseMediaType(doc.MediaType),
+        Title = doc.Title,
+        Year = doc.Year,
+        PosterPath = doc.PosterPath
+    };
+
+    internal static FavoriteTitleDocument ToFavoriteDocument(FavoriteTitle favorite) => new()
+    {
+        TmdbId = favorite.TmdbId,
+        MediaType = MovieMapper.MediaTypeToString(favorite.MediaType),
+        Title = favorite.Title,
+        Year = favorite.Year,
+        PosterPath = favorite.PosterPath
     };
 
     private static LinkedIdentity ToIdentityDomain(UserIdentityDocument doc) => new()

@@ -13,4 +13,6 @@ public sealed class DeleteEventResponse
     public long RemovedVotes { get; init; }
 
     public long RemovedSeenMarks { get; init; }
+
+    public long RemovedRatings { get; init; }
 }

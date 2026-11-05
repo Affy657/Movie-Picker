@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type Dispatch,
@@ -14,7 +15,7 @@ import {
 } from '@/shared/utils/formatMyEventsListDate';
 import PageLayout from '@/shared/components/PageLayout';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { eventFrontendUrl } from '@/features/events/api/eventsApi';
+import { eventFrontendUrl, nightRecapFrontendUrl } from '@/features/events/api/eventsApi';
 import { useLocale, useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useEventWheel } from '@/features/events/hooks/useEventWheel';
 import { eventCountdown, type EventCountdown } from '@/shared/utils/eventCountdown';
@@ -26,10 +27,16 @@ import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import { persistMoviesViewMode, readMoviesViewMode } from '@/features/events/moviesViewMode';
 import EventDetailSessionChrome from './EventDetailSessionChrome';
+import EventWinnerStage, { isWinnerStageShown } from './EventWinnerStage';
 import EventDetailSessionBody from './EventDetailSessionBody';
 import { OVERLAY_CHUNKS } from './eventDetailOverlays';
 import { useEventDetailActions } from './useEventDetailActions';
-import type { MoviesViewMode, ParticipantRef, ShareTab } from './eventDetailSessionTypes';
+import type {
+  MoviesViewMode,
+  ParticipantRef,
+  RecapShare,
+  ShareTab,
+} from './eventDetailSessionTypes';
 
 type EventDetailSessionProps = {
   slug: string;
@@ -53,9 +60,39 @@ const COUNTDOWN_KEYS = {
   hours: 'events.detail.countdownHours',
 } as const satisfies Record<EventCountdown['unit'], TranslationKey>;
 
+function wheelSelection(wheel: ReturnType<typeof useEventWheel>): MovieCardSelection | undefined {
+  if (wheel.manualMode) {
+    return {
+      active: true,
+      mode: 'pick',
+      pending: wheel.loading,
+      selectableIds: wheel.drawableMovies.map((m) => m.id),
+      onSelect: wheel.pickWinnerManually,
+    };
+  }
+  if (wheel.removalMode) {
+    return {
+      active: true,
+      mode: 'remove',
+      pending: wheel.loading,
+      selectableIds: wheel.winnerIds,
+      onSelect: wheel.removeWinner,
+    };
+  }
+  return undefined;
+}
+
 function countdownParams(countdown: EventCountdown) {
   if (countdown.unit === 'imminent') return undefined;
   return { count: countdown.count };
+}
+
+function isNightFull(maxParticipants: number | null, participantCount: number): boolean {
+  return (
+    typeof maxParticipants === 'number' &&
+    maxParticipants > 0 &&
+    participantCount >= maxParticipants
+  );
 }
 
 export default function EventDetailSession({
@@ -131,24 +168,7 @@ export default function EventDetailSession({
     }
   }, [addMovieOpen]);
 
-  let selection: MovieCardSelection | undefined;
-  if (wheel.manualMode) {
-    selection = {
-      active: true,
-      mode: 'pick',
-      pending: wheel.loading,
-      selectableIds: wheel.drawableMovies.map((m) => m.id),
-      onSelect: wheel.pickWinnerManually,
-    };
-  } else if (wheel.removalMode) {
-    selection = {
-      active: true,
-      mode: 'remove',
-      pending: wheel.loading,
-      selectableIds: wheel.winnerIds,
-      onSelect: wheel.removeWinner,
-    };
-  }
+  const selection = wheelSelection(wheel);
 
   const isConnectedSelf =
     !!event.myParticipant?.id && participant?.participantId === event.myParticipant.id;
@@ -183,7 +203,17 @@ export default function EventDetailSession({
     locale,
     t('events.detail.dateTimeJoiner')
   );
-  const shareUrl = eventFrontendUrl(slug);
+  const firstWinnerId = event.winners?.[0]?.movieId;
+  const winnerMovies = useMemo(() => {
+    const byId = new Map(movies.map((movie) => [movie.id, movie]));
+    return (event.winners ?? [])
+      .map((winner) => byId.get(winner.movieId))
+      .filter((movie): movie is MovieData => !!movie);
+  }, [event.winners, movies]);
+  const recap: RecapShare | null =
+    event.isFinished && firstWinnerId && event.recapSlug ? { winners: winnerMovies } : null;
+  const shareUrl =
+    recap && event.recapSlug ? nightRecapFrontendUrl(event.recapSlug) : eventFrontendUrl(slug);
   const needsJoin = !event.isFinished && !participant;
   const maxParticipants = event.config?.maxParticipants ?? null;
   const myParticipantSummary =
@@ -205,12 +235,10 @@ export default function EventDetailSession({
     ? t(COUNTDOWN_KEYS[countdown.unit], countdownParams(countdown))
     : null;
   const canConfigure = !!event.isHost && !event.isFinished;
+  const showWinnerStage = isWinnerStageShown(winnerMovies, wheel);
   const emptyStateCarriesAddMovie = moviesLoaded && movies.length === 0;
   const canAddMovie = !event.isFinished && !!participant && !emptyStateCarriesAddMovie;
-  const isFull =
-    typeof maxParticipants === 'number' &&
-    maxParticipants > 0 &&
-    participantCount >= maxParticipants;
+  const isFull = isNightFull(maxParticipants, participantCount);
 
   return (
     <PageLayout className="page-event">
@@ -227,6 +255,7 @@ export default function EventDetailSession({
           open: shareOpen,
           initialTab: shareInitialTab,
           url: shareUrl,
+          recap,
           onOpen: openShare,
           onClose: () => setShareOpen(false),
         }}
@@ -252,9 +281,19 @@ export default function EventDetailSession({
         onRequestCloseWithoutMovie={requestCloseWithoutMovie}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
+        viewToggleInHeader={!showWinnerStage}
         connectionUnstable={connectionUnstable}
         onRetryConnection={refreshAll}
       />
+      {showWinnerStage ? (
+        <EventWinnerStage
+          slug={slug}
+          event={event}
+          winners={winnerMovies}
+          participant={participant}
+          refreshAll={refreshAll}
+        />
+      ) : null}
       <EventDetailSessionBody
         slug={slug}
         event={event}
@@ -282,6 +321,8 @@ export default function EventDetailSession({
         moviesSection={{
           ref: moviesSectionRef,
           viewMode,
+          titled: showWinnerStage,
+          onViewModeChange: handleViewModeChange,
           selection,
           addMovieOpen,
           onAddMovieOpenChange: setAddMovieOpen,

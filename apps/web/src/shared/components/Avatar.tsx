@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import clsx from 'clsx';
-import { avatarUrl } from '@/shared/utils/avatar';
+import { avatarPaletteIndex, avatarUrl } from '@/shared/utils/avatar';
+import { initialsOf } from '@/shared/utils/initials';
 import styles from './Avatar.module.css';
 
 interface AvatarProps {
@@ -17,20 +19,6 @@ const SIZE_PX: Record<NonNullable<AvatarProps['size']>, number> = {
   xl: 96,
 };
 
-const PALETTE_SIZE = 8;
-
-function getInitials(pseudo: string): string {
-  const parts = pseudo.trim().split(/\s+/);
-  const a = parts[0]?.[0] ?? '';
-  const b = parts[1]?.[0] ?? '';
-  if (a && b) return (a + b).toUpperCase();
-  return pseudo.slice(0, 2).toUpperCase();
-}
-
-function paletteIndex(pseudo: string): number {
-  return (pseudo.codePointAt(0) ?? 0) % PALETTE_SIZE;
-}
-
 export default function Avatar({
   avatarId,
   pseudo,
@@ -38,16 +26,17 @@ export default function Avatar({
   className,
 }: Readonly<AvatarProps>) {
   const px = SIZE_PX[size];
+  const [failedAvatarId, setFailedAvatarId] = useState<string | null>(null);
 
-  if (!avatarId) {
+  if (!avatarId || failedAvatarId === avatarId) {
     if (pseudo) {
       return (
         <span
           aria-hidden="true"
           className={clsx(styles.avatar, styles.initials, styles[size], className)}
-          data-palette={paletteIndex(pseudo)}
+          data-palette={avatarPaletteIndex(pseudo)}
         >
-          <span className={styles.initialsText}>{getInitials(pseudo)}</span>
+          <span className={styles.initialsText}>{initialsOf(pseudo)}</span>
         </span>
       );
     }
@@ -69,6 +58,7 @@ export default function Avatar({
       className={clsx(styles.avatar, styles[size], className)}
       loading="lazy"
       decoding="async"
+      onError={() => setFailedAvatarId(avatarId)}
     />
   );
 }

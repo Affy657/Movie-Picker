@@ -31,29 +31,8 @@ internal static class PosterRemoteFetch
         if (!IsAllowedContentType(declared))
             return null;
 
-        var contentLength = res.Content.Headers.ContentLength;
-        if (contentLength is > 0 && contentLength > maxBytes)
-            return null;
-
-        await using var stream = await res.Content.ReadAsStreamAsync(download.Token);
-        await using var ms = new MemoryStream();
-        var buffer = new byte[8192];
-        var total = 0;
-        while (true)
-        {
-            var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), download.Token);
-            if (read == 0)
-                break;
-            total += read;
-            if (total > maxBytes)
-                return null;
-            await ms.WriteAsync(buffer.AsMemory(0, read), download.Token);
-        }
-
-        if (ms.Length == 0)
-            return null;
-
-        return new PosterImageBlob(ms.ToArray(), declared!);
+        var bytes = await res.Content.ReadAtMostAsync(maxBytes, download.Token);
+        return bytes is { Length: > 0 } ? new PosterImageBlob(bytes, declared!) : null;
     }
 
     private static bool IsAllowedContentType(string? mediaType)

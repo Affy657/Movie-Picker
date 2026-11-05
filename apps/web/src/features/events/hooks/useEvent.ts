@@ -4,15 +4,25 @@ import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getLivePollingRefetchIntervalForEventQuery } from '@/features/events/hooks/useEventLive';
 import { pollIntervalAfterFailures } from '@/shared/api/retryPolicy';
 
-export function useEvent(slug: string | undefined, hostToken: string | null) {
+export type UseEventOptions = {
+  live?: boolean;
+};
+
+export function useEvent(
+  slug: string | undefined,
+  hostToken: string | null,
+  { live = true }: UseEventOptions = {}
+) {
   return useQuery({
     queryKey: queryKeys.event.detail(slug, hostToken),
     queryFn: () => fetchEventBySlug(slug!, hostToken),
     enabled: !!slug,
-    refetchInterval: (query) =>
-      pollIntervalAfterFailures(
-        getLivePollingRefetchIntervalForEventQuery(query.state.data),
-        query
-      ),
+    refetchInterval: live
+      ? (query) =>
+          pollIntervalAfterFailures(
+            getLivePollingRefetchIntervalForEventQuery(query.state.data),
+            query
+          )
+      : false,
   });
 }

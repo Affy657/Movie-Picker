@@ -272,7 +272,7 @@ public sealed class AuthControllerTests
     {
         var loginHandler = new Mock<IOAuthLoginHandler>();
         loginHandler
-            .Setup(h => h.HandleAsync(It.IsAny<ExternalLoginInfo>(), It.IsAny<CancellationToken>()))
+            .Setup(h => h.HandleAsync(It.IsAny<ExternalLoginInfo>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.OAuthLinkFailed());
 
         var result = await SignInCallback(loginHandler.Object);
@@ -301,7 +301,7 @@ public sealed class AuthControllerTests
     {
         var loginHandler = new Mock<IOAuthLoginHandler>();
         loginHandler
-            .Setup(h => h.HandleAsync(It.IsAny<ExternalLoginInfo>(), It.IsAny<CancellationToken>()))
+            .Setup(h => h.HandleAsync(It.IsAny<ExternalLoginInfo>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new OAuthOutcome { Kind = OAuthOutcomeKind.UnlinkedIdentityRequiresManualLink });
 
         var result = await SignInCallback(loginHandler.Object);

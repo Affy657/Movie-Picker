@@ -63,6 +63,7 @@ public sealed class MongoIndexInitializer : IHostedService
         EnsureVoteIndexes(plan);
         EnsureAuthSessionIndexes(plan);
         EnsureSeenMarkIndexes(plan);
+        EnsureMovieRatingIndexes(plan);
         EnsurePasswordResetTokenIndexes(plan);
         EnsurePushSubscriptionIndexes(plan);
         EnsureFollowIndexes(plan);
@@ -73,6 +74,7 @@ public sealed class MongoIndexInitializer : IHostedService
         EnsureRateLimitCounterIndexes(plan);
         EnsureSharedCacheIndexes(plan);
         EnsurePosterCacheIndexes(plan);
+        EnsureAvatarPhotoIndexes(plan);
         return plan;
     }
 
@@ -105,6 +107,9 @@ public sealed class MongoIndexInitializer : IHostedService
         var slug = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.Slug),
             new CreateIndexOptions { Name = "events_slug_unique", Unique = true });
+        var recapSlug = new CreateIndexModel<EventDocument>(
+            Builders<EventDocument>.IndexKeys.Ascending(x => x.RecapSlug),
+            new CreateIndexOptions { Name = "events_recapSlug_unique", Unique = true, Sparse = true });
         var creator = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending(x => x.CreatorUserId),
             new CreateIndexOptions { Name = "events_creatorUserId", Sparse = true });
@@ -125,7 +130,7 @@ public sealed class MongoIndexInitializer : IHostedService
         var byWinner = new CreateIndexModel<EventDocument>(
             Builders<EventDocument>.IndexKeys.Ascending("winners.movieId"),
             new CreateIndexOptions { Name = "events_winners_movieId" });
-        plan.Create("events", slug, creator, recurrence, startAt, creationRequest, byWinner);
+        plan.Create("events", slug, recapSlug, creator, recurrence, startAt, creationRequest, byWinner);
     }
 
     private static void EnsureMovieIndexes(MongoIndexPlan plan)
@@ -235,6 +240,24 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<SeenMarkDocument>.IndexKeys.Ascending(x => x.ParticipantId),
             new CreateIndexOptions { Name = "seen_marks_participantId" });
         plan.Create("seen_marks", unique, byMovie, byParticipant);
+    }
+
+    private static void EnsureMovieRatingIndexes(MongoIndexPlan plan)
+    {
+        var unique = new CreateIndexModel<MovieRatingDocument>(
+            Builders<MovieRatingDocument>.IndexKeys
+                .Ascending(x => x.EventId)
+                .Ascending(x => x.MovieId)
+                .Ascending(x => x.ParticipantId),
+            new CreateIndexOptions<MovieRatingDocument>
+            {
+                Name = "movie_ratings_event_movie_participant_unique",
+                Unique = true
+            });
+        var byParticipant = new CreateIndexModel<MovieRatingDocument>(
+            Builders<MovieRatingDocument>.IndexKeys.Ascending(x => x.ParticipantId),
+            new CreateIndexOptions { Name = "movie_ratings_participantId" });
+        plan.Create("movie_ratings", unique, byParticipant);
     }
 
     private static void EnsurePushSubscriptionIndexes(MongoIndexPlan plan)
@@ -360,6 +383,14 @@ public sealed class MongoIndexInitializer : IHostedService
             Builders<PosterCacheDocument>.IndexKeys.Ascending(x => x.ExpiresAtUtc),
             new CreateIndexOptions { Name = "poster_cache_expiresAtUtc_ttl", ExpireAfter = TimeSpan.Zero });
         plan.Create(MongoPosterImageStore.CollectionName, ttl);
+    }
+
+    private static void EnsureAvatarPhotoIndexes(MongoIndexPlan plan)
+    {
+        var userId = new CreateIndexModel<AvatarPhotoBlobDocument>(
+            Builders<AvatarPhotoBlobDocument>.IndexKeys.Ascending(x => x.UserId),
+            new CreateIndexOptions { Name = "avatar_photos_userId" });
+        plan.Create(MongoAvatarPhotoRepository.CollectionName, userId);
     }
 
     private static void EnsureKofiWebhookLogIndexes(MongoIndexPlan plan)

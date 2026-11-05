@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth.OAuth;
@@ -100,6 +101,12 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         Assert.Equal(ErrorCodes.HandleTaken, conflict.Reason);
     }
 
+    private sealed class NoPhotoImporter : IOAuthProfilePhotoImporter
+    {
+        public Task<User> ImportAsync(User user, ExternalLoginInfo info, string? accessToken, CancellationToken ct = default) =>
+            Task.FromResult(user);
+    }
+
     private sealed class RaceLosingUsers(IUserRepository inner, User? readByEmail) : IUserRepository
     {
         private int _identityReads;
@@ -138,6 +145,10 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
             inner.ReplaceEventTemplateAsync(userId, template, now, ct);
         public Task<bool> RemoveEventTemplateAsync(string userId, string templateId, DateTimeOffset now, CancellationToken ct = default) =>
             inner.RemoveEventTemplateAsync(userId, templateId, now, ct);
+        public Task<bool> AddFavoriteAsync(string userId, FavoriteTitle favorite, int maxPerUser, DateTimeOffset now, CancellationToken ct = default) =>
+            inner.AddFavoriteAsync(userId, favorite, maxPerUser, now, ct);
+        public Task<bool> RemoveFavoriteAsync(string userId, int tmdbId, MovieMediaType mediaType, DateTimeOffset now, CancellationToken ct = default) =>
+            inner.RemoveFavoriteAsync(userId, tmdbId, mediaType, now, ct);
         public Task<IReadOnlyList<PublicProfileRef>> ListPublicProfilesAsync(int limit, CancellationToken ct = default) => inner.ListPublicProfilesAsync(limit, ct);
         public Task<User> AddAsync(User user, CancellationToken ct = default) => inner.AddAsync(user, ct);
         public Task<User> UpdateAsync(User user, CancellationToken ct = default) => inner.UpdateAsync(user, ct);
@@ -172,7 +183,11 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         {
             PasswordHash = string.Empty
         });
-        var loser = new OAuthLoginHandler(new RaceLosingUsers(users, null), TimeProvider.System, NullLogger<OAuthLoginHandler>.Instance);
+        var loser = new OAuthLoginHandler(
+            new RaceLosingUsers(users, null),
+            new NoPhotoImporter(),
+            TimeProvider.System,
+            NullLogger<OAuthLoginHandler>.Instance);
 
         var outcome = await loser.HandleAsync(GoogleSignIn(subject, winner.Email));
 
@@ -194,6 +209,7 @@ public sealed class MongoDuplicateKeyMappingTests : IClassFixture<MoviePickerApp
         });
         var loser = new OAuthLoginHandler(
             new RaceLosingUsers(users, readBeforeTheWinner),
+            new NoPhotoImporter(),
             TimeProvider.System,
             NullLogger<OAuthLoginHandler>.Instance);
 

@@ -104,6 +104,26 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  it('with aria-disabled, keeps the focus but ignores the click and does not submit', async () => {
+    const onClick = vi.fn();
+    const onSubmit = vi.fn((event: { preventDefault: () => void }) => event.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <Button type="submit" aria-disabled onClick={onClick}>
+          Envoyer
+        </Button>
+      </form>
+    );
+
+    const button = screen.getByRole('button', { name: 'Envoyer' });
+    await userEvent.click(button);
+
+    expect(button).not.toBeDisabled();
+    expect(button).toHaveFocus();
+    expect(onClick).not.toHaveBeenCalled();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('while loading, disables itself, announces itself busy and keeps its label', async () => {
     const onClick = vi.fn();
     render(

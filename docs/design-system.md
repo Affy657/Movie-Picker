@@ -49,6 +49,7 @@ Chaque rôle porte sa déclinaison, en clair, en sombre et sous `.on-dark` ; un 
 | marque secondaire | `--color-brand-secondary` | | `--color-brand-secondary-bg`, `-glow` | `--color-brand-secondary-border` |
 | états de soirée | | `--color-badge-<état>-text` | `--color-badge-<état>-bg` | `--color-badge-<état>-border` |
 | teintes neutres | `--color-surface-hover` (6 %), `-hover-strong` (10 %), `-active` (12 %), `-sunken`, `-translucent`, `--color-bg-tint`, `--color-bg-translucent` | | | |
+| note d'un film (étoiles pleines, pastille de note) | `--color-rating` (ambre, identique en clair, en sombre et sous `.on-dark`) | | | |
 
 `--color-primary-text` existe parce que `--color-primary` colore des surfaces : la déclinaison texte de chaque accent tient 4,5:1 sur le fond, la surface, le fond léger et la teinte, en clair comme en sombre.
 
@@ -83,7 +84,7 @@ Le bouton du produit. `buttonClass()` donne la même composition de classes à u
 | `loading` | `boolean` | `false` | désactive, pose `aria-busy` et un `Spinner` devant le libellé ; le libellé reste |
 | `type` | | `button` | à poser à `submit` explicitement |
 
-Les enfants texte qui se suivent (`Proposer ({count})`) sont réunis dans un seul libellé centré optiquement (`--text-optical-nudge`, ou `-caps` sans jambage), les blancs seuls sont ignorés ; un appelant n'ajoute jamais de `<span>` de décalage. États : repos, survol (sous `(hover: hover)`, soulèvement `--lift-sm` annulé sous `prefers-reduced-motion`), focus (`--outline-focus`), désactivé (`--opacity-disabled`), chargement (`--opacity-dimmed`). Hauteur minimale `--tap-target-min` ; `sm` dessine 40 px et étend sa zone tactile à 44 px.
+Les enfants texte qui se suivent (`Proposer ({count})`) sont réunis dans un seul libellé centré optiquement (`--text-optical-nudge`, ou `-caps` sans jambage), les blancs seuls sont ignorés ; un appelant n'ajoute jamais de `<span>` de décalage. États : repos, survol (sous `(hover: hover)`, soulèvement `--lift-sm` annulé sous `prefers-reduced-motion`), focus (`--outline-focus`), désactivé (`--opacity-disabled`), inerte (`aria-disabled` : le rendu du désactivé, mais le bouton garde le focus et ignore le clic, soumission comprise ; pour une action indisponible un instant, comme pendant une animation), chargement (`--opacity-dimmed`). Hauteur minimale `--tap-target-min` ; `sm` dessine 40 px et étend sa zone tactile à 44 px.
 
 ### IconButton
 
@@ -176,6 +177,10 @@ Dialogues déjà câblés dessus :
 ### Sheet
 
 Feuille ancrée en bas, glissable : le geste est `useSheetDrag` (`shared/hooks/`), `SheetDrag.module.css` porte la surface, la poignée et les animations d'entrée (`sheetEnter`, `sheetBackdropEnter`, retirées sous `prefers-reduced-motion`). `open`, `title`, `onClose`, `footer`, `size` `md` / `lg`. Sa croix est un `IconButton`.
+
+### ResponsiveDialog
+
+Le dialogue qui est une `Sheet` sur téléphone et une `Modal` `sm` en colonne sur grand écran, avec le même contenu : `open`, `title`, `onClose`, `footer`. Sur grand écran, le corps défile entre la barre de titre et le pied, que sépare un filet, et sans `footer` il n'y a pas de pied. C'est la note d'un film vu et la pioche dans la watchlist. Un dialogue dont l'en-tête change d'un format à l'autre (onglets à la place du titre, taille `xs`) garde sa propre bascule.
 
 ### Notice
 
@@ -289,6 +294,17 @@ Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches
 | `iconOnly` | `boolean` | le libellé devient `aria-label` |
 | `disabled` | `boolean` | toutes les options, `--opacity-disabled`, clavier inerte |
 
+### StarRating
+
+Cinq étoiles à demi-pas pour noter un film vu, valeur entière sur 10 (`1` à `10`, une demi-étoile vaut un point), `role="group"`. Un tap donne l'étoile pleine, un second tap sur la même étoile la passe en demie ; à la souris, la moitié gauche de l'étoile prévisualise et choisit la demie ; les flèches déplacent d'une demi-étoile, bornées à 1 et 10. La valeur s'affiche à côté par `formatRating` (`shared/utils/formatRating.ts`), dans l'échelle du lecteur (`3,5/5` ou `7/10`) et sa langue.
+
+| Prop | Type | Rôle |
+|---|---|---|
+| `value`, `onChange` | `number \| null`, `(value: number) => void` | requis |
+| `ariaLabel` | `string` | nom du groupe |
+| `starLabel` | `(stars: number) => string` | nom de chaque bouton |
+| `size` | `md` / `lg` | `lg` (fenêtre de notation) porte des cellules de 44 px, `md` étend sa zone tactile |
+
 ### Tooltip et InfoBubble
 
 | Composant | Props | Rôle |
@@ -309,7 +325,7 @@ Choix exclusif entre deux à cinq options courtes, `role="radiogroup"`, flèches
 
 ### Divers
 
-- `Avatar` : `avatarId`, `pseudo`, `size` `xs` / `sm` / `md` / `lg` / `xl` (`--avatar-*`). Sans identifiant, initiales sur l'une des huit couleurs `--color-avatar-*`, choisie par le pseudo ; sans pseudo, pastille vide. Toujours décoratif (`aria-hidden`), le nom est porté par le texte voisin. Les tailles sont déclarées en `:where()` : un module qui doit redimensionner un avatar pose `width` et `height` sur sa propre classe, sans `!important`.
+- `Avatar` : `avatarId`, `pseudo`, `size` `xs` / `sm` / `md` / `lg` / `xl` (`--avatar-*`). L'identifiant désigne un robot ou un emoji DiceBear, ou une photo de profil (`photo:<clé>`, servie par `/api/v1/avatars/<clé>`). Sans identifiant, ou quand l'image ne répond plus (photo supprimée, compte supprimé), initiales sur l'une des huit couleurs `--color-avatar-*`, choisie par le pseudo ; sans pseudo, pastille vide. Toujours décoratif (`aria-hidden`), le nom est porté par le texte voisin. Les tailles sont déclarées en `:where()` : un module qui doit redimensionner un avatar pose `width` et `height` sur sa propre classe, sans `!important`.
 - `AvatarStack` : `people` (`{ key, avatarId, pseudo }`), `max` (3), `hidden` quand la liste n'est qu'un échantillon, `size` `xs` / `sm`, `ariaLabel`. Avatars chevauchés d'un quart, anneau `--avatar-stack-ring` (le fond de page par défaut, la surface ou l'anneau d'affiche via une classe), pastille « +N » pour le reste. Décoratif sans `ariaLabel`, `role="img"` avec.
 - `EventLifecyclePill` : `lifecycle` `upcoming` / `live` / `pending` / `finished`, `label`, `detail` ; seul `live` pulse (`StatusDot pulsing`). Consomme `--color-badge-*`, comme `Chip` `pending`.
 - `ViewModeToggle` : barre d'outils grille / liste, `aria-pressed` sur le mode courant, boutons de 28 px à zone tactile étendue.

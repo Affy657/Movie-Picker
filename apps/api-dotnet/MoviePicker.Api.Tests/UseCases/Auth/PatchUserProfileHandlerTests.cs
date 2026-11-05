@@ -465,4 +465,19 @@ public sealed class PatchUserProfileHandlerTests
             x => x.UpdateAsync(It.Is<User>(y => y.LetterboxdPendingReconciliationCount == 4), It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Fact]
+    public async Task HandleAsync_ResponseKeepsWhatThePatchDidNotTouch()
+    {
+        var (handler, _) = HandlerFor(User() with
+        {
+            Favorites = [new FavoriteTitle { TmdbId = 949, Title = "Heat", Year = "1995" }],
+            LetterboxdPendingReconciliationCount = 4
+        });
+
+        var res = await handler.HandleAsync("u1", new PatchUserProfileRequest { Bio = "Cinéphile" });
+
+        Assert.Equal(["Heat"], res.Favorites.Select(f => f.Title));
+        Assert.Equal(4, res.LetterboxdPendingReconciliationCount);
+    }
 }

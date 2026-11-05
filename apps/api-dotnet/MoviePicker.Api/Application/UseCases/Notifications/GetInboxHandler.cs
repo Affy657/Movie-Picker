@@ -29,7 +29,7 @@ public sealed class GetInboxHandler : IGetInboxHandler
         var items = hasMore ? page.Take(pageSize).ToList() : page;
 
         var unreadCount = await _notifications.GetUnreadCountAsync(userId, ct);
-        var publicHandles = await ResolvePublicHandlesAsync(items, ct);
+        var actors = await ResolveActorsAsync(items, ct);
 
         return new NotificationInboxResponse
         {
@@ -37,9 +37,9 @@ public sealed class GetInboxHandler : IGetInboxHandler
             {
                 Id = n.Id,
                 Type = n.Type.ToString().ToLowerInvariant(),
-                ActorHandle = n.ActorHandle is { } handle ? publicHandles.GetValueOrDefault(handle) : null,
+                ActorHandle = PublicHandleResolver.Resolve(ActorOf(n, actors)),
                 ActorDisplayName = n.ActorDisplayName,
-                ActorAvatarId = n.ActorAvatarId,
+                ActorAvatarId = ActorOf(n, actors)?.AvatarId ?? n.ActorAvatarId,
                 EventSlug = n.EventSlug,
                 EventTitle = n.EventTitle,
                 MovieTitle = n.MovieTitle,
@@ -51,21 +51,20 @@ public sealed class GetInboxHandler : IGetInboxHandler
         };
     }
 
-    private async Task<Dictionary<string, string?>> ResolvePublicHandlesAsync(
+    private static UserCard? ActorOf(UserNotification notification, Dictionary<string, UserCard> actors) =>
+        notification.ActorHandle is { } handle ? actors.GetValueOrDefault(HandlePolicy.Normalize(handle)) : null;
+
+    private async Task<Dictionary<string, UserCard>> ResolveActorsAsync(
         IEnumerable<UserNotification> items,
         CancellationToken ct)
     {
         var actorHandles = items.Select(n => n.ActorHandle).OfType<string>().Distinct(StringComparer.Ordinal).ToList();
         if (actorHandles.Count == 0)
-            return new Dictionary<string, string?>(StringComparer.Ordinal);
+            return new Dictionary<string, UserCard>(StringComparer.Ordinal);
 
-        var cardsByHandle = (await _users.ListCardsByHandlesAsync(actorHandles, ct))
+        return (await _users.ListCardsByHandlesAsync(actorHandles, ct))
             .Where(card => !string.IsNullOrEmpty(card.Handle))
             .DistinctBy(card => card.Handle, StringComparer.Ordinal)
             .ToDictionary(card => card.Handle!, StringComparer.Ordinal);
-        return actorHandles.ToDictionary(
-            handle => handle,
-            handle => PublicHandleResolver.Resolve(cardsByHandle.GetValueOrDefault(HandlePolicy.Normalize(handle))),
-            StringComparer.Ordinal);
     }
 }

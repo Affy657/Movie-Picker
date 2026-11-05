@@ -2,7 +2,7 @@ import { useId } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
 import { ChevronRight, Sparkles, Wand2, Wrench } from 'lucide-react';
-import type { ComponentType, SVGProps } from 'react';
+import type { ComponentType, RefObject, SVGProps } from 'react';
 import { useTranslation } from '@/shared/i18n';
 import {
   whatsNewLinkPath,
@@ -18,6 +18,7 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 
 type Props = {
   open: boolean;
+  dialogRef?: RefObject<HTMLDialogElement | null>;
   release: WhatsNewRelease;
   ownProfilePath?: string | null;
   onClose: () => void;
@@ -58,6 +59,7 @@ function EntryChevron() {
 
 export default function WhatsNewModal({
   open,
+  dialogRef,
   release,
   ownProfilePath = null,
   onClose,
@@ -104,7 +106,14 @@ export default function WhatsNewModal({
   };
 
   return (
-    <Modal open={open} onClose={onClose} size="sm" column ariaLabelledBy={titleId}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="sm"
+      column
+      ariaLabelledBy={titleId}
+      dialogRef={dialogRef}
+    >
       <div className={styles.accent} aria-hidden="true" />
 
       <div className={styles.body}>

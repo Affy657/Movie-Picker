@@ -32,7 +32,7 @@ public sealed class GetPublicProfileHandler : IGetPublicProfileHandler
         {
             Handle = user.Handle,
             DisplayName = user.DisplayName,
-            AvatarId = user.AvatarId,
+            AvatarId = user.DisplayedAvatarId,
             Bio = user.Bio,
             MemberSince = user.CreatedAt,
             FollowingCount = followingCount,
@@ -40,7 +40,8 @@ public sealed class GetPublicProfileHandler : IGetPublicProfileHandler
             IsSupporter = user.SupporterSince is not null,
             IsFollowedByMe = await followedByMeTask,
             IsWatchlistPublic = user.IsWatchlistPublic,
-            WatchlistCount = await watchlistCountTask
+            WatchlistCount = await watchlistCountTask,
+            Favorites = FavoriteTitleResponse.ListFrom(user.Favorites)
         };
     }
 

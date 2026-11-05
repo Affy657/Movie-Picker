@@ -41,7 +41,7 @@ internal static class FollowListQuery
             {
                 Handle = u!.Handle,
                 DisplayName = u.DisplayName,
-                AvatarId = u.AvatarId,
+                AvatarId = u.DisplayedAvatarId,
                 IsFollowedByMe = FollowStateFor(u, followingSet)
             })
             .ToList();

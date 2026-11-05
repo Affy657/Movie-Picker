@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
@@ -7,6 +8,7 @@ using MoviePicker.Api.Application.UseCases.Auth.OAuth;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Auth.OAuth;
@@ -22,12 +24,72 @@ public sealed class OAuthLoginHandlerTests
         public override DateTimeOffset GetUtcNow() => _now;
     }
 
+    private static Mock<IOAuthProfilePhotoImporter> PassThroughImporter()
+    {
+        var importer = new Mock<IOAuthProfilePhotoImporter>();
+        importer.Setup(i => i.ImportAsync(It.IsAny<User>(), It.IsAny<ExternalLoginInfo>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User user, ExternalLoginInfo _, string? _, CancellationToken _) => user);
+        return importer;
+    }
+
     private sealed class Fixture
     {
         public InMemoryUserRepository Users { get; } = new();
+        public Mock<IOAuthProfilePhotoImporter> Importer { get; } = PassThroughImporter();
 
         public OAuthLoginHandler CreateHandler() =>
-            new(Users, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+            new(Users, Importer.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NewAccount_ImportsTheProviderPhotoWithTheAccessToken()
+    {
+        var f = new Fixture();
+        var withPhoto = new AvatarPhoto { Key = AvatarPhotoKeys.Sample, IsActive = true };
+        f.Importer.Setup(i => i.ImportAsync(It.IsAny<User>(), It.IsAny<ExternalLoginInfo>(), "ya29.token", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User user, ExternalLoginInfo _, string? _, CancellationToken _) => user with { AvatarPhoto = withPhoto });
+
+        var outcome = await f.CreateHandler().HandleAsync(
+            new ExternalLoginInfo { Provider = "google", Subject = "sub-new", Email = "new@example.com", EmailVerified = true, DisplayName = "New" },
+            "ya29.token");
+
+        Assert.True(outcome.IsNewAccount);
+        Assert.Equal(withPhoto, outcome.User!.AvatarPhoto);
+    }
+
+    [Fact]
+    public async Task HandleAsync_KnownIdentity_DoesNotImportAPhoto()
+    {
+        var f = new Fixture();
+        await f.Users.AddAsync(new User
+        {
+            Email = "known@example.com",
+            Handle = "known",
+            Identities = [new LinkedIdentity { Provider = "google", Subject = "sub-known", Email = "known@example.com", LinkedAt = TestEpoch }]
+        });
+
+        await f.CreateHandler().HandleAsync(
+            new ExternalLoginInfo { Provider = "google", Subject = "sub-known", Email = "known@example.com", EmailVerified = true },
+            "ya29.token");
+
+        f.Importer.Verify(
+            i => i.ImportAsync(It.IsAny<User>(), It.IsAny<ExternalLoginInfo>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ExistingAccountLinkedByEmail_DoesNotImportAPhoto()
+    {
+        var f = new Fixture();
+        await f.Users.AddAsync(new User { Email = "linked@example.com", Handle = "linked" });
+
+        await f.CreateHandler().HandleAsync(
+            new ExternalLoginInfo { Provider = "google", Subject = "sub-linked", Email = "linked@example.com", EmailVerified = true },
+            "ya29.token");
+
+        f.Importer.Verify(
+            i => i.ImportAsync(It.IsAny<User>(), It.IsAny<ExternalLoginInfo>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -287,7 +349,7 @@ public sealed class OAuthLoginHandlerTests
         users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.IdentityConflict());
 
-        var handler = new OAuthLoginHandler(users.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 
         var outcome = await handler.HandleAsync(new ExternalLoginInfo
         {
@@ -315,7 +377,7 @@ public sealed class OAuthLoginHandlerTests
         users.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.ConcurrentUpdate());
 
-        var handler = new OAuthLoginHandler(users.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 
         var outcome = await handler.HandleAsync(new ExternalLoginInfo
         {
@@ -343,7 +405,7 @@ public sealed class OAuthLoginHandlerTests
         users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.EmailTaken());
 
-        var handler = new OAuthLoginHandler(users.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 
         var outcome = await handler.HandleAsync(new ExternalLoginInfo
         {
@@ -369,7 +431,7 @@ public sealed class OAuthLoginHandlerTests
         users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.EmailTaken());
 
-        var handler = new OAuthLoginHandler(users.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() => handler.HandleAsync(new ExternalLoginInfo
         {
@@ -396,7 +458,7 @@ public sealed class OAuthLoginHandlerTests
         users.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(Errors.IdentityConflict());
 
-        var handler = new OAuthLoginHandler(users.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
+        var handler = new OAuthLoginHandler(users.Object, PassThroughImporter().Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthLoginHandler>.Instance);
 
         var outcome = await handler.HandleAsync(new ExternalLoginInfo
         {

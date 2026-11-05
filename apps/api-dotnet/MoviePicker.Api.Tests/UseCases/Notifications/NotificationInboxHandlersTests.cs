@@ -68,6 +68,22 @@ public sealed class GetInboxHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ShowsEachActorsCurrentAvatar()
+    {
+        _notifications.Setup(n => n.ListByUserIdAsync("u1", 31, 0, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                new UserNotification { Id = "n1", UserId = "u1", Type = UserNotificationType.NewFollower, ActorHandle = "bob", ActorAvatarId = "photo:old" },
+                new UserNotification { Id = "n2", UserId = "u1", Type = UserNotificationType.MovieAdded, ActorHandle = "hidden", ActorAvatarId = "bolt" },
+                new UserNotification { Id = "n3", UserId = "u1", Type = UserNotificationType.MovieAdded, ActorHandle = "gone", ActorAvatarId = "cute" }
+            ]);
+
+        var result = await _sut.HandleAsync("u1", limit: null, offset: null);
+
+        Assert.Equal(["avatar-1", "avatar-2", "cute"], result.Items.Select(i => i.ActorAvatarId));
+    }
+
+    [Fact]
     public async Task HandleAsync_APageWithoutActors_LooksNobodyUp()
     {
         _notifications.Setup(n => n.ListByUserIdAsync("u1", 31, 0, It.IsAny<CancellationToken>()))

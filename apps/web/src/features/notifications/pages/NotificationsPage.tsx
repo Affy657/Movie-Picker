@@ -46,7 +46,9 @@ function notifDestination(item: UserNotificationItem): string | null {
     return item.actorHandle ? ROUTES.profile(item.actorHandle) : null;
   if (item.type === 'eventdeleted') return null;
   if (item.type === 'letterboxdreconciliationpending') return ROUTES.accountIntegrations;
-  return item.eventSlug ? ROUTES.eventDetail(item.eventSlug) : null;
+  if (!item.eventSlug) return null;
+  if (item.type === 'ratingreminder') return ROUTES.eventDetailRating(item.eventSlug);
+  return ROUTES.eventDetail(item.eventSlug);
 }
 
 const NOTIFICATION_TEXT_KEYS = {
@@ -90,6 +92,10 @@ const NOTIFICATION_TEXT_KEYS = {
   },
   letterboxdreconciliationpending: {
     plain: 'notifications.letterboxdReconciliationPendingText',
+  },
+  ratingreminder: {
+    plain: 'notifications.ratingReminderText',
+    grouped: 'notifications.ratingReminderGroupedText',
   },
 } as const satisfies Partial<
   Record<UserNotificationItem['type'], { plain: TranslationKey; grouped?: TranslationKey }>

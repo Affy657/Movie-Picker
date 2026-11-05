@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { useNavigate } from 'react-router';
 import { ArrowLeft, ChevronDown, Plus, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import EventShareButton from '@/features/events/components/EventShareButton';
 import EventCalendarMenu from '@/features/events/components/EventCalendarMenu';
 import EventThemeBanner from '@/features/events/components/EventThemeBanner';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
+import { useEventBack } from './useEventBack';
 import ViewModeToggle from '@/shared/components/ViewModeToggle';
 import AvatarStack from '@/shared/components/AvatarStack';
 import type { EventParticipantSummary, MyEventLifecycle } from '@/shared/types/event';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
-import { ROUTES } from '@/app/routes';
+import { participantsCountLabel } from '@/features/events/utils/eventLabels';
 import styles from './EventDetailHeader.module.css';
 import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
@@ -387,15 +387,8 @@ export default function EventDetailHeader({
   viewMode,
   onViewModeChange,
 }: Readonly<EventDetailHeaderProps>) {
-  const navigate = useNavigate();
   const { t } = useTranslation();
-  const goBack = () => {
-    if (globalThis.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate(ROUTES.home);
-    }
-  };
+  const goBack = useEventBack();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLElement>(null);
   const wheelActionsRef = useRef<HTMLDivElement>(null);
@@ -406,12 +399,7 @@ export default function EventDetailHeader({
 
   const stacked = (participants ?? []).slice(0, MAX_STACKED_AVATARS);
   const hiddenCount = Math.max(participantCount - stacked.length, 0);
-  const participantsLabel = pluralizeCount(
-    participantCount,
-    'events.detail.participantsToggleOne',
-    'events.detail.participantsToggle',
-    t
-  );
+  const participantsLabel = participantsCountLabel(participantCount, t);
   const moviesLabel = pluralizeCount(
     moviesCount,
     'events.detail.moviesCountOne',
@@ -479,6 +467,7 @@ export default function EventDetailHeader({
         </div>
         {showLifecyclePill ? (
           <EventLifecyclePill
+            className={styles.lifecycle}
             lifecycle={lifecycle}
             label={isUpcoming ? t('events.lifecycle.startsIn') : undefined}
             detail={isUpcoming ? countdownLabel : null}

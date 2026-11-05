@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using MongoDB.Driver;
+using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
@@ -20,6 +21,7 @@ using MoviePicker.Api.Infrastructure.Caching;
 using MoviePicker.Api.Infrastructure.Development;
 using MoviePicker.Api.Infrastructure.Email;
 using MoviePicker.Api.Infrastructure.GitHub;
+using MoviePicker.Api.Infrastructure.Google;
 using MoviePicker.Api.Infrastructure.Letterboxd;
 using MoviePicker.Api.Infrastructure.Migrations;
 using MoviePicker.Api.Infrastructure.Persistence;
@@ -99,8 +101,13 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGoogleOidcSchedulerTokenValidator, GoogleOidcSchedulerTokenValidator>();
         services.AddSingleton<ISchedulerCallerAuthenticator, SchedulerCallerAuthenticator>();
         services.AddScoped<IEventReminderPass, EventReminderPass>();
+        services.AddScoped<IRatingReminderPass, RatingReminderPass>();
         services.AddScoped<IRecurringEventPass, RecurringEventPass>();
         services.AddScoped<IFinishedEventWatchlistPass, FinishedEventWatchlistPass>();
+        services.AddHttpClient(HttpWebShellSource.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(3));
+        services.AddHttpClient(GoogleProfilePhotoSource.HttpClientName);
+        services.AddSingleton<IGoogleProfilePhotoSource, GoogleProfilePhotoSource>();
+        services.AddSingleton<IWebShellSource, HttpWebShellSource>();
         services.AddScoped<ICatalogWarmPass, CatalogWarmPass>();
 
         var runsRemindersInProcess = environment.IsDevelopment()
@@ -271,9 +278,11 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IParticipantRepository, InMemoryParticipantRepository>();
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddSingleton<IPasswordResetTokenRepository, InMemoryPasswordResetTokenRepository>();
+            services.AddSingleton<IAvatarPhotoRepository, InMemoryAvatarPhotoRepository>();
             services.AddSingleton<IMovieRepository, InMemoryMovieRepository>();
             services.AddSingleton<IVoteRepository, InMemoryVoteRepository>();
             services.AddSingleton<ISeenMarkRepository, InMemorySeenMarkRepository>();
+            services.AddSingleton<IMovieRatingRepository, InMemoryMovieRatingRepository>();
             services.AddSingleton<IAuthSessionInvalidator, InMemoryAuthSessionInvalidator>();
             services.AddSingleton<IPushSubscriptionRepository, InMemoryPushSubscriptionRepository>();
             services.AddSingleton<IFollowRepository, InMemoryFollowRepository>();
@@ -321,9 +330,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IParticipantRepository, MongoParticipantRepository>();
         services.AddScoped<IUserRepository, MongoUserRepository>();
         services.AddScoped<IPasswordResetTokenRepository, MongoPasswordResetTokenRepository>();
+        services.AddScoped<IAvatarPhotoRepository, MongoAvatarPhotoRepository>();
         services.AddScoped<IMovieRepository, MongoMovieRepository>();
         services.AddScoped<IVoteRepository, MongoVoteRepository>();
         services.AddScoped<ISeenMarkRepository, MongoSeenMarkRepository>();
+        services.AddScoped<IMovieRatingRepository, MongoMovieRatingRepository>();
         services.AddScoped<IAuthSessionInvalidator, MongoAuthSessionInvalidator>();
         services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
         services.AddScoped<IFollowRepository, MongoFollowRepository>();
@@ -400,6 +411,8 @@ public static class ServiceCollectionExtensions
     private static void RegisterHandlers(IServiceCollection services)
     {
         services.AddScoped<LetterboxdWatchlistSynchronizer>();
+        services.AddScoped<AvatarPhotoWriter>();
+        services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
         services.AddScoped<IWheelWinnerAnnouncement, WheelWinnerAnnouncement>();
 

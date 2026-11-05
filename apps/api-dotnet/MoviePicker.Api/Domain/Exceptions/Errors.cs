@@ -29,8 +29,14 @@ public static class Errors
     public static NotFoundException SeenMarkNotFound() =>
         new("Seen mark not found", ErrorCodes.SeenMarkNotFound);
 
+    public static NotFoundException RatingNotFound() =>
+        new("Rating not found", ErrorCodes.RatingNotFound);
+
     public static NotFoundException EventTemplateNotFound() =>
         new("Movie night template not found", ErrorCodes.EventTemplateNotFound);
+
+    public static NotFoundException AvatarPhotoNotFound() =>
+        new("No profile photo to use", ErrorCodes.AvatarPhotoNotFound);
 
     public static NotFoundException OAuthProviderNotLinked() =>
         new("This account is not linked to this provider", ErrorCodes.OAuthProviderNotLinked);
@@ -104,6 +110,9 @@ public static class Errors
     public static ConflictException EventTemplateLimitReached(int max) =>
         new($"You reached the limit of {max} templates, delete one to save a new one", ErrorCodes.EventTemplateLimitReached, Params(("max", max)));
 
+    public static ConflictException FavoritesLimitReached(int max) =>
+        new($"You already have {max} favorites, remove one to add another", ErrorCodes.FavoritesLimitReached, Params(("max", max)));
+
     public static ConflictException InviteEventFinished() =>
         new("Cannot invite, the movie night is over", ErrorCodes.InviteEventFinished);
 
@@ -175,6 +184,18 @@ public static class Errors
 
     public static ForbiddenException SeenMarkOwnParticipationOnly() =>
         new("You can only mark a movie as seen for your own participation", ErrorCodes.SeenMarkOwnParticipationOnly);
+
+    public static ForbiddenException RatingOwnParticipationOnly() =>
+        new("You can only rate a movie for your own participation", ErrorCodes.RatingOwnParticipationOnly);
+
+    public static ConflictException RatingOnlyOnceStarted() =>
+        new("A movie can only be rated once the movie night has started", ErrorCodes.RatingOnlyOnceStarted);
+
+    public static ConflictException RatingOnlyChosenMovie() =>
+        new("Only the chosen movies of the night can be rated", ErrorCodes.RatingOnlyChosenMovie);
+
+    public static BadRequestException RatingOutOfRange() =>
+        new("The rating must be between 1 and 10", ErrorCodes.RatingOutOfRange);
 
     public static ForbiddenException VoteOwnOnly() =>
         new("You can only change your own vote", ErrorCodes.VoteOwnOnly);
@@ -352,6 +373,9 @@ public static class Errors
 
     public static BadRequestException WinnerCountOutOfRange(int min, int max) =>
         new($"The number of winning movies must be between {min} and {max}", ErrorCodes.WinnerCountOutOfRange, Params(("min", min), ("max", max)));
+
+    public static BadRequestException AvatarPhotoInvalid() =>
+        new("The profile photo must be a JPEG, PNG or WebP image of 128 to 1024 pixels per side and at most 512 KB", ErrorCodes.AvatarPhotoInvalid);
 
     public static BadRequestException LastLoginMethod() =>
         new("The last sign-in method of the account cannot be removed", ErrorCodes.LastLoginMethod);

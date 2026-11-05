@@ -14,7 +14,9 @@ public static class UserProfileMapping
         UiTheme = user.UiTheme,
         AccentColor = user.AccentColor,
         RatingScale = user.RatingScale,
-        AvatarId = user.AvatarId,
+        AvatarId = user.DisplayedAvatarId,
+        AvatarPhotoId = user.AvatarPhoto?.AvatarId,
+        GeneratedAvatarId = user.AvatarId,
         Handle = user.Handle,
         Bio = user.Bio,
         IsProfilePublic = user.IsProfilePublic,
@@ -25,6 +27,7 @@ public static class UserProfileMapping
         LetterboxdPendingReconciliationCount = user.LetterboxdPendingReconciliationCount,
         HasPassword = !string.IsNullOrEmpty(user.PasswordHash),
         LinkedProviders = user.Identities.Select(i => i.Provider).ToList(),
+        Favorites = FavoriteTitleResponse.ListFrom(user.Favorites),
         CreatedAt = user.CreatedAt
     };
 }
