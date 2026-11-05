@@ -6,10 +6,17 @@ Le format s'appuie sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) 
 projet suit le [versionnage sémantique](https://semver.org/lang/fr/) (SemVer). Chaque
 version publiée est associée à un tag Git et à une release GitHub.
 
-## [Non publié]
+## [1.7.0] - 2026-11-06
 
 ### Added
 
+- **Noter les films vus** : dès que la soirée a commencé, chaque participant note le ou les films choisis, en étoiles à la demi-étoile près, dans l'échelle de son compte, et modifie ou efface sa note sans limite de temps. Tout le monde, visiteur compris, voit les notes et la moyenne, et la note de l'auteur figure sur ses films vus du profil public.
+- **Relance du lendemain** : à 10 h, chaque participant qui n'a pas encore noté un film choisi reçoit une notification, push et dans l'application, qui ouvre directement le premier film à noter. Une seule relance par soirée, rattrapée jusqu'à trois jours, désactivable dans les réglages.
+- **Page recap publique** : dès qu'un film est choisi, une page partageable et lisible sans compte résume la soirée (films choisis, moyenne, note de chacun), avec « Noter » pour qui ne l'a pas encore fait et « Organise la tienne » pour le visiteur. Le lien partagé montre le titre, le film, la moyenne et l'affiche.
+- **Partager sa soirée en story** : une image au format des stories, générée depuis le recap avec son lien, part par le partage natif du téléphone ou se télécharge depuis la page de la soirée.
+- **Top 3 de films préférés** : jusqu'à trois films ou séries, choisis par une recherche TMDB, s'affichent sur le profil public et se modifient depuis les paramètres.
+- **Photo de profil** : téléverser une photo, la recadrer dans un cercle et en faire son avatar partout dans l'application, robots et emojis restant disponibles ; un compte créé avec Google part avec sa photo Google.
+- **Piocher un film au hasard dans sa liste** : un bouton tire un titre parmi les films à voir, à proposer dans une soirée en un clic.
 - **Le site s'appelle désormais `www.movie-picker.fr`** : l'adresse historique `web.movie-picker.fr` et `movie-picker.fr` y renvoient d'elles-mêmes, en gardant la page demandée, donc un lien de soirée ou un courriel déjà reçu continue d'ouvrir la bonne page ; `www` et l'adresse nue répondent enfin en HTTPS. L'hébergement du site est passé sur Firebase Hosting, à côté de l'API, et une adresse tapée avec une barre finale est ramenée sur sa page.
 - **Un environnement de recette, `staging.movie-picker.fr`** : une seconde instance de l'API et du site, avec sa propre base et ses propres comptes de connexion, décrite en code à côté de la production ; chaque livraison y passe d'abord, et la production ne part que si la recette sert exactement le même commit, avec la même image de conteneur, sans reconstruction. La recette n'est pas indexée par les moteurs de recherche.
 - **L'infrastructure commence à s'écrire en code** : une arborescence Terraform dédiée, aux versions épinglées, avec un état distant versionné et verrouillé, et une porte `fmt` + `validate` jouée dans la vérification locale comme dans la CI.
@@ -66,6 +73,9 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **La page d'une soirée se lit de haut en bas** : le titre de la soirée, le retour, les actions et les réglages restent au-dessus du film choisi, jamais dans sa carte, et le film gagnant s'affiche ensuite en grand avec sa note et sa moyenne ; la page recap suit la même hiérarchie.
+- **La note s'enregistre toute seule** : choisir une étoile suffit, un échec se réessaie, et le film suivant à noter s'enchaîne depuis la même feuille.
+- **La politique de confidentialité décrit la V1.7** : la photo de profil, sa reprise depuis Google à la création du compte, et les notes visibles sur la page recap publique.
 - **Des rangées plus épurées sur la page Explorer** : sous chaque affiche ne reste que le titre du film, sans l'année, la note ni la durée, qui se lisent toujours dans la fiche du film et sur les pages « Voir tout ». Les liens « Voir ma liste » et « Voir les N films » perdent leur soulignement au profit d'un texte gris suivi d'une flèche, qui s'éclaire au survol, et les flèches de défilement se centrent sur les affiches. La rangée « Les plus proposés » garde le nombre de soirées sous chaque titre.
 - **Le code reste à zéro remarque SonarCloud** : les vingt-sept remarques ouvertes, les seize acceptées ou écartées à la main et les trois blocs dupliqués sont corrigés dans le code, et la CI refuse désormais toute branche qui en porterait une, qui descendrait sous A sur une note, dupliquerait du code ou ferait baisser la couverture ; les règles de SonarCloud tournent aussi dans la vérification locale, avant chaque envoi.
 - **Les écrans parlent le même langage visuel** : un même lien de retour en haut des pages secondaires (compte, formulaires, listes, profil, soirée), des titres de page à la même taille, les mêmes pastilles de compteur sur les filtres, la cloche et les onglets, le même encart « Réessayer » quand un bloc ne charge pas, les mêmes états vides, et la création de soirée prend la carte des pages de connexion. Un bouton de filtre ou de menu ouvert se teinte de la couleur d'accent au lieu de changer de forme.
@@ -545,7 +555,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.6.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/Affy657/Movie-Picker/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/Affy657/Movie-Picker/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/Affy657/Movie-Picker/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/Affy657/Movie-Picker/compare/v1.4.0...v1.4.1

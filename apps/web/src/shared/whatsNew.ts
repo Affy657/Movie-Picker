@@ -111,6 +111,25 @@ export const WHATS_NEW: readonly WhatsNewRelease[] = [
       entry('offlineEventPage', 'fixed', { link: 'myEvents' }),
     ],
   },
+  {
+    version: '1.7.0',
+    entries: [
+      entry('movieRating', 'new', { link: 'myEvents' }),
+      entry('ratingReminder', 'new', { link: 'notifications' }),
+      entry('nightRecap', 'new', { link: 'myEvents' }),
+      entry('nightStory', 'new', { link: 'myEvents' }),
+      entry('topFavorites', 'new', { link: 'profile' }),
+      entry('profilePhoto', 'new', { link: 'profile' }),
+      entry('watchlistPick', 'new', { link: 'watchlist' }),
+      entry('chosenMovie', 'improved', { link: 'myEvents' }),
+      entry('createEventSteps', 'improved', { link: 'myEvents' }),
+      entry('exploreRows', 'improved', { link: 'home' }),
+      entry('newAddress', 'improved'),
+      entry('manageCookies', 'improved'),
+      entry('weightedWheelShare', 'fixed', { link: 'myEvents' }),
+      entry('fullDataExport', 'fixed', { link: 'account' }),
+    ],
+  },
 ];
 
 export function whatsNewLinkPath(
@@ -147,7 +166,7 @@ function getLatestRelease(releases: readonly WhatsNewRelease[]): WhatsNewRelease
 
 export const LATEST_WHATS_NEW_RELEASE: WhatsNewRelease = getLatestRelease(WHATS_NEW);
 
-export const WHATS_NEW_NAV_RELEASED_AT_MS = Date.parse('2026-09-12T00:00:00.000Z');
+export const WHATS_NEW_NAV_RELEASED_AT_MS = Date.parse('2026-11-06T00:00:00.000Z');
 export const WHATS_NEW_NAV_VISIBLE_FOR_MS = 7 * 24 * 60 * 60 * 1000;
 export const WHATS_NEW_NAV_NEW_ACCOUNT_FROM_MS = WHATS_NEW_NAV_RELEASED_AT_MS + 24 * 60 * 60 * 1000;
 

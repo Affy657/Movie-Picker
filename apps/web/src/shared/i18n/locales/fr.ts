@@ -1891,14 +1891,14 @@ export const fr = {
     privacyDataTitle: 'Données collectées',
     privacyDataBody: 'Movie Picker traite trois familles de données :',
     privacyDataAccount:
-      'Compte : e-mail, pseudo, handle public, mot de passe (haché) ou identité liée via Google/GitHub.',
+      'Compte : e-mail, pseudo, handle public, photo de profil si vous en avez une, mot de passe (haché) ou identité liée via Google/GitHub.',
     privacyDataUsage:
-      'Usage du service : soirées créées, votes, participations, liste, notifications, abonnements.',
+      'Usage du service : soirées créées, votes, notes de films (visibles sur la soirée et sur sa page recap publique), participations, liste, films préférés, notifications, abonnements.',
     privacyDataAnalytics:
       'Mesure d’audience : PostHog, uniquement avec votre consentement. PostHog reçoit un identifiant technique, les pages visitées et les actions (créer une soirée, voter, partager un lien), sans pseudo, handle, e-mail ni localisation précise.',
     privacyOAuthTitle: 'Connexion via Google ou GitHub',
     privacyOAuthBody:
-      'Si vous choisissez de vous connecter via Google ou GitHub, Movie Picker reçoit uniquement votre identifiant, votre adresse e-mail (si vérifiée par le fournisseur) et votre nom affiché. Aucune autre donnée du fournisseur n’est demandée ni stockée. Vous pouvez lier ou délier ces comptes à tout moment depuis la page Paramètres.',
+      'Si vous choisissez de vous connecter via Google ou GitHub, Movie Picker reçoit votre identifiant, votre adresse e-mail (si vérifiée par le fournisseur) et votre nom affiché. Un compte créé avec Google reprend aussi votre photo Google comme photo de profil, que vous pouvez remplacer ou supprimer à tout moment. Aucune autre donnée du fournisseur n’est demandée ni stockée. Vous pouvez lier ou délier ces comptes à tout moment depuis la page Paramètres.',
     privacyDonationsTitle: 'Dons via Ko-fi',
     privacyDonationsBody:
       'Les paiements sont traités intégralement par Ko-fi, qui agit comme responsable de traitement pour les données de paiement : Movie Picker n’y a jamais accès. À chaque don, Ko-fi notifie notre serveur et transmet l’adresse e-mail du donateur. Cette adresse est utilisée uniquement, en mémoire, pour retrouver le compte Movie Picker correspondant et y afficher le badge de soutien ; elle n’est jamais enregistrée. Aucun montant, nom de donateur ni message n’est conservé : seule la date du premier don est stockée sur le compte concerné, ainsi qu’un identifiant technique de notification qui évite de traiter deux fois le même don.',
@@ -1907,7 +1907,7 @@ export const fr = {
       'Une suggestion envoyée depuis le bouton « Proposer une idée » devient un ticket public du dépôt GitHub du projet, lisible par tous : son titre, sa description, ses captures d’écran (sans leurs métadonnées), le type de page d’où elle part et la version de l’application. Votre nom, votre handle et votre e-mail n’y figurent pas, seulement un identifiant technique qui permet de vous recontacter. La suppression de votre compte n’efface pas ce ticket : écrivez à l’adresse de contact pour le faire retirer.',
     privacyRetentionTitle: 'Durée de conservation',
     privacyRetentionBody:
-      'Vos données sont conservées tant que votre compte existe. La suppression de compte, disponible depuis la page Paramètres, efface définitivement votre profil ; les soirées créées et vos votes sont conservés mais anonymisés.',
+      'Vos données sont conservées tant que votre compte existe. La suppression de compte, disponible depuis la page Paramètres, efface définitivement votre profil et votre photo ; les soirées créées, vos votes et vos notes sont conservés mais anonymisés.',
     privacyRightsTitle: 'Vos droits',
     privacyRightsBody:
       'Conformément au RGPD, vous pouvez à tout moment exporter vos données (page Paramètres) ou supprimer votre compte. Pour toute autre demande relative à vos données, contactez {{email}}.',
@@ -2447,6 +2447,74 @@ export const fr = {
         description:
           'Un lien de soirée ouvert sans réseau affiche une erreur au lieu d’un squelette sans fin.',
       },
+      movieRating: {
+        title: 'Notez les films vus',
+        description:
+          'Des étoiles, à la demi-étoile près, dès que la soirée commence. Tout le monde voit les notes et la moyenne.',
+      },
+      ratingReminder: {
+        title: 'Un rappel le lendemain',
+        description:
+          'À 10 h, une notification ouvre le film qu’il vous reste à noter. Elle se coupe dans les réglages.',
+      },
+      nightRecap: {
+        title: 'Le recap de la soirée',
+        description:
+          'Films choisis, moyenne et note de chacun, sur un lien à partager, lisible sans compte.',
+      },
+      nightStory: {
+        title: 'Votre soirée en story',
+        description:
+          'Une image au format story, avec le lien du recap, à partager depuis votre téléphone ou à télécharger.',
+      },
+      topFavorites: {
+        title: 'Votre top 3',
+        description: 'Trois films ou séries préférés, affichés sur votre profil public.',
+      },
+      profilePhoto: {
+        title: 'Votre photo de profil',
+        description:
+          'Ajoutez une photo, recadrez-la : elle devient votre avatar partout dans l’app.',
+      },
+      watchlistPick: {
+        title: 'Piocher dans ma liste',
+        description:
+          'Un bouton tire un film au hasard dans votre liste, à proposer dans une soirée en un clic.',
+      },
+      chosenMovie: {
+        title: 'Le film choisi en grand',
+        description:
+          'Le titre de la soirée et ses actions restent en haut, le film gagnant et ses notes juste dessous.',
+      },
+      createEventSteps: {
+        title: 'Créer une soirée en trois temps',
+        description:
+          'Le titre, la date, puis les options regroupées par étape. Les paramètres suivent la même grille.',
+      },
+      exploreRows: {
+        title: 'Explorer plus épuré',
+        description:
+          'Sous chaque affiche, le titre seul. Les détails restent dans la fiche du film.',
+      },
+      newAddress: {
+        title: 'Une nouvelle adresse',
+        description:
+          'Le site s’appelle www.movie-picker.fr. Vos anciens liens fonctionnent toujours.',
+      },
+      manageCookies: {
+        title: 'Vos cookies, à tout moment',
+        description: 'Changez d’avis depuis « Gérer les cookies », en bas de chaque page.',
+      },
+      weightedWheelShare: {
+        title: 'Le poids de chaque film sur la roue',
+        description:
+          'En mode pondéré, la roue montre enfin la part que les votes donnent à chaque film.',
+      },
+      fullDataExport: {
+        title: 'Un export de données complet',
+        description:
+          'Il contient aussi vos films proposés et leurs notes, et vos modèles de soirée.',
+      },
     },
   },
   pwaInstall: {
@@ -2726,12 +2794,12 @@ export const fr = {
       v16Item4: 'Plusieurs gagnants',
       v16Item5: 'Plage de votes réglable',
       v16Item6: "Watchlist d'un autre compte",
-      v17When: 'Ensuite',
+      v17When: 'Novembre 2026',
       v17What: 'V1.7',
       v17Detail:
-        'Fermer la boucle après la soirée : chacun note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.',
+        'La boucle se ferme après la soirée : chacun note le film vu, le recap se partage et ramène de nouveaux hôtes, et le profil se personnalise.',
       v17Hint:
-        "La note et le partage sont les deux maillons du parcours où l'application ne fait encore rien, et le partage est le seul qui ramène du monde de l'extérieur.",
+        "La note et le partage étaient les deux maillons du parcours où l'application ne faisait encore rien, et le partage est le seul qui ramène du monde de l'extérieur.",
       v17Item1: "Note d'un film vu",
       v17Item2: 'Relance du lendemain',
       v17Item3: 'Page recap publique',
@@ -2739,7 +2807,7 @@ export const fr = {
       v17Item5: 'Top 3 films préférés',
       v17Item6: 'Photo de profil',
       v17Item7: 'Pioche dans la watchlist',
-      v18When: 'Plus tard',
+      v18When: 'Ensuite',
       v18What: 'V1.8',
       v18Detail:
         'La bibliothèque personnelle : des listes de films à soi, faites à la main, remplies par des règles ou tenues à plusieurs, et les films déjà vus repris de Letterboxd.',
@@ -2750,7 +2818,7 @@ export const fr = {
       v18Item3: 'Listes collaboratives',
       v18Item4: 'Films vus importés de Letterboxd',
       v18Item5: 'Écart watchlist Letterboxd',
-      v19When: 'Plus tard encore',
+      v19When: 'Plus tard',
       v19What: 'V1.9',
       v19Detail:
         "Une vraie connexion temps réel à la place du rafraîchissement périodique, une soirée lisible hors-ligne et cadrée par le thème de l'hôte, puis la palette de commandes.",
@@ -2761,7 +2829,7 @@ export const fr = {
       v19Item3: 'Consultation hors-ligne',
       v19Item4: 'Thème imposé',
       v19Item5: 'Palette de commandes',
-      v110When: 'Au-delà',
+      v110When: 'Plus tard encore',
       v110What: 'V1.10',
       v110Detail:
         "Ouvrir l'application au-delà de son cercle, avec un fil d'actualité et des soirées publiques, et la confiance que cela demande : double authentification, passkeys, sessions visibles, alerte de connexion, état du service et aide en ligne.",

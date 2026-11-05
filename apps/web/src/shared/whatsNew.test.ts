@@ -76,8 +76,8 @@ describe('shouldShowWhatsNewNavChip', () => {
 });
 
 describe('LATEST_WHATS_NEW_RELEASE', () => {
-  it('pointe sur la 1.6.0', () => {
-    expect(LATEST_WHATS_NEW_RELEASE.version).toBe('1.6.0');
+  it('points at 1.7.0', () => {
+    expect(LATEST_WHATS_NEW_RELEASE.version).toBe('1.7.0');
   });
 
   it('annonce la version que le pied de page affiche', () => {
@@ -109,23 +109,26 @@ describe('whatsNewLinkPath', () => {
   });
 });
 
-describe('WHATS_NEW 1.6.0', () => {
-  it('couvre les changements visibles de la version', () => {
+describe('WHATS_NEW 1.7.0', () => {
+  it('covers the visible changes of the version', () => {
     const slugs = LATEST_WHATS_NEW_RELEASE.entries.map((entry) =>
       entry.titleKey.replace('whatsNew.entries.', '').replace('.title', '')
     );
     expect(slugs).toEqual([
-      'userSearch',
-      'recurringEvents',
-      'eventTemplates',
-      'multipleWinners',
-      'voteLimit',
-      'friendsWatchlist',
-      'openEventMovies',
-      'wheelAnnounce',
-      'letterboxdFromCard',
-      'scrollableDialogs',
-      'offlineEventPage',
+      'movieRating',
+      'ratingReminder',
+      'nightRecap',
+      'nightStory',
+      'topFavorites',
+      'profilePhoto',
+      'watchlistPick',
+      'chosenMovie',
+      'createEventSteps',
+      'exploreRows',
+      'newAddress',
+      'manageCookies',
+      'weightedWheelShare',
+      'fullDataExport',
     ]);
   });
 });

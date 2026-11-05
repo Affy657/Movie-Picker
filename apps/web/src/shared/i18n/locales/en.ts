@@ -1853,14 +1853,14 @@ export const en: Locale = {
     privacyDataTitle: 'Data collected',
     privacyDataBody: 'Movie Picker processes three families of data:',
     privacyDataAccount:
-      'Account: email, nickname, public handle, hashed password, or an identity linked via Google/GitHub.',
+      'Account: email, nickname, public handle, profile photo if you have one, hashed password, or an identity linked via Google/GitHub.',
     privacyDataUsage:
-      'Service usage: events you create, votes, participations, watchlist, notifications, follows.',
+      'Service usage: events you create, votes, film ratings (visible on the event and on its public recap page), participations, watchlist, favorite films, notifications, follows.',
     privacyDataAnalytics:
       'Audience measurement: PostHog, only with your consent. PostHog receives a technical identifier, pages viewed and actions (creating an event, voting, sharing a link), without nickname, handle, email or precise location.',
     privacyOAuthTitle: 'Signing in with Google or GitHub',
     privacyOAuthBody:
-      'If you choose to sign in with Google or GitHub, Movie Picker only receives your identifier, your email address (if verified by the provider) and your display name. No other data from the provider is requested or stored. You can link or unlink these accounts at any time from the Settings page.',
+      'If you choose to sign in with Google or GitHub, Movie Picker receives your identifier, your email address (if verified by the provider) and your display name. An account created with Google also takes your Google photo as its profile photo, which you can replace or delete at any time. No other data from the provider is requested or stored. You can link or unlink these accounts at any time from the Settings page.',
     privacyDonationsTitle: 'Donations through Ko-fi',
     privacyDonationsBody:
       'Payments are handled entirely by Ko-fi, which acts as the data controller for payment data: Movie Picker never has access to it. For each donation, Ko-fi notifies our server and passes on the donor’s email address. That address is used in memory only, to find the matching Movie Picker account and show the supporter badge on it; it is never stored. No amount, donor name or message is kept: only the date of the first donation is stored on the account concerned, along with a technical notification identifier that prevents the same donation from being processed twice.',
@@ -1869,7 +1869,7 @@ export const en: Locale = {
       'A suggestion sent from the “Suggest an idea” button becomes a public issue of the project’s GitHub repository, readable by anyone: its title, description, screenshots (without their metadata), the kind of page it was sent from and the app version. Your name, handle and email are not included, only a technical identifier that lets us reach you. Deleting your account does not remove that issue: write to the contact address to have it taken down.',
     privacyRetentionTitle: 'Data retention',
     privacyRetentionBody:
-      'Your data is kept for as long as your account exists. Deleting your account, available from the Settings page, permanently erases your profile; events you created and your votes are kept but anonymised.',
+      'Your data is kept for as long as your account exists. Deleting your account, available from the Settings page, permanently erases your profile and your photo; events you created, your votes and your ratings are kept but anonymised.',
     privacyRightsTitle: 'Your rights',
     privacyRightsBody:
       'Under GDPR, you can export your data (Settings page) or delete your account at any time. For any other request about your data, contact {{email}}.',
@@ -2400,6 +2400,69 @@ export const en: Locale = {
         description:
           'A night link opened without network shows an error instead of an endless skeleton.',
       },
+      movieRating: {
+        title: 'Rate the films you watched',
+        description:
+          'Half-star ratings, from the moment the night starts. Everyone sees the ratings and the average.',
+      },
+      ratingReminder: {
+        title: 'A reminder the next day',
+        description:
+          'At 10 a.m., a notification opens the film you still have to rate. You can turn it off in settings.',
+      },
+      nightRecap: {
+        title: 'The night recap',
+        description:
+          'The chosen films, the average and everyone’s rating, on a shareable link, no account needed.',
+      },
+      nightStory: {
+        title: 'Your night as a story',
+        description:
+          'A story-sized image with the recap link, to share from your phone or download.',
+      },
+      topFavorites: {
+        title: 'Your top 3',
+        description: 'Three favorite films or series, shown on your public profile.',
+      },
+      profilePhoto: {
+        title: 'Your profile photo',
+        description: 'Add a photo, crop it, and it becomes your avatar across the app.',
+      },
+      watchlistPick: {
+        title: 'Pick from my list',
+        description: 'A button draws a random film from your list, ready to suggest in one click.',
+      },
+      chosenMovie: {
+        title: 'The chosen film, front and center',
+        description:
+          'The night title and actions stay at the top, the winning film and its ratings right below.',
+      },
+      createEventSteps: {
+        title: 'Creating a night in three steps',
+        description:
+          'The title, the date, then the options grouped by stage. The night settings follow the same layout.',
+      },
+      exploreRows: {
+        title: 'A cleaner Explore page',
+        description: 'Just the title under each poster. The details stay on the film page.',
+      },
+      newAddress: {
+        title: 'A new address',
+        description: 'The site is now www.movie-picker.fr. Your old links still work.',
+      },
+      manageCookies: {
+        title: 'Your cookies, any time',
+        description: 'Change your mind from “Manage cookies”, at the bottom of every page.',
+      },
+      weightedWheelShare: {
+        title: 'Each film’s weight on the wheel',
+        description: 'In weighted mode, the wheel finally shows the share votes give to each film.',
+      },
+      fullDataExport: {
+        title: 'A complete data export',
+        description:
+          'It now includes the films you suggested, their ratings and your night templates.',
+      },
     },
   },
   pwaInstall: {
@@ -2678,12 +2741,12 @@ export const en: Locale = {
       v16Item4: 'Several winners',
       v16Item5: 'Adjustable vote budget',
       v16Item6: "Another account's watchlist",
-      v17When: 'After that',
+      v17When: 'November 2026',
       v17What: 'V1.7',
       v17Detail:
-        'Closing the loop after the night: everyone rates the film they watched, the recap gets shared and brings in new hosts, and the profile becomes personal.',
+        'The loop closes after the night: everyone rates the film they watched, the recap gets shared and brings in new hosts, and the profile becomes personal.',
       v17Hint:
-        'Rating and sharing are the two steps of the journey where the app still does nothing, and sharing is the only one that brings people in from outside.',
+        'Rating and sharing were the two steps of the journey where the app still did nothing, and sharing is the only one that brings people in from outside.',
       v17Item1: 'Rate a watched film',
       v17Item2: 'Next-day reminder',
       v17Item3: 'Public recap page',
@@ -2691,7 +2754,7 @@ export const en: Locale = {
       v17Item5: 'Top 3 favourite films',
       v17Item6: 'Profile picture',
       v17Item7: 'Watchlist random pick',
-      v18When: 'Later',
+      v18When: 'After that',
       v18What: 'V1.8',
       v18Detail:
         'The personal library: film lists of your own, built by hand, filled by rules or maintained together, and watched films pulled from Letterboxd.',
@@ -2702,7 +2765,7 @@ export const en: Locale = {
       v18Item3: 'Collaborative lists',
       v18Item4: 'Watched films from Letterboxd',
       v18Item5: 'Letterboxd watchlist gap',
-      v19When: 'Later still',
+      v19When: 'Later',
       v19What: 'V1.9',
       v19Detail:
         "A true real-time connection in place of the periodic refresh, a night readable offline and framed by the host's theme, then the command palette.",
@@ -2712,7 +2775,7 @@ export const en: Locale = {
       v19Item3: 'Offline reading',
       v19Item4: 'Enforced theme',
       v19Item5: 'Command palette',
-      v110When: 'Beyond',
+      v110When: 'Later still',
       v110What: 'V1.10',
       v110Detail:
         'Opening the app beyond your own circle, with a news feed and public nights, and the trust that takes: two-factor authentication, passkeys, visible sessions, new sign-in alerts, service status and online help.',
