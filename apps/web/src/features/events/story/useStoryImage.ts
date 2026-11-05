@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { renderStoryImage } from './renderStoryImage';
 import type { StoryAssetCache } from './storyAssets';
 import type { StoryImageSpec } from './storySpec';
@@ -16,11 +16,7 @@ export type StoryImageState = Drawn & { retry: () => void };
 const PENDING: Drawn = { status: 'pending', url: null, blob: null };
 const FAILED: Drawn = { status: 'error', url: null, blob: null };
 
-export function useStoryImage(
-  key: string,
-  spec: StoryImageSpec | null,
-  qrRef: RefObject<HTMLElement | null>
-): StoryImageState {
+export function useStoryImage(key: string, spec: StoryImageSpec | null): StoryImageState {
   const cache = useRef(new Map<string, Drawn>());
   const assets = useRef<StoryAssetCache>(new Map());
   const drawing = useRef(new Set<string>());
@@ -59,7 +55,7 @@ export function useStoryImage(
 
     drawing.current.add(key);
     setShown({ key, drawn: PENDING });
-    void renderStoryImage(spec, qrRef.current?.querySelector('svg') ?? null, assets.current)
+    void renderStoryImage(spec, assets.current)
       .then((blob): Drawn =>
         blob ? { status: 'ready', url: URL.createObjectURL(blob), blob } : FAILED
       )
@@ -73,7 +69,7 @@ export function useStoryImage(
         cache.current.set(key, drawn);
         setShown((previous) => (previous.key === key ? { key, drawn } : previous));
       });
-  }, [key, spec, qrRef, attempt]);
+  }, [key, spec, attempt]);
 
   const retry = useCallback(() => {
     const stale = cache.current.get(key);

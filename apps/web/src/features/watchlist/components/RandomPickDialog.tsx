@@ -73,8 +73,8 @@ function DrawnFacts({
   ratingScale?: RatingScale;
   onOpenDetails: (item: WatchlistEntry) => void;
 }>) {
-  const { t } = useTranslation();
-  const vote = formatTmdbVote(item.voteAverage, ratingScale);
+  const { t, locale } = useTranslation();
+  const vote = formatTmdbVote(item.voteAverage, ratingScale, locale);
   const runtime = formatRuntimeMinutes(item.runtimeMinutes);
   return (
     <>

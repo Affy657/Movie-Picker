@@ -8,7 +8,7 @@ import { useTranslation, type Translate } from '@/shared/i18n';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import type { RecapShare } from './eventDetailSessionTypes';
-import { averageRating, formatRating } from '@/shared/utils/formatRating';
+import { averageOfRatings, formatRating } from '@/shared/utils/formatRating';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 export type EventShareTab = 'link' | 'friends';
@@ -41,11 +41,10 @@ function useRecapRatingsLabel(movie: MovieData | null | undefined): string {
   const { t, locale } = useTranslation();
   const { user } = useAuth();
   if (!movie) return '';
-  const values = (movie.ratings ?? []).map((rating) => rating.value);
-  const average = averageRating(values);
+  const average = averageOfRatings(movie.ratings);
   if (average === null) return t('events.recap.share.noRating');
   const scale = user?.ratingScale ?? 'five';
-  return `${t('events.ratings.average', { value: formatRating(average, scale, locale, { decimals: 1 }) })}, ${ratingCountLabel(values.length, t)}`;
+  return `${t('events.ratings.average', { value: formatRating(average, scale, locale, { decimals: 1 }) })}, ${ratingCountLabel(movie.ratings?.length ?? 0, t)}`;
 }
 
 export default function EventShareDialog({

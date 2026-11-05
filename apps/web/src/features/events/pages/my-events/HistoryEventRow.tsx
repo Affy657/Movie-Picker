@@ -1,21 +1,75 @@
 import { Link } from 'react-router';
-import { Crown, Film, Trophy } from 'lucide-react';
+import { Crown, Film, Star } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
-import { formatMyEventsListDate } from '@/shared/utils/formatMyEventsListDate';
-import { ParticipantStat, MoviesStat } from '@/features/events/components/EventSummaryCard';
+import { formatShortDate } from '@/shared/utils/formatMyEventsListDate';
+import { formatRating } from '@/shared/utils/formatRating';
 import EventCardMenu from '@/features/events/components/EventCardMenu';
-import { useLocale, useTranslation } from '@/shared/i18n';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
+import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { ROUTES } from '@/app/routes';
-import type { MyEventSummary } from '@/features/events/types';
+import type { MyEventSummary, MyEventWinnerMovie } from '@/features/events/types';
 import { winnerPosterPaths, winnerTitles } from '@/features/events/utils/eventWinners';
 import styles from './HistoryEventRow.module.css';
 import Card from '@/shared/components/Card';
+import Chip from '@/shared/components/Chip';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface HistoryEventRowProps {
   event: MyEventSummary;
   onDelete?: () => void;
   onReuse?: () => void;
+}
+
+function winnerHeadline(winners: readonly MyEventWinnerMovie[], t: Translate): string {
+  const title = winners[0]?.title ?? '';
+  if (winners.length <= 1) return title;
+  return pluralizeCount(
+    winners.length - 1,
+    'events.myEvents.historyWinnerAndOthersOne',
+    'events.myEvents.historyWinnerAndOthersMany',
+    t,
+    { title }
+  );
+}
+
+function HistoryRatingLine({ event }: Readonly<{ event: MyEventSummary }>) {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
+  const { user } = useAuth();
+  const scale = user?.ratingScale ?? 'five';
+  const average = event.averageRating ?? null;
+  const mine = event.myRating ?? null;
+  const hasWinnerToRate = event.hasWinnerToRate === true;
+
+  if (average === null && !hasWinnerToRate) return null;
+
+  const averageText =
+    average === null ? null : formatRating(average, scale, locale, { decimals: 1 });
+
+  return (
+    <span className={styles.rating}>
+      {averageText === null ? null : (
+        <span
+          className={styles.average}
+          title={t('events.ratings.average', { value: averageText })}
+        >
+          <Star aria-hidden size={ICON_SIZE.md} className={styles.star} />
+          <span className={styles.averageValue}>{averageText}</span>
+        </span>
+      )}
+      {hasWinnerToRate ? (
+        <Chip tone="primary" size="sm" className={styles.toRate}>
+          {t('events.ratings.toRate')}
+        </Chip>
+      ) : null}
+      {!hasWinnerToRate && mine !== null ? (
+        <span className={styles.myRating}>
+          {t('events.myEvents.historyMyRating', { value: formatRating(mine, scale, locale) })}
+        </span>
+      ) : null}
+    </span>
+  );
 }
 
 export default function HistoryEventRow({
@@ -27,7 +81,7 @@ export default function HistoryEventRow({
   const { locale } = useLocale();
   const winners = event.winnerMovies ?? [];
   const firstPoster = winnerPosterPaths(winners)[0] ?? null;
-  const titles = winnerTitles(winners, locale);
+  const hasWinner = winners.length > 0;
 
   return (
     <Card as="article" padding="none" elevation="sm" className={styles.row}>
@@ -44,8 +98,8 @@ export default function HistoryEventRow({
               alt=""
               aria-hidden
               className={styles.poster}
-              width={52}
-              height={78}
+              width={64}
+              height={96}
             />
             {winners.length > 1 ? (
               <span className={styles.posterCount} aria-hidden>
@@ -61,40 +115,31 @@ export default function HistoryEventRow({
       </Link>
 
       <Link to={ROUTES.eventDetail(event.slug)} className={styles.body}>
-        <h3 className={styles.title}>{event.title}</h3>
-        {winners.length > 0 ? (
-          <span
-            className={styles.winner}
-            aria-label={t('events.myEvents.winnerMoviesLabel', { titles })}
+        <div className={styles.headline}>
+          <h3
+            className={styles.title}
+            aria-label={
+              winners.length > 1
+                ? t('events.myEvents.winnerMoviesLabel', { titles: winnerTitles(winners, locale) })
+                : undefined
+            }
           >
-            <Trophy aria-hidden size={ICON_SIZE.sm} />
-            <span aria-hidden="true">{titles}</span>
+            {hasWinner ? winnerHeadline(winners, t) : event.title}
+          </h3>
+          <span className={styles.date}>{formatShortDate(event.date, locale)}</span>
+        </div>
+        <span className={styles.night}>
+          <span className={styles.nightTitle}>
+            {hasWinner ? event.title : t('events.myEvents.historyFinishedWithoutMovie')}
           </span>
-        ) : (
-          <span className={styles.noWinner}>
-            {t('events.myEvents.historyFinishedWithoutMovie')}
-          </span>
-        )}
-      </Link>
-
-      <div className={styles.facts}>
-        <span className={styles.stats}>
-          <ParticipantStat
-            count={event.participantCount ?? 0}
-            maxParticipants={event.maxParticipants}
-            t={t}
-          />
-          <MoviesStat count={event.movieCount ?? 0} t={t} />
+          {event.isCreator ? (
+            <span className={styles.hostIcon} title={t('events.myEvents.hostBadgeTitle')}>
+              <Crown aria-hidden size={ICON_SIZE.sm} />
+            </span>
+          ) : null}
         </span>
-        <span className={styles.date}>{formatMyEventsListDate(event.date, locale)}</span>
-        {event.isCreator ? (
-          <span className={styles.hostIcon} title={t('events.myEvents.hostBadgeTitle')}>
-            <Crown aria-hidden size={ICON_SIZE.sm} />
-          </span>
-        ) : (
-          <span className={styles.hostIconPlaceholder} aria-hidden />
-        )}
-      </div>
+        <HistoryRatingLine event={event} />
+      </Link>
 
       <EventCardMenu
         className={styles.menu}

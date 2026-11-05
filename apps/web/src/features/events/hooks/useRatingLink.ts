@@ -32,10 +32,12 @@ function rememberPrompted(entry: string): void {
   safeLocalStorageSet(PROMPTED_KEY, JSON.stringify([...kept, entry].slice(-PROMPTED_MAX)));
 }
 
-function unratedWinners(winners: MovieData[], participantId: string): MovieData[] {
-  return winners.filter(
-    (movie) => !(movie.ratings ?? []).some((rating) => rating.participantId === participantId)
-  );
+export function hasRated(movie: MovieData, participantId: string | null): boolean {
+  return (movie.ratings ?? []).some((rating) => rating.participantId === participantId);
+}
+
+export function unratedWinners(winners: MovieData[], participantId: string): MovieData[] {
+  return winners.filter((movie) => !hasRated(movie, participantId));
 }
 
 export function ratingLinkTarget(

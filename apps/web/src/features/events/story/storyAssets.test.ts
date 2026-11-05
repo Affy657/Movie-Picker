@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { loadStoryAssets, svgElementToImage } from './storyAssets';
+import { loadStoryAssets } from './storyAssets';
 
 const loadedSrc: string[] = [];
 const fetchedSrc: string[] = [];
@@ -112,18 +112,5 @@ describe('loadStoryAssets', () => {
     const assets = await loadStoryAssets(['/flaky.jpg'], shared);
 
     expect(assets.has('/flaky.jpg')).toBe(true);
-  });
-});
-
-describe('svgElementToImage', () => {
-  it('draws the rendered qr code', async () => {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-
-    expect(await svgElementToImage(svg)).not.toBeNull();
-    expect(loadedSrc).toEqual(['blob:story']);
-  });
-
-  it('has nothing to draw without a qr code', async () => {
-    expect(await svgElementToImage(null)).toBeNull();
   });
 });

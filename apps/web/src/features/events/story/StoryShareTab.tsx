@@ -1,8 +1,7 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CircleAlert, Download, Film, RotateCcw, Share2, Star } from 'lucide-react';
 import Button from '@/shared/components/Button';
 import EmptyState from '@/shared/components/EmptyState';
-import QrCode from '@/shared/components/QrCode';
 import SegmentedRadioGroup from '@/shared/components/SegmentedRadioGroup';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
@@ -42,7 +41,6 @@ export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Pro
   const { t, locale } = useTranslation();
   const { user } = useAuth();
   const { track } = useAnalytics();
-  const qrRef = useRef<HTMLDivElement>(null);
   const families = useMemo(() => storyFamilies(winners), [winners]);
   const [family, setFamily] = useState<StoryFamilyKey>(() => families[0]?.key ?? 'film');
   const [index, setIndex] = useState(0);
@@ -53,11 +51,11 @@ export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Pro
   const slide = slides[Math.min(index, slides.length - 1)] ?? slides[0];
 
   const spec = useMemo(
-    () => (slide ? storyImageSpec({ event, winners, slide, scale, locale, t, recapUrl }) : null),
-    [event, winners, slide, scale, locale, t, recapUrl]
+    () => (slide ? storyImageSpec({ event, winners, slide, scale, locale, t }) : null),
+    [event, winners, slide, scale, locale, t]
   );
 
-  const image = useStoryImage(`${slide?.key ?? 'none'}-${locale}-${scale}`, spec, qrRef);
+  const image = useStoryImage(`${slide?.key ?? 'none'}-${locale}-${scale}`, spec);
   const fileName = slide ? storyFileName(event.recapSlug ?? '', slide) : '';
   const canShareFile = useMemo(
     () => image.blob !== null && canShareStoryFile(image.blob, fileName),
@@ -196,10 +194,6 @@ export default function StoryShareTab({ event, winners, recapUrl }: Readonly<Pro
           </div>
         </>
       )}
-
-      <div className="visually-hidden" ref={qrRef} aria-hidden>
-        <QrCode value={recapUrl} title={t('events.recap.story.qrCaption')} />
-      </div>
     </div>
   );
 }

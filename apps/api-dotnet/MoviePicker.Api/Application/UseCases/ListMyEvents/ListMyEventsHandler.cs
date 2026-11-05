@@ -11,17 +11,20 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
     private readonly IEventRepository _eventRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IMovieRepository _movieRepository;
+    private readonly IMovieRatingRepository _ratingRepository;
     private readonly TimeProvider _clock;
 
     public ListMyEventsHandler(
         IEventRepository eventRepository,
         IParticipantRepository participantRepository,
         IMovieRepository movieRepository,
+        IMovieRatingRepository ratingRepository,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
         _participantRepository = participantRepository;
         _movieRepository = movieRepository;
+        _ratingRepository = ratingRepository;
         _clock = clock;
     }
 
@@ -40,6 +43,10 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         var onlyJoined = await ListOnlyJoinedAsync(joinedIds, createdIds, ct);
 
         var (merged, winnerMovieIdByEventId) = BuildMergedEvents(created, onlyJoined, joinedSet, utcNow);
+        var ratingOpenEventIds = created.Concat(onlyJoined)
+            .Where(e => e.IsRatingOpen(utcNow))
+            .Select(e => e.Id)
+            .ToHashSet();
 
         var all = merged.Values.ToList();
         var totalActive = all.Count(x => x.Lifecycle != MyEventListLifecycle.Finished);
@@ -84,14 +91,19 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             ? _movieRepository.ListByIdsAsync(sliceWinnerIds, ct)
             : Task.FromResult<IReadOnlyList<Movie>>(Array.Empty<Movie>());
 
-        await Task.WhenAll(participantCountsTask, movieCountsTask, winnerMoviesTask);
+        var ratingsTask = normalizedScope == MyEventListScope.Finished
+            ? LoadRatingsAsync(userId, sliceIds.Where(winnerMovieIdByEventId.ContainsKey).ToList(), ratingOpenEventIds, ct)
+            : Task.FromResult(MyEventRatings.None);
+
+        await Task.WhenAll(participantCountsTask, movieCountsTask, winnerMoviesTask, ratingsTask);
 
         var participantCounts = await participantCountsTask;
         var movieCounts = await movieCountsTask;
         var winnerMovies = (await winnerMoviesTask).ToDictionary(m => m.Id, m => m);
+        var ratings = await ratingsTask;
 
         var enriched = orderedSlice.ConvertAll(d =>
-            EnrichSummary(d, winnerMovieIdByEventId, winnerMovies, participantCounts, movieCounts));
+            EnrichSummary(d, winnerMovieIdByEventId, winnerMovies, participantCounts, movieCounts, ratings));
 
         return new MyEventsListResponse
         {
@@ -100,6 +112,22 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             TotalActive = totalActive,
             TotalFinished = totalFinished,
         };
+    }
+
+    private async Task<MyEventRatings> LoadRatingsAsync(
+        string userId,
+        List<string> eventIdsWithWinner,
+        HashSet<string> ratingOpenEventIds,
+        CancellationToken ct)
+    {
+        if (eventIdsWithWinner.Count == 0)
+            return MyEventRatings.None;
+
+        var ratingsTask = _ratingRepository.ListByEventIdsAsync(eventIdsWithWinner, ct);
+        var myParticipationsTask = _participantRepository.ListByUserIdAsync(userId, ct: ct);
+        await Task.WhenAll(ratingsTask, myParticipationsTask);
+
+        return new MyEventRatings(await ratingsTask, await myParticipationsTask, ratingOpenEventIds);
     }
 
     private async Task<List<MyEventSummaryDto>> FilterBySearchAsync(
@@ -169,16 +197,14 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
         Dictionary<string, IReadOnlyList<string>> winnerMovieIdByEventId,
         Dictionary<string, Movie> winnerMovies,
         IReadOnlyDictionary<string, int> participantCounts,
-        IReadOnlyDictionary<string, int> movieCounts)
+        IReadOnlyDictionary<string, int> movieCounts,
+        MyEventRatings ratings)
     {
         var id = d.Id;
         var winners = winnerMovieIdByEventId.TryGetValue(id, out var wIds)
-            ? wIds
-                .Select(wId => winnerMovies.GetValueOrDefault(wId))
-                .Where(m => m is not null)
-                .Select(m => new MyEventWinnerMovieDto { Title = m!.Title, PosterPath = m.PosterPath })
-                .ToList()
+            ? wIds.Select(wId => winnerMovies.GetValueOrDefault(wId)).OfType<Movie>().ToList()
             : [];
+        var rating = ratings.SummaryOf(id, winners.ConvertAll(m => m.Id));
         return new MyEventSummaryDto
         {
             Id = d.Id,
@@ -195,7 +221,10 @@ public sealed class ListMyEventsHandler : IListMyEventsHandler
             MovieCount = movieCounts.TryGetValue(id, out var mc) ? mc : 0,
             MaxParticipants = d.MaxParticipants,
             Theme = d.Theme,
-            WinnerMovies = winners,
+            WinnerMovies = winners.ConvertAll(m => new MyEventWinnerMovieDto { Title = m.Title, PosterPath = m.PosterPath }),
+            AverageRating = rating.Average,
+            MyRating = rating.MyRating,
+            HasWinnerToRate = rating.HasWinnerToRate,
             AutoCloseAt = d.AutoCloseAt,
         };
     }

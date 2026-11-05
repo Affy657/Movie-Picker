@@ -61,7 +61,7 @@ describe('RandomPickDialog, reduced motion', () => {
     const dialog = screen.getByRole('dialog', { name: 'Piocher un titre' });
     expect(within(dialog).getByRole('heading', { name: 'Beetlejuice', level: 3 })).toBeVisible();
     expect(dialog).toHaveTextContent('1988');
-    expect(dialog).toHaveTextContent('7.4/10');
+    expect(dialog).toHaveTextContent('7,4/10');
     expect(dialog).toHaveTextContent('1h38');
     expect(within(dialog).getByText('Au hasard parmi les 3 titres de votre liste.')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Piocher un autre' })).not.toHaveAttribute(

@@ -13,6 +13,12 @@
   --star-cell: var(--tap-target-min);
 }
 
+.xl {
+  --star-cell: clamp(var(--space-12), 18vw, var(--space-16));
+  --star-size: calc(var(--star-cell) - var(--space-2));
+  margin-left: 0;
+}
+
 .star {
   display: inline-flex;
   align-items: center;

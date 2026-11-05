@@ -52,30 +52,30 @@ const spec = (over: Partial<StorySpecInput> = {}) =>
     scale: 'five',
     locale: 'fr',
     t: fr,
-    recapUrl: 'https://www.movie-picker.fr/r/4tdCIJeojN',
     ...over,
   });
 
 describe('storyImageSpec', () => {
-  it('heads every story with the brand, the night and the recap link', () => {
+  it('heads every story with the night and closes it with the footer line', () => {
     const s = spec();
 
-    expect(s.brand).toBe('Movie Picker');
-    expect(s.eyebrow).toBe('Le recap de la soirée');
     expect(s.title).toBe('Soirée du vendredi');
     expect(s.date).toBe('vendredi 18 septembre 2026 à 20h30');
-    expect(s.qr).toEqual({
-      value: 'https://www.movie-picker.fr/r/4tdCIJeojN',
-      caption: 'Voir le recap',
-    });
-    expect(s.url).toBe('movie-picker.fr/r/4tdCIJeojN');
     expect(s.footer).toBe('Le recap et les notes de chacun');
+  });
+
+  it('names its layout after the family of the slide', () => {
+    const film = spec({ slide: { key: 'film-1', family: 'film', movie: heat, index: 0 } });
+    const ratings = spec({ slide: { key: 'ratings-1', family: 'ratings', movie: heat, index: 0 } });
+
+    expect(spec().layout).toBe('films');
+    expect(film.layout).toBe('film');
+    expect(ratings.layout).toBe('ratings');
   });
 
   it('lists every chosen movie with its average in the reader scale', () => {
     const s = spec();
 
-    expect(s.layout).toBe('films');
     expect(s.films).toHaveLength(2);
     expect(s.films[0]).toMatchObject({
       title: 'Inception',
@@ -92,13 +92,19 @@ describe('storyImageSpec', () => {
     expect(s.films.map((f) => f.title)).toEqual(['Heat']);
   });
 
-  it('carries the participants and the theme of the night', () => {
+  it('carries the participants and the theme of the night with all the movies', () => {
     const s = spec();
 
     expect(s.people).toMatchObject({ label: '8 participants' });
     expect(s.people?.avatars).toHaveLength(3);
     expect(s.people?.avatars[0]).toMatchObject({ initials: 'CL' });
     expect(s.theme).toBe('Années 80');
+  });
+
+  it('keeps the participants off the slide of a single movie', () => {
+    const s = spec({ slide: { key: 'film-1', family: 'film', movie: inception, index: 0 } });
+
+    expect(s.people).toBeNull();
   });
 
   it('writes the average on the ten scale when the reader uses it', () => {
@@ -110,7 +116,6 @@ describe('storyImageSpec', () => {
   it('speaks the language of the interface', () => {
     const s = spec({ locale: 'en', t: en });
 
-    expect(s.eyebrow).toBe('The night recap');
     expect(s.date).toBe('Friday, 18 September 2026 at 20h30');
     expect(s.films[0]?.countText).toBe('2 ratings');
   });

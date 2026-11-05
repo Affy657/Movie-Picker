@@ -68,6 +68,16 @@ public sealed class MongoMovieRatingRepository : IMovieRatingRepository
         return docs.ConvertAll(MovieRatingMapper.ToDomain);
     }
 
+    public async Task<IReadOnlyList<MovieRating>> ListByEventIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default)
+    {
+        var ids = eventIds.Where(id => ObjectId.TryParse(id, out _)).Distinct().ToList();
+        if (ids.Count == 0)
+            return [];
+        var filter = Builders<MovieRatingDocument>.Filter.In(x => x.EventId, ids);
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(MovieRatingMapper.ToDomain);
+    }
+
     public async Task<IReadOnlyList<MovieRating>> ListByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default)
     {
         var ids = participantIds.Where(id => ObjectId.TryParse(id, out _)).Distinct().ToList();

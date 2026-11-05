@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import clsx from 'clsx';
-import { avatarUrl } from '@/shared/utils/avatar';
+import { avatarPaletteIndex, avatarUrl } from '@/shared/utils/avatar';
 import { initialsOf } from '@/shared/utils/initials';
 import styles from './Avatar.module.css';
 
@@ -19,12 +19,6 @@ const SIZE_PX: Record<NonNullable<AvatarProps['size']>, number> = {
   xl: 96,
 };
 
-const PALETTE_SIZE = 8;
-
-function paletteIndex(pseudo: string): number {
-  return (pseudo.codePointAt(0) ?? 0) % PALETTE_SIZE;
-}
-
 export default function Avatar({
   avatarId,
   pseudo,
@@ -40,7 +34,7 @@ export default function Avatar({
         <span
           aria-hidden="true"
           className={clsx(styles.avatar, styles.initials, styles[size], className)}
-          data-palette={paletteIndex(pseudo)}
+          data-palette={avatarPaletteIndex(pseudo)}
         >
           <span className={styles.initialsText}>{initialsOf(pseudo)}</span>
         </span>

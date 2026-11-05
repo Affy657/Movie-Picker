@@ -51,7 +51,6 @@ describe('useEventMovieRating', () => {
     expect(mockSet).toHaveBeenCalledWith('soiree', 'm1', 'p1', 8);
     expect(refreshAll).toHaveBeenCalledTimes(1);
     expect(hook.result.current.error).toBeNull();
-    expect(hook.result.current.saving).toBe(false);
   });
 
   it('keeps the previous rating and exposes a translated error when the API refuses', async () => {

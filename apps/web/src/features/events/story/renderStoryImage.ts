@@ -1,4 +1,4 @@
-import { loadStoryAssets, svgElementToImage, type StoryAssetCache } from './storyAssets';
+import { loadStoryAssets, type StoryAssetCache } from './storyAssets';
 import { drawStory, storySources } from './storyCanvas';
 import { STORY_HEIGHT, STORY_WIDTH } from './storyLayout';
 import type { StoryImageSpec } from './storySpec';
@@ -6,22 +6,8 @@ import type { StoryImageSpec } from './storySpec';
 export const STORY_MIME = 'image/jpeg';
 const STORY_QUALITY = 0.92;
 
-function qrImage(
-  value: string,
-  svg: SVGElement | null,
-  cache?: StoryAssetCache
-): Promise<CanvasImageSource | null> {
-  const key = `qr:${value}`;
-  const known = cache?.get(key);
-  if (known) return known;
-  const loading = svgElementToImage(svg);
-  cache?.set(key, loading);
-  return loading;
-}
-
 export async function renderStoryImage(
   spec: StoryImageSpec,
-  qrSvg: SVGElement | null,
   cache?: StoryAssetCache
 ): Promise<Blob | null> {
   const canvas = document.createElement('canvas');
@@ -32,11 +18,7 @@ export async function renderStoryImage(
 
   await document.fonts?.ready.catch(() => undefined);
 
-  const [assets, qr] = await Promise.all([
-    loadStoryAssets(storySources(spec), cache),
-    qrImage(spec.qr.value, qrSvg, cache),
-  ]);
-  drawStory(ctx, spec, assets, qr);
+  drawStory(ctx, spec, await loadStoryAssets(storySources(spec), cache));
 
   return new Promise((resolve) => {
     canvas.toBlob(

@@ -203,25 +203,19 @@
   --color-wheel-hub-shadow: rgba(0, 0, 0, 0.3);
 
   --color-story-ink: var(--slate-50);
-  --color-story-muted: #a3b1c6;
-  --color-story-accent: var(--blue-300);
   --color-story-star: var(--amber-400);
-  --color-story-star-dim: rgba(251, 191, 36, 0.22);
   --color-story-chip-bg: rgba(147, 197, 253, 0.16);
   --color-story-chip-text: #bfdbfe;
   --color-story-host-bg: rgba(99, 102, 241, 0.25);
   --color-story-host-text: var(--indigo-200);
   --color-story-placeholder: var(--slate-800);
   --color-story-placeholder-ink: var(--slate-400);
-  --color-story-row-line: rgba(255, 255, 255, 0.08);
-  --color-story-bg-top: #0a0f1c;
-  --color-story-bg-middle: #111631;
-  --color-story-bg-bottom: #191a40;
-  --color-story-glow-blue: rgba(37, 99, 235, 0.42);
-  --color-story-glow-blue-end: rgba(37, 99, 235, 0);
-  --color-story-glow-violet: rgba(109, 40, 217, 0.34);
-  --color-story-glow-violet-end: rgba(109, 40, 217, 0);
-  --color-story-qr-bg: var(--white);
+  --color-story-row-line: rgba(248, 250, 252, 0.16);
+  --color-story-ground: #05080f;
+  --color-story-scrim-top: rgba(5, 8, 15, 0.62);
+  --color-story-scrim-middle: rgba(5, 8, 15, 0.3);
+  --color-story-scrim-bottom: rgba(5, 8, 15, 0.92);
+  --color-story-poster-shadow: rgba(0, 0, 0, 0.6);
   --color-wheel-pointer: var(--red-500);
   --color-wheel-pointer-stroke: var(--white);
   --color-wheel-pointer-shadow: rgba(0, 0, 0, 0.5);
@@ -245,7 +239,9 @@
   --color-streak-flame-tip: var(--red-500);
   --color-streak-bg: color-mix(in srgb, var(--color-streak-soft) 10%, transparent);
   --color-streak-border: color-mix(in srgb, var(--color-streak-soft) 26%, transparent);
-  --filter-streak-glow: drop-shadow(0 5px 12px color-mix(in srgb, var(--color-streak) 50%, transparent));
+  --filter-streak-glow: drop-shadow(
+    0 5px 12px color-mix(in srgb, var(--color-streak) 50%, transparent)
+  );
   --filter-streak-glow-strong: drop-shadow(
     0 7px 18px color-mix(in srgb, var(--color-streak) 70%, transparent)
   );
@@ -443,12 +439,32 @@
   --color-brand-secondary-bg: color-mix(in srgb, var(--color-brand-secondary) 10%, transparent);
   --color-brand-secondary-border: color-mix(in srgb, var(--color-brand-secondary) 35%, transparent);
   --color-brand-secondary-glow: color-mix(in srgb, var(--color-brand-secondary) 20%, transparent);
-  --color-badge-upcoming-border: color-mix(in srgb, var(--color-badge-upcoming-text) 32%, transparent);
-  --color-badge-upcoming-soft: color-mix(in srgb, var(--color-badge-upcoming-text) 22%, transparent);
+  --color-badge-upcoming-border: color-mix(
+    in srgb,
+    var(--color-badge-upcoming-text) 32%,
+    transparent
+  );
+  --color-badge-upcoming-soft: color-mix(
+    in srgb,
+    var(--color-badge-upcoming-text) 22%,
+    transparent
+  );
   --color-badge-live-border: color-mix(in srgb, var(--color-badge-live-text) 32%, transparent);
-  --color-badge-pending-border: color-mix(in srgb, var(--color-badge-pending-text) 32%, transparent);
-  --color-badge-finished-border: color-mix(in srgb, var(--color-badge-finished-text) 40%, transparent);
-  --gradient-accent: linear-gradient(90deg, var(--color-primary) 0%, var(--color-brand-secondary) 100%);
+  --color-badge-pending-border: color-mix(
+    in srgb,
+    var(--color-badge-pending-text) 32%,
+    transparent
+  );
+  --color-badge-finished-border: color-mix(
+    in srgb,
+    var(--color-badge-finished-text) 40%,
+    transparent
+  );
+  --gradient-accent: linear-gradient(
+    90deg,
+    var(--color-primary) 0%,
+    var(--color-brand-secondary) 100%
+  );
   --color-heat-0: var(--color-surface-hover);
   --color-heat-1: color-mix(in srgb, var(--color-primary) 34%, var(--color-surface));
   --color-heat-2: color-mix(in srgb, var(--color-primary) 62%, var(--color-surface));

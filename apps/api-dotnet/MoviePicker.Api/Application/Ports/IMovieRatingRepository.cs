@@ -12,5 +12,7 @@ public interface IMovieRatingRepository
 
     Task<IReadOnlyList<MovieRating>> ListByEventIdAsync(string eventId, CancellationToken ct = default);
 
+    Task<IReadOnlyList<MovieRating>> ListByEventIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default);
+
     Task<IReadOnlyList<MovieRating>> ListByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default);
 }

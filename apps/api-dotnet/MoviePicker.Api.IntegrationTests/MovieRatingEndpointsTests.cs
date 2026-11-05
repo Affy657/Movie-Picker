@@ -64,6 +64,38 @@ public sealed class MovieRatingEndpointsTests : IClassFixture<MoviePickerApplica
     private static Task<HttpResponseMessage> RateAsync(HttpClient client, string slug, string movieId, string participantId, int value) =>
         client.PutAsJsonAsync($"/api/v1/events/{slug}/movies/{movieId}/rating", new { participantId, value });
 
+    private static async Task<JsonElement> MyFinishedEventAsync(HttpClient client, string slug)
+    {
+        var res = await client.GetAsync("/api/v1/events/mine?scope=finished");
+        res.EnsureSuccessStatusCode();
+        var list = await res.Content.ReadFromJsonAsync<JsonElement>();
+        return list.GetProperty("events").EnumerateArray().Single(e => e.GetProperty("slug").GetString() == slug);
+    }
+
+    [Fact]
+    public async Task ListMine_TellsEachViewerTheGroupAverageTheirOwnRatingAndWhatIsLeftToRate()
+    {
+        var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var guest = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var night = await FinishedNightAsync(host, "Soirée à noter", guest);
+
+        var beforeAnyRating = await MyFinishedEventAsync(guest, night.Slug);
+        Assert.Equal(JsonValueKind.Null, beforeAnyRating.GetProperty("averageRating").ValueKind);
+        Assert.True(beforeAnyRating.GetProperty("hasWinnerToRate").GetBoolean());
+
+        (await RateAsync(host, night.Slug, night.WinnerMovieId, night.HostParticipantId, 8)).EnsureSuccessStatusCode();
+
+        var forHost = await MyFinishedEventAsync(host, night.Slug);
+        Assert.Equal(8, forHost.GetProperty("averageRating").GetDouble());
+        Assert.Equal(8, forHost.GetProperty("myRating").GetDouble());
+        Assert.False(forHost.GetProperty("hasWinnerToRate").GetBoolean());
+
+        var forGuest = await MyFinishedEventAsync(guest, night.Slug);
+        Assert.Equal(8, forGuest.GetProperty("averageRating").GetDouble());
+        Assert.Equal(JsonValueKind.Null, forGuest.GetProperty("myRating").ValueKind);
+        Assert.True(forGuest.GetProperty("hasWinnerToRate").GetBoolean());
+    }
+
     [Fact]
     public async Task Rate_ThenRateAgain_KeepsOneRatingPerParticipantAndExposesItOnTheMovie()
     {

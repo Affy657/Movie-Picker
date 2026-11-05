@@ -61,7 +61,7 @@ describe('LibraryMovieRow', () => {
 
     const row = screen.getByRole('listitem');
     expect(within(row).getByRole('heading', { name: 'Dune', level: 3 })).toBeInTheDocument();
-    expect(within(row).getByText('8.1/10')).toBeInTheDocument();
+    expect(within(row).getByText('8,1/10')).toBeInTheDocument();
     expect(within(row).getByText('2h35')).toBeInTheDocument();
     expect(within(row).getByText('2021')).toBeInTheDocument();
   });
@@ -82,7 +82,7 @@ describe('LibraryMovieRow', () => {
     unmount();
 
     renderRow();
-    expect(screen.queryByText(/,/)).toBeNull();
+    expect(screen.queryByText('Drame, Thriller')).toBeNull();
   });
 
   it('keeps the kebab after the cells on desktop and drops it on mobile', () => {
@@ -98,7 +98,7 @@ describe('LibraryMovieRow', () => {
     expect(screen.queryByRole('button', { name: 'kebab' })).toBeNull();
     expect(screen.getByText('2021')).toBeInTheDocument();
     expect(screen.getByText('2h35')).toBeInTheDocument();
-    expect(screen.getByText('8.1/10')).toBeInTheDocument();
+    expect(screen.getByText('8,1/10')).toBeInTheDocument();
   });
 
   it('renders the availability slot on desktop and among the mobile facts', () => {

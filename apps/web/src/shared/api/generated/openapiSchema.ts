@@ -7764,6 +7764,11 @@ export interface components {
             maxParticipants?: number | null;
             theme?: string | null;
             winnerMovies?: components["schemas"]["MyEventWinnerMovieDto"][] | null;
+            /** Format: double */
+            averageRating?: number | null;
+            /** Format: double */
+            myRating?: number | null;
+            hasWinnerToRate?: boolean;
             /** Format: date-time */
             autoCloseAt?: string | null;
         };

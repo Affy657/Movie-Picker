@@ -114,7 +114,7 @@ describe('MovieDetailsModal', () => {
     expect(screen.getByRole('heading', { name: 'Inception' })).toBeInTheDocument();
     expect(screen.getByText('2010')).toBeInTheDocument();
     expect(screen.getByText('2h28')).toBeInTheDocument();
-    expect(screen.getByText('8.8/10')).toBeInTheDocument();
+    expect(screen.getByText('8,8/10')).toBeInTheDocument();
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
@@ -138,7 +138,7 @@ describe('MovieDetailsModal', () => {
     expect(screen.getByRole('heading', { name: 'Le Parrain' })).toBeInTheDocument();
     expect(screen.getByText('1972')).toBeInTheDocument();
     expect(screen.getByText('2h55')).toBeInTheDocument();
-    expect(screen.getByText('8.7/10')).toBeInTheDocument();
+    expect(screen.getByText('8,7/10')).toBeInTheDocument();
     expect(screen.getByRole('list', { name: 'Genres' })).toHaveTextContent('DrameCrime');
     const images = Array.from(container.querySelectorAll('img')).map((img) =>
       img.getAttribute('src')
@@ -173,7 +173,7 @@ describe('MovieDetailsModal', () => {
     expect(screen.getByRole('heading', { name: 'Inception' })).toBeInTheDocument();
     expect(screen.getByText('2010')).toBeInTheDocument();
     expect(screen.getByText('2h28')).toBeInTheDocument();
-    expect(screen.getByText('4.4/5')).toBeInTheDocument();
+    expect(screen.getByText('4,4/5')).toBeInTheDocument();
   });
 
   it('a series shows its seasons instead of a runtime and names its tab accordingly', () => {

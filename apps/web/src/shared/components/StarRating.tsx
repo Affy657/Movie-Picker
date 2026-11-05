@@ -9,10 +9,16 @@ type StarFill = 'full' | 'half' | 'empty';
 type StarRatingProps = {
   value: number | null;
   onChange: (value: number) => void;
-  size?: 'md' | 'lg';
+  size?: 'md' | 'lg' | 'xl';
   ariaLabel: string;
   starLabel: (stars: number) => string;
   className?: string;
+};
+
+const SIZE_CLASS: Record<NonNullable<StarRatingProps['size']>, string | undefined> = {
+  md: undefined,
+  lg: styles.lg,
+  xl: styles.xl,
 };
 
 const STARS = [1, 2, 3, 4, 5] as const;
@@ -54,7 +60,7 @@ export default function StarRating({
   const shown = preview ?? value ?? 0;
 
   const pick = (event: MouseEvent<HTMLButtonElement>, star: number) => {
-    if (preview !== null && event.detail > 0) {
+    if (event.detail > 0) {
       onChange(tenthsUnderPointer(event, star));
       return;
     }
@@ -72,7 +78,7 @@ export default function StarRating({
 
   return (
     <div
-      className={clsx(styles.root, size === 'lg' && styles.lg, className)}
+      className={clsx(styles.root, SIZE_CLASS[size], className)}
       role="group"
       aria-label={ariaLabel}
       onMouseLeave={() => setPreview(null)}

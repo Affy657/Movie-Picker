@@ -86,6 +86,8 @@ export type ParticipantsPanelState = {
 export type MoviesSectionState = {
   ref: RefObject<HTMLDivElement | null>;
   viewMode: MoviesViewMode;
+  titled: boolean;
+  onViewModeChange: (mode: MoviesViewMode) => void;
   selection: MovieCardSelection | undefined;
   addMovieOpen: boolean;
   onAddMovieOpenChange: (open: boolean) => void;

@@ -1022,6 +1022,9 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
         var listed = Assert.Single(await ratings.ListByEventIdAsync(eventId));
         Assert.Equal(9, listed.Value);
         Assert.Equal(participantId, Assert.Single(await ratings.ListByParticipantIdsAsync([participantId])).ParticipantId);
+        Assert.Equal(eventId, Assert.Single(await ratings.ListByEventIdsAsync([eventId])).EventId);
+        Assert.Empty(await ratings.ListByEventIdsAsync([ObjectId.GenerateNewId().ToString()]));
+        Assert.Empty(await ratings.ListByEventIdsAsync(["not-an-object-id"]));
 
         Assert.True(await ratings.DeleteAsync(eventId, movieId, participantId));
         Assert.False(await ratings.DeleteAsync(eventId, movieId, participantId));

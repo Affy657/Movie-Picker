@@ -27,6 +27,7 @@ import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import { persistMoviesViewMode, readMoviesViewMode } from '@/features/events/moviesViewMode';
 import EventDetailSessionChrome from './EventDetailSessionChrome';
+import EventWinnerStage, { isWinnerStageShown } from './EventWinnerStage';
 import EventDetailSessionBody from './EventDetailSessionBody';
 import { OVERLAY_CHUNKS } from './eventDetailOverlays';
 import { useEventDetailActions } from './useEventDetailActions';
@@ -84,6 +85,14 @@ function wheelSelection(wheel: ReturnType<typeof useEventWheel>): MovieCardSelec
 function countdownParams(countdown: EventCountdown) {
   if (countdown.unit === 'imminent') return undefined;
   return { count: countdown.count };
+}
+
+function isNightFull(maxParticipants: number | null, participantCount: number): boolean {
+  return (
+    typeof maxParticipants === 'number' &&
+    maxParticipants > 0 &&
+    participantCount >= maxParticipants
+  );
 }
 
 export default function EventDetailSession({
@@ -226,12 +235,10 @@ export default function EventDetailSession({
     ? t(COUNTDOWN_KEYS[countdown.unit], countdownParams(countdown))
     : null;
   const canConfigure = !!event.isHost && !event.isFinished;
+  const showWinnerStage = isWinnerStageShown(winnerMovies, wheel);
   const emptyStateCarriesAddMovie = moviesLoaded && movies.length === 0;
   const canAddMovie = !event.isFinished && !!participant && !emptyStateCarriesAddMovie;
-  const isFull =
-    typeof maxParticipants === 'number' &&
-    maxParticipants > 0 &&
-    participantCount >= maxParticipants;
+  const isFull = isNightFull(maxParticipants, participantCount);
 
   return (
     <PageLayout className="page-event">
@@ -274,9 +281,19 @@ export default function EventDetailSession({
         onRequestCloseWithoutMovie={requestCloseWithoutMovie}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
+        viewToggleInHeader={!showWinnerStage}
         connectionUnstable={connectionUnstable}
         onRetryConnection={refreshAll}
       />
+      {showWinnerStage ? (
+        <EventWinnerStage
+          slug={slug}
+          event={event}
+          winners={winnerMovies}
+          participant={participant}
+          refreshAll={refreshAll}
+        />
+      ) : null}
       <EventDetailSessionBody
         slug={slug}
         event={event}
@@ -304,6 +321,8 @@ export default function EventDetailSession({
         moviesSection={{
           ref: moviesSectionRef,
           viewMode,
+          titled: showWinnerStage,
+          onViewModeChange: handleViewModeChange,
           selection,
           addMovieOpen,
           onAddMovieOpenChange: setAddMovieOpen,

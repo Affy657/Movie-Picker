@@ -54,14 +54,15 @@ describe('StarRating', () => {
     expect(onChange).toHaveBeenCalledWith(8);
   });
 
-  it('a second tap on the same full star turns it into a half star, a third restores it', async () => {
-    const onChange = renderStars(8);
-    await userEvent.click(screen.getByRole('button', { name: 'Noter 4 étoiles' }));
-    expect(onChange).toHaveBeenLastCalledWith(7);
+  it('a tap on the left half of a star gives the half star, on the right half the full star', () => {
+    const onChange = renderStars(null);
+    const star = screen.getByRole('button', { name: 'Noter 3 étoiles' });
+    star.getBoundingClientRect = () => ({ left: 100, width: 40 }) as DOMRect;
 
-    const again = renderStars(7);
-    await userEvent.click(screen.getAllByRole('button', { name: 'Noter 4 étoiles' })[1]!);
-    expect(again).toHaveBeenLastCalledWith(8);
+    fireEvent.click(star, { detail: 1, clientX: 110 });
+    fireEvent.click(star, { detail: 1, clientX: 130 });
+
+    expect(onChange.mock.calls).toEqual([[5], [6]]);
   });
 
   it('with a mouse, the left half of a star previews and picks the half star', () => {

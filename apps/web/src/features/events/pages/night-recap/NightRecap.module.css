@@ -23,6 +23,7 @@
 
 .back {
   composes: expanded from '@/shared/components/tapTarget.module.css';
+  margin-left: calc(var(--space-2) * -1);
 }
 
 @media (hover: hover) {
@@ -108,12 +109,6 @@
 .stackLabel {
   white-space: nowrap;
   transform: translateY(var(--text-optical-nudge));
-}
-
-.films {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
 }
 
 .rateLink {

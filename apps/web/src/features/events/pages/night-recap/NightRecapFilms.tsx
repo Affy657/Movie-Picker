@@ -41,9 +41,10 @@ function RecapRatings({
   scale: RatingScale;
 }>) {
   const { t } = useTranslation();
+  const rows = recapRows(movie, event, myParticipantId);
   return (
     <RatingNotes
-      participants={recapRows(movie, event, myParticipantId)}
+      participants={rows}
       scale={scale}
       alwaysList
       selfAction={
@@ -85,26 +86,16 @@ export default function NightRecapFilms({
   );
 
   return (
-    <div className={styles.films}>
-      <EventWinnerSummary
-        winners={winners}
-        isFinished={isFinished}
-        date={event.date}
-        participantAvatars={participantAvatars}
-        posterSize="lg"
-        renderRating={
-          ratingOpen
-            ? (movie) => (
-                <RecapRatings
-                  movie={movie}
-                  event={event}
-                  myParticipantId={myParticipantId}
-                  scale={scale}
-                />
-              )
-            : undefined
-        }
-      />
-    </div>
+    <EventWinnerSummary
+      winners={winners}
+      isFinished={isFinished}
+      ratingOpen={ratingOpen}
+      date={event.date}
+      participantAvatars={participantAvatars}
+      scale={scale}
+      renderRating={(movie) => (
+        <RecapRatings movie={movie} event={event} myParticipantId={myParticipantId} scale={scale} />
+      )}
+    />
   );
 }

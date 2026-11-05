@@ -4,12 +4,8 @@ import type { StoryImageSpec } from './storySpec';
 
 const spec: StoryImageSpec = {
   layout: 'films',
-  brand: 'Movie Picker',
-  eyebrow: 'Le recap de la soirée',
   title: 'Soirée du vendredi',
   date: 'vendredi 18 septembre 2026 à 20h30',
-  qr: { value: 'https://www.movie-picker.fr/r/abc', caption: 'Voir le recap' },
-  url: 'movie-picker.fr/r/abc',
   footer: 'Le recap et les notes de chacun',
   people: { label: '8 participants', avatars: [] },
   theme: null,
@@ -49,7 +45,7 @@ afterEach(() => {
 
 describe('renderStoryImage', () => {
   it('draws the story on a story sized canvas', async () => {
-    const blob = await renderStoryImage(spec, null);
+    const blob = await renderStoryImage(spec);
 
     expect(blob?.type).toBe('image/jpeg');
     expect(sizes).toEqual([{ width: 1080, height: 1920 }]);
@@ -58,6 +54,6 @@ describe('renderStoryImage', () => {
   it('has no image to give when the browser draws nothing', async () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
 
-    expect(await renderStoryImage(spec, null)).toBeNull();
+    expect(await renderStoryImage(spec)).toBeNull();
   });
 });

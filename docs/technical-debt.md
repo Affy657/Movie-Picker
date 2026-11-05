@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-079`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-080`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -517,6 +517,15 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - ou: `apps/web/src/features/events/hooks/useRatingLink.ts`
 - verify: `grep -n "moviepicker_rating_prompted" apps/web/src/features/events/hooks/useRatingLink.ts` ; encore ouvert tant que la mémoire reste locale
 - fix: garder la date de la dernière proposition côté serveur, sur la participation, et la rendre avec la soirée
+
+## DEBT-079 les colonnes de la liste de films se chevauchent entre 768 et 1024 px
+
+- state: agent
+- impact: sur tablette et dans une petite fenêtre, les en-têtes « Ajout » et « Note » de la liste d'une soirée se superposent et la colonne « Score » sort du cadre
+- ou: `apps/web/src/features/movies/components/MovieList.module.css`, `apps/web/src/features/movies/components/EventMovieRow.module.css`
+- verify: ouvrir une soirée en vue liste à 820 px de large ; encore ouvert si les en-têtes se touchent
+- fix: passer la liste en présentation compacte sous 64rem, ou retirer une colonne à cette largeur
+- fini-quand: à 768, 820 et 1023 px, tous les en-têtes sont lisibles et la colonne « Score » reste dans le cadre
 
 ---
 

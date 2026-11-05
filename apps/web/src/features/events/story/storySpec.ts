@@ -1,5 +1,4 @@
 import type { LocaleCode, Translate } from '@/shared/i18n';
-import { SITE_NAME } from '@/shared/seo/siteMeta';
 import { ratingCountLabel } from '@/features/events/components/RatingNotes';
 import { participantsCountLabel } from '@/features/events/utils/eventLabels';
 import type { EventData } from '@/features/events/types';
@@ -7,11 +6,11 @@ import type { EventParticipantSummary } from '@/shared/types/event';
 import type { MovieData } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
 import { avatarUrl } from '@/shared/utils/avatar';
-import { averageRating, formatRating } from '@/shared/utils/formatRating';
+import { averageOfRatings, formatRating } from '@/shared/utils/formatRating';
 import { formatEventDateLong } from '@/shared/utils/formatMyEventsListDate';
 import { initialsOf } from '@/shared/utils/initials';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
-import type { StorySlide } from './storySlides';
+import type { StoryFamilyKey, StorySlide } from './storySlides';
 
 export const MAX_STORY_ROWS = 9;
 export const MAX_STORY_AVATARS = 4;
@@ -43,13 +42,9 @@ export type StorySpecPeople = {
 };
 
 export type StoryImageSpec = {
-  layout: 'films' | 'ratings';
-  brand: string;
-  eyebrow: string;
+  layout: StoryFamilyKey;
   title: string;
   date: string;
-  qr: { value: string; caption: string };
-  url: string;
   footer: string;
   people: StorySpecPeople | null;
   theme: string | null;
@@ -65,17 +60,7 @@ export type StorySpecInput = {
   scale: RatingScale;
   locale: LocaleCode;
   t: Translate;
-  recapUrl: string;
 };
-
-function readableUrl(recapUrl: string): string {
-  try {
-    const url = new URL(recapUrl);
-    return `${url.host.replace(/^www\./, '')}${url.pathname}`;
-  } catch {
-    return recapUrl;
-  }
-}
 
 function ratingTextOf(value: number | null, scale: RatingScale, locale: LocaleCode): string | null {
   return value === null ? null : formatRating(value, scale, locale, { decimals: 1 });
@@ -94,15 +79,14 @@ function filmOf(
   locale: LocaleCode,
   t: Translate
 ): StorySpecFilm {
-  const values = (movie.ratings ?? []).map((rating) => rating.value);
-  const average = averageRating(values);
+  const average = averageOfRatings(movie.ratings);
   return {
     title: movie.title,
     year: movie.year,
     posterSrc: posterImageSrc(movie.posterPath) ?? null,
     ratingValue: average,
     ratingText: ratingTextOf(average, scale, locale),
-    countText: average === null ? null : ratingCountLabel(values.length, t),
+    countText: average === null ? null : ratingCountLabel(movie.ratings?.length ?? 0, t),
     fallbackText: t('events.recap.share.noRating'),
   };
 }
@@ -157,7 +141,6 @@ export function storyImageSpec({
   scale,
   locale,
   t,
-  recapUrl,
 }: StorySpecInput): StoryImageSpec {
   const movies = slide.movie ? [slide.movie] : winners;
   const ratings = slide.family === 'ratings' && slide.movie ? slide.movie : null;
@@ -166,17 +149,13 @@ export function storyImageSpec({
     : { rows: [], moreText: null };
 
   return {
-    layout: ratings ? 'ratings' : 'films',
-    brand: SITE_NAME,
-    eyebrow: t('events.recap.eyebrow'),
+    layout: slide.family,
     title: event.title,
     date: formatEventDateLong(event.date, event.time, locale, t('events.detail.dateTimeJoiner'), {
       keepsake: true,
     }),
-    qr: { value: recapUrl, caption: t('events.recap.story.qrCaption') },
-    url: readableUrl(recapUrl),
     footer: t('events.recap.story.footer'),
-    people: ratings ? null : peopleOf(event, t),
+    people: slide.family === 'films' ? peopleOf(event, t) : null,
     theme: event.config?.theme?.trim() || null,
     films: movies.map((movie) => filmOf(movie, scale, locale, t)),
     rows,

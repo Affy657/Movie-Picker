@@ -564,7 +564,7 @@ describe('WatchlistPage (MSW)', () => {
         .map((h) => h.textContent);
     expect(titles()).toEqual(['Recent Mais Mal Noté', 'Ancien Mais Bien Noté']);
     expect(within(list).getByText('1h30')).toBeInTheDocument();
-    expect(within(list).getByText('9.0/10')).toBeInTheDocument();
+    expect(within(list).getByText('9,0/10')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Note' }));
     expect(titles()).toEqual(['Ancien Mais Bien Noté', 'Recent Mais Mal Noté']);

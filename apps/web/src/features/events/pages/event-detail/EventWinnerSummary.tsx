@@ -1,40 +1,43 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import clsx from 'clsx';
-import { Film, LogIn, Star, Trophy } from 'lucide-react';
-import AvatarStack from '@/shared/components/AvatarStack';
+import { Film, Info, LogIn, Star } from 'lucide-react';
 import Button, { buttonClass } from '@/shared/components/Button';
-import Card from '@/shared/components/Card';
+import PosterBackdrop from '@/shared/components/PosterBackdrop';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { ProposerBadge } from '@/features/movies/components/movieCardParts';
+import LazyMovieDetailsModal from '@/features/movies/components/LazyMovieDetailsModal';
 import MovieRatingDialog from '@/features/events/components/MovieRatingDialog';
-import { ratingCountLabel, type ParticipantRating } from '@/features/events/components/RatingNotes';
+import { hasRated, unratedWinners } from '@/features/events/hooks/useRatingLink';
+import RatingNotes, {
+  ratingCountLabel,
+  type ParticipantRating,
+} from '@/features/events/components/RatingNotes';
+import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation, type Translate } from '@/shared/i18n';
 import type { LocaleCode } from '@/shared/i18n/locales';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { EventParticipantSummary } from '@/shared/types/event';
 import type { MovieData } from '@/shared/types/movie';
 import type { RatingScale } from '@/shared/types/theme';
-import { averageRating, formatRating } from '@/shared/utils/formatRating';
+import { averageOfRatings, formatRating } from '@/shared/utils/formatRating';
 import { formatShortDate } from '@/shared/utils/formatMyEventsListDate';
 import { daysUntilEventDate } from '@/shared/utils/formatRelativeEventDate';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { posterImageSrc, tmdbPosterSrcSetForList } from '@/shared/utils/posterUrl';
+import { keepPunctuationAttached } from '@/shared/utils/keepPunctuationAttached';
 import { getParticipantId } from '@/shared/utils/movieParticipant';
 import styles from './EventWinnerSummary.module.css';
-import CountBadge from '@/shared/components/CountBadge';
 
 export type WinnerRatingContext = {
   scale: RatingScale;
   participants: Pick<EventParticipantSummary, 'id' | 'pseudo' | 'avatarId'>[];
   currentParticipantId: string | null;
-  saving: boolean;
   error: string | null;
   onSave: (movieId: string, value: number) => Promise<boolean>;
   onClear: (movieId: string) => Promise<boolean>;
   autoOpenMovieId?: string | null;
   onAutoOpen?: () => void;
-  onRated?: (movieId: string) => void;
   signInHref?: (movieId: string) => string;
 };
 
@@ -47,7 +50,7 @@ type Props = {
   rating?: WinnerRatingContext;
   action?: ReactNode;
   renderRating?: (movie: MovieData) => ReactNode;
-  posterSize?: 'md' | 'lg';
+  scale?: RatingScale;
 };
 
 function participantRatings(movie: MovieData, context: WinnerRatingContext): ParticipantRating[] {
@@ -62,191 +65,155 @@ function participantRatings(movie: MovieData, context: WinnerRatingContext): Par
   return [...rows.filter((r) => r.isSelf), ...rows.filter((r) => !r.isSelf)];
 }
 
-function RatingAverage({
-  raters,
-  average,
-  scale,
-  onOpen,
-}: Readonly<{
-  raters: ParticipantRating[];
-  average: number;
-  scale: RatingScale;
-  onOpen?: () => void;
-}>) {
-  const { t, locale } = useTranslation();
-  const averageLabel = formatRating(average, scale, locale, { decimals: 1 });
-  const countLabel = ratingCountLabel(raters.length, t);
-  const parts = (
-    <>
-      <AvatarStack
-        people={raters.map((r) => ({
-          key: r.participantId,
-          avatarId: r.avatarId,
-          pseudo: r.pseudo,
-        }))}
-        max={3}
-      />
-      <span className={styles.averageValue}>{averageLabel}</span>
-      <span className={styles.averageCount}>{countLabel}</span>
-    </>
-  );
-
-  if (!onOpen) {
-    return (
-      <>
-        <span className="visually-hidden">
-          {`${t('events.ratings.average', { value: averageLabel })}, ${countLabel}`}
-        </span>
-        <span className={styles.averageSummary} aria-hidden>
-          {parts}
-        </span>
-      </>
-    );
-  }
-
-  return (
-    <Button
-      type="button"
-      size="sm"
-      variant="ghost"
-      className={styles.averageButton}
-      onClick={onOpen}
-      aria-label={t('events.ratings.groupAria', { average: averageLabel, count: countLabel })}
-    >
-      {parts}
-    </Button>
-  );
-}
-
-function MyRatingButton({
-  mine,
-  scale,
-  onOpen,
-}: Readonly<{ mine: number | null; scale: RatingScale; onOpen: () => void }>) {
-  const { t, locale } = useTranslation();
-  const rated = mine !== null;
-  return (
-    <Button type="button" size="sm" variant={rated ? 'secondary' : 'primary'} onClick={onOpen}>
-      <Star size={ICON_SIZE.sm} aria-hidden className={rated ? styles.ratedStar : undefined} />
-      {rated
-        ? t('events.ratings.myRating', { value: formatRating(mine, scale, locale) })
-        : t('events.ratings.rateAction')}
-    </Button>
-  );
-}
-
-function SignInToRateLink({ href }: Readonly<{ href: string }>) {
-  const { t } = useTranslation();
-  return (
-    <Link to={href} className={buttonClass({ variant: 'primary', size: 'sm' })}>
-      <LogIn size={ICON_SIZE.sm} aria-hidden />
-      {t('events.ratings.signInToRate')}
-    </Link>
-  );
-}
-
 function nextUnrated(winners: MovieData[], participantId: string, after: string): string | null {
   const index = winners.findIndex((movie) => movie.id === after);
   const ordered = [...winners.slice(index + 1), ...winners.slice(0, Math.max(index, 0))];
-  const next = ordered.find(
-    (movie) =>
-      movie.id !== after &&
-      !(movie.ratings ?? []).some((rating) => rating.participantId === participantId)
-  );
+  const next = unratedWinners(ordered, participantId).find((movie) => movie.id !== after);
   return next?.id ?? null;
 }
 
-function WinnerRatingActions({
-  movie,
-  context,
-}: Readonly<{ movie: MovieData; context: WinnerRatingContext }>) {
-  const [open, setOpen] = useState(false);
-  const [attempted, setAttempted] = useState(false);
-  const rows = participantRatings(movie, context);
-  const raters = rows.filter((r) => r.value !== null);
-  const average = averageRating(raters.map((r) => r.value as number));
-  const mine = rows.find((r) => r.isSelf)?.value ?? null;
-  const canRate = context.currentParticipantId !== null;
-  const signInHref = canRate ? undefined : context.signInHref?.(movie.id);
-  const autoOpen = canRate && context.autoOpenMovieId === movie.id;
-  const { onAutoOpen } = context;
-  useEffect(() => {
-    if (!autoOpen) return;
-    onAutoOpen?.();
-    setAttempted(false);
-    setOpen(true);
-  }, [autoOpen, onAutoOpen]);
-  if (!canRate && average === null && !signInHref) return null;
-
-  const openDialog = () => {
-    setAttempted(false);
-    setOpen(true);
-  };
-  const close = () => setOpen(false);
-  const closeWhen = async (done: Promise<boolean>, then?: () => void) => {
-    setAttempted(true);
-    if (!(await done)) return;
-    close();
-    then?.();
-  };
-
-  return (
-    <div className={styles.ratingActions}>
-      {canRate ? <MyRatingButton mine={mine} scale={context.scale} onOpen={openDialog} /> : null}
-      {signInHref ? <SignInToRateLink href={signInHref} /> : null}
-      {average === null ? null : (
-        <RatingAverage
-          raters={raters}
-          average={average}
-          scale={context.scale}
-          onOpen={canRate ? undefined : openDialog}
-        />
-      )}
-      {open ? (
-        <MovieRatingDialog
-          open
-          onClose={close}
-          movie={movie}
-          mine={mine}
-          participants={rows}
-          scale={context.scale}
-          canRate={canRate}
-          saving={context.saving}
-          error={attempted ? context.error : null}
-          onSave={(value) =>
-            void closeWhen(context.onSave(movie.id, value), () => context.onRated?.(movie.id))
-          }
-          onClear={() => void closeWhen(context.onClear(movie.id))}
-        />
-      ) : null}
-    </div>
-  );
+function firstToRate(winners: MovieData[], participantId: string | null): MovieData | undefined {
+  return participantId ? unratedWinners(winners, participantId)[0] : undefined;
 }
 
-function WinnerPoster({
+function HeroPoster({
   posterPath,
-  large,
-}: Readonly<{ posterPath: string | null | undefined; large: boolean }>) {
+  className,
+  sizes,
+}: Readonly<{ posterPath: string | null | undefined; className?: string; sizes: string }>) {
   const src = posterImageSrc(posterPath);
   if (!src) {
     return (
-      <span className={styles.posterPlaceholder} aria-hidden>
-        <Film size={ICON_SIZE['2xl']} />
+      <span className={clsx(className, styles.posterPlaceholder)} aria-hidden>
+        <Film size={ICON_SIZE['4xl']} />
       </span>
     );
   }
-  const width = large ? 112 : 64;
   return (
     <img
       src={src}
       srcSet={tmdbPosterSrcSetForList(src)}
-      sizes={`${width}px`}
+      sizes={sizes}
       alt=""
-      className={styles.poster}
-      width={width}
-      height={Math.round(width * 1.5)}
+      className={className}
       decoding="async"
     />
+  );
+}
+
+function ScoreLine({ movie, scale }: Readonly<{ movie: MovieData; scale: RatingScale }>) {
+  const { t, locale } = useTranslation();
+  const average = averageOfRatings(movie.ratings);
+  if (average === null) return null;
+  const value = formatRating(average, scale, locale, { decimals: 1 });
+  const count = ratingCountLabel(movie.ratings?.length ?? 0, t);
+  return (
+    <p className={styles.score}>
+      <Star size={ICON_SIZE['2xl']} aria-hidden className={styles.scoreStar} />
+      <span className="visually-hidden">{`${t('events.ratings.average', { value })}, ${count}`}</span>
+      <span className={styles.scoreValue} aria-hidden>
+        {value}
+      </span>
+      <span className={styles.scoreCount} aria-hidden>
+        {count}
+      </span>
+    </p>
+  );
+}
+
+function MovieTiles({
+  winners,
+  selectedId,
+  participantId,
+  scale,
+  onSelect,
+  onRate,
+}: Readonly<{
+  winners: MovieData[];
+  selectedId: string;
+  participantId: string | null;
+  scale: RatingScale;
+  onSelect: (movieId: string) => void;
+  onRate: (movieId: string) => void;
+}>) {
+  const { t, locale } = useTranslation();
+  return (
+    <ol className={styles.tiles}>
+      {winners.map((movie) => {
+        const average = averageOfRatings(movie.ratings);
+        const rated = hasRated(movie, participantId);
+        return (
+          <li key={movie.id} className={styles.tile}>
+            <button
+              type="button"
+              className={styles.tileButton}
+              aria-pressed={movie.id === selectedId}
+              aria-label={movie.title}
+              onClick={() => onSelect(movie.id)}
+            >
+              <HeroPoster
+                posterPath={movie.posterPath}
+                className={styles.tilePoster}
+                sizes="150px"
+              />
+            </button>
+            {participantId && !rated ? (
+              <Button
+                type="button"
+                variant="soft"
+                size="sm"
+                aria-label={t('events.ratings.toRateMovie', { title: movie.title })}
+                onClick={() => onRate(movie.id)}
+              >
+                {t('events.ratings.toRate')}
+              </Button>
+            ) : null}
+            {(!participantId || rated) && average !== null ? (
+              <span className={styles.tileScore}>
+                <Star size={ICON_SIZE.sm} aria-hidden className={styles.scoreStar} />
+                {formatRating(average, scale, locale, { decimals: 1 })}
+              </span>
+            ) : null}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function PrimaryAction({
+  movie,
+  context,
+  raters,
+  mine,
+  onRate,
+}: Readonly<{
+  movie: MovieData;
+  context: WinnerRatingContext;
+  raters: number;
+  mine: number | null;
+  onRate: () => void;
+}>) {
+  const { t } = useTranslation();
+  if (context.currentParticipantId !== null) {
+    if (mine !== null) return null;
+    return (
+      <Button type="button" variant="primary" size="lg" className={styles.cta} onClick={onRate}>
+        <Star size={ICON_SIZE.md} aria-hidden />
+        {t(raters === 0 ? 'events.ratings.firstRating' : 'events.ratings.rateAction')}
+      </Button>
+    );
+  }
+  const href = context.signInHref?.(movie.id);
+  if (!href) return null;
+  return (
+    <Link
+      to={href}
+      className={buttonClass({ variant: 'primary', size: 'lg', className: styles.cta })}
+    >
+      <LogIn size={ICON_SIZE.md} aria-hidden />
+      {t('events.ratings.signInToRate')}
+    </Link>
   );
 }
 
@@ -257,23 +224,210 @@ function upcomingHeading(date: string | undefined, t: Translate, locale: LocaleC
   return t('events.winners.upcomingOn', { date: formatShortDate(date, locale) });
 }
 
-function useChainedRating(
+function useRatingSheet(
   winners: MovieData[],
-  rating: WinnerRatingContext | undefined
-): WinnerRatingContext | undefined {
-  const [nextToRate, setNextToRate] = useState<string | null>(null);
-  const clearNext = useCallback(() => setNextToRate(null), []);
-  if (!rating) return undefined;
-  const linked = rating.autoOpenMovieId ?? null;
-  const participantId = rating.currentParticipantId;
-  return {
-    ...rating,
-    autoOpenMovieId: linked ?? nextToRate,
-    onAutoOpen: linked ? rating.onAutoOpen : clearNext,
-    onRated: (movieId) => {
-      if (participantId) setNextToRate(nextUnrated(winners, participantId, movieId));
+  rating: WinnerRatingContext | undefined,
+  select: (movieId: string) => void
+) {
+  const [movieId, setMovieId] = useState<string | null>(null);
+  const [previous, setPrevious] = useState<{ title: string; value: number } | null>(null);
+  const linked = rating?.currentParticipantId ? (rating.autoOpenMovieId ?? null) : null;
+  const onAutoOpen = rating?.onAutoOpen;
+
+  const open = useCallback(
+    (id: string) => {
+      setPrevious(null);
+      select(id);
+      setMovieId(id);
     },
+    [select]
+  );
+
+  useEffect(() => {
+    if (!linked) return;
+    onAutoOpen?.();
+    open(linked);
+  }, [linked, onAutoOpen, open]);
+
+  const participantId = rating?.currentParticipantId ?? null;
+  const nextId = movieId && participantId ? nextUnrated(winners, participantId, movieId) : null;
+  const moveTo = (id: string, from: MovieData | undefined, value: number | null) => {
+    setPrevious(from && value !== null ? { title: from.title, value } : null);
+    select(id);
+    setMovieId(id);
   };
+
+  return { movieId, nextId, previous, open, moveTo, close: () => setMovieId(null) };
+}
+
+function ownRating(rows: ParticipantRating[]): number | null {
+  return rows.find((row) => row.isSelf)?.value ?? null;
+}
+
+function WinnerNotes({
+  movie,
+  rating,
+  scale,
+  renderRating,
+  onEdit,
+}: Readonly<{
+  movie: MovieData;
+  rating: WinnerRatingContext | undefined;
+  scale: RatingScale;
+  renderRating: Props['renderRating'];
+  onEdit: () => void;
+}>) {
+  const { t } = useTranslation();
+  if (renderRating) return <div className={styles.notes}>{renderRating(movie)}</div>;
+  if (!rating) return null;
+  const rows = participantRatings(movie, rating);
+  const canEdit = rating.currentParticipantId !== null && ownRating(rows) !== null;
+  return (
+    <div className={styles.notes}>
+      <RatingNotes
+        participants={rows}
+        scale={scale}
+        action={
+          canEdit ? (
+            <Button type="button" size="sm" variant="secondary" onClick={onEdit}>
+              <Star size={ICON_SIZE.sm} aria-hidden />
+              {t('events.ratings.editRating')}
+            </Button>
+          ) : undefined
+        }
+      />
+    </div>
+  );
+}
+
+function WinnerBody({
+  movie,
+  heading,
+  avatarId,
+  showRating,
+  rating,
+  scale,
+  action,
+  onRate,
+  onDetails,
+}: Readonly<{
+  movie: MovieData;
+  heading: string;
+  avatarId: string;
+  showRating: boolean;
+  rating: WinnerRatingContext | undefined;
+  scale: RatingScale;
+  action: ReactNode;
+  onRate: () => void;
+  onDetails: () => void;
+}>) {
+  const { t } = useTranslation();
+  const facts = [movie.year, formatRuntimeMinutes(movie.runtimeMinutes)].filter(Boolean);
+  const rows = rating ? participantRatings(movie, rating) : [];
+  return (
+    <div className={styles.body}>
+      <p className={styles.overline}>{heading}</p>
+      <h2 className={styles.title}>{keepPunctuationAttached(movie.title)}</h2>
+      <div className={styles.meta}>
+        <span className={styles.facts}>
+          {facts.map((fact) => (
+            <span key={fact}>{fact}</span>
+          ))}
+        </span>
+        <ProposerBadge
+          avatarId={avatarId}
+          pseudo={movie.proposerPseudo}
+          handle={movie.proposerHandle}
+          t={t}
+        />
+      </div>
+      {showRating ? <ScoreLine movie={movie} scale={scale} /> : null}
+      <div className={styles.actions}>
+        {showRating && rating ? (
+          <PrimaryAction
+            movie={movie}
+            context={rating}
+            raters={rows.filter((row) => row.value !== null).length}
+            mine={ownRating(rows)}
+            onRate={onRate}
+          />
+        ) : null}
+        <Button type="button" variant="secondary" onClick={onDetails}>
+          <Info size={ICON_SIZE.md} aria-hidden />
+          {t('events.ratings.movieDetails')}
+        </Button>
+        {action}
+      </div>
+    </div>
+  );
+}
+
+function SheetHost({
+  winners,
+  rating,
+  scale,
+  sheet,
+}: Readonly<{
+  winners: MovieData[];
+  rating: WinnerRatingContext | undefined;
+  scale: RatingScale;
+  sheet: ReturnType<typeof useRatingSheet>;
+}>) {
+  const index = winners.findIndex((movie) => movie.id === sheet.movieId);
+  const movie = winners[index];
+  if (!rating || !movie) return null;
+  const mine = ownRating(participantRatings(movie, rating));
+  const { nextId } = sheet;
+  return (
+    <MovieRatingDialog
+      key={movie.id}
+      open
+      onClose={sheet.close}
+      movie={movie}
+      mine={mine}
+      scale={scale}
+      error={rating.error}
+      onSave={(value) => rating.onSave(movie.id, value)}
+      onClear={() => rating.onClear(movie.id)}
+      onNext={nextId ? (rated) => sheet.moveTo(nextId, movie, rated) : undefined}
+      position={winners.length > 1 ? { index: index + 1, total: winners.length } : undefined}
+      previous={sheet.previous}
+    />
+  );
+}
+
+function MovieDetails({
+  movie,
+  scale,
+  onClose,
+}: Readonly<{ movie: MovieData; scale: RatingScale; onClose: () => void }>) {
+  return (
+    <LazyMovieDetailsModal
+      open
+      tmdbId={movie.tmdbId}
+      mediaType={movie.mediaType}
+      title={movie.title}
+      year={movie.year}
+      posterPath={movie.posterPath}
+      voteAverage={movie.voteAverage}
+      runtimeMinutes={movie.runtimeMinutes}
+      ratingScale={scale}
+      watchProviders={movie.watchProviders}
+      watchPageUrl={movie.tmdbWatchPageUrl}
+      onClose={onClose}
+    />
+  );
+}
+
+function headingOf(
+  count: number,
+  isFinished: boolean,
+  date: string | undefined,
+  t: Translate,
+  locale: LocaleCode
+): string {
+  if (!isFinished) return upcomingHeading(date, t, locale);
+  return pluralizeCount(count, 'events.winners.finishedOne', 'events.winners.finishedMany', t);
 }
 
 export default function EventWinnerSummary({
@@ -285,64 +439,74 @@ export default function EventWinnerSummary({
   rating,
   action,
   renderRating,
-  posterSize = 'md',
+  scale: scaleProp,
 }: Readonly<Props>) {
   const { t, locale } = useTranslation();
-  const ratingContext = useChainedRating(winners, rating);
-  if (winners.length === 0) return null;
+  const isMobile = useIsMobile();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const sheet = useRatingSheet(winners, rating, setSelectedId);
   const showRating = ratingOpen ?? isFinished;
-  const several = winners.length > 1;
-  const heading = isFinished
-    ? pluralizeCount(winners.length, 'events.winners.finishedOne', 'events.winners.finishedMany', t)
-    : upcomingHeading(date, t, locale);
+  const toRate = showRating
+    ? firstToRate(winners, rating?.currentParticipantId ?? null)
+    : undefined;
+  const selected = winners.find((movie) => movie.id === selectedId) ?? toRate ?? winners[0];
+  if (!selected) return null;
+
+  const scale = rating?.scale ?? scaleProp ?? 'five';
+  const heading = headingOf(winners.length, isFinished, date, t, locale);
+  const notes = showRating ? (
+    <WinnerNotes
+      movie={selected}
+      rating={rating}
+      scale={scale}
+      renderRating={renderRating}
+      onEdit={() => sheet.open(selected.id)}
+    />
+  ) : null;
 
   return (
-    <Card as="section" padding="md" elevation="sm" className={styles.root} aria-label={heading}>
-      <div className={styles.headingRow}>
-        <h2 className={styles.heading}>
-          <Trophy size={ICON_SIZE.md} aria-hidden className={styles.headingIcon} />
-          <span className={styles.headingLabel}>{heading}</span>
-        </h2>
-        {action}
-      </div>
-      <ol className={styles.list}>
-        {winners.map((movie, index) => {
-          const facts = [movie.year, formatRuntimeMinutes(movie.runtimeMinutes)].filter(Boolean);
-          return (
-            <li
-              key={movie.id}
-              className={clsx(styles.item, posterSize === 'lg' && styles.itemLarge)}
-            >
-              <span className={styles.posterCol}>
-                <WinnerPoster posterPath={movie.posterPath} large={posterSize === 'lg'} />
-                {several ? (
-                  <CountBadge value={index + 1} tone="success" className={styles.rank} />
-                ) : null}
-              </span>
-              <div className={styles.body}>
-                <span className={styles.title}>{movie.title}</span>
-                {facts.length > 0 ? (
-                  <span className={styles.facts}>
-                    {facts.map((fact) => (
-                      <span key={fact}>{fact}</span>
-                    ))}
-                  </span>
-                ) : null}
-                <ProposerBadge
-                  avatarId={participantAvatars?.[getParticipantId(movie)] ?? ''}
-                  pseudo={movie.proposerPseudo}
-                  handle={movie.proposerHandle}
-                  t={t}
-                />
-                {!renderRating && showRating && ratingContext ? (
-                  <WinnerRatingActions movie={movie} context={ratingContext} />
-                ) : null}
-              </div>
-              {renderRating ? <div className={styles.below}>{renderRating(movie)}</div> : null}
-            </li>
-          );
-        })}
-      </ol>
-    </Card>
+    <>
+      <section className={clsx('on-dark', styles.hero)} aria-label={heading}>
+        <PosterBackdrop posterPath={selected.posterPath} direction={isMobile ? 'down' : 'side'} />
+        <div className={styles.inner}>
+          <div className={styles.layout}>
+            {winners.length > 1 ? (
+              <MovieTiles
+                winners={winners}
+                selectedId={selected.id}
+                participantId={showRating ? (rating?.currentParticipantId ?? null) : null}
+                scale={scale}
+                onSelect={setSelectedId}
+                onRate={sheet.open}
+              />
+            ) : (
+              <HeroPoster
+                posterPath={selected.posterPath}
+                className={styles.poster}
+                sizes="240px"
+              />
+            )}
+            <WinnerBody
+              movie={selected}
+              heading={heading}
+              avatarId={participantAvatars?.[getParticipantId(selected)] ?? ''}
+              showRating={showRating}
+              rating={rating}
+              scale={scale}
+              action={action}
+              onRate={() => sheet.open(selected.id)}
+              onDetails={() => setDetailsOpen(true)}
+            />
+            {isMobile ? null : notes}
+          </div>
+        </div>
+      </section>
+      {isMobile ? notes : null}
+      <SheetHost winners={winners} rating={rating} scale={scale} sheet={sheet} />
+      {detailsOpen ? (
+        <MovieDetails movie={selected} scale={scale} onClose={() => setDetailsOpen(false)} />
+      ) : null}
+    </>
   );
 }

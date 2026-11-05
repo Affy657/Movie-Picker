@@ -54,6 +54,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const invalidateSession = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
     await queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.event.all });
   }, [queryClient]);
 
   const {

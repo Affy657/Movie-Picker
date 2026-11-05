@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { averageRating, formatRating } from '@/shared/utils/formatRating';
+import {
+  averageOfRatings,
+  averageRating,
+  formatRating,
+  ratingScaleMax,
+} from '@/shared/utils/formatRating';
 
 describe('formatRating', () => {
   it('reads a 7/10 rating as 3,5/5 on the five scale, in French', () => {
@@ -35,5 +40,20 @@ describe('averageRating', () => {
   it('averages the raw values out of 10', () => {
     expect(averageRating([7, 8, 9])).toBe(8);
     expect(averageRating([7, 8])).toBe(7.5);
+  });
+});
+
+describe('averageOfRatings', () => {
+  it('averages the value of each rating and has no answer without one', () => {
+    expect(averageOfRatings([{ value: 6 }, { value: 9 }])).toBe(7.5);
+    expect(averageOfRatings([])).toBeNull();
+    expect(averageOfRatings(undefined)).toBeNull();
+  });
+});
+
+describe('ratingScaleMax', () => {
+  it('tops the scale of the user', () => {
+    expect(ratingScaleMax('ten')).toBe(10);
+    expect(ratingScaleMax('five')).toBe(5);
   });
 });

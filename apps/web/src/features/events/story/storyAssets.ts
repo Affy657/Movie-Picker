@@ -5,7 +5,6 @@ export type StoryAssets = ReadonlyMap<string, CanvasImageSource>;
 export type StoryAssetCache = Map<string, Promise<CanvasImageSource | null>>;
 
 const SVG_MIME = 'image/svg+xml';
-const QR_SIZE = 512;
 const ASSET_SIZE = 128;
 
 function sized(svg: string, size: number): string {
@@ -39,12 +38,6 @@ export async function loadStoryAsset(src: string): Promise<CanvasImageSource | n
   } catch {
     return null;
   }
-}
-
-export async function svgElementToImage(svg: SVGElement | null): Promise<CanvasImageSource | null> {
-  if (!svg) return null;
-  const markup = sized(new XMLSerializer().serializeToString(svg), QR_SIZE);
-  return fromObjectUrl(URL.createObjectURL(new Blob([markup], { type: SVG_MIME })));
 }
 
 function loadOnce(src: string, cache?: StoryAssetCache): Promise<CanvasImageSource | null> {

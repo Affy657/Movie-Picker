@@ -156,6 +156,7 @@ export default function EventDetailSessionChrome({
   onRequestCloseWithoutMovie,
   viewMode,
   onViewModeChange,
+  viewToggleInHeader,
   connectionUnstable,
   onRetryConnection,
 }: Readonly<{
@@ -177,6 +178,7 @@ export default function EventDetailSessionChrome({
   onRequestCloseWithoutMovie: () => void;
   viewMode: MoviesViewMode;
   onViewModeChange: (mode: MoviesViewMode) => void;
+  viewToggleInHeader: boolean;
   connectionUnstable: boolean;
   onRetryConnection: () => void;
 }>) {
@@ -204,8 +206,8 @@ export default function EventDetailSessionChrome({
         onAddMovie={addMovie.canAdd ? addMovie.onOpen : undefined}
         addMoviePrimary={wheel.primaryAction === 'add'}
         addMovieTriggerRef={addMovie.triggerRef}
-        viewMode={viewMode}
-        onViewModeChange={onViewModeChange}
+        viewMode={viewToggleInHeader ? viewMode : undefined}
+        onViewModeChange={viewToggleInHeader ? onViewModeChange : undefined}
       />
       {connectionUnstable ? <EventConnectionBanner onRetry={onRetryConnection} /> : null}
       {lifecycle === 'pending' ? (

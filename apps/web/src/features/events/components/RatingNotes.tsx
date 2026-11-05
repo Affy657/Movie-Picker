@@ -2,24 +2,16 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Crown } from 'lucide-react';
 import Avatar from '@/shared/components/Avatar';
-import Chip from '@/shared/components/Chip';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { ROUTES } from '@/app/routes';
 import { useTranslation } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import type { RatingScale } from '@/shared/types/theme';
-import { averageRating, formatRating } from '@/shared/utils/formatRating';
+import { formatRating } from '@/shared/utils/formatRating';
+import RatingScaleAxis, { type ParticipantRating } from './RatingScaleAxis';
 import styles from './RatingNotes.module.css';
 
-export type ParticipantRating = {
-  participantId: string;
-  pseudo: string;
-  avatarId: string | null;
-  value: number | null;
-  isSelf: boolean;
-  handle?: string | null;
-  isCreator?: boolean;
-};
+export type { ParticipantRating };
 
 export function ratingCountLabel(count: number, t: ReturnType<typeof useTranslation>['t']) {
   return pluralizeCount(count, 'events.ratings.countOne', 'events.ratings.countMany', t);
@@ -30,6 +22,7 @@ type Props = {
   scale: RatingScale;
   selfAction?: ReactNode;
   alwaysList?: boolean;
+  action?: ReactNode;
 };
 
 function RowName({ row }: Readonly<{ row: ParticipantRating }>) {
@@ -76,27 +69,19 @@ export default function RatingNotes({
   scale,
   selfAction,
   alwaysList = false,
+  action,
 }: Readonly<Props>) {
-  const { t, locale } = useTranslation();
-  const values = participants.map((p) => p.value).filter((v): v is number => v !== null);
-  const average = averageRating(values);
+  const { t } = useTranslation();
+  const nobodyRated = participants.every((p) => p.value === null);
 
   return (
     <section className={styles.notes} aria-label={t('events.ratings.listTitle')}>
       <div className={styles.notesHead}>
         <h3 className={styles.notesTitle}>{t('events.ratings.listTitle')}</h3>
-        {average !== null ? (
-          <span className={styles.summary}>
-            <Chip tone="default" size="sm">
-              {t('events.ratings.average', {
-                value: formatRating(average, scale, locale, { decimals: 1 }),
-              })}
-            </Chip>
-            <span className={styles.count}>{ratingCountLabel(values.length, t)}</span>
-          </span>
-        ) : null}
+        {action}
       </div>
-      {values.length === 0 && !alwaysList ? (
+      <RatingScaleAxis participants={participants} scale={scale} />
+      {nobodyRated && !alwaysList ? (
         <p className={styles.empty}>{t('events.ratings.nobodyYet')}</p>
       ) : (
         <ul className={styles.list}>

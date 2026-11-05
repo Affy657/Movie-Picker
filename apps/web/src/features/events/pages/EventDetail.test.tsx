@@ -638,7 +638,7 @@ describe('EventDetail (MSW)', () => {
 
       renderEventDetail(`/e/${slug}?rate`);
 
-      expect(await screen.findByRole('button', { name: 'Votre note 4/5' })).toBeInTheDocument();
+      expect(await screen.findByRole('button', { name: 'Modifier ma note' })).toBeInTheDocument();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
@@ -673,7 +673,9 @@ describe('EventDetail (MSW)', () => {
 
       renderEventDetail(`/e/${slug}`);
 
-      expect(await screen.findByRole('button', { name: 'Noter ce film' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('button', { name: 'Donner la première note' })
+      ).toBeInTheDocument();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
@@ -684,7 +686,9 @@ describe('EventDetail (MSW)', () => {
 
       renderEventDetail(`/e/${slug}`);
 
-      expect(await screen.findByRole('button', { name: 'Noter ce film' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('button', { name: 'Donner la première note' })
+      ).toBeInTheDocument();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
@@ -700,7 +704,9 @@ describe('EventDetail (MSW)', () => {
         'href',
         `/login?returnTo=${encodeURIComponent(`/e/${slug}?rate=m-win`)}`
       );
-      expect(screen.queryByRole('button', { name: 'Noter ce film' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Donner la première note' })
+      ).not.toBeInTheDocument();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
@@ -711,7 +717,9 @@ describe('EventDetail (MSW)', () => {
 
       renderEventDetail(`/e/${slug}`);
 
-      expect(await screen.findByRole('button', { name: 'Noter ce film' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('button', { name: 'Donner la première note' })
+      ).toBeInTheDocument();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
@@ -722,7 +730,9 @@ describe('EventDetail (MSW)', () => {
 
       expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
       expect((await screen.findAllByText('Matrix')).length).toBeGreaterThan(0);
-      expect(screen.queryByRole('button', { name: 'Noter ce film' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Donner la première note' })
+      ).not.toBeInTheDocument();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
@@ -1041,6 +1051,30 @@ describe('EventDetail (MSW)', () => {
       ])
     );
 
+    it('puts the night and its actions above the chosen movie, none of them inside its card', async () => {
+      setStoredParticipant(slug, 'p-msw-host', 'Hôte');
+      server.use(
+        drawnEventHandler(true, 'p-msw-host'),
+        drawnMoviesHandler,
+        http.get(`${TEST_API_V1}/events/${slug}/invitations/eligible-follows`, () =>
+          HttpResponse.json({ follows: [] })
+        )
+      );
+
+      renderEventDetail(`/e/${slug}?host=host-token`);
+
+      const nightTitle = await screen.findByRole('heading', { level: 1, name: 'Soirée démo' });
+      const movieTitle = await screen.findByRole('heading', { level: 2, name: 'Matrix' });
+      const card = movieTitle.closest('section') as HTMLElement;
+      expect(
+        nightTitle.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Retour' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Partager' })).toBeInTheDocument();
+      expect(within(card).queryByRole('button', { name: 'Retour' })).not.toBeInTheDocument();
+      expect(within(card).queryByRole('button', { name: 'Partager' })).not.toBeInTheDocument();
+    });
+
     it('the host is offered no participant removal the API would refuse', async () => {
       const user = userEvent.setup();
       setStoredParticipant(slug, 'p-msw-host', 'Hôte');
@@ -1081,7 +1115,7 @@ describe('EventDetail (MSW)', () => {
       server.use(drawnEventHandler(false, 'p-msw-host'), drawnMoviesHandler);
 
       renderEventDetail(`/e/${slug}`);
-      expect(await screen.findByRole('heading', { name: 'Matrix' })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { level: 2, name: 'Matrix' })).toBeInTheDocument();
 
       await user.click(await screen.findByRole('button', { name: /plus d.actions.*matrix/i }));
       expect(await screen.findByRole('menu')).toBeInTheDocument();

@@ -1,19 +1,9 @@
-import { Suspense, useMemo, type Dispatch, type SetStateAction } from 'react';
+import { Suspense, type Dispatch, type SetStateAction } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import EventParticipantsList from '@/features/events/components/EventParticipantsList';
 import EventMoviesSection from '@/features/events/pages/event-detail/EventMoviesSection';
 import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/EventClosedWithoutMovieState';
-import EventWinnerSummary, {
-  type WinnerRatingContext,
-} from '@/features/events/pages/event-detail/EventWinnerSummary';
-import { useEventMovieRating } from '@/features/events/pages/event-detail/useEventMovieRating';
-import { isRatingOpen, isRecentNight, useRatingLink } from '@/features/events/hooks/useRatingLink';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
-import { Link } from 'react-router';
-import { ArrowRight } from 'lucide-react';
-import { ROUTES, withReturnTo } from '@/app/routes';
-import { buttonClass } from '@/shared/components/Button';
-import { ICON_SIZE } from '@/shared/components/iconSize';
+import ViewModeToggle from '@/shared/components/ViewModeToggle';
 import { useTranslation } from '@/shared/i18n';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
@@ -110,47 +100,7 @@ export default function EventDetailSessionBody({
   participantsPanel: ParticipantsPanelState;
   moviesSection: MoviesSectionState;
 }>) {
-  const winners = useMemo(
-    () =>
-      wheel.winnerIds
-        .map((id) => movies.find((movie) => movie.id === id))
-        .filter((movie): movie is MovieData => movie !== undefined),
-    [wheel.winnerIds, movies]
-  );
-  const participantAvatars = useMemo(
-    () =>
-      Object.fromEntries(
-        (event.participants ?? [])
-          .filter((p) => p.avatarId)
-          .map((p) => [p.id, p.avatarId as string])
-      ),
-    [event.participants]
-  );
-  const { user } = useAuth();
   const { t } = useTranslation();
-  const movieRating = useEventMovieRating({ slug, participant, refreshAll });
-  const ratingOpen = isRatingOpen(event);
-  const signedInParticipantId = user ? (participant?.participantId ?? null) : null;
-  const ratingLink = useRatingLink(
-    winners,
-    signedInParticipantId,
-    ratingOpen,
-    !!event.isFinished && isRecentNight(event.date)
-  );
-  const rating: WinnerRatingContext = {
-    scale: user?.ratingScale ?? 'five',
-    participants: event.participants ?? [],
-    currentParticipantId: signedInParticipantId,
-    saving: movieRating.saving,
-    error: movieRating.error,
-    onSave: movieRating.save,
-    onClear: movieRating.clear,
-    autoOpenMovieId: ratingLink.movieId,
-    onAutoOpen: ratingLink.consume,
-    signInHref: user
-      ? undefined
-      : (movieId) => withReturnTo(ROUTES.login, ROUTES.eventDetailRating(slug, movieId)),
-  };
   return (
     <>
       {participantsPanel.open ? (
@@ -167,28 +117,18 @@ export default function EventDetailSessionBody({
         </p>
       ) : null}
       <EventWheelModalGate wheel={wheel} />
-      {wheel.manualMode || wheel.removalMode ? null : (
-        <EventWinnerSummary
-          winners={winners}
-          isFinished={!!event.isFinished}
-          ratingOpen={ratingOpen}
-          date={event.date}
-          participantAvatars={participantAvatars}
-          rating={rating}
-          action={
-            event.recapSlug ? (
-              <Link
-                to={ROUTES.nightRecap(event.recapSlug)}
-                className={buttonClass({ variant: 'ghost', size: 'sm' })}
-              >
-                {t('events.recap.viewRecap')}
-                <ArrowRight size={ICON_SIZE.sm} aria-hidden />
-              </Link>
-            ) : undefined
-          }
-        />
-      )}
       <div ref={moviesSection.ref} className={styles.moviesSection}>
+        {moviesSection.titled ? (
+          <div className={styles.moviesToolbar}>
+            <span className={styles.moviesLabel} aria-hidden>
+              {t('movies.list.sectionLabel')}
+            </span>
+            <ViewModeToggle
+              value={moviesSection.viewMode}
+              onChange={moviesSection.onViewModeChange}
+            />
+          </div>
+        ) : null}
         <EventMoviesSection
           slug={slug}
           event={event}

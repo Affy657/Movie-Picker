@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
 import { ArrowLeft, Clapperboard } from 'lucide-react';
 import clsx from 'clsx';
 import AvatarStack from '@/shared/components/AvatarStack';
 import EventShareButton from '@/features/events/components/EventShareButton';
 import EventThemeBanner from '@/features/events/components/EventThemeBanner';
 import EventShareDialog from '@/features/events/pages/event-detail/EventShareDialog';
+import { useEventBack } from '@/features/events/pages/event-detail/useEventBack';
 import { nightRecapFrontendUrl } from '@/features/events/api/eventsApi';
-import { ROUTES } from '@/app/routes';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useEverOpened } from '@/shared/hooks/useEverOpened';
 import { useLocale, useTranslation } from '@/shared/i18n';
@@ -31,13 +30,9 @@ export default function NightRecapHeader({
   const recapOf = winners[0] ?? null;
   const { t } = useTranslation();
   const { locale } = useLocale();
-  const navigate = useNavigate();
+  const goBack = useEventBack();
   const [shareOpen, setShareOpen] = useState(false);
   const shareEverOpened = useEverOpened(shareOpen);
-  const goBack = () => {
-    if (globalThis.history.length > 1) navigate(-1);
-    else navigate(ROUTES.home);
-  };
 
   const participants = event.participants ?? [];
   const participantCount = event.participantCount ?? participants.length;

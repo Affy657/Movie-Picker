@@ -1,5 +1,11 @@
 import { apiPath, apiUrl } from '@/shared/api/client';
 
+export const AVATAR_PALETTE_SIZE = 8;
+
+export function avatarPaletteIndex(pseudo: string): number {
+  return (pseudo.codePointAt(0) ?? 0) % AVATAR_PALETTE_SIZE;
+}
+
 export const BOTTTS_IDS = [
   'alpha',
   'beta',

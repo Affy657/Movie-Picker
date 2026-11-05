@@ -250,7 +250,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     renderSection('alice');
 
     expect(await screen.findByRole('heading', { name: 'Inception', level: 3 })).toBeInTheDocument();
-    expect(await screen.findByText('8.4/10')).toBeInTheDocument();
+    expect(await screen.findByText('8,4/10')).toBeInTheDocument();
     expect(screen.getByText('2h28')).toBeInTheDocument();
   });
 

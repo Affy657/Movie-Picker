@@ -51,6 +51,13 @@ public sealed class InMemoryMovieRatingRepository : IMovieRatingRepository
         return Task.FromResult(list);
     }
 
+    public Task<IReadOnlyList<MovieRating>> ListByEventIdsAsync(IReadOnlyCollection<string> eventIds, CancellationToken ct = default)
+    {
+        var ids = new HashSet<string>(eventIds);
+        IReadOnlyList<MovieRating> list = _byKey.Values.Where(r => ids.Contains(r.EventId)).ToList();
+        return Task.FromResult(list);
+    }
+
     public Task<IReadOnlyList<MovieRating>> ListByParticipantIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default)
     {
         var ids = new HashSet<string>(participantIds);
