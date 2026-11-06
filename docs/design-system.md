@@ -244,7 +244,7 @@ Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue,
 
 ### Menu
 
-`Menu` rend un déclencheur et son panneau : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelAriaLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Le déclencheur est un `Button` `sm` `secondary` qui passe en `soft` tant que le panneau est ouvert. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte, celui de l'agenda et celui des cartes de soirée (`IconButton` `lg` `round` qui reçoit `{...menu.triggerProps}`). Échap ferme et rend le focus au déclencheur, focus visible en contour interne (`--outline-offset-inset`).
+`Menu` rend un déclencheur et son panneau : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelAriaLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Le déclencheur est un `Button` `sm` `secondary` qui passe en `soft` tant que le panneau est ouvert. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte, celui de l'agenda et celui des cartes de soirée (`IconButton` `lg` `round` qui reçoit `{...menu.triggerProps}`). Échap ferme et rend le focus au déclencheur, focus visible en contour interne (`--outline-offset-inset`). Tab parcourt les entrées, et le focus qui sort du panneau le ferme en restant là où Tab l'a mené, sans revenir au déclencheur : c'est l'option `closeOnFocusLeave` de `useClickOutside`, posée par `useMenuState`, à passer aussi à un menu qui garde son état local, avec tous ses éléments dans `refs` quand un portail les sépare.
 
 | Brique | Props | Rôle |
 |---|---|---|
@@ -254,7 +254,7 @@ Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue,
 
 ### Dropdown
 
-Liste déroulante maison avec `role="listbox"`. Le déclencheur est nommé par le libellé suivi de la valeur choisie (« Langue Français »), la liste ouverte par le libellé seul ; `ariaLabel` ou `ariaLabelledBy` est requis.
+Liste déroulante maison avec `role="listbox"`. Le déclencheur est nommé par le libellé suivi de la valeur choisie (« Langue Français »), la liste ouverte par le libellé seul ; `ariaLabel` ou `ariaLabelledBy` est requis. Tab ferme la liste sans rien choisir, le focus reste là où Tab l'a mené ; Échap ferme et rend le focus au déclencheur.
 
 | Prop | Type | Rôle |
 |---|---|---|

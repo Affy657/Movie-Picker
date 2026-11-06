@@ -94,7 +94,7 @@ export default function Dropdown<V extends string>({
     setUpward(opensUpward(placement, buttonRef.current, listRef.current));
   }, [open, placement]);
 
-  useClickOutside(rootRef, () => setOpen(false), open);
+  useClickOutside(rootRef, () => setOpen(false), open, { closeOnFocusLeave: true });
 
   useEffect(() => {
     if (!open) return;

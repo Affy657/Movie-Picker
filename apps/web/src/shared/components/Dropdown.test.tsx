@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import Dropdown from '@/shared/components/Dropdown';
@@ -205,6 +205,23 @@ describe('Dropdown', () => {
     await userEvent.click(trigger);
 
     expect(screen.getByRole('listbox', { name: 'Lettre' })).toBeInTheDocument();
+  });
+
+  it('closes when Tab leaves the list, with the focus where Tab took it', async () => {
+    const user = userEvent.setup();
+    render(
+      <div>
+        <Dropdown value="a" options={OPTIONS} onChange={vi.fn()} ariaLabel="Choix" />
+        <button type="button">Plus loin</button>
+      </div>
+    );
+    await user.click(screen.getByRole('button', { name: 'Choix Alpha' }));
+    await waitFor(() => expect(screen.getByRole('option', { name: 'Alpha' })).toHaveFocus());
+
+    await user.tab();
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Plus loin' })).toHaveFocus();
   });
 
   it('closes when clicking outside', async () => {
