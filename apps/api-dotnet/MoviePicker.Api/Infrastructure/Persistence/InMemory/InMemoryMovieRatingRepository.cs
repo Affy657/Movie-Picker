@@ -30,16 +30,32 @@ public sealed class InMemoryMovieRatingRepository : IMovieRatingRepository
     public Task<bool> DeleteAsync(string eventId, string movieId, string participantId, CancellationToken ct = default) =>
         Task.FromResult(_byKey.TryRemove(Key(eventId, movieId, participantId), out _));
 
-    public Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
+    public Task DeleteByMovieIdsAsync(string eventId, IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        var ids = new HashSet<string>(movieIds);
+        RemoveWhere(r => r.EventId == eventId && ids.Contains(r.MovieId));
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
+    {
+        RemoveWhere(r => r.EventId == eventId && r.ParticipantId == participantId);
+        return Task.CompletedTask;
+    }
+
+    public Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default) =>
+        Task.FromResult(RemoveWhere(r => r.EventId == eventId));
+
+    private long RemoveWhere(Func<MovieRating, bool> matches)
     {
         long deleted = 0;
         foreach (var key in _byKey.Keys.ToArray())
         {
-            if (_byKey.TryGetValue(key, out var r) && r.EventId == eventId && _byKey.TryRemove(key, out _))
+            if (_byKey.TryGetValue(key, out var r) && matches(r) && _byKey.TryRemove(key, out _))
                 deleted++;
         }
 
-        return Task.FromResult(deleted);
+        return deleted;
     }
 
     public Task<IReadOnlyList<MovieRating>> ListByEventIdAsync(string eventId, CancellationToken ct = default)

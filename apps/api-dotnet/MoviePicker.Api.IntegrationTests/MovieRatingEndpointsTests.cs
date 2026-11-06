@@ -1,6 +1,11 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain;
+using MoviePicker.Api.Domain.Entities;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -70,6 +75,124 @@ public sealed class MovieRatingEndpointsTests : IClassFixture<MoviePickerApplica
         res.EnsureSuccessStatusCode();
         var list = await res.Content.ReadFromJsonAsync<JsonElement>();
         return list.GetProperty("events").EnumerateArray().Single(e => e.GetProperty("slug").GetString() == slug);
+    }
+
+    private async Task<string> StartTheNightAsync(string slug)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var evt = await events.GetByIdOrSlugAsync(slug);
+        var startedAt = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow.AddMinutes(-30), EventSchedule.ParisTimeZone);
+        await events.UpdateAsync(evt! with
+        {
+            Date = startedAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            Time = startedAt.ToString("HH:mm", CultureInfo.InvariantCulture)
+        });
+        return evt.Id;
+    }
+
+    private async Task<Event> ReadEventAsync(string slug)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        return (await events.GetByIdOrSlugAsync(slug))!;
+    }
+
+    private async Task<IReadOnlyList<MovieRating>> StoredRatingsAsync(string eventId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var ratings = scope.ServiceProvider.GetRequiredService<IMovieRatingRepository>();
+        return await ratings.ListByEventIdAsync(eventId);
+    }
+
+    private static Task<HttpResponseMessage> CancelTheDrawAsync(HttpClient host, string slug, string movieId, string cancellation) =>
+        cancellation == "reset-wheel"
+            ? host.DeleteAsync($"/api/v1/events/{slug}/wheel")
+            : host.DeleteAsync($"/api/v1/events/{slug}/winners/{movieId}");
+
+    private static Task<HttpResponseMessage> DrawAsync(HttpClient host, string slug, string movieId) =>
+        host.PostAsJsonAsync($"/api/v1/events/{slug}/winner", new { movieId });
+
+    private static async Task<IReadOnlyList<int>> VisibleRatingsAsync(HttpClient client, string slug, string movieId) =>
+        (await MovieAsync(client, slug, movieId)).GetProperty("ratings").EnumerateArray()
+            .Select(r => r.GetProperty("value").GetInt32())
+            .Order()
+            .ToList();
+
+    [Theory]
+    [InlineData("reset-wheel")]
+    [InlineData("remove-winner")]
+    public async Task RemovingAParticipant_AfterTheDrawIsCancelled_PurgesTheirRatingsAndBumpsWriteSeq(string cancellation)
+    {
+        var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var guest = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var (slug, hostParticipantId) = await CreateEventAsync(host, "Soirée annulée");
+        var movieId = await AddMovieAsync(host, slug, hostParticipantId, 603, "The Matrix");
+        var guestParticipantId = await JoinAsync(guest, slug, "Bob");
+        (await DrawAsync(host, slug, movieId)).EnsureSuccessStatusCode();
+        var eventId = await StartTheNightAsync(slug);
+        (await RateAsync(host, slug, movieId, hostParticipantId, 8)).EnsureSuccessStatusCode();
+        (await RateAsync(guest, slug, movieId, guestParticipantId, 2)).EnsureSuccessStatusCode();
+
+        (await CancelTheDrawAsync(host, slug, movieId, cancellation)).EnsureSuccessStatusCode();
+        var beforeRemoval = await ReadEventAsync(slug);
+        (await host.DeleteAsync($"/api/v1/events/{slug}/participants/{guestParticipantId}")).EnsureSuccessStatusCode();
+
+        Assert.True((await ReadEventAsync(slug)).WriteSeq > beforeRemoval.WriteSeq);
+        Assert.Equal(hostParticipantId, Assert.Single(await StoredRatingsAsync(eventId)).ParticipantId);
+
+        var rejoinedParticipantId = await JoinAsync(guest, slug, "Bob");
+        (await DrawAsync(host, slug, movieId)).EnsureSuccessStatusCode();
+        (await RateAsync(guest, slug, movieId, rejoinedParticipantId, 4)).EnsureSuccessStatusCode();
+        Assert.Equal([4, 8], await VisibleRatingsAsync(host, slug, movieId));
+    }
+
+    [Fact]
+    public async Task RemovingAParticipant_PurgesEveryRatingOfTheMoviesTheyProposed()
+    {
+        var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var guest = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var (slug, hostParticipantId) = await CreateEventAsync(host, "Proposition retirée");
+        var guestParticipantId = await JoinAsync(guest, slug, "Bob");
+        var movieId = await AddMovieAsync(guest, slug, guestParticipantId, 603, "The Matrix");
+        (await DrawAsync(host, slug, movieId)).EnsureSuccessStatusCode();
+        var eventId = await StartTheNightAsync(slug);
+        (await RateAsync(host, slug, movieId, hostParticipantId, 8)).EnsureSuccessStatusCode();
+
+        (await CancelTheDrawAsync(host, slug, movieId, "reset-wheel")).EnsureSuccessStatusCode();
+        (await host.DeleteAsync($"/api/v1/events/{slug}/participants/{guestParticipantId}")).EnsureSuccessStatusCode();
+
+        Assert.Empty(await StoredRatingsAsync(eventId));
+    }
+
+    [Theory]
+    [InlineData("reset-wheel")]
+    [InlineData("remove-winner")]
+    public async Task DeletingAMovie_AfterTheDrawIsCancelled_PurgesItsRatingsAndBumpsWriteSeq(string cancellation)
+    {
+        var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
+        var (slug, participantId) = await CreateEventAsync(host, "Film retiré");
+        (await host.PatchAsJsonAsync($"/api/v1/events/{slug}/config", new { winnerCount = 2 })).EnsureSuccessStatusCode();
+        var deletedMovie = await AddMovieAsync(host, slug, participantId, 603, "The Matrix");
+        var keptMovie = await AddMovieAsync(host, slug, participantId, 27205, "Inception");
+        (await DrawAsync(host, slug, deletedMovie)).EnsureSuccessStatusCode();
+        (await DrawAsync(host, slug, keptMovie)).EnsureSuccessStatusCode();
+        var eventId = await StartTheNightAsync(slug);
+        (await RateAsync(host, slug, deletedMovie, participantId, 8)).EnsureSuccessStatusCode();
+        (await RateAsync(host, slug, keptMovie, participantId, 3)).EnsureSuccessStatusCode();
+
+        (await CancelTheDrawAsync(host, slug, deletedMovie, cancellation)).EnsureSuccessStatusCode();
+        if (cancellation == "remove-winner")
+            (await CancelTheDrawAsync(host, slug, keptMovie, cancellation)).EnsureSuccessStatusCode();
+        var beforeDeletion = await ReadEventAsync(slug);
+        var delete = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/events/{slug}/movies/{deletedMovie}")
+        {
+            Content = JsonContent.Create(new { participantId })
+        };
+        (await host.SendAsync(delete)).EnsureSuccessStatusCode();
+
+        Assert.True((await ReadEventAsync(slug)).WriteSeq > beforeDeletion.WriteSeq);
+        Assert.Equal(keptMovie, Assert.Single(await StoredRatingsAsync(eventId)).MovieId);
     }
 
     [Fact]

@@ -1032,6 +1032,37 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task MovieRatingTargetedDeletes_RemoveOnlyTheGivenMoviesOrParticipantOfThatEvent()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var ratings = scope.ServiceProvider.GetRequiredService<IMovieRatingRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        var otherEventId = ObjectId.GenerateNewId().ToString();
+        var purgedMovie = ObjectId.GenerateNewId().ToString();
+        var keptMovie = ObjectId.GenerateNewId().ToString();
+        var purgedParticipant = ObjectId.GenerateNewId().ToString();
+        var keptParticipant = ObjectId.GenerateNewId().ToString();
+        await ratings.UpsertAsync(new MovieRating { EventId = eventId, MovieId = purgedMovie, ParticipantId = keptParticipant, Value = 1 });
+        await ratings.UpsertAsync(new MovieRating { EventId = eventId, MovieId = purgedMovie, ParticipantId = purgedParticipant, Value = 2 });
+        await ratings.UpsertAsync(new MovieRating { EventId = eventId, MovieId = keptMovie, ParticipantId = keptParticipant, Value = 3 });
+        await ratings.UpsertAsync(new MovieRating { EventId = eventId, MovieId = keptMovie, ParticipantId = purgedParticipant, Value = 4 });
+        await ratings.UpsertAsync(new MovieRating { EventId = otherEventId, MovieId = purgedMovie, ParticipantId = purgedParticipant, Value = 5 });
+
+        await ratings.DeleteByMovieIdsAsync(eventId, []);
+        await ratings.DeleteByMovieIdsAsync(eventId, ["not-an-id"]);
+        await ratings.DeleteByEventAndParticipantAsync(eventId, "not-an-id");
+        Assert.Equal(4, (await ratings.ListByEventIdAsync(eventId)).Count);
+
+        await ratings.DeleteByMovieIdsAsync(eventId, [purgedMovie]);
+        Assert.Equal([3, 4], (await ratings.ListByEventIdAsync(eventId)).Select(r => r.Value).Order());
+
+        await ratings.DeleteByEventAndParticipantAsync(eventId, purgedParticipant);
+        Assert.Equal(3, Assert.Single(await ratings.ListByEventIdAsync(eventId)).Value);
+
+        Assert.Equal(5, Assert.Single(await ratings.ListByEventIdAsync(otherEventId)).Value);
+    }
+
+    [Fact]
     public async Task MalformedObjectIds_ReadAsAbsent_InsteadOfThrowing()
     {
         using var scope = _factory.Services.CreateScope();

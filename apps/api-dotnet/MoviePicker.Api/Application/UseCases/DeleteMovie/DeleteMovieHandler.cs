@@ -10,6 +10,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IVoteRepository _voteRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
+    private readonly IMovieRatingRepository _ratingRepository;
     private readonly IParticipantRepository _participantRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
@@ -21,6 +22,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         IMovieRepository movieRepository,
         IVoteRepository voteRepository,
         ISeenMarkRepository seenMarkRepository,
+        IMovieRatingRepository ratingRepository,
         IParticipantRepository participantRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
@@ -31,6 +33,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
         _movieRepository = movieRepository;
         _voteRepository = voteRepository;
         _seenMarkRepository = seenMarkRepository;
+        _ratingRepository = ratingRepository;
         _participantRepository = participantRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
@@ -73,6 +76,7 @@ public sealed class DeleteMovieHandler : IDeleteMovieHandler
 
                 await _voteRepository.DeleteByMovieIdAsync(movieId, token);
                 await _seenMarkRepository.DeleteByMovieIdAsync(evt.Id, movieId, token);
+                await _ratingRepository.DeleteByMovieIdsAsync(evt.Id, [movieId], token);
                 await _movieRepository.DeleteAsync(movieId, token);
                 await _eventRepository.UpdateAsync(current with { UpdatedAt = _clock.GetUtcNow() }, token);
             },
