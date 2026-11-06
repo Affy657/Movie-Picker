@@ -96,6 +96,7 @@ const frontTypesMatchTheOpenApiContract: [
   true,
   true,
   true,
+  true,
 ];
 
 it('exposes front types aligned with the OpenAPI contract', () => {

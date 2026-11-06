@@ -140,9 +140,10 @@ public sealed class ListMoviesForEventHandlerTests
         var movie = Assert.Single(movies);
         Assert.Equal("m1", movie.Id);
         Assert.Equal(118, movie.RuntimeMinutes);
+        var selectedKey = (101, MovieMediaType.Movie);
         _tmdb.Verify(
             t => t.GetEnrichmentsAsync(
-                It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(keys => keys.Count == 1 && keys.Contains((101, MovieMediaType.Movie))),
+                It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(keys => keys.Count == 1 && keys.Contains(selectedKey)),
                 "FR",
                 It.IsAny<CancellationToken>()),
             Times.Once);
