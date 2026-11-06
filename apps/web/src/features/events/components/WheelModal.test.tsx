@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import confetti from 'canvas-confetti';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, render, screen, fireEvent } from '@testing-library/react';
 import type { MovieData } from '@/shared/types/movie';
@@ -530,6 +531,30 @@ describe('WheelModal and the Popover API', () => {
 
     expect(screen.getByRole('heading', { name: /film sélectionné/i })).toBeInTheDocument();
     expect(() => unmount()).not.toThrow();
+  });
+
+  it('asks canvas-confetti to stay still when the reader prefers reduced motion', () => {
+    vi.mocked(confetti.create).mockClear();
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+    act(() => {
+      vi.advanceTimersToNextFrame();
+    });
+
+    expect(confetti.create).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ disableForReducedMotion: true })
+    );
   });
 
   it('still raises the confetti above the modal where the Popover API exists', () => {
