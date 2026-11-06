@@ -55,6 +55,32 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     };
 
     [Fact]
+    public async Task MovieList_KeepsTheProposalOrder_WhateverTheTmdbIds()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var movies = scope.ServiceProvider.GetRequiredService<IMovieRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        int[] proposed = [900, 12, 450, 7];
+        foreach (var tmdbId in proposed)
+        {
+            await movies.InsertAsync(new Movie
+            {
+                EventId = eventId,
+                ParticipantId = ObjectId.GenerateNewId().ToString(),
+                TmdbId = tmdbId,
+                Title = $"Film {tmdbId}",
+                Year = "2001",
+                CreatedAt = Now,
+                UpdatedAt = Now
+            });
+        }
+
+        var listed = await movies.ListByEventIdAsync(eventId);
+
+        Assert.Equal(proposed, listed.Select(movie => movie.TmdbId));
+    }
+
+    [Fact]
     public async Task EventLookup_ResolvesTheSlug_ButNeverTheEventId()
     {
         using var scope = _factory.Services.CreateScope();
