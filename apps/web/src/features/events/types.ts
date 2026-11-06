@@ -48,8 +48,6 @@ export interface EventTemplateData {
 
 export type SaveEventTemplateBody = Omit<EventTemplateData, 'id'>;
 
-export const EVENT_RECURRENCES: readonly EventRecurrence[] = ['weekly', 'biweekly', 'monthly'];
-
 export const MAX_WINNERS_PER_EVENT = 10;
 
 export type EventConfigPatchPayload = {

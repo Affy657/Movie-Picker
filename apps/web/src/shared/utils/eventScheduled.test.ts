@@ -1,9 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import {
-  eventScheduledStartUtcMs,
-  eventWallClockAt,
-  formatEventStartInUserTimezone,
-} from '@/shared/utils/eventScheduled';
+import { eventScheduledStartUtcMs, eventWallClockAt } from '@/shared/utils/eventScheduled';
 
 describe('eventScheduled', () => {
   it('eventScheduledStartUtcMs convertit depuis Europe/Paris (hiver, UTC+1)', () => {
@@ -74,18 +70,5 @@ describe('eventScheduled', () => {
 
   it('eventScheduledStartUtcMs : heure invalide', () => {
     expect(eventScheduledStartUtcMs({ date: '2030-06-01', time: 'not-a-time' })).toBeNull();
-  });
-
-  it('formatEventStartInUserTimezone uses Intl (fixed locale)', () => {
-    const s = formatEventStartInUserTimezone('2030-06-01', '20:00', 'fr-FR');
-    expect(s).toMatch(/2030/);
-    expect(s).toMatch(/20/);
-    expect(s!.length).toBeGreaterThan(8);
-  });
-
-  it('formatEventStartInUserTimezone: French by default (without a 3rd argument)', () => {
-    const s = formatEventStartInUserTimezone('2030-06-01', '20:00');
-    expect(s).toMatch(/juin/i);
-    expect(s).toMatch(/2030/);
   });
 });

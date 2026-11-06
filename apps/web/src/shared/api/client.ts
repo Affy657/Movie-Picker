@@ -33,7 +33,7 @@ const REQUEST_TIMEOUT_REASON = 'request_timeout';
 
 export type ApiRequestOptions = RequestInit & { timeoutMs?: number };
 
-export const HOST_TOKEN_HEADER = 'X-Host-Token';
+const HOST_TOKEN_HEADER = 'X-Host-Token';
 
 export function withHostToken(
   hostToken: string | null | undefined,

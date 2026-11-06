@@ -1,4 +1,3 @@
-import { ROUTES } from '@/app/routes';
 import type { TranslationKey } from '@/shared/i18n';
 import {
   SHOWCASE_PROVIDERS,
@@ -44,7 +43,3 @@ export function isShowcaseTheme(value: string | undefined): value is ShowcaseThe
 }
 
 export const TRENDING_GENRE_IDS = [28, 35, 53, 18, 27, 16] as const;
-
-export function themeListPath(theme: ShowcaseTheme): string {
-  return ROUTES.showcaseTheme(theme);
-}

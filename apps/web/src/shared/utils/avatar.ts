@@ -48,9 +48,6 @@ export const EMOJI_IDS = [
   'luxe',
 ] as const;
 
-export const AVATAR_IDS = [...BOTTTS_IDS, ...EMOJI_IDS] as const;
-export type AvatarId = (typeof AVATAR_IDS)[number];
-
 const EMOJI_SET = new Set<string>(EMOJI_IDS);
 
 export const AVATAR_PHOTO_PREFIX = 'photo:';

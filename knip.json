@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreExportsUsedInFile": true,
+  "ignore": ["archive/**"],
+  "ignoreBinaries": ["gcloud"],
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.{js,mjs,cjs}"],
+      "project": ["scripts/**", "e2e/**"],
+      "ignoreDependencies": ["serve"]
+    },
+    "apps/web": {
+      "entry": ["src/prerender.tsx", "src/features/auth/devQuickLoginCredentials.stub.ts"],
+      "ignore": ["src/shared/api/generated/**"],
+      "ignoreDependencies": ["@fontsource/overpass", "@fontsource/overpass-mono"]
+    }
+  }
+}

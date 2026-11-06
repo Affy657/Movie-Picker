@@ -12,7 +12,7 @@ import {
   toPwaInstallGuideMode,
 } from '@/shared/pwa/pwaInstall';
 
-export type { BeforeInstallPromptEvent, PwaInstallGuideMode, PwaInstallMode, PwaInstallSurface };
+export type { PwaInstallGuideMode, PwaInstallMode, PwaInstallSurface };
 
 type NavigatorWithPwa = Navigator & {
   standalone?: boolean;
