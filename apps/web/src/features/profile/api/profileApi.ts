@@ -1,4 +1,4 @@
-import { fetchApi } from '@/shared/api/client';
+import { apiPath, fetchApi } from '@/shared/api/client';
 import { readAllWatchlistPages } from '@/features/movies/api/watchlistApi';
 import type { FavoriteTitle, MovieMediaType } from '@/shared/types/movie';
 
@@ -41,7 +41,7 @@ export interface FollowListResponse {
 }
 
 export async function fetchPublicProfile(handle: string): Promise<PublicProfile> {
-  return fetchApi<PublicProfile>(`/users/${encodeURIComponent(handle)}`);
+  return fetchApi<PublicProfile>(apiPath('users', handle));
 }
 
 export async function checkHandleAvailability(handle: string): Promise<HandleAvailability> {
@@ -51,15 +51,15 @@ export async function checkHandleAvailability(handle: string): Promise<HandleAva
 }
 
 export async function followUser(handle: string): Promise<void> {
-  await fetchApi(`/users/${encodeURIComponent(handle)}/follow`, { method: 'POST' });
+  await fetchApi(apiPath('users', handle, 'follow'), { method: 'POST' });
 }
 
 export async function unfollowUser(handle: string): Promise<void> {
-  await fetchApi(`/users/${encodeURIComponent(handle)}/follow`, { method: 'DELETE' });
+  await fetchApi(apiPath('users', handle, 'follow'), { method: 'DELETE' });
 }
 
 export async function addFavorite(favorite: FavoriteTitle): Promise<FavoriteListResponse> {
-  return fetchApi<FavoriteListResponse>('/users/me/favorites', {
+  return fetchApi<FavoriteListResponse>(apiPath('users', 'me', 'favorites'), {
     method: 'POST',
     body: JSON.stringify(favorite),
   });
@@ -70,21 +70,24 @@ export async function removeFavorite(
   mediaType: MovieMediaType
 ): Promise<FavoriteListResponse> {
   const params = new URLSearchParams({ mediaType });
-  return fetchApi<FavoriteListResponse>(`/users/me/favorites/${tmdbId}?${params.toString()}`, {
-    method: 'DELETE',
-  });
+  return fetchApi<FavoriteListResponse>(
+    `${apiPath('users', 'me', 'favorites', tmdbId)}?${params.toString()}`,
+    { method: 'DELETE' }
+  );
 }
 
 export async function fetchFollowing(handle: string): Promise<FollowListResponse> {
-  return fetchApi<FollowListResponse>(`/users/${encodeURIComponent(handle)}/following`);
+  return fetchApi<FollowListResponse>(apiPath('users', handle, 'following'));
 }
 
 export async function fetchFollowers(handle: string): Promise<FollowListResponse> {
-  return fetchApi<FollowListResponse>(`/users/${encodeURIComponent(handle)}/followers`);
+  return fetchApi<FollowListResponse>(apiPath('users', handle, 'followers'));
 }
 
 export async function searchUsers(query: string): Promise<FollowListResponse> {
-  return fetchApi<FollowListResponse>(`/users/search?q=${encodeURIComponent(query)}`);
+  return fetchApi<FollowListResponse>(
+    `${apiPath('users', 'search')}?q=${encodeURIComponent(query)}`
+  );
 }
 
 export interface UserWatchedMovieItem {
@@ -151,14 +154,18 @@ export async function fetchMyWatchedMovies(
   take: number,
   signal?: AbortSignal
 ): Promise<UserWatchedMoviesResponse> {
-  return fetchApi<UserWatchedMoviesResponse>(`/users/me/watched-movies?take=${take}`, { signal });
+  return fetchApi<UserWatchedMoviesResponse>(
+    `${apiPath('users', 'me', 'watched-movies')}?take=${take}`,
+    { signal }
+  );
 }
 
 export async function fetchFollowingWatchedMovies(
   take: number,
   signal?: AbortSignal
 ): Promise<UserWatchedMoviesResponse> {
-  return fetchApi<UserWatchedMoviesResponse>(`/users/me/following-watched-movies?take=${take}`, {
-    signal,
-  });
+  return fetchApi<UserWatchedMoviesResponse>(
+    `${apiPath('users', 'me', 'following-watched-movies')}?take=${take}`,
+    { signal }
+  );
 }

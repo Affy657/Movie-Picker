@@ -25,7 +25,10 @@ export async function fetchEventBySlug(slug: string, hostToken: string | null): 
   return mapEventData(raw);
 }
 
-type RawNightRecap = Omit<RawEventData, '_id' | 'slug' | 'recapSlug'> & {
+export type RawNightRecap = Omit<
+  RawEventData,
+  '_id' | 'slug' | 'recapSlug' | 'isHost' | 'votersCount'
+> & {
   recapSlug: string;
   eventSlug: string | null;
   winnerMovies: RawMovieData[];
@@ -127,16 +130,25 @@ export function patchEventConfig(
   );
 }
 
+export type RawWinnerMovie = Pick<
+  RawMovieData,
+  '_id' | 'eventId' | 'participantId' | 'tmdbId' | 'title' | 'year' | 'posterPath' | 'createdAt'
+>;
+
+function mapWinnerMovie(raw: RawWinnerMovie): MovieData {
+  return mapMovieData({ ...raw, proposerPseudo: '', score: 0, up: 0, down: 0 });
+}
+
 export async function postEventWheel(
   slug: string,
   hostToken: string | null,
   expectedWinnerCount?: number
 ): Promise<{ winner: MovieData; message: string }> {
-  const raw = await fetchApi<{ winner: RawMovieData; message: string }>(
+  const raw = await fetchApi<{ winner: RawWinnerMovie; message: string }>(
     apiPath('events', slug, 'wheel'),
     withHostToken(hostToken, { method: 'POST', body: JSON.stringify({ expectedWinnerCount }) })
   );
-  return { winner: mapMovieData(raw.winner), message: raw.message };
+  return { winner: mapWinnerMovie(raw.winner), message: raw.message };
 }
 
 export async function postEventWheelAnnounce(
@@ -154,11 +166,11 @@ export async function postEventWinner(
   movieId: string,
   hostToken: string | null
 ): Promise<{ winner: MovieData; message: string }> {
-  const raw = await fetchApi<{ winner: RawMovieData; message: string }>(
+  const raw = await fetchApi<{ winner: RawWinnerMovie; message: string }>(
     apiPath('events', slug, 'winner'),
     withHostToken(hostToken, { method: 'POST', body: JSON.stringify({ movieId }) })
   );
-  return { winner: mapMovieData(raw.winner), message: raw.message };
+  return { winner: mapWinnerMovie(raw.winner), message: raw.message };
 }
 
 export async function postEventClose(slug: string, hostToken: string | null): Promise<void> {

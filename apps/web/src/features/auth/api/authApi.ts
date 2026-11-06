@@ -118,7 +118,7 @@ export async function patchAuthProfile(patch: ProfilePatch): Promise<UserProfile
 }
 
 export async function putAvatarPhoto(photo: Blob): Promise<UserProfile> {
-  const profile = await fetchApi<UserProfile>('/users/me/avatar-photo', {
+  const profile = await fetchApi<UserProfile>(apiPath('users', 'me', 'avatar-photo'), {
     method: 'PUT',
     body: JSON.stringify({ contentType: photo.type, base64Content: await blobToBase64(photo) }),
   });
@@ -126,7 +126,9 @@ export async function putAvatarPhoto(photo: Blob): Promise<UserProfile> {
 }
 
 export async function deleteAvatarPhoto(): Promise<UserProfile> {
-  const profile = await fetchApi<UserProfile>('/users/me/avatar-photo', { method: 'DELETE' });
+  const profile = await fetchApi<UserProfile>(apiPath('users', 'me', 'avatar-photo'), {
+    method: 'DELETE',
+  });
   return withProfileDefaults(profile);
 }
 

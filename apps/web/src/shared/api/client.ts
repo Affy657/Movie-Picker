@@ -1,4 +1,5 @@
 import { ApiError } from '@/shared/api/apiError';
+import type { ApiRequestPath, ApiRoute, ApiRouteSegments } from '@/shared/api/apiRoutes';
 import { interpolate, loadedLocale, preferredLocale, t, type TranslationKey } from '@/shared/i18n';
 
 function hostLooksLocal(host: string): boolean {
@@ -54,8 +55,8 @@ function encodePathSegment(segment: string | number): string {
   return encodeURIComponent(text);
 }
 
-export function apiPath(...segments: ReadonlyArray<string | number>): string {
-  return `/${segments.map(encodePathSegment).join('/')}`;
+export function apiPath(...segments: ApiRouteSegments): ApiRoute {
+  return `/${segments.map(encodePathSegment).join('/')}` as ApiRoute;
 }
 
 function userFacing(key: TranslationKey): string {
@@ -228,7 +229,7 @@ async function readResponseText(res: Response): Promise<string> {
   }
 }
 
-export async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
+export async function fetchApi<T>(path: ApiRequestPath, options?: RequestInit): Promise<T> {
   const url = apiUrl(path);
   ensureApiIsNotFrontOrigin(url);
   let res: Response;

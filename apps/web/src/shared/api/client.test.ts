@@ -33,7 +33,8 @@ describe('apiPath', () => {
   });
 
   it('keeps a segment that only contains dots among other characters', () => {
-    expect(apiPath('events', '...', 'a.b', '.x', 0)).toBe('/events/.../a.b/.x/0');
+    expect(apiPath('events', '...', 'movies', 'a.b')).toBe('/events/.../movies/a.b');
+    expect(apiPath('events', '.x', 'movies', 0)).toBe('/events/.x/movies/0');
   });
 });
 
@@ -85,7 +86,7 @@ describe('fetchApi', () => {
           })
         ),
     });
-    await expect(fetchApi('/event-templates')).rejects.toMatchObject({
+    await expect(fetchApi('/users/me/event-templates')).rejects.toMatchObject({
       message: fr.apiErrors.event_template_name_taken.split('{{name}}').join('Tom $& Jerry'),
     });
   });

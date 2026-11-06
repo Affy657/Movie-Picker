@@ -1,6 +1,15 @@
-import type { components, paths } from '@/shared/api/generated/openapiSchema';
-import type { MyEventsListResponse, MyEventSummary } from '@/features/events/types';
+import { expect, it } from 'vitest';
+import type { components } from '@/shared/api/generated/openapiSchema';
+import { apiPath, fetchApi } from '@/shared/api/client';
+import type { RawEventData, RawMovieData, RawParticipantData } from '@/shared/api/apiMapping';
 import type {
+  EventTemplateData,
+  MyEventsListResponse,
+  MyEventSummary,
+} from '@/features/events/types';
+import type {
+  RawNightRecap,
+  RawWinnerMovie,
   RemoveParticipantResponse,
   DeleteEventResponse,
 } from '@/features/events/api/eventsApi';
@@ -31,10 +40,6 @@ type ServedBy<TFrontType, TSchema> =
     ? true
     : UnknownServerFields<TFrontType, TSchema>;
 
-type ApiPath = keyof paths;
-
-import { expect, it } from 'vitest';
-
 const frontTypesMatchTheOpenApiContract: [
   ServedBy<MyEventsListResponse, ApiSchemas['MyEventsListResponse']>,
   ServedBy<MyEventSummary, ApiSchemas['MyEventSummaryDto']>,
@@ -55,6 +60,12 @@ const frontTypesMatchTheOpenApiContract: [
   ServedBy<UserWatchedMovieItem, ApiSchemas['UserWatchedMovieItem']>,
   ServedBy<FavoriteTitle, ApiSchemas['FavoriteTitleResponse']>,
   ServedBy<FavoriteListResponse, ApiSchemas['FavoriteListResponse']>,
+  ServedBy<RawEventData, ApiSchemas['EventDetailResponse']>,
+  ServedBy<RawMovieData, ApiSchemas['MovieWithScoreResponse']>,
+  ServedBy<RawParticipantData, ApiSchemas['ParticipantResponse']>,
+  ServedBy<RawNightRecap, ApiSchemas['NightRecapResponse']>,
+  ServedBy<RawWinnerMovie, ApiSchemas['WinnerMovieResponse']>,
+  ServedBy<EventTemplateData, ApiSchemas['EventTemplateResponse']>,
 ] = [
   true,
   true,
@@ -75,75 +86,45 @@ const frontTypesMatchTheOpenApiContract: [
   true,
   true,
   true,
-];
-
-const endpointsCalledByTheFront: ApiPath[] = [
-  '/api/v1/auth/register',
-  '/api/v1/auth/login',
-  '/api/v1/auth/logout',
-  '/api/v1/auth/me',
-  '/api/v1/auth/me/export',
-  '/api/v1/auth/me/password',
-  '/api/v1/auth/me/identities/{provider}',
-  '/api/v1/auth/oauth/providers',
-  '/api/v1/auth/oauth/{provider}/start',
-  '/api/v1/auth/password-reset/request',
-  '/api/v1/auth/password-reset/confirm',
-  '/api/v1/avatars/{key}',
-  '/api/v1/events',
-  '/api/v1/events/mine',
-  '/api/v1/events/slug/{idOrSlug}',
-  '/api/v1/events/{idOrSlug}',
-  '/api/v1/events/{idOrSlug}/close',
-  '/api/v1/events/{idOrSlug}/config',
-  '/api/v1/events/{idOrSlug}/invitations',
-  '/api/v1/events/{idOrSlug}/invitations/eligible-follows',
-  '/api/v1/events/{idOrSlug}/join',
-  '/api/v1/events/{idOrSlug}/movies',
-  '/api/v1/events/{idOrSlug}/movies/{movieId}',
-  '/api/v1/events/{idOrSlug}/movies/{movieId}/note',
-  '/api/v1/events/{idOrSlug}/movies/{movieId}/rating',
-  '/api/v1/events/{idOrSlug}/movies/{movieId}/seen',
-  '/api/v1/events/{idOrSlug}/movies/{movieId}/vote',
-  '/api/v1/events/{idOrSlug}/movies/{movieId}/wheel-exclusion',
-  '/api/v1/events/{idOrSlug}/participants/{participantId}',
-  '/api/v1/events/{idOrSlug}/wheel',
-  '/api/v1/events/{idOrSlug}/winner',
-  '/api/v1/idea-suggestions',
-  '/api/v1/letterboxd/confirm',
-  '/api/v1/letterboxd/sync',
-  '/api/v1/movies/collections',
-  '/api/v1/movies/search',
-  '/api/v1/movies/showcase',
-  '/api/v1/movies/tmdb/{tmdbId}/details',
-  '/api/v1/notifications/inbox',
-  '/api/v1/notifications/inbox/read-all',
-  '/api/v1/notifications/inbox/{id}/read',
-  '/api/v1/notifications/preferences',
-  '/api/v1/notifications/subscriptions',
-  '/api/v1/notifications/vapid-public-key',
-  '/api/v1/users/handle-available',
-  '/api/v1/users/me/avatar-photo',
-  '/api/v1/users/me/favorites',
-  '/api/v1/users/me/favorites/{tmdbId}',
-  '/api/v1/users/me/following-watched-movies',
-  '/api/v1/users/me/watched-movies',
-  '/api/v1/users/{handle}',
-  '/api/v1/users/{handle}/follow',
-  '/api/v1/users/{handle}/followers',
-  '/api/v1/users/{handle}/following',
-  '/api/v1/users/{handle}/stats',
-  '/api/v1/users/{handle}/watched-movies',
-  '/api/v1/watchlist',
-  '/api/v1/watchlist/availability',
-  '/api/v1/watchlist/{tmdbId}',
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
 ];
 
 it('exposes front types aligned with the OpenAPI contract', () => {
   expect(frontTypesMatchTheOpenApiContract.every(Boolean)).toBe(true);
 });
 
-it('references each contract route only once (their existence is checked by the typing)', () => {
-  expect(endpointsCalledByTheFront.length).toBeGreaterThan(0);
-  expect(new Set(endpointsCalledByTheFront).size).toBe(endpointsCalledByTheFront.length);
+it('refuses at compile time a route the contract does not serve', () => {
+  const callsThatMustNotCompile = [
+    // @ts-expect-error not in the contract
+    () => apiPath('no-such-route'),
+    // @ts-expect-error not in the contract
+    () => apiPath('events', 'soiree', 'no-such-route'),
+    // @ts-expect-error not in the contract
+    () => apiPath('users', 'alice', 'no-such-route'),
+    // @ts-expect-error not in the contract
+    () => fetchApi('/no-such-route'),
+    // @ts-expect-error not in the contract
+    () => fetchApi('/auth/no-such-route'),
+  ];
+
+  expect(callsThatMustNotCompile).toHaveLength(5);
+});
+
+it('accepts a contract route, its parameters and its query string', () => {
+  expect(apiPath('events', 'soiree', 'movies', 'm1', 'vote')).toBe('/events/soiree/movies/m1/vote');
+  expect(apiPath('recaps', 'r1')).toBe('/recaps/r1');
+  expect(apiPath('watchlist', 603)).toBe('/watchlist/603');
+  const callsThatMustCompile = [
+    () => fetchApi('/auth/me'),
+    () => fetchApi('/events/mine?scope=active'),
+    () => fetchApi(apiPath('events', 'soiree', 'wheel', 'announce')),
+    () => fetchApi(`${apiPath('watchlist', 603)}?mediaType=movie`),
+  ];
+
+  expect(callsThatMustCompile).toHaveLength(4);
 });
