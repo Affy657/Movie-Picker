@@ -25,12 +25,10 @@ import type { RatingScale } from '@/shared/types/theme';
 import styles from './movieCardParts.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
-export { PITCH_MAX } from './MovieNote';
 export { CardKebab, MovieCardKebab } from './MovieCardKebab';
 import { deriveWheelToggle } from './MovieCardKebab';
 import { MovieNote } from './MovieNote';
 import { useLocale, type Translate } from '@/shared/i18n';
-export type { MovieWheelExclusion } from '@/features/movies/types';
 
 export interface MovieCardSelection {
   active: boolean;

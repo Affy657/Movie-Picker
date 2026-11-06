@@ -1,6 +1,5 @@
 export { interpolate, t, type Translate, type TranslationKey } from './t';
 export {
-  type Locale,
   type LocaleCode,
   LOCALE_LABELS,
   SUPPORTED_LOCALES,

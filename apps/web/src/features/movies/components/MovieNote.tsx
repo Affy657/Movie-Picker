@@ -6,7 +6,7 @@ import styles from './MovieNote.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { Translate } from '@/shared/i18n';
 
-export const PITCH_MAX = 140;
+const PITCH_MAX = 140;
 const NOTE_PREVIEW_THRESHOLD = 38;
 
 interface MovieNoteProps {
