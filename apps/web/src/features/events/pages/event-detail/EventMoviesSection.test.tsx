@@ -694,7 +694,7 @@ describe('EventMoviesSection (MSW)', () => {
     await user.click(await screen.findByRole('button', { name: /voter pour matrix/i }));
 
     const retryButton = await screen.findByRole('button', { name: /réessayer/i });
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
 
     await user.click(retryButton);
     await waitFor(() => expect(attempts).toBe(2));
