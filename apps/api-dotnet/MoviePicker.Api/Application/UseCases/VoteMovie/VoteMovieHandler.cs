@@ -83,24 +83,25 @@ public sealed class VoteMovieHandler : IVoteMovieHandler
         CancellationToken ct)
     {
         var maxVotes = evt.Config?.MaxVotesPerParticipant;
-        if (maxVotes is not > 0)
-        {
-            var upserted = await _voteRepository.UpsertAsync(vote, ct);
-            await _eventRepository.MarkChangedAsync(evt.Id, ct);
-            return upserted;
-        }
-
         Vote saved = vote;
         await _unitOfWork.ExecuteAsync(
             async token =>
             {
                 await _eventRepository.LockForWriteAsync(evt.Id, token);
-                var votes = await _voteRepository.GetParticipantVotesByEventAsync(evt.Id, participant.Id, token);
-                if (!votes.ContainsKey(movie.Id) && votes.Count >= maxVotes)
-                    throw Errors.VoteLimitReached(maxVotes.Value);
+                await MovieActionContext.EnsureMovieAndParticipantRemainAsync(
+                    _movieRepository, _participantRepository, evt.Id, movie.Id, participant.Id, token);
+                if (maxVotes is > 0)
+                    await EnsureVoteLimitAllowsAsync(evt.Id, movie.Id, participant.Id, maxVotes.Value, token);
                 saved = await _voteRepository.UpsertAsync(vote, token);
             },
             ct);
         return saved;
+    }
+
+    private async Task EnsureVoteLimitAllowsAsync(string eventId, string movieId, string participantId, int maxVotes, CancellationToken ct)
+    {
+        var votes = await _voteRepository.GetParticipantVotesByEventAsync(eventId, participantId, ct);
+        if (!votes.ContainsKey(movieId) && votes.Count >= maxVotes)
+            throw Errors.VoteLimitReached(maxVotes);
     }
 }

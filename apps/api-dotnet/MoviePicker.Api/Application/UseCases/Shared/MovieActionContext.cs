@@ -43,6 +43,21 @@ internal static class MovieActionContext
         return (evt, movie, participant);
     }
 
+    public static async Task EnsureMovieAndParticipantRemainAsync(
+        IMovieRepository movieRepository,
+        IParticipantRepository participantRepository,
+        string eventId,
+        string movieId,
+        string participantId,
+        CancellationToken ct)
+    {
+        if (await movieRepository.GetByIdAndEventIdAsync(movieId, eventId, ct) is null)
+            throw Errors.MovieNotFound();
+
+        if (await participantRepository.FindByIdAndEventIdAsync(participantId, eventId, ct) is null)
+            throw Errors.InvalidParticipant();
+    }
+
     public static async Task<(Event Event, Movie Movie, string? CurrentUserId, bool IsHost)> ResolveMovieForHostActionAsync(
         IEventRepository eventRepository,
         IMovieRepository movieRepository,

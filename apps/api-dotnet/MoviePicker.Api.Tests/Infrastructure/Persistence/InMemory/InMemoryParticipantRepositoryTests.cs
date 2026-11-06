@@ -24,23 +24,17 @@ public sealed class InMemoryParticipantRepositoryTests
             UpdatedAt = DateTimeOffset.UtcNow
         };
 
+    private async Task<Participant?> ListedWithPseudoAsync(string eventId, string pseudo) =>
+        (await _repo.ListByEventIdAsync(eventId)).FirstOrDefault(p => p.Pseudo == pseudo);
+
     [Fact]
     public async Task AddAsync_GeneratesId_AndIndexesByPseudoAndUser()
     {
         var created = await _repo.AddAsync(Mk(pseudo: "Alice", userId: "u1"));
 
         Assert.Equal(24, created.Id.Length);
-        Assert.NotNull(await _repo.FindByEventAndPseudoAsync("evt1", "Alice"));
+        Assert.NotNull(await ListedWithPseudoAsync("evt1", "Alice"));
         Assert.NotNull(await _repo.FindByEventAndUserIdAsync("evt1", "u1"));
-    }
-
-    [Fact]
-    public async Task FindByEventAndPseudoAsync_TrimsInput_AndReturnsNullWhenUnknown()
-    {
-        await _repo.AddAsync(Mk(pseudo: "Alice"));
-
-        Assert.NotNull(await _repo.FindByEventAndPseudoAsync("evt1", "  Alice  "));
-        Assert.Null(await _repo.FindByEventAndPseudoAsync("evt1", "Bob"));
     }
 
     [Fact]
@@ -132,7 +126,7 @@ public sealed class InMemoryParticipantRepositoryTests
 
         Assert.False(await _repo.DeleteAsync(created.Id, "wrong-event"));
         Assert.True(await _repo.DeleteAsync(created.Id, "evt1"));
-        Assert.Null(await _repo.FindByEventAndPseudoAsync("evt1", "Alice"));
+        Assert.Null(await ListedWithPseudoAsync("evt1", "Alice"));
         Assert.Null(await _repo.FindByEventAndUserIdAsync("evt1", "u1"));
     }
 
@@ -156,7 +150,7 @@ public sealed class InMemoryParticipantRepositoryTests
         Assert.Equal(1L, await _repo.AnonymizeByUserIdAsync("u1", "Anonyme"));
 
         Assert.Null(await _repo.FindByEventAndUserIdAsync("evt1", "u1"));
-        var renamed = await _repo.FindByEventAndPseudoAsync("evt1", "Anonyme");
+        var renamed = await ListedWithPseudoAsync("evt1", "Anonyme");
         Assert.NotNull(renamed);
         Assert.Null(renamed!.UserId);
     }
@@ -169,7 +163,7 @@ public sealed class InMemoryParticipantRepositoryTests
 
         await _repo.AnonymizeByUserIdAsync("u1", "Anonyme");
 
-        var still = await _repo.FindByEventAndPseudoAsync("evt1", "Anonyme");
+        var still = await ListedWithPseudoAsync("evt1", "Anonyme");
         Assert.NotNull(still);
         Assert.Equal(2, await _repo.CountByEventIdAsync("evt1"));
     }
@@ -196,7 +190,7 @@ public sealed class InMemoryParticipantRepositoryTests
             _repo.AddAsync(Mk(eventId: "evt1", pseudo: "Alice bis", userId: "u1")));
 
         Assert.Equal(ParticipantCollision.SameAccount, ex.Collision);
-        Assert.Null(await _repo.FindByEventAndPseudoAsync("evt1", "Alice bis"));
+        Assert.Null(await ListedWithPseudoAsync("evt1", "Alice bis"));
     }
 
     [Fact]

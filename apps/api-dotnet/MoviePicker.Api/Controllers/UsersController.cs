@@ -22,21 +22,6 @@ namespace MoviePicker.Api.Controllers;
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public sealed class UsersController : ControllerBase
 {
-    [HttpGet("handle-available")]
-    [AllowAnonymous]
-    [EnableRateLimiting(RateLimitingExtensions.PublicProfilePolicy)]
-    [ProducesResponseType(typeof(HandleAvailabilityResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
-    public async Task<IActionResult> HandleAvailable(
-        [FromQuery] string? handle,
-        [FromServices] ICheckHandleAvailabilityHandler handler,
-        CancellationToken ct)
-    {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var result = await handler.HandleAsync(handle ?? string.Empty, currentUserId, ct);
-        return Ok(result);
-    }
-
     [HttpGet("search")]
     [Authorize]
     [EnableRateLimiting(RateLimitingExtensions.SearchUsersPolicy)]

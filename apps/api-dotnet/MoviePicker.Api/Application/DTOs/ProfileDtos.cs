@@ -16,13 +16,6 @@ public sealed class PublicProfileResponse
     public IReadOnlyList<FavoriteTitleResponse> Favorites { get; init; } = [];
 }
 
-public sealed class HandleAvailabilityResponse
-{
-    public string Handle { get; init; } = string.Empty;
-    public bool Available { get; init; }
-    public string? Reason { get; init; }
-}
-
 public sealed class FollowUserItem
 {
     public string Handle { get; init; } = string.Empty;

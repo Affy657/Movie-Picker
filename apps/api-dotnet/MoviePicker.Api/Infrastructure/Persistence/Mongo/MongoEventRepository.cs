@@ -13,6 +13,31 @@ public sealed class MongoEventRepository : IEventRepository
 
     private const string WriteSeqElement = "writeSeq";
 
+    private static readonly BsonDocumentFilterDefinition<EventDocument> WheelPickNewerThanTheLastAnnouncement = new(
+        new BsonDocument(
+            "$expr",
+            new BsonDocument(
+                "$anyElementTrue",
+                new BsonArray
+                {
+                    new BsonDocument(
+                        "$map",
+                        new BsonDocument
+                        {
+                            { "input", new BsonDocument("$ifNull", new BsonArray { "$winners", new BsonArray() }) },
+                            {
+                                "in",
+                                new BsonDocument(
+                                    "$and",
+                                    new BsonArray
+                                    {
+                                        new BsonDocument("$ne", new BsonArray { "$$this.pickMethod", "manual" }),
+                                        new BsonDocument("$gt", new BsonArray { "$$this.pickedAt", "$winnerAnnouncedAt" })
+                                    })
+                            }
+                        })
+                })));
+
     private readonly TransactionalCollection<EventDocument> _collection;
 
     public MongoEventRepository(MongoCollectionFactory collections)
@@ -183,6 +208,19 @@ public sealed class MongoEventRepository : IEventRepository
             builder.Eq(x => x.ClosedAt, (DateTime?)null),
             builder.Gte(x => x.StartAtUtc, fromInclusive.UtcDateTime),
             builder.Lte(x => x.StartAtUtc, toInclusive.UtcDateTime));
+        var docs = await _collection.Find(filter).ToListAsync(ct);
+        return docs.ConvertAll(EventDocumentMapper.ToDomain);
+    }
+
+    public async Task<IReadOnlyList<Event>> ListOpenWithUnannouncedWheelPickAsync(
+        DateTimeOffset startingFrom,
+        CancellationToken ct = default)
+    {
+        var builder = Builders<EventDocument>.Filter;
+        var filter = builder.And(
+            builder.Eq(x => x.ClosedAt, (DateTime?)null),
+            builder.Gte(x => x.StartAtUtc, startingFrom.UtcDateTime),
+            WheelPickNewerThanTheLastAnnouncement);
         var docs = await _collection.Find(filter).ToListAsync(ct);
         return docs.ConvertAll(EventDocumentMapper.ToDomain);
     }

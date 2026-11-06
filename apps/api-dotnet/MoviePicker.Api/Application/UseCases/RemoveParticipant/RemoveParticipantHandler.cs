@@ -14,6 +14,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
     private readonly IMovieRepository _movieRepository;
     private readonly IVoteRepository _voteRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
+    private readonly IMovieRatingRepository _ratingRepository;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IUnitOfWork _unitOfWork;
@@ -26,6 +27,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         IMovieRepository movieRepository,
         IVoteRepository voteRepository,
         ISeenMarkRepository seenMarkRepository,
+        IMovieRatingRepository ratingRepository,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
         IUnitOfWork unitOfWork,
@@ -37,6 +39,7 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
         _movieRepository = movieRepository;
         _voteRepository = voteRepository;
         _seenMarkRepository = seenMarkRepository;
+        _ratingRepository = ratingRepository;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
         _unitOfWork = unitOfWork;
@@ -114,9 +117,11 @@ public sealed class RemoveParticipantHandler : IRemoveParticipantHandler
 
                 await _voteRepository.DeleteByMovieIdsAsync(movieIds, token);
                 await _seenMarkRepository.DeleteByMovieIdsAsync(eventId, movieIds, token);
+                await _ratingRepository.DeleteByMovieIdsAsync(eventId, movieIds, token);
                 await _movieRepository.DeleteByIdsAsync(movieIds, token);
                 await _voteRepository.DeleteByEventAndParticipantAsync(eventId, participantId, token);
                 await _seenMarkRepository.DeleteByEventAndParticipantAsync(eventId, participantId, token);
+                await _ratingRepository.DeleteByEventAndParticipantAsync(eventId, participantId, token);
                 if (!await _participantRepository.DeleteAsync(participantId, eventId, token))
                     throw Errors.ParticipantNotFound();
                 await _eventRepository.UpdateAsync(current with { UpdatedAt = _clock.GetUtcNow() }, token);

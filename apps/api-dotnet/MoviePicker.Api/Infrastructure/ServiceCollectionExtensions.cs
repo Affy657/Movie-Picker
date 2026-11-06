@@ -413,6 +413,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<LetterboxdWatchlistSynchronizer>();
         services.AddScoped<AvatarPhotoWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
+        services.AddScoped<EventAudienceNotifier>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
         services.AddScoped<IWheelWinnerAnnouncement, WheelWinnerAnnouncement>();
 

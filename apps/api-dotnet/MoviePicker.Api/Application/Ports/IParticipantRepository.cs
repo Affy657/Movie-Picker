@@ -4,7 +4,6 @@ namespace MoviePicker.Api.Application.Ports;
 
 public interface IParticipantRepository
 {
-    Task<Participant?> FindByEventAndPseudoAsync(string eventId, string pseudo, CancellationToken ct = default);
     Task<Participant?> FindByEventAndUserIdAsync(string eventId, string userId, CancellationToken ct = default);
     Task<Participant?> FindByIdAndEventIdAsync(string participantId, string eventId, CancellationToken ct = default);
     Task<IReadOnlyDictionary<string, string>> GetPseudosByIdsAsync(

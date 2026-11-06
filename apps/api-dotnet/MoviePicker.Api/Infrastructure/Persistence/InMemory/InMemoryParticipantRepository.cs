@@ -11,14 +11,6 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
     private readonly ConcurrentDictionary<(string EventId, string Pseudo), string> _eventPseudoToId = new();
     private readonly ConcurrentDictionary<(string EventId, string UserId), string> _eventUserToId = new();
 
-    public Task<Participant?> FindByEventAndPseudoAsync(string eventId, string pseudo, CancellationToken ct = default)
-    {
-        var key = (eventId, pseudo.Trim());
-        if (_eventPseudoToId.TryGetValue(key, out var id) && _byId.TryGetValue(id, out var p))
-            return Task.FromResult<Participant?>(p);
-        return Task.FromResult<Participant?>(null);
-    }
-
     public Task<Participant?> FindByIdAndEventIdAsync(string participantId, string eventId, CancellationToken ct = default)
     {
         if (_byId.TryGetValue(participantId, out var p) && p.EventId == eventId)
