@@ -121,7 +121,7 @@ jobs:
   # filtering (see the `ci-cd.yml` header): its colour holds for the whole tree of the commit.
   # Before that, a documentation commit on top of a red code commit gave a green run in 12 s, nine
   # jobs skipped, and this guard accepted it.
-  # The refusal outside master below is doubled by the branch policy of the `production` and
+  # The refusal outside master, in `require-green-ci`, is doubled by the branch policy of the `production` and
   # `staging` environments (Settings → Environments), which also covers the rollback and backup
   # workflows: this `if` is only the clear message and the fast exit.
   verify-ci:
@@ -132,45 +132,12 @@ jobs:
       contents: read
       actions: read
     steps:
-      - name: Refuse a deployment outside master
-        run: |
-          if [ "$GITHUB_REF" != "refs/heads/master" ]; then
-            echo "::error::A deployment only leaves from master (requested ref: $GITHUB_REF). Merge first."
-            exit 1
-          fi
-      # `--jq` filters server-side on the exact SHA: a pull request run carries the same head_sha
-      # as the push that followed it, hence the filter on event and branch. The most recent run
-      # wins, it is the one a "Re-run failed jobs" turned green again.
-      - name: Read the CI run conclusion for this commit
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -eo pipefail
-          runs="$(gh api \
-            "repos/$GITHUB_REPOSITORY/actions/workflows/ci-cd.yml/runs?head_sha=$GITHUB_SHA&per_page=100" \
-            --jq '[.workflow_runs[]
-                   | select(.head_branch == "master")
-                   | select(.event == "push" or .event == "workflow_dispatch")]
-                  | sort_by(.run_started_at) | reverse')"
-          count="$(printf '%s' "$runs" | jq 'length')"
-          if [ "$count" = "0" ]; then
-            echo "::error::No ci-cd.yml run on $GITHUB_SHA. Run the \"🔍 CI\" workflow on master, wait for green, then trigger this deployment again."
-            exit 1
-          fi
-          status="$(printf '%s' "$runs" | jq -r '.[0].status')"
-          conclusion="$(printf '%s' "$runs" | jq -r '.[0].conclusion')"
-          url="$(printf '%s' "$runs" | jq -r '.[0].html_url')"
-          echo "CI run: $url"
-          echo "status=$status conclusion=$conclusion"
-          if [ "$status" != "completed" ]; then
-            echo "::error::The CI run of this commit is still '$status'. Wait for it to finish."
-            exit 1
-          fi
-          if [ "$conclusion" != "success" ]; then
-            echo "::error::The CI run of this commit concluded '$conclusion': fix, then rerun the CI before deploying. $url"
-            exit 1
-          fi
-          echo "CI gates green on $GITHUB_SHA."
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/require-green-ci
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       # A web app alone on a commit that also changed the API leaves the stage serving pages built
       # against routes its API does not have yet: on 2026-09-20 production got the front of a
       # commit whose API enrichment was still in master only, and the cards lost their year,

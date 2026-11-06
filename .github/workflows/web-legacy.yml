@@ -11,19 +11,18 @@
 # domain-level redirect did. The old start URL of the installed app, `/my-events`, carries
 # `?movedFrom=web` so that www can tell the visitor to install the app again from there.
 #
-# Runs on every change of that folder or of the publication script, and on demand. The job holds
-# the deployment identity of the `production` environment, the one `deploy.yml` publishes the web
-# app with. The site must exist first: the Terraform apply of `infra.yml` creates it.
+# On demand only, like `deploy.yml`: `gh workflow run web-legacy.yml --ref master`, after a change
+# of that folder (nothing else changes what this site serves) and to purge the edge cache of the
+# site. It used to run on every push to master: the publication then left under the production
+# identity before the CI of the commit had said anything. The site is a kill switch that barely
+# moves, so one more gesture costs less than that hole. `publish` holds the deployment identity
+# of the `production` environment, the one `deploy.yml` publishes the web app with, and only
+# leaves behind `verify-ci`. The site must exist first: the Terraform apply of `infra.yml` creates
+# it.
 
 name: 🏚️ Legacy web origin
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - "infra/web-legacy/**"
-      - "scripts/publish-front-firebase.mjs"
-      - ".github/workflows/web-legacy.yml"
   workflow_dispatch:
 
 permissions:
@@ -40,8 +39,24 @@ env:
   CANONICAL_ORIGIN: https://www.movie-picker.fr
 
 jobs:
+  verify-ci:
+    name: ✅ Require a green CI run on the target commit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/require-green-ci
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
   publish:
     name: 🏚️ Publish the legacy origin
+    needs: verify-ci
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: production
