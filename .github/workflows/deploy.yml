@@ -31,9 +31,10 @@
 # build of the commit, the same whatever the stage, so production does not replay it: the staging
 # only serves a front this gate let through, and `verify-ci` requires that front to be this commit.
 #
-# Rollback: `rollback.yml` for the API (earlier Cloud Run revision), `rollback-front.yml` for the
-# web app (a Hosting release pointed back at a version `deploy-front` built). Both target
-# production; the staging is rolled back by deploying again.
+# Rollback: `rollback.yml` for the API (an earlier Cloud Run revision, probed before the traffic
+# moves), `rollback-front.yml` for the web app (a Hosting release pointed back at a version
+# `deploy-front` built). Both take the stage as an input: the staging is where a rollback is
+# rehearsed.
 #
 # Two identities per stage on GCP, never the same one. The workflows impersonate the CI service
 # account of their environment (`gcloud-auth`), which can push images, create revisions and manage

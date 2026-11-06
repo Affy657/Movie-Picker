@@ -138,9 +138,9 @@ Attendre 30 minutes après la promotion (commande en arrière-plan), puis compar
 **Régression : retour arrière immédiat.**
 
 1. Lancer les deux workflows de retour arrière, puis suivre les deux runs :
-   - `gh workflow run rollback.yml --repo Affy657/Movie-Picker --ref master -f stage=production` ;
+   - `gh workflow run rollback.yml --repo Affy657/Movie-Picker --ref master -f stage=production -f release=<release notée à l'étape 5>` ;
    - `gh workflow run rollback-front.yml --repo Affy657/Movie-Picker --ref master -f stage=production -f commit=<release notée à l'étape 5>`.
-2. Vérifier que la prod sert de nouveau la release notée.
+2. Vérifier que la prod sert de nouveau la release notée. `rollback.yml` en échec n'a pas bougé le trafic : aucune révision ne porte cette release, ou sa révision a échoué aux sondes sur son URL taguée. Le dire dans la notification et ne pas forcer une autre révision.
 3. Créer le label s'il manque (`gh label create maintenance-freeze --repo Affy657/Movie-Picker --color B60205`), puis ouvrir l'issue de gel (`gh issue create --repo Affy657/Movie-Picker --label maintenance-freeze --title "..." --body "..."`), qui ne porte que la date et les deux SHA. Le diagnostic va dans la notification, pas dans l'issue publique.
 4. Si les commits de la passe sont en cause, les `git revert` sur master.
 5. Notifier.
