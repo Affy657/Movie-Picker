@@ -153,7 +153,7 @@ Surface de contenu. `as` change l'élément et type ses props : `<Card as={Link}
 
 ### Modal
 
-Seul endroit du projet où `<dialog>` et `::backdrop` sont écrits. Fermeture par Échap, clic sur le voile et bouton de fermeture ; le `<dialog>` natif retient le focus et le rend à l'ouvreur.
+Seul endroit du projet où `<dialog>` et `::backdrop` sont écrits. Fermeture par Échap, clic sur le voile et bouton de fermeture ; le `<dialog>` natif retient le focus et le rend à l'ouvreur. Tant qu'un `<dialog>` est ouvert, la page derrière ne défile plus (`html:has(dialog[open])` dans `01-foundation.css`) : la gouttière de `scrollbar-gutter: stable` reste réservée, donc rien ne saute à l'ouverture. Un navigateur sans `:has()` ignore la règle et garde le défilement, comme avant.
 
 | Prop | Type | Note |
 |---|---|---|
@@ -176,7 +176,7 @@ Dialogues déjà câblés dessus :
 
 ### Sheet
 
-Feuille ancrée en bas, glissable : le geste est `useSheetDrag` (`shared/hooks/`), `SheetDrag.module.css` porte la surface, la poignée et les animations d'entrée (`sheetEnter`, `sheetBackdropEnter`, retirées sous `prefers-reduced-motion`). `open`, `title`, `onClose`, `footer`, `size` `md` / `lg`. Sa croix est un `IconButton`.
+Feuille ancrée en bas, glissable : le geste est `useSheetDrag` (`shared/hooks/`), `SheetDrag.module.css` porte la surface, la poignée et les animations d'entrée (`sheetEnter`, `sheetBackdropEnter`, retirées sous `prefers-reduced-motion`). `open`, `title`, `onClose`, `footer`, `size` `md` / `lg`. Sa croix est un `IconButton`. Son corps pose `overscroll-behavior: contain` : arrivé en butée, le geste ne passe pas à la page.
 
 ### ResponsiveDialog
 
