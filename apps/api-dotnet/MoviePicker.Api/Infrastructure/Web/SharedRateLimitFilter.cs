@@ -8,7 +8,7 @@ using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
 
-[AttributeUsage(AttributeTargets.Method)]
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public sealed class SharedRateLimitAttribute : Attribute
 {
     public SharedRateLimitAttribute(string policyName) => PolicyName = policyName;
@@ -43,23 +43,21 @@ public sealed class SharedRateLimitFilter : IAsyncActionFilter
             return;
         }
 
-        var attribute = context.ActionDescriptor.EndpointMetadata
-            .OfType<SharedRateLimitAttribute>()
-            .FirstOrDefault();
-
-        if (attribute is null)
+        var attributes = context.ActionDescriptor.EndpointMetadata.OfType<SharedRateLimitAttribute>();
+        foreach (var attribute in attributes)
         {
-            await next();
-            return;
+            if (RateLimitingExtensions.FindPolicy(attribute.PolicyName) is { } policy
+                && await RefuseIfOverQuotaAsync(context, policy))
+                return;
         }
 
-        var spec = RateLimitingExtensions.FindPolicy(attribute.PolicyName);
-        if (spec is not { } policy)
-        {
-            await next();
-            return;
-        }
+        await next();
+    }
 
+    private async Task<bool> RefuseIfOverQuotaAsync(
+        ActionExecutingContext context,
+        RateLimitingExtensions.PolicySpec policy)
+    {
         var now = _clock.GetUtcNow();
         var window = TimeSpan.FromMinutes(policy.WindowMinutes);
         var windowStartTicks = now.UtcTicks / window.Ticks;
@@ -75,15 +73,11 @@ public sealed class SharedRateLimitFilter : IAsyncActionFilter
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Shared quota counter unavailable for {Policy}", policy.Name);
-            await next();
-            return;
+            return false;
         }
 
         if (used <= policy.PermitLimit)
-        {
-            await next();
-            return;
-        }
+            return false;
 
         var retryAfter = Math.Max(1, (int)Math.Ceiling((windowEnd - now).TotalSeconds));
         context.HttpContext.Response.Headers.RetryAfter =
@@ -99,5 +93,6 @@ public sealed class SharedRateLimitFilter : IAsyncActionFilter
                 "Too many requests, please retry in a moment",
                 ErrorCodes.RateLimited)
         };
+        return true;
     }
 }

@@ -40,6 +40,7 @@ public static class RateLimitingExtensions
     public const string LetterboxdImportPolicy = "letterboxd-import";
     public const string KofiWebhookPolicy = "kofi-webhook";
     public const string IdeaSuggestionPolicy = "idea-suggestion";
+    public const string IdeaSuggestionAddressPolicy = "idea-suggestion-address";
     public const string SchedulerPolicy = "scheduler";
     public const string HostActionPolicy = "host-action";
     public const string MovieMutationPolicy = "movie-mutation";
@@ -89,6 +90,7 @@ public static class RateLimitingExtensions
         new(LetterboxdImportPolicy, 10, 1),
         new(KofiWebhookPolicy, 20, 1, QuotaScope.Address),
         new(IdeaSuggestionPolicy, 10, 60),
+        new(IdeaSuggestionAddressPolicy, 20, 60, QuotaScope.Address),
         new(SchedulerPolicy, 10, 1, QuotaScope.Address),
         new(HostActionPolicy, 60, 1),
         new(MovieMutationPolicy, 60, 1),

@@ -52,13 +52,26 @@ public sealed class MutatingEndpointsRateLimitTests
         var perInstanceOnly = controllers
             .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
             .Where(m => SharedResourcePolicies.Contains(m.GetCustomAttribute<EnableRateLimitingAttribute>()?.PolicyName))
-            .Where(m => m.GetCustomAttribute<SharedRateLimitAttribute>()?.PolicyName
-                != m.GetCustomAttribute<EnableRateLimitingAttribute>()!.PolicyName)
+            .Where(m => !m.GetCustomAttributes<SharedRateLimitAttribute>()
+                .Any(shared => shared.PolicyName == m.GetCustomAttribute<EnableRateLimitingAttribute>()!.PolicyName))
             .Select(m => $"{m.DeclaringType!.Name}.{m.Name}")
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToList();
 
         Assert.Empty(perInstanceOnly);
+    }
+
+    [Fact]
+    public void IdeaSuggestions_CountBothTheAccountAndTheAddress()
+    {
+        var policies = typeof(IdeaSuggestionsController).GetMethod(nameof(IdeaSuggestionsController.Create))!
+            .GetCustomAttributes<SharedRateLimitAttribute>()
+            .Select(attribute => attribute.PolicyName)
+            .Order(StringComparer.Ordinal);
+
+        Assert.Equal(
+            [RateLimitingExtensions.IdeaSuggestionPolicy, RateLimitingExtensions.IdeaSuggestionAddressPolicy],
+            policies);
     }
 
     [Fact]

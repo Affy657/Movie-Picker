@@ -21,6 +21,7 @@ public sealed class IdeaSuggestionsController : ControllerBase
     [RequestTimeout(RequestTimeoutPolicies.LongRunning)]
     [EnableRateLimiting(RateLimitingExtensions.IdeaSuggestionPolicy)]
     [SharedRateLimit(RateLimitingExtensions.IdeaSuggestionPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.IdeaSuggestionAddressPolicy)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]

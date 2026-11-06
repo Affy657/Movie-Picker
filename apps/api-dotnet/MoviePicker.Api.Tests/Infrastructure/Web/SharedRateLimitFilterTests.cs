@@ -107,6 +107,54 @@ public sealed class SharedRateLimitFilterTests
     }
 
     [Fact]
+    public async Task SeveralQuotas_OneOverItsLimit_RefusesTheRequest()
+    {
+        var addressPolicy = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.IdeaSuggestionAddressPolicy)!.Value;
+        _counters
+            .Setup(c => c.IncrementAsync(
+                It.Is<string>(key => key.StartsWith(RateLimitingExtensions.IdeaSuggestionPolicy + "|", StringComparison.Ordinal)),
+                It.IsAny<DateTimeOffset>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+        _counters
+            .Setup(c => c.IncrementAsync(
+                It.Is<string>(key => key.StartsWith(addressPolicy.Name + "|ip:203.0.113.7|", StringComparison.Ordinal)),
+                It.IsAny<DateTimeOffset>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(addressPolicy.PermitLimit + 1);
+        var context = BuildContext(
+            new SharedRateLimitAttribute(RateLimitingExtensions.IdeaSuggestionPolicy),
+            new SharedRateLimitAttribute(addressPolicy.Name));
+        var (next, wasCalled) = TrackedNext();
+
+        await CreateFilter().OnActionExecutionAsync(context, next);
+
+        Assert.False(wasCalled());
+        Assert.Equal(StatusCodes.Status429TooManyRequests, Assert.IsType<ContentResult>(context.Result).StatusCode);
+    }
+
+    [Fact]
+    public async Task SeveralQuotas_AllWithinTheirLimit_LetsTheRequestThroughOnce()
+    {
+        GivenCounterReturns(1);
+        var context = BuildContext(
+            new SharedRateLimitAttribute(RateLimitingExtensions.IdeaSuggestionPolicy),
+            new SharedRateLimitAttribute(RateLimitingExtensions.IdeaSuggestionAddressPolicy));
+        var calls = 0;
+
+        await CreateFilter().OnActionExecutionAsync(context, () =>
+        {
+            calls++;
+            return Task.FromResult<ActionExecutedContext>(null!);
+        });
+
+        Assert.Equal(1, calls);
+        _counters.Verify(
+            c => c.IncrementAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
+    }
+
+    [Fact]
     public async Task UnderTheLimit_LetsTheRequestThrough()
     {
         GivenCounterReturns(1);

@@ -130,6 +130,21 @@ public sealed class RateLimitingExtensionsTests
         Assert.NotEqual(fromHome.PartitionKey, neighbour.PartitionKey);
     }
 
+    [Fact]
+    public void CreatePartition_IdeaSuggestionAddress_CountsEveryAccountBehindOneAddress()
+    {
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.IdeaSuggestionAddressPolicy)!.Value;
+
+        var alice = RateLimitingExtensions.CreatePartition(SignedIn("alice", "192.0.2.8"), spec);
+        var bob = RateLimitingExtensions.CreatePartition(SignedIn("bob", "192.0.2.8"), spec);
+        var elsewhere = RateLimitingExtensions.CreatePartition(SignedIn("alice", "198.51.100.2"), spec);
+
+        Assert.Equal(alice.PartitionKey, bob.PartitionKey);
+        Assert.NotEqual(alice.PartitionKey, elsewhere.PartitionKey);
+        Assert.True(spec.PermitLimit > RateLimitingExtensions.FindPolicy(RateLimitingExtensions.IdeaSuggestionPolicy)!.Value.PermitLimit);
+        Assert.Equal(60, spec.WindowMinutes);
+    }
+
     private static DefaultHttpContext From(string address)
     {
         var http = new DefaultHttpContext();
