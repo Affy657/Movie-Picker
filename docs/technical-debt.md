@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-088`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-089`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -527,17 +527,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: passer la liste en présentation compacte sous 64rem, ou retirer une colonne à cette largeur
 - fini-quand: à 768, 820 et 1023 px, tous les en-têtes sont lisibles et la colonne « Score » reste dans le cadre
 
-## DEBT-080 le retour arrière n'a jamais tourné en production, ni avec `-f release`
-
-- state: differe
-- declencheur: la première mise sur master de `rollback.yml -f release=<sha>`
-- impact: `rollback.yml` et `rollback-front.yml` n'ont tourné que deux fois, en recette, le 2026-09-20. Le choix de révision par release, le tag de sonde et le contrôle `expected-release` n'ont été rejoués que contre un faux `gcloud`. La passe `/auto-maintenance` dépend de ce filet.
-- ou: `.github/workflows/rollback.yml`, `.github/workflows/rollback-front.yml`
-- verify: `gh run list --workflow=rollback.yml --limit 5` ; encore ouvert tant qu'aucun run réel ne porte l'entrée `release`
-- fix: une répétition en recette, `-f stage=staging -f release=<sha>` et `rollback-front.yml -f stage=staging`, puis un redéploiement, enfin une répétition planifiée
-- fini-quand: un run réel de chaque workflow a réussi en recette depuis l'ajout de l'entrée `release`
-- refs: C1
-
 ## DEBT-081 un chunk du graphe d'entrée qui échoue laisse le splash à l'écran
 
 - state: agent
@@ -597,6 +586,15 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - ou: `.github/workflows/security-scan.yml`
 - verify: `grep -n "ignore-unfixed" .github/workflows/security-scan.yml` ; encore ouvert tant que la commande rend `true` pour la sévérité CRITICAL
 - fix: une étape CRITICAL sans `ignore-unfixed` dans l'analyse planifiée
+
+## DEBT-088 `verify:local` ne joue pas la build web
+
+- state: agent
+- impact: une build cassée passe `verify:local` et ne se voit qu'en CI ou en e2e. Le 2026-11-06, `generate-tech-metrics.mjs` a échoué sur une liste de routes retirée alors que les dix-huit étapes étaient vertes.
+- ou: `scripts/verify-local.cjs`
+- verify: `grep -c "run', 'build'" scripts/verify-local.cjs` ; encore ouvert tant que la commande rend `0`
+- fix: une étape de build web dans la voie node, avec `generate-tech-metrics.mjs` et le prérendu, sans laisser `techMetrics.ts` modifié
+- piege: `techMetrics.ts` est versionné et réécrit par chaque build
 
 ---
 

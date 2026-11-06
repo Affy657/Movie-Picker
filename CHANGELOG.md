@@ -19,7 +19,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Une déconnexion sans réseau est signalée comme non confirmée**, puis relancée au retour de la connexion.
 - **Retirer son consentement efface l'identifiant de mesure d'audience du navigateur.**
 - **L'inscription et les sections à clé libre de l'accueil sont bornées par heure et par adresse**, ce qui freine les essais automatisés d'adresses et les appels au catalogue.
-- **La chaîne de livraison se resserre** : la garde de déploiement partiel refuse une comparaison tronquée, l'image de production se construit sans cache partagé, toute CVE critique bloque, et le contrôle IAM repère un compte étranger ou un propriétaire de plus.
+- **La chaîne de livraison se resserre** : la garde de déploiement partiel refuse une comparaison tronquée, l'image de production se construit sans cache partagé, toute CVE critique bloque, et le contrôle IAM repère un compte étranger ou un propriétaire de plus. Le retour arrière vise désormais une release nommée, sonde sa cible avant de basculer le trafic, et a été répété pour de vrai en recette.
 
 ### Fixed
 
