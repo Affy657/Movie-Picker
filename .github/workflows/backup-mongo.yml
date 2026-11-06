@@ -144,7 +144,7 @@ jobs:
           echo "Database backed up and verified: $DB_NAME"
           STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
           ARCHIVE="$RUNNER_TEMP/moviepicker-${STAMP}.archive.gz"
-          mongodump --uri="$URI" --archive="$ARCHIVE" --gzip
+          mongodump --uri="$URI" --archive="$ARCHIVE" --gzip 2>&1 | sed -nE '/\t(Failed:|error )/p'
           SIZE="$(stat -c%s "$ARCHIVE")"
           echo "Archive: $ARCHIVE ($SIZE bytes)"
           if [ "$SIZE" -lt 1024 ]; then
@@ -234,7 +234,7 @@ jobs:
             print_mongo_diagnostics
             exit 1
           fi
-          mongorestore --uri="mongodb://127.0.0.1:27017/?directConnection=true" --archive="$FETCHED" --gzip
+          mongorestore --uri="mongodb://127.0.0.1:27017/?directConnection=true" --archive="$FETCHED" --gzip 2>&1 | sed -nE '/\t(Failed:|error )/p'
           # The database name is validated above against ^[A-Za-z0-9_-]+$: injection impossible.
           printf 'const EXPECTED_DB = "%s";\n' "$DB_NAME" > "$RUNNER_TEMP/verify.js"
           cat >> "$RUNNER_TEMP/verify.js" <<'JS'
