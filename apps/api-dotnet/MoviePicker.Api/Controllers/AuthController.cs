@@ -121,6 +121,7 @@ public sealed class AuthController : ControllerBase
     private const string FrontIntegrationsPath = "/settings/integrations";
     private const string FrontCallbackPath = "/auth/callback";
     private const string ReturnToItemKey = "returnTo";
+    internal const string ProviderItemKey = "oauthProvider";
     private const string OauthErrorQueryKey = "oauthError";
     private const string ReauthenticationRequiredError = "reauthentication_required";
 
@@ -151,6 +152,7 @@ public sealed class AuthController : ControllerBase
             RedirectUri = $"/{ApiRoutePrefix.V1}/auth/oauth/{knownProvider}/callback"
         };
         props.Items[ReturnToItemKey] = ReturnToPolicy.Sanitize(returnTo);
+        props.Items[ProviderItemKey] = knownProvider;
         return Challenge(props, knownProvider);
     }
 
@@ -177,6 +179,12 @@ public sealed class AuthController : ControllerBase
 
         if (!externalResult.Succeeded || externalResult.Principal is null)
             return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "external_auth_failed")));
+
+        if (!WasIssuedBy(externalResult.Properties, knownProvider))
+        {
+            logger.LogWarning("OAuth callback: the external ticket does not come from {Provider}", knownProvider);
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "external_auth_failed")));
+        }
 
         var returnTo = ReturnToPolicy.Sanitize(
             externalResult.Properties?.Items.TryGetValue(ReturnToItemKey, out var storedReturnTo) == true
@@ -226,6 +234,10 @@ public sealed class AuthController : ControllerBase
             ("provider", knownProvider),
             ("event", loginOutcome.IsNewAccount ? "signup" : "login")));
     }
+
+    private static bool WasIssuedBy(AuthenticationProperties? ticket, string provider) =>
+        ticket?.Items.TryGetValue(ProviderItemKey, out var issuer) == true
+        && string.Equals(issuer, provider, StringComparison.Ordinal);
 
     private async Task<IActionResult> LinkToSignedInAccountAsync(
         string currentUserId,
