@@ -1,8 +1,8 @@
 import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
 import { Bookmark, CalendarPlus, Inbox } from 'lucide-react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { queryRetryDelay, shouldRetryQuery } from '@/shared/api/retryPolicy';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { createAppQueryClient } from '@/app/appQueryClient';
 import { ThemeProvider } from '@/shared/contexts/ThemeContext';
 import { ConsentProvider } from '@/shared/contexts/ConsentContext';
 import { useTranslation, LocaleProvider } from '@/shared/i18n';
@@ -52,21 +52,6 @@ function PageFallback() {
       <p className="placeholder">{t('common.loading')}</p>
     </PageLayout>
   );
-}
-
-function createAppQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: shouldRetryQuery,
-        retryDelay: queryRetryDelay,
-        staleTime: 1000 * 60 * 5,
-        gcTime: 1000 * 60 * 30,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: 'always',
-      },
-    },
-  });
 }
 
 export function AppRoutes() {
