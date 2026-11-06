@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
+using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
@@ -18,7 +19,7 @@ public sealed class TmdbMovieSearchTests
     private static HttpClient CreateHttpClient(HttpMessageHandler handler) => new(handler) { BaseAddress = new Uri("https://api.themoviedb.org") };
 
     private static TmdbMovieSearch CreateSut(HttpClient client, IOptions<MoviePickerOptions> options) =>
-        new(client, options, new MemoryCache(new MemoryCacheOptions()), new InMemorySharedCache(), NullLogger<TmdbMovieSearch>.Instance);
+        new(client, options, new MemoryCache(new MemoryCacheOptions()), new InMemorySharedCache(), new SingleFlight(), NullLogger<TmdbMovieSearch>.Instance);
 
     [Fact]
     public async Task SearchAsync_NoApiKey_ThrowsInvalidOperationException()
@@ -339,6 +340,7 @@ public sealed class TmdbMovieSearchTests
             Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }),
             new MemoryCache(new MemoryCacheOptions()),
             shared,
+            new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
         var result = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
@@ -367,6 +369,7 @@ public sealed class TmdbMovieSearchTests
             Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }),
             new MemoryCache(new MemoryCacheOptions()),
             shared,
+            new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
         await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
@@ -390,12 +393,65 @@ public sealed class TmdbMovieSearchTests
             Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }),
             new MemoryCache(new MemoryCacheOptions()),
             shared,
+            new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
         var result = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
 
         Assert.Null(result);
         Assert.Null(await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v2:movie:FR:550"));
+    }
+
+    private sealed class HeldTmdb : HttpMessageHandler
+    {
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _calls;
+
+        public int Calls => Volatile.Read(ref _calls);
+
+        public void Release() => _release.SetResult();
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Interlocked.Increment(ref _calls);
+            await _release.Task;
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(RuntimeBodyFromPath(request)) };
+        }
+    }
+
+    [Fact]
+    public async Task GetEnrichmentAsync_ConcurrentCallersOnTwoTypedClients_ShareOneFetch()
+    {
+        var tmdb = new HeldTmdb();
+        var options = Options.Create(new MoviePickerOptions { TmdbApiKey = "key" });
+        var memory = new MemoryCache(new MemoryCacheOptions());
+        var shared = new InMemorySharedCache();
+        var flight = new SingleFlight();
+        TmdbMovieSearch TypedClient() => new(new HttpClient(tmdb), options, memory, shared, flight, NullLogger<TmdbMovieSearch>.Instance);
+
+        var first = TypedClient().GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
+        var second = TypedClient().GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
+        tmdb.Release();
+
+        Assert.Equal(7, (await first)?.RuntimeMinutes);
+        Assert.Equal(7, (await second)?.RuntimeMinutes);
+        Assert.Equal(2, tmdb.Calls);
+    }
+
+    [Fact]
+    public async Task GetEnrichmentAsync_ACallerGivesUp_TheOtherOneStillReceivesTheSharedFetch()
+    {
+        var tmdb = new HeldTmdb();
+        var sut = CreateSut(new HttpClient(tmdb), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+        using var abandoned = new CancellationTokenSource();
+
+        var leaving = sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR", abandoned.Token);
+        var staying = sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
+        abandoned.Cancel();
+        tmdb.Release();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => leaving);
+        Assert.Equal(7, (await staying)?.RuntimeMinutes);
     }
 
     [Fact]
@@ -409,6 +465,7 @@ public sealed class TmdbMovieSearchTests
             Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbEnrichmentSharedCacheMaxEntries = 1 }),
             new MemoryCache(new MemoryCacheOptions()),
             shared,
+            new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
         var first = await sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
@@ -437,6 +494,7 @@ public sealed class TmdbMovieSearchTests
             Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }),
             new MemoryCache(new MemoryCacheOptions()),
             shared,
+            new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
         var result = await sut.GetEnrichmentAsync(550, MovieMediaType.Movie, "FR");
@@ -674,6 +732,7 @@ public sealed class TmdbMovieSearchTests
             Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbEnrichmentCacheHours = 1 }),
             memory,
             shared,
+            new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
         var result = await sut.GetEnrichmentsAsync(

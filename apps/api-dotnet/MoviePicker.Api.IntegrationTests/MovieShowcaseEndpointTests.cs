@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
@@ -71,6 +72,7 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
                 Options.Create(new MoviePickerOptions { TmdbApiKey = "test-key" }),
                 new MemoryCache(new MemoryCacheOptions()),
                 new InMemorySharedCache(),
+                new SingleFlight(),
                 NullLogger<TmdbMovieSearch>.Instance));
         })).CreateClient();
 

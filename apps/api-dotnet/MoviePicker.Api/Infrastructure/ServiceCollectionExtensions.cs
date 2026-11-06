@@ -389,6 +389,7 @@ public static class ServiceCollectionExtensions
                 sp.GetRequiredService<IOptions<MoviePickerOptions>>(),
                 sp.GetRequiredService<TmdbEntryCache>(),
                 sp.GetRequiredService<ISharedCache>(),
+                sp.GetRequiredService<SingleFlight>(),
                 sp.GetRequiredService<ILogger<TmdbMovieSearch>>()));
     }
 

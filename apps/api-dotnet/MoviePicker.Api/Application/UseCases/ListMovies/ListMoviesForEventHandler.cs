@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
@@ -156,7 +155,7 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
             var (seenCount, seenByPseudos) = ResolveSeenSummary(m.Id, seenAgg, pseudos);
             var votersUpPseudos = ResolveUpVoterPseudos(m.Id, upVotersAgg, pseudos);
 
-            enrichmentByKey.TryGetValue((m.TmdbId, m.MediaType.ToString()), out var enr);
+            enrichmentByKey.TryGetValue((m.TmdbId, m.MediaType), out var enr);
             var posterOut = _posterImageStore.ToPublicPosterPath(m.PosterPath);
 
             int? myVote = myVotes.TryGetValue(m.Id, out var mv) ? mv : null;
@@ -198,32 +197,19 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         return list;
     }
 
-    private async Task<ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>> BuildEnrichmentMapAsync(
+    private async Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> BuildEnrichmentMapAsync(
         IReadOnlyList<Movie> movies,
         CancellationToken ct)
     {
-        var enrichmentByKey = new ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>();
         if (!_options.HasTmdbCredentials)
-            return enrichmentByKey;
+            return new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>();
 
         var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)
             ? "FR"
             : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
-        var distinctPairs = movies.Select(x => (x.TmdbId, x.MediaType)).Distinct().ToList();
-        var parallel = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
-        await Parallel.ForEachAsync(
-                distinctPairs,
-                new ParallelOptions { MaxDegreeOfParallelism = parallel, CancellationToken = ct },
-                async (pair, c) =>
-                {
-                    var (tmdbId, mediaType) = pair;
-                    var enr = await _tmdbMovieSearch.GetEnrichmentAsync(tmdbId, mediaType, region, c);
-                    enrichmentByKey[(tmdbId, mediaType.ToString())] = enr;
-                })
-            .ConfigureAwait(false);
-        return enrichmentByKey;
+        var keys = movies.Select(x => (x.TmdbId, x.MediaType)).Distinct().ToList();
+        return await _tmdbMovieSearch.GetEnrichmentsAsync(keys, region, ct).ConfigureAwait(false);
     }
-
 
     private static List<string> ResolvePseudos(
         IEnumerable<string> participantIds,

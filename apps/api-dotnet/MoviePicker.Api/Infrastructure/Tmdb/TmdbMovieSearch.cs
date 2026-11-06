@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
@@ -44,6 +45,7 @@ public sealed partial class TmdbMovieSearch : ITmdbMovieSearch
     private readonly MoviePickerOptions _options;
     private readonly IMemoryCache _cache;
     private readonly ISharedCache _sharedCache;
+    private readonly SingleFlight _singleFlight;
     private readonly ILogger<TmdbMovieSearch> _logger;
 
     private TimeSpan FailureCacheTtl() =>
@@ -54,12 +56,14 @@ public sealed partial class TmdbMovieSearch : ITmdbMovieSearch
         IOptions<MoviePickerOptions> options,
         IMemoryCache cache,
         ISharedCache sharedCache,
+        SingleFlight singleFlight,
         ILogger<TmdbMovieSearch> logger)
     {
         _http = http;
         _options = options.Value;
         _cache = cache;
         _sharedCache = sharedCache;
+        _singleFlight = singleFlight;
         _logger = logger;
     }
 

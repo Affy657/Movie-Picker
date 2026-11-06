@@ -82,6 +82,25 @@ public sealed class ListMoviesForEventHandlerTests
             opts);
     }
 
+    private ListMoviesForEventHandler SutWithTmdbKey() =>
+        new(
+            _eventRepo.Object,
+            _movieRepo.Object,
+            _voteRepo.Object,
+            _participantRepo.Object,
+            _seenMarkRepo.Object,
+            _ratingRepo.Object,
+            _userRepo.Object,
+            _tmdb.Object,
+            _posterStore.Object,
+            _currentUser.Object,
+            Options.Create(new MoviePickerOptions { TmdbApiKey = "k", TmdbWatchProvidersRegion = "FR" }));
+
+    private void GivenEnrichments(params ((int TmdbId, MovieMediaType MediaType) Key, TmdbMovieEnrichment? Enrichment)[] rows) =>
+        _tmdb
+            .Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(rows.ToDictionary(row => row.Key, row => row.Enrichment));
+
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {
@@ -348,7 +367,7 @@ public sealed class ListMoviesForEventHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_WithTmdbKey_EnrichesFromGetEnrichmentAsync()
+    public async Task HandleAsync_WithTmdbKey_EnrichesFromTheBatchRead()
     {
         var evt = ActiveEvent();
         var movies = new List<Movie>
@@ -374,29 +393,9 @@ public sealed class ListMoviesForEventHandlerTests
         _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
         _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate> { ["mov1"] = new(0, 0, 0) });
         _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string> { ["p1"] = "Alice" });
-        _tmdb
-            .Setup(t => t.GetEnrichmentAsync(42, It.IsAny<MovieMediaType>(), "FR", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(enrichment);
+        GivenEnrichments(((42, MovieMediaType.Movie), enrichment));
 
-        var sutWithKey = new ListMoviesForEventHandler(
-            _eventRepo.Object,
-            _movieRepo.Object,
-            _voteRepo.Object,
-            _participantRepo.Object,
-            _seenMarkRepo.Object,
-            _ratingRepo.Object,
-            _userRepo.Object,
-            _tmdb.Object,
-            _posterStore.Object,
-            _currentUser.Object,
-            Options.Create(
-                new MoviePickerOptions
-                {
-                    TmdbApiKey = "k",
-                    TmdbWatchProvidersRegion = "FR",
-                }));
-
-        var result = await sutWithKey.HandleAsync("evt1");
+        var result = await SutWithTmdbKey().HandleAsync("evt1");
 
         var m = Assert.Single(result);
         Assert.Equal(7.2, m.VoteAverage);
@@ -406,6 +405,35 @@ public sealed class ListMoviesForEventHandlerTests
         Assert.Equal(8, p.ProviderId);
         Assert.Equal("Netflix", p.Name);
         Assert.Equal("flatrate", p.Type);
+        _tmdb.Verify(
+            t => t.GetEnrichmentAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MovieBeyondTheFetchBudget_StaysListedWithoutItsEnrichment()
+    {
+        var evt = ActiveEvent();
+        var now = DateTimeOffset.UtcNow;
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(
+        [
+            new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Within", Year = "2020", CreatedAt = now, UpdatedAt = now },
+            new Movie { Id = "mov2", EventId = evt.Id, ParticipantId = "p1", TmdbId = 2, Title = "Beyond", Year = "2021", CreatedAt = now, UpdatedAt = now }
+        ]);
+        _voteRepo.Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+        _participantRepo.Setup(r => r.GetPseudosByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).ReturnsAsync(new Dictionary<string, string>());
+        GivenEnrichments(((1, MovieMediaType.Movie), new TmdbMovieEnrichment(7.2, [], null, 148)));
+
+        var result = await SutWithTmdbKey().HandleAsync("evt1");
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal(148, result.First(m => m.TmdbId == 1).RuntimeMinutes);
+        var beyond = result.First(m => m.TmdbId == 2);
+        Assert.Equal("Beyond", beyond.Title);
+        Assert.Null(beyond.RuntimeMinutes);
+        Assert.Null(beyond.VoteAverage);
+        Assert.Empty(beyond.WatchProviders);
     }
 
     [Fact]
