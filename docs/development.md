@@ -33,7 +33,7 @@ Development sur la base `moviepicker`, et les suites de tests refusent en plus `
 En conteneur :
 
 ```bash
-docker run -d --name moviepicker-mongo -p 27017:27017 mongo:7
+docker run -d --name moviepicker-mongo -p 27017:27017 mongo:8
 ```
 
 Ce qui donne `MONGODB_URI=mongodb://localhost:27017/moviepicker_dev`. Sur Atlas, un cluster gratuit

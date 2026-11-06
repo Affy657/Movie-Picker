@@ -6,6 +6,53 @@ Le format s'appuie sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) 
 projet suit le [versionnage sémantique](https://semver.org/lang/fr/) (SemVer). Chaque
 version publiée est associée à un tag Git et à une release GitHub.
 
+## [Non publié]
+
+### Security
+
+- **Une connexion Google ou GitHub reste liée au fournisseur qui l'a délivrée** : tout écart est refusé avant d'ouvrir une session.
+- **Le mail de réinitialisation ne cite plus votre nom** et part au plus cinq fois par jour vers une même adresse.
+- **Supprimer un compte sans mot de passe ou y délier un fournisseur demande une connexion récente.**
+- **Les photos de profil sont limitées à ce que l'application produit**, et leur nombre total est plafonné.
+- **Une même personne reçoit au plus cinq invitations par jour d'un même hôte**, et couper les invitations les retire aussi de la boîte de réception.
+- **Une session fermée depuis un autre onglet ou appareil déconnecte aussi cet onglet**, sans rechargement.
+- **Une déconnexion sans réseau est signalée comme non confirmée**, puis relancée au retour de la connexion.
+- **Retirer son consentement efface l'identifiant de mesure d'audience du navigateur.**
+- **La chaîne de livraison se resserre** : la garde de déploiement partiel refuse une comparaison tronquée, l'image de production se construit sans cache partagé, toute CVE critique bloque, et le contrôle IAM repère un compte étranger ou un propriétaire de plus.
+
+### Fixed
+
+- **Le film tiré reste caché aux participants jusqu'à l'arrêt de la roue**, et la feuille de note ne s'ouvre plus par-dessus la roue.
+- **Retirer un participant ou un film après l'annulation d'un tirage efface aussi ses notes** : la moyenne et le recap restent justes.
+- **Une limite égale au maximum (15 films, 300 participants) est enregistrée comme une limite**, et non comme « sans limite ». À la création, une limite invalide affiche une erreur au lieu d'être remplacée en silence.
+- **La note de pitch se lit et s'écrit en vue liste, donc sur téléphone**, et l'hôte peut la supprimer.
+- **Le recap se met à jour après une note.**
+- **L'historique filtré garde « Charger plus ».**
+- **Une soirée qui ne se charge pas propose « Réessayer ».**
+- **Une notification du film ne dit « Ce soir » que le jour même**, sinon elle nomme le jour.
+- **Le tirage d'une soirée lointaine est annoncé même si l'hôte a quitté la page pendant la roue.**
+- **Un incident chez un destinataire ne prive plus les suivants de leur notification**, et le rappel de note arrive dans la boîte même si le premier passage a échoué.
+- **Un vote ou une marque « vu » envoyé pendant le retrait du film ou du participant est refusé.**
+- **Le lancement de la roue depuis le bandeau « en suspens » ne peut plus partir deux fois.**
+- **Une note en échec reste signalée après la fermeture de la feuille.**
+- **Rejoindre une soirée met le compteur à jour tout de suite.**
+- **Le film tiré et l'échec d'un vote sont annoncés aux lecteurs d'écran**, et les confettis respectent la réduction des animations.
+- **La page ne défile plus derrière une fenêtre ou une feuille ouverte.**
+- **Si l'application ne peut pas démarrer, un message propose de recharger la page**, et « Réessayer » recharge vraiment après un fichier manquant.
+- **Une requête bloquée s'arrête avec un message clair** au lieu de tourner sans fin.
+- **La bannière de cookies et les boutons de connexion ne clignotent plus** au chargement des pages publiques.
+- **L'application installée s'ouvre hors ligne.**
+- **Tab ferme les menus et les listes déroulantes.**
+- **Un lien de connexion mal formé ne fait plus planter la page.**
+- **Les durées des films restent affichées sur l'accueil quand TMDB limite ses réponses.**
+- **La mesure d'audience ne s'arrête plus après la première page vue**, et une page vue ne compte plus deux fois.
+
+### Changed
+
+- **La cloche de notifications ne recharge plus toute la boîte de réception** pour afficher son compteur.
+- **La liste de films d'une soirée coûte moins de lectures** : les enrichissements se lisent en une requête et les votes en un agrégat.
+- **La synchronisation Letterboxd manuelle s'espace de cinq minutes** et le dit à l'écran.
+
 ## [1.7.0] - 2026-11-06
 
 ### Added
