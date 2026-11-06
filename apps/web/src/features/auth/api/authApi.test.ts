@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { postAuthLogout } from '@/features/auth/api/authApi';
+import { hasSessionHint, setSessionHint } from '@/features/auth/session-hint';
+import { ApiError } from '@/shared/api/apiError';
 
 const mockFetchApi = vi.fn();
 vi.mock('@/shared/api/client', async (importOriginal) => ({
@@ -66,4 +68,36 @@ describe('postAuthLogout', () => {
 
     expect(logoutBody()).toEqual({});
   });
+
+  it('forgets the session hint once the server confirmed', async () => {
+    setSessionHint();
+
+    await postAuthLogout();
+
+    expect(hasSessionHint()).toBe(false);
+  });
+
+  it.each([
+    ['the session was already gone', 401],
+    ['the server cannot be reached', 0],
+  ])('forgets the session hint when %s', async (_case, code) => {
+    setSessionHint();
+    mockFetchApi.mockRejectedValue(new ApiError('Refused', { code }));
+
+    await expect(postAuthLogout()).rejects.toThrow('Refused');
+
+    expect(hasSessionHint()).toBe(false);
+  });
+
+  it.each([500, 503, 429])(
+    'keeps the session hint on a %i, the session is still open',
+    async (code) => {
+      setSessionHint();
+      mockFetchApi.mockRejectedValue(new ApiError('Refused', { code }));
+
+      await expect(postAuthLogout()).rejects.toThrow('Refused');
+
+      expect(hasSessionHint()).toBe(true);
+    }
+  );
 });

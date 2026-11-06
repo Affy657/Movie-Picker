@@ -64,9 +64,11 @@ export async function postAuthLogout(): Promise<void> {
   const pushEndpoint = await currentPushEndpoint();
   try {
     await fetchApi('/auth/logout', { method: 'POST', body: JSON.stringify({ pushEndpoint }) });
-  } finally {
-    clearSessionHint();
+  } catch (e) {
+    if (ApiError.is(e) && (e.code === 401 || e.code === 0)) clearSessionHint();
+    throw e;
   }
+  clearSessionHint();
 }
 
 export async function fetchOAuthProviders(): Promise<string[]> {

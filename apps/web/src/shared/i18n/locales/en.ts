@@ -692,6 +692,9 @@ export const en: Locale = {
     logout: {
       fallbackError: 'Logout failed.',
       submitting: 'Logging out\u2026',
+      pendingTitle: 'Sign-out not confirmed',
+      pendingDescription:
+        'The server cannot be reached: your session stays open until it answers. The sign-out will be retried when the network is back.',
     },
   },
 

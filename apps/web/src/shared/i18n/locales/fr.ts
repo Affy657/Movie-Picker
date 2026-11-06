@@ -702,6 +702,9 @@ export const fr = {
     logout: {
       fallbackError: 'Déconnexion impossible.',
       submitting: 'Déconnexion\u2026',
+      pendingTitle: 'Déconnexion non confirmée',
+      pendingDescription:
+        'Le serveur est injoignable : votre session reste ouverte tant qu’il n’a pas répondu. La déconnexion sera relancée au retour du réseau.',
     },
   },
 
