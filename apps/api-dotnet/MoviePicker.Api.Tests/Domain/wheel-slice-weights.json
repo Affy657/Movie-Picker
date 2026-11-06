@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "mode": "weightedByVotes", "scores": [4, 0, 1], "weights": [5, 1, 2] },
+    { "mode": "weightedByVotes", "scores": [-3, -1, 0], "weights": [1, 1, 1] },
+    { "mode": "weightedByVotes", "scores": [2, -5], "weights": [3, 1] },
+    { "mode": "strictRandom", "scores": [4, 0, -2], "weights": [1, 1, 1] }
+  ]
+}
