@@ -645,6 +645,7 @@ export const fr = {
         syncNow: 'Synchroniser maintenant',
         syncSubmitting: 'Lecture de Letterboxd…',
         syncFallbackError: 'Synchronisation impossible. Réessayez dans un instant.',
+        syncDeferred: 'Une synchronisation vient d’avoir lieu. Réessayez dans quelques minutes.',
         reportChanges: '{{added}} film(s) ajouté(s), {{removed}} retiré(s).',
         reportPending: 'Choisir pour {{count}} film(s) ambigu(s)',
         reportUnmatched: 'Voir les {{count}} film(s) introuvable(s) sur TMDB',
@@ -1623,6 +1624,8 @@ export const fr = {
       'Vous avez atteint la limite de {{max}} templates. Supprimez-en un pour en enregistrer un nouveau.',
     invite_event_finished: "Impossible d'inviter : la soirée est terminée.",
     already_participant: 'Cet utilisateur participe déjà à la soirée.',
+    invitation_limit_reached:
+      'Vous avez déjà envoyé plusieurs invitations à cette personne aujourd’hui. Réessayez demain.',
     invitation_already_sent:
       'Une invitation a déjà été envoyée à cet utilisateur pour cette soirée.',
     event_full: 'La soirée est complète ({{max}} participants maximum).',
@@ -1703,6 +1706,8 @@ export const fr = {
     reference_movie_missing: 'Film de référence manquant',
     collection_id_missing: 'Identifiant de collection manquant',
     unknown_theme: 'Thème inconnu',
+    unknown_genre: 'Genre inconnu',
+    unknown_collection: 'Collection inconnue',
     too_many_attachments: 'Trop de pièces jointes (maximum {{max}}).',
     attachment_content_invalid: 'Contenu invalide (base64 malformé) pour « {{name}} ».',
     attachment_content_mismatch:
@@ -1728,6 +1733,8 @@ export const fr = {
     avatar_photo_invalid:
       'Cette image ne peut pas servir de photo de profil. Choisissez une image JPEG, PNG ou WebP d’au moins 128 pixels de côté.',
     avatar_photo_not_found: 'Cette photo n’existe plus. Ajoutez-en une nouvelle.',
+    avatar_photo_storage_full:
+      'Impossible d’ajouter une photo de profil pour le moment. Réessayez plus tard ou choisissez un avatar.',
     movie_details_unavailable: 'Détails film temporairement indisponibles',
     showcase_unavailable: 'Sélections de films temporairement indisponibles',
     search_unavailable: 'Recherche films temporairement indisponible',

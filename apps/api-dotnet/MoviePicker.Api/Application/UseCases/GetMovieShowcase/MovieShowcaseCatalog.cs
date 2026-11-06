@@ -19,6 +19,7 @@ public static class MovieShowcaseCatalog
     public const int MostProposedLimit = 100;
     public const int MostProposedMinEventCount = 2;
     public const int MostProposedMinDistinctMovies = 30;
+    public const int MaxSeedTmdbId = 10_000_000;
 
     private const int A24CompanyId = 41_077;
     private const int FamilyGenreId = 10_751;
@@ -110,6 +111,8 @@ public static class MovieShowcaseCatalog
     public static string? ProviderKey(string? provider) => CatalogKey(ProviderKeys, provider);
 
     public static bool IsTmdbMovieGenre(int genreId) => TmdbMovieGenreIds.Contains(genreId);
+
+    public static bool IsCatalogCollection(int collectionId) => CollectionIds.Contains(collectionId);
 
     private static string? CatalogKey(IReadOnlyList<string> keys, string? value) =>
         string.IsNullOrWhiteSpace(value)

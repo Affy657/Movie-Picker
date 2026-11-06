@@ -130,6 +130,7 @@ public static class ServiceCollectionExtensions
         RegisterHandlers(services);
 
         services.AddScoped<SharedRateLimitFilter>();
+        services.AddScoped<ISharedQuota, CounterSharedQuota>();
         services.AddSingleton<ValidationErrorFilter>();
         services.AddSingleton<MoviePickerExceptionFilter>();
 

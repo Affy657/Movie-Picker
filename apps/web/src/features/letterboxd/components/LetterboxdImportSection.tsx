@@ -55,6 +55,7 @@ export default function LetterboxdImportSection() {
   const [report, setReport] = useState<LetterboxdSyncReport | null>(null);
   const [choicesOpen, setChoicesOpen] = useState(false);
   const [confirmResult, setConfirmResult] = useState<LetterboxdConfirmResult | null>(null);
+  const [syncDeferred, setSyncDeferred] = useState(false);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -113,8 +114,13 @@ export default function LetterboxdImportSection() {
     clearSyncError();
     setConfirmResult(null);
     setReport(null);
+    setSyncDeferred(false);
     const result = await runSync();
     if (!result) return;
+    if (result.skipped) {
+      setSyncDeferred(true);
+      return;
+    }
     setReport(result);
     setChoicesOpen(result.pendingChoices.length > 0);
   };
@@ -307,6 +313,12 @@ export default function LetterboxdImportSection() {
       {syncError && (
         <p className="error" role="alert">
           {syncError}
+        </p>
+      )}
+
+      {syncDeferred && (
+        <p className="hint" role="status" aria-live="polite">
+          {t('auth.account.letterboxd.syncDeferred')}
         </p>
       )}
 

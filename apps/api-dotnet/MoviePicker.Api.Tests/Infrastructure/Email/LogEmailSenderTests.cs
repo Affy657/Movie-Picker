@@ -14,7 +14,6 @@ public class LogEmailSenderTests
         var sender = new LogEmailSender(logger);
         var msg = new EmailMessage(
             ToEmail: "alice.smith@example.com",
-            ToName: "Alice",
             Subject: "Test subject",
             HtmlBody: "<a href=\"https://www.movie-picker.fr/reset?token=abc123\">link</a>",
             TextBody: "Open https://www.movie-picker.fr/reset?token=abc123",
@@ -36,7 +35,7 @@ public class LogEmailSenderTests
     {
         var logger = new CapturingLogger<LogEmailSender>();
         var sender = new LogEmailSender(logger);
-        var msg = new EmailMessage("u@x.fr", "X", "S", "<p>hello</p>", "hello", Tag: null);
+        var msg = new EmailMessage("u@x.fr", "S", "<p>hello</p>", "hello", Tag: null);
 
         await sender.SendAsync(msg);
 
@@ -49,7 +48,7 @@ public class LogEmailSenderTests
     {
         var logger = new CapturingLogger<LogEmailSender>();
         var sender = new LogEmailSender(logger);
-        var msg = new EmailMessage("u@x.fr", "X", "S", "<p>no link here</p>", "no link", "tag");
+        var msg = new EmailMessage("u@x.fr", "S", "<p>no link here</p>", "no link", "tag");
 
         await sender.SendAsync(msg);
 

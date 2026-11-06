@@ -50,6 +50,7 @@ public static class ErrorCodes
     public const string InviteEventFinished = "invite_event_finished";
     public const string AlreadyParticipant = "already_participant";
     public const string InvitationAlreadySent = "invitation_already_sent";
+    public const string InvitationLimitReached = "invitation_limit_reached";
     public const string EventFull = "event_full";
     public const string WinnersAllDrawn = "winners_all_drawn";
     public const string CreatorCannotBeRemoved = "creator_cannot_be_removed";
@@ -119,6 +120,8 @@ public static class ErrorCodes
     public const string ReferenceMovieMissing = "reference_movie_missing";
     public const string CollectionIdMissing = "collection_id_missing";
     public const string UnknownTheme = "unknown_theme";
+    public const string UnknownGenre = "unknown_genre";
+    public const string UnknownCollection = "unknown_collection";
     public const string TooManyAttachments = "too_many_attachments";
     public const string AttachmentContentInvalid = "attachment_content_invalid";
     public const string AttachmentContentMismatch = "attachment_content_mismatch";
@@ -138,6 +141,7 @@ public static class ErrorCodes
     public const string LastLoginMethod = "last_login_method";
     public const string AvatarPhotoInvalid = "avatar_photo_invalid";
     public const string AvatarPhotoNotFound = "avatar_photo_not_found";
+    public const string AvatarPhotoStorageFull = "avatar_photo_storage_full";
     public const string ParticipantIdRequired = "participant_id_required";
 
     public const string MovieDetailsUnavailable = "movie_details_unavailable";

@@ -20,6 +20,7 @@ public sealed class LetterboxdController : ControllerBase
 {
     [HttpPost("sync")]
     [EnableRateLimiting(RateLimitingExtensions.LetterboxdImportPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.LetterboxdImportPolicy)]
     [ProducesResponseType(typeof(LetterboxdSyncResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]

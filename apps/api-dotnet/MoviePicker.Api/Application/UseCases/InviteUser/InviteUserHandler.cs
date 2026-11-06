@@ -8,6 +8,11 @@ namespace MoviePicker.Api.Application.UseCases.InviteUser;
 
 public sealed class InviteUserHandler : IInviteUserHandler
 {
+    public const string PairQuotaScope = "invite-pair";
+    public const int MaxInvitationsPerPairPerDay = 5;
+
+    private static readonly TimeSpan PairQuotaWindow = TimeSpan.FromHours(24);
+
     private readonly IEventRepository _events;
     private readonly IParticipantRepository _participants;
     private readonly IFollowRepository _follows;
@@ -17,6 +22,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
     private readonly IPushNotificationSender _pushSender;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly INotificationDedupRepository _dedup;
+    private readonly ISharedQuota _quota;
     private readonly TimeProvider _clock;
 
     public InviteUserHandler(
@@ -29,6 +35,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
         IPushNotificationSender pushSender,
         ICurrentUserAccessor currentUserAccessor,
         INotificationDedupRepository dedup,
+        ISharedQuota quota,
         TimeProvider clock)
     {
         _events = events;
@@ -40,6 +47,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
         _pushSender = pushSender;
         _currentUserAccessor = currentUserAccessor;
         _dedup = dedup;
+        _quota = quota;
         _clock = clock;
     }
 
@@ -71,10 +79,20 @@ public sealed class InviteUserHandler : IInviteUserHandler
         if (alreadyInvited)
             throw Errors.InvitationAlreadySent();
 
+        var withinPairQuota = await _quota.TryConsumeAsync(
+            PairQuotaScope, $"{currentUserId}|{targetUserId}", MaxInvitationsPerPairPerDay, PairQuotaWindow, ct);
+        if (!withinPairQuota)
+            throw Errors.InvitationLimitReached();
+
+        var target = await _users.GetByIdAsync(targetUserId, ct);
+
         var claimed = await _dedup.TryClaimAsync(
             targetUserId, UserNotificationType.EventInvitation, evt.Id, NotificationDedupChannel.InApp, ct);
         if (!claimed)
             throw Errors.InvitationAlreadySent();
+
+        if (target is not null && !target.NotifiesOn(UserNotificationType.EventInvitation))
+            return Sent();
 
         User? actor;
         try
@@ -101,8 +119,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
             throw;
         }
 
-        var target = await _users.GetByIdAsync(targetUserId, ct);
-        if (target is not null && target.NotifiesOn(UserNotificationType.EventInvitation))
+        if (target is not null)
         {
             var subs = await _pushSubscriptions.ListByUserIdAsync(targetUserId, ct);
             var message = new PushMessage(
@@ -114,6 +131,8 @@ public sealed class InviteUserHandler : IInviteUserHandler
             await PushFanOut.SendToAllAsync(_pushSender, subs, message, ct);
         }
 
-        return new InviteUserResponse { Message = "Invitation sent" };
+        return Sent();
     }
+
+    private static InviteUserResponse Sent() => new() { Message = "Invitation sent" };
 }

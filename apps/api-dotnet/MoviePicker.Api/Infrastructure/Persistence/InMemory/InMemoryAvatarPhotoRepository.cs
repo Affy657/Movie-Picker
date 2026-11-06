@@ -17,6 +17,9 @@ public sealed class InMemoryAvatarPhotoRepository : IAvatarPhotoRepository
     public Task<StoredAvatarPhoto?> GetByKeyAsync(string key, CancellationToken ct = default) =>
         Task.FromResult(_byKey.TryGetValue(key, out var photo) ? photo : null);
 
+    public Task<long> EstimatedCountAsync(CancellationToken ct = default) =>
+        Task.FromResult((long)_byKey.Count);
+
     public Task DeleteAsync(string key, CancellationToken ct = default)
     {
         _byKey.TryRemove(key, out _);

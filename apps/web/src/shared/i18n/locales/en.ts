@@ -638,6 +638,7 @@ export const en: Locale = {
         syncNow: 'Sync now',
         syncSubmitting: 'Reading Letterboxd…',
         syncFallbackError: 'Sync failed. Try again in a moment.',
+        syncDeferred: 'A sync has just run. Try again in a few minutes.',
         reportChanges: '{{added}} film(s) added, {{removed}} removed.',
         reportPending: 'Choose for {{count}} ambiguous film(s)',
         reportUnmatched: 'Show the {{count}} film(s) not found on TMDB',
@@ -1594,6 +1595,8 @@ export const en: Locale = {
       'You reached the limit of {{max}} templates. Delete one to save a new one.',
     invite_event_finished: 'Cannot invite: the movie night is over.',
     already_participant: 'This user already takes part in the movie night.',
+    invitation_limit_reached:
+      'You have already sent several invitations to this person today. Try again tomorrow.',
     invitation_already_sent:
       'An invitation has already been sent to this user for this movie night.',
     event_full: 'The movie night is full ({{max}} participants maximum).',
@@ -1672,6 +1675,8 @@ export const en: Locale = {
     reference_movie_missing: 'Reference movie missing',
     collection_id_missing: 'Collection id missing',
     unknown_theme: 'Unknown theme',
+    unknown_genre: 'Unknown genre',
+    unknown_collection: 'Unknown collection',
     too_many_attachments: 'Too many attachments (maximum {{max}}).',
     attachment_content_invalid: 'Invalid content (malformed base64) for “{{name}}”.',
     attachment_content_mismatch:
@@ -1695,6 +1700,8 @@ export const en: Locale = {
     avatar_photo_invalid:
       'This image cannot be used as a profile photo. Choose a JPEG, PNG or WebP image at least 128 pixels on each side.',
     avatar_photo_not_found: 'This photo no longer exists. Add a new one.',
+    avatar_photo_storage_full:
+      'Profile photos cannot be added right now. Try again later or choose an avatar.',
     movie_details_unavailable: 'Movie details temporarily unavailable',
     showcase_unavailable: 'Movie selections temporarily unavailable',
     search_unavailable: 'Movie search temporarily unavailable',

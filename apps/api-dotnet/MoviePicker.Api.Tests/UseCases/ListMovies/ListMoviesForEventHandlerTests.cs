@@ -106,6 +106,59 @@ public sealed class ListMoviesForEventHandlerTests
             .Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows.ToDictionary(row => row.Key, row => row.Enrichment));
 
+    private void GivenSelectionOf(params Movie[] stored)
+    {
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("soiree", It.IsAny<CancellationToken>())).ReturnsAsync(ActiveEvent());
+        _movieRepo
+            .Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, CancellationToken _) => stored.Where(m => ids.Contains(m.Id)).ToList());
+        _voteRepo
+            .Setup(r => r.AggregateSummariesByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, MovieVoteSummary>());
+        GivenParticipants();
+    }
+
+    private static Movie StoredMovie(string id, int tmdbId, string eventId = "evt1") => new()
+    {
+        Id = id,
+        EventId = eventId,
+        ParticipantId = "p1",
+        TmdbId = tmdbId,
+        MediaType = MovieMediaType.Movie,
+        Title = id,
+        Year = "2000"
+    };
+
+    [Fact]
+    public async Task HandleSelectionAsync_EnrichesTheSelectedMoviesAndNoneOfTheOthers()
+    {
+        GivenSelectionOf(StoredMovie("m1", 101), StoredMovie("m2", 102), StoredMovie("m3", 103));
+        GivenEnrichments(((101, MovieMediaType.Movie), new TmdbMovieEnrichment(null, [], null, 118)));
+
+        var movies = await SutWithTmdbKey().HandleSelectionAsync("soiree", ["m1"]);
+
+        var movie = Assert.Single(movies);
+        Assert.Equal("m1", movie.Id);
+        Assert.Equal(118, movie.RuntimeMinutes);
+        _tmdb.Verify(
+            t => t.GetEnrichmentsAsync(
+                It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(keys => keys.Count == 1 && keys.Contains((101, MovieMediaType.Movie))),
+                "FR",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _movieRepo.Verify(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleSelectionAsync_MovieOfAnotherEvent_IsLeftOut()
+    {
+        GivenSelectionOf(StoredMovie("m1", 101), StoredMovie("foreign", 102, eventId: "evt2"));
+
+        var movies = await _sut.HandleSelectionAsync("soiree", ["m1", "foreign"]);
+
+        Assert.Equal("m1", Assert.Single(movies).Id);
+    }
+
     [Fact]
     public async Task HandleAsync_EventNotFound_ThrowsNotFoundException()
     {

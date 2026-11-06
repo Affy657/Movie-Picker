@@ -8,4 +8,10 @@ public interface IListMoviesForEventHandler
         string idOrSlug,
         string? participantId = null,
         CancellationToken ct = default);
+
+    Task<IReadOnlyList<MovieWithScoreResponse>> HandleSelectionAsync(
+        string idOrSlug,
+        IReadOnlyCollection<string> movieIds,
+        string? participantId = null,
+        CancellationToken ct = default);
 }

@@ -30,6 +30,16 @@ public sealed class InMemoryAvatarPhotoRepositoryTests
     }
 
     [Fact]
+    public async Task EstimatedCount_FollowsTheStoredPhotos()
+    {
+        await _repo.SaveAsync(Photo("k1"));
+        await _repo.SaveAsync(Photo("k2"));
+        await _repo.DeleteAsync("k1");
+
+        Assert.Equal(1, await _repo.EstimatedCountAsync());
+    }
+
+    [Fact]
     public async Task Get_UnknownKey_ReturnsNull()
     {
         Assert.Null(await _repo.GetByKeyAsync("missing"));

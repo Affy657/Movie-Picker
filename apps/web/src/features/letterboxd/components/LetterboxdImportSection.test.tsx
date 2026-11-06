@@ -211,6 +211,37 @@ describe('LetterboxdImportSection (MSW)', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('says to come back later instead of reporting zero changes when the server skips the sync', async () => {
+    const user = userEvent.setup();
+    server.use(
+      meHandler({ letterboxdUsername: 'affy657', letterboxdLastSyncAt: '2026-08-10T12:00:00Z' }),
+      http.post(`${TEST_API_V1}/letterboxd/sync`, () =>
+        HttpResponse.json({
+          skipped: true,
+          added: 0,
+          removed: 0,
+          unmatchedTitles: [],
+          pendingChoices: [],
+          totalOnLetterboxd: 0,
+          totalTruncated: 0,
+        })
+      )
+    );
+
+    renderAccount();
+
+    const syncButton = await screen.findByRole('button', { name: /Synchroniser maintenant/ });
+    await waitFor(() => expect(syncButton).toBeEnabled());
+    await user.click(syncButton);
+
+    expect(
+      await screen.findByText(
+        'Une synchronisation vient d’avoir lieu. Réessayez dans quelques minutes.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText('0 film(s) ajouté(s), 0 retiré(s).')).not.toBeInTheDocument();
+  });
+
   it('opens the choice modal when the sync returns ambiguous matches', async () => {
     const user = userEvent.setup();
 

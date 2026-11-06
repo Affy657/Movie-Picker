@@ -431,7 +431,8 @@ public sealed class GetMovieShowcaseHandlerTests
         _tmdb.Setup(t => t.GetCollectionMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
 
-        await Build().HandleAsync(new MovieShowcaseQuery(section, CollectionId: 4242, SeedTmdbId: 4242));
+        await Build().HandleAsync(new MovieShowcaseQuery(
+            section, CollectionId: MovieShowcaseCatalog.CollectionIds[0], SeedTmdbId: 4242));
 
         _shared.Verify(
             c => c.TryGetAsync<IReadOnlyList<MovieShowcaseItemResponse>>(It.IsAny<string>(), It.IsAny<CancellationToken>()),
@@ -529,18 +530,61 @@ public sealed class GetMovieShowcaseHandlerTests
             ? new MovieShowcaseQuery(section, Theme: key)
             : new MovieShowcaseQuery(section, Provider: key);
 
-    [Fact]
-    public async Task HandleAsync_TrendingOnAGenreTmdbDoesNotHave_StaysOutOfTheSharedCache()
+    [Theory]
+    [InlineData(987_654)]
+    [InlineData(28, 987_654)]
+    public async Task HandleAsync_TrendingOnAGenreTmdbDoesNotHave_IsRejectedBeforeReachingTmdb(params int[] genreIds)
     {
-        _tmdb.Setup(t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        var ex = await Assert.ThrowsAsync<BadRequestException>(
+            () => Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, GenreIds: genreIds)));
+
+        Assert.Equal(ErrorCodes.UnknownGenre, ex.Reason);
+        _tmdb.Verify(
+            t => t.DiscoverMoviesAsync(It.IsAny<TmdbDiscoveryCriteria>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        VerifySharedWrites(Times.Never());
+    }
+
+    [Fact]
+    public async Task HandleAsync_CollectionOutOfTheCatalog_IsRejectedBeforeReachingTmdb()
+    {
+        var ex = await Assert.ThrowsAsync<BadRequestException>(
+            () => Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Collection, CollectionId: 4242)));
+
+        Assert.Equal(ErrorCodes.UnknownCollection, ex.Reason);
+        _tmdb.Verify(t => t.GetCollectionMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SeedBeyondAnyTmdbIdentifier_IsRejectedBeforeReachingTmdb()
+    {
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => Build().HandleAsync(new MovieShowcaseQuery(
+            MovieShowcaseSections.Recommendations, SeedTmdbId: MovieShowcaseCatalog.MaxSeedTmdbId + 1)));
+
+        Assert.Equal(ErrorCodes.ReferenceMovieMissing, ex.Reason);
+        _tmdb.Verify(
+            t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SeedAtTheEdgeOfTheRange_IsStillServed()
+    {
+        _tmdb.Setup(t => t.GetRecommendationsAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(2));
 
-        await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending, GenreIds: [987_654]));
+        var result = await Build().HandleAsync(new MovieShowcaseQuery(
+            MovieShowcaseSections.Recommendations, SeedTmdbId: MovieShowcaseCatalog.MaxSeedTmdbId));
 
-        VerifySharedWrites(Times.Never());
-        _shared.Verify(
-            c => c.TryGetAsync<IReadOnlyList<MovieShowcaseItemResponse>>(It.IsAny<string>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        Assert.Equal(2, result.Items.Count);
+    }
+
+    [Fact]
+    public void TheGenresOfferedByTheHome_AreAllInTheCatalog()
+    {
+        int[] trendingGenreTabs = [28, 35, 53, 18, 27, 16];
+
+        Assert.All(trendingGenreTabs, id => Assert.True(MovieShowcaseCatalog.IsTmdbMovieGenre(id)));
     }
 
     [Fact]

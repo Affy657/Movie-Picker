@@ -253,8 +253,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         public bool IsSharedAcrossInstances => Section switch
         {
             MovieShowcaseSections.Recommendations or MovieShowcaseSections.Collection => false,
-            MovieShowcaseSections.Trending => GenreIds.Count == 0
-                || (GenreIds.Count == 1 && MovieShowcaseCatalog.IsTmdbMovieGenre(GenreIds[0])),
+            MovieShowcaseSections.Trending => GenreIds.Count <= 1,
             _ => true,
         };
 
@@ -274,7 +273,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             var section = (query.Section ?? string.Empty).Trim().ToLowerInvariant();
             return section switch
             {
-                MovieShowcaseSections.Trending => new SectionRequest(section, Genres: NormalizeGenreIds(query.GenreIds)),
+                MovieShowcaseSections.Trending => new SectionRequest(section, Genres: KnownGenreIds(query.GenreIds)),
                 MovieShowcaseSections.NowPlaying or MovieShowcaseSections.MostProposed => new SectionRequest(section),
                 MovieShowcaseSections.Theme => new SectionRequest(
                     section,
@@ -284,16 +283,30 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
                     Provider: MovieShowcaseCatalog.ProviderKey(query.Provider) ?? throw Errors.UnknownPlatform()),
                 MovieShowcaseSections.Collection => new SectionRequest(
                     section,
-                    CollectionId: query.CollectionId is > 0 ? query.CollectionId : throw Errors.CollectionIdMissing()),
+                    CollectionId: KnownCollectionId(query.CollectionId)),
                 MovieShowcaseSections.Recommendations => new SectionRequest(
                     section,
-                    SeedTmdbId: query.SeedTmdbId is > 0 ? query.SeedTmdbId : throw Errors.ReferenceMovieMissing(),
+                    SeedTmdbId: query.SeedTmdbId is > 0 and <= MovieShowcaseCatalog.MaxSeedTmdbId
+                        ? query.SeedTmdbId
+                        : throw Errors.ReferenceMovieMissing(),
                     SeedMediaType: query.SeedMediaType == MovieMediaType.Tv ? MovieMediaType.Tv : MovieMediaType.Movie),
                 _ => throw Errors.UnknownSection(),
             };
         }
 
-        private static List<int> NormalizeGenreIds(IReadOnlyList<int>? genreIds) =>
-            genreIds is null ? [] : genreIds.Where(id => id > 0).Distinct().Order().ToList();
+        private static int KnownCollectionId(int? collectionId)
+        {
+            if (collectionId is not > 0)
+                throw Errors.CollectionIdMissing();
+            return MovieShowcaseCatalog.IsCatalogCollection(collectionId.Value)
+                ? collectionId.Value
+                : throw Errors.UnknownCollection();
+        }
+
+        private static List<int> KnownGenreIds(IReadOnlyList<int>? genreIds)
+        {
+            List<int> ids = genreIds is null ? [] : genreIds.Where(id => id > 0).Distinct().Order().ToList();
+            return ids.TrueForAll(MovieShowcaseCatalog.IsTmdbMovieGenre) ? ids : throw Errors.UnknownGenre();
+        }
     }
 }

@@ -53,7 +53,9 @@ public sealed class GetNightRecapHandler : IGetNightRecapHandler
         if (detail.Winners.Count == 0)
             return [];
 
-        var byId = (await _movies.HandleAsync(eventSlug, detail.MyParticipant?.Id, ct)).ToDictionary(m => m.Id);
+        var winnerIds = detail.Winners.Select(w => w.MovieId).ToList();
+        var byId = (await _movies.HandleSelectionAsync(eventSlug, winnerIds, detail.MyParticipant?.Id, ct))
+            .ToDictionary(m => m.Id);
         return detail.Winners
             .Select(w => byId.GetValueOrDefault(w.MovieId))
             .OfType<MovieWithScoreResponse>()
