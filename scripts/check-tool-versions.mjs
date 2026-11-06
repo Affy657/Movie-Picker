@@ -62,6 +62,11 @@ function newest(versions) {
     .at(-1);
 }
 
+async function latestNpmDistTag(packageName, tag) {
+  const tags = await json(`https://registry.npmjs.org/-/package/${packageName}/dist-tags`);
+  return tags[tag];
+}
+
 async function latestNuget(packageId) {
   const index = await json(`https://api.nuget.org/v3-flatcontainer/${packageId}/index.json`);
   return newest(index.versions);
@@ -78,6 +83,15 @@ async function dockerHubDigest(repository, tag) {
 }
 
 const tools = [
+  // `pnpm/action-setup` and pnpm itself read this field, Dependabot leaves it alone. The pin follows
+  // its own major line: pnpm patches its advisories on each `latest-<major>`, and a new major is a
+  // decision, not a drift. A bump rewrites the `+sha512.` suffix too, the hexadecimal form of the
+  // registry's `dist.integrity`.
+  {
+    name: 'pnpm',
+    pins: [{ file: 'package.json', pattern: /"packageManager": "pnpm@([^"+]+)/ }],
+    latest: (current) => latestNpmDistTag('pnpm', `latest-${current.split('.')[0]}`),
+  },
   {
     name: 'actionlint',
     pins: [
@@ -184,7 +198,7 @@ for (const tool of tools) {
   const current = values[0];
   let latest;
   try {
-    latest = await tool.latest();
+    latest = await tool.latest(current);
   } catch (error) {
     failures += 1;
     console.log(`unreachable ${tool.name} ${short(current)} (${files}): ${error.message}`);
