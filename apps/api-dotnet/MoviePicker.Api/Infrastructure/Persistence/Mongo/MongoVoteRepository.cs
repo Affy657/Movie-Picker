@@ -82,54 +82,10 @@ public sealed class MongoVoteRepository : IVoteRepository
         IReadOnlyCollection<string> movieIds,
         CancellationToken ct = default)
     {
-        if (movieIds.Count == 0)
-            return new Dictionary<string, VoteScoreAggregate>();
-
-        var oids = new List<ObjectId>();
-        foreach (var id in movieIds)
-        {
-            if (ObjectId.TryParse(id, out var oid))
-                oids.Add(oid);
-        }
-
-        if (oids.Count == 0)
-            return new Dictionary<string, VoteScoreAggregate>();
-
-        var pipeline = new[]
-        {
-            new BsonDocument("$match", new BsonDocument("movieId", new BsonDocument("$in", new BsonArray(oids)))),
-            new BsonDocument(
-                "$group",
-                new BsonDocument
-                {
-                    { "_id", "$movieId" },
-                    { "score", new BsonDocument("$sum", "$value") },
-                    {
-                        "up",
-                        new BsonDocument(
-                            "$sum",
-                            new BsonDocument(
-                                "$cond",
-                                new BsonArray { new BsonDocument("$eq", new BsonArray { "$value", 1 }), 1, 0 }))
-                    },
-                    {
-                        "down",
-                        new BsonDocument(
-                            "$sum",
-                            new BsonDocument(
-                                "$cond",
-                                new BsonArray { new BsonDocument("$eq", new BsonArray { "$value", -1 }), 1, 0 }))
-                    }
-                })
-        };
-
-        using var cursor = await _collection.AggregateAsync<BsonDocument>(pipeline, cancellationToken: ct);
-        var results = await cursor.ToListAsync(ct);
         var dict = new Dictionary<string, VoteScoreAggregate>();
-        foreach (var r in results)
+        foreach (var r in await AggregateVotesAsync(movieIds, VoteCountsGroup(), ct))
         {
-            var id = r["_id"].AsObjectId.ToString();
-            dict[id] = new VoteScoreAggregate(
+            dict[r["_id"].AsObjectId.ToString()] = new VoteScoreAggregate(
                 r["score"].ToInt32(),
                 r["up"].ToInt32(),
                 r["down"].ToInt32());
@@ -138,13 +94,50 @@ public sealed class MongoVoteRepository : IVoteRepository
         return dict;
     }
 
-    public async Task<IReadOnlyDictionary<string, IReadOnlyList<string>>> AggregateUpVotersByMovieIdsAsync(
+    public async Task<IReadOnlyDictionary<string, MovieVoteSummary>> AggregateSummariesByMovieIdsAsync(
         IReadOnlyCollection<string> movieIds,
         CancellationToken ct = default)
     {
-        if (movieIds.Count == 0)
-            return new Dictionary<string, IReadOnlyList<string>>();
+        var group = VoteCountsGroup();
+        group.Add(
+            "upVoterIds",
+            new BsonDocument(
+                "$push",
+                new BsonDocument("$cond", new BsonArray { HasValue(1), "$participantId", "$$REMOVE" })));
 
+        var dict = new Dictionary<string, MovieVoteSummary>();
+        foreach (var r in await AggregateVotesAsync(movieIds, group, ct))
+        {
+            dict[r["_id"].AsObjectId.ToString()] = new MovieVoteSummary(
+                r["score"].ToInt32(),
+                r["up"].ToInt32(),
+                r["down"].ToInt32(),
+                r["upVoterIds"].AsBsonArray.Select(v => v.AsObjectId.ToString()).ToList());
+        }
+
+        return dict;
+    }
+
+    private static BsonDocument HasValue(int value) =>
+        new("$eq", new BsonArray { "$value", value });
+
+    private static BsonDocument CountOf(int value) =>
+        new("$sum", new BsonDocument("$cond", new BsonArray { HasValue(value), 1, 0 }));
+
+    private static BsonDocument VoteCountsGroup() =>
+        new()
+        {
+            { "_id", "$movieId" },
+            { "score", new BsonDocument("$sum", "$value") },
+            { "up", CountOf(1) },
+            { "down", CountOf(-1) }
+        };
+
+    private async Task<List<BsonDocument>> AggregateVotesAsync(
+        IReadOnlyCollection<string> movieIds,
+        BsonDocument group,
+        CancellationToken ct)
+    {
         var oids = new List<ObjectId>();
         foreach (var id in movieIds)
         {
@@ -153,37 +146,16 @@ public sealed class MongoVoteRepository : IVoteRepository
         }
 
         if (oids.Count == 0)
-            return new Dictionary<string, IReadOnlyList<string>>();
+            return [];
 
         var pipeline = new[]
         {
-            new BsonDocument(
-                "$match",
-                new BsonDocument
-                {
-                    { "movieId", new BsonDocument("$in", new BsonArray(oids)) },
-                    { "value", 1 }
-                }),
-            new BsonDocument(
-                "$group",
-                new BsonDocument
-                {
-                    { "_id", "$movieId" },
-                    { "participantIds", new BsonDocument("$push", "$participantId") }
-                })
+            new BsonDocument("$match", new BsonDocument("movieId", new BsonDocument("$in", new BsonArray(oids)))),
+            new BsonDocument("$group", group)
         };
 
         using var cursor = await _collection.AggregateAsync<BsonDocument>(pipeline, cancellationToken: ct);
-        var results = await cursor.ToListAsync(ct);
-        var dict = new Dictionary<string, IReadOnlyList<string>>();
-        foreach (var r in results)
-        {
-            var id = r["_id"].AsObjectId.ToString();
-            var pids = r["participantIds"].AsBsonArray.Select(v => v.AsObjectId.ToString()).ToList();
-            dict[id] = pids;
-        }
-
-        return dict;
+        return await cursor.ToListAsync(ct);
     }
 
     public async Task<IReadOnlyDictionary<string, int>> GetParticipantVotesByEventAsync(

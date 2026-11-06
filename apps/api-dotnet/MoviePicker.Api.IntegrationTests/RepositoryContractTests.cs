@@ -55,6 +55,31 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     };
 
     [Fact]
+    public async Task VoteSummaries_CountEveryVote_AndListOnlyTheUpVoters()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var votes = scope.ServiceProvider.GetRequiredService<IVoteRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        var movieId = ObjectId.GenerateNewId().ToString();
+        var downVotedMovieId = ObjectId.GenerateNewId().ToString();
+        string[] upVoters = [ObjectId.GenerateNewId().ToString(), ObjectId.GenerateNewId().ToString()];
+        var downVoter = ObjectId.GenerateNewId().ToString();
+        foreach (var upVoter in upVoters)
+            await votes.UpsertAsync(new Vote { EventId = eventId, MovieId = movieId, ParticipantId = upVoter, Value = 1 });
+        await votes.UpsertAsync(new Vote { EventId = eventId, MovieId = movieId, ParticipantId = downVoter, Value = -1 });
+        await votes.UpsertAsync(new Vote { EventId = eventId, MovieId = downVotedMovieId, ParticipantId = downVoter, Value = -1 });
+
+        var summaries = await votes.AggregateSummariesByMovieIdsAsync(
+            [movieId, downVotedMovieId, ObjectId.GenerateNewId().ToString()]);
+
+        Assert.Equal(2, summaries.Count);
+        Assert.Equal((1, 2, 1), (summaries[movieId].Score, summaries[movieId].Up, summaries[movieId].Down));
+        Assert.Equal(upVoters.Order(), summaries[movieId].UpVoterIds.Order());
+        Assert.Equal((-1, 0, 1), (summaries[downVotedMovieId].Score, summaries[downVotedMovieId].Up, summaries[downVotedMovieId].Down));
+        Assert.Empty(summaries[downVotedMovieId].UpVoterIds);
+    }
+
+    [Fact]
     public async Task MovieList_KeepsTheProposalOrder_WhateverTheTmdbIds()
     {
         using var scope = _factory.Services.CreateScope();

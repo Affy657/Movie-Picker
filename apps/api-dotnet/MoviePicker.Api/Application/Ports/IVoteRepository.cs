@@ -4,6 +4,11 @@ namespace MoviePicker.Api.Application.Ports;
 
 public readonly record struct VoteScoreAggregate(int Score, int Up, int Down);
 
+public sealed record MovieVoteSummary(int Score, int Up, int Down, IReadOnlyList<string> UpVoterIds)
+{
+    public static readonly MovieVoteSummary None = new(0, 0, 0, []);
+}
+
 public interface IVoteRepository
 {
     Task DeleteByMovieIdAsync(string movieId, CancellationToken ct = default);
@@ -21,7 +26,7 @@ public interface IVoteRepository
         IReadOnlyCollection<string> movieIds,
         CancellationToken ct = default);
 
-    Task<IReadOnlyDictionary<string, IReadOnlyList<string>>> AggregateUpVotersByMovieIdsAsync(
+    Task<IReadOnlyDictionary<string, MovieVoteSummary>> AggregateSummariesByMovieIdsAsync(
         IReadOnlyCollection<string> movieIds,
         CancellationToken ct = default);
 

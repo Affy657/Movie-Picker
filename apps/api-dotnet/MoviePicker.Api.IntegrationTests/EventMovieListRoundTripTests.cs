@@ -132,5 +132,7 @@ public sealed class EventMovieListRoundTripTests : IClassFixture<MoviePickerAppl
             Assert.Equal(1, movie.Up);
         });
         Assert.Equal(1, Count("find", "shared_cache"));
+        Assert.Equal(1, Count("aggregate", "votes"));
+        Assert.Equal(1, Count("find", "participants"));
     }
 }
