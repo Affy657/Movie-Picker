@@ -224,7 +224,10 @@ export function CardKebab({
     repositionMenu();
   }, [open, repositionMenu]);
 
-  useClickOutside([rootRef, menuRef], close, open, { returnFocusTo: btnRef });
+  useClickOutside([rootRef, menuRef], close, open, {
+    returnFocusTo: btnRef,
+    closeOnFocusLeave: true,
+  });
 
   useEffect(() => {
     if (!open) return;

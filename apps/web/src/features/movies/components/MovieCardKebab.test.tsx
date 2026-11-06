@@ -50,6 +50,23 @@ const menuItemNames = () =>
     .map((item) => item.getAttribute('aria-label') ?? item.textContent);
 
 describe('CardKebab', () => {
+  it('closes when Tab leaves the menu, with the focus where Tab took it', async () => {
+    const user = userEvent.setup();
+    render(
+      <LocaleProvider>
+        <Harness onViewDetails={() => {}} />
+        <button type="button">Plus loin</button>
+      </LocaleProvider>
+    );
+    await user.click(screen.getByRole('button', { name: /plus d’actions/i }));
+    screen.getAllByRole('menuitem')[0].focus();
+
+    await user.tab({ shift: true });
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Plus loin' })).toHaveFocus();
+  });
+
   it('offers only the Letterboxd link among the external links', async () => {
     await openKebab({ onViewDetails: () => {}, canRemove: true });
 
