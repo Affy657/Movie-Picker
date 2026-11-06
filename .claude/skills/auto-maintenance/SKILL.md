@@ -123,7 +123,7 @@ Conditions, toutes requises :
 2. `gh workflow run deploy.yml --repo Affy657/Movie-Picker --ref master -f stage=staging -f target=all`, suivre le run jusqu'au bout. `deploy-guard` doit être vert, et la recette doit servir le SHA (`https://api.staging.movie-picker.fr/health/ready`, `<meta name="release">` de `https://staging.movie-picker.fr/`).
 3. Même commande avec `-f stage=production`, puis vérifier les points 1 à 3 de l'étape 7 de `/weekly-maintenance`.
 
-Un échec de déploiement ne touche pas la prod : la révision n'est promue qu'après validation, et la production refuse de partir sans la recette. Porte Trivy rouge sur une CVE de l'image de base : monter le digest du runtime, revenir à l'étape 3. Lighthouse rouge ou autre cause : notifier.
+Un échec de déploiement ne touche pas la prod : la révision n'est promue qu'après validation, et la production refuse de partir sans la recette. Porte Trivy rouge sur une CVE de l'image de base : monter le digest du runtime, revenir à l'étape 3. Une CRITICAL sans correctif publié bloque aussi, et aucun digest ne la lève : c'est un risque à accepter dans `.trivyignore`, décision de l'utilisateur, donc notifier. Lighthouse rouge ou autre cause : notifier.
 
 ## Étape 6 : surveiller, et revenir en arrière
 

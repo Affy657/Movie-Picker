@@ -347,22 +347,33 @@ jobs:
           file: apps/api-dotnet/MoviePicker.Api/Dockerfile
           tags: movie-picker-api
           load: true
-      # § 25: CVE scan of the image before push. Policy:
-      #   - blocks on CRITICAL unconditionally
+      # § 25: CVE scan of the image before push. Policy, in two steps because `ignore-unfixed`
+      # applies to every severity of a step:
       #   - blocks on HIGH **only when an upstream fix is available** (`ignore-unfixed: true`),
-      #     to avoid freezing the deployment on base-image CVEs without a published patch.
+      #     to avoid freezing the deployment on base-image CVEs without a published patch;
+      #   - blocks on CRITICAL unconditionally, published patch or not.
       # If a CVE blocks here, either rebuild with a newer base image, or document the risk
-      # (workaround / mitigation) and suppress it on the Trivy side (`.trivyignore` at the root of
-      # the build context) with a review note.
-      - name: Scan Docker image (Trivy)
+      # (workaround / mitigation) and suppress it in `.trivyignore`, at the root of the repository
+      # where Trivy runs, with a review note.
+      - name: Scan Docker image (Trivy, HIGH with a fix)
         if: inputs.stage == 'staging'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: movie-picker-api
           format: table
           exit-code: '1'
-          severity: HIGH,CRITICAL
+          severity: HIGH
           ignore-unfixed: true
+          vuln-type: os,library
+          cache: true
+      - name: Scan Docker image (Trivy, every CRITICAL)
+        if: inputs.stage == 'staging'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: movie-picker-api
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
           vuln-type: os,library
           cache: true
       # The digest is read after the push and is the deployment target: a tag stays rewritable, a
@@ -442,15 +453,25 @@ jobs:
           echo "Image the staging serves: ${REPO}@${DIGEST} (revision $REVISION, release $RELEASE)"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
           echo "ref=${REPO}@${DIGEST}" >> "$GITHUB_OUTPUT"
-      - name: Scan the resolved image again (Trivy)
+      - name: Scan the resolved image again (Trivy, HIGH with a fix)
         if: inputs.stage == 'production'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ steps.resolve.outputs.ref }}
           format: table
           exit-code: '1'
-          severity: HIGH,CRITICAL
+          severity: HIGH
           ignore-unfixed: true
+          vuln-type: os,library
+          cache: true
+      - name: Scan the resolved image again (Trivy, every CRITICAL)
+        if: inputs.stage == 'production'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.resolve.outputs.ref }}
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
           vuln-type: os,library
           cache: true
 
