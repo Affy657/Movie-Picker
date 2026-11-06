@@ -317,19 +317,6 @@ public sealed class InMemoryUserRepositoryTests
     }
 
     [Fact]
-    public async Task ListWithLetterboxdSyncEnabledAsync_ReturnsOnlyConfiguredUsers()
-    {
-        await _repo.AddAsync(Mk(email: "a@test.local", handle: "a") with { LetterboxdUsername = "dave_v" });
-        await _repo.AddAsync(Mk(email: "b@test.local", handle: "b"));
-        await _repo.AddAsync(Mk(email: "c@test.local", handle: "c") with { LetterboxdUsername = "" });
-
-        var result = await _repo.ListWithLetterboxdSyncEnabledAsync();
-
-        Assert.Single(result);
-        Assert.Equal("dave_v", result[0].LetterboxdUsername);
-    }
-
-    [Fact]
     public async Task SearchPublicAsync_MatchesDisplayNameAndHandleAnywhere()
     {
         await _repo.AddAsync(Mk(email: "lea@test.local", handle: "lea_m", displayName: "Léa Moreau"));

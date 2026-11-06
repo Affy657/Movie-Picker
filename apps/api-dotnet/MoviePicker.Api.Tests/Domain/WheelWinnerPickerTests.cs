@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using Xunit;
@@ -19,6 +20,56 @@ public sealed class WheelWinnerPickerTests
     };
 
     private static readonly string[] collection = new[] { "a", "b" };
+
+    private static readonly JsonSerializerOptions SharedCasesJson = new() { PropertyNameCaseInsensitive = true };
+
+    private sealed record SharedWeightCase(string Mode, int[] Scores, int[] Weights);
+
+    private sealed record SharedWeightCases(SharedWeightCase[] Cases);
+
+    private sealed class FixedRandom(int value) : Random
+    {
+        public int? LastMaxValue { get; private set; }
+
+        public override int Next(int maxValue)
+        {
+            LastMaxValue = maxValue;
+            return value;
+        }
+    }
+
+    public static TheoryData<string, int[], int[]> SharedWheelWeights()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Domain", "wheel-slice-weights.json");
+        var shared = JsonSerializer.Deserialize<SharedWeightCases>(File.ReadAllText(path), SharedCasesJson)!;
+        var data = new TheoryData<string, int[], int[]>();
+        foreach (var weightCase in shared.Cases)
+            data.Add(weightCase.Mode, weightCase.Scores, weightCase.Weights);
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(SharedWheelWeights))]
+    public void Pick_GivesEachMovieTheShareTheWheelDraws(string mode, int[] scores, int[] weights)
+    {
+        var movies = scores.Select((_, index) => M($"m{index}", $"Movie {index}")).ToArray();
+        var scoreOf = movies
+            .Select((movie, index) => (movie.Id, Score: scores[index]))
+            .ToDictionary(entry => entry.Id, entry => entry.Score, StringComparer.Ordinal);
+        var wheelMode = Enum.Parse<WheelMode>(mode, ignoreCase: true);
+        var total = weights.Sum();
+        var picks = new int[movies.Length];
+
+        for (var roll = 0; roll < total; roll++)
+        {
+            var random = new FixedRandom(roll);
+            var picked = WheelWinnerPicker.Pick(movies, id => scoreOf[id], wheelMode, random);
+            picks[Array.IndexOf(movies, picked)]++;
+            Assert.Equal(wheelMode == WheelMode.StrictRandom ? movies.Length : total, random.LastMaxValue);
+        }
+
+        Assert.Equal(weights, picks);
+    }
 
     [Fact]
     public void Pick_StrictRandom_UsesRandom()

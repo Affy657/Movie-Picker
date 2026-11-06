@@ -54,12 +54,18 @@ public sealed class DeleteAccountHandler : IDeleteAccountHandler
         _logger = logger;
     }
 
-    public async Task HandleAsync(string userId, DeleteAccountRequest request, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, DeleteAccountRequest request, bool recentlyAuthenticated, CancellationToken ct = default)
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
 
         if (string.IsNullOrEmpty(user.PasswordHash))
         {
+            if (!recentlyAuthenticated)
+            {
+                _logger.LogWarning("DeleteAccount: refused on a stale session for {UserId}", userId);
+                throw Errors.ReauthenticationRequired();
+            }
+
             var confirmation = (request.Confirmation ?? string.Empty).Trim();
             var matchesHandle = !string.IsNullOrEmpty(user.Handle)
                 && string.Equals(confirmation, user.Handle, StringComparison.OrdinalIgnoreCase);

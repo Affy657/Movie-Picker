@@ -22,6 +22,7 @@ interface MovieListProps {
   isHost?: boolean;
   onVote: (movieId: string, value: 1 | -1) => Promise<void>;
   onRemove: (movie: MovieData) => void;
+  onRemoveNote?: (movie: MovieData) => void;
   refresh: () => void;
   onActionError: (message: string) => void;
   participantAvatars?: Record<string, string>;
@@ -57,6 +58,7 @@ export default function MovieList({
   isHost = false,
   onVote,
   onRemove,
+  onRemoveNote,
   refresh,
   onActionError,
   participantAvatars,
@@ -110,6 +112,7 @@ export default function MovieList({
     isHost,
     onVote,
     onRemove,
+    onRemoveNote,
     refresh,
     onActionError,
     participantAvatars,

@@ -1,5 +1,4 @@
 using System.Globalization;
-using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Shared;
@@ -15,12 +14,8 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
     private readonly IParticipantRepository _participants;
     private readonly IHostTokenAccessor _hostTokenAccessor;
     private readonly ICurrentUserAccessor _currentUserAccessor;
-    private readonly IUserRepository _userRepository;
-    private readonly IPushSubscriptionRepository _pushSubscriptions;
-    private readonly IPushNotificationSender _pushSender;
-    private readonly IUserNotificationRepository _notifications;
+    private readonly EventAudienceNotifier _audience;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<PatchEventConfigHandler> _logger;
     private readonly TimeProvider _clock;
 
     public PatchEventConfigHandler(
@@ -28,24 +23,16 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
         IParticipantRepository participants,
         IHostTokenAccessor hostTokenAccessor,
         ICurrentUserAccessor currentUserAccessor,
-        IUserRepository userRepository,
-        IPushSubscriptionRepository pushSubscriptions,
-        IPushNotificationSender pushSender,
-        IUserNotificationRepository notifications,
+        EventAudienceNotifier audience,
         IUnitOfWork unitOfWork,
-        ILogger<PatchEventConfigHandler> logger,
         TimeProvider clock)
     {
         _events = events;
         _participants = participants;
         _hostTokenAccessor = hostTokenAccessor;
         _currentUserAccessor = currentUserAccessor;
-        _userRepository = userRepository;
-        _pushSubscriptions = pushSubscriptions;
-        _pushSender = pushSender;
-        _notifications = notifications;
+        _audience = audience;
         _unitOfWork = unitOfWork;
-        _logger = logger;
         _clock = clock;
     }
 
@@ -114,66 +101,25 @@ public sealed partial class PatchEventConfigHandler : IPatchEventConfigHandler
 
         var dateChanged = date != evt.Date || time != evt.Time;
         if (dateChanged && request.NotifyParticipantsOfDateChange == true)
-            await NotifyParticipantsOnDateChangedAsync(saved, userId, CancellationToken.None);
+            await _audience.NotifyParticipantsAsync(DateChangedMessage(saved), userId, CancellationToken.None);
 
         return EventConfigResponse.FromEvent(saved);
     }
 
-    private async Task NotifyParticipantsOnDateChangedAsync(Event evt, string? actingUserId, CancellationToken ct)
-    {
-        try
+    private static EventAudienceMessage DateChangedMessage(Event evt) => new(
+        evt.Id,
+        new UserNotification
         {
-            var participants = await _participants.ListByEventIdAsync(evt.Id, ct);
-            var userIds = participants
-                .Where(p => !string.IsNullOrEmpty(p.UserId) && p.UserId != actingUserId)
-                .Select(p => p.UserId!)
-                .Distinct()
-                .ToList();
-            if (userIds.Count == 0)
-                return;
-
-            var users = await _userRepository.ListByIdsAsync(userIds, ct);
-            var notifiableIds = users.Where(u => u.NotifiesOn(UserNotificationType.EventDateChanged)).Select(u => u.Id).ToHashSet();
-            if (notifiableIds.Count == 0)
-                return;
-
-            var subs = await _pushSubscriptions.ListByUserIdsAsync(notifiableIds, ct);
-            if (subs.Count > 0)
-            {
-                var message = new PushMessage(
-                    Title: "Nouvelle date pour la soirée 📅",
-                    Body: $"{evt.Title} a été reprogrammée.",
-                    Tag: $"event-date-changed-{evt.Id}",
-                    Url: $"/e/{evt.Slug}"
-                );
-
-                await PushFanOut.SendToAllAsync(
-                    _pushSender,
-                    subs.Where(s => notifiableIds.Contains(s.UserId)),
-                    message,
-                    ct);
-            }
-
-            var now = _clock.GetUtcNow();
-            foreach (var userId in notifiableIds)
-            {
-                await _notifications.AddAsync(new UserNotification
-                {
-                    UserId = userId,
-                    Type = UserNotificationType.EventDateChanged,
-                    EventId = evt.Id,
-                    EventSlug = evt.Slug,
-                    EventTitle = evt.Title,
-                    IsRead = false,
-                    CreatedAt = now
-                }, ct);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Date change notification failed for movie night {EventId}", evt.Id);
-        }
-    }
+            Type = UserNotificationType.EventDateChanged,
+            EventId = evt.Id,
+            EventSlug = evt.Slug,
+            EventTitle = evt.Title
+        },
+        new PushMessage(
+            Title: "Nouvelle date pour la soirée 📅",
+            Body: $"{evt.Title} a été reprogrammée.",
+            Tag: $"event-date-changed-{evt.Id}",
+            Url: $"/e/{evt.Slug}"));
 
     private static bool HasConfigChange(PatchEventConfigRequest request) =>
         request.Theme is not null

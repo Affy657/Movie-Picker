@@ -130,6 +130,7 @@ public static class ServiceCollectionExtensions
         RegisterHandlers(services);
 
         services.AddScoped<SharedRateLimitFilter>();
+        services.AddScoped<ISharedQuota, CounterSharedQuota>();
         services.AddSingleton<ValidationErrorFilter>();
         services.AddSingleton<MoviePickerExceptionFilter>();
 
@@ -389,6 +390,7 @@ public static class ServiceCollectionExtensions
                 sp.GetRequiredService<IOptions<MoviePickerOptions>>(),
                 sp.GetRequiredService<TmdbEntryCache>(),
                 sp.GetRequiredService<ISharedCache>(),
+                sp.GetRequiredService<SingleFlight>(),
                 sp.GetRequiredService<ILogger<TmdbMovieSearch>>()));
     }
 
@@ -413,6 +415,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<LetterboxdWatchlistSynchronizer>();
         services.AddScoped<AvatarPhotoWriter>();
         services.AddScoped<IOAuthProfilePhotoImporter, OAuthProfilePhotoImporter>();
+        services.AddScoped<EventAudienceNotifier>();
         services.AddScoped<IWinnerAnnouncer, WinnerAnnouncer>();
         services.AddScoped<IWheelWinnerAnnouncement, WheelWinnerAnnouncement>();
 

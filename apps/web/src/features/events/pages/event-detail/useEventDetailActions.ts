@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROUTES } from '@/app/routes';
 import { removeEventParticipant, postEventClose } from '@/features/events/api/eventsApi';
-import { removeMovieFromEvent } from '@/features/movies/api/moviesApi';
+import { deleteMoviePitchNote, removeMovieFromEvent } from '@/features/movies/api/moviesApi';
 import { removeStoredParticipant } from '@/shared/utils/eventIdentityStorage';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { getErrorMessage } from '@/shared/api/apiError';
@@ -84,6 +84,11 @@ export function useEventDetailActions({
     },
   });
 
+  const removeNoteMutation = useMutation({
+    mutationFn: (movieId: string) =>
+      deleteMoviePitchNote(slug, movieId, participant?.participantId ?? null, hostToken),
+  });
+
   const closeWithoutMovieMutation = useMutation({
     mutationFn: () => postEventClose(slug, hostToken),
     onSuccess: () => {
@@ -99,6 +104,7 @@ export function useEventDetailActions({
   });
   const removeParticipant = removeParticipantMutation.mutate;
   const removeMovie = removeMovieMutation.mutate;
+  const removeNote = removeNoteMutation.mutate;
   const closeWithoutMovie = closeWithoutMovieMutation.mutate;
   const resetWheel = wheel.reset;
 
@@ -113,6 +119,10 @@ export function useEventDetailActions({
       movieTitle: movie.title,
       voteCount: movie.up + movie.down,
     });
+  }, []);
+
+  const handleRequestRemoveNote = useCallback((movie: MovieData) => {
+    setConfirmState({ kind: 'removeNote', movieId: movie.id, movieTitle: movie.title });
   }, []);
 
   const handleLeaveEvent = useCallback(() => {
@@ -165,6 +175,22 @@ export function useEventDetailActions({
     [participant, removeMovie, setActionError, track, refreshAll, t]
   );
 
+  const confirmRemoveNote = useCallback(
+    (movieId: string) => {
+      setActionError(null);
+      removeNote(movieId, {
+        onSuccess: refreshAll,
+        onError: (err) => {
+          setActionError(getErrorMessage(err, t('movies.pitchNote.removeError')));
+        },
+        onSettled: () => {
+          setConfirmState(null);
+        },
+      });
+    },
+    [removeNote, setActionError, refreshAll, t]
+  );
+
   const confirmLeave = useCallback(() => {
     if (!participant) return;
     setActionError(null);
@@ -212,12 +238,14 @@ export function useEventDetailActions({
       leave: removeParticipantMutation.isPending,
       resetWheel: wheel.loading,
       removeMovie: removeMovieMutation.isPending,
+      removeNote: removeNoteMutation.isPending,
       closeWithoutMovie: closeWithoutMovieMutation.isPending,
     }),
     [
       removeParticipantMutation.isPending,
       wheel.loading,
       removeMovieMutation.isPending,
+      removeNoteMutation.isPending,
       closeWithoutMovieMutation.isPending,
     ]
   );
@@ -232,6 +260,7 @@ export function useEventDetailActions({
         confirmLeave,
         confirmResetWheel,
         confirmRemoveMovie,
+        confirmRemoveNote,
         confirmCloseWithoutMovie,
         busyByKind: confirmBusyByKind,
       }),
@@ -243,6 +272,7 @@ export function useEventDetailActions({
       confirmLeave,
       confirmResetWheel,
       confirmRemoveMovie,
+      confirmRemoveNote,
       confirmCloseWithoutMovie,
       confirmBusyByKind,
     ]
@@ -262,6 +292,7 @@ export function useEventDetailActions({
     actionSuccess,
     handleRemoveParticipant,
     handleRequestRemoveMovie,
+    handleRequestRemoveNote,
     handleLeaveEvent,
     requestResetWheel,
     requestCloseWithoutMovie,

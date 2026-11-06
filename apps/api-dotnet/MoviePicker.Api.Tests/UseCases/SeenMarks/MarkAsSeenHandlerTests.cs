@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -18,6 +19,7 @@ public sealed class MarkAsSeenHandlerTests
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo;
     private readonly Mock<ICurrentUserAccessor> _currentUser;
+    private readonly RecordingUnitOfWork _unitOfWork = new();
     private readonly MarkAsSeenHandler _sut;
 
     private static Event ActiveEvent() =>
@@ -53,7 +55,7 @@ public sealed class MarkAsSeenHandlerTests
         _seenMarkRepo = new Mock<ISeenMarkRepository>();
         _currentUser = new Mock<ICurrentUserAccessor>();
         _currentUser.Setup(u => u.GetUserId()).Returns(OwnerUserId);
-        _sut = new MarkAsSeenHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _seenMarkRepo.Object, _currentUser.Object, TimeProvider.System);
+        _sut = new MarkAsSeenHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, _seenMarkRepo.Object, _currentUser.Object, _unitOfWork, TimeProvider.System);
     }
 
     [Fact]
@@ -132,7 +134,75 @@ public sealed class MarkAsSeenHandlerTests
         Assert.Equal(evt.Id, result.EventId);
         Assert.Equal(movie.Id, result.MovieId);
         Assert.Equal(participant.Id, result.ParticipantId);
-        _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_LocksTheEventThenRereadsAndWritesInsideTheUnitOfWork()
+    {
+        var evt = ActiveEvent();
+        var movie = MovieFor(evt);
+        var participant = ParticipantFor(evt);
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        var steps = new List<string>();
+        void Step(string name)
+        {
+            if (_unitOfWork.IsExecuting)
+                steps.Add(name);
+        }
+        _eventRepo.Setup(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => Step("lock")).Returns(Task.CompletedTask);
+        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => Step("movie")).ReturnsAsync(movie);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => Step("participant")).ReturnsAsync(participant);
+        _seenMarkRepo.Setup(r => r.AddAsync(It.IsAny<SeenMark>(), It.IsAny<CancellationToken>()))
+            .Callback(() => Step("write"))
+            .ReturnsAsync((SeenMark m, CancellationToken _) => m);
+
+        await _sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
+
+        Assert.Equal(["lock", "movie", "participant", "write"], steps);
+        Assert.Equal(1, _unitOfWork.Executions);
+        _eventRepo.Verify(r => r.MarkChangedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MovieRemovedBeforeTheLock_RefusesWithoutWriting()
+    {
+        var evt = ActiveEvent();
+        var movie = MovieFor(evt);
+        var participant = ParticipantFor(evt);
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.SetupSequence(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(movie)
+            .ReturnsAsync((Movie?)null);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
+
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() =>
+            _sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id }));
+
+        Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
+        _seenMarkRepo.Verify(r => r.AddAsync(It.IsAny<SeenMark>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ParticipantRemovedBeforeTheLock_RefusesWithoutWriting()
+    {
+        var evt = ActiveEvent();
+        var movie = MovieFor(evt);
+        var participant = ParticipantFor(evt);
+        _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
+        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
+        _participantRepo.SetupSequence(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(participant)
+            .ReturnsAsync((Participant?)null);
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
+            _sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id }));
+
+        Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
+        _seenMarkRepo.Verify(r => r.AddAsync(It.IsAny<SeenMark>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -141,29 +211,16 @@ public sealed class MarkAsSeenHandlerTests
         var evt = ActiveEvent();
         var movie = MovieFor(evt);
         var participant = ParticipantFor(evt);
-        var existing = new SeenMark
-        {
-            Id = "sm-existing",
-            EventId = evt.Id,
-            MovieId = movie.Id,
-            ParticipantId = participant.Id,
-            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
-            UpdatedAt = DateTimeOffset.UtcNow.AddMinutes(-5)
-        };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
-        _seenMarkRepo
-            .Setup(r => r.AddAsync(It.IsAny<SeenMark>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existing);
+        var seenMarks = new InMemorySeenMarkRepository();
+        var sut = new MarkAsSeenHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, seenMarks, _currentUser.Object, _unitOfWork, TimeProvider.System);
 
-        var first = await _sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
-        var second = await _sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
+        var first = await sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
+        var second = await sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
 
-        Assert.Equal(existing.Id, first.Id);
-        Assert.Equal(existing.Id, second.Id);
-        _seenMarkRepo.Verify(
-            r => r.AddAsync(It.IsAny<SeenMark>(), It.IsAny<CancellationToken>()),
-            Times.Exactly(2));
+        Assert.Equal(first.Id, second.Id);
+        Assert.Equal(first.Id, Assert.Single(await seenMarks.ListByParticipantIdsAsync([participant.Id])).Id);
     }
 }

@@ -5,12 +5,13 @@ import { AlertTriangle, RotateCcw, ThumbsDown, ThumbsUp } from 'lucide-react';
 import Chip from '@/shared/components/Chip';
 import {
   CardModals,
+  CardNote,
+  CardProposerFooter,
   CardSelectionOverlay,
   isSelectable,
   type MovieCardCommonProps,
   MovieCardKebab,
   PosterDetailsTrigger,
-  ProposerBadge,
   useMovieCardState,
   VoteBar,
   WatchlistBadge,
@@ -135,13 +136,21 @@ export interface EventMovieRowProps extends MovieCardCommonProps {
 
 function VoteErrorBanner({
   voteError,
+  title,
   t,
-}: Readonly<{ voteError: MovieRowVoteError; t: Translate }>) {
+}: Readonly<{ voteError: MovieRowVoteError; title: string; t: Translate }>) {
   return (
     <li className={styles.errorBanner}>
       <AlertTriangle aria-hidden size={ICON_SIZE.md} className={styles.errorIcon} />
-      <p className={styles.errorMessage}>{voteError.message}</p>
-      <button type="button" className={styles.errorRetry} onClick={voteError.onRetry}>
+      <p className={styles.errorMessage} role="alert">
+        {voteError.message}
+      </p>
+      <button
+        type="button"
+        className={styles.errorRetry}
+        onClick={voteError.onRetry}
+        aria-label={t('movies.list.retryVoteAria', { title })}
+      >
         <RotateCcw aria-hidden size={ICON_SIZE.sm} />
         <span>{t('movies.list.retryVoteAction')}</span>
       </button>
@@ -174,9 +183,14 @@ function EventMovieRowMobile({
   selecting,
   emptyAvailabilityLabel,
   m,
+  slug,
+  participantId,
   isHost,
   onVote,
   onRemove,
+  onRemoveNote,
+  refresh,
+  onActionError,
   t,
   participantAvatarsByPseudo,
   eager,
@@ -240,6 +254,16 @@ function EventMovieRowMobile({
               t={t}
             />
           </div>
+          <CardNote
+            s={s}
+            m={m}
+            slug={slug}
+            participantId={participantId}
+            refresh={refresh}
+            onActionError={onActionError}
+            onRemoveNote={onRemoveNote}
+            t={t}
+          />
           <div className={styles.mobileBottomSection}>
             <span className={styles.mobileVoteScore}>
               {s.canVote ? (
@@ -250,12 +274,7 @@ function EventMovieRowMobile({
               <ScoreBlock m={m} t={t} />
             </span>
             <div className={styles.mobileProposerRow}>
-              <ProposerBadge
-                avatarId={s.proposerAvatarId}
-                pseudo={m.proposerPseudo}
-                handle={m.proposerHandle}
-                t={t}
-              />
+              <CardProposerFooter s={s} m={m} t={t} />
               <span className={styles.mobileSeenSlot}>
                 {s.canAct ? (
                   <SeenButton
@@ -301,7 +320,7 @@ function EventMovieRowMobile({
           participantCount={participantCount}
         />
       </li>
-      {voteError ? <VoteErrorBanner voteError={voteError} t={t} /> : null}
+      {voteError ? <VoteErrorBanner voteError={voteError} title={m.title} t={t} /> : null}
     </Fragment>
   );
 }
@@ -318,9 +337,14 @@ function EventMovieRowDesktop({
   selecting,
   emptyAvailabilityLabel,
   m,
+  slug,
+  participantId,
   isHost,
   onVote,
   onRemove,
+  onRemoveNote,
+  refresh,
+  onActionError,
   t,
   participantAvatarsByPseudo,
   eager,
@@ -341,6 +365,7 @@ function EventMovieRowDesktop({
         className={clsx(
           table.row,
           styles.rowGrid,
+          (m.pitchNote || s.noteEditing) && styles.rowWithNote,
           isWinner && styles.rowWinner,
           !!voteError && styles.rowError,
           excluded && cardPartsStyles.excluded,
@@ -373,17 +398,24 @@ function EventMovieRowDesktop({
             </h3>
           </div>
           <div className={table.metaRow}>
-            <ProposerBadge
-              avatarId={s.proposerAvatarId}
-              pseudo={m.proposerPseudo}
-              handle={m.proposerHandle}
-              t={t}
-            />
+            <CardProposerFooter s={s} m={m} t={t} />
             {isWinner ? (
               <Chip tone="primary" size="sm" className={styles.winnerBadge}>
                 {winnerBadgeLabel(t, winnerRank)}
               </Chip>
             ) : null}
+          </div>
+          <div className={styles.note}>
+            <CardNote
+              s={s}
+              m={m}
+              slug={slug}
+              participantId={participantId}
+              refresh={refresh}
+              onActionError={onActionError}
+              onRemoveNote={onRemoveNote}
+              t={t}
+            />
           </div>
         </div>
         <span className={table.cellEnd}>{s.voteLabel}</span>
@@ -453,7 +485,7 @@ function EventMovieRowDesktop({
           participantCount={participantCount}
         />
       </li>
-      {voteError ? <VoteErrorBanner voteError={voteError} t={t} /> : null}
+      {voteError ? <VoteErrorBanner voteError={voteError} title={m.title} t={t} /> : null}
     </Fragment>
   );
 }
@@ -469,6 +501,7 @@ export const EventMovieRow = memo(function EventMovieRow({
   isHost,
   onVote,
   onRemove,
+  onRemoveNote,
   refresh,
   onActionError,
   t,
@@ -524,6 +557,7 @@ export const EventMovieRow = memo(function EventMovieRow({
       isHost,
       onVote,
       onRemove,
+      onRemoveNote,
       refresh,
       onActionError,
       t,

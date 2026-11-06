@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Controllers;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
@@ -104,6 +105,103 @@ public sealed class SharedRateLimitFilterTests
         _counters.Verify(
             c => c.IncrementAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public void Register_IsBoundByAnHourlyQuotaOnTheAddress()
+    {
+        var attributes = typeof(AuthController)
+            .GetMethod(nameof(AuthController.Register))!
+            .GetCustomAttributes(typeof(SharedRateLimitAttribute), inherit: false)
+            .Cast<SharedRateLimitAttribute>();
+
+        Assert.Contains(attributes, a => a.PolicyName == RateLimitingExtensions.AuthRegisterHourlyPolicy);
+        var policy = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.AuthRegisterHourlyPolicy)!.Value;
+        Assert.Equal(RateLimitingExtensions.QuotaScope.Address, policy.Scope);
+        Assert.Equal(60, policy.WindowMinutes);
+    }
+
+    [Theory]
+    [InlineData("?section=recommendations&seedTmdbId=603")]
+    [InlineData("?section=trending&genreIds=18,35")]
+    public async Task ShowcaseFreeKeyQuota_OverItsLimit_RefusesAFreeKey(string query)
+    {
+        var policy = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieShowcaseFreeKeyHourlyPolicy)!.Value;
+        _counters
+            .Setup(c => c.IncrementAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(policy.PermitLimit + 1);
+        var context = BuildContext(new SharedRateLimitAttribute(policy.Name));
+        context.HttpContext.Request.QueryString = new QueryString(query);
+        var (next, wasCalled) = TrackedNext();
+
+        await CreateFilter().OnActionExecutionAsync(context, next);
+
+        Assert.False(wasCalled());
+    }
+
+    [Theory]
+    [InlineData("?section=trending&genreIds=18")]
+    [InlineData("?section=collections")]
+    public async Task ShowcaseFreeKeyQuota_ClosedSection_IsNeitherCountedNorRefused(string query)
+    {
+        var context = BuildContext(new SharedRateLimitAttribute(RateLimitingExtensions.MovieShowcaseFreeKeyHourlyPolicy));
+        context.HttpContext.Request.QueryString = new QueryString(query);
+        var (next, wasCalled) = TrackedNext();
+
+        await CreateFilter().OnActionExecutionAsync(context, next);
+
+        Assert.True(wasCalled());
+        _counters.Verify(
+            c => c.IncrementAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task SeveralQuotas_OneOverItsLimit_RefusesTheRequest()
+    {
+        var addressPolicy = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.IdeaSuggestionAddressPolicy)!.Value;
+        _counters
+            .Setup(c => c.IncrementAsync(
+                It.Is<string>(key => key.StartsWith(RateLimitingExtensions.IdeaSuggestionPolicy + "|", StringComparison.Ordinal)),
+                It.IsAny<DateTimeOffset>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+        _counters
+            .Setup(c => c.IncrementAsync(
+                It.Is<string>(key => key.StartsWith(addressPolicy.Name + "|ip:203.0.113.7|", StringComparison.Ordinal)),
+                It.IsAny<DateTimeOffset>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(addressPolicy.PermitLimit + 1);
+        var context = BuildContext(
+            new SharedRateLimitAttribute(RateLimitingExtensions.IdeaSuggestionPolicy),
+            new SharedRateLimitAttribute(addressPolicy.Name));
+        var (next, wasCalled) = TrackedNext();
+
+        await CreateFilter().OnActionExecutionAsync(context, next);
+
+        Assert.False(wasCalled());
+        Assert.Equal(StatusCodes.Status429TooManyRequests, Assert.IsType<ContentResult>(context.Result).StatusCode);
+    }
+
+    [Fact]
+    public async Task SeveralQuotas_AllWithinTheirLimit_LetsTheRequestThroughOnce()
+    {
+        GivenCounterReturns(1);
+        var context = BuildContext(
+            new SharedRateLimitAttribute(RateLimitingExtensions.IdeaSuggestionPolicy),
+            new SharedRateLimitAttribute(RateLimitingExtensions.IdeaSuggestionAddressPolicy));
+        var calls = 0;
+
+        await CreateFilter().OnActionExecutionAsync(context, () =>
+        {
+            calls++;
+            return Task.FromResult<ActionExecutedContext>(null!);
+        });
+
+        Assert.Equal(1, calls);
+        _counters.Verify(
+            c => c.IncrementAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
     }
 
     [Fact]

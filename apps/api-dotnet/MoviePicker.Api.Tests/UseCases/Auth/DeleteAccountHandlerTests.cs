@@ -69,7 +69,7 @@ public sealed class DeleteAccountHandlerTests
         await f.Events.AddAsync(new Event { Title = "Soirée", Slug = "soiree", CreatorUserId = user.Id });
 
         var ex = await Assert.ThrowsAsync<UnauthorizedException>(() =>
-            f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "wrong" }));
+            f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "wrong" }, recentlyAuthenticated: true));
 
         Assert.Equal(ErrorCodes.WrongPassword, ex.Reason);
         Assert.NotNull(await f.Users.GetByIdAsync(user.Id));
@@ -100,7 +100,7 @@ public sealed class DeleteAccountHandlerTests
         var key = AvatarPhotoKeys.Sample;
         await f.AvatarPhotos.SaveAsync(new StoredAvatarPhoto { Key = key, UserId = user.Id, ContentType = "image/webp", Data = [1] });
 
-        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
         Assert.Null(await f.AvatarPhotos.GetByKeyAsync(key));
     }
@@ -112,10 +112,34 @@ public sealed class DeleteAccountHandlerTests
         var user = await SeedUserWithoutPasswordAsync(f);
 
         var ex = await Assert.ThrowsAsync<UnauthorizedException>(() =>
-            f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Confirmation = "wrong" }));
+            f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Confirmation = "wrong" }, recentlyAuthenticated: true));
 
         Assert.Equal(ErrorCodes.ConfirmationIncorrect, ex.Reason);
         Assert.NotNull(await f.Users.GetByIdAsync(user.Id));
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoPassword_StaleSession_AsksForAFreshSignInAndKeepsData()
+    {
+        var f = new Fixture();
+        var user = await SeedUserWithoutPasswordAsync(f);
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() =>
+            f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Confirmation = "neo" }, recentlyAuthenticated: false));
+
+        Assert.Equal(ErrorCodes.ReauthenticationRequired, ex.Reason);
+        Assert.NotNull(await f.Users.GetByIdAsync(user.Id));
+    }
+
+    [Fact]
+    public async Task HandleAsync_Password_StaleSession_IsProvedByThePassword()
+    {
+        var f = new Fixture();
+        var user = await SeedUserAsync(f, "abcd1234");
+
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: false);
+
+        Assert.Null(await f.Users.GetByIdAsync(user.Id));
     }
 
     [Fact]
@@ -124,7 +148,7 @@ public sealed class DeleteAccountHandlerTests
         var f = new Fixture();
         var user = await SeedUserWithoutPasswordAsync(f);
 
-        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Confirmation = "NEO" });
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Confirmation = "NEO" }, recentlyAuthenticated: true);
 
         Assert.Null(await f.Users.GetByIdAsync(user.Id));
     }
@@ -135,7 +159,7 @@ public sealed class DeleteAccountHandlerTests
         var f = new Fixture();
         var user = await SeedUserWithoutPasswordAsync(f);
 
-        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Confirmation = "neo@example.com" });
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Confirmation = "neo@example.com" }, recentlyAuthenticated: true);
 
         Assert.Null(await f.Users.GetByIdAsync(user.Id));
     }
@@ -145,7 +169,7 @@ public sealed class DeleteAccountHandlerTests
     {
         var f = new Fixture();
         await Assert.ThrowsAsync<NotFoundException>(() =>
-            f.CreateHandler().HandleAsync("missing", new DeleteAccountRequest { Password = "abcd1234" }));
+            f.CreateHandler().HandleAsync("missing", new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true));
     }
 
     [Fact]
@@ -203,7 +227,7 @@ public sealed class DeleteAccountHandlerTests
             CreatedAt = DateTimeOffset.UtcNow
         });
 
-        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
         Assert.Null(await f.Users.GetByIdAsync(user.Id));
 
@@ -247,7 +271,7 @@ public sealed class DeleteAccountHandlerTests
             CreatedAt = DateTimeOffset.UtcNow
         });
 
-        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
         var kept = Assert.Single(await f.Notifications.ListByUserIdAsync("someone-else"));
         Assert.Null(kept.ActorHandle);
@@ -272,7 +296,7 @@ public sealed class DeleteAccountHandlerTests
         var renaming = new PatchUserProfileHandler(f.Users, f.Notifications, new InMemoryUnitOfWork(), TimeProvider.System);
         await renaming.HandleAsync(user.Id, new PatchUserProfileRequest { Handle = "neo_apres" });
 
-        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
         var kept = Assert.Single(await f.Notifications.ListByUserIdAsync("someone-else"));
         Assert.Null(kept.ActorHandle);
@@ -307,7 +331,7 @@ public sealed class DeleteAccountHandlerTests
             new InMemoryUnitOfWork(),
             NullLogger<DeleteAccountHandler>.Instance);
 
-        await handler.HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+        await handler.HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
         events.Verify(r => r.MarkChangedAsync("joined-1", It.IsAny<CancellationToken>()), Times.Once);
         events.Verify(r => r.MarkChangedAsync("joined-2", It.IsAny<CancellationToken>()), Times.Once);
@@ -322,7 +346,7 @@ public sealed class DeleteAccountHandlerTests
         await f.Participants.AddAsync(new Participant { EventId = joined.Id, Pseudo = "Neo", UserId = user.Id });
         var before = (await f.Events.GetByIdOrSlugAsync(joined.Slug))!.WriteSeq;
 
-        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
         Assert.True((await f.Events.GetByIdOrSlugAsync(joined.Slug))!.WriteSeq > before);
     }
@@ -334,7 +358,7 @@ public sealed class DeleteAccountHandlerTests
         var user = await SeedUserAsync(f, "abcd1234");
         await f.Participants.AddAsync(new Participant { EventId = "deleted-night", Pseudo = "Neo", UserId = user.Id });
 
-        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" });
+        await f.CreateHandler().HandleAsync(user.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
         Assert.Null(await f.Users.GetByIdAsync(user.Id));
     }
@@ -357,8 +381,8 @@ public sealed class DeleteAccountHandlerTests
         await f.Participants.AddAsync(new Participant { EventId = evt.Id, Pseudo = "Neo", UserId = first.Id });
         await f.Participants.AddAsync(new Participant { EventId = evt.Id, Pseudo = "Trinity", UserId = second.Id });
 
-        await f.CreateHandler().HandleAsync(first.Id, new DeleteAccountRequest { Password = "abcd1234" });
-        await f.CreateHandler().HandleAsync(second.Id, new DeleteAccountRequest { Password = "abcd1234" });
+        await f.CreateHandler().HandleAsync(first.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
+        await f.CreateHandler().HandleAsync(second.Id, new DeleteAccountRequest { Password = "abcd1234" }, recentlyAuthenticated: true);
 
         var pseudos = (await f.Participants.ListByEventIdAsync(evt.Id)).Select(p => p.Pseudo).ToList();
         Assert.Equal(2, pseudos.Distinct().Count());

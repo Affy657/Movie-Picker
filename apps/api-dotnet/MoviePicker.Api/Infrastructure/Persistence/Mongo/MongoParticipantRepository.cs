@@ -17,14 +17,6 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         _collection = collections.GetCollection<ParticipantDocument>("participants");
     }
 
-    public async Task<Participant?> FindByEventAndPseudoAsync(string eventId, string pseudo, CancellationToken ct = default)
-    {
-        var doc = await _collection
-            .Find(x => x.EventId == eventId && x.Pseudo == pseudo)
-            .FirstOrDefaultAsync(ct);
-        return doc is null ? null : ParticipantDocumentMapper.ToDomain(doc);
-    }
-
     public async Task<Participant?> FindByEventAndUserIdAsync(string eventId, string userId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(userId))
@@ -42,20 +34,6 @@ public sealed class MongoParticipantRepository : IParticipantRepository
 
         var doc = await _collection.Find(x => x.Id == participantId && x.EventId == eventId).FirstOrDefaultAsync(ct);
         return doc is null ? null : ParticipantDocumentMapper.ToDomain(doc);
-    }
-
-    public async Task<IReadOnlyDictionary<string, string>> GetPseudosByIdsAsync(
-        IReadOnlyCollection<string> participantIds,
-        CancellationToken ct = default)
-    {
-        if (participantIds.Count == 0)
-            return new Dictionary<string, string>();
-
-        var docs = await _collection
-            .Find(x => participantIds.Contains(x.Id))
-            .Project(x => new { x.Id, x.Pseudo })
-            .ToListAsync(ct);
-        return docs.ToDictionary(x => x.Id, x => x.Pseudo);
     }
 
     public async Task<Participant> AddAsync(Participant participant, CancellationToken ct = default)

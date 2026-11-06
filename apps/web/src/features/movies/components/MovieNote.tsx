@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, ChevronUp, Quote, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Quote, Trash2, X } from 'lucide-react';
 import clsx from 'clsx';
 import { deleteMoviePitchNote, setMoviePitchNote } from '@/features/movies/api/moviesApi';
 import styles from './MovieNote.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { Translate } from '@/shared/i18n';
 
-export const PITCH_MAX = 140;
+const PITCH_MAX = 140;
 const NOTE_PREVIEW_THRESHOLD = 38;
 
 interface MovieNoteProps {
   movieId: string;
+  movieTitle: string;
   slug: string;
   pitchNote?: string | null;
   editable: boolean;
@@ -19,11 +20,13 @@ interface MovieNoteProps {
   onEditingChange: (editing: boolean) => void;
   refresh: () => void;
   onActionError: (message: string) => void;
+  onRemove?: () => void;
   t: Translate;
 }
 
 export function MovieNote({
   movieId,
+  movieTitle,
   slug,
   pitchNote,
   editable,
@@ -32,6 +35,7 @@ export function MovieNote({
   onEditingChange,
   refresh,
   onActionError,
+  onRemove,
   t,
 }: Readonly<MovieNoteProps>) {
   const [draft, setDraft] = useState('');
@@ -125,6 +129,17 @@ export function MovieNote({
     <span className={clsx(styles.noteText, !expanded && styles.noteTextClamp)}>{pitchNote}</span>
   );
 
+  const removeButton = onRemove ? (
+    <button
+      type="button"
+      className={styles.noteIconBtn}
+      aria-label={t('movies.pitchNote.removeAria', { title: movieTitle })}
+      onClick={onRemove}
+    >
+      <Trash2 aria-hidden size={ICON_SIZE.sm} />
+    </button>
+  ) : null;
+
   if (editable) {
     return (
       <div className={styles.note}>
@@ -136,6 +151,7 @@ export function MovieNote({
         >
           {textNode}
         </button>
+        {removeButton}
       </div>
     );
   }
@@ -148,7 +164,7 @@ export function MovieNote({
       {showExpand && (
         <button
           type="button"
-          className={styles.noteExpand}
+          className={styles.noteIconBtn}
           aria-expanded={expanded}
           aria-label={expanded ? t('movies.details.toggleHide') : t('movies.details.toggleShow')}
           onClick={() => setExpanded((v) => !v)}
@@ -160,6 +176,7 @@ export function MovieNote({
           )}
         </button>
       )}
+      {removeButton}
     </div>
   );
 }

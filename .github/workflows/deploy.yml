@@ -31,9 +31,10 @@
 # build of the commit, the same whatever the stage, so production does not replay it: the staging
 # only serves a front this gate let through, and `verify-ci` requires that front to be this commit.
 #
-# Rollback: `rollback.yml` for the API (earlier Cloud Run revision), `rollback-front.yml` for the
-# web app (a Hosting release pointed back at a version `deploy-front` built). Both target
-# production; the staging is rolled back by deploying again.
+# Rollback: `rollback.yml` for the API (an earlier Cloud Run revision, probed before the traffic
+# moves), `rollback-front.yml` for the web app (a Hosting release pointed back at a version
+# `deploy-front` built). Both take the stage as an input: the staging is where a rollback is
+# rehearsed.
 #
 # Two identities per stage on GCP, never the same one. The workflows impersonate the CI service
 # account of their environment (`gcloud-auth`), which can push images, create revisions and manage
@@ -120,7 +121,7 @@ jobs:
   # filtering (see the `ci-cd.yml` header): its colour holds for the whole tree of the commit.
   # Before that, a documentation commit on top of a red code commit gave a green run in 12 s, nine
   # jobs skipped, and this guard accepted it.
-  # The refusal outside master below is doubled by the branch policy of the `production` and
+  # The refusal outside master, in `require-green-ci`, is doubled by the branch policy of the `production` and
   # `staging` environments (Settings → Environments), which also covers the rollback and backup
   # workflows: this `if` is only the clear message and the fast exit.
   verify-ci:
@@ -131,45 +132,12 @@ jobs:
       contents: read
       actions: read
     steps:
-      - name: Refuse a deployment outside master
-        run: |
-          if [ "$GITHUB_REF" != "refs/heads/master" ]; then
-            echo "::error::A deployment only leaves from master (requested ref: $GITHUB_REF). Merge first."
-            exit 1
-          fi
-      # `--jq` filters server-side on the exact SHA: a pull request run carries the same head_sha
-      # as the push that followed it, hence the filter on event and branch. The most recent run
-      # wins, it is the one a "Re-run failed jobs" turned green again.
-      - name: Read the CI run conclusion for this commit
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -eo pipefail
-          runs="$(gh api \
-            "repos/$GITHUB_REPOSITORY/actions/workflows/ci-cd.yml/runs?head_sha=$GITHUB_SHA&per_page=100" \
-            --jq '[.workflow_runs[]
-                   | select(.head_branch == "master")
-                   | select(.event == "push" or .event == "workflow_dispatch")]
-                  | sort_by(.run_started_at) | reverse')"
-          count="$(printf '%s' "$runs" | jq 'length')"
-          if [ "$count" = "0" ]; then
-            echo "::error::No ci-cd.yml run on $GITHUB_SHA. Run the \"🔍 CI\" workflow on master, wait for green, then trigger this deployment again."
-            exit 1
-          fi
-          status="$(printf '%s' "$runs" | jq -r '.[0].status')"
-          conclusion="$(printf '%s' "$runs" | jq -r '.[0].conclusion')"
-          url="$(printf '%s' "$runs" | jq -r '.[0].html_url')"
-          echo "CI run: $url"
-          echo "status=$status conclusion=$conclusion"
-          if [ "$status" != "completed" ]; then
-            echo "::error::The CI run of this commit is still '$status'. Wait for it to finish."
-            exit 1
-          fi
-          if [ "$conclusion" != "success" ]; then
-            echo "::error::The CI run of this commit concluded '$conclusion': fix, then rerun the CI before deploying. $url"
-            exit 1
-          fi
-          echo "CI gates green on $GITHUB_SHA."
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/require-green-ci
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       # A web app alone on a commit that also changed the API leaves the stage serving pages built
       # against routes its API does not have yet: on 2026-09-20 production got the front of a
       # commit whose API enrichment was still in master only, and the cards lost their year,
@@ -209,10 +177,19 @@ jobs:
             echo "The $STAGE $other already serves $GITHUB_SHA: $TARGET alone fits it."
             exit 0
           fi
-          if ! changed="$(gh api --paginate "repos/$GITHUB_REPOSITORY/compare/${served}...${GITHUB_SHA}?per_page=100" \
-              --jq "[.files[]? | .filename | select(startswith(\"$lane\"))] | length" \
-              | awk '{ total += $1 } END { print total + 0 }')"; then
+          # `compare` lists at most 300 files, on its first page only, and does not say it stopped:
+          # `--paginate` walks the commits, not the files. On v1.6.0...v1.7.0 it listed 300 files
+          # of 1,661, none under apps/web/ where 853 had changed. So a full list clears a partial
+          # target, a list that reached the cap refuses it.
+          if ! compared="$(gh api "repos/$GITHUB_REPOSITORY/compare/${served}...${GITHUB_SHA}?per_page=1" \
+              --jq "{listed: (.files // [] | length), lane: ([.files[]? | .filename | select(startswith(\"$lane\"))] | length)}")"; then
             echo "::error::GitHub could not compare $served (the release the $STAGE $other serves) with $GITHUB_SHA. Deploy target=all."
+            exit 1
+          fi
+          listed="$(printf '%s' "$compared" | jq -r '.listed')"
+          changed="$(printf '%s' "$compared" | jq -r '.lane')"
+          if [ "$listed" -ge 300 ]; then
+            echo "::error::GitHub stops listing at 300 changed files and reached it between $served and $GITHUB_SHA: whether $lane changed cannot be told. Deploy target=all."
             exit 1
           fi
           if [ "$changed" != "0" ]; then
@@ -328,7 +305,9 @@ jobs:
       # The context is the solution folder, not the project one: `Directory.Build.props` lives
       # there, and an image built without it compiles with other analyser and audit settings than
       # the ones `lint-api` validated. The Dockerfile copies only what the API needs.
-      - name: Build API image (buildx + GHA layer cache)
+      # No `cache-from` nor `cache-to`: the GHA cache is shared with the jobs of the repository
+      # that run the code of the lockfile, and this image goes to production.
+      - name: Build API image (buildx, no shared cache)
         if: inputs.stage == 'staging'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -336,24 +315,33 @@ jobs:
           file: apps/api-dotnet/MoviePicker.Api/Dockerfile
           tags: movie-picker-api
           load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      # § 25: CVE scan of the image before push. Policy:
-      #   - blocks on CRITICAL unconditionally
+      # § 25: CVE scan of the image before push. Policy, in two steps because `ignore-unfixed`
+      # applies to every severity of a step:
       #   - blocks on HIGH **only when an upstream fix is available** (`ignore-unfixed: true`),
-      #     to avoid freezing the deployment on base-image CVEs without a published patch.
+      #     to avoid freezing the deployment on base-image CVEs without a published patch;
+      #   - blocks on CRITICAL unconditionally, published patch or not.
       # If a CVE blocks here, either rebuild with a newer base image, or document the risk
-      # (workaround / mitigation) and suppress it on the Trivy side (`.trivyignore` at the root of
-      # the build context) with a review note.
-      - name: Scan Docker image (Trivy)
+      # (workaround / mitigation) and suppress it in `.trivyignore`, at the root of the repository
+      # where Trivy runs, with a review note.
+      - name: Scan Docker image (Trivy, HIGH with a fix)
         if: inputs.stage == 'staging'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: movie-picker-api
           format: table
           exit-code: '1'
-          severity: HIGH,CRITICAL
+          severity: HIGH
           ignore-unfixed: true
+          vuln-type: os,library
+          cache: true
+      - name: Scan Docker image (Trivy, every CRITICAL)
+        if: inputs.stage == 'staging'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: movie-picker-api
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
           vuln-type: os,library
           cache: true
       # The digest is read after the push and is the deployment target: a tag stays rewritable, a
@@ -433,15 +421,25 @@ jobs:
           echo "Image the staging serves: ${REPO}@${DIGEST} (revision $REVISION, release $RELEASE)"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
           echo "ref=${REPO}@${DIGEST}" >> "$GITHUB_OUTPUT"
-      - name: Scan the resolved image again (Trivy)
+      - name: Scan the resolved image again (Trivy, HIGH with a fix)
         if: inputs.stage == 'production'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ steps.resolve.outputs.ref }}
           format: table
           exit-code: '1'
-          severity: HIGH,CRITICAL
+          severity: HIGH
           ignore-unfixed: true
+          vuln-type: os,library
+          cache: true
+      - name: Scan the resolved image again (Trivy, every CRITICAL)
+        if: inputs.stage == 'production'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.resolve.outputs.ref }}
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
           vuln-type: os,library
           cache: true
 
@@ -595,8 +593,14 @@ jobs:
           # on the project. `gcloud scheduler jobs describe` then exits with SERVICE_DISABLED, and
           # without it the step failed the job **after** the revision had taken 100% of the
           # traffic. A missing schedule is a warning: it says nothing about the health of the
-          # deployed API.
-          if ! gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)' | grep -q cloudscheduler; then
+          # deployed API. Only an answer that does not list the service means that, though: a
+          # `gcloud` that fails has said nothing, and reading it as "disabled" would leave the jobs
+          # on their previous configuration behind a green run.
+          if ! ENABLED="$(gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)')"; then
+            echo "::error::gcloud could not list the enabled services, so the Scheduler jobs were not updated. The revision is already promoted: rerun this deployment."
+            exit 1
+          fi
+          if ! printf '%s' "$ENABLED" | grep -q cloudscheduler; then
             echo "::warning::Cloud Scheduler API disabled on the project: jobs not configured, event reminders will not leave, recurring events will only be renewed on closing, watchlists will only be cleaned on closing and the home catalog will only be reloaded on demand. Run 'gcloud services enable cloudscheduler.googleapis.com' then rerun this deployment."
             exit 0
           fi

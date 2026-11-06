@@ -87,7 +87,7 @@ flowchart LR
 
 L'API expose `/api/v1`, son contrat est exporté vers `artifacts/openapi-v1.json` et le front en
 dérive ses types : une route retirée côté API casse la compilation du front. L'authentification
-passe par cookie de session, les actions d'hôte par un jeton dans l'URL de partage.
+passe par cookie de session, les actions d'hôte par un jeton envoyé dans l'en-tête `X-Host-Token`.
 
 > **Le dossier technique du projet est publié en ligne, sur
 > [www.movie-picker.fr/tech](https://www.movie-picker.fr/tech).** Quatorze sections : architecture,

@@ -128,9 +128,6 @@ public static class Errors
     public static ConflictException WinnersAllDrawn(int target) =>
         new($"The {target} winning movie(s) of the movie night are already set, raise the setting or remove one from the winners", ErrorCodes.WinnersAllDrawn, Params(("count", target)));
 
-    public static ConflictException HandleAllocationFailed() =>
-        new("Could not allocate a unique handle, please retry", ErrorCodes.HandleAllocationFailed);
-
     public static ConflictException CreatorCannotBeRemoved() =>
         new("The creator of the movie night cannot be removed", ErrorCodes.CreatorCannotBeRemoved);
 
@@ -145,6 +142,9 @@ public static class Errors
 
     public static ConflictException WheelLockedDelete() =>
         new("The wheel has already been spun, removal is impossible", ErrorCodes.WheelLockedDelete);
+
+    public static TooManyRequestsException InvitationLimitReached() =>
+        new("Too many invitations sent to this user today", ErrorCodes.InvitationLimitReached);
 
     public static TooManyRequestsException TooManySignInAttempts() =>
         new("Too many failed sign-in attempts for this account, retry in a few minutes", ErrorCodes.RateLimited);
@@ -326,6 +326,12 @@ public static class Errors
     public static BadRequestException UnknownTheme() =>
         new("Unknown theme", ErrorCodes.UnknownTheme);
 
+    public static BadRequestException UnknownGenre() =>
+        new("Unknown genre", ErrorCodes.UnknownGenre);
+
+    public static BadRequestException UnknownCollection() =>
+        new("Unknown collection", ErrorCodes.UnknownCollection);
+
     public static BadRequestException TooManyAttachments(int max) =>
         new($"Too many attachments (maximum {max})", ErrorCodes.TooManyAttachments, Params(("max", max)));
 
@@ -375,10 +381,13 @@ public static class Errors
         new($"The number of winning movies must be between {min} and {max}", ErrorCodes.WinnerCountOutOfRange, Params(("min", min), ("max", max)));
 
     public static BadRequestException AvatarPhotoInvalid() =>
-        new("The profile photo must be a JPEG, PNG or WebP image of 128 to 1024 pixels per side and at most 512 KB", ErrorCodes.AvatarPhotoInvalid);
+        new("The profile photo must be a JPEG, PNG or WebP image of 128 to 256 pixels per side and at most 192 KB", ErrorCodes.AvatarPhotoInvalid);
 
     public static BadRequestException LastLoginMethod() =>
         new("The last sign-in method of the account cannot be removed", ErrorCodes.LastLoginMethod);
+
+    public static ServiceUnavailableException AvatarPhotoStorageFull() =>
+        new("Profile photos cannot be added for now", ErrorCodes.AvatarPhotoStorageFull);
 
     public static ServiceUnavailableException MovieDetailsUnavailable() =>
         new("Movie details temporarily unavailable", ErrorCodes.MovieDetailsUnavailable);

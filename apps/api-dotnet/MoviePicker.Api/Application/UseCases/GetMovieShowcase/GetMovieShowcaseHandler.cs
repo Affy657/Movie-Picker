@@ -36,7 +36,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
 
         try
         {
-            var items = await _cache.GetOrLoadAsync(
+            var items = await _cache.GetOrLoadCheckedAsync(
                 section.CacheKey,
                 CacheTtl(),
                 token => LoadSectionAsync(section, token),
@@ -62,9 +62,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             return await _cache.RefreshAsync(
                 section.CacheKey,
                 CacheTtl(),
-                async token => new CacheLoad<IReadOnlyList<MovieShowcaseItemResponse>>(
-                    await LoadSectionAsync(section, token),
-                    IsComplete: true),
+                token => LoadSectionAsync(section, token),
                 ct);
         }
         catch (MoviePickerException)
@@ -73,12 +71,12 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         }
     }
 
-    private async Task<IReadOnlyList<MovieShowcaseItemResponse>> LoadSectionAsync(
+    private async Task<CacheLoad<IReadOnlyList<MovieShowcaseItemResponse>>> LoadSectionAsync(
         SectionRequest section,
         CancellationToken ct)
     {
         if (section.Section == MovieShowcaseSections.MostProposed)
-            return await LoadMostProposedAsync(ct);
+            return new CacheLoad<IReadOnlyList<MovieShowcaseItemResponse>>(await LoadMostProposedAsync(ct), IsComplete: true);
 
         RequireTmdbConfigured();
 
@@ -159,13 +157,13 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             .ToList();
     }
 
-    private async Task<IReadOnlyList<MovieShowcaseItemResponse>> WithRuntimesAsync(
+    private async Task<CacheLoad<IReadOnlyList<MovieShowcaseItemResponse>>> WithRuntimesAsync(
         List<MovieShowcaseItemResponse> items,
         CancellationToken ct)
     {
         var count = Math.Clamp(_options.MovieShowcaseEnrichedCount, 0, 60);
         if (count == 0 || items.Count == 0)
-            return items;
+            return new CacheLoad<IReadOnlyList<MovieShowcaseItemResponse>>(items, IsComplete: true);
 
         var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)
             ? "FR"
@@ -173,6 +171,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         var parallelism = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
         var head = items.Take(count).ToList();
         var runtimes = new ConcurrentDictionary<(int, MovieMediaType), int?>();
+        var missing = 0;
 
         await Parallel.ForEachAsync(
             head.Select(item => (item.Id, item.MediaType)).Distinct(),
@@ -180,14 +179,17 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             async (pair, token) =>
             {
                 var enrichment = await _tmdb.GetEnrichmentAsync(pair.Id, pair.MediaType, region, token);
-                if (enrichment?.RuntimeMinutes is int runtime)
+                if (enrichment is null)
+                    Interlocked.Increment(ref missing);
+                else if (enrichment.RuntimeMinutes is int runtime)
                     runtimes[pair] = runtime;
             });
 
+        var isComplete = missing == 0;
         if (runtimes.IsEmpty)
-            return items;
+            return new CacheLoad<IReadOnlyList<MovieShowcaseItemResponse>>(items, isComplete);
 
-        return items
+        var withRuntimes = items
             .Select(item => runtimes.TryGetValue((item.Id, item.MediaType), out var runtime)
                 ? new MovieShowcaseItemResponse
                 {
@@ -204,6 +206,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
                 }
                 : item)
             .ToList();
+        return new CacheLoad<IReadOnlyList<MovieShowcaseItemResponse>>(withRuntimes, isComplete);
     }
 
     private void RequireTmdbConfigured()
@@ -250,8 +253,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
         public bool IsSharedAcrossInstances => Section switch
         {
             MovieShowcaseSections.Recommendations or MovieShowcaseSections.Collection => false,
-            MovieShowcaseSections.Trending => GenreIds.Count == 0
-                || (GenreIds.Count == 1 && MovieShowcaseCatalog.IsTmdbMovieGenre(GenreIds[0])),
+            MovieShowcaseSections.Trending => GenreIds.Count <= 1,
             _ => true,
         };
 
@@ -271,7 +273,7 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
             var section = (query.Section ?? string.Empty).Trim().ToLowerInvariant();
             return section switch
             {
-                MovieShowcaseSections.Trending => new SectionRequest(section, Genres: NormalizeGenreIds(query.GenreIds)),
+                MovieShowcaseSections.Trending => new SectionRequest(section, Genres: KnownGenreIds(query.GenreIds)),
                 MovieShowcaseSections.NowPlaying or MovieShowcaseSections.MostProposed => new SectionRequest(section),
                 MovieShowcaseSections.Theme => new SectionRequest(
                     section,
@@ -281,16 +283,30 @@ public sealed class GetMovieShowcaseHandler : IGetMovieShowcaseHandler
                     Provider: MovieShowcaseCatalog.ProviderKey(query.Provider) ?? throw Errors.UnknownPlatform()),
                 MovieShowcaseSections.Collection => new SectionRequest(
                     section,
-                    CollectionId: query.CollectionId is > 0 ? query.CollectionId : throw Errors.CollectionIdMissing()),
+                    CollectionId: KnownCollectionId(query.CollectionId)),
                 MovieShowcaseSections.Recommendations => new SectionRequest(
                     section,
-                    SeedTmdbId: query.SeedTmdbId is > 0 ? query.SeedTmdbId : throw Errors.ReferenceMovieMissing(),
+                    SeedTmdbId: query.SeedTmdbId is > 0 and <= MovieShowcaseCatalog.MaxSeedTmdbId
+                        ? query.SeedTmdbId
+                        : throw Errors.ReferenceMovieMissing(),
                     SeedMediaType: query.SeedMediaType == MovieMediaType.Tv ? MovieMediaType.Tv : MovieMediaType.Movie),
                 _ => throw Errors.UnknownSection(),
             };
         }
 
-        private static List<int> NormalizeGenreIds(IReadOnlyList<int>? genreIds) =>
-            genreIds is null ? [] : genreIds.Where(id => id > 0).Distinct().Order().ToList();
+        private static int KnownCollectionId(int? collectionId)
+        {
+            if (collectionId is not > 0)
+                throw Errors.CollectionIdMissing();
+            return MovieShowcaseCatalog.IsCatalogCollection(collectionId.Value)
+                ? collectionId.Value
+                : throw Errors.UnknownCollection();
+        }
+
+        private static List<int> KnownGenreIds(IReadOnlyList<int>? genreIds)
+        {
+            List<int> ids = genreIds is null ? [] : genreIds.Where(id => id > 0).Distinct().Order().ToList();
+            return ids.TrueForAll(MovieShowcaseCatalog.IsTmdbMovieGenre) ? ids : throw Errors.UnknownGenre();
+        }
     }
 }

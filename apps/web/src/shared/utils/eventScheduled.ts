@@ -60,25 +60,3 @@ export function eventScheduledStartUtcMs(event: { date: string; time: string }):
   if (offsetAtFirstGuessMs === offsetAtWallClockMs) return firstGuessMs;
   return wallClockAsUtcMs - offsetAtFirstGuessMs;
 }
-
-export function formatEventStartInUserTimezone(
-  date: string,
-  time: string,
-  locale?: string
-): string | null {
-  const ms = eventScheduledStartUtcMs({ date, time });
-  if (ms === null) return null;
-  const loc = locale ?? 'fr-FR';
-  try {
-    return new Intl.DateTimeFormat(loc, {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(ms));
-  } catch {
-    return `${date} ${time}`;
-  }
-}

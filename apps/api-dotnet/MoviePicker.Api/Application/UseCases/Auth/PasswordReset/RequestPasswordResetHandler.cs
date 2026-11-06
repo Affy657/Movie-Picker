@@ -10,15 +10,20 @@ namespace MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
 
 public sealed class RequestPasswordResetHandler : IRequestPasswordResetHandler
 {
+    public const string EmailQuotaScope = "password-reset-email";
+    public const int MaxEmailsPerAddressPerDay = 5;
+
     public static readonly TimeSpan ResponseTimeFloor = TimeSpan.FromMilliseconds(500);
 
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan ResendThrottle = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan EmailQuotaWindow = TimeSpan.FromHours(24);
 
     private readonly IUserRepository _users;
     private readonly IPasswordResetTokenRepository _tokens;
     private readonly IEmailSender _emailSender;
     private readonly MoviePickerOptions _options;
+    private readonly ISharedQuota _quota;
     private readonly TimeProvider _clock;
     private readonly ILogger<RequestPasswordResetHandler> _logger;
 
@@ -27,6 +32,7 @@ public sealed class RequestPasswordResetHandler : IRequestPasswordResetHandler
         IPasswordResetTokenRepository tokens,
         IEmailSender emailSender,
         IOptions<MoviePickerOptions> options,
+        ISharedQuota quota,
         TimeProvider clock,
         ILogger<RequestPasswordResetHandler> logger)
     {
@@ -34,6 +40,7 @@ public sealed class RequestPasswordResetHandler : IRequestPasswordResetHandler
         _tokens = tokens;
         _emailSender = emailSender;
         _options = options.Value;
+        _quota = quota;
         _clock = clock;
         _logger = logger;
     }
@@ -84,6 +91,13 @@ public sealed class RequestPasswordResetHandler : IRequestPasswordResetHandler
             return;
         }
 
+        if (!await _quota.TryConsumeAsync(
+            EmailQuotaScope, user.Email.ToLowerInvariant(), MaxEmailsPerAddressPerDay, EmailQuotaWindow, ct))
+        {
+            _logger.LogWarning("PasswordReset.Request: daily cap reached for {EmailMasked}", EmailMasking.Mask(email));
+            return;
+        }
+
         var (plain, hash) = PasswordResetTokenFactory.Generate();
         var token = new PasswordResetToken
         {
@@ -99,7 +113,7 @@ public sealed class RequestPasswordResetHandler : IRequestPasswordResetHandler
 
         var baseUrl = _options.PublicWebBaseUrl?.TrimEnd('/') ?? "";
         var resetUrl = new Uri($"{baseUrl}/reset?token={Uri.EscapeDataString(plain)}");
-        var emailMessage = PasswordResetEmailFactory.Build(user.Email, user.DisplayName, resetUrl, request.Locale);
+        var emailMessage = PasswordResetEmailFactory.Build(user.Email, resetUrl, request.Locale);
 
         try
         {

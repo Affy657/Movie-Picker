@@ -10,6 +10,7 @@ type ConfirmDialogInputs = {
   confirmLeave: () => void;
   confirmResetWheel: () => void;
   confirmRemoveMovie: (movieId: string) => void;
+  confirmRemoveNote: (movieId: string) => void;
   confirmCloseWithoutMovie: () => void;
   busyByKind: ConfirmBusyByKind;
 };
@@ -22,6 +23,7 @@ export function buildConfirmDialogContent({
   confirmLeave,
   confirmResetWheel,
   confirmRemoveMovie,
+  confirmRemoveNote,
   confirmCloseWithoutMovie,
   busyByKind,
 }: ConfirmDialogInputs) {
@@ -57,6 +59,15 @@ export function buildConfirmDialogContent({
       ),
       confirmLabel: t('movies.list.removeConfirmAction'),
       onConfirm: () => confirmRemoveMovie(confirmState.movieId),
+      loading,
+    };
+  }
+  if (confirmState.kind === 'removeNote') {
+    return {
+      title: t('movies.pitchNote.removeConfirmTitle'),
+      message: t('movies.pitchNote.removeConfirmMessage', { title: confirmState.movieTitle }),
+      confirmLabel: t('movies.pitchNote.removeConfirmAction'),
+      onConfirm: () => confirmRemoveNote(confirmState.movieId),
       loading,
     };
   }

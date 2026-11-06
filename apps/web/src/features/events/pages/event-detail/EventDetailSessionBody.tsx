@@ -142,6 +142,7 @@ export default function EventDetailSessionBody({
           setActionError={setActionError}
           refreshAll={refreshAll}
           onRequestRemove={moviesSection.onRequestRemove}
+          onRequestRemoveNote={moviesSection.onRequestRemoveNote}
           viewMode={moviesSection.viewMode}
           selection={moviesSection.selection}
           addMovieOpen={moviesSection.addMovieOpen}

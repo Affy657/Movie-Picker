@@ -11,7 +11,7 @@ const draft: SettingsDraft = {
   eventTitle: 'Soirée',
   eventDateLocal: '2030-01-01T20:00',
   proposalLimitEnabled: true,
-  maxProp: '4',
+  maxProposals: '4',
   participantLimitEnabled: true,
   maxParticipants: '12',
   voteLimitEnabled: false,
@@ -35,7 +35,7 @@ describe('validateSettingsDraft', () => {
       {
         ...draft,
         proposalLimitEnabled: false,
-        maxProp: 'abc',
+        maxProposals: 'abc',
         participantLimitEnabled: false,
         maxParticipants: '0',
       },
@@ -47,23 +47,23 @@ describe('validateSettingsDraft', () => {
     expect(result.maxParticipantsValue).toBeNull();
   });
 
-  it('reads a limit written at the cap as no cap', () => {
+  it('keeps a limit written at the cap', () => {
     const result = validateSettingsDraft(
       {
         ...draft,
-        maxProp: String(MAX_PROPOSALS_PER_PARTICIPANT),
+        maxProposals: String(MAX_PROPOSALS_PER_PARTICIPANT),
         maxParticipants: String(MAX_EVENT_PARTICIPANTS),
       },
       t
     );
 
     expect(result.errors).toEqual({});
-    expect(result.maxProposalsPerParticipant).toBeNull();
-    expect(result.maxParticipantsValue).toBeNull();
+    expect(result.maxProposalsPerParticipant).toBe(MAX_PROPOSALS_PER_PARTICIPANT);
+    expect(result.maxParticipantsValue).toBe(MAX_EVENT_PARTICIPANTS);
   });
 
   it('flags an enabled limit that is empty or out of bounds', () => {
-    const result = validateSettingsDraft({ ...draft, maxProp: '', maxParticipants: '999' }, t);
+    const result = validateSettingsDraft({ ...draft, maxProposals: '', maxParticipants: '999' }, t);
 
     expect(result.errors.maxProposals).toBe(
       `Films par personne : nombre entier entre 1 et ${MAX_PROPOSALS_PER_PARTICIPANT}.`

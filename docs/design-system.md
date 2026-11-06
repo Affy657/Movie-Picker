@@ -153,7 +153,7 @@ Surface de contenu. `as` change l'élément et type ses props : `<Card as={Link}
 
 ### Modal
 
-Seul endroit du projet où `<dialog>` et `::backdrop` sont écrits. Fermeture par Échap, clic sur le voile et bouton de fermeture ; le `<dialog>` natif retient le focus et le rend à l'ouvreur.
+Seul endroit du projet où `<dialog>` et `::backdrop` sont écrits. Fermeture par Échap, clic sur le voile et bouton de fermeture ; le `<dialog>` natif retient le focus et le rend à l'ouvreur. Tant qu'un `<dialog>` est ouvert, la page derrière ne défile plus (`html:has(dialog[open])` dans `01-foundation.css`) : la gouttière de `scrollbar-gutter: stable` reste réservée, donc rien ne saute à l'ouverture. Un navigateur sans `:has()` ignore la règle et garde le défilement, comme avant.
 
 | Prop | Type | Note |
 |---|---|---|
@@ -176,7 +176,7 @@ Dialogues déjà câblés dessus :
 
 ### Sheet
 
-Feuille ancrée en bas, glissable : le geste est `useSheetDrag` (`shared/hooks/`), `SheetDrag.module.css` porte la surface, la poignée et les animations d'entrée (`sheetEnter`, `sheetBackdropEnter`, retirées sous `prefers-reduced-motion`). `open`, `title`, `onClose`, `footer`, `size` `md` / `lg`. Sa croix est un `IconButton`.
+Feuille ancrée en bas, glissable : le geste est `useSheetDrag` (`shared/hooks/`), `SheetDrag.module.css` porte la surface, la poignée et les animations d'entrée (`sheetEnter`, `sheetBackdropEnter`, retirées sous `prefers-reduced-motion`). `open`, `title`, `onClose`, `footer`, `size` `md` / `lg`. Sa croix est un `IconButton`. Son corps pose `overscroll-behavior: contain` : arrivé en butée, le geste ne passe pas à la page.
 
 ### ResponsiveDialog
 
@@ -244,7 +244,7 @@ Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue,
 
 ### Menu
 
-`Menu` rend un déclencheur et son panneau : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelAriaLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Le déclencheur est un `Button` `sm` `secondary` qui passe en `soft` tant que le panneau est ouvert. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte, celui de l'agenda et celui des cartes de soirée (`IconButton` `lg` `round` qui reçoit `{...menu.triggerProps}`). Échap ferme et rend le focus au déclencheur, focus visible en contour interne (`--outline-offset-inset`).
+`Menu` rend un déclencheur et son panneau : `triggerLabel`, `triggerIcon`, `triggerClassName`, `panelAriaLabel`, `panelClassName`, enfants sous forme de fonction `(close) => …`. Le déclencheur est un `Button` `sm` `secondary` qui passe en `soft` tant que le panneau est ouvert. Un déclencheur sur mesure (avatar, bouton à icône) garde le même comportement avec `useMenuState()` puis `MenuPanel {...menu.panelProps}` : c'est le menu du compte, celui de l'agenda et celui des cartes de soirée (`IconButton` `lg` `round` qui reçoit `{...menu.triggerProps}`). Échap ferme et rend le focus au déclencheur, focus visible en contour interne (`--outline-offset-inset`). Tab parcourt les entrées, et le focus qui sort du panneau le ferme en restant là où Tab l'a mené, sans revenir au déclencheur : c'est l'option `closeOnFocusLeave` de `useClickOutside`, posée par `useMenuState`, à passer aussi à un menu qui garde son état local, avec tous ses éléments dans `refs` quand un portail les sépare.
 
 | Brique | Props | Rôle |
 |---|---|---|
@@ -254,7 +254,7 @@ Chaque carte est un `<button role="radio" aria-checked>`. C'est le mode de roue,
 
 ### Dropdown
 
-Liste déroulante maison avec `role="listbox"`. Le déclencheur est nommé par le libellé suivi de la valeur choisie (« Langue Français »), la liste ouverte par le libellé seul ; `ariaLabel` ou `ariaLabelledBy` est requis.
+Liste déroulante maison avec `role="listbox"`. Le déclencheur est nommé par le libellé suivi de la valeur choisie (« Langue Français »), la liste ouverte par le libellé seul ; `ariaLabel` ou `ariaLabelledBy` est requis. Tab ferme la liste sans rien choisir, le focus reste là où Tab l'a mené ; Échap ferme et rend le focus au déclencheur.
 
 | Prop | Type | Rôle |
 |---|---|---|
@@ -326,6 +326,7 @@ Cinq étoiles à demi-pas pour noter un film vu, valeur entière sur 10 (`1` à 
 ### Divers
 
 - `Avatar` : `avatarId`, `pseudo`, `size` `xs` / `sm` / `md` / `lg` / `xl` (`--avatar-*`). L'identifiant désigne un robot ou un emoji DiceBear, ou une photo de profil (`photo:<clé>`, servie par `/api/v1/avatars/<clé>`). Sans identifiant, ou quand l'image ne répond plus (photo supprimée, compte supprimé), initiales sur l'une des huit couleurs `--color-avatar-*`, choisie par le pseudo ; sans pseudo, pastille vide. Toujours décoratif (`aria-hidden`), le nom est porté par le texte voisin. Les tailles sont déclarées en `:where()` : un module qui doit redimensionner un avatar pose `width` et `height` sur sa propre classe, sans `!important`.
+- `PosterBackdrop` : `posterPath`, `direction` `down` / `side`, `className`. Affiche en fond avec son voile, toujours décorative (`aria-hidden`), le voile seul quand il n'y a pas d'affiche.
 - `AvatarStack` : `people` (`{ key, avatarId, pseudo }`), `max` (3), `hidden` quand la liste n'est qu'un échantillon, `size` `xs` / `sm`, `ariaLabel`. Avatars chevauchés d'un quart, anneau `--avatar-stack-ring` (le fond de page par défaut, la surface ou l'anneau d'affiche via une classe), pastille « +N » pour le reste. Décoratif sans `ariaLabel`, `role="img"` avec.
 - `EventLifecyclePill` : `lifecycle` `upcoming` / `live` / `pending` / `finished`, `label`, `detail` ; seul `live` pulse (`StatusDot pulsing`). Consomme `--color-badge-*`, comme `Chip` `pending`.
 - `ViewModeToggle` : barre d'outils grille / liste, `aria-pressed` sur le mode courant, boutons de 28 px à zone tactile étendue.

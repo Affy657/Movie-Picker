@@ -50,13 +50,15 @@ describe('describeTemplateConfig', () => {
     );
   });
 
-  it('ignores a limit written at the cap', () => {
+  it('names a limit written at the cap', () => {
     const draft: TemplateConfigDraft = {
       ...defaults,
       maxProposalsPerParticipant: MAX_PROPOSALS_PER_PARTICIPANT,
       maxParticipants: MAX_EVENT_PARTICIPANTS,
     };
 
-    expect(describeTemplateConfig(draft, t)).toBe('Réglages par défaut');
+    expect(describeTemplateConfig(draft, t)).toBe(
+      `${MAX_PROPOSALS_PER_PARTICIPANT} films par personne, ${MAX_EVENT_PARTICIPANTS} participants max`
+    );
   });
 });

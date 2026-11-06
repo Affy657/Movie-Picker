@@ -1,9 +1,17 @@
 # API rollback (Cloud Run): routes the traffic to an earlier revision.
 #   - Manually triggered (workflow_dispatch).
-#   - Empty `revision` input → the most recent revision created BEFORE the one serving the
-#     traffic. Not "the 2nd most recent": a deployment refused at validation leaves a newer
-#     revision that never served, and the 2nd most recent is then the one already in production,
-#     which a rollback would pin without changing anything.
+#   - `release` input → the most recent revision whose `SENTRY_RELEASE` is that commit: the one to
+#     give when the release to come back to is known, which is the point of a rollback. A release
+#     no revision carries refuses the run.
+#   - `revision` input → that very revision.
+#   - Neither → the most recent revision created BEFORE the one serving the traffic. Not "the 2nd
+#     most recent": a deployment refused at validation leaves a newer revision that never served,
+#     and the 2nd most recent is then the one already in production, which a rollback would pin
+#     without changing anything. It can still be a refused revision, when the refusal came between
+#     the two last deployments that served: the probe below is what stops that one.
+#   - The target answers on a tagged URL, with the probes of the deployment, before any traffic
+#     moves: a target that does not start or is not ready refuses the run, and the stage keeps
+#     serving what it served.
 #   - Cloud Run keeps the revisions: the rollback redeploys nothing, it routes traffic.
 #   - `--to-revisions` PINS the traffic: while the service is pinned, `gcloud run deploy` no
 #     longer routes anything to new revisions. The next deployment restores `latestRevision`
@@ -40,7 +48,11 @@ on:
           - production
           - staging
       revision:
-        description: "Target Cloud Run revision (empty = previous revision)"
+        description: "Target Cloud Run revision (empty = the release below, or else the previous revision)"
+        required: false
+        type: string
+      release:
+        description: "Release to serve again: the full commit SHA its revision was built from"
         required: false
         type: string
 
@@ -57,6 +69,9 @@ env:
   GCP_REGION: europe-west1
   GCP_ARTIFACT_REPO: movie-picker
   CLOUD_RUN_SERVICE_NAME: ${{ inputs.stage == 'production' && 'movie-picker-api' || 'movie-picker-api-staging' }}
+  # One fixed name, not one per run: `deploy-<stage>` runs one at a time, and a tag left behind by a
+  # cancelled run is moved by the next one instead of piling up on the service.
+  PROBE_TAG: rollback-check
 
 jobs:
   rollback:
@@ -80,9 +95,18 @@ jobs:
         id: target
         env:
           INPUT_REV: ${{ inputs.revision }}
+          INPUT_RELEASE: ${{ inputs.release }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
           set -eo pipefail
+          if [ -n "$INPUT_REV" ] && [ -n "$INPUT_RELEASE" ]; then
+            echo "::error::Give a revision or a release, not both."
+            exit 1
+          fi
+          if [ -n "$INPUT_RELEASE" ] && ! printf '%s' "$INPUT_RELEASE" | grep -qE '^[0-9a-f]{40}$'; then
+            echo "::error::The release input takes the full 40-character commit SHA, as /health/ready reports it."
+            exit 1
+          fi
           SERVING="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
             | jq -r '[.status.traffic[]? | select(.percent == 100) | .revisionName] | first // ""')"
           if [ -z "$SERVING" ]; then
@@ -92,6 +116,18 @@ jobs:
           echo "Serving revision: $SERVING"
           if [ -n "$INPUT_REV" ]; then
             TARGET="$INPUT_REV"
+          elif [ -n "$INPUT_RELEASE" ]; then
+            gcloud run revisions list \
+              --service "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" \
+              --sort-by=~metadata.creationTimestamp \
+              --format=json > "$RUNNER_TEMP/revisions.json"
+            TARGET="$(jq -r --arg release "$INPUT_RELEASE" \
+              '[.[] | select(any(.spec.containers[0].env[]?; .name == "SENTRY_RELEASE" and .value == $release)) | .metadata.name] | first // ""' \
+              "$RUNNER_TEMP/revisions.json")"
+            if [ -z "$TARGET" ]; then
+              echo "::error::No revision of $CLOUD_RUN_SERVICE_NAME was built from release $INPUT_RELEASE. Give a revision, or redeploy that commit."
+              exit 1
+            fi
           else
             TARGET="$(gcloud run revisions list \
               --service "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" \
@@ -122,6 +158,35 @@ jobs:
             echo "target=$TARGET"
             echo "release=$RELEASE"
           } >> "$GITHUB_OUTPUT"
+      # `--update-tags` moves no percentage. The tag leaves before the switch, so that the traffic
+      # moves on a service in the state the rollbacks were rehearsed on, and in `always()` so that
+      # a refused target does not keep its address.
+      - name: Tag the target revision
+        id: tag
+        env:
+          TARGET: ${{ steps.target.outputs.target }}
+        run: |
+          set -eo pipefail
+          gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" \
+            --region "$GCP_REGION" \
+            --update-tags "$PROBE_TAG=$TARGET"
+          TAG_URL="$(gcloud run services describe "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --format=json \
+            | jq -r --arg t "$PROBE_TAG" '[.status.traffic[]? | select(.tag == $t) | .url] | first // ""')"
+          if [ -z "$TAG_URL" ]; then
+            echo "::error::Tagged URL not found for '$PROBE_TAG': the target cannot be validated before the switch."
+            exit 1
+          fi
+          echo "Target reachable at $TAG_URL"
+          echo "tag_url=$TAG_URL" >> "$GITHUB_OUTPUT"
+      - name: Validate the target before moving the traffic
+        uses: ./.github/actions/check-api-health
+        with:
+          url: ${{ steps.tag.outputs.tag_url }}
+          expected-release: ${{ steps.target.outputs.release }}
+      - name: Remove the probe tag
+        if: always() && steps.tag.outcome != 'skipped'
+        run: |
+          gcloud run services update-traffic "$CLOUD_RUN_SERVICE_NAME" --region "$GCP_REGION" --remove-tags "$PROBE_TAG" || true
       - name: Route 100% of the traffic
         env:
           TARGET: ${{ steps.target.outputs.target }}

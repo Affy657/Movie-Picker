@@ -19,4 +19,10 @@ describe('remainingWheelRevealDelayMs', () => {
     const pickedAt = '2026-05-01T18:00:00.000Z';
     expect(remainingWheelRevealDelayMs('wheel', pickedAt, now)).toBe(0);
   });
+
+  it('never waits longer than the rotation, however late the local clock runs', () => {
+    const now = Date.parse('2026-05-01T17:00:00.000Z');
+    const pickedAt = '2026-05-01T18:00:00.000Z';
+    expect(remainingWheelRevealDelayMs('wheel', pickedAt, now)).toBe(WHEEL_SPIN_DURATION_MS);
+  });
 });

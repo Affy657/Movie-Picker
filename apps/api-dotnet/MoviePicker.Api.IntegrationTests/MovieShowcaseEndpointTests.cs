@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
@@ -71,6 +72,7 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
                 Options.Create(new MoviePickerOptions { TmdbApiKey = "test-key" }),
                 new MemoryCache(new MemoryCacheOptions()),
                 new InMemorySharedCache(),
+                new SingleFlight(),
                 NullLogger<TmdbMovieSearch>.Instance));
         })).CreateClient();
 
@@ -147,6 +149,21 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
         var res = await anon.GetAsync("/api/v1/movies/showcase?section=nawak");
 
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("?section=trending&genreIds=987654", "unknown_genre")]
+    [InlineData("?section=collection&collectionId=4242", "unknown_collection")]
+    [InlineData("?section=recommendations&seedTmdbId=2000000000", "reference_movie_missing")]
+    public async Task Showcase_KeyOutOfTheCatalog_ReturnsBadRequestWithItsCode(string query, string reason)
+    {
+        var anon = _factory.CreateClient();
+
+        var res = await anon.GetAsync($"/api/v1/movies/showcase{query}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+        var body = System.Text.Json.JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal(reason, body.GetProperty("reason").GetString());
     }
 
     [Fact]

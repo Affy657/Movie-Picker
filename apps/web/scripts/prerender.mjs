@@ -114,6 +114,17 @@ if (!globalThis.matchMedia)
   });
 // The stored language is the only one read at boot, the prerender pins it to the site language.
 globalThis.localStorage.setItem('moviepicker-locale', 'fr');
+// A prerendered document is the same for every visitor, so nothing that depends on the visitor
+// may be frozen in it until React takes over. The consent banner would flash for someone who
+// already answered: consent reads as decided, refused so that PostHog stays out of the build.
+// The guest actions of the header would flash for someone signed in: the session hint leaves the
+// session check waiting on the `fetch` below, which never answers, and the header stays in its
+// loading state. React shows the banner or the guest actions after that, to whoever they concern.
+globalThis.localStorage.setItem(
+  'moviepicker-consent',
+  JSON.stringify({ decided: true, analytics: false })
+);
+globalThis.localStorage.setItem('mp.session-hint', '1');
 
 // The film lists query the API at mount. The prerender never reaches a network: their request
 // stays pending and the document carries the page head, its heading and its loading state,

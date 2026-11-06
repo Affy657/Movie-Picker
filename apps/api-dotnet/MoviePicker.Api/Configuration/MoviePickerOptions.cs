@@ -29,6 +29,8 @@ public sealed class MoviePickerOptions
 
     public int TmdbBatchEnrichmentMaxFetch { get; set; } = 40;
 
+    public int TmdbEnrichmentSharedCacheMaxEntries { get; set; } = 10_000;
+
     public bool PosterCacheEnabled { get; set; } = true;
 
     public int PosterCacheTtlDays { get; set; } = 30;
@@ -36,6 +38,8 @@ public sealed class MoviePickerOptions
     public int PosterCacheMaxBytes { get; set; } = 524_288;
 
     public int PosterCacheMaxEntries { get; set; } = 2_000;
+
+    public int AvatarPhotoMaxEntries { get; set; } = 1_000;
 
     public string PublicWebBaseUrl { get; set; } = "https://www.movie-picker.fr";
 

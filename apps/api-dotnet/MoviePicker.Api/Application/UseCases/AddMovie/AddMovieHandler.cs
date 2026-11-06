@@ -16,9 +16,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
     private readonly IParticipantRepository _participantRepository;
     private readonly IPosterImageStore _posterImageStore;
     private readonly IUserRepository _userRepository;
-    private readonly IPushSubscriptionRepository _pushSubscriptions;
-    private readonly IPushNotificationSender _pushSender;
-    private readonly IUserNotificationRepository _notifications;
+    private readonly EventAudienceNotifier _audience;
     private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ITmdbMovieSearch _tmdb;
     private readonly IUnitOfWork _unitOfWork;
@@ -31,9 +29,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         IParticipantRepository participantRepository,
         IPosterImageStore posterImageStore,
         IUserRepository userRepository,
-        IPushSubscriptionRepository pushSubscriptions,
-        IPushNotificationSender pushSender,
-        IUserNotificationRepository notifications,
+        EventAudienceNotifier audience,
         ICurrentUserAccessor currentUserAccessor,
         ITmdbMovieSearch tmdb,
         IUnitOfWork unitOfWork,
@@ -45,9 +41,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
         _participantRepository = participantRepository;
         _posterImageStore = posterImageStore;
         _userRepository = userRepository;
-        _pushSubscriptions = pushSubscriptions;
-        _pushSender = pushSender;
-        _notifications = notifications;
+        _audience = audience;
         _currentUserAccessor = currentUserAccessor;
         _tmdb = tmdb;
         _unitOfWork = unitOfWork;
@@ -88,7 +82,8 @@ public sealed class AddMovieHandler : IAddMovieHandler
         var proposerUserTask = _userRepository.GetByIdAsync(currentUserId, ct);
         await Task.WhenAll(genreIdsTask, proposerUserTask);
         var genreIds = await genreIdsTask;
-        var proposerHandle = PublicHandleResolver.Resolve(await proposerUserTask);
+        var proposer = await proposerUserTask;
+        var proposerHandle = PublicHandleResolver.Resolve(proposer);
 
         var movie = new Movie
         {
@@ -108,7 +103,7 @@ public sealed class AddMovieHandler : IAddMovieHandler
 
         var created = await InsertWithinProposalLimitAsync(evt, participant, movie, ct);
 
-        await NotifyParticipantsOnMovieAddedAsync(evt, created.Title, participant.UserId, CancellationToken.None);
+        await _audience.NotifyParticipantsAsync(MovieAddedMessage(evt, created.Title, proposer), participant.UserId, CancellationToken.None);
 
         return new MovieWithScoreResponse
         {
@@ -184,67 +179,22 @@ public sealed class AddMovieHandler : IAddMovieHandler
         }
     }
 
-    private async Task NotifyParticipantsOnMovieAddedAsync(Event evt, string movieTitle, string? proposerUserId, CancellationToken ct)
-    {
-        try
+    private static EventAudienceMessage MovieAddedMessage(Event evt, string movieTitle, User? proposer) => new(
+        evt.Id,
+        new UserNotification
         {
-            var participants = await _participantRepository.ListByEventIdAsync(evt.Id, ct);
-            var userIds = participants
-                .Where(p => !string.IsNullOrEmpty(p.UserId) && p.UserId != proposerUserId)
-                .Select(p => p.UserId!)
-                .Distinct()
-                .ToList();
-            if (userIds.Count == 0)
-                return;
-
-            var users = await _userRepository.ListByIdsAsync(userIds, ct);
-            var notifiableIds = users.Where(u => u.NotifiesOn(UserNotificationType.MovieAdded)).Select(u => u.Id).ToHashSet();
-            if (notifiableIds.Count == 0)
-                return;
-
-            User? proposer = null;
-            if (!string.IsNullOrEmpty(proposerUserId))
-                proposer = await _userRepository.GetByIdAsync(proposerUserId, ct);
-
-            var subs = await _pushSubscriptions.ListByUserIdsAsync(notifiableIds, ct);
-            if (subs.Count > 0)
-            {
-                var message = new PushMessage(
-                    Title: "Un film de plus au menu 🍿",
-                    Body: $"{movieTitle} a été ajouté à la soirée {evt.Title}",
-                    Tag: $"movie-add-{evt.Id}",
-                    Url: $"/e/{evt.Slug}"
-                );
-
-                await PushFanOut.SendToAllAsync(
-                    _pushSender,
-                    subs.Where(s => notifiableIds.Contains(s.UserId)),
-                    message,
-                    ct);
-            }
-
-            var now = _clock.GetUtcNow();
-            foreach (var userId in notifiableIds)
-            {
-                await _notifications.AddAsync(new UserNotification
-                {
-                    UserId = userId,
-                    Type = UserNotificationType.MovieAdded,
-                    ActorHandle = proposer?.Handle,
-                    ActorDisplayName = proposer?.DisplayName,
-                    ActorAvatarId = proposer?.DisplayedAvatarId,
-                    EventId = evt.Id,
-                    EventSlug = evt.Slug,
-                    EventTitle = evt.Title,
-                    MovieTitle = movieTitle,
-                    IsRead = false,
-                    CreatedAt = now
-                }, ct);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Movie proposed notification failed for movie night {EventId}", evt.Id);
-        }
-    }
+            Type = UserNotificationType.MovieAdded,
+            ActorHandle = proposer?.Handle,
+            ActorDisplayName = proposer?.DisplayName,
+            ActorAvatarId = proposer?.DisplayedAvatarId,
+            EventId = evt.Id,
+            EventSlug = evt.Slug,
+            EventTitle = evt.Title,
+            MovieTitle = movieTitle
+        },
+        new PushMessage(
+            Title: "Un film de plus au menu 🍿",
+            Body: $"{movieTitle} a été ajouté à la soirée {evt.Title}",
+            Tag: $"movie-add-{evt.Id}",
+            Url: $"/e/{evt.Slug}"));
 }

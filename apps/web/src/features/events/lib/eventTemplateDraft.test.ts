@@ -79,15 +79,26 @@ describe('buildTemplateDraft', () => {
     expect(draft.maxParticipants).toBe(DEFAULT_PARTICIPANT_LIMIT);
   });
 
-  it('reads a limit at the cap as no limit', () => {
+  it('reads a limit at the cap as a limit, only the switch means no limit', () => {
     const draft = buildTemplateDraft({
       ...baseFields,
       maxProposals: String(MAX_PROPOSALS_PER_PARTICIPANT),
       maxParticipants: String(MAX_EVENT_PARTICIPANTS),
     });
 
-    expect(draft.maxProposalsPerParticipant).toBeNull();
-    expect(draft.maxParticipants).toBeNull();
+    expect(draft.maxProposalsPerParticipant).toBe(MAX_PROPOSALS_PER_PARTICIPANT);
+    expect(draft.maxParticipants).toBe(MAX_EVENT_PARTICIPANTS);
+  });
+
+  it('falls back to the default limit above the cap, the form refuses such a value', () => {
+    const draft = buildTemplateDraft({
+      ...baseFields,
+      maxProposals: String(MAX_PROPOSALS_PER_PARTICIPANT + 1),
+      maxParticipants: String(MAX_EVENT_PARTICIPANTS + 1),
+    });
+
+    expect(draft.maxProposalsPerParticipant).toBe(DEFAULT_PROPOSAL_LIMIT);
+    expect(draft.maxParticipants).toBe(DEFAULT_PARTICIPANT_LIMIT);
   });
 
   it('reads the vote budget only when the limit is enabled, falling back to the default', () => {
@@ -102,7 +113,7 @@ describe('buildTemplateDraft', () => {
     expect(buildTemplateDraft({ ...baseFields, maxVotes: '4' }).maxVotesPerParticipant).toBeNull();
   });
 
-  it('turns a config back into form fields, caps standing for no limit', () => {
+  it('turns a config back into form fields, the default counter waiting behind a disabled limit', () => {
     const fields = configToFields({
       theme: '🎃 Halloween',
       maxProposalsPerParticipant: null,
@@ -118,7 +129,7 @@ describe('buildTemplateDraft', () => {
       themeEmoji: '🎃',
       themeText: 'Halloween',
       proposalLimitEnabled: false,
-      maxProposals: String(MAX_PROPOSALS_PER_PARTICIPANT),
+      maxProposals: String(DEFAULT_PROPOSAL_LIMIT),
       participantLimitEnabled: true,
       maxParticipants: '8',
       voteLimitEnabled: true,
@@ -146,7 +157,7 @@ describe('buildTemplateDraft', () => {
     expect(buildTemplateDraft(configToFields({ ...config, theme: '🎃' })).theme).toBe('🎃');
   });
 
-  it('reads a limit stored at the cap as disabled', () => {
+  it('reads a limit stored at the cap as enabled', () => {
     const fields = configToFields({
       theme: null,
       maxProposalsPerParticipant: MAX_PROPOSALS_PER_PARTICIPANT,
@@ -158,8 +169,8 @@ describe('buildTemplateDraft', () => {
       winnerCount: 1,
     });
 
-    expect(fields.proposalLimitEnabled).toBe(false);
-    expect(fields.participantLimitEnabled).toBe(false);
+    expect(fields.proposalLimitEnabled).toBe(true);
+    expect(fields.participantLimitEnabled).toBe(true);
   });
 
   it('projects a draft onto the config patch, null limits sent as zero', () => {
@@ -257,7 +268,7 @@ describe('isSameTemplateConfig', () => {
     expect(isSameTemplateConfig(baseDraft, { ...baseDraft, ...patch })).toBe(false);
   });
 
-  it('treats an absent limit as the cap', () => {
+  it('tells an absent limit from a limit at the cap', () => {
     const noLimit: TemplateConfigDraft = {
       ...baseDraft,
       maxProposalsPerParticipant: null,
@@ -269,7 +280,7 @@ describe('isSameTemplateConfig', () => {
       maxParticipants: MAX_EVENT_PARTICIPANTS,
     };
 
-    expect(isSameTemplateConfig(noLimit, atCap)).toBe(true);
+    expect(isSameTemplateConfig(noLimit, atCap)).toBe(false);
   });
 });
 
@@ -296,21 +307,23 @@ describe('isDefaultTemplateDraft', () => {
     expect(isDefaultTemplateDraft({ ...defaults, winnerCount: 2 })).toBe(false);
   });
 
-  it('still counts a limit written at the cap as the default', () => {
+  it('counts a limit written at the cap as a choice of the host', () => {
     const defaults = buildTemplateDraft(defaultTemplateFields());
 
     expect(isDefaultTemplateDraft({ ...defaults, maxParticipants: MAX_EVENT_PARTICIPANTS })).toBe(
-      true
+      false
     );
   });
 });
 
 describe('limitFieldOnEnable', () => {
-  it('keeps a usable counter value', () => {
-    expect(limitFieldOnEnable('8', MAX_EVENT_PARTICIPANTS, DEFAULT_PARTICIPANT_LIMIT)).toBe('8');
+  it.each(['8', String(MAX_EVENT_PARTICIPANTS)])('keeps the usable counter value %j', (value) => {
+    expect(limitFieldOnEnable(value, MAX_EVENT_PARTICIPANTS, DEFAULT_PARTICIPANT_LIMIT)).toBe(
+      value
+    );
   });
 
-  it.each(['', '0', 'abc', String(MAX_EVENT_PARTICIPANTS)])(
+  it.each(['', '0', 'abc', String(MAX_EVENT_PARTICIPANTS + 1)])(
     'replaces %j by the default limit',
     (value) => {
       expect(limitFieldOnEnable(value, MAX_EVENT_PARTICIPANTS, DEFAULT_PARTICIPANT_LIMIT)).toBe(

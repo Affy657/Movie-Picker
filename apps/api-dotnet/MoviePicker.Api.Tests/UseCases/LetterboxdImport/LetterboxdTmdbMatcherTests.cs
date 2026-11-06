@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
+using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Configuration;
@@ -45,6 +46,7 @@ public sealed class LetterboxdTmdbMatcherTests
             Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }),
             new MemoryCache(new MemoryCacheOptions()),
             new InMemorySharedCache(),
+            new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
     }
 

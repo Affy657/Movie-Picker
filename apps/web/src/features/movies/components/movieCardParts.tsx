@@ -25,11 +25,10 @@ import type { RatingScale } from '@/shared/types/theme';
 import styles from './movieCardParts.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
-export { MovieNote, PITCH_MAX } from './MovieNote';
 export { CardKebab, MovieCardKebab } from './MovieCardKebab';
 import { deriveWheelToggle } from './MovieCardKebab';
+import { MovieNote } from './MovieNote';
 import { useLocale, type Translate } from '@/shared/i18n';
-export type { MovieWheelExclusion } from '@/features/movies/types';
 
 export interface MovieCardSelection {
   active: boolean;
@@ -55,6 +54,7 @@ export interface MovieCardCommonProps {
   isHost: boolean;
   onVote: (movieId: string, value: 1 | -1) => Promise<void>;
   onRemove: (movie: MovieData) => void;
+  onRemoveNote?: (movie: MovieData) => void;
   refresh: () => void;
   onActionError: (message: string) => void;
   t: Translate;
@@ -381,6 +381,44 @@ export function CardProposerFooter({
         </button>
       )}
     </span>
+  );
+}
+
+export function CardNote({
+  s,
+  m,
+  slug,
+  participantId,
+  refresh,
+  onActionError,
+  onRemoveNote,
+  t,
+}: Readonly<{
+  s: ReturnType<typeof useMovieCardState>;
+  m: MovieData;
+  slug: string;
+  participantId: string | null;
+  refresh: () => void;
+  onActionError: (message: string) => void;
+  onRemoveNote?: (movie: MovieData) => void;
+  t: Translate;
+}>) {
+  if (!m.pitchNote && !s.noteEditing) return null;
+  return (
+    <MovieNote
+      movieId={m.id}
+      movieTitle={m.title}
+      slug={slug}
+      pitchNote={m.pitchNote}
+      editable={s.canEditNote}
+      participantId={participantId}
+      editing={s.noteEditing}
+      onEditingChange={s.setNoteEditing}
+      refresh={refresh}
+      onActionError={onActionError}
+      onRemove={s.canRemove && onRemoveNote ? () => onRemoveNote(m) : undefined}
+      t={t}
+    />
   );
 }
 

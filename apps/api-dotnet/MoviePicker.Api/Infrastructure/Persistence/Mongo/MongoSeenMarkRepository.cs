@@ -21,31 +21,21 @@ public sealed class MongoSeenMarkRepository : ISeenMarkRepository
             Builders<SeenMarkDocument>.Filter.Eq(x => x.MovieId, mark.MovieId),
             Builders<SeenMarkDocument>.Filter.Eq(x => x.ParticipantId, mark.ParticipantId));
 
-        var existing = await _collection.Find(filter).FirstOrDefaultAsync(ct);
-        if (existing is not null)
-            return SeenMarkMapper.ToDomain(existing);
-
         var now = DateTime.UtcNow;
-        var doc = new SeenMarkDocument
+        var update = Builders<SeenMarkDocument>.Update
+            .SetOnInsert(x => x.Id, ObjectId.GenerateNewId().ToString())
+            .SetOnInsert(x => x.EventId, mark.EventId)
+            .SetOnInsert(x => x.MovieId, mark.MovieId)
+            .SetOnInsert(x => x.ParticipantId, mark.ParticipantId)
+            .SetOnInsert(x => x.CreatedAt, now)
+            .SetOnInsert(x => x.UpdatedAt, now);
+        var options = new FindOneAndUpdateOptions<SeenMarkDocument>
         {
-            Id = ObjectId.GenerateNewId().ToString(),
-            EventId = mark.EventId,
-            MovieId = mark.MovieId,
-            ParticipantId = mark.ParticipantId,
-            CreatedAt = now,
-            UpdatedAt = now
+            IsUpsert = true,
+            ReturnDocument = ReturnDocument.After
         };
 
-        try
-        {
-            await _collection.InsertOneAsync(doc, cancellationToken: ct);
-        }
-        catch (MongoWriteException ex) when (ex.WriteError?.Code == 11000)
-        {
-            var again = await _collection.Find(filter).FirstAsync(ct);
-            return SeenMarkMapper.ToDomain(again);
-        }
-
+        var doc = await _collection.FindOneAndUpdateAsync(filter, update, options, ct);
         return SeenMarkMapper.ToDomain(doc);
     }
 

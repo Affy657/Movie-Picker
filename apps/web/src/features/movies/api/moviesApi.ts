@@ -7,11 +7,15 @@ import type {
   WatchProviderOffer,
 } from '@/shared/types/movie';
 
+type QueryString = '' | `?${string}`;
+
 export async function fetchEventMovies(
   slug: string,
   participantId?: string | null
 ): Promise<MovieData[]> {
-  const suffix = participantId ? `?participantId=${encodeURIComponent(participantId)}` : '';
+  const suffix: QueryString = participantId
+    ? `?participantId=${encodeURIComponent(participantId)}`
+    : '';
   const list = await fetchApi<RawMovieData[]>(`${apiPath('events', slug, 'movies')}${suffix}`);
   return Array.isArray(list) ? list.map(mapMovieData) : [];
 }
@@ -136,7 +140,7 @@ export async function fetchMovieDetails(
 ): Promise<MovieDetails> {
   const params = new URLSearchParams();
   if (opts?.mediaType) params.set('mediaType', opts.mediaType);
-  const qs = params.toString() ? `?${params.toString()}` : '';
+  const qs: QueryString = params.toString() ? `?${params.toString()}` : '';
   const raw = await fetchApi<RawMovieDetailsResponse>(
     `${apiPath('movies', 'tmdb', tmdbId, 'details')}${qs}`,
     opts?.signal ? { signal: opts.signal } : undefined
@@ -243,12 +247,13 @@ export async function setMoviePitchNote(
 export async function deleteMoviePitchNote(
   slug: string,
   movieId: string,
-  participantId: string
+  participantId: string | null,
+  hostToken?: string | null
 ): Promise<void> {
-  await fetchApi(apiPath('events', slug, 'movies', movieId, 'note'), {
-    method: 'DELETE',
-    body: JSON.stringify({ participantId }),
-  });
+  await fetchApi(
+    apiPath('events', slug, 'movies', movieId, 'note'),
+    withHostToken(hostToken, { method: 'DELETE', body: JSON.stringify({ participantId }) })
+  );
 }
 
 export async function markMovieAsSeen(

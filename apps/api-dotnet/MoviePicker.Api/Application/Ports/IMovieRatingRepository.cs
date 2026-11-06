@@ -8,6 +8,10 @@ public interface IMovieRatingRepository
 
     Task<bool> DeleteAsync(string eventId, string movieId, string participantId, CancellationToken ct = default);
 
+    Task DeleteByMovieIdsAsync(string eventId, IReadOnlyCollection<string> movieIds, CancellationToken ct = default);
+
+    Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default);
+
     Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default);
 
     Task<IReadOnlyList<MovieRating>> ListByEventIdAsync(string eventId, CancellationToken ct = default);

@@ -1,7 +1,6 @@
 import type { Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
-import { MAX_EVENT_PARTICIPANTS, MAX_PROPOSALS_PER_PARTICIPANT } from '@/features/events/types';
-import { limitBelowCap, type TemplateConfigDraft } from './eventTemplateDraft';
+import { positiveLimit, type TemplateConfigDraft } from './eventTemplateDraft';
 
 const PART_SEPARATOR = ', ';
 
@@ -9,7 +8,7 @@ export function describeTemplateConfig(draft: TemplateConfigDraft, t: Translate)
   const parts: string[] = [];
   if (draft.theme) parts.push(draft.theme);
 
-  const proposals = limitBelowCap(draft.maxProposalsPerParticipant, MAX_PROPOSALS_PER_PARTICIPANT);
+  const proposals = positiveLimit(draft.maxProposalsPerParticipant);
   if (proposals !== null) {
     parts.push(
       pluralizeCount(
@@ -21,7 +20,7 @@ export function describeTemplateConfig(draft: TemplateConfigDraft, t: Translate)
     );
   }
 
-  const participants = limitBelowCap(draft.maxParticipants, MAX_EVENT_PARTICIPANTS);
+  const participants = positiveLimit(draft.maxParticipants);
   if (participants !== null) {
     parts.push(
       pluralizeCount(

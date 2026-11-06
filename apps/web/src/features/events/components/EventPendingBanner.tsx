@@ -6,6 +6,7 @@ import EventInfoBanner from './EventInfoBanner';
 
 type Props = {
   isHost: boolean;
+  launching?: boolean;
   onLaunchWheel?: () => void;
   onReschedule?: () => void;
   onCloseWithoutMovie?: () => void;
@@ -13,6 +14,7 @@ type Props = {
 
 export default function EventPendingBanner({
   isHost,
+  launching = false,
   onLaunchWheel,
   onReschedule,
   onCloseWithoutMovie,
@@ -21,7 +23,13 @@ export default function EventPendingBanner({
   const actions = isHost ? (
     <>
       {onLaunchWheel ? (
-        <Button type="button" variant="primary" size="sm" onClick={onLaunchWheel}>
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          loading={launching}
+          onClick={onLaunchWheel}
+        >
           <Disc3 size={ICON_SIZE.sm} aria-hidden />
           {t('events.wheel.launchButton')}
         </Button>

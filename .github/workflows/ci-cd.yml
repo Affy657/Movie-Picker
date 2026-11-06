@@ -127,6 +127,7 @@ jobs:
               - 'turbo.json'
               - 'eslint.config.mjs'
               - 'prettier.config.cjs'
+              - 'knip.json'
               - 'configs/**'
               - 'scripts/**'
               - '.github/workflows/ci-cd.yml'
@@ -275,6 +276,7 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run lint:eslint
       - run: pnpm run format:check
+      - run: pnpm run check:unused
 
   lint-api:
     name: 🧹 Lint API .NET (format + build + OpenAPI)

@@ -6,10 +6,10 @@ public sealed record AvatarPhotoFormat(string ContentType, int Width, int Height
 
 public static class AvatarPhotoImage
 {
-    public const int MaxBytes = 512 * 1024;
-    public const int MaxBase64Length = (MaxBytes + 2) / 3 * 4;
     public const int MinSide = 128;
-    public const int MaxSide = 1024;
+    public const int MaxSide = 256;
+    public const int MaxBytes = MaxSide * MaxSide * 3;
+    public const int MaxBase64Length = (MaxBytes + 2) / 3 * 4;
 
     private const byte WebpAnimationFlag = 0x02;
 

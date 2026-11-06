@@ -90,10 +90,8 @@ public sealed class DataMigrationRunner : BackgroundService
 
         if (!await history.TryAcquireLeaseAsync(migration.Id, _holder, _clock.GetUtcNow(), LeaseDuration, stoppingToken))
         {
-            _logger.LogInformation(
-                "Migration {MigrationId} is running on another instance, which applies the remaining ones",
-                migration.Id);
-            return false;
+            _logger.LogInformation("Migration {MigrationId} is running on another instance", migration.Id);
+            return repeatable;
         }
 
         try

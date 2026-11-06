@@ -1,5 +1,6 @@
 import type { Translate } from '@/shared/i18n';
 import { eventScheduledStartUtcMs } from '@/shared/utils/eventScheduled';
+import type { EventLimitErrors } from './eventLimitValidation';
 
 export type CreateEventDraft = {
   title: string;
@@ -7,7 +8,8 @@ export type CreateEventDraft = {
   time: string;
 };
 
-export type CreateEventFieldErrors = Partial<Record<keyof CreateEventDraft, string>>;
+export type CreateEventFieldErrors = Partial<Record<keyof CreateEventDraft, string>> &
+  EventLimitErrors;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{2}:\d{2}$/;

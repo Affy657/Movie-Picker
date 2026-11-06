@@ -141,6 +141,38 @@ describe('JoinForm', () => {
     expect(client.getQueryState(queryKeys.myEvents.active)?.isInvalidated).toBe(true);
   });
 
+  it('reloads the night after joining, whichever host token it was read with', async () => {
+    const user = userEvent.setup();
+    mockFetchApi.mockImplementation(async (path: string) => {
+      if (path === '/auth/me') return profile;
+      if (path === '/events/soiree/join')
+        return {
+          participant: { _id: 'p1', eventId: 'e1', pseudo: 'ProfilCompte' },
+          isNew: true,
+          message: '',
+        };
+      throw new Error(`fetchApi inattendu: ${path}`);
+    });
+    const client = createTestQueryClient();
+    client.setQueryData(queryKeys.event.detail('soiree', null), { slug: 'soiree' });
+    client.setQueryData(queryKeys.event.detail('soiree', 'host-token'), { slug: 'soiree' });
+    render(
+      <AppTestProviders client={client}>
+        <MemoryRouter>
+          <JoinForm slug="soiree" onJoined={onJoined} />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    await user.click(await screen.findByRole('button', { name: /rejoindre/i }));
+
+    await waitFor(() => expect(onJoined).toHaveBeenCalledWith('p1', 'ProfilCompte'));
+    expect(client.getQueryState(queryKeys.event.detail('soiree', null))?.isInvalidated).toBe(true);
+    expect(
+      client.getQueryState(queryKeys.event.detail('soiree', 'host-token'))?.isInvalidated
+    ).toBe(true);
+  });
+
   it('signed in without displayName: sends "Participant" by default', async () => {
     const user = userEvent.setup();
     mockFetchApi.mockImplementation(async (path: string) => {

@@ -4,6 +4,7 @@ import { Lock, Settings, X } from 'lucide-react';
 import HostEventDateField from './HostEventDateField';
 import HostEventThemeField from './HostEventThemeField';
 import WheelModeField from './WheelModeField';
+import EventLimitFields from './EventLimitFields';
 import EventTemplateSaveBar from './EventTemplateSaveBar';
 import EventTemplatesRow from './EventTemplatesRow';
 import HostEventDangerZone from './HostEventDangerZone';
@@ -19,11 +20,7 @@ import Modal from '@/shared/components/Modal';
 import styles from './HostEventSettingsPanel.module.css';
 import templatesStyles from './EventTemplatesSection.module.css';
 import type { EventData } from '@/features/events/types';
-import {
-  MAX_EVENT_PARTICIPANTS,
-  MAX_PROPOSALS_PER_PARTICIPANT,
-  MAX_WINNERS_PER_EVENT,
-} from '@/features/events/types';
+import { MAX_WINNERS_PER_EVENT } from '@/features/events/types';
 import { useTranslation } from '@/shared/i18n';
 import IconButton from '@/shared/components/IconButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
@@ -237,85 +234,34 @@ export default function HostEventSettingsPanel({
             <h3 className={styles.sectionTitle}>{t('events.settings.sectionParticipants')}</h3>
 
             <fieldset className={styles.lockable} disabled={configLocked}>
-              <div className={styles.field}>
-                <ToggleRow
-                  title={t('events.settings.participantLimitLabel')}
-                  description={t('events.settings.participantLimitDesc', {
-                    max: MAX_EVENT_PARTICIPANTS,
-                  })}
-                  checked={participantLimitEnabled}
-                  disabled={configLocked}
-                  onChange={toggleParticipantLimit}
-                />
-                {participantLimitEnabled && (
-                  <Field
-                    label={t('events.settings.maxParticipantsLabel')}
-                    htmlFor="host-cfg-max-participants"
-                    error={fieldErrors.maxParticipants}
-                    hint={fieldErrors.maxParticipants ? undefined : maxParticipantsHint}
-                    className={clsx(styles.subField, styles.counterField)}
-                  >
-                    {({ id, describedBy, invalid }) => (
-                      <NumberInput
-                        id={id}
-                        value={maxParticipants}
-                        onChange={(v) => {
-                          setMaxParticipants(v);
-                          scheduleAutoSave();
-                        }}
-                        min={1}
-                        max={MAX_EVENT_PARTICIPANTS}
-                        disabled={configLocked}
-                        invalid={invalid}
-                        ariaDescribedBy={describedBy}
-                      />
-                    )}
-                  </Field>
-                )}
-              </div>
-
-              <div className={styles.field}>
-                <ToggleRow
-                  title={t('events.settings.proposalLimitLabel')}
-                  description={t('events.settings.proposalLimitDesc', {
-                    max: MAX_PROPOSALS_PER_PARTICIPANT,
-                  })}
-                  checked={proposalLimitEnabled}
-                  disabled={configLocked}
-                  onChange={toggleProposalLimit}
-                />
-                {proposalLimitEnabled && (
-                  <Field
-                    label={t('events.settings.maxProposalsLabel')}
-                    htmlFor="host-cfg-max"
-                    error={fieldErrors.maxProposals}
-                    hint={
-                      fieldErrors.maxProposals
-                        ? undefined
-                        : t('events.settings.maxProposalsHint', {
-                            max: MAX_PROPOSALS_PER_PARTICIPANT,
-                          })
-                    }
-                    className={clsx(styles.subField, styles.counterField)}
-                  >
-                    {({ id, describedBy, invalid }) => (
-                      <NumberInput
-                        id={id}
-                        value={maxProp}
-                        onChange={(v) => {
-                          setMaxProp(v);
-                          scheduleAutoSave();
-                        }}
-                        min={1}
-                        max={MAX_PROPOSALS_PER_PARTICIPANT}
-                        disabled={configLocked}
-                        invalid={invalid}
-                        ariaDescribedBy={describedBy}
-                      />
-                    )}
-                  </Field>
-                )}
-              </div>
+              <EventLimitFields
+                idPrefix="host-cfg"
+                disabled={configLocked}
+                rowClassName={styles.field}
+                limits={{
+                  participants: {
+                    enabled: participantLimitEnabled,
+                    value: maxParticipants,
+                    error: fieldErrors.maxParticipants,
+                    hint: maxParticipantsHint,
+                    onEnabledChange: toggleParticipantLimit,
+                    onValueChange: (v) => {
+                      setMaxParticipants(v);
+                      scheduleAutoSave();
+                    },
+                  },
+                  proposals: {
+                    enabled: proposalLimitEnabled,
+                    value: maxProp,
+                    error: fieldErrors.maxProposals,
+                    onEnabledChange: toggleProposalLimit,
+                    onValueChange: (v) => {
+                      setMaxProp(v);
+                      scheduleAutoSave();
+                    },
+                  },
+                }}
+              />
 
               <div className={styles.field}>
                 <ToggleRow
@@ -335,39 +281,26 @@ export default function HostEventSettingsPanel({
             <h3 className={styles.sectionTitle}>{t('events.settings.sectionDraw')}</h3>
 
             <fieldset className={styles.lockable} disabled={configLocked}>
-              <div className={styles.field}>
-                <ToggleRow
-                  title={t('events.settings.voteLimitLabel')}
-                  description={t('events.settings.voteLimitDesc')}
-                  checked={voteLimitEnabled}
-                  onChange={() => {
-                    setVoteLimitEnabled((v) => !v);
-                    scheduleAutoSave(true);
-                  }}
-                />
-                {voteLimitEnabled && (
-                  <Field
-                    label={t('events.settings.maxVotesLabel')}
-                    htmlFor="host-cfg-max-votes"
-                    error={fieldErrors.maxVotes}
-                    className={clsx(styles.subField, styles.counterField)}
-                  >
-                    {({ id, describedBy, invalid }) => (
-                      <NumberInput
-                        id={id}
-                        value={maxVotes}
-                        onChange={(v) => {
-                          setMaxVotes(v);
-                          scheduleAutoSave();
-                        }}
-                        min={1}
-                        invalid={invalid}
-                        ariaDescribedBy={describedBy}
-                      />
-                    )}
-                  </Field>
-                )}
-              </div>
+              <EventLimitFields
+                idPrefix="host-cfg"
+                disabled={configLocked}
+                rowClassName={styles.field}
+                limits={{
+                  votes: {
+                    enabled: voteLimitEnabled,
+                    value: maxVotes,
+                    error: fieldErrors.maxVotes,
+                    onEnabledChange: (enabled) => {
+                      setVoteLimitEnabled(enabled);
+                      scheduleAutoSave(true);
+                    },
+                    onValueChange: (v) => {
+                      setMaxVotes(v);
+                      scheduleAutoSave();
+                    },
+                  },
+                }}
+              />
 
               <div className={styles.field}>
                 <span className="label" id={wheelModeLabelId}>

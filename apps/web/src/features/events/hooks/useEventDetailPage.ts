@@ -85,13 +85,17 @@ export function useEventDetailPage(
     setParticipant(null);
   }, [slug, event]);
 
+  const recapSlug = event?.recapSlug;
   const refreshAll = useCallback(() => {
     if (!slug) return;
     queryClient.invalidateQueries({ queryKey: queryKeys.event.detail(slug, hostToken) });
     queryClient.invalidateQueries({ queryKey: queryKeys.movies.list(slug) });
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
     queryClient.invalidateQueries({ queryKey: queryKeys.profile.watchedMoviesAll });
-  }, [slug, hostToken, queryClient]);
+    if (recapSlug) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.event.recap(recapSlug) });
+    }
+  }, [slug, hostToken, recapSlug, queryClient]);
 
   return {
     slug,

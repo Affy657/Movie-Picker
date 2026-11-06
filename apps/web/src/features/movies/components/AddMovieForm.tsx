@@ -1,16 +1,10 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Film, ListFilter, Search } from 'lucide-react';
-import {
-  addMovieToEvent,
-  searchMovies,
-  type MovieSearchFilters,
-  type MovieSearchItem,
-  type MovieSearchListResponse,
-} from '@/features/movies/api/moviesApi';
+import { addMovieToEvent, type MovieSearchItem } from '@/features/movies/api/moviesApi';
 import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
 import { getErrorMessage } from '@/shared/api/apiError';
-import { useLocale, useTranslation } from '@/shared/i18n';
+import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
 import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
 import { metaGenresLabel, movieMetaLine } from '@/shared/utils/movieMetaLine';
@@ -21,6 +15,7 @@ import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useSearchHistory } from '@/features/movies/hooks/useSearchHistory';
 import { useAnalytics } from '@/shared/hooks/useAnalytics';
+import { SEARCH_MIN_CHARS, useMovieSearch } from '@/features/movies/hooks/useMovieSearch';
 import { useMovieSearchFilters } from '@/features/movies/hooks/useMovieSearchFilters';
 import MovieSearchFiltersPanel from '@/features/movies/components/MovieSearchFiltersPanel';
 import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
@@ -33,15 +28,22 @@ import { ICON_SIZE } from '@/shared/components/iconSize';
 import CountBadge from '@/shared/components/CountBadge';
 import { PaidOfferChip } from '@/features/movies/components/movieCardParts';
 
-const SEARCH_DEBOUNCE_MS = 350;
-const SEARCH_MIN_CHARS = 2;
-
-function makeSearchKey(term: string, filters: MovieSearchFilters): string {
-  return `${term}|${(filters.genreIds ?? []).join(',')}|${filters.yearFrom ?? ''}|${filters.yearTo ?? ''}|${filters.voteMin ?? ''}|${filters.originalLanguage ?? ''}|${filters.runtimeMin ?? ''}|${filters.runtimeMax ?? ''}`;
-}
-
 function isSameTmdbItem(m: MovieData, r: MovieSearchItem): boolean {
   return m.tmdbId === r.id && (m.mediaType ?? 'movie') === (r.mediaType ?? 'movie');
+}
+
+function searchFailureMessage(failure: unknown, t: Translate): string | null {
+  return failure ? getErrorMessage(failure, t('movies.search.fallbackError')) : null;
+}
+
+function searchStatusLabel(
+  search: { searching: boolean; answered: boolean; count: number },
+  t: Translate
+): string {
+  if (search.searching) return t('movies.search.a11ySearching');
+  if (!search.answered) return '';
+  if (search.count === 0) return t('movies.search.a11yNoResults');
+  return t('movies.search.a11yResultsCount', { count: search.count });
 }
 
 export interface AddMovieFormProps {
@@ -92,23 +94,13 @@ export default function AddMovieForm({
   const [query, setQuery] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const [historyDismissed, setHistoryDismissed] = useState(false);
-  const [results, setResults] = useState<MovieSearchItem[]>([]);
-  const [searchMeta, setSearchMeta] = useState<Pick<
-    MovieSearchListResponse,
-    'disclaimer' | 'watchProvidersRegion' | 'tmdbAttributionUrl'
-  > | null>(null);
-  const [searching, setSearching] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [emptySearchKey, setEmptySearchKey] = useState<string | null>(null);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const filters = useMovieSearchFilters(tmdbLanguage, user?.ratingScale);
 
   const trimmedForSearch = useMemo(() => query.trim(), [query]);
 
-  const lastFulfilledKeyRef = useRef<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const immediateSearchRef = useRef(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -119,151 +111,52 @@ export default function AddMovieForm({
     ignoreSelector: '[data-filters-toggle]',
   });
 
-  useEffect(() => () => abortRef.current?.abort(), []);
-
   useEffect(() => {
     const frame = requestAnimationFrame(() => searchInputRef.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  const clearDebounceTimer = useCallback(() => {
-    if (debounceTimerRef.current != null) {
-      clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = null;
-    }
-  }, []);
+  const filterChangedRef = filters.filterChangedRef;
+  const takeImmediateSearch = useCallback(() => {
+    const immediate = immediateSearchRef.current || filterChangedRef.current;
+    immediateSearchRef.current = false;
+    filterChangedRef.current = false;
+    return immediate;
+  }, [filterChangedRef]);
 
-  const clearSearchResults = useCallback(() => {
-    lastFulfilledKeyRef.current = null;
-    setResults([]);
-    setSearchMeta(null);
-    setError(null);
-    setEmptySearchKey(null);
-    setA11ySearchStatus('');
-    abortRef.current?.abort();
-    setSearching(false);
-  }, []);
+  const {
+    searchKey,
+    results,
+    meta: searchMeta,
+    searching,
+    answered,
+    failure,
+    emptySearchKey,
+    searchNow,
+    reset: resetSearch,
+  } = useMovieSearch({
+    term: trimmedForSearch,
+    filters: filters.activeFilters,
+    hasApiFilters: filters.hasApiFilters,
+    lang: tmdbLanguage,
+    eventSlug: slug,
+    includeSeries,
+    takeImmediate: takeImmediateSearch,
+    onSearched: addToHistory,
+  });
 
-  const [a11ySearchStatus, setA11ySearchStatus] = useState('');
+  useEffect(() => setAddError(null), [searchKey]);
 
-  const executeSearch = useCallback(
-    async (term: string, activeFilters: MovieSearchFilters) => {
-      abortRef.current?.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      setError(null);
-      setSearching(true);
-      setA11ySearchStatus(t('movies.search.a11ySearching'));
-      try {
-        const body = await searchMovies(term, {
-          signal: controller.signal,
-          lang: tmdbLanguage,
-          eventSlug: slug,
-          includeSeries,
-          filters: activeFilters,
-        });
-        if (controller.signal.aborted) return;
-        setResults(body.items);
-        const hasMeta =
-          Boolean(body.disclaimer) ||
-          Boolean(body.watchProvidersRegion) ||
-          Boolean(body.tmdbAttributionUrl);
-        setSearchMeta(
-          hasMeta
-            ? {
-                disclaimer: body.disclaimer,
-                watchProvidersRegion: body.watchProvidersRegion,
-                tmdbAttributionUrl: body.tmdbAttributionUrl,
-              }
-            : null
-        );
-        lastFulfilledKeyRef.current = makeSearchKey(term, activeFilters);
-        if (term.length >= SEARCH_MIN_CHARS) addToHistory(term);
-        if (body.items.length === 0) {
-          setEmptySearchKey(makeSearchKey(term, activeFilters));
-          setA11ySearchStatus(t('movies.search.a11yNoResults'));
-        } else {
-          setEmptySearchKey(null);
-          setA11ySearchStatus(t('movies.search.a11yResultsCount', { count: body.items.length }));
-        }
-      } catch (err) {
-        if (controller.signal.aborted || (err instanceof Error && err.name === 'AbortError'))
-          return;
-        lastFulfilledKeyRef.current = null;
-        setEmptySearchKey(null);
-        setA11ySearchStatus('');
-        setError(getErrorMessage(err, t('movies.search.fallbackError')));
-      } finally {
-        if (!controller.signal.aborted) setSearching(false);
-      }
-    },
-    [tmdbLanguage, t, slug, includeSeries, addToHistory]
-  );
+  const error = addError ?? searchFailureMessage(failure, t);
+  const a11ySearchStatus = searchStatusLabel({ searching, answered, count: results.length }, t);
 
   const searchAllowed = trimmedForSearch.length >= SEARCH_MIN_CHARS || filters.hasApiFilters;
-  const currentSearchKey = useMemo(
-    () => makeSearchKey(trimmedForSearch, filters.activeFilters),
-    [trimmedForSearch, filters.activeFilters]
-  );
 
   const search = useCallback(() => {
     if (!searchAllowed) return;
-    clearDebounceTimer();
-    executeSearch(trimmedForSearch, filters.activeFilters);
-  }, [searchAllowed, trimmedForSearch, filters.activeFilters, executeSearch, clearDebounceTimer]);
-
-  useEffect(() => {
-    const trimmed = trimmedForSearch;
-    const filtersOnlySearch = trimmed.length === 0 && filters.hasApiFilters;
-    const shouldSearch = trimmed.length >= SEARCH_MIN_CHARS || filtersOnlySearch;
-
-    if (!shouldSearch) {
-      immediateSearchRef.current = false;
-      filters.filterChangedRef.current = false;
-      clearDebounceTimer();
-      clearSearchResults();
-      return;
-    }
-
-    abortRef.current?.abort();
-    if (currentSearchKey !== lastFulfilledKeyRef.current) {
-      setResults([]);
-      setSearchMeta(null);
-      setError(null);
-      setEmptySearchKey(null);
-      lastFulfilledKeyRef.current = null;
-    }
-
-    clearDebounceTimer();
-
-    const immediate = immediateSearchRef.current || filters.filterChangedRef.current;
-    immediateSearchRef.current = false;
-    filters.filterChangedRef.current = false;
-
-    if (immediate) {
-      executeSearch(trimmed, filters.activeFilters);
-      return;
-    }
-
-    debounceTimerRef.current = setTimeout(() => {
-      debounceTimerRef.current = null;
-      executeSearch(trimmed, filters.activeFilters);
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      clearDebounceTimer();
-    };
-  }, [
-    trimmedForSearch,
-    filters.activeFilters,
-    filters.hasApiFilters,
-    filters.filterChangedRef,
-    currentSearchKey,
-    executeSearch,
-    clearDebounceTimer,
-    clearSearchResults,
-  ]);
+    setAddError(null);
+    searchNow();
+  }, [searchAllowed, searchNow]);
 
   const selectHistoryItem = useCallback((q: string) => {
     immediateSearchRef.current = true;
@@ -324,7 +217,7 @@ export default function AddMovieForm({
   }, [disabled]);
 
   const addMovie = async (r: MovieSearchItem) => {
-    setError(null);
+    setAddError(null);
     setAdding(true);
     try {
       if (onAddItem) {
@@ -341,13 +234,13 @@ export default function AddMovieForm({
         });
         track('movie_added', { mediaType: r.mediaType });
       }
-      clearSearchResults();
+      resetSearch();
       setQuery('');
       onAdded();
       setHistoryDismissed(true);
       searchInputRef.current?.focus();
     } catch (err) {
-      setError(getErrorMessage(err, addErrorLabel ?? t('movies.search.addError')));
+      setAddError(getErrorMessage(err, addErrorLabel ?? t('movies.search.addError')));
     } finally {
       setAdding(false);
     }
@@ -358,12 +251,7 @@ export default function AddMovieForm({
   const trimmed = trimmedForSearch;
   const showMinCharsHint = trimmed.length > 0 && trimmed.length < SEARCH_MIN_CHARS;
   const showNoResultsBlock =
-    !searching &&
-    searchAllowed &&
-    results.length === 0 &&
-    !error &&
-    emptySearchKey !== null &&
-    emptySearchKey === currentSearchKey;
+    !searching && searchAllowed && results.length === 0 && !error && emptySearchKey === searchKey;
   const showAvailabilityEmpty =
     !searching &&
     results.length > 0 &&

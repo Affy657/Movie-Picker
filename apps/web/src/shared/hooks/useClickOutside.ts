@@ -5,6 +5,7 @@ type ElementRef = RefObject<HTMLElement | null>;
 type ClickOutsideOptions = {
   ignoreSelector?: string;
   returnFocusTo?: ElementRef;
+  closeOnFocusLeave?: boolean;
 };
 
 function isInside(refs: readonly ElementRef[], target: Node): boolean {
@@ -37,7 +38,7 @@ export function useClickOutside(
   refs: ElementRef | readonly ElementRef[],
   onClose: () => void,
   enabled: boolean,
-  { ignoreSelector, returnFocusTo }: ClickOutsideOptions = {}
+  { ignoreSelector, returnFocusTo, closeOnFocusLeave = false }: ClickOutsideOptions = {}
 ): void {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -50,7 +51,7 @@ export function useClickOutside(
       const current = refsRef.current;
       return 'current' in current ? [current] : current;
     };
-    const handlePointer = (event: MouseEvent) => {
+    const closeWhenOutside = (event: Event) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
       const list = watched();
@@ -68,11 +69,13 @@ export function useClickOutside(
       onCloseRef.current();
       if (giveFocusBack) returnFocusTo?.current?.focus();
     };
-    document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('mousedown', closeWhenOutside);
     document.addEventListener('keydown', handleKey);
+    if (closeOnFocusLeave) document.addEventListener('focusin', closeWhenOutside);
     return () => {
-      document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('mousedown', closeWhenOutside);
       document.removeEventListener('keydown', handleKey);
+      document.removeEventListener('focusin', closeWhenOutside);
     };
-  }, [enabled, ignoreSelector, returnFocusTo]);
+  }, [enabled, ignoreSelector, returnFocusTo, closeOnFocusLeave]);
 }

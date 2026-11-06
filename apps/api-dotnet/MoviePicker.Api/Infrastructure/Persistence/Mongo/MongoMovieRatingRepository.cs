@@ -52,6 +52,24 @@ public sealed class MongoMovieRatingRepository : IMovieRatingRepository
         return res.DeletedCount > 0;
     }
 
+    public async Task DeleteByMovieIdsAsync(string eventId, IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    {
+        var ids = movieIds.Where(id => ObjectId.TryParse(id, out _)).Distinct().ToList();
+        if (ids.Count == 0 || !ObjectId.TryParse(eventId, out _))
+            return;
+        var filter = Builders<MovieRatingDocument>.Filter.And(
+            Builders<MovieRatingDocument>.Filter.Eq(x => x.EventId, eventId),
+            Builders<MovieRatingDocument>.Filter.In(x => x.MovieId, ids));
+        await _collection.DeleteManyAsync(filter, ct);
+    }
+
+    public async Task DeleteByEventAndParticipantAsync(string eventId, string participantId, CancellationToken ct = default)
+    {
+        if (!ObjectId.TryParse(eventId, out _) || !ObjectId.TryParse(participantId, out _))
+            return;
+        await _collection.DeleteManyAsync(x => x.EventId == eventId && x.ParticipantId == participantId, ct);
+    }
+
     public async Task<long> DeleteByEventIdAsync(string eventId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(eventId))

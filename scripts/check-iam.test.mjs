@@ -1,8 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { reviewBindings, terraformBindings } from './check-iam.mjs';
+import { expectedOwners, reviewBindings, terraformBindings } from './check-iam.mjs';
 
 const PROJECT = 'demo-project';
+const PROJECT_NUMBER = '1';
 const CI = `serviceAccount:movie-picker-ci@${PROJECT}.iam.gserviceaccount.com`;
 const BACKUP = `serviceAccount:movie-picker-backup@${PROJECT}.iam.gserviceaccount.com`;
 const OWNER = 'user:owner@example.com';
@@ -43,6 +44,7 @@ const state = {
 
 const context = {
   projectId: PROJECT,
+  projectNumber: PROJECT_NUMBER,
   described: terraformBindings([state]),
   owners: new Set([OWNER]),
 };
@@ -135,6 +137,62 @@ describe('check-iam review', () => {
     assert.deepEqual(findings, []);
   });
 
+  it('accepts the agents Google binds for this project', () => {
+    const agents = [
+      `service-${PROJECT_NUMBER}@gcp-sa-cloudscheduler.iam.gserviceaccount.com`,
+      `service-${PROJECT_NUMBER}@serverless-robot-prod.iam.gserviceaccount.com`,
+      `service-${PROJECT_NUMBER}@container-analysis.iam.gserviceaccount.com`,
+      `service-${PROJECT_NUMBER}@containerregistry.iam.gserviceaccount.com`,
+      `service-${PROJECT_NUMBER}@compute-system.iam.gserviceaccount.com`,
+      `${PROJECT_NUMBER}@cloudservices.gserviceaccount.com`,
+    ].map((email) => `serviceAccount:${email}`);
+
+    assert.deepEqual(
+      reviewBindings('project', [{ role: 'roles/editor', members: agents }], context),
+      []
+    );
+  });
+
+  it('reports a service account of another project', () => {
+    const stranger = 'serviceAccount:reader@other-project.iam.gserviceaccount.com';
+
+    assert.deepEqual(
+      reviewBindings(
+        'secret MONGODB_URI',
+        [{ role: 'roles/viewer', members: [stranger] }],
+        context
+      ),
+      [`secret MONGODB_URI: roles/viewer -> ${stranger}`]
+    );
+  });
+
+  it('reports a Google agent carrying the number of another project', () => {
+    const stranger = 'serviceAccount:service-2@gcp-sa-cloudscheduler.iam.gserviceaccount.com';
+
+    assert.equal(
+      reviewBindings('project', [{ role: 'roles/editor', members: [stranger] }], context).length,
+      1
+    );
+  });
+
+  it('reports the project number used outside a Google domain', () => {
+    const lookalike = `serviceAccount:service-${PROJECT_NUMBER}@other-project.iam.gserviceaccount.com`;
+
+    assert.equal(
+      reviewBindings('project', [{ role: 'roles/editor', members: [lookalike] }], context).length,
+      1
+    );
+  });
+
+  it('reports a second owner of the project', () => {
+    const second = 'user:second@example.com';
+
+    assert.deepEqual(
+      reviewBindings('project', [{ role: 'roles/owner', members: [OWNER, second] }], context),
+      [`project: roles/owner -> ${second}`]
+    );
+  });
+
   it('reports allUsers anywhere but as the invoker of a public service', () => {
     const findings = reviewBindings(
       'bucket backups',
@@ -143,5 +201,23 @@ describe('check-iam review', () => {
     );
 
     assert.equal(findings.length, 1);
+  });
+});
+
+describe('expectedOwners', () => {
+  it('reads the members the environment lists', () => {
+    assert.deepEqual(
+      expectedOwners(' user:a@example.com, group:b@example.com ,', 'user@example.com'),
+      new Set(['user:a@example.com', 'group:b@example.com'])
+    );
+  });
+
+  it('falls back on the account gcloud runs as', () => {
+    assert.deepEqual(expectedOwners(undefined, 'me@example.com'), new Set(['user:me@example.com']));
+    assert.deepEqual(expectedOwners('', 'me@example.com'), new Set(['user:me@example.com']));
+  });
+
+  it('expects nobody when neither source names an owner', () => {
+    assert.equal(expectedOwners(undefined, '').size, 0);
   });
 });

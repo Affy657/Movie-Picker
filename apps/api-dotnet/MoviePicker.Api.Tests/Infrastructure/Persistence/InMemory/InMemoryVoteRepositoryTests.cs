@@ -73,18 +73,20 @@ public sealed class InMemoryVoteRepositoryTests
     }
 
     [Fact]
-    public async Task AggregateUpVotersByMovieIdsAsync_CollectsOnlyUpVoters_AndSkipsMoviesWithoutUpVotes()
+    public async Task AggregateSummariesByMovieIdsAsync_CountsTheVotes_AndListsOnlyTheUpVoters()
     {
         await _repo.UpsertAsync(Mk(movieId: "mov1", participantId: "p1", value: 1));
         await _repo.UpsertAsync(Mk(movieId: "mov1", participantId: "p2", value: 1));
         await _repo.UpsertAsync(Mk(movieId: "mov1", participantId: "p3", value: -1));
         await _repo.UpsertAsync(Mk(movieId: "mov2", participantId: "p4", value: -1));
 
-        var upVoters = await _repo.AggregateUpVotersByMovieIdsAsync(["mov1", "mov2", "unknown"]);
+        var summaries = await _repo.AggregateSummariesByMovieIdsAsync(["mov1", "mov2", "unknown"]);
 
-        Assert.Equal(ExpectedUpVoters, upVoters["mov1"]);
-        Assert.False(upVoters.ContainsKey("mov2"));
-        Assert.False(upVoters.ContainsKey("unknown"));
+        Assert.Equal(ExpectedUpVoters, summaries["mov1"].UpVoterIds);
+        Assert.Equal((1, 2, 1), (summaries["mov1"].Score, summaries["mov1"].Up, summaries["mov1"].Down));
+        Assert.Empty(summaries["mov2"].UpVoterIds);
+        Assert.Equal(-1, summaries["mov2"].Score);
+        Assert.False(summaries.ContainsKey("unknown"));
     }
 
     [Fact]

@@ -5,6 +5,8 @@ using MoviePicker.Api.Application.UseCases.LetterboxdImport;
 using MoviePicker.Api.Application.UseCases.Watchlist;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Web;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.LetterboxdImport;
@@ -34,6 +36,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
     private readonly Mock<IParticipantRepository> _participants = new();
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IMovieRepository> _movies = new();
+    private readonly RecordingSharedQuota _quota = new();
     private readonly SyncLetterboxdWatchlistHandler _sut;
 
     public SyncLetterboxdWatchlistHandlerTests()
@@ -59,7 +62,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
             _movies.Object,
             NullLogger<LetterboxdWatchlistSynchronizer>.Instance);
         _sut = new SyncLetterboxdWatchlistHandler(
-            _users.Object, _notifications.Object, synchronizer, new FixedClock(Now));
+            _users.Object, _notifications.Object, synchronizer, _quota, new FixedClock(Now));
     }
 
     private void GivenAmbiguousLetterboxdFilm()
@@ -176,14 +179,77 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_SyncedRecently_RunsAnywayWhenForced()
+    public async Task HandleAsync_SyncedAFewMinutesAgo_IsSkippedEvenWhenForced()
     {
-        GivenUser(Username, Now.AddMinutes(-1));
+        GivenUser(Username, Now - SyncLetterboxdWatchlistHandler.ForcedMinimumInterval + TimeSpan.FromSeconds(1));
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.True(result.Skipped);
+        VerifyLetterboxdRead(Times.Never());
+        _users.Verify(
+            u => u.SetLetterboxdSyncStatusAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_FailedAFewMinutesAgo_IsSkippedEvenWhenForced()
+    {
+        GivenUser(Username, Now.AddMinutes(-1), lastSyncError: ErrorCodes.LetterboxdSyncUnavailable);
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.True(result.Skipped);
+        VerifyLetterboxdRead(Times.Never());
+    }
+
+    [Fact]
+    public async Task HandleAsync_IntervalElapsed_RunsAgainWhenForced()
+    {
+        GivenUser(Username, Now - SyncLetterboxdWatchlistHandler.ForcedMinimumInterval);
 
         var result = await _sut.HandleAsync(UserId, force: true);
 
         Assert.False(result.Skipped);
         VerifyLetterboxdRead(Times.Once());
+    }
+
+    [Fact]
+    public void ForcedMinimumInterval_OutlastsTheLongestSyncTheRouteAllows()
+    {
+        Assert.True(SyncLetterboxdWatchlistHandler.ForcedMinimumInterval > RequestTimeoutPolicies.LongRunningBudget);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ForcedSync_CountsAgainstTheHourlyQuotaOfTheAccount()
+    {
+        await _sut.HandleAsync(UserId, force: true);
+
+        var call = Assert.Single(_quota.Calls);
+        Assert.Equal(SyncLetterboxdWatchlistHandler.ForcedSyncQuotaScope, call.Scope);
+        Assert.Equal(UserId, call.Subject);
+        Assert.Equal(SyncLetterboxdWatchlistHandler.MaxForcedSyncsPerHour, call.Limit);
+        Assert.Equal(TimeSpan.FromHours(1), call.Window);
+    }
+
+    [Fact]
+    public async Task HandleAsync_HourlyQuotaSpent_IsSkippedEvenAfterAUsernameChange()
+    {
+        GivenUser(Username, null);
+        _quota.Allows = false;
+
+        var result = await _sut.HandleAsync(UserId, force: true);
+
+        Assert.True(result.Skipped);
+        VerifyLetterboxdRead(Times.Never());
+    }
+
+    [Fact]
+    public async Task HandleAsync_AutomaticSync_LeavesTheHourlyQuotaAlone()
+    {
+        await _sut.HandleAsync(UserId, force: false);
+
+        Assert.Empty(_quota.Calls);
     }
 
     [Fact]
@@ -303,7 +369,7 @@ public sealed class SyncLetterboxdWatchlistHandlerTests
     [Fact]
     public async Task HandleAsync_ManualSyncFindsAmbiguousFilm_DoesNotCreateNotification()
     {
-        GivenUser(Username, Now.AddMinutes(-1));
+        GivenUser(Username, Now.AddHours(-1));
         GivenAmbiguousLetterboxdFilm();
 
         var result = await _sut.HandleAsync(UserId, force: true);

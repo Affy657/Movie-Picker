@@ -1,8 +1,9 @@
-using Microsoft.Extensions.Logging.Abstractions;
+using System.Globalization;
 using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Shared;
@@ -33,14 +34,7 @@ public sealed class WinnerAnnouncerTests
         _participantRepo
             .Setup(r => r.ListByEventIdAsync("evt1", It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
-        _sut = new WinnerAnnouncer(
-            _participantRepo.Object,
-            _userRepo.Object,
-            _pushSubRepo.Object,
-            _pushSender.Object,
-            _notifications.Object,
-            NullLogger<WinnerAnnouncer>.Instance,
-            TimeProvider.System);
+        _sut = new WinnerAnnouncer(Audience(), TimeProvider.System);
     }
 
     private void HasParticipants(params string[] userIds) =>
@@ -62,6 +56,37 @@ public sealed class WinnerAnnouncerTests
     private void Subscriptions(params string[] userIds) =>
         _pushSubRepo.Setup(r => r.ListByUserIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(userIds.Select((u, i) => new PushSubscription { Id = $"s{i}", UserId = u, Endpoint = $"https://push/{i}", P256dh = "k", Auth = "a" }).ToList());
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
+
+    private EventAudienceNotifier Audience() => TestAudienceNotifier.Over(
+        _participantRepo.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object);
+
+    private WinnerAnnouncer AnnouncerAt(string utcNow) =>
+        new(Audience(), new FixedClock(DateTimeOffset.Parse(utcNow, CultureInfo.InvariantCulture)));
+
+    [Theory]
+    [InlineData("2030-01-01", "2030-01-01T18:00:00Z", "Ce soir : « Matrix » pour « Soirée »")]
+    [InlineData("2030-01-02", "2030-01-01T23:30:00Z", "Ce soir : « Matrix » pour « Soirée »")]
+    [InlineData("2030-01-01", "2029-12-31T22:59:00Z", "Mardi 1 janvier : « Matrix » pour « Soirée »")]
+    [InlineData("2030-01-12", "2030-01-01T18:00:00Z", "Samedi 12 janvier : « Matrix » pour « Soirée »")]
+    [InlineData("2029-12-30", "2030-01-01T18:00:00Z", "Dimanche 30 décembre : « Matrix » pour « Soirée »")]
+    [InlineData("pas-une-date", "2030-01-01T18:00:00Z", "« Matrix » pour « Soirée »")]
+    public async Task AnnounceAsync_SaysTonightOnlyOnTheDayOfTheNightInParis(string nightDate, string utcNow, string expectedBody)
+    {
+        HasParticipants("u1");
+        Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = true } });
+        Subscriptions("u1");
+
+        await AnnouncerAt(utcNow).AnnounceAsync(Soiree with { Date = nightDate }, "Matrix", WinnerPickMethod.Wheel);
+
+        _pushSender.Verify(
+            s => s.SendAsync(It.IsAny<PushSubscription>(), It.Is<PushMessage>(m => m.Body == expectedBody), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 
     [Fact]
     public async Task AnnounceAsync_NotifiableParticipant_SendsPushAndInbox()
@@ -115,6 +140,41 @@ public sealed class WinnerAnnouncerTests
         await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel);
 
         _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AnnounceAsync_InboxWriteFailsForOneRecipient_StillReachesTheNextOnes()
+    {
+        HasParticipants("u1", "u2", "u3");
+        var opted = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = true };
+        Users(
+            new User { Id = "u1", NotificationPreferences = opted },
+            new User { Id = "u2", NotificationPreferences = opted },
+            new User { Id = "u3", NotificationPreferences = opted });
+        Subscriptions();
+        _notifications
+            .Setup(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u1"), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel);
+
+        _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u2"), It.IsAny<CancellationToken>()), Times.Once);
+        _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u3"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnnounceAsync_PushThrows_StillWritesTheInboxes()
+    {
+        HasParticipants("u1");
+        Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = true } });
+        Subscriptions("u1");
+        _pushSender
+            .Setup(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        await _sut.AnnounceAsync(Soiree, "Winner", WinnerPickMethod.Wheel);
+
+        _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u1"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

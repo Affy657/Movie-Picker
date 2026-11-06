@@ -693,6 +693,10 @@ html {
   scrollbar-gutter: stable;
 }
 
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
 @media (pointer: fine) {
   dialog,
   dialog * {

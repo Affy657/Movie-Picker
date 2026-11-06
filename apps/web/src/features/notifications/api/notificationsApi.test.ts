@@ -5,6 +5,7 @@ import {
   deletePushSubscription,
   fetchNotificationInbox,
   fetchNotificationPreferences,
+  fetchNotificationUnreadCount,
   fetchVapidPublicKey,
   markAllNotificationsRead,
   patchNotificationPreferences,
@@ -29,6 +30,14 @@ describe('notificationsApi', () => {
 
     await expect(fetchNotificationInbox()).resolves.toBe(inbox);
     expect(mockFetchApi).toHaveBeenCalledWith('/notifications/inbox');
+  });
+
+  it('fetchNotificationUnreadCount reads the counter endpoint', async () => {
+    const counter = { unreadCount: 3 };
+    mockFetchApi.mockResolvedValue(counter);
+
+    await expect(fetchNotificationUnreadCount()).resolves.toBe(counter);
+    expect(mockFetchApi).toHaveBeenCalledWith('/notifications/inbox/unread-count');
   });
 
   it('markAllNotificationsRead posts to the read-all endpoint', async () => {

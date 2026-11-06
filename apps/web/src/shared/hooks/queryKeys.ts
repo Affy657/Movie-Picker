@@ -5,7 +5,6 @@ export const queryKeys = {
   profile: {
     publicAll: ['profile', 'public'] as const,
     public: (handle: string | undefined) => ['profile', 'public', handle ?? '$pending'] as const,
-    handleAvailability: (handle: string) => ['profile', 'handle-available', handle] as const,
     followingAll: ['profile', 'following'] as const,
     following: (handle: string | undefined) =>
       ['profile', 'following', handle ?? '$pending'] as const,
@@ -25,6 +24,7 @@ export const queryKeys = {
   notifications: {
     inbox: ['notifications', 'inbox'] as const,
     inboxPaged: ['notifications', 'inbox', 'paged'] as const,
+    unreadCount: ['notifications', 'inbox', 'unread-count'] as const,
   },
   myEvents: {
     list: ['events', 'mine'] as const,
@@ -57,6 +57,13 @@ export const queryKeys = {
     list: (slug: string | undefined) => ['movies', 'list', slug ?? '$pending'] as const,
     details: (tmdbId: number | undefined, mediaType?: string) =>
       ['movies', 'details', tmdbId ?? '$pending', mediaType ?? 'movie'] as const,
+    searchIdle: ['movies', 'search', '$idle'] as const,
+    search: (
+      searchKey: string,
+      lang: string,
+      eventSlug: string | undefined,
+      includeSeries: boolean
+    ) => ['movies', 'search', searchKey, lang, eventSlug ?? '', includeSeries] as const,
   },
   me: {
     followingWatchedMoviesAll: ['users', 'me', 'following-watched-movies'] as const,

@@ -85,7 +85,9 @@ public sealed class SearchMoviesHandlerTests
         Assert.Empty(item.GenreIds);
         Assert.Equal("FR", result.WatchProvidersRegion);
         Assert.False(string.IsNullOrEmpty(result.Disclaimer));
-        _tmdb.Verify(t => t.GetEnrichmentAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tmdb.Verify(
+            t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -105,6 +107,10 @@ public sealed class SearchMoviesHandlerTests
         Assert.Equal([28, 878], item.GenreIds);
     }
 
+    private void GivenEnrichments(params (int TmdbId, TmdbMovieEnrichment? Enrichment)[] rows) =>
+        _tmdb.Setup(t => t.GetEnrichmentsAsync(It.IsAny<IReadOnlyCollection<(int, MovieMediaType)>>(), "FR", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(rows.ToDictionary(row => (row.TmdbId, MovieMediaType.Movie), row => row.Enrichment));
+
     [Fact]
     public async Task HandleAsync_WithEnrichment_FillsProvidersRuntimeAndVoteFallback()
     {
@@ -112,12 +118,11 @@ public sealed class SearchMoviesHandlerTests
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<double?>(), It.IsAny<string?>(),
                 It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new TmdbSearchItem(1, MovieMediaType.Movie, "Inception", "2010", "/p.jpg", VoteAverage: null)]);
-        _tmdb.Setup(t => t.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TmdbMovieEnrichment(
-                7.9,
-                [new TmdbWatchProviderOffer(8, "Netflix", "/logo.png", "flatrate")],
-                "https://tmdb/watch",
-                148));
+        GivenEnrichments((1, new TmdbMovieEnrichment(
+            7.9,
+            [new TmdbWatchProviderOffer(8, "Netflix", "/logo.png", "flatrate")],
+            "https://tmdb/watch",
+            148)));
         var sut = Build();
 
         var result = await sut.HandleAsync("inception", SeriesEventSlug);
@@ -143,12 +148,10 @@ public sealed class SearchMoviesHandlerTests
                 new TmdbSearchItem(2, MovieMediaType.Movie, "TooShort", "2011", "/p.jpg"),
                 new TmdbSearchItem(3, MovieMediaType.Movie, "Unknown", "2012", "/p.jpg"),
             ]);
-        _tmdb.Setup(t => t.GetEnrichmentAsync(1, MovieMediaType.Movie, "FR", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TmdbMovieEnrichment(null, [], null, 100));
-        _tmdb.Setup(t => t.GetEnrichmentAsync(2, MovieMediaType.Movie, "FR", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TmdbMovieEnrichment(null, [], null, 45));
-        _tmdb.Setup(t => t.GetEnrichmentAsync(3, MovieMediaType.Movie, "FR", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((TmdbMovieEnrichment?)null);
+        GivenEnrichments(
+            (1, new TmdbMovieEnrichment(null, [], null, 100)),
+            (2, new TmdbMovieEnrichment(null, [], null, 45)),
+            (3, null));
         var sut = Build(new MoviePickerOptions { TmdbApiKey = "key", TmdbSearchMaxWatchProviderLookups = 0 });
         var filters = new MovieSearchFilters(Array.Empty<int>(), null, null, RuntimeMin: 90, RuntimeMax: 120);
 
@@ -157,7 +160,9 @@ public sealed class SearchMoviesHandlerTests
         var item = Assert.Single(result.Items);
         Assert.Equal(1, item.Id);
         Assert.Equal(100, item.RuntimeMinutes);
-        _tmdb.Verify(t => t.GetEnrichmentAsync(3, MovieMediaType.Movie, "FR", It.IsAny<CancellationToken>()), Times.Once);
+        _tmdb.Verify(
+            t => t.GetEnrichmentsAsync(It.Is<IReadOnlyCollection<(int, MovieMediaType)>>(keys => keys.Count == 3), "FR", It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

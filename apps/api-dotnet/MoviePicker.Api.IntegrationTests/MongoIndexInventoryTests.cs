@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MongoDB.Bson;
@@ -35,7 +36,6 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("events", "events_creator_creationRequest_unique", Unique: true),
         new("events", "events_winners_movieId"),
 
-        new("movies", "movies_eventId"),
         new("movies", "movies_participantId"),
         new("movies", "movies_eventId_tmdbId_mediaType_unique", Unique: true),
 
@@ -56,13 +56,12 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("password_reset_tokens", "password_reset_tokens_expires_ttl", ExpireAfterSeconds: 0),
 
         new("seen_marks", "seen_marks_event_movie_participant_unique", Unique: true),
-        new("seen_marks", "seen_marks_movieId"),
         new("movie_ratings", "movie_ratings_event_movie_participant_unique", Unique: true),
         new("movie_ratings", "movie_ratings_participantId"),
         new("seen_marks", "seen_marks_participantId"),
 
         new("push_subscriptions", "push_subscriptions_userId_endpoint_unique", Unique: true),
-        new("push_subscriptions", "push_subscriptions_userId"),
+        new("push_subscriptions", "push_subscriptions_endpoint"),
 
         new("follows", "follows_followerId_followeeId_unique", Unique: true),
         new("follows", "follows_followerId_createdAt"),
@@ -70,7 +69,6 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
 
         new("watchlist", "watchlist_userId_tmdbId_mediaType_unique", Unique: true),
         new("watchlist", "watchlist_userId_createdAt"),
-        new("watchlist", "watchlist_runtimeMinutes_missing"),
 
         new("user_notifications", "user_notifications_userId_createdAt"),
         new("user_notifications", "user_notifications_userId_isRead"),
@@ -92,6 +90,14 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         new("kofi_webhook_log", "kofi_webhook_log_receivedAt_ttl", ExpireAfterSeconds: OneYear)
     ];
 
+    private static readonly (string Collection, string Name, string Field)[] RetiredIndexes =
+    [
+        ("movies", "movies_eventId", "eventId"),
+        ("seen_marks", "seen_marks_movieId", "movieId"),
+        ("push_subscriptions", "push_subscriptions_userId", "userId"),
+        ("watchlist", "watchlist_runtimeMinutes_missing", "runtimeMinutes")
+    ];
+
     private readonly MoviePickerApplicationFactory _factory;
 
     public MongoIndexInventoryTests(MoviePickerApplicationFactory factory)
@@ -103,12 +109,41 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
     private async Task<Dictionary<string, BsonDocument>> ListIndexesAsync(string collection)
     {
         using var scope = _factory.Services.CreateScope();
-        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+        return await ListIndexesAsync(scope.ServiceProvider.GetRequiredService<IMongoDatabase>(), collection);
+    }
+
+    private static async Task<Dictionary<string, BsonDocument>> ListIndexesAsync(IMongoDatabase database, string collection)
+    {
         using var cursor = await database.GetCollection<BsonDocument>(collection).Indexes.ListAsync();
         var indexes = await cursor.ToListAsync();
         return indexes
             .Where(index => index["name"].AsString != "_id_")
             .ToDictionary(index => index["name"].AsString, index => index);
+    }
+
+    [Fact]
+    public void IndexPlan_DeclaresExactlyTheInventory_SoANewCollectionCannotEscapeIt()
+    {
+        using var unusedClient = new MongoClient("mongodb://127.0.0.1:27017");
+        var plan = MongoIndexInitializer.BuildPlan(unusedClient.GetDatabase("index_plan_only"));
+
+        var declared = plan.Descriptions
+            .Where(description => !description.StartsWith("drop ", StringComparison.Ordinal))
+            .Select(description => description.Split('|'))
+            .Select(parts => string.Join('|', parts[0], parts[1], parts[3], parts[5]))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        var expected = Expected
+            .Select(index => string.Join(
+                '|',
+                index.Collection,
+                index.Name,
+                index.Unique ? "unique" : string.Empty,
+                index.ExpireAfterSeconds?.ToString(CultureInfo.InvariantCulture) ?? string.Empty))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(expected, declared);
     }
 
     [MongoFact]
@@ -164,6 +199,72 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         {
             await database.DropCollectionAsync(collection);
         }
+    }
+
+    [MongoFact]
+    public async Task Plan_OnADatabaseStillCarryingTheRetiredIndexes_DropsThem_AndCanRunAgain()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var client = scope.ServiceProvider.GetRequiredService<IMongoClient>();
+        var databaseName = "moviepicker_it_index_upgrade_" + Guid.NewGuid().ToString("N");
+        var database = client.GetDatabase(databaseName);
+        try
+        {
+            foreach (var (collection, name, field) in RetiredIndexes)
+            {
+                await database.GetCollection<BsonDocument>(collection).Indexes.CreateOneAsync(new CreateIndexModel<BsonDocument>(
+                    Builders<BsonDocument>.IndexKeys.Ascending(field),
+                    new CreateIndexOptions { Name = name }));
+            }
+
+            var plan = MongoIndexInitializer.BuildPlan(database);
+            await plan.ExecuteAsync(CancellationToken.None);
+            await plan.ExecuteAsync(CancellationToken.None);
+
+            foreach (var (collection, name, _) in RetiredIndexes)
+                Assert.DoesNotContain(name, (await ListIndexesAsync(database, collection)).Keys);
+            Assert.Contains("push_subscriptions_endpoint", (await ListIndexesAsync(database, "push_subscriptions")).Keys);
+        }
+        finally
+        {
+            await client.DropDatabaseAsync(databaseName);
+        }
+    }
+
+    [MongoFact]
+    public async Task QueriesOfTheRetiredIndexes_StayOnAnIndex()
+    {
+        var id = ObjectId.GenerateNewId();
+
+        Assert.Contains(
+            "movies_eventId_tmdbId_mediaType_unique",
+            await WinningPlanAsync("movies", new BsonDocument("eventId", id)));
+        Assert.Contains(
+            "seen_marks_event_movie_participant_unique",
+            await WinningPlanAsync("seen_marks", new BsonDocument { { "eventId", id }, { "movieId", id } }));
+        Assert.Contains(
+            "push_subscriptions_userId_endpoint_unique",
+            await WinningPlanAsync("push_subscriptions", new BsonDocument("userId", id)));
+    }
+
+    [MongoFact]
+    public async Task PushSubscriptionHandover_FindsTheEndpointThroughItsIndex()
+    {
+        var otherOwners = new BsonDocument { { "endpoint", "https://push.test/a" }, { "userId", new BsonDocument("$ne", ObjectId.GenerateNewId()) } };
+
+        Assert.Contains("push_subscriptions_endpoint", await WinningPlanAsync("push_subscriptions", otherOwners));
+    }
+
+    private async Task<string> WinningPlanAsync(string collection, BsonDocument filter)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+        var explained = await database.RunCommandAsync<BsonDocument>(new BsonDocument
+        {
+            { "explain", new BsonDocument { { "find", collection }, { "filter", filter } } },
+            { "verbosity", "queryPlanner" }
+        });
+        return explained["queryPlanner"]["winningPlan"].ToJson();
     }
 
     [MongoFact]

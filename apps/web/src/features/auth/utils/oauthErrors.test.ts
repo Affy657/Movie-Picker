@@ -22,4 +22,11 @@ describe('resolveOAuthErrorKey', () => {
     expect(resolveOAuthErrorKey('something_else')).toBe('auth.oauth.errors.generic');
     expect(resolveOAuthErrorKey(null)).toBeNull();
   });
+
+  it.each(['constructor', 'toString', '__proto__', 'hasOwnProperty'])(
+    'treats %s, inherited by every object, as an unknown code',
+    (code) => {
+      expect(resolveOAuthErrorKey(code)).toBe('auth.oauth.errors.generic');
+    }
+  );
 });

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
@@ -171,6 +172,19 @@ public sealed class InMemoryEventRepository : IEventRepository
                 && EventSchedule.TryGetStartUtc(e.Date, e.Time, out var startAt)
                 && startAt >= fromInclusive
                 && startAt <= toInclusive)
+            .ToList();
+        return Task.FromResult(result);
+    }
+
+    public Task<IReadOnlyList<Event>> ListOpenWithUnannouncedWheelPickAsync(
+        DateTimeOffset startingFrom,
+        CancellationToken ct = default)
+    {
+        IReadOnlyList<Event> result = _byId.Values
+            .Where(e => !e.ClosedAt.HasValue
+                && EventSchedule.TryGetStartUtc(e.Date, e.Time, out var startAt)
+                && startAt >= startingFrom
+                && WheelWinnerAnnouncement.PicksAwaitingAnnouncement(e).Count > 0)
             .ToList();
         return Task.FromResult(result);
     }

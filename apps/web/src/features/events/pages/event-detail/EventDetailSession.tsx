@@ -181,6 +181,7 @@ export default function EventDetailSession({
     actionSuccess,
     handleRemoveParticipant,
     handleRequestRemoveMovie,
+    handleRequestRemoveNote,
     handleLeaveEvent,
     requestResetWheel,
     requestCloseWithoutMovie,
@@ -203,13 +204,13 @@ export default function EventDetailSession({
     locale,
     t('events.detail.dateTimeJoiner')
   );
-  const firstWinnerId = event.winners?.[0]?.movieId;
+  const firstWinnerId = wheel.winnerIds[0];
   const winnerMovies = useMemo(() => {
     const byId = new Map(movies.map((movie) => [movie.id, movie]));
-    return (event.winners ?? [])
-      .map((winner) => byId.get(winner.movieId))
+    return wheel.winnerIds
+      .map((movieId) => byId.get(movieId))
       .filter((movie): movie is MovieData => !!movie);
-  }, [event.winners, movies]);
+  }, [wheel.winnerIds, movies]);
   const recap: RecapShare | null =
     event.isFinished && firstWinnerId && event.recapSlug ? { winners: winnerMovies } : null;
   const shareUrl =
@@ -292,6 +293,7 @@ export default function EventDetailSession({
           winners={winnerMovies}
           participant={participant}
           refreshAll={refreshAll}
+          holdRatingPrompt={wheel.isModalOpen}
         />
       ) : null}
       <EventDetailSessionBody
@@ -330,6 +332,7 @@ export default function EventDetailSession({
           isFull,
           wheelLocked: wheel.wheelLocked,
           onRequestRemove: handleRequestRemoveMovie,
+          onRequestRemoveNote: handleRequestRemoveNote,
         }}
       />
       <ConfirmDialog

@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { startPwaInstallRuntime } from '@/shared/hooks/usePwaInstall';
+import { showBootFailure } from '@/shared/pwa/bootFailure';
 import { captureMovedOriginMarker } from '@/shared/pwa/movedOrigin';
 import { reloadOnStaleBuild } from '@/shared/pwa/staleBuildReload';
 import { captureException, scheduleSentryStart } from '@/shared/observability/sentry';
@@ -39,7 +40,10 @@ async function mountApp(): Promise<void> {
 
 function boot(): void {
   mountApp()
-    .catch((error: unknown) => captureException(error))
+    .catch((error: unknown) => {
+      captureException(error);
+      showBootFailure(document.getElementById('root'), preferredLocale());
+    })
     .finally(() => {
       hideSplash();
       scheduleSentryStart();

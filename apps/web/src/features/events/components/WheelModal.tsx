@@ -6,7 +6,7 @@ import type { MovieData } from '@/shared/types/movie';
 import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
 import { keepPunctuationAttached } from '@/shared/utils/keepPunctuationAttached';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
-import { useTranslation } from '@/shared/i18n';
+import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import SpinningWheel, { WHEEL_SEGMENT_TOKENS } from './SpinningWheel';
 import { readCssToken } from '@/shared/utils/cssToken';
@@ -28,6 +28,22 @@ export function confettiPalettes(colors: string[]) {
   if (colors.length === 1) return { burst: colors, left: colors, right: colors };
   const half = Math.ceil(colors.length / 2);
   return { burst: colors, left: colors.slice(0, half), right: colors.slice(half) };
+}
+
+function revealTitle(
+  skipSpin: boolean,
+  winnerCount: number,
+  params: { index: number; total: number },
+  t: Translate
+): string {
+  if (skipSpin) {
+    return winnerCount > 1
+      ? t('events.wheel.modal.manualWinnerTitleOfMany', params)
+      : t('events.wheel.modal.manualWinnerTitle');
+  }
+  return winnerCount > 1
+    ? t('events.wheel.modal.winnerTitleOfMany', params)
+    : t('events.wheel.modal.winnerTitle');
 }
 
 interface WheelModalProps {
@@ -65,19 +81,7 @@ export default function WheelModal({
 }: Readonly<WheelModalProps>) {
   const { t } = useTranslation();
   const drawIndex = Math.max(1, winnerCount - remainingDraws);
-  const titleParams = { index: drawIndex, total: winnerCount };
-  let title: string;
-  if (skipSpin) {
-    title =
-      winnerCount > 1
-        ? t('events.wheel.modal.manualWinnerTitleOfMany', titleParams)
-        : t('events.wheel.modal.manualWinnerTitle');
-  } else {
-    title =
-      winnerCount > 1
-        ? t('events.wheel.modal.winnerTitleOfMany', titleParams)
-        : t('events.wheel.modal.winnerTitle');
-  }
+  const title = revealTitle(skipSpin, winnerCount, { index: drawIndex, total: winnerCount }, t);
   const remainingLabel =
     remainingDraws > 0
       ? pluralizeCount(
@@ -151,7 +155,11 @@ export default function WheelModal({
       overlay.appendChild(canvas);
       confettiCanvasRef.current = canvas;
 
-      const fire = confetti.create(canvas, { resize: true, useWorker: false });
+      const fire = confetti.create(canvas, {
+        resize: true,
+        useWorker: false,
+        disableForReducedMotion: true,
+      });
       const {
         burst: burstColors,
         left: leftColors,
@@ -209,6 +217,9 @@ export default function WheelModal({
         dialogRef={dialogRef}
         className={animDone ? clsx('on-dark', styles.dialogDone) : undefined}
       >
+        <output className="visually-hidden">
+          {animDone ? t('events.wheel.modal.winnerAnnouncement', { title: winner.title }) : null}
+        </output>
         {!animDone && (
           <div className={styles.spinPhase}>
             <SpinningWheel

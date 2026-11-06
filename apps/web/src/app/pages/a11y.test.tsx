@@ -577,6 +577,7 @@ describe('accessibility (axe)', () => {
         voteAverage: 8.3,
         runtimeMinutes: 148,
         genreIds: [28, 878],
+        pitchNote: 'Un casse dans les rêves',
         watchProviders: [{ providerId: 8, name: 'Netflix', logoPath: null, type: 'flatrate' }],
       },
       {

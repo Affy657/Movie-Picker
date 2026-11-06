@@ -18,6 +18,7 @@ public sealed class MoviesShowcaseController : ControllerBase
     [HttpGet("showcase")]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitingExtensions.MovieShowcasePolicy)]
+    [SharedRateLimit(RateLimitingExtensions.MovieShowcaseFreeKeyHourlyPolicy)]
     [ProducesResponseType(typeof(MovieShowcaseListResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]

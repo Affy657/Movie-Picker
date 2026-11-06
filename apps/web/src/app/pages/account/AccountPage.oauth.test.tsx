@@ -76,6 +76,26 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     expect(linkGithub).toHaveAttribute('href', expect.stringContaining('/auth/oauth/github/start'));
   });
 
+  it('names the provider it just linked', async () => {
+    renderAccount('/settings/integrations?oauthLinked=github');
+
+    await screen.findByText('Google');
+    expect(screen.getByRole('status')).toHaveTextContent('GitHub');
+  });
+
+  it.each(['constructor', '__proto__'])(
+    'shows %s from the URL as plain text, never as a property of an object',
+    async (oauthLinked) => {
+      renderAccount(`/settings/integrations?oauthLinked=${oauthLinked}`);
+
+      await screen.findByText('Google');
+      const banner = screen.getByRole('status');
+      expect(banner).toHaveTextContent(oauthLinked);
+      expect(banner).not.toHaveTextContent('[object Object]');
+      expect(banner).not.toHaveTextContent('native code');
+    }
+  );
+
   it('unlinks a provider after confirmation, when it is not the last one', async () => {
     const user = userEvent.setup();
     let unlinkCalled = false;
@@ -100,6 +120,30 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     await waitFor(() =>
       expect(screen.getByRole('link', { name: /lier google/i })).toBeInTheDocument()
     );
+  });
+
+  it('asks for a new sign-in and keeps the provider when the session is too old to unlink', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({ ...ME_NO_PASSWORD, linkedProviders: ['google', 'github'] })
+      ),
+      http.delete(`${TEST_API_V1}/auth/me/identities/google`, () =>
+        HttpResponse.json({ reason: 'reauthentication_required' }, { status: 403 })
+      )
+    );
+
+    renderAccount('/settings/integrations');
+
+    await screen.findByText('Google');
+    const unlinkButtons = await screen.findAllByRole('button', { name: 'Délier' });
+    await user.click(unlinkButtons[0]!);
+    await user.click(screen.getByRole('button', { name: 'Confirmer' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Par sécurité, déconnectez-vous puis reconnectez-vous avant de réessayer.'
+    );
+    expect(screen.queryByRole('link', { name: /lier google/i })).not.toBeInTheDocument();
   });
 
   it('offers to set a password when the account has none', async () => {
@@ -240,5 +284,28 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
 
     await waitFor(() => expect(sentConfirmation).toBe('oauthuser'));
     expect(await screen.findByTestId('home-marker')).toBeInTheDocument();
+  });
+
+  it('asks for a new sign-in and stays on the page when the session is too old to delete the account', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.delete(`${TEST_API_V1}/auth/me`, () =>
+        HttpResponse.json({ reason: 'reauthentication_required' }, { status: 403 })
+      )
+    );
+
+    renderAccount('/settings/securite');
+
+    await user.click(await screen.findByRole('button', { name: 'Supprimer mon compte' }));
+    await user.type(
+      await screen.findByLabelText('Saisissez votre handle ou votre e-mail pour confirmer'),
+      'oauthuser'
+    );
+    await user.click(screen.getByRole('button', { name: 'Supprimer définitivement' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Par sécurité, déconnectez-vous puis reconnectez-vous avant de réessayer.'
+    );
+    expect(screen.queryByTestId('home-marker')).not.toBeInTheDocument();
   });
 });

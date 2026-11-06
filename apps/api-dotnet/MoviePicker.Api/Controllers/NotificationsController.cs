@@ -104,6 +104,21 @@ public sealed class NotificationsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("inbox/unread-count")]
+    [Authorize]
+    [ProducesResponseType(typeof(NotificationUnreadCountResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetUnreadCount(
+        [FromServices] IGetUnreadCountHandler handler,
+        CancellationToken ct)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var result = await handler.HandleAsync(userId, ct);
+        return Ok(result);
+    }
+
     [HttpPost("inbox/read-all")]
     [EnableRateLimiting(RateLimitingExtensions.NotificationMutationPolicy)]
     [Authorize]

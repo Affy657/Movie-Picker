@@ -45,6 +45,9 @@ public sealed class MongoAvatarPhotoRepository : IAvatarPhotoRepository
             };
     }
 
+    public Task<long> EstimatedCountAsync(CancellationToken ct = default) =>
+        _collection.EstimatedDocumentCountAsync(ct);
+
     public async Task DeleteAsync(string key, CancellationToken ct = default)
     {
         await _collection.DeleteOneAsync(d => d.Key == key, ct);

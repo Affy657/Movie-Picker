@@ -6,9 +6,9 @@ import WatchProviderChips from '@/features/movies/components/WatchProviderChips'
 import {
   MovieCardKebab,
   CardModals,
+  CardNote,
   CardProposerFooter,
   CardSelectionOverlay,
-  MovieNote,
   PosterDetailsTrigger,
   PaidOfferChip,
   VoteBar,
@@ -69,6 +69,7 @@ export const EventMovieCard = memo(function EventMovieCard({
   isHost,
   onVote,
   onRemove,
+  onRemoveNote,
   refresh,
   onActionError,
   t,
@@ -224,20 +225,16 @@ export const EventMovieCard = memo(function EventMovieCard({
 
           {!s.canAct && s.othersHint && <p className={styles.seenHint}>{s.othersHint}</p>}
 
-          {(m.pitchNote || s.noteEditing) && (
-            <MovieNote
-              movieId={m.id}
-              slug={slug}
-              pitchNote={m.pitchNote}
-              editable={s.canEditNote}
-              participantId={participantId}
-              editing={s.noteEditing}
-              onEditingChange={s.setNoteEditing}
-              refresh={refresh}
-              onActionError={onActionError}
-              t={t}
-            />
-          )}
+          <CardNote
+            s={s}
+            m={m}
+            slug={slug}
+            participantId={participantId}
+            refresh={refresh}
+            onActionError={onActionError}
+            onRemoveNote={onRemoveNote}
+            t={t}
+          />
 
           <div className={styles.proposerRow}>
             <CardProposerFooter s={s} m={m} t={t} />

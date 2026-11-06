@@ -7,7 +7,7 @@ import styles from './SeenButton.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import type { Translate } from '@/shared/i18n';
 
-export function SeenButton({
+function SeenButton({
   m,
   iMarkedSeen,
   seenPending,

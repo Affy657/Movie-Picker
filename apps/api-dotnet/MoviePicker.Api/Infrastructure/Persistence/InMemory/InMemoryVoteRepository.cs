@@ -130,26 +130,23 @@ public sealed class InMemoryVoteRepository : IVoteRepository
         return Task.FromResult<IReadOnlyDictionary<string, VoteScoreAggregate>>(result);
     }
 
-    public Task<IReadOnlyDictionary<string, IReadOnlyList<string>>> AggregateUpVotersByMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
+    public Task<IReadOnlyDictionary<string, MovieVoteSummary>> AggregateSummariesByMovieIdsAsync(IReadOnlyCollection<string> movieIds, CancellationToken ct = default)
     {
-        var result = new Dictionary<string, IReadOnlyList<string>>();
+        var result = new Dictionary<string, MovieVoteSummary>();
         foreach (var movieId in movieIds)
         {
             if (!_byMovieId.TryGetValue(movieId, out var list))
                 continue;
-            var upVoters = new List<string>();
+            List<Vote> votes;
             lock (list)
             {
-                foreach (var v in list)
-                {
-                    if (v.Value == 1)
-                        upVoters.Add(v.ParticipantId);
-                }
+                votes = list.ToList();
             }
-            if (upVoters.Count > 0)
-                result[movieId] = upVoters;
+            var upVoterIds = votes.Where(v => v.Value == 1).Select(v => v.ParticipantId).ToList();
+            var down = votes.Count(v => v.Value == -1);
+            result[movieId] = new MovieVoteSummary(upVoterIds.Count - down, upVoterIds.Count, down, upVoterIds);
         }
-        return Task.FromResult<IReadOnlyDictionary<string, IReadOnlyList<string>>>(result);
+        return Task.FromResult<IReadOnlyDictionary<string, MovieVoteSummary>>(result);
     }
 
     public Task<IReadOnlyDictionary<string, int>> GetParticipantVotesByEventAsync(

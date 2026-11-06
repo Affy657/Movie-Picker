@@ -364,10 +364,12 @@ describe('MovieList', () => {
           onRetryVote={onRetryVote}
         />
       );
-      expect(
-        screen.getByText('Votre vote n’a pas été enregistré. Vérifiez votre connexion.')
-      ).toBeInTheDocument();
-      await userEvent.click(screen.getByRole('button', { name: /réessayer/i }));
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Votre vote n’a pas été enregistré. Vérifiez votre connexion.'
+      );
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Réessayer le vote pour Inception' })
+      );
       expect(onRetryVote).toHaveBeenCalledWith('m1');
     });
 
@@ -639,6 +641,112 @@ describe('MovieList', () => {
       await userEvent.click(screen.getByRole('button', { name: /Plus d’actions/ }));
       expect(screen.getByRole('menuitem', { name: 'Voir les détails' })).toBeInTheDocument();
       expect(screen.queryByRole('menuitem', { name: /Retirer/ })).not.toBeInTheDocument();
+    });
+
+    it.each([
+      ['on a computer', false],
+      ['on a phone', true],
+    ])('shows the pitch note to everyone in the list view %s', (_device, isMobile) => {
+      renderWithLocale(
+        <MovieList
+          movies={[{ ...movies[0]!, pitchNote: 'Un casse dans les rêves' }]}
+          {...baseProps()}
+          isMobile={isMobile}
+          viewMode="list"
+        />
+      );
+
+      expect(screen.getByText('Un casse dans les rêves')).toBeInTheDocument();
+    });
+
+    it.each([
+      ['on a computer', false],
+      ['on a phone', true],
+    ])('lets the proposer write a pitch note from the list view %s', async (_device, isMobile) => {
+      renderWithLocale(
+        <MovieList
+          movies={[movies[0]!]}
+          {...baseProps()}
+          participantId="p1"
+          participantPseudo="Alice"
+          isMobile={isMobile}
+          viewMode="list"
+        />
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: 'Ajouter une note' }));
+
+      expect(screen.getByPlaceholderText('Vendez votre film en quelques mots…')).toHaveFocus();
+    });
+
+    it.each(['grid', 'list'] as const)(
+      'lets the host take a pitch note down from the %s view',
+      async (viewMode) => {
+        const onRemoveNote = vi.fn();
+        const pitched = { ...movies[0]!, pitchNote: 'Un casse dans les rêves' };
+        renderWithLocale(
+          <MovieList
+            movies={[pitched]}
+            {...baseProps()}
+            participantId="p2"
+            participantPseudo="Bob"
+            isHost
+            viewMode={viewMode}
+            onRemoveNote={onRemoveNote}
+          />
+        );
+
+        await userEvent.click(
+          screen.getByRole('button', { name: 'Supprimer la note sur Inception' })
+        );
+
+        expect(onRemoveNote).toHaveBeenCalledWith(pitched);
+      }
+    );
+
+    it('lets the proposer take their own pitch note down, not the other guests', () => {
+      const pitchedList = (participantId: string) => (
+        <MemoryRouter>
+          <QueryClientWrapper>
+            <LocaleProvider>
+              <MovieList
+                movies={[{ ...movies[0]!, pitchNote: 'Un casse dans les rêves' }]}
+                {...baseProps()}
+                participantId={participantId}
+                participantPseudo="Alice"
+                viewMode="list"
+                onRemoveNote={vi.fn()}
+              />
+            </LocaleProvider>
+          </QueryClientWrapper>
+        </MemoryRouter>
+      );
+      const { rerender } = render(pitchedList('p1'));
+      expect(
+        screen.getByRole('button', { name: 'Supprimer la note sur Inception' })
+      ).toBeInTheDocument();
+
+      rerender(pitchedList('p2'));
+      expect(
+        screen.queryByRole('button', { name: 'Supprimer la note sur Inception' })
+      ).not.toBeInTheDocument();
+    });
+
+    it('offers no removal of a pitch note once the wheel is locked', () => {
+      renderWithLocale(
+        <MovieList
+          movies={[{ ...movies[0]!, pitchNote: 'Un casse dans les rêves' }]}
+          {...baseProps()}
+          isHost
+          wheelLocked
+          viewMode="list"
+          onRemoveNote={vi.fn()}
+        />
+      );
+
+      expect(
+        screen.queryByRole('button', { name: 'Supprimer la note sur Inception' })
+      ).not.toBeInTheDocument();
     });
 
     it('once the wheel is locked, offers the proposer no pitch note to add', () => {

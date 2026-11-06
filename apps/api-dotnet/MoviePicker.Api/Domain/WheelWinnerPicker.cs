@@ -12,11 +12,11 @@ public static class WheelWinnerPicker
         IReadOnlyCollection<string>? excludedMovieIds = null)
     {
         if (movies.Count == 0)
-            throw new InvalidOperationException("Liste de films vide.");
+            throw new InvalidOperationException("The movie list is empty.");
 
         var eligible = movies.Where(m => !m.ExcludedFromWheel).ToList();
         if (eligible.Count == 0)
-            throw new InvalidOperationException("Tous les films sont exclus du tirage.");
+            throw new InvalidOperationException("Every movie is excluded from the draw");
 
         var pool = RemoveAlreadyPicked(eligible, excludedMovieIds);
         if (pool.Count == 0)

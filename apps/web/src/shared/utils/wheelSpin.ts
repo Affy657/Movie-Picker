@@ -10,5 +10,6 @@ export function remainingWheelRevealDelayMs(
   if (winnerPickMethod !== 'wheel' || !winnerPickedAt) return 0;
   const pickedAt = Date.parse(winnerPickedAt);
   if (!Number.isFinite(pickedAt)) return 0;
-  return Math.max(0, pickedAt + WHEEL_SPIN_DURATION_MS - nowMs);
+  const remaining = pickedAt + WHEEL_SPIN_DURATION_MS - nowMs;
+  return Math.min(WHEEL_SPIN_DURATION_MS, Math.max(0, remaining));
 }

@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useId, useRef, useState, type SyntheticEvent } from 'react';
+import { flushSync } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router';
 import clsx from 'clsx';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ListRestart, Settings2, Sparkles } from 'lucide-react';
+import EventLimitFields, {
+  eventLimitCounterId,
+  type EventLimitKind,
+} from '@/features/events/components/EventLimitFields';
 import ThemeField from '@/features/events/components/ThemeField';
 import WheelModeField from '@/features/events/components/WheelModeField';
 import EventTemplatesRow from '@/features/events/components/EventTemplatesRow';
@@ -19,6 +24,7 @@ import {
   type TemplateFormFields,
 } from '@/features/events/lib/eventTemplateDraft';
 import { describeTemplateConfig } from '@/features/events/lib/describeTemplateConfig';
+import { validateEventLimits } from '@/features/events/lib/eventLimitValidation';
 import {
   isPastEventDateTime,
   validateCreateEventDraft,
@@ -85,6 +91,7 @@ function getDefaultStart(): { date: string; time: string } {
 }
 
 const INITIAL_FIELDS = defaultTemplateFields();
+const LIMIT_ID_PREFIX = 'create';
 
 export default function CreateEvent() {
   const { t } = useTranslation();
@@ -240,17 +247,40 @@ export default function CreateEvent() {
     error,
   } = useAsyncAction(createAction, t('events.create.fallbackError'));
 
+  const focusLimitCounter = (kind: EventLimitKind) => {
+    flushSync(() => setAdvancedOpen(true));
+    document.getElementById(eventLimitCounterId(LIMIT_ID_PREFIX, kind))?.focus();
+  };
+
+  const clearFieldError = (field: keyof CreateEventFieldErrors) =>
+    setFieldErrors((current) => ({ ...current, [field]: undefined }));
+
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const errors = validateCreateEventDraft({ title, date, time }, t);
+    const limits = validateEventLimits(
+      {
+        proposalLimitEnabled,
+        maxProposals,
+        participantLimitEnabled,
+        maxParticipants,
+        voteLimitEnabled,
+        maxVotes,
+        currentParticipantCount: 0,
+      },
+      t
+    );
+    const errors = { ...validateCreateEventDraft({ title, date, time }, t), ...limits.errors };
     setFieldErrors(errors);
     const firstInvalid = [
-      { message: errors.title, ref: titleRef },
-      { message: errors.date, ref: dateRef },
-      { message: errors.time, ref: timeRef },
+      { message: errors.title, focus: () => titleRef.current?.focus() },
+      { message: errors.date, focus: () => dateRef.current?.focus() },
+      { message: errors.time, focus: () => timeRef.current?.focus() },
+      { message: errors.maxParticipants, focus: () => focusLimitCounter('participants') },
+      { message: errors.maxProposals, focus: () => focusLimitCounter('proposals') },
+      { message: errors.maxVotes, focus: () => focusLimitCounter('votes') },
     ].find((entry) => entry.message !== undefined);
     if (firstInvalid) {
-      firstInvalid.ref.current?.focus();
+      firstInvalid.focus();
       return;
     }
     void submit();
@@ -388,88 +418,53 @@ export default function CreateEvent() {
 
               <section className={styles.group}>
                 <h2 className={styles.groupTitle}>{t('events.settings.sectionParticipants')}</h2>
-                <div>
-                  <ToggleRow
-                    title={t('events.settings.participantLimitLabel')}
-                    description={t('events.settings.participantLimitDesc', {
-                      max: MAX_EVENT_PARTICIPANTS,
-                    })}
-                    checked={participantLimitEnabled}
-                    onChange={(checked) => {
-                      setParticipantLimitEnabled(checked);
-                      if (checked)
-                        setMaxParticipants((current) =>
-                          limitFieldOnEnable(
-                            current,
-                            MAX_EVENT_PARTICIPANTS,
-                            DEFAULT_PARTICIPANT_LIMIT
-                          )
-                        );
-                    }}
-                  />
-                  {participantLimitEnabled && (
-                    <Field
-                      label={t('events.settings.maxParticipantsLabel')}
-                      htmlFor="create-max-participants"
-                      hint={t('events.settings.maxParticipantsCapHint', {
-                        max: MAX_EVENT_PARTICIPANTS,
-                      })}
-                      className={clsx(styles.subField, styles.counterField)}
-                    >
-                      {({ id, describedBy }) => (
-                        <NumberInput
-                          id={id}
-                          value={maxParticipants}
-                          onChange={setMaxParticipants}
-                          min={1}
-                          max={MAX_EVENT_PARTICIPANTS}
-                          ariaDescribedBy={describedBy}
-                        />
-                      )}
-                    </Field>
-                  )}
-                </div>
-                <div>
-                  <ToggleRow
-                    title={t('events.settings.proposalLimitLabel')}
-                    description={t('events.settings.proposalLimitDesc', {
-                      max: MAX_PROPOSALS_PER_PARTICIPANT,
-                    })}
-                    checked={proposalLimitEnabled}
-                    onChange={(checked) => {
-                      setProposalLimitEnabled(checked);
-                      if (checked)
-                        setMaxProposals((current) =>
-                          limitFieldOnEnable(
-                            current,
-                            MAX_PROPOSALS_PER_PARTICIPANT,
-                            DEFAULT_PROPOSAL_LIMIT
-                          )
-                        );
-                    }}
-                  />
-                  {proposalLimitEnabled && (
-                    <Field
-                      label={t('events.settings.maxProposalsLabel')}
-                      htmlFor="create-max-proposals"
-                      hint={t('events.settings.maxProposalsHint', {
-                        max: MAX_PROPOSALS_PER_PARTICIPANT,
-                      })}
-                      className={clsx(styles.subField, styles.counterField)}
-                    >
-                      {({ id, describedBy }) => (
-                        <NumberInput
-                          id={id}
-                          value={maxProposals}
-                          onChange={setMaxProposals}
-                          min={1}
-                          max={MAX_PROPOSALS_PER_PARTICIPANT}
-                          ariaDescribedBy={describedBy}
-                        />
-                      )}
-                    </Field>
-                  )}
-                </div>
+                <EventLimitFields
+                  idPrefix={LIMIT_ID_PREFIX}
+                  limits={{
+                    participants: {
+                      enabled: participantLimitEnabled,
+                      value: maxParticipants,
+                      error: fieldErrors.maxParticipants,
+                      onEnabledChange: (checked) => {
+                        setParticipantLimitEnabled(checked);
+                        clearFieldError('maxParticipants');
+                        if (checked)
+                          setMaxParticipants((current) =>
+                            limitFieldOnEnable(
+                              current,
+                              MAX_EVENT_PARTICIPANTS,
+                              DEFAULT_PARTICIPANT_LIMIT
+                            )
+                          );
+                      },
+                      onValueChange: (value) => {
+                        setMaxParticipants(value);
+                        clearFieldError('maxParticipants');
+                      },
+                    },
+                    proposals: {
+                      enabled: proposalLimitEnabled,
+                      value: maxProposals,
+                      error: fieldErrors.maxProposals,
+                      onEnabledChange: (checked) => {
+                        setProposalLimitEnabled(checked);
+                        clearFieldError('maxProposals');
+                        if (checked)
+                          setMaxProposals((current) =>
+                            limitFieldOnEnable(
+                              current,
+                              MAX_PROPOSALS_PER_PARTICIPANT,
+                              DEFAULT_PROPOSAL_LIMIT
+                            )
+                          );
+                      },
+                      onValueChange: (value) => {
+                        setMaxProposals(value);
+                        clearFieldError('maxProposals');
+                      },
+                    },
+                  }}
+                />
                 <ToggleRow
                   title={t('events.settings.allowSeriesLabel')}
                   description={t('events.settings.allowSeriesDesc')}
@@ -480,25 +475,24 @@ export default function CreateEvent() {
 
               <section className={styles.group}>
                 <h2 className={styles.groupTitle}>{t('events.settings.sectionDraw')}</h2>
-                <div>
-                  <ToggleRow
-                    title={t('events.settings.voteLimitLabel')}
-                    description={t('events.settings.voteLimitDesc')}
-                    checked={voteLimitEnabled}
-                    onChange={setVoteLimitEnabled}
-                  />
-                  {voteLimitEnabled && (
-                    <Field
-                      label={t('events.settings.maxVotesLabel')}
-                      htmlFor="create-max-votes"
-                      className={clsx(styles.subField, styles.counterField)}
-                    >
-                      {({ id }) => (
-                        <NumberInput id={id} value={maxVotes} onChange={setMaxVotes} min={1} />
-                      )}
-                    </Field>
-                  )}
-                </div>
+                <EventLimitFields
+                  idPrefix={LIMIT_ID_PREFIX}
+                  limits={{
+                    votes: {
+                      enabled: voteLimitEnabled,
+                      value: maxVotes,
+                      error: fieldErrors.maxVotes,
+                      onEnabledChange: (checked) => {
+                        setVoteLimitEnabled(checked);
+                        clearFieldError('maxVotes');
+                      },
+                      onValueChange: (value) => {
+                        setMaxVotes(value);
+                        clearFieldError('maxVotes');
+                      },
+                    },
+                  }}
+                />
                 <div className={styles.groupField}>
                   <span className="label" id={wheelModeLabelId}>
                     {t('events.settings.wheelModeLabel')}

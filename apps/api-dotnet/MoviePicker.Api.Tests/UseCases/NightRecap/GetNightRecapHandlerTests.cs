@@ -24,8 +24,13 @@ public sealed class GetNightRecapHandlerTests
     public GetNightRecapHandlerTests()
     {
         _events.Setup(r => r.GetByRecapSlugAsync("recap-1234", It.IsAny<CancellationToken>())).ReturnsAsync(Night);
-        _movies.Setup(m => m.HandleAsync("soiree-privee", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([Movie("m1", "Heat"), Movie("m2", "Alien"), Movie("m3", "Dune")]);
+        _movies
+            .Setup(m => m.HandleSelectionAsync(
+                "soiree-privee", It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string _, IReadOnlyCollection<string> ids, string? _, CancellationToken _) =>
+                new[] { Movie("m1", "Heat"), Movie("m2", "Alien"), Movie("m3", "Dune") }
+                    .Where(movie => ids.Contains(movie.Id))
+                    .ToList());
         _sut = new GetNightRecapHandler(_events.Object, _detail.Object, _movies.Object);
     }
 
@@ -109,7 +114,25 @@ public sealed class GetNightRecapHandlerTests
 
         Assert.Equal(["Alien", "Heat"], recap.WinnerMovies.Select(m => m.Title));
         Assert.Equal(["m2", "m1"], recap.Winners.Select(w => w.MovieId));
-        _movies.Verify(m => m.HandleAsync("soiree-privee", "p1", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ReadsTheChosenMoviesOnly()
+    {
+        GivenDetail(myParticipantId: "p1", winnerIds: ["m2", "m1"]);
+
+        await _sut.HandleAsync("recap-1234");
+
+        _movies.Verify(
+            m => m.HandleSelectionAsync(
+                "soiree-privee",
+                It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 2 && ids.Contains("m1") && ids.Contains("m2")),
+                "p1",
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _movies.Verify(
+            m => m.HandleAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -120,6 +143,9 @@ public sealed class GetNightRecapHandlerTests
         var recap = await _sut.HandleAsync("recap-1234");
 
         Assert.Empty(recap.WinnerMovies);
-        _movies.Verify(m => m.HandleAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _movies.Verify(
+            m => m.HandleSelectionAsync(
+                It.IsAny<string>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

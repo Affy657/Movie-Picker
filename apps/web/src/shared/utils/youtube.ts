@@ -19,8 +19,3 @@ export function extractYouTubeId(url: string | null | undefined): string | null 
     return null;
   }
 }
-
-export function youTubeEmbedUrl(url: string | null | undefined): string | null {
-  const id = extractYouTubeId(url);
-  return id ? `https://www.youtube.com/embed/${encodeURIComponent(id)}` : null;
-}

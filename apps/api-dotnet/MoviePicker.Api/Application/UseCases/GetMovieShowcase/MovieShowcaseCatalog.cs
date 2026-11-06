@@ -11,12 +11,6 @@ public static class MovieShowcaseSections
     public const string Collection = "collection";
     public const string Provider = "provider";
     public const string Recommendations = "recommendations";
-
-    public static readonly IReadOnlyList<string> All =
-        [Trending, NowPlaying, MostProposed, Theme, Collection, Provider, Recommendations];
-
-    public static bool IsKnown(string? section) =>
-        section is not null && All.Contains(section.Trim().ToLowerInvariant());
 }
 
 public static class MovieShowcaseCatalog
@@ -25,6 +19,7 @@ public static class MovieShowcaseCatalog
     public const int MostProposedLimit = 100;
     public const int MostProposedMinEventCount = 2;
     public const int MostProposedMinDistinctMovies = 30;
+    public const int MaxSeedTmdbId = 10_000_000;
 
     private const int A24CompanyId = 41_077;
     private const int FamilyGenreId = 10_751;
@@ -116,6 +111,8 @@ public static class MovieShowcaseCatalog
     public static string? ProviderKey(string? provider) => CatalogKey(ProviderKeys, provider);
 
     public static bool IsTmdbMovieGenre(int genreId) => TmdbMovieGenreIds.Contains(genreId);
+
+    public static bool IsCatalogCollection(int collectionId) => CollectionIds.Contains(collectionId);
 
     private static string? CatalogKey(IReadOnlyList<string> keys, string? value) =>
         string.IsNullOrWhiteSpace(value)

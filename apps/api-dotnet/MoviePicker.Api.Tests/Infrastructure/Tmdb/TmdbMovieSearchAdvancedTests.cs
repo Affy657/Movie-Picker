@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
+using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -23,6 +24,7 @@ public sealed class TmdbMovieSearchAdvancedTests
             Options.Create(new MoviePickerOptions { TmdbApiKey = apiKey, TmdbEnrichmentCacheHours = 1 }),
             new MemoryCache(new MemoryCacheOptions()),
             new InMemorySharedCache(),
+            new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
 
     private static HttpResponseMessage Json(string body) =>

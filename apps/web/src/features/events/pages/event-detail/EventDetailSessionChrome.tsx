@@ -130,6 +130,7 @@ function SessionPendingBanner({
   return (
     <EventPendingBanner
       isHost={isHost}
+      launching={wheel.loading}
       onLaunchWheel={canLaunch ? wheel.launch : undefined}
       onReschedule={settings.canConfigure ? settings.onOpen : undefined}
       onCloseWithoutMovie={settings.canConfigure ? onRequestCloseWithoutMovie : undefined}

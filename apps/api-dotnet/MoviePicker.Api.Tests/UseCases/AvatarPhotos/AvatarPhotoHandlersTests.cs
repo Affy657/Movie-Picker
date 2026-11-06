@@ -1,11 +1,15 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Application.UseCases.AvatarPhotos;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Tests.Builders;
+using MoviePicker.Api.Tests.Logging;
 using MoviePicker.Api.Tests.UseCases.EventTemplates;
 using Xunit;
 
@@ -17,6 +21,8 @@ public sealed class AvatarPhotoHandlersTests
 
     private readonly InMemoryUserRepository _users = new();
     private readonly InMemoryAvatarPhotoRepository _photos = new();
+    private readonly MoviePickerOptions _options = new();
+    private readonly CapturingLogger<AvatarPhotoWriter> _writerLogs = new();
     private readonly UploadAvatarPhotoHandler _upload;
     private readonly DeleteAvatarPhotoHandler _delete;
     private readonly PatchUserProfileHandler _patch;
@@ -24,7 +30,7 @@ public sealed class AvatarPhotoHandlersTests
     public AvatarPhotoHandlersTests()
     {
         var clock = new FrozenClock(Now);
-        var writer = new AvatarPhotoWriter(_users, _photos, new InMemoryUnitOfWork(), clock);
+        var writer = new AvatarPhotoWriter(_users, _photos, new InMemoryUnitOfWork(), clock, Options.Create(_options), _writerLogs);
         _upload = new UploadAvatarPhotoHandler(writer);
         _delete = new DeleteAvatarPhotoHandler(writer);
         _patch = new PatchUserProfileHandler(_users, new InMemoryUserNotificationRepository(), new InMemoryUnitOfWork(), clock);
@@ -81,7 +87,7 @@ public sealed class AvatarPhotoHandlersTests
         var user = await UserAsync();
         var first = await _upload.HandleAsync(user.Id, Request(Webp()));
 
-        var second = await _upload.HandleAsync(user.Id, Request(ImageHeaders.Png(300, 300), "image/png"));
+        var second = await _upload.HandleAsync(user.Id, Request(ImageHeaders.Png(200, 200), "image/png"));
 
         Assert.NotEqual(first.AvatarId, second.AvatarId);
         Assert.Null(await _photos.GetByKeyAsync(KeyOf(first.AvatarId)));
@@ -95,6 +101,8 @@ public sealed class AvatarPhotoHandlersTests
         { ImageHeaders.WebpExtended(256, 256, animated: true), "image/webp" },
         { ImageHeaders.Png(100, 400), "image/png" },
         { ImageHeaders.Png(256, 2000), "image/png" },
+        { ImageHeaders.Png(1024, 1024), "image/png" },
+        { [.. ImageHeaders.Png(256, 256), .. new byte[256 * 1024]], "image/png" },
         { ImageHeaders.Png(256, 256), "image/webp" },
         { [.. ImageHeaders.Png(256, 256), .. new byte[AvatarPhotoImage.MaxBytes]], "image/png" }
     };
@@ -112,6 +120,39 @@ public sealed class AvatarPhotoHandlersTests
         var unchanged = await _users.GetByIdAsync(user.Id);
         Assert.Null(unchanged!.AvatarPhoto);
         Assert.Equal("bolt", unchanged.DisplayedAvatarId);
+    }
+
+    [Fact]
+    public async Task Upload_FirstPhotoWhenTheStorageIsFull_IsRefusedAndWarns()
+    {
+        var owner = await UserAsync();
+        await _upload.HandleAsync(owner.Id, Request(Webp()));
+        _options.AvatarPhotoMaxEntries = 1;
+        var newcomer = await UserAsync("bolt");
+
+        var ex = await Assert.ThrowsAsync<ServiceUnavailableException>(
+            () => _upload.HandleAsync(newcomer.Id, Request(Webp())));
+
+        Assert.Equal(ErrorCodes.AvatarPhotoStorageFull, ex.Reason);
+        Assert.Equal(1, await _photos.EstimatedCountAsync());
+        Assert.Null((await _users.GetByIdAsync(newcomer.Id))!.AvatarPhoto);
+        Assert.Contains(_writerLogs.Entries, e => e.Level == LogLevel.Warning);
+        Assert.Contains(
+            _writerLogs.States.SelectMany(state => state),
+            pair => pair.Key == "{OriginalFormat}" && Equals(pair.Value, AvatarPhotoWriter.StorageFullLogTemplate));
+    }
+
+    [Fact]
+    public async Task Upload_ReplacingAPhotoWhenTheStorageIsFull_StillWorks()
+    {
+        var owner = await UserAsync();
+        var first = await _upload.HandleAsync(owner.Id, Request(Webp()));
+        _options.AvatarPhotoMaxEntries = 1;
+
+        var second = await _upload.HandleAsync(owner.Id, Request(ImageHeaders.Png(200, 200), "image/png"));
+
+        Assert.NotEqual(first.AvatarId, second.AvatarId);
+        Assert.Equal(1, await _photos.EstimatedCountAsync());
     }
 
     [Fact]

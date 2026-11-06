@@ -69,6 +69,7 @@ public sealed class AuthController : ControllerBase
     [HttpPost("register")]
     [EnableRateLimiting(RateLimitingExtensions.AuthRegisterPolicy)]
     [SharedRateLimit(RateLimitingExtensions.AuthRegisterPolicy)]
+    [SharedRateLimit(RateLimitingExtensions.AuthRegisterHourlyPolicy)]
     [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -121,6 +122,7 @@ public sealed class AuthController : ControllerBase
     private const string FrontIntegrationsPath = "/settings/integrations";
     private const string FrontCallbackPath = "/auth/callback";
     private const string ReturnToItemKey = "returnTo";
+    internal const string ProviderItemKey = "oauthProvider";
     private const string OauthErrorQueryKey = "oauthError";
     private const string ReauthenticationRequiredError = "reauthentication_required";
 
@@ -151,6 +153,7 @@ public sealed class AuthController : ControllerBase
             RedirectUri = $"/{ApiRoutePrefix.V1}/auth/oauth/{knownProvider}/callback"
         };
         props.Items[ReturnToItemKey] = ReturnToPolicy.Sanitize(returnTo);
+        props.Items[ProviderItemKey] = knownProvider;
         return Challenge(props, knownProvider);
     }
 
@@ -177,6 +180,12 @@ public sealed class AuthController : ControllerBase
 
         if (!externalResult.Succeeded || externalResult.Principal is null)
             return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "external_auth_failed")));
+
+        if (!WasIssuedBy(externalResult.Properties, knownProvider))
+        {
+            logger.LogWarning("OAuth callback: the external ticket does not come from {Provider}", knownProvider);
+            return Redirect(BuildFrontUrl(webBase, FrontLoginPath, (OauthErrorQueryKey, "external_auth_failed")));
+        }
 
         var returnTo = ReturnToPolicy.Sanitize(
             externalResult.Properties?.Items.TryGetValue(ReturnToItemKey, out var storedReturnTo) == true
@@ -227,6 +236,10 @@ public sealed class AuthController : ControllerBase
             ("event", loginOutcome.IsNewAccount ? "signup" : "login")));
     }
 
+    private static bool WasIssuedBy(AuthenticationProperties? ticket, string provider) =>
+        ticket?.Items.TryGetValue(ProviderItemKey, out var issuer) == true
+        && string.Equals(issuer, provider, StringComparison.Ordinal);
+
     private async Task<IActionResult> LinkToSignedInAccountAsync(
         string currentUserId,
         string provider,
@@ -268,17 +281,19 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UnlinkIdentity(
         string provider,
         [FromServices] IOAuthUnlinkHandler handler,
+        [FromServices] TimeProvider clock,
         CancellationToken ct)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
         if (!OAuthProviders.TryResolve(provider, out var knownProvider))
             return NotFound();
-        await handler.HandleAsync(userId, knownProvider, AuthSessionKey.Of(HttpContext), ct);
+        await handler.HandleAsync(userId, knownProvider, AuthSessionKey.Of(HttpContext), IsRecentlyAuthenticated(clock), ct);
         return NoContent();
     }
 
@@ -412,11 +427,13 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> DeleteMe(
         [FromBody] DeleteAccountRequest? request,
         [FromServices] IDeleteAccountHandler handler,
+        [FromServices] TimeProvider clock,
         CancellationToken ct)
     {
         if (request is null)
@@ -426,7 +443,7 @@ public sealed class AuthController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        await handler.HandleAsync(userId, request, ct);
+        await handler.HandleAsync(userId, request, IsRecentlyAuthenticated(clock), ct);
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 

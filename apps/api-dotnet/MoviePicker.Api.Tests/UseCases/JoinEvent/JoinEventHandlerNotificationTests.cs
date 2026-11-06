@@ -36,8 +36,6 @@ public sealed class JoinEventHandlerNotificationTests
             });
         _participantRepo.Setup(r => r.FindByEventAndUserIdAsync("evt1", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Participant?)null);
-        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync("evt1", It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Participant?)null);
         _participantRepo.Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))
@@ -99,8 +97,6 @@ public sealed class JoinEventHandlerNotificationTests
                 UpdatedAt = DateTimeOffset.UtcNow
             });
         _participantRepo.Setup(r => r.FindByEventAndUserIdAsync("evt2", It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Participant?)null);
-        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync("evt2", It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Participant?)null);
 
         await _sut.HandleAsync("evt2", new JoinEventRequest { Pseudo = "Joiner" }, "joiner");

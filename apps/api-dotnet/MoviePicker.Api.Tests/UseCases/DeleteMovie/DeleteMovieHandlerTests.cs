@@ -16,6 +16,7 @@ public sealed class DeleteMovieHandlerTests
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IVoteRepository> _voteRepo;
     private readonly Mock<ISeenMarkRepository> _seenMarkRepo;
+    private readonly Mock<IMovieRatingRepository> _ratingRepo;
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IHostTokenAccessor> _hostToken;
     private readonly Mock<ICurrentUserAccessor> _currentUser;
@@ -40,6 +41,7 @@ public sealed class DeleteMovieHandlerTests
         _movieRepo = new Mock<IMovieRepository>();
         _voteRepo = new Mock<IVoteRepository>();
         _seenMarkRepo = new Mock<ISeenMarkRepository>();
+        _ratingRepo = new Mock<IMovieRatingRepository>();
         _participantRepo = new Mock<IParticipantRepository>();
         _hostToken = new Mock<IHostTokenAccessor>();
         _currentUser = new Mock<ICurrentUserAccessor>();
@@ -50,6 +52,7 @@ public sealed class DeleteMovieHandlerTests
             _movieRepo.Object,
             _voteRepo.Object,
             _seenMarkRepo.Object,
+            _ratingRepo.Object,
             _participantRepo.Object,
             _hostToken.Object,
             _currentUser.Object,
@@ -110,7 +113,7 @@ public sealed class DeleteMovieHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_Success_DeletesVotesSeenMarksAndMovie()
+    public async Task HandleAsync_Success_DeletesVotesSeenMarksRatingsAndMovie()
     {
         var evt = ActiveEvent();
         var participantId = "p123456789012345678901234";
@@ -125,12 +128,15 @@ public sealed class DeleteMovieHandlerTests
         void CountOutside() { if (!_unitOfWork.IsExecuting) deletesOutsideUnitOfWork++; }
         _voteRepo.Setup(r => r.DeleteByMovieIdAsync("mov1", It.IsAny<CancellationToken>())).Callback(CountOutside).Returns(Task.CompletedTask);
         _seenMarkRepo.Setup(r => r.DeleteByMovieIdAsync("evt1", "mov1", It.IsAny<CancellationToken>())).Callback(CountOutside).Returns(Task.CompletedTask);
+        _ratingRepo.Setup(r => r.DeleteByMovieIdsAsync("evt1", It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>())).Callback(CountOutside).Returns(Task.CompletedTask);
         _movieRepo.Setup(r => r.DeleteAsync("mov1", It.IsAny<CancellationToken>())).Callback(CountOutside).Returns(Task.CompletedTask);
 
         await _sut.HandleAsync("evt1", "mov1", participantId);
 
         _voteRepo.Verify(r => r.DeleteByMovieIdAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
         _seenMarkRepo.Verify(r => r.DeleteByMovieIdAsync("evt1", "mov1", It.IsAny<CancellationToken>()), Times.Once);
+        _ratingRepo.Verify(r => r.DeleteByMovieIdsAsync(
+            "evt1", It.Is<IReadOnlyCollection<string>>(ids => ids.Count == 1 && ids.Contains("mov1")), It.IsAny<CancellationToken>()), Times.Once);
         _movieRepo.Verify(r => r.DeleteAsync("mov1", It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(1, _unitOfWork.Executions);
         Assert.Equal(0, deletesOutsideUnitOfWork);

@@ -123,7 +123,7 @@ Conditions, toutes requises :
 2. `gh workflow run deploy.yml --repo Affy657/Movie-Picker --ref master -f stage=staging -f target=all`, suivre le run jusqu'au bout. `deploy-guard` doit être vert, et la recette doit servir le SHA (`https://api.staging.movie-picker.fr/health/ready`, `<meta name="release">` de `https://staging.movie-picker.fr/`).
 3. Même commande avec `-f stage=production`, puis vérifier les points 1 à 3 de l'étape 7 de `/weekly-maintenance`.
 
-Un échec de déploiement ne touche pas la prod : la révision n'est promue qu'après validation, et la production refuse de partir sans la recette. Porte Trivy rouge sur une CVE de l'image de base : monter le digest du runtime, revenir à l'étape 3. Lighthouse rouge ou autre cause : notifier.
+Un échec de déploiement ne touche pas la prod : la révision n'est promue qu'après validation, et la production refuse de partir sans la recette. Porte Trivy rouge sur une CVE de l'image de base : monter le digest du runtime, revenir à l'étape 3. Une CRITICAL sans correctif publié bloque aussi, et aucun digest ne la lève : c'est un risque à accepter dans `.trivyignore`, décision de l'utilisateur, donc notifier. Lighthouse rouge ou autre cause : notifier.
 
 ## Étape 6 : surveiller, et revenir en arrière
 
@@ -138,9 +138,9 @@ Attendre 30 minutes après la promotion (commande en arrière-plan), puis compar
 **Régression : retour arrière immédiat.**
 
 1. Lancer les deux workflows de retour arrière, puis suivre les deux runs :
-   - `gh workflow run rollback.yml --repo Affy657/Movie-Picker --ref master -f stage=production` ;
+   - `gh workflow run rollback.yml --repo Affy657/Movie-Picker --ref master -f stage=production -f release=<release notée à l'étape 5>` ;
    - `gh workflow run rollback-front.yml --repo Affy657/Movie-Picker --ref master -f stage=production -f commit=<release notée à l'étape 5>`.
-2. Vérifier que la prod sert de nouveau la release notée.
+2. Vérifier que la prod sert de nouveau la release notée. `rollback.yml` en échec n'a pas bougé le trafic : aucune révision ne porte cette release, ou sa révision a échoué aux sondes sur son URL taguée. Le dire dans la notification et ne pas forcer une autre révision.
 3. Créer le label s'il manque (`gh label create maintenance-freeze --repo Affy657/Movie-Picker --color B60205`), puis ouvrir l'issue de gel (`gh issue create --repo Affy657/Movie-Picker --label maintenance-freeze --title "..." --body "..."`), qui ne porte que la date et les deux SHA. Le diagnostic va dans la notification, pas dans l'issue publique.
 4. Si les commits de la passe sont en cause, les `git revert` sur master.
 5. Notifier.

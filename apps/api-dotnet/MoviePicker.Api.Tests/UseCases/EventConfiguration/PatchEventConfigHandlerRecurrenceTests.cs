@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
@@ -35,12 +34,8 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
             _participants.Object,
             _hostToken.Object,
             _user.Object,
-            _userRepo.Object,
-            _pushSubRepo.Object,
-            _pushSender.Object,
-            _notifications.Object,
+            TestAudienceNotifier.Over(_participants.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object),
             new RecordingUnitOfWork(),
-            NullLogger<PatchEventConfigHandler>.Instance,
             TimeProvider.System);
     }
 

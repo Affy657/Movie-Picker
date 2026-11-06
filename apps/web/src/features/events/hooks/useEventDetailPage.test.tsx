@@ -142,6 +142,26 @@ describe('useEventDetailPage', () => {
     );
   });
 
+  it('marks the recap of the night stale, so a new rating shows there', async () => {
+    serveEventNever();
+    const client = createTestQueryClient();
+    client.setQueryData(queryKeys.event.detail(slug, null), { slug, recapSlug: 'recap-perf' });
+    client.setQueryData(queryKeys.event.recap('recap-perf'), { title: 'Soirée' });
+    client.setQueryData(queryKeys.event.recap('recap-other'), { title: 'Autre soirée' });
+    const { result } = renderHook(() => useEventDetailPage(slug), {
+      wrapper: ({ children }: Readonly<{ children: ReactNode }>) => (
+        <QueryClientWrapper client={client}>
+          <MemoryRouter initialEntries={[`/e/${slug}`]}>{children}</MemoryRouter>
+        </QueryClientWrapper>
+      ),
+    });
+
+    act(() => result.current.refreshAll());
+
+    expect(client.getQueryState(queryKeys.event.recap('recap-perf'))?.isInvalidated).toBe(true);
+    expect(client.getQueryState(queryKeys.event.recap('recap-other'))?.isInvalidated).toBe(false);
+  });
+
   it('keeps the fragment and the navigation state when it moves a legacy host token into the session', async () => {
     serveEventNever();
 

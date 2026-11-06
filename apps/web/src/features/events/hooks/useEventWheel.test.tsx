@@ -233,6 +233,94 @@ describe('useEventWheel : annonce du gagnant', () => {
   });
 });
 
+describe('useEventWheel: launching', () => {
+  beforeEach(() => {
+    vi.mocked(postEventWheel).mockReturnValue(new Promise(() => undefined));
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('sends a single draw when the host taps twice before the page has rendered', () => {
+    const { result } = renderWheel();
+    const { launch } = result.current;
+
+    act(() => {
+      launch();
+      launch();
+    });
+
+    expect(postEventWheel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useEventWheel: reveal after the host closes the modal', () => {
+  beforeEach(() => {
+    vi.mocked(postEventWheel).mockResolvedValue({ winner, message: 'Roue lancée.' });
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('never paints a freshly polled wheel winner, not even for the render before its delay starts', () => {
+    const eventAfterDraw = {
+      ...hostEvent,
+      isHost: false,
+      winners: [{ movieId: 'mov1', pickMethod: 'wheel', pickedAt: new Date().toISOString() }],
+    } as EventData;
+    const winnerIdsOfEachRender: string[][] = [];
+    const { rerender } = renderHook(
+      ({ event }: { event: EventData }) => {
+        const wheel = useEventWheel({
+          slug: 'soiree',
+          event,
+          movies: [winner],
+          hostToken: null,
+          onWheelDone: () => {},
+        });
+        winnerIdsOfEachRender.push(wheel.winnerIds);
+        return wheel;
+      },
+      { wrapper, initialProps: { event: { ...hostEvent, isHost: false } as EventData } }
+    );
+
+    rerender({ event: eventAfterDraw });
+
+    expect(winnerIdsOfEachRender.flat()).toEqual([]);
+  });
+
+  it('keeps the winner in view once the host has seen it, even when the local clock runs late', async () => {
+    const pickedAt = new Date(Date.now() + 60_000).toISOString();
+    const eventAfterDraw = {
+      ...hostEvent,
+      winners: [{ movieId: 'mov1', pickMethod: 'wheel', pickedAt }],
+    } as EventData;
+    const { result, rerender } = renderHook(
+      ({ event }: { event: EventData }) =>
+        useEventWheel({
+          slug: 'soiree',
+          event,
+          movies: [winner],
+          hostToken: 'ht1',
+          onWheelDone: () => {},
+        }),
+      { wrapper, initialProps: { event: hostEvent } }
+    );
+
+    act(() => result.current.launch());
+    await waitFor(() => expect(result.current.isModalOpen).toBe(true));
+    rerender({ event: eventAfterDraw });
+    expect(result.current.winnerIds).toEqual([]);
+
+    act(() => result.current.revealWinner());
+    act(() => result.current.dismissModal());
+
+    expect(result.current.winnerIds).toEqual(['mov1']);
+  });
+});
+
 describe('useEventWheel: remaining slots', () => {
   const second = { id: 'mov2', title: 'Alien', tmdbId: 2 } as MovieData;
   const twoSlots = {

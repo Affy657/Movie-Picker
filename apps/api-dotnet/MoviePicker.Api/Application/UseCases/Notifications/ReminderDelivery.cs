@@ -43,7 +43,7 @@ public sealed class ReminderDelivery
             return new ReminderDeliveryResult(false, false);
 
         var pushed = await PushOnceAsync(inApp, eventId, subscriptions, push, ct);
-        var added = inAppClaimed && await AddToInboxOnceAsync(inApp, eventId, ct);
+        var added = await AddToInboxOnceAsync(inApp, eventId, ct);
         return new ReminderDeliveryResult(pushed == PushOutcome.Sent || added, pushed == PushOutcome.Failed);
     }
 

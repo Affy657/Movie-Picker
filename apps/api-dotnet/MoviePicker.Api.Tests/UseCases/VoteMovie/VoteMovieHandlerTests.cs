@@ -101,7 +101,7 @@ public sealed class VoteMovieHandlerTests
         Assert.Equal(1, result.Value);
         Assert.Equal(movie.Id, result.MovieId);
         Assert.Equal(participant.Id, result.ParticipantId);
-        _eventRepo.Verify(r => r.MarkChangedAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepo.Verify(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -178,6 +178,76 @@ public sealed class VoteMovieHandlerTests
 
         Assert.Equal(["lock", "count", "write"], steps);
         Assert.Equal(1, _unitOfWork.Executions);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithoutVoteLimit_LocksTheEventThenRereadsAndWritesInsideTheUnitOfWork()
+    {
+        var evt = ActiveEvent();
+        var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        GivenVotableMovie(evt, movie, participant, new Dictionary<string, int>());
+        var steps = new List<string>();
+        void Step(string name)
+        {
+            if (_unitOfWork.IsExecuting)
+                steps.Add(name);
+        }
+        _eventRepo.Setup(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => Step("lock")).Returns(Task.CompletedTask);
+        _movieRepo.Setup(r => r.GetByIdAndEventIdAsync(movie.Id, evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => Step("movie")).ReturnsAsync(movie);
+        _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>()))
+            .Callback(() => Step("participant")).ReturnsAsync(participant);
+        _voteRepo.Setup(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>()))
+            .Callback(() => Step("write"))
+            .ReturnsAsync((Vote v, CancellationToken _) => v with { Id = "saved" });
+
+        await _sut.HandleAsync("evt1", "mov1", new VoteRequest { ParticipantId = participant.Id, Value = 1 });
+
+        Assert.Equal(["lock", "movie", "participant", "write"], steps);
+        Assert.Equal(1, _unitOfWork.Executions);
+        _eventRepo.Verify(r => r.MarkChangedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task HandleAsync_MovieRemovedBeforeTheLock_RefusesWithoutWriting(bool withVoteLimit)
+    {
+        var evt = withVoteLimit ? EventWithVoteLimit(2) : ActiveEvent();
+        var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        GivenVotableMovie(evt, movie, participant, new Dictionary<string, int>());
+        _movieRepo.SetupSequence(r => r.GetByIdAndEventIdAsync(movie.Id, evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(movie)
+            .ReturnsAsync((Movie?)null);
+
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() =>
+            _sut.HandleAsync("evt1", "mov1", new VoteRequest { ParticipantId = participant.Id, Value = 1 }));
+
+        Assert.Equal(ErrorCodes.MovieNotFound, ex.Reason);
+        _voteRepo.Verify(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task HandleAsync_ParticipantRemovedBeforeTheLock_RefusesWithoutWriting(bool withVoteLimit)
+    {
+        var evt = withVoteLimit ? EventWithVoteLimit(2) : ActiveEvent();
+        var movie = new Movie { Id = "mov1", EventId = evt.Id, ParticipantId = "p0", TmdbId = 1, Title = "X", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var participant = new Participant { Id = "p123456789012345678901234", EventId = evt.Id, Pseudo = "Alice", UserId = OwnerUserId, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        GivenVotableMovie(evt, movie, participant, new Dictionary<string, int>());
+        _participantRepo.SetupSequence(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(participant)
+            .ReturnsAsync((Participant?)null);
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() =>
+            _sut.HandleAsync("evt1", "mov1", new VoteRequest { ParticipantId = participant.Id, Value = 1 }));
+
+        Assert.Equal(ErrorCodes.InvalidParticipant, ex.Reason);
+        _voteRepo.Verify(r => r.UpsertAsync(It.IsAny<Vote>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

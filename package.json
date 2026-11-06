@@ -26,6 +26,7 @@
     "check:iam": "node scripts/check-iam.mjs",
     "test:scripts": "node --test scripts/*.test.mjs",
     "check:sonar": "node scripts/check-sonar.mjs",
+    "check:unused": "knip",
     "format": "prettier --write --cache \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:check": "prettier --check --cache \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",
     "format:dotnet": "dotnet format apps/api-dotnet/MoviePicker.slnx --verbosity minimal",
@@ -56,6 +57,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-sonarjs": "^4.2.2",
     "globals": "^17.13.0",
+    "knip": "^6.44.1",
     "lighthouse": "^13.5.0",
     "openapi-typescript": "^7.13.0",
     "prettier": "^3.9.9",
@@ -65,7 +67,7 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1"
   },
-  "packageManager": "pnpm@10.0.0",
+  "packageManager": "pnpm@10.34.9+sha512.f49b5a8ea0fdedb44bb3c0c1d6575092a53c2950d95b7ad15df11f17974877a2de3a01c07e934e9b28ce716e51c09a94962c7306d09be2e1e4b18a8c8762fd32",
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"
   },

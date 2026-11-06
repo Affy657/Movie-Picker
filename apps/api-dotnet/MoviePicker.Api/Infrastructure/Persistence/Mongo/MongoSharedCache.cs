@@ -89,4 +89,23 @@ public sealed class MongoSharedCache : ISharedCache
             _logger.LogWarning(ex, "Shared cache not written for {Key}", key);
         }
     }
+
+    public async Task SetWithinCapacityAsync<T>(string key, T value, TimeSpan ttl, long maxEntries, CancellationToken ct = default)
+    {
+        try
+        {
+            if (await _collection.EstimatedDocumentCountAsync(cancellationToken: ct).ConfigureAwait(false) >= maxEntries)
+            {
+                _logger.LogInformation("Shared cache full, {Key} stays in memory only", key);
+                return;
+            }
+        }
+        catch (Exception ex) when (ex is MongoException or TimeoutException)
+        {
+            _logger.LogWarning(ex, "Shared cache not counted, {Key} stays in memory only", key);
+            return;
+        }
+
+        await SetAsync(key, value, ttl, ct).ConfigureAwait(false);
+    }
 }

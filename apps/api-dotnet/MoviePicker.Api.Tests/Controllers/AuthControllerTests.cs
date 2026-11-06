@@ -51,19 +51,33 @@ public sealed class AuthControllerTests
             })
             .Build());
 
+    private static OAuthProviderCatalog GoogleAndGitHubEnabled() =>
+        new(new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["OAUTH_GOOGLE_CLIENT_ID"] = "client-id",
+                ["OAUTH_GOOGLE_CLIENT_SECRET"] = "client-secret",
+                ["OAUTH_GITHUB_CLIENT_ID"] = "client-id",
+                ["OAUTH_GITHUB_CLIENT_SECRET"] = "client-secret"
+            })
+            .Build());
+
     private static IOptions<MoviePickerOptions> Options() =>
         Microsoft.Extensions.Options.Options.Create(new MoviePickerOptions { PublicWebBaseUrl = WebBase });
 
-    private static Mock<IAuthenticationService> ExternalSignIn()
+    private static Mock<IAuthenticationService> ExternalSignIn(string? ticketProvider = OAuthProviders.Google)
     {
         var authentication = new Mock<IAuthenticationService>();
         var external = new ClaimsPrincipal(new ClaimsIdentity(
-            [new Claim(ClaimTypes.NameIdentifier, "google-subject")],
+            [new Claim(ClaimTypes.NameIdentifier, "external-subject")],
             AuthConstants.ExternalCookieScheme));
+        var ticket = new AuthenticationProperties();
+        if (ticketProvider is not null)
+            ticket.Items[AuthController.ProviderItemKey] = ticketProvider;
         authentication
             .Setup(a => a.AuthenticateAsync(It.IsAny<HttpContext>(), AuthConstants.ExternalCookieScheme))
             .ReturnsAsync(AuthenticateResult.Success(
-                new AuthenticationTicket(external, AuthConstants.ExternalCookieScheme)));
+                new AuthenticationTicket(external, ticket, AuthConstants.ExternalCookieScheme)));
         return authentication;
     }
 
@@ -227,6 +241,53 @@ public sealed class AuthControllerTests
         Assert.Equal($"{WebBase}/settings/integrations?oauthError=reauthentication_required", redirect.Url);
     }
 
+    [Theory]
+    [InlineData(OAuthProviders.Google)]
+    [InlineData(OAuthProviders.GitHub)]
+    public void OAuthStart_RemembersTheProviderInTheTicket(string provider)
+    {
+        var result = Controller(null).OAuthStart(provider, "/settings/integrations", GoogleAndGitHubEnabled(), Options(), Clock);
+
+        var challenge = Assert.IsType<ChallengeResult>(result);
+        Assert.Equal(provider, challenge.Properties!.Items[AuthController.ProviderItemKey]);
+    }
+
+    [Theory]
+    [InlineData(OAuthProviders.GitHub, OAuthProviders.Google)]
+    [InlineData(OAuthProviders.Google, OAuthProviders.GitHub)]
+    [InlineData(OAuthProviders.GitHub, null)]
+    public async Task OAuthCallback_TicketOfAnotherProvider_IsRefusedBeforeAnyHandler(string routeProvider, string? ticketProvider)
+    {
+        var loginHandler = new Mock<IOAuthLoginHandler>();
+        var linkHandler = new Mock<IOAuthLinkHandler>();
+        var authentication = ExternalSignIn(ticketProvider);
+        var anonymous = new AuthController().WithContext(authentication: authentication.Object);
+        var signedIn = SessionController(Now.AddMinutes(-2), authentication.Object);
+
+        foreach (var controller in new[] { anonymous, signedIn })
+        {
+            var result = await controller.OAuthCallback(
+                routeProvider,
+                loginHandler.Object,
+                linkHandler.Object,
+                GoogleAndGitHubEnabled(),
+                Options(),
+                Clock,
+                NullLogger<AuthController>.Instance,
+                CancellationToken.None);
+
+            var redirect = Assert.IsType<RedirectResult>(result);
+            Assert.Equal($"{WebBase}/login?oauthError=external_auth_failed", redirect.Url);
+        }
+
+        loginHandler.Verify(
+            h => h.HandleAsync(It.IsAny<ExternalLoginInfo>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        linkHandler.Verify(
+            h => h.HandleAsync(It.IsAny<string>(), It.IsAny<ExternalLoginInfo>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     [Fact]
     public async Task OAuthCallback_StaleSession_RefusesTheLink()
     {
@@ -317,10 +378,24 @@ public sealed class AuthControllerTests
         var controller = Controller("u1");
         AuthSessionKey.Remember(controller.HttpContext, "session-1");
 
-        var result = await controller.UnlinkIdentity("github", handler.Object, CancellationToken.None);
+        var result = await controller.UnlinkIdentity("github", handler.Object, Clock, CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
-        handler.Verify(h => h.HandleAsync("u1", "github", "session-1", It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("u1", "github", "session-1", It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(2, true)]
+    [InlineData(11, false)]
+    public async Task UnlinkIdentity_TellsTheHandlerWhetherTheSignInIsRecent(int minutesSinceSignIn, bool expectedRecent)
+    {
+        var handler = new Mock<IOAuthUnlinkHandler>();
+
+        await SessionController(Now.AddMinutes(-minutesSinceSignIn))
+            .UnlinkIdentity("github", handler.Object, Clock, CancellationToken.None);
+
+        handler.Verify(
+            h => h.HandleAsync("u1", "github", It.IsAny<string?>(), expectedRecent, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -430,7 +505,7 @@ public sealed class AuthControllerTests
     [Fact]
     public async Task DeleteMe_NullBody_ReturnsBadRequest()
     {
-        var result = await Controller("u1").DeleteMe(null, new Mock<IDeleteAccountHandler>().Object, CancellationToken.None);
+        var result = await Controller("u1").DeleteMe(null, new Mock<IDeleteAccountHandler>().Object, Clock, CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -440,11 +515,25 @@ public sealed class AuthControllerTests
     {
         var handler = new Mock<IDeleteAccountHandler>();
 
-        var result = await Controller("u1").DeleteMe(new DeleteAccountRequest(), handler.Object, CancellationToken.None);
+        var result = await Controller("u1").DeleteMe(new DeleteAccountRequest(), handler.Object, Clock, CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(
-            h => h.HandleAsync("u1", It.IsAny<DeleteAccountRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+            h => h.HandleAsync("u1", It.IsAny<DeleteAccountRequest>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(2, true)]
+    [InlineData(11, false)]
+    public async Task DeleteMe_TellsTheHandlerWhetherTheSignInIsRecent(int minutesSinceSignIn, bool expectedRecent)
+    {
+        var handler = new Mock<IDeleteAccountHandler>();
+
+        await SessionController(Now.AddMinutes(-minutesSinceSignIn))
+            .DeleteMe(new DeleteAccountRequest(), handler.Object, Clock, CancellationToken.None);
+
+        handler.Verify(
+            h => h.HandleAsync("u1", It.IsAny<DeleteAccountRequest>(), expectedRecent, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

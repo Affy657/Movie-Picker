@@ -7,6 +7,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth.PasswordReset;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 using MsOptions = Microsoft.Extensions.Options.Options;
 
@@ -93,11 +94,13 @@ public sealed class RequestPasswordResetHandlerTests
             .ReturnsAsync((User?)null);
         var tokens = new Mock<IPasswordResetTokenRepository>();
         var emailSender = new Mock<IEmailSender>();
+        var quota = new RecordingSharedQuota();
         var handler = new RequestPasswordResetHandler(
             users.Object,
             tokens.Object,
             emailSender.Object,
             ConfigureOptions("https://www.movie-picker.fr"),
+            quota,
             clock,
             new CapturingLogger<RequestPasswordResetHandler>());
 
@@ -109,6 +112,7 @@ public sealed class RequestPasswordResetHandlerTests
         tokens.Verify(x => x.GetMostRecentForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         tokens.Verify(x => x.AddAsync(It.IsAny<PasswordResetToken>(), It.IsAny<CancellationToken>()), Times.Never);
         emailSender.Verify(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.Empty(quota.Calls);
     }
 
     [Fact]
@@ -161,8 +165,80 @@ public sealed class RequestPasswordResetHandlerTests
         IEmailSender emailSender,
         TimeProvider clock,
         ILogger<RequestPasswordResetHandler> logger,
-        string publicWebBaseUrl = "https://www.movie-picker.fr") =>
-        new(users, tokens, emailSender, ConfigureOptions(publicWebBaseUrl), clock, logger);
+        string publicWebBaseUrl = "https://www.movie-picker.fr",
+        ISharedQuota? quota = null) =>
+        new(users, tokens, emailSender, ConfigureOptions(publicWebBaseUrl), quota ?? new RecordingSharedQuota(), clock, logger);
+
+    private static (Mock<IUserRepository> Users, Mock<IPasswordResetTokenRepository> Tokens, Mock<IEmailSender> Sender) KnownAccount(User user)
+    {
+        var users = new Mock<IUserRepository>();
+        users.Setup(x => x.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        var tokens = new Mock<IPasswordResetTokenRepository>();
+        tokens.Setup(x => x.GetMostRecentForUserAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PasswordResetToken?)null);
+        tokens
+            .Setup(x => x.AddAsync(It.IsAny<PasswordResetToken>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PasswordResetToken t, CancellationToken _) => t with { Id = "tok" });
+        return (users, tokens, new Mock<IEmailSender>());
+    }
+
+    [Fact]
+    public async Task HandleAsync_DailyCapReached_SendsNothingButWaitsTheSameFloor()
+    {
+        var clock = new FakeTimeProvider(TestEpoch);
+        var (users, tokens, sender) = KnownAccount(SampleUser());
+        var quota = new RecordingSharedQuota { Allows = false };
+        var handler = CreateHandler(
+            users.Object, tokens.Object, sender.Object, clock, new CapturingLogger<RequestPasswordResetHandler>(), quota: quota);
+
+        await handler.HandleAsync(new PasswordResetRequest { Email = "known@example.com" }, null, null);
+
+        tokens.Verify(x => x.AddAsync(It.IsAny<PasswordResetToken>(), It.IsAny<CancellationToken>()), Times.Never);
+        sender.Verify(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.Equal([RequestPasswordResetHandler.ResponseTimeFloor], clock.RequestedDelays);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CountsEveryEmailAgainstTheCapOfTheTargetAddress()
+    {
+        var clock = new FakeTimeProvider(TestEpoch);
+        var (users, tokens, sender) = KnownAccount(SampleUser(email: "Known@Example.com"));
+        var quota = new RecordingSharedQuota();
+        var handler = CreateHandler(
+            users.Object, tokens.Object, sender.Object, clock, new CapturingLogger<RequestPasswordResetHandler>(), quota: quota);
+
+        await handler.HandleAsync(new PasswordResetRequest { Email = "Known@Example.com" }, null, null);
+
+        var call = Assert.Single(quota.Calls);
+        Assert.Equal(RequestPasswordResetHandler.EmailQuotaScope, call.Scope);
+        Assert.Equal("known@example.com", call.Subject);
+        Assert.Equal(RequestPasswordResetHandler.MaxEmailsPerAddressPerDay, call.Limit);
+        Assert.Equal(TimeSpan.FromHours(24), call.Window);
+    }
+
+    [Theory]
+    [InlineData("fr")]
+    [InlineData("en")]
+    public async Task HandleAsync_NeverCopiesTheDisplayNameIntoTheEmail(string locale)
+    {
+        const string freeText = "Gagnez un iPhone sur evil.example";
+        var clock = new FakeTimeProvider(TestEpoch);
+        var (users, tokens, sender) = KnownAccount(SampleUser() with { DisplayName = freeText });
+        EmailMessage? sent = null;
+        sender
+            .Setup(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
+            .Callback<EmailMessage, CancellationToken>((m, _) => sent = m)
+            .Returns(Task.CompletedTask);
+        var handler = CreateHandler(
+            users.Object, tokens.Object, sender.Object, clock, new CapturingLogger<RequestPasswordResetHandler>());
+
+        await handler.HandleAsync(new PasswordResetRequest { Email = "known@example.com", Locale = locale }, null, null);
+
+        Assert.NotNull(sent);
+        Assert.DoesNotContain(freeText, sent!.HtmlBody);
+        Assert.DoesNotContain(freeText, sent.TextBody);
+        Assert.DoesNotContain(freeText, sent.Subject);
+    }
 
     [Fact]
     public async Task HandleAsync_KnownEmail_NoRecentToken_CreatesTokenAndSendsEmail()
@@ -218,6 +294,7 @@ public sealed class RequestPasswordResetHandlerTests
     [Fact]
     public async Task HandleAsync_KnownEmail_RecentActiveToken_DoesNotCreateOrSend()
     {
+        var quota = new RecordingSharedQuota();
         var clock = new FakeTimeProvider(TestEpoch);
         var user = SampleUser();
         var recent = new PasswordResetToken
@@ -244,7 +321,8 @@ public sealed class RequestPasswordResetHandlerTests
             tokens.Object,
             emailSender.Object,
             clock,
-            new CapturingLogger<RequestPasswordResetHandler>());
+            new CapturingLogger<RequestPasswordResetHandler>(),
+            quota: quota);
 
         await handler.HandleAsync(
             new PasswordResetRequest { Email = "known@example.com" },
@@ -253,6 +331,7 @@ public sealed class RequestPasswordResetHandlerTests
 
         tokens.Verify(x => x.AddAsync(It.IsAny<PasswordResetToken>(), It.IsAny<CancellationToken>()), Times.Never);
         emailSender.Verify(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.Empty(quota.Calls);
     }
 
     [Fact]

@@ -1,0 +1,9 @@
+.subField {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--color-border-subtle);
+}
+
+.counterField > div {
+  max-width: 12rem;
+}

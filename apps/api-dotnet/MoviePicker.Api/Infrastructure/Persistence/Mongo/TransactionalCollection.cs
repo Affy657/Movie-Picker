@@ -56,6 +56,9 @@ public sealed class TransactionalCollection<TDocument>
             ? _inner.CountDocumentsAsync(session, filter, options, cancellationToken)
             : _inner.CountDocumentsAsync(filter, options, cancellationToken);
 
+    public Task<long> EstimatedDocumentCountAsync(CancellationToken cancellationToken = default) =>
+        _inner.EstimatedDocumentCountAsync(cancellationToken: cancellationToken);
+
     public Task InsertOneAsync(
         TDocument document,
         InsertOneOptions? options = null,

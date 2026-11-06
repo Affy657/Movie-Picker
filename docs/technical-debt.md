@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-080`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-088`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -34,7 +34,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - ou: `Infrastructure/Tmdb/TmdbMovieSearch.Details.cs` et `TmdbMovieSearch.Search.cs` pour ce qui reste en mémoire seule ; `Application/Caching/SharedCacheReadThrough.cs` pour le modèle à réutiliser
 - verify: `grep -rln IMemoryCache apps/api-dotnet --include=*.cs`
 - fix: passer les caches restants par `SharedCacheReadThrough`, ou un cache hors processus dédié
-- piege: `min-instances` reste à 0, donc le démarrage à froid (3,5 s en prod, 0,7 s en local avec ReadyToRun) subsiste ; le poser à 1 coûte environ 8 à 10 $ par mois, décision de l'utilisateur, jamais de l'agent. Deux règles du cache partagé : seules les clés de catalogue (sections à liste fermée, au plus un genre) s'écrivent dans Mongo, parce que `recommendations`, `collection` et les combinaisons de genres ouvrent un espace de clés illimité à 24 Ko le document sur un palier de 512 Mo ; et chaque famille de clés porte une version (`showcase-v1`, `showcase-collections-v1`, `tmdb-enrich-v2`) à incrémenter quand le DTO sérialisé change, sinon les instances relisent d'anciens documents pendant tout le TTL après un déploiement.
+- piege: `min-instances` reste à 0, donc le démarrage à froid (3,5 s en prod, 0,7 s en local avec ReadyToRun) subsiste ; le poser à 1 coûte environ 8 à 10 $ par mois, décision de l'utilisateur, jamais de l'agent. Deux règles du cache partagé : seules les clés de catalogue (sections à liste fermée, au plus un genre) s'écrivent dans Mongo, parce que `recommendations` et les combinaisons de genres ouvrent un espace de clés illimité à 24 Ko le document sur un palier de 512 Mo (`collection` est une liste fermée depuis le 2026-11-06, les graines de `recommendations` restent ouvertes par nature, tout film TMDB en étant une, et chaque adresse IP est bornée à 300 clés libres par heure, `MovieShowcaseFreeKeyHourlyPolicy`) ; `tmdb-enrich-v2` fait exception, bornée par `TmdbEnrichmentSharedCacheMaxEntries` sur le compte estimé de la collection ; et chaque famille de clés porte une version (`showcase-v1`, `showcase-collections-v1`, `tmdb-enrich-v2`) à incrémenter quand le DTO sérialisé change, sinon les instances relisent d'anciens documents pendant tout le TTL après un déploiement.
 - refs: même racine que DEBT-007 et DEBT-008, la contrainte Cloud Run
 
 ## DEBT-007 affiches servies en octets depuis Mongo à travers Cloud Run
@@ -51,7 +51,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 
 - state: differe
 - declencheur: approcher la moitié du plafond d'opérations du palier Atlas, soit 50 opérations par seconde sur le M0 présumé (DEBT-009) : deux soirées de 6 en sondage actif au même moment y sont
-- impact: environ 15 allers-retours Mongo par cycle et par participant **quand la soirée a bougé depuis le cycle précédent**, soit environ 26 opérations par seconde pour une soirée de 6 en pleine activité, 260 à 10 soirées simultanées. Un cycle sans changement coûte 2 lectures (une par route sondée, `EventViewTagHandler`) et rend 304 : le chiffre est le pire cas, pas la moyenne. L'ETag change aussi une fois par minute, donc chaque participant refait un cycle complet par minute même sans changement ; depuis le 2026-09-23 cette minute est décalée de 0 à 59 s selon le lecteur, ces cycles s'étalent au lieu de tomber tous dans les mêmes 3,5 s, et le sondage recule sur erreur (`pollIntervalAfterFailures` : délai qui double avec la durée de l'échec, gigue, `Retry-After` respecté, plafond d'une minute, arrêt sur 404). Plafond du palier : 100 opérations par seconde sur le M0 présumé (500 sur Flex), au-delà Atlas met les opérations en file.
+- impact: environ 13 allers-retours Mongo par cycle et par participant **quand la soirée a bougé depuis le cycle précédent**, soit environ 26 opérations par seconde pour une soirée de 6 en pleine activité, 260 à 10 soirées simultanées. Un cycle sans changement coûte 2 lectures (une par route sondée, `EventViewTagHandler`) et rend 304 : le chiffre est le pire cas, pas la moyenne. Depuis le 2026-11-06, chaque vote prend le verrou de la soirée en transaction, ce qui écrit aussi le document soirée : coût à observer sous rafale. L'ETag change aussi une fois par minute, donc chaque participant refait un cycle complet par minute même sans changement ; depuis le 2026-09-23 cette minute est décalée de 0 à 59 s selon le lecteur, ces cycles s'étalent au lieu de tomber tous dans les mêmes 3,5 s, et le sondage recule sur erreur (`pollIntervalAfterFailures` : délai qui double avec la durée de l'échec, gigue, `Retry-After` respecté, plafond d'une minute, arrêt sur 404). Plafond du palier : 100 opérations par seconde sur le M0 présumé (500 sur Flex), au-delà Atlas met les opérations en file.
 - verify: `grep -n EVENT_LIVE_POLL_INTERVAL_ACTIVE_MS apps/web/src/features/events/hooks/useEventLive.ts` ; encore ouvert tant que la constante existe, c'est-à-dire tant qu'on sonde
 - fix: passer en SSE
 - piege: ce n'est pas un défaut, le sondage reste le bon choix aujourd'hui (zéro infrastructure, Cloud Run n'aime pas les connexions longues) ; c'est le paramètre qui fixe la limite, à ne changer que sur le déclencheur. Le 304 tient à une règle non outillée, écrite dans `AGENTS.md` : toute mutation de la vue soirée fait bouger `writeSeq` (`UpdateAsync`, `LockForWriteAsync` ou `MarkChangedAsync`), sinon les clients en sondage gardent l'ancienne réponse jusqu'à la minute suivante.
@@ -404,7 +404,7 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 
 - state: humain
 - bloque: décision produit, une confirmation d'adresse à l'inscription (courriel de confirmation, compte limité tant qu'il n'est pas confirmé)
-- impact: n'importe qui peut ouvrir un compte à mot de passe sur l'adresse d'un tiers. Le vrai titulaire ne peut alors ni s'inscrire ni se connecter par Google ou GitHub (`account_exists`) tant qu'il n'a pas repris le compte par « mot de passe oublié », et le badge Ko-fi, attribué par adresse, peut aller au squatteur. Pas de prise de compte : la connexion OAuth ne fusionne jamais un compte à mot de passe, et la réinitialisation coupe sessions, identités liées et abonnements push de l'occupant.
+- impact: n'importe qui peut ouvrir un compte à mot de passe sur l'adresse d'un tiers. Le vrai titulaire ne peut alors ni s'inscrire ni se connecter par Google ou GitHub (`account_exists`) tant qu'il n'a pas repris le compte par « mot de passe oublié », et le badge Ko-fi, attribué par adresse, peut aller au squatteur. Pas de prise de compte : la connexion OAuth ne fusionne jamais un compte à mot de passe, et la réinitialisation coupe sessions, identités liées et abonnements push de l'occupant. Le code `email_taken` révèle aussi si une adresse a un compte, ce qui affaiblit le 202 constant de la réinitialisation : depuis le 2026-11-06, l'inscription est bornée à 20 essais par heure et par adresse IP (`AuthRegisterHourlyPolicy`), mais la réponse ne peut devenir neutre qu'avec ce flux de confirmation.
 - ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Auth/RegisterUserHandler.cs`, `Application/UseCases/Auth/OAuth/OAuthLoginHandler.cs` (`PasswordAccountRequiresManualLink`), `Application/UseCases/Donations/ProcessKofiWebhookHandler.cs`
 - verify: `grep -c "EmailVerified" apps/api-dotnet/MoviePicker.Api/Domain/Entities/User.cs` ; encore ouvert tant que la commande rend `0`
 - fix: un `EmailVerifiedAt` sur `User` et un courriel de confirmation (même mécanique de jeton que la réinitialisation) ; côté OAuth, un e-mail vérifié par le fournisseur qui tombe sur un compte non confirmé vaut preuve de possession : purger mot de passe, identités, sessions et abonnements push de l'occupant au lieu de refuser ; ne pas attribuer le badge Ko-fi à une adresse non confirmée
@@ -527,6 +527,77 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: passer la liste en présentation compacte sous 64rem, ou retirer une colonne à cette largeur
 - fini-quand: à 768, 820 et 1023 px, tous les en-têtes sont lisibles et la colonne « Score » reste dans le cadre
 
+## DEBT-080 le retour arrière n'a jamais tourné en production, ni avec `-f release`
+
+- state: differe
+- declencheur: la première mise sur master de `rollback.yml -f release=<sha>`
+- impact: `rollback.yml` et `rollback-front.yml` n'ont tourné que deux fois, en recette, le 2026-09-20. Le choix de révision par release, le tag de sonde et le contrôle `expected-release` n'ont été rejoués que contre un faux `gcloud`. La passe `/auto-maintenance` dépend de ce filet.
+- ou: `.github/workflows/rollback.yml`, `.github/workflows/rollback-front.yml`
+- verify: `gh run list --workflow=rollback.yml --limit 5` ; encore ouvert tant qu'aucun run réel ne porte l'entrée `release`
+- fix: une répétition en recette, `-f stage=staging -f release=<sha>` et `rollback-front.yml -f stage=staging`, puis un redéploiement, enfin une répétition planifiée
+- fini-quand: un run réel de chaque workflow a réussi en recette depuis l'ajout de l'entrée `release`
+- refs: C1
+
+## DEBT-081 un chunk du graphe d'entrée qui échoue laisse le splash à l'écran
+
+- state: agent
+- impact: `index-*.js` importe `App-*.js` et `react-vendor` en statique. Si l'un d'eux échoue, `main.tsx` ne s'exécute pas et le `catch` de `boot` ne couvre que les chunks de langue : le visiteur garde le splash, sans bouton de rechargement.
+- ou: `apps/web/index.html`, `apps/web/src/main.tsx`, `apps/web/src/shared/pwa/bootFailure.ts`
+- verify: `grep -n "addEventListener('error'" apps/web/index.html` ; encore ouvert tant que la commande ne rend rien
+- fix: un écouteur d'erreur de ressource en ligne dans `index.html`, qui affiche le repli statique
+- piege: C2 interdit d'alourdir ou de déplacer le titre peint dans la coquille, à relire avant de toucher `index.html`
+
+## DEBT-082 enregistrer un modèle de soirée avec un compteur invalide garde le repli en silence
+
+- state: agent
+- impact: la création de soirée et le panneau d'hôte affichent une erreur sur une limite invalide, pas l'enregistrement d'un modèle : le compteur invalide y prend la valeur par défaut sans message.
+- ou: `apps/web/src/features/events/lib/eventTemplateDraft.ts`
+- verify: `grep -n "parseCappedLimit(raw, cap) ?? fallback" apps/web/src/features/events/lib/eventTemplateDraft.ts` ; encore ouvert tant que la ligne existe
+- fix: passer le modèle par `eventLimitValidation`, comme les deux autres écrans
+
+## DEBT-083 une limite au-dessus du plafond du front bloque l'enregistrement automatique du panneau d'hôte
+
+- state: differe
+- declencheur: la décision produit de DEBT-033 sur les plafonds
+- impact: le front plafonne à 300 participants et 15 propositions, l'API à 500 et 100. Une valeur plus haute, posée par l'API directe, s'affiche telle quelle et le panneau refuse d'enregistrer tant qu'elle n'est pas baissée. Aucun client publié n'écrit une telle valeur.
+- ou: `apps/web/src/features/events/types.ts`, `apps/api-dotnet/MoviePicker.Api/Domain/Entities/Event.cs`
+- verify: `grep -n "MAX_EVENT_PARTICIPANTS = " apps/web/src/features/events/types.ts`
+- fix: un seul plafond, rendu par l'API, une fois DEBT-033 tranchée
+- refs: DEBT-033, C3
+
+## DEBT-084 des tests gardent des dates futures en dur
+
+- state: agent
+- impact: `EventEntityBuilder` n'en dépend plus, mais 33 fichiers de tests unitaires et 16 d'intégration écrivent encore 2030 ou 2035 avec l'horloge système : ils tomberont à ces dates, d'un coup.
+- ou: `apps/api-dotnet/MoviePicker.Api.Tests/`, `apps/api-dotnet/MoviePicker.Api.IntegrationTests/`
+- verify: `grep -rlE '"20(30|35)-' apps/api-dotnet/MoviePicker.Api.Tests apps/api-dotnet/MoviePicker.Api.IntegrationTests --include=*.cs | wc -l` ; encore ouvert tant que le nombre dépasse 0
+- fix: une date relative à une horloge de test fixe
+
+## DEBT-085 le plafond de photos de profil n'a pas d'alerte
+
+- state: agent
+- impact: le plafond global de 1 000 photos repose sur le M0 présumé (DEBT-009). Une fois atteint, un premier envoi de photo est refusé pour tous, avec un simple avertissement au journal.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/Avatars/`, `infra/terraform/modules/monitoring/`
+- verify: `grep -rn "avatar" infra/terraform/modules/monitoring/ | wc -l` ; encore ouvert tant que le nombre vaut 0
+- fix: une alerte sur ce journal, et un plafond relu une fois le palier confirmé
+- refs: DEBT-009
+
+## DEBT-086 une cible sans invitations redevient invitable après rechargement
+
+- state: agent
+- impact: après une invitation refusée en silence, parce que la cible a coupé les invitations, la liste la repropose au rechargement, ce qui laisse deviner sa préférence.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/InviteUser/`
+- verify: `grep -n "NotifiesOn" apps/api-dotnet/MoviePicker.Api/Application/UseCases/InviteUser/InviteUserHandler.cs`
+- fix: mémoriser l'invitation sans la remettre, pour que la cible disparaisse de la liste comme une cible déjà invitée
+
+## DEBT-087 l'analyse hebdomadaire de sécurité ignore les CRITICAL sans correctif
+
+- state: agent
+- impact: `deploy.yml` bloque toute CRITICAL, `security-scan.yml` garde `ignore-unfixed`. Une CRITICAL sans correctif n'apparaît donc qu'au déploiement, et si elle sort entre la recette et la production, elle bloque la production jusqu'à une décision dans `.trivyignore`.
+- ou: `.github/workflows/security-scan.yml`
+- verify: `grep -n "ignore-unfixed" .github/workflows/security-scan.yml` ; encore ouvert tant que la commande rend `true` pour la sévérité CRITICAL
+- fix: une étape CRITICAL sans `ignore-unfixed` dans l'analyse planifiée
+
 ---
 
 # Contraintes
@@ -550,6 +621,8 @@ Les trois préchargements de police portent `fetchpriority="low"` : à priorité
 ## C3 deux duplications volontaires, gardées par un test
 
 La configuration de build ne peut pas importer `src/` : `activeLocalePreloadScript` (`apps/web/vite.config.ts`) et le script de `index.html` (pour `<html lang>`) réécrivent la clé `moviepicker-locale`, la liste des langues et la langue par défaut, et `index.html` duplique le titre de l'accueil et `home.seoTitle`. `apps/web/src/startShell.test.ts` compare ces chaînes aux locales. Si `preferredLocale()` change, changer les deux copies.
+
+Depuis le 2026-11-06, trois autres copies sont gardées de la même façon : `BOOT_FAILURE_COPY` duplique les locales pour le repli d'avant React (`bootFailure.test.ts`), les plafonds du front restent sous ceux de `Event.cs` (`eventLimitValidation.test.ts`, qui lit le fichier C#), et les poids de la roue sont comparés entre `WheelWinnerPicker` et `wheelSliceWeights` par la fixture `wheel-slice-weights.json`, lue par les deux suites.
 
 La langue ne se lit **jamais** dans `navigator.language` : sans choix mémorisé, l'application est en français. Googlebot rend le JavaScript en `en-US`, et la détection faisait indexer l'accueil et les profils en anglais, contre le prérendu, `og:locale` et le sitemap.
 
@@ -646,7 +719,7 @@ Pool de 20 connexions par instance (`DefaultMaxConnectionPoolSize`, `ServiceColl
 
 ## C13 `UpdateAsync` écrit les champs connus, il ne remplace pas le document
 
-`MongoEventRepository.UpdateAsync` et `MongoUserRepository.UpdateAsync` passent par `KnownFieldsUpdate.From(doc)` (`$set` des champs sérialisés, `$unset` des champs mappés absents), jamais `ReplaceOneAsync`. Tous les documents stockés portent `BsonIgnoreExtraElements` (`MongoDocumentCompatibilityTests` le vérifie pour chaque classe `*Document` du dossier Mongo, les documents imbriqués compris ; jusqu'au 2026-09-24, dix-huit en manquaient, participants, votes, abonnements push compris, et un champ ajouté à l'un d'eux faisait échouer la lecture de la révision précédente) : une révision qui ne connaît pas un champ le lit sans erreur, et avec `ReplaceOne` l'effaçait à sa prochaine écriture (`Winners`, `Recurrence`, `EventTemplates`, `IsWatchlistPublic` perdus à chaque retour de la V1.6 vers la V1.5). Tests : `*_KeepsTheFieldsWrittenByANewerApiVersion` et `*_ClearingAnOptionalField_RemovesItFromTheDocument` de `RepositoryContractTests`. Revenir à `ReplaceOneAsync` rend `rollback.yml` destructif sans qu'aucun test d'API ne le voie ; revenir vers une révision antérieure au 2026-09-15 efface encore.
+`MongoEventRepository.UpdateAsync` et `MongoUserRepository.UpdateAsync` passent par `KnownFieldsUpdate.From(doc)`, un pipeline d'agrégation : `$set` des champs sérialisés sous `$literal`, chemins pointés pour les sous-documents mappés (`config`, `avatarPhoto`), `$unset` des champs mappés absents, jamais `ReplaceOneAsync`. Un `$set` classique en chemin pointé échoue en code 28 si le parent vaut `null`, et une valeur hors `$literal` commençant par `$` serait lue comme une expression. Les tableaux (`winners[]`, `favorites[]`) se réécrivent en entier : un champ inconnu dans un élément est perdu (`EventUpdate_ArrayElements_AreRewrittenWhole_TheirUnknownFieldsAreLost`). Tous les documents stockés portent `BsonIgnoreExtraElements` (`MongoDocumentCompatibilityTests` le vérifie pour chaque classe `*Document` du dossier Mongo, les documents imbriqués compris ; jusqu'au 2026-09-24, dix-huit en manquaient, participants, votes, abonnements push compris, et un champ ajouté à l'un d'eux faisait échouer la lecture de la révision précédente) : une révision qui ne connaît pas un champ le lit sans erreur, et avec `ReplaceOne` l'effaçait à sa prochaine écriture (`Winners`, `Recurrence`, `EventTemplates`, `IsWatchlistPublic` perdus à chaque retour de la V1.6 vers la V1.5). Tests : `*_KeepsTheFieldsWrittenByANewerApiVersion` et `*_ClearingAnOptionalField_RemovesItFromTheDocument` de `RepositoryContractTests`. Revenir à `ReplaceOneAsync` rend `rollback.yml` destructif sans qu'aucun test d'API ne le voie ; revenir vers une révision antérieure au 2026-09-15 efface encore.
 
 ## C14 une session révoquée reste valable jusqu'à 30 s sur les autres instances
 
@@ -658,6 +731,8 @@ Pool de 20 connexions par instance (`DefaultMaxConnectionPoolSize`, `ServiceColl
 
 1. **Le document prérendu porte les styles de sa route en ligne**, lus dans `dist/route-assets.json` (C4), concaténés de la coquille à la page. Sans eux le contenu peint sans styles, se remet en page à l'arrivée du chunk et Chrome retient ce second rendu comme LCP (`/soutenir`, `elementRenderDelay` de 585 ms sur un document complet). En feuille liée : 1 point perdu sur `donate` et `privacy`.
 2. **`scripts/lighthouse-run.mjs` réécrit ces routes vers leur fichier prérendu**, parce que Hosting sert chaque route prérendue comme un fichier à part (`<route>/index.html`, déposé par `scripts/publish-front-firebase.mjs`, la coquille ne répondant aux autres chemins que par le repli `**` de `infra/firebase-hosting.json`) ; sans la réécriture, `serve` rend la coquille et la porte mesure une page que personne ne reçoit. `serve-handler` applique ses réécritures en cascade, donc le repli est écrit en négation (`!/prerendered/**`) et `--single` n'est pas passé, il insère son propre `**` en tête.
+
+`prerender.mjs` pose `moviepicker-consent` avec `decided: true` et l'indice de session, pour que ni la bannière ni les actions invité ne soient figées dans le HTML. `/r/` et les routes prérendues restent hors du repli hors ligne du service worker : Hosting sert leur document propre, le repli ne joue que sur un échec réseau.
 
 ---
 

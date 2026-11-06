@@ -1,3 +1,4 @@
+using System.Globalization;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Tests.Builders;
 
@@ -9,7 +10,7 @@ public sealed class EventEntityBuilder
     private string _title = "Soirée test";
     private string _slug = "soiree-test";
     private string _hostToken = "host-token";
-    private string _date = "2030-06-01";
+    private string _date = DateTime.UtcNow.AddYears(1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     private string _time = "20:00";
     private DateTimeOffset? _closedAt;
     private EventConfig _config = new();

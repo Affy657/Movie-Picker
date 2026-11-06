@@ -38,6 +38,7 @@
 
 .body {
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 0 var(--space-4) var(--space-4);
 }
 

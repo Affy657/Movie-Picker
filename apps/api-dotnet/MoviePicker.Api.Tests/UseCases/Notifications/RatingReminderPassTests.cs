@@ -420,6 +420,31 @@ public sealed class RatingReminderPassTests
     }
 
     [Fact]
+    public async Task RunAsync_PushClaimFailsAfterTheInboxClaim_TheSameDayRetryStillWritesTheInbox()
+    {
+        GivenOneUnratedNight();
+        var parisMidnight = new DateTimeOffset(2026, 3, 9, 23, 0, 0, TimeSpan.Zero);
+        _dedup.Setup(r => r.TryClaimAsync("u1", UserNotificationType.RatingReminder, "e1", NotificationDedupChannel.Push, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException());
+
+        await Assert.ThrowsAsync<TimeoutException>(() => CreatePass().RunAsync());
+
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+
+        _dedup.Setup(r => r.TryClaimAsync("u1", UserNotificationType.RatingReminder, "e1", NotificationDedupChannel.Push, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _dedup.Setup(r => r.TryClaimAsync("u1", UserNotificationType.RatingReminder, "e1", NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _dedup.Setup(r => r.WasClaimedSinceAsync("u1", UserNotificationType.RatingReminder, "e1", NotificationDedupChannel.InApp, parisMidnight, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(new RatingReminderPassResult(1, 1), result);
+        _notifications.Verify(n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == "u1"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task RunAsync_RemindedInTheInboxOnAnEarlierDay_SendsNoPushNow()
     {
         GivenOneUnratedNight();
