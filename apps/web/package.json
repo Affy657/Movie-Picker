@@ -30,7 +30,6 @@
     "workbox-window": "^7.4.1"
   },
   "devDependencies": {
-    "@axe-core/react": "^4.13.0",
     "@sentry/vite-plugin": "^5.4.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
