@@ -264,6 +264,33 @@ describe('useEventWheel: reveal after the host closes the modal', () => {
     vi.clearAllMocks();
   });
 
+  it('never paints a freshly polled wheel winner, not even for the render before its delay starts', () => {
+    const eventAfterDraw = {
+      ...hostEvent,
+      isHost: false,
+      winners: [{ movieId: 'mov1', pickMethod: 'wheel', pickedAt: new Date().toISOString() }],
+    } as EventData;
+    const winnerIdsOfEachRender: string[][] = [];
+    const { rerender } = renderHook(
+      ({ event }: { event: EventData }) => {
+        const wheel = useEventWheel({
+          slug: 'soiree',
+          event,
+          movies: [winner],
+          hostToken: null,
+          onWheelDone: () => {},
+        });
+        winnerIdsOfEachRender.push(wheel.winnerIds);
+        return wheel;
+      },
+      { wrapper, initialProps: { event: { ...hostEvent, isHost: false } as EventData } }
+    );
+
+    rerender({ event: eventAfterDraw });
+
+    expect(winnerIdsOfEachRender.flat()).toEqual([]);
+  });
+
   it('keeps the winner in view once the host has seen it, even when the local clock runs late', async () => {
     const pickedAt = new Date(Date.now() + 60_000).toISOString();
     const eventAfterDraw = {

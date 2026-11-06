@@ -122,6 +122,7 @@ export function useEventWheel({
   const [pendingRevealId, setPendingRevealId] = useState<string | null>(() =>
     last && remainingWheelRevealDelayMs(last.pickMethod, last.pickedAt) > 0 ? last.movieId : null
   );
+  const [settledPickId, setSettledPickId] = useState<string | null>(last?.movieId ?? null);
   const [spinWinner, setSpinWinner] = useState<MovieData | null>(null);
   const spinWinnerId = spinWinner?.id ?? null;
   const [spinPool, setSpinPool] = useState<MovieData[]>([]);
@@ -145,9 +146,10 @@ export function useEventWheel({
     () => (event?.winners ?? []).map((w) => w.movieId),
     [event?.winners]
   );
+  const unsettledPickId = last?.movieId === settledPickId ? undefined : last?.movieId;
   const winnerIds = useMemo(
-    () => allWinnerIds.filter((id) => id !== pendingRevealId),
-    [allWinnerIds, pendingRevealId]
+    () => allWinnerIds.filter((id) => id !== pendingRevealId && id !== unsettledPickId),
+    [allWinnerIds, pendingRevealId, unsettledPickId]
   );
   useEffect(() => {
     setLocallyDrawnIds((ids) =>
@@ -180,6 +182,7 @@ export function useEventWheel({
 
   useEffect(() => {
     if (isModalOpen) return undefined;
+    setSettledPickId(lastMovieId ?? null);
     const delay =
       lastMovieId === revealedHereIdRef.current
         ? 0
