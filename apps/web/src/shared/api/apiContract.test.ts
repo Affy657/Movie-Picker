@@ -122,7 +122,6 @@ const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/notifications/preferences',
   '/api/v1/notifications/subscriptions',
   '/api/v1/notifications/vapid-public-key',
-  '/api/v1/users/handle-available',
   '/api/v1/users/me/avatar-photo',
   '/api/v1/users/me/favorites',
   '/api/v1/users/me/favorites/{tmdbId}',

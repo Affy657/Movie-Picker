@@ -5407,63 +5407,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/users/handle-available": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    handle?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["HandleAvailabilityResponse"];
-                        "application/json": components["schemas"]["HandleAvailabilityResponse"];
-                        "text/json": components["schemas"]["HandleAvailabilityResponse"];
-                    };
-                };
-                /** @description Too Many Requests */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["ProblemDetails"];
-                        "application/json": components["schemas"]["ProblemDetails"];
-                        "text/json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/users/search": {
         parameters: {
             query?: never;
@@ -7501,11 +7444,6 @@ export interface components {
             genreId?: number;
             /** Format: int32 */
             count?: number;
-        };
-        HandleAvailabilityResponse: {
-            handle?: string | null;
-            available?: boolean;
-            reason?: string | null;
         };
         HealthDependencyStatus: {
             name?: string | null;
