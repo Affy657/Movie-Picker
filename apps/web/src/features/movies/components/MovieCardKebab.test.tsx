@@ -59,7 +59,7 @@ describe('CardKebab', () => {
       </LocaleProvider>
     );
     await user.click(screen.getByRole('button', { name: /plus d’actions/i }));
-    screen.getAllByRole('menuitem')[0].focus();
+    screen.getAllByRole('menuitem')[0]?.focus();
 
     await user.tab({ shift: true });
 
