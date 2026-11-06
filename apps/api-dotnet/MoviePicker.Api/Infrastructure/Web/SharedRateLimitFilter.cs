@@ -47,12 +47,17 @@ public sealed class SharedRateLimitFilter : IAsyncActionFilter
         foreach (var attribute in attributes)
         {
             if (RateLimitingExtensions.FindPolicy(attribute.PolicyName) is { } policy
+                && AppliesTo(context.HttpContext.Request, policy)
                 && await RefuseIfOverQuotaAsync(context, policy))
                 return;
         }
 
         await next();
     }
+
+    private static bool AppliesTo(HttpRequest request, RateLimitingExtensions.PolicySpec policy) =>
+        policy.Name != RateLimitingExtensions.MovieShowcaseFreeKeyHourlyPolicy
+        || ShowcaseFreeKey.IsRequestedBy(request);
 
     private async Task<bool> RefuseIfOverQuotaAsync(
         ActionExecutingContext context,

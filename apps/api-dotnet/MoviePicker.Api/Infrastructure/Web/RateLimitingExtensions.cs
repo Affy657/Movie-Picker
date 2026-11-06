@@ -16,7 +16,9 @@ public static class RateLimitingExtensions
     public const string SearchMoviesPolicy = "search-movies";
     public const string MovieDetailsPolicy = "movie-details";
     public const string MovieShowcasePolicy = "movie-showcase";
+    public const string MovieShowcaseFreeKeyHourlyPolicy = "movie-showcase-free-key-hourly";
     public const string AuthRegisterPolicy = "auth-register";
+    public const string AuthRegisterHourlyPolicy = "auth-register-hourly";
     public const string AuthLoginPolicy = "auth-login";
     public const string AuthPasswordResetRequestPolicy = "auth-password-reset-request";
     public const string AuthPasswordResetConfirmPolicy = "auth-password-reset-confirm";
@@ -70,7 +72,9 @@ public static class RateLimitingExtensions
         new(SearchMoviesPolicy, 40, 1),
         new(MovieDetailsPolicy, 120, 1),
         new(MovieShowcasePolicy, 240, 1),
+        new(MovieShowcaseFreeKeyHourlyPolicy, 300, 60, QuotaScope.Address),
         new(AuthRegisterPolicy, 10, 1, QuotaScope.Address),
+        new(AuthRegisterHourlyPolicy, 20, 60, QuotaScope.Address),
         new(AuthLoginPolicy, 30, 1, QuotaScope.Address),
         new(AuthPasswordResetRequestPolicy, 5, 1, QuotaScope.Address),
         new(AuthPasswordResetConfirmPolicy, 30, 1, QuotaScope.Address),
