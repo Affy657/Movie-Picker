@@ -18,6 +18,7 @@ type Props = {
   winners: MovieData[];
   participant: { participantId: string; pseudo: string } | null;
   refreshAll: () => void;
+  holdRatingPrompt: boolean;
 };
 
 export function isWinnerStageShown(
@@ -33,6 +34,7 @@ function useWinnerRating({
   winners,
   participant,
   refreshAll,
+  holdRatingPrompt,
 }: Props): WinnerRatingContext {
   const { user } = useAuth();
   const movieRating = useEventMovieRating({ slug, participant, refreshAll });
@@ -50,7 +52,7 @@ function useWinnerRating({
     error: movieRating.error,
     onSave: movieRating.save,
     onClear: movieRating.clear,
-    autoOpenMovieId: ratingLink.movieId,
+    autoOpenMovieId: holdRatingPrompt ? null : ratingLink.movieId,
     onAutoOpen: ratingLink.consume,
     signInHref: user
       ? undefined
@@ -64,9 +66,17 @@ export default function EventWinnerStage({
   winners,
   participant,
   refreshAll,
+  holdRatingPrompt,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const rating = useWinnerRating({ slug, event, winners, participant, refreshAll });
+  const rating = useWinnerRating({
+    slug,
+    event,
+    winners,
+    participant,
+    refreshAll,
+    holdRatingPrompt,
+  });
   const participantAvatars = useMemo(
     () =>
       Object.fromEntries(
