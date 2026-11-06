@@ -23,6 +23,7 @@ import WhatsNewNavChip from './WhatsNewNavChip';
 import { ProposeIdeaDialog } from './ProposeIdeaButton';
 import InAppBrowserBanner from './InAppBrowserBanner';
 import MovedOriginBanner from './MovedOriginBanner';
+import SignOutPendingNotice from './SignOutPendingNotice';
 import styles from './AppShell.module.css';
 import { buttonClass } from '@/shared/components/Button';
 
@@ -302,6 +303,7 @@ export default function AppShell() {
       ) : null}
       <InAppBrowserBanner />
       <MovedOriginBanner />
+      <SignOutPendingNotice />
     </div>
   );
 }

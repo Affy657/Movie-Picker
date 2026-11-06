@@ -73,6 +73,60 @@ describe('Menu', () => {
 });
 
 describe('MenuPanel', () => {
+  it('closes when Tab leaves the panel, with the focus where Tab took it', async () => {
+    const user = userEvent.setup();
+    render(
+      <div>
+        <Menu triggerLabel="Options" panelAriaLabel="Options">
+          {() => <MenuItem>Un choix</MenuItem>}
+        </Menu>
+        <button type="button">Plus loin</button>
+      </div>
+    );
+    await user.click(screen.getByRole('button', { name: 'Options' }));
+    expect(screen.getByRole('menuitem', { name: 'Un choix' })).toHaveFocus();
+
+    await user.tab();
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Plus loin' })).toHaveFocus();
+  });
+
+  it('stays open while Tab walks through its items', async () => {
+    const user = userEvent.setup();
+    render(
+      <Menu triggerLabel="Options" panelAriaLabel="Options">
+        {() => (
+          <>
+            <MenuItem>Un choix</MenuItem>
+            <MenuItem>Un autre</MenuItem>
+          </>
+        )}
+      </Menu>
+    );
+    await user.click(screen.getByRole('button', { name: 'Options' }));
+
+    await user.tab();
+
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Un autre' })).toHaveFocus();
+  });
+
+  it('still gives the focus back to its trigger on Escape', async () => {
+    const user = userEvent.setup();
+    render(
+      <Menu triggerLabel="Options" panelAriaLabel="Options">
+        {() => <MenuItem>Un choix</MenuItem>}
+      </Menu>
+    );
+    await user.click(screen.getByRole('button', { name: 'Options' }));
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Options' })).toHaveFocus();
+  });
+
   it('renders on its own, without trigger nor opening logic', () => {
     render(
       <MenuPanel ariaLabel="Actions">

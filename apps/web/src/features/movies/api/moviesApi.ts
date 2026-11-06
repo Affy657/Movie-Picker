@@ -7,11 +7,15 @@ import type {
   WatchProviderOffer,
 } from '@/shared/types/movie';
 
+type QueryString = '' | `?${string}`;
+
 export async function fetchEventMovies(
   slug: string,
   participantId?: string | null
 ): Promise<MovieData[]> {
-  const suffix = participantId ? `?participantId=${encodeURIComponent(participantId)}` : '';
+  const suffix: QueryString = participantId
+    ? `?participantId=${encodeURIComponent(participantId)}`
+    : '';
   const list = await fetchApi<RawMovieData[]>(`${apiPath('events', slug, 'movies')}${suffix}`);
   return Array.isArray(list) ? list.map(mapMovieData) : [];
 }
@@ -136,7 +140,7 @@ export async function fetchMovieDetails(
 ): Promise<MovieDetails> {
   const params = new URLSearchParams();
   if (opts?.mediaType) params.set('mediaType', opts.mediaType);
-  const qs = params.toString() ? `?${params.toString()}` : '';
+  const qs: QueryString = params.toString() ? `?${params.toString()}` : '';
   const raw = await fetchApi<RawMovieDetailsResponse>(
     `${apiPath('movies', 'tmdb', tmdbId, 'details')}${qs}`,
     opts?.signal ? { signal: opts.signal } : undefined

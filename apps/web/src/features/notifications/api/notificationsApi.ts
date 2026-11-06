@@ -52,7 +52,7 @@ export async function fetchNotificationUnreadCount(): Promise<NotificationUnread
 }
 
 export async function fetchNotificationInbox(offset = 0): Promise<NotificationInbox> {
-  const params = offset > 0 ? `?offset=${offset}` : '';
+  const params: '' | `?${string}` = offset > 0 ? `?offset=${offset}` : '';
   return fetchApi<NotificationInbox>(`/notifications/inbox${params}`);
 }
 

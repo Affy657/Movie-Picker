@@ -1,4 +1,4 @@
-import { fetchApi } from '@/shared/api/client';
+import { fetchApi, SLOW_REQUEST_TIMEOUT_MS } from '@/shared/api/client';
 import type { MovieMediaType } from '@/shared/types/movie';
 
 export interface LetterboxdCandidate {
@@ -50,6 +50,7 @@ export interface LetterboxdConfirmResult {
 export async function syncLetterboxd(force: boolean): Promise<LetterboxdSyncReport> {
   return fetchApi<LetterboxdSyncReport>(`/letterboxd/sync?force=${force ? 'true' : 'false'}`, {
     method: 'POST',
+    timeoutMs: SLOW_REQUEST_TIMEOUT_MS,
   });
 }
 
@@ -60,6 +61,7 @@ export async function confirmLetterboxdChoices(
   const result = await fetchApi<LetterboxdConfirmResult>('/letterboxd/confirm', {
     method: 'POST',
     body: JSON.stringify({ selections, remainingUnresolvedCount }),
+    timeoutMs: SLOW_REQUEST_TIMEOUT_MS,
   });
   return {
     ...result,

@@ -16,6 +16,11 @@ import Button, { buttonClass } from '@/shared/components/Button';
 
 const PROVIDER_LABELS: Record<string, string> = { google: 'Google', github: 'GitHub' };
 
+function providerLabel(provider: string): string {
+  const known = Object.hasOwn(PROVIDER_LABELS, provider) ? PROVIDER_LABELS[provider] : undefined;
+  return known ?? provider;
+}
+
 export default function AccountIntegrationsPage({ user }: Readonly<{ user: UserProfile }>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -67,7 +72,7 @@ export default function AccountIntegrationsPage({ user }: Readonly<{ user: UserP
           {oauthLinked && (
             <p className="hint" role="status" aria-live="polite">
               {t('auth.account.connectionsLinkedBanner', {
-                provider: PROVIDER_LABELS[oauthLinked] ?? oauthLinked,
+                provider: providerLabel(oauthLinked),
               })}
             </p>
           )}
@@ -87,7 +92,7 @@ export default function AccountIntegrationsPage({ user }: Readonly<{ user: UserP
             return (
               <div className={sharedStyles.row} key={provider}>
                 <div className={sharedStyles.rowMain}>
-                  <p className={sharedStyles.rowLabel}>{PROVIDER_LABELS[provider] ?? provider}</p>
+                  <p className={sharedStyles.rowLabel}>{providerLabel(provider)}</p>
                   <p className={sharedStyles.rowSub}>
                     {lockedOut
                       ? t('auth.account.connectionsLastProviderHint')
@@ -129,14 +134,14 @@ export default function AccountIntegrationsPage({ user }: Readonly<{ user: UserP
           {unlinkable.map((provider) => (
             <div className={sharedStyles.row} key={provider}>
               <div className={sharedStyles.rowMain}>
-                <p className={sharedStyles.rowLabel}>{PROVIDER_LABELS[provider] ?? provider}</p>
+                <p className={sharedStyles.rowLabel}>{providerLabel(provider)}</p>
               </div>
               <a
                 href={oauthStartUrl(provider, ROUTES.accountIntegrations)}
                 className={buttonClass()}
               >
                 {t('auth.account.connectionsLinkButton', {
-                  provider: PROVIDER_LABELS[provider] ?? provider,
+                  provider: providerLabel(provider),
                 })}
               </a>
             </div>

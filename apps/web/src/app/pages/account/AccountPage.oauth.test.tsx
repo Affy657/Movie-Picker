@@ -76,6 +76,26 @@ describe('AccountPage — connexions et compte sans mot de passe (MSW)', () => {
     expect(linkGithub).toHaveAttribute('href', expect.stringContaining('/auth/oauth/github/start'));
   });
 
+  it('names the provider it just linked', async () => {
+    renderAccount('/settings/integrations?oauthLinked=github');
+
+    await screen.findByText('Google');
+    expect(screen.getByRole('status')).toHaveTextContent('GitHub');
+  });
+
+  it.each(['constructor', '__proto__'])(
+    'shows %s from the URL as plain text, never as a property of an object',
+    async (oauthLinked) => {
+      renderAccount(`/settings/integrations?oauthLinked=${oauthLinked}`);
+
+      await screen.findByText('Google');
+      const banner = screen.getByRole('status');
+      expect(banner).toHaveTextContent(oauthLinked);
+      expect(banner).not.toHaveTextContent('[object Object]');
+      expect(banner).not.toHaveTextContent('native code');
+    }
+  );
+
   it('unlinks a provider after confirmation, when it is not the last one', async () => {
     const user = userEvent.setup();
     let unlinkCalled = false;

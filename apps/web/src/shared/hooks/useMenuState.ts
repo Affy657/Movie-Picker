@@ -12,7 +12,7 @@ export function useMenuState() {
 
   const close = useCallback(() => setOpen(false), []);
   const toggle = useCallback(() => setOpen((value) => !value), []);
-  useClickOutside(containerRef, close, open);
+  useClickOutside(containerRef, close, open, { closeOnFocusLeave: true });
   useMenuFocus(open, panelRef, triggerRef);
   const fitLeft = useMenuHorizontalFit(open, containerRef, panelRef);
 

@@ -1,4 +1,5 @@
 import { ApiError } from '@/shared/api/apiError';
+import type { ApiRequestPath, ApiRoute, ApiRouteSegments } from '@/shared/api/apiRoutes';
 import { interpolate, loadedLocale, preferredLocale, t, type TranslationKey } from '@/shared/i18n';
 
 function hostLooksLocal(host: string): boolean {
@@ -23,6 +24,14 @@ const API_BASE = getApiBase();
 const IS_DEV = import.meta.env?.DEV === true;
 
 export const API_VERSION_PREFIX = '/api/v1';
+
+export const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+
+export const SLOW_REQUEST_TIMEOUT_MS = 120_000;
+
+const REQUEST_TIMEOUT_REASON = 'request_timeout';
+
+export type ApiRequestOptions = RequestInit & { timeoutMs?: number };
 
 export const HOST_TOKEN_HEADER = 'X-Host-Token';
 
@@ -54,8 +63,8 @@ function encodePathSegment(segment: string | number): string {
   return encodeURIComponent(text);
 }
 
-export function apiPath(...segments: ReadonlyArray<string | number>): string {
-  return `/${segments.map(encodePathSegment).join('/')}`;
+export function apiPath(...segments: ApiRouteSegments): ApiRoute {
+  return `/${segments.map(encodePathSegment).join('/')}` as ApiRoute;
 }
 
 function userFacing(key: TranslationKey): string {
@@ -160,6 +169,42 @@ function rethrowFetchError(e: unknown): never {
   throw new ApiError(isNetwork ? networkErrorMessage() : msg, { code: 0 });
 }
 
+function timeoutError(): ApiError {
+  return new ApiError(userFacing('errors.api.timeout'), {
+    code: 0,
+    reason: REQUEST_TIMEOUT_REASON,
+  });
+}
+
+type RequestDeadline = {
+  signal: AbortSignal;
+  expired: () => boolean;
+  clear: () => void;
+};
+
+function startRequestDeadline(
+  callerSignal: AbortSignal | null | undefined,
+  timeoutMs: number
+): RequestDeadline {
+  const controller = new AbortController();
+  let expired = false;
+  const followCaller = (): void => controller.abort(callerSignal?.reason);
+  if (callerSignal?.aborted) followCaller();
+  else callerSignal?.addEventListener('abort', followCaller, { once: true });
+  const timer = setTimeout(() => {
+    expired = true;
+    controller.abort();
+  }, timeoutMs);
+  return {
+    signal: controller.signal,
+    expired: () => expired,
+    clear: () => {
+      clearTimeout(timer);
+      callerSignal?.removeEventListener('abort', followCaller);
+    },
+  };
+}
+
 function statusMessage(status: number): string {
   if (status === 429) return userFacing('apiErrors.rate_limited');
   if (status === 503) return userFacing('errors.api.unavailable');
@@ -228,9 +273,7 @@ async function readResponseText(res: Response): Promise<string> {
   }
 }
 
-export async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
-  const url = apiUrl(path);
-  ensureApiIsNotFrontOrigin(url);
+async function sendRequest<T>(url: string, options: RequestInit): Promise<T> {
   let res: Response;
   try {
     res = await fetch(url, {
@@ -247,4 +290,22 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
 
   if (!res.ok) handleErrorResponse(res, text, isJson);
   return parseSuccessBody<T>(res, text, isJson);
+}
+
+export async function fetchApi<T>(
+  path: ApiRequestPath,
+  options: ApiRequestOptions = {}
+): Promise<T> {
+  const url = apiUrl(path);
+  ensureApiIsNotFrontOrigin(url);
+  const { timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS, ...init } = options;
+  const deadline = startRequestDeadline(init.signal, timeoutMs);
+  try {
+    return await sendRequest<T>(url, { ...init, signal: deadline.signal });
+  } catch (e) {
+    if (deadline.expired() && isAbortError(e)) throw timeoutError();
+    throw e;
+  } finally {
+    deadline.clear();
+  }
 }

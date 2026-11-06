@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from 'react';
 import { hashKey, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -16,6 +17,12 @@ import {
   postAuthRegister,
   type ProfilePatch,
 } from '@/features/auth/api/authApi';
+import {
+  clearPendingSignOut,
+  hasPendingSignOut,
+  markSignOutPending,
+  onSessionChangedInAnotherTab,
+} from '@/features/auth/session-hint';
 import { ApiError } from '@/shared/api/apiError';
 import { clearStoredEventIdentities } from '@/shared/utils/eventIdentityStorage';
 import { dropBrowserPushSubscription } from '@/shared/utils/browserPushSubscription';
@@ -28,6 +35,7 @@ type AuthContextValue = {
   user: UserProfile | null;
   isLoading: boolean;
   authCheckFailed: boolean;
+  signOutPending: boolean;
   retryAuthCheck: () => void;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string) => Promise<void>;
@@ -42,14 +50,20 @@ function signedOutStateRendered(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-function sessionGoneOrUnreachable(error: unknown): boolean {
-  return ApiError.is(error) && (error.code === 401 || error.code === 0);
+function sessionIsGone(error: unknown): boolean {
+  return ApiError.is(error) && error.code === 401;
+}
+
+function serverIsUnreachable(error: unknown): boolean {
+  return ApiError.is(error) && error.code === 0;
 }
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const queryClient = useQueryClient();
 
   const { track } = useAnalytics();
+  const [signOutPending, setSignOutPending] = useState(hasPendingSignOut);
+  const replayingSignOutRef = useRef(false);
 
   const invalidateSession = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
@@ -125,12 +139,45 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     onSuccess: () => track('user_signed_up'),
   });
 
+  useEffect(() => {
+    const replaySignOut = async (): Promise<void> => {
+      if (replayingSignOutRef.current || !hasPendingSignOut()) return;
+      replayingSignOutRef.current = true;
+      try {
+        await postAuthLogout();
+      } catch (error) {
+        if (!sessionIsGone(error)) return;
+      } finally {
+        replayingSignOutRef.current = false;
+      }
+      clearPendingSignOut();
+      setSignOutPending(false);
+    };
+    const handleOnline = (): void => void replaySignOut();
+    handleOnline();
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, []);
+
+  useEffect(
+    () =>
+      onSessionChangedInAnotherTab(() => {
+        setSignOutPending(hasPendingSignOut());
+        void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
+      }),
+    [queryClient]
+  );
+
   const logoutMutation = useMutation({
     mutationFn: async () => {
       try {
         await postAuthLogout();
       } catch (error) {
-        if (!sessionGoneOrUnreachable(error)) throw error;
+        if (!sessionIsGone(error) && !serverIsUnreachable(error)) throw error;
+        if (serverIsUnreachable(error)) {
+          markSignOutPending();
+          setSignOutPending(true);
+        }
       } finally {
         void dropBrowserPushSubscription();
       }
@@ -170,6 +217,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       user,
       isLoading,
       authCheckFailed,
+      signOutPending,
       retryAuthCheck,
       login,
       register,
@@ -181,6 +229,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       user,
       isLoading,
       authCheckFailed,
+      signOutPending,
       retryAuthCheck,
       login,
       register,

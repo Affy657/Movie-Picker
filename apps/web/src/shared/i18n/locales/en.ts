@@ -693,6 +693,9 @@ export const en: Locale = {
     logout: {
       fallbackError: 'Logout failed.',
       submitting: 'Logging out\u2026',
+      pendingTitle: 'Sign-out not confirmed',
+      pendingDescription:
+        'The server cannot be reached: your session stays open until it answers. The sign-out will be retried when the network is back.',
     },
   },
 
@@ -1722,6 +1725,7 @@ export const en: Locale = {
       network: 'Could not connect to the server. Check your internet connection, then try again.',
       server: 'Something went wrong on the server. Please try again in a moment.',
       invalidJson: 'Invalid server response (JSON expected).',
+      timeout: 'The server is taking too long to answer. Try again in a moment.',
     },
     network: 'Could not reach the server. Check your connection.',
     generic: 'An error occurred.',
@@ -1739,6 +1743,10 @@ export const en: Locale = {
       hint: 'You can reload the page or go back to the home page. If the problem persists, try clearing your browser cache.',
       retryButton: 'Retry',
       homeButton: 'Home',
+    },
+    boot: {
+      message: 'Movie Picker could not start. Reload the page to try again.',
+      reloadButton: 'Reload the page',
     },
   },
 

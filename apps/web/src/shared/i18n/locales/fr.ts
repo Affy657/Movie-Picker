@@ -703,6 +703,9 @@ export const fr = {
     logout: {
       fallbackError: 'Déconnexion impossible.',
       submitting: 'Déconnexion\u2026',
+      pendingTitle: 'Déconnexion non confirmée',
+      pendingDescription:
+        'Le serveur est injoignable : votre session reste ouverte tant qu’il n’a pas répondu. La déconnexion sera relancée au retour du réseau.',
     },
   },
 
@@ -1756,6 +1759,7 @@ export const fr = {
         'Connexion au serveur impossible. Vérifiez votre connexion internet, puis réessayez.',
       server: 'Une erreur est survenue côté serveur. Réessayez dans un instant.',
       invalidJson: 'Réponse invalide du serveur (JSON attendu).',
+      timeout: 'Le serveur met trop de temps à répondre. Réessayez dans un instant.',
     },
     network: 'Problème de connexion au serveur. Vérifiez votre réseau.',
     generic: 'Une erreur est survenue.',
@@ -1774,6 +1778,10 @@ export const fr = {
       hint: "Vous pouvez recharger la page ou retourner à l'accueil. Si le problème persiste, essayez de vider le cache du navigateur.",
       retryButton: 'Réessayer',
       homeButton: 'Accueil',
+    },
+    boot: {
+      message: 'Movie Picker n’a pas pu démarrer. Rechargez la page pour réessayer.',
+      reloadButton: 'Recharger la page',
     },
   },
 

@@ -12,6 +12,7 @@ type HarnessProps = {
   withPortal?: boolean;
   ignoreSelector?: string;
   returnFocus?: boolean;
+  closeOnFocusLeave?: boolean;
 };
 
 function Popover({
@@ -20,6 +21,7 @@ function Popover({
   withPortal = false,
   ignoreSelector,
   returnFocus = false,
+  closeOnFocusLeave = false,
 }: Readonly<Omit<HarnessProps, 'insideDialog' | 'withOtherDialog'>>) {
   const rootRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
@@ -27,6 +29,7 @@ function Popover({
   useClickOutside(withPortal ? [rootRef, portalRef] : rootRef, onClose, enabled, {
     ignoreSelector,
     returnFocusTo: returnFocus ? triggerRef : undefined,
+    closeOnFocusLeave,
   });
   return (
     <>
@@ -181,6 +184,56 @@ describe('useClickOutside', () => {
     inside.addEventListener('keydown', (event) => event.preventDefault());
 
     fireEvent.keyDown(inside, { key: 'Escape' });
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('closes once the focus lands outside, and leaves it where it landed', () => {
+    const onClose = vi.fn();
+    render(<Harness onClose={onClose} closeOnFocusLeave returnFocus />);
+    const inside = screen.getByRole('button', { name: 'inside' });
+    inside.focus();
+    expect(onClose).not.toHaveBeenCalled();
+
+    const outside = screen.getByRole('button', { name: 'outside' });
+    outside.focus();
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(outside).toHaveFocus();
+  });
+
+  it('keeps a portaled panel open while the focus moves into it', () => {
+    const onClose = vi.fn();
+    render(<Harness onClose={onClose} closeOnFocusLeave withPortal />);
+
+    screen.getByRole('button', { name: 'portaled' }).focus();
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('stays open when the focus moves to a dialog opened over it', () => {
+    const onClose = vi.fn();
+    render(<Harness onClose={onClose} closeOnFocusLeave withOtherDialog />);
+
+    screen.getByRole('button', { name: 'in another dialog' }).focus();
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('leaves the focus on the ignored selector alone', () => {
+    const onClose = vi.fn();
+    render(<Harness onClose={onClose} closeOnFocusLeave ignoreSelector="[data-toggle]" />);
+
+    screen.getByRole('button', { name: 'toggle' }).focus();
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('does not watch the focus unless asked to', () => {
+    const onClose = vi.fn();
+    render(<Harness onClose={onClose} />);
+
+    screen.getByRole('button', { name: 'outside' }).focus();
 
     expect(onClose).not.toHaveBeenCalled();
   });
