@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MongoDB.Bson;
@@ -109,6 +110,31 @@ public sealed class MongoIndexInventoryTests : IClassFixture<MoviePickerApplicat
         return indexes
             .Where(index => index["name"].AsString != "_id_")
             .ToDictionary(index => index["name"].AsString, index => index);
+    }
+
+    [Fact]
+    public void IndexPlan_DeclaresExactlyTheInventory_SoANewCollectionCannotEscapeIt()
+    {
+        using var unusedClient = new MongoClient("mongodb://127.0.0.1:27017");
+        var plan = MongoIndexInitializer.BuildPlan(unusedClient.GetDatabase("index_plan_only"));
+
+        var declared = plan.Descriptions
+            .Where(description => !description.StartsWith("drop ", StringComparison.Ordinal))
+            .Select(description => description.Split('|'))
+            .Select(parts => string.Join('|', parts[0], parts[1], parts[3], parts[5]))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        var expected = Expected
+            .Select(index => string.Join(
+                '|',
+                index.Collection,
+                index.Name,
+                index.Unique ? "unique" : string.Empty,
+                index.ExpireAfterSeconds?.ToString(CultureInfo.InvariantCulture) ?? string.Empty))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(expected, declared);
     }
 
     [MongoFact]
