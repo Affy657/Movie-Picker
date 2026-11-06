@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
@@ -76,21 +75,11 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
     private static (int Count, IReadOnlyList<string> Pseudos) ResolveSeenSummary(
         string movieId,
         IReadOnlyDictionary<string, SeenMarkAggregate> seenAgg,
-        IReadOnlyDictionary<string, string> pseudos)
+        Dictionary<string, Participant> participantById)
     {
         if (!seenAgg.TryGetValue(movieId, out var seen))
             return (0, Array.Empty<string>());
-        return (seen.Count, ResolvePseudos(seen.ParticipantIds, pseudos));
-    }
-
-    private static IReadOnlyList<string> ResolveUpVoterPseudos(
-        string movieId,
-        IReadOnlyDictionary<string, IReadOnlyList<string>> upVotersAgg,
-        IReadOnlyDictionary<string, string> pseudos)
-    {
-        if (!upVotersAgg.TryGetValue(movieId, out var upVoters))
-            return Array.Empty<string>();
-        return ResolvePseudos(upVoters, pseudos);
+        return (seen.Count, ResolvePseudos(seen.ParticipantIds, participantById));
     }
 
     public async Task<IReadOnlyList<MovieWithScoreResponse>> HandleAsync(
@@ -102,17 +91,15 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
 
         var movies = await _movieRepository.ListByEventIdAsync(evt.Id, ct);
         var movieIds = movies.Select(m => m.Id).ToList();
-        var scoresTask = _voteRepository.AggregateScoresByMovieIdsAsync(movieIds, ct);
+        var voteSummariesTask = _voteRepository.AggregateSummariesByMovieIdsAsync(movieIds, ct);
         var seenAggTask = _seenMarkRepository.AggregateByMovieIdsAsync(evt.Id, movieIds, ct);
-        var upVotersAggTask = _voteRepository.AggregateUpVotersByMovieIdsAsync(movieIds, ct);
         var eventParticipantsTask = _participantRepository.ListByEventIdAsync(evt.Id, ct);
         var ratingsTask = evt.HasWinner
             ? _ratingRepository.ListByEventIdAsync(evt.Id, ct)
             : Task.FromResult<IReadOnlyList<MovieRating>>(Array.Empty<MovieRating>());
-        await Task.WhenAll(scoresTask, seenAggTask, upVotersAggTask, eventParticipantsTask, ratingsTask);
-        var scores = await scoresTask;
+        await Task.WhenAll(voteSummariesTask, seenAggTask, eventParticipantsTask, ratingsTask);
+        var voteSummaries = await voteSummariesTask;
         var seenAgg = await seenAggTask;
-        var upVotersAgg = await upVotersAggTask;
         var eventParticipants = await eventParticipantsTask;
         var ratingsByMovie = (await ratingsTask)
             .GroupBy(r => r.MovieId)
@@ -121,9 +108,6 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         IReadOnlyDictionary<string, int> myVotes = IsCallersOwnParticipant(participantId, eventParticipants)
             ? await _voteRepository.GetParticipantVotesByEventAsync(evt.Id, participantId!, ct)
             : new Dictionary<string, int>();
-        var seenParticipantIds = seenAgg.Values.SelectMany(v => v.ParticipantIds).Distinct().ToList();
-        var upVoterParticipantIds = upVotersAgg.Values.SelectMany(v => v).Distinct().ToList();
-        var participantIds = movies.Select(m => m.ParticipantId).Concat(seenParticipantIds).Concat(upVoterParticipantIds).Distinct().ToList();
 
         var participantById = eventParticipants.ToDictionary(p => p.Id);
         var proposerUserIds = movies
@@ -133,13 +117,9 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
             .Distinct()
             .ToList();
 
-        var pseudosTask = _participantRepository.GetPseudosByIdsAsync(participantIds, ct);
-        var proposerUsersTask = proposerUserIds.Count > 0
-            ? _userRepository.ListCardsByIdsAsync(proposerUserIds, ct)
-            : Task.FromResult<IReadOnlyList<UserCard>>([]);
-        await Task.WhenAll(pseudosTask, proposerUsersTask);
-        var pseudos = await pseudosTask;
-        var proposerUsers = await proposerUsersTask;
+        IReadOnlyList<UserCard> proposerUsers = proposerUserIds.Count > 0
+            ? await _userRepository.ListCardsByIdsAsync(proposerUserIds, ct)
+            : [];
         var userById = proposerUsers.ToDictionary(u => u.Id);
 
         var enrichmentByKey = await BuildEnrichmentMapAsync(movies, ct);
@@ -147,16 +127,16 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         var list = new List<MovieWithScoreResponse>(movies.Count);
         foreach (var m in movies)
         {
-            scores.TryGetValue(m.Id, out var s);
-            pseudos.TryGetValue(m.ParticipantId, out var pseudo);
+            var votes = voteSummaries.GetValueOrDefault(m.Id, MovieVoteSummary.None);
+            participantById.TryGetValue(m.ParticipantId, out var proposer);
 
             var proposerHandle = PublicHandleResolver.Resolve(
                 ResolveProposerUser(m.ParticipantId, participantById, userById));
 
-            var (seenCount, seenByPseudos) = ResolveSeenSummary(m.Id, seenAgg, pseudos);
-            var votersUpPseudos = ResolveUpVoterPseudos(m.Id, upVotersAgg, pseudos);
+            var (seenCount, seenByPseudos) = ResolveSeenSummary(m.Id, seenAgg, participantById);
+            var votersUpPseudos = ResolvePseudos(votes.UpVoterIds, participantById);
 
-            enrichmentByKey.TryGetValue((m.TmdbId, m.MediaType.ToString()), out var enr);
+            enrichmentByKey.TryGetValue((m.TmdbId, m.MediaType), out var enr);
             var posterOut = _posterImageStore.ToPublicPosterPath(m.PosterPath);
 
             int? myVote = myVotes.TryGetValue(m.Id, out var mv) ? mv : null;
@@ -177,11 +157,11 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
                     ExcludedFromWheel = m.ExcludedFromWheel,
                     CreatedAt = m.CreatedAt,
                     UpdatedAt = m.UpdatedAt,
-                    ProposerPseudo = pseudo ?? string.Empty,
+                    ProposerPseudo = proposer?.Pseudo ?? string.Empty,
                     ProposerHandle = proposerHandle,
-                    Score = s.Score,
-                    Up = s.Up,
-                    Down = s.Down,
+                    Score = votes.Score,
+                    Up = votes.Up,
+                    Down = votes.Down,
                     MyVote = myVote,
                     SeenCount = seenCount,
                     SeenByPseudos = seenByPseudos,
@@ -198,44 +178,31 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         return list;
     }
 
-    private async Task<ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>> BuildEnrichmentMapAsync(
+    private async Task<IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>> BuildEnrichmentMapAsync(
         IReadOnlyList<Movie> movies,
         CancellationToken ct)
     {
-        var enrichmentByKey = new ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>();
         if (!_options.HasTmdbCredentials)
-            return enrichmentByKey;
+            return new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>();
 
         var region = string.IsNullOrWhiteSpace(_options.TmdbWatchProvidersRegion)
             ? "FR"
             : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
-        var distinctPairs = movies.Select(x => (x.TmdbId, x.MediaType)).Distinct().ToList();
-        var parallel = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
-        await Parallel.ForEachAsync(
-                distinctPairs,
-                new ParallelOptions { MaxDegreeOfParallelism = parallel, CancellationToken = ct },
-                async (pair, c) =>
-                {
-                    var (tmdbId, mediaType) = pair;
-                    var enr = await _tmdbMovieSearch.GetEnrichmentAsync(tmdbId, mediaType, region, c);
-                    enrichmentByKey[(tmdbId, mediaType.ToString())] = enr;
-                })
-            .ConfigureAwait(false);
-        return enrichmentByKey;
+        var keys = movies.Select(x => (x.TmdbId, x.MediaType)).Distinct().ToList();
+        return await _tmdbMovieSearch.GetEnrichmentsAsync(keys, region, ct).ConfigureAwait(false);
     }
-
 
     private static List<string> ResolvePseudos(
         IEnumerable<string> participantIds,
-        IReadOnlyDictionary<string, string> pseudos)
+        Dictionary<string, Participant> participantById)
     {
         var result = new List<string>();
         foreach (var pid in participantIds)
         {
             if (result.Count >= MaxPseudosPerMovie)
                 break;
-            if (pseudos.TryGetValue(pid, out var p) && !string.IsNullOrWhiteSpace(p))
-                result.Add(p);
+            if (participantById.TryGetValue(pid, out var p) && !string.IsNullOrWhiteSpace(p.Pseudo))
+                result.Add(p.Pseudo);
         }
         return result;
     }

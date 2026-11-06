@@ -1,9 +1,9 @@
-using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Configuration;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Application.UseCases.SearchMovies;
@@ -64,28 +64,16 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
             ? "FR"
             : _options.TmdbWatchProvidersRegion.Trim().ToUpperInvariant();
         var maxLookups = Math.Clamp(_options.TmdbSearchMaxWatchProviderLookups, 0, 20);
-        var maxParallelism = Math.Clamp(_options.TmdbListEnrichmentMaxParallelism, 1, 16);
 
         var hasTextQuery = !string.IsNullOrWhiteSpace(query);
         var hasRuntimeFilter = filters?.RuntimeMin.HasValue == true || filters?.RuntimeMax.HasValue == true;
         var runtimeFilterNeedsEnrichment = hasRuntimeFilter && hasTextQuery;
         var lookupCount = runtimeFilterNeedsEnrichment ? rows.Count : maxLookups;
 
-        var enrichmentsByKey = new ConcurrentDictionary<(int, string), TmdbMovieEnrichment?>();
         var toEnrich = rows.Take(lookupCount).Select(r => (r.Id, r.MediaType)).Distinct().ToList();
-        if (toEnrich.Count > 0)
-        {
-            await Parallel.ForEachAsync(
-                    toEnrich,
-                    new ParallelOptions { MaxDegreeOfParallelism = maxParallelism, CancellationToken = ct },
-                    async (pair, c) =>
-                    {
-                        var (tmdbId, mediaType) = pair;
-                        var key = (tmdbId, mediaType.ToString());
-                        enrichmentsByKey[key] = await _tmdb.GetEnrichmentAsync(tmdbId, mediaType, region, c);
-                    })
-                .ConfigureAwait(false);
-        }
+        IReadOnlyDictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?> enrichmentsByKey = toEnrich.Count > 0
+            ? await _tmdb.GetEnrichmentsAsync(toEnrich, region, ct).ConfigureAwait(false)
+            : new Dictionary<(int TmdbId, MovieMediaType MediaType), TmdbMovieEnrichment?>();
 
         var items = new List<MovieSearchItemResponse>(rows.Count);
         foreach (var row in rows)
@@ -95,8 +83,7 @@ public sealed class SearchMoviesHandler : ISearchMoviesHandler
             double? vote = row.VoteAverage;
             int? runtime = null;
 
-            var enrichKey = (row.Id, row.MediaType.ToString());
-            if (enrichmentsByKey.TryGetValue(enrichKey, out var enr) && enr is not null)
+            if (enrichmentsByKey.TryGetValue((row.Id, row.MediaType), out var enr) && enr is not null)
             {
                 providers = WatchProviderMapping.ToDto(enr.WatchProviders);
                 watchPage = enr.TmdbWatchPageUrl;

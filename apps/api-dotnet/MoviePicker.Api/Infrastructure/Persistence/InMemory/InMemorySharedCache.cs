@@ -34,4 +34,7 @@ public sealed class InMemorySharedCache : ISharedCache
         _entries[key] = (value, DateTimeOffset.UtcNow.Add(ttl));
         return Task.CompletedTask;
     }
+
+    public Task SetWithinCapacityAsync<T>(string key, T value, TimeSpan ttl, long maxEntries, CancellationToken ct = default) =>
+        _entries.Count >= maxEntries ? Task.CompletedTask : SetAsync(key, value, ttl, ct);
 }

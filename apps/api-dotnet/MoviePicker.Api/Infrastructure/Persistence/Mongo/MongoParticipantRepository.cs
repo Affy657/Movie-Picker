@@ -36,20 +36,6 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         return doc is null ? null : ParticipantDocumentMapper.ToDomain(doc);
     }
 
-    public async Task<IReadOnlyDictionary<string, string>> GetPseudosByIdsAsync(
-        IReadOnlyCollection<string> participantIds,
-        CancellationToken ct = default)
-    {
-        if (participantIds.Count == 0)
-            return new Dictionary<string, string>();
-
-        var docs = await _collection
-            .Find(x => participantIds.Contains(x.Id))
-            .Project(x => new { x.Id, x.Pseudo })
-            .ToListAsync(ct);
-        return docs.ToDictionary(x => x.Id, x => x.Pseudo);
-    }
-
     public async Task<Participant> AddAsync(Participant participant, CancellationToken ct = default)
     {
         var doc = ParticipantDocumentMapper.ToDocument(participant);

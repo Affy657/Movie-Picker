@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="MoviePicker.Api.Tests" />
+    <InternalsVisibleTo Include="MoviePicker.Api.IntegrationTests" />
   </ItemGroup>
 
   <ItemGroup>

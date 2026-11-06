@@ -50,6 +50,37 @@ public sealed class NotificationsEndpointsTests : IClassFixture<MoviePickerAppli
     }
 
     [Fact]
+    public async Task UnreadCount_Unauthenticated_Returns401()
+    {
+        var anon = _factory.CreateClient();
+
+        var res = await anon.GetAsync("/api/v1/notifications/inbox/unread-count");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task UnreadCount_AnswersTheCounterAlone_AndFollowsReadAll()
+    {
+        var (alice, _) = await NewUserAsync("CountAlice");
+        var (bob, b) = await NewUserAsync("CountBob");
+        var follow = await alice.PostAsync($"/api/v1/users/{b.Handle}/follow", null);
+        Assert.Equal(HttpStatusCode.NoContent, follow.StatusCode);
+
+        var res = await bob.GetAsync("/api/v1/notifications/inbox/unread-count");
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        using var body = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        var onlyProperty = Assert.Single(body.RootElement.EnumerateObject());
+        Assert.Equal("unreadCount", onlyProperty.Name);
+        Assert.Equal(1, onlyProperty.Value.GetInt32());
+
+        await bob.PostAsync("/api/v1/notifications/inbox/read-all", null);
+        var after = await bob.GetFromJsonAsync<NotificationUnreadCountResponse>("/api/v1/notifications/inbox/unread-count", Json);
+        Assert.Equal(0, after!.UnreadCount);
+    }
+
+    [Fact]
     public async Task Preferences_DefaultAllEnabled()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "PrefsDefault");

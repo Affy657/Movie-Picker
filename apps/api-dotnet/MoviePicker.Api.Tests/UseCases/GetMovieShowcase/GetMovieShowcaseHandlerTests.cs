@@ -20,6 +20,12 @@ public sealed class GetMovieShowcaseHandlerTests
     private readonly Mock<ISharedCache> _shared = new();
     private readonly MemoryCache _cache = new(new MemoryCacheOptions());
 
+    public GetMovieShowcaseHandlerTests() => GivenEnrichment(new TmdbMovieEnrichment(7.5, [], null, 120));
+
+    private void GivenEnrichment(TmdbMovieEnrichment? enrichment) =>
+        _tmdb.Setup(t => t.GetEnrichmentAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(enrichment);
+
     private GetMovieShowcaseHandler Build(string? apiKey = "key") =>
         new(
             _tmdb.Object,
@@ -535,6 +541,59 @@ public sealed class GetMovieShowcaseHandlerTests
         _shared.Verify(
             c => c.TryGetAsync<IReadOnlyList<MovieShowcaseItemResponse>>(It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_TmdbThrottlingTheEnrichments_KeepsTheCompleteSnapshot()
+    {
+        var shared = new InMemorySharedCache();
+        var trending = new MovieShowcaseQuery(MovieShowcaseSections.Trending);
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
+        Assert.True(await BuildAnotherInstanceOn(shared).RefreshAsync(trending));
+        GivenEnrichment(null);
+
+        var refreshed = await BuildAnotherInstanceOn(shared).RefreshAsync(trending);
+
+        Assert.False(refreshed);
+        var served = await BuildAnotherInstanceOn(shared).HandleAsync(trending);
+        Assert.All(served.Items, item => Assert.Equal(120, item.RuntimeMinutes));
+    }
+
+    [Fact]
+    public async Task RefreshAsync_ASingleEnrichmentMissing_DoesNotPublishTheSection()
+    {
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
+        _tmdb.Setup(t => t.GetEnrichmentAsync(2, MovieMediaType.Movie, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TmdbMovieEnrichment?)null);
+
+        var refreshed = await Build().RefreshAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
+
+        Assert.False(refreshed);
+        VerifySharedWrites(Times.Never());
+    }
+
+    [Fact]
+    public async Task RefreshAsync_TitleTmdbKnowsWithoutARuntime_IsComplete()
+    {
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
+        GivenEnrichment(new TmdbMovieEnrichment(null, [], null, null));
+
+        var refreshed = await Build().RefreshAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
+
+        Assert.True(refreshed);
+        VerifySharedWrites(Times.Once());
+    }
+
+    [Fact]
+    public async Task HandleAsync_TmdbThrottlingTheEnrichments_ServesTheListWithoutPublishingIt()
+    {
+        _tmdb.Setup(t => t.GetTrendingMoviesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(Items(3));
+        GivenEnrichment(null);
+
+        var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.Trending));
+
+        Assert.Equal(3, result.Items.Count);
+        VerifySharedWrites(Times.Never());
     }
 
     [Fact]

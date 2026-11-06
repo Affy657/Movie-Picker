@@ -11,6 +11,8 @@ public sealed class MongoIndexPlan
 {
     public const string MarkerPrefix = "indexes-";
 
+    private const int IndexNotFoundCode = 27;
+
     private readonly IMongoDatabase _database;
     private readonly List<string> _descriptions = [];
     private readonly List<Func<CancellationToken, Task>> _steps = [];
@@ -48,14 +50,20 @@ public sealed class MongoIndexPlan
     public void DropIfExists<TDocument>(string collection, string indexName)
     {
         _descriptions.Add($"drop {collection} {indexName}");
-        _steps.Add(async ct =>
+        _steps.Add(ct => TryDropAsync<TDocument>(collection, indexName, ct));
+    }
+
+    private async Task<bool> TryDropAsync<TDocument>(string collection, string indexName, CancellationToken ct)
+    {
+        try
         {
-            var indexes = _database.GetCollection<TDocument>(collection).Indexes;
-            using var cursor = await indexes.ListAsync(ct);
-            var existing = await cursor.ToListAsync(ct);
-            if (existing.Any(index => index["name"].AsString == indexName))
-                await indexes.DropOneAsync(indexName, ct);
-        });
+            await _database.GetCollection<TDocument>(collection).Indexes.DropOneAsync(indexName, ct);
+            return true;
+        }
+        catch (MongoCommandException ex) when (ex.Code == IndexNotFoundCode)
+        {
+            return false;
+        }
     }
 
     public async Task ExecuteAsync(CancellationToken ct)

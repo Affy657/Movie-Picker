@@ -135,17 +135,15 @@ public sealed class MongoIndexInitializer : IHostedService
 
     private static void EnsureMovieIndexes(MongoIndexPlan plan)
     {
-        var byEvent = new CreateIndexModel<MovieDocument>(
-            Builders<MovieDocument>.IndexKeys.Ascending(x => x.EventId),
-            new CreateIndexOptions { Name = "movies_eventId" });
         var byEventTmdb = new CreateIndexModel<MovieDocument>(
             Builders<MovieDocument>.IndexKeys.Ascending(x => x.EventId).Ascending(x => x.TmdbId).Ascending(x => x.MediaType),
             new CreateIndexOptions { Name = "movies_eventId_tmdbId_mediaType_unique", Unique = true });
         var byParticipant = new CreateIndexModel<MovieDocument>(
             Builders<MovieDocument>.IndexKeys.Ascending(x => x.ParticipantId),
             new CreateIndexOptions { Name = "movies_participantId" });
-        plan.Create("movies", byEvent, byEventTmdb, byParticipant);
+        plan.Create("movies", byEventTmdb, byParticipant);
         plan.DropIfExists<MovieDocument>("movies", "movies_eventId_tmdbId_unique");
+        plan.DropIfExists<MovieDocument>("movies", "movies_eventId");
     }
 
     private static void EnsureVoteIndexes(MongoIndexPlan plan)
@@ -233,13 +231,11 @@ public sealed class MongoIndexInitializer : IHostedService
                 Name = "seen_marks_event_movie_participant_unique",
                 Unique = true
             });
-        var byMovie = new CreateIndexModel<SeenMarkDocument>(
-            Builders<SeenMarkDocument>.IndexKeys.Ascending(x => x.MovieId),
-            new CreateIndexOptions { Name = "seen_marks_movieId" });
         var byParticipant = new CreateIndexModel<SeenMarkDocument>(
             Builders<SeenMarkDocument>.IndexKeys.Ascending(x => x.ParticipantId),
             new CreateIndexOptions { Name = "seen_marks_participantId" });
-        plan.Create("seen_marks", unique, byMovie, byParticipant);
+        plan.Create("seen_marks", unique, byParticipant);
+        plan.DropIfExists<SeenMarkDocument>("seen_marks", "seen_marks_movieId");
     }
 
     private static void EnsureMovieRatingIndexes(MongoIndexPlan plan)
@@ -267,10 +263,11 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending(x => x.UserId)
                 .Ascending(x => x.Endpoint),
             new CreateIndexOptions { Name = "push_subscriptions_userId_endpoint_unique", Unique = true });
-        var byUser = new CreateIndexModel<PushSubscriptionDocument>(
-            Builders<PushSubscriptionDocument>.IndexKeys.Ascending(x => x.UserId),
-            new CreateIndexOptions { Name = "push_subscriptions_userId" });
-        plan.Create("push_subscriptions", unique, byUser);
+        var byEndpoint = new CreateIndexModel<PushSubscriptionDocument>(
+            Builders<PushSubscriptionDocument>.IndexKeys.Ascending(x => x.Endpoint),
+            new CreateIndexOptions { Name = "push_subscriptions_endpoint" });
+        plan.Create("push_subscriptions", unique, byEndpoint);
+        plan.DropIfExists<PushSubscriptionDocument>("push_subscriptions", "push_subscriptions_userId");
     }
 
     private static void EnsureFollowIndexes(MongoIndexPlan plan)
@@ -306,10 +303,8 @@ public sealed class MongoIndexInitializer : IHostedService
                 .Ascending(x => x.UserId)
                 .Descending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "watchlist_userId_createdAt" });
-        var missingRuntime = new CreateIndexModel<WatchlistItemDocument>(
-            Builders<WatchlistItemDocument>.IndexKeys.Ascending(x => x.RuntimeMinutes),
-            new CreateIndexOptions { Name = "watchlist_runtimeMinutes_missing" });
-        plan.Create("watchlist", unique, byUserDate, missingRuntime);
+        plan.Create("watchlist", unique, byUserDate);
+        plan.DropIfExists<WatchlistItemDocument>("watchlist", "watchlist_runtimeMinutes_missing");
     }
 
     private static void EnsureUserNotificationIndexes(MongoIndexPlan plan)

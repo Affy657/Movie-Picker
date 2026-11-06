@@ -53,19 +53,6 @@ public sealed class InMemoryParticipantRepositoryTests
     }
 
     [Fact]
-    public async Task GetPseudosByIdsAsync_ReturnsKnownPseudos()
-    {
-        var a = await _repo.AddAsync(Mk(pseudo: "Alice"));
-        var b = await _repo.AddAsync(Mk(pseudo: "Bob"));
-
-        var map = await _repo.GetPseudosByIdsAsync([a.Id, b.Id, "ghost"]);
-
-        Assert.Equal("Alice", map[a.Id]);
-        Assert.Equal("Bob", map[b.Id]);
-        Assert.False(map.ContainsKey("ghost"));
-    }
-
-    [Fact]
     public async Task ListByEventIdAsync_OrdersByCreatedAt()
     {
         var older = await _repo.AddAsync(Mk(pseudo: "Old", createdAt: DateTimeOffset.UtcNow.AddMinutes(-10)));

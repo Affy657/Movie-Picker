@@ -46,6 +46,7 @@ public sealed class ShowcaseTmdbStallTests
             options,
             new MemoryCache(new MemoryCacheOptions()),
             new InMemorySharedCache(),
+            new SingleFlight(),
             NullLogger<TmdbMovieSearch>.Instance);
         var handler = new GetMovieShowcaseHandler(
             tmdb,

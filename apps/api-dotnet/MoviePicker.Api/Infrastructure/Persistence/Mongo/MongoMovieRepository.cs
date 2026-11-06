@@ -52,6 +52,7 @@ public sealed class MongoMovieRepository : IMovieRepository
     {
         var list = await _collection
             .Find(x => x.EventId == eventId)
+            .SortBy(x => x.Id)
             .Limit(EventConfig.MaxMoviesPerEventCap)
             .ToListAsync(ct);
         return list.ConvertAll(MovieMapper.ToDomain);

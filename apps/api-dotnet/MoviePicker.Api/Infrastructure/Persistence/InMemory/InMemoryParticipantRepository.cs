@@ -28,15 +28,6 @@ public sealed class InMemoryParticipantRepository : IParticipantRepository
         return Task.FromResult<Participant?>(null);
     }
 
-    public Task<IReadOnlyDictionary<string, string>> GetPseudosByIdsAsync(IReadOnlyCollection<string> participantIds, CancellationToken ct = default)
-    {
-        var dict = new Dictionary<string, string>();
-        foreach (var id in participantIds)
-            if (_byId.TryGetValue(id, out var p))
-                dict[id] = p.Pseudo;
-        return Task.FromResult<IReadOnlyDictionary<string, string>>(dict);
-    }
-
     public Task<Participant> AddAsync(Participant participant, CancellationToken ct = default)
     {
         var id = string.IsNullOrEmpty(participant.Id) ? Guid.NewGuid().ToString("N")[..24] : participant.Id;

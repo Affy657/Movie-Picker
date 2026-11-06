@@ -6,6 +6,23 @@ using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.Notifications;
 
+public sealed class GetUnreadCountHandlerTests
+{
+    [Fact]
+    public async Task HandleAsync_ReadsTheCounterWithoutListingTheNotifications()
+    {
+        var notifications = new Mock<IUserNotificationRepository>();
+        notifications.Setup(n => n.GetUnreadCountAsync("u1", It.IsAny<CancellationToken>())).ReturnsAsync(4);
+
+        var result = await new GetUnreadCountHandler(notifications.Object).HandleAsync("u1");
+
+        Assert.Equal(4, result.UnreadCount);
+        notifications.Verify(
+            n => n.ListByUserIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+}
+
 public sealed class GetInboxHandlerTests
 {
     private readonly Mock<IUserNotificationRepository> _notifications = new();

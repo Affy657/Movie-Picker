@@ -121,17 +121,27 @@ public sealed partial class TmdbMovieSearch
         string cacheKey,
         CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
+        return await _singleFlight
+            .RunAsync(cacheKey, () => FetchAndStoreEnrichmentAsync(tmdbId, mediaType, region, cacheKey), ct)
+            .ConfigureAwait(false);
+    }
+
+    private async Task<TmdbMovieEnrichment?> FetchAndStoreEnrichmentAsync(
+        int tmdbId,
+        MovieMediaType mediaType,
+        string region,
+        string cacheKey)
+    {
         var ttl = TimeSpan.FromHours(Math.Clamp(_options.TmdbEnrichmentCacheHours, 1, 168));
         try
         {
-            var fresh = await FetchEnrichmentUncachedAsync(tmdbId, mediaType, region, ct).ConfigureAwait(false);
+            var fresh = await FetchEnrichmentUncachedAsync(tmdbId, mediaType, region, CancellationToken.None).ConfigureAwait(false);
             _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl, Size = 1 });
-            await _sharedCache.SetAsync(cacheKey, fresh, ttl, ct).ConfigureAwait(false);
+            await _sharedCache
+                .SetWithinCapacityAsync(cacheKey, fresh, ttl, _options.TmdbEnrichmentSharedCacheMaxEntries, CancellationToken.None)
+                .ConfigureAwait(false);
             return fresh;
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            throw;
         }
         catch (Exception ex) when (
             ex is HttpRequestException
