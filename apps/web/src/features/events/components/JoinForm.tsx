@@ -42,6 +42,7 @@ export default function JoinForm({
     const { id } = res.participant;
     setStoredParticipant(slug, id, res.participant.pseudo);
     queryClient.invalidateQueries({ queryKey: queryKeys.myEvents.list });
+    queryClient.invalidateQueries({ queryKey: queryKeys.event.detailForAnyHostToken(slug) });
     track('event_joined');
     onJoined(id, res.participant.pseudo);
   }, [user, slug, onJoined, track, queryClient]);
