@@ -245,7 +245,7 @@ export function useHostEventSettingsDraft({
         eventTitle,
         eventDateLocal: committedDateLocal,
         proposalLimitEnabled,
-        maxProp,
+        maxProposals: maxProp,
         participantLimitEnabled,
         maxParticipants,
         voteLimitEnabled,

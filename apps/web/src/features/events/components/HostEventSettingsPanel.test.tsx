@@ -328,7 +328,7 @@ describe('HostEventSettingsPanel', () => {
     expect(screen.queryByLabelText(/participants max/i)).not.toBeInTheDocument();
   });
 
-  it('shows a limit stored at the cap as no limit', () => {
+  it('shows a limit stored at the cap as a limit, with its value', () => {
     renderWithRouter(
       <HostEventSettingsPanel
         open
@@ -344,11 +344,13 @@ describe('HostEventSettingsPanel', () => {
 
     expect(
       screen.getByRole('switch', { name: /limiter le nombre de participants/i })
-    ).toHaveAttribute('aria-checked', 'false');
+    ).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByRole('switch', { name: /limiter les films proposés/i })).toHaveAttribute(
       'aria-checked',
-      'false'
+      'true'
     );
+    expect(screen.getByLabelText(/participants max/i)).toHaveValue(300);
+    expect(screen.getByLabelText(/films max par personne/i)).toHaveValue(15);
   });
 
   it('enabling the vote limit sends the default value, then the typed value', async () => {

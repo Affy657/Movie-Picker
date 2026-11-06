@@ -628,28 +628,60 @@ describe('CreateEvent', () => {
     });
   });
 
-  it('limit enabled but counter cleared: the default value is still sent', async () => {
+  it('refuses a cleared limit under its field, as the settings panel does, without calling the API', async () => {
     const user = userEvent.setup();
-    mockFetchApi.mockImplementation((path: unknown) => {
-      if (isTemplatesCall(path)) return Promise.resolve({ items: [] });
-      if (path === '/events') return Promise.resolve({ slug: 'abc', shareUrl: 'x' });
-      return Promise.resolve({});
-    });
+    mockTemplates([]);
     RenderCreateEvent();
 
     await user.click(screen.getByText(/options avancées/i));
     await user.click(screen.getByRole('switch', { name: /limiter les votes par participant/i }));
-    await user.clear(screen.getByLabelText(/^votes par participant$/i));
+    const votes = screen.getByLabelText(/^votes par participant$/i);
+    await user.clear(votes);
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    expect(
+      await screen.findByText('Votes par participant : nombre entier à partir de 1.')
+    ).toBeInTheDocument();
+    expect(votes).toHaveFocus();
+    expect(mockFetchApi).not.toHaveBeenCalledWith('/events', expect.anything());
+  });
+
+  it('refuses a limit above the cap instead of replacing it, and opens the options to show why', async () => {
+    const user = userEvent.setup();
+    mockTemplates([]);
+    RenderCreateEvent();
+
+    const options = screen.getByText(/options avancées/i);
+    await user.click(options);
+    await user.click(screen.getByRole('switch', { name: /limiter le nombre de participants/i }));
+    const limit = screen.getByLabelText(/participants max/i);
+    await user.clear(limit);
+    await user.type(limit, '301');
+    await user.click(options);
+    await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
+
+    expect(
+      await screen.findByText('Nombre maximum de participants : entier entre 1 et 300.')
+    ).toBeInTheDocument();
+    expect(limit).toHaveFocus();
+    expect(limit).toHaveValue(301);
+    expect(mockFetchApi).not.toHaveBeenCalledWith('/events', expect.anything());
+  });
+
+  it('sends a limit typed at the cap as a limit', async () => {
+    const user = userEvent.setup();
+    mockTemplates([]);
+    RenderCreateEvent();
+
+    await user.click(screen.getByText(/options avancées/i));
+    await user.click(screen.getByRole('switch', { name: /limiter le nombre de participants/i }));
+    const limit = screen.getByLabelText(/participants max/i);
+    await user.clear(limit);
+    await user.type(limit, '300');
     await user.click(screen.getByRole('button', { name: /créer la soirée/i }));
 
     await waitFor(() => {
-      const configCall = mockFetchApi.mock.calls.find(
-        ([path]) => typeof path === 'string' && path.startsWith('/events/abc/config')
-      );
-      expect(configCall).toBeDefined();
-      expect(JSON.parse((configCall![1] as { body: string }).body)).toEqual(
-        expect.objectContaining({ maxVotesPerParticipant: 3 })
-      );
+      expect(configCallBody()).toEqual(expect.objectContaining({ maxParticipants: 300 }));
     });
   });
 
