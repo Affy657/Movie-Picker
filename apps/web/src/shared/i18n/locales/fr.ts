@@ -1765,6 +1765,10 @@ export const fr = {
       retryButton: 'Réessayer',
       homeButton: 'Accueil',
     },
+    boot: {
+      message: 'Movie Picker n’a pas pu démarrer. Rechargez la page pour réessayer.',
+      reloadButton: 'Recharger la page',
+    },
   },
 
   theme: {

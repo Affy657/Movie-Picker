@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { STALE_BUILD_RELOAD_KEY, reloadOnStaleBuild } from '@/shared/pwa/staleBuildReload';
+import {
+  STALE_BUILD_RELOAD_KEY,
+  isChunkLoadError,
+  reloadForFreshBuild,
+  reloadOnStaleBuild,
+} from '@/shared/pwa/staleBuildReload';
 
 function failChunkLoad(page: EventTarget): void {
   page.dispatchEvent(new Event('vite:preloadError', { cancelable: true }));
@@ -82,5 +87,49 @@ describe('reloadOnStaleBuild', () => {
 
     expect(reload).not.toHaveBeenCalled();
     expect(sessionStorage.getItem(STALE_BUILD_RELOAD_KEY)).toBeNull();
+  });
+});
+
+describe('isChunkLoadError', () => {
+  it.each([
+    ['Chrome', 'Failed to fetch dynamically imported module: https://x/assets/a.js'],
+    ['Firefox', 'error loading dynamically imported module: https://x/assets/a.js'],
+    ['Safari', 'Importing a module script failed.'],
+    ['the Vite preload', 'Unable to preload CSS for /assets/a.css'],
+  ])('recognises the wording of %s', (_engine, message) => {
+    expect(isChunkLoadError(new TypeError(message))).toBe(true);
+  });
+
+  it('leaves the other errors to the usual retry', () => {
+    expect(isChunkLoadError(new Error('Cannot read properties of undefined'))).toBe(false);
+    expect(isChunkLoadError(null)).toBe(false);
+  });
+});
+
+describe('reloadForFreshBuild', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
+  it('reloads and arms the guard, so the automatic reload does not chain on it', () => {
+    const reload = vi.fn();
+    reloadForFreshBuild(reload, () => 1_000_000);
+
+    const page = new EventTarget();
+    reloadOnStaleBuild(page, reload, () => 1_005_000);
+    failChunkLoad(page);
+
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('reloads even when the tab storage cannot keep the guard, a click cannot loop', () => {
+    const reload = vi.fn();
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new Error('storage indisponible');
+    });
+
+    reloadForFreshBuild(reload);
+
+    expect(reload).toHaveBeenCalledTimes(1);
   });
 });

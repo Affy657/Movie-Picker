@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import ServerErrorPage from '@/shared/components/ServerErrorPage';
 import { captureException } from '@/shared/observability/sentry';
+import { isChunkLoadError, reloadForFreshBuild } from '@/shared/pwa/staleBuildReload';
 
 type Props = {
   children: ReactNode;
@@ -23,14 +24,17 @@ export class ErrorBoundary extends Component<Props, State> {
     captureException(error, info.componentStack ?? undefined);
   }
 
+  private readonly retry = (): void => {
+    if (isChunkLoadError(this.state.error)) {
+      reloadForFreshBuild();
+      return;
+    }
+    this.setState({ hasError: false, error: null });
+  };
+
   render(): ReactNode {
     if (this.state.hasError && this.state.error) {
-      return (
-        <ServerErrorPage
-          error={this.state.error}
-          onRetry={() => this.setState({ hasError: false, error: null })}
-        />
-      );
+      return <ServerErrorPage error={this.state.error} onRetry={this.retry} />;
     }
 
     return this.props.children;

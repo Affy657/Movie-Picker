@@ -1730,6 +1730,10 @@ export const en: Locale = {
       retryButton: 'Retry',
       homeButton: 'Home',
     },
+    boot: {
+      message: 'Movie Picker could not start. Reload the page to try again.',
+      reloadButton: 'Reload the page',
+    },
   },
 
   theme: {
