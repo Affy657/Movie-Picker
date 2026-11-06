@@ -1728,6 +1728,8 @@ export const fr = {
     avatar_photo_invalid:
       'Cette image ne peut pas servir de photo de profil. Choisissez une image JPEG, PNG ou WebP d’au moins 128 pixels de côté.',
     avatar_photo_not_found: 'Cette photo n’existe plus. Ajoutez-en une nouvelle.',
+    avatar_photo_storage_full:
+      'Impossible d’ajouter une photo de profil pour le moment. Réessayez plus tard ou choisissez un avatar.',
     movie_details_unavailable: 'Détails film temporairement indisponibles',
     showcase_unavailable: 'Sélections de films temporairement indisponibles',
     search_unavailable: 'Recherche films temporairement indisponible',

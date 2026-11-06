@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using MoviePicker.Api.Application.Avatars;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Tests.Builders;
@@ -20,12 +22,32 @@ public sealed class OAuthProfilePhotoImporterTests
     private readonly InMemoryUserRepository _users = new();
     private readonly InMemoryAvatarPhotoRepository _photos = new();
     private readonly Mock<IGoogleProfilePhotoSource> _google = new();
+    private readonly MoviePickerOptions _options = new();
     private readonly OAuthProfilePhotoImporter _sut;
 
     public OAuthProfilePhotoImporterTests()
     {
-        var writer = new AvatarPhotoWriter(_users, _photos, new InMemoryUnitOfWork(), new FrozenClock(Now));
+        var writer = new AvatarPhotoWriter(
+            _users,
+            _photos,
+            new InMemoryUnitOfWork(),
+            new FrozenClock(Now),
+            Options.Create(_options),
+            NullLogger<AvatarPhotoWriter>.Instance);
         _sut = new OAuthProfilePhotoImporter(_google.Object, writer, NullLogger<OAuthProfilePhotoImporter>.Instance);
+    }
+
+    [Fact]
+    public async Task Google_WhenThePhotoStorageIsFull_SignsInWithoutThePhoto()
+    {
+        _options.AvatarPhotoMaxEntries = 0;
+        var user = await NewUserAsync();
+        _google.Setup(g => g.FetchAsync(AccessToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ImageHeaders.WebpLossy(256, 256));
+
+        var imported = await _sut.ImportAsync(user, Login(), AccessToken);
+
+        Assert.Null(imported.AvatarPhoto);
     }
 
     private async Task<User> NewUserAsync() =>

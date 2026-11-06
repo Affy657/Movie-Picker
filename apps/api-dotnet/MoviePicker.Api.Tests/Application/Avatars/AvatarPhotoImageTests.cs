@@ -105,11 +105,12 @@ public sealed class AvatarPhotoImageTests
 
     [Theory]
     [InlineData(128, 128, true)]
-    [InlineData(1024, 1024, true)]
+    [InlineData(256, 256, true)]
     [InlineData(127, 256, false)]
     [InlineData(256, 127, false)]
-    [InlineData(1025, 256, false)]
-    [InlineData(256, 1025, false)]
+    [InlineData(257, 256, false)]
+    [InlineData(256, 257, false)]
+    [InlineData(1024, 1024, false)]
     public void HasAcceptedSize_KeepsBothSidesBetweenTheBounds(int width, int height, bool accepted)
     {
         Assert.Equal(accepted, AvatarPhotoImage.HasAcceptedSize(new AvatarPhotoFormat("image/png", width, height)));

@@ -375,10 +375,13 @@ public static class Errors
         new($"The number of winning movies must be between {min} and {max}", ErrorCodes.WinnerCountOutOfRange, Params(("min", min), ("max", max)));
 
     public static BadRequestException AvatarPhotoInvalid() =>
-        new("The profile photo must be a JPEG, PNG or WebP image of 128 to 1024 pixels per side and at most 512 KB", ErrorCodes.AvatarPhotoInvalid);
+        new("The profile photo must be a JPEG, PNG or WebP image of 128 to 256 pixels per side and at most 192 KB", ErrorCodes.AvatarPhotoInvalid);
 
     public static BadRequestException LastLoginMethod() =>
         new("The last sign-in method of the account cannot be removed", ErrorCodes.LastLoginMethod);
+
+    public static ServiceUnavailableException AvatarPhotoStorageFull() =>
+        new("Profile photos cannot be added for now", ErrorCodes.AvatarPhotoStorageFull);
 
     public static ServiceUnavailableException MovieDetailsUnavailable() =>
         new("Movie details temporarily unavailable", ErrorCodes.MovieDetailsUnavailable);

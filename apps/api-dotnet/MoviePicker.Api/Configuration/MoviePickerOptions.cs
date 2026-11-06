@@ -37,6 +37,8 @@ public sealed class MoviePickerOptions
 
     public int PosterCacheMaxEntries { get; set; } = 2_000;
 
+    public int AvatarPhotoMaxEntries { get; set; } = 1_000;
+
     public string PublicWebBaseUrl { get; set; } = "https://www.movie-picker.fr";
 
     public string ResolvedWebBaseUrl() =>

@@ -1695,6 +1695,8 @@ export const en: Locale = {
     avatar_photo_invalid:
       'This image cannot be used as a profile photo. Choose a JPEG, PNG or WebP image at least 128 pixels on each side.',
     avatar_photo_not_found: 'This photo no longer exists. Add a new one.',
+    avatar_photo_storage_full:
+      'Profile photos cannot be added right now. Try again later or choose an avatar.',
     movie_details_unavailable: 'Movie details temporarily unavailable',
     showcase_unavailable: 'Movie selections temporarily unavailable',
     search_unavailable: 'Movie search temporarily unavailable',

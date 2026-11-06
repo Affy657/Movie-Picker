@@ -2,7 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
@@ -89,6 +92,29 @@ public sealed class AvatarPhotoEndpointsTests : IClassFixture<MoviePickerApplica
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
         Assert.Equal(ErrorCodes.AvatarPhotoInvalid, body.GetProperty("reason").GetString());
+    }
+
+    [Fact]
+    public async Task GetImage_PhotoStoredWhenLargerOnesWereAccepted_IsStillServed()
+    {
+        byte[] bytes = [.. ImageHeaders.Png(1024, 1024), .. new byte[512 * 1024 - 64]];
+        var key = AvatarPhoto.NewKey();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<IAvatarPhotoRepository>().SaveAsync(new StoredAvatarPhoto
+            {
+                Key = key,
+                UserId = "legacy-owner",
+                ContentType = "image/png",
+                Data = bytes,
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+        }
+
+        var image = await _factory.CreateClient().GetAsync($"/api/v1/avatars/{key}");
+
+        Assert.Equal(HttpStatusCode.OK, image.StatusCode);
+        Assert.Equal(bytes, await image.Content.ReadAsByteArrayAsync());
     }
 
     [Theory]
