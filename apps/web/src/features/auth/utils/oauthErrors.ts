@@ -14,5 +14,6 @@ const OAUTH_ERROR_KEYS: Record<string, TranslationKey> = {
 
 export function resolveOAuthErrorKey(code: string | null): TranslationKey | null {
   if (!code) return null;
-  return OAUTH_ERROR_KEYS[code] ?? 'auth.oauth.errors.generic';
+  const known = Object.hasOwn(OAUTH_ERROR_KEYS, code) ? OAUTH_ERROR_KEYS[code] : undefined;
+  return known ?? 'auth.oauth.errors.generic';
 }
