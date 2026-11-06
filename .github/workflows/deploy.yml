@@ -209,10 +209,19 @@ jobs:
             echo "The $STAGE $other already serves $GITHUB_SHA: $TARGET alone fits it."
             exit 0
           fi
-          if ! changed="$(gh api --paginate "repos/$GITHUB_REPOSITORY/compare/${served}...${GITHUB_SHA}?per_page=100" \
-              --jq "[.files[]? | .filename | select(startswith(\"$lane\"))] | length" \
-              | awk '{ total += $1 } END { print total + 0 }')"; then
+          # `compare` lists at most 300 files, on its first page only, and does not say it stopped:
+          # `--paginate` walks the commits, not the files. On v1.6.0...v1.7.0 it listed 300 files
+          # of 1,661, none under apps/web/ where 853 had changed. So a full list clears a partial
+          # target, a list that reached the cap refuses it.
+          if ! compared="$(gh api "repos/$GITHUB_REPOSITORY/compare/${served}...${GITHUB_SHA}?per_page=1" \
+              --jq "{listed: (.files // [] | length), lane: ([.files[]? | .filename | select(startswith(\"$lane\"))] | length)}")"; then
             echo "::error::GitHub could not compare $served (the release the $STAGE $other serves) with $GITHUB_SHA. Deploy target=all."
+            exit 1
+          fi
+          listed="$(printf '%s' "$compared" | jq -r '.listed')"
+          changed="$(printf '%s' "$compared" | jq -r '.lane')"
+          if [ "$listed" -ge 300 ]; then
+            echo "::error::GitHub stops listing at 300 changed files and reached it between $served and $GITHUB_SHA: whether $lane changed cannot be told. Deploy target=all."
             exit 1
           fi
           if [ "$changed" != "0" ]; then
