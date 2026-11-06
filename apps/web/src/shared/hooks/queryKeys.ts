@@ -57,6 +57,13 @@ export const queryKeys = {
     list: (slug: string | undefined) => ['movies', 'list', slug ?? '$pending'] as const,
     details: (tmdbId: number | undefined, mediaType?: string) =>
       ['movies', 'details', tmdbId ?? '$pending', mediaType ?? 'movie'] as const,
+    searchIdle: ['movies', 'search', '$idle'] as const,
+    search: (
+      searchKey: string,
+      lang: string,
+      eventSlug: string | undefined,
+      includeSeries: boolean
+    ) => ['movies', 'search', searchKey, lang, eventSlug ?? '', includeSeries] as const,
   },
   me: {
     followingWatchedMoviesAll: ['users', 'me', 'following-watched-movies'] as const,

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
+import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 import AddMoviePanel from './AddMoviePanel';
 
 vi.mock('@/features/auth/contexts/AuthContext', () => ({
@@ -25,13 +26,15 @@ function stubMatchMedia(matches: boolean) {
 
 function renderPanel() {
   return render(
-    <LocaleProvider>
-      <AddMoviePanel
-        triggerLabel="Ajouter un film"
-        panelTitle="Ajouter un film à ma liste"
-        onAdded={() => undefined}
-      />
-    </LocaleProvider>
+    <QueryClientWrapper>
+      <LocaleProvider>
+        <AddMoviePanel
+          triggerLabel="Ajouter un film"
+          panelTitle="Ajouter un film à ma liste"
+          onAdded={() => undefined}
+        />
+      </LocaleProvider>
+    </QueryClientWrapper>
   );
 }
 

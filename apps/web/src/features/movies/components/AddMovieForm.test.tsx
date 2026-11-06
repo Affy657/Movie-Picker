@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupServer } from 'msw/node';
 import { LocaleProvider, useLocale } from '@/shared/i18n';
+import { QueryClientWrapper } from '@/test-utils/queryWrapper';
 import AddMovieForm from '@/features/movies/components/AddMovieForm';
 import { TEST_API_V1, createSearchAndAddHandlers } from '@/mocks/handlers';
 import { http, HttpResponse } from 'msw';
@@ -15,7 +16,11 @@ vi.mock('@/shared/hooks/useAnalytics', () => ({
 }));
 
 function renderWithLocale(ui: React.ReactElement) {
-  return render(<LocaleProvider>{ui}</LocaleProvider>);
+  return render(
+    <QueryClientWrapper>
+      <LocaleProvider>{ui}</LocaleProvider>
+    </QueryClientWrapper>
+  );
 }
 
 const HISTORY_KEY = 'moviepicker_search_history_test-user';
