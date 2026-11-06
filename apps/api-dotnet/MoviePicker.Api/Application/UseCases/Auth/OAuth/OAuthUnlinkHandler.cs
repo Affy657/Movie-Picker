@@ -24,7 +24,7 @@ public sealed class OAuthUnlinkHandler : IOAuthUnlinkHandler
         _logger = logger;
     }
 
-    public async Task HandleAsync(string userId, string provider, string? currentSessionId, CancellationToken ct = default)
+    public async Task HandleAsync(string userId, string provider, string? currentSessionId, bool recentlyAuthenticated, CancellationToken ct = default)
     {
         var user = await _users.GetByIdAsync(userId, ct) ?? throw Errors.UserNotFound();
 
@@ -35,6 +35,12 @@ public sealed class OAuthUnlinkHandler : IOAuthUnlinkHandler
         var hasPassword = !string.IsNullOrEmpty(user.PasswordHash);
         if (!hasPassword && remainingIdentities == 0)
             throw Errors.LastLoginMethod();
+
+        if (!hasPassword && !recentlyAuthenticated)
+        {
+            _logger.LogWarning("OAuth unlink: refused on a stale session for {UserId}", userId);
+            throw Errors.ReauthenticationRequired();
+        }
 
         var now = _clock.GetUtcNow();
         var unlinked = user.Identities

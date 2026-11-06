@@ -239,7 +239,7 @@ public sealed class OAuthLoginHandlerTests
                 new Mock<IAuthSessionInvalidator>().Object,
                 new FakeTimeProvider(TestEpoch.AddDays(-1)),
                 NullLogger<OAuthUnlinkHandler>.Instance)
-            .HandleAsync(userId, provider, "session-1");
+            .HandleAsync(userId, provider, "session-1", recentlyAuthenticated: true);
 
     private static ExternalLoginInfo GitHubSignIn(string subject) => new()
     {

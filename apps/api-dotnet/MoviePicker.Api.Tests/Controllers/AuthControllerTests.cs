@@ -378,10 +378,24 @@ public sealed class AuthControllerTests
         var controller = Controller("u1");
         AuthSessionKey.Remember(controller.HttpContext, "session-1");
 
-        var result = await controller.UnlinkIdentity("github", handler.Object, CancellationToken.None);
+        var result = await controller.UnlinkIdentity("github", handler.Object, Clock, CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
-        handler.Verify(h => h.HandleAsync("u1", "github", "session-1", It.IsAny<CancellationToken>()), Times.Once);
+        handler.Verify(h => h.HandleAsync("u1", "github", "session-1", It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(2, true)]
+    [InlineData(11, false)]
+    public async Task UnlinkIdentity_TellsTheHandlerWhetherTheSignInIsRecent(int minutesSinceSignIn, bool expectedRecent)
+    {
+        var handler = new Mock<IOAuthUnlinkHandler>();
+
+        await SessionController(Now.AddMinutes(-minutesSinceSignIn))
+            .UnlinkIdentity("github", handler.Object, Clock, CancellationToken.None);
+
+        handler.Verify(
+            h => h.HandleAsync("u1", "github", It.IsAny<string?>(), expectedRecent, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -491,7 +505,7 @@ public sealed class AuthControllerTests
     [Fact]
     public async Task DeleteMe_NullBody_ReturnsBadRequest()
     {
-        var result = await Controller("u1").DeleteMe(null, new Mock<IDeleteAccountHandler>().Object, CancellationToken.None);
+        var result = await Controller("u1").DeleteMe(null, new Mock<IDeleteAccountHandler>().Object, Clock, CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -501,11 +515,25 @@ public sealed class AuthControllerTests
     {
         var handler = new Mock<IDeleteAccountHandler>();
 
-        var result = await Controller("u1").DeleteMe(new DeleteAccountRequest(), handler.Object, CancellationToken.None);
+        var result = await Controller("u1").DeleteMe(new DeleteAccountRequest(), handler.Object, Clock, CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
         handler.Verify(
-            h => h.HandleAsync("u1", It.IsAny<DeleteAccountRequest>(), It.IsAny<CancellationToken>()), Times.Once);
+            h => h.HandleAsync("u1", It.IsAny<DeleteAccountRequest>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(2, true)]
+    [InlineData(11, false)]
+    public async Task DeleteMe_TellsTheHandlerWhetherTheSignInIsRecent(int minutesSinceSignIn, bool expectedRecent)
+    {
+        var handler = new Mock<IDeleteAccountHandler>();
+
+        await SessionController(Now.AddMinutes(-minutesSinceSignIn))
+            .DeleteMe(new DeleteAccountRequest(), handler.Object, Clock, CancellationToken.None);
+
+        handler.Verify(
+            h => h.HandleAsync("u1", It.IsAny<DeleteAccountRequest>(), expectedRecent, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

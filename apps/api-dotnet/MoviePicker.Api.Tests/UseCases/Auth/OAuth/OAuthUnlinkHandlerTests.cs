@@ -29,11 +29,63 @@ public sealed class OAuthUnlinkHandlerTests
             new(Users, Sessions.Object, new FakeTimeProvider(TestEpoch), NullLogger<OAuthUnlinkHandler>.Instance);
     }
 
+    private static User Passwordless(params string[] providers) => new()
+    {
+        Email = "neo@example.com",
+        DisplayName = "Neo",
+        Handle = "neo",
+        PasswordHash = string.Empty,
+        Identities = providers
+            .Select(provider => new LinkedIdentity { Provider = provider, Subject = $"{provider}-1", Email = "neo@example.com", LinkedAt = TestEpoch })
+            .ToList(),
+        CreatedAt = TestEpoch,
+        UpdatedAt = TestEpoch
+    };
+
+    [Fact]
+    public async Task HandleAsync_NoPassword_StaleSession_AsksForAFreshSignInAndKeepsTheIdentity()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(Passwordless("google", "github"));
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(
+            () => f.CreateHandler().HandleAsync(user.Id, "github", "session-1", recentlyAuthenticated: false));
+
+        Assert.Equal(ErrorCodes.ReauthenticationRequired, ex.Reason);
+        Assert.Contains((await f.Users.GetByIdAsync(user.Id))!.Identities, i => i.Provider == "github");
+        f.Sessions.Verify(
+            x => x.InvalidateOthersForUserAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoPassword_LastIdentity_StaleSession_ExplainsThatItCannotBeRemoved()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(Passwordless("google"));
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(
+            () => f.CreateHandler().HandleAsync(user.Id, "google", "session-1", recentlyAuthenticated: false));
+
+        Assert.Equal(ErrorCodes.LastLoginMethod, ex.Reason);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithPassword_StaleSession_StillWorks()
+    {
+        var f = new Fixture();
+        var user = await f.Users.AddAsync(Passwordless("google", "github") with { PasswordHash = "hash" });
+
+        await f.CreateHandler().HandleAsync(user.Id, "github", "session-1", recentlyAuthenticated: false);
+
+        Assert.DoesNotContain((await f.Users.GetByIdAsync(user.Id))!.Identities, i => i.Provider == "github");
+    }
+
     [Fact]
     public async Task HandleAsync_UserMissing_ThrowsNotFound()
     {
         var f = new Fixture();
-        await Assert.ThrowsAsync<NotFoundException>(() => f.CreateHandler().HandleAsync("missing", "google", "session-1"));
+        await Assert.ThrowsAsync<NotFoundException>(() => f.CreateHandler().HandleAsync("missing", "google", "session-1", recentlyAuthenticated: true));
     }
 
     [Fact]
@@ -50,7 +102,7 @@ public sealed class OAuthUnlinkHandlerTests
             UpdatedAt = TestEpoch
         });
 
-        await Assert.ThrowsAsync<NotFoundException>(() => f.CreateHandler().HandleAsync(user.Id, "google", "session-1"));
+        await Assert.ThrowsAsync<NotFoundException>(() => f.CreateHandler().HandleAsync(user.Id, "google", "session-1", recentlyAuthenticated: true));
         f.Sessions.Verify(
             x => x.InvalidateOthersForUserAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -71,7 +123,7 @@ public sealed class OAuthUnlinkHandlerTests
             UpdatedAt = TestEpoch
         });
 
-        await f.CreateHandler().HandleAsync(user.Id, "google", "session-1");
+        await f.CreateHandler().HandleAsync(user.Id, "google", "session-1", recentlyAuthenticated: true);
 
         var reloaded = await f.Users.GetByIdAsync(user.Id);
         Assert.Empty(reloaded!.Identities);
@@ -95,7 +147,7 @@ public sealed class OAuthUnlinkHandlerTests
             UpdatedAt = TestEpoch
         });
 
-        await f.CreateHandler().HandleAsync(user.Id, "google", "session-1");
+        await f.CreateHandler().HandleAsync(user.Id, "google", "session-1", recentlyAuthenticated: true);
 
         var reloaded = await f.Users.GetByIdAsync(user.Id);
         var remaining = Assert.Single(reloaded!.Identities);
@@ -116,7 +168,7 @@ public sealed class OAuthUnlinkHandlerTests
             UpdatedAt = TestEpoch
         });
 
-        await Assert.ThrowsAsync<BadRequestException>(() => f.CreateHandler().HandleAsync(user.Id, "google", "session-1"));
+        await Assert.ThrowsAsync<BadRequestException>(() => f.CreateHandler().HandleAsync(user.Id, "google", "session-1", recentlyAuthenticated: true));
 
         var reloaded = await f.Users.GetByIdAsync(user.Id);
         Assert.Single(reloaded!.Identities);
@@ -140,7 +192,7 @@ public sealed class OAuthUnlinkHandlerTests
             UpdatedAt = TestEpoch
         });
 
-        await f.CreateHandler().HandleAsync(user.Id, "github", "session-1");
+        await f.CreateHandler().HandleAsync(user.Id, "github", "session-1", recentlyAuthenticated: true);
 
         var reloaded = await f.Users.GetByIdAsync(user.Id);
         var unlinked = Assert.Single(reloaded!.UnlinkedIdentities);
@@ -162,7 +214,7 @@ public sealed class OAuthUnlinkHandlerTests
             UpdatedAt = TestEpoch
         });
 
-        await f.CreateHandler().HandleAsync(user.Id, "github", "session-1");
+        await f.CreateHandler().HandleAsync(user.Id, "github", "session-1", recentlyAuthenticated: true);
 
         f.Sessions.Verify(x => x.InvalidateOthersForUserAsync(user.Id, "session-1", It.IsAny<CancellationToken>()), Times.Once);
         f.Sessions.Verify(x => x.InvalidateAllForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);

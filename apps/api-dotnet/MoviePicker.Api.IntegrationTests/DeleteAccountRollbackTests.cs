@@ -178,7 +178,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         var handler = BuildHandlerFailingOnResetTokens(services);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            handler.HandleAsync(fixture.UserId, new DeleteAccountRequest { Password = "MotDePasse1!" }));
+            handler.HandleAsync(fixture.UserId, new DeleteAccountRequest { Password = "MotDePasse1!" }, recentlyAuthenticated: true));
 
         var users = services.GetRequiredService<IUserRepository>();
         var events = services.GetRequiredService<IEventRepository>();
@@ -215,7 +215,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
 
         var handler = services.GetRequiredService<IDeleteAccountHandler>();
 
-        await handler.HandleAsync(fixture.UserId, new DeleteAccountRequest { Password = "MotDePasse1!" });
+        await handler.HandleAsync(fixture.UserId, new DeleteAccountRequest { Password = "MotDePasse1!" }, recentlyAuthenticated: true);
 
         var users = services.GetRequiredService<IUserRepository>();
         var events = services.GetRequiredService<IEventRepository>();
@@ -251,7 +251,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         var handler = services.GetRequiredService<IDeleteAccountHandler>();
 
         await Assert.ThrowsAsync<Domain.Exceptions.UnauthorizedException>(() =>
-            handler.HandleAsync(fixture.UserId, new DeleteAccountRequest { Password = "MauvaisMotDePasse!" }));
+            handler.HandleAsync(fixture.UserId, new DeleteAccountRequest { Password = "MauvaisMotDePasse!" }, recentlyAuthenticated: true));
 
         var users = services.GetRequiredService<IUserRepository>();
         var watchlist = services.GetRequiredService<IWatchlistRepository>();
@@ -292,10 +292,10 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
             UpdatedAt = now
         });
         var handler = services.GetRequiredService<IDeleteAccountHandler>();
-        await handler.HandleAsync(fixture.UserId, new DeleteAccountRequest { Password = "MotDePasse1!" });
+        await handler.HandleAsync(fixture.UserId, new DeleteAccountRequest { Password = "MotDePasse1!" }, recentlyAuthenticated: true);
 
         var watch = System.Diagnostics.Stopwatch.StartNew();
-        await handler.HandleAsync(coParticipant.Id, new DeleteAccountRequest { Password = "MotDePasse1!" });
+        await handler.HandleAsync(coParticipant.Id, new DeleteAccountRequest { Password = "MotDePasse1!" }, recentlyAuthenticated: true);
         watch.Stop();
 
         Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10), $"second deletion took {watch.Elapsed}");

@@ -4,5 +4,5 @@ namespace MoviePicker.Api.Application.UseCases.Auth;
 
 public interface IDeleteAccountHandler
 {
-    Task HandleAsync(string userId, DeleteAccountRequest request, CancellationToken ct = default);
+    Task HandleAsync(string userId, DeleteAccountRequest request, bool recentlyAuthenticated, CancellationToken ct = default);
 }

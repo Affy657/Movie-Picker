@@ -280,17 +280,19 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UnlinkIdentity(
         string provider,
         [FromServices] IOAuthUnlinkHandler handler,
+        [FromServices] TimeProvider clock,
         CancellationToken ct)
     {
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
         if (!OAuthProviders.TryResolve(provider, out var knownProvider))
             return NotFound();
-        await handler.HandleAsync(userId, knownProvider, AuthSessionKey.Of(HttpContext), ct);
+        await handler.HandleAsync(userId, knownProvider, AuthSessionKey.Of(HttpContext), IsRecentlyAuthenticated(clock), ct);
         return NoContent();
     }
 
@@ -424,11 +426,13 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> DeleteMe(
         [FromBody] DeleteAccountRequest? request,
         [FromServices] IDeleteAccountHandler handler,
+        [FromServices] TimeProvider clock,
         CancellationToken ct)
     {
         if (request is null)
@@ -438,7 +442,7 @@ public sealed class AuthController : ControllerBase
         if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
-        await handler.HandleAsync(userId, request, ct);
+        await handler.HandleAsync(userId, request, IsRecentlyAuthenticated(clock), ct);
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
