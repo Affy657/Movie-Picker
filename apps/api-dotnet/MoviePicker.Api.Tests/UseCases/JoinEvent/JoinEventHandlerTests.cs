@@ -74,7 +74,6 @@ public sealed class JoinEventHandlerTests
     {
         var evt = ActiveEvent();
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(evt.Id, "Alice", It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
         var newParticipant = new Participant { Id = "p1", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _participantRepo.Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>())).ReturnsAsync(newParticipant);
         var request = new JoinEventRequest { Pseudo = " Alice " };
@@ -217,9 +216,6 @@ public sealed class JoinEventHandlerTests
         Assert.Equal("p1", result.Participant.Id);
         Assert.Equal("Premier", result.Participant.Pseudo);
         Assert.Equal("Already joined with this account", result.Message);
-        _participantRepo.Verify(
-            r => r.FindByEventAndPseudoAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
-            Times.Never);
     }
 
     [Fact]
@@ -230,8 +226,6 @@ public sealed class JoinEventHandlerTests
             Config = new EventConfig { MaxParticipants = 3 }
         };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(evt.Id, "Alice", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Participant?)null);
         _participantRepo.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(3);
 
@@ -251,8 +245,6 @@ public sealed class JoinEventHandlerTests
             Config = new EventConfig { MaxParticipants = 5 }
         };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(evt.Id, "Alice", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Participant?)null);
         _participantRepo.Setup(r => r.CountByEventIdAsync(evt.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(2);
         var newParticipant = new Participant { Id = "p1", EventId = evt.Id, Pseudo = "Alice", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
@@ -269,8 +261,6 @@ public sealed class JoinEventHandlerTests
     {
         var evt = ActiveEvent() with { Config = new EventConfig { MaxParticipants = 5 } };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
-        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(evt.Id, "Alice", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Participant?)null);
         var steps = new List<string>();
         _eventRepo.Setup(r => r.LockForWriteAsync(evt.Id, It.IsAny<CancellationToken>()))
             .Callback(() => steps.Add(_unitOfWork.IsExecuting ? "lock" : "lock-outside")).Returns(Task.CompletedTask);
@@ -294,8 +284,6 @@ public sealed class JoinEventHandlerTests
         _eventRepo.SetupSequence(r => r.GetByIdOrSlugAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(withoutCap)
             .ReturnsAsync(cappedMeanwhile);
-        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(withoutCap.Id, "Alice", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Participant?)null);
         _participantRepo.Setup(r => r.CountByEventIdAsync(withoutCap.Id, It.IsAny<CancellationToken>())).ReturnsAsync(3);
 
         var ex = await Assert.ThrowsAsync<ConflictException>(
@@ -319,7 +307,6 @@ public sealed class JoinEventHandlerTests
         var evt = ActiveEvent();
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _participantRepo.Setup(r => r.FindByEventAndUserIdAsync(evt.Id, "u99", It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
-        _participantRepo.Setup(r => r.FindByEventAndPseudoAsync(evt.Id, "Zed", It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
         Participant? captured = null;
         _participantRepo
             .Setup(r => r.AddAsync(It.IsAny<Participant>(), It.IsAny<CancellationToken>()))

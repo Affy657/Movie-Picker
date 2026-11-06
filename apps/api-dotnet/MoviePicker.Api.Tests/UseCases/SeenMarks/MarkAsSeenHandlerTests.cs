@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.SeenMarks;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Infrastructure.Persistence.InMemory;
 using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
@@ -210,29 +211,16 @@ public sealed class MarkAsSeenHandlerTests
         var evt = ActiveEvent();
         var movie = MovieFor(evt);
         var participant = ParticipantFor(evt);
-        var existing = new SeenMark
-        {
-            Id = "sm-existing",
-            EventId = evt.Id,
-            MovieId = movie.Id,
-            ParticipantId = participant.Id,
-            CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
-            UpdatedAt = DateTimeOffset.UtcNow.AddMinutes(-5)
-        };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.GetByIdAndEventIdAsync("mov1", evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movie);
         _participantRepo.Setup(r => r.FindByIdAndEventIdAsync(participant.Id, evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(participant);
-        _seenMarkRepo
-            .Setup(r => r.AddAsync(It.IsAny<SeenMark>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existing);
+        var seenMarks = new InMemorySeenMarkRepository();
+        var sut = new MarkAsSeenHandler(_eventRepo.Object, _movieRepo.Object, _participantRepo.Object, seenMarks, _currentUser.Object, _unitOfWork, TimeProvider.System);
 
-        var first = await _sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
-        var second = await _sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
+        var first = await sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
+        var second = await sut.HandleAsync("evt1", "mov1", new MarkAsSeenRequest { ParticipantId = participant.Id });
 
-        Assert.Equal(existing.Id, first.Id);
-        Assert.Equal(existing.Id, second.Id);
-        _seenMarkRepo.Verify(
-            r => r.AddAsync(It.IsAny<SeenMark>(), It.IsAny<CancellationToken>()),
-            Times.Exactly(2));
+        Assert.Equal(first.Id, second.Id);
+        Assert.Equal(first.Id, Assert.Single(await seenMarks.ListByParticipantIdsAsync([participant.Id])).Id);
     }
 }
