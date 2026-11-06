@@ -42,6 +42,27 @@ public sealed class MongoTransactionTests : IClassFixture<MoviePickerApplication
     };
 
     [MongoFact]
+    public async Task FailedUnitOfWork_RollsBackAnEventUpdate()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var created = await events.AddAsync(NewEvent("Avant la transaction"));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            unitOfWork.ExecuteAsync(async token =>
+            {
+                await events.UpdateAsync(created with { Title = "Pendant la transaction" }, token);
+                throw new InvalidOperationException("failure after the update");
+            }));
+
+        var reloaded = await events.GetByIdOrSlugAsync(created.Slug);
+        Assert.Equal("Avant la transaction", reloaded!.Title);
+        Assert.Equal(created.Version, reloaded.Version);
+        Assert.Equal(created.WriteSeq, reloaded.WriteSeq);
+    }
+
+    [MongoFact]
     public async Task FailedUnitOfWork_RollsBackEveryWrite()
     {
         using var scope = _factory.Services.CreateScope();

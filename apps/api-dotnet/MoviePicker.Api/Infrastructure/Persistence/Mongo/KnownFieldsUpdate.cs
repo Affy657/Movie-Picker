@@ -1,3 +1,4 @@
+using System.Collections;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -11,21 +12,42 @@ internal static class KnownFieldsUpdate
     public static UpdateDefinition<TDocument> From<TDocument>(TDocument document, params string[] incrementedCounters)
     {
         var written = document.ToBsonDocument();
-        written.Remove(IdElement);
+        var set = new BsonDocument();
+        var unset = new BsonArray();
+        var rootFields = BsonClassMap.LookupClassMap(typeof(TDocument)).AllMemberMaps
+            .Where(member => member.ElementName != IdElement && !incrementedCounters.Contains(member.ElementName));
+        CollectFields(rootFields, written, string.Empty, set, unset);
         foreach (var counter in incrementedCounters)
-            written.Remove(counter);
+            set[counter] = Incremented(counter);
 
-        var absentKnownFields = BsonClassMap.LookupClassMap(typeof(TDocument)).AllMemberMaps
-            .Select(member => member.ElementName)
-            .Where(name => name != IdElement && !written.Contains(name) && !incrementedCounters.Contains(name))
-            .Select(name => new BsonElement(name, 1));
-
-        var update = new BsonDocument("$set", written);
-        var unset = new BsonDocument(absentKnownFields);
-        if (unset.ElementCount > 0)
-            update.Add("$unset", unset);
-        if (incrementedCounters.Length > 0)
-            update.Add("$inc", new BsonDocument(incrementedCounters.Select(name => new BsonElement(name, 1L))));
-        return update;
+        var stages = new List<BsonDocument> { new("$set", set) };
+        if (unset.Count > 0)
+            stages.Add(new BsonDocument("$unset", unset));
+        return Builders<TDocument>.Update.Pipeline(stages);
     }
+
+    private static void CollectFields(
+        IEnumerable<BsonMemberMap> members,
+        BsonDocument written,
+        string pathPrefix,
+        BsonDocument set,
+        BsonArray unset)
+    {
+        foreach (var member in members)
+        {
+            var path = pathPrefix + member.ElementName;
+            if (!written.TryGetValue(member.ElementName, out var value))
+                unset.Add(path);
+            else if (value is BsonDocument { ElementCount: > 0 } subDocument && IsMappedSubDocument(member.MemberType))
+                CollectFields(BsonClassMap.LookupClassMap(member.MemberType).AllMemberMaps, subDocument, path + ".", set, unset);
+            else
+                set[path] = new BsonDocument("$literal", value);
+        }
+    }
+
+    private static bool IsMappedSubDocument(Type memberType) =>
+        memberType.IsClass && !typeof(IEnumerable).IsAssignableFrom(memberType);
+
+    private static BsonDocument Incremented(string counter) =>
+        new("$add", new BsonArray { new BsonDocument("$ifNull", new BsonArray { "$" + counter, 0L }), 1L });
 }
