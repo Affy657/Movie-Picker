@@ -39,11 +39,11 @@ describe('t (i18n)', () => {
   });
 
   it('returns the string unchanged when no variable is provided', () => {
-    expect(t('common.appName')).toBe('Movie Picker');
+    expect(t('common.retry')).toBe('Réessayer');
   });
 
   it('ignores the vars when the string contains no placeholder', () => {
-    expect(t('common.appName', { unused: 'value' })).toBe('Movie Picker');
+    expect(t('common.retry', { unused: 'value' })).toBe('Réessayer');
   });
 
   it('laisse le placeholder intact si la variable correspondante est absente', () => {

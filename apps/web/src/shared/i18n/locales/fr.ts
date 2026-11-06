@@ -1,14 +1,10 @@
 export const fr = {
   common: {
-    appName: 'Movie Picker',
     loading: 'Chargement\u2026',
     retry: 'Réessayer',
-    backHome: '\u2190 Accueil',
-    save: 'Enregistrer',
     cancel: 'Annuler',
     confirm: 'Confirmer',
     close: 'Fermer',
-    send: 'Envoi\u2026',
     pageTitle: '{{segment}} | Movie Picker',
     languageLabel: 'Langue',
     decrement: 'Diminuer',
@@ -27,7 +23,6 @@ export const fr = {
   nav: {
     explore: 'Explorer',
     home: 'Accueil',
-    discover: 'Découvrir',
     myEvents: 'Mes soirées',
     myEventsShort: 'Soirées',
     watchlist: 'Ma liste',
@@ -36,7 +31,6 @@ export const fr = {
     createEvent: 'Nouvelle soirée',
     createEventShort: 'Créer',
     profile: 'Profil',
-    signIn: 'Se connecter',
     signInShort: 'Connexion',
     navLabel: 'Navigation principale',
     accountMenu: 'Menu du compte',
@@ -53,7 +47,6 @@ export const fr = {
   },
 
   home: {
-    actionsAriaLabel: 'Actions principales',
     ctaLogin: 'Se connecter',
     ctaRegister: 'Créer un compte',
     title: "Qu'est-ce qu'on regarde ce soir ?",
@@ -401,7 +394,6 @@ export const fr = {
       description: 'Cr\u00e9ez un compte pour retrouver vos soir\u00e9es.',
       emailLabel: 'E-mail',
       passwordLabel: 'Mot de passe',
-      passwordHint: 'Au moins 8 caractères',
       passwordRulesHint: '8 caract\u00e8res minimum, au moins une lettre et un chiffre.',
       passwordRulesError:
         'Le mot de passe doit faire au moins 8 caract\u00e8res et inclure au moins une lettre et un chiffre.',
@@ -495,8 +487,6 @@ export const fr = {
       preferencesTitle: 'Préférences',
       languageLabel: 'Langue',
       guestLead: 'Connectez-vous ou créez un compte pour garder vos soirées.',
-      saveSuccess: 'Modifications enregistrées.',
-      fallbackError: 'Enregistrement impossible.',
       logoutButton: 'Se déconnecter',
       loginCta: 'Se connecter',
       registerCta: 'Créer un compte',
@@ -509,7 +499,6 @@ export const fr = {
       passwordChangeLogoutWarning: 'Changer votre mot de passe vous déconnectera de cet appareil.',
       changePasswordRowButton: 'Changer',
       setPasswordRowButton: 'Définir',
-      saving: 'Enregistrement\u2026',
       guestNavAriaLabel: 'Connexion et inscription',
       changePasswordCurrentLabel: 'Mot de passe actuel',
       changePasswordNewLabel: 'Nouveau mot de passe',
@@ -522,19 +511,14 @@ export const fr = {
       changePasswordMustMatch: 'Les deux mots de passe doivent \u00eatre identiques.',
       changePasswordRulesError:
         'Le nouveau mot de passe doit contenir au moins 8 caract\u00e8res, une lettre et un chiffre.',
-      setPasswordHint:
-        'Vous vous \u00eates inscrit avec Google ou GitHub. D\u00e9finissez un mot de passe pour aussi pouvoir vous connecter avec votre e-mail.',
       setPasswordSubmit: 'D\u00e9finir le mot de passe',
       setPasswordSubmitting: 'Enregistrement\u2026',
       setPasswordSuccess: 'Mot de passe d\u00e9fini. Reconnectez-vous dans un instant\u2026',
       setPasswordFallbackError: 'Enregistrement impossible.',
       connectionsTitle: 'Connexions',
-      connectionsDescription:
-        'Connectez-vous en un clic la prochaine fois gr\u00e2ce \u00e0 un compte Google ou GitHub.',
       connectionsLinked: 'Li\u00e9',
       connectionsLinkButton: 'Lier {{provider}}',
       connectionsUnlinkButton: 'D\u00e9lier',
-      connectionsUnlinkConfirm: 'D\u00e9lier ce compte {{provider}} ?',
       connectionsUnlinkFallbackError: 'Impossible de d\u00e9lier ce compte pour le moment.',
       connectionsLinkedBanner: '{{provider}} est maintenant li\u00e9 \u00e0 votre compte.',
       connectionsUnlinkSafeHint:
@@ -547,7 +531,6 @@ export const fr = {
       accentColorHint:
         'Choisissez la couleur dominante des boutons et accents. S\u2019applique en mode clair et sombre.',
       accentColorOptions: {
-        default: 'Par défaut',
         blue: 'Bleu',
         green: 'Vert',
         purple: 'Violet',
@@ -564,7 +547,6 @@ export const fr = {
         ten: 'Sur 10',
       },
       avatarLabel: 'Avatar',
-      avatarHint: 'Affiché à côté de votre pseudo dans les soirées.',
       avatarOptionAriaLabel: 'Choisir l’avatar {{name}}',
       avatarCategoryRobots: '🤖 Robots',
       avatarCategoryEmoji: '😄 Emoji',
@@ -612,7 +594,6 @@ export const fr = {
       deleteAccountDescription:
         'Votre profil, vos notifications, vos abonnements et vos appareils de notification seront définitivement supprimés. Les soirées que vous avez créées et vos votes sont conservés mais anonymisés (rattachés à « Compte supprimé ») pour ne pas perturber les autres participants. Cette action est irréversible.',
       deleteAccountButton: 'Supprimer mon compte',
-      deleteAccountConfirmTitle: 'Confirmer la suppression',
       deleteAccountPasswordLabel: 'Saisissez votre mot de passe pour confirmer',
       deleteAccountConfirmationLabel: 'Saisissez votre handle ou votre e-mail pour confirmer',
       deleteAccountConfirmButton: 'Supprimer définitivement',
@@ -649,8 +630,6 @@ export const fr = {
         reportChanges: '{{added}} film(s) ajouté(s), {{removed}} retiré(s).',
         reportPending: 'Choisir pour {{count}} film(s) ambigu(s)',
         reportUnmatched: 'Voir les {{count}} film(s) introuvable(s) sur TMDB',
-        reportUndecided:
-          'Voir les {{count}} film(s) laissé(s) en attente, à décider à la prochaine synchronisation',
         reportTruncated: '{{count}} film(s) non traité(s) : trop de films pour une seule fois.',
         attentionMessageOne: '1 film n’a pas pu être identifié automatiquement.',
         attentionMessage: '{{count}} films n’ont pas pu être identifiés automatiquement.',
@@ -739,12 +718,9 @@ export const fr = {
     join: {
       title: 'Rejoindre la soirée',
       fullTitle: 'Soirée complète',
-      pseudoLabel: 'Votre pseudo',
-      pseudoPlaceholder: 'Ex: Alice',
       submit: 'Rejoindre',
       submitting: 'Envoi\u2026',
       fallbackError: 'Impossible de rejoindre',
-      pseudoRequired: 'Indiquez un pseudo pour rejoindre.',
       fullWithCap:
         "La soirée est complète ({{max}} participants maximum). Demandez à l'hôte d'ouvrir une place pour la rejoindre.",
       full: "La soirée est complète. Demandez à l'hôte d'ouvrir une place pour la rejoindre.",
@@ -754,7 +730,6 @@ export const fr = {
     participants: {
       title: 'Participants',
       empty: "Personne n'a encore rejoint la soirée.",
-      meBadge: 'moi',
       hostBadge: 'hôte',
       fullBadge: 'Complète',
       fullBadgeAria: 'Soirée complète',
@@ -775,7 +750,6 @@ export const fr = {
       leaveError: 'Impossible de quitter la soirée.',
       manageAction: 'Gérer',
       manageDone: 'Terminer',
-      capacityLabel: '{{count}} participants sur {{max}} places',
       inviteAction: 'Inviter',
     },
     detail: {
@@ -788,10 +762,6 @@ export const fr = {
       missing: "Cette soirée n'existe pas ou a été supprimée.",
       backHome: "Retour à l'accueil",
       backNav: 'Retour',
-      finishedBadge: 'Terminée',
-      finishedBanner: 'Soirée terminée',
-      moviesSection: 'Films',
-      wheelSection: 'Roue',
       dateTimeJoiner: 'à',
       countdownImminent: 'quelques instants',
       countdownMinutes: '{{count}} min',
@@ -813,13 +783,9 @@ export const fr = {
       emptyDescription:
         'Aucune soirée pour l\u2019instant. Cr\u00e9ez-en une ou rejoignez une invitation.',
       createCta: 'Créer une soirée',
-      hostedSection: "Soirées que j'ai créées",
-      joinedSection: "Soirées que j'ai rejointes",
-      loadingPlaceholder: 'Chargement\u2026',
       loadingDetail: 'Chargement de vos soir\u00e9es\u2026',
       fallbackError: 'Chargement impossible',
       reconnectLink: 'Se reconnecter',
-      actionsNavLabel: 'Actions sur vos soir\u00e9es',
       hostBadge: 'H\u00f4te',
       hostBadgeTitle: 'Vous organisez cette soir\u00e9e',
       eventOptionsLabel: 'Options pour {{title}}',
@@ -838,7 +804,6 @@ export const fr = {
       joinedCountWithCapMany: '{{count}} / {{max}} participants',
       movieProposedOne: '1 film propos\u00e9',
       movieProposedMany: '{{count}} films propos\u00e9s',
-      winnerMovieLabel: 'Gagnant\u00a0: {{title}}',
       winnerMoviesLabel: 'Gagnants\u00a0: {{titles}}',
       winnerMoviesCount: '{{count}} films',
       activesTab: 'Actives',
@@ -901,8 +866,6 @@ export const fr = {
     share: {
       dialogTitle: 'Partager la soirée',
       shareText: "Je t'invite à {{title}} le {{date}} à {{time}} sur Movie Picker !",
-      shareTextNoDate: "Je t'invite à {{title}} à {{time}} sur Movie Picker !",
-      shareTextFallback: 'Invitation à une soirée ciné sur Movie Picker !',
       qrHint: "Ouvrez l'appareil photo pour rejoindre la soirée sur mobile.",
     },
     calendar: {
@@ -919,8 +882,6 @@ export const fr = {
       inviteAriaLabel: 'Inviter {{name}}',
       invitedBadge: 'Invité ✓',
       alreadyParticipant: 'Déjà participant',
-      empty:
-        'Vous ne suivez encore personne. Suivez des utilisateurs pour pouvoir les inviter directement.',
       emptyLine1: 'Vous ne suivez encore personne.',
       emptyLink: 'Allez sur votre profil pour suivre des utilisateurs',
       loadError: 'Impossible de charger la liste.',
@@ -958,7 +919,6 @@ export const fr = {
       themeLabel: 'Thème / ambiance',
       themeEmptyTitle: 'Ajouter un thème',
       themeEmptySubtitle: 'Optionnel : donne le ton de la soirée.',
-      themePlaceholder: 'Ex: Horreur, Sci-fi, Comédie…',
       clearThemeAria: 'Supprimer le thème',
       clearThemeButton: 'Effacer',
       themeFieldPlaceholder: 'Horreur, Comédie\u2026',
@@ -966,7 +926,6 @@ export const fr = {
       emojiListLabel: 'Emojis',
       emojiNoneLabel: 'Sans emoji',
       themePresetsLegend: 'Thèmes suggérés',
-      themePresetsMore: 'Plus de thèmes',
       themePresetsLess: 'Moins de thèmes',
       themePresetsMoreCount: '{{count}} de plus',
       themePresets: {
@@ -1000,7 +959,6 @@ export const fr = {
         sameAsApplied: 'Identique au template « {{name}} ».',
         capReached:
           '{{max}} templates sur {{max}}. Supprimez-en un pour en enregistrer un nouveau.',
-        applyAriaLabel: 'Appliquer le template « {{name}} »',
         renameAriaLabel: 'Renommer le template « {{name}} »',
         deleteAriaLabel: 'Supprimer le template « {{name}} »',
         nameLabel: 'Nom du template',
@@ -1017,12 +975,9 @@ export const fr = {
         saveFromEventHint: 'Cette configuration marche bien ?',
         saveFromEventAction: 'Enregistrer en template',
         lockedHint: 'Le tirage a commencé : les templates ne s’appliquent plus à cette soirée.',
-        saved: 'Template « {{name}} » enregistré.',
         modifiedHint: 'Vous avez modifié la configuration de {{name}}.',
         updateAction: 'Mettre à jour',
         saveAsNewAction: 'Enregistrer comme nouveau',
-        updated: 'Template « {{name}} » mis à jour.',
-        deleted: 'Template « {{name}} » supprimé.',
         reuseEventAction: 'Refaire cette soirée',
         reusedFrom: 'Configuration de « {{title}} » reprise. Ajustez-la si besoin.',
         reusedFromUnnamed: 'Configuration de la soirée reprise. Ajustez-la si besoin.',
@@ -1088,9 +1043,6 @@ export const fr = {
         'Impossible de réduire la capacité à {{value}} : {{count}} participants sont déjà inscrits.',
     },
     wheel: {
-      title: 'Roue',
-
-      viewerTitle: 'R\u00e9sultat du tirage',
       emptyPlaceholder: 'Aucun film. Proposez au moins un film pour désigner un gagnant.',
       winnerLabel: 'Film gagnant',
       launchButton: 'Lancer la roue',
@@ -1123,7 +1075,6 @@ export const fr = {
       manualPickButton: 'Choisir moi-même',
       manualPickCancel: 'Annuler',
       manualPickHint: 'Choisissez le film à désigner gagnant.',
-      manualPickBadge: 'Choisi par l’hôte',
       manualPickCardAria: '{{title}} : désigner ce film comme gagnant',
       manualPickError: 'Sélection impossible',
       allExcludedHint:
@@ -1148,10 +1099,6 @@ export const fr = {
         closeButton: "C'est parti !",
         finishHereButton: 'Terminer ici',
       },
-    },
-    reminder: {
-      startsIn: 'La soirée commence dans {{time}}',
-      startedRecently: 'La soirée a commencé !',
     },
     lifecycle: {
       startsIn: 'Commence dans',
@@ -1268,7 +1215,6 @@ export const fr = {
       label: 'Proposer un film',
       placeholder: 'Ajouter un film \u00e0 la soir\u00e9e\u2026',
       searchButton: 'Rechercher',
-      searching: '\u2026',
       fallbackError: 'Recherche indisponible',
       addButton: 'Ajouter',
       addButtonAria: 'Ajouter « {{title}} »',
@@ -1277,7 +1223,6 @@ export const fr = {
       duplicateHint: 'Déjà proposé dans cette soirée.',
       addError: 'Ajout impossible',
       regionHint: 'Disponibilités indicatives pour la région {{region}}',
-      tmdbVoteHint: 'Note moyenne TMDB (indicatif)',
       liveSearchMinCharsHint: 'Tapez au moins {{min}} caractères pour lancer une recherche.',
       a11ySearching: 'Recherche en cours\u2026',
       a11yResultsCount: '{{count}} résultat(s)',
@@ -1292,10 +1237,6 @@ export const fr = {
       filtersClearAll: 'Effacer les filtres',
       filterGenre: 'Genre',
       filterYear: 'Année de sortie',
-      yearFromPlaceholder: 'De',
-      yearToPlaceholder: 'À',
-      yearFromAria: 'Année de sortie minimum',
-      yearToAria: 'Année de sortie maximum',
       noResultsForFilters: 'Aucun film ne correspond aux filtres sélectionnés.',
       filterVoteMin: 'Note min.',
       filterLanguage: 'Langue VO',
@@ -1312,9 +1253,6 @@ export const fr = {
       emptyParticipant: 'Proposez le premier film, la roue viendra ensuite.',
       emptyVisitor: 'Rejoignez la soirée pour proposer le premier film.',
       emptyVisitorFull: "Les participants n'ont encore rien proposé.",
-      proposedBy: 'Proposé par {{pseudo}}',
-      proposedByMeLead: 'Proposé par ',
-      proposedByMeSelf: 'moi',
       voteUp: 'Voter pour',
       voteDown: 'Voter contre',
       voteUpRemoveAria: 'Retirer mon vote pour « {{title}} »',
@@ -1414,7 +1352,6 @@ export const fr = {
       loading: 'Chargement des détails\u2026',
       error: 'Impossible de charger les détails du film.',
       empty: 'Aucun détail disponible pour ce film.',
-      overviewLabel: 'Synopsis',
       directorLabel: 'Réalisation',
       creatorLabel: 'Création',
       castLabel: 'Avec',
@@ -1449,8 +1386,6 @@ export const fr = {
       tmdbShort: 'TMDB',
     },
     tmdb: {
-      disclaimer:
-        'Les notes et les offres de visionnage (streaming / VOD) sont indicatives, issues de The Movie Database (TMDB). Les services disponibles peuvent varier.',
       attributionPrefix: 'Données fournies par',
       attributionLinkLabel: 'TMDB',
       attributionLinkAria: 'TMDB : ouvrir le site The Movie Database (nouvel onglet)',
@@ -1484,7 +1419,6 @@ export const fr = {
     loadError: 'Impossible de charger votre liste.',
     loadingDetail: 'Chargement de votre liste…',
     addError: 'Ajout à la liste impossible.',
-    removeAria: 'Retirer « {{title}} » de ma liste',
     letterboxdCta: 'Importer depuis Letterboxd',
     letterboxdCtaShort: 'Importer',
     header: {
@@ -1501,7 +1435,6 @@ export const fr = {
     search: {
       label: 'Rechercher un film à ajouter à ma liste',
       placeholder: 'Rechercher un film à ajouter…',
-      add: 'Ajouter',
       alreadyAdded: 'Déjà dans la liste',
     },
     addPanel: {
@@ -1539,7 +1472,6 @@ export const fr = {
     },
     filter: {
       toggleAria: 'Filtrer ma liste',
-      empty: 'Aucun film pour ce filtre.',
     },
     toolbar: {
       searchLabel: 'Rechercher dans ma liste',
@@ -1641,7 +1573,6 @@ export const fr = {
     event_full: 'La soirée est complète ({{max}} participants maximum).',
     winners_all_drawn:
       'Les {{count}} film(s) gagnant(s) de la soirée sont déjà désignés. Montez le réglage, ou retirez-en un du palmarès.',
-    handle_allocation_failed: "Impossible d'allouer un handle unique. Réessayez.",
     creator_cannot_be_removed: 'Le créateur de la soirée ne peut pas être retiré.',
     movie_excluded_from_wheel:
       'Ce film est exclu du tirage. Réintégrez-le pour pouvoir le choisir.',
@@ -1775,7 +1706,6 @@ export const fr = {
       title: 'Un problème est survenu',
       messageProd:
         "Une erreur inattendue s'est produite. Vous pouvez réessayer ou recharger la page.",
-      hint: "Vous pouvez recharger la page ou retourner à l'accueil. Si le problème persiste, essayez de vider le cache du navigateur.",
       retryButton: 'Réessayer',
       homeButton: 'Accueil',
     },
@@ -1804,7 +1734,6 @@ export const fr = {
     disableButton: 'Désactiver',
     enableError: 'Erreur lors de l’activation des notifications',
     disableError: 'Erreur lors de la désactivation',
-    prefsTitle: 'Choisissez les notifications à recevoir',
     groupEvents: 'Vos soirées',
     groupReminders: 'Rappels',
     groupSocial: 'Social et imports',
@@ -2055,20 +1984,10 @@ export const fr = {
         emptyTitle: 'Personne ne correspond',
         emptyMessage:
           "Vérifiez l'orthographe du pseudo. Les comptes dont le profil est privé n'apparaissent pas dans la recherche.",
-        loading: 'Recherche en cours',
         error: 'Recherche impossible, réessayez.',
       },
     },
     settings: {
-      title: 'Profil public',
-      description:
-        'Votre profil est accessible via un lien unique. Vous pouvez le rendre privé à tout moment.',
-      handleLabel: 'Identifiant public (handle)',
-      handleHint: '3 à 20 caractères : lettres minuscules, chiffres et underscores.',
-      handleChecking: 'Vérification de la disponibilité…',
-      handleAvailable: 'Ce handle est disponible.',
-      handleTaken: 'Ce handle est déjà pris.',
-      handleInvalid: 'Handle invalide (3 à 20 caractères : a-z, 0-9, _).',
       bioLabel: 'Bio',
       bioHint: '{{count}} caractères restants.',
       visibilityLabel: 'Profil public',
@@ -2078,7 +1997,6 @@ export const fr = {
       watchlistVisibilityPrivateHint:
         'Votre profil est privé\u00a0: la watchlist reste masquée tant qu’il le restera.',
       viewMyProfile: 'Voir mon profil public',
-      saveSuccess: 'Profil public mis à jour.',
       fallbackError: 'Impossible de mettre à jour le profil public.',
     },
     stats: {
@@ -2086,10 +2004,7 @@ export const fr = {
       eventsCreated: 'Soirées créées',
       eventsJoined: 'Soirées rejointes',
       moviesProposed: 'Films proposés',
-      votesCast: 'Votes donnés',
       winningProposals: 'Propositions gagnantes',
-      moviesSeen: 'Films vus',
-      bestStreak: 'Meilleur streak',
       genresTitle: 'Genres favoris',
       genresCumulative: 'Top 6 des genres, sur {{count}} occurrences cumulées',
       activityTitle: 'Activité (6 mois)',
@@ -2105,7 +2020,6 @@ export const fr = {
       visitorTitle: 'Ses favoris',
       ownerTitle: 'Mes favoris',
       edit: 'Modifier',
-      editAria: 'Modifier mes favoris',
       addSlot: 'Ajouter',
       addSlotAria: 'Ajouter un favori',
       ownerOnly: 'Visible par vous seul',
