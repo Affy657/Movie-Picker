@@ -1032,6 +1032,33 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task SeenMarkAdd_TwiceInsideAUnitOfWork_KeepsOneMarkAndItsFirstId()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var seenMarks = scope.ServiceProvider.GetRequiredService<ISeenMarkRepository>();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        var movieId = ObjectId.GenerateNewId().ToString();
+        var participantId = ObjectId.GenerateNewId().ToString();
+        var mark = new SeenMark { EventId = eventId, MovieId = movieId, ParticipantId = participantId, CreatedAt = Now, UpdatedAt = Now };
+
+        SeenMark? first = null;
+        SeenMark? second = null;
+        await unitOfWork.ExecuteAsync(async token =>
+        {
+            first = await seenMarks.AddAsync(mark, token);
+            second = await seenMarks.AddAsync(mark, token);
+        });
+        var third = await seenMarks.AddAsync(mark);
+
+        Assert.False(string.IsNullOrEmpty(first!.Id));
+        Assert.Equal(first.Id, second!.Id);
+        Assert.Equal(first.Id, third.Id);
+        Assert.Equal(first.Id, Assert.Single(await seenMarks.ListByParticipantIdsAsync([participantId])).Id);
+        Assert.Equal(1, (await seenMarks.AggregateByMovieIdsAsync(eventId, [movieId]))[movieId].Count);
+    }
+
+    [Fact]
     public async Task MovieRatingTargetedDeletes_RemoveOnlyTheGivenMoviesOrParticipantOfThatEvent()
     {
         using var scope = _factory.Services.CreateScope();

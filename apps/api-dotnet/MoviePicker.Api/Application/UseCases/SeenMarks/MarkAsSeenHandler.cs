@@ -13,6 +13,7 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
     private readonly IParticipantRepository _participantRepository;
     private readonly ISeenMarkRepository _seenMarkRepository;
     private readonly ICurrentUserAccessor _currentUserAccessor;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _clock;
 
     public MarkAsSeenHandler(
@@ -21,6 +22,7 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
         IParticipantRepository participantRepository,
         ISeenMarkRepository seenMarkRepository,
         ICurrentUserAccessor currentUserAccessor,
+        IUnitOfWork unitOfWork,
         TimeProvider clock)
     {
         _eventRepository = eventRepository;
@@ -28,6 +30,7 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
         _participantRepository = participantRepository;
         _seenMarkRepository = seenMarkRepository;
         _currentUserAccessor = currentUserAccessor;
+        _unitOfWork = unitOfWork;
         _clock = clock;
     }
 
@@ -50,18 +53,26 @@ public sealed class MarkAsSeenHandler : IMarkAsSeenHandler
             ct);
 
         var now = _clock.GetUtcNow();
-        var saved = await _seenMarkRepository.AddAsync(
-            new SeenMark
+        var mark = new SeenMark
+        {
+            Id = string.Empty,
+            EventId = evt.Id,
+            MovieId = movie.Id,
+            ParticipantId = participant.Id,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        var saved = mark;
+        await _unitOfWork.ExecuteAsync(
+            async token =>
             {
-                Id = string.Empty,
-                EventId = evt.Id,
-                MovieId = movie.Id,
-                ParticipantId = participant.Id,
-                CreatedAt = now,
-                UpdatedAt = now
+                await _eventRepository.LockForWriteAsync(evt.Id, token);
+                await MovieActionContext.EnsureMovieAndParticipantRemainAsync(
+                    _movieRepository, _participantRepository, evt.Id, movie.Id, participant.Id, token);
+                saved = await _seenMarkRepository.AddAsync(mark, token);
             },
             ct);
-        await _eventRepository.MarkChangedAsync(evt.Id, ct);
 
         return new SeenMarkResponse
         {
