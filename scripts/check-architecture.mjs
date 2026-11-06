@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { join, resolve, relative, dirname, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const root = resolve(import.meta.dirname, '..');
 const webSrc = join(root, 'apps/web/src');
@@ -49,14 +50,16 @@ function checkComments(files) {
 const IMPORT_RE = /^\s*(?:import|export)[^'"]*from\s*['"]([^'"]+)['"]/gm;
 const DYNAMIC_IMPORT_RE = /\bimport\(\s*['"]([^'"]+)['"]\s*\)/g;
 
-function importsOf(file) {
-  const text = readFileSync(file, 'utf8');
+function staticImportsIn(text) {
   return [...text.matchAll(IMPORT_RE)].map((m) => m[1]);
 }
 
-function dynamicImportsOf(file) {
-  const text = readFileSync(file, 'utf8');
+function dynamicImportsIn(text) {
   return [...text.matchAll(DYNAMIC_IMPORT_RE)].map((m) => m[1]);
+}
+
+function importsOf(file) {
+  return staticImportsIn(readFileSync(file, 'utf8'));
 }
 
 function resolveImport(spec, from) {
@@ -80,14 +83,16 @@ function resolveImport(spec, from) {
   return null;
 }
 
+export function sharedLeafViolations(file, text) {
+  if (!rel(file).startsWith('apps/web/src/shared/') || file.includes('.test.')) return [];
+  return [...staticImportsIn(text), ...dynamicImportsIn(text)]
+    .filter((spec) => featureOfImport(spec, file))
+    .map((spec) => `${rel(file)} imports ${spec}: shared/ must not depend on any feature`);
+}
+
 function checkSharedIsALeaf(files) {
-  for (const file of files) {
-    if (!rel(file).startsWith('apps/web/src/shared/') || file.includes('.test.')) continue;
-    for (const spec of importsOf(file)) {
-      if (spec.startsWith('@/features/'))
-        violations.push(`${rel(file)} imports ${spec}: shared/ must not depend on any feature`);
-    }
-  }
+  for (const file of files)
+    violations.push(...sharedLeafViolations(file, readFileSync(file, 'utf8')));
 }
 
 const FEATURE_EDGES = {
@@ -102,25 +107,34 @@ const FEATURE_EDGES = {
 const FEATURE_OF = /^apps\/web\/src\/features\/([a-z]+)\//;
 const FEATURE_SPEC = /^@\/features\/([a-z]+)\//;
 
-function checkFeatureLayers(files) {
-  for (const file of files) {
-    const from = FEATURE_OF.exec(rel(file))?.[1];
-    if (!from) continue;
-    const allowed = FEATURE_EDGES[from];
-    if (!allowed) {
-      violations.push(
-        `${rel(file)}: feature "${from}" is not in FEATURE_EDGES of scripts/check-architecture.mjs, declare what it may import`
-      );
-      continue;
-    }
-    for (const spec of [...importsOf(file), ...dynamicImportsOf(file)]) {
-      const to = FEATURE_SPEC.exec(spec)?.[1];
-      if (!to || to === from || allowed.includes(to)) continue;
-      violations.push(
-        `${rel(file)} imports ${spec}: feature "${from}" may only import ${allowed.length ? allowed.join(', ') : 'no other feature'}`
-      );
-    }
+function featureOfImport(spec, from) {
+  const target = resolveImport(spec, from);
+  return target ? FEATURE_OF.exec(rel(target))?.[1] : FEATURE_SPEC.exec(spec)?.[1];
+}
+
+export function featureLayerViolations(file, text) {
+  const from = FEATURE_OF.exec(rel(file))?.[1];
+  if (!from) return [];
+  const allowed = FEATURE_EDGES[from];
+  if (!allowed) {
+    return [
+      `${rel(file)}: feature "${from}" is not in FEATURE_EDGES of scripts/check-architecture.mjs, declare what it may import`,
+    ];
   }
+  const found = [];
+  for (const spec of [...staticImportsIn(text), ...dynamicImportsIn(text)]) {
+    const to = featureOfImport(spec, file);
+    if (!to || to === from || allowed.includes(to)) continue;
+    found.push(
+      `${rel(file)} imports ${spec}: feature "${from}" may only import ${allowed.length ? allowed.join(', ') : 'no other feature'}`
+    );
+  }
+  return found;
+}
+
+function checkFeatureLayers(files) {
+  for (const file of files)
+    violations.push(...featureLayerViolations(file, readFileSync(file, 'utf8')));
 }
 
 function checkNoImportCycles(files) {
@@ -150,10 +164,21 @@ function checkNoImportCycles(files) {
   for (const node of graph.keys()) if (!state.has(node)) walkNode(node, []);
 }
 
-const USING_RE = /^using\s+(?:static\s+)?([A-Za-z0-9_.]+)\s*;/gm;
+const USING_PREFIX = String.raw`^\s*(?:global\s+)?using\s+(?:static\s+)?`;
+const NAMESPACE = String.raw`(?:global::)?([A-Za-z_][\w.]*)`;
+const USING_RE = new RegExp(String.raw`${USING_PREFIX}${NAMESPACE}\s*;`, 'gm');
+const USING_ALIAS_RE = new RegExp(String.raw`${USING_PREFIX}[A-Za-z_]\w*\s*=\s*${NAMESPACE}`, 'gm');
+const USING_LINE_RE = new RegExp(String.raw`${USING_PREFIX}.*$`, 'gm');
+const CSHARP_STRING_RE = /"(?:[^"\\\n]|\\.)*"/g;
+const QUALIFIED_NAME_RE = /(?<![\w.])(?:global::)?([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+)/g;
 
-function usingsOf(file) {
-  return [...readFileSync(file, 'utf8').matchAll(USING_RE)].map((m) => m[1]);
+function usingsIn(text) {
+  return [...text.matchAll(USING_RE), ...text.matchAll(USING_ALIAS_RE)].map((m) => m[1]);
+}
+
+function qualifiedNamesIn(text) {
+  const code = text.replace(CSHARP_STRING_RE, '""').replace(USING_LINE_RE, '');
+  return [...code.matchAll(QUALIFIED_NAME_RE)].map((m) => m[1]);
 }
 
 const LAYER_RULES = [
@@ -180,17 +205,26 @@ const LAYER_RULES = [
   },
 ];
 
+function layerBreaks(rule, ns) {
+  return rule.allow ? !rule.allow.some((re) => re.test(ns)) : rule.forbid.some((re) => re.test(ns));
+}
+
+export function apiLayerViolations(layer, path, text) {
+  const rule = LAYER_RULES.find((candidate) => candidate.layer === layer);
+  const usings = usingsIn(text)
+    .filter((ns) => layerBreaks(rule, ns))
+    .map((ns) => `${path}: using ${ns}, ${rule.message}`);
+  if (!rule.forbid) return usings;
+  const qualified = qualifiedNamesIn(text)
+    .filter((name) => layerBreaks(rule, name))
+    .map((name) => `${path}: ${name}, ${rule.message}`);
+  return [...usings, ...qualified];
+}
+
 function checkApiLayers() {
-  for (const rule of LAYER_RULES) {
-    for (const file of walk(join(apiSrc, rule.layer), ['.cs'])) {
-      for (const ns of usingsOf(file)) {
-        const broken = rule.allow
-          ? !rule.allow.some((re) => re.test(ns))
-          : rule.forbid.some((re) => re.test(ns));
-        if (broken) violations.push(`${rel(file)}: using ${ns}, ${rule.message}`);
-      }
-    }
-  }
+  for (const { layer } of LAYER_RULES)
+    for (const file of walk(join(apiSrc, layer), ['.cs']))
+      violations.push(...apiLayerViolations(layer, rel(file), readFileSync(file, 'utf8')));
 }
 
 const FOUNDATION = 'apps/web/src/styles/01-foundation.css';
@@ -400,6 +434,20 @@ function checkHoverAndMotion(path, text) {
       );
 }
 
+const POPOVER_BACKDROPS = new Set([
+  'apps/web/src/features/events/components/WheelModal.module.css .confettiOverlay',
+]);
+
+export function backdropViolations(path, text) {
+  if (path === MODAL_CSS || path === SHEET_DRAG_CSS) return [];
+  return [...text.matchAll(/([^\s{},]*)::backdrop/g)]
+    .map((match) => match[1])
+    .filter((selector) => !POPOVER_BACKDROPS.has(`${path} ${selector}`))
+    .map(
+      (selector) => `${path}: ${selector}::backdrop, the modal backdrop belongs to Modal.module.css`
+    );
+}
+
 function checkDesignTokens(cssFiles) {
   for (const file of cssFiles) {
     const path = rel(file);
@@ -567,12 +615,7 @@ function checkDesignTokens(cssFiles) {
           `${path}: ${selector.trim().replace(/\s+/g, ' ')} removes the outline without var(--ring-focus), the focus must stay visible`
         );
 
-    if (path !== MODAL_CSS && path !== SHEET_DRAG_CSS)
-      for (const [, selector] of text.matchAll(/([^\s{},]+)::backdrop/g))
-        if (/dialog|modal|sheet/i.test(selector))
-          violations.push(
-            `${path}: ${selector}::backdrop, the modal backdrop belongs to Modal.module.css`
-          );
+    violations.push(...backdropViolations(path, text));
   }
 }
 
@@ -1041,56 +1084,61 @@ function checkIconScale() {
       );
 }
 
-const webFiles = walk(webSrc, ['.ts', '.tsx', '.css']);
-const indexHtml = join(root, 'apps/web/index.html');
-const apiFiles = walk(join(root, 'apps/api-dotnet'), ['.cs']);
-const e2eFiles = walk(join(root, 'e2e'), ['.ts']);
+function main() {
+  const webFiles = walk(webSrc, ['.ts', '.tsx', '.css']);
+  const indexHtml = join(root, 'apps/web/index.html');
+  const apiFiles = walk(join(root, 'apps/api-dotnet'), ['.cs']);
+  const e2eFiles = walk(join(root, 'e2e'), ['.ts']);
 
-checkComments([...webFiles, ...apiFiles, ...e2eFiles]);
-checkSharedIsALeaf(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
-checkFeatureLayers(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
-checkNoImportCycles(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
-checkDesignTokens(webFiles.filter((f) => f.endsWith('.css')));
-checkUndeclaredTokens(
-  webFiles.filter((f) => f.endsWith('.css')),
-  webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
-);
-checkModalPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
-checkAriaPrimitives(webFiles.filter((f) => f.endsWith('.tsx')));
-checkButtonPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
-checkTapTargets(
-  webFiles.filter((f) => f.endsWith('.css')),
-  webFiles.filter((f) => f.endsWith('.tsx'))
-);
-checkInlineStyleTokens(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
-checkIconScale();
-checkAvatarScale();
-checkGlobalTargets(
-  webFiles.filter((f) => f.endsWith('.css')),
-  [...webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')), indexHtml]
-);
-const cssModulesExcluded = checkDeadCssClasses(
-  webFiles.filter((f) => f.endsWith('.css')),
-  webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
-);
-checkDeadGlobalClasses(
-  webFiles.filter((f) => f.endsWith('.css')),
-  [...webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')), indexHtml]
-);
-checkApiLayers();
-
-if (violations.length > 0) {
-  console.error(`\n${violations.length} architecture rule violation(s):\n`);
-  for (const v of violations) console.error(`  ${v}`);
-  console.error(
-    '\nRules: AGENTS.md (style) and hexagonal architecture (Domain < Application < Infrastructure).\n'
+  checkComments([...webFiles, ...apiFiles, ...e2eFiles]);
+  checkSharedIsALeaf(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
+  checkFeatureLayers(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
+  checkNoImportCycles(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
+  checkDesignTokens(webFiles.filter((f) => f.endsWith('.css')));
+  checkUndeclaredTokens(
+    webFiles.filter((f) => f.endsWith('.css')),
+    webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
   );
-  process.exit(1);
-}
-console.log(
-  'Architecture: no violation (comments, API layers, shared/ as a leaf, feature layers, import cycles, design system tokens, colours in TypeScript, hover and reduced motion, icon, avatar and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes, :global targets and tokens).'
-);
-if (cssModulesExcluded.length > 0)
+  checkModalPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
+  checkAriaPrimitives(webFiles.filter((f) => f.endsWith('.tsx')));
+  checkButtonPrimitive(webFiles.filter((f) => f.endsWith('.tsx')));
+  checkTapTargets(
+    webFiles.filter((f) => f.endsWith('.css')),
+    webFiles.filter((f) => f.endsWith('.tsx'))
+  );
+  checkInlineStyleTokens(webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')));
+  checkIconScale();
+  checkAvatarScale();
+  checkGlobalTargets(
+    webFiles.filter((f) => f.endsWith('.css')),
+    [...webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')), indexHtml]
+  );
+  const cssModulesExcluded = checkDeadCssClasses(
+    webFiles.filter((f) => f.endsWith('.css')),
+    webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
+  );
+  checkDeadGlobalClasses(
+    webFiles.filter((f) => f.endsWith('.css')),
+    [...webFiles.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx')), indexHtml]
+  );
+  checkApiLayers();
+
+  if (violations.length > 0) {
+    console.error(`\n${violations.length} architecture rule violation(s):\n`);
+    for (const v of violations) console.error(`  ${v}`);
+    console.error(
+      '\nRules: AGENTS.md (style) and hexagonal architecture (Domain < Application < Infrastructure).\n'
+    );
+    process.exit(1);
+  }
   console.log(
-    `Dead classes: ${cssModulesExcluded.length} module(s) excluded, bracket access makes them unanalysable: ${cssModulesExcluded.join(', ')}`
+    'Architecture: no violation (comments, API layers, shared/ as a leaf, feature layers, import cycles, design system tokens, colours in TypeScript, hover and reduced motion, icon, avatar and size scales, Modal, Button and ARIA primitives, tap targets, dead CSS classes, :global targets and tokens).'
   );
+  if (cssModulesExcluded.length > 0)
+    console.log(
+      `Dead classes: ${cssModulesExcluded.length} module(s) excluded, bracket access makes them unanalysable: ${cssModulesExcluded.join(', ')}`
+    );
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href)
+  main();

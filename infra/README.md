@@ -5,7 +5,7 @@ Deux choses vivent ici : la description Terraform de l'infrastructure, construit
 | Fichier | Ce qu'il décrit | Comment il s'applique |
 |---|---|---|
 | `firebase-hosting.json` | configuration de service du site Firebase Hosting (repli SPA, en-têtes de sécurité, paliers de cache) | envoyée avec chaque version par [`../scripts/publish-front-firebase.mjs`](../scripts/publish-front-firebase.mjs), section Hosting ci-dessous |
-| `web-legacy/` | l'ancienne origine `web.movie-picker.fr` : un worker qui désinstalle celui d'avant la bascule (`site/sw.js`) et une configuration qui répond `301` vers `www` pour tout le reste (`hosting.json`) | publiée sur le site `movie-picker-web-legacy` par `web-legacy.yml` à chaque changement du dossier, section Domaines ci-dessous |
+| `web-legacy/` | l'ancienne origine `web.movie-picker.fr` : un worker qui désinstalle celui d'avant la bascule (`site/sw.js`) et une configuration qui répond `301` vers `www` pour tout le reste (`hosting.json`) | publiée sur le site `movie-picker-web-legacy` par `web-legacy.yml`, à lancer à la main après un changement du dossier, section Domaines ci-dessous |
 
 ## Les identifiants sont des espaces réservés
 

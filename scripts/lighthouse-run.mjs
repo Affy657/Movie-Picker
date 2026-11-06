@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 import lighthouse, { generateReport } from 'lighthouse';
 import { launch as launchChrome } from 'chrome-launcher';
 
+import { median, reviewCategory } from './lighthouse-budget.mjs';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 const DIST = path.join(ROOT, 'apps', 'web', 'dist');
@@ -323,7 +325,6 @@ try {
     chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
   });
 
-  const median = (nums) => [...nums].sort((a, b) => a - b)[Math.floor(nums.length / 2)];
   const RUNS = Number(process.env.LH_RUNS || 3);
 
   const only = (process.env.LH_ONLY || '')
@@ -355,23 +356,18 @@ try {
 
       for (const cat of Object.keys(mins)) {
         const min = perPageMins[slug]?.[cat] ?? mins[cat];
-        const scores = lhrs
-          .map((l) => l.categories[cat])
-          .filter((c) => c && typeof c.score === 'number')
-          .map((c) => Math.round(c.score * 100));
-        if (scores.length === 0) continue;
-        const score = median(scores);
         const skipSeo = cat === 'seo' && indexable === false;
         const skipPerf = cat === 'performance' && skipPerformance === true;
         const skipBudget = skipSeo || skipPerf;
+        const { score, failure } = reviewCategory(lhrs, cat, { min, ignoreThreshold: skipBudget });
         const suffix = skipBudget
           ? skipSeo
             ? ' (not indexable, threshold ignored)'
             : ' (event SPA, threshold ignored)'
           : ` (min ${min}, median of ${RUNS} runs)`;
-        console.log(`${slug} ${cat}: ${score}${suffix}`);
-        if (!skipBudget && score < min) {
-          console.error(`✗ ${slug} ${cat}: ${score} < ${min}`);
+        if (score !== null) console.log(`${slug} ${cat}: ${score}${suffix}`);
+        if (failure) {
+          console.error(`✗ ${slug} ${cat}: ${failure}`);
           failed = true;
         }
       }

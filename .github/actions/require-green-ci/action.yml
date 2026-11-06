@@ -1,0 +1,50 @@
+name: "Require a green CI run"
+description: "Refuses a ref other than master, then requires the ci-cd.yml run of the target commit to be green. A missing run is a refusal, not a green light. Shared by every workflow that publishes under a deployment identity; needs `actions: read`."
+inputs:
+  github-token:
+    description: "Token that reads the Actions runs of the repository"
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Refuse a deployment outside master
+      shell: bash
+      run: |
+        if [ "$GITHUB_REF" != "refs/heads/master" ]; then
+          echo "::error::A deployment only leaves from master (requested ref: $GITHUB_REF). Merge first."
+          exit 1
+        fi
+    # `--jq` filters server-side on the exact SHA: a pull request run carries the same head_sha
+    # as the push that followed it, hence the filter on event and branch. The most recent run
+    # wins, it is the one a "Re-run failed jobs" turned green again.
+    - name: Read the CI run conclusion for this commit
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -eo pipefail
+        runs="$(gh api \
+          "repos/$GITHUB_REPOSITORY/actions/workflows/ci-cd.yml/runs?head_sha=$GITHUB_SHA&per_page=100" \
+          --jq '[.workflow_runs[]
+                 | select(.head_branch == "master")
+                 | select(.event == "push" or .event == "workflow_dispatch")]
+                | sort_by(.run_started_at) | reverse')"
+        count="$(printf '%s' "$runs" | jq 'length')"
+        if [ "$count" = "0" ]; then
+          echo "::error::No ci-cd.yml run on $GITHUB_SHA. Run the \"🔍 CI\" workflow on master, wait for green, then trigger this deployment again."
+          exit 1
+        fi
+        status="$(printf '%s' "$runs" | jq -r '.[0].status')"
+        conclusion="$(printf '%s' "$runs" | jq -r '.[0].conclusion')"
+        url="$(printf '%s' "$runs" | jq -r '.[0].html_url')"
+        echo "CI run: $url"
+        echo "status=$status conclusion=$conclusion"
+        if [ "$status" != "completed" ]; then
+          echo "::error::The CI run of this commit is still '$status'. Wait for it to finish."
+          exit 1
+        fi
+        if [ "$conclusion" != "success" ]; then
+          echo "::error::The CI run of this commit concluded '$conclusion': fix, then rerun the CI before deploying. $url"
+          exit 1
+        fi
+        echo "CI gates green on $GITHUB_SHA."
