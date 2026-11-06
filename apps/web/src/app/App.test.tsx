@@ -484,8 +484,8 @@ describe('App (routes)', () => {
           })
         ),
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] })),
-        http.get(`${TEST_API_V1}/notifications/inbox`, () =>
-          HttpResponse.json({ items: [], unreadCount: 0 })
+        http.get(`${TEST_API_V1}/notifications/inbox/unread-count`, () =>
+          HttpResponse.json({ unreadCount: 0 })
         )
       );
       renderRoutes(['/my-events']);

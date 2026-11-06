@@ -60,6 +60,11 @@ public sealed record UserNotificationItem
     public DateTimeOffset CreatedAt { get; init; }
 }
 
+public sealed record NotificationUnreadCountResponse
+{
+    public int UnreadCount { get; init; }
+}
+
 public sealed record NotificationInboxResponse
 {
     public IReadOnlyList<UserNotificationItem> Items { get; init; } = [];

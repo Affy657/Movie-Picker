@@ -25,6 +25,7 @@ export const queryKeys = {
   notifications: {
     inbox: ['notifications', 'inbox'] as const,
     inboxPaged: ['notifications', 'inbox', 'paged'] as const,
+    unreadCount: ['notifications', 'inbox', 'unread-count'] as const,
   },
   myEvents: {
     list: ['events', 'mine'] as const,

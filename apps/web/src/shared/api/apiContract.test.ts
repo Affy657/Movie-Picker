@@ -15,7 +15,10 @@ import type {
   WatchlistAvailabilityResponse,
   WatchlistResponse,
 } from '@/features/movies/api/watchlistApi';
-import type { NotificationInbox } from '@/features/notifications/api/notificationsApi';
+import type {
+  NotificationInbox,
+  NotificationUnreadCount,
+} from '@/features/notifications/api/notificationsApi';
 import type { MovieSearchListResponse } from '@/features/movies/api/moviesApi';
 import type { UserProfile } from '@/features/auth/types';
 import type { EventConfigData } from '@/shared/types/event';
@@ -48,6 +51,7 @@ const frontTypesMatchTheOpenApiContract: [
   ServedBy<WatchlistAvailabilityResponse, ApiSchemas['WatchlistAvailabilityResponse']>,
   ServedBy<WatchlistAvailabilityItem, ApiSchemas['WatchlistAvailabilityItemResponse']>,
   ServedBy<NotificationInbox, ApiSchemas['NotificationInboxResponse']>,
+  ServedBy<NotificationUnreadCount, ApiSchemas['NotificationUnreadCountResponse']>,
   ServedBy<MovieSearchListResponse, ApiSchemas['MovieSearchListResponse']>,
   ServedBy<EventConfigData, ApiSchemas['EventConfigResponse']>,
   ServedBy<WatchProviderOffer, ApiSchemas['WatchProviderOfferResponse']>,
@@ -56,6 +60,7 @@ const frontTypesMatchTheOpenApiContract: [
   ServedBy<FavoriteTitle, ApiSchemas['FavoriteTitleResponse']>,
   ServedBy<FavoriteListResponse, ApiSchemas['FavoriteListResponse']>,
 ] = [
+  true,
   true,
   true,
   true,
@@ -118,6 +123,7 @@ const endpointsCalledByTheFront: ApiPath[] = [
   '/api/v1/movies/tmdb/{tmdbId}/details',
   '/api/v1/notifications/inbox',
   '/api/v1/notifications/inbox/read-all',
+  '/api/v1/notifications/inbox/unread-count',
   '/api/v1/notifications/inbox/{id}/read',
   '/api/v1/notifications/preferences',
   '/api/v1/notifications/subscriptions',
