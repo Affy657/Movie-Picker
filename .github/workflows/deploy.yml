@@ -604,8 +604,14 @@ jobs:
           # on the project. `gcloud scheduler jobs describe` then exits with SERVICE_DISABLED, and
           # without it the step failed the job **after** the revision had taken 100% of the
           # traffic. A missing schedule is a warning: it says nothing about the health of the
-          # deployed API.
-          if ! gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)' | grep -q cloudscheduler; then
+          # deployed API. Only an answer that does not list the service means that, though: a
+          # `gcloud` that fails has said nothing, and reading it as "disabled" would leave the jobs
+          # on their previous configuration behind a green run.
+          if ! ENABLED="$(gcloud services list --enabled --filter="config.name:cloudscheduler.googleapis.com" --format='value(config.name)')"; then
+            echo "::error::gcloud could not list the enabled services, so the Scheduler jobs were not updated. The revision is already promoted: rerun this deployment."
+            exit 1
+          fi
+          if ! printf '%s' "$ENABLED" | grep -q cloudscheduler; then
             echo "::warning::Cloud Scheduler API disabled on the project: jobs not configured, event reminders will not leave, recurring events will only be renewed on closing, watchlists will only be cleaned on closing and the home catalog will only be reloaded on demand. Run 'gcloud services enable cloudscheduler.googleapis.com' then rerun this deployment."
             exit 0
           fi
