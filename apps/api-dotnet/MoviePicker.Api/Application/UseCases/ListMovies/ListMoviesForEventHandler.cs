@@ -99,8 +99,27 @@ public sealed class ListMoviesForEventHandler : IListMoviesForEventHandler
         CancellationToken ct = default)
     {
         var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
-
         var movies = await _movieRepository.ListByEventIdAsync(evt.Id, ct);
+        return await ToResponsesAsync(evt, movies, participantId, ct);
+    }
+
+    public async Task<IReadOnlyList<MovieWithScoreResponse>> HandleSelectionAsync(
+        string idOrSlug,
+        IReadOnlyCollection<string> movieIds,
+        string? participantId = null,
+        CancellationToken ct = default)
+    {
+        var evt = await _eventRepository.GetRequiredByIdOrSlugAsync(idOrSlug, ct);
+        var selected = await _movieRepository.ListByIdsAsync(movieIds, ct);
+        return await ToResponsesAsync(evt, selected.Where(m => m.EventId == evt.Id).ToList(), participantId, ct);
+    }
+
+    private async Task<IReadOnlyList<MovieWithScoreResponse>> ToResponsesAsync(
+        Event evt,
+        IReadOnlyList<Movie> movies,
+        string? participantId,
+        CancellationToken ct)
+    {
         var movieIds = movies.Select(m => m.Id).ToList();
         var scoresTask = _voteRepository.AggregateScoresByMovieIdsAsync(movieIds, ct);
         var seenAggTask = _seenMarkRepository.AggregateByMovieIdsAsync(evt.Id, movieIds, ct);

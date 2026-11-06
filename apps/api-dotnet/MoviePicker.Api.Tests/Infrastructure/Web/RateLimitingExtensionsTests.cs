@@ -104,6 +104,19 @@ public sealed class RateLimitingExtensionsTests
     }
 
     [Fact]
+    public void NightRecapRoute_HasItsOwnPolicy_CountedPerReader()
+    {
+        var attribute = typeof(RecapsController).GetMethod(nameof(RecapsController.Get))!
+            .GetCustomAttribute<EnableRateLimitingAttribute>();
+
+        Assert.Equal(RateLimitingExtensions.NightRecapPolicy, attribute?.PolicyName);
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.NightRecapPolicy)!.Value;
+        Assert.Equal(60, spec.PermitLimit);
+        Assert.Equal(1, spec.WindowMinutes);
+        Assert.Equal("ip:192.0.2.8", RateLimitingExtensions.CreatePartition(From("192.0.2.8"), spec).PartitionKey);
+    }
+
+    [Fact]
     public void CreatePartition_IdeaSuggestion_CountsPerAccountWhateverTheAddress()
     {
         var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.IdeaSuggestionPolicy)!.Value;

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.UseCases.NightRecap;
 using MoviePicker.Api.Infrastructure.Web;
@@ -12,8 +13,10 @@ public sealed class RecapsController : ControllerBase
 {
     [HttpGet("{recapSlug}")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.NightRecapPolicy)]
     [ProducesResponseType(typeof(NightRecapResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Get(
         string recapSlug,
         [FromServices] IGetNightRecapHandler handler,
