@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Infrastructure.Migrations;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -202,6 +203,44 @@ public sealed class DataMigrationRunnerTests
 
         Assert.Equal(2, repair.Runs);
         Assert.False(await history.IsAppliedAsync("001-repair"));
+    }
+
+    [Fact]
+    public async Task Run_RepeatableMigrationLeasedByAnotherInstance_StillAppliesTheNextOnes()
+    {
+        var history = new InMemoryMigrationHistoryRepository();
+        await history.TryAcquireLeaseAsync("001-repair", "other-instance", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(30));
+        var repair = new RepeatableRepair();
+        var next = new RecordingMigration("002-b", () => 1);
+
+        await RunAsync(history, repair, next);
+
+        Assert.Equal(0, repair.Runs);
+        Assert.Equal(1, next.Runs);
+        Assert.True(await history.IsAppliedAsync("002-b"));
+    }
+
+    [Fact]
+    public async Task Run_LegacyPosterRewrite_IsRecordedAfterItsLastPass_AndNeverScansAgain()
+    {
+        var movies = new Mock<IMovieRepository>();
+        movies.Setup(r => r.ListWithLegacyPosterPathAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        var watchlist = new Mock<IWatchlistRepository>();
+        watchlist.Setup(r => r.ListWithLegacyPosterPathAsync(It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        var migration = new RewriteLegacyPosterPathsMigration(
+            movies.Object,
+            watchlist.Object,
+            Mock.Of<IPosterImageStore>(),
+            Mock.Of<ITmdbMovieSearch>(),
+            NullLogger<RewriteLegacyPosterPathsMigration>.Instance);
+        var history = new InMemoryMigrationHistoryRepository();
+
+        await RunAsync(history, migration);
+        await RunAsync(history, migration);
+
+        Assert.True(await history.IsAppliedAsync(migration.Id));
+        movies.Verify(r => r.ListWithLegacyPosterPathAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
+        watchlist.Verify(r => r.ListWithLegacyPosterPathAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

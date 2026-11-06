@@ -5,7 +5,7 @@ using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Infrastructure.Migrations;
 
-public sealed class RewriteLegacyPosterPathsMigration : IRepeatableDataMigration
+public sealed class RewriteLegacyPosterPathsMigration : IDataMigration
 {
     private const int BatchSize = 100;
 
