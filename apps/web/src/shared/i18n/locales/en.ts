@@ -1675,6 +1675,8 @@ export const en: Locale = {
     reference_movie_missing: 'Reference movie missing',
     collection_id_missing: 'Collection id missing',
     unknown_theme: 'Unknown theme',
+    unknown_genre: 'Unknown genre',
+    unknown_collection: 'Unknown collection',
     too_many_attachments: 'Too many attachments (maximum {{max}}).',
     attachment_content_invalid: 'Invalid content (malformed base64) for “{{name}}”.',
     attachment_content_mismatch:

@@ -329,6 +329,12 @@ public static class Errors
     public static BadRequestException UnknownTheme() =>
         new("Unknown theme", ErrorCodes.UnknownTheme);
 
+    public static BadRequestException UnknownGenre() =>
+        new("Unknown genre", ErrorCodes.UnknownGenre);
+
+    public static BadRequestException UnknownCollection() =>
+        new("Unknown collection", ErrorCodes.UnknownCollection);
+
     public static BadRequestException TooManyAttachments(int max) =>
         new($"Too many attachments (maximum {max})", ErrorCodes.TooManyAttachments, Params(("max", max)));
 

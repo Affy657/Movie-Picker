@@ -1706,6 +1706,8 @@ export const fr = {
     reference_movie_missing: 'Film de référence manquant',
     collection_id_missing: 'Identifiant de collection manquant',
     unknown_theme: 'Thème inconnu',
+    unknown_genre: 'Genre inconnu',
+    unknown_collection: 'Collection inconnue',
     too_many_attachments: 'Trop de pièces jointes (maximum {{max}}).',
     attachment_content_invalid: 'Contenu invalide (base64 malformé) pour « {{name}} ».',
     attachment_content_mismatch:

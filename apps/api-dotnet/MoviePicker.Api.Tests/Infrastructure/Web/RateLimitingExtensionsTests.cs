@@ -145,6 +145,73 @@ public sealed class RateLimitingExtensionsTests
         Assert.Equal(60, spec.WindowMinutes);
     }
 
+    private static RateLimitPartition<string> ShowcasePartition(string query)
+    {
+        var http = From("192.0.2.8");
+        http.Request.QueryString = new QueryString(query);
+        return RateLimitingExtensions.CreatePartition(
+            http,
+            RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieShowcasePolicy)!.Value);
+    }
+
+    private static int PermitsOf(RateLimitPartition<string> partition)
+    {
+        using var limiter = partition.Factory(partition.PartitionKey);
+        var permits = 0;
+        while (permits < 1_000)
+        {
+            using var lease = limiter.AttemptAcquire();
+            if (!lease.IsAcquired)
+                break;
+            permits++;
+        }
+        return permits;
+    }
+
+    [Theory]
+    [InlineData("?section=recommendations&seedTmdbId=27205")]
+    [InlineData("?section=RECOMMENDATIONS&seedTmdbId=27205")]
+    [InlineData("?section=recommendations&section=trending&seedTmdbId=27205")]
+    [InlineData("?section=trending&genreIds=28,35")]
+    [InlineData("?genreIds=28,35")]
+    public void CreatePartition_ShowcaseOnAFreeKey_GetsItsOwnLowerQuota(string query)
+    {
+        var partition = ShowcasePartition(query);
+
+        Assert.Equal(RateLimitingExtensions.MovieShowcaseFreeKeyPermitLimit, PermitsOf(partition));
+        Assert.NotEqual(ShowcasePartition("?section=trending").PartitionKey, partition.PartitionKey);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("?section=trending")]
+    [InlineData("?section=trending&genreIds=28")]
+    [InlineData("?section=trending&section=recommendations&seedTmdbId=27205")]
+    [InlineData("?section=now-playing")]
+    [InlineData("?section=most-proposed")]
+    [InlineData("?section=theme&theme=frissons")]
+    [InlineData("?section=provider&provider=netflix")]
+    [InlineData("?section=collection&collectionId=1241")]
+    public void CreatePartition_ShowcaseOnAClosedList_KeepsTheRegularQuota(string query)
+    {
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieShowcasePolicy)!.Value;
+
+        var partition = ShowcasePartition(query);
+
+        Assert.Equal(spec.PermitLimit, PermitsOf(partition));
+        Assert.Equal("ip:192.0.2.8", partition.PartitionKey);
+    }
+
+    [Fact]
+    public void CreatePartition_FreeKeyQuota_DoesNotApplyToAnotherPolicy()
+    {
+        var http = From("192.0.2.8");
+        http.Request.QueryString = new QueryString("?section=recommendations");
+        var spec = RateLimitingExtensions.FindPolicy(RateLimitingExtensions.MovieDetailsPolicy)!.Value;
+
+        Assert.Equal("ip:192.0.2.8", RateLimitingExtensions.CreatePartition(http, spec).PartitionKey);
+    }
+
     private static DefaultHttpContext From(string address)
     {
         var http = new DefaultHttpContext();

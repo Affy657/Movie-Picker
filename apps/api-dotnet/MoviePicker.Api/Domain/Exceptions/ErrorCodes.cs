@@ -121,6 +121,8 @@ public static class ErrorCodes
     public const string ReferenceMovieMissing = "reference_movie_missing";
     public const string CollectionIdMissing = "collection_id_missing";
     public const string UnknownTheme = "unknown_theme";
+    public const string UnknownGenre = "unknown_genre";
+    public const string UnknownCollection = "unknown_collection";
     public const string TooManyAttachments = "too_many_attachments";
     public const string AttachmentContentInvalid = "attachment_content_invalid";
     public const string AttachmentContentMismatch = "attachment_content_mismatch";

@@ -149,6 +149,21 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
     }
 
+    [Theory]
+    [InlineData("?section=trending&genreIds=987654", "unknown_genre")]
+    [InlineData("?section=collection&collectionId=4242", "unknown_collection")]
+    [InlineData("?section=recommendations&seedTmdbId=2000000000", "reference_movie_missing")]
+    public async Task Showcase_KeyOutOfTheCatalog_ReturnsBadRequestWithItsCode(string query, string reason)
+    {
+        var anon = _factory.CreateClient();
+
+        var res = await anon.GetAsync($"/api/v1/movies/showcase{query}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+        var body = System.Text.Json.JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal(reason, body.GetProperty("reason").GetString());
+    }
+
     [Fact]
     public async Task Showcase_UnknownTheme_ReturnsBadRequest()
     {

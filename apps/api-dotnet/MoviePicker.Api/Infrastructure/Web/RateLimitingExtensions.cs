@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Domain.Exceptions;
 
 namespace MoviePicker.Api.Infrastructure.Web;
@@ -54,6 +55,9 @@ public static class RateLimitingExtensions
     public const string AvatarPhotosPolicy = "avatar-photos-get";
 
     private const string ProxiedPartition = "proxied";
+    private const string FreeKeyPartitionPrefix = "free-key:";
+
+    public const int MovieShowcaseFreeKeyPermitLimit = 30;
 
     public const int GlobalPermitLimitPerMinute = 900;
 
@@ -197,8 +201,13 @@ public static class RateLimitingExtensions
     private static bool IsProxied(HttpContext httpContext) =>
         PolicyNameOf(httpContext) is { } policyName && FindPolicy(policyName) is { Scope: QuotaScope.Slug };
 
-    internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec) =>
-        BuildFixedWindow(PartitionKeyFor(httpContext, spec), spec.PermitLimit, spec.WindowMinutes);
+    internal static RateLimitPartition<string> CreatePartition(HttpContext httpContext, PolicySpec spec)
+    {
+        var key = PartitionKeyFor(httpContext, spec);
+        return spec.Name == MovieShowcasePolicy && ShowcaseFreeKey.IsRequestedBy(httpContext.Request)
+            ? BuildFixedWindow(FreeKeyPartitionPrefix + key, MovieShowcaseFreeKeyPermitLimit, spec.WindowMinutes)
+            : BuildFixedWindow(key, spec.PermitLimit, spec.WindowMinutes);
+    }
 
     internal static RateLimitPartition<string> BuildFixedWindow(string key, int permitLimit, int windowMinutes) =>
         RateLimitPartition.GetFixedWindowLimiter(
@@ -221,6 +230,19 @@ public static class RateLimitingExtensions
 
     internal readonly record struct PolicySpec(string Name, int PermitLimit, int WindowMinutes, QuotaScope Scope = QuotaScope.Account);
 
+}
+
+internal static class ShowcaseFreeKey
+{
+    internal static bool IsRequestedBy(HttpRequest request)
+    {
+        var section = request.Query["section"].FirstOrDefault()?.Trim().ToLowerInvariant();
+        if (section == MovieShowcaseSections.Recommendations)
+            return true;
+
+        var isTrending = string.IsNullOrEmpty(section) || section == MovieShowcaseSections.Trending;
+        return isTrending && request.Query["genreIds"].FirstOrDefault()?.Contains(',') == true;
+    }
 }
 
 internal static class ClientIpPartitionKey
