@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MoviePicker.Api.Application.Ports;
@@ -62,6 +63,40 @@ public sealed class WinnerAnnouncerTests
     private void Subscriptions(params string[] userIds) =>
         _pushSubRepo.Setup(r => r.ListByUserIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(userIds.Select((u, i) => new PushSubscription { Id = $"s{i}", UserId = u, Endpoint = $"https://push/{i}", P256dh = "k", Auth = "a" }).ToList());
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
+
+    private WinnerAnnouncer AnnouncerAt(string utcNow) => new(
+        _participantRepo.Object,
+        _userRepo.Object,
+        _pushSubRepo.Object,
+        _pushSender.Object,
+        _notifications.Object,
+        NullLogger<WinnerAnnouncer>.Instance,
+        new FixedClock(DateTimeOffset.Parse(utcNow, CultureInfo.InvariantCulture)));
+
+    [Theory]
+    [InlineData("2030-01-01", "2030-01-01T18:00:00Z", "Ce soir : « Matrix » pour « Soirée »")]
+    [InlineData("2030-01-02", "2030-01-01T23:30:00Z", "Ce soir : « Matrix » pour « Soirée »")]
+    [InlineData("2030-01-01", "2029-12-31T22:59:00Z", "Mardi 1 janvier : « Matrix » pour « Soirée »")]
+    [InlineData("2030-01-12", "2030-01-01T18:00:00Z", "Samedi 12 janvier : « Matrix » pour « Soirée »")]
+    [InlineData("2029-12-30", "2030-01-01T18:00:00Z", "Dimanche 30 décembre : « Matrix » pour « Soirée »")]
+    [InlineData("pas-une-date", "2030-01-01T18:00:00Z", "« Matrix » pour « Soirée »")]
+    public async Task AnnounceAsync_SaysTonightOnlyOnTheDayOfTheNightInParis(string nightDate, string utcNow, string expectedBody)
+    {
+        HasParticipants("u1");
+        Users(new User { Id = "u1", NotificationPreferences = new Dictionary<UserNotificationType, bool> { [UserNotificationType.MoviePicked] = true } });
+        Subscriptions("u1");
+
+        await AnnouncerAt(utcNow).AnnounceAsync(Soiree with { Date = nightDate }, "Matrix", WinnerPickMethod.Wheel);
+
+        _pushSender.Verify(
+            s => s.SendAsync(It.IsAny<PushSubscription>(), It.Is<PushMessage>(m => m.Body == expectedBody), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 
     [Fact]
     public async Task AnnounceAsync_NotifiableParticipant_SendsPushAndInbox()

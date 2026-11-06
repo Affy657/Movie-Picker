@@ -1,11 +1,15 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Domain;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.UseCases.Shared;
 
 public sealed class WinnerAnnouncer : IWinnerAnnouncer
 {
+    private static readonly CultureInfo FrCulture = new("fr-FR");
+
     private readonly IParticipantRepository _participantRepository;
     private readonly IUserRepository _userRepository;
     private readonly IPushSubscriptionRepository _pushSubscriptions;
@@ -30,6 +34,19 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
         _notifications = notifications;
         _logger = logger;
         _clock = clock;
+    }
+
+    private string PushBody(Event evt, string winnerTitle)
+    {
+        var programme = $"« {winnerTitle} » pour « {evt.Title} »";
+        if (!DateOnly.TryParse(evt.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var night))
+            return programme;
+
+        if (night == EventRecurrence.TodayInParis(_clock.GetUtcNow()))
+            return $"Ce soir : {programme}";
+
+        var day = night.ToString("dddd d MMMM", FrCulture);
+        return $"{char.ToUpper(day[0], FrCulture)}{day[1..]} : {programme}";
     }
 
     public async Task AnnounceAsync(Event evt, string winnerTitle, WinnerPickMethod method, CancellationToken ct = default)
@@ -59,7 +76,7 @@ public sealed class WinnerAnnouncer : IWinnerAnnouncer
             {
                 var message = new PushMessage(
                     Title: method == WinnerPickMethod.Manual ? "🎬 Film choisi par l'hôte !" : "🎡 Film tiré au sort !",
-                    Body: $"Ce soir : « {winnerTitle} » pour « {evt.Title} »",
+                    Body: PushBody(evt, winnerTitle),
                     Tag: $"wheel-{evt.Id}",
                     Url: $"/e/{evt.Slug}"
                 );
