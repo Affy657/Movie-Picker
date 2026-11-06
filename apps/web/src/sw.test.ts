@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { PRERENDERED_ROUTES } from '@/app/prerenderRoutes';
 
 const workbox = vi.hoisted(() => ({
   precacheAndRoute: vi.fn(),
   cleanupOutdatedCaches: vi.fn(),
+  matchPrecache: vi.fn(),
   registerRoute: vi.fn(),
   NetworkFirst: vi.fn(),
+  NetworkOnly: vi.fn(),
   CacheFirst: vi.fn(),
   StaleWhileRevalidate: vi.fn(),
   ExpirationPlugin: vi.fn(),
@@ -14,10 +17,12 @@ const workbox = vi.hoisted(() => ({
 vi.mock('workbox-precaching', () => ({
   precacheAndRoute: workbox.precacheAndRoute,
   cleanupOutdatedCaches: workbox.cleanupOutdatedCaches,
+  matchPrecache: workbox.matchPrecache,
 }));
 vi.mock('workbox-routing', () => ({ registerRoute: workbox.registerRoute }));
 vi.mock('workbox-strategies', () => ({
   NetworkFirst: workbox.NetworkFirst,
+  NetworkOnly: workbox.NetworkOnly,
   CacheFirst: workbox.CacheFirst,
   StaleWhileRevalidate: workbox.StaleWhileRevalidate,
 }));
@@ -26,7 +31,7 @@ vi.mock('workbox-cacheable-response', () => ({
   CacheableResponsePlugin: workbox.CacheableResponsePlugin,
 }));
 
-type RouteMatcher = (context: { url: URL }) => boolean;
+type RouteMatcher = (context: { url: URL; request: { mode: string } }) => boolean;
 type ServiceWorkerListener = (event: Record<string, unknown>) => void;
 
 const listeners = new Map<string, ServiceWorkerListener>();
@@ -63,6 +68,7 @@ const installation = {
   expirationOptions: [] as unknown[],
   cacheableResponseOptions: [] as unknown[],
   cacheFirstOptions: [] as StrategyOptions[],
+  networkOnlyOptions: [] as StrategyOptions[],
   precacheCalls: 0,
   cleanupCalls: 0,
   networkFirstCalls: 0,
@@ -74,6 +80,25 @@ function showcaseRouteMatcher(): RouteMatcher {
 
 function tmdbRouteMatcher(): RouteMatcher {
   return installation.routes[1]!.matches;
+}
+
+function navigationRoute(): RegisteredRoute {
+  return installation.routes[2]!;
+}
+
+function apiCall(path: string): { url: URL; request: { mode: string } } {
+  return { url: new URL(`${origin()}${path}`), request: { mode: 'cors' } };
+}
+
+function navigationTo(path: string): { url: URL; request: { mode: string } } {
+  return { url: new URL(`${origin()}${path}`), request: { mode: 'navigate' } };
+}
+
+type NavigationPlugin = { handlerDidError: () => Promise<Response | undefined> };
+
+function offlineShell(): NavigationPlugin {
+  const plugins = installation.networkOnlyOptions[0]?.plugins ?? [];
+  return plugins[0] as NavigationPlugin;
 }
 
 function tmdbImagePlugin(): TmdbImagePlugin {
@@ -120,6 +145,9 @@ beforeAll(async () => {
   installation.cacheFirstOptions = workbox.CacheFirst.mock.calls.map(
     (call) => call[0] as StrategyOptions
   );
+  installation.networkOnlyOptions = workbox.NetworkOnly.mock.calls.map(
+    (call) => call[0] as StrategyOptions
+  );
   installation.precacheCalls = workbox.precacheAndRoute.mock.calls.length;
   installation.cleanupCalls = workbox.cleanupOutdatedCaches.mock.calls.length;
   installation.networkFirstCalls = workbox.NetworkFirst.mock.calls.length;
@@ -141,12 +169,10 @@ describe('service worker — mise en cache', () => {
 
   it('serves the public selections from the cache then refreshes them behind', () => {
     const matches = showcaseRouteMatcher();
-    expect(matches({ url: new URL(`${origin()}/api/v1/movies/showcase?section=trending`) })).toBe(
-      true
-    );
-    expect(matches({ url: new URL(`${origin()}/api/v1/movies/collections`) })).toBe(true);
-    expect(matches({ url: new URL(`${origin()}/api/v1/movies/search?q=heat`) })).toBe(false);
-    expect(matches({ url: new URL(`${origin()}/api/v1/events`) })).toBe(false);
+    expect(matches(apiCall('/api/v1/movies/showcase?section=trending'))).toBe(true);
+    expect(matches(apiCall('/api/v1/movies/collections'))).toBe(true);
+    expect(matches(apiCall('/api/v1/movies/search?q=heat'))).toBe(false);
+    expect(matches(apiCall('/api/v1/events'))).toBe(false);
     expect(installation.routes[0]!.strategy).toBeInstanceOf(workbox.StaleWhileRevalidate);
   });
 
@@ -161,16 +187,16 @@ describe('service worker — mise en cache', () => {
       '/api/v1/posters/550',
     ];
     for (const path of privatePaths) {
-      const url = new URL(`${origin()}${path}`);
-      expect(matchers.some((matches) => matches({ url }))).toBe(false);
+      expect(matchers.some((matches) => matches(apiCall(path)))).toBe(false);
     }
     expect(installation.networkFirstCalls).toBe(0);
   });
 
   it('met en cache les images TMDB', () => {
     const matches = tmdbRouteMatcher();
-    expect(matches({ url: new URL('https://image.tmdb.org/t/p/w500/a.jpg') })).toBe(true);
-    expect(matches({ url: new URL('https://evil.test/t/p/w500/a.jpg') })).toBe(false);
+    const imageAt = (href: string) => ({ url: new URL(href), request: { mode: 'no-cors' } });
+    expect(matches(imageAt('https://image.tmdb.org/t/p/w500/a.jpg'))).toBe(true);
+    expect(matches(imageAt('https://evil.test/t/p/w500/a.jpg'))).toBe(false);
   });
 
   it('serves a cached TMDB image straight from the cache, its content never changes under a URL', () => {
@@ -213,6 +239,42 @@ describe('service worker — mise en cache', () => {
       maxAgeSeconds: 60 * 60 * 24 * 30,
       purgeOnQuotaError: true,
     });
+  });
+});
+
+describe('service worker: offline navigation', () => {
+  it('always asks the network first: Hosting stays the source of a document', () => {
+    expect(navigationRoute().strategy).toBeInstanceOf(workbox.NetworkOnly);
+  });
+
+  it('falls back on the precached shell once the network failed', async () => {
+    const shell = new Response('<html></html>');
+    workbox.matchPrecache.mockResolvedValueOnce(shell);
+
+    await expect(offlineShell().handlerDidError()).resolves.toBe(shell);
+
+    expect(workbox.matchPrecache).toHaveBeenCalledWith('/index.html');
+  });
+
+  it('covers the app routes, the start page of the installed app first', () => {
+    const { matches } = navigationRoute();
+    expect(matches(navigationTo('/my-events'))).toBe(true);
+    expect(matches(navigationTo('/e/Ab3dE_9xYz'))).toBe(true);
+    expect(matches(navigationTo('/settings/profile'))).toBe(true);
+  });
+
+  it('leaves the recap documents to the API, they carry their own preview tags', () => {
+    expect(navigationRoute().matches(navigationTo('/r/Ab3dE_9xYz'))).toBe(false);
+  });
+
+  it.each(PRERENDERED_ROUTES)('leaves the prerendered document of %s to Hosting', (route) => {
+    const { matches } = navigationRoute();
+    expect(matches(navigationTo(route))).toBe(false);
+    expect(matches(navigationTo(`${route}/`))).toBe(false);
+  });
+
+  it('never answers anything but a navigation', () => {
+    expect(navigationRoute().matches(apiCall('/my-events'))).toBe(false);
   });
 });
 

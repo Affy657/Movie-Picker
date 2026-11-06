@@ -1,9 +1,11 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+import { matchPrecache, precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { CacheFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
+import { PRERENDERED_ROUTES } from '@/app/prerenderRoutes';
+import { ROUTES } from '@/app/routes';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -57,6 +59,20 @@ registerRoute(
       new CacheableResponsePlugin({ statuses: [200] }),
     ],
   })
+);
+
+const OFFLINE_SHELL_URL = '/index.html';
+const HOSTING_ONLY_ROUTES = new Set<string>(PRERENDERED_ROUTES);
+const RECAP_DOCUMENT_PREFIX = ROUTES.nightRecap('');
+
+function servedOnlyByHosting(pathname: string): boolean {
+  const route = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+  return HOSTING_ONLY_ROUTES.has(route) || route.startsWith(RECAP_DOCUMENT_PREFIX);
+}
+
+registerRoute(
+  ({ request, url }) => request.mode === 'navigate' && !servedOnlyByHosting(url.pathname),
+  new NetworkOnly({ plugins: [{ handlerDidError: () => matchPrecache(OFFLINE_SHELL_URL) }] })
 );
 
 self.addEventListener('push', (event) => {
