@@ -1,5 +1,11 @@
-import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
-import { apiPath, apiUrl, fetchApi } from '@/shared/api/client';
+import { afterEach, describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
+import {
+  apiPath,
+  apiUrl,
+  DEFAULT_REQUEST_TIMEOUT_MS,
+  fetchApi,
+  SLOW_REQUEST_TIMEOUT_MS,
+} from '@/shared/api/client';
 import { ApiError } from '@/shared/api/apiError';
 import { loadLocale } from '@/shared/i18n/locales';
 import { fr } from '@/shared/i18n/locales/fr';
@@ -35,6 +41,123 @@ describe('apiPath', () => {
   it('keeps a segment that only contains dots among other characters', () => {
     expect(apiPath('events', '...', 'movies', 'a.b')).toBe('/events/.../movies/a.b');
     expect(apiPath('events', '.x', 'movies', 0)).toBe('/events/.x/movies/0');
+  });
+});
+
+function hangingFetch(abortError: unknown) {
+  return (_url: string, init: RequestInit): Promise<Response> =>
+    new Promise((_resolve, reject) => {
+      if (init.signal?.aborted) {
+        reject(abortError);
+        return;
+      }
+      init.signal?.addEventListener('abort', () => reject(abortError));
+    });
+}
+
+describe('fetchApi deadline', () => {
+  const abortErr = new DOMException('The operation was aborted', 'AbortError');
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    globalThis.fetch = vi.fn(hangingFetch(abortErr)) as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  async function settledAfter<T>(pending: Promise<T>, ms: number): Promise<unknown> {
+    const outcome = pending.then(
+      (value) => ({ value }),
+      (error: unknown) => ({ error })
+    );
+    await vi.advanceTimersByTimeAsync(ms);
+    return outcome;
+  }
+
+  it('gives up on a request that hangs, in the words of the interface', async () => {
+    const outcome = settledAfter(fetchApi('/events'), DEFAULT_REQUEST_TIMEOUT_MS);
+
+    await expect(outcome).resolves.toEqual({ error: expect.any(ApiError) });
+    const { error } = (await outcome) as { error: ApiError };
+    expect(error.code).toBe(0);
+    expect(error.reason).toBe('request_timeout');
+    expect(error.message).toBe(fr.errors.api.timeout);
+  });
+
+  it('leaves a request alive until its deadline', async () => {
+    const settled = vi.fn();
+    fetchApi('/events').then(settled, settled);
+
+    await vi.advanceTimersByTimeAsync(DEFAULT_REQUEST_TIMEOUT_MS - 1);
+
+    expect(settled).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(settled).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives a slow route the longer deadline it asks for', async () => {
+    const settled = vi.fn();
+    fetchApi('/events', { timeoutMs: SLOW_REQUEST_TIMEOUT_MS }).then(settled, settled);
+
+    await vi.advanceTimersByTimeAsync(DEFAULT_REQUEST_TIMEOUT_MS);
+
+    expect(settled).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(SLOW_REQUEST_TIMEOUT_MS - DEFAULT_REQUEST_TIMEOUT_MS);
+    expect(settled).toHaveBeenCalledTimes(1);
+  });
+
+  it('stays an abort when the caller gives up first', async () => {
+    const controller = new AbortController();
+    const pending = fetchApi('/events', { signal: controller.signal });
+
+    controller.abort();
+
+    await expect(pending).rejects.toBe(abortErr);
+  });
+
+  it('never sends a write twice, the failure is the end of it', async () => {
+    const outcome = settledAfter(
+      fetchApi('/events', { method: 'POST', body: '{}' }),
+      DEFAULT_REQUEST_TIMEOUT_MS * 3
+    );
+
+    await outcome;
+
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('covers the body too, a response can stall half way', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_url: string, init: RequestInit) =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          text: () => hangingFetch(abortErr)('', init),
+        })
+    );
+
+    const outcome = settledAfter(fetchApi('/events'), DEFAULT_REQUEST_TIMEOUT_MS);
+
+    await expect(outcome).resolves.toMatchObject({ error: { reason: 'request_timeout' } });
+  });
+
+  it('leaves no timer and no listener behind once the answer is in', async () => {
+    const controller = new AbortController();
+    const removeListener = vi.spyOn(controller.signal, 'removeEventListener');
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: () => Promise.resolve('{}'),
+    });
+
+    await fetchApi('/events', { signal: controller.signal });
+
+    expect(vi.getTimerCount()).toBe(0);
+    expect(removeListener).toHaveBeenCalledWith('abort', expect.any(Function));
   });
 });
 
@@ -456,19 +579,24 @@ describe('fetchApi', () => {
     }
   });
 
-  it('propage le signal AbortController au fetch natif', async () => {
+  it('aborts the native fetch when the caller aborts', async () => {
     const controller = new AbortController();
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      headers: new Headers({ 'content-type': 'application/json' }),
-      text: () => Promise.resolve('{}'),
-    });
-    await fetchApi('/events', { signal: controller.signal });
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({ signal: controller.signal })
-    );
+    const abortErr = new DOMException('The operation was aborted', 'AbortError');
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(hangingFetch(abortErr));
+
+    const pending = fetchApi('/events', { signal: controller.signal });
+    controller.abort();
+
+    await expect(pending).rejects.toBe(abortErr);
+  });
+
+  it('does not even start when the caller aborted already', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const abortErr = new DOMException('The operation was aborted', 'AbortError');
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(hangingFetch(abortErr));
+
+    await expect(fetchApi('/events', { signal: controller.signal })).rejects.toBe(abortErr);
   });
 
   it('abort signal propage AbortError sans envelopper dans ApiError', async () => {

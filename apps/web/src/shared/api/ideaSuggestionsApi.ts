@@ -1,4 +1,4 @@
-import { fetchApi } from '@/shared/api/client';
+import { fetchApi, SLOW_REQUEST_TIMEOUT_MS } from '@/shared/api/client';
 
 export type IdeaSuggestionCategory = 'idea' | 'bug' | 'improvement';
 
@@ -21,5 +21,6 @@ export async function createIdeaSuggestion(body: CreateIdeaSuggestionBody): Prom
   await fetchApi('/idea-suggestions', {
     method: 'POST',
     body: JSON.stringify(body),
+    timeoutMs: SLOW_REQUEST_TIMEOUT_MS,
   });
 }

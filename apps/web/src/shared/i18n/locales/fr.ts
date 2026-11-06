@@ -1745,6 +1745,7 @@ export const fr = {
         'Connexion au serveur impossible. Vérifiez votre connexion internet, puis réessayez.',
       server: 'Une erreur est survenue côté serveur. Réessayez dans un instant.',
       invalidJson: 'Réponse invalide du serveur (JSON attendu).',
+      timeout: 'Le serveur met trop de temps à répondre. Réessayez dans un instant.',
     },
     network: 'Problème de connexion au serveur. Vérifiez votre réseau.',
     generic: 'Une erreur est survenue.',

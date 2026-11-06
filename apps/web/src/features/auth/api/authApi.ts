@@ -1,4 +1,4 @@
-import { apiPath, apiUrl, fetchApi } from '@/shared/api/client';
+import { apiPath, apiUrl, fetchApi, SLOW_REQUEST_TIMEOUT_MS } from '@/shared/api/client';
 import { blobToBase64 } from '@/shared/utils/blobToBase64';
 import { downloadBlob } from '@/shared/utils/downloadBlob';
 import { ApiError } from '@/shared/api/apiError';
@@ -121,6 +121,7 @@ export async function putAvatarPhoto(photo: Blob): Promise<UserProfile> {
   const profile = await fetchApi<UserProfile>(apiPath('users', 'me', 'avatar-photo'), {
     method: 'PUT',
     body: JSON.stringify({ contentType: photo.type, base64Content: await blobToBase64(photo) }),
+    timeoutMs: SLOW_REQUEST_TIMEOUT_MS,
   });
   return withProfileDefaults(profile);
 }
@@ -169,7 +170,7 @@ function buildExportFilename(): string {
 }
 
 export async function downloadMyDataExport(): Promise<void> {
-  const data = await fetchApi<unknown>('/auth/me/export');
+  const data = await fetchApi<unknown>('/auth/me/export', { timeoutMs: SLOW_REQUEST_TIMEOUT_MS });
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   downloadBlob(blob, buildExportFilename());

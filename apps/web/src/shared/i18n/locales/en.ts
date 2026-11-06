@@ -1711,6 +1711,7 @@ export const en: Locale = {
       network: 'Could not connect to the server. Check your internet connection, then try again.',
       server: 'Something went wrong on the server. Please try again in a moment.',
       invalidJson: 'Invalid server response (JSON expected).',
+      timeout: 'The server is taking too long to answer. Try again in a moment.',
     },
     network: 'Could not reach the server. Check your connection.',
     generic: 'An error occurred.',
