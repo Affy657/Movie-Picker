@@ -16,10 +16,8 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
     private readonly ISeenMarkRepository _seenMarkRepository;
     private readonly IMovieRatingRepository _ratingRepository;
     private readonly ICurrentUserAccessor _currentUserAccessor;
-    private readonly IUserRepository _userRepository;
-    private readonly IPushSubscriptionRepository _pushSubscriptions;
-    private readonly IPushNotificationSender _pushSender;
     private readonly IUserNotificationRepository _notifications;
+    private readonly EventAudienceNotifier _audience;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteEventHandler> _logger;
     private readonly TimeProvider _clock;
@@ -32,10 +30,8 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         ISeenMarkRepository seenMarkRepository,
         IMovieRatingRepository ratingRepository,
         ICurrentUserAccessor currentUserAccessor,
-        IUserRepository userRepository,
-        IPushSubscriptionRepository pushSubscriptions,
-        IPushNotificationSender pushSender,
         IUserNotificationRepository notifications,
+        EventAudienceNotifier audience,
         IUnitOfWork unitOfWork,
         ILogger<DeleteEventHandler> logger,
         TimeProvider clock)
@@ -47,10 +43,8 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         _seenMarkRepository = seenMarkRepository;
         _ratingRepository = ratingRepository;
         _currentUserAccessor = currentUserAccessor;
-        _userRepository = userRepository;
-        _pushSubscriptions = pushSubscriptions;
-        _pushSender = pushSender;
         _notifications = notifications;
+        _audience = audience;
         _unitOfWork = unitOfWork;
         _logger = logger;
         _clock = clock;
@@ -97,7 +91,7 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
             throw Errors.EventNotFound();
         }
 
-        await NotifyParticipantsOnEventDeletedAsync(evt, participantUserIds, CancellationToken.None);
+        await _audience.NotifyUsersAsync(participantUserIds, EventDeletedMessage(evt), CancellationToken.None);
 
         _logger.LogInformation(
             "Event deleted: {EventId} (slug={Slug}, by={UserId}, cascadedVotes={Votes}, seenMarks={Seen}, movies={Movies}, participants={Participants})",
@@ -147,51 +141,16 @@ public sealed class DeleteEventHandler : IDeleteEventHandler
         public bool EventDeleted { get; set; }
     }
 
-    private async Task NotifyParticipantsOnEventDeletedAsync(Event evt, List<string> userIds, CancellationToken ct)
-    {
-        try
+    private static EventAudienceMessage EventDeletedMessage(Event evt) => new(
+        evt.Id,
+        new UserNotification
         {
-            if (userIds.Count == 0)
-                return;
-
-            var users = await _userRepository.ListByIdsAsync(userIds, ct);
-            var notifiableIds = users.Where(u => u.NotifiesOn(UserNotificationType.EventDeleted)).Select(u => u.Id).ToHashSet();
-            if (notifiableIds.Count == 0)
-                return;
-
-            var subs = await _pushSubscriptions.ListByUserIdsAsync(notifiableIds, ct);
-            if (subs.Count > 0)
-            {
-                var message = new PushMessage(
-                    Title: "Soirée annulée 😢",
-                    Body: $"{evt.Title} a été annulée.",
-                    Tag: $"event-deleted-{evt.Id}",
-                    Url: "/"
-                );
-
-                await PushFanOut.SendToAllAsync(
-                    _pushSender,
-                    subs.Where(s => notifiableIds.Contains(s.UserId)),
-                    message,
-                    ct);
-            }
-
-            var now = _clock.GetUtcNow();
-            foreach (var userId in notifiableIds)
-            {
-                await _notifications.AddAsync(new UserNotification
-                {
-                    UserId = userId,
-                    Type = UserNotificationType.EventDeleted,
-                    EventTitle = evt.Title,
-                    IsRead = false,
-                    CreatedAt = now
-                }, ct);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Deletion notification failed for movie night {EventId}", evt.Id);
-        }
-    }
+            Type = UserNotificationType.EventDeleted,
+            EventTitle = evt.Title
+        },
+        new PushMessage(
+            Title: "Soirée annulée 😢",
+            Body: $"{evt.Title} a été annulée.",
+            Tag: $"event-deleted-{evt.Id}",
+            Url: "/"));
 }

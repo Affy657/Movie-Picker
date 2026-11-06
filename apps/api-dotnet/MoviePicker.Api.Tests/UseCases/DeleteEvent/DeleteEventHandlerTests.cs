@@ -57,10 +57,8 @@ public sealed class DeleteEventHandlerTests
             _seenMarkRepo.Object,
             _ratingRepo.Object,
             _currentUser.Object,
-            _userRepo.Object,
-            _pushSubRepo.Object,
-            _pushSender.Object,
             Mock.Of<IUserNotificationRepository>(),
+            TestAudienceNotifier.Over(_participantRepo.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, Mock.Of<IUserNotificationRepository>()),
             new InMemoryUnitOfWork(),
             NullLogger<DeleteEventHandler>.Instance,
             TimeProvider.System);
