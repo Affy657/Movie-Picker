@@ -1623,6 +1623,8 @@ export const fr = {
       'Vous avez atteint la limite de {{max}} templates. Supprimez-en un pour en enregistrer un nouveau.',
     invite_event_finished: "Impossible d'inviter : la soirée est terminée.",
     already_participant: 'Cet utilisateur participe déjà à la soirée.',
+    invitation_limit_reached:
+      'Vous avez déjà envoyé plusieurs invitations à cette personne aujourd’hui. Réessayez demain.',
     invitation_already_sent:
       'Une invitation a déjà été envoyée à cet utilisateur pour cette soirée.',
     event_full: 'La soirée est complète ({{max}} participants maximum).',

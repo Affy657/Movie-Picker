@@ -146,6 +146,9 @@ public static class Errors
     public static ConflictException WheelLockedDelete() =>
         new("The wheel has already been spun, removal is impossible", ErrorCodes.WheelLockedDelete);
 
+    public static TooManyRequestsException InvitationLimitReached() =>
+        new("Too many invitations sent to this user today", ErrorCodes.InvitationLimitReached);
+
     public static TooManyRequestsException TooManySignInAttempts() =>
         new("Too many failed sign-in attempts for this account, retry in a few minutes", ErrorCodes.RateLimited);
 

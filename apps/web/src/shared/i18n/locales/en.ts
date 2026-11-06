@@ -1594,6 +1594,8 @@ export const en: Locale = {
       'You reached the limit of {{max}} templates. Delete one to save a new one.',
     invite_event_finished: 'Cannot invite: the movie night is over.',
     already_participant: 'This user already takes part in the movie night.',
+    invitation_limit_reached:
+      'You have already sent several invitations to this person today. Try again tomorrow.',
     invitation_already_sent:
       'An invitation has already been sent to this user for this movie night.',
     event_full: 'The movie night is full ({{max}} participants maximum).',

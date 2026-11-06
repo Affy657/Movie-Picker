@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.InviteUser;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.InviteUser;
@@ -22,6 +23,7 @@ public sealed class InviteUserHandlerTests
     private readonly Mock<IPushNotificationSender> _pushSender = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<INotificationDedupRepository> _dedup = new();
+    private readonly RecordingSharedQuota _quota = new();
     private readonly InviteUserHandler _sut;
 
     public InviteUserHandlerTests()
@@ -33,7 +35,7 @@ public sealed class InviteUserHandlerTests
             .ReturnsAsync(true);
         _sut = new InviteUserHandler(
             _events.Object, _participants.Object, _follows.Object, _users.Object,
-            _notifications.Object, _pushSubs.Object, _pushSender.Object, _currentUser.Object, _dedup.Object, TimeProvider.System);
+            _notifications.Object, _pushSubs.Object, _pushSender.Object, _currentUser.Object, _dedup.Object, _quota, TimeProvider.System);
     }
 
     private static Event Evt(DateTimeOffset? closedAt = null) =>
@@ -83,6 +85,8 @@ public sealed class InviteUserHandlerTests
         _follows.Setup(f => f.IsFollowingAsync(HostId, TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
         await Assert.ThrowsAsync<BadRequestException>(() => _sut.HandleAsync("evt1", Request()));
+
+        Assert.Empty(_quota.Calls);
     }
 
     [Fact]
@@ -205,7 +209,7 @@ public sealed class InviteUserHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_TargetOptedOut_SkipsPush()
+    public async Task HandleAsync_TargetOptedOut_LeavesNoTraceForTheTargetAndAnswersTheSame()
     {
         SetupEvent(Evt());
         _follows.Setup(f => f.IsFollowingAsync(HostId, TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
@@ -225,9 +229,71 @@ public sealed class InviteUserHandlerTests
                 }
             });
 
+        var result = await _sut.HandleAsync("evt1", Request());
+
+        Assert.Equal("Invitation sent", result.Message);
+        _pushSender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+        _dedup.Verify(d => d.TryClaimAsync(
+            TargetId, UserNotificationType.EventInvitation, "evt1", NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private void GivenAnEligibleTarget()
+    {
+        SetupEvent(Evt());
+        _follows.Setup(f => f.IsFollowingAsync(HostId, TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _participants.Setup(p => p.FindByEventAndUserIdAsync("evt1", TargetId, It.IsAny<CancellationToken>())).ReturnsAsync((Participant?)null);
+        _notifications.Setup(n => n.ExistsAsync(TargetId, UserNotificationType.EventInvitation, "evt1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CountsTheInvitationAgainstTheHostAndTargetPair()
+    {
+        GivenAnEligibleTarget();
+
         await _sut.HandleAsync("evt1", Request());
 
-        _pushSender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
-        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Once);
+        var call = Assert.Single(_quota.Calls);
+        Assert.Equal(InviteUserHandler.PairQuotaScope, call.Scope);
+        Assert.Equal($"{HostId}|{TargetId}", call.Subject);
+        Assert.Equal(InviteUserHandler.MaxInvitationsPerPairPerDay, call.Limit);
+        Assert.Equal(TimeSpan.FromHours(24), call.Window);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PairCapReached_IsRefusedBeforeAnyWrite()
+    {
+        GivenAnEligibleTarget();
+        _quota.Allows = false;
+
+        var ex = await Assert.ThrowsAsync<TooManyRequestsException>(() => _sut.HandleAsync("evt1", Request()));
+
+        Assert.Equal(ErrorCodes.InvitationLimitReached, ex.Reason);
+        _dedup.Verify(d => d.TryClaimAsync(
+            It.IsAny<string>(), It.IsAny<UserNotificationType>(), It.IsAny<string>(),
+            It.IsAny<NotificationDedupChannel>(), It.IsAny<CancellationToken>()), Times.Never);
+        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PairCapReachedOnAnOptedOutTarget_AnswersLikeAnyOtherTarget()
+    {
+        GivenAnEligibleTarget();
+        _users.Setup(u => u.GetByIdAsync(TargetId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User
+            {
+                Id = TargetId,
+                Handle = "target",
+                NotificationPreferences = new Dictionary<UserNotificationType, bool>
+                {
+                    [UserNotificationType.EventInvitation] = false
+                }
+            });
+        _quota.Allows = false;
+
+        var ex = await Assert.ThrowsAsync<TooManyRequestsException>(() => _sut.HandleAsync("evt1", Request()));
+
+        Assert.Equal(ErrorCodes.InvitationLimitReached, ex.Reason);
     }
 }

@@ -50,6 +50,7 @@ public static class ErrorCodes
     public const string InviteEventFinished = "invite_event_finished";
     public const string AlreadyParticipant = "already_participant";
     public const string InvitationAlreadySent = "invitation_already_sent";
+    public const string InvitationLimitReached = "invitation_limit_reached";
     public const string EventFull = "event_full";
     public const string WinnersAllDrawn = "winners_all_drawn";
     public const string HandleAllocationFailed = "handle_allocation_failed";
