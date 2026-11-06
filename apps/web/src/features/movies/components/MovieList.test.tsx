@@ -364,10 +364,12 @@ describe('MovieList', () => {
           onRetryVote={onRetryVote}
         />
       );
-      expect(
-        screen.getByText('Votre vote n’a pas été enregistré. Vérifiez votre connexion.')
-      ).toBeInTheDocument();
-      await userEvent.click(screen.getByRole('button', { name: /réessayer/i }));
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Votre vote n’a pas été enregistré. Vérifiez votre connexion.'
+      );
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Réessayer le vote pour Inception' })
+      );
       expect(onRetryVote).toHaveBeenCalledWith('m1');
     });
 

@@ -1295,6 +1295,7 @@ export const en: Locale = {
       voteError: 'Vote failed',
       voteErrorRow: 'Your vote was not saved. Check your connection.',
       retryVoteAction: 'Retry',
+      retryVoteAria: 'Retry the vote on {{title}}',
       voteToolbarAria: 'Votes for "{{title}}"',
       voteLimitReachedTitle: 'Vote limit reached',
       voteLimitReachedOne:

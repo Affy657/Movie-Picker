@@ -1318,6 +1318,7 @@ export const fr = {
       voteError: 'Vote impossible',
       voteErrorRow: 'Votre vote n’a pas été enregistré. Vérifiez votre connexion.',
       retryVoteAction: 'Réessayer',
+      retryVoteAria: 'Réessayer le vote pour {{title}}',
       voteToolbarAria: 'Votes pour « {{title}} »',
       voteLimitReachedTitle: 'Limite de votes atteinte',
       voteLimitReachedOne:

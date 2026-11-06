@@ -135,13 +135,21 @@ export interface EventMovieRowProps extends MovieCardCommonProps {
 
 function VoteErrorBanner({
   voteError,
+  title,
   t,
-}: Readonly<{ voteError: MovieRowVoteError; t: Translate }>) {
+}: Readonly<{ voteError: MovieRowVoteError; title: string; t: Translate }>) {
   return (
     <li className={styles.errorBanner}>
       <AlertTriangle aria-hidden size={ICON_SIZE.md} className={styles.errorIcon} />
-      <p className={styles.errorMessage}>{voteError.message}</p>
-      <button type="button" className={styles.errorRetry} onClick={voteError.onRetry}>
+      <p className={styles.errorMessage} role="alert">
+        {voteError.message}
+      </p>
+      <button
+        type="button"
+        className={styles.errorRetry}
+        onClick={voteError.onRetry}
+        aria-label={t('movies.list.retryVoteAria', { title })}
+      >
         <RotateCcw aria-hidden size={ICON_SIZE.sm} />
         <span>{t('movies.list.retryVoteAction')}</span>
       </button>
@@ -301,7 +309,7 @@ function EventMovieRowMobile({
           participantCount={participantCount}
         />
       </li>
-      {voteError ? <VoteErrorBanner voteError={voteError} t={t} /> : null}
+      {voteError ? <VoteErrorBanner voteError={voteError} title={m.title} t={t} /> : null}
     </Fragment>
   );
 }
@@ -453,7 +461,7 @@ function EventMovieRowDesktop({
           participantCount={participantCount}
         />
       </li>
-      {voteError ? <VoteErrorBanner voteError={voteError} t={t} /> : null}
+      {voteError ? <VoteErrorBanner voteError={voteError} title={m.title} t={t} /> : null}
     </Fragment>
   );
 }
