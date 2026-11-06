@@ -14,22 +14,22 @@ import {
 } from '@/shared/analytics/posthog';
 
 function createStub(): PostHog {
-  const opted = { in: false, out: true };
+  let optedIn = false;
   return {
     capture: vi.fn(),
     identify: vi.fn(),
-    reset: vi.fn(),
+    reset: vi.fn(() => {
+      optedIn = false;
+    }),
     unsetPersonProperties: vi.fn(),
     opt_in_capturing: vi.fn(() => {
-      opted.in = true;
-      opted.out = false;
+      optedIn = true;
     }),
     opt_out_capturing: vi.fn(() => {
-      opted.in = false;
-      opted.out = true;
+      optedIn = false;
     }),
-    has_opted_in_capturing: vi.fn(() => opted.in),
-    has_opted_out_capturing: vi.fn(() => opted.out),
+    has_opted_in_capturing: vi.fn(() => optedIn),
+    has_opted_out_capturing: vi.fn(() => !optedIn),
   } as unknown as PostHog;
 }
 
@@ -54,20 +54,13 @@ describe('file d’attente consentement / identify', () => {
     resetPostHogForTests();
   });
 
-  it('applies opt-in and pageview once the SDK is wired', () => {
+  it('applies the opt-in once the SDK is wired, and leaves the $pageview to the SDK', () => {
     const stub = createStub();
     optIn();
     bindPostHogForTests(stub);
+    optIn();
     expect(stub.opt_in_capturing).toHaveBeenCalledTimes(1);
-    expect(stub.capture).toHaveBeenCalledWith('$pageview');
-  });
-
-  it('sends only one $pageview per session even when optIn is called again', () => {
-    const stub = createStub();
-    optIn();
-    bindPostHogForTests(stub);
-    optIn();
-    expect(stub.capture).toHaveBeenCalledTimes(1);
+    expect(stub.capture).not.toHaveBeenCalled();
   });
 
   it('identifie sans PII et unset displayName/handle', () => {
@@ -78,15 +71,70 @@ describe('file d’attente consentement / identify', () => {
     expect(stub.unsetPersonProperties).toHaveBeenCalledWith(['displayName', 'handle']);
   });
 
-  it('optOut then identity reset', () => {
+  it('opts back in without a new $opt_in event after an identity reset', () => {
+    const stub = createStub();
+    bindPostHogForTests(stub);
+    optIn();
+    identify('user-1');
+
+    resetIdentity();
+
+    expect(stub.reset).toHaveBeenCalledTimes(1);
+    expect(stub.opt_in_capturing).toHaveBeenLastCalledWith({ captureEventName: false });
+    expect(stub.has_opted_in_capturing()).toBe(true);
+  });
+
+  it('identifies the next account after an identity reset', () => {
+    const stub = createStub();
+    bindPostHogForTests(stub);
+    optIn();
+    identify('user-1');
+    resetIdentity();
+
+    identify('user-1');
+
+    expect(stub.identify).toHaveBeenCalledTimes(2);
+  });
+
+  it('forgets the identity when consent is withdrawn, and stays out afterwards', () => {
+    const stub = createStub();
+    bindPostHogForTests(stub);
+    optIn();
+    identify('user-1');
+
+    optOut();
+    optOut();
+
+    expect(stub.opt_out_capturing).toHaveBeenCalledTimes(1);
+    expect(stub.reset).toHaveBeenCalledTimes(1);
+    expect(stub.identify).toHaveBeenCalledTimes(1);
+  });
+
+  it('identifies again once consent is given back', () => {
     const stub = createStub();
     bindPostHogForTests(stub);
     optIn();
     identify('user-1');
     optOut();
-    resetIdentity();
-    expect(stub.opt_out_capturing).toHaveBeenCalled();
-    expect(stub.reset).toHaveBeenCalled();
+
+    optIn();
+    identify('user-1');
+
+    expect(stub.identify).toHaveBeenCalledTimes(2);
+  });
+
+  it('removes what PostHog stored, even when the SDK never loaded in this page', () => {
+    localStorage.setItem('ph_phc_test_posthog', '{"distinct_id":"visitor"}');
+    sessionStorage.setItem('ph_phc_test_window_id', 'window');
+    document.cookie = 'ph_phc_test_posthog=visitor; path=/';
+    localStorage.setItem('moviepicker-consent', '{"decided":true,"analytics":false}');
+
+    optOut();
+
+    expect(localStorage.getItem('ph_phc_test_posthog')).toBeNull();
+    expect(sessionStorage.getItem('ph_phc_test_window_id')).toBeNull();
+    expect(document.cookie).not.toContain('ph_phc_test_posthog');
+    expect(localStorage.getItem('moviepicker-consent')).not.toBeNull();
   });
 
   it('capture ignores the events as long as the SDK is not ready', () => {
@@ -150,6 +198,27 @@ describe('initPostHog', () => {
         capture_exceptions: false,
         mask_personal_data_properties: true,
         custom_personal_data_properties: expect.arrayContaining(['token', 'host', 'api_key']),
+      })
+    );
+  });
+
+  it('keeps nothing in the browser as long as consent is not given', async () => {
+    vi.stubEnv('PROD', true);
+    vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test');
+    vi.stubGlobal('requestIdleCallback', (callback: () => void) => {
+      callback();
+      return 1;
+    });
+    const init = vi.fn();
+    vi.doMock('posthog-js', () => ({ default: { ...createStub(), init } }));
+
+    await initPostHog();
+
+    expect(init).toHaveBeenCalledWith(
+      'phc_test',
+      expect.objectContaining({
+        opt_out_capturing_by_default: true,
+        opt_out_persistence_by_default: true,
       })
     );
   });

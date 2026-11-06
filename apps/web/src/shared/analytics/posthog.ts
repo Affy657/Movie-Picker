@@ -5,13 +5,14 @@ const PERSON_PII_KEYS = ['displayName', 'handle'] as const;
 
 const MAX_REDACTION_DEPTH = 5;
 
+const STORED_DATA_PREFIX = 'ph_';
+
 let posthog: PostHog | null = null;
 let initialized = false;
 let initPromise: Promise<void> | null = null;
 let pendingConsent: boolean | null = null;
 let pendingUserId: string | null | undefined;
 let identifiedUserId: string | null = null;
-let sessionPageviewSent = false;
 
 export function stripPersonPii(properties?: Properties): Properties | undefined {
   if (!properties) return properties;
@@ -56,23 +57,56 @@ export function redactCapturedUrls(event: CaptureResult | null): CaptureResult |
   }
 }
 
-function applyOptIn(): void {
-  if (!posthog) return;
-  if (!posthog.has_opted_in_capturing()) {
-    posthog.opt_in_capturing();
-  }
-  if (!sessionPageviewSent) {
-    posthog.capture('$pageview');
-    sessionPageviewSent = true;
+function removeStoredKeys(storage: Storage): void {
+  const keys = Array.from({ length: storage.length }, (_, index) => storage.key(index));
+  for (const key of keys) {
+    if (key?.startsWith(STORED_DATA_PREFIX)) storage.removeItem(key);
   }
 }
 
-function applyOptOut(): void {
-  if (!posthog) return;
-  if (!posthog.has_opted_out_capturing()) {
-    posthog.opt_out_capturing();
+function cookieDomains(hostname: string): string[] {
+  const labels = hostname.split('.');
+  return labels.slice(0, -1).map((_, index) => labels.slice(index).join('.'));
+}
+
+function expireCookie(name: string): void {
+  const expired = `${name}=; Max-Age=0; path=/`;
+  document.cookie = expired;
+  for (const domain of cookieDomains(globalThis.location.hostname)) {
+    document.cookie = `${expired}; domain=.${domain}`;
   }
-  sessionPageviewSent = false;
+}
+
+function removeStoredCookies(): void {
+  for (const cookie of document.cookie.split(';')) {
+    const name = cookie.split('=')[0]?.trim();
+    if (name?.startsWith(STORED_DATA_PREFIX)) expireCookie(name);
+  }
+}
+
+function clearStoredData(): void {
+  if (globalThis.window === undefined) return;
+  try {
+    removeStoredKeys(localStorage);
+    removeStoredKeys(sessionStorage);
+    removeStoredCookies();
+  } catch {
+    return;
+  }
+}
+
+function applyOptIn(): void {
+  if (!posthog?.has_opted_out_capturing()) return;
+  posthog.opt_in_capturing();
+}
+
+function applyOptOut(): void {
+  if (posthog && !posthog.has_opted_out_capturing()) {
+    posthog.opt_out_capturing();
+    posthog.reset();
+    identifiedUserId = null;
+  }
+  clearStoredData();
 }
 
 function applyIdentify(userId: string): void {
@@ -84,14 +118,20 @@ function applyIdentify(userId: string): void {
 
 function applyResetIdentity(): void {
   if (!posthog) return;
+  const consented = posthog.has_opted_in_capturing();
   posthog.reset();
   identifiedUserId = null;
+  if (consented) posthog.opt_in_capturing({ captureEventName: false });
 }
 
 function flushPending(): void {
+  if (pendingConsent === false) {
+    pendingUserId = undefined;
+    applyOptOut();
+    return;
+  }
   if (!initialized || !posthog) return;
   if (pendingConsent === true) applyOptIn();
-  else if (pendingConsent === false) applyOptOut();
   if (pendingUserId === null) {
     applyResetIdentity();
     pendingUserId = undefined;
@@ -132,6 +172,7 @@ async function doInit(): Promise<void> {
     disable_session_recording: true,
     disable_surveys: true,
     opt_out_capturing_by_default: true,
+    opt_out_persistence_by_default: true,
     person_profiles: 'identified_only',
     sanitize_properties: (properties) => stripPersonPii(properties) ?? {},
     before_send: redactCapturedUrls,
@@ -185,5 +226,4 @@ export function resetPostHogForTests(): void {
   pendingConsent = null;
   pendingUserId = undefined;
   identifiedUserId = null;
-  sessionPageviewSent = false;
 }
