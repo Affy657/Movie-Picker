@@ -197,6 +197,50 @@ describe('EventDetail (MSW)', () => {
     expect(document.title).toBe(pageTitle('Soirée introuvable'));
   });
 
+  it('offers to retry when the movie night cannot be loaded for now', async () => {
+    let attempts = 0;
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/soiree-503`, () => {
+        attempts += 1;
+        if (attempts === 1) return HttpResponse.json({ message: 'down' }, { status: 503 });
+        return HttpResponse.json({
+          _id: 'evt-503',
+          title: 'Soirée revenue',
+          date: '2030-12-15',
+          time: '21:00',
+          slug: 'soiree-503',
+          isHost: false,
+          isFinished: false,
+          lifecycle: 'live',
+          winners: [],
+          participantCount: 1,
+          movieCount: 0,
+          participants: [],
+        });
+      }),
+      ...createEventDetailHandlers({ slug: 'soiree-503' })
+    );
+
+    renderEventDetail('/e/soiree-503');
+    await userEvent.click(await screen.findByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByRole('heading', { name: 'Soirée revenue' })).toBeInTheDocument();
+  });
+
+  it('offers no retry for a movie night that does not exist', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/soiree-absente`, () =>
+        HttpResponse.json({ message: 'nope' }, { status: 404 })
+      ),
+      http.get(`${TEST_API_V1}/events/soiree-absente/movies`, () => HttpResponse.json([]))
+    );
+
+    renderEventDetail('/e/soiree-absente');
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Réessayer' })).toBeNull();
+  });
+
   it('moves a legacy host token out of the address bar into the session', async () => {
     renderEventDetail(`/e/${slug}?host=legacy-host-token&tab=movies`);
     await waitFor(() => {
