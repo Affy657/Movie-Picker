@@ -126,7 +126,9 @@ public sealed partial class TmdbMovieSearch
         {
             var fresh = await FetchEnrichmentUncachedAsync(tmdbId, mediaType, region, ct).ConfigureAwait(false);
             _cache.Set(cacheKey, fresh, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl, Size = 1 });
-            await _sharedCache.SetAsync(cacheKey, fresh, ttl, ct).ConfigureAwait(false);
+            await _sharedCache
+                .SetWithinCapacityAsync(cacheKey, fresh, ttl, _options.TmdbEnrichmentSharedCacheMaxEntries, ct)
+                .ConfigureAwait(false);
             return fresh;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)

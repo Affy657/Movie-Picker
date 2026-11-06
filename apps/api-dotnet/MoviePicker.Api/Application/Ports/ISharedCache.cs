@@ -11,4 +11,6 @@ public interface ISharedCache
         CancellationToken ct = default);
 
     Task SetAsync<T>(string key, T value, TimeSpan ttl, CancellationToken ct = default);
+
+    Task SetWithinCapacityAsync<T>(string key, T value, TimeSpan ttl, long maxEntries, CancellationToken ct = default);
 }

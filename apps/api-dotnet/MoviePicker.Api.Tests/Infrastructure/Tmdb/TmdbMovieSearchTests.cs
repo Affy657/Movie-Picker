@@ -399,6 +399,32 @@ public sealed class TmdbMovieSearchTests
     }
 
     [Fact]
+    public async Task GetEnrichmentAsync_SharedCacheFull_KeepsTheEntryInMemoryAndWritesNothing()
+    {
+        var shared = new InMemorySharedCache();
+        await shared.SetAsync("showcase-v1:trending", "snapshot", TimeSpan.FromHours(1));
+        var mockHandler = EnrichmentHandler(RuntimeBodyFromPath);
+        var sut = new TmdbMovieSearch(
+            CreateHttpClient(mockHandler.Object),
+            Options.Create(new MoviePickerOptions { TmdbApiKey = "key", TmdbEnrichmentSharedCacheMaxEntries = 1 }),
+            new MemoryCache(new MemoryCacheOptions()),
+            shared,
+            NullLogger<TmdbMovieSearch>.Instance);
+
+        var first = await sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
+        var second = await sut.GetEnrichmentAsync(7, MovieMediaType.Movie, "FR");
+
+        Assert.Equal(7, first?.RuntimeMinutes);
+        Assert.Equal(7, second?.RuntimeMinutes);
+        Assert.Null(await shared.TryGetAsync<TmdbMovieEnrichment>("tmdb-enrich-v2:movie:FR:7"));
+        mockHandler.Protected().Verify(
+            "SendAsync",
+            Times.Exactly(2),
+            ItExpr.IsAny<HttpRequestMessage>(),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
     public async Task GetEnrichmentAsync_TitleUnknownToTmdb_IsCachedAsAnEmptyEnrichment()
     {
         var shared = new InMemorySharedCache();
