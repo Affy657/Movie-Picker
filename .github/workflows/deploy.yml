@@ -337,7 +337,9 @@ jobs:
       # The context is the solution folder, not the project one: `Directory.Build.props` lives
       # there, and an image built without it compiles with other analyser and audit settings than
       # the ones `lint-api` validated. The Dockerfile copies only what the API needs.
-      - name: Build API image (buildx + GHA layer cache)
+      # No `cache-from` nor `cache-to`: the GHA cache is shared with the jobs of the repository
+      # that run the code of the lockfile, and this image goes to production.
+      - name: Build API image (buildx, no shared cache)
         if: inputs.stage == 'staging'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -345,8 +347,6 @@ jobs:
           file: apps/api-dotnet/MoviePicker.Api/Dockerfile
           tags: movie-picker-api
           load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
       # § 25: CVE scan of the image before push. Policy:
       #   - blocks on CRITICAL unconditionally
       #   - blocks on HIGH **only when an upstream fix is available** (`ignore-unfixed: true`),
