@@ -59,6 +59,35 @@ describe('EventWinnerSummary', () => {
     localStorage.setItem('moviepicker-locale', 'fr');
   });
 
+  it('keeps a failed rating in view once the sheet is closed', () => {
+    renderSummary(
+      <EventWinnerSummary
+        winners={[movie({})]}
+        isFinished
+        rating={ratingContext({ error: "Votre note n'a pas été enregistrée. Réessayez." })}
+      />
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      "Votre note n'a pas été enregistrée. Réessayez."
+    );
+  });
+
+  it('leaves the error of a rating to the sheet while the sheet is open', async () => {
+    const user = userEvent.setup();
+    renderSummary(
+      <EventWinnerSummary
+        winners={[movie({})]}
+        isFinished
+        rating={ratingContext({ error: "Votre note n'a pas été enregistrée. Réessayez." })}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Donner la première note' }));
+
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
   it('renders nothing without a winner', () => {
     const { container } = renderSummary(<EventWinnerSummary winners={[]} isFinished />);
     expect(container).toBeEmptyDOMElement();

@@ -18,6 +18,7 @@ export type ConfirmState =
   | { kind: 'leave' }
   | { kind: 'resetWheel' }
   | { kind: 'removeMovie'; movieId: string; movieTitle: string; voteCount: number }
+  | { kind: 'removeNote'; movieId: string; movieTitle: string }
   | { kind: 'closeWithoutMovie' }
   | null;
 
@@ -95,4 +96,5 @@ export type MoviesSectionState = {
   isFull: boolean;
   wheelLocked: boolean;
   onRequestRemove: (movie: MovieData) => void;
+  onRequestRemoveNote: (movie: MovieData) => void;
 };

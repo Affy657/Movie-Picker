@@ -11,7 +11,7 @@ import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { useEventDetailPage } from '@/features/events/hooks/useEventDetailPage';
 import { isWellFormedEventSlug } from '@/features/events/utils/eventSlug';
 import EventDetailSession from '@/features/events/pages/event-detail/EventDetailSession';
-import { buttonClass } from '@/shared/components/Button';
+import Button, { buttonClass } from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { ApiError } from '@/shared/api/apiError';
 
@@ -43,6 +43,33 @@ function eventUnavailableMessage(
   });
 }
 
+function EventUnavailableState({
+  message,
+  canRetry,
+  retrying,
+  onRetry,
+}: Readonly<{ message: string; canRetry: boolean; retrying: boolean; onRetry: () => void }>) {
+  const { t } = useTranslation();
+  return (
+    <PageLayout className="page-event page--centered page--errorState">
+      <span className="errorStateIcon" aria-hidden>
+        <AlertCircle size={ICON_SIZE['4xl']} />
+      </span>
+      <p className="errorStateMessage" role="alert">
+        {message}
+      </p>
+      {canRetry ? (
+        <Button type="button" variant="primary" loading={retrying} onClick={onRetry}>
+          {t('common.retry')}
+        </Button>
+      ) : null}
+      <Link to={ROUTES.home} className={buttonClass()}>
+        {t('events.detail.backHome')}
+      </Link>
+    </PageLayout>
+  );
+}
+
 type ArrivalState = { configNotSaved?: boolean } | null;
 
 export default function EventDetail() {
@@ -69,6 +96,7 @@ export default function EventDetail() {
   const isEventGone = ApiError.is(eventQuery.error) && eventQuery.error.code === 404;
   const isEventUnavailable =
     isMalformedSlug || (eventQuery.isError && (!event || isEventGone)) || isNetworkPaused;
+  const canRetryEvent = !isMalformedSlug && !isEventGone;
   const isShowingStaleData =
     eventQuery.isError || (moviesQuery.isError && moviesQuery.data !== undefined);
 
@@ -98,20 +126,15 @@ export default function EventDetail() {
 
   if (isEventUnavailable) {
     return (
-      <PageLayout className="page-event page--centered page--errorState">
-        <span className="errorStateIcon" aria-hidden>
-          <AlertCircle size={ICON_SIZE['4xl']} />
-        </span>
-        <p className="errorStateMessage" role="alert">
-          {eventUnavailableMessage(
-            { isNetworkPaused, isMalformedSlug, error: eventQuery.error },
-            t
-          )}
-        </p>
-        <Link to={ROUTES.home} className={buttonClass()}>
-          {t('events.detail.backHome')}
-        </Link>
-      </PageLayout>
+      <EventUnavailableState
+        message={eventUnavailableMessage(
+          { isNetworkPaused, isMalformedSlug, error: eventQuery.error },
+          t
+        )}
+        canRetry={canRetryEvent}
+        retrying={eventQuery.isFetching}
+        onRetry={() => void eventQuery.refetch()}
+      />
     );
   }
 

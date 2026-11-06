@@ -1137,6 +1137,7 @@ export const fr = {
         manualWinnerTitle: 'Film choisi par l’hôte !',
         manualWinnerTitleOfMany: 'Film {{index}} sur {{total}}, choisi par l’hôte !',
         spinningTitle: 'Tirage en cours…',
+        winnerAnnouncement: 'Film tiré : {{title}}',
         winnerTitle: 'Film sélectionné !',
         winnerTitleOfMany: 'Film {{index}} sur {{total}} sélectionné !',
         remainingOne: 'Encore 1 film à tirer.',
@@ -1318,6 +1319,7 @@ export const fr = {
       voteError: 'Vote impossible',
       voteErrorRow: 'Votre vote n’a pas été enregistré. Vérifiez votre connexion.',
       retryVoteAction: 'Réessayer',
+      retryVoteAria: 'Réessayer le vote pour {{title}}',
       voteToolbarAria: 'Votes pour « {{title}} »',
       voteLimitReachedTitle: 'Limite de votes atteinte',
       voteLimitReachedOne:
@@ -1379,6 +1381,11 @@ export const fr = {
       saveButton: 'Enregistrer',
       cancelButton: 'Annuler',
       saveError: 'Impossible d’enregistrer la note',
+      removeAria: 'Supprimer la note sur {{title}}',
+      removeConfirmTitle: 'Supprimer cette note ?',
+      removeConfirmMessage: 'La note sur {{title}} disparaîtra pour tout le monde.',
+      removeConfirmAction: 'Supprimer',
+      removeError: 'Impossible de supprimer la note',
     },
     seen: {
       label: 'D\u00e9j\u00e0 vu',

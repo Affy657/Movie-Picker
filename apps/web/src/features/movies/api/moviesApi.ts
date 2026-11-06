@@ -243,12 +243,13 @@ export async function setMoviePitchNote(
 export async function deleteMoviePitchNote(
   slug: string,
   movieId: string,
-  participantId: string
+  participantId: string | null,
+  hostToken?: string | null
 ): Promise<void> {
-  await fetchApi(apiPath('events', slug, 'movies', movieId, 'note'), {
-    method: 'DELETE',
-    body: JSON.stringify({ participantId }),
-  });
+  await fetchApi(
+    apiPath('events', slug, 'movies', movieId, 'note'),
+    withHostToken(hostToken, { method: 'DELETE', body: JSON.stringify({ participantId }) })
+  );
 }
 
 export async function markMovieAsSeen(

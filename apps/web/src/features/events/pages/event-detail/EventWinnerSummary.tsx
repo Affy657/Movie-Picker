@@ -502,6 +502,11 @@ export default function EventWinnerSummary({
           </div>
         </div>
       </section>
+      {rating?.error && sheet.movieId === null ? (
+        <p className="error" role="alert">
+          {rating.error}
+        </p>
+      ) : null}
       {isMobile ? notes : null}
       <SheetHost winners={winners} rating={rating} scale={scale} sheet={sheet} />
       {detailsOpen ? (

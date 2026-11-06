@@ -18,6 +18,7 @@ import { http, HttpResponse } from 'msw';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import {
   getStoredHostToken,
+  setStoredHostToken,
   setStoredParticipant,
   getStoredParticipant,
 } from '@/shared/utils/eventIdentityStorage';
@@ -195,6 +196,50 @@ describe('EventDetail (MSW)', () => {
     renderEventDetail(`/e/inconnu`);
     expect(await screen.findByText(/n'existe pas|introuvable/i)).toBeInTheDocument();
     expect(document.title).toBe(pageTitle('Soirée introuvable'));
+  });
+
+  it('offers to retry when the movie night cannot be loaded for now', async () => {
+    let attempts = 0;
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/soiree-503`, () => {
+        attempts += 1;
+        if (attempts === 1) return HttpResponse.json({ message: 'down' }, { status: 503 });
+        return HttpResponse.json({
+          _id: 'evt-503',
+          title: 'Soirée revenue',
+          date: '2030-12-15',
+          time: '21:00',
+          slug: 'soiree-503',
+          isHost: false,
+          isFinished: false,
+          lifecycle: 'live',
+          winners: [],
+          participantCount: 1,
+          movieCount: 0,
+          participants: [],
+        });
+      }),
+      ...createEventDetailHandlers({ slug: 'soiree-503' })
+    );
+
+    renderEventDetail('/e/soiree-503');
+    await userEvent.click(await screen.findByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByRole('heading', { name: 'Soirée revenue' })).toBeInTheDocument();
+  });
+
+  it('offers no retry for a movie night that does not exist', async () => {
+    server.use(
+      http.get(`${TEST_API_V1}/events/slug/soiree-absente`, () =>
+        HttpResponse.json({ message: 'nope' }, { status: 404 })
+      ),
+      http.get(`${TEST_API_V1}/events/soiree-absente/movies`, () => HttpResponse.json([]))
+    );
+
+    renderEventDetail('/e/soiree-absente');
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Réessayer' })).toBeNull();
   });
 
   it('moves a legacy host token out of the address bar into the session', async () => {
@@ -433,6 +478,51 @@ describe('EventDetail (MSW)', () => {
     expect(await screen.findByText(/film test/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^ajouter « /i }));
     await waitFor(() => expect(screen.queryByText(/film test/i)).not.toBeInTheDocument());
+  });
+
+  it('as the host, takes a pitch note down after confirming, with the host token', async () => {
+    const user = userEvent.setup();
+    const hostHeaders: Array<string | null> = [];
+    setStoredHostToken(slug, 'host-token');
+    server.use(
+      http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+        HttpResponse.json([
+          {
+            _id: '507f1f77bcf86cd799439011',
+            eventId: 'evt-msw',
+            participantId: 'p-msw-bob',
+            tmdbId: 1,
+            title: 'Inception',
+            year: '2010',
+            posterPath: null,
+            proposerPseudo: 'Bob',
+            score: 0,
+            up: 0,
+            down: 0,
+            pitchNote: 'Un casse dans les rêves',
+          },
+        ])
+      ),
+      http.delete(
+        `${TEST_API_V1}/events/${slug}/movies/507f1f77bcf86cd799439011/note`,
+        ({ request }) => {
+          hostHeaders.push(request.headers.get('X-Host-Token'));
+          return new HttpResponse(null, { status: 204 });
+        }
+      )
+    );
+
+    renderEventDetail(`/e/${slug}`);
+    await user.click(
+      await screen.findByRole('button', { name: 'Supprimer la note sur Inception' })
+    );
+    await user.click(
+      within(await screen.findByTestId('confirm-dialog')).getByRole('button', {
+        name: 'Supprimer',
+      })
+    );
+
+    await waitFor(() => expect(hostHeaders).toEqual(['host-token']));
   });
 
   describe('participant removal flow (host)', () => {

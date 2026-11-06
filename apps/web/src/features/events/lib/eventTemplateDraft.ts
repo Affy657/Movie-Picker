@@ -58,27 +58,22 @@ function parseLimit(raw: string): number | null {
   return value;
 }
 
-export function limitBelowCap(value: number | null | undefined, cap: number): number | null {
-  return value != null && value > 0 && value < cap ? value : null;
+export function positiveLimit(value: number | null | undefined): number | null {
+  return value != null && value > 0 ? value : null;
 }
 
-function isBelowCap(value: number | null | undefined, cap: number): boolean {
-  return limitBelowCap(value, cap) !== null;
+function parseCappedLimit(raw: string, cap: number): number | null {
+  const value = parseLimit(raw);
+  return value !== null && value <= cap ? value : null;
 }
 
-function parseCappedLimit(
-  enabled: boolean,
-  raw: string,
-  cap: number,
-  fallback: number
-): number | null {
+function draftLimit(enabled: boolean, raw: string, cap: number, fallback: number): number | null {
   if (!enabled) return null;
-  const value = parseLimit(raw) ?? fallback;
-  return value >= cap ? null : value;
+  return parseCappedLimit(raw, cap) ?? fallback;
 }
 
 export function limitFieldOnEnable(value: string, cap: number, fallback: number): string {
-  return isBelowCap(parseLimit(value), cap) ? value : String(fallback);
+  return parseCappedLimit(value, cap) === null ? String(fallback) : value;
 }
 
 function parseWinnerCount(raw: string): number {
@@ -92,13 +87,13 @@ export function buildTemplateDraft(fields: TemplateFormFields): TemplateConfigDr
   const theme = [fields.themeEmoji.trim(), fields.themeText.trim()].filter(Boolean).join(' ');
   return {
     theme: theme.length > 0 ? theme : null,
-    maxProposalsPerParticipant: parseCappedLimit(
+    maxProposalsPerParticipant: draftLimit(
       fields.proposalLimitEnabled,
       fields.maxProposals,
       MAX_PROPOSALS_PER_PARTICIPANT,
       DEFAULT_PROPOSAL_LIMIT
     ),
-    maxParticipants: parseCappedLimit(
+    maxParticipants: draftLimit(
       fields.participantLimitEnabled,
       fields.maxParticipants,
       MAX_EVENT_PARTICIPANTS,
@@ -116,16 +111,15 @@ export function buildTemplateDraft(fields: TemplateFormFields): TemplateConfigDr
 
 export function configToFields(config: ApplicableConfig): TemplateFormFields {
   const theme = parseTheme(config.theme);
+  const maxProposals = positiveLimit(config.maxProposalsPerParticipant);
+  const maxParticipants = positiveLimit(config.maxParticipants);
   return {
     themeEmoji: theme.emoji,
     themeText: theme.text,
-    proposalLimitEnabled: isBelowCap(
-      config.maxProposalsPerParticipant,
-      MAX_PROPOSALS_PER_PARTICIPANT
-    ),
-    maxProposals: String(config.maxProposalsPerParticipant ?? MAX_PROPOSALS_PER_PARTICIPANT),
-    participantLimitEnabled: isBelowCap(config.maxParticipants, MAX_EVENT_PARTICIPANTS),
-    maxParticipants: String(config.maxParticipants ?? MAX_EVENT_PARTICIPANTS),
+    proposalLimitEnabled: maxProposals !== null,
+    maxProposals: String(maxProposals ?? DEFAULT_PROPOSAL_LIMIT),
+    participantLimitEnabled: maxParticipants !== null,
+    maxParticipants: String(maxParticipants ?? DEFAULT_PARTICIPANT_LIMIT),
     voteLimitEnabled: config.maxVotesPerParticipant != null,
     maxVotes: String(config.maxVotesPerParticipant ?? DEFAULT_VOTE_LIMIT),
     wheelMode: config.wheelMode,
@@ -136,11 +130,7 @@ export function configToFields(config: ApplicableConfig): TemplateFormFields {
 }
 
 export function defaultTemplateFields(): TemplateFormFields {
-  return {
-    ...configToFields(DEFAULT_EVENT_CONFIG),
-    maxProposals: String(DEFAULT_PROPOSAL_LIMIT),
-    maxParticipants: String(DEFAULT_PARTICIPANT_LIMIT),
-  };
+  return configToFields(DEFAULT_EVENT_CONFIG);
 }
 
 export function isDefaultTemplateDraft(draft: TemplateConfigDraft): boolean {
@@ -173,19 +163,11 @@ export function templateToDraft(template: EventTemplateData): TemplateConfigDraf
   };
 }
 
-function isSameLimit(a: number | null, b: number | null, cap: number): boolean {
-  return (a ?? cap) === (b ?? cap);
-}
-
 export function isSameTemplateConfig(a: TemplateConfigDraft, b: TemplateConfigDraft): boolean {
   return (
     a.theme === b.theme &&
-    isSameLimit(
-      a.maxProposalsPerParticipant,
-      b.maxProposalsPerParticipant,
-      MAX_PROPOSALS_PER_PARTICIPANT
-    ) &&
-    isSameLimit(a.maxParticipants, b.maxParticipants, MAX_EVENT_PARTICIPANTS) &&
+    a.maxProposalsPerParticipant === b.maxProposalsPerParticipant &&
+    a.maxParticipants === b.maxParticipants &&
     a.maxVotesPerParticipant === b.maxVotesPerParticipant &&
     a.wheelMode === b.wheelMode &&
     a.richSharePreview === b.richSharePreview &&

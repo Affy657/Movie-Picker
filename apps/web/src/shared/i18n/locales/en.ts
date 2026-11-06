@@ -1117,6 +1117,7 @@ export const en: Locale = {
         manualWinnerTitleOfMany: 'Movie {{index}} of {{total}}, picked by the host!',
         spinningTitle: 'Draw in progress…',
         winnerTitle: 'Movie selected!',
+        winnerAnnouncement: 'Movie drawn: {{title}}',
         winnerTitleOfMany: 'Movie {{index}} of {{total}} selected!',
         remainingOne: '1 more movie to draw.',
         remainingMany: '{{count}} more movies to draw.',
@@ -1295,6 +1296,7 @@ export const en: Locale = {
       voteError: 'Vote failed',
       voteErrorRow: 'Your vote was not saved. Check your connection.',
       retryVoteAction: 'Retry',
+      retryVoteAria: 'Retry the vote on {{title}}',
       voteToolbarAria: 'Votes for "{{title}}"',
       voteLimitReachedTitle: 'Vote limit reached',
       voteLimitReachedOne:
@@ -1356,6 +1358,11 @@ export const en: Locale = {
       saveButton: 'Save',
       cancelButton: 'Cancel',
       saveError: 'Could not save the note',
+      removeAria: 'Remove the note on {{title}}',
+      removeConfirmTitle: 'Remove this note?',
+      removeConfirmMessage: 'The note on {{title}} will disappear for everyone.',
+      removeConfirmAction: 'Remove',
+      removeError: 'Could not remove the note',
     },
     seen: {
       label: 'Already seen',

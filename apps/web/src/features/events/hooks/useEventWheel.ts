@@ -123,6 +123,7 @@ export function useEventWheel({
     last && remainingWheelRevealDelayMs(last.pickMethod, last.pickedAt) > 0 ? last.movieId : null
   );
   const [spinWinner, setSpinWinner] = useState<MovieData | null>(null);
+  const spinWinnerId = spinWinner?.id ?? null;
   const [spinPool, setSpinPool] = useState<MovieData[]>([]);
   const wheelMode = event?.config?.wheelMode ?? 'strictRandom';
   const spinWeights = useMemo(() => wheelSliceWeights(spinPool, wheelMode), [spinPool, wheelMode]);
@@ -175,10 +176,14 @@ export function useEventWheel({
   const lastPickedAt = last?.pickedAt;
   const lastPickMethod = last?.pickMethod;
   const lastMovieId = last?.movieId;
+  const revealedHereIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (isModalOpen) return undefined;
-    const delay = remainingWheelRevealDelayMs(lastPickMethod, lastPickedAt);
+    const delay =
+      lastMovieId === revealedHereIdRef.current
+        ? 0
+        : remainingWheelRevealDelayMs(lastPickMethod, lastPickedAt);
     if (delay <= 0) {
       setPendingRevealId(null);
       setSpinWinner(null);
@@ -240,7 +245,11 @@ export function useEventWheel({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [manualMode, removalMode, cancelManualMode, cancelRemovalMode]);
 
+  const launchInFlightRef = useRef(false);
+
   const launch = useCallback(() => {
+    if (launchInFlightRef.current) return;
+    launchInFlightRef.current = true;
     setError(null);
     setLoading(true);
     postEventWheel(slug, hostToken, drawnIds.length)
@@ -261,7 +270,10 @@ export function useEventWheel({
         track('movie_picked', { method: 'wheel' });
       })
       .catch((err) => setError(getErrorMessage(err, t('events.wheel.launchError'))))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        launchInFlightRef.current = false;
+        setLoading(false);
+      });
   }, [slug, hostToken, drawnIds.length, safeMovies, drawableMovies, announceWinner, track, t]);
 
   const pickWinnerManually = useCallback(
@@ -322,16 +334,18 @@ export function useEventWheel({
   }, [slug, hostToken, onWheelDone, t]);
 
   const revealWinner = useCallback(() => {
+    revealedHereIdRef.current = spinWinnerId;
     setPendingRevealId(null);
     announceWinner();
-  }, [announceWinner]);
+  }, [announceWinner, spinWinnerId]);
 
   const dismissModal = useCallback(() => {
+    revealedHereIdRef.current = spinWinnerId;
     setIsModalOpen(false);
     setPendingRevealId(null);
     announceWinner();
     onWheelDone();
-  }, [onWheelDone, announceWinner]);
+  }, [onWheelDone, announceWinner, spinWinnerId]);
 
   const isOpenForActions = isHost && !!event && !event.isFinished;
   const selecting = manualMode || removalMode;

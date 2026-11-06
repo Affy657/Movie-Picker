@@ -26,6 +26,7 @@
   border-radius: var(--radius-md);
   touch-action: pan-y;
   user-select: none;
+  -webkit-user-select: none;
   -webkit-user-drag: none;
 }
 

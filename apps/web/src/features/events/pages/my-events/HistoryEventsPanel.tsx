@@ -89,6 +89,20 @@ function HistoryResults({
     [toolbar.visibleEvents, locale]
   );
 
+  const loadMoreLabel = searchQuery
+    ? t('events.myEvents.loadMore')
+    : t('events.myEvents.loadMoreCount', { count: Math.max(totalFinished - events.length, 0) });
+  const loadMore = query.hasNextPage ? (
+    <Button
+      size="sm"
+      className={styles.loadMoreBtn}
+      onClick={() => query.fetchNextPage()}
+      loading={query.isFetchingNextPage}
+    >
+      {loadMoreLabel}
+    </Button>
+  ) : null;
+
   if (query.isLoading) return <p className="placeholder">{t('common.loading')}</p>;
 
   if (query.isError && events.length === 0) {
@@ -119,13 +133,10 @@ function HistoryResults({
         icon={<History size={ICON_SIZE['2xl']} aria-hidden />}
         title={t('events.myEvents.searchNoResultsTitle')}
         message={t('events.myEvents.historyNoResultsForFilters')}
+        actions={loadMore}
       />
     );
   }
-
-  const loadMoreLabel = searchQuery
-    ? t('events.myEvents.loadMore')
-    : t('events.myEvents.loadMoreCount', { count: Math.max(totalFinished - events.length, 0) });
 
   return (
     <>
@@ -134,16 +145,7 @@ function HistoryResults({
       ) : (
         <HistoryEventList events={toolbar.visibleEvents} {...handlers} />
       )}
-      {query.hasNextPage ? (
-        <Button
-          size="sm"
-          className={styles.loadMoreBtn}
-          onClick={() => query.fetchNextPage()}
-          loading={query.isFetchingNextPage}
-        >
-          {loadMoreLabel}
-        </Button>
-      ) : null}
+      {loadMore}
     </>
   );
 }
