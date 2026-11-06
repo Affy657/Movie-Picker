@@ -1136,6 +1136,7 @@ export const fr = {
         manualWinnerTitle: 'Film choisi par l’hôte !',
         manualWinnerTitleOfMany: 'Film {{index}} sur {{total}}, choisi par l’hôte !',
         spinningTitle: 'Tirage en cours…',
+        winnerAnnouncement: 'Film tiré : {{title}}',
         winnerTitle: 'Film sélectionné !',
         winnerTitleOfMany: 'Film {{index}} sur {{total}} sélectionné !',
         remainingOne: 'Encore 1 film à tirer.',

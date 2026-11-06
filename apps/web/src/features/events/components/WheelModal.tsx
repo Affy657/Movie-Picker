@@ -217,6 +217,9 @@ export default function WheelModal({
         dialogRef={dialogRef}
         className={animDone ? clsx('on-dark', styles.dialogDone) : undefined}
       >
+        <output className="visually-hidden">
+          {animDone ? t('events.wheel.modal.winnerAnnouncement', { title: winner.title }) : null}
+        </output>
         {!animDone && (
           <div className={styles.spinPhase}>
             <SpinningWheel

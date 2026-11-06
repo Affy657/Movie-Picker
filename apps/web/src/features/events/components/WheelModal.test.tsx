@@ -533,6 +533,26 @@ describe('WheelModal and the Popover API', () => {
     expect(() => unmount()).not.toThrow();
   });
 
+  it('announces the drawn movie to screen readers only once the wheel has stopped', () => {
+    wrap(
+      <WheelModal
+        open
+        movies={movies}
+        winnerIndex={0}
+        winner={baseMovie}
+        wheelKey={1}
+        onClose={vi.fn()}
+      />
+    );
+    const announcement = wheelDialog().querySelector('output');
+    expect(announcement).toBeEmptyDOMElement();
+
+    fireEvent.click(screen.getByTestId('spin-done-trigger'));
+
+    expect(wheelDialog().querySelector('output')).toBe(announcement);
+    expect(announcement).toHaveTextContent('Film tiré : Interstellar');
+  });
+
   it('asks canvas-confetti to stay still when the reader prefers reduced motion', () => {
     vi.mocked(confetti.create).mockClear();
     wrap(

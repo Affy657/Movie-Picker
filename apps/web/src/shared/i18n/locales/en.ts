@@ -1116,6 +1116,7 @@ export const en: Locale = {
         manualWinnerTitleOfMany: 'Movie {{index}} of {{total}}, picked by the host!',
         spinningTitle: 'Draw in progress…',
         winnerTitle: 'Movie selected!',
+        winnerAnnouncement: 'Movie drawn: {{title}}',
         winnerTitleOfMany: 'Movie {{index}} of {{total}} selected!',
         remainingOne: '1 more movie to draw.',
         remainingMany: '{{count}} more movies to draw.',
