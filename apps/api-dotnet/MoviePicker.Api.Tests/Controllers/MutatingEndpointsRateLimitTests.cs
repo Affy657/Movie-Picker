@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using MoviePicker.Api.Controllers;
 using MoviePicker.Api.Infrastructure.Web;
 using Xunit;
 
@@ -58,5 +59,14 @@ public sealed class MutatingEndpointsRateLimitTests
             .ToList();
 
         Assert.Empty(perInstanceOnly);
+    }
+
+    [Fact]
+    public void LetterboxdSync_CountsItsQuotaAcrossInstances()
+    {
+        var attribute = typeof(LetterboxdController).GetMethod(nameof(LetterboxdController.Sync))!
+            .GetCustomAttribute<SharedRateLimitAttribute>();
+
+        Assert.Equal(RateLimitingExtensions.LetterboxdImportPolicy, attribute?.PolicyName);
     }
 }

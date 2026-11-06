@@ -645,6 +645,7 @@ export const fr = {
         syncNow: 'Synchroniser maintenant',
         syncSubmitting: 'Lecture de Letterboxd…',
         syncFallbackError: 'Synchronisation impossible. Réessayez dans un instant.',
+        syncDeferred: 'Une synchronisation vient d’avoir lieu. Réessayez dans quelques minutes.',
         reportChanges: '{{added}} film(s) ajouté(s), {{removed}} retiré(s).',
         reportPending: 'Choisir pour {{count}} film(s) ambigu(s)',
         reportUnmatched: 'Voir les {{count}} film(s) introuvable(s) sur TMDB',

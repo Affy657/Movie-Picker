@@ -7,23 +7,32 @@ namespace MoviePicker.Api.Application.UseCases.LetterboxdImport;
 
 public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHandler
 {
+    public const string ForcedSyncQuotaScope = "letterboxd-forced-sync";
+    public const int MaxForcedSyncsPerHour = 12;
+
+    public static readonly TimeSpan ForcedMinimumInterval = TimeSpan.FromMinutes(5);
+
     private static readonly TimeSpan MinimumInterval = TimeSpan.FromDays(1);
     private static readonly TimeSpan RetryIntervalAfterFailure = TimeSpan.FromHours(1);
+    private static readonly TimeSpan ForcedSyncQuotaWindow = TimeSpan.FromHours(1);
 
     private readonly IUserRepository _users;
     private readonly IUserNotificationRepository _notifications;
     private readonly LetterboxdWatchlistSynchronizer _synchronizer;
+    private readonly ISharedQuota _quota;
     private readonly TimeProvider _clock;
 
     public SyncLetterboxdWatchlistHandler(
         IUserRepository users,
         IUserNotificationRepository notifications,
         LetterboxdWatchlistSynchronizer synchronizer,
+        ISharedQuota quota,
         TimeProvider clock)
     {
         _users = users;
         _notifications = notifications;
         _synchronizer = synchronizer;
+        _quota = quota;
         _clock = clock;
     }
 
@@ -43,8 +52,11 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
         }
 
         var now = _clock.GetUtcNow();
-        var interval = user.LetterboxdLastSyncError is null ? MinimumInterval : RetryIntervalAfterFailure;
-        if (!force && user.LetterboxdLastSyncAt is { } last && now - last < interval)
+        if (user.LetterboxdLastSyncAt is { } last && now - last < IntervalFor(user, force))
+            return Skipped();
+
+        if (force && !await _quota.TryConsumeAsync(
+            ForcedSyncQuotaScope, userId, MaxForcedSyncsPerHour, ForcedSyncQuotaWindow, ct))
             return Skipped();
 
         await _users.SetLetterboxdSyncStatusAsync(userId, now, null, ct);
@@ -85,6 +97,13 @@ public sealed class SyncLetterboxdWatchlistHandler : ISyncLetterboxdWatchlistHan
             TotalOnLetterboxd = outcome.TotalOnLetterboxd,
             TotalTruncated = outcome.TotalTruncated
         };
+    }
+
+    private static TimeSpan IntervalFor(User user, bool force)
+    {
+        if (force)
+            return ForcedMinimumInterval;
+        return user.LetterboxdLastSyncError is null ? MinimumInterval : RetryIntervalAfterFailure;
     }
 
     private async Task<LetterboxdSyncOutcome> SyncRecordingFailuresAsync(User user, DateTimeOffset startedAt, CancellationToken ct)

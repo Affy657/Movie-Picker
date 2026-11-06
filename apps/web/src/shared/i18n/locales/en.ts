@@ -638,6 +638,7 @@ export const en: Locale = {
         syncNow: 'Sync now',
         syncSubmitting: 'Reading Letterboxd…',
         syncFallbackError: 'Sync failed. Try again in a moment.',
+        syncDeferred: 'A sync has just run. Try again in a few minutes.',
         reportChanges: '{{added}} film(s) added, {{removed}} removed.',
         reportPending: 'Choose for {{count}} ambiguous film(s)',
         reportUnmatched: 'Show the {{count}} film(s) not found on TMDB',
