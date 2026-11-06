@@ -192,6 +192,12 @@ jobs:
           DB_NAME: ${{ steps.dump.outputs.db_name }}
         run: |
           set -eo pipefail
+          print_mongo_diagnostics() {
+            uname -r
+            docker version --format '{{.Server.Version}}'
+            docker inspect -f '{{.State.Status}} {{.State.ExitCode}} {{.State.OOMKilled}} {{.State.Error}}' mongo-verify
+            docker logs --tail 80 mongo-verify
+          }
           FETCHED="$RUNNER_TEMP/readback.archive.gz"
           gcloud storage cp "$PENDING" "$FETCHED"
           FETCHED_SIZE="$(stat -c%s "$FETCHED")"
@@ -211,6 +217,7 @@ jobs:
           done
           if [ "$READY" != "1" ]; then
             echo "::error::The verification MongoDB never answered: the archive cannot be validated."
+            print_mongo_diagnostics
             exit 1
           fi
           docker exec mongo-verify mongosh --quiet --eval \
@@ -224,6 +231,7 @@ jobs:
           done
           if [ "$PRIMARY" != "1" ]; then
             echo "::error::The verification replica set never became primary."
+            print_mongo_diagnostics
             exit 1
           fi
           mongorestore --uri="mongodb://127.0.0.1:27017/?directConnection=true" --archive="$FETCHED" --gzip
