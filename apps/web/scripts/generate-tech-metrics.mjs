@@ -252,8 +252,8 @@ function computeMetrics(previous) {
     /^\s+ServedBy</gm
   );
   const contractRoutesChecked = countMatches(
-    join(repoRoot, 'apps/web/src/shared/api/apiContract.test.ts'),
-    /^ {2}'\/api\/v1\//gm
+    join(repoRoot, 'apps/web/src/shared/api/generated/openapiSchema.ts'),
+    /^ {4}"\/api\/v1\//gm
   );
 
   const measured = {

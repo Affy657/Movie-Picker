@@ -48,7 +48,7 @@ test.describe('Event page layout', () => {
 
     await addStubMovie(page);
 
-    await expect(page.getByRole('button', { name: 'Note' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Note', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '1 participant' })).toBeVisible();
 
     await page.getByRole('button', { name: /choisir moi-même/i }).click();
