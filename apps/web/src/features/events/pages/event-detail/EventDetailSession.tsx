@@ -181,6 +181,7 @@ export default function EventDetailSession({
     actionSuccess,
     handleRemoveParticipant,
     handleRequestRemoveMovie,
+    handleRequestRemoveNote,
     handleLeaveEvent,
     requestResetWheel,
     requestCloseWithoutMovie,
@@ -331,6 +332,7 @@ export default function EventDetailSession({
           isFull,
           wheelLocked: wheel.wheelLocked,
           onRequestRemove: handleRequestRemoveMovie,
+          onRequestRemoveNote: handleRequestRemoveNote,
         }}
       />
       <ConfirmDialog

@@ -1357,6 +1357,11 @@ export const en: Locale = {
       saveButton: 'Save',
       cancelButton: 'Cancel',
       saveError: 'Could not save the note',
+      removeAria: 'Remove the note on {{title}}',
+      removeConfirmTitle: 'Remove this note?',
+      removeConfirmMessage: 'The note on {{title}} will disappear for everyone.',
+      removeConfirmAction: 'Remove',
+      removeError: 'Could not remove the note',
     },
     seen: {
       label: 'Already seen',

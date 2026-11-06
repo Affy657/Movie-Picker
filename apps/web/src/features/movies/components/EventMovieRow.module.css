@@ -1,8 +1,20 @@
 .rowGrid {
   grid-template-columns:
     var(--space-9) var(--table-col-poster) minmax(0, 1fr) var(--table-col-vote)
-    var(--table-col-runtime) var(--table-col-year) var(--table-col-availability) var(--table-col-votes) var(--table-col-seen) var(--table-col-score)
+    var(--table-col-runtime) var(--table-col-year) var(--table-col-availability) var(
+      --table-col-votes
+    ) var(--table-col-seen) var(--table-col-score)
     var(--table-col-kebab);
+}
+
+.rowGrid.rowWithNote {
+  height: auto;
+  min-height: var(--space-24);
+}
+
+.rowWithNote .note {
+  margin-top: var(--space-1);
+  padding-bottom: var(--space-1);
 }
 
 .rowWinner {

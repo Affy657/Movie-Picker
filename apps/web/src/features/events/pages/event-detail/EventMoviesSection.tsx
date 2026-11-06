@@ -104,6 +104,7 @@ export type EventMoviesSectionProps = {
   setActionError: (message: string | null) => void;
   refreshAll: () => void;
   onRequestRemove: (movie: MovieData) => void;
+  onRequestRemoveNote?: (movie: MovieData) => void;
   viewMode: 'grid' | 'list';
   selection?: MovieCardSelection;
   addMovieOpen: boolean;
@@ -214,6 +215,7 @@ export default function EventMoviesSection({
   setActionError,
   refreshAll,
   onRequestRemove,
+  onRequestRemoveNote,
   viewMode,
   selection,
   addMovieOpen,
@@ -327,6 +329,7 @@ export default function EventMoviesSection({
     onActionError: handleActionError,
     onVote: handleVote,
     onRemove: onRequestRemove,
+    onRemoveNote: onRequestRemoveNote,
     refresh: refreshAll,
     participantAvatars,
     participantAvatarsByPseudo,

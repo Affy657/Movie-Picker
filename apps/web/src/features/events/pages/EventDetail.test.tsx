@@ -18,6 +18,7 @@ import { http, HttpResponse } from 'msw';
 import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import {
   getStoredHostToken,
+  setStoredHostToken,
   setStoredParticipant,
   getStoredParticipant,
 } from '@/shared/utils/eventIdentityStorage';
@@ -477,6 +478,51 @@ describe('EventDetail (MSW)', () => {
     expect(await screen.findByText(/film test/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^ajouter « /i }));
     await waitFor(() => expect(screen.queryByText(/film test/i)).not.toBeInTheDocument());
+  });
+
+  it('as the host, takes a pitch note down after confirming, with the host token', async () => {
+    const user = userEvent.setup();
+    const hostHeaders: Array<string | null> = [];
+    setStoredHostToken(slug, 'host-token');
+    server.use(
+      http.get(`${TEST_API_V1}/events/${slug}/movies`, () =>
+        HttpResponse.json([
+          {
+            _id: '507f1f77bcf86cd799439011',
+            eventId: 'evt-msw',
+            participantId: 'p-msw-bob',
+            tmdbId: 1,
+            title: 'Inception',
+            year: '2010',
+            posterPath: null,
+            proposerPseudo: 'Bob',
+            score: 0,
+            up: 0,
+            down: 0,
+            pitchNote: 'Un casse dans les rêves',
+          },
+        ])
+      ),
+      http.delete(
+        `${TEST_API_V1}/events/${slug}/movies/507f1f77bcf86cd799439011/note`,
+        ({ request }) => {
+          hostHeaders.push(request.headers.get('X-Host-Token'));
+          return new HttpResponse(null, { status: 204 });
+        }
+      )
+    );
+
+    renderEventDetail(`/e/${slug}`);
+    await user.click(
+      await screen.findByRole('button', { name: 'Supprimer la note sur Inception' })
+    );
+    await user.click(
+      within(await screen.findByTestId('confirm-dialog')).getByRole('button', {
+        name: 'Supprimer',
+      })
+    );
+
+    await waitFor(() => expect(hostHeaders).toEqual(['host-token']));
   });
 
   describe('participant removal flow (host)', () => {

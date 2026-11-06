@@ -1380,6 +1380,11 @@ export const fr = {
       saveButton: 'Enregistrer',
       cancelButton: 'Annuler',
       saveError: 'Impossible d’enregistrer la note',
+      removeAria: 'Supprimer la note sur {{title}}',
+      removeConfirmTitle: 'Supprimer cette note ?',
+      removeConfirmMessage: 'La note sur {{title}} disparaîtra pour tout le monde.',
+      removeConfirmAction: 'Supprimer',
+      removeError: 'Impossible de supprimer la note',
     },
     seen: {
       label: 'D\u00e9j\u00e0 vu',
