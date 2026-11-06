@@ -128,9 +128,6 @@ public static class Errors
     public static ConflictException WinnersAllDrawn(int target) =>
         new($"The {target} winning movie(s) of the movie night are already set, raise the setting or remove one from the winners", ErrorCodes.WinnersAllDrawn, Params(("count", target)));
 
-    public static ConflictException HandleAllocationFailed() =>
-        new("Could not allocate a unique handle, please retry", ErrorCodes.HandleAllocationFailed);
-
     public static ConflictException CreatorCannotBeRemoved() =>
         new("The creator of the movie night cannot be removed", ErrorCodes.CreatorCannotBeRemoved);
 

@@ -173,33 +173,6 @@ public sealed class PublicProfileEndpointsTests : IClassFixture<MoviePickerAppli
     }
 
     [Fact]
-    public async Task HandleAvailable_ReflectsExistingHandles()
-    {
-        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Taken User");
-        var me = await GetMeAsync(client);
-
-        var anon = _factory.CreateClient();
-
-        var taken = await anon.GetAsync($"/api/v1/users/handle-available?handle={me.Handle}");
-        taken.EnsureSuccessStatusCode();
-        var takenBody = await taken.Content.ReadFromJsonAsync<HandleAvailabilityResponse>(JsonOptions);
-        Assert.NotNull(takenBody);
-        Assert.False(takenBody!.Available);
-
-        var free = await anon.GetAsync("/api/v1/users/handle-available?handle=totally_free_42");
-        free.EnsureSuccessStatusCode();
-        var freeBody = await free.Content.ReadFromJsonAsync<HandleAvailabilityResponse>(JsonOptions);
-        Assert.NotNull(freeBody);
-        Assert.True(freeBody!.Available);
-
-        var invalid = await anon.GetAsync("/api/v1/users/handle-available?handle=ab");
-        invalid.EnsureSuccessStatusCode();
-        var invalidBody = await invalid.Content.ReadFromJsonAsync<HandleAvailabilityResponse>(JsonOptions);
-        Assert.NotNull(invalidBody);
-        Assert.False(invalidBody!.Available);
-    }
-
-    [Fact]
     public async Task PatchHandle_ChangesPublicProfileUrl()
     {
         var unique = Guid.NewGuid().ToString("N")[..8];

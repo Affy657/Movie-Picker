@@ -11,12 +11,6 @@ public static class MovieShowcaseSections
     public const string Collection = "collection";
     public const string Provider = "provider";
     public const string Recommendations = "recommendations";
-
-    public static readonly IReadOnlyList<string> All =
-        [Trending, NowPlaying, MostProposed, Theme, Collection, Provider, Recommendations];
-
-    public static bool IsKnown(string? section) =>
-        section is not null && All.Contains(section.Trim().ToLowerInvariant());
 }
 
 public static class MovieShowcaseCatalog

@@ -34,8 +34,6 @@ public static partial class TmdbPosterUrlNormalizer
         return TmdbSizeSegmentRegex().Replace(url, $"/t/p/{targetSize}/", 1);
     }
 
-    public static bool IsApiPosterPath(string url) => TryParsePosterKey(url, out _);
-
     public static bool TryParsePosterKey(string? pathOrUrl, out string key)
     {
         key = "";

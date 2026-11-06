@@ -78,14 +78,6 @@ public sealed class InMemoryUserRepository : IUserRepository
         return Task.FromResult(result);
     }
 
-    public Task<IReadOnlyList<User>> ListWithLetterboxdSyncEnabledAsync(CancellationToken ct = default)
-    {
-        IReadOnlyList<User> result = _byId.Values
-            .Where(u => !string.IsNullOrWhiteSpace(u.LetterboxdUsername))
-            .ToList();
-        return Task.FromResult(result);
-    }
-
     public Task<IReadOnlyList<User>> SearchPublicAsync(string query, int limit, CancellationToken ct = default)
     {
         var normalized = UserSearchPolicy.Normalize(query);

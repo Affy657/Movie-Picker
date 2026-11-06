@@ -17,14 +17,6 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         _collection = collections.GetCollection<ParticipantDocument>("participants");
     }
 
-    public async Task<Participant?> FindByEventAndPseudoAsync(string eventId, string pseudo, CancellationToken ct = default)
-    {
-        var doc = await _collection
-            .Find(x => x.EventId == eventId && x.Pseudo == pseudo)
-            .FirstOrDefaultAsync(ct);
-        return doc is null ? null : ParticipantDocumentMapper.ToDomain(doc);
-    }
-
     public async Task<Participant?> FindByEventAndUserIdAsync(string eventId, string userId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(userId))

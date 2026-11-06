@@ -52,7 +52,6 @@ public static class ErrorCodes
     public const string InvitationAlreadySent = "invitation_already_sent";
     public const string EventFull = "event_full";
     public const string WinnersAllDrawn = "winners_all_drawn";
-    public const string HandleAllocationFailed = "handle_allocation_failed";
     public const string CreatorCannotBeRemoved = "creator_cannot_be_removed";
     public const string MovieExcludedFromWheel = "movie_excluded_from_wheel";
     public const string MovieAlreadyAWinner = "movie_already_a_winner";

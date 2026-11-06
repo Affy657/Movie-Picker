@@ -19,27 +19,6 @@ public sealed class UsersControllerTests
             userId is null ? null : ControllerTestHelpers.AuthenticatedUser(userId));
 
     [Fact]
-    public async Task HandleAvailable_ForwardsHandleAndCurrentUser()
-    {
-        var handler = new Mock<ICheckHandleAvailabilityHandler>();
-
-        var result = await Controller("u1").HandleAvailable("cinephile", handler.Object, CancellationToken.None);
-
-        Assert.IsType<OkObjectResult>(result);
-        handler.Verify(h => h.HandleAsync("cinephile", "u1", It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task HandleAvailable_NullHandle_PassesEmptyString()
-    {
-        var handler = new Mock<ICheckHandleAvailabilityHandler>();
-
-        await Controller(null).HandleAvailable(null, handler.Object, CancellationToken.None);
-
-        handler.Verify(h => h.HandleAsync("", null, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
     public async Task Search_ForwardsQueryAndCurrentUser()
     {
         var handler = new Mock<ISearchUsersHandler>();
