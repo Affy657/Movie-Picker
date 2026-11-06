@@ -20,10 +20,13 @@
  *     `infra/terraform/environments/`, read from the state bucket), matched on resource, role,
  *     member and condition: a described service account or a GitHub environment granted one more
  *     role, on one more resource, or without the condition Terraform set, is a finding;
- *   - the project owner (`roles/owner` on the project, and the `projectOwner:` convenience value
- *     the buckets keep for it);
- *   - the Google-managed service agents (`service-<number>@gcp-sa-*`, `*.iam.gserviceaccount.com`
- *     of Google's own projects), which the platform binds itself;
+ *   - the expected owners, on any resource, and the `projectOwner:` convenience value the buckets
+ *     keep for them. The list never comes from the policy under review: `IAM_EXPECTED_OWNERS`
+ *     (members, comma-separated, kept off the public repository) or else the account gcloud runs
+ *     as, so an owner added by hand is a finding;
+ *   - the Google-managed service agents, which the platform binds itself: an account named after
+ *     the number of this project on a domain of `GOOGLE_AGENT_DOMAIN`. Both are needed: those
+ *     domains serve every project, and any project can name an account `service-<number>@`;
  *   - `allUsers` as `roles/run.invoker` on the Cloud Run services, the public API, and nowhere else.
  */
 import { spawnSync } from 'node:child_process';
@@ -36,7 +39,8 @@ const BUCKETS = [STATE_BUCKET, 'movie-picker-backups'];
 const IMAGE_REPOSITORY = 'movie-picker';
 const RUN_SERVICES = ['movie-picker-api', 'movie-picker-api-staging'];
 const SECRET_VERSION_MAX_AGE_DAYS = 365;
-const OWNER_ROLE = 'roles/owner';
+const GOOGLE_AGENT_DOMAIN =
+  /^(?:(?:gcp-sa-[a-z0-9-]+|compute-system|container-analysis|containerregistry|gs-project-accounts|serverless-robot-prod)\.iam|cloudservices)\.gserviceaccount\.com$/;
 const TERRAFORM_ROOTS = fileURLToPath(new URL('../infra/terraform/environments/', import.meta.url));
 
 function lastSegment(path) {
@@ -78,33 +82,36 @@ export function terraformBindings(states) {
   return described;
 }
 
-function isGoogleServiceAgent(member, projectId) {
+function isGoogleServiceAgent(member, projectNumber) {
+  const [, account, domain] = /^serviceAccount:([^@]+)@(.+)$/.exec(member) ?? [];
   return (
-    /^serviceAccount:service-\d+@/.test(member) ||
-    (member.startsWith('serviceAccount:') &&
-      member.endsWith('.iam.gserviceaccount.com') &&
-      !member.endsWith(`@${projectId}.iam.gserviceaccount.com`) &&
-      !member.endsWith('@developer.gserviceaccount.com'))
+    (account === `service-${projectNumber}` || account === projectNumber) &&
+    GOOGLE_AGENT_DOMAIN.test(domain)
   );
 }
 
-function isOwner(member, role, { owners, projectId }) {
-  return (
-    (role === OWNER_ROLE && member.startsWith('user:')) ||
-    owners.has(member) ||
-    member === `projectOwner:${projectId}`
-  );
+export function expectedOwners(configured, activeAccount) {
+  const listed = (configured ?? '')
+    .split(',')
+    .map((owner) => owner.trim())
+    .filter(Boolean);
+  if (listed.length > 0) return new Set(listed);
+  return new Set(activeAccount ? [`user:${activeAccount}`] : []);
+}
+
+function isOwner(member, { owners, projectId }) {
+  return owners.has(member) || member === `projectOwner:${projectId}`;
 }
 
 export function reviewBindings(resource, bindings, context) {
-  const { described, projectId, allowAllUsersAs = null } = context;
+  const { described, projectNumber, allowAllUsersAs = null } = context;
   const findings = [];
   for (const binding of bindings ?? []) {
     const condition = binding.condition?.expression;
     for (const member of binding.members ?? []) {
       if (described.has(bindingKey(resource, binding.role, member, condition))) continue;
-      if (isGoogleServiceAgent(member, projectId)) continue;
-      if (isOwner(member, binding.role, context)) continue;
+      if (isGoogleServiceAgent(member, projectNumber)) continue;
+      if (isOwner(member, context)) continue;
       if (member === 'allUsers' && binding.role === allowAllUsersAs) continue;
       const when = condition ? ` (when ${condition})` : '';
       findings.push(`${resource}: ${binding.role} -> ${member}${when}`);
@@ -202,15 +209,20 @@ function main() {
     console.error('No project: set GCP_PROJECT_ID or configure a gcloud project.');
     process.exit(1);
   }
+  const owners = expectedOwners(
+    process.env.IAM_EXPECTED_OWNERS,
+    gcloud(['config', 'get-value', 'account'])
+  );
+  if (owners.size === 0) {
+    console.error('No expected owner: set IAM_EXPECTED_OWNERS or log in with gcloud.');
+    process.exit(1);
+  }
   const projectPolicy = gcloudJson(['projects', 'get-iam-policy', projectId]);
   const context = {
     projectId,
+    projectNumber: gcloudJson(['projects', 'describe', projectId]).projectNumber,
     described: terraformBindings(readTerraformStates()),
-    owners: new Set(
-      (projectPolicy.bindings ?? [])
-        .filter((binding) => binding.role === OWNER_ROLE)
-        .flatMap((binding) => binding.members)
-    ),
+    owners,
   };
 
   const findings = [
@@ -262,7 +274,7 @@ function main() {
     process.exit(1);
   }
   console.log(
-    'Every IAM binding of the project is recorded in a Terraform state, or belongs to the owner or a Google service agent; no key, no stale secret.'
+    'Every IAM binding of the project is recorded in a Terraform state, or belongs to an expected owner or a Google service agent; no key, no stale secret.'
   );
 }
 
