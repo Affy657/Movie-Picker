@@ -4712,6 +4712,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications/inbox/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["NotificationUnreadCountResponse"];
+                        "application/json": components["schemas"]["NotificationUnreadCountResponse"];
+                        "text/json": components["schemas"]["NotificationUnreadCountResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ProblemDetails"];
+                        "application/json": components["schemas"]["ProblemDetails"];
+                        "text/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications/inbox/read-all": {
         parameters: {
             query?: never;
@@ -7820,6 +7875,10 @@ export interface components {
         NotificationTypePreferencePatch: {
             type: string;
             enabled: boolean;
+        };
+        NotificationUnreadCountResponse: {
+            /** Format: int32 */
+            unreadCount?: number;
         };
         OAuthProvidersResponse: {
             providers?: string[] | null;
