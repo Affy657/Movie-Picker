@@ -129,6 +129,7 @@ Tous se lancent à la racine du dépôt.
 | `pnpm build` | Build du front par Turbo |
 | `pnpm lint`, `pnpm run lint:eslint` | Types et règles côté front |
 | `pnpm run check:architecture` | Règles d'architecture, aussi jouées au pre-push |
+| `pnpm run check:unused` | Fichiers, exports et dépendances inutilisés (knip), joué par `verify:local` et le job `lint-web` |
 | `pnpm run check:workflows` | actionlint (+ shellcheck) et zizmor sur `.github/workflows/`, par Docker |
 | `pnpm run check:terraform` | `terraform fmt -check` puis `validate` sur chaque module racine de `infra/terraform/`, par Docker |
 | `pnpm run terraform -- <commande>` | Terraform depuis son image épinglée, bucket d'état et jeton GCP fournis par l'enveloppe, voir `infra/README.md` |

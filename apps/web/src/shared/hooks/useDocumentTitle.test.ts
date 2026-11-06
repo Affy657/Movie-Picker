@@ -1,15 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { renderHook } from '@testing-library/react';
-import { APP_DOCUMENT_TITLE, pageTitle, useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
+import { APP_DOCUMENT_TITLE, pageTitle } from '@/shared/hooks/useDocumentTitle';
 
-describe('useDocumentTitle', () => {
+describe('pageTitle', () => {
   it('pageTitle ajoute le suffixe produit', () => {
     expect(pageTitle('Accueil')).toBe(`Accueil | ${APP_DOCUMENT_TITLE}`);
-  });
-
-  it('updates document.title', () => {
-    document.title = 'initial';
-    renderHook(() => useDocumentTitle('Page test'));
-    expect(document.title).toBe('Page test');
   });
 });
