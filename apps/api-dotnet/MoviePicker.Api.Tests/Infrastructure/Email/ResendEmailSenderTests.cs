@@ -23,7 +23,7 @@ public class ResendEmailSenderTests
         };
 
     private static EmailMessage SampleMessage(string? tag = "password-reset")
-        => new("alice@example.com", "Alice", "Test subject", "<p>html</p>", "text", tag);
+        => new("alice@example.com", "Test subject", "<p>html</p>", "text", tag);
 
     [Fact]
     public async Task SendAsync_HappyPath_PostsResendEmailEndpointWithBearerAndExpectedBody()
