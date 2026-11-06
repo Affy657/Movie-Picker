@@ -539,6 +539,32 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task ListOpenWithUnannouncedWheelPick_KeepsTheNightsOwingAnAnnouncement_HoweverFarAhead()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var events = scope.ServiceProvider.GetRequiredService<IEventRepository>();
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        var wheel = new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now };
+        var laterWheel = new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Wheel, PickedAt = Now.AddHours(1) };
+        var laterManual = new EventWinner { MovieId = ObjectId.GenerateNewId().ToString(), Method = WinnerPickMethod.Manual, PickedAt = Now.AddHours(1) };
+        var announcedInBetween = Now.AddMinutes(30);
+        var farAhead = await events.AddAsync(NewEvent("far-" + marker) with { Winners = [wheel], Date = "2040-01-01" });
+        var secondPick = await events.AddAsync(NewEvent("second-" + marker) with { Winners = [wheel, laterWheel], WinnerAnnouncedAt = announcedInBetween });
+        await events.AddAsync(NewEvent("announced-" + marker) with { Winners = [wheel], WinnerAnnouncedAt = announcedInBetween });
+        await events.AddAsync(NewEvent("manual-after-" + marker) with { Winners = [wheel, laterManual], WinnerAnnouncedAt = announcedInBetween });
+        await events.AddAsync(NewEvent("manual-" + marker) with { Winners = [laterManual] });
+        await events.AddAsync(NewEvent("no-winner-" + marker));
+        await events.AddAsync(NewEvent("closed-" + marker) with { Winners = [wheel], ClosedAt = Now });
+        await events.AddAsync(NewEvent("started-too-long-ago-" + marker) with { Winners = [wheel], Date = "2020-01-01" });
+
+        var found = await events.ListOpenWithUnannouncedWheelPickAsync(Now.AddDays(-8));
+
+        var mine = found.Where(e => e.Title.EndsWith(marker, StringComparison.Ordinal)).Select(e => e.Id).ToHashSet();
+        HashSet<string> expected = [farAhead.Id, secondPick.Id];
+        Assert.Equal(expected, mine);
+    }
+
+    [Fact]
     public async Task ListWithWinnerStartingBetween_KeepsTheWinnersOfTheWindow_WhetherClosedOrNot()
     {
         using var scope = _factory.Services.CreateScope();

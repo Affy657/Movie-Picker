@@ -39,6 +39,8 @@ public sealed class EventReminderPassTests
         _events.Setup(r => r.ListOpenEventsStartingBetweenAsync(
                 It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
+        _events.Setup(r => r.ListOpenWithUnannouncedWheelPickAsync(It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
         _participants.Setup(r => r.ListByEventIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         _users.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
@@ -150,9 +152,9 @@ public sealed class EventReminderPassTests
             n => n.AddAsync(It.Is<UserNotification>(u => u.UserId == userId && u.Type == type), It.IsAny<CancellationToken>()),
             times);
 
-    private Event OpenNightWithAWheelPick(DateTimeOffset pickedAt, DateTimeOffset? announcedAt = null)
+    private Event OpenNightWithAWheelPick(DateTimeOffset pickedAt, DateTimeOffset? announcedAt = null, DateTimeOffset? startUtc = null)
     {
-        var (date, time) = ParisFields(Now.AddMinutes(-30));
+        var (date, time) = ParisFields(startUtc ?? Now.AddMinutes(-30));
         var evt = new Event
         {
             Id = "evt-wheel",
@@ -166,10 +168,33 @@ public sealed class EventReminderPassTests
             CreatedAt = Now.AddDays(-3),
             UpdatedAt = pickedAt
         };
-        _events.Setup(r => r.ListOpenEventsStartingBetweenAsync(
-                It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        _events.Setup(r => r.ListOpenWithUnannouncedWheelPickAsync(It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([evt]);
         return evt;
+    }
+
+    [Fact]
+    public async Task RunAsync_WheelPickOfANightBeyondTheReminderWindow_IsStillAnnounced()
+    {
+        var evt = OpenNightWithAWheelPick(pickedAt: Now.AddMinutes(-10), startUtc: Now.AddDays(10));
+        _wheelAnnouncement.Setup(a => a.AnnounceAwaitingPicksAsync(evt, It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        var result = await CreatePass().RunAsync();
+
+        Assert.Equal(1, result.WheelWinnersAnnounced);
+        Assert.Equal(0, result.OpenEvents);
+    }
+
+    [Fact]
+    public async Task RunAsync_LooksForUnannouncedPicksBackToTheOldestNightNotAutoClosed()
+    {
+        await CreatePass().RunAsync();
+
+        _events.Verify(
+            r => r.ListOpenWithUnannouncedWheelPickAsync(
+                Now - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]

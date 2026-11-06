@@ -31,6 +31,10 @@ public interface IEventRepository
         DateTimeOffset toInclusive,
         CancellationToken ct = default);
 
+    Task<IReadOnlyList<Event>> ListOpenWithUnannouncedWheelPickAsync(
+        DateTimeOffset startingFrom,
+        CancellationToken ct = default);
+
     Task<IReadOnlyList<Event>> ListMissingStartAtAsync(int limit, CancellationToken ct = default);
 
     Task<IReadOnlyList<Event>> ListMissingRecapSlugAsync(int limit, CancellationToken ct = default);

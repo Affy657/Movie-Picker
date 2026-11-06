@@ -71,8 +71,9 @@ public sealed class EventReminderPass : IEventReminderPass
     public async Task<EventReminderPassResult> RunAsync(CancellationToken ct = default)
     {
         var now = _clock.GetUtcNow();
+        var oldestNightNotAutoClosed = now - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay;
         var openEvents = await _events.ListOpenEventsStartingBetweenAsync(
-            now - EventSchedule.PendingDelay - EventSchedule.AutoCloseDelay,
+            oldestNightNotAutoClosed,
             now + Window24hMax,
             ct);
         var eventsWithStart = openEvents
@@ -94,7 +95,7 @@ public sealed class EventReminderPass : IEventReminderPass
             failures,
             ct);
 
-        var wheelWinnersAnnounced = await AnnounceWheelPicksTheHostPageLeftAsync(openEvents, now, ct);
+        var wheelWinnersAnnounced = await AnnounceWheelPicksTheHostPageLeftAsync(oldestNightNotAutoClosed, now, ct);
 
         var pending = await ProcessPendingEventsAsync(openEvents, now, failures, ct);
 
@@ -103,12 +104,13 @@ public sealed class EventReminderPass : IEventReminderPass
     }
 
     private async Task<int> AnnounceWheelPicksTheHostPageLeftAsync(
-        IReadOnlyList<Event> openEvents,
+        DateTimeOffset startingFrom,
         DateTimeOffset now,
         CancellationToken ct)
     {
+        var nights = await _events.ListOpenWithUnannouncedWheelPickAsync(startingFrom, ct);
         var announced = 0;
-        foreach (var evt in openEvents)
+        foreach (var evt in nights)
         {
             var awaiting = WheelWinnerAnnouncement.PicksAwaitingAnnouncement(evt);
             if (awaiting.Count == 0 || awaiting.Exists(pick => now - pick.PickedAt < WheelSpinLongOver))
