@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractYouTubeId, youTubeEmbedUrl } from '@/shared/utils/youtube';
+import { extractYouTubeId } from '@/shared/utils/youtube';
 
 const VALID = 'dQw4w9WgXcQ';
 
@@ -48,18 +48,5 @@ describe('extractYouTubeId', () => {
 
   it('returns null for malformed URLs', () => {
     expect(extractYouTubeId('not a url')).toBeNull();
-  });
-});
-
-describe('youTubeEmbedUrl', () => {
-  it('builds an embed URL from a valid id', () => {
-    expect(youTubeEmbedUrl(`https://youtu.be/${VALID}`)).toBe(
-      `https://www.youtube.com/embed/${VALID}`
-    );
-  });
-
-  it('returns null when no id can be extracted', () => {
-    expect(youTubeEmbedUrl('https://vimeo.com/123')).toBeNull();
-    expect(youTubeEmbedUrl(null)).toBeNull();
   });
 });

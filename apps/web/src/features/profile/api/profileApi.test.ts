@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchApi } from '@/shared/api/client';
 import {
-  checkHandleAvailability,
   fetchFollowers,
   fetchFollowing,
   fetchPublicProfile,
@@ -31,14 +30,6 @@ describe('profileApi', () => {
 
     await expect(fetchPublicProfile('a b')).resolves.toBe(profile);
     expect(mockFetchApi).toHaveBeenCalledWith('/users/a%20b');
-  });
-
-  it('checkHandleAvailability builds the query string', async () => {
-    mockFetchApi.mockResolvedValue({ handle: 'bob', available: true, reason: null });
-
-    await checkHandleAvailability('bob');
-
-    expect(mockFetchApi).toHaveBeenCalledWith('/users/handle-available?handle=bob');
   });
 
   it('followUser posts to the follow endpoint', async () => {

@@ -23,12 +23,6 @@ export interface FavoriteListResponse {
   items: FavoriteTitle[];
 }
 
-export interface HandleAvailability {
-  handle: string;
-  available: boolean;
-  reason: string | null;
-}
-
 export interface FollowUserItem {
   handle: string;
   displayName: string;
@@ -42,12 +36,6 @@ export interface FollowListResponse {
 
 export async function fetchPublicProfile(handle: string): Promise<PublicProfile> {
   return fetchApi<PublicProfile>(apiPath('users', handle));
-}
-
-export async function checkHandleAvailability(handle: string): Promise<HandleAvailability> {
-  return fetchApi<HandleAvailability>(
-    `/users/handle-available?handle=${encodeURIComponent(handle)}`
-  );
 }
 
 export async function followUser(handle: string): Promise<void> {

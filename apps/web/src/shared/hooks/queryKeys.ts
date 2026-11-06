@@ -5,7 +5,6 @@ export const queryKeys = {
   profile: {
     publicAll: ['profile', 'public'] as const,
     public: (handle: string | undefined) => ['profile', 'public', handle ?? '$pending'] as const,
-    handleAvailability: (handle: string) => ['profile', 'handle-available', handle] as const,
     followingAll: ['profile', 'following'] as const,
     following: (handle: string | undefined) =>
       ['profile', 'following', handle ?? '$pending'] as const,
