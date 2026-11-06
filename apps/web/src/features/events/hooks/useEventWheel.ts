@@ -245,7 +245,11 @@ export function useEventWheel({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [manualMode, removalMode, cancelManualMode, cancelRemovalMode]);
 
+  const launchInFlightRef = useRef(false);
+
   const launch = useCallback(() => {
+    if (launchInFlightRef.current) return;
+    launchInFlightRef.current = true;
     setError(null);
     setLoading(true);
     postEventWheel(slug, hostToken, drawnIds.length)
@@ -266,7 +270,10 @@ export function useEventWheel({
         track('movie_picked', { method: 'wheel' });
       })
       .catch((err) => setError(getErrorMessage(err, t('events.wheel.launchError'))))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        launchInFlightRef.current = false;
+        setLoading(false);
+      });
   }, [slug, hostToken, drawnIds.length, safeMovies, drawableMovies, announceWinner, track, t]);
 
   const pickWinnerManually = useCallback(

@@ -233,6 +233,28 @@ describe('useEventWheel : annonce du gagnant', () => {
   });
 });
 
+describe('useEventWheel: launching', () => {
+  beforeEach(() => {
+    vi.mocked(postEventWheel).mockReturnValue(new Promise(() => undefined));
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('sends a single draw when the host taps twice before the page has rendered', () => {
+    const { result } = renderWheel();
+    const { launch } = result.current;
+
+    act(() => {
+      launch();
+      launch();
+    });
+
+    expect(postEventWheel).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('useEventWheel: reveal after the host closes the modal', () => {
   beforeEach(() => {
     vi.mocked(postEventWheel).mockResolvedValue({ winner, message: 'Roue lancée.' });
