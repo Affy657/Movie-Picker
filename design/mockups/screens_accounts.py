@@ -189,7 +189,7 @@ def side(active, name="Adrien"):
 def settings_inner(active, body, name="Adrien", saved=True):
     chip = b.when("saved", SAVED, False) if saved else ""
     return f'''{b.hdr(-1, solid=True)}<div class="xa-set">{side(active, name)}
-<div class="xa-main"><div class="xa-ph"><div><div class="ov">Paramètres</div><h1 class="disp util">{RUBS[active][1]}</h1></div>{chip}</div>{body}</div></div>'''
+<div class="xa-main"><div class="xa-ph"><h1 class="vh">{RUBS[active][1]}</h1>{chip}</div>{body}</div></div>'''
 
 
 def settings_desk(active, body, name="Adrien", saved=True):
@@ -251,9 +251,9 @@ def swatches(cls="xa-sws"):
 
 
 def scale_opt(full=False):
-    btns = (f'<button type="button" class="{b.hole("sc5", "")}"{b.on("ssc5")}>Sur 5</button>'
-            f'<button type="button" class="{b.hole("sc10", "on")}"{b.on("ssc10")}>Sur 10</button>')
-    ex = f'<span class="xa-ex">Aperçu<b>{b.star(13)}{b.hole("scEx", "8,4")}</b></span>'
+    btns = (f'<button type="button" class="{b.hole("sc5", "on")}"{b.on("ssc5")}>Sur 5</button>'
+            f'<button type="button" class="{b.hole("sc10", "")}"{b.on("ssc10")}>Sur 10</button>')
+    ex = f'<span class="xa-ex">Aperçu<b>{b.hole("scEx", "4,2")}{b.star(13)}</b></span>'
     return f'<div class="xa-scl"><div class="xa-opt{" xa-optf" if full else ""}" role="radiogroup" aria-label="Échelle des notes">{btns}</div>{ex}</div>'
 
 
@@ -530,7 +530,7 @@ o['ac_' + k] = ac === k ? 'on' : '';
 o['sac_' + k] = () => this.setState({ ac: k, sv: true });
 });
 o.acName = NAMES[ac];
-const sc = st.sc || 'ten';
+const sc = st.sc || 'five';
 o.sc5 = sc === 'five' ? 'on' : '';
 o.sc10 = sc === 'ten' ? 'on' : '';
 o.ssc5 = () => this.setState({ sc: 'five', sv: true });
@@ -687,11 +687,12 @@ CSS = r"""
 .S .xa-rub.on{background:var(--s1);color:var(--tx);box-shadow:inset 0 0 0 1px var(--line)}
 .S .xa-rub.on .ic{opacity:1}
 .S .xa-rub.on::before{content:'';position:absolute;left:0;top:13px;bottom:13px;width:3px;border-radius:0 3px 3px 0;background:var(--acc)}
-.S .xa-dot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc);flex:none}
+.S .xa-dot{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--acc);flex:none}
 .S .xa-pub{margin-top:auto;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--tx2)}
 .S .xa-main{min-width:0;overflow:hidden auto;scrollbar-width:none;padding-bottom:28px}
 .S .xa-main::-webkit-scrollbar{display:none}
-.S .xa-ph{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
+.S .xa-ph{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.S .xa-ph:has(.xa-saved){margin-bottom:12px}
 .S .xa-ph h1{font-size:52px;margin-top:8px}
 .S .xa-ph .xa-saved{margin-bottom:10px}
 .S .xa-saved{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--line);color:var(--tx);font-size:12px;font-weight:700;flex:none}
@@ -754,7 +755,7 @@ CSS = r"""
 .S .xa-sw.on .ic{opacity:1}
 .S .xa-scl{display:flex;align-items:center;gap:16px}
 .S .xa-ex{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--tx3)}
-.S .xa-ex b{display:inline-flex;align-items:center;gap:4px;color:var(--gold);font-size:15px;font-weight:700}
+.S .xa-ex b{display:inline-flex;align-items:center;gap:4px;color:var(--tx);font-size:15px;font-weight:700}
 
 .S .xa-ncols{display:grid;grid-template-columns:1fr 1fr;gap:0 36px;padding:0 20px 8px}
 .S .xa-nr{display:flex;align-items:center;justify-content:space-between;gap:12px;height:44px;border-top:1px solid var(--line);font-size:13.5px;font-weight:500}

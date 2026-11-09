@@ -11,6 +11,7 @@ SCREENS = [
     ("00", "planche", "La planche", "desk", "main", None),
     ("01", "explorer", "Explorer", "desk", "main", None),
     ("02", "soiree", "Une soirée", "desk", "main", None),
+    ("93", "soiree-liste", "Une soirée, les films en liste", "desk", "main", None),
     ("03", "roue", "La roue qui tourne", "desk", "main", None),
     ("04", "fiche-film", "La fiche d’un film", "desk", "main", None),
     ("05", "mes-soirees", "Mes soirées", "desk", "main", None),

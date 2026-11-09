@@ -85,7 +85,7 @@ CSS = r"""
 .S .xd-ni{width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--s3);color:var(--tx)}
 .S .xd-nr .av{box-shadow:0 0 0 1px rgba(255,255,255,.1)}
 .S .xd-nm{font-size:12px;color:var(--tx3);white-space:nowrap}
-.S .xd-dot{width:8px;height:8px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--glow);visibility:hidden}
+.S .xd-dot{width:8px;height:8px;border-radius:50%;background:var(--acc);visibility:hidden}
 .S .xd-un .xd-dot{visibility:visible}
 .S .xd-nmore{display:flex;align-items:center;gap:6px;width:100%;height:40px;padding:0 16px;border-top:1px solid var(--line);font-size:13px;font-weight:600;color:var(--tx2)}
 .S .xd-lm{align-self:flex-start;margin-top:4px}
@@ -198,7 +198,7 @@ CSS = r"""
 .S .xd-act .chip .ic{color:var(--tx3)}
 .S .xd-act .xd-clr{font-size:13px;font-weight:600;color:var(--tx2);margin-left:6px}
 .S .xd-g{grid-template-columns:repeat(7,minmax(0,1fr))}
-.S .xd-rt{position:absolute;left:6px;top:6px;z-index:3;display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 8px;border-radius:999px;background:rgba(0,0,0,.78);color:var(--gold);font-size:13px;font-weight:800}
+.S .xd-rt{position:absolute;left:6px;top:6px;z-index:3;display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 8px;border-radius:999px;background:rgba(0,0,0,.78);color:#fff;font-size:13px;font-weight:800}
 .S .xd-bm{position:absolute;right:6px;top:6px;z-index:4;width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(0,0,0,.66);color:#e2e8f0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
 .S .xd-bm.on{background:var(--acc);color:var(--acc-c);box-shadow:none}
 .S .xd-wc .pw{display:block}
@@ -445,7 +445,7 @@ o.toggleFollow = () => this.setState({{ fol: !f }});
 
 def screen_64():
     favs = "".join(f'<a class="fv"{href("04-fiche-film")}>{poster(k)}</a>' for k in LEA_FAVS)
-    seen = "".join(f'<a class="sn"{href("04-fiche-film")}><div class="pw">{poster(k)}<span class="rt">{b.star(11)} {r}</span></div></a>' for k, r in LEA_SEEN[:6])
+    seen = "".join(f'<a class="sn"{href("04-fiche-film")}><div class="pw">{poster(k)}<span class="rt">{b.on5(r)}{b.star(11)}</span></div></a>' for k, r in LEA_SEEN[:6])
     L = LEA
     stats = (f'<div><b class="disp">{L["created"]}</b><span>soirées créées</span></div><div><b class="disp">{L["joined"]}</b><span>soirées rejointes</span></div>'
              f'<div><b class="disp">{L["proposed"]}</b><span>films proposés</span></div><div><b class="disp">{L["wins"]}</b><span>propositions gagnantes</span></div>'
@@ -732,12 +732,12 @@ def screen_66():
     for i, (k, r) in enumerate(ADRIEN_SEEN):
         f = FILMS[k]
         if i == 1:
-            pw = (f'<div class="pw">{poster(k)}<span class="xd-rt">{b.star(12)}{r}</span><div class="ovl2"><a class="btn sm"{href("47-proposer-un-film")}>{b.ic("plus", 14)}Proposer</a>'
+            pw = (f'<div class="pw">{poster(k)}<span class="xd-rt">{b.on5(r)}{b.star(12)}</span><div class="ovl2"><a class="btn sm"{href("47-proposer-un-film")}>{b.ic("plus", 14)}Proposer</a>'
                   f'<span class="mini">{b.ic("bookmark", 14)}</span></div></div>')
-            cell = f'<div class="wlc hov xd-wc" style="order:{hole(f"o{i}", i)}">{pw}<div class="t">{f["t"]}</div><div class="m">{f["y"]}{b.tmdb(f["r"])}</div></div>'
+            cell = f'<div class="wlc hov xd-wc" style="order:{hole(f"o{i}", i)}">{pw}<div class="m">{f["y"]}{b.rating(f["r"])}</div></div>'
         else:
-            cell = (f'<div class="wlc xd-wc" style="order:{hole(f"o{i}", i)}"><a class="pw"{href("04-fiche-film")}>{poster(k)}<span class="xd-rt">{b.star(12)}{r}</span></a>'
-                    f'<div class="t">{f["t"]}</div><div class="m">{f["y"]}{b.tmdb(f["r"])}</div></div>')
+            cell = (f'<div class="wlc xd-wc" style="order:{hole(f"o{i}", i)}"><a class="pw"{href("04-fiche-film")}>{poster(k)}<span class="xd-rt">{b.on5(r)}{b.star(12)}</span></a>'
+                    f'<div class="m">{f["y"]}{b.rating(f["r"])}</div></div>')
         cells += when(f"c{i}", cell)
     return f'''<div class="S desk frame">{b.hdr(-1, solid=True)}<div class="xd-clip"><div class="page xd-cp">
 <a class="back"{href("07-profil")}>{b.ic("left", 16)}Retour au profil</a>
@@ -763,10 +763,10 @@ def screen_67():
         if i == 1:
             pw = (f'<div class="pw">{poster(k)}{bm}<div class="ovl2"><a class="btn sm"{href("47-proposer-un-film")}>{b.ic("plus", 14)}Proposer</a>'
                   f'<a class="mini" aria-label="Voir la fiche"{href("04-fiche-film")}>{b.ic("info", 14)}</a></div></div>')
-            cell = f'<div class="wlc hov xd-wc">{pw}<div class="t">{f["t"]}</div><div class="m">{f["y"]}{b.tmdb(f["r"])}</div></div>'
+            cell = f'<div class="wlc hov xd-wc">{pw}<div class="m">{f["y"]}{b.rating(f["r"])}</div></div>'
         else:
             cell = (f'<div class="wlc xd-wc"><div class="pw"><a class="pw"{href("04-fiche-film")}>{poster(k)}</a>{bm}</div>'
-                    f'<div class="t">{f["t"]}</div><div class="m">{f["y"]}{b.tmdb(f["r"])}</div></div>')
+                    f'<div class="m">{f["y"]}{b.rating(f["r"])}</div></div>')
         cells += when(f"c{i}", cell)
     seg = '<div class="seg big"><button type="button" class="on">Ajouté le</button><button type="button">Titre</button><button type="button">Année</button></div>'
     tool = (f'<div class="tool xd-tool">{search_field("Rechercher un film…", "Rechercher dans la watchlist")}'
@@ -818,7 +818,7 @@ def screen_70():
     cells = ""
     for i, (k, r) in enumerate(LEA_SEEN):
         f = FILMS[k]
-        cells += when(f"c{i}", f'''<div style="order:{hole(f"o{i}", i)}"><a class="pw"{href("17-m-fiche-film")}>{poster(k)}<span class="xd-rt">{b.star(11)}{r}</span></a><div class="t">{f["t"]}</div><div class="m">{f["y"]}</div></div>''')
+        cells += when(f"c{i}", f'''<div style="order:{hole(f"o{i}", i)}"><a class="pw"{href("17-m-fiche-film")}>{poster(k)}<span class="xd-rt">{b.on5(r)}{b.star(11)}</span></a><div class="m">{f["y"]}</div></div>''')
     if b.DC:
         inp = f'<input class="xd-in" value="{hx("q")}" onChange="{hx("onQ")}" placeholder="Rechercher un film…" aria-label="Rechercher parmi les films vus">'
     else:

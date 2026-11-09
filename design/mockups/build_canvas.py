@@ -30,19 +30,20 @@ o.svCls = sv ? 'on' : '';
 o.toggleSave = () => this.setState({ saved: !sv });
 """
 
-SEG = """
-const h = !!st.hist;
-o.isA = !h;
-o.isB = h;
-o.tA = h ? '' : 'on';
-o.tB = h ? 'on' : '';
-o.hT = h ? 'Historique' : 'Dernièrement';
-o.showA = () => this.setState({ hist: false });
-o.showB = () => this.setState({ hist: true });
+
+
+VIEW = """
+const view = st.view || '__V__';
+o.isGrid = view === 'grid';
+o.isList = view === 'list';
+o.vg = view === 'grid' ? 'on' : '';
+o.vl = view === 'list' ? 'on' : '';
+o.sv0 = () => this.setState({ view: 'grid' });
+o.sv1 = () => this.setState({ view: 'list' });
 """
 
 
-def votes(n):
+def votes(n, view=None):
     base, init = [], []
     for fid, by, up, down, sc, mine in b.PROGRAM[:n]:
         base.append([up - (mine == "up"), down - (mine == "down")])
@@ -67,6 +68,8 @@ o['vu' + i] = () => this.vote(i, 'up');
 o['vd' + i] = () => this.vote(i, 'down');
 }});
 """
+    if view:
+        body += VIEW.replace("__V__", view)
     return component(body, methods)
 
 
@@ -182,9 +185,9 @@ o.rlab = L[r - 1];
 
 
 LOGIC = {
-    "01": component(SAVE), "02": votes(6), "03": wheel("big"), "04": component(SAVE), "05": component(SEG), "06": watchlist(),
+    "01": component(SAVE), "02": votes(6, "grid"), "93": votes(6, "list"), "03": wheel("big"), "04": component(SAVE), "06": watchlist(),
     "08": create_desk(), "10": component(SAVE), "11": component(SAVE), "12": votes(5), "13": wheel("sml"), "15": rate(),
-    "16": component(SEG), "17": component(SAVE), "19": create_mob(),
+    "17": component(SAVE), "19": create_mob(),
 }
 
 MODULES = []

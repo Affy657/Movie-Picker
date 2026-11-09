@@ -125,7 +125,7 @@ def search_filters():
     star = b.star(11)
     groups = [("Genre", fcs(["Action", "Aventure", "Animation", "Comédie", "Drame", "Science-fiction", "Thriller"])),
               ("Année de sortie", fcs(["2020s", "2010s", "2000s", "1990s", "1980s"])),
-              ("Note min.", "".join(f'<span class="xc-fc">{star}{n}+</span>' for n in (6, 7, 8))),
+              ("Note min.", "".join(f'<span class="xc-fc">{n}{star}</span>' for n in ("3", "3,5", "4"))),
               ("Langue VO", "".join(f'<span class="xc-fc"><em>{c}</em>{n}</span>' for c, n in [("FR", "Français"), ("EN", "Anglais"), ("JA", "Japonais"), ("KO", "Coréen")])),
               ("Disponibilité", fcs(["Streaming", "Location", "Achat"]))]
     out = "".join(f'<div class="xc-fg"><span class="xc-fl">{lab}</span><div class="xc-fcs">{chips}</div></div>' for lab, chips in groups)
@@ -538,7 +538,7 @@ def screen_54():
         title = f'<input class="in" value="{hx("evn")}" onChange="{hx("onEvn")}" aria-label="Titre">'
     else:
         title = '<span class="in">Soirée chez Léa</span>'
-    left = f'''<div class="ov">Nouvelle soirée</div><h1 class="disp">Créer une soirée</h1>
+    left = f'''<h1 class="vh">Créer une soirée</h1>
 <label class="fld xc-fld"><span class="fl">Titre</span>{title}</label>
 <div class="frow"><label class="fld xc-fld"><span class="fl">Date</span><span class="in">14/11/2026<em>{ic("cal", 16)}</em></span></label><label class="fld xc-fld"><span class="fl">Heure</span><span class="in">21:00<em>{ic("clock", 16)}</em></span></label></div>
 {templates_card(0, "create")}<a class="btn full"{href("02-soiree")}>Créer la soirée</a>'''
@@ -553,13 +553,13 @@ def screen_54():
 
 
 HISTORY = [
-    (1, "8 nov.", "Soirée pizza", "volets", "8,4", "j", "Vous 8"),
+    (1, "8 nov.", "Soirée pizza", "volets", "8,4", "j", "Vous 4"),
     (1, "4 nov.", "Soirée raclette", None, None, "h", None),
     (0, "31 oct.", "Halloween chez Sam", "brume", "7,2", "j", "rate"),
-    (0, "24 oct.", "Ciné-club du mercredi", "kyoto", "9,2", "h", "Vous 9"),
-    (0, "17 oct.", "Soirée chez Inès", "marseille", "7,8", "j", "Vous 7"),
-    (0, "10 oct.", "Ciné-club du mercredi", "phare", "8,6", "h", "Vous 9"),
-    (0, "3 oct.", "Dimanche pluvieux", "sable", "6,4", "h", "Vous 6"),
+    (0, "24 oct.", "Ciné-club du mercredi", "kyoto", "9,2", "h", "Vous 4,5"),
+    (0, "17 oct.", "Soirée chez Inès", "marseille", "7,8", "j", "Vous 3,5"),
+    (0, "10 oct.", "Ciné-club du mercredi", "phare", "8,6", "h", "Vous 4,5"),
+    (0, "3 oct.", "Dimanche pluvieux", "sable", "6,4", "h", "Vous 3"),
 ]
 
 
@@ -575,7 +575,7 @@ def hist_row(i, item):
         head, night, target = title, "Terminée sans film choisi", "59-m-soiree-sans-film"
     rate = ""
     if rating:
-        rate = f'<span class="hr2">{b.star(13)} {rating}</span>'
+        rate = f'<span class="hr2">{b.on5(rating)}{b.star(13)}</span>'
     if mine == "rate":
         rate += f'<a class="chip xc-tor"{href("52-noter")}>À noter</a>'
     elif mine:
@@ -614,7 +614,7 @@ def screen_55():
     fpanel = when("fo", f'<div class="xc-fp">{chips}<div class="xc-fres"><span>{hole("cnt", "4 sur 7")}</span><button type="button" class="xc-clr"{on("clearF")}>Tout effacer</button></div></div>')
     recap = (f'<div class="xc-recap"><div><b class="disp">36</b><span>soirées terminées</span></div><div><b class="disp">29</b><span>films regardés</span></div>'
              f'<div><b class="disp">{ic("flame", 22)}4</b><span>semaines d’affilée</span></div></div>')
-    pend = f'''<article class="xc-pc"><div class="xc-pch"><span class="xc-pill">{ic("clock", 13)}En suspens</span><span>Clôture automatique dans 6 jours</span></div>
+    pend = f'''<article class="xc-pc"><div class="xc-pch"><span class="xc-pill st-wait">{ic("clock", 13)}En suspens</span><span>Clôture automatique dans 6 jours</span></div>
 <div class="xc-pcr"><div class="xc-dchip"><span>Dim.</span><b class="disp">9</b><span>Nov.</span></div><div><b class="disp xc-pct">Dimanche cocooning</b><span class="xc-pth">Comédies du dimanche</span></div></div>
 <p>L’heure de la soirée est passée et aucun film n’a été choisi.</p><div class="xc-pcs">{icx("users", 14)}4 participants<span>{ic("film", 14)}5 films proposés</span></div>
 <div class="xc-iva"><a class="btn sm"{href("02-soiree")}>Choisir le film</a><button type="button" class="btn gl sm"{on("cwOpen")}>Clôturer sans film</button></div></article>'''
@@ -622,7 +622,7 @@ def screen_55():
     ok = f'<a class="btn xc-dbtn"{href("59-m-soiree-sans-film")}>Clôturer sans film</a>'
     dialog = confirm("cw", "Clôturer sans choisir de film&nbsp;?", "La soirée « Dimanche cocooning » sera clôturée sans film. Cette action est définitive.", ok, "cwNo")
     return f'''<div class="S desk frame">{b.hdr(1, solid=True)}
-<div class="xc-p55"><div class="ph"><h1 class="disp">Mes soirées</h1><div class="seg big"><a{href("05-mes-soirees")}>Actives <em>3</em></a><span class="on">Historique <em>36</em></span></div></div>
+<div class="xc-p55"><h1 class="vh">Mes soirées</h1><div class="sh xc-sh55"><h2 class="disp">Historique<em>36</em></h2><a class="more"{href("05-mes-soirees")}>{ic("left", 15)}Soirées à venir</a></div>
 <div class="xc-g55"><div class="xc-main">{recap}{toolbar}{fpanel}<div class="xc-hist">{lst}</div></div>{side}</div></div>{dialog}</div>'''
 
 
@@ -683,7 +683,7 @@ o.cwNo = () => this.setState({ cw: false });
 
 
 def screen_50():
-    films = "".join(f'''<div class="xc-fc50"><div class="pw">{poster(fid)}<span class="rk">{i}</span></div><div class="t">{FILMS[fid]["t"]}</div>
+    films = "".join(f'''<div class="xc-fc50"><div class="pw">{poster(fid)}<span class="rk">{i}</span></div>
 <div class="xc-fm">{av(by, 18)}<span>{name_of(by)}</span><b class="{b.foundation.score_cls(sc)}">{b.score_txt(sc)}</b></div></div>''' for i, (fid, by, up, down, sc, mine) in enumerate(b.PROGRAM, 1))
     return f'''<div class="S desk frame">{pub_hdr()}
 <div class="xc-evh xc-e50"><div class="bd2"></div><div class="xc-evc"><div class="ov">Vendredi 14 novembre, 21 h</div><h1 class="disp">Soirée chez Léa</h1>
@@ -751,7 +751,7 @@ for (let n = 1; n <= 5; n++) {
 o['s' + n] = n <= r ? 'on' : '';
 o['r' + n] = () => this.setState({ r: n });
 }
-o.val = r * 2 + '/10';
+o.val = r + ' sur 5';
 o.hasDraft = r > 0;
 o.noDraft = r === 0;
 o.clr = () => this.setState({ r: 0 });
@@ -765,7 +765,7 @@ def screen_53():
 <div class="em xc-meta"><span>Vendredi 14 novembre à 21 h</span>{stack(["adrien", "lea", "nico", "ines"], 24)}<span>6 participants</span><span>6 films proposés</span><span class="chip">Nuits blanches</span></div>
 <div class="xc-g53"><div><div class="xc-wcard"><div class="xc-wcp">{poster("orbite")}</div><div class="xc-wci"><div class="ov">Le film de la soirée</div><div class="disp xc-wt">Orbite basse</div>
 <div class="xc-rf"><span>2024</span><span>2h12</span></div><div class="xc-by">{av("hugo", 20)}<span>Proposé par Hugo</span></div>
-<div class="xc-srow2"><div class="xc-score">{b.star(26)}<b class="disp">7,5/10</b><span>6 notes</span></div><a class="btn gl sm"{href("04-fiche-film")}>{ic("info", 16)}Voir la fiche du film</a></div></div></div>
+<div class="xc-srow2"><div class="xc-score"><b class="disp">3,8</b>{b.star(26)}<span>6 notes</span></div><a class="btn gl sm"{href("04-fiche-film")}>{ic("info", 16)}Voir la fiche du film</a></div></div></div>
 <div class="xc-cta"><div><div class="disp">Et la prochaine&nbsp;?</div><p>Sur Movie Picker, chacun propose ses films, tout le monde vote et la roue tranche. Gratuit, rien à installer.</p></div>
 <a class="btn"{href("22-inscription")}>Organisez la vôtre</a><a class="btn gl"{href("02-soiree")}>Voir la soirée{ic("right", 15)}</a></div></div>{rating_notes(RATED)}</div></div></div>'''
 
@@ -776,7 +776,7 @@ def screen_59():
         rows += (f'<a class="xc-pr"{href("17-m-fiche-film")}><span class="pw">{poster(fid)}</span><span class="xc-prb"><b>{FILMS[fid]["t"]}</b>'
                  f'<span>{av(by, 14)}{name_of(by)}</span></span><span class="xc-prs {b.foundation.score_cls(sc)}">{b.score_txt(sc)}</span></a>')
     return f'''<div class="S mob frame"><div class="mhd xc-mhd59"><div class="bd2 xc-gray"></div>{b.sbar()}{b.m_top("Mes soirées", "16-m-mes-soirees", ())}
-<div class="mhc"><div class="ov">Ven. 14 nov., 21 h</div><h1 class="disp">Soirée chez Léa</h1><div class="em">{stack(["adrien", "lea", "nico", "ines"], 20)}<span class="xc-pill">Terminée</span><span>6 films</span></div></div></div>
+<div class="mhc"><div class="ov">Ven. 14 nov., 21 h</div><h1 class="disp">Soirée chez Léa</h1><div class="em">{stack(["adrien", "lea", "nico", "ines"], 20)}<span class="xc-pill st-done">Terminée</span><span>6 films</span></div></div></div>
 <div class="xc-closed"><span class="xc-ci">{ic("film", 24)}</span><h2 class="disp">Aucun film n’a été choisi</h2><p>La soirée est clôturée. Vous pouvez en créer une nouvelle quand vous voulez.</p></div>
 <div class="xc-pl59 xc-scroll"><div class="sh"><h2 class="disp">Les films proposés</h2><span class="more">6 films</span></div>{rows}</div>
 {b.mnav(1)}</div>'''
@@ -787,7 +787,7 @@ def screen_60():
 <div class="xc-scroll xc-r60"><div class="ov xc-eye">{icx("clapper", 14)}Le recap de la soirée</div><h1 class="disp xc-h60">Soirée chez Léa</h1>
 <div class="xc-meta m"><span>Vendredi 14 novembre à 21 h</span><span class="xc-mrow">{stack(["adrien", "lea", "nico", "ines"], 20)}<span>6 participants, 6 films proposés</span></span></div>
 <div class="xc-wcard m"><div class="xc-wcp">{poster("orbite")}</div><div class="xc-wci"><div class="ov">Le film de la soirée</div><div class="disp xc-wt">Orbite basse</div>
-<div class="xc-rf"><span>2024</span><span>2h12</span></div><div class="xc-by">{av("hugo", 18)}<span>Proposé par Hugo</span></div><div class="xc-score">{b.star(20)}<b class="disp">7,5/10</b><span>6 notes</span></div></div></div>
+<div class="xc-rf"><span>2024</span><span>2h12</span></div><div class="xc-by">{av("hugo", 18)}<span>Proposé par Hugo</span></div><div class="xc-score"><b class="disp">3,8</b>{b.star(20)}<span>6 notes</span></div></div></div>
 <a class="btn gl full xc-fiche"{href("17-m-fiche-film")}>{ic("info", 16)}Voir la fiche du film</a>
 {rating_notes(RATED, me="adrien")}
 <div class="xc-cta m"><div class="disp">Et la prochaine&nbsp;?</div><p>Sur Movie Picker, chacun propose ses films, tout le monde vote et la roue tranche. Gratuit, rien à installer.</p>
@@ -798,14 +798,14 @@ def screen_60():
 def story_film():
     return f'''<div class="xc-story"><div class="xc-sbg"></div><div class="xc-sc"><div class="xc-slogo">Movie Picker<i></i></div><div class="xc-stit disp">Soirée chez Léa</div>
 <div class="xc-sdate">Vendredi 14 novembre</div><span class="xc-sth">Nuits blanches</span><div class="xc-spo">{poster("orbite")}</div><div class="disp xc-sft">Orbite basse</div>
-<div class="xc-sscore">{b.star(14)}<b>7,5/10</b><span>6 notes</span></div><div class="xc-sppl">{stack(["adrien", "lea", "nico", "ines"], 18)}<span>et 2 autres participants</span></div>
+<div class="xc-sscore"><b>3,8</b>{b.star(14)}<span>6 notes</span></div><div class="xc-sppl">{stack(["adrien", "lea", "nico", "ines"], 18)}<span>et 2 autres participants</span></div>
 <div class="xc-sfoot">Le recap et les notes de chacun</div></div></div>'''
 
 
 def story_notes():
-    rows = "".join(f'<div class="xc-snr">{av(k, 20)}<span>{name_of(k)}</span><i><u style="width:{v * 10}%"></u></i><b>{v}/10</b></div>' for k, v in RATED)
+    rows = "".join(f'<div class="xc-snr">{av(k, 20)}<span>{name_of(k)}</span><i><u style="width:{v * 10}%"></u></i><b>{b.on5(v)}</b></div>' for k, v in RATED)
     return f'''<div class="xc-story"><div class="xc-sbg n"></div><div class="xc-sc"><div class="xc-slogo">Movie Picker<i></i></div><div class="xc-stit disp">Soirée chez Léa</div>
-<div class="xc-sdate">Vendredi 14 novembre</div><div class="xc-snh"><span class="xc-spm">{poster("orbite")}</span><span><b class="disp">Orbite basse</b><span class="xc-sscore">{b.star(13)}<b>7,5/10</b></span></span></div>
+<div class="xc-sdate">Vendredi 14 novembre</div><div class="xc-snh"><span class="xc-spm">{poster("orbite")}</span><span><b class="disp">Orbite basse</b><span class="xc-sscore"><b>3,8</b>{b.star(13)}</span></span></div>
 <div class="xc-snl">{rows}</div><div class="xc-sfoot">Le recap et les notes de chacun</div></div></div>'''
 
 
@@ -815,7 +815,7 @@ def screen_61():
     story = f'''{fam}<div class="xc-car">{when("isFilm", story_film())}{when("isNotes", story_notes(), False)}</div>
 <p class="xc-cap">Orbite basse (2024)</p><p class="xc-shint">{hole("hint", "Au format story, pour Instagram, Snapchat ou WhatsApp.")}</p>
 <div class="xc-acts m"><button type="button" class="btn"{on("share")}>{ic("share", 16)}Partager</button><button type="button" class="btn gl">{icx("download", 16)}Télécharger l’image</button></div>'''
-    link = f'''<div class="xc-tbody m"><div class="xc-lpm"><div class="xc-prev"><span class="xc-pi">{icx("clapper", 22)}</span><span class="xc-pt"><b>Soirée chez Léa</b><span>Orbite basse</span><span>Moyenne 7,5/10, 6 notes</span></span></div>
+    link = f'''<div class="xc-tbody m"><div class="xc-lpm"><div class="xc-prev"><span class="xc-pi">{icx("clapper", 22)}</span><span class="xc-pt"><b>Soirée chez Léa</b><span>Orbite basse</span><span>Moyenne 3,8 sur 5, 6 notes</span></span></div>
 <div class="xc-qrw m">{qr(150)}</div><p class="xc-qh">Ouvrez l’appareil photo pour ouvrir le recap sur mobile.</p><a class="xc-url"{href("60-m-recap")}><code>movie-picker.fr/r/soiree-chez-lea-7k2</code>{icx("ext", 15)}</a>
 <button type="button" class="btn full xc-nat">{ic("share", 16)}Partager</button><div class="xc-acts m">{copy_btn("btn gl")}<button type="button" class="btn gl">{icx("download", 16)}Enregistrer le QR</button></div></div></div>'''
     return f'''<div class="S mob frame">{mob_bg(screen_60)}
@@ -899,7 +899,7 @@ def delete_confirm(mob):
 
 def rating_panel(prefix=""):
     stars = "".join(f'<button type="button" class="st {hole(f"s{n}", "on" if n <= 4 else "")}" aria-label="Noter {n} étoile{"s" if n > 1 else ""}"{on(f"r{n}")}>{b.star(40)}</button>' for n in range(1, 6))
-    value = (when("hasDraft", f'<b>{hole("val", "8/10")}</b><span class="xc-ok2">{ic("check", 14, 2.5)}Enregistré</span>')
+    value = (when("hasDraft", f'<b>{hole("val", "4 sur 5")}</b><span class="xc-ok2">{ic("check", 14, 2.5)}Enregistré</span>')
              + when("noDraft", '<span class="xc-pick2">Choisissez une étoile</span>', False))
     return f'<div class="ov">Votre note</div><div class="stars5 xc-stars">{stars}</div><div class="xc-rv">{value}</div><p class="xc-hint">La moitié gauche d’une étoile vaut une demi-étoile.</p>'
 
@@ -922,9 +922,9 @@ def axis(rows):
         if v is not None:
             groups.setdefault(v, []).append(k)
     marks = "".join(f'<span class="xc-mk" style="left:{v * 10}%">{"".join(av(k, 20) for k in ks[:3])}</span>' for v, ks in sorted(groups.items()))
-    ticks = "".join(f'<i style="left:{t * 10}%"><b>{t}</b></i>' for t in range(0, 11, 2))
-    return (f'<div class="xc-axis" role="img" aria-label="Échelle des notes de 0 à 10"><span class="xc-mln" style="left:{avg * 10}%"></span>'
-            f'<span class="xc-avl" style="left:{avg * 10}%">Moyenne {fmt(avg)}/10</span><div class="xc-al">{ticks}</div>{marks}</div>')
+    ticks = "".join(f'<i style="left:{t * 20}%"><b>{t}</b></i>' for t in range(0, 6))
+    return (f'<div class="xc-axis" role="img" aria-label="Échelle des notes de 0 à 5"><span class="xc-mln" style="left:{avg * 10}%"></span>'
+            f'<span class="xc-avl" style="left:{avg * 10}%">Moyenne {fmt(avg / 2)}</span><div class="xc-al">{ticks}</div>{marks}</div>')
 
 
 def rating_notes(rows, me=None, me_html=None):
@@ -935,7 +935,7 @@ def rating_notes(rows, me=None, me_html=None):
         if k == me and me_html is not None:
             val = me_html
         else:
-            val = f'<b>{v}/10</b>' if v is not None else '<span class="xc-pend2">Pas encore noté</span>'
+            val = f'<b class="xc-n5">{b.on5(v)}{b.star(12)}</b>' if v is not None else '<span class="xc-pend2">Pas encore noté</span>'
         lis += f'<li>{av(k, 28)}<span class="xc-nn">{name}{crown}</span>{val}</li>'
     return f'<section class="xc-notes"><h3 class="xc-st">Les notes de la soirée</h3>{axis(rows)}<ul class="xc-nl">{lis}</ul></section>'
 
@@ -1073,15 +1073,15 @@ def screen_89():
     for j, (fid, by, rows) in enumerate(WIN2):
         tiles += (f'<li class="xc-tile"><button type="button" class="xc-tbtn {hole(f"t{j}", "on" if j == 0 else "")}" aria-pressed="{"true" if j == 0 else "false"}" aria-label="{FILMS[fid]["t"]}"{on(f"sel{j}")}>{poster(fid)}</button>'
                   + when(f"toR{j}", f'<button type="button" class="btn gl sm xc-tor2" aria-label="Noter {FILMS[fid]["t"]}"{on(f"rate{j}")}>À noter</button>')
-                  + when(f"rd{j}", f'<span class="xc-tsc">{b.star(13)}{hole(f"avg{j}", "")}</span>', False) + '</li>')
+                  + when(f"rd{j}", f'<span class="xc-tsc">{hole(f"avg{j}", "")}{b.star(13)}</span>', False) + '</li>')
     bodies = ""
     for j, (fid, by, rows) in enumerate(WIN2):
         f = FILMS[fid]
         vals = [v for _, v in rows if v is not None]
-        avg = fmt(sum(vals) / len(vals))
+        avg = fmt(sum(vals) / len(vals) / 2)
         me_html = f'<span class="xc-pend2">{hole(f"me{j}", "Pas encore noté")}</span>'
         body = f'''<div class="xc-wb"><div class="ov">Les 2 films de la soirée</div><h2 class="disp">{f["t"]}</h2><div class="xc-rf"><span>{f["y"]}</span><span>{f["d"]}</span></div>
-<div class="xc-by">{av(by, 18)}<span>Proposé par {name_of(by)}</span></div><div class="xc-score">{b.star(20)}<b class="disp">{avg}/10</b><span>{len(vals)} notes</span></div>
+<div class="xc-by">{av(by, 18)}<span>Proposé par {name_of(by)}</span></div><div class="xc-score"><b class="disp">{avg}</b>{b.star(20)}<span>{len(vals)} notes</span></div>
 {when(f"toR{j}", f'<button type="button" class="btn full xc-rate"{on(f"rate{j}")}>{b.star(16)}Noter ce film</button>')}
 <div class="xc-wbb"><a class="btn gl"{href("17-m-fiche-film")}>{ic("info", 16)}Voir la fiche du film</a><a class="btn gh"{href("60-m-recap")}>Voir le recap{ic("right", 15)}</a></div></div>{rating_notes(rows, me="adrien", me_html=me_html)}'''
         bodies += when(f"w{j}", body, j == 0)
@@ -1095,7 +1095,7 @@ def screen_89():
 <div class="xc-rdpos"><span class="xc-posl">{hole("pos", "Film 1 sur 2")}</span>{when("hasPrev", f'<span class="xc-prevs">{hole("prev", "")}</span>', False)}</div>{stage}</div>
 <div class="xc-rdpan">{rating_panel()}<div class="xc-ra">{acts}</div></div></div>''', False)
     return f'''<div class="S mob frame"><div class="xc-bgclip"><div class="xc-pbg m">{poster("orbite")}</div></div>{b.sbar()}{b.m_top("Mes soirées", "16-m-mes-soirees", (("share", "61-m-story", "Partager le recap"),))}
-<div class="xc-89h"><div class="ov">Ven. 14 nov., 21 h</div><div class="xc-89t"><h1 class="disp">Soirée chez Léa</h1><span class="xc-pill">Terminée</span></div></div>
+<div class="xc-89h"><div class="ov">Ven. 14 nov., 21 h</div><div class="xc-89t"><h1 class="disp">Soirée chez Léa</h1><span class="xc-pill st-done">Terminée</span></div></div>
 <div class="xc-scroll xc-89s"><ol class="xc-tiles">{tiles}</ol>{bodies}</div>{dlg}{b.mnav(1)}</div>'''
 
 
@@ -1118,8 +1118,8 @@ o['rate' + j] = () => this.setState({ dlg: j, sel: j });
 o['toR' + j] = !R[j];
 o['rd' + j] = !!R[j];
 const all = R[j] ? O[j].concat([R[j] * 2]) : O[j];
-o['avg' + j] = fmt(all.reduce((a, b) => a + b, 0) / all.length);
-o['me' + j] = R[j] ? R[j] * 2 + '/10' : 'Pas encore noté';
+o['avg' + j] = fmt(all.reduce((a, b) => a + b, 0) / all.length / 2);
+o['me' + j] = R[j] ? R[j] + ' sur 5' : 'Pas encore noté';
 o['d' + j] = dlg === j;
 });
 o.dlg = dlg >= 0;
@@ -1132,12 +1132,12 @@ R2[dlg] = n;
 this.setState({ R: R2 });
 };
 }
-o.val = cur * 2 + '/10';
+o.val = cur + ' sur 5';
 o.hasDraft = cur > 0;
 o.noDraft = cur === 0;
 o.pos = 'Film ' + (dlg + 1) + ' sur 2';
 o.hasPrev = dlg === 1 && R[0] > 0;
-o.prev = 'Orbite basse : ' + R[0] * 2 + '/10 enregistré';
+o.prev = 'Orbite basse : ' + R[0] + ' sur 5 enregistré';
 o.skipL = dlg === 0 ? 'Passer ce film' : 'Plus tard';
 o.nextL = dlg === 0 ? 'Film suivant' : 'Voir les notes';
 o.next = () => this.setState(dlg === 0 ? { dlg: 1, sel: 1 } : { dlg: -1 });
@@ -1156,7 +1156,7 @@ def screen_90():
         f = FILMS[fid]
         rows += (f'<div class="mr"><span class="rk">{i}</span><a class="pw"{href("17-m-fiche-film")}>{poster(fid)}</a><div class="mi"><div class="t">{f["t"]}</div>'
                  f'<div class="m">{av(by, 14)}<span>{name_of(by)}</span><span class="g {b.foundation.score_cls(sc)}">{b.score_txt(sc)}</span></div></div><div class="vt">{b.vote(up, down, mine)}</div></div>')
-    banner = f'''<section class="xc-pend"><div class="xc-pendh"><span class="xc-pico">{ic("clock", 17)}</span><span class="xc-kick">En suspens</span></div>
+    banner = f'''<section class="xc-pend"><div class="xc-pendh"><span class="xc-pico st-wait">{ic("clock", 17)}</span><span class="xc-kick">En suspens</span></div>
 <p class="xc-ptx">L’heure de la soirée est passée et aucun film n’a été choisi.</p><p class="xc-pmeta">Sans action de votre part, la soirée se clôture automatiquement dans 7 jours.</p>
 <div class="xc-pa"><a class="btn sm"{href("13-m-roue")}>{ic("wheel", 15)}Lancer la roue</a><a class="btn gl sm"{href("58-m-reglages-soiree")}>Reprogrammer</a><button type="button" class="btn gh sm"{on("cwOpen")}>Clôturer sans film</button></div></section>'''
     ok = f'<a class="btn xc-dbtn"{href("59-m-soiree-sans-film")}>Clôturer sans film</a>'
@@ -1349,14 +1349,14 @@ CSS = r"""
 .S .xc-rr .seg>*{height:30px;padding:0 12px;font-size:12.5px;font-weight:600}
 .S .xc-thc{border-radius:12px;box-shadow:inset 0 0 0 1px var(--line2);overflow:hidden}
 .S .xc-tht{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;text-align:left}
-.S .xc-thb{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:var(--s3);color:var(--gold);flex:none}
+.S .xc-thb{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:var(--s3);color:var(--hi);flex:none}
 .S .xc-chev{color:var(--tx3);display:inline-flex;transition:transform .15s}
 .S .xc-thc.on .xc-chev{transform:rotate(180deg)}
 .S .xc-thx{padding:0 12px 12px}
 .S .xc-thr{display:flex;align-items:center;gap:8px}
 .S .xc-thr .in{flex:1;height:42px;font-size:14px;min-width:0}
 .S .xc-thr .chip{flex:none}
-.S .xc-emo{display:inline-flex;align-items:center;gap:4px;height:42px;padding:0 10px;border-radius:12px;background:var(--s2);box-shadow:inset 0 0 0 1px var(--line2);color:var(--gold);flex:none}
+.S .xc-emo{display:inline-flex;align-items:center;gap:4px;height:42px;padding:0 10px;border-radius:12px;background:var(--s2);box-shadow:inset 0 0 0 1px var(--line2);color:var(--hi);flex:none}
 .S .xc-emo .ic:last-child{color:var(--tx3)}
 .S .xc-tpl{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:12px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line)}
 .S .xc-tph{display:flex;align-items:center;gap:8px;color:var(--tx2)}
@@ -1403,9 +1403,8 @@ CSS = r"""
 .S .xc-reset{align-self:flex-start;height:34px;padding:0 6px;gap:7px}
 
 .S .xc-p55{position:relative;padding:92px 40px 0}
-.S .xc-p55 .ph{margin-bottom:18px}
-.S .xc-p55 .ph h1{font-size:56px}
-.S .xc-p55 .seg a{display:flex;align-items:center;gap:6px}
+.S .xc-sh55{margin-bottom:16px}
+.S .xc-sh55 h2{font-size:28px}
 .S .xc-g55{display:grid;grid-template-columns:minmax(0,1fr) 326px;grid-template-rows:minmax(0,1fr);gap:32px;height:532px}
 .S .xc-main{display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0}
 .S .xc-main>*{flex:none}
@@ -1438,7 +1437,7 @@ CSS = r"""
 .S .xc-ht b{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .S .xc-ht span{font-size:12px;color:var(--tx3);flex:none}
 .S .xc-hn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--tx2)}
-.S .xc-crown{display:inline-flex;color:var(--tx3)}
+.S .xc-crown{display:inline-flex;color:var(--st-host)}
 .S .xc-hx{display:flex;align-items:center;gap:10px;flex:none;font-size:13px}
 .S .xc-mine{font-size:12.5px;color:var(--tx3);font-weight:600}
 .S .xc-tor{height:26px}
@@ -1540,8 +1539,8 @@ CSS = r"""
 .S .xc-ra .btn{height:46px}
 .S .xc-ra .btn:first-child{margin-right:auto;padding:0 8px}
 
-.S .xc-rbg{position:absolute;inset:0;background:radial-gradient(520px 320px at 78% 8%,rgba(214,150,60,.28),transparent 70%),radial-gradient(600px 420px at 30% 60%,rgba(59,130,246,.12),transparent 70%);pointer-events:none}
-.S .xc-rbg.m{background:radial-gradient(300px 260px at 80% 0%,rgba(214,150,60,.3),transparent 70%)}
+.S .xc-rbg{position:absolute;inset:0;background:radial-gradient(520px 320px at 78% 8%,rgba(56,189,248,.28),transparent 70%),radial-gradient(600px 420px at 30% 60%,rgba(59,130,246,.12),transparent 70%);pointer-events:none}
+.S .xc-rbg.m{background:radial-gradient(300px 260px at 80% 0%,rgba(56,189,248,.3),transparent 70%)}
 .S .xc-p53{position:relative;z-index:2;padding:80px 40px 0}
 .S .xc-eye{display:flex;align-items:center;gap:8px;margin-top:4px}
 .S .xc-h53{font-size:58px;margin:8px 0 10px}
@@ -1560,7 +1559,7 @@ CSS = r"""
 .S .xc-g53 .xc-cta p{font-size:12.5px;line-height:1.4}
 .S .xc-g53 .xc-cta .btn{height:44px;padding:0 16px}
 .S .xc-wci .xc-by{margin-top:8px}
-.S .xc-score{display:flex;align-items:center;gap:8px;color:var(--gold);margin:10px 0 12px}
+.S .xc-score{display:flex;align-items:center;gap:8px;color:var(--tx);margin:10px 0 12px}
 .S .xc-score b{font-size:34px;line-height:1}
 .S .xc-score span{font-size:12.5px;color:var(--tx2);margin-left:4px}
 .S .xc-others{display:flex;flex-direction:column;gap:8px;margin-top:14px}
@@ -1573,7 +1572,7 @@ CSS = r"""
 .S .xc-nh{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .S .xc-nh .xc-st{margin:0}
 .S .xc-nh>span{font-size:12.5px;color:var(--tx2)}
-.S .xc-nh>span b{color:var(--gold);font-weight:700}
+.S .xc-nh>span b{color:var(--tx);font-weight:700}
 .S .xc-nr{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
 .S .xc-nh+.xc-nr{border-top:0}
 .S .xc-nn{display:inline-flex;align-items:center;gap:6px;width:76px;font-size:13px;font-weight:600}
@@ -1628,8 +1627,8 @@ CSS = r"""
 .S .xc-fam>*{height:32px;padding:0 12px;gap:6px;font-size:12.5px;font-weight:600}
 .S .xc-car{display:flex;justify-content:center;margin-top:14px}
 .S .xc-story{position:relative;width:212px;height:376px;border-radius:14px;overflow:hidden;box-shadow:0 24px 60px -16px #000,0 0 0 1px rgba(255,255,255,.12)}
-.S .xc-sbg{position:absolute;inset:0;background:radial-gradient(180px 200px at 50% 44%,rgba(59,130,246,.55),transparent 70%),radial-gradient(160px 120px at 80% 0%,rgba(214,150,60,.35),transparent 70%),#05080f}
-.S .xc-sbg.n{background:radial-gradient(200px 160px at 50% 0%,rgba(214,150,60,.4),transparent 70%),#0a0f1c}
+.S .xc-sbg{position:absolute;inset:0;background:radial-gradient(180px 200px at 50% 44%,rgba(59,130,246,.55),transparent 70%),radial-gradient(160px 120px at 80% 0%,rgba(56,189,248,.35),transparent 70%),#05080f}
+.S .xc-sbg.n{background:radial-gradient(200px 160px at 50% 0%,rgba(56,189,248,.4),transparent 70%),#0a0f1c}
 .S .xc-sc{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;height:100%;padding:16px 12px 12px}
 .S .xc-sc>*{flex:none}
 .S .xc-slogo{display:flex;align-items:center;gap:5px;font-family:Archivo,sans-serif;font-stretch:70%;font-variation-settings:'wdth' 70;font-weight:800;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
@@ -1639,7 +1638,7 @@ CSS = r"""
 .S .xc-sth{display:inline-flex;height:20px;align-items:center;padding:0 8px;border-radius:999px;background:rgba(255,255,255,.1);font-size:12px;font-weight:600;margin-top:6px}
 .S .xc-spo{width:80px;margin-top:10px;border-radius:5px;overflow:hidden;box-shadow:0 14px 34px -8px var(--glow)}
 .S .xc-sft{font-size:22px;margin-top:10px}
-.S .xc-sscore{display:inline-flex;align-items:center;gap:4px;color:var(--gold);font-size:12px;margin-top:4px}
+.S .xc-sscore{display:inline-flex;align-items:center;gap:4px;color:var(--tx);font-size:12px;margin-top:4px}
 .S .xc-sscore b{font-size:14px}
 .S .xc-sscore span{color:var(--tx2);margin-left:3px}
 .S .xc-sppl{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);margin-top:8px;white-space:nowrap}
@@ -1708,12 +1707,13 @@ CSS = r"""
 .S .xc-al b{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:600;color:var(--tx3)}
 .S .xc-mk{position:absolute;bottom:30px;transform:translateX(-50%);display:flex;flex-direction:column-reverse;gap:3px}
 .S .xc-mk .av{box-shadow:0 0 0 2px var(--s1)}
-.S .xc-mln{position:absolute;top:18px;bottom:22px;width:0;border-left:1.5px dashed var(--gold);opacity:.7}
-.S .xc-avl{position:absolute;top:0;transform:translateX(-50%);font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap}
+.S .xc-mln{position:absolute;top:18px;bottom:22px;width:0;border-left:1.5px dashed var(--tx2);opacity:.7}
+.S .xc-avl{position:absolute;top:0;transform:translateX(-50%);font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap}
 .S .xc-nl{list-style:none;margin:0;padding:0}
 .S .xc-nl li{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
 .S .xc-nl li .xc-nn{flex:1;width:auto}
 .S .xc-nl li>b{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.S .xc-n5{display:inline-flex;align-items:center;gap:3px}
 .S .xc-pend2{font-size:12.5px;color:var(--tx3)}
 .S .xc-g53 .xc-notes{padding:14px 16px}
 .S .xc-score b.disp{font-size:30px}
@@ -1768,7 +1768,7 @@ CSS = r"""
 .S .xc-pchip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 6px 0 6px;border-radius:999px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line)}
 .S .xc-pchip.me{box-shadow:inset 0 0 0 1.5px var(--line2);background:rgba(255,255,255,.1)}
 .S .xc-pid{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding-right:6px}
-.S .xc-hostb{display:inline-flex;color:var(--tx2);margin-right:4px}
+.S .xc-hostb{display:inline-flex;color:var(--st-host);margin-right:4px}
 .S .xc-rmx{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);color:var(--tx)}
 .S .xc-invc{height:36px;padding:0 14px;gap:7px;background:transparent;box-shadow:inset 0 0 0 1.5px var(--line2);border:0;outline:1px dashed var(--line2);outline-offset:-1px}
 .S .xc-films{display:flex;flex-direction:column}
@@ -1809,7 +1809,7 @@ CSS = r"""
 .S .xc-tbtn{display:block;width:100%;border-radius:6px;overflow:hidden;opacity:.7}
 .S .xc-tbtn.on{opacity:1;outline:2px solid var(--tx);outline-offset:3px}
 .S .xc-tor2{height:32px;padding:0 12px;font-size:12.5px}
-.S .xc-tsc{display:inline-flex;align-items:center;gap:4px;height:32px;font-size:13px;font-weight:700;color:var(--gold)}
+.S .xc-tsc{display:inline-flex;align-items:center;gap:4px;height:32px;font-size:13px;font-weight:700;color:var(--tx)}
 .S .xc-wb{display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:16px}
 .S .xc-wb h2{font-size:40px;margin:8px 0 6px}
 .S .xc-wb .xc-score{margin:10px 0 12px}

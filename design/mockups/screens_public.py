@@ -425,16 +425,6 @@ o.svCls = sv ? 'on' : '';
 o.toggleSave = () => this.setState({ saved: !sv });
 """
 
-SEG_JS = """
-const hh = !!st.hist;
-o.isA = !hh;
-o.isB = hh;
-o.tA = hh ? '' : 'on';
-o.tB = hh ? 'on' : '';
-o.hT = hh ? 'Historique' : 'Dernièrement';
-o.showA = () => this.setState({ hist: false });
-o.showB = () => this.setState({ hist: true });
-"""
 
 
 def screen_78():
@@ -526,7 +516,7 @@ def screen_80():
 
 
 def logic_80():
-    return b.component(SEG_JS + f"""
+    return b.component(f"""
 const cat = st.cat || 0;
 [0, 1, 2].forEach((j) => {{
 o['k' + j] = cat === j ? 'on' : '';
@@ -561,20 +551,10 @@ def m_bar(right):
     return f'<div class="xe-mbar"><a class="logo"{href("81-m-accueil-public")}>Movie Picker<i></i></a>{right}</div>'
 
 
-def xwheel(size, rot=282, live=True):
-    step = 360 / len(b.WHEEL)
-    stops = ",".join(f"{c} {i * step}deg {(i + 1) * step}deg" for i, (_, _, c) in enumerate(b.WHEEL))
-    labels = ""
-    for i, (_, lab, _) in enumerate(b.WHEEL):
-        a = i * step + step / 2 - 90
-        eff = (a + rot) % 360
-        flip = " flip" if 90 < eff < 270 else ""
-        labels += f'<span class="{flip}" style="transform:rotate({a}deg)"><b>{lab}</b></span>'
+def xwheel(size, rot=b.WHEEL_REST, live=True):
     cls = hx("whCls") if (b.DC and live) else "wh sml"
     wbc = hx("wbCls") if (b.DC and live) else "wb"
-    return (f'<div class="{cls}" style="width:{size}px;height:{size}px"><div class="{wbc}" style="transform:rotate({rot}deg);'
-            f'background:repeating-conic-gradient(from 0deg,rgba(0,0,0,.6) 0 .7deg,transparent .7deg {step}deg),conic-gradient({stops})">'
-            f'<div class="wl">{labels}</div></div><span class="hub"></span><span class="ptr"></span></div>')
+    return f'<div class="{cls}" style="width:{size}px;height:{size}px"><div class="{wbc}" {b.wheel_face(rot, rot)}</div><span class="hub"></span>{b.POINTER}</div>'
 
 
 def qr_svg(size=84):
@@ -776,7 +756,7 @@ def invite_page():
     return f'''<div class="ibd big"></div><div class="minv xe-iinv"><div class="logo">Movie Picker<i></i></div>
 <div class="ov xe-iov">Vendredi 14 novembre, 21 h</div><h1 class="disp">Soirée chez Léa</h1>
 <div class="iby">{av("lea", 30)}<span><b>Léa</b> vous invite à choisir le film de la soirée</span></div>
-<div class="ifacts"><div><b class="disp">5</b><span>participants</span></div><div><b class="disp">6</b><span>films proposés</span></div><div><b class="disp gold">4 J</b><span>avant la séance</span></div></div>
+<div class="ifacts"><div><b class="disp">5</b><span>participants</span></div><div><b class="disp">6</b><span>films proposés</span></div><div><b class="disp hi">4 J</b><span>avant la séance</span></div></div>
 <div class="ifilms">{films}<span class="more2">+2</span></div>
 <a class="btn full"{href("12-m-soiree")}>{ic("users", 17)}Rejoindre la soirée</a></div>'''
 
@@ -1137,7 +1117,7 @@ CSS = r"""
 .S .xe-dr .vb{height:26px;padding:0 8px;white-space:nowrap}
 .S .xe-dw{display:flex;justify-content:center;padding-top:8px}
 .S .xe-dw .wl{display:none}
-.S .xe-dw .ptr{top:-9px;border-left-width:8px;border-right-width:8px;border-top-width:16px}
+.S .xe-dw .ptr{top:-8px;width:9px}
 .S .xe-tags{list-style:none;display:flex;flex-direction:column;gap:9px;margin-top:16px}
 .S .xe-tags li{display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600}
 .S .xe-tags .ic{color:var(--ok)}
@@ -1149,8 +1129,8 @@ CSS = r"""
 .S .xe-won b{display:block;font-size:30px;margin-top:6px}
 .S .wb.xe-s1{animation:xeSpin1 4.6s cubic-bezier(.15,.65,.12,1) both}
 .S .wb.xe-s2{animation:xeSpin2 4.6s cubic-bezier(.15,.65,.12,1) both}
-@keyframes xeSpin1{from{transform:rotate(282deg)}to{transform:rotate(2082deg)}}
-@keyframes xeSpin2{from{transform:rotate(282deg)}to{transform:rotate(2082deg)}}
+@keyframes xeSpin1{from{transform:rotate(216deg)}to{transform:rotate(2016deg)}}
+@keyframes xeSpin2{from{transform:rotate(216deg)}to{transform:rotate(2016deg)}}
 .S .xe-feat{display:flex;flex-direction:column;gap:10px;margin-top:20px}
 .S .xe-frow{display:grid;grid-template-columns:40px 1fr;gap:14px;padding:14px;border-radius:18px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--line)}
 .S .xe-fi{width:40px;height:40px;border-radius:12px;background:var(--s2);display:flex;align-items:center;justify-content:center;color:var(--tx)}

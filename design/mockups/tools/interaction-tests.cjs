@@ -15,10 +15,17 @@ function inspectArtboard() {
     ...new Set([...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family)),
   ];
   const links = [...root.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'));
+  const usesArchivo = [...root.querySelectorAll('*')].some(
+    (el) =>
+      getComputedStyle(el).fontFamily.startsWith('Archivo') &&
+      el.getClientRects().length > 0 &&
+      [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())
+  );
   return {
     width: box.width,
     height: Math.round(box.height),
     fonts,
+    usesArchivo,
     links,
     holes: root.innerHTML.includes('{{'),
   };
@@ -37,7 +44,8 @@ async function renderAll(page, errors) {
       const missing = info.links.filter(
         (h) => !h.startsWith('http') && !h.startsWith('#') && !fs.existsSync(path.join(dir, h))
       );
-      const fontsOk = info.fonts.includes('Archivo') && info.fonts.includes('Inter');
+      const fontsOk =
+        info.fonts.includes('Inter') && (info.fonts.includes('Archivo') || !info.usesArchivo);
       check(
         `${file} renders ${info.width}x${info.height}`,
         !info.holes && missing.length === 0 && fontsOk,
@@ -106,6 +114,19 @@ async function scrollsTo(page, selector) {
   check('02 upvote Orbite basse', (await text('.gc:nth-child(2) .sc')) === '+4');
   await page.click('.gc:nth-child(1) .vb:first-of-type');
   check('02 withdraw the vote on the leader', (await text('.gc:nth-child(1) .sc')) === '+3');
+  await page.click('[aria-label="Affichage liste"]');
+  check(
+    '02 list view keeps the votes',
+    !(await page.$('.gr')) &&
+      (await count('.elr')) === 6 &&
+      (await text('.elr:nth-child(3) .sc')) === '+4'
+  );
+
+  await open('93-soiree-liste.dc.html');
+  await page.click('.elr:nth-child(3) .vb:first-of-type');
+  check('93 upvote Orbite basse in the list', (await text('.elr:nth-child(3) .sc')) === '+4');
+  await page.click('[aria-label="Affichage grille"]');
+  check('93 back to the grid', !(await page.$('.elist')) && (await count('.gc')) === 6);
 
   await open('12-m-soiree.dc.html');
   await page.click('.mr:nth-child(3) .vb:nth-of-type(2)');
@@ -115,7 +136,7 @@ async function scrollsTo(page, selector) {
   await page.click('.stars5 .st:nth-child(2)');
   check(
     '15 two stars',
-    (await text('.rlab')) === '4 sur 10, bof' && (await count('.stars5 .st.on')) === 2
+    (await text('.rlab')) === '2 sur 5, bof' && (await count('.stars5 .st.on')) === 2
   );
 
   await open('08-creer.dc.html');
@@ -152,17 +173,19 @@ async function scrollsTo(page, selector) {
   );
 
   await open('05-mes-soirees.dc.html');
-  await page.click('.ph .seg button:nth-child(2)');
   check(
-    '05 history tab',
-    !(await page.$('.egrid')) &&
-      (await text('.sh h2')) === 'Historique' &&
-      (await count('.hrow')) === 6
+    '05 upcoming and history on one page',
+    !(await page.$('.seg')) &&
+      (await count('.ecard')) === 3 &&
+      (await count('.hrow')) === 6 &&
+      (await scrollsTo(page, 'a.hall[href="55-mes-soirees-suite.dc.html"]'))
   );
 
   await open('16-m-mes-soirees.dc.html');
-  await page.click('.mseg .seg button:nth-child(2)');
-  check('16 history tab', !(await page.$('.mec')) && (await count('.mh')) === 6);
+  check(
+    '16 upcoming and history on one page',
+    !(await page.$('.seg')) && (await count('.mec')) === 3 && (await count('.mh')) === 6
+  );
 
   await open('01-explorer.dc.html');
   await page.click('.hb button.btn');

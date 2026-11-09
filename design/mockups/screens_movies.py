@@ -103,9 +103,9 @@ def sort_chips(labels, static_idx=0, static_dir="desc"):
 
 def card(k, slug, cls="", badge="", over="", meta=None, after=""):
     f = FILMS[k]
-    m = meta if meta is not None else f'<span>{f["y"]}</span>{b.tmdb(f["r"])}'
+    m = meta if meta is not None else f'<span>{f["y"]}</span>{b.rating(f["r"])}'
     return (f'<div class="xb-cd {cls}"><div class="xb-pw"><a class="xb-pl" aria-label="Voir la fiche de {f["t"]}"{b.href(slug)}>{b.poster(k)}</a>{badge}{over}</div>'
-            f'{after}<div class="xb-t">{f["t"]}</div><div class="xb-m">{m}</div></div>')
+            f'{after}<div class="xb-m">{m}</div></div>')
 
 
 def sfield(placeholder, static_val, cls="", aria="Chercher un film"):
@@ -154,7 +154,7 @@ GS35 = [GENRES.index("Science-fiction")]
 
 def meta3(k):
     f = FILMS[k]
-    return f'<span>{f["y"]}</span>{b.tmdb(f["r"])}<span>{f["d"]}</span>'
+    return f'<span>{f["y"]}</span>{b.rating(f["r"])}<span>{f["d"]}</span>'
 
 
 def list_static(k, gs=()):
@@ -370,7 +370,7 @@ def screen_91():
     catch = b.when("hist", f'<button type="button" class="xb-catch" aria-label="Fermer les recherches récentes"{b.on("closeH")}></button>', False) if b.DC else ""
     return f'''<div class="S desk frame">{b.hdr(3, solid=True)}
 <div class="xb-pg scr">
-<div class="xb-wh"><div><h1 class="disp">Ma liste</h1><span class="xb-c">48 titres à voir</span></div><div class="xb-wha"><a class="btn gh sm"{b.href("40-import-letterboxd")}>{xi("import", 16)}Importer depuis Letterboxd</a><a class="btn gl sm"{b.href("41-au-hasard")}>{xi("dice", 16)}Piocher un film</a><button type="button" class="btn sm" aria-expanded="true">{ic("plus", 16)}Ajouter un film</button></div></div>
+<div class="xb-wh"><div><h1 class="vh">Ma liste</h1><span class="xb-c">48 titres à voir</span></div><div class="xb-wha"><a class="btn gh sm"{b.href("40-import-letterboxd")}>{xi("import", 16)}Importer depuis Letterboxd</a><a class="btn gl sm"{b.href("41-au-hasard")}>{xi("dice", 16)}Piocher un film</a><button type="button" class="btn sm" aria-expanded="true">{ic("plus", 16)}Ajouter un film</button></div></div>
 <section class="xb-ap" aria-label="Ajouter un film à ma liste"><div class="xb-aph"><h2 class="disp">Ajouter un film à ma liste</h2>{close_btn("06-ma-liste")}</div>
 {add_form(Q35, 0)}</section>
 {tb06()}{catch}
@@ -558,7 +558,7 @@ def screen_36():
     return f'''<div class="S desk frame">{b.hdr(0, solid=True)}
 <div class="xb-pg">
 <div class="xb-subnav"><a class="back"{b.href("01-explorer")}>{ic("left", 16)}Explorer</a><span class="xb-vsep"></span><div class="xb-tabs" role="tablist">{tabs_html()}</div></div>
-<div class="xb-head"><h1 class="disp">{b.hole("ttl", VT[0])}</h1><p class="xb-st">{b.hole("sub", VS[0])}</p></div>
+<div class="xb-head"><h1 class="vh">{b.hole("ttl", VT[0])}</h1><p class="xb-st">{b.hole("sub", VS[0])}</p></div>
 <div class="xb-bar2"><div class="xb-chs">{variant_chips()}</div><div class="xb-tools">{tools}</div></div>
 {showcase_grids("04-fiche-film")}
 </div></div>'''
@@ -657,7 +657,7 @@ def screen_37():
     return f'''<div class="S desk frame">{b.hdr(0, solid=True)}
 <div class="xb-pg">
 <a class="back"{b.href("01-explorer")}>{ic("left", 16)}Explorer</a>
-<div class="xb-head s"><h1 class="disp">Sagas et collections</h1><p class="xb-st">Toute une franchise en une liste</p></div>
+<div class="xb-head s"><h1 class="vh">Sagas et collections</h1><p class="xb-st">Toute une franchise en une liste</p></div>
 <div class="xb-tbar"><label class="xb-fld s">{xi("search", 16)}{inp}</label><span class="xb-vsep"></span><div class="xb-sort l"><span>Trier par</span>{sort_chips(["Popularité", "Nom", "Nombre de films"], 0, "asc")}</div><div class="xb-rc">{rc}</div></div>
 <div class="xb-cgrid">{cards}</div>{empty}
 </div></div>'''
@@ -712,7 +712,7 @@ def screen_38():
         f, x = FILMS[k], X[k]
         rows += (f'<div class="xb-lr {b.hole(f"ro{i}", f"xb-o{i}")}"><span class="xb-n disp" aria-label="Film {i + 1} de la saga">{i + 1}</span>'
                  f'<a class="xb-lp"{b.href("04-fiche-film")}>{b.poster(k)}</a>'
-                 f'<div class="xb-li"><a class="xb-lt"{b.href("04-fiche-film")}>{f["t"]}</a><div class="xb-lm"><span>{f["y"]}</span>{b.tmdb(f["r"])}<span>{f["d"]}</span><span>{", ".join(x["gen"][:2])}</span></div><p>{SYN[k]}</p></div>'
+                 f'<div class="xb-li"><a class="xb-lt"{b.href("04-fiche-film")}>{f["t"]}</a><div class="xb-lm"><span>{f["y"]}</span>{b.rating(f["r"])}<span>{f["d"]}</span><span>{", ".join(x["gen"][:2])}</span></div><p>{SYN[k]}</p></div>'
                  f'<div class="xb-la"><a class="btn gl sm"{b.href("02-soiree")}>{ic("plus", 15)}Proposer</a>'
                  f'<button type="button" class="ib xb-bk {b.hole(f"bk{i}", "on" if i == 1 else "")}" aria-label="Ma liste"{b.on(f"tb{i}")}>{ic("bookmark", 17)}</button>'
                  f'<a class="ib" aria-label="Voir la fiche de {f["t"]}"{b.href("04-fiche-film")}>{ic("info", 17)}</a></div></div>')
@@ -909,7 +909,7 @@ def pick_slot(mob=False):
 
 def pick_facts(slug, mob=False):
     f = FILMS[POOL[0]]
-    facts = (f'<h3 class="disp xb-rt">{b.hole("ttl", f["t"])}</h3><div class="xb-rm"><span>{b.hole("yr", f["y"])}</span>{b.tmdb(b.hole("vt", f["r"]))}'
+    facts = (f'<h3 class="disp xb-rt">{b.hole("ttl", f["t"])}</h3><div class="xb-rm"><span>{b.hole("yr", f["y"])}</span>{b.rating(b.hole("vt", f["r"]))}'
              f'<span>{ic("clock", 14)}{b.hole("du", f["d"])}</span></div><a class="xb-det"{b.href(slug)}>{ic("info", 15)}Voir les détails</a>')
     skel = '<span class="xb-sk"></span><span class="xb-sk s"></span>'
     return b.when("ns", facts) + b.when("sh", skel, False)
@@ -954,7 +954,7 @@ UNMOUNT = "componentWillUnmount() {\nclearTimeout(this.tm);\n}\n"
 
 
 def pick_js():
-    return b.component(PICK_JS.replace("__P__", js([dict(t=FILMS[k]["t"], y=FILMS[k]["y"], r=FILMS[k]["r"], d=FILMS[k]["d"]) for k in POOL])), UNMOUNT)
+    return b.component(PICK_JS.replace("__P__", js([dict(t=FILMS[k]["t"], y=FILMS[k]["y"], r=b.on5(FILMS[k]["r"]), d=FILMS[k]["d"]) for k in POOL])), UNMOUNT)
 
 
 def screen_42():
@@ -975,7 +975,7 @@ def screen_42():
 def screen_43():
     tools = (f'<a class="xb-tb"{b.href("46-m-filtres")}>{ic("sliders", 15)}Filtres</a><span class="xb-dd"><em>Trier par</em>Pertinence{ic("chevd", 15)}</span>')
     body = (f'{b.m_top("Explorer", "11-m-explorer", (("search", "42-m-recherche", "Rechercher un film"),))}'
-            f'<div class="xb-mpad"><h1 class="disp xb-mt2">{b.hole("ttl", VT[0])}</h1><p class="xb-st m">{b.hole("sub", VS[0])}</p></div>'
+            f'<div class="xb-mpad"><h1 class="vh">{b.hole("ttl", VT[0])}</h1><p class="xb-st m">{b.hole("sub", VS[0])}</p></div>'
             f'<div class="xb-mrow"><div class="xb-tabs m" role="tablist">{tabs_html(False)}</div></div>'
             f'<div class="xb-mrow">{variant_chips()}</div>'
             f'<div class="xb-mtb">{tools}</div><div class="xb-mpad xb-mg">{showcase_grids("17-m-fiche-film", True)}</div>')
@@ -991,7 +991,7 @@ def m_list():
     for i, k in enumerate(WL44):
         f = FILMS[k]
         badge = '<span class="badge">Série</span>' if k in WL44_TV else ""
-        meta = f'<span>{f["y"]}</span>{b.tmdb(f["r"])}<span>{f["d"]}</span>'
+        meta = f'<span>{f["y"]}</span>{b.rating(f["r"])}<span>{f["d"]}</span>'
         cells += b.when(f"c{i}", card(k, "17-m-fiche-film", badge=badge, meta=meta))
     if b.DC:
         inp = f'<input class="xb-in" value="{b.hx("q")}" onChange="{b.hx("onQ")}" placeholder="Rechercher dans ma liste…" aria-label="Rechercher dans ma liste">'
@@ -1000,7 +1000,7 @@ def m_list():
     rc = b.when("filt", f'<div class="xb-wrc"><span>{b.hole("rcT", "")}</span><button type="button" class="xb-lk"{b.on("clearQ")}>Tout effacer</button></div>', False)
     empty = b.when("none", f'<div class="xb-empty m">{xi("search", 24)}<b>Aucun titre ne correspond</b><span>Aucun film de votre liste ne coche ces critères. Élargissez la recherche ou retirez un filtre.</span></div>', False)
     return f'''<div class="S mob frame">{b.sbar()}<div class="xb-mpg">
-<div class="xb-lh"><h1 class="disp">Ma liste</h1><span class="xb-c">48 titres à voir</span></div>
+<div class="xb-lh"><h1 class="vh">Ma liste</h1><span class="xb-c">48 titres à voir</span></div>
 <div class="xb-lact"><button type="button" class="ib" aria-label="Importer depuis Letterboxd">{xi("import", 18)}</button><a class="btn gl sm"{b.href("45-m-au-hasard")}>{xi("dice", 17)}Piocher</a><a class="btn sm"{b.href("92-m-ajouter-a-ma-liste")}>{ic("plus", 17)}Ajouter</a></div>
 <div class="xb-wtb"><label class="xb-fld s">{xi("search", 16)}{inp}</label>
 <div class="xb-wtr"><a class="xb-tb"{b.href("46-m-filtres")}>{ic("sliders", 15)}Filtres</a><span class="xb-vsep"></span><span class="xb-dd" aria-label="Trier par">Ajout{xi("adown", 14)}</span>
@@ -1176,7 +1176,7 @@ CSS = r"""
 .S .xb-pw{position:relative;border-radius:6px;overflow:hidden}
 .S .xb-pl{display:block}
 .S .xb-t{font-size:13px;font-weight:600;margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.S .xb-m{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--tx3);margin-top:4px;white-space:nowrap}
+.S .xb-m{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--tx3);margin-top:8px;white-space:nowrap}
 .S .xb-cd.hov .xb-pw{box-shadow:0 0 0 2px var(--tx),0 20px 40px -12px rgba(0,0,0,.8)}
 .S .xb-kb{position:absolute;right:7px;top:7px;z-index:4;background:rgba(0,0,0,.55)}
 .S .xb-kb.on{background:var(--tx);color:var(--bg)}
