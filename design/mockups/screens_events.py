@@ -69,8 +69,7 @@ def mob_bg(fn):
 
 
 def pub_hdr():
-    return (f'<header class="hdr"><a class="logo"{href("09-accueil-public")}>Movie Picker<i></i></a>'
-            f'<div class="hr"><a class="btn gl sm"{href("21-connexion")}>Se connecter</a></div></header>')
+    return b.guest_hdr(False)
 
 
 def name_of(k):
@@ -136,8 +135,8 @@ def search_filters():
 
 
 def screen_47():
-    acts = f'<a class="btn"{href("03-roue")}>{ic("wheel", 18)}Lancer la roue</a><a class="btn gl on"{href("02-soiree")}>{ic("plus", 18)}Proposer</a>'
-    return f'''<div class="S desk frame">{b.hdr(1, False)}{ev_head(acts)}
+    acts = b.event_actions(propose_on=True)
+    return f'''<div class="S desk frame">{b.hdr(1)}{ev_head(acts)}
 <section class="xc-addp"><div class="xc-addh"><h3>Proposer un film</h3><a class="ib s" aria-label="Fermer"{href("02-soiree")}>{ic("x", 16)}</a></div>
 <div class="xc-srow">{search_input("Ajouter un film à la soirée…")}<button type="button" class="btn gl sm xc-fb {hole("fCls", "")}"{on("tF")}>{icx("filter", 16)}Filtres avancés</button></div>
 {recent_row()}{when("fOpen", search_filters(), False)}<div class="xc-list">{search_results()}</div></section></div>'''
@@ -549,7 +548,7 @@ def screen_54():
     colB = sec("Vote et tirage", draw_block(True)) + f'<button type="button" class="btn gh sm xc-reset">{icx("reset", 15)}Réinitialiser les options</button>'
     right = f'''<div class="xc-adv"><a class="xc-advh"{href("08-creer")}>{ic("sliders", 17)}<b>Options avancées</b><span class="xc-chev">{icx("chevu", 17)}</span></a>
 <div class="xc-advb"><div class="xc-col">{colA}</div><div class="xc-col">{colB}</div></div></div>'''
-    return f'''<div class="S desk frame">{b.hdr(2, False, solid=True)}<div class="spot soft"></div>
+    return f'''<div class="S desk frame">{b.hdr(2, solid=True)}<div class="spot soft"></div>
 <div class="xc-g54"><div class="xc-c54">{left}</div>{right}</div></div>'''
 
 
@@ -622,7 +621,7 @@ def screen_55():
     side = f'<aside class="xc-side"><section><h2 class="xc-st">{icx("warn", 14)}À traiter</h2>{pend}</section></aside>'
     ok = f'<a class="btn xc-dbtn"{href("59-m-soiree-sans-film")}>Clôturer sans film</a>'
     dialog = confirm("cw", "Clôturer sans choisir de film&nbsp;?", "La soirée « Dimanche cocooning » sera clôturée sans film. Cette action est définitive.", ok, "cwNo")
-    return f'''<div class="S desk frame">{b.hdr(1, False, solid=True)}
+    return f'''<div class="S desk frame">{b.hdr(1, solid=True)}
 <div class="xc-p55"><div class="ph"><h1 class="disp">Mes soirées</h1><div class="seg big"><a{href("05-mes-soirees")}>Actives <em>3</em></a><span class="on">Historique <em>36</em></span></div></div>
 <div class="xc-g55"><div class="xc-main">{recap}{toolbar}{fpanel}<div class="xc-hist">{lst}</div></div>{side}</div></div>{dialog}</div>'''
 
@@ -707,7 +706,7 @@ def screen_51():
 <button type="button" class="xc-mi err"{on("rsOpen")}>{icx("reset", 15)}Repartir de zéro</button></div>''', False)
     ok = f'<a class="btn xc-dbtn"{href("02-soiree")}>Repartir de zéro</a>'
     dialog = confirm("rs", "Repartir de zéro&nbsp;?", "Tous les films gagnants seront oubliés. Les propositions et les votes restent en place.", ok, "rsNo")
-    return f'''<div class="S desk frame">{b.hdr(1, False)}<div class="wbg xc-wbg51"></div>
+    return f'''<div class="S desk frame">{b.hdr(1)}<div class="wbg xc-wbg51"></div>
 <div class="xc-p51"><div class="evtop"><a class="back"{href("02-soiree")}>{ic("left", 16)}Soirée chez Léa</a><div class="ibs xc-wact"><span class="xc-done">{ic("trophy", 15)}Film gagnant désigné</span>
 <span class="xc-mw"><button type="button" class="ib {hole("moreC", "")}" aria-label="Autres actions sur le tirage"{on("tMore")}>{icx("dotsh", 17)}</button>{more}</span>
 <a class="ib" aria-label="Partager"{href("48-partager-soiree")}>{ic("share", 17)}</a><span class="xc-mw"><button type="button" class="ib {hole("calC", "")}" aria-label="Ajouter au calendrier"{on("tCal")}>{ic("cal", 17)}</button>{cal}</span>
@@ -884,13 +883,13 @@ def ev_head(actions, ptog_open=False, ptog_dc=False):
     ptog = (f'<button type="button" class="xc-ptog {cls}"{on("tPt") if ptog_dc else ""}>{stack(["adrien", "lea", "nico", "ines"], 24)}<span class="xc-plus">+2</span>'
             f'<span>6 participants</span>{ic("chevd", 15)}</button>')
     return f'''<div class="xc-evh"><div class="bd2"></div><div class="xc-evc">
-<div class="evtop"><a class="back"{href("05-mes-soirees")}>{ic("left", 16)}Mes soirées</a><div class="ibs"><a class="ib" aria-label="Partager"{href("48-partager-soiree")}>{ic("share", 17)}</a><span class="ib" aria-label="Ajouter au calendrier">{ic("cal", 17)}</span><a class="ib" aria-label="Paramètres de la soirée"{href("49-reglages-soiree")}>{ic("gear", 17)}</a></div></div>
-<div class="ov">Vendredi 14 novembre, 21 h</div><div class="tr"><h1 class="disp">Soirée chez Léa</h1><div class="evact">{actions}</div></div>
+{b.event_bar(actions)}
+<div class="ov">Vendredi 14 novembre, 21 h</div><h1 class="disp">Soirée chez Léa</h1>
 <div class="em">{ptog}<span class="chip">Nuits blanches</span><span>6 films</span><span>3 votants sur 6</span><span class="cdn">{ic("clock", 15)}Commence dans 4 j 06 h</span></div></div></div>'''
 
 
 def default_actions():
-    return f'<a class="btn"{href("03-roue")}>{ic("wheel", 18)}Lancer la roue</a><a class="btn gl"{href("47-proposer-un-film")}>{ic("plus", 18)}Proposer</a>'
+    return b.event_actions()
 
 
 def delete_confirm(mob):
@@ -965,7 +964,7 @@ def screen_87():
     rows = "".join(film_row(i, *p) for i, p in enumerate(b.PROGRAM, 1))
     ok = f'<button type="button" class="btn xc-dbtn"{on("cfOk")}>Retirer</button>'
     dialog = confirm("cf", "Retirer un participant", f'Retirer {hole("cfName", "Sam")} de la soirée&nbsp;? Ses films, votes et marques seront supprimés.', ok, "cfNo")
-    return f'''<div class="S desk frame">{b.hdr(1, False)}{ev_head(default_actions(), True, True)}
+    return f'''<div class="S desk frame">{b.hdr(1)}{ev_head(default_actions(), True, True)}
 <div class="xc-body8 cut">{panel}<div class="xc-films"><div class="xc-lhd"><span class="xc-st">Les films en lice</span></div>{rows}</div></div>{dialog}</div>'''
 
 
@@ -1018,13 +1017,13 @@ def screen_88():
     for i, p in enumerate(b.PROGRAM):
         ins += when(f"in{i}", row88(i, *p, False), i != 4)
         exs += when(f"ex{i}", row88(i, *p, True), i == 4)
-    acts = (when("notMan", f'<a class="btn"{href("03-roue")}>{ic("wheel", 18)}Lancer la roue</a><button type="button" class="btn gl xc-iconb" aria-label="Choisir moi-même" title="Choisir moi-même"{on("tMan")}>{icx("pointer", 19)}</button>')
-            + when("man", f'<output class="xc-selbar">{icx("pointer", 17)}<span>Choisissez le film à désigner gagnant.</span><button type="button" class="btn gl sm"{on("tMan")}>Annuler</button></output>', False)
-            + f'<a class="btn gl"{href("47-proposer-un-film")}>{ic("plus", 18)}Proposer</a>')
+    pick = f'<button type="button" class="ib" aria-label="Choisir moi-même" title="Choisir moi-même"{on("tMan")}>{icx("pointer", 18)}</button>'
+    acts = (when("notMan", b.event_actions(pick))
+            + when("man", f'<output class="xc-selbar">{icx("pointer", 17)}<span>Choisissez le film à désigner gagnant.</span><button type="button" class="btn gl sm"{on("tMan")}>Annuler</button></output>' + f'<a class="btn gl"{href("47-proposer-un-film")}>{ic("plus", 18)}Proposer</a>', False))
     divider = when("hasEx", '<div class="xc-wdiv"><i></i><span>Hors tirage</span><i></i></div>')
     ok = f'<button type="button" class="btn xc-dbtn"{on("cfOk")}>Retirer le film</button>'
     dialog = confirm("cf", "Retirer ce film de la soirée&nbsp;?", hole("cfMsg", ""), ok, "cfNo")
-    return f'''<div class="S desk frame">{b.hdr(1, False)}{ev_head(acts)}
+    return f'''<div class="S desk frame">{b.hdr(1)}{ev_head(acts)}
 <div class="xc-body8"><div class="xc-films {hole("manC", "")}"><div class="xc-lhd"><span class="xc-st">Les films en lice</span><div class="seg"><span>{ic("grid", 15)}</span><span class="on">{ic("list", 15)}</span></div></div>{ins}{divider}{exs}</div></div>{dialog}</div>'''
 
 
@@ -1677,7 +1676,7 @@ CSS = r"""
 .S .xc-evc{position:absolute;left:40px;right:40px;top:80px;z-index:2}
 .S .xc-evc>.ov{margin-top:10px}
 .S .xc-evc h1{font-size:60px;margin:6px 0 10px;white-space:nowrap}
-.S .xc-evc .evact .btn{height:46px}
+.S .xc-evc .evbar .btn{height:40px}
 .S .xc-ptog{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 10px 0 4px;border-radius:999px;color:var(--tx2);font-size:14px}
 .S .xc-ptog.on{background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--line2);color:var(--tx)}
 .S .xc-ptog.on>.ic{transform:rotate(180deg)}
@@ -1850,6 +1849,9 @@ CSS = r"""
 .S .xc-pa .btn{padding:0 14px;gap:7px}
 .S .xc-pa .btn.gh{padding:0 6px}
 .S .xc-ml90{margin-top:8px}
+.S .xc-trt span,.S .xc-hint,.S .xc-hint *,.S .xc-dh,.S .xc-region,.S .xc-dz p,.S .xc-pch span,.S .xc-sfoot,.S .xc-tpa span{font-size:13px}
+.S.mob .xc-tabs.seg.big>*{height:44px}
+.S.mob .xc-step button{width:44px}
 """
 
 SCREENS = {"47": screen_47, "48": screen_48, "49": screen_49, "50": screen_50, "51": screen_51, "52": screen_52, "53": screen_53, "54": screen_54,

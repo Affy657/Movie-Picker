@@ -248,6 +248,10 @@ CSS = r"""
 .S .xd-mg .xd-rt{left:5px;top:5px;height:22px;padding:0 7px;font-size:12px}
 .S .xd-mg .t{font-size:12.5px;font-weight:600;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .S .xd-mg .m{font-size:12px;color:var(--tx3);margin-top:2px}
+.S .xd-ncols.one{grid-template-columns:minmax(0,760px)}
+.S .xd-scroll{overflow-y:auto;scrollbar-width:none}
+.S .xd-scroll::-webkit-scrollbar{display:none}
+.S .xd-scroll .xd-np{padding-bottom:40px}
 """
 
 
@@ -340,9 +344,9 @@ def screen_62():
     right = (n_single("r10", False) + n_group(G_HALL, False) + n_single("r13", False) + n_single("r14", False)
              + '<button type="button" class="btn gl sm xd-lm">Charger la suite</button>')
     cnt = when("hasUnread", f'<span class="cnt">{hole("cnt", "4 non lues")}</span>')
-    return f'''<div class="S desk frame {hole("rc", "")}">{b.hdr(-1, solid=True)}<div class="xd-clip">
-<div class="page xd-np"><div class="ph"><h1 class="disp">Notifications</h1>{cnt}<div class="phx">{mark_all_btn()}<a class="ib" aria-label="Réglages des notifications"{href("27-reglages-notifications")}>{b.ic("gear", 18)}</a></div></div>
-<div class="xd-ncols"><div class="xd-ncol">{left}</div><div class="xd-ncol">{right}</div></div></div></div></div>'''
+    return f'''<div class="S desk frame {hole("rc", "")}">{b.hdr(-1, solid=True)}<div class="xd-clip xd-scroll">
+<div class="page xd-np"><div class="ph"><h1 class="disp util">Notifications</h1>{cnt}<div class="phx">{mark_all_btn()}<a class="ib" aria-label="Réglages des notifications"{href("27-reglages-notifications")}>{b.ic("gear", 18)}</a></div></div>
+<div class="xd-ncols one"><div class="xd-ncol">{left}{right}</div></div></div></div></div>'''
 
 
 def screen_68():
@@ -350,7 +354,7 @@ def screen_68():
             + n_group(G_HALL, True) + n_single("r13", True) + n_single("r14", True))
     cnt = when("hasUnread", f'<span class="cnt">{hole("cnt", "4 non lues")}</span>')
     return f'''<div class="S mob frame {hole("rc", "")}">{b.sbar()}
-<div class="xd-mtl"><h1 class="disp">Notifications</h1><a class="ib" aria-label="Réglages des notifications"{href("33-m-reglages")}>{b.ic("gear", 18)}</a></div>
+<div class="xd-mtl"><h1 class="disp util">Notifications</h1><a class="ib" aria-label="Réglages des notifications"{href("33-m-reglages")}>{b.ic("gear", 18)}</a></div>
 <div class="xd-msub">{cnt}{mark_all_btn()}</div>
 <div class="xd-mlist">{rows}</div>
 {b.mnav(-1)}</div>'''

@@ -1138,7 +1138,7 @@ CSS = r"""
 .S .xb-sl.full .xb-k1{left:100%}
 .S .xb-sll{display:flex;justify-content:space-between;margin-top:14px;font-size:12.5px;font-weight:600;color:var(--tx2)}
 .S .xb-sf{position:relative;z-index:7}
-.S .xb-fld{display:flex;align-items:center;gap:12px;height:52px;padding:0 10px 0 16px;border-radius:12px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--line2);color:var(--tx3)}
+.S .xb-fld{display:flex;align-items:center;gap:12px;height:52px;padding:0 10px 0 16px;border-radius:12px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--field);color:var(--tx3)}
 .S .xb-fld.f{box-shadow:inset 0 0 0 1.5px var(--acc),0 0 0 4px var(--acc-soft)}
 .S .xb-fld.s{height:40px;width:300px;padding:0 12px;gap:10px}
 .S .xb-in{flex:1;min-width:0;height:100%;display:flex;align-items:center;border:0;outline:0;background:transparent;font:500 15px Inter,sans-serif;color:var(--tx);white-space:nowrap;overflow:hidden}
@@ -1211,7 +1211,7 @@ CSS = r"""
 .S .xb-chi{display:flex;gap:6px;min-width:0}
 .S .xb-chi.fade{-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 .S .xb-tools{position:relative;display:flex;align-items:center;gap:8px;flex:none}
-.S .xb-mfld{display:inline-flex;align-items:center;gap:8px;width:210px;height:36px;padding:0 12px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line2);font-size:13px;color:var(--tx3);white-space:nowrap}
+.S .xb-mfld{display:inline-flex;align-items:center;gap:8px;width:210px;height:36px;padding:0 12px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--field);font-size:13px;color:var(--tx3);white-space:nowrap}
 .S .xb-tb{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line2);font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap}
 .S .xb-tb.on{background:var(--acc-soft);box-shadow:inset 0 0 0 1px var(--acc);color:var(--acc-tx)}
 .S .xb-dd{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line2);font-size:13px;font-weight:600;color:var(--tx);white-space:nowrap}
@@ -1241,7 +1241,7 @@ CSS = r"""
 .S .xb-f0{transform:translateX(-30px) rotate(-9deg);z-index:1}
 .S .xb-f1{top:6px;width:62px;margin-left:-31px;z-index:3}
 .S .xb-f2{transform:translateX(30px) rotate(9deg);z-index:2}
-.S .xb-cn{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:10px;font-size:18px;line-height:.95;min-height:34px}
+.S .xb-cn{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:10px;font-size:18px;line-height:1.05;min-height:34px}
 .S .xb-cc{font-size:12.5px;color:var(--tx3);margin-top:4px}
 
 .S .xb-cbd{position:absolute;left:0;right:0;top:0;height:400px;display:flex;overflow:hidden}
@@ -1459,6 +1459,9 @@ CSS = r"""
 .S .xb-ashb .xb-sf.a{margin-top:16px}
 .S .xb-ashb .xb-asr{max-width:none}
 .S .xb-ashb .xb-in{font-size:14px}
+.S .xb-clr{position:relative}
+.S .xb-clr::after{content:'';position:absolute;inset:-6px}
+.S .xb-ch{min-width:44px}
 """
 
 SCREENS = {

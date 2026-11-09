@@ -10,6 +10,7 @@ STATIC_DIR = OUT / "screens"
 
 foundation.ICONS.update({
     "x": '<path d="M18 6 6 18M6 6l12 12"/>',
+    "pointer": '<path d="M14 4.1 12 6"/><path d="m5.1 8-2.9-.8"/><path d="m6 12-1.9 2"/><path d="M7.2 2.2 8 5.1"/><path d="M9.04 9.69a.5.5 0 0 1 .65-.65l11 4.5a.5.5 0 0 1-.07.95l-4.35 1.04a1 1 0 0 0-.74.74l-1.04 4.35a.5.5 0 0 1-.95.07z"/>',
     "chevd": '<path d="m6 9 6 6 6-6"/>',
     "sliders": '<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>',
     "users": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
@@ -101,13 +102,43 @@ def mnav(active):
     return out + "</nav>"
 
 
-def hdr(active, search=True, solid=False):
+def hdr(active, solid=False):
     items = [("Explorer", "01-explorer"), ("Mes soirées", "05-mes-soirees"), ("Nouvelle soirée", "08-creer"), ("Ma liste", "06-ma-liste")]
     nav = "".join(f'<a class="{"on" if i == active else ""}"{href(t)}>{x}</a>' for i, (x, t) in enumerate(items))
-    s = f'<a class="sbox"{href("35-recherche")}>{ic("search", 16)}Rechercher un film</a>' if search else f'<a class="ib" aria-label="Rechercher un film"{href("35-recherche")}>{ic("search", 18)}</a>'
     return f'''<header class="hdr{" solid" if solid else ""}"><a class="logo"{href("01-explorer")}>Movie Picker<i></i></a><nav>{nav}</nav>
-<div class="hr">{s}<a class="bell" aria-label="Notifications"{href("62-notifications")}>{ic("bell", 20)}<b></b></a><a class="me" aria-label="Menu du compte"{href("63-menu-compte")}>{av("adrien", 32)}</a></div></header>'''
+<div class="hr"><a class="bell" aria-label="Notifications"{href("62-notifications")}>{ic("bell", 20)}<b></b></a><a class="me" aria-label="Menu du compte"{href("63-menu-compte")}>{av("adrien", 32)}</a></div></header>'''
 
+
+GUEST_NAV = [("Comment ça marche", "09-accueil-public"), ("Mes soirées", "21-connexion"), ("Nouvelle soirée", "21-connexion"), ("Ma liste", "21-connexion")]
+
+
+def guest_hdr(solid=True, actions=True):
+    nav = "".join(f'<a{href(t)}>{x}</a>' for x, t in GUEST_NAV)
+    acts = (f'<div class="hr"><a class="btn gl sm"{href("21-connexion")}>Se connecter</a><a class="btn sm"{href("22-inscription")}>Créer un compte</a></div>'
+            if actions else "")
+    return f'<header class="hdr{" solid" if solid else ""}"><a class="logo"{href("09-accueil-public")}>Movie Picker<i></i></a><nav>{nav}</nav>{acts}</header>'
+
+
+def crowd(keys, size, shown=4):
+    extra = len(keys) - shown
+    more = f'<span class="avmore">+{extra}</span>' if extra > 0 else ""
+    return stack(keys[:shown], size) + more
+
+
+def event_actions(pick='', propose_on=False):
+    pick = pick or f'<a class="ib" aria-label="Choisir moi-même"{href("88-actions-tirage")}>{ic("pointer", 18)}</a>'
+    return (pick + f'<a class="btn gl{" on" if propose_on else ""}"{href("02-soiree" if propose_on else "47-proposer-un-film")}>{ic("plus", 18)}Proposer</a>'
+            f'<a class="btn"{href("03-roue")}>{ic("wheel", 18)}Lancer la roue</a>')
+
+
+def event_icons():
+    return (f'<div class="ibs"><a class="ib" aria-label="Partager"{href("48-partager-soiree")}>{ic("share", 17)}</a>'
+            f'<span class="ib" aria-label="Ajouter au calendrier">{ic("cal", 17)}</span>'
+            f'<a class="ib" aria-label="Paramètres de la soirée"{href("49-reglages-soiree")}>{ic("gear", 17)}</a></div>')
+
+
+def event_bar(actions):
+    return f'<div class="evtop"><a class="back"{href("05-mes-soirees")}>{ic("left", 16)}Mes soirées</a><div class="evbar">{event_icons()}<span class="evsep"></span>{actions}</div></div>'
 
 def vote(up, down, mine, idx=None):
     if DC and idx is not None:
@@ -186,8 +217,9 @@ def d_explorer(light=False):
 <div class="hm">{tmdb("7,8")}<span>2024</span><span>2h12</span><span>Science-fiction</span></div>
 <p class="hs">Une astronaute coincée en orbite capte chaque nuit la voix d’un enfant qui n’existe pas.</p>
 <div class="hb"><a class="btn"{href("02-soiree")}>{ic("plus", 16)}Proposer à une soirée</a>{save_btn("btn gl")}</div></div>
-<a class="cd"{href("02-soiree")}><div><div class="cdl">Soirée chez Léa</div><div class="cds">Séance dans</div></div><div class="v">4 J 06 H</div>{stack(["lea", "nico", "ines"], 24)}</a>
+<a class="cd"{href("02-soiree")}><div><div class="cdl">Soirée chez Léa</div><div class="cds">Commence dans</div></div><div class="v">4 J 06 H</div>{stack(["lea", "nico", "ines"], 24)}</a>
 </div>
+<div class="srow"><div class="slab">Chercher un film</div><a class="sfield"{href("35-recherche")}>{ic("search", 18)}<span>Titre, réalisateur, acteur</span></a></div>
 <div class="row"><div class="rh"><h2 class="disp">Dans votre liste</h2><a class="more"{href("06-ma-liste")}>Tout voir {ic("right", 15)}</a></div><div class="rail">{rail}</div></div>
 <div class="row"><div class="rh"><h2 class="disp">Tendances de la semaine</h2><span class="rsub">Les films dont tout le monde parle</span><a class="more"{href("36-tendances")}>Tout voir {ic("right", 15)}</a></div><div class="rail">{trend}</div></div>
 <div class="row rlast"><div class="rh"><h2 class="disp">Sagas et collections</h2><span class="rsub">Toute une franchise en une liste</span><a class="more"{href("37-collections")}>Tout voir {ic("right", 15)}</a></div><div class="rail">{sagas}</div></div>
@@ -200,12 +232,12 @@ def d_event():
         f = FILMS[fid]
         cards += f'''<div class="gc {"lead" if i == 1 else ""}"><a class="pw"{href("04-fiche-film")}>{poster(fid)}<span class="rk">{i}</span></a>
 <div class="t">{f["t"]}</div><div class="gv">{av(by, 20)}{vote(up, down, mine, i - 1)}{score(sc, i - 1, "sc")}</div></div>'''
-    return f'''<div class="S desk frame">{hdr(1, False)}
+    return f'''<div class="S desk frame">{hdr(1)}
 <div class="evh"><div class="bd2"></div>
-<div class="evc"><div class="evtop"><a class="back"{href("05-mes-soirees")}>{ic("left", 16)}Mes soirées</a><div class="ibs"><a class="ib" aria-label="Partager"{href("48-partager-soiree")}>{ic("share", 17)}</a><span class="ib">{ic("cal", 17)}</span><a class="ib" aria-label="Réglages de la soirée"{href("49-reglages-soiree")}>{ic("gear", 17)}</a></div></div>
+<div class="evc">{event_bar(event_actions())}
 <div class="ov" style="margin-top:22px">Vendredi 14 novembre, 21 h</div>
-<div class="tr"><h1 class="disp">Soirée chez Léa</h1><div class="evact"><a class="btn"{href("03-roue")}>{ic("wheel", 18)}Lancer la roue</a><a class="ib" aria-label="Choisir moi-même"{href("88-actions-tirage")}>{ic("trophy", 18)}</a><a class="btn gl"{href("47-proposer-un-film")}>{ic("plus", 18)}Proposer</a></div></div>
-<div class="em"><a class="ppl"{href("87-participants")}>{stack(["lea", "nico", "ines", "sam", "hugo", "adrien"], 26)}<span>6 participants</span></a><span class="chip">Nuits blanches</span><span>6 films</span><span>3 sur 6 ont voté</span><span class="cdn">{ic("clock", 15)}Séance dans 4 j 06 h</span></div></div></div>
+<h1 class="disp">Soirée chez Léa</h1>
+<div class="em"><a class="ppl"{href("87-participants")}>{crowd(["lea", "nico", "ines", "sam", "hugo", "adrien"], 26)}<span>6 participants</span></a><span class="chip">Nuits blanches</span><span>6 films</span><span>3 votants sur 6</span><span class="cdn">{ic("clock", 15)}Commence dans 4 j 06 h</span></div></div></div>
 <div class="sec"><div class="sh"><h2 class="disp">Les films en lice</h2><div class="seg"><span class="on">{ic("grid", 15)}</span><span>{ic("list", 15)}</span></div></div>
 <div class="gr">{cards}</div></div>
 </div>'''
@@ -220,7 +252,7 @@ def d_wheel():
         for k, p in CHANCES
     )
     res = when("done", f'<a class="btn wres"{href("51-film-tire")}>{ic("info", 16)}Voir le film tiré</a>', False)
-    return f'''<div class="S desk frame">{hdr(1, False)}<div class="spot"></div>
+    return f'''<div class="S desk frame">{hdr(1)}<div class="spot"></div>
 <div class="wpage"><div class="evtop"><a class="back"{href("02-soiree")}>{ic("left", 16)}Soirée chez Léa</a><span class="live"><i></i>En direct</span></div>
 <div class="wgrid"><div class="wtxt"><div class="ov">{hole("ov", "Léa a lancé la roue")}</div><h1 class="disp">{hole("ttl", "Ça tourne")}</h1>
 <p>Six films en lice. Plus un film a de votes, plus sa part de roue est grande.</p>
@@ -262,9 +294,9 @@ HIST_MORE = [("17 oct.", "Soirée chez Inès", "marseille", "7,8", ["ines", "lea
 
 def d_events():
     cards = event_card("Ven.", "14", "Nov.", "Soirée chez Léa", "Nuits blanches", ["lea", "nico", "ines", "sam", "hugo", "adrien"], 6,
-                       f'<i class="dot"></i>Vote ouvert, 3 sur 6 ont voté', "vote", ["projo", "orbite", "kyoto"], "rgba(214,150,60,.35)")
+                       f'<i class="dot"></i>Vote ouvert, 3 votants sur 6', "vote", ["projo", "orbite", "kyoto"], "rgba(214,150,60,.35)")
     cards += event_card("Mer.", "19", "Nov.", "Ciné-club du mercredi", "Années 80", ["adrien", "sam", "hugo"], 3,
-                        f'{ic("clock", 14)}Séance dans 9 j', "soon", ["verre", "phare", "sable"], "rgba(59,130,246,.35)")
+                        f'{ic("clock", 14)}Commence dans 9 j', "soon", ["verre", "phare", "sable"], "rgba(59,130,246,.35)")
     cards += event_card("Sam.", "29", "Nov.", "Marathon du samedi", "Trilogies", ["adrien", "lea"], 0,
                         f'{ic("plus", 14)}Personne n’a encore proposé', "empty", [], "rgba(255,255,255,.08)")
 
@@ -272,7 +304,7 @@ def d_events():
         return "".join(f'''<a class="hrow"{href("53-recap")}><span class="hd">{d}</span><span class="ht">{t}</span><span class="hw"><span class="hp">{poster(w)}</span>{FILMS[w]["t"]}</span><span class="hr2">{star(13)} {r}</span>{stack(ppl, 22)}</a>'''
                        for d, t, w, r, ppl in items)
     more = f'<a class="more"{href("55-mes-soirees-suite")}>Tout l’historique {ic("right", 15)}</a>'
-    return f'''<div class="S desk frame scroll">{hdr(1, False, solid=True)}
+    return f'''<div class="S desk frame scroll">{hdr(1, solid=True)}
 <div class="page"><div class="ph"><h1 class="disp">Mes soirées</h1>{seg2("Actives <em>3</em>", "Historique <em>36</em>")}<a class="btn sm"{href("08-creer")}>{ic("plus", 16)}Nouvelle soirée</a></div>
 {when("isA", f'<div class="egrid">{cards}</div>')}
 <div class="sh" style="margin-top:28px"><h2 class="disp">{hole("hT", "Dernièrement")}</h2>{more}</div>
@@ -370,7 +402,7 @@ def field(label, static_html, name, small=""):
 
 def d_create():
     sugg = "".join(f'<button type="button" class="chip"{on(f"sg{j}")}>{x}</button>' for j, x in enumerate(SUGG))
-    return f'''<div class="S desk frame">{hdr(2, False, solid=True)}<div class="spot soft"></div>
+    return f'''<div class="S desk frame">{hdr(2, solid=True)}<div class="spot soft"></div>
 <div class="cgrid"><div class="cform"><div class="ov">Nouvelle soirée</div><h1 class="disp">Créer une soirée</h1>
 {field("Titre", '<span class="in focus">Soirée chez Léa<i class="caret"></i></span>', "title")}
 <div class="frow"><label class="fld"><span class="fl">Date</span><span class="in">14/11/2026<em>{ic("cal", 16)}</em></span></label><label class="fld"><span class="fl">Heure</span><span class="in">21:00<em>{ic("clock", 16)}</em></span></label></div>
@@ -389,7 +421,7 @@ def d_landing():
 <h1 class="disp">Choisissez le film de la soirée, <span>sans y passer la soirée.</span></h1>
 <p>Créez la soirée, partagez le lien, chacun propose ses films et vote. Toujours pas d’accord&nbsp;? La roue tranche.</p>
 <div class="hb"><a class="btn"{href("22-inscription")}>Créer un compte</a><a class="btn gl">{ic("play", 15)}Voir comment ça marche</a></div><div class="free">Gratuit, sans publicité.</div></div>
-<div class="lphone"><div class="scale">{phone}</div><div class="toast">{av("sam", 28)}<div><b>Sam a proposé Brume</b><span>Soirée chez Léa, à l’instant</span></div></div></div></div>
+<div class="lphone"><div class="scale" aria-hidden="true" inert>{phone}</div><div class="toast">{av("sam", 28)}<div><b>Sam a proposé Brume</b><span>Soirée chez Léa, à l’instant</span></div></div></div></div>
 <div class="steps"><div><b class="disp">1</b><span>Créez la soirée</span></div><div><b class="disp">2</b><span>Partagez le lien</span></div><div><b class="disp">3</b><span>Proposez et votez</span></div><div><b class="disp">4</b><span>La roue tranche</span></div></div></div>'''
 
 
@@ -402,10 +434,11 @@ def m_explorer():
     rail = "".join(f'<a class="pc"{href("17-m-fiche-film")}>{poster(k)}</a>' for k in ["phare", "volets", "sable", "brume"])
     trend = "".join(f'<a class="pc"{href("17-m-fiche-film")}>{poster(k)}</a>' for k in ["orbite", "km", "verre", "projo"])
     return f'''<div class="S mob frame scroll"><div class="mhero">{hero_bd()}{sbar()}
-<div class="mhd2"><div class="logo">Movie Picker<i></i></div><div class="hr"><a class="ib s" aria-label="Rechercher un film"{href("42-m-recherche")}>{ic("search", 16)}</a><a class="bell" aria-label="Notifications"{href("68-m-notifications")}>{ic("bell", 19)}<b></b></a><a class="me" aria-label="Mon profil"{href("18-m-profil")}>{av("adrien", 30)}</a></div></div>
+<div class="mhd2"><div class="logo">Movie Picker<i></i></div><div class="hr"><a class="bell" aria-label="Notifications"{href("68-m-notifications")}>{ic("bell", 19)}<b></b></a><a class="me" aria-label="Mon profil"{href("18-m-profil")}>{av("adrien", 30)}</a></div></div>
 <div class="mhc2"><div class="ov">En tête du vote, chez Léa</div><h1 class="disp">Orbite basse</h1><div class="hm">{tmdb("7,8")}<span>2024</span><span>2h12</span></div>
 <div class="hb"><a class="btn sm"{href("12-m-soiree")}>{ic("plus", 15)}Proposer</a>{save_btn("btn gl sm", 15)}</div></div></div>
-<a class="mcd"{href("12-m-soiree")}><div><div class="cdl">Soirée chez Léa</div><div class="cds">Séance dans <b>4 j 06 h</b></div></div>{stack(["lea", "nico", "ines"], 22)}{ic("right", 16)}</a>
+<a class="mcd"{href("12-m-soiree")}><div><div class="cdl">Soirée chez Léa</div><div class="cds">Commence dans <b>4 j 06 h</b></div></div>{stack(["lea", "nico", "ines"], 22)}{ic("right", 16)}</a>
+<div class="msrow"><a class="sfield"{href("42-m-recherche")}>{ic("search", 17)}<span>Titre, réalisateur, acteur</span></a></div>
 <div class="mrow2"><div class="rh"><h2 class="disp">Dans votre liste</h2><a class="more"{href("44-m-ma-liste")}>Tout voir</a></div><div class="rail sm">{rail}</div></div>
 <div class="mrow2 rlast"><div class="rh"><h2 class="disp">Tendances</h2><a class="more"{href("43-m-tendances")}>Tout voir</a></div><div class="rail sm">{trend}</div></div>
 {mnav(0)}</div>'''
@@ -419,7 +452,7 @@ def m_event():
                  f'<div class="m">{av(by, 14)}<span>{PEOPLE[by][0]}</span>{score(sc, i - 1, "g")}</div></div><div class="vt">{vote(up, down, mine, i - 1)}</div></div>')
     return f'''<div class="S mob frame"><div class="mhd"><div class="bd2"></div>{sbar()}
 {m_top("Mes soirées", "16-m-mes-soirees", (("plus", "56-m-proposer", "Proposer un film"), ("share", "57-m-partager", "Partager"), ("gear", "58-m-reglages-soiree", "Réglages de la soirée")))}
-<div class="mhc"><div class="ov">Ven. 14 nov., 21 h</div><h1 class="disp">Soirée chez Léa</h1><div class="em">{stack(["lea", "nico", "ines", "sam", "hugo", "adrien"], 20)}<span>6 films</span><span>3 sur 6 ont voté</span><span class="cdn">{ic("clock", 13)}4 j 06 h</span></div></div></div>
+<div class="mhc"><div class="ov">Ven. 14 nov., 21 h</div><h1 class="disp">Soirée chez Léa</h1><div class="em">{crowd(["lea", "nico", "ines", "sam", "hugo", "adrien"], 20)}<span>6 films</span><span>3 votants sur 6</span><span class="cdn">{ic("clock", 13)}4 j 06 h</span></div></div></div>
 <div class="ml">{rows}</div>
 <div class="mcta"><a class="btn"{href("13-m-roue")}>{ic("wheel", 18)}Lancer la roue</a></div>
 {mnav(1)}</div>'''
@@ -440,7 +473,7 @@ def m_win():
     f = FILMS["orbite"]
     return f'''<div class="S mob frame"><div class="wbg"></div>{sbar()}{m_top("Soirée chez Léa", "12-m-soiree", (("cal", None, "Ajouter au calendrier"), ("share", "57-m-partager", "Partager")))}
 <div class="wc"><div class="ov">Ce soir, vous regardez</div><div class="pw">{poster("orbite")}</div>
-<h2 class="disp">{f["t"]}</h2><div class="wm">{tmdb(f["r"])}<span>{f["y"]}</span><span>{f["d"]}</span></div>
+<h1 class="disp">{f["t"]}</h1><div class="wm">{tmdb(f["r"])}<span>{f["y"]}</span><span>{f["d"]}</span></div>
 <div class="wby">{av("hugo", 20)}Proposé par Hugo, 3 votes pour</div></div>
 <div class="wbtns one"><a class="btn gl"{href("17-m-fiche-film")}>{ic("info", 17)}Voir la fiche du film</a></div>
 {mnav(1)}</div>'''
@@ -456,7 +489,7 @@ def m_rate():
     ticks = "".join(f'<i style="left:{(n - 1) / 9 * 100}%"><b>{n}</b></i>' for n in range(1, 11))
     stars = "".join(f'<button type="button" class="st {hole(f"s{n}", "on" if n <= 4 else "")}" aria-label="{n} sur 5"{on(f"r{n}")}>{star(38)}</button>' for n in range(1, 6))
     return f'''<div class="S mob frame"><div class="wbg dim"></div>{sbar()}{m_top("Soirée chez Léa", "12-m-soiree", ())}
-<div class="rc"><div class="rhd"><div class="rp">{poster("orbite")}</div><div><div class="ov">Hier soir</div><div class="disp rt">Orbite basse</div><div class="rq">Alors, c’était comment&nbsp;?</div></div></div>
+<div class="rc"><div class="rhd"><div class="rp">{poster("orbite")}</div><div><div class="ov">Hier soir</div><h1 class="disp rt">Orbite basse</h1><div class="rq">Alors, c’était comment&nbsp;?</div></div></div>
 <div class="stars5">{stars}</div><div class="rlab">{hole("rlab", RATE_LABELS[3])}</div>
 <div class="grp"><div class="gh"><span>Les notes du groupe</span><b>{star(13)} 7,4</b></div><div class="scale"><div class="line">{ticks}</div>{scale}</div></div>
 <a class="btn full"{href("16-m-mes-soirees")}>Valider ma note</a><a class="skip"{href("16-m-mes-soirees")}>Je ne l’ai pas vu</a></div>
@@ -468,7 +501,7 @@ def m_events():
         pst = "".join(f'<div class="mf f{i}">{poster(p)}</div>' for i, p in enumerate(posters))
         return f'''<a class="mec"{href("12-m-soiree")} style="--tint:{tint}"><div class="edate"><span>{day}</span><b class="disp">{dnum}</b><span>{mon}</span></div><div class="emid"><div class="disp et">{title}</div><div class="eth">{sub}</div><div class="est {cls}">{status}</div></div><div class="mfan">{pst}</div></a>'''
     cards = mc("Ven.", "14", "Nov.", "Soirée chez Léa", "6 participants, 6 films", '<i class="dot"></i>Vote ouvert', "vote", "rgba(214,150,60,.35)", ["projo", "orbite"])
-    cards += mc("Mer.", "19", "Nov.", "Ciné-club du mercredi", "3 participants, 3 films", f'{ic("clock", 13)}Dans 9 j', "soon", "rgba(59,130,246,.35)", ["verre", "phare"])
+    cards += mc("Mer.", "19", "Nov.", "Ciné-club du mercredi", "3 participants, 3 films", f'{ic("clock", 13)}Commence dans 9 j', "soon", "rgba(59,130,246,.35)", ["verre", "phare"])
     cards += mc("Sam.", "29", "Nov.", "Marathon du samedi", "2 participants", f'{ic("plus", 13)}À remplir', "empty", "rgba(255,255,255,.08)", [])
 
     def rows(items):
@@ -484,7 +517,7 @@ def m_movie():
     f = FILMS["orbite"]
     return f'''<div class="S mob frame"><div class="under">{m_explorer_inner()}</div><div class="veil"></div>
 <div class="sheet"><span class="grab"></span><div class="sband">{hero_bd()}<a class="ib s close" aria-label="Fermer"{href("11-m-explorer")}>{ic("x", 16)}</a></div>
-<div class="sbody"><div class="shd"><div class="sp2">{poster("orbite")}</div><div><div class="ov">Science-fiction, 2024</div><h2 class="disp">{f["t"]}</h2><div class="hm">{tmdb("7,8")}<span>2h12</span><span>Clara Venn</span></div></div></div>
+<div class="sbody"><div class="shd"><div class="sp2">{poster("orbite")}</div><div><div class="ov">Science-fiction, 2024</div><h1 class="disp">{f["t"]}</h1><div class="hm">{tmdb("7,8")}<span>2h12</span><span>Clara Venn</span></div></div></div>
 <p class="syn">Une astronaute coincée en orbite capte chaque nuit la voix d’un enfant qui n’existe pas.</p>
 <div class="mlab">Où le voir</div><div class="prov"><span class="pv">Netflix</span><span class="pv">Canal+</span><span class="pv">Prime Video <em>location</em></span></div>
 <div class="sact"><a class="btn"{href("12-m-soiree")}>{ic("plus", 16)}Proposer à une soirée</a>{save_btn("btn gl sq", 17, False)}</div></div></div></div>'''
@@ -555,14 +588,14 @@ def tile():
 <div class="crow">{vote(4, 0, "up")}<span class="chip">Nuits blanches</span><span class="est vote"><i class="dot"></i>Vote ouvert</span></div>
 <label class="fld"><span class="in focus">Soirée chez Léa<i class="caret"></i></span></label>
 <label class="fld"><span class="in err">Nuits blanches et autres insomnies</span><span class="msg">{ic("alert", 13)}60 caractères au plus</span></label>
-<div class="crow"><span class="stars-s">{star(18)}{star(18)}{star(18)}{star(18)}{star(18, False)}</span>{tmdb("7,8")}</div><div class="crow"><div class="cd st"><div><div class="cdl">Soirée chez Léa</div><div class="cds">Séance dans</div></div><div class="v">4 J 06 H</div></div></div>
+<div class="crow"><span class="stars-s">{star(18)}{star(18)}{star(18)}{star(18)}{star(18, False)}</span>{tmdb("7,8")}</div><div class="crow"><div class="cd st"><div><div class="cdl">Soirée chez Léa</div><div class="cds">Commence dans</div></div><div class="v">4 J 06 H</div></div></div>
 <div class="note">Le bleu n’est que sur l’action principale et les états choisis. Liens, onglets, compteurs, statuts et graphiques restent blancs ou gris. L’or est réservé aux notes du groupe, sur 10, au compte à rebours et aux surtitres. La note TMDB reste grise.</div></div>
 </div>'''
 
 
 CSS = r"""
-.S{--bg:#0a0f1c;--s1:#131a2b;--s2:#1a2338;--s3:#243049;--line:#243049;--line2:#334155;--tx:#e2e8f0;--tx2:#94a3b8;--tx3:#818fa6;--acc:#3b82f6;--acc-h:#60a5fa;--acc-c:#0a0f1c;--acc-tx:#60a5fa;--acc-soft:rgba(59,130,246,.14);--glow:rgba(59,130,246,.55);--gold:#fbbf24;--ok:#4ade80;--err:#f87171;--hdr:rgba(10,15,28,.8);background:var(--bg);color:var(--tx);font-family:Inter,sans-serif}
-.S.light{--bg:#f4f6fa;--s1:#ffffff;--s2:#f1f5f9;--s3:#e2e8f0;--line:#e2e8f0;--line2:#cbd5e1;--tx:#0f172a;--tx2:#475569;--tx3:#5d6b80;--acc:#2563eb;--acc-h:#1d4ed8;--acc-c:#ffffff;--acc-tx:#1d4ed8;--acc-soft:rgba(37,99,235,.12);--glow:rgba(37,99,235,.3);--gold:#92400e;--hdr:#f4f6fa}
+.S{--bg:#0a0f1c;--s1:#131a2b;--s2:#1a2338;--s3:#243049;--line:#243049;--line2:#334155;--field:#5f6f8c;--tx:#e2e8f0;--tx2:#94a3b8;--tx3:#818fa6;--acc:#3b82f6;--acc-h:#60a5fa;--acc-c:#0a0f1c;--acc-tx:#60a5fa;--acc-soft:rgba(59,130,246,.14);--glow:rgba(59,130,246,.55);--gold:#fbbf24;--ok:#4ade80;--err:#f87171;--hdr:rgba(10,15,28,.8);background:var(--bg);color:var(--tx);font-family:Inter,sans-serif}
+.S.light{--bg:#f4f6fa;--s1:#ffffff;--s2:#f1f5f9;--s3:#e2e8f0;--line:#e2e8f0;--line2:#cbd5e1;--field:#82909f;--tx:#0f172a;--tx2:#475569;--tx3:#5d6b80;--acc:#2563eb;--acc-h:#1d4ed8;--acc-c:#ffffff;--acc-tx:#1d4ed8;--acc-soft:rgba(37,99,235,.12);--glow:rgba(37,99,235,.3);--gold:#92400e;--hdr:#f4f6fa}
 .S .disp{font-family:Archivo,sans-serif;font-stretch:70%;font-variation-settings:'wdth' 70;font-weight:800;text-transform:uppercase;letter-spacing:.005em;line-height:.92}
 .S .ov{font:700 11px/1.2 Inter,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
 .S .gold{color:var(--gold)}
@@ -745,7 +778,7 @@ CSS = r"""
 .S .ecard.add{display:flex;justify-content:center;gap:10px;color:var(--tx2);font-weight:600;font-size:14px;background:transparent;box-shadow:inset 0 0 0 1.5px var(--line2);border-radius:18px}
 .S .edate{display:flex;flex-direction:column;align-items:center;justify-content:center;height:96px;border-right:1px solid var(--line);padding-right:16px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--tx2)}
 .S .edate b{font-size:48px;color:var(--tx);margin:2px 0}
-.S .et{font-size:28px;line-height:.95;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.S .et{font-size:28px;line-height:1.05;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .S .eth{font-size:13px;color:var(--tx2);margin-top:5px}
 .S .eppl{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--tx3);margin-top:10px}
 .S .emid .est{margin-top:9px}
@@ -815,7 +848,7 @@ CSS = r"""
 .S .fld{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;flex:1}
 .S .fl{font-size:12.5px;font-weight:600;color:var(--tx2)}
 .S .fl small{font-weight:500;color:var(--tx3);margin-left:6px;font-size:12px}
-.S .in{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 16px;border-radius:12px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--line2);font-size:15px;color:var(--tx);white-space:nowrap;overflow:hidden}
+.S .in{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 16px;border-radius:12px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--field);font-size:15px;color:var(--tx);white-space:nowrap;overflow:hidden}
 .S .in em{color:var(--tx3);display:inline-flex}
 .S .in.focus{box-shadow:inset 0 0 0 1.5px var(--acc),0 0 0 4px var(--acc-soft);justify-content:flex-start}
 .S .caret{display:inline-block;width:1.5px;height:20px;background:var(--acc-tx);margin-left:2px}
@@ -824,7 +857,7 @@ CSS = r"""
 .S .frow{display:flex;gap:14px}
 .S .sugg{display:flex;gap:8px;flex-wrap:wrap;margin:-2px 0 16px}
 .S .adv{display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);font-size:14px;font-weight:600;margin-bottom:18px;color:var(--tx)}
-.S .adv small{font-size:12px;color:var(--tx3);font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.S .adv small{font-size:13px;color:var(--tx3);font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .S .adv .ic:last-child{margin-left:auto;color:var(--tx3)}
 .S .clab{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin:64px 0 12px}
 .S .inv{position:relative;border-radius:18px;overflow:hidden;background:var(--s1);box-shadow:inset 0 0 0 1px var(--line),0 30px 80px -20px rgba(0,0,0,.8);height:420px}
@@ -845,7 +878,7 @@ CSS = r"""
 .S .free{font-size:13px;color:var(--tx3);margin-top:14px}
 .S .lphone{position:relative;height:520px}
 .S .lphone .scale{transform:scale(.6);transform-origin:top center;position:absolute;left:50%;margin-left:-197px;top:-8px}
-.S .toast{position:absolute;left:-30px;top:34px;display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:rgba(26,35,56,.92);box-shadow:inset 0 0 0 1px var(--line2),0 20px 40px -10px #000;font-size:12px;z-index:3}
+.S .toast{position:absolute;left:-30px;top:34px;display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:rgba(26,35,56,.92);box-shadow:inset 0 0 0 1px var(--line2),0 20px 40px -10px #000;font-size:13px;z-index:3}
 .S .toast b{display:block;font-size:13px}
 .S .toast span{color:var(--tx2)}
 .S .steps{position:absolute;left:60px;right:40px;bottom:34px;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);z-index:2}
@@ -877,7 +910,7 @@ CSS = r"""
 .S .wbg.dim{background:radial-gradient(420px 360px at 50% 20%,rgba(59,130,246,.22),transparent 70%),#0a0f1c}
 .S .wc{position:relative;z-index:2;text-align:center;padding:30px 24px 0}
 .S .wc .pw{width:128px;margin:18px auto 0;border-radius:6px;overflow:hidden;box-shadow:0 34px 90px -12px var(--glow),0 0 0 1px rgba(255,255,255,.12)}
-.S .wc h2{font-size:58px;margin-top:18px}
+.S .wc h1,.S .wc h2{font-size:58px;margin-top:18px}
 .S .wm{display:flex;justify-content:center;gap:12px;color:var(--tx2);font-size:13px;margin-top:12px}
 .S .wby{display:flex;justify-content:center;align-items:center;gap:8px;font-size:13px;color:var(--tx2);margin-top:10px}
 .S .wbtns{position:absolute;left:18px;right:18px;bottom:94px;display:grid;grid-template-columns:1fr auto;gap:10px;z-index:3}
@@ -958,7 +991,7 @@ CSS = r"""
 .S .mh{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
 .S .mh .hp{width:30px}
 .S .mh div{flex:1;display:flex;flex-direction:column;gap:2px}
-.S .mh div span{font-size:12px;color:var(--tx3)}
+.S .mh div span{font-size:13px;color:var(--tx3)}
 
 .S .under{position:absolute;inset:0}
 .S .veil{position:absolute;inset:0;background:rgba(0,0,0,.62);z-index:4}
@@ -971,7 +1004,7 @@ CSS = r"""
 .S .sbody{position:relative;z-index:2;padding:0 18px;margin-top:-72px}
 .S .shd{display:flex;align-items:flex-end;gap:14px}
 .S .sp2{width:96px;border-radius:6px;overflow:hidden;flex:none;box-shadow:0 18px 40px -10px #000,0 0 0 1px rgba(255,255,255,.12)}
-.S .shd h2{font-size:42px;margin:6px 0 8px}
+.S .shd h1,.S .shd h2{font-size:42px;margin:6px 0 8px}
 .S .shd .hm{font-size:12.5px;gap:10px}
 .S .sbody .syn{font-size:14px;margin:14px 0 4px}
 .S .sbody .mlab{margin-top:14px}
@@ -1029,7 +1062,7 @@ CSS = r"""
 .S.mob .vb::after{left:0;right:0}
 .S.mob .back::after,.S.mob .more::after,.S.mob .skip::after{top:-12px;bottom:-12px}
 .S.mob .btn.sm{height:44px}
-.S.mob .seg.big>*{height:38px}
+.S.mob .seg.big>*{height:44px}
 .S button{font:inherit;color:inherit;border:0;background:none;padding:0;margin:0;text-align:inherit}
 .S a[href],.S button{cursor:pointer}
 .S a.pw,.S a.fv,.S a.sn{display:block}
@@ -1059,7 +1092,7 @@ CSS = r"""
 .S .pfl b{color:var(--tx);font-weight:700}
 .S .badge.seen{display:inline-flex;gap:4px}
 .S .wtb{display:flex;align-items:center;gap:10px;height:56px;padding:0 10px 0 9px;margin-bottom:16px;border-radius:12px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--line)}
-.S .wsrch{display:flex;align-items:center;gap:8px;width:250px;height:38px;padding:0 12px;border-radius:12px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line2);color:var(--tx3);font-size:13px;flex:none}
+.S .wsrch{display:flex;align-items:center;gap:8px;width:250px;height:38px;padding:0 12px;border-radius:12px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--field);color:var(--tx3);font-size:13px;flex:none}
 .S .wsrch input{flex:1;min-width:0;border:0;outline:0;background:none;font:inherit;font-size:13px;color:var(--tx)}
 .S .wsrch input::placeholder{color:var(--tx3)}
 .S .wfb{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 12px;border-radius:12px;font-size:13px;font-weight:600;color:var(--tx);box-shadow:inset 0 0 0 1px var(--line2);flex:none}
@@ -1105,6 +1138,24 @@ CSS = r"""
 .S .wprov{display:flex;gap:6px;align-items:center}
 .S .wprov .pv{height:26px;padding:0 8px;font-size:12px}
 .S .wplus{font-size:12px;color:var(--tx3);font-weight:600}
+.S .avmore{position:relative;display:inline-flex;align-items:center;justify-content:center;height:24px;min-width:24px;padding:0 5px;margin-left:-8px;border-radius:999px;background:var(--s3);box-shadow:0 0 0 2px var(--bg);font-size:11px;font-weight:700;color:var(--tx)}
+.S .evbar{display:flex;align-items:center;gap:8px}
+.S .evsep{width:1px;height:24px;margin:0 6px;background:var(--line2)}
+.S .evbar .btn{height:40px}
+.S .em>*{white-space:nowrap}
+.S .mhc .em{flex-wrap:wrap;row-gap:8px}
+.S .srow{padding:28px 40px 4px}
+.S .slab{margin-bottom:8px;font-size:13px;font-weight:600;color:var(--tx2)}
+.S .sfield{display:flex;align-items:center;gap:12px;height:52px;max-width:640px;padding:0 18px;border-radius:12px;background:var(--s1);box-shadow:inset 0 0 0 1px var(--field);color:var(--tx3);font-size:15px}
+.S .msrow{padding:14px 16px 0}
+.S .msrow .sfield{height:48px;font-size:14px}
+.S .srow+.row{padding-top:36px}
+.S nav.mnav{display:grid;grid-template-columns:repeat(5,1fr);gap:0}
+.S.mob .mhd2 .bell,.S.mob .mhd2 .me{position:relative}
+.S.mob .mhd2 .bell::after{content:'';position:absolute;inset:-13px}
+.S.mob .mhd2 .me::after{content:'';position:absolute;inset:-7px}
+.S h1.disp.util{font-size:44px}
+.S.mob h1.disp.util{font-size:38px}
 """
 
 

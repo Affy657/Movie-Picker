@@ -81,7 +81,7 @@ def google_btn(target, cls="btn gl full xa-gg"):
 
 
 def auth_hdr():
-    return f'<header class="hdr"><a class="logo"{b.href("09-accueil-public")}>Movie Picker<i></i></a></header>'
+    return b.guest_hdr(False, actions=False)
 
 
 WALL = ["phare", "orbite", "kyoto", "volets", "sable", "marseille", "projo", "brume", "km", "verre", "orbite", "phare", "kyoto", "sable", "volets", "projo"]
@@ -93,7 +93,7 @@ def wall(keys):
 
 def art_login():
     return f'''<div class="xa-art">{wall(WALL)}<div class="xa-artc"><div class="ov">Soirée ciné à plusieurs</div><div class="disp xa-artt">Vos soirées vous attendent</div>
-<div class="cd st"><div><div class="cdl">Soirée chez Léa</div><div class="cds">Séance dans</div></div><div class="v">4 J 06 H</div>{b.stack(["lea", "nico", "ines"], 24)}</div></div></div>'''
+<div class="cd st"><div><div class="cdl">Soirée chez Léa</div><div class="cds">Commence dans</div></div><div class="v">4 J 06 H</div>{b.stack(["lea", "nico", "ines"], 24)}</div></div></div>'''
 
 
 def art_register():
@@ -189,7 +189,7 @@ def side(active, name="Adrien"):
 def settings_inner(active, body, name="Adrien", saved=True):
     chip = b.when("saved", SAVED, False) if saved else ""
     return f'''{b.hdr(-1, solid=True)}<div class="xa-set">{side(active, name)}
-<div class="xa-main"><div class="xa-ph"><div><div class="ov">Paramètres</div><h1 class="disp">{RUBS[active][1]}</h1></div>{chip}</div>{body}</div></div>'''
+<div class="xa-main"><div class="xa-ph"><div><div class="ov">Paramètres</div><h1 class="disp util">{RUBS[active][1]}</h1></div>{chip}</div>{body}</div></div>'''
 
 
 def settings_desk(active, body, name="Adrien", saved=True):
@@ -422,7 +422,7 @@ def screen_33():
         tag = "a" if target else "div"
         rows += f'<{tag} class="xa-mrow"{b.href(target)}><span class="xa-mic">{ic(icon, 19)}</span><span class="xa-mt"><b>{lab}</b><small>{summ}</small></span>{dot}{b.ic("right", 17)}</{tag}>'
     return f'''<div class="S mob frame">{b.sbar()}{b.m_top("Profil", "18-m-profil", ())}
-<div class="xa-ms"><h1 class="disp">Paramètres</h1>
+<div class="xa-ms"><h1 class="disp util">Paramètres</h1>
 <div class="xa-mid"><span class="xa-avw big">{b.av("adrien", 64)}<i>{b.ic("pencil", 12)}</i></span><span><b class="disp">Adrien</b><small>@adrien</small></span>
 <a class="btn gl sm xa-mpub"{b.href("18-m-profil")}>{ic("globe", 15)}Profil public</a></div>
 <div class="xa-mlist">{rows}</div>
@@ -434,7 +434,7 @@ def screen_34():
     chip = b.when("saved", SAVED, False)
     top = f'<div class="mtop"><a class="back"{b.href("33-m-reglages")}>{b.ic("left", 16)}Paramètres</a><div class="ibs xa-mchip">{chip}</div></div>'
     return f'''<div class="S mob frame">{b.sbar()}{top}
-<div class="xa-ms"><h1 class="disp">Préférences</h1>
+<div class="xa-ms"><h1 class="disp util">Préférences</h1>
 <div class="xa-card xa-mcard">
 <div class="xa-mfld"><div class="xa-rl">Langue</div>{lang_dd(True)}</div>
 <div class="xa-mfld"><div class="xa-rl">Thème de l’interface</div>{theme_opt(True)}</div>
@@ -720,7 +720,7 @@ CSS = r"""
 .S .xa-ida .av{box-shadow:0 0 0 3px var(--s1),0 0 0 5px var(--line2)}
 .S .xa-ida .xa-avw i{box-shadow:0 0 0 2px var(--s1)}
 .S .xa-ta{height:88px;align-items:flex-start;padding:12px 16px;white-space:normal;font-size:14px;line-height:1.45}
-.S textarea.in.xa-ta{width:100%;border:0;outline:0;resize:none;font:inherit;font-size:14px;line-height:1.45;color:var(--tx);background:var(--s1);box-shadow:inset 0 0 0 1px var(--line2);display:block}
+.S textarea.in.xa-ta{width:100%;border:0;outline:0;resize:none;font:inherit;font-size:14px;line-height:1.45;color:var(--tx);background:var(--s1);box-shadow:inset 0 0 0 1px var(--field);display:block}
 .S textarea.in.xa-ta:focus{box-shadow:inset 0 0 0 1.5px var(--acc),0 0 0 4px var(--acc-soft)}
 .S .xa-cnt{font-size:12px;font-weight:500;color:var(--tx3)}
 .S .xa-favs{padding:16px 18px 14px}
@@ -738,7 +738,7 @@ CSS = r"""
 .S .xa-prow .xa-rm{max-width:250px}
 .S .xa-ctl{margin-left:auto;flex:none}
 .S .xa-accn{font-size:12px;font-weight:600;color:var(--tx3);margin-left:8px}
-.S .xa-sel{display:inline-flex;align-items:center;justify-content:space-between;gap:10px;height:42px;min-width:220px;padding:0 14px;border-radius:12px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line2);font-size:14px;font-weight:600}
+.S .xa-sel{display:inline-flex;align-items:center;justify-content:space-between;gap:10px;height:42px;min-width:220px;padding:0 14px;border-radius:12px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--field);font-size:14px;font-weight:600}
 .S .xa-sel .ic{color:var(--tx3)}
 .S .xa-self{display:flex;width:100%}
 .S .xa-opt{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line)}
@@ -871,4 +871,8 @@ CSS = r"""
 .S .xa-sws4 .xa-sw.on{box-shadow:none}
 .S .xa-sws4 .xa-sw.on i{box-shadow:0 0 0 2px var(--s1),0 0 0 4px var(--acc)}
 .S .xa-mfld .xa-sws+.xa-rs{margin-top:10px}
+.S.mob .xa-opt.xa-optf>button{height:44px}
+.S.mob .xa-self{height:44px}
+.S .xa-alt a{position:relative}
+.S .xa-alt a::after{content:'';position:absolute;left:-4px;right:-4px;top:-14px;bottom:-14px}
 """

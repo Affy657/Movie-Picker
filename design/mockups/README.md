@@ -50,6 +50,13 @@ Tout ce qui est généré va dans `build/`, ignoré par git.
 
 Un artboard garde son propre état. Un parcours qui doit partager un état entre plusieurs vues tient donc dans un seul écran, avec des `when(...)`.
 
+Les briques communes à reprendre plutôt qu'à refaire :
+
+- `hdr()` pour l'en-tête d'un compte connecté, `guest_hdr()` pour un visiteur. Comme dans l'application, la recherche n'est pas dans l'en-tête : elle est sur Explorer.
+- `event_bar()` et `event_actions()` pour la barre d'actions d'une soirée, identique dans tous ses états.
+- `crowd()` pour une pile d'avatars : quatre au plus, puis « +N ».
+- La classe `util` sur le titre d'une page utilitaire (réglages, notifications, pages légales), plus petit que celui d'un écran principal.
+
 ## Régénérer et vérifier
 
 Il faut Python 3.12 ou plus et les dépendances du dépôt (`pnpm install`), pour Playwright.

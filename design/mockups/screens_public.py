@@ -74,18 +74,12 @@ def mail():
     return f'<a class="xe-mail">{EMAIL}</a>'
 
 
-def hdr_in(chip=False):
-    h = b.hdr(-1, search=not chip, solid=True)
-    if chip:
-        h = h.replace('<div class="hr">', f'<div class="hr"><a class="chip xe-nchip"{href("78-nouveautes")}>{xi("sparkles", 14)}Nouveautés</a>', 1)
-    return h
+def hdr_in():
+    return b.hdr(-1, solid=True)
 
 
 def pub_hdr(solid=True):
-    nav = "".join(f'<a{href(t)}>{x}</a>' for x, t in [("Comment ça marche", "09-accueil-public"), ("Mes soirées", "21-connexion"),
-                                                       ("Nouvelle soirée", "21-connexion"), ("Ma liste", "21-connexion")])
-    return (f'<header class="hdr{" solid" if solid else ""}"><a class="logo"{href("09-accueil-public")}>Movie Picker<i></i></a><nav>{nav}</nav>'
-            f'<div class="hr"><a class="btn gl sm"{href("21-connexion")}>Se connecter</a><a class="btn sm"{href("22-inscription")}>Créer un compte</a></div></header>')
+    return b.guest_hdr(solid)
 
 
 def mnav_guest():
@@ -163,7 +157,7 @@ def costs_html():
 
 
 def screen_71():
-    return f'''<div class="S desk frame">{hdr_in(chip=True)}
+    return f'''<div class="S desk frame">{hdr_in()}
 <div class="xe-scr"><div class="xe-don"><div class="xe-dmain">{page_title("Gratuit, sans publicité", "Soutenir Movie Picker")}
 <p class="xe-lead">{DONATE_INTRO}</p>
 <h2 class="disp xe-h2">Où va l’argent</h2><p class="xe-p">Movie Picker a des frais fixes chaque mois :</p>
@@ -225,7 +219,7 @@ def legal_aside(title, sections, prefix, also, h1cls="", intro=""):
     also_html = "".join(f'<a{href(t)}>{x}{ic("right", 15)}</a>' for x, t in also)
     toc_html = f'<div class="xe-toc" role="navigation"><p class="xe-cap">Sur cette page</p>{toc(sections, prefix)}</div>' if sections else ""
     intro_html = f'<p class="xe-lead xe-lin">{intro}</p>' if intro else ""
-    return f'''<aside class="xe-la">{page_title("Informations légales", title, h1cls)}{intro_html}
+    return f'''<aside class="xe-la">{page_title("Informations légales", title, ("util " + h1cls).strip())}{intro_html}
 <p class="xe-upd">{ic("clock", 13)}Dernière mise à jour : 9 septembre 2026</p>
 {toc_html}
 <div class="xe-also">{also_html}</div></aside>'''
@@ -252,7 +246,7 @@ def screen_73():
     for i, (t, ps) in enumerate(PRIVACY):
         secs += sec_html(i, t, ps, "xe-p", f'<div class="xe-items">{items}</div>' if i == 0 else "")
     aside = legal_aside("Politique de confidentialité", PRIVACY, "xe-p", [("Mentions légales", "72-mentions-legales"), ("Gérer les cookies", "77-consentement")], "xe-h1s")
-    return f'''<div class="S desk frame">{hdr_in(chip=True)}
+    return f'''<div class="S desk frame">{hdr_in()}
 <div class="xe-scr"><div class="xe-leg">{aside}
 <div class="xe-lc"><p class="xe-lead big">Cette page décrit les données personnelles traitées par Movie Picker et vos droits sur ces données.</p>
 <div class="xe-flow">{secs}</div><a class="btn gl sm xe-backb"{href("01-explorer")}>{ic("left", 15)}Retour à Movie Picker</a></div></div>
@@ -887,7 +881,7 @@ CSS = r"""
 .S .xe-leg{display:grid;grid-template-columns:300px minmax(0,1fr);gap:64px;padding:36px 40px 52px}
 .S .xe-la{position:sticky;top:36px;align-self:start}
 .S .xe-la h1{font-size:56px;margin:12px 0 14px}
-.S .xe-la h1.xe-h1s{font-size:46px}
+.S .xe-la h1.xe-h1s{font-size:44px}
 .S .xe-upd{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--tx3)}
 .S .xe-toc{display:flex;flex-direction:column;gap:2px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
 .S .xe-toc .xe-cap{margin-bottom:8px}
@@ -1036,8 +1030,8 @@ CSS = r"""
 .S .xe-ta{display:block;width:100%;height:182px;padding:12px 14px;border:0;outline:0;resize:none;background:transparent;color:var(--tx);font:13px/1.55 'IBM Plex Mono',monospace}
 .S .xe-ta:focus{box-shadow:inset 0 0 0 1.5px var(--acc)}
 .S .xe-tech{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 14px;border-top:1px solid var(--line)}
-.S .xe-tech em{flex:1 1 100%;font-style:normal;font-size:12px;color:var(--tx3);margin-bottom:2px}
-.S .xe-tech span{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:999px;background:var(--s2);font-size:12px;color:var(--tx2)}
+.S .xe-tech em{flex:1 1 100%;font-style:normal;font-size:13px;color:var(--tx3);margin-bottom:2px}
+.S .xe-tech span{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:999px;background:var(--s2);font-size:13px;color:var(--tx2)}
 .S .xe-mda{display:flex;align-items:center;gap:10px;margin-top:18px}
 .S .xe-st{display:inline-flex;align-items:center;gap:6px;margin-left:6px;font-size:13px;font-weight:600;color:var(--ok)}
 .S .xe-hint{font-size:12.5px;line-height:1.5;color:var(--tx3);margin-top:14px}
@@ -1256,6 +1250,12 @@ CSS = r"""
 .S .xe-iov{margin-top:236px}
 .S .xe-scrim{position:absolute;inset:0;z-index:3;background:rgba(0,0,0,.45)}
 .S .xe-iatb{position:absolute;left:0;right:0;bottom:0;height:56px;z-index:3;display:flex;align-items:center;justify-content:space-around;padding-bottom:6px;background:var(--s1);border-top:1px solid var(--line);color:var(--tx2)}
+.S.mob .xe-ftl a,.S.mob .xe-fwn{display:flex;align-items:center;min-height:44px}
+.S.mob .xe-inst{height:44px}
+.S.mob .xe-mft .logo,.S.mob .xe-mbar .logo{display:inline-flex;align-items:center;min-height:44px}
+.S .xe-mnote a{position:relative}
+.S .xe-mnote a::after{content:'';position:absolute;left:-4px;right:-4px;top:-15px;bottom:-15px}
+.S .xe-tmdb,.S .xe-mfb span,.S .xe-stamp,.S .xe-hr.l{font-size:13px}
 """
 
 SCREENS = {
