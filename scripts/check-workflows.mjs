@@ -27,7 +27,7 @@ const workflowsDir = join(root, '.github', 'workflows');
 const ACTIONLINT_IMAGE =
   'rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667';
 const ZIZMOR_IMAGE =
-  'ghcr.io/zizmorcore/zizmor:1.31.1@sha256:42d409dbb851d4c5d35a058cf042b828bea1e3f2884378c526eb0974780e18d9';
+  'ghcr.io/zizmorcore/zizmor:1.32.0@sha256:3014cc8f68f663935f69b3c3e0e41f5ce102b268d97db13db0f62208747f860d';
 
 function fail(message) {
   console.error(`\x1b[31m✗\x1b[0m ${message}`);
