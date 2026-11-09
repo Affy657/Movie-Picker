@@ -239,6 +239,7 @@ L'application mobile Expo est archivée dans `archive/mobile` depuis mai 2026, i
 - **Guide de développement** (installation, seed, scripts, tests, structure) : [`docs/development.md`](docs/development.md), destiné à un humain qui arrive sur le dépôt, il porte aussi les pièges d'environnement local.
 - **Roadmap** (features par version et statuts, puis une section Tech par version pour l'infra, la CI/CD, la qualité et la sécurité) : [`docs/roadmap.md`](docs/roadmap.md).
 - **Dette technique** : [`docs/technical-debt.md`](docs/technical-debt.md), fichier de travail pour agent, pas de lecture humaine. Une entrée par dette, chacune avec sa commande `verify` de fraîcheur et son critère de fin, plus deux sections « Contraintes » et « Impasses » à lire avant toute optimisation front ou tout geste de déploiement. C'est là qu'atterrit toute dette constatée, jamais dans une roadmap ni en mémoire agent.
+- **Maquettes** (les écrans de l'application dans la direction artistique « Salle obscure en bleu », publiés dans un canvas Design de claude.ai) : [`design/mockups/README.md`](design/mockups/README.md), qui dit comment ajouter un écran, régénérer, vérifier et republier.
 
 **Dossier technique publié dans l'application** (`/tech`), source dans `apps/web/src/app/pages/tech/`. Deux dates s'affichent dans son en-tête et elles ne se maintiennent pas de la même façon :
 

@@ -19,6 +19,7 @@ EXCL=$(sonar_join \
   'coverage-unit/**' \
   'archive/**' \
   'docs/**' \
+  'design/**' \
   'e2e/**' \
   'scripts/**' \
   'apps/web/scripts/**' \

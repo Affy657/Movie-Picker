@@ -72,3 +72,9 @@ terraform.rc
 # Misc
 *.local
 tmp-swagger.json
+
+# Python bytecode
+__pycache__/
+
+# Design canvas runtime, copied from the published canvas, see design/mockups/README.md
+design/mockups/tools/dc-runtime.js
