@@ -732,6 +732,16 @@ Pool de 20 connexions par instance (`DefaultMaxConnectionPoolSize`, `ServiceColl
 
 `prerender.mjs` pose `moviepicker-consent` avec `decided: true` et l'indice de session, pour que ni la bannière ni les actions invité ne soient figées dans le HTML. `/r/` et les routes prérendues restent hors du repli hors ligne du service worker : Hosting sert leur document propre, le repli ne joue que sur un échec réseau.
 
+## C16 Gitleaks lit tout l'arbre pendant que les autres voies y écrivent
+
+Dans `scripts/verify-local.cjs`, la voie docker monte le dépôt en lecture (`-v .:/repo:ro`) et Gitleaks parcourt l'arbre de travail entier, fichiers ignorés par git compris, pendant que la voie dotnet écrit dedans. Sous Windows, chaque fichier lu reste ouvert côté hôte le temps de sa lecture, en partage lecture et écriture : 375 ms mesurés pour `artifacts/openapi-v1.json` (348 Ko) sur un parcours de 23 s. Une écriture ordinaire passe au travers, une ouverture exclusive échoue.
+
+`dotnet swagger tofile` ouvre sa sortie par `File.Create`, donc en exclusif : le 2026-11-09, `verify:local` est tombé sur `IOException: The process cannot access the file ... because it is being used by another process` à l'étape d'export OpenAPI, sans rapport avec le code. D'où `scripts/export-openapi.cjs` : le contrat est généré dans un dossier temporaire hors de l'arbre, puis recopié par `publishContract`, qui écrit en mode partagé et patiente sur `EBUSY` ou `EPERM` (`scripts/export-openapi.test.mjs`).
+
+1. Ne pas rebrancher `--output` sur `artifacts/` directement.
+2. Une nouvelle étape qui écrit dans l'arbre par un outil .NET (`File.Create`, `FileShare.None`) pendant la voie docker reproduira la panne, une fois sur quelques dizaines : générer hors de l'arbre, puis recopier.
+3. Ne pas sortir `artifacts/` du périmètre de Gitleaks pour régler ça : le prochain lecteur (antivirus, indexeur, éditeur) rouvrirait la même fenêtre.
+
 ---
 
 # Impasses
