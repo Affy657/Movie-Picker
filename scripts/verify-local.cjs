@@ -11,20 +11,37 @@
  * Only the docker lane may still be running at that point, its longest step being the Trivy
  * database download, pure network. The first failure kills everything else.
  *
+ * The web build closes the run, once the docker lane is over: it empties and rewrites `dist`
+ * while Gitleaks would be reading it (see docs/technical-debt.md, C16), and it regenerates the
+ * versioned `techMetrics.ts`, put back as it was whatever the outcome.
+ *
  * Buffered lanes print each step's output when the step ends, so the log stays readable; the
  * Vitest suite streams live as before. A per-step timing table closes the run.
  */
 const { spawn, spawnSync } = require('node:child_process');
 const path = require('node:path');
+const { snapshotFile } = require('./file-snapshot.cjs');
 
 const root = path.join(__dirname, '..');
 const envMongoEmpty = { ...process.env, MONGODB_URI: '' };
 const isWindows = process.platform === 'win32';
+const generatedTechMetrics = path.join(
+  root,
+  'apps',
+  'web',
+  'src',
+  'app',
+  'pages',
+  'tech',
+  'generated',
+  'techMetrics.ts'
+);
 
 const running = new Set();
 const timings = [];
 const startedAt = Date.now();
 let aborting = false;
+let restoreGeneratedFiles = () => {};
 
 function seconds(ms) {
   return `${(ms / 1000).toFixed(1)} s`;
@@ -44,6 +61,7 @@ function abort(title, status, output) {
   if (aborting) return;
   aborting = true;
   for (const child of running) killTree(child);
+  restoreGeneratedFiles();
   if (output) process.stdout.write(output);
   process.stdout.write(`\n\x1b[31m✗ ${title} failed (exit ${status}).\x1b[0m\n\n`);
   process.exit(typeof status === 'number' && status !== 0 ? status : 1);
@@ -239,6 +257,17 @@ function printTimings() {
   );
 }
 
+async function webBuild() {
+  restoreGeneratedFiles = snapshotFile(generatedTechMetrics);
+  await run('Web build (metrics, tsc, vite, bundle secrets, prerender)', 'pnpm', [
+    '--filter',
+    'web',
+    'run',
+    'build',
+  ]);
+  restoreGeneratedFiles();
+}
+
 async function main() {
   const docker = dockerLane();
   await Promise.all([nodeLane(), dotnetLane()]);
@@ -251,6 +280,7 @@ async function main() {
     }
   );
   await docker;
+  await webBuild();
   printTimings();
   process.stdout.write('\n\x1b[32m✓ verify:local: everything passed.\x1b[0m\n\n');
 }
