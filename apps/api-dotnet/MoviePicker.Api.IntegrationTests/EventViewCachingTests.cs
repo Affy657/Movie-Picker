@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -23,7 +24,7 @@ public sealed class EventViewCachingTests : IClassFixture<MoviePickerApplication
     {
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Cache", date = "2035-06-01", time = "20:00" });
+            new { title = "Cache", date = TestDates.Upcoming, time = "20:00" });
         create.EnsureSuccessStatusCode();
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         var slug = created!.Slug;

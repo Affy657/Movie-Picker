@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -41,7 +42,7 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
 
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Soirée compte", date = "2035-06-01", time = "20:00" });
+            new { title = "Soirée compte", date = TestDates.Upcoming, time = "20:00" });
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
@@ -65,7 +66,7 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
 
         var shared = await creatorAClient.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "S partagée", date = "2035-07-01", time = "21:00" });
+            new { title = "S partagée", date = TestDates.Upcoming, time = "21:00" });
         Assert.Equal(HttpStatusCode.Created, shared.StatusCode);
         var sharedEvt = await shared.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(sharedEvt);
@@ -77,7 +78,7 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
 
         var owned = await hostClient.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Ma soirée", date = "2035-08-01", time = "22:00" });
+            new { title = "Ma soirée", date = TestDates.UpcomingPlusDays(31), time = "22:00" });
         Assert.Equal(HttpStatusCode.Created, owned.StatusCode);
 
         var mine = await hostClient.GetAsync("/api/v1/events/mine");
@@ -111,7 +112,7 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
         var other = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Autre");
         var otherCreate = await other.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Autre", date = "2035-10-01", time = "20:00" });
+            new { title = "Autre", date = TestDates.Upcoming, time = "20:00" });
         otherCreate.EnsureSuccessStatusCode();
         var otherEvt = await otherCreate.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(otherEvt);

@@ -16,7 +16,7 @@ public sealed class EventDocumentMapperTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = "2026-01-01",
             Time = "20:00",
             HostToken = "ht",
             Slug = "soiree",
@@ -31,7 +31,7 @@ public sealed class EventDocumentMapperTests
 
         Assert.Equal("evt1", domain.Id);
         Assert.Equal("Soirée", domain.Title);
-        Assert.Equal("2030-01-01", domain.Date);
+        Assert.Equal("2026-01-01", domain.Date);
         Assert.Equal("20:00", domain.Time);
         Assert.Equal("ht", domain.HostToken);
         Assert.Equal("soiree", domain.Slug);
@@ -50,7 +50,7 @@ public sealed class EventDocumentMapperTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = "2026-01-01",
             Time = "20:00",
             HostToken = "ht",
             Slug = "s",
@@ -81,7 +81,7 @@ public sealed class EventDocumentMapperTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = "2026-01-01",
             Time = "20:00",
             HostToken = "ht",
             Slug = "s",
@@ -104,13 +104,13 @@ public sealed class EventDocumentMapperTests
     {
         var evt = new EventEntityBuilder().WithId("evt1").WithSlug("soiree").Build() with
         {
-            Date = "2030-07-14",
+            Date = "2026-07-14",
             Time = "21:00"
         };
 
         var doc = EventDocumentMapper.ToDocument(evt);
 
-        Assert.Equal(new DateTime(2030, 7, 14, 19, 0, 0, DateTimeKind.Utc), doc.StartAtUtc);
+        Assert.Equal(new DateTime(2026, 7, 14, 19, 0, 0, DateTimeKind.Utc), doc.StartAtUtc);
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public sealed class EventDocumentMapperTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = "2026-01-01",
             Time = "20:00",
             HostToken = "ht",
             Slug = "s",
@@ -158,7 +158,7 @@ public sealed class EventDocumentMapperTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = "2026-01-01",
             Time = "20:00",
             HostToken = "ht",
             Slug = "s",
@@ -187,7 +187,7 @@ public sealed class EventDocumentMapperTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = "2026-01-01",
             Time = "20:00",
             HostToken = "ht",
             Slug = "s",
@@ -211,7 +211,7 @@ public sealed class EventDocumentMapperTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = "2026-01-01",
             Time = "20:00",
             HostToken = "ht",
             Slug = "s",
@@ -258,7 +258,7 @@ public sealed class EventDocumentMapperTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = "2026-01-01",
             Time = "20:00",
             HostToken = "ht",
             Slug = "s",
@@ -281,7 +281,7 @@ public sealed class EventDocumentMapperTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = "2026-01-01",
             Time = "20:00",
             HostToken = "ht",
             Slug = "s"

@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.CreateEvent;
@@ -31,7 +32,7 @@ public sealed class CreateEventIdempotencyTests
     private static CreateEventRequest Request(string? clientRequestId) => new()
     {
         Title = "Soirée",
-        Date = "2030-01-01",
+        Date = TestDates.Upcoming,
         Time = "20:30",
         ClientRequestId = clientRequestId
     };

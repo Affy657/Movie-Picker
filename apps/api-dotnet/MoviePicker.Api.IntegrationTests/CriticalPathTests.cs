@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc.Testing;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -56,7 +57,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     public async Task PostEvents_WithoutSession_Returns401()
     {
         var client = _factory.CreateClient();
-        var body = new { title = "Soirée test", date = "2030-12-31", time = "20:00" };
+        var body = new { title = "Soirée test", date = TestDates.Upcoming, time = "20:00" };
         var res = await client.PostAsJsonAsync("/api/v1/events", body);
         Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
     }
@@ -65,7 +66,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     public async Task PostEvents_WithSession_CreatesEvent_Returns201_WithSlugAndCreatorParticipant()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Créateur");
-        var body = new { title = "Soirée test", date = "2030-12-31", time = "20:00" };
+        var body = new { title = "Soirée test", date = TestDates.Upcoming, time = "20:00" };
         var res = await client.PostAsJsonAsync("/api/v1/events", body);
         Assert.Equal(HttpStatusCode.Created, res.StatusCode);
         var created = await res.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
@@ -82,7 +83,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "HôteIntégration");
 
-        var createBody = new { title = "Soirée intégration", date = "2030-06-15", time = "19:00" };
+        var createBody = new { title = "Soirée intégration", date = TestDates.Upcoming, time = "19:00" };
         var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
         createRes.EnsureSuccessStatusCode();
         var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
@@ -129,7 +130,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     public async Task PostMovie_PosterPathLongerThanAnyTmdbAddress_IsRefusedBeforeBeingStored()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "HôteAffiche");
-        var createRes = await client.PostAsJsonAsync("/api/v1/events", new { title = "Soirée affiche", date = "2030-06-16", time = "19:00" });
+        var createRes = await client.PostAsJsonAsync("/api/v1/events", new { title = "Soirée affiche", date = TestDates.Upcoming, time = "19:00" });
         createRes.EnsureSuccessStatusCode();
         var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
 
@@ -150,7 +151,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "HôteManuel");
 
-        var createBody = new { title = "Soirée choix manuel", date = "2030-06-16", time = "19:00" };
+        var createBody = new { title = "Soirée choix manuel", date = TestDates.Upcoming, time = "19:00" };
         var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
         createRes.EnsureSuccessStatusCode();
         var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
@@ -187,7 +188,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "HôteManuel404");
 
-        var createBody = new { title = "Soirée choix manuel 404", date = "2030-06-17", time = "19:00" };
+        var createBody = new { title = "Soirée choix manuel 404", date = TestDates.Upcoming, time = "19:00" };
         var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
         createRes.EnsureSuccessStatusCode();
         var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
@@ -203,7 +204,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     public async Task PostWinner_WithoutHostAccess_Returns403()
     {
         var hostClient = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "HôteManuel403");
-        var createBody = new { title = "Soirée choix manuel 403", date = "2030-06-18", time = "19:00" };
+        var createBody = new { title = "Soirée choix manuel 403", date = TestDates.Upcoming, time = "19:00" };
         var createRes = await hostClient.PostAsJsonAsync("/api/v1/events", createBody);
         createRes.EnsureSuccessStatusCode();
         var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
@@ -231,7 +232,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     public async Task PostWheelAndClose_WithoutJsonBody_Returns415()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "GardeCsrf");
-        var createBody = new { title = "Soirée garde CSRF", date = "2030-08-01", time = "20:00" };
+        var createBody = new { title = "Soirée garde CSRF", date = TestDates.Upcoming, time = "20:00" };
         var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
         createRes.EnsureSuccessStatusCode();
         var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
@@ -270,7 +271,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
 
         var createRes = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Soirée V1 flow", date = "2031-06-01", time = "20:00" });
+            new { title = "Soirée V1 flow", date = TestDates.Upcoming, time = "20:00" });
         createRes.EnsureSuccessStatusCode();
         var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
@@ -331,7 +332,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "VoteToggle");
 
-        var createBody = new { title = "Soirée vote toggle", date = "2030-07-01", time = "20:00" };
+        var createBody = new { title = "Soirée vote toggle", date = TestDates.Upcoming, time = "20:00" };
         var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
         createRes.EnsureSuccessStatusCode();
         var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
@@ -401,7 +402,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
 
         var createRes = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Soirée budget de votes", date = "2030-07-01", time = "20:00" });
+            new { title = "Soirée budget de votes", date = TestDates.Upcoming, time = "20:00" });
         createRes.EnsureSuccessStatusCode();
         var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         var slug = created!.Slug;
@@ -456,7 +457,7 @@ public sealed class CriticalPathTests : IClassFixture<MoviePickerApplicationFact
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "WheelRelaunch");
 
-        var createBody = new { title = "Soirée relance roue", date = "2030-07-01", time = "20:00" };
+        var createBody = new { title = "Soirée relance roue", date = TestDates.Upcoming, time = "20:00" };
         var createRes = await client.PostAsJsonAsync("/api/v1/events", createBody);
         createRes.EnsureSuccessStatusCode();
         var created = await createRes.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);

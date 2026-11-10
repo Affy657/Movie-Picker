@@ -21,7 +21,7 @@ public sealed class InMemoryEventRepositoryTests
         {
             Id = id,
             Title = title,
-            Date = "2030-01-01",
+            Date = "2026-01-01",
             Time = "20:00",
             HostToken = "ht",
             Slug = slug,
@@ -35,9 +35,9 @@ public sealed class InMemoryEventRepositoryTests
     [Fact]
     public async Task ListAwaitingWatchlistCleanupAsync_ReturnsFinishedEventsWithAWinnerNotYetCleaned()
     {
-        var now = new DateTimeOffset(2030, 6, 1, 12, 0, 0, TimeSpan.Zero);
+        var now = new DateTimeOffset(2026, 6, 1, 12, 0, 0, TimeSpan.Zero);
         var closed = await _repo.AddAsync(Mk(slug: "closed", winnerMovieId: "m1", closedAt: now.AddDays(-1)));
-        var autoClosed = await _repo.AddAsync(Mk(slug: "auto") with { Date = "2030-05-01", Winners = TestWinners.Won("m2") });
+        var autoClosed = await _repo.AddAsync(Mk(slug: "auto") with { Date = "2026-05-01", Winners = TestWinners.Won("m2") });
         await _repo.AddAsync(Mk(slug: "cleaned", winnerMovieId: "m3", closedAt: now.AddDays(-1)) with { WatchlistCleanedAt = now });
         await _repo.AddAsync(Mk(slug: "no-winner", closedAt: now.AddDays(-1)));
         await _repo.AddAsync(Mk(slug: "upcoming", winnerMovieId: "m4") with { Date = "2031-01-01" });
@@ -146,8 +146,8 @@ public sealed class InMemoryEventRepositoryTests
         await _repo.AddAsync(Mk(slug: "unparsable", closedAt: null) with { Date = "pas-une-date" });
 
         var open = await _repo.ListOpenEventsStartingBetweenAsync(
-            new DateTimeOffset(2029, 12, 31, 0, 0, 0, TimeSpan.Zero),
-            new DateTimeOffset(2030, 1, 2, 0, 0, 0, TimeSpan.Zero));
+            new DateTimeOffset(2025, 12, 31, 0, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero));
 
         Assert.Single(open);
         Assert.Equal("open", open[0].Slug);
@@ -171,7 +171,7 @@ public sealed class InMemoryEventRepositoryTests
     public async Task MarkWatchlistCleanedAsync_StampsOnceAndKeepsTheRestOfTheEvent()
     {
         var evt = await _repo.AddAsync(new EventEntityBuilder().WithSlug("stamp-me").Build());
-        var at = new DateTimeOffset(2030, 6, 2, 12, 0, 0, TimeSpan.Zero);
+        var at = new DateTimeOffset(2026, 6, 2, 12, 0, 0, TimeSpan.Zero);
 
         var first = await _repo.MarkWatchlistCleanedAsync(evt.Id, at);
         var second = await _repo.MarkWatchlistCleanedAsync(evt.Id, at.AddHours(1));

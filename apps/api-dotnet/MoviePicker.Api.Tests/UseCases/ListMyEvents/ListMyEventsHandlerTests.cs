@@ -74,7 +74,7 @@ public sealed class ListMyEventsHandlerTests
         {
             Id = "e1",
             Title = "Créée",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "c",
             HostToken = "h",
@@ -86,7 +86,7 @@ public sealed class ListMyEventsHandlerTests
         {
             Id = "e2",
             Title = "Rejointe",
-            Date = "2030-02-01",
+            Date = TestDates.UpcomingPlusDays(31),
             Time = "21:00",
             Slug = "j",
             HostToken = "h2",
@@ -120,7 +120,7 @@ public sealed class ListMyEventsHandlerTests
         {
             Id = "a",
             Title = "A",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "a",
             HostToken = "h",
@@ -132,7 +132,7 @@ public sealed class ListMyEventsHandlerTests
         {
             Id = "b",
             Title = "B",
-            Date = "2030-01-02",
+            Date = TestDates.UpcomingPlusDays(1),
             Time = "20:00",
             Slug = "b",
             HostToken = "h",
@@ -170,7 +170,7 @@ public sealed class ListMyEventsHandlerTests
         {
             Id = "e1",
             Title = "Une",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "u",
             HostToken = "h",
@@ -204,7 +204,7 @@ public sealed class ListMyEventsHandlerTests
         {
             Id = "e1",
             Title = "Avec capacité",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "cap",
             HostToken = "h",
@@ -217,7 +217,7 @@ public sealed class ListMyEventsHandlerTests
         {
             Id = "e2",
             Title = "Sans limite",
-            Date = "2030-02-01",
+            Date = TestDates.UpcomingPlusDays(31),
             Time = "21:00",
             Slug = "free",
             HostToken = "h",
@@ -252,7 +252,7 @@ public sealed class ListMyEventsHandlerTests
         {
             Id = "e1",
             Title = "Une",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "u",
             HostToken = "h",
@@ -281,7 +281,7 @@ public sealed class ListMyEventsHandlerTests
         {
             Id = "active",
             Title = "Active",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "active",
             HostToken = "h",
@@ -486,7 +486,7 @@ public sealed class ListMyEventsHandlerTests
     [Fact]
     public async Task HandleAsync_RatingNotOpenYet_HasNothingToRate()
     {
-        GivenCreatedNights(FinishedNight("e1", "m1") with { Date = "2035-06-01", ClosedAt = null });
+        GivenCreatedNights(FinishedNight("e1", "m1") with { Date = TestDates.Upcoming, ClosedAt = null });
         GivenViewerJoined("e1", "me");
 
         var result = await _sut.HandleAsync("u1", MyEventListScope.Active, limit: 10, offset: 0, q: null);
@@ -497,7 +497,7 @@ public sealed class ListMyEventsHandlerTests
     [Fact]
     public async Task HandleAsync_ActiveScope_LeavesTheRatingsUnread()
     {
-        GivenCreatedNights(FinishedNight("e1", "m1") with { Date = "2035-06-01", ClosedAt = null });
+        GivenCreatedNights(FinishedNight("e1", "m1") with { Date = TestDates.Upcoming, ClosedAt = null });
 
         await _sut.HandleAsync("u1", MyEventListScope.Active, limit: 10, offset: 0, q: null);
 

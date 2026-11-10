@@ -85,7 +85,7 @@ public sealed class CachedAuthTicketStoreTests
         inner.Setup(s => s.RetrieveAsync("k1")).ReturnsAsync(Ticket("u1"));
         await store.RetrieveAsync("k1");
         var renewed = Ticket("u1");
-        renewed.Properties.ExpiresUtc = new DateTimeOffset(2030, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        renewed.Properties.ExpiresUtc = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
         await store.RenewAsync("k1", renewed);
         var cached = await store.RetrieveAsync("k1");

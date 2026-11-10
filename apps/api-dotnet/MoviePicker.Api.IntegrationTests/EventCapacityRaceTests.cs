@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -24,7 +25,7 @@ public sealed class EventCapacityRaceTests : IClassFixture<MoviePickerApplicatio
         var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Hôte");
         var create = await host.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Course", date = "2035-06-01", time = "20:00" });
+            new { title = "Course", date = TestDates.Upcoming, time = "20:00" });
         create.EnsureSuccessStatusCode();
         var created = (await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions))!;
         var patch = await host.PatchAsJsonAsync($"/api/v1/events/{created.Slug}/config", config);

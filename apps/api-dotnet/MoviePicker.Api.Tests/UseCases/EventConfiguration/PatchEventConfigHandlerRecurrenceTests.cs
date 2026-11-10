@@ -12,6 +12,13 @@ namespace MoviePicker.Api.Tests.UseCases.EventConfiguration;
 
 public sealed class PatchEventConfigHandlerRecurrenceTests
 {
+    private static readonly DateTimeOffset Now = new(2025, 12, 1, 12, 0, 0, TimeSpan.Zero);
+
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
+
     private readonly Mock<IEventRepository> _events = new();
     private readonly Mock<IParticipantRepository> _participants = new();
     private readonly Mock<IHostTokenAccessor> _hostToken = new();
@@ -36,7 +43,7 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
             _user.Object,
             TestAudienceNotifier.Over(_participants.Object, _userRepo.Object, _pushSubRepo.Object, _pushSender.Object, _notifications.Object),
             new RecordingUnitOfWork(),
-            TimeProvider.System);
+            new FixedClock(Now));
     }
 
     private void GivenEvent(Event evt) =>
@@ -46,12 +53,12 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
     {
         Id = "evt1",
         Title = "S",
-        Date = "2035-01-01",
+        Date = "2026-01-01",
         Time = "20:00",
         Slug = "s",
         HostToken = "ht",
-        CreatedAt = DateTimeOffset.UtcNow,
-        UpdatedAt = DateTimeOffset.UtcNow
+        CreatedAt = Now,
+        UpdatedAt = Now
     };
 
     [Fact]
@@ -74,7 +81,7 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
     [Fact]
     public async Task HandleAsync_HostSetsAMonthlyRecurrence_AnchorsItOnTheDayOfTheNight()
     {
-        GivenEvent(Upcoming() with { Date = "2035-01-31" });
+        GivenEvent(Upcoming() with { Date = "2026-01-31" });
 
         await _sut.HandleAsync("s", new PatchEventConfigRequest { Recurrence = RecurrenceFrequency.Monthly });
 
@@ -86,7 +93,7 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
     [Fact]
     public async Task HandleAsync_OccurrenceOnAClampedDay_KeepsTheAnchorOfItsSeries()
     {
-        GivenEvent(Upcoming() with { Date = "2035-02-28", Recurrence = RecurrenceFrequency.Monthly, RecurrenceAnchorDay = 31 });
+        GivenEvent(Upcoming() with { Date = "2026-02-28", Recurrence = RecurrenceFrequency.Monthly, RecurrenceAnchorDay = 31 });
 
         await _sut.HandleAsync("s", new PatchEventConfigRequest { Title = "Soirée de fin de mois" });
 
@@ -98,9 +105,9 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
     [Fact]
     public async Task HandleAsync_HostMovesARecurringNight_AnchorsTheSeriesOnTheNewDay()
     {
-        GivenEvent(Upcoming() with { Date = "2035-01-31", Recurrence = RecurrenceFrequency.Monthly, RecurrenceAnchorDay = 31 });
+        GivenEvent(Upcoming() with { Date = "2026-01-31", Recurrence = RecurrenceFrequency.Monthly, RecurrenceAnchorDay = 31 });
 
-        await _sut.HandleAsync("s", new PatchEventConfigRequest { Date = "2035-01-15" });
+        await _sut.HandleAsync("s", new PatchEventConfigRequest { Date = "2026-01-15" });
 
         _events.Verify(
             r => r.UpdateAsync(It.Is<Event>(e => e.RecurrenceAnchorDay == 15), It.IsAny<CancellationToken>()),
@@ -146,7 +153,7 @@ public sealed class PatchEventConfigHandlerRecurrenceTests
         GivenEvent(Upcoming() with
         {
             Recurrence = RecurrenceFrequency.Weekly,
-            ClosedAt = DateTimeOffset.UtcNow
+            ClosedAt = Now
         });
 
         var response = await _sut.HandleAsync("s", new PatchEventConfigRequest { ClearRecurrence = true });

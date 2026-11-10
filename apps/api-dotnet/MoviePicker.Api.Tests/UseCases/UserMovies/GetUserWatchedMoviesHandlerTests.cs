@@ -24,6 +24,8 @@ public sealed class GetUserWatchedMoviesHandlerTests
     private readonly Mock<IMovieRepository> _movies = new();
     private readonly Mock<IMovieRatingRepository> _ratings = new();
     private readonly Mock<ITmdbMovieSearch> _tmdb = new();
+    private const string NightAfterNow = "2026-12-01";
+
     private readonly DateTimeOffset _now = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
 
     private static User PublicUser(bool isPublic = true) => new()
@@ -159,7 +161,7 @@ public sealed class GetUserWatchedMoviesHandlerTests
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { Part("p1", "A") });
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { Evt("A", date: "2030-01-01", winnerMovieId: "m1") });
+            .ReturnsAsync(new[] { Evt("A", date: NightAfterNow, winnerMovieId: "m1") });
 
         var res = await handler.HandleAsync("alice", 6);
 

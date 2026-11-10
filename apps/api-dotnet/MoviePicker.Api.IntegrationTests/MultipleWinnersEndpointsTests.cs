@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -24,7 +25,7 @@ public sealed class MultipleWinnersEndpointsTests : IClassFixture<MoviePickerApp
     {
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title, date = "2035-06-01", time = "20:00" });
+            new { title, date = TestDates.Upcoming, time = "20:00" });
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         return (created!.Slug, created.CreatorParticipant!.Id);

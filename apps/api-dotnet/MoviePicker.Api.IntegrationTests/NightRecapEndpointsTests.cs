@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using MoviePicker.Api.IntegrationTests.Helpers;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -14,7 +15,7 @@ public sealed class NightRecapEndpointsTests : IClassFixture<MoviePickerApplicat
 
     private static async Task<(string Slug, string RecapSlug)> CreateNightWithAWinnerAsync(HttpClient host)
     {
-        var create = await host.PostAsJsonAsync("/api/v1/events", new { title = "Soirée du vendredi", date = "2035-06-01", time = "20:00" });
+        var create = await host.PostAsJsonAsync("/api/v1/events", new { title = "Soirée du vendredi", date = TestDates.Upcoming, time = "20:00" });
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
         var created = await create.Content.ReadFromJsonAsync<JsonElement>();
         var slug = created.GetProperty("slug").GetString()!;

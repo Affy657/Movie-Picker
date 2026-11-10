@@ -22,6 +22,8 @@ public sealed class GetUserStatsHandlerTests
     private readonly Mock<IMovieRepository> _movies = new();
     private readonly Mock<IVoteRepository> _votes = new();
     private readonly Mock<ISeenMarkRepository> _seen = new();
+    private const string NightAfterNow = "2026-12-01";
+
     private readonly DateTimeOffset _now = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
 
     private static User PublicUser(bool isPublic = true) => new()
@@ -60,7 +62,7 @@ public sealed class GetUserStatsHandlerTests
         UpdatedAt = DateTimeOffset.UtcNow
     };
 
-    private static Event Evt(string id, string date = "2030-01-01", string? winnerMovieId = null, DateTimeOffset? closedAt = null) => new()
+    private static Event Evt(string id, string date = NightAfterNow, string? winnerMovieId = null, DateTimeOffset? closedAt = null) => new()
     {
         Id = id,
         Title = "E",
@@ -217,7 +219,7 @@ public sealed class GetUserStatsHandlerTests
         var parts = new[] { Part("p1", "A", DateTimeOffset.UtcNow) };
         _participants.Setup(r => r.ListByUserIdAsync("u1", It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync(parts);
         _events.Setup(r => r.ListByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { Evt("A", "2030-01-01", winnerMovieId: "m1") });
+            .ReturnsAsync(new[] { Evt("A", NightAfterNow, winnerMovieId: "m1") });
 
         var res = await handler.HandleAsync("alice");
 

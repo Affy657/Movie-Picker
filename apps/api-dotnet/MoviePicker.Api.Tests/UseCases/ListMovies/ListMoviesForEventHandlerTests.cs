@@ -31,7 +31,7 @@ public sealed class ListMoviesForEventHandlerTests
     {
         Id = "evt1",
         Title = "Soirée",
-        Date = "2030-01-01",
+        Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
         HostToken = "ht",
@@ -391,7 +391,7 @@ public sealed class ListMoviesForEventHandlerTests
             new() { Id = "mov1", EventId = evt.Id, ParticipantId = "p1", TmdbId = 1, Title = "Film A", Year = "2020", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
             new() { Id = "mov2", EventId = evt.Id, ParticipantId = "p2", TmdbId = 2, Title = "Film B", Year = "2021", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
         };
-        var updatedAt = new DateTimeOffset(2030, 6, 2, 9, 0, 0, TimeSpan.Zero);
+        var updatedAt = new DateTimeOffset(2026, 6, 2, 9, 0, 0, TimeSpan.Zero);
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _movieRepo.Setup(r => r.ListByEventIdAsync(evt.Id, It.IsAny<CancellationToken>())).ReturnsAsync(movies);
         _ratingRepo

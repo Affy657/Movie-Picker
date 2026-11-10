@@ -5,7 +5,7 @@ namespace MoviePicker.Api.Tests.Builders;
 
 public static class TestWinners
 {
-    private static readonly DateTimeOffset FirstPick = new(2030, 6, 1, 20, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset FirstPick = new(2026, 6, 1, 20, 0, 0, TimeSpan.Zero);
 
     public static IReadOnlyList<EventWinner> Won(params string?[] movieIds) =>
         movieIds

@@ -36,7 +36,7 @@ public sealed class GetEventSharePreviewHtmlHandlerTests
         {
             Id = "1",
             Title = "Titre secret",
-            Date = "2030-01-01",
+            Date = "2026-01-01",
             Time = "20:00",
             Slug = "slug1",
             HostToken = "h",
@@ -62,7 +62,7 @@ public sealed class GetEventSharePreviewHtmlHandlerTests
         {
             Id = "1",
             Title = "<script>alert(1)</script>",
-            Date = "2030-02-02",
+            Date = "2026-02-02",
             Time = "21:00",
             Slug = "s2",
             HostToken = "h",
@@ -87,7 +87,7 @@ public sealed class GetEventSharePreviewHtmlHandlerTests
         {
             Id = "1",
             Title = "Night saved without settings",
-            Date = "2030-03-03",
+            Date = "2026-03-03",
             Time = "20:00",
             Slug = "s3",
             HostToken = "h",

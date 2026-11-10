@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -53,7 +54,7 @@ public sealed class EventSlugAccessTests : IClassFixture<MoviePickerApplicationF
         var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await host.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Slug only night", date = "2035-09-01", time = "20:00" });
+            new { title = "Slug only night", date = TestDates.Upcoming, time = "20:00" });
         create.EnsureSuccessStatusCode();
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);

@@ -33,7 +33,7 @@ public sealed class RemoveWinnerHandlerTests
         Id = "evt1",
         HostToken = "ht",
         CreatorUserId = "host",
-        Date = "2030-01-01",
+        Date = TestDates.Upcoming,
         Time = "20:00",
         Winners = TestWinners.Won(winners),
         ClosedAt = closedAt

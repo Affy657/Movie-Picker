@@ -42,7 +42,7 @@ public sealed class PatchEventConfigHandlerTests
     {
         Id = "evt1",
         Title = "S",
-        Date = "2035-01-01",
+        Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "s",
         HostToken = "ht",

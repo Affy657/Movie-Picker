@@ -5,6 +5,7 @@ using MoviePicker.Api.Application.UseCases.AnnounceWheelWinner;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.Tests.UseCases.AnnounceWheelWinner;
@@ -25,7 +26,7 @@ public sealed class AnnounceWheelWinnerHandlerTests
     {
         Id = "evt1",
         Title = "Soirée",
-        Date = "2030-01-01",
+        Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
         HostToken = "ht1",

@@ -22,7 +22,7 @@ public sealed class SetMovieWheelExclusionHandlerTests
     {
         Id = "evt1",
         Title = "Soirée",
-        Date = "2030-01-01",
+        Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
         HostToken = hostToken,

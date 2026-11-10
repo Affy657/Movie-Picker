@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -34,7 +35,7 @@ public sealed class EventSharePreviewTests : IClassFixture<MoviePickerApplicatio
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Soirée publique OG", date = "2035-08-01", time = "19:30" });
+            new { title = "Soirée publique OG", date = TestDates.Upcoming, time = "19:30" });
         create.EnsureSuccessStatusCode();
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
@@ -60,7 +61,7 @@ public sealed class EventSharePreviewTests : IClassFixture<MoviePickerApplicatio
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Soirée confidentielle", date = "2035-07-01", time = "20:00" });
+            new { title = "Soirée confidentielle", date = TestDates.Upcoming, time = "20:00" });
         create.EnsureSuccessStatusCode();
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);

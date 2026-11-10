@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Domain.Exceptions;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -20,7 +21,7 @@ public sealed class ParticipationOwnershipEndpointsTests : IClassFixture<MoviePi
     {
         var create = await host.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Soirée surveillée", date = "2035-06-01", time = "20:00" });
+            new { title = "Soirée surveillée", date = TestDates.Upcoming, time = "20:00" });
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
         var created = await create.Content.ReadFromJsonAsync<JsonElement>();
         var eventId = created.GetProperty("_id").GetString()!;

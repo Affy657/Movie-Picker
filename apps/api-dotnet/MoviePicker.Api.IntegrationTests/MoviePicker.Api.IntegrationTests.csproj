@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <Compile Include="..\MoviePicker.Api.Tests\Builders\ImageHeaders.cs" Link="Builders\ImageHeaders.cs" />
+    <Compile Include="..\MoviePicker.Api.Tests\Builders\TestDates.cs" Link="Builders\TestDates.cs" />
   </ItemGroup>
 
 </Project>

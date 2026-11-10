@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -25,7 +26,7 @@ public sealed class DeleteEventEndpointTests : IClassFixture<MoviePickerApplicat
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, displayName);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = $"Soirée {Guid.NewGuid():N}", date = "2035-12-15", time = "21:00" });
+            new { title = $"Soirée {Guid.NewGuid():N}", date = TestDates.Upcoming, time = "21:00" });
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
         var evt = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(evt);

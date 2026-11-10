@@ -26,7 +26,7 @@ public sealed class JoinEventHandlerNotificationTests
             {
                 Id = "evt1",
                 Title = "Soirée",
-                Date = "2030-01-01",
+                Date = TestDates.Upcoming,
                 Time = "20:00",
                 Slug = "soiree",
                 HostToken = "ht1",
@@ -88,7 +88,7 @@ public sealed class JoinEventHandlerNotificationTests
             {
                 Id = "evt2",
                 Title = "Soirée",
-                Date = "2030-01-01",
+                Date = TestDates.Upcoming,
                 Time = "20:00",
                 Slug = "s2",
                 HostToken = "ht1",

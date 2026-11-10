@@ -21,7 +21,7 @@ public sealed class WinnerAnnouncerTests
     {
         Id = "evt1",
         Title = "Soirée",
-        Date = "2030-01-01",
+        Date = "2019-01-01",
         Time = "20:00",
         Slug = "soiree",
         HostToken = "ht1",
@@ -69,12 +69,12 @@ public sealed class WinnerAnnouncerTests
         new(Audience(), new FixedClock(DateTimeOffset.Parse(utcNow, CultureInfo.InvariantCulture)));
 
     [Theory]
-    [InlineData("2030-01-01", "2030-01-01T18:00:00Z", "Ce soir : « Matrix » pour « Soirée »")]
-    [InlineData("2030-01-02", "2030-01-01T23:30:00Z", "Ce soir : « Matrix » pour « Soirée »")]
-    [InlineData("2030-01-01", "2029-12-31T22:59:00Z", "Mardi 1 janvier : « Matrix » pour « Soirée »")]
-    [InlineData("2030-01-12", "2030-01-01T18:00:00Z", "Samedi 12 janvier : « Matrix » pour « Soirée »")]
-    [InlineData("2029-12-30", "2030-01-01T18:00:00Z", "Dimanche 30 décembre : « Matrix » pour « Soirée »")]
-    [InlineData("pas-une-date", "2030-01-01T18:00:00Z", "« Matrix » pour « Soirée »")]
+    [InlineData("2019-01-01", "2019-01-01T18:00:00Z", "Ce soir : « Matrix » pour « Soirée »")]
+    [InlineData("2019-01-02", "2019-01-01T23:30:00Z", "Ce soir : « Matrix » pour « Soirée »")]
+    [InlineData("2019-01-01", "2018-12-31T22:59:00Z", "Mardi 1 janvier : « Matrix » pour « Soirée »")]
+    [InlineData("2019-01-12", "2019-01-01T18:00:00Z", "Samedi 12 janvier : « Matrix » pour « Soirée »")]
+    [InlineData("2018-12-30", "2019-01-01T18:00:00Z", "Dimanche 30 décembre : « Matrix » pour « Soirée »")]
+    [InlineData("pas-une-date", "2019-01-01T18:00:00Z", "« Matrix » pour « Soirée »")]
     public async Task AnnounceAsync_SaysTonightOnlyOnTheDayOfTheNightInParis(string nightDate, string utcNow, string expectedBody)
     {
         HasParticipants("u1");

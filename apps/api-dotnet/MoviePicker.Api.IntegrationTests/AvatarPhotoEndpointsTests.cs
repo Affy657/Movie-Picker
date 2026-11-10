@@ -206,7 +206,7 @@ public sealed class AvatarPhotoEndpointsTests : IClassFixture<MoviePickerApplica
         var following = await viewer.GetFromJsonAsync<FollowListResponse>($"/api/v1/users/{viewerMe!.Handle}/following", Json);
         Assert.Contains(following!.Items, item => item.Handle == me.Handle && item.AvatarId == photoAvatarId);
 
-        var created = await owner.PostAsJsonAsync("/api/v1/events", new { title = "Soirée photo", date = "2035-06-01", time = "20:00" });
+        var created = await owner.PostAsJsonAsync("/api/v1/events", new { title = "Soirée photo", date = TestDates.Upcoming, time = "20:00" });
         var slug = (await created.Content.ReadFromJsonAsync<CreateEventResponse>(Json))!.Slug;
         var detail = await owner.GetFromJsonAsync<EventDetailResponse>($"/api/v1/events/slug/{slug}", Json);
         Assert.Contains(detail!.Participants, participant => participant.AvatarId == photoAvatarId);

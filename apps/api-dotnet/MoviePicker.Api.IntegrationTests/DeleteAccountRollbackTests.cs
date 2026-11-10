@@ -4,6 +4,7 @@ using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
 using MoviePicker.Api.Application.UseCases.Auth;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -87,7 +88,7 @@ public sealed class DeleteAccountRollbackTests : IClassFixture<MoviePickerApplic
         {
             Id = string.Empty,
             Title = "Soirée à conserver",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:30",
             HostToken = Guid.NewGuid().ToString("N"),
             Slug = "rollback-" + suffix,

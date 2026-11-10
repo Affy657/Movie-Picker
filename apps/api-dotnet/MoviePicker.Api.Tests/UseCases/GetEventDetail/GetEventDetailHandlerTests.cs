@@ -25,7 +25,7 @@ public sealed class GetEventDetailHandlerTests
     {
         Id = "evt1",
         Title = "Soirée",
-        Date = "2030-01-01",
+        Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
         HostToken = hostToken,
@@ -148,7 +148,7 @@ public sealed class GetEventDetailHandlerTests
     public async Task HandleAsync_WithAWinner_ProjectsThePickWithoutLoadingTheMovie()
     {
         var pickedAt = new DateTimeOffset(2026, 5, 1, 18, 0, 0, TimeSpan.Zero);
-        var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht1", Winners = [TestWinners.Pick("mov1", WinnerPickMethod.Wheel, pickedAt)], CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var evt = new Event { Id = "evt1", Title = "Soirée", Date = TestDates.Upcoming, Time = "20:00", Slug = "soiree", HostToken = "ht1", Winners = [TestWinners.Pick("mov1", WinnerPickMethod.Wheel, pickedAt)], CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns((string?)null);
 
@@ -171,7 +171,7 @@ public sealed class GetEventDetailHandlerTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "soiree",
             HostToken = "ht1",
@@ -200,7 +200,7 @@ public sealed class GetEventDetailHandlerTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "soiree",
             HostToken = "secret",
@@ -224,7 +224,7 @@ public sealed class GetEventDetailHandlerTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "soiree",
             HostToken = "real",
@@ -248,7 +248,7 @@ public sealed class GetEventDetailHandlerTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "soiree",
             HostToken = "tok",

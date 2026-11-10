@@ -10,7 +10,7 @@ namespace MoviePicker.Api.Tests.UseCases.FinishedEvents;
 
 public sealed class FinishedEventWatchlistPassTests
 {
-    private static readonly DateTimeOffset Now = new(2030, 6, 2, 12, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset Now = new(2026, 6, 2, 12, 0, 0, TimeSpan.Zero);
 
     private sealed class FrozenClock : TimeProvider
     {
@@ -48,7 +48,7 @@ public sealed class FinishedEventWatchlistPassTests
     {
         Id = "evt1",
         Title = "Soirée",
-        Date = "2030-06-01",
+        Date = "2026-06-01",
         Time = "20:00",
         Slug = "soiree",
         HostToken = "ht1",
@@ -130,7 +130,7 @@ public sealed class FinishedEventWatchlistPassTests
     [Fact]
     public async Task RunForEventAsync_StillLive_WaitsForTheEventToFinish()
     {
-        var live = FinishedWithWinner() with { Date = "2030-06-02", Time = "13:30" };
+        var live = FinishedWithWinner() with { Date = "2026-06-02", Time = "13:30" };
 
         var cleaned = await _sut.RunForEventAsync(live);
 
@@ -154,7 +154,7 @@ public sealed class FinishedEventWatchlistPassTests
     public async Task RunForEventAsync_ClosedByTheHost_CountsAsFinishedWhateverTheDate()
     {
         GivenWinnerAndParticipants(new Participant { Id = "p1", EventId = "evt1", Pseudo = "Alice", UserId = "u1" });
-        var closedEarly = FinishedWithWinner() with { Date = "2030-06-02", Time = "23:00", ClosedAt = Now };
+        var closedEarly = FinishedWithWinner() with { Date = "2026-06-02", Time = "23:00", ClosedAt = Now };
 
         var cleaned = await _sut.RunForEventAsync(closedEarly);
 
@@ -231,7 +231,7 @@ public sealed class FinishedEventWatchlistPassTests
         GivenWinnerAndParticipants(new Participant { Id = "p1", EventId = "evt1", Pseudo = "Alice", UserId = "u1" });
         _eventRepo
             .Setup(r => r.ListAwaitingWatchlistCleanupAsync(Now, It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([FinishedWithWinner(), FinishedWithWinner() with { Id = "evt-live", Date = "2030-06-02", Time = "13:30" }]);
+            .ReturnsAsync([FinishedWithWinner(), FinishedWithWinner() with { Id = "evt-live", Date = "2026-06-02", Time = "13:30" }]);
 
         var result = await _sut.RunAsync();
 
@@ -247,7 +247,7 @@ public sealed class FinishedEventWatchlistPassTests
         {
             FinishedWithWinner(),
             FinishedWithWinner() with { Id = "evt-cleaned", WatchlistCleanedAt = Now.AddDays(-1) },
-            FinishedWithWinner() with { Id = "evt-live", Date = "2030-06-02", Time = "13:30" },
+            FinishedWithWinner() with { Id = "evt-live", Date = "2026-06-02", Time = "13:30" },
             FinishedWithWinner() with { Id = "evt-no-winner", Winners = [] }
         };
 

@@ -24,7 +24,7 @@ public sealed class CloseEventHandlerTests
     {
         Id = "evt1",
         Title = "Soirée",
-        Date = "2030-01-01",
+        Date = TestDates.Upcoming,
         Time = "20:00",
         Slug = "soiree",
         HostToken = hostToken,
@@ -83,7 +83,7 @@ public sealed class CloseEventHandlerTests
     public async Task HandleAsync_AlreadyClosed_ReturnsMessageWithoutUpdating()
     {
         var now = DateTimeOffset.UtcNow;
-        var evt = new Event { Id = "evt1", Title = "Soirée", Date = "2030-01-01", Time = "20:00", Slug = "soiree", HostToken = "ht1", ClosedAt = now, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
+        var evt = new Event { Id = "evt1", Title = "Soirée", Date = TestDates.Upcoming, Time = "20:00", Slug = "soiree", HostToken = "ht1", ClosedAt = now, CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow };
         _eventRepo.Setup(r => r.GetByIdOrSlugAsync("evt1", It.IsAny<CancellationToken>())).ReturnsAsync(evt);
         _hostTokenAccessor.Setup(h => h.GetHostToken()).Returns("ht1");
 
@@ -119,7 +119,7 @@ public sealed class CloseEventHandlerTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "soiree",
             HostToken = "ht1",

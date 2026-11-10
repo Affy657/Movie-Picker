@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Domain;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -42,7 +43,7 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
     public async Task PatchConfig_SettingARecurrence_IsReadBackOnTheEvent()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
-        var created = await CreateEventAsync(client, "Ciné-club", new DateOnly(2035, 6, 1));
+        var created = await CreateEventAsync(client, "Ciné-club", TestDates.UpcomingDay);
 
         var patch = await client.PatchAsJsonAsync(
             $"/api/v1/events/{created.Slug}/config",
@@ -59,7 +60,7 @@ public sealed class RecurringEventEndpointsTests : IClassFixture<MoviePickerAppl
     public async Task PatchConfig_ClearingTheRecurrence_StopsTheSeries()
     {
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
-        var created = await CreateEventAsync(client, "Ciné-club", new DateOnly(2035, 6, 1));
+        var created = await CreateEventAsync(client, "Ciné-club", TestDates.UpcomingDay);
         await client.PatchAsJsonAsync($"/api/v1/events/{created.Slug}/config", new { recurrence = "monthly" });
 
         var patch = await client.PatchAsJsonAsync(

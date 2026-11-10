@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using MoviePicker.Api.IntegrationTests.Helpers;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -14,7 +15,7 @@ public sealed class EventRecapDocumentTests : IClassFixture<MoviePickerApplicati
 
     private static async Task<(string Slug, string ParticipantId)> CreateEventAsync(HttpClient client, string title)
     {
-        var create = await client.PostAsJsonAsync("/api/v1/events", new { title, date = "2035-06-01", time = "20:00" });
+        var create = await client.PostAsJsonAsync("/api/v1/events", new { title, date = TestDates.Upcoming, time = "20:00" });
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
         var json = await create.Content.ReadFromJsonAsync<JsonElement>();
         return (json.GetProperty("slug").GetString()!, json.GetProperty("creatorParticipant").GetProperty("_id").GetString()!);

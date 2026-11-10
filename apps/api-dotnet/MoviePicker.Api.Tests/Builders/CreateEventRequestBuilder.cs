@@ -5,7 +5,7 @@ namespace MoviePicker.Api.Tests.Builders;
 public sealed class CreateEventRequestBuilder
 {
     private string _title = "Soirée";
-    private string _date = "2030-01-01";
+    private string _date = TestDates.Upcoming;
     private string _time = "20:00";
 
     public CreateEventRequestBuilder WithTitle(string title)

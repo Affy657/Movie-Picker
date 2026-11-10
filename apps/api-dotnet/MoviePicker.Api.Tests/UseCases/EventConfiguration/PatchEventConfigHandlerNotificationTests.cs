@@ -26,7 +26,7 @@ public sealed class PatchEventConfigHandlerNotificationTests
         {
             Id = "evt1",
             Title = "Soirée",
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             Slug = "soiree",
             HostToken = "ht1",
@@ -72,7 +72,7 @@ public sealed class PatchEventConfigHandlerNotificationTests
 
         await _sut.HandleAsync("soiree", new PatchEventConfigRequest
         {
-            Date = "2030-02-01",
+            Date = TestDates.UpcomingPlusDays(31),
             NotifyParticipantsOfDateChange = true
         });
 
@@ -91,7 +91,7 @@ public sealed class PatchEventConfigHandlerNotificationTests
 
         await _sut.HandleAsync("soiree", new PatchEventConfigRequest
         {
-            Date = "2030-02-01",
+            Date = TestDates.UpcomingPlusDays(31),
             NotifyParticipantsOfDateChange = false
         });
 
@@ -106,7 +106,7 @@ public sealed class PatchEventConfigHandlerNotificationTests
 
         await _sut.HandleAsync("soiree", new PatchEventConfigRequest
         {
-            Date = "2030-01-01",
+            Date = TestDates.Upcoming,
             Time = "20:00",
             NotifyParticipantsOfDateChange = true
         });
@@ -123,7 +123,7 @@ public sealed class PatchEventConfigHandlerNotificationTests
 
         await _sut.HandleAsync("soiree", new PatchEventConfigRequest
         {
-            Date = "2030-02-01",
+            Date = TestDates.UpcomingPlusDays(31),
             NotifyParticipantsOfDateChange = true
         });
 

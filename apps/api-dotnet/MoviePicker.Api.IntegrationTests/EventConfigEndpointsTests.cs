@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Domain.Entities;
+using MoviePicker.Api.Tests.Builders;
 using Xunit;
 
 namespace MoviePicker.Api.IntegrationTests;
@@ -27,7 +28,7 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "C", date = "2035-06-01", time = "20:00" });
+            new { title = "C", date = TestDates.Upcoming, time = "20:00" });
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
@@ -45,7 +46,7 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Cfg", date = "2035-06-01", time = "20:00" });
+            new { title = "Cfg", date = TestDates.Upcoming, time = "20:00" });
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
 
@@ -85,7 +86,7 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         var owner = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await owner.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "X", date = "2035-06-01", time = "20:00" });
+            new { title = "X", date = TestDates.Upcoming, time = "20:00" });
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
 
@@ -102,7 +103,7 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Wheel", date = "2035-06-01", time = "20:00" });
+            new { title = "Wheel", date = TestDates.Upcoming, time = "20:00" });
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
         var slug = created!.Slug;
@@ -144,7 +145,7 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await client.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Cap", date = "2035-06-01", time = "20:00" });
+            new { title = "Cap", date = TestDates.Upcoming, time = "20:00" });
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
 
@@ -168,7 +169,7 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await host.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Full", date = "2035-06-01", time = "20:00" });
+            new { title = "Full", date = TestDates.Upcoming, time = "20:00" });
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         Assert.NotNull(created);
         var slug = created!.Slug;
@@ -193,7 +194,7 @@ public sealed class EventConfigEndpointsTests : IClassFixture<MoviePickerApplica
         var host = await IntegrationTestAuth.NewRegisteredClientAsync(_factory);
         var create = await host.PostAsJsonAsync(
             "/api/v1/events",
-            new { title = "Shrink", date = "2035-06-01", time = "20:00" });
+            new { title = "Shrink", date = TestDates.Upcoming, time = "20:00" });
         var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
         var slug = created!.Slug;
 

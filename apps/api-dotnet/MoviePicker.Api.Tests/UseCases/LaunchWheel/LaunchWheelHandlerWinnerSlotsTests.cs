@@ -60,7 +60,7 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
         GivenEvent(winnerCount, announcedAt: null, alreadyWon);
 
     private void GivenEvent(int winnerCount, DateTimeOffset? announcedAt, params string[] alreadyWon) =>
-        GivenEventOn("2030-01-01", winnerCount, announcedAt, alreadyWon);
+        GivenEventOn(TestDates.Upcoming, winnerCount, announcedAt, alreadyWon);
 
     private void GivenEventOn(string date, int winnerCount, DateTimeOffset? announcedAt, params string[] alreadyWon)
     {
@@ -84,7 +84,7 @@ public sealed class LaunchWheelHandlerWinnerSlotsTests
     [Fact]
     public async Task HandleAsync_NextDraw_KeepsTheAnnouncementMarkOfThePreviousPicks()
     {
-        var announcedAt = new DateTimeOffset(2030, 6, 1, 20, 5, 0, TimeSpan.Zero);
+        var announcedAt = new DateTimeOffset(2026, 6, 1, 20, 5, 0, TimeSpan.Zero);
         GivenEvent(3, announcedAt, "m1");
         GivenMovies("m1", "m2");
         Event? saved = null;
