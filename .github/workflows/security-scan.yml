@@ -47,14 +47,25 @@ jobs:
             echo "::error::High/Critical NuGet vulnerabilities detected."
             exit 1
           fi
-      - name: Filesystem scan (Trivy; vulnerable npm + NuGet deps in lockfiles; replaces pnpm audit since the npm endpoint was removed on 2026-07-15, see pnpm/pnpm#11265)
+      # Same split as the image gate of `deploy.yml`: a HIGH blocks only once a fix is published,
+      # a CRITICAL blocks with or without one. With `ignore-unfixed` on both, a CRITICAL without a
+      # fix only showed up at deployment, possibly between the staging and production.
+      - name: Filesystem scan (Trivy, HIGH with a fix; vulnerable npm + NuGet deps in lockfiles; replaces pnpm audit since the npm endpoint was removed on 2026-07-15, see pnpm/pnpm#11265)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
-          severity: HIGH,CRITICAL
+          severity: HIGH
           exit-code: "1"
           ignore-unfixed: true
+          cache: true
+      - name: Filesystem scan (Trivy, every CRITICAL)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL
+          exit-code: "1"
           cache: true
       - name: Runtime base image of the API, as the Dockerfile pins it
         id: base-image
@@ -67,14 +78,23 @@ jobs:
           fi
           echo "Base image: $image"
           echo "ref=$image" >> "$GITHUB_OUTPUT"
-      - name: Runtime base image scan (Trivy; OS packages and .NET runtime production serves)
+      - name: Runtime base image scan (Trivy, HIGH with a fix; OS packages and .NET runtime production serves)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
           image-ref: ${{ steps.base-image.outputs.ref }}
-          severity: HIGH,CRITICAL
+          severity: HIGH
           exit-code: "1"
           ignore-unfixed: true
+          vuln-type: os,library
+          cache: true
+      - name: Runtime base image scan (Trivy, every CRITICAL)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ steps.base-image.outputs.ref }}
+          severity: CRITICAL
+          exit-code: "1"
           vuln-type: os,library
           cache: true
       - name: Terraform misconfiguration scan (Trivy)

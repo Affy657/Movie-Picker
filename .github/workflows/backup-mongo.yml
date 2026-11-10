@@ -210,7 +210,7 @@ jobs:
           docker run -d --name mongo-verify -p 27017:27017 -e GLIBC_TUNABLES=glibc.pthread.rseq=1 "$MONGO_IMAGE" --replSet rs0 --bind_ip_all
           READY=0
           for _ in $(seq 1 30); do
-            if docker exec mongo-verify mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
+            if docker exec -e HOME=/tmp mongo-verify mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' >/dev/null 2>&1; then
               READY=1; break
             fi
             sleep 2
@@ -220,11 +220,11 @@ jobs:
             print_mongo_diagnostics
             exit 1
           fi
-          docker exec mongo-verify mongosh --quiet --eval \
+          docker exec -e HOME=/tmp mongo-verify mongosh --quiet --eval \
             'rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "127.0.0.1:27017" }] })'
           PRIMARY=0
           for _ in $(seq 1 30); do
-            if [ "$(docker exec mongo-verify mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
+            if [ "$(docker exec -e HOME=/tmp mongo-verify mongosh --quiet --eval 'db.hello().isWritablePrimary')" = "true" ]; then
               PRIMARY=1; break
             fi
             sleep 2
@@ -251,7 +251,7 @@ jobs:
           }
           JS
           docker cp "$RUNNER_TEMP/verify.js" mongo-verify:/verify.js
-          docker exec mongo-verify mongosh --quiet --file /verify.js
+          docker exec -e HOME=/tmp mongo-verify mongosh --quiet --file /verify.js
 
       # The first verified archive of each month is copied under `monthly/`, where the bucket
       # keeps it 400 days: the daily archives leave after 30 days, and a corruption noticed later
