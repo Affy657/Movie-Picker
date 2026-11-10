@@ -13,6 +13,7 @@ import { Film, Plus } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDetailsModal';
 import { setMovieWheelExclusion } from '@/features/movies/api/moviesApi';
@@ -38,6 +39,18 @@ import Chip from '@/shared/components/Chip';
 const loadAddMoviePanel = () => import('@/features/movies/components/AddMoviePanel');
 const AddMoviePanel = lazy(loadAddMoviePanel);
 const ADD_MOVIE_CHUNKS = [loadAddMoviePanel, loadMovieDetailsModal];
+const TABLE_COLUMNS_MIN_WIDTH_QUERY = '(max-width: 63.9375rem)';
+
+function useMoviesLayout(viewMode: 'grid' | 'list') {
+  const isMobile = useIsMobile();
+  const tooNarrowForColumns = useMediaQuery(TABLE_COLUMNS_MIN_WIDTH_QUERY);
+  const layout: 'grid' | 'list' = isMobile ? 'list' : viewMode;
+  return {
+    isMobile,
+    layout,
+    compactRows: isMobile || (layout === 'list' && tooNarrowForColumns),
+  };
+}
 
 const DEFAULT_SORT_DIRECTION: Record<MovieRowSortKey, 'asc' | 'desc'> = {
   score: 'desc',
@@ -229,8 +242,7 @@ export default function EventMoviesSection({
   const { user } = useAuth();
   const ratingScale = user?.ratingScale;
   const { t } = useTranslation();
-  const isMobile = useIsMobile();
-  const layout: 'grid' | 'list' = isMobile ? 'list' : viewMode;
+  const { isMobile, layout, compactRows } = useMoviesLayout(viewMode);
   useIdlePrefetch(ADD_MOVIE_CHUNKS);
   const sectionHeadingId = useId();
   const { sortBy, sortDir, setSort: handleSetSort } = useMovieSort();
@@ -300,7 +312,7 @@ export default function EventMoviesSection({
   ];
 
   const moviesLoaded = moviesQuery.data !== undefined;
-  const showSortControl = moviesLoaded && (layout === 'grid' || isMobile) && movies.length > 1;
+  const showSortControl = moviesLoaded && (layout === 'grid' || compactRows) && movies.length > 1;
   const canAddFromEmptyState = !!participant && !addMovieOpen;
   const emptyState = isFinished ? null : (
     <EmptyState
@@ -335,7 +347,7 @@ export default function EventMoviesSection({
     participantAvatarsByPseudo,
     ratingScale,
     viewMode: layout,
-    isMobile,
+    isMobile: compactRows,
     isInWatchlist: user ? isInWatchlist : undefined,
     onToggleWatchlist: user ? toggleWatchlist : undefined,
     onToggleWheelExclusion: event.isHost && !isFinished ? handleToggleWheelExclusion : undefined,

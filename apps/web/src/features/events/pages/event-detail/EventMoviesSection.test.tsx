@@ -427,6 +427,25 @@ describe('EventMoviesSection (MSW)', () => {
     expect(screen.getByRole('button', { name: /votes/i })).toBeInTheDocument();
   });
 
+  it('between the phone and the wide screen, lays the list out in compact rows sorted by the menu', () => {
+    stubMatchMedia((query) => query === '(max-width: 63.9375rem)');
+    server.use(authedUserHandler, watchlistHandler([]));
+    const second: MovieData = { ...MOVIE, id: 'm2', title: 'Inception', score: 4 };
+    renderSection({ movies: [MOVIE, second], viewMode: 'list' });
+
+    expect(screen.getByRole('button', { name: /votes/i })).toBeInTheDocument();
+    expect(screen.queryByTestId('movie-rank')).not.toBeInTheDocument();
+  });
+
+  it('keeps the grid on a tablet when it is the stored view', () => {
+    stubMatchMedia((query) => query === '(max-width: 63.9375rem)');
+    server.use(authedUserHandler, watchlistHandler([]));
+    renderSection({ movies: [MOVIE], viewMode: 'grid' });
+
+    expect(screen.queryByTestId('movie-rank')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: MOVIE.title })).toBeInTheDocument();
+  });
+
   it("n'affiche pas le composant de tri en vue liste sur desktop (colonnes triables au clic)", () => {
     server.use(authedUserHandler, watchlistHandler([]));
     const second: MovieData = { ...MOVIE, id: 'm2', title: 'Inception', score: 4 };
