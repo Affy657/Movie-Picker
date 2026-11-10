@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { CalendarPlus, Clock, Dices, Film, Star } from 'lucide-react';
 import Button from '@/shared/components/Button';
@@ -149,14 +149,20 @@ export default function RandomPickDialog({
 }: Readonly<RandomPickDialogProps>) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  const [{ pool, keys }] = useState(() => {
-    const byKey = new Map(
-      items.map((item) => [watchlistItemKey(item.tmdbId, item.mediaType), item])
-    );
-    return { pool: byKey, keys: [...byKey.keys()] };
-  });
+  const [pool] = useState(
+    () => new Map(items.map((item) => [watchlistItemKey(item.tmdbId, item.mediaType), item]))
+  );
+  const listedKeys = items.map((item) => watchlistItemKey(item.tmdbId, item.mediaType)).join(' ');
+  const keys = useMemo(
+    () => listedKeys.split(' ').filter((key) => pool.has(key)),
+    [listedKeys, pool]
+  );
   const { current, shown, shuffling, canDrawAgain, drawAgain } = useRandomPick(keys, pickIndex);
   const announceReady = useLiveRegionReady();
+  const emptied = keys.length === 0;
+  useEffect(() => {
+    if (emptied) onClose();
+  }, [emptied, onClose]);
   const drawn = current === null ? undefined : pool.get(current);
   if (!drawn) return null;
 
@@ -167,7 +173,7 @@ export default function RandomPickDialog({
 
   const body = (
     <div className={styles.body}>
-      <p className={styles.pool}>{pluralizeCount(pool.size, oneKey, manyKey, t)}</p>
+      <p className={styles.pool}>{pluralizeCount(keys.length, oneKey, manyKey, t)}</p>
       <div className={styles.draw}>
         <div
           className={clsx(styles.slot, isMobile && styles.slotFitted, !shuffling && styles.landed)}

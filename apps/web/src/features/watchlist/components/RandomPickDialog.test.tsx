@@ -158,6 +158,73 @@ describe('RandomPickDialog, reduced motion', () => {
   });
 });
 
+describe('RandomPickDialog, list changing while it is open', () => {
+  beforeEach(() => stubMatchMedia((query) => query === REDUCED_MOTION));
+
+  function renderLiveDialog() {
+    const onClose = vi.fn();
+    const dialog = (items: WatchlistEntry[]) => (
+      <LocaleProvider>
+        <RandomPickDialog
+          items={items}
+          scope="list"
+          ratingScale="ten"
+          pickIndex={() => 0}
+          onClose={onClose}
+          onPropose={vi.fn()}
+          onOpenDetails={vi.fn()}
+        />
+      </LocaleProvider>
+    );
+    const { rerender } = render(dialog([BEETLEJUICE, NOPE, WHIPLASH]));
+    return { onClose, keepOnly: (items: WatchlistEntry[]) => rerender(dialog(items)) };
+  }
+
+  it('keeps the drawn title when another one leaves the list, and counts what is left', () => {
+    const { keepOnly } = renderLiveDialog();
+
+    keepOnly([BEETLEJUICE, WHIPLASH]);
+
+    expect(drawnHeading('Beetlejuice')).toBeInTheDocument();
+    expect(screen.getByText('Au hasard parmi les 2 titres de votre liste.')).toBeInTheDocument();
+  });
+
+  it('never draws a title that left the list meanwhile', async () => {
+    const { keepOnly } = renderLiveDialog();
+
+    keepOnly([BEETLEJUICE, WHIPLASH]);
+    await userEvent.click(screen.getByRole('button', { name: 'Piocher un autre' }));
+
+    expect(drawnHeading('Whiplash')).toBeInTheDocument();
+  });
+
+  it('draws another title when the one shown leaves the list', () => {
+    const { keepOnly } = renderLiveDialog();
+
+    keepOnly([NOPE, WHIPLASH]);
+
+    expect(drawnHeading('Nope')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Beetlejuice' })).not.toBeInTheDocument();
+  });
+
+  it('offers no other draw once a single title is left', () => {
+    const { keepOnly } = renderLiveDialog();
+
+    keepOnly([BEETLEJUICE]);
+
+    expect(screen.getByText('Le seul titre de votre liste.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Piocher un autre' })).not.toBeInTheDocument();
+  });
+
+  it('closes once every title has left the list', () => {
+    const { onClose, keepOnly } = renderLiveDialog();
+
+    keepOnly([]);
+
+    expect(onClose).toHaveBeenCalled();
+  });
+});
+
 describe('RandomPickDialog, with motion', () => {
   beforeEach(() => {
     stubMatchMedia(false);

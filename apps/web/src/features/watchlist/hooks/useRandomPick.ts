@@ -52,6 +52,15 @@ export function useRandomPick(keys: readonly string[], pickIndex: PickIndex) {
     return () => timers.forEach((timer) => globalThis.clearTimeout(timer));
   }, [draw.frames]);
 
+  useEffect(() => {
+    setDraw((current) => {
+      const shown = current.pick.current;
+      if (shown === null || keys.includes(shown)) return current;
+      const pick = drawNext(keys, { current: null, drawn: current.pick.drawn }, pickIndex);
+      return { pick, frames: [], step: 0 };
+    });
+  }, [keys, pickIndex]);
+
   const drawAgain = useCallback(() => {
     setDraw((current) => {
       if (current.step < current.frames.length) return current;

@@ -1,5 +1,5 @@
 import { beforeAll, afterEach, afterAll, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -8,6 +8,11 @@ import WatchlistPage from '@/features/watchlist/pages/WatchlistPage';
 import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { stubHoverCapability, stubMatchMedia } from '@/test-utils/matchMedia';
 import { createWatchlistHandlers, TEST_API_V1 } from '@/mocks/handlers';
+
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({ track }),
+}));
 
 function renderPage() {
   return render(
@@ -141,7 +146,9 @@ beforeAll(() => {
     this.removeAttribute('open');
     const previous = previouslyFocused.get(this);
     previouslyFocused.delete(this);
-    if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
+    if (this.isConnected && previous instanceof HTMLElement && previous.isConnected) {
+      previous.focus();
+    }
     this.dispatchEvent(new Event('close'));
   };
 });
@@ -779,8 +786,13 @@ describe('WatchlistPage (MSW)', () => {
       );
       renderPage();
 
+      track.mockClear();
       const { user, dialog } = await openPick('Piocher un film');
 
+      expect(track).toHaveBeenCalledExactlyOnceWith('random_pick_opened', {
+        scope: 'list',
+        pool: 2,
+      });
       expect(
         within(dialog).getByText('Au hasard parmi les 2 titres de votre liste.')
       ).toBeVisible();
@@ -892,6 +904,61 @@ describe('WatchlistPage (MSW)', () => {
 
       const back = await screen.findByRole('dialog', { name: 'Piocher un titre' });
       expect(within(back).getByRole('heading', { level: 3 })).toHaveTextContent(ITEM_A.title);
+    });
+
+    it('does not come back to a draw whose title was removed from its details', async () => {
+      reduceMotion();
+      server.use(
+        authedUserHandler,
+        ...watchlistHandler([ITEM_A]),
+        detailsHandler,
+        removeHandler(() => server.use(...watchlistHandler([])))
+      );
+      renderPage();
+      const { user, dialog } = await openPick('Piocher un film');
+      await user.click(within(dialog).getByRole('button', { name: 'Voir les détails' }));
+      await screen.findByRole('heading', { name: ITEM_A.title, level: 2 });
+
+      const details = screen
+        .getByRole('heading', { name: ITEM_A.title, level: 2 })
+        .closest('dialog');
+      await user.click(screen.getByRole('button', { name: 'Retirer de ma liste' }));
+      await waitFor(() =>
+        expect(screen.queryByRole('button', { name: /piocher/i })).not.toBeInTheDocument()
+      );
+      await user.click(within(details as HTMLElement).getByRole('button', { name: 'Fermer' }));
+
+      await waitFor(() =>
+        expect(screen.queryByRole('heading', { name: ITEM_A.title, level: 2 })).toBeNull()
+      );
+      expect(screen.queryByRole('dialog', { name: 'Piocher un titre' })).not.toBeInTheDocument();
+    });
+
+    it('gives the focus back to the Pick button of the layout shown at closing time', async () => {
+      let mobile = true;
+      const listeners = new Set<() => void>();
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn((query: string) => ({
+          get matches() {
+            return query.includes('max-width') ? mobile : query.includes('reduce');
+          },
+          media: query,
+          addEventListener: (_type: string, listener: () => void) => listeners.add(listener),
+          removeEventListener: (_type: string, listener: () => void) => listeners.delete(listener),
+        }))
+      );
+      server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
+      renderPage();
+      const { user, dialog: sheet } = await openPick('Piocher');
+      within(sheet).getByRole('button', { name: 'Fermer' }).focus();
+
+      mobile = false;
+      act(() => listeners.forEach((listener) => listener()));
+      const dialog = await screen.findByRole('dialog', { name: 'Piocher un titre' });
+      await user.click(within(dialog).getByRole('button', { name: 'Fermer' }));
+
+      expect(screen.getByRole('button', { name: 'Piocher un film' })).toHaveFocus();
     });
 
     it('on mobile, shows a short Piocher next to Add', async () => {

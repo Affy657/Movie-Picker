@@ -9,6 +9,7 @@ import { pageTitle } from '@/shared/hooks/useDocumentTitle';
 import { useNoindexPage } from '@/shared/hooks/usePageSeo';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import AddMoviePanel from '@/features/movies/components/AddMoviePanel';
 import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
@@ -214,8 +215,18 @@ export default function WatchlistPage() {
     [items, availabilityItems]
   );
 
+  const listedKeys = useMemo(
+    () => new Set(entries.map((entry) => itemKey(entry.tmdbId, entry.mediaType))),
+    [entries]
+  );
+
   const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
   const [randomPick, setRandomPick] = useState<RandomPick | null>(null);
+  const { track } = useAnalytics();
+  const openRandomPick = (pick: RandomPick) => {
+    track('random_pick_opened', { scope: pick.scope, pool: pick.items.length });
+    setRandomPick(pick);
+  };
   const details = useLibraryMovieDetails();
   const detailsEntry = details.target
     ? entries.find(
@@ -348,7 +359,7 @@ export default function WatchlistPage() {
                   onOpen={() => setLetterboxdModalOpen(true)}
                 />
               )}
-              <RandomPickButton toolbar={toolbar} compact onOpen={setRandomPick} />
+              <RandomPickButton toolbar={toolbar} compact onOpen={openRandomPick} />
               <Button
                 type="button"
                 ref={addButtonRef}
@@ -368,7 +379,7 @@ export default function WatchlistPage() {
                   <span>{t('watchlist.letterboxdCta')}</span>
                 </Button>
               )}
-              <RandomPickButton toolbar={toolbar} compact={false} onOpen={setRandomPick} />
+              <RandomPickButton toolbar={toolbar} compact={false} onOpen={openRandomPick} />
               <Button type="button" ref={addButtonRef} variant="primary" onClick={openAddPanel}>
                 <Plus size={ICON_SIZE.md} aria-hidden />
                 <span>{t('watchlist.addPanel.trigger')}</span>
@@ -519,7 +530,9 @@ export default function WatchlistPage() {
       {randomPick && (
         <RandomPickDialog
           open={proposeTarget === null && details.target === null}
-          items={randomPick.items}
+          items={randomPick.items.filter((item) =>
+            listedKeys.has(itemKey(item.tmdbId, item.mediaType))
+          )}
           scope={randomPick.scope}
           ratingScale={user?.ratingScale}
           onClose={() => setRandomPick(null)}
