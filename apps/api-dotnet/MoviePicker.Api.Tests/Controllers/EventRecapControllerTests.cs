@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MoviePicker.Api.Application.UseCases.EventRecap;
+using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Controllers;
 using Xunit;
 
@@ -22,7 +23,7 @@ public sealed class EventRecapControllerTests
 
     private void Document(int status, string html = "<html><div id=\"root\"></div></html>") =>
         _handler.Setup(h => h.HandleAsync("abc", "https://api.example", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new EventRecapDocument(status, html));
+            .ReturnsAsync(new ShareDocument(status, html));
 
     [Fact]
     public async Task Get_KnownNight_ServesTheDocumentAsHtmlWithTheSiteHeaders()

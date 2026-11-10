@@ -7,7 +7,6 @@ using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteEvent;
 using MoviePicker.Api.Application.UseCases.EventConfiguration;
-using MoviePicker.Api.Application.UseCases.EventSharePreview;
 using MoviePicker.Api.Application.UseCases.EventViewTag;
 using MoviePicker.Api.Application.UseCases.GetEligibleFollowsForEvent;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
@@ -95,21 +94,6 @@ public sealed class EventsController : ControllerBase
     {
         var result = await handler.HandleAsync(idOrSlug, request, ct);
         return Ok(result);
-    }
-
-    [HttpGet("slug/{idOrSlug}/share-preview")]
-    [Produces("text/html")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSharePreview(
-        string idOrSlug,
-        [FromServices] IGetEventSharePreviewHtmlHandler handler,
-        CancellationToken ct)
-    {
-        var apiBase = $"{Request.Scheme}://{Request.Host.Value}{Request.PathBase.Value}";
-        var html = await handler.BuildHtmlAsync(idOrSlug, apiBase, ct);
-        Response.Headers.CacheControl = "public, max-age=120";
-        return Content(html, "text/html; charset=utf-8");
     }
 
     [HttpGet("slug/{idOrSlug}")]

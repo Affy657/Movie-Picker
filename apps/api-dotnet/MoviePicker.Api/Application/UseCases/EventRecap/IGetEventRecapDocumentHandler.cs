@@ -1,8 +1,8 @@
+using MoviePicker.Api.Application.UseCases.Shared;
+
 namespace MoviePicker.Api.Application.UseCases.EventRecap;
 
 public interface IGetEventRecapDocumentHandler
 {
-    Task<EventRecapDocument> HandleAsync(string slug, string apiPublicBaseUrl, CancellationToken ct = default);
+    Task<ShareDocument> HandleAsync(string slug, string apiPublicBaseUrl, CancellationToken ct = default);
 }
-
-public sealed record EventRecapDocument(int StatusCode, string Html);

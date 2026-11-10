@@ -23,7 +23,7 @@ public sealed class EventSlugAccessTests : IClassFixture<MoviePickerApplicationF
 
     [Theory]
     [InlineData("/api/v1/events/slug/{0}")]
-    [InlineData("/api/v1/events/slug/{0}/share-preview")]
+    [InlineData("/e/{0}")]
     [InlineData("/api/v1/events/{0}/config")]
     [InlineData("/api/v1/events/{0}/movies")]
     public async Task PublicEventRoutes_ResolveTheSlug_ButNeverTheEventId(string routeFormat)

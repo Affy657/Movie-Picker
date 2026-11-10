@@ -1,31 +1,78 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using System.Text.Unicode;
+using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.Posters;
+using MoviePicker.Api.Domain.Entities;
 
-namespace MoviePicker.Api.Application.UseCases.EventRecap;
+namespace MoviePicker.Api.Application.UseCases.Shared;
 
-public sealed record EventRecapPreview(
+public sealed record ShareDocument(int StatusCode, string Html);
+
+public sealed record SharePreview(
     string Canonical,
     string FallbackUrl,
     string Title,
     string Description,
     string ImageUrl,
-    string ImageAlt = EventRecapPreview.SiteName)
+    string ImageAlt = SharePreview.SiteName)
 {
     public const string SiteName = "Movie Picker";
 
-    public static EventRecapPreview Generic(string webBase) => new(
+    public static SharePreview Generic(string webBase) => new(
         $"{webBase}/",
         $"{webBase}/",
         SiteName,
         "Choisissez votre prochain film ensemble : chacun propose, tout le monde vote, la roue tranche.",
-        $"{webBase}/og-image.png");
+        SiteImage(webBase));
+
+    public static string SiteImage(string webBase) => $"{webBase}/og-image.png";
 
     public string DocumentTitle => Title == SiteName ? SiteName : $"{Title} | {SiteName}";
 }
 
-public static partial class EventRecapHead
+public static class SharePreviewContent
+{
+    public static readonly CultureInfo French = new("fr-FR");
+
+    public static string Day(string date) =>
+        DateOnly.TryParse(date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
+            ? day.ToString("dddd d MMMM yyyy", French)
+            : date;
+
+    public static string Hour(string time)
+    {
+        if (!time.Contains(':'))
+            return time;
+        return time.EndsWith(":00", StringComparison.Ordinal)
+            ? time[..time.IndexOf(':')] + "h"
+            : time.Replace(':', 'h');
+    }
+
+    public static string Film(Movie movie) =>
+        string.IsNullOrWhiteSpace(movie.Year) ? movie.Title : $"{movie.Title} ({movie.Year})";
+
+    public static async Task<string> PosterOrAsync(
+        IPosterImageStore posters,
+        Movie movie,
+        string apiBase,
+        string fallback,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(movie.PosterPath))
+            return fallback;
+
+        var publicPath = await posters.ToStoredPosterPathAsync(movie.PosterPath, ct);
+        if (string.IsNullOrEmpty(publicPath) || !publicPath.StartsWith('/'))
+            return fallback;
+
+        return $"{apiBase}{publicPath}";
+    }
+}
+
+public static partial class SharePreviewHead
 {
     private const string CloseTag = "\" />\n";
     private static readonly HtmlEncoder Encoder = HtmlEncoder.Create(UnicodeRanges.All);
@@ -42,7 +89,10 @@ public static partial class EventRecapHead
     [GeneratedRegex("<title>.*?</title>", RegexOptions.Singleline)]
     private static partial Regex TitleTag();
 
-    public static string IntoShell(string shell, EventRecapPreview preview)
+    public static string Render(string? shell, SharePreview preview) =>
+        shell is null ? StandaloneDocument(preview) : IntoShell(shell, preview);
+
+    public static string IntoShell(string shell, SharePreview preview)
     {
         var stripped = JsonLd().Replace(CanonicalLink().Replace(SocialMeta().Replace(shell, string.Empty), string.Empty), string.Empty);
         var head = HeadTags(preview);
@@ -54,7 +104,7 @@ public static partial class EventRecapHead
         return headEnd < 0 ? head + stripped : stripped[..headEnd] + head + stripped[headEnd..];
     }
 
-    public static string StandaloneDocument(EventRecapPreview preview)
+    public static string StandaloneDocument(SharePreview preview)
     {
         var target = H(preview.FallbackUrl);
         return
@@ -65,7 +115,7 @@ public static partial class EventRecapHead
             + "</head>\n<body>\n<p><a href=\"" + target + "\">Ouvrir sur Movie Picker</a></p>\n</body>\n</html>\n";
     }
 
-    private static string HeadTags(EventRecapPreview preview)
+    private static string HeadTags(SharePreview preview)
     {
         var title = H(preview.Title);
         var description = H(preview.Description);
@@ -77,7 +127,7 @@ public static partial class EventRecapHead
             .Append("<meta name=\"description\" content=\"").Append(description).Append(CloseTag)
             .Append("<meta name=\"robots\" content=\"noindex, nofollow\" />\n")
             .Append("<link rel=\"canonical\" href=\"").Append(canonical).Append(CloseTag)
-            .Append("<meta property=\"og:site_name\" content=\"").Append(EventRecapPreview.SiteName).Append(CloseTag)
+            .Append("<meta property=\"og:site_name\" content=\"").Append(SharePreview.SiteName).Append(CloseTag)
             .Append("<meta property=\"og:type\" content=\"website\" />\n")
             .Append("<meta property=\"og:url\" content=\"").Append(canonical).Append(CloseTag)
             .Append("<meta property=\"og:title\" content=\"").Append(title).Append(CloseTag)

@@ -47,6 +47,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 - **Un lien de connexion mal formé ne fait plus planter la page.**
 - **Les durées des films restent affichées sur l'accueil quand TMDB limite ses réponses.**
 - **La mesure d'audience ne s'arrête plus après la première page vue**, et une page vue ne compte plus deux fois.
+- **Un lien d'invitation partagé montre à nouveau le titre, la date et le thème de la soirée**, puis l'affiche du film une fois choisi, au lieu de l'aperçu générique du site. Un lien de soirée inconnu répond « introuvable ».
 
 ### Changed
 

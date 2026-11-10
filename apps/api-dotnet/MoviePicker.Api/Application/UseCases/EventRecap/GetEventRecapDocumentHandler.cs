@@ -1,7 +1,5 @@
-using System.Globalization;
 using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Ports;
-using MoviePicker.Api.Application.Posters;
 using MoviePicker.Api.Application.UseCases.Shared;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
@@ -10,8 +8,6 @@ namespace MoviePicker.Api.Application.UseCases.EventRecap;
 
 public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
 {
-    private static readonly CultureInfo FrCulture = new("fr-FR");
-
     private readonly IEventRepository _events;
     private readonly IMovieRepository _movies;
     private readonly IParticipantRepository _participants;
@@ -41,31 +37,28 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
         _clock = clock;
     }
 
-    public async Task<EventRecapDocument> HandleAsync(string slug, string apiPublicBaseUrl, CancellationToken ct = default)
+    public async Task<ShareDocument> HandleAsync(string slug, string apiPublicBaseUrl, CancellationToken ct = default)
     {
         var webBase = _options.ResolvedWebBaseUrl();
         var evt = await _events.GetByRecapSlugAsync(slug, ct);
         var preview = evt is null
-            ? EventRecapPreview.Generic(webBase)
+            ? SharePreview.Generic(webBase)
             : await DescribeAsync(evt, webBase, apiPublicBaseUrl.Trim().TrimEnd('/'), ct);
-        var shell = await _shell.GetShellAsync(ct);
-        var html = shell is null
-            ? EventRecapHead.StandaloneDocument(preview)
-            : EventRecapHead.IntoShell(shell, preview);
-        return new EventRecapDocument(evt is null ? 404 : 200, html);
+        var html = SharePreviewHead.Render(await _shell.GetShellAsync(ct), preview);
+        return new ShareDocument(evt is null ? 404 : 200, html);
     }
 
-    private async Task<EventRecapPreview> DescribeAsync(Event evt, string webBase, string apiBase, CancellationToken ct)
+    private async Task<SharePreview> DescribeAsync(Event evt, string webBase, string apiBase, CancellationToken ct)
     {
         var canonical = $"{webBase}/r/{evt.RecapSlug}";
         var fallbackUrl = $"{webBase}/";
         var title = $"{evt.Title}, le recap";
-        var fallbackImage = $"{webBase}/og-image.png";
+        var fallbackImage = SharePreview.SiteImage(webBase);
         IReadOnlyList<Movie> winners = evt.HasWinner ? await WinnerMovies.ListAsync(_movies, evt, ct) : [];
         var first = winners.Count > 0 ? winners[0] : null;
         if (first is null)
         {
-            return new EventRecapPreview(
+            return new SharePreview(
                 canonical,
                 fallbackUrl,
                 title,
@@ -78,43 +71,29 @@ public sealed class GetEventRecapDocumentHandler : IGetEventRecapDocumentHandler
             .Where(r => r.MovieId == first.Id)
             .Select(r => r.Value)
             .ToList();
-        var image = await ResolveImageAsync(first, apiBase, fallbackImage, ct);
-        return new EventRecapPreview(
+        var image = await SharePreviewContent.PosterOrAsync(_posterImageStore, first, apiBase, fallbackImage, ct);
+        return new SharePreview(
             canonical,
             fallbackUrl,
             title,
             BuildDescription(evt, first, ratings, participantCount, evt.IsFinished(_clock.GetUtcNow())),
             image,
-            image == fallbackImage ? EventRecapPreview.SiteName : $"Affiche de {first.Title}");
+            image == fallbackImage ? SharePreview.SiteName : $"Affiche de {first.Title}");
     }
 
     private static string BuildDescription(Event evt, Movie movie, List<int> ratings, int participantCount, bool finished)
     {
-        var film = string.IsNullOrWhiteSpace(movie.Year) ? movie.Title : $"{movie.Title} ({movie.Year})";
-        var day = DateOnly.TryParse(evt.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
-            ? date.ToString("dddd d MMMM yyyy", FrCulture)
-            : evt.Date;
+        var film = SharePreviewContent.Film(movie);
+        var day = SharePreviewContent.Day(evt.Date);
         if (!finished)
             return $"Au programme : {film} le {day}, avec {Participants(participantCount)}.";
         if (ratings.Count == 0)
             return $"On a vu {film} le {day}, avec {Participants(participantCount)}.";
 
-        var average = (ratings.Average() / 2).ToString("0.#", FrCulture);
+        var average = (ratings.Average() / 2).ToString("0.#", SharePreviewContent.French);
         return $"On a vu {film}, noté {average}/5 par {Participants(ratings.Count)}, le {day}.";
     }
 
     private static string Participants(int count) =>
         count == 1 ? "1 participant" : $"{count} participants";
-
-    private async Task<string> ResolveImageAsync(Movie movie, string apiBase, string fallback, CancellationToken ct)
-    {
-        if (string.IsNullOrEmpty(movie.PosterPath))
-            return fallback;
-
-        var publicPath = await _posterImageStore.ToStoredPosterPathAsync(movie.PosterPath, ct);
-        if (string.IsNullOrEmpty(publicPath) || !publicPath.StartsWith('/'))
-            return fallback;
-
-        return $"{apiBase}{publicPath}";
-    }
 }

@@ -6,7 +6,6 @@ using MoviePicker.Api.Application.UseCases.CloseEvent;
 using MoviePicker.Api.Application.UseCases.CreateEvent;
 using MoviePicker.Api.Application.UseCases.DeleteEvent;
 using MoviePicker.Api.Application.UseCases.EventConfiguration;
-using MoviePicker.Api.Application.UseCases.EventSharePreview;
 using MoviePicker.Api.Application.UseCases.EventViewTag;
 using MoviePicker.Api.Application.UseCases.GetEligibleFollowsForEvent;
 using MoviePicker.Api.Application.UseCases.GetEventDetail;
@@ -87,22 +86,6 @@ public sealed class EventsControllerTests
         var result = await Controller(null).PatchConfig("e", null!, handler.Object, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result);
-    }
-
-    [Fact]
-    public async Task GetSharePreview_ReturnsHtmlContent_WithCacheHeader()
-    {
-        var handler = new Mock<IGetEventSharePreviewHtmlHandler>();
-        handler.Setup(h => h.BuildHtmlAsync("e", It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync("<html></html>");
-        var controller = Controller(null);
-
-        var result = await controller.GetSharePreview("e", handler.Object, CancellationToken.None);
-
-        var content = Assert.IsType<ContentResult>(result);
-        Assert.Equal("<html></html>", content.Content);
-        Assert.Equal("text/html; charset=utf-8", content.ContentType);
-        Assert.Equal("public, max-age=120", controller.Response.Headers.CacheControl);
     }
 
     [Fact]

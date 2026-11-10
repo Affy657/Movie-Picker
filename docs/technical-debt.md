@@ -193,27 +193,15 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: `DateOnly Date` et `TimeOnly Time` sur l'entité, ou un `StartUtc` calculé et validé à l'écriture, avec conversion aux frontières (document Mongo, DTO) pour ne changer ni le contrat OpenAPI ni les documents existants ; la validation du format remonte dans le handler de création et rend une `Errors.<Cas>()` au lieu d'un `Upcoming` silencieux
 - piege: les documents de production portent les chaînes : garder la lecture de l'ancien format ou passer par une `IDataMigration`, jamais les deux à moitié. Le seed (`DevelopmentScenarioSeed`, DEBT-040), les fixtures et les tests écrivent ces chaînes en dur : compter les occurrences avant de changer le type, le chantier est plus large qu'il ne paraît depuis `Event.cs`.
 
-## DEBT-042 les aperçus de partage d'une invitation sont génériques, l'option « aperçu riche » n'a plus d'effet
-
-- state: agent
-- impact: le lien d'invitation est `https://<front>/e/<slug>` et Hosting lui répond la coquille SPA, donc WhatsApp, Messenger, Discord et consorts affichent le titre et l'image génériques du site quelle que soit la soirée. `GET /api/v1/events/slug/{slug}/share-preview`, qui rend le HTML Open Graph de la soirée, n'est plus appelé par personne depuis `9a1ecc87` (le lien de partage est passé de l'URL API à l'URL front, et l'assistant front qui construisait l'URL de l'API a été supprimé le 2026-09-23) : le réglage `richSharePreview` de la soirée ne change rien pour l'utilisateur. Depuis la V1.7, le recap `/r/<slug>` a son aperçu : Hosting réécrit `/r/**` vers Cloud Run et `GET /r/{slug}` rend la coquille du site avec les balises de la soirée (`GetEventRecapDocumentHandler`, coquille lue sur `PUBLIC_WEB_BASE_URL/index.html` par `HttpWebShellSource`), ce qui est le mécanisme à reprendre pour l'invitation.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventSharePreview/GetEventSharePreviewHtmlHandler.cs`, `apps/api-dotnet/MoviePicker.Api/Application/UseCases/EventRecap/`, `infra/firebase-hosting.json` (réécritures)
-- verify: encore ouvert tant que la commande ne renvoie pas une balise `og:title` propre à la soirée (la coquille rend le titre du site).
-  ```bash
-  curl -sS -A "facebookexternalhit/1.1" https://www.movie-picker.fr/e/<SLUG_PUBLIC> | grep -o '<meta property="og:title" content="[^"]*"'
-  ```
-- fix: une réécriture Hosting `{ "glob": "/e/**", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } }` devant le repli `**`, et une route `GET /e/{slug}` de l'API qui rend la coquille avec les balises de l'invitation (titre, date, thème selon `richSharePreview`) sur le modèle de `EventRecapController`, image générique du site tant que la soirée n'a pas de film ; supprimer alors `share-preview` et `GetEventSharePreviewHtmlHandler`, dont `GetEventRecapDocumentHandler` reprend la description. Le 404 des soirées inconnues (DEBT-043) vient avec.
-- piege: `robots.txt` interdit `/e/` : un robot d'indexation n'y va pas, seuls les robots d'aperçu (qui ignorent `robots.txt`) sont concernés. Tout document navigateur passe alors par Cloud Run (démarrage à froid possible sur chaque lien d'invitation, là où le recap n'expose qu'un lien partagé) : c'est le coût à peser avant de l'étendre. Les documents servis par l'API remplacent les en-têtes du middleware de sécurité (`Content-Security-Policy: frame-ancestors 'none'`, `Referrer-Policy`) par ceux de Hosting, sinon la coquille est bloquée par `default-src 'none'`.
-
 ## DEBT-043 toute adresse inconnue répond 200
 
 - state: differe
-- declencheur: la réécriture Hosting `/e/**` vers Cloud Run de DEBT-042, ou une page de la coquille vue indexée dans Search Console. Depuis la V1.7, `/r/<slug-inconnu>` répond déjà `404` avec la coquille (document rendu par l'API derrière la réécriture `/r/**`), la même voie vaut pour `/e/`.
-- impact: `/page-inexistante` et `/e/<slug-inconnu>` répondent `200` avec la coquille SPA, le `noindex` de `NotFoundPage` n'est posé qu'en JavaScript : un moteur qui n'exécute pas le rendu peut indexer une page vide (mesuré le 2026-09-18, une `/films/collection/…` indexée avec la coquille brute)
+- declencheur: une page de la coquille vue indexée dans Search Console. `/r/<slug-inconnu>` et `/e/<slug-inconnu>` répondent déjà `404` avec la coquille, document rendu par l'API derrière les réécritures Hosting `/r/**` et `/e/*`.
+- impact: `/page-inexistante` répond `200` avec la coquille SPA, le `noindex` de `NotFoundPage` n'est posé qu'en JavaScript : un moteur qui n'exécute pas le rendu peut indexer une page vide (mesuré le 2026-09-18, une `/films/collection/…` indexée avec la coquille brute)
 - ou: `infra/firebase-hosting.json` (repli vers `/index.html` en 200, sauf sous `/assets/`)
 - verify: `curl -sS -o /dev/null -w '%{http_code}\n' https://www.movie-picker.fr/page-inexistante` ; encore ouvert tant que la commande affiche `200`
-- fix: pour les chemins qui ne correspondent à aucune route de `apps/web/src/app/routes.ts`, renvoyer la coquille avec le statut 404 (`X-Robots-Tag: noindex`), ce qu'un hébergement statique ne sait pas faire seul ; une réécriture Hosting `/e/**` vers Cloud Run (DEBT-042) réglerait au moins les soirées inconnues, le reste demande une fonction devant le site
-- piege: `/u/<handle>` et `/e/<slug>` sont des gabarits valides même quand la ressource n'existe pas, le 404 côté edge ne peut pas les juger : leur `noindex` reste posé par l'application
+- fix: pour les chemins qui ne correspondent à aucune route de `apps/web/src/app/routes.ts`, renvoyer la coquille avec le statut 404 (`X-Robots-Tag: noindex`), ce qu'un hébergement statique ne sait pas faire seul : il faut une fonction devant le site
+- piege: `/u/<handle>` est un gabarit valide même quand le profil n'existe pas, le 404 côté edge ne peut pas le juger : son `noindex` reste posé par l'application
 
 ## DEBT-044 le conteneur de l'API est décrit à deux endroits, le pipeline et Terraform
 
@@ -458,20 +446,20 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -c "ImageMetadataStripper" apps/api-dotnet/MoviePicker.Api/Application/UseCases/AvatarPhotos/UploadAvatarPhotoHandler.cs` ; encore ouvert tant que la commande rend `0`
 - fix: passer les octets par `ImageMetadataStripper` (déjà utilisé pour les pièces jointes des suggestions) ou les réencoder côté serveur ; garder l'ancienne image quelques minutes avant de la supprimer
 
-## DEBT-074 l'aperçu du recap `/r/<slug>` n'a de quota que par slug
+## DEBT-074 les documents `/r/<slug>` et `/e/<slug>` n'ont de quota que par slug
 
 - state: agent
-- impact: le document `/r/<slug>` (page recap et son aperçu de partage) échappe au plafond par adresse et au limiteur global, parce que derrière Firebase Hosting toutes les requêtes arrivent des adresses de Google. Seul compte un quota de 120 requêtes par minute et par slug, partagé dans Mongo. La route répond pourtant aussi en direct sur l'adresse de l'API : un client peut boucler sur des slugs au hasard sans frein (une lecture `events` et un upsert de compteur à chaque fois), ou épuiser le quota d'un recap connu, et chaque visiteur sans cache CDN reçoit alors un 429 brut au lieu de la page.
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` (`IsProxied`, `RecapDocumentPolicy`), `Infrastructure/Web/SharedRateLimitFilter.cs`, `Controllers/EventRecapController.cs`
+- impact: les documents `/r/<slug>` (recap) et `/e/<slug>` (invitation), page et aperçu de partage, échappent au plafond par adresse et au limiteur global, parce que derrière Firebase Hosting toutes les requêtes arrivent des adresses de Google. Seul compte un quota de 120 requêtes par minute et par slug, partagé dans Mongo. Les routes répondent pourtant aussi en direct sur l'adresse de l'API : un client peut boucler sur des slugs au hasard sans frein (une lecture `events` et un upsert de compteur à chaque fois), ou épuiser le quota d'une soirée connue, et chaque visiteur sans cache CDN reçoit alors un 429 brut au lieu de la page.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` (`IsProxied`, `RecapDocumentPolicy`, `InvitationDocumentPolicy`), `Infrastructure/Web/SharedRateLimitFilter.cs`, `Controllers/EventRecapController.cs`, `Controllers/EventInvitationController.cs`
 - verify: `grep -n "Scope: QuotaScope.Slug }" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` ; encore ouvert tant que la ligne sort
 - fix: distinguer l'appel relayé par Hosting de l'appel direct (en-tête posé par la réécriture, ou entrée réservée à Hosting) et garder le plafond par adresse pour l'appel direct
 
-## DEBT-075 juste après un déploiement du front, `/r/<slug>` peut servir une coquille périmée
+## DEBT-075 juste après un déploiement du front, `/r/<slug>` et `/e/<slug>` peuvent servir une coquille périmée
 
 - state: differe
-- declencheur: un recap signalé bloqué sur l'écran de démarrage, ou des 404 sur `/assets/index-*.js` dans les journaux de Hosting après un déploiement
-- impact: l'API garde `index.html` 60 s en mémoire et sert le document du recap en `public, max-age=60`. `deploy-front` passe après `deploy-api`, et les anciens `/assets/index-<hash>.js` répondent 404 sur la nouvelle version de Hosting : pendant une à deux minutes après chaque déploiement du front (ou retour arrière), un visiteur sans service worker qui ouvre un recap reste sur l'écran de démarrage.
-- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` (`CacheTtl`), `Controllers/EventRecapController.cs`, `.github/workflows/deploy.yml`
+- declencheur: un recap ou une invitation signalés bloqués sur l'écran « recharger », ou des 404 sur `/assets/index-*.js` dans les journaux de Hosting après un déploiement
+- impact: l'API garde `index.html` 60 s en mémoire et sert les documents du recap et de l'invitation en `public, max-age=60`. `deploy-front` passe après `deploy-api`, et les anciens `/assets/index-<hash>.js` répondent 404 sur la nouvelle version de Hosting : pendant une à deux minutes après chaque déploiement du front (ou retour arrière), un visiteur qui ouvre un recap ou un lien d'invitation voit le panneau « recharger » de `index.html`, et le rechargement retombe sur la même coquille tant que les deux caches n'ont pas expiré.
+- ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` (`CacheTtl`), `Controllers/ShareDocumentResults.cs`, `.github/workflows/deploy.yml`
 - verify: `grep -n "CacheTtl = TimeSpan.FromSeconds(60)" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/HttpWebShellSource.cs` ; encore ouvert tant que la ligne sort
 - fix: relire la coquille quand elle désigne un fichier absent (un 404 sur ses assets vide le cache), ou garder les assets de la version précédente servis quelques minutes après le déploiement
 

@@ -19,18 +19,6 @@ public sealed class EventRecapController : ControllerBase
     public async Task<IActionResult> Get(
         string slug,
         [FromServices] IGetEventRecapDocumentHandler handler,
-        CancellationToken ct)
-    {
-        var apiBase = $"{Request.Scheme}://{Request.Host.Value}{Request.PathBase.Value}";
-        var document = await handler.HandleAsync(slug, apiBase, ct);
-        Response.Headers.CacheControl = "public, max-age=60";
-        Response.Headers.ContentSecurityPolicy = "frame-ancestors 'none'";
-        Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-        return new ContentResult
-        {
-            StatusCode = document.StatusCode,
-            ContentType = "text/html; charset=utf-8",
-            Content = document.Html
-        };
-    }
+        CancellationToken ct) =>
+        this.ShareDocument(await handler.HandleAsync(slug, this.PublicApiBase(), ct));
 }

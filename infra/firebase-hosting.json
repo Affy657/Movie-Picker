@@ -3,6 +3,7 @@
   "trailingSlashBehavior": "REMOVE",
   "rewrites": [
     { "glob": "/r/**", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } },
+    { "glob": "/e/*", "run": { "serviceId": "movie-picker-api", "region": "europe-west1" } },
     {
       "regex": "^/(?:[^a].*|a(?:[^s].*)?|as(?:[^s].*)?|ass(?:[^e].*)?|asse(?:[^t].*)?|asset(?:[^s].*)?|assets(?:[^/].*)?)?$",
       "path": "/index.html"
