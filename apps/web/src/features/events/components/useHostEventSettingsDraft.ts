@@ -7,6 +7,7 @@ import {
   limitFieldOnEnable,
   type ApplicableConfig,
 } from '@/features/events/lib/eventTemplateDraft';
+import { validateEventLimits } from '@/features/events/lib/eventLimitValidation';
 import { patchEventConfig } from '@/features/events/api/eventsApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { queryKeys } from '@/shared/hooks/queryKeys';
@@ -187,6 +188,24 @@ export function useHostEventSettingsDraft({
     [scheduleAutoSave]
   );
 
+  const templateLimitsAreValid = () => {
+    const { errors } = validateEventLimits(
+      {
+        proposalLimitEnabled,
+        maxProposals: maxProp,
+        participantLimitEnabled,
+        maxParticipants,
+        voteLimitEnabled,
+        maxVotes,
+        currentParticipantCount: 0,
+      },
+      t
+    );
+    if (Object.keys(errors).length === 0) return true;
+    setFieldErrors((current) => ({ ...current, ...errors }));
+    return false;
+  };
+
   const eventTemplates = useEventTemplates(open && isConnectedCreator, {
     draft: templateDraft,
     onError: setSaveError,
@@ -343,6 +362,7 @@ export function useHostEventSettingsDraft({
     saveState,
     scheduleAutoSave,
     templateDraft,
+    templateLimitsAreValid,
     eventTemplates,
     isConnectedCreator,
   };

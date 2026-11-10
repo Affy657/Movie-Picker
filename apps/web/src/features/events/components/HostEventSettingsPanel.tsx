@@ -102,6 +102,7 @@ export default function HostEventSettingsPanel({
     saveState,
     scheduleAutoSave,
     templateDraft,
+    templateLimitsAreValid,
     eventTemplates,
     isConnectedCreator,
   } = useHostEventSettingsDraft({ slug, hostToken, event, open });
@@ -401,6 +402,7 @@ export default function HostEventSettingsPanel({
                 appliedTemplate={eventTemplates.appliedTemplate}
                 lastSaved={eventTemplates.lastSaved}
                 disabled={eventTemplates.isBusy}
+                onBeforeSave={templateLimitsAreValid}
                 onSave={eventTemplates.saveAs}
                 onUpdate={eventTemplates.updateApplied}
               />

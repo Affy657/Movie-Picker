@@ -22,6 +22,7 @@ type Props = {
   variant?: 'create' | 'event';
   disabled?: boolean;
   className?: string;
+  onBeforeSave?: () => boolean;
   onSave: (name: string) => void;
   onUpdate?: (template: EventTemplateData) => void;
 };
@@ -34,6 +35,7 @@ export default function EventTemplateSaveBar({
   variant = 'create',
   disabled = false,
   className,
+  onBeforeSave,
   onSave,
   onUpdate,
 }: Readonly<Props>) {
@@ -52,7 +54,10 @@ export default function EventTemplateSaveBar({
       ? lastSaved
       : null;
 
+  const draftCanBeSaved = () => onBeforeSave === undefined || onBeforeSave();
+
   const startNaming = () => {
+    if (!draftCanBeSaved()) return;
     setDraftName(suggestTemplateName(draft.theme, takenNames));
     setNaming(true);
   };
@@ -114,7 +119,9 @@ export default function EventTemplateSaveBar({
               variant="primary"
               size="sm"
               disabled={disabled}
-              onClick={() => onUpdate(appliedTemplate)}
+              onClick={() => {
+                if (draftCanBeSaved()) onUpdate(appliedTemplate);
+              }}
             >
               <RotateCcw size={ICON_SIZE.sm} aria-hidden />
               <span className={styles.actionLabel}>

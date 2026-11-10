@@ -957,6 +957,41 @@ describe('HostEventSettingsPanel', () => {
     });
   });
 
+  it('refuses to save a template with a cleared limit instead of saving the default', async () => {
+    const user = userEvent.setup();
+    let templateWrites = 0;
+    server.use(
+      http.get(`${TEST_API_V1}/users/me/event-templates`, () => HttpResponse.json({ items: [] })),
+      http.post(`${TEST_API_V1}/users/me/event-templates`, () => {
+        templateWrites += 1;
+        return HttpResponse.json({ ...templateFixture, id: 'tpl2' });
+      }),
+      http.patch(`${TEST_API_V1}/events/${slug}/config`, () => HttpResponse.json({}))
+    );
+
+    renderWithRouter(
+      <HostEventSettingsPanel
+        open
+        onClose={() => {}}
+        slug={slug}
+        hostToken={null}
+        event={creatorEvent}
+      />
+    );
+
+    await user.click(
+      await screen.findByRole('switch', { name: /limiter les votes par participant/i })
+    );
+    await user.clear(screen.getByLabelText(/^votes par participant$/i));
+    await user.click(await screen.findByRole('button', { name: /enregistrer en template/i }));
+
+    expect(
+      await screen.findByText('Votes par participant : nombre entier à partir de 1.')
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText('Nom du template')).toBeNull();
+    expect(templateWrites).toBe(0);
+  });
+
   it('allows managing the templates from the panel', async () => {
     const user = userEvent.setup();
     server.use(

@@ -668,6 +668,45 @@ describe('CreateEvent', () => {
     expect(mockFetchApi).not.toHaveBeenCalledWith('/events', expect.anything());
   });
 
+  it('refuses to save a template with a cleared limit, under its field, without calling the API', async () => {
+    const user = userEvent.setup();
+    mockTemplates([]);
+    RenderCreateEvent();
+
+    await user.click(screen.getByText(/options avancées/i));
+    await user.click(screen.getByRole('switch', { name: /limiter les votes par participant/i }));
+    const votes = screen.getByLabelText(/^votes par participant$/i);
+    await user.clear(votes);
+    await user.click(screen.getByRole('button', { name: /enregistrer en template/i }));
+
+    expect(
+      await screen.findByText('Votes par participant : nombre entier à partir de 1.')
+    ).toBeInTheDocument();
+    expect(votes).toHaveFocus();
+    const templateWrites = mockFetchApi.mock.calls.filter(
+      ([path, init]) => isTemplatesCall(path) && (init as { method?: string })?.method === 'POST'
+    );
+    expect(templateWrites).toHaveLength(0);
+  });
+
+  it('saves a template once its limits are valid', async () => {
+    const user = userEvent.setup();
+    mockTemplates([]);
+    RenderCreateEvent();
+
+    await user.click(screen.getByText(/options avancées/i));
+    await user.click(screen.getByRole('switch', { name: /limiter les votes par participant/i }));
+    await user.click(screen.getByRole('button', { name: /enregistrer en template/i }));
+    await user.type(screen.getByLabelText('Nom du template'), '{Enter}');
+
+    await waitFor(() => {
+      const templateWrites = mockFetchApi.mock.calls.filter(
+        ([path, init]) => isTemplatesCall(path) && (init as { method?: string })?.method === 'POST'
+      );
+      expect(templateWrites).toHaveLength(1);
+    });
+  });
+
   it('sends a limit typed at the cap as a limit', async () => {
     const user = userEvent.setup();
     mockTemplates([]);

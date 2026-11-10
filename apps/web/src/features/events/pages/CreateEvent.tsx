@@ -255,9 +255,8 @@ export default function CreateEvent() {
   const clearFieldError = (field: keyof CreateEventFieldErrors) =>
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
 
-  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const limits = validateEventLimits(
+  const limitErrors = () =>
+    validateEventLimits(
       {
         proposalLimitEnabled,
         maxProposals,
@@ -268,16 +267,36 @@ export default function CreateEvent() {
         currentParticipantCount: 0,
       },
       t
-    );
-    const errors = { ...validateCreateEventDraft({ title, date, time }, t), ...limits.errors };
+    ).errors;
+
+  const limitFocusTargets = (errors: CreateEventFieldErrors) => [
+    { message: errors.maxParticipants, focus: () => focusLimitCounter('participants') },
+    { message: errors.maxProposals, focus: () => focusLimitCounter('proposals') },
+    { message: errors.maxVotes, focus: () => focusLimitCounter('votes') },
+  ];
+
+  const templateLimitsAreValid = () => {
+    const errors = limitErrors();
+    setFieldErrors((current) => ({
+      ...current,
+      maxProposals: errors.maxProposals,
+      maxParticipants: errors.maxParticipants,
+      maxVotes: errors.maxVotes,
+    }));
+    const firstInvalid = limitFocusTargets(errors).find((entry) => entry.message !== undefined);
+    firstInvalid?.focus();
+    return firstInvalid === undefined;
+  };
+
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const errors = { ...validateCreateEventDraft({ title, date, time }, t), ...limitErrors() };
     setFieldErrors(errors);
     const firstInvalid = [
       { message: errors.title, focus: () => titleRef.current?.focus() },
       { message: errors.date, focus: () => dateRef.current?.focus() },
       { message: errors.time, focus: () => timeRef.current?.focus() },
-      { message: errors.maxParticipants, focus: () => focusLimitCounter('participants') },
-      { message: errors.maxProposals, focus: () => focusLimitCounter('proposals') },
-      { message: errors.maxVotes, focus: () => focusLimitCounter('votes') },
+      ...limitFocusTargets(errors),
     ].find((entry) => entry.message !== undefined);
     if (firstInvalid) {
       firstInvalid.focus();
@@ -569,6 +588,7 @@ export default function CreateEvent() {
                 appliedTemplate={eventTemplates.appliedTemplate}
                 lastSaved={eventTemplates.lastSaved}
                 disabled={eventTemplates.isBusy || loading}
+                onBeforeSave={templateLimitsAreValid}
                 onSave={eventTemplates.saveAs}
                 onUpdate={eventTemplates.updateApplied}
               />
