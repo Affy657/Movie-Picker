@@ -47,6 +47,10 @@ public sealed class UserNotificationDocument
     [BsonElement("isRead")]
     public bool IsRead { get; set; }
 
+    [BsonElement("isWithheld")]
+    [BsonIgnoreIfDefault]
+    public bool IsWithheld { get; set; }
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; }
 }

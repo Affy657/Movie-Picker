@@ -182,7 +182,7 @@ public sealed class InviteUserHandlerTests
 
         Assert.Equal("Invitation sent", result.Message);
         _notifications.Verify(n => n.AddAsync(
-            It.Is<UserNotification>(x => x.UserId == TargetId && x.Type == UserNotificationType.EventInvitation && x.EventId == "evt1"),
+            It.Is<UserNotification>(x => x.UserId == TargetId && x.Type == UserNotificationType.EventInvitation && x.EventId == "evt1" && !x.IsWithheld),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -209,7 +209,7 @@ public sealed class InviteUserHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_TargetOptedOut_LeavesNoTraceForTheTargetAndAnswersTheSame()
+    public async Task HandleAsync_TargetOptedOut_RemembersTheInvitationWithoutDeliveringItAndAnswersTheSame()
     {
         SetupEvent(Evt());
         _follows.Setup(f => f.IsFollowingAsync(HostId, TargetId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
@@ -233,7 +233,10 @@ public sealed class InviteUserHandlerTests
 
         Assert.Equal("Invitation sent", result.Message);
         _pushSender.Verify(s => s.SendAsync(It.IsAny<PushSubscription>(), It.IsAny<PushMessage>(), It.IsAny<CancellationToken>()), Times.Never);
-        _notifications.Verify(n => n.AddAsync(It.IsAny<UserNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+        _pushSubs.Verify(p => p.ListByUserIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _notifications.Verify(n => n.AddAsync(
+            It.Is<UserNotification>(x => x.UserId == TargetId && x.Type == UserNotificationType.EventInvitation && x.EventId == "evt1" && x.IsWithheld),
+            It.IsAny<CancellationToken>()), Times.Once);
         _dedup.Verify(d => d.TryClaimAsync(
             TargetId, UserNotificationType.EventInvitation, "evt1", NotificationDedupChannel.InApp, It.IsAny<CancellationToken>()), Times.Once);
     }

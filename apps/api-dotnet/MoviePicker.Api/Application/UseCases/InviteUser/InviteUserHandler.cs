@@ -91,8 +91,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
         if (!claimed)
             throw Errors.InvitationAlreadySent();
 
-        if (target is not null && !target.NotifiesOn(UserNotificationType.EventInvitation))
-            return Sent();
+        var withheld = target is not null && !target.NotifiesOn(UserNotificationType.EventInvitation);
 
         User? actor;
         try
@@ -109,6 +108,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
                 EventSlug = evt.Slug,
                 EventTitle = evt.Title,
                 IsRead = false,
+                IsWithheld = withheld,
                 CreatedAt = _clock.GetUtcNow()
             }, ct);
         }
@@ -119,7 +119,7 @@ public sealed class InviteUserHandler : IInviteUserHandler
             throw;
         }
 
-        if (target is not null)
+        if (target is not null && !withheld)
         {
             var subs = await _pushSubscriptions.ListByUserIdAsync(targetUserId, ct);
             var message = new PushMessage(

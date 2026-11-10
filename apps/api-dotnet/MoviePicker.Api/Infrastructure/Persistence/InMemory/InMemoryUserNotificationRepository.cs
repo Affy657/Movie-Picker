@@ -19,7 +19,7 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
         string userId, int limit = 50, int offset = 0, CancellationToken ct = default)
     {
         IReadOnlyList<UserNotification> result = _store.Values
-            .Where(n => n.UserId == userId)
+            .Where(n => n.UserId == userId && !n.IsWithheld)
             .OrderByDescending(n => n.CreatedAt)
             .Skip(offset)
             .Take(limit)
@@ -29,7 +29,7 @@ public sealed class InMemoryUserNotificationRepository : IUserNotificationReposi
 
     public Task<int> GetUnreadCountAsync(string userId, CancellationToken ct = default)
     {
-        var count = _store.Values.Count(n => n.UserId == userId && !n.IsRead);
+        var count = _store.Values.Count(n => n.UserId == userId && !n.IsRead && !n.IsWithheld);
         return Task.FromResult(count);
     }
 

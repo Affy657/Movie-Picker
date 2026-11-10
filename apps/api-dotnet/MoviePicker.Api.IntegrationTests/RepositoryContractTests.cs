@@ -188,6 +188,40 @@ public sealed class RepositoryContractTests : IClassFixture<MoviePickerApplicati
     }
 
     [Fact]
+    public async Task WithheldNotification_StaysOutOfTheInboxButCountsAsSent()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var notifications = scope.ServiceProvider.GetRequiredService<IUserNotificationRepository>();
+        var withheldFor = ObjectId.GenerateNewId().ToString();
+        var deliveredTo = ObjectId.GenerateNewId().ToString();
+        var eventId = ObjectId.GenerateNewId().ToString();
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = withheldFor,
+            Type = UserNotificationType.EventInvitation,
+            EventId = eventId,
+            IsWithheld = true,
+            CreatedAt = Now
+        });
+        await notifications.AddAsync(new UserNotification
+        {
+            UserId = deliveredTo,
+            Type = UserNotificationType.EventInvitation,
+            EventId = eventId,
+            CreatedAt = Now
+        });
+
+        Assert.Empty(await notifications.ListByUserIdAsync(withheldFor));
+        Assert.Equal(0, await notifications.GetUnreadCountAsync(withheldFor));
+        Assert.True(await notifications.ExistsAsync(withheldFor, UserNotificationType.EventInvitation, eventId));
+        Assert.Single(await notifications.ListByUserIdAsync(deliveredTo));
+        Assert.Equal(1, await notifications.GetUnreadCountAsync(deliveredTo));
+        var invited = await notifications.ListUserIdsByTypeAndEventAsync(UserNotificationType.EventInvitation, eventId);
+        Assert.Contains(withheldFor, invited);
+        Assert.Contains(deliveredTo, invited);
+    }
+
+    [Fact]
     public async Task NotificationExistsFromActor_MatchesTheRecipientTheTypeAndTheActor()
     {
         using var scope = _factory.Services.CreateScope();

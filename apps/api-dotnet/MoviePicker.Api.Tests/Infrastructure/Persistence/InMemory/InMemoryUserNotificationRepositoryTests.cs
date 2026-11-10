@@ -125,4 +125,15 @@ public sealed class InMemoryUserNotificationRepositoryTests
         Assert.Equal(2, (await _repo.ListByUserIdAsync("u1")).Count);
         Assert.Empty(await _repo.ListByUserIdAsync("u2"));
     }
+
+    [Fact]
+    public async Task WithheldNotification_StaysOutOfTheInboxButCountsAsSent()
+    {
+        await _repo.AddAsync(Mk(userId: "u1", type: UserNotificationType.EventInvitation, eventId: "evt1") with { IsWithheld = true });
+
+        Assert.Empty(await _repo.ListByUserIdAsync("u1"));
+        Assert.Equal(0, await _repo.GetUnreadCountAsync("u1"));
+        Assert.True(await _repo.ExistsAsync("u1", UserNotificationType.EventInvitation, "evt1"));
+        Assert.Contains("u1", await _repo.ListUserIdsByTypeAndEventAsync(UserNotificationType.EventInvitation, "evt1"));
+    }
 }

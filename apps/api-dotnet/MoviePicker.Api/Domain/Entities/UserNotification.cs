@@ -30,5 +30,6 @@ public sealed record UserNotification
     public string? EventTitle { get; init; }
     public string? MovieTitle { get; init; }
     public bool IsRead { get; init; }
+    public bool IsWithheld { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }

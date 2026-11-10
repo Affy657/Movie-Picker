@@ -29,6 +29,7 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
             EventTitle = notification.EventTitle,
             MovieTitle = notification.MovieTitle,
             IsRead = false,
+            IsWithheld = notification.IsWithheld,
             CreatedAt = notification.CreatedAt.UtcDateTime
         };
         await _collection.InsertOneAsync(doc, cancellationToken: ct);
@@ -38,7 +39,7 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
         string userId, int limit = 50, int offset = 0, CancellationToken ct = default)
     {
         var docs = await _collection
-            .Find(x => x.UserId == userId)
+            .Find(x => x.UserId == userId && !x.IsWithheld)
             .SortByDescending(x => x.CreatedAt)
             .Skip(offset)
             .Limit(limit)
@@ -63,7 +64,7 @@ public sealed class MongoUserNotificationRepository : IUserNotificationRepositor
     public async Task<int> GetUnreadCountAsync(string userId, CancellationToken ct = default)
     {
         var count = await _collection.CountDocumentsAsync(
-            x => x.UserId == userId && !x.IsRead, cancellationToken: ct);
+            x => x.UserId == userId && !x.IsRead && !x.IsWithheld, cancellationToken: ct);
         return (int)count;
     }
 
