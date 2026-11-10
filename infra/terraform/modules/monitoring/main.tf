@@ -671,3 +671,49 @@ resource "google_monitoring_alert_policy" "account_throttled" {
     )
   }
 }
+
+resource "google_monitoring_alert_policy" "avatar_storage_full" {
+  project               = var.project_id
+  display_name          = "Plafond de photos de profil atteint"
+  combiner              = "OR"
+  severity              = "WARNING"
+  notification_channels = [google_monitoring_notification_channel.email.name]
+
+  alert_strategy {
+    auto_close = "3600s"
+
+    notification_rate_limit {
+      period = "3600s"
+    }
+  }
+
+  conditions {
+    display_name = "Envoi d'une photo de profil refusé, stockage plein"
+
+    condition_matched_log {
+      filter = "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"${var.api_service_name}\" AND jsonPayload.State.\"{OriginalFormat}\"=\"Avatar photo refused: {Stored} photos stored for a limit of {Limit}\""
+
+      label_extractors = {
+        stored = "EXTRACT(jsonPayload.State.Stored)"
+        limit  = "EXTRACT(jsonPayload.State.Limit)"
+      }
+    }
+  }
+
+  documentation {
+    mime_type = "text/markdown"
+    content = chomp(<<-EOT
+      **Indicateur** : l'avertissement `Avatar photo refused: {Stored} photos stored for a limit of {Limit}` de `AvatarPhotoWriter`, dans le journal du service Cloud Run `${var.api_service_name}`.
+
+      **Pourquoi** : le plafond global de photos de profil protège le quota de stockage de la base. Une fois atteint, tout premier envoi de photo est refusé, pour tous les comptes ; remplacer une photo existante reste possible.
+
+      **Déclencheur** : chaque ligne correspondante, au plus une notification par heure.
+
+      **Conduite à tenir** :
+      1. Lire `stored` et `limit` portés par la notification.
+      2. Vérifier la place réelle de la base (palier Atlas), puis relever `AvatarPhotoMaxEntries` si elle le permet.
+      3. Sinon, supprimer les photos de comptes supprimés ou inactifs avant de rouvrir les envois.
+    EOT
+    )
+  }
+}
