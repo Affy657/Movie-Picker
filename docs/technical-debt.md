@@ -410,7 +410,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - fix: un `EmailVerifiedAt` sur `User` et un courriel de confirmation (même mécanique de jeton que la réinitialisation) ; côté OAuth, un e-mail vérifié par le fournisseur qui tombe sur un compte non confirmé vaut preuve de possession : purger mot de passe, identités, sessions et abonnements push de l'occupant au lieu de refuser ; ne pas attribuer le badge Ko-fi à une adresse non confirmée
 - fini-quand: un compte non confirmé ne peut plus bloquer l'adresse d'un tiers
 
-
 ## DEBT-066 les disponibilités en streaming de Ma liste s'arrêtent aux 500 films les plus récents
 
 - state: differe
@@ -420,7 +419,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -n "ListPageByUserIdAsync(userId, 0, GetWatchlistHandler.MaxTake" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Watchlist/GetWatchlistAvailabilityHandler.cs` ; encore ouvert tant que la ligne sort
 - fix: paginer la route (`skip`, `take`) comme `GET /watchlist` et laisser le front la lire page par page, ou n'enrichir que les films visibles
 - piege: chaque page enrichie coûte jusqu'à 500 appels TMDB en cache froid ; garder le plafond par requête, ne pas le relever d'un coup
-
 
 ## DEBT-068 les photos de profil ne sont ni modérées ni signalables
 
@@ -433,16 +431,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - piege: retirer une photo à la main demande d'effacer le document de `avatar_photos` et de remettre `avatarPhoto` à `null` sur l'utilisateur ; sans le second geste, le profil pointe vers une image en 404 et retombe sans bruit sur les initiales
 - refs: cadrage du 2026-10-03 de la feature « Photo de profil personnalisée » (modération écartée de la V1.7)
 
-
-## DEBT-070 la pioche perd le focus quand l'écran change de format, et tire dans une liste figée
-
-- state: agent
-- impact: deux défauts de la pioche aléatoire de Ma liste. Si l'écran franchit 768 px pendant que la pioche est ouverte (téléphone tourné en paysage), `ResponsiveDialog` remplace la feuille par la modale et l'en-tête de la page change de branche : à la fermeture, le focus clavier tombe sur `body` au lieu de revenir sur « Piocher », et l'animation d'atterrissage rejoue. Le tirage se fait aussi sur la copie de la liste prise à l'ouverture : un titre retiré pendant que la pioche est ouverte (synchro Letterboxd lancée au chargement, retrait encore en cours) peut encore être tiré et proposé à une soirée.
-- ou: `apps/web/src/shared/components/ResponsiveDialog.tsx`, `apps/web/src/features/watchlist/components/RandomPickDialog.tsx` (pool initialisé une fois), `apps/web/src/features/watchlist/pages/WatchlistPage.tsx`
-- verify: `grep -n "const \[{ pool, keys }\] = useState(" apps/web/src/features/watchlist/components/RandomPickDialog.tsx` ; encore ouvert tant que la ligne sort
-- fix: retirer du pool les clés absentes des `items` courants, sans re-tirer tant que le titre affiché y reste ; rendre le focus au bouton « Piocher » de la branche montée à la fermeture
-
-
 ## DEBT-071 la relance du lendemain oublie une soirée dont le film est tiré tard
 
 - state: differe
@@ -451,7 +439,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs`, `ListWithWinnerStartingBetweenAsync` de `MongoEventRepository`
 - verify: `grep -n "ListWithWinnerStartingBetweenAsync" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Notifications/RatingReminderPass.cs` ; encore ouvert tant que la ligne sort
 - fix: borner la fenêtre sur le tirage le plus récent (`Winners[].PickedAt`) ou sur la fin effective de la soirée plutôt que sur son début, avec l'index qui va avec
-
 
 ## DEBT-072 le serveur croit le titre et l'année d'un favori envoyés par le client
 
@@ -462,7 +449,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -c "ITmdbMovieSearch" apps/api-dotnet/MoviePicker.Api/Application/UseCases/Favorites/AddFavoriteHandler.cs` ; encore ouvert tant que la commande rend `0`
 - fix: relire titre, année et affiche chez TMDB par l'identifiant et le type, en ignorant ceux du client
 
-
 ## DEBT-073 une photo de profil envoyée hors de l'app garde ses métadonnées, et l'ancienne disparaît trop tôt
 
 - state: differe
@@ -472,7 +458,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -c "ImageMetadataStripper" apps/api-dotnet/MoviePicker.Api/Application/UseCases/AvatarPhotos/UploadAvatarPhotoHandler.cs` ; encore ouvert tant que la commande rend `0`
 - fix: passer les octets par `ImageMetadataStripper` (déjà utilisé pour les pièces jointes des suggestions) ou les réencoder côté serveur ; garder l'ancienne image quelques minutes avant de la supprimer
 
-
 ## DEBT-074 l'aperçu du recap `/r/<slug>` n'a de quota que par slug
 
 - state: agent
@@ -480,7 +465,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - ou: `apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` (`IsProxied`, `RecapDocumentPolicy`), `Infrastructure/Web/SharedRateLimitFilter.cs`, `Controllers/EventRecapController.cs`
 - verify: `grep -n "Scope: QuotaScope.Slug }" apps/api-dotnet/MoviePicker.Api/Infrastructure/Web/RateLimitingExtensions.cs` ; encore ouvert tant que la ligne sort
 - fix: distinguer l'appel relayé par Hosting de l'appel direct (en-tête posé par la réécriture, ou entrée réservée à Hosting) et garder le plafond par adresse pour l'appel direct
-
 
 ## DEBT-075 juste après un déploiement du front, `/r/<slug>` peut servir une coquille périmée
 
@@ -518,32 +502,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -n "moviepicker_rating_prompted" apps/web/src/features/events/hooks/useRatingLink.ts` ; encore ouvert tant que la mémoire reste locale
 - fix: garder la date de la dernière proposition côté serveur, sur la participation, et la rendre avec la soirée
 
-## DEBT-079 les colonnes de la liste de films se chevauchent entre 768 et 1024 px
-
-- state: agent
-- impact: sur tablette et dans une petite fenêtre, les en-têtes « Ajout » et « Note » de la liste d'une soirée se superposent et la colonne « Score » sort du cadre
-- ou: `apps/web/src/features/movies/components/MovieList.module.css`, `apps/web/src/features/movies/components/EventMovieRow.module.css`
-- verify: ouvrir une soirée en vue liste à 820 px de large ; encore ouvert si les en-têtes se touchent
-- fix: passer la liste en présentation compacte sous 64rem, ou retirer une colonne à cette largeur
-- fini-quand: à 768, 820 et 1023 px, tous les en-têtes sont lisibles et la colonne « Score » reste dans le cadre
-
-## DEBT-081 un chunk du graphe d'entrée qui échoue laisse le splash à l'écran
-
-- state: agent
-- impact: `index-*.js` importe `App-*.js` et `react-vendor` en statique. Si l'un d'eux échoue, `main.tsx` ne s'exécute pas et le `catch` de `boot` ne couvre que les chunks de langue : le visiteur garde le splash, sans bouton de rechargement.
-- ou: `apps/web/index.html`, `apps/web/src/main.tsx`, `apps/web/src/shared/pwa/bootFailure.ts`
-- verify: `grep -n "addEventListener('error'" apps/web/index.html` ; encore ouvert tant que la commande ne rend rien
-- fix: un écouteur d'erreur de ressource en ligne dans `index.html`, qui affiche le repli statique
-- piege: C2 interdit d'alourdir ou de déplacer le titre peint dans la coquille, à relire avant de toucher `index.html`
-
-## DEBT-082 enregistrer un modèle de soirée avec un compteur invalide garde le repli en silence
-
-- state: agent
-- impact: la création de soirée et le panneau d'hôte affichent une erreur sur une limite invalide, pas l'enregistrement d'un modèle : le compteur invalide y prend la valeur par défaut sans message.
-- ou: `apps/web/src/features/events/lib/eventTemplateDraft.ts`
-- verify: `grep -n "parseCappedLimit(raw, cap) ?? fallback" apps/web/src/features/events/lib/eventTemplateDraft.ts` ; encore ouvert tant que la ligne existe
-- fix: passer le modèle par `eventLimitValidation`, comme les deux autres écrans
-
 ## DEBT-083 une limite au-dessus du plafond du front bloque l'enregistrement automatique du panneau d'hôte
 
 - state: differe
@@ -553,48 +511,6 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -n "MAX_EVENT_PARTICIPANTS = " apps/web/src/features/events/types.ts`
 - fix: un seul plafond, rendu par l'API, une fois DEBT-033 tranchée
 - refs: DEBT-033, C3
-
-## DEBT-084 des tests gardent des dates futures en dur
-
-- state: agent
-- impact: `EventEntityBuilder` n'en dépend plus, mais 33 fichiers de tests unitaires et 16 d'intégration écrivent encore 2030 ou 2035 avec l'horloge système : ils tomberont à ces dates, d'un coup.
-- ou: `apps/api-dotnet/MoviePicker.Api.Tests/`, `apps/api-dotnet/MoviePicker.Api.IntegrationTests/`
-- verify: `grep -rlE '"20(30|35)-' apps/api-dotnet/MoviePicker.Api.Tests apps/api-dotnet/MoviePicker.Api.IntegrationTests --include=*.cs | wc -l` ; encore ouvert tant que le nombre dépasse 0
-- fix: une date relative à une horloge de test fixe
-
-## DEBT-085 le plafond de photos de profil n'a pas d'alerte
-
-- state: agent
-- impact: le plafond global de 1 000 photos repose sur le M0 présumé (DEBT-009). Une fois atteint, un premier envoi de photo est refusé pour tous, avec un simple avertissement au journal.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/Avatars/`, `infra/terraform/modules/monitoring/`
-- verify: `grep -rn "avatar" infra/terraform/modules/monitoring/ | wc -l` ; encore ouvert tant que le nombre vaut 0
-- fix: une alerte sur ce journal, et un plafond relu une fois le palier confirmé
-- refs: DEBT-009
-
-## DEBT-086 une cible sans invitations redevient invitable après rechargement
-
-- state: agent
-- impact: après une invitation refusée en silence, parce que la cible a coupé les invitations, la liste la repropose au rechargement, ce qui laisse deviner sa préférence.
-- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/InviteUser/`
-- verify: `grep -n "NotifiesOn" apps/api-dotnet/MoviePicker.Api/Application/UseCases/InviteUser/InviteUserHandler.cs`
-- fix: mémoriser l'invitation sans la remettre, pour que la cible disparaisse de la liste comme une cible déjà invitée
-
-## DEBT-087 l'analyse hebdomadaire de sécurité ignore les CRITICAL sans correctif
-
-- state: agent
-- impact: `deploy.yml` bloque toute CRITICAL, `security-scan.yml` garde `ignore-unfixed`. Une CRITICAL sans correctif n'apparaît donc qu'au déploiement, et si elle sort entre la recette et la production, elle bloque la production jusqu'à une décision dans `.trivyignore`.
-- ou: `.github/workflows/security-scan.yml`
-- verify: `grep -n "ignore-unfixed" .github/workflows/security-scan.yml` ; encore ouvert tant que la commande rend `true` pour la sévérité CRITICAL
-- fix: une étape CRITICAL sans `ignore-unfixed` dans l'analyse planifiée
-
-## DEBT-088 `verify:local` ne joue pas la build web
-
-- state: agent
-- impact: une build cassée passe `verify:local` et ne se voit qu'en CI ou en e2e. Le 2026-11-06, `generate-tech-metrics.mjs` a échoué sur une liste de routes retirée alors que les dix-huit étapes étaient vertes.
-- ou: `scripts/verify-local.cjs`
-- verify: `grep -c "run', 'build'" scripts/verify-local.cjs` ; encore ouvert tant que la commande rend `0`
-- fix: une étape de build web dans la voie node, avec `generate-tech-metrics.mjs` et le prérendu, sans laisser `techMetrics.ts` modifié
-- piege: `techMetrics.ts` est versionné et réécrit par chaque build
 
 ---
 
@@ -741,6 +657,12 @@ Dans `scripts/verify-local.cjs`, la voie docker monte le dépôt en lecture (`-v
 1. Ne pas rebrancher `--output` sur `artifacts/` directement.
 2. Une nouvelle étape qui écrit dans l'arbre par un outil .NET (`File.Create`, `FileShare.None`) pendant la voie docker reproduira la panne, une fois sur quelques dizaines : générer hors de l'arbre, puis recopier.
 3. Ne pas sortir `artifacts/` du périmètre de Gitleaks pour régler ça : le prochain lecteur (antivirus, indexeur, éditeur) rouvrirait la même fenêtre.
+
+## C17 la sonde `mongosh` d'un conteneur Mongo écrit dans son répertoire de données
+
+L'image `mongo` a `HOME=/data/db`. `docker exec <conteneur> mongosh` y écrit `.mongodb/mongosh/` pendant que le script de démarrage du conteneur fait son `chown` récursif sur `/data/db` : si un fichier disparaît entre la liste et le `chown`, le script sort en erreur et le conteneur meurt (`chown: cannot access '/data/db/.mongodb/mongosh/...lock'`). Vu le 2026-11-09 sur le job E2E de `ci-cd.yml`, vert une fois rejoué.
+
+Toute sonde `mongosh` lancée par `docker exec` dans les workflows passe donc `-e HOME=/tmp` (`ci-cd.yml`, `backup-mongo.yml`). Une nouvelle sonde sans ce réglage refait la course, une fois sur quelques dizaines.
 
 ---
 
