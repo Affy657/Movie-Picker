@@ -170,6 +170,35 @@
       })();
     </script>
     <div id="root"></div>
+    <script>
+      (function () {
+        function showEntryFailure(event) {
+          var source = event.target;
+          if (!source || source.tagName !== 'SCRIPT' || source.type !== 'module') return;
+          var splash = document.getElementById('splash');
+          var root = document.getElementById('root');
+          if (!splash || !root || root.firstChild) return;
+          var english = document.documentElement.lang === 'en';
+          var message = document.createElement('p');
+          message.textContent = english
+            ? 'Movie Picker could not start. Reload the page to try again.'
+            : 'Movie Picker n’a pas pu démarrer. Rechargez la page pour réessayer.';
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = english ? 'Reload the page' : 'Recharger la page';
+          button.addEventListener('click', function () {
+            location.reload();
+          });
+          var panel = document.createElement('div');
+          panel.className = 'boot-failure';
+          panel.setAttribute('role', 'alert');
+          panel.append(message, button);
+          root.append(panel);
+          splash.remove();
+        }
+        addEventListener('error', showEntryFailure, true);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
