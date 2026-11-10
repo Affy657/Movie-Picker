@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { deleteMovieRating, setMovieRating } from '@/features/movies/api/moviesApi';
 import { API_ERROR_REASONS, ApiError, getErrorMessage } from '@/shared/api/apiError';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { useTranslation } from '@/shared/i18n';
 
 type ParticipantRef = { participantId: string; pseudo: string };
@@ -21,14 +22,20 @@ interface EventMovieRatingInput {
 
 export function useEventMovieRating({ slug, participant, refreshAll }: EventMovieRatingInput) {
   const { t } = useTranslation();
+  const { track } = useAnalytics();
   const [error, setError] = useState<string | null>(null);
 
   const run = useCallback(
-    async (action: (participantId: string) => Promise<unknown>, fallback: string) => {
+    async (
+      action: (participantId: string) => Promise<unknown>,
+      fallback: string,
+      cleared: boolean
+    ) => {
       if (!participant) return false;
       setError(null);
       try {
         await action(participant.participantId);
+        track('movie_rated', { cleared });
         refreshAll();
         return true;
       } catch (e) {
@@ -36,14 +43,15 @@ export function useEventMovieRating({ slug, participant, refreshAll }: EventMovi
         return false;
       }
     },
-    [participant, refreshAll]
+    [participant, refreshAll, track]
   );
 
   const save = useCallback(
     (movieId: string, value: number) =>
       run(
         (participantId) => setMovieRating(slug, movieId, participantId, value),
-        t('events.ratings.saveError')
+        t('events.ratings.saveError'),
+        false
       ),
     [run, slug, t]
   );
@@ -52,7 +60,8 @@ export function useEventMovieRating({ slug, participant, refreshAll }: EventMovi
     (movieId: string) =>
       run(
         (participantId) => deleteIfStillThere(slug, movieId, participantId),
-        t('events.ratings.clearError')
+        t('events.ratings.clearError'),
+        true
       ),
     [run, slug, t]
   );

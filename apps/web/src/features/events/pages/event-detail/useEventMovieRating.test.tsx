@@ -12,6 +12,11 @@ vi.mock('@/features/movies/api/moviesApi', () => ({
   deleteMovieRating: vi.fn(),
 }));
 
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({ track }),
+}));
+
 const mockSet = vi.mocked(setMovieRating);
 const mockDelete = vi.mocked(deleteMovieRating);
 
@@ -36,6 +41,34 @@ describe('useEventMovieRating', () => {
   beforeEach(() => {
     mockSet.mockReset();
     mockDelete.mockReset();
+    track.mockClear();
+  });
+
+  it('counts a rating set and a rating cleared', async () => {
+    mockSet.mockResolvedValueOnce({ participantId: 'p1', value: 8, updatedAt: 'now' });
+    mockDelete.mockResolvedValueOnce(undefined);
+    const { hook } = renderRating();
+
+    await act(async () => {
+      await hook.result.current.save('m1', 8);
+      await hook.result.current.clear('m1');
+    });
+
+    expect(track.mock.calls).toEqual([
+      ['movie_rated', { cleared: false }],
+      ['movie_rated', { cleared: true }],
+    ]);
+  });
+
+  it('counts nothing when the rating is refused', async () => {
+    mockSet.mockRejectedValueOnce('boom');
+    const { hook } = renderRating();
+
+    await act(async () => {
+      await hook.result.current.save('m1', 8);
+    });
+
+    expect(track).not.toHaveBeenCalled();
   });
 
   it('saves a rating for my participation and refreshes the page', async () => {

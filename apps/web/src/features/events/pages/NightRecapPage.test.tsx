@@ -9,6 +9,11 @@ import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { TEST_API_V1, authMeGuestHandler } from '@/mocks/handlers';
 import { setSessionHint } from '@/features/auth/session-hint';
 
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({ track }),
+}));
+
 const slug = 'recap-msw';
 const NIGHT_SLUG = 'soiree-privee';
 const ME = {
@@ -402,6 +407,7 @@ describe('NightRecapPage (MSW)', () => {
   });
 
   it('tells an unknown link apart and sends home', async () => {
+    track.mockClear();
     server.use(
       http.get(`${TEST_API_V1}/recaps/${slug}`, () =>
         HttpResponse.json({ error: 'Not found', code: 404, reason: 'not_found' }, { status: 404 })
@@ -411,6 +417,17 @@ describe('NightRecapPage (MSW)', () => {
 
     expect(await screen.findByText('Recap introuvable')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: "Retour à l'accueil" })).toHaveAttribute('href', '/');
+    expect(track).not.toHaveBeenCalledWith('recap_viewed', expect.anything());
+  });
+
+  it('counts one view of a recap that shows a chosen movie', async () => {
+    track.mockClear();
+    serveNight();
+
+    renderRecap();
+
+    expect(await screen.findByRole('heading', { name: 'Soirée du vendredi' })).toBeInTheDocument();
+    expect(track).toHaveBeenCalledExactlyOnceWith('recap_viewed', { winners: 1 });
   });
 
   it('offers to retry after a failure, and recovers', async () => {

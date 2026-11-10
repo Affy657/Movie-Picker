@@ -9,6 +9,7 @@ import {
 import type { MovieMediaType } from '@/shared/types/movie';
 import type { UserProfile } from '@/features/auth/types';
 import { queryKeys } from '@/shared/hooks/queryKeys';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 
 export function invalidateWatchlist(queryClient: QueryClient): Promise<void> {
   const ownHandle = queryClient.getQueryData<UserProfile | null>(queryKeys.auth.me)?.handle;
@@ -45,10 +46,14 @@ export function useWatchlistAvailability(options?: { enabled?: boolean }) {
 
 export function useAddToWatchlist(options?: { onError?: (error: unknown) => void }) {
   const queryClient = useQueryClient();
+  const { track } = useAnalytics();
   return useMutation({
     mutationFn: (body: AddWatchlistItemBody) => addToWatchlist(body),
     onError: options?.onError,
-    onSuccess: () => invalidateWatchlist(queryClient),
+    onSuccess: (_result, body) => {
+      track('watchlist_added', { mediaType: body.mediaType ?? 'movie' });
+      return invalidateWatchlist(queryClient);
+    },
   });
 }
 

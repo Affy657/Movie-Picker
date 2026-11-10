@@ -12,6 +12,11 @@ vi.mock('@/features/movies/api/watchlistApi', () => ({
   removeFromWatchlist: vi.fn().mockResolvedValue(undefined),
 }));
 
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/shared/hooks/useAnalytics', () => ({
+  useAnalytics: () => ({ track }),
+}));
+
 function setup<T>(hook: () => T, ownHandle?: string) {
   const client = createTestQueryClient();
   if (ownHandle) client.setQueryData(queryKeys.auth.me, { id: 'u1', handle: ownHandle });
@@ -23,6 +28,24 @@ function setup<T>(hook: () => T, ownHandle?: string) {
 }
 
 describe('useWatchlist mutations', () => {
+  it('counts an addition with the kind of title added', async () => {
+    track.mockClear();
+    const { result } = setup(() => useAddToWatchlist());
+
+    act(() =>
+      result.current.mutate({
+        tmdbId: 1,
+        mediaType: 'tv',
+        title: 'Dark',
+        year: '2017',
+        posterPath: null,
+      })
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(track).toHaveBeenCalledExactlyOnceWith('watchlist_added', { mediaType: 'tv' });
+  });
+
   it("an addition refreshes my list and my public profile, not other people's", async () => {
     const { result, invalidateSpy } = setup(() => useAddToWatchlist(), 'alice');
 

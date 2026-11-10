@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router';
+import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import PageLayout from '@/shared/components/PageLayout';
 import { ROUTES } from '@/app/routes';
 import { ApiError } from '@/shared/api/apiError';
@@ -21,11 +23,22 @@ function isNotFound(error: unknown): boolean {
   return ApiError.is(error) && error.code === 404;
 }
 
+function useRecapViewCount(slug: string | undefined, winnerCount: number): void {
+  const { track } = useAnalytics();
+  const countedSlug = useRef<string | null>(null);
+  useEffect(() => {
+    if (!slug || winnerCount === 0 || countedSlug.current === slug) return;
+    countedSlug.current = slug;
+    track('recap_viewed', { winners: winnerCount });
+  }, [slug, winnerCount, track]);
+}
+
 export default function NightRecapPage() {
   const { t } = useTranslation();
   const { slug } = useParams<{ slug: string }>();
   const recapQuery = useNightRecap(slug);
   const recap = recapQuery.data ?? null;
+  useRecapViewCount(slug, recap?.winners.length ?? 0);
 
   usePageSeo({
     title: recap

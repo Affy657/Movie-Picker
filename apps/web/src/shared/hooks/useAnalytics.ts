@@ -25,7 +25,11 @@ export type AnalyticsEvent =
   | 'pwa_install_accepted'
   | 'pwa_install_dismissed'
   | 'pwa_install_guide_shown'
-  | 'signed_out_cta_clicked';
+  | 'signed_out_cta_clicked'
+  | 'movie_rated'
+  | 'recap_viewed'
+  | 'watchlist_added'
+  | 'random_pick_opened';
 
 export function useAnalytics() {
   const { analytics } = useConsent();
