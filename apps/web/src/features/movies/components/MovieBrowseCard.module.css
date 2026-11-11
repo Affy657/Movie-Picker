@@ -9,3 +9,8 @@
   align-items: flex-start;
   gap: var(--space-1);
 }
+
+.proposeAction {
+  flex: 1 1 auto;
+  min-width: 0;
+}

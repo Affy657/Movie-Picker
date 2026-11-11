@@ -1460,6 +1460,8 @@ export const fr = {
       addAction: 'Ajouter à ma liste',
       removeAction: 'Retirer de ma liste',
       proposeAction: 'Proposer dans une soirée',
+      proposeShort: 'Proposer',
+      proposeAria: 'Proposer « {{title}} » dans une soirée',
       detailsAction: 'Voir les détails',
       inWatchlistBadgeAria: 'Déjà dans votre liste',
       addError: 'Ajout à la liste impossible.',

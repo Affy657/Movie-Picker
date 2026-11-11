@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -54,12 +54,6 @@ const emptyWatchlistHandler = http.get(`${TEST_API_V1}/watchlist`, () =>
 
 const KEBAB_FILM_1 = /plus d.actions.*film 1/i;
 const POSTER_FILM_1 = /voir les détails de « film 1 »/i;
-
-function menuItemNames() {
-  return screen
-    .getAllByRole('menuitem')
-    .map((item) => item.getAttribute('aria-label') ?? item.textContent);
-}
 
 const lastWatchedInceptionHandler = http.get(`${TEST_API_V1}/users/me/watched-movies`, () =>
   HttpResponse.json({
@@ -327,31 +321,33 @@ describe('ShowcaseListPage', () => {
     expect(screen.getByText('Rang 2')).toBeInTheDocument();
   });
 
-  it('hover, logged in: the kebab lists details, watchlist, proposal and Letterboxd in order', async () => {
+  it('hover, logged in: the poster offers the watchlist toggle and Proposer, no kebab', async () => {
     stubHoverCapability();
     server.use(authedUserHandler, emptyWatchlistHandler, showcaseHandler);
     renderPage('trending', '/films/tendances', '/films/tendances');
 
-    await screen.findByText('Film 1');
-    await userEvent.click(screen.getByRole('button', { name: KEBAB_FILM_1 }));
-
-    expect(menuItemNames()).toEqual([
-      'Voir les détails',
+    const card = (await screen.findByText('Film 1')).closest('li') as HTMLElement;
+    expect(screen.queryByRole('button', { name: KEBAB_FILM_1 })).not.toBeInTheDocument();
+    expect(
+      within(card)
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('aria-label'))
+    ).toEqual([
+      'Voir les détails de « Film 1 »',
       'Ajouter à ma liste',
-      'Proposer dans une soirée',
-      'Ouvrir sur Letterboxd',
+      'Proposer « Film 1 » dans une soirée',
     ]);
   });
 
-  it('hover, visitor: the kebab only offers the details and Letterboxd', async () => {
+  it('hover, visitor: the poster offers no library action', async () => {
     stubHoverCapability();
     server.use(authMeGuestHandler, showcaseHandler);
     renderPage('trending', '/films/tendances', '/films/tendances');
 
-    await screen.findByText('Film 1');
-    await userEvent.click(screen.getByRole('button', { name: KEBAB_FILM_1 }));
-
-    expect(menuItemNames()).toEqual(['Voir les détails', 'Ouvrir sur Letterboxd']);
+    const card = (await screen.findByText('Film 1')).closest('li') as HTMLElement;
+    expect(within(card).getAllByRole('button')).toEqual([
+      within(card).getByRole('button', { name: POSTER_FILM_1 }),
+    ]);
   });
 
   it('touch, logged in: no kebab, the poster opens the details with the library footer', async () => {

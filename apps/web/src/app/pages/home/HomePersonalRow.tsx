@@ -64,7 +64,6 @@ export default function HomePersonalRow({
             <MovieBrowseCard
               key={`${cardItem.tmdbId}|${cardItem.mediaType}`}
               item={cardItem}
-              showFacts={false}
               eager={index < eagerCount}
               hasHover={library.hasHover}
               isLoggedIn={library.isLoggedIn}

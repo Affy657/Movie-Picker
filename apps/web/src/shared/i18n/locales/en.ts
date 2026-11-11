@@ -1440,6 +1440,8 @@ export const en: Locale = {
       addAction: 'Add to my watchlist',
       removeAction: 'Remove from my watchlist',
       proposeAction: 'Propose in an event',
+      proposeShort: 'Propose',
+      proposeAria: 'Propose "{{title}}" in an event',
       detailsAction: 'View details',
       inWatchlistBadgeAria: 'Already in your watchlist',
       addError: 'Could not add to watchlist.',

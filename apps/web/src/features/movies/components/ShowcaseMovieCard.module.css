@@ -1,13 +1,15 @@
 .card {
+  --poster-lift: 1.06;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1-5);
   min-width: 0;
 }
 
-.card:focus-within {
-  --opacity-card-kebab: 1;
+.posterFrame {
+  position: relative;
+  border-radius: var(--radius-sm);
+  transition:
+    transform var(--duration-enter) var(--ease-reveal),
+    box-shadow var(--duration-enter) var(--ease-reveal);
 }
 
 .posterRegion {
@@ -17,21 +19,6 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   overflow: hidden;
-  transition: border-color var(--duration-base) var(--ease-default);
-}
-
-@media (hover: hover) {
-  .card {
-    --opacity-card-kebab: 0;
-  }
-
-  .card:hover {
-    --opacity-card-kebab: 1;
-  }
-
-  .card:hover .posterRegion {
-    border-color: var(--color-primary);
-  }
 }
 
 .cardTrigger {
@@ -40,6 +27,7 @@
   z-index: var(--z-base);
   padding: 0;
   border: none;
+  border-radius: var(--radius-sm);
   background: none;
   cursor: pointer;
 }
@@ -47,7 +35,6 @@
 .cardTrigger:focus-visible {
   outline: var(--outline-focus);
   outline-offset: var(--outline-offset);
-  border-radius: var(--radius-sm);
 }
 
 .posterImg {
@@ -68,25 +55,41 @@
   color: var(--color-placeholder);
 }
 
-.kebabSlot {
+.cornerSlot {
   position: absolute;
-  top: var(--space-2);
-  right: var(--space-2);
-  z-index: var(--z-raised-above);
+  inset: 0;
+  z-index: var(--z-raised);
+  pointer-events: none;
+  transition: opacity var(--duration-slow) var(--ease-default);
 }
 
-.cardBody {
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-raised-above);
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: var(--space-1);
+  padding: var(--space-2-5);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    180deg,
+    transparent 30%,
+    var(--color-on-poster-scrim-strong) 66%,
+    var(--color-on-poster-surface-ring) 100%
+  );
+  color: var(--color-on-poster-fg-strong);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-slow) var(--ease-default);
 }
 
 .cardTitle {
   margin: 0;
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   line-height: var(--leading-snug);
-  height: calc(2 * var(--leading-snug) * var(--font-size-sm));
   overflow: hidden;
   overflow-wrap: break-word;
   display: -webkit-box;
@@ -95,37 +98,89 @@
 }
 
 .cardMeta {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  height: var(--space-4);
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
   font-size: var(--font-size-2xs);
   line-height: var(--leading-none);
-  color: var(--color-text-subtle);
+  color: var(--color-on-poster-fg-soft);
   font-variant-numeric: tabular-nums;
 }
 
-.metaStart {
-  grid-column: 1;
-  justify-self: start;
+.actionBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  margin-top: var(--space-1);
+  transform: translateY(var(--space-2));
+  transition: transform var(--duration-enter) var(--ease-reveal);
 }
 
-.metaCenter {
-  grid-column: 2;
-  justify-self: center;
+.card:has(:focus-visible) {
+  z-index: var(--z-raised);
 }
 
-.metaEnd {
-  grid-column: 3;
-  justify-self: end;
+.card:has(:focus-visible) .posterFrame {
+  transform: scale(var(--poster-lift));
+  box-shadow:
+    var(--shadow-wheel),
+    0 0 0 2px var(--color-primary);
 }
 
-.metaText {
-  grid-column: 1 / -1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.card:has(:focus-visible) .overlay {
+  opacity: 1;
+}
+
+.card:has(:focus-visible) .actionBar {
+  pointer-events: auto;
+  transform: none;
+}
+
+.card:has(:focus-visible) .cornerSlot {
+  opacity: 0;
+}
+
+@media (hover: hover) {
+  .card:hover {
+    z-index: var(--z-raised);
+  }
+
+  .card:hover .posterFrame {
+    transform: scale(var(--poster-lift));
+    box-shadow:
+      var(--shadow-wheel),
+      0 0 0 2px var(--color-primary);
+  }
+
+  .card:hover .overlay {
+    opacity: 1;
+  }
+
+  .card:hover .actionBar {
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .card:hover .cornerSlot {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    --poster-lift: 1;
+  }
+
+  .posterFrame,
+  .actionBar {
+    transition: none;
+  }
+
+  .actionBar {
+    transform: none;
+  }
 }
 
 .badge {

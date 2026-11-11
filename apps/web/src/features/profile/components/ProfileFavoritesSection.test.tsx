@@ -69,13 +69,14 @@ describe('ProfileFavoritesSection', () => {
     expect(screen.queryByRole('link', { name: /modifier/i })).not.toBeInTheDocument();
   });
 
-  it('shows each favorite by its poster and title alone, without a year', () => {
+  it('shows each favorite by its poster, its title and year sitting on the poster', () => {
     renderSection([HEAT, INCEPTION, TWIN_PEAKS]);
 
     const section = screen.getByRole('region', { name: 'Ses favoris' });
-    expect(within(section).queryByText('1995')).not.toBeInTheDocument();
-    expect(within(section).queryByText('2010')).not.toBeInTheDocument();
-    expect(within(section).queryByText('1990')).not.toBeInTheDocument();
+    for (const card of within(section).getAllByRole('listitem')) {
+      expect(card.children).toHaveLength(1);
+    }
+    expect(within(section).getByText('1995')).toBeInTheDocument();
   });
 
   it('renders nothing for a visitor when there is no favorite', () => {

@@ -70,11 +70,6 @@ describe('ProfileMoviesSection (MSW)', () => {
     })
   );
 
-  const menuItemNames = () =>
-    screen
-      .getAllByRole('menuitem')
-      .map((item) => item.getAttribute('aria-label') ?? item.textContent?.trim());
-
   it('ne rend rien si la liste est vide', async () => {
     server.use(
       http.get(`${TEST_API_V1}/users/alice/watched-movies`, () => HttpResponse.json({ items: [] }))
@@ -332,7 +327,7 @@ describe('ProfileMoviesSection (MSW)', () => {
     expect(screen.queryByRole('heading', { name: 'Inception', level: 2 })).not.toBeInTheDocument();
   });
 
-  it('hover, logged in: the card kebab lists the library actions and opens the propose modal', async () => {
+  it('hover, logged in: the poster offers the library actions and opens the propose modal', async () => {
     stubHoverCapability();
     server.use(
       authedBobHandler,
@@ -344,36 +339,27 @@ describe('ProfileMoviesSection (MSW)', () => {
     renderSection('alice');
     const user = userEvent.setup();
 
+    expect(await screen.findByRole('button', { name: 'Ajouter à ma liste' })).toBeInTheDocument();
     await user.click(
-      await screen.findByRole('button', { name: /plus d’actions pour «\s*inception\s*»/i })
+      screen.getByRole('button', { name: 'Proposer « Inception » dans une soirée' })
     );
-
-    expect(menuItemNames()).toEqual([
-      'Voir les détails',
-      'Ajouter à ma liste',
-      'Proposer dans une soirée',
-      'Ouvrir sur Letterboxd',
-    ]);
-
-    await user.click(screen.getByRole('menuitem', { name: 'Proposer dans une soirée' }));
 
     expect(
       await screen.findByText(/proposer «\s*inception\s*» dans une soirée/i)
     ).toBeInTheDocument();
   });
 
-  it('hover, guest: the kebab keeps only the details and Letterboxd', async () => {
+  it('hover, guest: the poster offers no library action', async () => {
     stubHoverCapability();
     server.use(inceptionHandler);
 
     renderSection('alice');
-    const user = userEvent.setup();
 
-    await user.click(
-      await screen.findByRole('button', { name: /plus d’actions pour «\s*inception\s*»/i })
-    );
-
-    expect(menuItemNames()).toEqual(['Voir les détails', 'Ouvrir sur Letterboxd']);
+    expect(
+      await screen.findByRole('button', { name: 'Voir les détails de « Inception »' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^proposer/i })).not.toBeInTheDocument();
   });
 
   it('affiche un film sans affiche via le placeholder', async () => {

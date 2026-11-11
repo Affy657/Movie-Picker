@@ -134,10 +134,8 @@ describe('HomePage', () => {
   });
   afterAll(() => server.close());
 
-  const menuItemNames = () =>
-    screen
-      .getAllByRole('menuitem')
-      .map((item) => item.getAttribute('aria-label') ?? item.textContent?.trim());
+  const posterCard = async (title: string) =>
+    (await screen.findByRole('heading', { name: title, level: 3 })).closest('li') as HTMLElement;
 
   it('ouvre sur un titre de niveau un et son introduction', () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
@@ -213,7 +211,7 @@ describe('HomePage', () => {
     const trendingCard = screen
       .getByRole('heading', { name: 'trending 1', level: 3 })
       .closest('li') as HTMLElement;
-    expect(within(trendingCard).queryByText('2024')).not.toBeInTheDocument();
+    expect(within(trendingCard).getByText('2024')).toBeInTheDocument();
   });
 
   it('signed-in: the details modal offers the watchlist and the proposal', async () => {
@@ -265,9 +263,8 @@ describe('HomePage', () => {
     const user = userEvent.setup();
 
     await user.click(
-      await screen.findByRole('button', { name: /plus d’actions pour «\s*trending 1\s*»/i })
+      within(await posterCard('trending 1')).getByRole('button', { name: 'Ajouter à ma liste' })
     );
-    await user.click(screen.getByRole('menuitem', { name: 'Ajouter à ma liste' }));
 
     await waitFor(() =>
       expect(added.bodies).toEqual([
@@ -368,7 +365,7 @@ describe('HomePage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('hover, signed-in: the showcase card carries the library kebab', async () => {
+  it('hover, signed-in: the showcase card offers the watchlist toggle and Proposer', async () => {
     stubHoverCapability();
     server.use(
       authedUserHandler,
@@ -380,18 +377,13 @@ describe('HomePage', () => {
     renderPage();
     const user = userEvent.setup();
 
+    const card = await posterCard('trending 1');
+    expect(within(card).getByRole('button', { name: 'Ajouter à ma liste' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /plus d’actions/i })).not.toBeInTheDocument();
+
     await user.click(
-      await screen.findByRole('button', { name: /plus d’actions pour «\s*trending 1\s*»/i })
+      within(card).getByRole('button', { name: 'Proposer « trending 1 » dans une soirée' })
     );
-
-    expect(menuItemNames()).toEqual([
-      'Voir les détails',
-      'Ajouter à ma liste',
-      'Proposer dans une soirée',
-      'Ouvrir sur Letterboxd',
-    ]);
-
-    await user.click(screen.getByRole('menuitem', { name: 'Proposer dans une soirée' }));
 
     expect(
       await screen.findByText(/proposer «\s*trending 1\s*» dans une soirée/i)
@@ -414,25 +406,15 @@ describe('HomePage', () => {
     renderPage();
     const user = userEvent.setup();
 
-    await user.click(
-      await screen.findByRole('button', {
-        name: /plus d’actions pour «\s*film de ma liste\s*»/i,
-      })
-    );
+    const card = await posterCard('Film de ma liste');
+    expect(within(card).getByRole('img', { name: 'Déjà dans votre liste' })).toBeInTheDocument();
 
-    expect(menuItemNames()).toEqual([
-      'Voir les détails',
-      'Retirer de ma liste',
-      'Proposer dans une soirée',
-      'Ouvrir sur Letterboxd',
-    ]);
-
-    await user.click(screen.getByRole('menuitem', { name: 'Retirer de ma liste' }));
+    await user.click(within(card).getByRole('button', { name: 'Retirer de ma liste' }));
 
     await waitFor(() => expect(removedPath).toContain('/watchlist/501'));
   });
 
-  it('signed-in: the personal rails show the title alone, without year, vote or runtime', async () => {
+  it('signed-in: the personal rails put the title, year and runtime on the poster', async () => {
     server.use(authedUserHandler, showcaseHandler, collectionsHandler, ...personalHandlers);
     renderPage();
 
@@ -444,26 +426,23 @@ describe('HomePage', () => {
     );
 
     const mineCard = within(mine!).getByText('Film de ma liste').closest('li');
-    expect(mineCard).not.toHaveTextContent('2021');
-    expect(mineCard).not.toHaveTextContent('3.7/5');
-    expect(mineCard).not.toHaveTextContent('2h08');
+    expect(mineCard?.children).toHaveLength(1);
+    expect(mineCard).toHaveTextContent('2021');
+    expect(mineCard).toHaveTextContent('2h08');
     const friendCard = within(friends!).getByText("Film d'un ami").closest('li');
-    expect(friendCard).not.toHaveTextContent('2019');
-    expect(friendCard).not.toHaveTextContent('3.1/5');
-    expect(friendCard).not.toHaveTextContent('1h35');
+    expect(friendCard).toHaveTextContent('2019');
+    expect(friendCard).toHaveTextContent('1h35');
   });
 
-  it('hover, visitor: the kebab keeps only the details and Letterboxd', async () => {
+  it('hover, visitor: the poster offers no library action', async () => {
     stubHoverCapability();
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
-    const user = userEvent.setup();
 
-    await user.click(
-      await screen.findByRole('button', { name: /plus d’actions pour «\s*trending 1\s*»/i })
-    );
-
-    expect(menuItemNames()).toEqual(['Voir les détails', 'Ouvrir sur Letterboxd']);
+    const card = await posterCard('trending 1');
+    expect(within(card).getAllByRole('button')).toEqual([
+      within(card).getByRole('button', { name: 'Voir les détails de « trending 1 »' }),
+    ]);
   });
 
   it('without hover capability: no kebab on the rails', async () => {

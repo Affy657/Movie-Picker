@@ -106,7 +106,6 @@ export default function HomeShowcaseRow<T extends string>({
           <MovieBrowseCard
             key={`${cardItem.tmdbId}|${cardItem.mediaType}`}
             item={cardItem}
-            showFacts={false}
             meta={
               showRank && item.eventCount != null
                 ? pluralizeCount(

@@ -349,7 +349,7 @@ describe('WatchlistPage (MSW)', () => {
     );
   });
 
-  it('hover: removes a movie from the kebab through the watchlist toggle', async () => {
+  it('hover: removes a movie from the poster through the watchlist toggle', async () => {
     stubHoverCapability();
     let removeCalled = false;
     server.use(
@@ -364,33 +364,24 @@ describe('WatchlistPage (MSW)', () => {
     const user = userEvent.setup();
 
     await screen.findByText('Ancien Mais Bien Noté');
-    await user.click(screen.getByRole('button', { name: KEBAB_A }));
-    await user.click(screen.getByRole('menuitem', { name: /retirer de ma liste/i }));
+    await user.click(screen.getByRole('button', { name: 'Retirer de ma liste' }));
 
     await waitFor(() => expect(removeCalled).toBe(true));
   });
 
-  it('hover: the kebab lists details, the watchlist toggle, the proposal and Letterboxd in order', async () => {
+  it('hover: the poster offers the details, the watchlist toggle and Proposer, no kebab', async () => {
     stubHoverCapability();
     server.use(authedUserHandler, ...watchlistHandler([ITEM_A]));
 
     renderPage();
-    const user = userEvent.setup();
 
     await screen.findByText('Ancien Mais Bien Noté');
-    await user.click(screen.getByRole('button', { name: KEBAB_A }));
-
-    const names = screen
-      .getAllByRole('menuitem')
-      .map((item) => item.getAttribute('aria-label') ?? item.textContent?.trim());
-    expect(names).toEqual([
-      'Voir les détails',
-      'Retirer de ma liste',
-      'Proposer dans une soirée',
-      'Ouvrir sur Letterboxd',
-    ]);
-    expect(screen.queryByRole('menuitem', { name: /^retirer$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('menuitem', { name: /imdb|allociné|tmdb/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: KEBAB_A })).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Déjà dans votre liste' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retirer de ma liste' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^proposer « ancien mais bien noté »/i })
+    ).toBeInTheDocument();
   });
 
   it('shows the details of a movie from the poster', async () => {
@@ -474,7 +465,7 @@ describe('WatchlistPage (MSW)', () => {
     await waitFor(() => expect(removeCalled).toBe(true));
   });
 
-  it('hover: proposes from the kebab through the modal, the flyout is gone', async () => {
+  it('hover: proposes from the poster through the modal', async () => {
     stubHoverCapability();
     let proposedBody: Record<string, unknown> | null = null;
     server.use(
@@ -491,8 +482,7 @@ describe('WatchlistPage (MSW)', () => {
     await screen.findByText('Ancien Mais Bien Noté');
     expect(screen.queryByRole('button', { name: /^proposer$/i })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: KEBAB_A }));
-    await user.click(screen.getByRole('menuitem', { name: /proposer dans une soirée/i }));
+    await user.click(screen.getByRole('button', { name: /^proposer « ancien mais bien noté »/i }));
 
     await screen.findByText(/proposer «\s*ancien mais bien noté\s*» dans une soirée/i);
     await user.click(screen.getByRole('button', { name: /chez moi/i }));
@@ -502,7 +492,7 @@ describe('WatchlistPage (MSW)', () => {
     expect(await screen.findByText(/^proposé$/i)).toBeInTheDocument();
   });
 
-  it('hover: closing the propose modal reached from the details footer lands the focus back on the kebab', async () => {
+  it('hover: closing the propose modal reached from the details footer lands the focus back on the poster', async () => {
     stubHoverCapability();
     server.use(
       authedUserHandler,
@@ -515,8 +505,7 @@ describe('WatchlistPage (MSW)', () => {
     const user = userEvent.setup();
 
     await screen.findByText('Ancien Mais Bien Noté');
-    await user.click(screen.getByRole('button', { name: KEBAB_A }));
-    await user.click(screen.getByRole('menuitem', { name: 'Voir les détails' }));
+    await user.click(screen.getByRole('button', { name: POSTER_A }));
     await screen.findByRole('heading', { name: 'Ancien Mais Bien Noté', level: 2 });
 
     await user.click(screen.getByRole('button', { name: 'Proposer dans une soirée' }));
@@ -532,7 +521,7 @@ describe('WatchlistPage (MSW)', () => {
         screen.queryByText(/proposer «\s*ancien mais bien noté\s*» dans une soirée/i)
       ).not.toBeInTheDocument()
     );
-    expect(document.activeElement).toBe(screen.getByRole('button', { name: KEBAB_A }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: POSTER_A }));
   });
 
   it('hover, list view: the kebab keeps every action', async () => {

@@ -5,8 +5,12 @@ import LibraryMovieRow from '@/features/movies/components/LibraryMovieRow';
 import styles from '@/features/movies/components/ShowcaseMovieCard.module.css';
 import rowStyles from '@/features/movies/components/LibraryMovieRow.module.css';
 import { MovieTableAvailability } from '@/features/movies/components/MovieTable';
-import { CardKebab } from '@/features/movies/components/movieCardParts';
+import { CardKebab, WatchlistBadge } from '@/features/movies/components/movieCardParts';
+import { Bookmark, BookmarkCheck, Plus } from 'lucide-react';
+import Button from '@/shared/components/Button';
 import Chip from '@/shared/components/Chip';
+import IconButton from '@/shared/components/IconButton';
+import { ICON_SIZE } from '@/shared/components/iconSize';
 import { Skeleton } from '@/shared/components/Skeleton';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import type { MovieMediaType, WatchProviderOffer } from '@/shared/types/movie';
@@ -54,7 +58,6 @@ interface MovieBrowseCardProps {
   leadingBadge?: ReactNode;
   ratingScale?: RatingScale;
   meta?: ReactNode;
-  showFacts?: boolean;
   eager?: boolean;
 }
 
@@ -96,14 +99,54 @@ function RowAvailability({
   );
 }
 
+function PosterLibraryActions({
+  title,
+  inWatchlist,
+  onToggleWatchlist,
+  onProposeToEvent,
+  t,
+}: Readonly<{
+  title: string;
+  inWatchlist: boolean;
+  onToggleWatchlist: () => void;
+  onProposeToEvent: () => void;
+  t: Translate;
+}>) {
+  return (
+    <>
+      <IconButton
+        ariaLabel={inWatchlist ? t('watchlist.card.removeAction') : t('watchlist.card.addAction')}
+        tone="onPoster"
+        size="sm"
+        onClick={onToggleWatchlist}
+      >
+        {inWatchlist ? (
+          <BookmarkCheck aria-hidden size={ICON_SIZE.sm} />
+        ) : (
+          <Bookmark aria-hidden size={ICON_SIZE.sm} />
+        )}
+      </IconButton>
+      <Button
+        variant="primary"
+        size="sm"
+        className={badgeStyles.proposeAction}
+        aria-label={t('watchlist.card.proposeAria', { title })}
+        onClick={onProposeToEvent}
+      >
+        <Plus aria-hidden size={ICON_SIZE.sm} />
+        {t('watchlist.card.proposeShort')}
+      </Button>
+    </>
+  );
+}
+
 function rowGenres(genreIds: number[] | undefined, tmdbLanguage: string): string[] {
   const labels = (genreIds ?? []).map((id) => genreLabel(id, tmdbLanguage));
   return [...new Set(labels)].slice(0, MAX_ROW_GENRES);
 }
 
-export default function MovieBrowseCard({
+function BrowseMovieRow({
   item,
-  layout = 'grid',
   isMobile = false,
   availability,
   hasHover,
@@ -113,69 +156,81 @@ export default function MovieBrowseCard({
   onProposeToEvent,
   onOpenDetails,
   onOpenAvailability,
-  leadingBadge,
   ratingScale,
-  meta,
-  showFacts,
   eager,
 }: Readonly<MovieBrowseCardProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
+
+  const kebab =
+    hasHover && !isMobile ? (
+      <CardKebab
+        title={item.title}
+        tmdbId={item.tmdbId}
+        mediaType={item.mediaType}
+        isMine={false}
+        isHost={false}
+        canRemove={false}
+        onRemove={() => undefined}
+        inWatchlist={isLoggedIn ? inWatchlist : undefined}
+        onToggleWatchlist={isLoggedIn ? onToggleWatchlist : undefined}
+        onProposeToEvent={isLoggedIn ? onProposeToEvent : undefined}
+        onViewDetails={onOpenDetails}
+        t={t}
+      />
+    ) : undefined;
+
+  return (
+    <LibraryMovieRow
+      title={item.title}
+      year={item.year}
+      posterPath={item.posterPath}
+      voteAverage={item.voteAverage}
+      ratingScale={ratingScale}
+      runtimeMinutes={item.runtimeMinutes}
+      genres={rowGenres(item.genreIds, tmdbLanguage)}
+      badge={
+        item.mediaType === 'tv' ? (
+          <Chip size="sm" tone="muted">
+            {t('movies.list.tvBadge')}
+          </Chip>
+        ) : undefined
+      }
+      availability={
+        availability ? (
+          <RowAvailability
+            availability={availability}
+            title={item.title}
+            isMobile={isMobile}
+            onMore={onOpenAvailability ?? onOpenDetails}
+            t={t}
+          />
+        ) : undefined
+      }
+      eager={eager}
+      isMobile={isMobile}
+      onOpenDetails={onOpenDetails}
+      kebab={kebab}
+    />
+  );
+}
+
+function BrowseMoviePoster({
+  item,
+  hasHover,
+  isLoggedIn,
+  inWatchlist,
+  onToggleWatchlist,
+  onProposeToEvent,
+  onOpenDetails,
+  leadingBadge,
+  ratingScale,
+  meta,
+  eager,
+}: Readonly<MovieBrowseCardProps>) {
+  const { t } = useTranslation();
   const isTv = item.mediaType === 'tv';
   const hasBadges = isTv || leadingBadge != null;
-
-  const kebab = hasHover ? (
-    <CardKebab
-      title={item.title}
-      tmdbId={item.tmdbId}
-      mediaType={item.mediaType}
-      isMine={false}
-      isHost={false}
-      canRemove={false}
-      onRemove={() => undefined}
-      inWatchlist={isLoggedIn ? inWatchlist : undefined}
-      onToggleWatchlist={isLoggedIn ? onToggleWatchlist : undefined}
-      onProposeToEvent={isLoggedIn ? onProposeToEvent : undefined}
-      onViewDetails={onOpenDetails}
-      t={t}
-    />
-  ) : undefined;
-
-  if (layout === 'row') {
-    return (
-      <LibraryMovieRow
-        title={item.title}
-        year={item.year}
-        posterPath={item.posterPath}
-        voteAverage={item.voteAverage}
-        ratingScale={ratingScale}
-        runtimeMinutes={item.runtimeMinutes}
-        genres={rowGenres(item.genreIds, tmdbLanguage)}
-        badge={
-          isTv ? (
-            <Chip size="sm" tone="muted">
-              {t('movies.list.tvBadge')}
-            </Chip>
-          ) : undefined
-        }
-        availability={
-          availability ? (
-            <RowAvailability
-              availability={availability}
-              title={item.title}
-              isMobile={isMobile}
-              onMore={onOpenAvailability ?? onOpenDetails}
-              t={t}
-            />
-          ) : undefined
-        }
-        eager={eager}
-        isMobile={isMobile}
-        onOpenDetails={onOpenDetails}
-        kebab={isMobile ? undefined : kebab}
-      />
-    );
-  }
 
   return (
     <ShowcaseMovieCard
@@ -186,7 +241,6 @@ export default function MovieBrowseCard({
       ratingScale={ratingScale}
       runtimeMinutes={item.runtimeMinutes}
       meta={meta}
-      showFacts={showFacts}
       eager={eager}
       onOpenDetails={onOpenDetails}
       badges={
@@ -201,7 +255,22 @@ export default function MovieBrowseCard({
           </div>
         )
       }
-      kebab={kebab}
+      cornerBadge={isLoggedIn && inWatchlist ? <WatchlistBadge inWatchlist t={t} /> : undefined}
+      actions={
+        hasHover && isLoggedIn ? (
+          <PosterLibraryActions
+            title={item.title}
+            inWatchlist={inWatchlist}
+            onToggleWatchlist={onToggleWatchlist}
+            onProposeToEvent={onProposeToEvent}
+            t={t}
+          />
+        ) : undefined
+      }
     />
   );
+}
+
+export default function MovieBrowseCard(props: Readonly<MovieBrowseCardProps>) {
+  return props.layout === 'row' ? <BrowseMovieRow {...props} /> : <BrowseMoviePoster {...props} />;
 }
