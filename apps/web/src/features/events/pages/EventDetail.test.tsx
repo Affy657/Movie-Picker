@@ -468,12 +468,15 @@ describe('EventDetail (MSW)', () => {
       })
     );
     expect(screen.queryByRole('button', { name: /proposer un film/i })).not.toBeInTheDocument();
-    expect(await screen.findByPlaceholderText(/ajouter un film/i)).toBeInTheDocument();
-    await user.type(screen.getByPlaceholderText(/ajouter un film/i), 'Test');
-    await user.click(screen.getByRole('button', { name: /^rechercher$/i }));
-    expect(await screen.findByText(/film test/i)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /^ajouter « /i }));
-    await waitFor(() => expect(screen.queryByText(/film test/i)).not.toBeInTheDocument());
+    const dialog = await screen.findByRole('dialog', { name: 'Proposer un film' });
+    await user.type(within(dialog).getByRole('searchbox', { name: 'Chercher un film' }), 'Test');
+    await user.click(within(dialog).getByRole('button', { name: /^rechercher$/i }));
+    expect(await within(dialog).findByText(/film test/i)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: /^proposer « /i }));
+    expect(
+      await within(dialog).findByText('« Film Test » est proposé à la soirée.')
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText('Vous avez proposé 1 film')).toBeInTheDocument();
   });
 
   it('as the host, takes a pitch note down after confirming, with the host token', async () => {

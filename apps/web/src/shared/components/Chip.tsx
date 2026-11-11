@@ -38,6 +38,7 @@ type ChipLabelProps = {
   href?: never;
   ariaLabel?: never;
   selected?: never;
+  expanded?: never;
   disabled?: never;
   external?: never;
   removeAriaLabel?: never;
@@ -46,6 +47,7 @@ type ChipLabelProps = {
 type ChipActionProps = {
   onClick: () => void;
   selected?: boolean;
+  expanded?: boolean;
   ariaLabel?: string;
   disabled?: boolean;
   onRemove?: never;
@@ -61,6 +63,7 @@ type ChipRemovableProps = {
   href?: never;
   ariaLabel?: never;
   selected?: never;
+  expanded?: never;
   disabled?: never;
   external?: never;
 };
@@ -72,6 +75,7 @@ type ChipLinkProps = {
   onClick?: never;
   onRemove?: never;
   selected?: never;
+  expanded?: never;
   disabled?: never;
   removeAriaLabel?: never;
 };
@@ -134,7 +138,8 @@ export default function Chip(props: Readonly<ChipProps>) {
         className={classes}
         onClick={props.onClick}
         aria-label={props.ariaLabel}
-        aria-pressed={selected}
+        aria-pressed={props.expanded === undefined ? selected : undefined}
+        aria-expanded={props.expanded}
         disabled={props.disabled ?? false}
         data-testid={testId}
       >

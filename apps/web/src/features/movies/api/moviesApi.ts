@@ -177,12 +177,14 @@ export async function addMovieToEvent(
     posterPath: string | null;
     participantId: string;
     genreIds?: number[];
+    pitchNote?: string;
   }
-): Promise<void> {
-  await fetchApi(apiPath('events', slug, 'movies'), {
+): Promise<MovieData> {
+  const raw = await fetchApi<RawMovieData>(apiPath('events', slug, 'movies'), {
     method: 'POST',
     body: JSON.stringify(body),
   });
+  return mapMovieData(raw);
 }
 
 export async function voteMovie(

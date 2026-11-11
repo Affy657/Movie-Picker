@@ -174,7 +174,7 @@ describe('AccountFavoritesCard (MSW)', () => {
     );
     const block = await findBlock();
     expect(await within(block).findByText('2 sur 3')).toBeInTheDocument();
-    expect(within(block).getByText('Inception')).toBeInTheDocument();
+    expect(within(block).getAllByText('Inception')).toHaveLength(2);
     expect(screen.getByText('Enregistré')).toBeInTheDocument();
     expect(screen.getByRole('searchbox', { name: 'Rechercher un favori' })).toBeInTheDocument();
   });
@@ -228,7 +228,8 @@ describe('AccountFavoritesCard (MSW)', () => {
     renderSettings();
     await openSearch(user, 'heat');
 
-    expect(await screen.findByRole('button', { name: 'Déjà en favori' })).toBeDisabled();
+    expect(await screen.findByText('Déjà en favori')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ajouter « Heat »' })).not.toBeInTheDocument();
   });
 
   it('keeps a film and a series sharing a number apart', async () => {

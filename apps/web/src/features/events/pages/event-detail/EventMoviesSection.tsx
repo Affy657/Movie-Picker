@@ -36,9 +36,9 @@ import { useEventWatchlistToggle } from './useEventWatchlistToggle';
 import styles from './EventMoviesSection.module.css';
 import Chip from '@/shared/components/Chip';
 
-const loadAddMoviePanel = () => import('@/features/movies/components/AddMoviePanel');
-const AddMoviePanel = lazy(loadAddMoviePanel);
-const ADD_MOVIE_CHUNKS = [loadAddMoviePanel, loadMovieDetailsModal];
+const loadProposeMovieDialog = () => import('@/features/events/components/ProposeMovieDialog');
+const ProposeMovieDialog = lazy(loadProposeMovieDialog);
+const ADD_MOVIE_CHUNKS = [loadProposeMovieDialog, loadMovieDetailsModal];
 const TABLE_COLUMNS_MIN_WIDTH_QUERY = '(max-width: 63.9375rem)';
 
 function useMoviesLayout(viewMode: 'grid' | 'list') {
@@ -269,6 +269,11 @@ export default function EventMoviesSection({
 
   const handleActionError = useCallback((msg: string) => setActionError(msg), [setActionError]);
 
+  const closeAddMovie = useCallback(() => {
+    onAddMovieOpenChange(false);
+    requestAnimationFrame(() => addMovieTriggerRef.current?.focus());
+  }, [onAddMovieOpenChange, addMovieTriggerRef]);
+
   const sortedMovies = useMemo(
     () => sortMovies(movies, sortBy, sortDir),
     [movies, sortBy, sortDir]
@@ -365,24 +370,18 @@ export default function EventMoviesSection({
         {t('movies.list.sectionLabel')}
       </h2>
       {!isFinished && participant && addMovieOpen && (
-        <div className={styles.addSection}>
-          <Suspense fallback={null}>
-            <AddMoviePanel
-              triggerLabel={t('movies.search.label')}
-              panelTitle={t('movies.search.label')}
-              slug={slug}
-              participantId={participant.participantId}
-              participantPseudo={participant.pseudo}
-              existingMovies={movies}
-              onAdded={refreshAll}
-              disabled={isFinished}
-              open={addMovieOpen}
-              onOpenChange={onAddMovieOpenChange}
-              hideTrigger
-              returnFocusRef={addMovieTriggerRef}
-            />
-          </Suspense>
-        </div>
+        <Suspense fallback={null}>
+          <ProposeMovieDialog
+            open
+            onClose={closeAddMovie}
+            slug={slug}
+            eventName={event.title}
+            participant={participant}
+            movies={movies}
+            onChanged={refreshAll}
+            onVote={(movieId, value) => void handleVote(movieId, value)}
+          />
+        </Suspense>
       )}
       {actionError && (
         <EventActionErrorBanner message={actionError} onDismiss={onDismissActionError} />

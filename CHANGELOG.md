@@ -8,6 +8,11 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Changed
+
+- **« Proposer un film » s'ouvre dans une fenêtre** : au centre de l'écran sur ordinateur, sur toute la hauteur sur téléphone, sans faire défiler la page. Elle montre tout de suite vos recherches récentes et les films de votre liste, chaque film avec son année, sa durée, sa note TMDB et s'il est en streaming. Un clic sur le titre ouvre un aperçu où ajouter un mot pour convaincre ; un film déjà proposé dit par qui et se vote d'ici ; chaque proposition se confirme et peut s'annuler.
+- **La recherche de films dit seulement « En streaming » ou « Pas en streaming »**, avec les plateformes incluses dans l'abonnement, aussi depuis Ma liste et les favoris. Les résultats restent affichés après un ajout, et une recherche sans résultat n'entre plus dans l'historique.
+
 ## [1.10.0] - 2026-11-12
 
 ### Added

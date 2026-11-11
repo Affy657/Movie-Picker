@@ -32,6 +32,7 @@ function renderPanel() {
           triggerLabel="Ajouter un film"
           panelTitle="Ajouter un film à ma liste"
           onAdded={() => undefined}
+          onAddItem={() => Promise.resolve()}
         />
       </LocaleProvider>
     </QueryClientWrapper>
@@ -99,7 +100,7 @@ describe('AddMoviePanel', () => {
     renderPanel();
 
     await user.click(screen.getByRole('button', { name: 'Ajouter un film' }));
-    const input = screen.getByPlaceholderText(/ajouter un film/i);
+    const input = screen.getByRole('searchbox', { name: 'Chercher un film' });
     await user.click(input);
     expect(screen.getByRole('group', { name: /recherches récentes/i })).toBeInTheDocument();
 
