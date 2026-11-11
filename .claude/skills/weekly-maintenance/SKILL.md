@@ -5,7 +5,7 @@ description: Passe de maintenance hebdomadaire du repo Movie Picker : merge des 
 
 # /weekly-maintenance : passe de maintenance hebdomadaire
 
-Les règles de style et de workflow du repo (zéro commentaire, `verify:local` avant push, jamais skip les hooks) sont dans [AGENTS.md](../../../AGENTS.md) : les respecter, ne pas les redéfinir ici.
+Les règles de style et de workflow du repo (zéro commentaire, CI de master comme porte, jamais skip les hooks) sont dans [AGENTS.md](../../../AGENTS.md) : les respecter, ne pas les redéfinir ici.
 
 Les commandes brutes de chaque étape sont dans [references/commandes.md](references/commandes.md), à lire au moment de s'en servir.
 
@@ -92,11 +92,11 @@ Commits séparés par nature (`fix(sonar):`, `fix(sentry):`, `chore(deps):`) pou
 
 Suivre AGENTS.md : zéro commentaire, réutiliser les primitives de `apps/web/src/shared/components/`, jetons de design, pas de valeur littérale dans les CSS modules.
 
-Pendant le dev, vérifications ciblées seulement : `tsc --noEmit`, `eslint`, `vitest run <chemin>`. Les suites lourdes se lancent juste avant le commit final.
+Pendant le dev, vérifications ciblées seulement : `tsc --noEmit`, `eslint`, `vitest run <chemin>`. Les suites complètes, c'est la CI.
 
 ## Étape 5 : PR et merge
 
-`pnpm run verify:local` complet, avec son code de sortie donné dans le rapport. Ne jamais annoncer vert sur une vérification partielle. Si `openapi:types:check` est concerné, lancer `openapi:export` avant.
+Pas de `verify:local` : les checks de la PR rejouent toute la CI, ce sont eux qui font foi et qui se citent dans le rapport. Ne jamais annoncer vert sur une vérification partielle. Si le contrat OpenAPI est concerné, lancer `openapi:export` puis `openapi:types` avant de pousser.
 
 Pousser la branche, ouvrir la PR, corps listant ce qui a été corrigé par source et ce qui a été laissé.
 

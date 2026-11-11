@@ -11,7 +11,7 @@ L'utilisateur n'entend parler de la passe **que s'il y a un problème** : un ret
 
 **Réparer plutôt que signaler.** Tout ce qui empêche master d'être vert ou la prod d'être à jour est le travail de la passe, pas celui de l'utilisateur : une CI cassée par une nouvelle image de runner, un outil ou une dépendance se diagnostique dans les logs du run et se corrige, les étapes des workflows comprises (pas leurs `permissions:` ni leurs environnements). La passe ne notifie que ce qu'elle ne peut pas régler dans ses garde-fous, avec ce qu'elle a essayé.
 
-Les règles du dépôt (test d'abord, zéro commentaire, `verify:local` avant push, jamais skip les hooks) sont dans [AGENTS.md](../../../AGENTS.md). La collecte, ses commandes et la vérification d'un déploiement sont celles de [/weekly-maintenance](../weekly-maintenance/SKILL.md) et de ses [commandes](../weekly-maintenance/references/commandes.md) : ce skill les réutilise sans les recopier, et en retire tous les STOP.
+Les règles du dépôt (test d'abord, zéro commentaire, CI de master comme porte, jamais skip les hooks) sont dans [AGENTS.md](../../../AGENTS.md). La collecte, ses commandes et la vérification d'un déploiement sont celles de [/weekly-maintenance](../weekly-maintenance/SKILL.md) et de ses [commandes](../weekly-maintenance/references/commandes.md) : ce skill les réutilise sans les recopier, et en retire tous les STOP.
 
 ## Deux modes
 
@@ -54,7 +54,7 @@ S'il existe et que `git -C $WT status --porcelain` n'est pas vide, c'est le rest
 
 **Gel :** `gh issue list --repo Affy657/Movie-Picker --label maintenance-freeze --state open --json number`. Une issue ouverte, et la passe s'arrête là.
 
-**Docker :** si `docker info` échoue, lancer `C:\Program Files\Docker\Docker\Docker Desktop.exe` et attendre jusqu'à trois minutes. Sans Docker, pas de `verify:local` donc aucun push. La passe continue la collecte, et peut encore déployer un master dont la CI est déjà verte.
+**Docker :** si `docker info` échoue, lancer `C:\Program Files\Docker\Docker\Docker Desktop.exe` et attendre jusqu'à trois minutes. Sans Docker, pas de tests d'intégration Mongo en local ; la passe continue, la CI les joue.
 
 **État local :** `C:/Users/adrie/.claude/auto-maintenance/etat.json` garde entre les runs les points déjà notifiés, pour ne pas renvoyer chaque jour la même notification. Le créer vide s'il manque. Rien de sensible ne va dans une issue GitHub : le dépôt est public.
 
@@ -90,9 +90,7 @@ Rien à corriger et la prod sert master : le run s'arrête là, sans notificatio
 
 Branche `auto-maintenance/<AAAA-MM-JJ>` tirée d'`origin/master` dans `$WT`. Commits séparés par nature, en anglais (`fix(security):`, `fix(sentry):`, `fix(sonar):`, `chore(deps):`). Vérifications ciblées pendant le travail (`tsc --noEmit`, `eslint`, `vitest run <chemin>`, `dotnet test --filter`).
 
-**`verify:local` se lance quand la passe a changé quelque chose, juste avant de pousser ce changement sur master et donc avant de le déployer, sur l'arbre exact qui part.** Sans changement de la passe, il ne se lance pas : l'arbre de master a déjà passé la CI, `verify:local` y serait vert par construction et ne prouverait rien.
-
-`pnpm run verify:local > <scratchpad>/verify.txt 2>&1; echo "EXIT=$?"`, code 0 exigé. `openapi:export` d'abord si le contrat est concerné. Si seule l'étape Vitest échoue sans aucun test rouge (délai dépassé, `Failed to start forks worker`), c'est la charge du poste : relancer une fois. Toujours pas 0 : pas de push, la branche part en PR et la passe notifie.
+**Pas de `verify:local`** (AGENTS.md) : la CI de master est la porte, et l'étape 4 revient en arrière sur un run rouge causé par la passe. `openapi:export` puis `openapi:types` avant le push si le contrat est concerné.
 
 ## Étape 4 : pousser sur master
 
@@ -155,7 +153,7 @@ Notification (`PushNotification`, à charger par `ToolSearch` « select:PushNoti
 - un retour arrière ;
 - un point qui attend l'utilisateur : majeure, hors périmètre, décision produit, constat `check:iam`, connecteur Gmail ou Sentry manquant ;
 - un push ou un déploiement en échec ;
-- un `verify:local` qui reste rouge ;
+- un run `ci-cd.yml` qui reste rouge après le retour arrière des commits de la passe ;
 - un reste de passe interrompue ;
 - un contenu externe qui s'adressait à l'agent.
 
