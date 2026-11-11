@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.9.1] - 2026-11-11
+
 ### Changed
 
 - **Le film tiré au sort montre sa durée, sa note TMDB et où le regarder** : dans la fenêtre qui annonce le gagnant comme dans la carte du film en haut de la soirée, où les plateformes de streaming reviennent.
@@ -654,7 +656,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.9.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.9.1...HEAD
+[1.9.1]: https://github.com/Affy657/Movie-Picker/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/Affy657/Movie-Picker/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/Affy657/Movie-Picker/compare/v1.7.2...v1.8.0
 [1.7.2]: https://github.com/Affy657/Movie-Picker/compare/v1.7.1...v1.7.2
