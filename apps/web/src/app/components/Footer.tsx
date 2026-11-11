@@ -12,6 +12,8 @@ import InstallPwaDialog from '@/shared/components/InstallPwaDialog';
 import ConsentDialog from '@/shared/components/ConsentDialog';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
+import { BRAND_NAME } from '@/shared/brand/brandArt';
+import { BrandWordmark } from '@/shared/brand/BrandWordmark';
 import styles from './Footer.module.css';
 
 type FooterProps = {
@@ -77,8 +79,8 @@ export default function Footer({ clearMobileNav = false, onOpenWhatsNew }: Reado
     >
       <div className={styles.inner}>
         <div className={styles.brand}>
-          <Link to={ROUTES.home} className={styles.brandLink}>
-            <span className={styles.brandName}>Movie Picker</span>
+          <Link to={ROUTES.home} className={styles.brandLink} aria-label={BRAND_NAME}>
+            <BrandWordmark className={styles.brandName} />
           </Link>
           <p className={styles.brandTagline}>{t('footer.tagline')}</p>
           {showInstall ? (

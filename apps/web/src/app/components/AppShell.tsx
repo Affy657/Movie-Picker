@@ -26,6 +26,8 @@ import MovedOriginBanner from './MovedOriginBanner';
 import SignOutPendingNotice from './SignOutPendingNotice';
 import styles from './AppShell.module.css';
 import { buttonClass } from '@/shared/components/Button';
+import { BrandMark } from '@/shared/brand/BrandMark';
+import { BrandWordmark } from '@/shared/brand/BrandWordmark';
 
 function navLinkClass({ isActive }: { isActive: boolean }): string {
   return clsx(styles.navLink, isActive && styles.navLinkActive);
@@ -237,15 +239,8 @@ export default function AppShell() {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link to={ROUTES.home} className={styles.brand} aria-label={t('nav.brandLabel')}>
-            <img
-              src="/logo.svg"
-              alt=""
-              width={32}
-              height={32}
-              className={styles.brandLogo}
-              decoding="async"
-            />
-            <span className={styles.brandName}>Movie Picker</span>
+            <BrandMark className={styles.brandLogo} />
+            <BrandWordmark className={styles.brandName} />
           </Link>
           <nav
             className={clsx(styles.navDesktop, isLandingRoute && styles.navLanding)}

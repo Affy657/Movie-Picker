@@ -80,19 +80,16 @@
 }
 
 .brandLogo {
-  display: block;
   width: var(--space-8);
   height: var(--space-8);
   flex-shrink: 0;
-  transform: translateY(var(--lift-sm));
 }
 
 .brandName {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-tight);
+  width: auto;
+  height: var(--space-5);
+  flex-shrink: 0;
   color: var(--color-text);
-  transform: translateY(var(--text-optical-nudge));
 }
 
 @media (max-width: 29.9375rem) {

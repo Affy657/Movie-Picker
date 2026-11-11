@@ -724,6 +724,7 @@ const NUMERIC_ICON_SIZE_DEFAULT = /\b(?:size|iconSize)\s*=\s*(\d+)\b(?=\s*[,)}])
 const TS_COLOR_ALLOWED = new Set([
   'apps/web/src/app/pages/tech/TechLogos.tsx',
   'apps/web/src/features/auth/components/OAuthProviderButtons.tsx',
+  'apps/web/src/shared/brand/brandArt.ts',
   'apps/web/src/shared/components/QrCode.tsx',
   'apps/web/src/shared/utils/downloadQrPng.ts',
 ]);
