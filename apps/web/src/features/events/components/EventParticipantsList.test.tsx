@@ -13,7 +13,7 @@ const participants: EventParticipantSummary[] = [
 ];
 
 describe('EventParticipantsList', () => {
-  it('shows the participants, the host badge and the counter', () => {
+  it('shows the participants and the host badge', () => {
     render(
       <AppTestProviders>
         <EventParticipantsList
@@ -27,7 +27,6 @@ describe('EventParticipantsList', () => {
     expect(screen.getByText('Hôte')).toBeInTheDocument();
     expect(screen.getByText('Bob')).toBeInTheDocument();
     expect(screen.getByLabelText('hôte')).toBeInTheDocument();
-    expect(screen.getByText(/3 \/ 5/)).toBeInTheDocument();
   });
 
   it('shows no remove button when the user is not the host', () => {

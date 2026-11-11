@@ -38,6 +38,19 @@ public sealed class InMemoryParticipantRepositoryTests
     }
 
     [Fact]
+    public async Task ListByEventIdsAsync_ListsTheRequestedEventsInJoinOrder()
+    {
+        var start = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
+        await _repo.AddAsync(Mk(eventId: "evt2", pseudo: "Late", createdAt: start.AddMinutes(2)));
+        await _repo.AddAsync(Mk(eventId: "evt1", pseudo: "Early", createdAt: start));
+        await _repo.AddAsync(Mk(eventId: "other", pseudo: "Elsewhere", createdAt: start.AddMinutes(1)));
+
+        var participants = await _repo.ListByEventIdsAsync(["evt1", "evt2"]);
+
+        Assert.Equal(["Early", "Late"], participants.Select(p => p.Pseudo));
+    }
+
+    [Fact]
     public async Task FindByIdAndEventIdAsync_MatchesEvent()
     {
         var created = await _repo.AddAsync(Mk(eventId: "evt1"));

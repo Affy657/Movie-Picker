@@ -59,21 +59,6 @@ function myEventsHandler(
   });
 }
 
-const statsHandler = http.get(`${TEST_API_V1}/users/alice/stats`, () =>
-  HttpResponse.json({
-    eventsCreated: 0,
-    eventsJoined: 0,
-    moviesProposed: 0,
-    votesCast: 0,
-    winningProposals: 0,
-    moviesSeen: 9,
-    currentStreakWeeks: 3,
-    bestStreakWeeks: 3,
-    favoriteGenres: [],
-    dailyActivity: [],
-  })
-);
-
 beforeAll(() => {
   if (!HTMLDialogElement.prototype.showModal) {
     HTMLDialogElement.prototype.showModal = function showModal() {
@@ -98,7 +83,7 @@ describe('MyEventsPage (MSW)', () => {
   });
   afterAll(() => server.close());
 
-  it('shows the To handle block, the active grid and the tab counters', async () => {
+  it('lists what to handle, then the upcoming nights, then the history, on one page', async () => {
     server.use(
       authMeHandler,
       myEventsHandler(
@@ -148,7 +133,22 @@ describe('MyEventsPage (MSW)', () => {
             movieCount: 1,
           },
         ],
-        [],
+        [
+          {
+            id: 'f1',
+            slug: 'passee',
+            title: 'Soirée passée',
+            date: '2020-01-01',
+            time: '20:00',
+            createdAt: '2019-01-01T00:00:00Z',
+            updatedAt: '2020-01-02T00:00:00Z',
+            isCreator: true,
+            isParticipant: true,
+            lifecycle: 'finished',
+            participantCount: 2,
+            movieCount: 1,
+          },
+        ],
         { active: 3, finished: 1 }
       )
     );
@@ -156,6 +156,12 @@ describe('MyEventsPage (MSW)', () => {
     renderMyEvents();
 
     await screen.findByRole('heading', { name: /à traiter/i }, { timeout: 5000 });
+    await screen.findByRole('link', { name: /Soirée passée/i });
+    const sectionTitles = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent);
+    expect(sectionTitles).toEqual(['À traiter', 'À venir', 'Historique']);
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
 
     expect(screen.getByRole('heading', { name: 'Mes soirées', level: 1 })).toBeInTheDocument();
     expect(screen.getByText('Soirée en suspens')).toBeInTheDocument();
@@ -164,17 +170,14 @@ describe('MyEventsPage (MSW)', () => {
 
     const hostedLink = screen.getByRole('link', { name: /Chez moi/i });
     expect(hostedLink).toHaveAttribute('href', '/e/ma-soiree');
-    expect(within(hostedLink.closest('li')!).getByText('4 / 8')).toBeInTheDocument();
-    expect(screen.getAllByText('Hôte').length).toBeGreaterThanOrEqual(1);
+    expect(within(hostedLink).getByText('4 participants, 2 films')).toBeInTheDocument();
 
     const joinedLink = screen.getByRole('link', { name: /Chez Bob/i });
     expect(joinedLink).toHaveAttribute('href', '/e/autre');
     expect(screen.getByText('En cours')).toBeInTheDocument();
 
-    const activeTab = screen.getByRole('tab', { name: /actives/i });
-    expect(within(activeTab).getByText('3')).toBeInTheDocument();
-    const historyTab = screen.getByRole('tab', { name: /historique/i });
-    expect(within(historyTab).getByText('1')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'À venir' })).toHaveTextContent(/^À venir2/);
+    expect(screen.getByRole('region', { name: 'Historique' })).toHaveTextContent(/^Historique1/);
 
     expect(document.title).toBe(pageTitle('Mes soirées'));
   });
@@ -230,7 +233,6 @@ describe('MyEventsPage (MSW)', () => {
     let deleteCalled = false;
     server.use(
       authMeHandler,
-      statsHandler,
       myEventsHandler(
         [],
         [
@@ -267,9 +269,7 @@ describe('MyEventsPage (MSW)', () => {
 
     renderMyEvents();
 
-    const historyTab = await screen.findByRole('tab', { name: /historique/i }, { timeout: 5000 });
-    await user.click(historyTab);
-    await screen.findByRole('link', { name: /Soirée passée/i });
+    await screen.findByRole('link', { name: /Soirée passée/i }, { timeout: 5000 });
 
     await user.click(screen.getByRole('button', { name: /Options pour Soirée passée/i }));
     await user.click(screen.getByRole('menuitem', { name: /supprimer/i }));
@@ -281,12 +281,10 @@ describe('MyEventsPage (MSW)', () => {
   });
 
   it('history: a participant is offered no removal the API would refuse on a finished night', async () => {
-    const user = (await import('@testing-library/user-event')).default.setup();
     setStoredParticipant('rejointe-terminee', 'part-1', 'Alice');
     let removeCalled = false;
     server.use(
       authMeHandler,
-      statsHandler,
       myEventsHandler(
         [],
         [
@@ -316,9 +314,7 @@ describe('MyEventsPage (MSW)', () => {
 
     renderMyEvents();
 
-    const historyTab = await screen.findByRole('tab', { name: /historique/i }, { timeout: 5000 });
-    await user.click(historyTab);
-    await screen.findByRole('link', { name: /Soirée rejointe/i });
+    await screen.findByRole('link', { name: /Soirée rejointe/i }, { timeout: 5000 });
 
     expect(
       screen.queryByRole('button', { name: /Options pour Soirée rejointe/i })
@@ -334,7 +330,6 @@ describe('MyEventsPage (MSW)', () => {
     let historyCalls = 0;
     server.use(
       authMeHandler,
-      statsHandler,
       http.get(`${TEST_API_V1}/events/mine`, ({ request }) => {
         const finished = new URL(request.url).searchParams.get('scope') === 'finished';
         if (finished && ++historyCalls === 1) {
@@ -368,9 +363,9 @@ describe('MyEventsPage (MSW)', () => {
 
     renderMyEvents();
 
-    await user.click(await screen.findByRole('tab', { name: /historique/i }, { timeout: 5000 }));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('Historique indisponible');
+    expect(await screen.findByRole('alert', {}, { timeout: 5000 })).toHaveTextContent(
+      'Historique indisponible'
+    );
     expect(screen.queryByText(/aucune soirée ne correspond/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /réessayer/i }));
@@ -379,11 +374,9 @@ describe('MyEventsPage (MSW)', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('history: filter by outcome (with/without a chosen movie)', async () => {
-    const user = (await import('@testing-library/user-event')).default.setup();
+  it('history: keeps no search, filter nor sort above the nights', async () => {
     server.use(
       authMeHandler,
-      statsHandler,
       myEventsHandler(
         [],
         [
@@ -402,37 +395,16 @@ describe('MyEventsPage (MSW)', () => {
             movieCount: 3,
             winnerMovies: [{ title: 'Matrix', posterPath: null }],
           },
-          {
-            id: 'e6',
-            slug: 'sans-film',
-            title: 'Soirée sans film',
-            date: '2020-02-01',
-            time: '20:00',
-            createdAt: '2019-01-01T00:00:00Z',
-            updatedAt: '2020-02-02T00:00:00Z',
-            isCreator: true,
-            isParticipant: true,
-            lifecycle: 'finished',
-            participantCount: 2,
-            movieCount: 0,
-            winnerMovies: [],
-          },
         ],
-        { active: 0, finished: 2 }
+        { active: 0, finished: 1 }
       )
     );
 
     renderMyEvents();
 
-    const historyTab = await screen.findByRole('tab', { name: /historique/i }, { timeout: 5000 });
-    await user.click(historyTab);
-    await screen.findByRole('link', { name: /Soirée avec film/i });
-    expect(screen.getByRole('link', { name: /Soirée sans film/i })).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: /filtres/i }));
-    await user.click(screen.getByRole('button', { name: /sans film choisi/i }));
-
-    expect(screen.getByRole('link', { name: /Soirée sans film/i })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Soirée avec film/i })).not.toBeInTheDocument();
+    await screen.findByRole('link', { name: /Soirée avec film/i }, { timeout: 5000 });
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /filtres/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /à traiter/i })).not.toBeInTheDocument();
   });
 });

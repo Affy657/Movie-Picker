@@ -372,8 +372,7 @@ describe('EventDetail (MSW)', () => {
     );
     renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
     expect(await screen.findByRole('heading', { name: 'Soirée démo' })).toBeInTheDocument();
-    const themeBanner = screen.getByRole('status', { name: /Thème de soirée/i });
-    expect(themeBanner).toHaveTextContent('Comédie noire');
+    expect(screen.getByText('Thème de soirée : Comédie noire')).toBeInTheDocument();
 
     const settingsToggle = screen.getByRole('button', { name: 'Paramètres de la soirée' });
     expect(settingsToggle).toHaveAttribute('aria-haspopup', 'dialog');
@@ -395,19 +394,17 @@ describe('EventDetail (MSW)', () => {
       );
     }
 
-    it('puts the three ways out inside the banner and drops the duplicate pill', async () => {
+    it('keeps the banner as text and moves the ways out to the header', async () => {
       usePendingHandlers();
       renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
       const banner = await screen.findByRole('status', { name: /en suspens/i });
-      expect(within(banner).getByRole('button', { name: /reprogrammer/i })).toBeInTheDocument();
-      expect(
-        within(banner).getByRole('button', { name: /clôturer sans film/i })
-      ).toBeInTheDocument();
-      expect(within(banner).queryByRole('button', { name: /lancer la roue/i })).toBeNull();
+      expect(within(banner).queryByRole('button')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Gérer le tirage' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Paramètres de la soirée' })).toBeInTheDocument();
       expect(screen.queryByText('En suspens', { selector: 'span' })).not.toBeInTheDocument();
     });
 
-    it('closing without a movie asks for confirmation, then posts the closing', async () => {
+    it('closing without a movie from the draw menu asks for confirmation, then posts the closing', async () => {
       const user = userEvent.setup();
       usePendingHandlers();
       let closed = 0;
@@ -418,20 +415,19 @@ describe('EventDetail (MSW)', () => {
         })
       );
       renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
-      const banner = await screen.findByRole('status', { name: /en suspens/i });
-      await user.click(within(banner).getByRole('button', { name: /clôturer sans film/i }));
+      await user.click(await screen.findByRole('button', { name: 'Gérer le tirage' }));
+      await user.click(screen.getByRole('menuitem', { name: 'Clôturer sans film' }));
       const dialog = await screen.findByRole('dialog', { name: /clôturer sans choisir de film/i });
       expect(closed).toBe(0);
       await user.click(within(dialog).getByRole('button', { name: /clôturer sans film/i }));
       await waitFor(() => expect(closed).toBe(1));
     });
 
-    it('reprogramming opens the settings panel', async () => {
+    it('reschedules from the settings cog', async () => {
       const user = userEvent.setup();
       usePendingHandlers();
       renderEventDetail(`/e/${slug}?host=${encodeURIComponent(token)}`);
-      const banner = await screen.findByRole('status', { name: /en suspens/i });
-      await user.click(within(banner).getByRole('button', { name: /reprogrammer/i }));
+      await user.click(await screen.findByRole('button', { name: 'Paramètres de la soirée' }));
       expect(await screen.findByLabelText(/date et heure de la soirée/i)).toBeInTheDocument();
     });
   });

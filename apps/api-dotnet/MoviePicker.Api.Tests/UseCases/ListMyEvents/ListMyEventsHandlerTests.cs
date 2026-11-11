@@ -18,6 +18,8 @@ public sealed class ListMyEventsHandlerTests
     private readonly Mock<IParticipantRepository> _participantRepo;
     private readonly Mock<IMovieRepository> _movieRepo;
     private readonly Mock<IMovieRatingRepository> _ratingRepo;
+    private readonly Mock<IVoteRepository> _voteRepo;
+    private readonly Mock<IUserRepository> _userRepo;
     private readonly ListMyEventsHandler _sut;
     private static readonly string[] value = new[] { "e1", "e2" };
 
@@ -27,6 +29,23 @@ public sealed class ListMyEventsHandlerTests
         _participantRepo = new Mock<IParticipantRepository>();
         _movieRepo = new Mock<IMovieRepository>();
         _ratingRepo = new Mock<IMovieRatingRepository>();
+        _voteRepo = new Mock<IVoteRepository>();
+        _userRepo = new Mock<IUserRepository>();
+        _movieRepo
+            .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Movie>());
+        _participantRepo
+            .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Participant>());
+        _voteRepo
+            .Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, VoteScoreAggregate>());
+        _voteRepo
+            .Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Vote>());
+        _userRepo
+            .Setup(r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<UserCard>());
         _ratingRepo
             .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<MovieRating>());
@@ -46,6 +65,8 @@ public sealed class ListMyEventsHandlerTests
             _participantRepo.Object,
             _movieRepo.Object,
             _ratingRepo.Object,
+            _voteRepo.Object,
+            _userRepo.Object,
             TimeProvider.System);
     }
 
@@ -582,4 +603,135 @@ public sealed class ListMyEventsHandlerTests
             r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    [Fact]
+    public async Task HandleAsync_ActiveScope_ShowsTheThreeBestScoredPosters_InListOrderOnTies()
+    {
+        GivenCreatedNights(UpcomingNight("e1"));
+        var start = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
+        _movieRepo
+            .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                ProposedMovie("e1", "early", start),
+                ProposedMovie("e1", "liked", start.AddMinutes(1)),
+                ProposedMovie("e1", "later", start.AddMinutes(2)),
+                ProposedMovie("e1", "disliked", start.AddMinutes(3)),
+                ProposedMovie("e1", "last", start.AddMinutes(4)),
+            ]);
+        _voteRepo
+            .Setup(r => r.AggregateScoresByMovieIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, VoteScoreAggregate>
+            {
+                ["liked"] = new(2, 2, 0),
+                ["disliked"] = new(-1, 0, 1),
+            });
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Active, limit: 10, offset: 0, q: null);
+
+        var row = Assert.Single(result.Events);
+        Assert.Equal(["liked", "early", "later"], row.TopMovies.Select(m => m.Title));
+        Assert.Equal("/posters/liked.jpg", row.TopMovies[0].PosterPath);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ActiveScope_PreviewsTheFirstFourParticipantsWithTheirAvatar()
+    {
+        GivenCreatedNights(UpcomingNight("e1"));
+        var start = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
+        _participantRepo
+            .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                Joined("e1", "p5", "Eve", start.AddMinutes(5)),
+                Joined("e1", "p1", "Léa", start, userId: "u-lea"),
+                Joined("e1", "p2", "Nico", start.AddMinutes(1)),
+                Joined("e1", "p3", "Inès", start.AddMinutes(2)),
+                Joined("e1", "p4", "Sam", start.AddMinutes(3)),
+            ]);
+        _userRepo
+            .Setup(r => r.ListCardsByIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new UserCard("u-lea", "fox", "lea", true)]);
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Active, limit: 10, offset: 0, q: null);
+
+        var row = Assert.Single(result.Events);
+        Assert.Equal(["Léa", "Nico", "Inès", "Sam"], row.ParticipantsPreview.Select(p => p.Pseudo));
+        Assert.Equal("fox", row.ParticipantsPreview[0].AvatarId);
+        Assert.Equal(string.Empty, row.ParticipantsPreview[1].AvatarId);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ActiveScope_TellsWhetherTheViewerAlreadyVotedOnEachNight()
+    {
+        GivenCreatedNights(UpcomingNight("e1"), UpcomingNight("e2"));
+        var start = DateTimeOffset.Parse("2026-06-01T00:00:00Z");
+        _participantRepo
+            .Setup(r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+            [
+                Joined("e1", "me-1", "Moi", start, userId: "u1"),
+                Joined("e2", "me-2", "Moi", start, userId: "u1"),
+            ]);
+        _voteRepo
+            .Setup(r => r.ListByParticipantIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new Vote { EventId = "e1", MovieId = "m1", ParticipantId = "me-1", Value = 1 }]);
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Active, limit: 10, offset: 0, q: null);
+
+        Assert.True(result.Events.Single(e => e.Id == "e1").HasVoted);
+        Assert.False(result.Events.Single(e => e.Id == "e2").HasVoted);
+    }
+
+    [Fact]
+    public async Task HandleAsync_FinishedScope_ReadsNoPreview()
+    {
+        GivenCreatedNights(FinishedNight("e1", "m1"));
+
+        var result = await _sut.HandleAsync("u1", MyEventListScope.Finished, limit: 10, offset: 0, q: null);
+
+        Assert.Empty(Assert.Single(result.Events).TopMovies);
+        _movieRepo.Verify(
+            r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _participantRepo.Verify(
+            r => r.ListByEventIdsAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    private static Event UpcomingNight(string id) => new()
+    {
+        Id = id,
+        Title = id,
+        Date = TestDates.Upcoming,
+        Time = "20:00",
+        Slug = id,
+        HostToken = "h",
+        CreatorUserId = "u1",
+        CreatedAt = DateTimeOffset.UtcNow,
+        UpdatedAt = DateTimeOffset.UtcNow
+    };
+
+    private static Movie ProposedMovie(string eventId, string id, DateTimeOffset createdAt) => new()
+    {
+        Id = id,
+        EventId = eventId,
+        Title = id,
+        PosterPath = $"/posters/{id}.jpg",
+        CreatedAt = createdAt
+    };
+
+    private static Participant Joined(
+        string eventId,
+        string id,
+        string pseudo,
+        DateTimeOffset createdAt,
+        string? userId = null) => new()
+    {
+        Id = id,
+        EventId = eventId,
+        Pseudo = pseudo,
+        UserId = userId,
+        CreatedAt = createdAt
+    };
 }

@@ -18,7 +18,8 @@ test.describe('Draw (host)', () => {
     await createEvent(page, 'Soirée choix manuel E2E');
     await addStubMovie(page);
 
-    await page.getByRole('button', { name: /choisir moi-même/i }).click();
+    await page.getByRole('button', { name: 'Autre façon de choisir le film' }).click();
+    await page.getByRole('menuitem', { name: 'Choisir moi-même' }).click();
     await expect(page.getByText(/choisissez le film à désigner gagnant/i)).toBeVisible();
     await page
       .getByRole('button', { name: `${STUB_MOVIE} : désigner ce film comme gagnant` })
@@ -32,14 +33,14 @@ test.describe('Draw (host)', () => {
     await expect(page.getByRole('region', { name: /vous regardez/i })).toBeVisible({
       timeout: 15_000,
     });
-    await expect(page.getByText('Film gagnant désigné')).toBeVisible();
+    await expect(page.getByText('Film choisi', { exact: true })).toBeVisible();
     await expect(
       page
         .getByRole('region', { name: 'Films proposés' })
         .getByText('Film gagnant', { exact: true })
     ).toBeVisible();
 
-    await page.getByRole('button', { name: 'Autres actions sur le tirage' }).click();
+    await page.getByRole('button', { name: 'Gérer le tirage' }).click();
     await page.getByRole('menuitem', { name: 'Retirer un gagnant' }).click();
     await expect(page.getByText(/choisissez le film gagnant à retirer/i)).toBeVisible();
     await page.getByRole('button', { name: `${STUB_MOVIE} : retirer ce film du palmarès` }).click();
@@ -63,7 +64,9 @@ test.describe('Draw (host)', () => {
     await expect(banner).toContainText(/aucun film n.a été choisi/i);
     await expect(page.getByRole('button', { name: 'Lancer la roue' })).toBeHidden();
 
-    await banner.getByRole('button', { name: 'Clôturer sans film' }).click();
+    await expect(banner.getByRole('button')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Gérer le tirage' }).click();
+    await page.getByRole('menuitem', { name: 'Clôturer sans film' }).click();
     const confirm = page.getByRole('dialog', { name: /clôturer sans choisir de film/i });
     await expect(confirm).toBeVisible();
     await expect(confirm).toContainText('Soirée en suspens E2E');
@@ -75,7 +78,6 @@ test.describe('Draw (host)', () => {
     await expect(page.getByRole('button', { name: /proposer un film/i })).toBeHidden();
 
     await page.goto('/my-events');
-    await page.getByRole('tab', { name: /Historique/ }).click();
     await page.getByRole('button', { name: 'Options pour Soirée en suspens E2E' }).click();
     await expect(page.getByRole('menuitem', { name: 'Supprimer la soirée' })).toBeInViewport({
       ratio: 1,

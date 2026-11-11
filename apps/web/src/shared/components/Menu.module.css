@@ -98,3 +98,64 @@
   margin: var(--space-1) var(--space-1);
   background: var(--color-border-subtle);
 }
+
+.choiceRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-target-min);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+  line-height: var(--leading-none);
+  color: var(--color-text);
+}
+
+.choiceLabel {
+  flex: 1;
+}
+
+.choices {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: var(--space-0-5);
+  padding: var(--space-0-5);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+}
+
+.choice {
+  composes: expanded from './tapTarget.module.css';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--space-8);
+  height: var(--space-7);
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-none);
+  cursor: pointer;
+}
+
+.choice:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset-inset);
+}
+
+@media (hover: hover) {
+  .choice:not(.choiceChecked):hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+}
+
+.choiceChecked {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
+}

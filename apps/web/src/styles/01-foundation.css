@@ -373,6 +373,7 @@
   --opacity-muted: 0.6;
   --opacity-hover: 0.8;
   --opacity-dimmed: 0.85;
+  --opacity-poster-glow: 0.35;
 }
 
 :root,
@@ -398,6 +399,7 @@
   --color-primary-text: var(--blue-700);
   --color-primary-text-hover: var(--blue-800);
   --color-brand-secondary: var(--cyan-500);
+  --color-brand-secondary-text: var(--cyan-800);
   --color-brand-clap: var(--blue-700);
   --color-brand-ink: var(--white);
   --color-brand-picker: var(--blue-600);
@@ -424,6 +426,7 @@
   --color-primary-tint: color-mix(in srgb, var(--color-primary) 6%, transparent);
   --color-primary-soft: color-mix(in srgb, var(--color-primary) 12%, transparent);
   --color-primary-soft-hover: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  --color-primary-glow: color-mix(in srgb, var(--color-primary) 14%, transparent);
   --color-primary-border: color-mix(in srgb, var(--color-primary) 32%, transparent);
   --color-error-bg: color-mix(in srgb, var(--color-error) 12%, transparent);
   --color-error-border: color-mix(in srgb, var(--color-error) 30%, transparent);
@@ -544,6 +547,7 @@
   --color-section-heading: var(--slate-300);
   --color-placeholder: #748499;
   --color-brand-secondary: var(--cyan-400);
+  --color-brand-secondary-text: var(--cyan-400);
   --color-error: var(--red-400);
   --color-success: var(--green-400);
   --color-warning: var(--orange-400);
@@ -577,6 +581,7 @@
 
 [data-theme='dark'] {
   color-scheme: dark;
+  --opacity-poster-glow: 0.55;
   --color-nav-bg: #0a0f1cee;
   --color-nav-shadow: rgba(0, 0, 0, 0.5);
   --shadow-nav: 0 -2px 20px var(--color-nav-shadow);
@@ -596,6 +601,7 @@
   --color-primary-tint: color-mix(in srgb, var(--color-primary) 8%, transparent);
   --color-primary-soft: color-mix(in srgb, var(--color-primary) 14%, transparent);
   --color-primary-soft-hover: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  --color-primary-glow: color-mix(in srgb, var(--color-primary) 22%, transparent);
   --color-primary-border: color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 

@@ -51,7 +51,8 @@ test.describe('Event page layout', () => {
     await expect(page.getByRole('button', { name: 'Note', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: '1 participant' })).toBeVisible();
 
-    await page.getByRole('button', { name: /choisir moi-même/i }).click();
+    await page.getByRole('button', { name: 'Autre façon de choisir le film' }).click();
+    await page.getByRole('menuitem', { name: 'Choisir moi-même' }).click();
     const firstPick = page.locator('[data-testid^="manual-pick-"]').first();
     await expect(firstPick).toBeVisible({ timeout: 15_000 });
     await expect

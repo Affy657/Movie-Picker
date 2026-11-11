@@ -100,6 +100,44 @@ public sealed class UserEventsEndpointsTests : IClassFixture<MoviePickerApplicat
     }
 
     [Fact]
+    public async Task Mine_PreviewsTheUpcomingNight_PostersParticipantsAndMyVote()
+    {
+        var client = await IntegrationTestAuth.NewRegisteredClientAsync(_factory, "Apercu");
+        var create = await client.PostAsJsonAsync(
+            "/api/v1/events",
+            new { title = "Soirée aperçu", date = TestDates.Upcoming, time = "20:00" });
+        create.EnsureSuccessStatusCode();
+        var created = await create.Content.ReadFromJsonAsync<CreateEventResponse>(JsonOptions);
+        var slug = created!.Slug;
+        var participantId = created.CreatorParticipant!.Id;
+
+        var addMovie = await client.PostAsJsonAsync($"/api/v1/events/{slug}/movies", new
+        {
+            tmdbId = 4242,
+            title = "Film aperçu",
+            year = "2024",
+            posterPath = (string?)null,
+            participantId
+        });
+        addMovie.EnsureSuccessStatusCode();
+        var movieId = (await addMovie.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("_id").GetString()!;
+
+        var before = await client.GetFromJsonAsync<MyEventsListResponse>("/api/v1/events/mine", JsonOptions);
+        var rowBefore = Assert.Single(before!.Events, e => e.Slug == slug);
+        Assert.False(rowBefore.HasVoted);
+        Assert.Equal("Film aperçu", Assert.Single(rowBefore.TopMovies).Title);
+        Assert.Equal("Apercu", Assert.Single(rowBefore.ParticipantsPreview).Pseudo);
+
+        var vote = await client.PostAsJsonAsync(
+            $"/api/v1/events/{slug}/movies/{movieId}/vote",
+            new { participantId, value = 1 });
+        vote.EnsureSuccessStatusCode();
+
+        var after = await client.GetFromJsonAsync<MyEventsListResponse>("/api/v1/events/mine", JsonOptions);
+        Assert.True(Assert.Single(after!.Events, e => e.Slug == slug).HasVoted);
+    }
+
+    [Fact]
     public async Task Join_SecondCallWithDifferentPseudo_ReturnsSameParticipantWhenSameAccount()
     {
         var client = _factory.CreateClient();

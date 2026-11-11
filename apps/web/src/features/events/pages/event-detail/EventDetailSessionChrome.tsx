@@ -6,6 +6,7 @@ import EventMoviesLoadError from '@/features/events/pages/event-detail/EventMovi
 import EventPendingBanner from '@/features/events/components/EventPendingBanner';
 import EventConnectionBanner from '@/features/events/components/EventConnectionBanner';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
+import { eventHeaderActions } from '@/features/events/lib/eventHeaderActions';
 import { getEligibleFollows } from '@/features/events/api/eventsApi';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import { useTranslation } from '@/shared/i18n';
@@ -19,6 +20,7 @@ import type {
   AddMovieEntry,
   EventCounts,
   EventDateLabels,
+  HeaderRating,
   JoinGate,
   MoviesViewMode,
   ParticipantsToggle,
@@ -115,29 +117,6 @@ function EventDetailSessionOverlays({
   );
 }
 
-function SessionPendingBanner({
-  isHost,
-  wheel,
-  settings,
-  onRequestCloseWithoutMovie,
-}: Readonly<{
-  isHost: boolean;
-  wheel: WheelApi;
-  settings: SettingsOverlay;
-  onRequestCloseWithoutMovie: () => void;
-}>) {
-  const canLaunch = wheel.canSpin && !wheel.spinDisabled;
-  return (
-    <EventPendingBanner
-      isHost={isHost}
-      launching={wheel.loading}
-      onLaunchWheel={canLaunch ? wheel.launch : undefined}
-      onReschedule={settings.canConfigure ? settings.onOpen : undefined}
-      onCloseWithoutMovie={settings.canConfigure ? onRequestCloseWithoutMovie : undefined}
-    />
-  );
-}
-
 export default function EventDetailSessionChrome({
   slug,
   hostToken,
@@ -150,6 +129,7 @@ export default function EventDetailSessionChrome({
   share,
   settings,
   participants,
+  rating,
   addMovie,
   join,
   wheel,
@@ -172,6 +152,7 @@ export default function EventDetailSessionChrome({
   share: ShareOverlay;
   settings: SettingsOverlay;
   participants: ParticipantsToggle;
+  rating: HeaderRating;
   addMovie: AddMovieEntry;
   join: JoinGate;
   wheel: WheelApi;
@@ -183,6 +164,20 @@ export default function EventDetailSessionChrome({
   connectionUnstable: boolean;
   onRetryConnection: () => void;
 }>) {
+  const plan = eventHeaderActions({
+    isHost: !!event.isHost,
+    isFinished: !!event.isFinished,
+    lifecycle,
+    canAddMovie: addMovie.canAdd,
+    canSpin: wheel.canSpin,
+    noMovie: wheel.noMovie,
+    hasWinner: wheel.winnerIds.length > 0,
+    remainingDraws: wheel.remainingDraws,
+    canRemoveWinner: wheel.showRemoveWinner,
+    canReset: wheel.showReset,
+    canCloseWithoutMovie: settings.canConfigure && lifecycle === 'pending',
+    canRate: rating.canRate,
+  });
   return (
     <>
       <EventDetailHeader
@@ -198,27 +193,25 @@ export default function EventDetailSessionChrome({
         participants={event.participants}
         participantCount={counts.participants}
         moviesCount={counts.movies}
-        votersCount={counts.voters}
-        participantsOpen={participants.open}
-        onToggleParticipants={participants.onToggle}
+        onOpenParticipants={participants.onOpen}
         onOpenShare={share.url ? () => share.onOpen('link') : undefined}
         onOpenSettings={settings.canConfigure ? settings.onOpen : undefined}
-        wheelActions={<EventWheelActions wheel={wheel} onRequestReset={onRequestResetWheel} />}
-        onAddMovie={addMovie.canAdd ? addMovie.onOpen : undefined}
-        addMoviePrimary={wheel.primaryAction === 'add'}
-        addMovieTriggerRef={addMovie.triggerRef}
+        actions={
+          <EventWheelActions
+            wheel={wheel}
+            plan={plan}
+            onAddMovie={addMovie.onOpen}
+            addMovieTriggerRef={addMovie.triggerRef}
+            onRequestReset={onRequestResetWheel}
+            onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
+            onRate={rating.onRate}
+          />
+        }
         viewMode={viewToggleInHeader ? viewMode : undefined}
         onViewModeChange={viewToggleInHeader ? onViewModeChange : undefined}
       />
       {connectionUnstable ? <EventConnectionBanner onRetry={onRetryConnection} /> : null}
-      {lifecycle === 'pending' ? (
-        <SessionPendingBanner
-          isHost={!!event.isHost}
-          wheel={wheel}
-          settings={settings}
-          onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
-        />
-      ) : null}
+      {lifecycle === 'pending' ? <EventPendingBanner isHost={!!event.isHost} /> : null}
       <EventDetailSessionOverlays
         slug={slug}
         hostToken={hostToken}

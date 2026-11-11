@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { ArrowLeft, ChevronDown, Plus, Settings } from 'lucide-react';
+import { ArrowLeft, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import EventShareButton from '@/features/events/components/EventShareButton';
 import EventCalendarMenu from '@/features/events/components/EventCalendarMenu';
-import EventThemeBanner from '@/features/events/components/EventThemeBanner';
 import EventLifecyclePill from '@/shared/components/EventLifecyclePill';
 import { useEventBack } from './useEventBack';
 import ViewModeToggle from '@/shared/components/ViewModeToggle';
@@ -13,86 +12,74 @@ import { useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { participantsCountLabel } from '@/features/events/utils/eventLabels';
 import styles from './EventDetailHeader.module.css';
-import Button from '@/shared/components/Button';
 import IconButton from '@/shared/components/IconButton';
-import Tooltip from '@/shared/components/Tooltip';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import BackLink from '@/shared/components/BackLink';
 
 const MAX_STACKED_AVATARS = 4;
 const STICKY_BAR_MEDIA = '(min-width: 48rem)';
 
-function useWheelActionsHeight(
-  wheelActionsRef: RefObject<HTMLDivElement | null>,
-  wheelActions: ReactNode
+type HeightPublisher = (height: number | null) => void;
+
+const publishWheelBarHeight: HeightPublisher = (height) => {
+  const root = document.documentElement;
+  if (height === null) root.style.removeProperty('--event-wheel-bar-height');
+  else root.style.setProperty('--event-wheel-bar-height', `${height}px`);
+};
+
+const publishStickyBarHeight: HeightPublisher = (height) => {
+  const root = document.documentElement;
+  if (height === null) root.style.removeProperty('--event-sticky-bar-height');
+  else root.style.setProperty('--event-sticky-bar-height', `${height}px`);
+};
+
+function usePublishedHeight(
+  enabled: boolean,
+  elementRef: RefObject<HTMLElement | null>,
+  publish: HeightPublisher,
+  dependency: unknown
 ) {
   useEffect(() => {
-    const el = wheelActionsRef.current;
-    const root = document.documentElement;
-    if (!el || typeof ResizeObserver !== 'function') return;
+    const el = elementRef.current;
+    if (!enabled || !el || typeof ResizeObserver !== 'function') return;
     const sync = () => {
       const height = el.offsetHeight;
-      if (height > 0) {
-        root.style.setProperty('--event-wheel-bar-height', `${height}px`);
-      } else {
-        root.style.removeProperty('--event-wheel-bar-height');
-      }
+      publish(height > 0 ? height : null);
     };
     sync();
     const observer = new ResizeObserver(sync);
     observer.observe(el);
     return () => {
       observer.disconnect();
-      root.style.removeProperty('--event-wheel-bar-height');
+      publish(null);
     };
-  }, [wheelActions, wheelActionsRef]);
+  }, [enabled, elementRef, publish, dependency]);
 }
 
-function useStickyBarHeight(stickyBar: boolean, barRef: RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const el = barRef.current;
-    const root = document.documentElement;
-    if (!stickyBar || !el || typeof ResizeObserver !== 'function') return;
-    const sync = () => {
-      const height = el.offsetHeight;
-      if (height > 0) {
-        root.style.setProperty('--event-sticky-bar-height', `${height}px`);
-      } else {
-        root.style.removeProperty('--event-sticky-bar-height');
-      }
-    };
-    sync();
-    const observer = new ResizeObserver(sync);
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      root.style.removeProperty('--event-sticky-bar-height');
-    };
-  }, [stickyBar, barRef]);
-}
-
-function useCondensedStickyBar(
+function useSentinelPassedUnderBar(
   stickyBar: boolean,
   sentinelRef: RefObject<HTMLDivElement | null>,
-  barRef: RefObject<HTMLElement | null>
+  barRef: RefObject<HTMLElement | null>,
+  { belowBar }: { belowBar: boolean }
 ) {
-  const [condensed, setCondensed] = useState(false);
+  const [passed, setPassed] = useState(false);
   useEffect(() => {
     if (!stickyBar) {
-      setCondensed(false);
+      setPassed(false);
       return;
     }
     const sentinel = sentinelRef.current;
     const bar = barRef.current;
     if (!sentinel || !bar || typeof IntersectionObserver !== 'function') return;
     const stickyOffsetPx = Number.parseFloat(getComputedStyle(bar).top) || 0;
-    const observer = new IntersectionObserver(([entry]) => setCondensed(!entry?.isIntersecting), {
-      rootMargin: `-${stickyOffsetPx}px 0px 0px 0px`,
+    const barHeightPx = belowBar ? bar.offsetHeight : 0;
+    const observer = new IntersectionObserver(([entry]) => setPassed(!entry?.isIntersecting), {
+      rootMargin: `-${stickyOffsetPx + barHeightPx}px 0px 0px 0px`,
     });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [stickyBar, sentinelRef, barRef]);
-  return condensed;
+  }, [stickyBar, sentinelRef, barRef, belowBar]);
+  return passed;
 }
 
 function useStickyBarMedia(): boolean {
@@ -110,36 +97,31 @@ function useStickyBarMedia(): boolean {
   return stickyBar;
 }
 
-type ParticipantsStackProps = {
+type ParticipantsButtonProps = {
   participants: EventParticipantSummary[];
   hiddenCount: number;
   label?: string;
   ariaLabel?: string;
-  open: boolean;
-  onToggle: () => void;
+  onOpen: () => void;
   testId: string;
-  bare?: boolean;
-  className?: string;
+  compact?: boolean;
 };
 
-function ParticipantsStack({
+function ParticipantsButton({
   participants,
   hiddenCount,
   label,
   ariaLabel,
-  open,
-  onToggle,
+  onOpen,
   testId,
-  bare,
-  className,
-}: Readonly<ParticipantsStackProps>) {
+  compact,
+}: Readonly<ParticipantsButtonProps>) {
   return (
     <button
       type="button"
-      className={clsx(styles.stack, bare && styles.stackBare, className)}
-      onClick={onToggle}
-      aria-expanded={open}
-      aria-controls={open ? 'event-participants-panel' : undefined}
+      className={clsx(styles.participants, compact && styles.participantsCompact)}
+      onClick={onOpen}
+      aria-haspopup="dialog"
       aria-label={ariaLabel}
       data-testid={testId}
       data-participants-toggle
@@ -149,15 +131,7 @@ function ParticipantsStack({
         max={MAX_STACKED_AVATARS}
         hidden={hiddenCount}
       />
-      {label ? <span className={styles.stackLabel}>{label}</span> : null}
-      {bare ? null : (
-        <ChevronDown
-          className={styles.chevron}
-          data-open={open || undefined}
-          size={ICON_SIZE.sm}
-          aria-hidden
-        />
-      )}
+      {label ? <span className={styles.participantsLabel}>{label}</span> : null}
     </button>
   );
 }
@@ -181,21 +155,13 @@ export type EventDetailHeaderProps = {
 
   moviesCount: number;
 
-  votersCount: number;
-
-  participantsOpen: boolean;
-
-  onToggleParticipants: () => void;
+  onOpenParticipants: () => void;
 
   onOpenShare?: () => void;
 
   onOpenSettings?: () => void;
 
-  wheelActions?: ReactNode;
-
-  onAddMovie?: () => void;
-  addMoviePrimary?: boolean;
-  addMovieTriggerRef?: RefObject<HTMLButtonElement | null>;
+  actions?: ReactNode;
 
   viewMode?: 'grid' | 'list';
   onViewModeChange?: (mode: 'grid' | 'list') => void;
@@ -244,122 +210,29 @@ function UtilityActions({
   );
 }
 
-function HeaderActions({
-  wheelActionsRef,
-  addMoviePrimary,
-  addMovieButton,
-  wheelActions,
-  utilityActions,
+function LifecycleStatus({
+  lifecycle,
+  countdownLabel,
+  short,
+  t,
 }: Readonly<{
-  wheelActionsRef: RefObject<HTMLDivElement | null>;
-  addMoviePrimary: boolean;
-  addMovieButton: ReactNode;
-  wheelActions: ReactNode;
-  utilityActions: ReactNode;
+  lifecycle: MyEventLifecycle;
+  countdownLabel: string | null | undefined;
+  short?: boolean;
+  t: Translate;
 }>) {
-  return (
-    <div className={styles.actions}>
-      <div ref={wheelActionsRef} className={styles.wheelActions}>
-        {addMoviePrimary ? addMovieButton : null}
-        {wheelActions}
-        {addMoviePrimary ? null : addMovieButton}
-      </div>
-      {utilityActions}
-    </div>
-  );
-}
-
-function HeaderRecap({
-  dateFormatted,
-  condensed,
-  stacked,
-  hiddenCount,
-  participantsLabel,
-  participantsOpen,
-  onToggleParticipants,
-  moviesLabel,
-  moviesCount,
-  votersLabel,
-  viewMode,
-  onViewModeChange,
-}: Readonly<{
-  dateFormatted: string;
-  condensed: boolean;
-  stacked: NonNullable<EventDetailHeaderProps['participants']>;
-  hiddenCount: number;
-  participantsLabel: string;
-  participantsOpen: boolean;
-  onToggleParticipants: () => void;
-  moviesLabel: string;
-  moviesCount: number;
-  votersLabel: string;
-  viewMode: EventDetailHeaderProps['viewMode'];
-  onViewModeChange: EventDetailHeaderProps['onViewModeChange'];
-}>) {
-  return (
-    <div className={styles.recap}>
-      <span className={styles.date}>{dateFormatted}</span>
-      {condensed ? null : (
-        <>
-          <span className={styles.sep} aria-hidden />
-          <ParticipantsStack
-            participants={stacked}
-            hiddenCount={hiddenCount}
-            label={participantsLabel}
-            open={participantsOpen}
-            onToggle={onToggleParticipants}
-            testId="participants-toggle"
-          />
-        </>
-      )}
-      <span className={styles.stats}>
-        <span className={styles.sep} aria-hidden />
-        <span>{moviesLabel}</span>
-        {moviesCount > 0 ? (
-          <>
-            <span className={styles.sep} aria-hidden />
-            <span>{votersLabel}</span>
-          </>
-        ) : null}
-      </span>
-      {onViewModeChange && viewMode ? (
-        <ViewModeToggle
-          value={viewMode}
-          onChange={onViewModeChange}
-          className={styles.viewToggle}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-type AddMovieButtonProps = {
-  onAddMovie: () => void;
-  primary: boolean;
-  label: string;
-  triggerRef?: RefObject<HTMLButtonElement | null>;
-};
-
-function AddMovieButton({ onAddMovie, primary, label, triggerRef }: Readonly<AddMovieButtonProps>) {
-  const button = (
-    <Button
-      ref={triggerRef}
-      type="button"
-      variant={primary ? 'primary' : 'secondary'}
-      className={clsx(styles.addMovieBtn, primary && styles.addMovieBtnPrimary)}
-      onClick={onAddMovie}
-      aria-label={primary ? undefined : label}
-    >
-      <Plus size={ICON_SIZE.md} aria-hidden />
-      {primary ? <span className={styles.addMovieLabel}>{label}</span> : null}
-    </Button>
-  );
-  if (primary) return button;
-  return (
-    <Tooltip label={label} placement="top">
-      {button}
-    </Tooltip>
-  );
+  if (lifecycle === 'upcoming') {
+    if (!countdownLabel) return null;
+    return (
+      <EventLifecyclePill
+        variant="text"
+        lifecycle="upcoming"
+        label={short ? countdownLabel : t('events.lifecycle.startsIn')}
+        detail={short ? null : countdownLabel}
+      />
+    );
+  }
+  return <EventLifecyclePill variant="text" lifecycle={lifecycle} />;
 }
 
 export default function EventDetailHeader({
@@ -375,27 +248,26 @@ export default function EventDetailHeader({
   participants,
   participantCount,
   moviesCount,
-  votersCount,
-  participantsOpen,
-  onToggleParticipants,
+  onOpenParticipants,
   onOpenShare,
   onOpenSettings,
-  wheelActions,
-  onAddMovie,
-  addMoviePrimary = true,
-  addMovieTriggerRef,
+  actions,
   viewMode,
   onViewModeChange,
 }: Readonly<EventDetailHeaderProps>) {
   const { t } = useTranslation();
   const goBack = useEventBack();
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const topSentinelRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLElement>(null);
-  const wheelActionsRef = useRef<HTMLDivElement>(null);
-  useWheelActionsHeight(wheelActionsRef, wheelActions);
+  const actionsRef = useRef<HTMLDivElement>(null);
   const stickyBar = useStickyBarMedia();
-  useStickyBarHeight(stickyBar, barRef);
-  const condensed = useCondensedStickyBar(stickyBar, sentinelRef, barRef);
+  usePublishedHeight(true, actionsRef, publishWheelBarHeight, actions);
+  usePublishedHeight(stickyBar, barRef, publishStickyBarHeight, stickyBar);
+  const condensed = useSentinelPassedUnderBar(stickyBar, sentinelRef, barRef, { belowBar: true });
+  const scrolled = useSentinelPassedUnderBar(stickyBar, topSentinelRef, barRef, {
+    belowBar: false,
+  });
 
   const stacked = (participants ?? []).slice(0, MAX_STACKED_AVATARS);
   const hiddenCount = Math.max(participantCount - stacked.length, 0);
@@ -406,108 +278,105 @@ export default function EventDetailHeader({
     'events.detail.moviesCount',
     t
   );
-  const votersLabel = pluralizeCount(
-    votersCount,
-    'events.detail.votersCountOne',
-    'events.detail.votersCount',
-    t,
-    { total: participantCount }
-  );
-  const isUpcoming = lifecycle === 'upcoming';
-  const showLifecyclePill = lifecycle !== 'pending' && (!isUpcoming || !!countdownLabel);
-
-  const addMovieButton = onAddMovie ? (
-    <AddMovieButton
-      onAddMovie={onAddMovie}
-      primary={addMoviePrimary}
-      label={t('movies.search.label')}
-      triggerRef={addMovieTriggerRef}
-    />
-  ) : null;
-
-  const utilityActions = (
-    <UtilityActions
-      condensed={condensed}
-      isFinished={isFinished}
-      shareUrl={shareUrl}
-      title={title}
-      rawDate={rawDate}
-      rawTime={rawTime}
-      onOpenShare={onOpenShare}
-      onOpenSettings={onOpenSettings}
-      t={t}
-    />
-  );
+  const theme = eventTheme?.trim();
+  const showStatus = lifecycle === 'upcoming' ? !!countdownLabel : lifecycle !== 'pending';
 
   return (
     <>
-      <div className={styles.top}>
-        <BackLink onClick={goBack} className={styles.backLink}>
-          {t('events.detail.backNav')}
-        </BackLink>
-        {stickyBar ? null : utilityActions}
-      </div>
-
-      <div ref={sentinelRef} className={styles.sentinel} aria-hidden />
-
+      <span
+        className={styles.accentGlow}
+        data-hidden={(stickyBar && scrolled) || undefined}
+        aria-hidden="true"
+      />
+      <div ref={topSentinelRef} className={styles.sentinel} aria-hidden />
       <header
         ref={barRef}
         className={styles.bar}
         data-condensed={condensed || undefined}
+        data-at-top={(stickyBar && !scrolled) || undefined}
         data-event-sticky-bar={stickyBar || undefined}
       >
         {condensed ? (
-          <IconButton size="sm" ariaLabel={t('events.detail.backNav')} onClick={goBack}>
-            <ArrowLeft size={ICON_SIZE.lg} aria-hidden />
-          </IconButton>
-        ) : null}
-        <div className={styles.heading}>
-          <h1 className={styles.title}>{title}</h1>
-          <EventThemeBanner className={styles.theme} theme={eventTheme} />
-        </div>
-        {showLifecyclePill ? (
-          <EventLifecyclePill
-            className={styles.lifecycle}
-            lifecycle={lifecycle}
-            label={isUpcoming ? t('events.lifecycle.startsIn') : undefined}
-            detail={isUpcoming ? countdownLabel : null}
-          />
-        ) : null}
-        {condensed ? (
-          <ParticipantsStack
-            participants={stacked}
-            hiddenCount={hiddenCount}
-            ariaLabel={participantsLabel}
-            open={participantsOpen}
-            onToggle={onToggleParticipants}
-            testId="participants-toggle-condensed"
-            bare
-          />
-        ) : null}
-
-        <HeaderActions
-          wheelActionsRef={wheelActionsRef}
-          addMoviePrimary={addMoviePrimary}
-          addMovieButton={addMovieButton}
-          wheelActions={wheelActions}
-          utilityActions={stickyBar ? utilityActions : null}
+          <>
+            <IconButton size="lg" ariaLabel={t('events.detail.backNav')} onClick={goBack}>
+              <ArrowLeft size={ICON_SIZE.lg} aria-hidden />
+            </IconButton>
+            <span className={styles.condensedTitle}>{title}</span>
+            <ParticipantsButton
+              participants={stacked}
+              hiddenCount={hiddenCount}
+              ariaLabel={participantsLabel}
+              onOpen={onOpenParticipants}
+              testId="participants-toggle-condensed"
+              compact
+            />
+            {showStatus ? (
+              <LifecycleStatus lifecycle={lifecycle} countdownLabel={countdownLabel} short t={t} />
+            ) : null}
+          </>
+        ) : (
+          <BackLink onClick={goBack} className={styles.backLink}>
+            {t('events.detail.backNav')}
+          </BackLink>
+        )}
+        <span className={styles.grow} aria-hidden />
+        <UtilityActions
+          condensed={condensed}
+          isFinished={isFinished}
+          shareUrl={shareUrl}
+          title={title}
+          rawDate={rawDate}
+          rawTime={rawTime}
+          onOpenShare={onOpenShare}
+          onOpenSettings={onOpenSettings}
+          t={t}
         />
+        {actions ? (
+          <div ref={actionsRef} className={styles.actions}>
+            {actions}
+          </div>
+        ) : null}
       </header>
 
-      <HeaderRecap
-        dateFormatted={dateFormatted}
-        condensed={condensed}
-        stacked={stacked}
-        hiddenCount={hiddenCount}
-        participantsLabel={participantsLabel}
-        participantsOpen={participantsOpen}
-        onToggleParticipants={onToggleParticipants}
-        moviesLabel={moviesLabel}
-        moviesCount={moviesCount}
-        votersLabel={votersLabel}
-        viewMode={viewMode}
-        onViewModeChange={onViewModeChange}
-      />
+      <div className={styles.heading}>
+        {theme ? (
+          <p className={styles.theme}>
+            <span className="visually-hidden">{t('events.detail.themeAria', { theme })}</span>
+            <span aria-hidden="true">{theme}</span>
+          </p>
+        ) : null}
+        <h1 className={styles.title}>{title}</h1>
+      </div>
+
+      <div className={styles.recap}>
+        <span className={styles.date}>{dateFormatted}</span>
+        <span className={styles.sep} aria-hidden />
+        <ParticipantsButton
+          participants={stacked}
+          hiddenCount={hiddenCount}
+          label={participantsLabel}
+          onOpen={onOpenParticipants}
+          testId="participants-toggle"
+        />
+        <span className={styles.stats}>
+          <span className={styles.sep} aria-hidden />
+          <span>{moviesLabel}</span>
+          {showStatus ? (
+            <>
+              <span className={styles.sep} aria-hidden />
+              <LifecycleStatus lifecycle={lifecycle} countdownLabel={countdownLabel} t={t} />
+            </>
+          ) : null}
+        </span>
+        {onViewModeChange && viewMode ? (
+          <ViewModeToggle
+            value={viewMode}
+            onChange={onViewModeChange}
+            className={styles.viewToggle}
+          />
+        ) : null}
+      </div>
+      <div ref={sentinelRef} className={styles.sentinel} aria-hidden />
     </>
   );
 }

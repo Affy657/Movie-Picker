@@ -4,6 +4,10 @@ import userEvent from '@testing-library/user-event';
 import EventWheelActions from '@/features/events/components/EventWheelActions';
 import type { EventWheelState } from '@/features/events/hooks/useEventWheel';
 import { LocaleProvider } from '@/shared/i18n';
+import {
+  eventHeaderActions,
+  type EventHeaderActionsInput,
+} from '@/features/events/lib/eventHeaderActions';
 
 function wheelState(overrides: Partial<EventWheelState> = {}): EventWheelState {
   return {
@@ -46,42 +50,108 @@ function wheelState(overrides: Partial<EventWheelState> = {}): EventWheelState {
   };
 }
 
-function renderActions(wheel: EventWheelState, onRequestReset = vi.fn()) {
+function planFor(wheel: EventWheelState, overrides: Partial<EventHeaderActionsInput> = {}) {
+  return eventHeaderActions({
+    isHost: wheel.isHost,
+    isFinished: false,
+    lifecycle: 'upcoming',
+    canAddMovie: true,
+    canSpin: wheel.canSpin,
+    noMovie: wheel.noMovie,
+    hasWinner: wheel.winnerIds.length > 0,
+    remainingDraws: wheel.remainingDraws,
+    canRemoveWinner: wheel.showRemoveWinner,
+    canReset: wheel.showReset,
+    canCloseWithoutMovie: false,
+    canRate: false,
+    ...overrides,
+  });
+}
+
+type Handlers = {
+  onAddMovie: () => void;
+  onRequestReset: () => void;
+  onRequestCloseWithoutMovie: () => void;
+  onRate: () => void;
+};
+
+function renderActions(
+  wheel: EventWheelState,
+  overrides: Partial<EventHeaderActionsInput> = {}
+): Handlers {
+  const handlers: Handlers = {
+    onAddMovie: vi.fn(),
+    onRequestReset: vi.fn(),
+    onRequestCloseWithoutMovie: vi.fn(),
+    onRate: vi.fn(),
+  };
   render(
     <LocaleProvider>
-      <EventWheelActions wheel={wheel} onRequestReset={onRequestReset} />
+      <EventWheelActions wheel={wheel} plan={planFor(wheel, overrides)} {...handlers} />
     </LocaleProvider>
   );
-  return onRequestReset;
+  return handlers;
+}
+
+function buttonNames(): string[] {
+  return screen
+    .getAllByRole('button')
+    .map((button) => button.getAttribute('aria-label') ?? button.textContent ?? '');
 }
 
 describe('EventWheelActions', () => {
-  it('no longer offers to close the movie night', () => {
+  it('offers to propose first, then the wheel, before any draw', () => {
     renderActions(wheelState());
 
-    expect(screen.queryByRole('button', { name: /clôturer/i })).not.toBeInTheDocument();
+    expect(buttonNames()).toEqual([
+      'Lancer la roue',
+      'Autre façon de choisir le film',
+      'Proposer un film',
+    ]);
   });
 
-  it('talks about spinning the wheel as long as no movie is drawn', () => {
-    renderActions(wheelState());
+  it('opens the manual pick from the arrow of the wheel button', async () => {
+    const enterManualMode = vi.fn();
+    renderActions(wheelState({ enterManualMode }));
 
-    expect(screen.getByRole('button', { name: /lancer la roue/i })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Autre façon de choisir le film' }));
+    const menu = screen.getByRole('menu', { name: 'Autre façon de choisir le film' });
+    expect(menu).toHaveTextContent('Lancer la roue');
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Choisir moi-même' }));
+
+    expect(enterManualMode).toHaveBeenCalledOnce();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  it('talks about drawing one more movie as soon as a movie is among the winners', () => {
-    renderActions(wheelState({ winnerIds: ['m1'], remainingDraws: 2, winnerCount: 3 }));
+  it('spins the wheel from the main part of the button', async () => {
+    const launch = vi.fn();
+    renderActions(wheelState({ launch }));
 
-    expect(screen.getByRole('button', { name: /tirer un film de plus/i })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Lancer la roue' }));
+
+    expect(launch).toHaveBeenCalledOnce();
   });
 
-  it('annonce les tirages restants dans le nom du bouton et sur le badge', () => {
-    renderActions(wheelState({ winnerIds: ['m1'], remainingDraws: 2, winnerCount: 3 }));
+  it('makes the next draw the last and main button once a winner is drawn', () => {
+    renderActions(
+      wheelState({
+        winnerIds: ['m1'],
+        remainingDraws: 2,
+        winnerCount: 3,
+        showRemoveWinner: true,
+        showReset: true,
+      })
+    );
 
-    const button = screen.getByRole('button', {
-      name: 'Tirer un film de plus, 2 tirages restants',
-    });
-    expect(button).toHaveTextContent('2');
-    expect(button).toHaveTextContent(/restants/);
+    expect(buttonNames()).toEqual([
+      'Gérer le tirage',
+      'Proposer un film',
+      'Tirer un film de plus, 2 tirages restants',
+      'Autre façon de choisir le film',
+    ]);
+    expect(
+      screen.getByRole('button', { name: 'Tirer un film de plus, 2 tirages restants' })
+    ).toHaveTextContent(/2\s*restants/);
   });
 
   it('puts no badge on a single-winner movie night', () => {
@@ -94,17 +164,15 @@ describe('EventWheelActions', () => {
     renderActions(
       wheelState({
         noMovie: true,
-        primaryAction: 'add',
         spinDisabled: true,
         spinDisabledHint: 'Proposez au moins un film pour lancer la roue.',
       })
     );
 
-    expect(screen.queryByRole('button', { name: /lancer la roue/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /choisir moi-même/i })).not.toBeInTheDocument();
+    expect(buttonNames()).toEqual(['Proposer un film']);
   });
 
-  it('shows the designated winners as a status pill, not as a button', () => {
+  it('says the movie is chosen once every draw is done, without a main button', () => {
     renderActions(
       wheelState({
         winnerIds: ['m1'],
@@ -117,9 +185,23 @@ describe('EventWheelActions', () => {
       })
     );
 
-    const status = screen.getByRole('status');
-    expect(status).toHaveTextContent('Film gagnant désigné');
-    expect(status.querySelector('button')).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent('Film choisi');
+    expect(buttonNames()).toEqual(['Gérer le tirage', 'Proposer un film']);
+  });
+
+  it('counts the chosen movies of a multi-winner night', () => {
+    renderActions(
+      wheelState({
+        winnerIds: ['m1', 'm2', 'm3'],
+        remainingDraws: 0,
+        winnerCount: 3,
+        spinDisabled: true,
+        showRemoveWinner: true,
+        showReset: true,
+      })
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent('3 films choisis');
   });
 
   it('disables the draw and carries the reason in a tooltip', () => {
@@ -135,64 +217,67 @@ describe('EventWheelActions', () => {
     expect(button).toHaveAttribute('title', 'Tous les films proposés ont déjà été tirés.');
   });
 
-  it('replaces the draw button with the full winners list when everything is drawn', () => {
+  it('arms the removal mode from the draw menu', async () => {
+    const enterRemovalMode = vi.fn();
     renderActions(
-      wheelState({
-        winnerIds: ['m1', 'm2', 'm3'],
-        remainingDraws: 0,
-        winnerCount: 3,
-        spinDisabled: true,
-        spinDisabledHint: 'Les 3 films gagnants de la soirée sont déjà désignés.',
-        showRemoveWinner: true,
-        showReset: true,
-      })
+      wheelState({ winnerIds: ['m1'], showRemoveWinner: true, showReset: true, enterRemovalMode })
     );
 
-    expect(
-      screen.queryByRole('button', { name: /tirer un film de plus/i })
-    ).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /choisir moi-même/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('3 films gagnants désignés');
-    expect(screen.getByRole('button', { name: /autres actions sur le tirage/i })).toBeEnabled();
-  });
-
-  it('hides the winners menu as long as there is no winner', () => {
-    renderActions(wheelState());
-
-    expect(
-      screen.queryByRole('button', { name: /autres actions sur le tirage/i })
-    ).not.toBeInTheDocument();
-  });
-
-  it('arme le mode retrait depuis le menu', async () => {
-    const enterRemovalMode = vi.fn();
-    renderActions(wheelState({ winnerIds: ['m1'], showRemoveWinner: true, enterRemovalMode }));
-
-    await userEvent.click(screen.getByRole('button', { name: /autres actions sur le tirage/i }));
-    await userEvent.click(screen.getByRole('menuitem', { name: /retirer un gagnant/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Gérer le tirage' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Retirer un gagnant' }));
 
     expect(enterRemovalMode).toHaveBeenCalledOnce();
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  it('asks for confirmation before starting over, from the menu', async () => {
-    const onRequestReset = vi.fn();
-    renderActions(wheelState({ winnerIds: ['m1'], showReset: true }), onRequestReset);
+  it('asks for confirmation before starting over, from the draw menu', async () => {
+    const wheel = wheelState({ winnerIds: ['m1'], showRemoveWinner: true, showReset: true });
+    const { onRequestReset } = renderActions(wheel);
 
-    await userEvent.click(screen.getByRole('button', { name: /autres actions sur le tirage/i }));
-    await userEvent.click(screen.getByRole('menuitem', { name: /repartir de zéro/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Gérer le tirage' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Repartir de zéro' }));
 
     expect(onRequestReset).toHaveBeenCalledOnce();
   });
 
-  it('remplace la barre par la consigne de retrait en mode retrait', () => {
+  it('closes a pending night without a movie from the draw menu', async () => {
+    const { onRequestCloseWithoutMovie } = renderActions(wheelState(), {
+      lifecycle: 'pending',
+      canCloseWithoutMovie: true,
+    });
+
+    expect(buttonNames()).toEqual([
+      'Gérer le tirage',
+      'Proposer un film',
+      'Lancer la roue',
+      'Autre façon de choisir le film',
+    ]);
+    await userEvent.click(screen.getByRole('button', { name: 'Gérer le tirage' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Clôturer sans film' }));
+
+    expect(onRequestCloseWithoutMovie).toHaveBeenCalledOnce();
+  });
+
+  it('makes rating the main action once the movie can be rated', async () => {
+    const { onRate } = renderActions(
+      wheelState({ winnerIds: ['m1'], remainingDraws: 0, showRemoveWinner: true, showReset: true }),
+      { lifecycle: 'live', canRate: true }
+    );
+
+    expect(buttonNames()).toEqual(['Gérer le tirage', 'Proposer un film', 'Noter ce film']);
+    await userEvent.click(screen.getByRole('button', { name: 'Noter ce film' }));
+
+    expect(onRate).toHaveBeenCalledOnce();
+  });
+
+  it('replaces the bar with the removal hint in removal mode', () => {
     renderActions(wheelState({ removalMode: true, canSpin: false, winnerIds: ['m1'] }));
 
     expect(screen.getByText(/choisissez le film gagnant à retirer/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /lancer la roue/i })).not.toBeInTheDocument();
   });
 
-  it('sort du mode retrait par le bouton Annuler', async () => {
+  it('leaves the removal mode with Cancel', async () => {
     const cancelRemovalMode = vi.fn();
     renderActions(
       wheelState({ removalMode: true, canSpin: false, winnerIds: ['m1'], cancelRemovalMode })
@@ -203,18 +288,21 @@ describe('EventWheelActions', () => {
     expect(cancelRemovalMode).toHaveBeenCalledOnce();
   });
 
-  it('affiche la consigne de choix manuel en mode manuel', () => {
+  it('shows the manual pick hint in manual mode', () => {
     renderActions(wheelState({ manualMode: true, canSpin: false }));
 
     expect(screen.getByText(/choisissez le film à désigner gagnant/i)).toBeInTheDocument();
   });
 
-  it('ne rend rien pour un participant qui ne peut rien faire', () => {
+  it('renders nothing for a guest who cannot do anything', () => {
+    const wheel = wheelState({ isHost: false, canSpin: false, primaryAction: null });
     const { container } = render(
       <LocaleProvider>
         <EventWheelActions
-          wheel={wheelState({ isHost: false, canSpin: false, primaryAction: null })}
+          wheel={wheel}
+          plan={planFor(wheel, { canAddMovie: false })}
           onRequestReset={vi.fn()}
+          onRequestCloseWithoutMovie={vi.fn()}
         />
       </LocaleProvider>
     );

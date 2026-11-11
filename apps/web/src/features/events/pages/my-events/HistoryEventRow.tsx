@@ -1,18 +1,18 @@
 import { Link } from 'react-router';
 import { Crown, Film, Star } from 'lucide-react';
 import { posterImageSrc } from '@/shared/utils/posterUrl';
-import { formatShortDate } from '@/shared/utils/formatMyEventsListDate';
+import { formatEventDateLong } from '@/shared/utils/formatMyEventsListDate';
 import { formatRating } from '@/shared/utils/formatRating';
 import EventCardMenu from '@/features/events/components/EventCardMenu';
+import EventDateBlock from '@/features/events/components/EventDateBlock';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import { ROUTES } from '@/app/routes';
 import type { MyEventSummary, MyEventWinnerMovie } from '@/features/events/types';
-import { winnerPosterPaths, winnerTitles } from '@/features/events/utils/eventWinners';
 import styles from './HistoryEventRow.module.css';
 import Card from '@/shared/components/Card';
-import Chip from '@/shared/components/Chip';
+import PosterBackdrop from '@/shared/components/PosterBackdrop';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 
 interface HistoryEventRowProps {
@@ -21,13 +21,23 @@ interface HistoryEventRowProps {
   onReuse?: () => void;
 }
 
+function winnerKicker(winners: readonly MyEventWinnerMovie[], t: Translate): string {
+  if (winners.length === 0) return t('events.myEvents.historyFinishedWithoutMovie');
+  return pluralizeCount(
+    winners.length,
+    'events.myEvents.cardWinnerOne',
+    'events.myEvents.cardWinnerMany',
+    t
+  );
+}
+
 function winnerHeadline(winners: readonly MyEventWinnerMovie[], t: Translate): string {
   const title = winners[0]?.title ?? '';
   if (winners.length <= 1) return title;
   return pluralizeCount(
     winners.length - 1,
-    'events.myEvents.historyWinnerAndOthersOne',
-    'events.myEvents.historyWinnerAndOthersMany',
+    'events.myEvents.cardWinnerAndOthersOne',
+    'events.myEvents.cardWinnerAndOthersMany',
     t,
     { title }
   );
@@ -42,7 +52,7 @@ function HistoryRatingLine({ event }: Readonly<{ event: MyEventSummary }>) {
   const mine = event.myRating ?? null;
   const hasWinnerToRate = event.hasWinnerToRate === true;
 
-  if (average === null && !hasWinnerToRate) return null;
+  if (average === null && !hasWinnerToRate && !event.isCreator) return null;
 
   const averageText =
     average === null ? null : formatRating(average, scale, locale, { decimals: 1 });
@@ -54,20 +64,53 @@ function HistoryRatingLine({ event }: Readonly<{ event: MyEventSummary }>) {
           className={styles.average}
           title={t('events.ratings.average', { value: averageText })}
         >
-          <Star aria-hidden size={ICON_SIZE.md} className={styles.star} />
+          <Star aria-hidden size={ICON_SIZE.sm} className={styles.star} />
           <span className={styles.averageValue}>{averageText}</span>
         </span>
       )}
-      {hasWinnerToRate ? (
-        <Chip tone="primary" size="sm" className={styles.toRate}>
-          {t('events.ratings.toRate')}
-        </Chip>
-      ) : null}
+      {hasWinnerToRate ? <span className={styles.toRate}>{t('events.ratings.toRate')}</span> : null}
       {!hasWinnerToRate && mine !== null ? (
-        <span className={styles.myRating}>
+        <span>
           {t('events.myEvents.historyMyRating', { value: formatRating(mine, scale, locale) })}
         </span>
       ) : null}
+      {event.isCreator ? (
+        <span className={styles.host} title={t('events.myEvents.hostBadgeTitle')}>
+          <Crown aria-hidden size={ICON_SIZE.sm} className={styles.hostIcon} />
+          {t('events.myEvents.hostBadge')}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+function WinnerPosters({ winners }: Readonly<{ winners: readonly MyEventWinnerMovie[] }>) {
+  if (winners.length === 0) {
+    return (
+      <span className={styles.posters} aria-hidden="true">
+        <span className={`${styles.poster} ${styles.noMovie}`}>
+          <Film size={ICON_SIZE.lg} />
+        </span>
+      </span>
+    );
+  }
+  return (
+    <span className={styles.posters} aria-hidden="true">
+      {winners.slice(0, 2).map((movie, index) => {
+        const src = posterImageSrc(movie.posterPath);
+        return (
+          <span
+            key={`${index}-${movie.title}`}
+            className={`${styles.poster} ${index === 0 ? styles.front : styles.back}`}
+          >
+            {src ? (
+              <img src={src} alt="" className={styles.image} loading="lazy" decoding="async" />
+            ) : (
+              <Film size={ICON_SIZE.lg} />
+            )}
+          </span>
+        );
+      })}
     </span>
   );
 }
@@ -80,73 +123,43 @@ export default function HistoryEventRow({
   const { t } = useTranslation();
   const { locale } = useLocale();
   const winners = event.winnerMovies ?? [];
-  const firstPoster = winnerPosterPaths(winners)[0] ?? null;
-  const hasWinner = winners.length > 0;
+  const hasMenu = !!onDelete || !!onReuse;
 
   return (
-    <Card as="article" padding="none" elevation="sm" className={styles.row}>
-      <Link
+    <article className={styles.wrap}>
+      <Card
+        as={Link}
         to={ROUTES.eventDetail(event.slug)}
-        className={styles.thumbLink}
-        tabIndex={-1}
-        aria-hidden="true"
+        interactive
+        elevation="sm"
+        padding="none"
+        className={styles.card}
+        data-with-menu={hasMenu || undefined}
       >
-        {firstPoster ? (
-          <span className={styles.posterSlot}>
-            <img
-              src={posterImageSrc(firstPoster)}
-              alt=""
-              aria-hidden
-              className={styles.poster}
-              width={64}
-              height={96}
-            />
-            {winners.length > 1 ? (
-              <span className={styles.posterCount} aria-hidden>
-                {winners.length}
-              </span>
+        <PosterBackdrop posterPath={winners[0]?.posterPath} glow />
+        <EventDateBlock date={event.date} />
+        <span className={styles.divider} aria-hidden="true" />
+        <span className={styles.main}>
+          <h3 className={styles.title}>{event.title}</h3>
+          <span className="visually-hidden">
+            {formatEventDateLong(event.date, event.time, locale, t('events.detail.dateTimeJoiner'))}
+          </span>
+          <span className={styles.winner}>
+            {winnerKicker(winners, t)}
+            {winners.length > 0 ? (
+              <span className={styles.winnerTitle}>{winnerHeadline(winners, t)}</span>
             ) : null}
           </span>
-        ) : (
-          <span className={styles.posterFallback} aria-hidden>
-            <Film size={ICON_SIZE.lg} />
-          </span>
-        )}
-      </Link>
-
-      <Link to={ROUTES.eventDetail(event.slug)} className={styles.body}>
-        <div className={styles.headline}>
-          <h3
-            className={styles.title}
-            aria-label={
-              winners.length > 1
-                ? t('events.myEvents.winnerMoviesLabel', { titles: winnerTitles(winners, locale) })
-                : undefined
-            }
-          >
-            {hasWinner ? winnerHeadline(winners, t) : event.title}
-          </h3>
-          <span className={styles.date}>{formatShortDate(event.date, locale)}</span>
-        </div>
-        <span className={styles.night}>
-          <span className={styles.nightTitle}>
-            {hasWinner ? event.title : t('events.myEvents.historyFinishedWithoutMovie')}
-          </span>
-          {event.isCreator ? (
-            <span className={styles.hostIcon} title={t('events.myEvents.hostBadgeTitle')}>
-              <Crown aria-hidden size={ICON_SIZE.sm} />
-            </span>
-          ) : null}
+          <HistoryRatingLine event={event} />
         </span>
-        <HistoryRatingLine event={event} />
-      </Link>
-
+        <WinnerPosters winners={winners} />
+      </Card>
       <EventCardMenu
         className={styles.menu}
         title={event.title}
         onDelete={onDelete}
         onReuse={onReuse}
       />
-    </Card>
+    </article>
   );
 }

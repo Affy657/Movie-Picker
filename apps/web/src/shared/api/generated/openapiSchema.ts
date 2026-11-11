@@ -7718,6 +7718,14 @@ export interface components {
             runtimeMinutes?: number | null;
             releaseDate?: string | null;
         };
+        MyEventMoviePreviewDto: {
+            title?: string | null;
+            posterPath?: string | null;
+        };
+        MyEventParticipantPreviewDto: {
+            pseudo?: string | null;
+            avatarId?: string | null;
+        };
         MyEventSummaryDto: {
             id?: string | null;
             slug?: string | null;
@@ -7746,6 +7754,9 @@ export interface components {
             hasWinnerToRate?: boolean;
             /** Format: date-time */
             autoCloseAt?: string | null;
+            topMovies?: components["schemas"]["MyEventMoviePreviewDto"][] | null;
+            participantsPreview?: components["schemas"]["MyEventParticipantPreviewDto"][] | null;
+            hasVoted?: boolean;
         };
         MyEventWinnerMovieDto: {
             title?: string | null;

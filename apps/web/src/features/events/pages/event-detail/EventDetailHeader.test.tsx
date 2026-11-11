@@ -56,9 +56,7 @@ const baseProps: EventDetailHeaderProps = {
   lifecycle: 'upcoming',
   participantCount: 3,
   moviesCount: 2,
-  votersCount: 2,
-  participantsOpen: false,
-  onToggleParticipants: () => {},
+  onOpenParticipants: () => {},
 };
 
 describe('EventDetailHeader', () => {
@@ -91,20 +89,18 @@ describe('EventDetailHeader', () => {
     expect(document.documentElement.style.getPropertyValue('--event-sticky-bar-height')).toBe('');
   });
 
-  it('shows the movie night summary and the start countdown', () => {
-    renderHeader(<EventDetailHeader {...baseProps} countdownLabel="22 h" />);
+  it('shows the movie night summary and the start countdown at the end of the line', () => {
+    renderHeader(<EventDetailHeader {...baseProps} countdownLabel="2 j 06 h" />);
     expect(screen.getByRole('heading', { name: 'Soirée ciné' })).toBeInTheDocument();
-    expect(screen.getByText('Commence dans')).toBeInTheDocument();
-    expect(screen.getByText('22 h')).toBeInTheDocument();
-    expect(screen.getByText('lundi 15 juin à 19h00')).toBeInTheDocument();
-    expect(screen.getByText('2 films')).toBeInTheDocument();
-    expect(screen.getByText('2 votants sur 3')).toBeInTheDocument();
-  });
-
-  it('hides the badge as long as the movie night is not within 24 h', () => {
-    renderHeader(<EventDetailHeader {...baseProps} />);
-    expect(screen.queryByText('Commence dans')).not.toBeInTheDocument();
-    expect(screen.queryByText('À venir')).not.toBeInTheDocument();
+    const date = screen.getByText('lundi 15 juin à 19h00');
+    const movies = screen.getByText('2 films');
+    const countdown = screen.getByText('Commence dans');
+    expect(countdown).toHaveTextContent('Commence dans 2 j 06 h');
+    expect(date.compareDocumentPosition(movies) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      movies.compareDocumentPosition(countdown) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(screen.queryByText(/votants/)).not.toBeInTheDocument();
   });
 
   it('shows no countdown when the movie night is in progress', () => {
@@ -113,25 +109,34 @@ describe('EventDetailHeader', () => {
     expect(screen.queryByText('22 h')).not.toBeInTheDocument();
   });
 
-  it('moves share, calendar and settings next to Back on mobile, keeps them with the actions on desktop', () => {
-    stubDesktopViewport(false);
-    const { unmount } = renderHeader(
-      <EventDetailHeader {...baseProps} onOpenShare={() => {}} onOpenSettings={() => {}} />
-    );
-    const back = screen.getByRole('button', { name: 'Retour' });
-    const share = screen.getByRole('button', { name: /^partager$/i });
-    const settings = screen.getByRole('button', { name: /paramètres de la soirée/i });
-    expect(back.parentElement).toContainElement(share);
-    expect(back.parentElement).toContainElement(settings);
-    unmount();
+  it('leaves the pending state to the banner', () => {
+    renderHeader(<EventDetailHeader {...baseProps} lifecycle="pending" />);
+    expect(screen.queryByText('En suspens')).not.toBeInTheDocument();
+  });
 
+  it('puts Back, share, calendar, settings and the actions above the title', () => {
     stubDesktopViewport(true);
     renderHeader(
-      <EventDetailHeader {...baseProps} onOpenShare={() => {}} onOpenSettings={() => {}} />
+      <EventDetailHeader
+        {...baseProps}
+        onOpenShare={() => {}}
+        onOpenSettings={() => {}}
+        actions={<button type="button">Proposer un film</button>}
+      />
     );
-    expect(screen.getByRole('button', { name: 'Retour' }).parentElement).not.toContainElement(
-      screen.getByRole('button', { name: /^partager$/i })
-    );
+    const bar = screen.getByRole('banner');
+    const heading = screen.getByRole('heading', { name: 'Soirée ciné' });
+    for (const name of [
+      'Retour',
+      /^partager$/i,
+      /ajouter au calendrier/i,
+      /paramètres de la soirée/i,
+      'Proposer un film',
+    ]) {
+      expect(bar).toContainElement(screen.getByRole('button', { name }));
+    }
+    expect(bar.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(bar).not.toContainElement(heading);
   });
 
   it('shows the Share button and the calendar separately', async () => {
@@ -140,7 +145,6 @@ describe('EventDetailHeader', () => {
     renderHeader(<EventDetailHeader {...baseProps} onOpenShare={onOpenShare} />);
 
     const shareButton = screen.getByRole('button', { name: /^partager$/i });
-    expect(shareButton).toBeInTheDocument();
     await user.click(shareButton);
     expect(onOpenShare).toHaveBeenCalledTimes(1);
 
@@ -160,24 +164,35 @@ describe('EventDetailHeader', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('bascule la liste des participants depuis la pile d’avatars', async () => {
+  it('opens the participants dialog from the avatars', async () => {
     const user = userEvent.setup();
-    const onToggleParticipants = vi.fn();
-    renderHeader(<EventDetailHeader {...baseProps} onToggleParticipants={onToggleParticipants} />);
+    const onOpenParticipants = vi.fn();
+    renderHeader(<EventDetailHeader {...baseProps} onOpenParticipants={onOpenParticipants} />);
 
     const toggle = screen.getByTestId('participants-toggle');
     expect(toggle).toHaveTextContent('3 participants');
+    expect(toggle).toHaveAttribute('aria-haspopup', 'dialog');
     expect(screen.queryByTestId('participants-toggle-condensed')).not.toBeInTheDocument();
-    expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await user.click(toggle);
-    expect(onToggleParticipants).toHaveBeenCalledTimes(1);
+    expect(onOpenParticipants).toHaveBeenCalledTimes(1);
   });
 
-  it('shows the theme under the movie night title', () => {
+  it('shows the theme as an overline above the movie night title', () => {
     renderHeader(<EventDetailHeader {...baseProps} eventTheme="Comédie noire" />);
     const heading = screen.getByRole('heading', { name: 'Soirée ciné' });
-    const theme = screen.getByRole('status', { name: /Thème de soirée : Comédie noire/i });
-    expect(heading.compareDocumentPosition(theme) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const theme = screen.getByText('Comédie noire');
+    expect(theme.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('lets the accent spot show behind the bar until the page scrolls, on desktop', () => {
+    stubDesktopViewport(true);
+    const { unmount } = renderHeader(<EventDetailHeader {...baseProps} />);
+    expect(screen.getByRole('banner')).toHaveAttribute('data-at-top');
+    unmount();
+
+    stubDesktopViewport(false);
+    renderHeader(<EventDetailHeader {...baseProps} />);
+    expect(screen.getByRole('banner')).not.toHaveAttribute('data-at-top');
   });
 
   it('exposes the settings cog only when a handler is provided', () => {

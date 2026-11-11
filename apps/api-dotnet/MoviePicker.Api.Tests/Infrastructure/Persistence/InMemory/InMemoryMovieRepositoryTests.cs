@@ -271,6 +271,18 @@ public sealed class InMemoryMovieRepositoryTests
     }
 
     [Fact]
+    public async Task ListByEventIdsAsync_ReturnsTheMoviesOfEachRequestedEventOnly()
+    {
+        await _repo.InsertAsync(Mk(eventId: "evt1"));
+        await _repo.InsertAsync(Mk(eventId: "evt2"));
+        await _repo.InsertAsync(Mk(eventId: "evt3"));
+
+        var movies = await _repo.ListByEventIdsAsync(["evt1", "evt2", "missing", "evt1"]);
+
+        Assert.Equal(["evt1", "evt2"], movies.Select(m => m.EventId).Order());
+    }
+
+    [Fact]
     public async Task DeleteByEventIdAsync_RemovesAll_AndReturnsCount()
     {
         await _repo.InsertAsync(Mk(eventId: "evt1"));

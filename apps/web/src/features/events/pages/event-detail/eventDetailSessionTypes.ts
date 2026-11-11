@@ -41,9 +41,13 @@ export type SettingsOverlay = {
 };
 
 export type ParticipantsToggle = {
-  open: boolean;
   count: number;
-  onToggle: () => void;
+  onOpen: () => void;
+};
+
+export type HeaderRating = {
+  canRate: boolean;
+  onRate: () => void;
 };
 
 export type AddMovieEntry = {
@@ -61,7 +65,6 @@ export type EventDateLabels = {
 export type EventCounts = {
   participants: number;
   movies: number;
-  voters: number;
 };
 
 export type JoinGate = {
@@ -73,7 +76,7 @@ export type JoinGate = {
 
 export type ParticipantsPanelState = {
   open: boolean;
-  ref: RefObject<HTMLDivElement | null>;
+  onClose: () => void;
   pendingRemovalId: string | null;
   removePending: boolean;
   canShowLeave: boolean;

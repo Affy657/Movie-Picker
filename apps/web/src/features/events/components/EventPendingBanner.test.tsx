@@ -1,34 +1,31 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { LocaleProvider } from '@/shared/i18n';
 import EventPendingBanner from './EventPendingBanner';
 
-function launchButton() {
-  return screen.getByRole('button', { name: 'Lancer la roue' });
-}
-
 describe('EventPendingBanner', () => {
-  it('lets the host launch the wheel', async () => {
-    const onLaunchWheel = vi.fn();
+  it('explains the situation to the host without any button, the actions living in the header', () => {
     render(
       <LocaleProvider>
-        <EventPendingBanner isHost onLaunchWheel={onLaunchWheel} />
+        <EventPendingBanner isHost />
       </LocaleProvider>
     );
 
-    await userEvent.click(launchButton());
-
-    expect(onLaunchWheel).toHaveBeenCalledOnce();
+    expect(screen.getByRole('status', { name: 'En suspens' })).toHaveTextContent(
+      /aucun film n.a été choisi/i
+    );
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('locks the launch button while the draw is on its way', () => {
+  it('tells a guest that the host has not picked the movie yet', () => {
     render(
       <LocaleProvider>
-        <EventPendingBanner isHost launching onLaunchWheel={vi.fn()} />
+        <EventPendingBanner isHost={false} />
       </LocaleProvider>
     );
 
-    expect(launchButton()).toBeDisabled();
+    expect(screen.getByRole('status', { name: 'En suspens' })).toHaveTextContent(
+      /vous pouvez encore voter/i
+    );
   });
 });

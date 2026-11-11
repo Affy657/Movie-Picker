@@ -134,6 +134,20 @@ public sealed class MongoParticipantRepository : IParticipantRepository
         return docs.Select(ParticipantDocumentMapper.ToDomain).ToList();
     }
 
+    public async Task<IReadOnlyList<Participant>> ListByEventIdsAsync(
+        IReadOnlyCollection<string> eventIds,
+        CancellationToken ct = default)
+    {
+        if (eventIds.Count == 0)
+            return [];
+
+        var docs = await _collection
+            .Find(Builders<ParticipantDocument>.Filter.In(x => x.EventId, eventIds))
+            .SortBy(x => x.CreatedAt)
+            .ToListAsync(ct);
+        return docs.Select(ParticipantDocumentMapper.ToDomain).ToList();
+    }
+
     public async Task<bool> DeleteAsync(string participantId, string eventId, CancellationToken ct = default)
     {
         var res = await _collection.DeleteOneAsync(
