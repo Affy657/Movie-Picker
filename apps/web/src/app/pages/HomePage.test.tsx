@@ -443,7 +443,9 @@ describe('HomePage', () => {
     const user = userEvent.setup();
 
     const card = await posterCard('Film de ma liste');
-    expect(within(card).getByRole('img', { name: 'Déjà dans votre liste' })).toBeInTheDocument();
+    expect(
+      within(card).queryByRole('img', { name: 'Déjà dans votre liste' })
+    ).not.toBeInTheDocument();
 
     await user.click(within(card).getByRole('button', { name: 'Retirer de ma liste' }));
 
@@ -547,9 +549,39 @@ describe('HomePage', () => {
     await waitFor(() => {
       expect(screen.queryByRole('heading', { name: /les plus proposés/i })).not.toBeInTheDocument();
     });
-    expect(
-      screen.getByRole('heading', { name: /actuellement au cinéma/i, level: 2 })
-    ).toBeInTheDocument();
+    const cinema = screen
+      .getByRole('heading', { name: /actuellement au cinéma/i, level: 2 })
+      .closest('section') as HTMLElement;
+    expect(within(cinema).getByTestId('movie-preview-rail')).toBeInTheDocument();
+  });
+
+  it('shows now playing as a poster grid beside the most proposed list', async () => {
+    server.use(
+      authMeGuestHandler,
+      collectionsHandler,
+      http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
+        const section = new URL(request.url).searchParams.get('section') ?? 'trending';
+        const items = showcaseItems(section, 8).map((item, index) =>
+          section === 'most-proposed' ? { ...item, rank: index + 1, eventCount: 3 } : item
+        );
+        return HttpResponse.json({
+          section,
+          theme: null,
+          items,
+          disclaimer: '',
+          tmdbAttributionUrl: '',
+        });
+      })
+    );
+    renderPage();
+
+    await screen.findByRole('heading', { name: 'Les plus proposés', level: 2 });
+    const cinema = screen
+      .getByRole('heading', { name: /actuellement au cinéma/i, level: 2 })
+      .closest('section') as HTMLElement;
+    await within(cinema).findByRole('heading', { name: 'now-playing 1', level: 3 });
+    expect(within(cinema).queryByTestId('movie-preview-rail')).not.toBeInTheDocument();
+    expect(within(cinema).getAllByRole('heading', { level: 3 })).toHaveLength(8);
   });
 
   it('affiche les pastilles de genre en onglets', async () => {

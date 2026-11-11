@@ -1,5 +1,4 @@
 import { useId, type ReactNode } from 'react';
-import clsx from 'clsx';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { Tabs, TabPanel, type TabDef } from '@/shared/components/Tabs';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
@@ -211,7 +210,7 @@ export default function HomeShowcaseRow<T extends string>({
       subtitle={subtitle}
       seeAllTo={total > 0 ? seeAllTo : undefined}
       seeAllLabel={total > 0 ? seeAllLabel : undefined}
-      className={clsx(layout === 'grid' && styles.gridRow, className)}
+      className={className}
       toolbar={
         tabConfig ? (
           <Tabs

@@ -101,6 +101,13 @@ describe('MovieBrowseCard', () => {
     expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).toBeNull();
   });
 
+  it('on the watchlist itself: no in-list badge, the toggle still removes the movie', () => {
+    renderCard({ hasHover: true, isLoggedIn: true, inWatchlist: true, showListBadge: false });
+
+    expect(screen.queryByRole('img', { name: 'Déjà dans votre liste' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retirer de ma liste' })).toBeInTheDocument();
+  });
+
   it('in the watchlist on a touch screen: the badge shows, no action button', () => {
     renderCard({ hasHover: false, isLoggedIn: true, inWatchlist: true });
 

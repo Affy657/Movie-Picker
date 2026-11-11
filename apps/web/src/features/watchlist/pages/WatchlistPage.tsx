@@ -324,6 +324,7 @@ export default function WatchlistPage() {
       hasHover={hasHover}
       isLoggedIn={!!user}
       inWatchlist
+      showListBadge={false}
       eager={listView && index < 3}
       onToggleWatchlist={() => watchlistToggle.toggle(item)}
       onProposeToEvent={() => setProposeTarget(item)}

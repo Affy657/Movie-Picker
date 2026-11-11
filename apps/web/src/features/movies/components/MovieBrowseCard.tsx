@@ -60,6 +60,7 @@ interface MovieBrowseCardProps {
   meta?: ReactNode;
   eager?: boolean;
   rank?: number;
+  showListBadge?: boolean;
 }
 
 function RowAvailability({
@@ -230,6 +231,7 @@ function BrowseMoviePoster({
   meta,
   eager,
   rank,
+  showListBadge = true,
 }: Readonly<MovieBrowseCardProps>) {
   const { t } = useTranslation();
   const isTv = item.mediaType === 'tv';
@@ -260,7 +262,11 @@ function BrowseMoviePoster({
           </div>
         )
       }
-      cornerBadge={isLoggedIn && inWatchlist ? <WatchlistBadge inWatchlist t={t} /> : undefined}
+      cornerBadge={
+        showListBadge && isLoggedIn && inWatchlist ? (
+          <WatchlistBadge inWatchlist t={t} />
+        ) : undefined
+      }
       actions={
         hasHover && isLoggedIn ? (
           <PosterLibraryActions

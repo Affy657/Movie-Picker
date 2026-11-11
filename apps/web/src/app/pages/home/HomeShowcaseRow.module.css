@@ -24,12 +24,8 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, var(--poster-column-md));
   gap: var(--space-3-5);
-}
-
-.gridRow:only-child .posterGrid {
-  grid-template-columns: repeat(8, minmax(0, 1fr));
 }
 
 .tabs {

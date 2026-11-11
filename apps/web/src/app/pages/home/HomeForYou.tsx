@@ -62,11 +62,13 @@ function PersonalRail({
   eagerCount,
   library,
   onSelect,
+  showListBadge,
 }: Readonly<{
   items: PersonalRowItem[];
   eagerCount: number;
   library: MovieLibraryActions;
   onSelect: (item: PersonalRowItem) => void;
+  showListBadge: boolean;
 }>) {
   return (
     <MoviePreviewRail size="md" itemCount={items.length}>
@@ -77,6 +79,7 @@ function PersonalRail({
             key={`${cardItem.tmdbId}|${cardItem.mediaType}`}
             item={cardItem}
             eager={index < eagerCount}
+            showListBadge={showListBadge}
             hasHover={library.hasHover}
             isLoggedIn={library.isLoggedIn}
             inWatchlist={library.has(cardItem)}
@@ -190,6 +193,7 @@ export default function HomeForYou({
         ) : (
           <PersonalRail
             items={active === 'watchlist' ? watchlist : friends}
+            showListBadge={active !== 'watchlist'}
             eagerCount={eagerCount}
             library={library}
             onSelect={onSelectPersonal}

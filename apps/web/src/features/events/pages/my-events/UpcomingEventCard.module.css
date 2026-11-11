@@ -115,6 +115,20 @@
   transform: translateY(calc(var(--text-optical-nudge) * -1));
 }
 
+.card:focus-visible {
+  --fan-spread: var(--space-10);
+  --fan-tilt: 15deg;
+  --fan-lift: calc(var(--space-1) * -1);
+}
+
+@media (hover: hover) {
+  .card:hover {
+    --fan-spread: var(--space-10);
+    --fan-tilt: 15deg;
+    --fan-lift: calc(var(--space-1) * -1);
+  }
+}
+
 .menu {
   position: absolute;
   top: 50%;

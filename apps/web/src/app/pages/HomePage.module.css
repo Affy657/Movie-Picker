@@ -13,7 +13,11 @@
   gap: var(--space-10);
 }
 
-.pair > * {
+.pairMain {
+  flex: 0 0 auto;
+}
+
+.pairSide {
   flex: 1 1 0;
   min-width: 0;
 }

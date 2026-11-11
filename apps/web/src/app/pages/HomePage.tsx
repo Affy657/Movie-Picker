@@ -28,6 +28,7 @@ import HomeCollectionsRow from './home/HomeCollectionsRow';
 import HomeThemeFans from './home/HomeThemeFans';
 import HomeForYou, { type PersonalRowItem } from './home/HomeForYou';
 import HomeMostProposed from './home/HomeMostProposed';
+import { useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import {
   useFriendsWatchedRow,
   useRecommendationSeed,
@@ -115,6 +116,8 @@ export default function HomePage() {
     });
 
   const selectedGenreIds = genreTab === 'all' ? undefined : [Number(genreTab)];
+  const mostProposed = useMovieShowcase({ section: 'most-proposed' });
+  const hasMostProposed = !mostProposed.isSuccess || mostProposed.data.items.length > 0;
 
   const openDetails = (item: ShowcaseItem) =>
     details.open({
@@ -178,17 +181,28 @@ export default function HomePage() {
           onChange: setProviderTab,
         }}
       />
-      <div className={styles.pair}>
+      {hasMostProposed ? (
+        <div className={styles.pair}>
+          <HomeShowcaseRow
+            headingKey="showcase.sections.nowPlayingTitle"
+            seeAllTo={ROUTES.showcaseNowPlaying}
+            query={{ section: 'now-playing' }}
+            layout="grid"
+            library={library}
+            onSelect={openDetails}
+            className={styles.pairMain}
+          />
+          <HomeMostProposed onSelect={openDetails} className={styles.pairSide} />
+        </div>
+      ) : (
         <HomeShowcaseRow
           headingKey="showcase.sections.nowPlayingTitle"
           seeAllTo={ROUTES.showcaseNowPlaying}
           query={{ section: 'now-playing' }}
-          layout="grid"
           library={library}
           onSelect={openDetails}
         />
-        <HomeMostProposed onSelect={openDetails} />
-      </div>
+      )}
       <HomeThemeFans />
       <HomeCollectionsRow />
 
