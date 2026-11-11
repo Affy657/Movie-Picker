@@ -63,7 +63,6 @@ function planFor(wheel: EventWheelState, overrides: Partial<EventHeaderActionsIn
     canRemoveWinner: wheel.showRemoveWinner,
     canReset: wheel.showReset,
     canCloseWithoutMovie: false,
-    canRate: false,
     ...overrides,
   });
 }
@@ -72,7 +71,6 @@ type Handlers = {
   onAddMovie: () => void;
   onRequestReset: () => void;
   onRequestCloseWithoutMovie: () => void;
-  onRate: () => void;
 };
 
 function renderActions(
@@ -83,7 +81,6 @@ function renderActions(
     onAddMovie: vi.fn(),
     onRequestReset: vi.fn(),
     onRequestCloseWithoutMovie: vi.fn(),
-    onRate: vi.fn(),
   };
   render(
     <LocaleProvider>
@@ -258,16 +255,14 @@ describe('EventWheelActions', () => {
     expect(onRequestCloseWithoutMovie).toHaveBeenCalledOnce();
   });
 
-  it('makes rating the main action once the movie can be rated', async () => {
-    const { onRate } = renderActions(
+  it('leaves rating to the movie card during the night', () => {
+    renderActions(
       wheelState({ winnerIds: ['m1'], remainingDraws: 0, showRemoveWinner: true, showReset: true }),
-      { lifecycle: 'live', canRate: true }
+      { lifecycle: 'live' }
     );
 
-    expect(buttonNames()).toEqual(['Gérer le tirage', 'Proposer un film', 'Noter ce film']);
-    await userEvent.click(screen.getByRole('button', { name: 'Noter ce film' }));
-
-    expect(onRate).toHaveBeenCalledOnce();
+    expect(buttonNames()).toEqual(['Gérer le tirage', 'Proposer un film']);
+    expect(screen.queryByRole('button', { name: 'Noter ce film' })).not.toBeInTheDocument();
   });
 
   it('replaces the bar with the removal hint in removal mode', () => {

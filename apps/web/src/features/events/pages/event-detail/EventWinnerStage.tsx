@@ -19,8 +19,6 @@ type Props = {
   participant: { participantId: string; pseudo: string } | null;
   refreshAll: () => void;
   holdRatingPrompt: boolean;
-  ratingRequestId?: string | null;
-  onRatingRequestHandled?: () => void;
 };
 
 export function isWinnerStageShown(
@@ -37,8 +35,6 @@ function useWinnerRating({
   participant,
   refreshAll,
   holdRatingPrompt,
-  ratingRequestId,
-  onRatingRequestHandled,
 }: Props): WinnerRatingContext {
   const { user } = useAuth();
   const movieRating = useEventMovieRating({ slug, participant, refreshAll });
@@ -56,11 +52,8 @@ function useWinnerRating({
     error: movieRating.error,
     onSave: movieRating.save,
     onClear: movieRating.clear,
-    autoOpenMovieId: holdRatingPrompt ? null : (ratingRequestId ?? ratingLink.movieId),
-    onAutoOpen: () => {
-      ratingLink.consume();
-      onRatingRequestHandled?.();
-    },
+    autoOpenMovieId: holdRatingPrompt ? null : ratingLink.movieId,
+    onAutoOpen: ratingLink.consume,
     signInHref: user
       ? undefined
       : (movieId) => withReturnTo(ROUTES.login, ROUTES.eventDetailRating(slug, movieId)),
@@ -74,8 +67,6 @@ export default function EventWinnerStage({
   participant,
   refreshAll,
   holdRatingPrompt,
-  ratingRequestId,
-  onRatingRequestHandled,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const rating = useWinnerRating({
@@ -85,8 +76,6 @@ export default function EventWinnerStage({
     participant,
     refreshAll,
     holdRatingPrompt,
-    ratingRequestId,
-    onRatingRequestHandled,
   });
   const participantAvatars = useMemo(
     () =>
@@ -106,7 +95,7 @@ export default function EventWinnerStage({
       participantAvatars={participantAvatars}
       rating={rating}
       action={
-        event.recapSlug ? (
+        event.isFinished && event.recapSlug ? (
           <Link
             to={ROUTES.nightRecap(event.recapSlug)}
             className={buttonClass({ variant: 'ghost' })}

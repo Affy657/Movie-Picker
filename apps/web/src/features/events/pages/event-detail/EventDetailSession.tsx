@@ -18,8 +18,6 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { eventFrontendUrl, nightRecapFrontendUrl } from '@/features/events/api/eventsApi';
 import { useLocale, useTranslation } from '@/shared/i18n';
 import { useEventWheel } from '@/features/events/hooks/useEventWheel';
-import { isRatingOpen, unratedWinners } from '@/features/events/hooks/useRatingLink';
-import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { eventCountdownLabel } from '@/features/events/utils/eventCountdownLabel';
 import type { MovieCardSelection } from '@/features/movies/components/movieCardParts';
 import { normalizeMyEventLifecycle } from '@/shared/utils/myEventLifecycle';
@@ -75,28 +73,6 @@ function wheelSelection(wheel: ReturnType<typeof useEventWheel>): MovieCardSelec
     };
   }
   return undefined;
-}
-
-function useHeaderRating({
-  event,
-  participant,
-  winners,
-}: {
-  event: EventData;
-  participant: ParticipantRef | null;
-  winners: MovieData[];
-}) {
-  const { user } = useAuth();
-  const [requestId, setRequestId] = useState<string | null>(null);
-  const clear = useCallback(() => setRequestId(null), []);
-  const participantId = user ? (participant?.participantId ?? null) : null;
-  const next =
-    participantId && isRatingOpen(event) ? unratedWinners(winners, participantId)[0] : undefined;
-  return {
-    requestId,
-    clear,
-    rating: { canRate: !!next, onRate: () => setRequestId(next?.id ?? null) },
-  };
 }
 
 function isNightFull(maxParticipants: number | null, participantCount: number): boolean {
@@ -244,11 +220,6 @@ export default function EventDetailSession({
   const emptyStateCarriesAddMovie = moviesLoaded && movies.length === 0;
   const canAddMovie = !event.isFinished && !!participant && !emptyStateCarriesAddMovie;
   const isFull = isNightFull(maxParticipants, participantCount);
-  const headerRating = useHeaderRating({
-    event,
-    participant,
-    winners: showWinnerStage ? winnerMovies : [],
-  });
 
   return (
     <PageLayout className="page-event">
@@ -279,7 +250,6 @@ export default function EventDetailSession({
           count: participantCount,
           onOpen: () => setParticipantsOpen(true),
         }}
-        rating={headerRating.rating}
         addMovie={{
           canAdd: canAddMovie,
           onOpen: () => setAddMovieOpen(true),
@@ -303,8 +273,6 @@ export default function EventDetailSession({
           participant={participant}
           refreshAll={refreshAll}
           holdRatingPrompt={wheel.isModalOpen}
-          ratingRequestId={headerRating.requestId}
-          onRatingRequestHandled={headerRating.clear}
         />
       ) : null}
       <EventDetailSessionBody

@@ -153,7 +153,7 @@ describe('EventWinnerSummary', () => {
       />
     );
     expect(screen.getByText('Netflix')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Heat' }));
+    await user.click(screen.getByRole('button', { name: /^Heat/ }));
     expect(screen.getByText('Disney Plus')).toBeInTheDocument();
     expect(screen.queryByText('Netflix')).toBeNull();
   });
@@ -183,7 +183,7 @@ describe('EventWinnerSummary', () => {
     );
     expect(screen.getByText('Notes de Matrix')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Heat' }));
+    await userEvent.click(screen.getByRole('button', { name: /^Heat/ }));
 
     expect(screen.getByText('Notes de Heat')).toBeInTheDocument();
     expect(screen.queryByText('Notes de Matrix')).not.toBeInTheDocument();
@@ -223,7 +223,7 @@ describe('EventWinnerSummary', () => {
     expect(screen.getByText('Le 3 juin 2035, vous regardez')).toBeInTheDocument();
   });
 
-  it('offers several winners in draw order and shows the first one', () => {
+  it('offers several winners in draw order in a strip above the card and shows the first one', () => {
     renderSummary(
       <EventWinnerSummary
         winners={[movie({ id: 'm2', title: 'Alien' }), movie({ id: 'm1', title: 'Matrix' })]}
@@ -231,15 +231,14 @@ describe('EventWinnerSummary', () => {
       />
     );
     expect(screen.getByText('Ce soir, vous regardez')).toBeInTheDocument();
-    const tiles = screen.getAllByRole('listitem');
-    expect(within(tiles[0]!).getByRole('button', { name: 'Alien' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
-    expect(within(tiles[1]!).getByRole('button', { name: 'Matrix' })).toHaveAttribute(
-      'aria-pressed',
-      'false'
-    );
+    const strip = screen.getByRole('list', { name: 'Films de la soirée' });
+    const chips = within(strip).getAllByRole('button');
+    expect(chips[0]).toHaveAccessibleName(/^Alien/);
+    expect(chips[0]).toHaveTextContent('Gagnant 1');
+    expect(chips[0]).toHaveAttribute('aria-pressed', 'true');
+    expect(chips[1]).toHaveAccessibleName(/^Matrix/);
+    expect(chips[1]).toHaveTextContent('Gagnant 2');
+    expect(chips[1]).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByRole('heading', { level: 2, name: 'Alien' })).toBeInTheDocument();
   });
 
@@ -252,9 +251,25 @@ describe('EventWinnerSummary', () => {
         rating={ratingContext()}
       />
     );
-    const tiles = screen.getAllByRole('listitem').slice(0, 2);
-    expect(tiles[0]).toHaveTextContent('4,0/5');
-    expect(tiles[1]).toHaveTextContent('À noter');
+    const chips = within(screen.getByRole('list', { name: 'Films de la soirée' })).getAllByRole(
+      'button'
+    );
+    expect(chips[0]).toHaveTextContent('4,0/5');
+    expect(chips[1]).toHaveTextContent('À noter');
+  });
+
+  it('says which drawn movies nobody has rated yet when I cannot rate', () => {
+    renderSummary(
+      <EventWinnerSummary
+        winners={[movie({ id: 'm1' }), movie({ id: 'm2', title: 'Alien' })]}
+        isFinished
+        rating={ratingContext({ currentParticipantId: null })}
+      />
+    );
+    const chips = within(screen.getByRole('list', { name: 'Films de la soirée' })).getAllByRole(
+      'button'
+    );
+    expect(chips[1]).toHaveTextContent('Pas encore noté');
   });
 
   it('opens on the first drawn movie I have not rated yet', () => {
@@ -267,24 +282,62 @@ describe('EventWinnerSummary', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: 'Alien' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /^Alien/ })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('heading', { level: 2, name: 'Alien' })).toBeInTheDocument();
   });
 
-  it('opens the rating of a movie straight from its to-rate badge', async () => {
+  it('switches the card to another drawn movie from the strip, then rates it from the card', async () => {
+    const user = userEvent.setup();
     const rated = { participantId: 'p1', value: 8, updatedAt: '2026-09-20T10:00:00Z' };
     renderSummary(
       <EventWinnerSummary
-        winners={[movie({ id: 'm1', ratings: [rated] }), movie({ id: 'm2', title: 'Alien' })]}
+        winners={[
+          movie({ id: 'm1', ratings: [rated] }),
+          movie({ id: 'm2', title: 'Alien' }),
+          movie({ id: 'm3', title: 'Heat' }),
+        ]}
         isFinished
         rating={ratingContext()}
       />
     );
 
-    await userEvent.click(screen.getByRole('button', { name: 'Noter Alien' }));
+    await user.click(screen.getByRole('button', { name: /^Heat/ }));
+    expect(screen.getByRole('heading', { level: 2, name: 'Heat' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Donner la première note' }));
 
     const dialog = await screen.findByRole('dialog', { name: 'Noter ce film' });
-    expect(within(dialog).getByRole('heading', { name: 'Alien' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('heading', { name: 'Heat' })).toBeInTheDocument();
+  });
+
+  describe('a night of one', () => {
+    const alone = { participants: [participants[0]!], currentParticipantId: 'p1' };
+
+    it('asks to rate the movie, never for the first rating, and shows no group panel', () => {
+      renderSummary(
+        <EventWinnerSummary winners={[movie({})]} isFinished rating={ratingContext(alone)} />
+      );
+
+      expect(screen.getByRole('button', { name: 'Noter ce film' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Donner la première note' })).toBeNull();
+      expect(screen.queryByRole('region', { name: 'Les notes de la soirée' })).toBeNull();
+    });
+
+    it('shows my own rating under the title and lets me change it from the card', async () => {
+      const mine = { participantId: 'p1', value: 8, updatedAt: '2026-09-20T10:00:00Z' };
+      renderSummary(
+        <EventWinnerSummary
+          winners={[movie({ ratings: [mine] })]}
+          isFinished
+          rating={ratingContext(alone)}
+        />
+      );
+
+      expect(screen.getByText('Votre note')).toBeInTheDocument();
+      expect(screen.getByText('4/5')).toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Les notes de la soirée' })).toBeNull();
+      await userEvent.click(screen.getByRole('button', { name: 'Modifier ma note' }));
+      expect(await screen.findByRole('dialog', { name: 'Noter ce film' })).toBeInTheDocument();
+    });
   });
 
   it('keeps the colon of a French title attached to the word before it', () => {

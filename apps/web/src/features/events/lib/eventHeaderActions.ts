@@ -14,7 +14,6 @@ export type EventHeaderActionsInput = {
   canRemoveWinner: boolean;
   canReset: boolean;
   canCloseWithoutMovie: boolean;
-  canRate: boolean;
 };
 
 export type DrawManagement = {
@@ -28,7 +27,6 @@ export type EventHeaderActionsPlan = {
   draw: HeaderActionWeight | null;
   manage: DrawManagement | null;
   chosen: boolean;
-  rate: boolean;
 };
 
 function drawWeight(input: EventHeaderActionsInput): HeaderActionWeight | null {
@@ -50,17 +48,15 @@ function drawManagement(input: EventHeaderActionsInput): DrawManagement | null {
 export function eventHeaderActions(input: EventHeaderActionsInput): EventHeaderActionsPlan {
   const draw = drawWeight(input);
   const allDrawn = input.hasWinner && input.remainingDraws === 0;
-  const rate = input.canRate;
-  const chosen = allDrawn && !input.isFinished && !rate;
+  const chosen = allDrawn && !input.isFinished;
   let addMovie: HeaderActionWeight | null = null;
   if (input.canAddMovie) {
-    addMovie = draw === 'primary' || allDrawn || rate ? 'secondary' : 'primary';
+    addMovie = draw === 'primary' || allDrawn ? 'secondary' : 'primary';
   }
   return {
     addMovie,
     draw,
     manage: drawManagement(input),
     chosen,
-    rate,
   };
 }

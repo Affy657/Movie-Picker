@@ -9,7 +9,6 @@ import {
   Plus,
   RotateCcw,
   SlidersHorizontal,
-  Star,
 } from 'lucide-react';
 import clsx from 'clsx';
 import type { EventWheelState } from '@/features/events/hooks/useEventWheel';
@@ -33,7 +32,6 @@ type EventWheelActionsProps = {
   addMovieTriggerRef?: RefObject<HTMLButtonElement | null>;
   onRequestReset: () => void;
   onRequestCloseWithoutMovie: () => void;
-  onRate?: () => void;
 };
 
 function SelectionBar({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Translate }>) {
@@ -247,7 +245,7 @@ function ChosenStatus({ wheel, t }: Readonly<{ wheel: EventWheelState; t: Transl
 }
 
 function countButtons(plan: EventHeaderActionsPlan): number {
-  return [plan.addMovie, plan.draw, plan.manage, plan.rate || null].filter(Boolean).length;
+  return [plan.addMovie, plan.draw, plan.manage].filter(Boolean).length;
 }
 
 function AddMovieButton({
@@ -281,20 +279,6 @@ function AddMovieButton({
   );
 }
 
-function RateButton({ onRate, t }: Readonly<{ onRate: () => void; t: Translate }>) {
-  return (
-    <Button
-      type="button"
-      variant="primary"
-      className={clsx(styles.action, styles.grow)}
-      onClick={onRate}
-    >
-      <Star size={ICON_SIZE.md} aria-hidden />
-      <span className={styles.label}>{t('events.ratings.rateAction')}</span>
-    </Button>
-  );
-}
-
 type WeightedAction = { key: string; node: ReactNode; weight: HeaderActionWeight };
 
 function weightedActions(
@@ -302,7 +286,7 @@ function weightedActions(
   dense: boolean,
   t: Translate
 ): ReactNode[] {
-  const { wheel, plan, onAddMovie, addMovieTriggerRef, onRate } = props;
+  const { wheel, plan, onAddMovie, addMovieTriggerRef } = props;
   const actions: WeightedAction[] = [];
   if (plan.draw) {
     actions.push({
@@ -325,9 +309,6 @@ function weightedActions(
         />
       ),
     });
-  }
-  if (plan.rate && onRate) {
-    actions.push({ key: 'rate', weight: 'primary', node: <RateButton onRate={onRate} t={t} /> });
   }
   return [
     ...actions.filter((entry) => entry.weight === 'secondary'),

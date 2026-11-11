@@ -11,6 +11,13 @@ version publiée est associée à un tag Git et à une release GitHub.
 ### Changed
 
 - **Le film tiré au sort montre sa durée, sa note TMDB et où le regarder** : dans la fenêtre qui annonce le gagnant comme dans la carte du film en haut de la soirée, où les plateformes de streaming reviennent.
+- **Une soirée à plusieurs films se parcourt par une bande au-dessus de la carte** : chaque film y dit s'il reste à noter ou donne sa moyenne, et la carte garde la même forme qu'avec un seul film, les notes à côté.
+- **Les notes d'un grand groupe restent lisibles** : au-delà de six notes, l'échelle passe en points et seul votre avatar y reste ; la liste montre cinq personnes, vous d'abord puis de la meilleure note à la moins bonne, et s'ouvre sur les autres.
+- **Une soirée en solo affiche simplement votre note**, sans panneau des notes du groupe.
+
+### Removed
+
+- **« Noter ce film » quitte l'en-tête et la barre du bas** : il reste dans la carte du film. Le lien vers le recap n'apparaît plus qu'une fois la soirée terminée.
 
 ## [1.9.0] - 2026-11-11
 

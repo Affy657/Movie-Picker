@@ -902,16 +902,13 @@ describe('EventDetail (MSW)', () => {
       expect(within(dialog).getByText('Moyenne 4,0/5, 1 note')).toBeInTheDocument();
     });
 
-    it('keeps the invitation to share while the night is not over, the recap link aside', async () => {
+    it('keeps the invitation to share and leaves the recap link out while the night is not over', async () => {
       setStoredParticipant(slug, myPid, 'Alice');
       serveNightWithWinner(false);
       renderEventDetail(`/e/${slug}`);
 
       const card = await screen.findByRole('region', { name: 'Ce soir, vous regardez' });
-      expect(within(card).getByRole('link', { name: 'Voir le recap' })).toHaveAttribute(
-        'href',
-        `/r/${recapSlug}`
-      );
+      expect(within(card).queryByRole('link', { name: 'Voir le recap' })).toBeNull();
 
       await userEvent.click(screen.getByRole('button', { name: 'Partager' }));
 
