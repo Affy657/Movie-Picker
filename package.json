@@ -25,6 +25,7 @@
     "check:tools": "node scripts/check-tool-versions.mjs",
     "check:iam": "node scripts/check-iam.mjs",
     "test:scripts": "node --test scripts/*.test.mjs",
+    "release": "node scripts/release.mjs",
     "check:sonar": "node scripts/check-sonar.mjs",
     "check:unused": "knip",
     "format": "prettier --write --cache \"apps/**/*.{ts,tsx,json}\" \"configs/**/*.{json,md,cjs}\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.mjs",

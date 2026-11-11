@@ -2968,7 +2968,7 @@ export const fr = {
       pipelineHeading: 'Ce qui tient la chaîne',
       trigger: 'Déclenchement',
       triggerValue:
-        "Toute poussée sur master ou sur une branche de version, et toute demande de fusion vers l'une d'elles, lancent la chaîne. Le déploiement, lui, ne part que depuis master.",
+        "Toute poussée sur master et toute demande de fusion vers master lancent la chaîne, et il n'y a aucune autre branche durable : chaque livraison part d'une branche courte, rejoint master le jour où elle est prête et part en production dans la foulée, avec sa propre version.",
       triggerHint:
         'Les branches ouvertes par le robot de dépendances sont exclues du déclenchement par poussée, pour ne pas jouer la chaîne deux fois.',
       scope: 'Périmètre calculé',
@@ -3426,10 +3426,10 @@ export const fr = {
       devFixes: 'corrections',
       devRoadmap: 'roadmap mise à jour',
       devPrePush: 'verify:local avant push',
-      devPush: 'push, branche de version',
+      devPush: 'version, push sur master',
       devCi: 'CI, {{jobs}} checks',
-      devMerge: 'merge en fin de version',
-      devDeploy: 'mise en prod manuelle',
+      devMerge: 'recette le jour même',
+      devDeploy: 'prod, tag et release',
       devSignals: 'monitoring',
       devSignalsSub: 'Sentry, PostHog',
       flowBrainstorm: 'brainstorming',

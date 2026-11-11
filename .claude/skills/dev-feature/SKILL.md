@@ -1,30 +1,32 @@
 ---
 name: dev-feature
-description: Flow de dev complet d'une feature roadmap Movie Picker, de la lecture du scope au déploiement. Déclenché avec « /dev-feature <nom de la feature> ». L'argument est le nom (ou un extrait) d'une feature présente dans la roadmap (docs/roadmap.md).
+description: Flow de dev complet d'une feature roadmap Movie Picker, de la lecture du scope à la mise en production. Déclenché avec « /dev-feature <nom de la feature> ». L'argument est le nom (ou un extrait) d'une feature présente dans la roadmap (docs/roadmap.md).
 ---
 
 # /dev-feature : flow de dev d'une feature
 
-Orchestre le cycle complet d'une feature, du scope au déploiement, sur la branche de la version en cours. L'argument `$ARGUMENTS` est le nom de la feature à développer.
+Orchestre le cycle complet d'une feature, du scope à la mise en production, en flux continu : une branche courte partie de `master`, fusionnée et mise en ligne le jour où la feature est prête, avec sa propre version. L'argument `$ARGUMENTS` est le nom de la feature à développer.
 
 Les règles de style et de workflow du repo (zéro commentaire, `verify:local` avant push, jamais skip les hooks) sont dans [AGENTS.md](../../../AGENTS.md) : les respecter, ne pas les redéfinir ici.
 
 **Trois règles qui structurent tout le flow :**
 - Le test est écrit avant le code : la phase de dev (étape 5) est en TDD, et le compte rendu fonctionnel (étape 3) fournit la liste des tests.
 - Les suites de tests lourdes se lancent **juste avant le commit** (étape 8), jamais à la fin du dev.
-- Le commit et le push n'ont lieu **qu'après** que l'utilisateur a testé la feature lui-même et donné son go.
+- Le commit et le push n'ont lieu **qu'après** que l'utilisateur a testé la feature lui-même et donné son go. Ce go vaut aussi pour la mise en production : la feature validée part en ligne dans la foulée (étape 9).
 
 Chaque **STOP** est un vrai arrêt : terminer le message, ne rien coder ni continuer le flow, reprendre uniquement quand l'utilisateur a répondu.
 
 ## Étape 1. Lire la feature
 
-- Chercher `$ARGUMENTS` dans [docs/roadmap.md](../../../docs/roadmap.md) : d'abord les features des sections de version, puis les sections **Tech** de chaque version, puis les deux backlogs en fin de fichier.
+- Chercher `$ARGUMENTS` dans [docs/roadmap.md](../../../docs/roadmap.md), sections planifiées puis backlogs.
 - Si rien ne correspond, ne pas inventer : lister les entrées approchantes trouvées et demander laquelle.
-- Noter la version de l'entrée : c'est la branche de travail (`v1.6`, `v1.7`, …), une branche par version. S'y placer avant d'écrire quoi que ce soit (`git switch v1.x`, à créer depuis `master` pour la première feature d'une version ; depuis un worktree où elle est déjà extraite ailleurs, une branche créée depuis `v1.x` que l'étape 8 poussera en `HEAD:v1.x`). Une entrée de backlog n'a pas de version : demander sur laquelle la livrer.
+- Avant d'écrire quoi que ce soit, se placer sur une branche courte partie de `master` à jour : `git fetch origin` puis `git switch -c feat/<slug> origin/master` (dans un worktree, la branche du worktree fait l'affaire si elle part de `origin/master`). Aucune branche de version : la feature rejoint `master` à l'étape 8 et part en production à l'étape 9.
 
 ## Étape 2. Cadrage
 
 La roadmap ne donne qu'un titre et une à deux phrases : poser les questions nécessaires pour partir dans la bonne direction. Lire d'abord le code existant de la zone touchée pour ne pas poser de question dont la réponse s'y trouve, et les sections Contraintes et Impasses de `docs/technical-debt.md` si la feature touche la coquille de démarrage, le prérendu ou la home. Reformuler brièvement ce qui a été compris, puis poser les questions ouvertes : UX, comportement aux limites, scope, interactions avec une autre feature.
+
+**Découper avant de construire.** Une entrée `L` ou `XL` ne se développe pas d'un bloc : proposer un découpage en tranches qui ont chacune un sens pour l'utilisateur et partent en production seules, la plus petite utile d'abord. La première tranche devient le périmètre de ce flow, les suivantes restent dans la roadmap sous forme d'entrées plus petites. Une tranche qui n'a pas de sens visible seule (un modèle de données sans écran) se livre quand même si elle ne change rien pour l'utilisateur, sinon elle se fond dans la tranche suivante.
 
 **STOP.** Attendre les réponses.
 
@@ -89,25 +91,36 @@ Corriger ce qui sort de ces contrôles (par un test d'abord quand c'est du compo
 ## Étape 7. Revue et roadmap
 
 - Invoquer `engineering:code-review` (bugs de correctness) puis `/simplify` (réutilisation, simplification) ; `/security-review` en plus dès que la feature touche l'authentification, les droits, un nouvel endpoint ou une entrée utilisateur. Appliquer les retours pertinents (un bug relevé en revue passe par un test qui le reproduit d'abord), relancer les tests ciblés, et rejouer les cinq contrôles de l'étape 6 si le diff a bougé de façon notable ; si le comportement visible a changé, redonner la main à l'utilisateur pour re-tester, avec STOP, avant de continuer.
-- Marquer la feature livrée dans `docs/roadmap.md` : `⬜` devient `✅`, rien ne s'ajoute après le titre (ni version ni date, la section les porte), et le compte « N restants » du titre de la version baisse du poids de l'item (`S` 1, `M` 3, `L` 8, `XL` 20). Une entrée venue du backlog rejoint la section de sa version, poids compris.
+- Retirer la feature de `docs/roadmap.md` : une entrée livrée sort du fichier, le CHANGELOG et git portent l'historique. Une tranche livrée réécrit l'entrée sur ce qui reste à faire, taille comprise. Mettre à jour le poids du titre de section qui la portait.
+- Ajouter la ligne de la feature sous `## [Non publié]` de `CHANGELOG.md`, dans la bonne rubrique (`Added` pour une nouveauté, `Changed`, `Fixed`, `Security`), au format des lignes voisines : `- **Ce que l'utilisateur obtient** : précision.`, côté utilisateur, sans détail d'implémentation. C'est cette rubrique qui fixe la version à l'étape 8 : `Added` donne une version mineure, le reste un correctif.
+- « Quoi de neuf » (`apps/web/src/shared/whatsNew.ts`) ne s'enrichit que pour une nouveauté qui mérite d'interrompre l'utilisateur à sa prochaine visite : une nouvelle version dans `WHATS_NEW` rouvre la fenêtre chez tout le monde. L'écrire sous la version mineure qui suit `APP_VERSION` de `origin/master`, l'étape 8 corrigeant ce numéro si `release` en annonce un autre ; jamais au-delà de `APP_VERSION` une fois la release faite (test `whatsNew.test.ts`). Un correctif ou une retouche n'y va pas.
 - Une dette repérée en route va dans `docs/technical-debt.md`, jamais dans la roadmap ni en mémoire.
 
-## Étape 8. Tests, commit, push
+## Étape 8. Tests, version, fusion dans master
 
 Dans cet ordre, et seulement une fois le go de l'utilisateur obtenu à l'étape 6 :
 
 - Arrêter les serveurs de dev et fermer l'onglet du Browser pane avant de lancer les suites : les laisser tourner sature le CPU, provoque de faux échecs par timeout, et le binaire verrouillé fait mourir le build API (MSB3027).
-- `pnpm run verify:local` et corriger toute erreur **avant** de push (obligatoire, cf. AGENTS.md). Jamais skip les hooks. Dans un worktree neuf, `pnpm install --frozen-lockfile` d'abord. Playwright n'en fait pas partie : `pnpm run test:e2e:ci` en plus si un spec de `e2e/` a été ajouté ou touché.
-- Commit sur la branche de version `v1.x` (code, tests et roadmap en un seul commit, message en anglais au format Conventional Commits `feat(<scope>): …` d'AGENTS.md), puis push. Depuis une branche de worktree : `git push origin HEAD:v1.x`, en prévenant que la référence locale `v1.x` reste en arrière.
-- Sur une branche de version, la CI GitHub Actions n'est pas bloquante : la signaler en une ligne si elle échoue et passer à la suite. Elle redevient une porte à la fusion dans `master`.
-- Relancer les serveurs avant de rendre la main.
+- Commit de la feature sur sa branche (code, tests, roadmap et ligne de CHANGELOG en un seul commit, message en anglais au format Conventional Commits `feat(<scope>): …` d'AGENTS.md).
+- Intégrer à `master` à jour : `git fetch origin`, `git switch -c integrate/<slug> origin/master`, `git merge --no-ff feat/<slug>` (depuis le checkout principal, `git switch master && git pull` puis la même fusion). La version se calcule toujours sur `master` à jour, jamais avant : deux sessions qui livrent en parallèle obtiennent ainsi deux numéros distincts sans conflit.
+- `pnpm run release` : il lit `## [Non publié]`, annonce la version (`Added` donne une mineure, le reste un correctif, rien de listé aucune version) et réécrit `CHANGELOG.md` et `APP_VERSION`. Corriger au besoin le numéro de la version ajoutée à `WHATS_NEW` à l'étape 7, puis commit `chore(release): X.Y.Z`. `pnpm run release -- --major` seulement sur décision de l'utilisateur.
+- `pnpm run verify:local` sur cet arbre, et corriger toute erreur **avant** de push (obligatoire, cf. AGENTS.md). Jamais skip les hooks. Dans un worktree neuf, `pnpm install --frozen-lockfile` d'abord. Playwright n'en fait pas partie : `pnpm run test:e2e:ci` en plus si un spec de `e2e/` a été ajouté ou touché, ou si la feature change un parcours qu'un spec joue.
+- `git fetch origin` puis `git push origin HEAD:master`. Si `origin/master` a bougé entre-temps (push refusé, `cannot lock ref`), repartir d'une nouvelle branche d'intégration et relancer `release` : jamais deux commits de release empilés.
 
-## Étape 9. Déploiement (geste séparé, sur demande)
+## Étape 9. Mise en production
 
-**Rien ne déploie tout seul.** Un push sur `v1.x` ne déploie rien ; la version part en production à sa fusion dans `master`, par le déploiement manuel ci-dessous, jamais automatiquement. La feature est livrée dans le dépôt, pas en production. Terminer en le disant à l'utilisateur, avec la commande à lancer quand il veut la mettre en ligne :
+Le go de l'étape 6 couvre la mise en ligne : la feature part le jour même, seule, recette d'abord. Ne rien grouper : une livraison, une version.
+
+1. Attendre que le run `ci-cd.yml` du SHA poussé soit vert (`gh run watch <id> --exit-status`, en arrière-plan, une trentaine de minutes). Rouge : le corriger avant toute autre chose, par un nouveau commit sur `master` qui suit la même étape 8.
+2. Noter la release que la prod sert (`release` de `https://api.movie-picker.fr/health/ready`), c'est la cible d'un éventuel retour arrière.
+3. Dérouler `engineering:deploy-checklist` (migrations `IDataMigration` idempotentes et compatibles avec la version d'avant, secrets attendus, critère de retour arrière), puis :
 
 ```bash
-rtk gh workflow run deploy.yml --ref master -f target=all
+rtk gh workflow run deploy.yml --ref master -f stage=staging -f target=all
 ```
 
-Ne pas le déclencher soi-même sans demande explicite : grouper plusieurs features dans un seul déploiement est précisément ce que ce découpage permet, et c'est l'utilisateur qui décide du moment. Quand il le demande, dérouler d'abord `engineering:deploy-checklist` (run `ci-cd.yml` vert sur le commit visé, migrations `IDataMigration` idempotentes, secrets attendus, critère de rollback), puis lancer la commande et vérifier que la production sert bien le commit.
+   Suivre le run jusqu'au bout, `deploy-guard` vert, recette qui sert le SHA (`https://api.staging.movie-picker.fr/health/ready`, `<meta name="release">` de `https://staging.movie-picker.fr/`). Le parcours de la feature se rejoue une fois en recette.
+4. Même commande avec `-f stage=production`. La prod doit servir le SHA (`/health/ready` de l'API, `<meta name="release">` de `https://www.movie-picker.fr/`), et le job `publish-release` doit avoir créé le tag `vX.Y.Z` et sa release GitHub quand l'étape 8 a annoncé une version.
+5. Dans l'heure, aucune issue Sentry nouvelle sur cette release et pas de hausse des 5xx. Sinon, retour arrière vers la release notée au point 2 (`rollback.yml` et `rollback-front.yml`, commandes dans AGENTS.md), puis le dire à l'utilisateur.
+
+Terminer en donnant la version mise en ligne et le lien de sa release.

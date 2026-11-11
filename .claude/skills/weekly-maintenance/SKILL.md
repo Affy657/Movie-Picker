@@ -41,9 +41,9 @@ Récupérer ensuite les issues ouvertes de `master`, **en séparant celles du ne
 
 **7. Socle.** Cinq vérifications courtes, invisibles autrement : expiration du certificat, joignabilité des domaines, dernier statut des workflows planifiés (`security-scan.yml`, `backup-mongo.yml`), les versions des outils épinglés à la main dans les workflows et les scripts (`pnpm run check:tools`), et les liaisons IAM que Terraform ne voit pas (`pnpm run check:iam`). Un job planifié qui échoue ne bloque rien et n'est donc vu par personne ; un outil épinglé à la main n'est suivi par aucun écosystème Dependabot, gitleaks avait six versions de règles de retard le 2026-09-17 sans que rien ne le dise ; Terraform lie les membres un par un, donc une liaison posée à la main ou héritée d'avant la description reste invisible au `plan`, le compte Compute par défaut lisait encore neuf secrets de production le 2026-09-20 avec un plan vide.
 
-**8. Scores Lighthouse.** Télécharger le dernier rapport archivé et lire les scores réels, pas seulement le vert ou le rouge. `accessibility` et `best-practices` sont à 100, donc **sans aucune marge** : lire les scores permet de voir venir la régression avant qu'elle ne bloque `deploy-front`. Le rapport vient du dernier run de `deploy.yml`, pas d'un run master : la porte est passée sur le chemin du déploiement le 2026-09-10. Comme le déploiement est manuel, la mesure peut avoir plusieurs semaines : noter sa date dans le rapport, un score de trois semaines ne dit rien du master d'aujourd'hui.
+**8. Scores Lighthouse.** Télécharger le dernier rapport archivé et lire les scores réels, pas seulement le vert ou le rouge. `accessibility` et `best-practices` sont à 100, donc **sans aucune marge** : lire les scores permet de voir venir la régression avant qu'elle ne bloque `deploy-front`. Le rapport vient du dernier run de `deploy.yml`, pas d'un run master : la porte est passée sur le chemin du déploiement le 2026-09-10. Noter sa date dans le rapport : une mesure qui date de plusieurs jours ne dit rien du master d'aujourd'hui.
 
-**9. Bug reports et état de la prod.** Issues `bug` ouvertes, les 3 derniers runs de master, et **l'écart entre `master` et ce qui est déployé** : le déploiement étant manuel, la prod est en retard par défaut et personne ne le signale. Comparer le SHA de la révision Cloud Run active à `git rev-parse origin/master`. Une prod déjà en retard avant la passe se traite en premier.
+**9. Bug reports, idées et état de la prod.** Issues `user-feedback` ouvertes (bugs, idées et améliorations envoyés depuis l'application), les 3 derniers runs de master, et **l'écart entre `master` et ce qui est déployé** : chaque livraison part en production dans la journée, donc un écart est une livraison restée en route, que personne ne signale. Comparer le SHA de la révision Cloud Run active à `git rev-parse origin/master`, et le dernier tag à `APP_VERSION` de master. Une prod déjà en retard avant la passe se traite en premier. Une idée ou une amélioration se propose au rapport comme entrée du backlog de `docs/roadmap.md`, avec le numéro d'issue comme besoin qui la justifie ; ni l'entrée ni la fermeture de l'issue ne se font sans le go de l'utilisateur.
 
 ## Étape 2 : rapport
 
@@ -102,11 +102,13 @@ Pousser la branche, ouvrir la PR, corps listant ce qui a été corrigé par sour
 
 Attendre que les checks de la PR soient verts : ce sont eux que le déploiement exigera une fois sur master.
 
+Si la passe a corrigé quelque chose que l'utilisateur peut constater, sa ligne va sous `## [Non publié]` de `CHANGELOG.md` (`Fixed` ou `Security`), puis `pnpm run release` sur la branche à jour de `master` et commit `chore(release): X.Y.Z`. Une montée de dépendance ou une issue Sonar ne crée pas de version.
+
 **STOP. Attendre le go de l'utilisateur avant de merger sur master.**
 
 ## Étape 6 : déclencher le déploiement
 
-**Merger ne déploie rien.** Le déploiement est manuel depuis le 2026-09-10, héritage du temps où les minutes GitHub Actions étaient facturées, gardé pour grouper les livraisons. Attendre que le run `ci-cd.yml` du commit de merge soit **terminé et vert** (le workflow de déploiement le vérifie et refuse de partir sinon), puis :
+**Merger ne déploie rien, mais la prod suit dans la journée.** Le déploiement est un geste déclenché, jamais automatique, et chaque livraison part seule, sans attendre d'en grouper d'autres. Attendre que le run `ci-cd.yml` du commit de merge soit **terminé et vert** (le workflow de déploiement le vérifie et refuse de partir sinon), puis :
 
 ```bash
 rtk gh workflow run deploy.yml --ref master -f stage=staging -f target=all
@@ -115,6 +117,8 @@ rtk gh workflow run deploy.yml --ref master -f stage=staging -f target=all
 Puis, la recette servant le commit, le même avec `-f stage=production` : la production refuse de partir avant.
 
 **STOP. Le déploiement met la production à jour : attendre le go de l'utilisateur avant de le déclencher.**
+
+En production, le job `publish-release` crée le tag et la release GitHub de la version quand `APP_VERSION` en annonce une nouvelle.
 
 ## Étape 7 : vérifier que le déploiement s'est bien passé
 

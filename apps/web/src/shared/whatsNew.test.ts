@@ -80,8 +80,10 @@ describe('LATEST_WHATS_NEW_RELEASE', () => {
     expect(LATEST_WHATS_NEW_RELEASE.version).toBe('1.7.0');
   });
 
-  it('annonce la version que le pied de page affiche', () => {
-    expect(LATEST_WHATS_NEW_RELEASE.version).toBe(APP_VERSION);
+  it('never announces a version the web app has not reached yet', () => {
+    const rank = (version: string) =>
+      version.split('.').reduce((total, part) => total * 1_000 + Number(part), 0);
+    expect(rank(LATEST_WHATS_NEW_RELEASE.version)).toBeLessThanOrEqual(rank(APP_VERSION));
   });
 });
 

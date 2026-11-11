@@ -682,7 +682,8 @@ describe('TechPage', () => {
     expect(section.textContent).toMatch(/relecteur/i);
     expect(section.textContent).toMatch(/chaque lundi/i);
     expect(section.textContent).toMatch(/36 heures/);
-    expect(section.textContent).toMatch(/branche de version/i);
+    expect(section.textContent).toMatch(/aucune autre branche durable/i);
+    expect(section.textContent).not.toMatch(/branche de version/i);
   });
 
   it('files the prerendering among the choices made, no longer among open work', () => {

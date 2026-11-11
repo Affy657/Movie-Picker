@@ -2914,7 +2914,7 @@ export const en: Locale = {
       pipelineHeading: 'What holds the pipeline together',
       trigger: 'Trigger',
       triggerValue:
-        'Every push to master or to a version branch, and every pull request towards one of them, starts the pipeline. Deployment, on the other hand, only leaves from master.',
+        'Every push to master and every pull request towards master starts the pipeline, and there is no other long-lived branch: each delivery starts from a short branch, joins master the day it is ready and goes to production right after, with its own version.',
       triggerHint:
         'Branches opened by the dependency bot are excluded from the push trigger, so the pipeline does not run twice.',
       scope: 'Computed scope',
@@ -3367,10 +3367,10 @@ export const en: Locale = {
       devFixes: 'fixes',
       devRoadmap: 'roadmap updated',
       devPrePush: 'verify:local before push',
-      devPush: 'push, version branch',
+      devPush: 'version, push to master',
       devCi: 'CI, {{jobs}} checks',
-      devMerge: 'merge at version end',
-      devDeploy: 'manual production deploy',
+      devMerge: 'staging the same day',
+      devDeploy: 'production, tag, release',
       devSignals: 'monitoring',
       devSignalsSub: 'Sentry, PostHog',
       flowBrainstorm: 'brainstorming',
