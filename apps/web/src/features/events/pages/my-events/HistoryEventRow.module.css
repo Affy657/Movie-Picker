@@ -143,6 +143,34 @@
   z-index: var(--z-raised);
 }
 
+.poster {
+  transition: transform var(--duration-enter) var(--ease-reveal);
+}
+
+.card:focus-visible .front {
+  transform: translateY(calc(var(--space-1) * -1)) rotate(4deg);
+}
+
+.card:focus-visible .back {
+  transform: translateX(calc(var(--space-4) * -1)) rotate(-14deg);
+}
+
+@media (hover: hover) {
+  .card:hover .front {
+    transform: translateY(calc(var(--space-1) * -1)) rotate(4deg);
+  }
+
+  .card:hover .back {
+    transform: translateX(calc(var(--space-4) * -1)) rotate(-14deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster {
+    transition: none;
+  }
+}
+
 .back {
   top: var(--space-1-5);
   right: var(--space-4);
