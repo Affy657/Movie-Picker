@@ -8,6 +8,16 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Explorer ouvre sur votre prochaine soirée** : en haut de la page, la recherche côtoie votre soirée en cours ou la plus proche, ou la roue pour en créer une, sur un fond d'affiches qui glisse lentement. Sur téléphone, une loupe apparaît dans l'en-tête dès que la recherche sort de l'écran.
+- **Des affiches qui réagissent au survol** : au survol, une affiche grandit et montre son titre, son année, sa note et sa durée, avec Ma liste et Proposer à portée de clic. Les affiches des cartes de soirée s'écartent au survol.
+- **Chaque sélection d'Explorer a sa forme** : Pour vous en onglets, un top 10 des tendances, Au cinéma à côté des films les plus proposés, des éventails d'affiches pour les thèmes et des piles pour les sagas.
+
+### Changed
+
+- **Plus de titre sous les affiches** : il apparaît au survol, et le menu à trois points laisse place à la barre Ma liste et Proposer. Le lien Letterboxd reste dans la fiche du film.
+
 ## [1.9.1] - 2026-11-11
 
 ### Changed

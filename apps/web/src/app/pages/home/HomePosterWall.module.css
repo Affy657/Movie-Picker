@@ -1,0 +1,75 @@
+.wall {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-below);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wall::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      var(--color-bg) 0%,
+      var(--color-bg-scrim) 40%,
+      var(--color-bg-veil) 100%
+    ),
+    linear-gradient(0deg, var(--color-bg) 0%, transparent 35%);
+}
+
+.track {
+  --wall-drift-duration: 90s;
+
+  position: absolute;
+  top: -40%;
+  right: -15%;
+  left: -15%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 6.5rem);
+  gap: var(--space-3);
+  transform: rotate(-8deg);
+  animation: wall-drift var(--wall-drift-duration) var(--ease-linear) infinite alternate;
+}
+
+.tile {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  opacity: var(--opacity-hover);
+}
+
+@keyframes wall-drift {
+  from {
+    translate: 0 0;
+  }
+
+  to {
+    translate: -8rem -4rem;
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .wall::after {
+    background: linear-gradient(180deg, var(--color-bg-scrim) 0%, var(--color-bg) 100%);
+  }
+
+  .track {
+    top: -15%;
+    right: -20%;
+    left: -20%;
+    grid-template-columns: repeat(auto-fill, var(--space-16));
+    gap: var(--space-2);
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}

@@ -235,6 +235,25 @@ public sealed class ServiceCollectionExtensionsBranchTests
     }
 
     [Theory]
+    [InlineData("1", 1, 1)]
+    [InlineData("0", 2, 30)]
+    [InlineData("x", 2, 30)]
+    public void MostProposedFloors_KeepTheirDefaultsOnAnInvalidValue(
+        string raw,
+        int expectedEventCount,
+        int expectedDistinctMovies)
+    {
+        var options = OptionsFrom(new Dictionary<string, string?>
+        {
+            ["MOST_PROPOSED_MIN_EVENT_COUNT"] = raw,
+            ["MOST_PROPOSED_MIN_DISTINCT_MOVIES"] = raw,
+        });
+
+        Assert.Equal(expectedEventCount, options.MostProposedMinEventCount);
+        Assert.Equal(expectedDistinctMovies, options.MostProposedMinDistinctMovies);
+    }
+
+    [Theory]
     [InlineData("7", 7)]
     [InlineData("0", 30)]
     public void PosterCacheTtl_KeepsItsDefaultOnAnInvalidValue(string raw, int expected)

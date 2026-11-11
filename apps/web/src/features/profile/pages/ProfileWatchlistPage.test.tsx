@@ -123,7 +123,7 @@ describe('ProfileWatchlistPage (MSW)', () => {
     expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
   });
 
-  it('hover, logged in: the kebab offers the watchlist toggle and the proposal', async () => {
+  it('hover, logged in: the poster offers the watchlist toggle and Proposer', async () => {
     stubHoverCapability();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
@@ -144,17 +144,14 @@ describe('ProfileWatchlistPage (MSW)', () => {
     renderPage('alice');
     await screen.findByText('Inception');
 
-    await user.click(await screen.findByRole('button', { name: /plus d.actions.*inception/i }));
+    expect(
+      await screen.findByRole('button', { name: 'Retirer « Inception » de ma liste' })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^proposer « inception »/i }));
 
-    const names = screen
-      .getAllByRole('menuitem')
-      .map((item) => item.getAttribute('aria-label') ?? item.textContent);
-    expect(names).toEqual([
-      'Voir les détails',
-      'Retirer de ma liste',
-      'Proposer dans une soirée',
-      'Ouvrir sur Letterboxd',
-    ]);
+    expect(
+      await screen.findByText(/proposer «\s*inception\s*» dans une soirée/i)
+    ).toBeInTheDocument();
   });
 
   it('shows an empty state when the watchlist contains nothing', async () => {

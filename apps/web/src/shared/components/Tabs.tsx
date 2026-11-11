@@ -67,7 +67,13 @@ interface TabsProps<T extends string> {
   onChange: (tab: T) => void;
   ariaLabel: string;
   className?: string;
-  variant?: 'underline' | 'pill';
+  variant?: 'underline' | 'pill' | 'chip';
+}
+
+function activeTabClass(variant: TabsProps<string>['variant']): string | undefined {
+  if (variant === 'pill') return styles.pillTabActive;
+  if (variant === 'chip') return styles.chipTabActive;
+  return styles.tabActive;
 }
 
 export function Tabs<T extends string>({
@@ -82,6 +88,7 @@ export function Tabs<T extends string>({
   const keys = tabs.filter((tab) => !tab.disabled).map((tab) => tab.key);
   const { onKeyDown, registerTab, tabIndexFor } = useTablistKeyboard(keys, active, onChange);
   const isPill = variant === 'pill';
+  const isChip = variant === 'chip';
   const listRef = useRef<HTMLDivElement>(null);
   const { canScrollBack, canScrollForward } = useRailScroll(listRef, tabs.length);
   useWheelToHorizontal(listRef);
@@ -105,7 +112,7 @@ export function Tabs<T extends string>({
     <div className={clsx(styles.listWrap, isPill && styles.pillWrap, className)}>
       <div
         ref={listRef}
-        className={clsx(styles.list, isPill && styles.pillList)}
+        className={clsx(styles.list, isPill && styles.pillList, isChip && styles.chipList)}
         role="tablist"
         tabIndex={-1}
         aria-label={ariaLabel}
@@ -129,7 +136,8 @@ export function Tabs<T extends string>({
               className={clsx(
                 styles.tab,
                 isPill && styles.pillTab,
-                isActive && (isPill ? styles.pillTabActive : styles.tabActive)
+                isChip && styles.chipTab,
+                isActive && activeTabClass(variant)
               )}
               onClick={() => onChange(tab.key)}
             >

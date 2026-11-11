@@ -223,6 +223,10 @@ public static class ServiceCollectionExtensions
             opts.TmdbHttpTimeoutSeconds = timeout;
         if (int.TryParse(cfg["TMDB_FAILURE_CACHE_MINUTES"], out var failTtl) && failTtl > 0)
             opts.TmdbFailureCacheMinutes = failTtl;
+        if (int.TryParse(cfg["MOST_PROPOSED_MIN_EVENT_COUNT"], out var minEvents) && minEvents > 0)
+            opts.MostProposedMinEventCount = minEvents;
+        if (int.TryParse(cfg["MOST_PROPOSED_MIN_DISTINCT_MOVIES"], out var minMovies) && minMovies > 0)
+            opts.MostProposedMinDistinctMovies = minMovies;
     }
 
     private static void ConfigurePosterOptions(MoviePickerOptions opts, IConfiguration cfg)

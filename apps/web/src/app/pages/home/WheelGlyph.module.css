@@ -1,0 +1,18 @@
+.rim {
+  fill: none;
+  stroke: var(--color-border-subtle);
+  stroke-width: 1;
+}
+
+.hub {
+  fill: var(--color-wheel-hub);
+  stroke: var(--color-wheel-hub-stroke);
+  stroke-width: 1;
+}
+
+.pointer {
+  fill: var(--color-wheel-pointer);
+  stroke: var(--color-wheel-pointer-stroke);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}

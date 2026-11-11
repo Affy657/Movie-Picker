@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { LocaleProvider } from '@/shared/i18n';
 import MoviePreviewRow, { MoviePreviewRail } from './MoviePreviewRow';
-import ShowcaseMovieCard, { MovieRankBadge } from './ShowcaseMovieCard';
+import ShowcaseMovieCard from './ShowcaseMovieCard';
 
 function mockRailMetrics(scrollWidth: number, clientWidth: number) {
   vi.spyOn(HTMLUListElement.prototype, 'scrollWidth', 'get').mockReturnValue(scrollWidth);
@@ -137,7 +137,7 @@ describe('MoviePreviewRow', () => {
                 posterPath={null}
                 meta="2024"
                 onOpenDetails={() => undefined}
-                badges={<MovieRankBadge rank={1} label="Rang 1" />}
+                badges={<span>Rang 1</span>}
               />
             </MoviePreviewRail>
           </MoviePreviewRow>

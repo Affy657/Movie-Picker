@@ -114,12 +114,25 @@ public sealed partial class TmdbMovieSearch
         var overview = element.TryGetProperty("overview", out var overviewEl) && overviewEl.ValueKind == JsonValueKind.String
             ? overviewEl.GetString()
             : null;
-        var movieCount = element.TryGetProperty("parts", out var parts) && parts.ValueKind == JsonValueKind.Array
-            ? parts.GetArrayLength()
-            : 0;
+        var hasParts = element.TryGetProperty("parts", out var parts) && parts.ValueKind == JsonValueKind.Array;
 
-        return new TmdbCollectionSummary(collectionId, name, overview, ReadPosterUrl(element), movieCount);
+        return new TmdbCollectionSummary(
+            collectionId,
+            name,
+            overview,
+            ReadPosterUrl(element),
+            hasParts ? parts.GetArrayLength() : 0,
+            hasParts ? ReadPartPosterPathsInReleaseOrder(parts) : []);
     }
+
+    private static List<string> ReadPartPosterPathsInReleaseOrder(JsonElement parts) =>
+        parts.EnumerateArray()
+            .Select(part => (ReleaseDate: ReadStringProp(part, "release_date") ?? string.Empty, PosterPath: ReadPosterUrl(part)))
+            .Where(part => part.PosterPath is not null)
+            .OrderBy(part => part.ReleaseDate.Length == 0)
+            .ThenBy(part => part.ReleaseDate, StringComparer.Ordinal)
+            .Select(part => part.PosterPath!)
+            .ToList();
 
     public async Task<IReadOnlyList<TmdbSearchItem>> GetCollectionMoviesAsync(
         int collectionId,

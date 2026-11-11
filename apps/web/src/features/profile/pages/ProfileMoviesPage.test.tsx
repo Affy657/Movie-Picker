@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { setupServer } from 'msw/node';
@@ -112,19 +112,15 @@ describe('ProfileMoviesPage (MSW)', () => {
     ).toBeInTheDocument();
   });
 
-  it('hover, visitor: the kebab only offers the details and Letterboxd', async () => {
+  it('hover, visitor: the poster offers no library action', async () => {
     stubHoverCapability();
     server.use(http.get(`${TEST_API_V1}/auth/me`, () => HttpResponse.json({}, { status: 401 })));
-    const user = userEvent.setup();
     renderPage('alice');
-    await screen.findByText('Inception');
 
-    await user.click(await screen.findByRole('button', { name: /plus d.actions.*inception/i }));
-
-    const names = screen
-      .getAllByRole('menuitem')
-      .map((item) => item.getAttribute('aria-label') ?? item.textContent);
-    expect(names).toEqual(['Voir les détails', 'Ouvrir sur Letterboxd']);
+    const card = (await screen.findByText('Inception')).closest('li') as HTMLElement;
+    expect(within(card).getAllByRole('button')).toEqual([
+      within(card).getByRole('button', { name: 'Voir les détails de « Inception »' }),
+    ]);
   });
 
   it('shows not found for a private or unknown profile', async () => {

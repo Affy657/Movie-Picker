@@ -17,25 +17,14 @@ interface ShowcaseMovieCardProps {
   ratingScale?: RatingScale;
   runtimeMinutes?: number | null;
   meta?: ReactNode;
-  showFacts?: boolean;
   eager?: boolean;
   onOpenDetails: () => void;
   badges?: ReactNode;
-  kebab?: ReactNode;
+  cornerBadge?: ReactNode;
+  actions?: ReactNode;
+  rank?: number;
+  rankLabel?: string;
   className?: string;
-}
-
-export function MovieRankBadge({
-  rank,
-  label,
-  stacked,
-}: Readonly<{ rank: number; label: string; stacked?: boolean }>) {
-  return (
-    <span className={clsx(styles.badge, stacked && styles.badgeStacked)}>
-      <span className="visually-hidden">{label}</span>
-      <span aria-hidden>{rank}</span>
-    </span>
-  );
 }
 
 export default function ShowcaseMovieCard({
@@ -46,11 +35,13 @@ export default function ShowcaseMovieCard({
   ratingScale,
   runtimeMinutes,
   meta,
-  showFacts = true,
   eager = false,
   onOpenDetails,
   badges,
-  kebab,
+  cornerBadge,
+  actions,
+  rank,
+  rankLabel,
   className,
 }: Readonly<ShowcaseMovieCardProps>) {
   const { t, locale } = useTranslation();
@@ -58,10 +49,9 @@ export default function ShowcaseMovieCard({
   const posterSrc = posterRaw ? tmdbPosterSrcForListDisplay(posterRaw) : undefined;
   const voteLabel = formatTmdbVote(voteAverage, ratingScale, locale);
   const runtimeLabel = formatRuntimeMinutes(runtimeMinutes);
-  const hasMetaLine = meta != null || showFacts;
 
   const body = (
-    <>
+    <div className={styles.posterFrame}>
       <button
         type="button"
         className={styles.cardTrigger}
@@ -87,35 +77,43 @@ export default function ShowcaseMovieCard({
 
         {badges}
 
-        {kebab && <div className={styles.kebabSlot}>{kebab}</div>}
+        {cornerBadge && <div className={styles.cornerSlot}>{cornerBadge}</div>}
       </div>
 
-      <div className={styles.cardBody}>
+      <div className={styles.overlay}>
         <h3 className={styles.cardTitle}>{title}</h3>
-        {hasMetaLine && (
-          <span className={styles.cardMeta}>
-            {meta != null ? (
-              <span className={styles.metaText}>{meta}</span>
-            ) : (
-              <>
-                {year && <span className={styles.metaStart}>{year}</span>}
-                {voteLabel && (
-                  <span className={styles.metaCenter} title={t('movies.list.tmdbVoteTitle')}>
-                    {voteLabel}
-                  </span>
-                )}
-                {runtimeLabel && (
-                  <span className={styles.metaEnd} title={t('movies.list.runtimeTitle')}>
-                    {runtimeLabel}
-                  </span>
-                )}
-              </>
-            )}
-          </span>
-        )}
+        <span className={styles.cardMeta}>
+          {meta ?? (
+            <>
+              {year && <span>{year}</span>}
+              {voteLabel && <span title={t('movies.list.tmdbVoteTitle')}>{voteLabel}</span>}
+              {runtimeLabel && <span title={t('movies.list.runtimeTitle')}>{runtimeLabel}</span>}
+            </>
+          )}
+        </span>
+        {actions && <div className={styles.actionBar}>{actions}</div>}
       </div>
-    </>
+    </div>
   );
 
-  return <li className={clsx(styles.card, className)}>{body}</li>;
+  if (rank != null) {
+    return (
+      <li
+        className={clsx(styles.card, styles.ranked, className)}
+        data-no-poster={posterSrc ? undefined : true}
+      >
+        <span className={styles.rankNumeral} aria-hidden>
+          {rank}
+        </span>
+        {rankLabel ? <span className="visually-hidden">{rankLabel}</span> : null}
+        {body}
+      </li>
+    );
+  }
+
+  return (
+    <li className={clsx(styles.card, className)} data-no-poster={posterSrc ? undefined : true}>
+      {body}
+    </li>
+  );
 }

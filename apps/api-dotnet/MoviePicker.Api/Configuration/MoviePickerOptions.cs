@@ -21,6 +21,10 @@ public sealed class MoviePickerOptions
 
     public int MovieShowcaseCacheHours { get; set; } = 6;
 
+    public int MostProposedMinEventCount { get; set; } = 2;
+
+    public int MostProposedMinDistinctMovies { get; set; } = 30;
+
     public int MovieShowcaseEnrichedCount { get; set; } = 24;
 
     public int TmdbSearchMaxWatchProviderLookups { get; set; } = 10;

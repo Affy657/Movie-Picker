@@ -1,8 +1,5 @@
-import { useState, type SubmitEvent } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useState } from 'react';
 import PageLayout from '@/shared/components/PageLayout';
-import { buttonClass } from '@/shared/components/Button';
-import SearchField from '@/shared/components/SearchField';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation } from '@/shared/i18n';
@@ -12,16 +9,10 @@ import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDet
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import type { MovieLibraryActions } from '@/features/movies/components/MovieBrowseCard';
-import type {
-  ShowcaseItem,
-  ShowcaseProvider,
-  ShowcaseTheme,
-} from '@/features/movies/api/showcaseApi';
+import type { ShowcaseItem, ShowcaseProvider } from '@/features/movies/api/showcaseApi';
 import {
   PROVIDER_KEYS,
   PROVIDER_LABEL_KEYS,
-  THEME_KEYS,
-  THEME_LABEL_KEYS,
   TRENDING_GENRE_IDS,
 } from '@/features/movies/showcaseSections';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -31,39 +22,30 @@ import LibraryMovieDetails, {
   useLibraryMovieDetails,
   type LibraryMovieSeed,
 } from '@/features/watchlist/components/LibraryMovieDetails';
+import HomeHero from './home/HomeHero';
 import HomeShowcaseRow from './home/HomeShowcaseRow';
 import HomeCollectionsRow from './home/HomeCollectionsRow';
-import HomePersonalRow, { type PersonalRowItem } from './home/HomePersonalRow';
+import HomeThemeFans from './home/HomeThemeFans';
+import HomeForYou, { type PersonalRowItem } from './home/HomeForYou';
+import HomeMostProposed from './home/HomeMostProposed';
+import { useMovieShowcase } from '@/features/movies/hooks/useMovieShowcase';
 import {
   useFriendsWatchedRow,
   useRecommendationSeed,
   useWatchlistRow,
 } from './home/usePersonalRows';
 import styles from './HomePage.module.css';
-import Card from '@/shared/components/Card';
-import { ICON_SIZE } from '@/shared/components/iconSize';
-import LinkButton from '@/shared/components/LinkButton';
 
 type GenreTabKey = 'all' | `${number}`;
-
-const SEARCH_EXAMPLES = ['Dune', 'Bong Joon-ho'];
 
 const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
 const FIRST_RAIL_EAGER_COUNT = 3;
 
-type HomeRail = 'watchlist' | 'recommendations' | 'friends' | 'provider';
+type HomeRail = 'forYou' | 'trending';
 
-function resolveFirstRail(
-  personalRowsPending: boolean,
-  hasWatchlist: boolean,
-  hasRecommendations: boolean,
-  hasFriends: boolean
-): HomeRail | null {
+function resolveFirstRail(personalRowsPending: boolean, hasPersonal: boolean): HomeRail | null {
   if (personalRowsPending) return null;
-  if (hasWatchlist) return 'watchlist';
-  if (hasRecommendations) return 'recommendations';
-  if (hasFriends) return 'friends';
-  return 'provider';
+  return hasPersonal ? 'forYou' : 'trending';
 }
 
 function eagerCountFor(rail: HomeRail, firstRail: HomeRail | null): number {
@@ -75,10 +57,7 @@ export default function HomePage() {
   useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
   const { locale } = useLocale();
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
   const [genreTab, setGenreTab] = useState<GenreTabKey>('all');
-  const [themeTab, setThemeTab] = useState<ShowcaseTheme>(THEME_KEYS[0]);
   const [providerTab, setProviderTab] = useState<ShowcaseProvider>(PROVIDER_KEYS[0]);
   const details = useLibraryMovieDetails();
   const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
@@ -97,8 +76,6 @@ export default function HomePage() {
       label: genreLabel(id, locale),
     })),
   ];
-
-  const themeTabs = THEME_KEYS.map((key) => ({ key, label: t(THEME_LABEL_KEYS[key]) }));
 
   const providerTabs = PROVIDER_KEYS.map((key) => ({ key, label: t(PROVIDER_LABEL_KEYS[key]) }));
 
@@ -120,11 +97,10 @@ export default function HomePage() {
     seedTitle,
     isPending: seedPending,
   } = useRecommendationSeed(isAuthenticated);
+  const personalPending = watchlistRow.isPending || friendsRow.isPending || seedPending;
   const firstRail = resolveFirstRail(
-    watchlistRow.isPending || friendsRow.isPending || seedPending,
-    watchlistRow.items.length > 0,
-    !!seedTmdbId,
-    friendsRow.items.length > 0
+    personalPending,
+    watchlistRow.items.length > 0 || !!seedTmdbId || friendsRow.items.length > 0
   );
 
   const openPersonalDetails = (item: PersonalRowItem) =>
@@ -140,6 +116,8 @@ export default function HomePage() {
     });
 
   const selectedGenreIds = genreTab === 'all' ? undefined : [Number(genreTab)];
+  const mostProposed = useMovieShowcase({ section: 'most-proposed' });
+  const hasMostProposed = mostProposed.isSuccess && mostProposed.data.items.length > 0;
 
   const openDetails = (item: ShowcaseItem) =>
     details.open({
@@ -153,44 +131,9 @@ export default function HomePage() {
       genreIds: item.genreIds,
     });
 
-  const runSearch = (term: string) => {
-    const trimmed = term.trim();
-    if (!trimmed) return;
-    void navigate(ROUTES.movieSearchFor(trimmed));
-  };
-
-  const submitSearch = (event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    runSearch(searchTerm);
-  };
-
   return (
     <PageLayout className={styles.home}>
-      <div className={styles.opener}>
-        <h1 className={styles.title}>{t('home.title')}</h1>
-        <p className={styles.intro}>{t('home.intro')}</p>
-        <form className={styles.searchForm} role="search" onSubmit={submitSearch}>
-          <label className="visually-hidden" htmlFor="home-search">
-            {t('home.searchLabel')}
-          </label>
-          <SearchField
-            id="home-search"
-            className={styles.searchField}
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder={t('home.searchPlaceholder')}
-            iconSize={ICON_SIZE.md}
-          />
-        </form>
-        <p className={styles.examples}>
-          <span className={styles.examplesLabel}>{t('home.searchExamplesLabel')}</span>
-          {SEARCH_EXAMPLES.map((example) => (
-            <LinkButton key={example} size="sm" onClick={() => runSearch(example)}>
-              {example}
-            </LinkButton>
-          ))}
-        </p>
-      </div>
+      <HomeHero />
 
       {watchlist.error ? (
         <p className="error" role="alert">
@@ -198,55 +141,26 @@ export default function HomePage() {
         </p>
       ) : null}
 
-      <HomePersonalRow
-        headingKey="showcase.sections.watchlistTitle"
-        items={watchlistRow.items}
-        isPending={watchlistRow.isPending}
-        seeAllTo={ROUTES.watchlist}
-        seeAllLabel={t('showcase.seeWatchlist')}
-        eagerCount={eagerCountFor('watchlist', firstRail)}
+      <HomeForYou
+        watchlist={watchlistRow.items}
+        friends={friendsRow.items}
+        seed={
+          seedTmdbId ? { tmdbId: seedTmdbId, mediaType: seedMediaType, title: seedTitle } : null
+        }
+        isPending={personalPending}
+        eagerCount={eagerCountFor('forYou', firstRail)}
         library={library}
-        onSelect={openPersonalDetails}
-      />
-      {seedTmdbId ? (
-        <HomeShowcaseRow
-          headingKey="showcase.sections.recommendationsTitle"
-          seeAllTo={ROUTES.showcaseRecommendations(seedTmdbId, seedMediaType)}
-          query={{ section: 'recommendations', seedTmdbId, seedMediaType }}
-          library={library}
-          onSelect={openDetails}
-          eagerCount={eagerCountFor('recommendations', firstRail)}
-          subtitle={seedTitle}
-        />
-      ) : null}
-      <HomePersonalRow
-        headingKey="showcase.sections.friendsTitle"
-        items={friendsRow.items}
-        isPending={friendsRow.isPending}
-        eagerCount={eagerCountFor('friends', firstRail)}
-        library={library}
-        onSelect={openPersonalDetails}
-      />
-      <HomeShowcaseRow
-        headingKey="showcase.sections.providerTitle"
-        seeAllTo={ROUTES.showcaseProvider(providerTab)}
-        query={{ section: 'provider', provider: providerTab }}
-        library={library}
-        onSelect={openDetails}
-        eagerCount={eagerCountFor('provider', firstRail)}
-        tabConfig={{
-          ariaLabel: t('showcase.providerLabel'),
-          tabs: providerTabs,
-          active: providerTab,
-          onChange: setProviderTab,
-        }}
+        onSelectPersonal={openPersonalDetails}
+        onSelectShowcase={openDetails}
       />
       <HomeShowcaseRow
         headingKey="showcase.sections.trendingTitle"
         seeAllTo={ROUTES.showcaseTrendingForGenre(selectedGenreIds?.[0])}
         query={{ section: 'trending', genreIds: selectedGenreIds }}
+        layout="ranked"
         library={library}
         onSelect={openDetails}
+        eagerCount={eagerCountFor('trending', firstRail)}
         tabConfig={{
           ariaLabel: t('showcase.genreLabel'),
           tabs: genreTabs,
@@ -255,52 +169,34 @@ export default function HomePage() {
         }}
       />
       <HomeShowcaseRow
-        headingKey="showcase.sections.nowPlayingTitle"
-        seeAllTo={ROUTES.showcaseNowPlaying}
-        query={{ section: 'now-playing' }}
-        library={library}
-        onSelect={openDetails}
-      />
-      <HomeShowcaseRow
-        headingKey="showcase.sections.themeTitle"
-        seeAllTo={ROUTES.showcaseTheme(themeTab)}
-        query={{ section: 'theme', theme: themeTab }}
+        headingKey="showcase.sections.providerTitle"
+        seeAllTo={ROUTES.showcaseProvider(providerTab)}
+        query={{ section: 'provider', provider: providerTab }}
         library={library}
         onSelect={openDetails}
         tabConfig={{
-          ariaLabel: t('showcase.themeLabel'),
-          tabs: themeTabs,
-          active: themeTab,
-          onChange: setThemeTab,
+          ariaLabel: t('showcase.providerLabel'),
+          tabs: providerTabs,
+          active: providerTab,
+          onChange: setProviderTab,
         }}
       />
+      <div className={hasMostProposed ? styles.pair : undefined}>
+        <HomeShowcaseRow
+          headingKey="showcase.sections.nowPlayingTitle"
+          seeAllTo={ROUTES.showcaseNowPlaying}
+          query={{ section: 'now-playing' }}
+          layout={hasMostProposed ? 'grid' : 'rail'}
+          library={library}
+          onSelect={openDetails}
+          className={hasMostProposed ? styles.pairMain : undefined}
+        />
+        {hasMostProposed ? (
+          <HomeMostProposed onSelect={openDetails} className={styles.pairSide} />
+        ) : null}
+      </div>
+      <HomeThemeFans />
       <HomeCollectionsRow />
-      <HomeShowcaseRow
-        headingKey="showcase.sections.mostProposedTitle"
-        seeAllTo={ROUTES.showcaseMostProposed}
-        query={{ section: 'most-proposed' }}
-        showRank
-        library={library}
-        onSelect={openDetails}
-      />
-
-      <Card
-        as="section"
-        padding="none"
-        radius="lg"
-        className={styles.ctaBand}
-        aria-labelledby="home-cta-title"
-      >
-        <div className={styles.ctaText}>
-          <p id="home-cta-title" className={styles.ctaTitle}>
-            {t('home.ctaBand.title')}
-          </p>
-          <p className={styles.ctaBody}>{t('home.ctaBand.body')}</p>
-        </div>
-        <Link to={ROUTES.createEvent} className={buttonClass({ variant: 'primary' })}>
-          {t('home.ctaBand.action')}
-        </Link>
-      </Card>
 
       <LibraryMovieDetails
         target={details.target}

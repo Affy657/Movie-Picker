@@ -15,6 +15,13 @@ export function tmdbPosterSrcForListDisplay(url: string | undefined): string | u
   }
 }
 
+const SIZED_POSTER_SEGMENT = /\/(t\/p|posters\/tmdb)\/(w\d+|original)\//i;
+
+export function posterSrcAtSize(url: string | undefined, size: string): string | undefined {
+  if (!url) return undefined;
+  return url.replace(SIZED_POSTER_SEGMENT, (_, prefix: string) => `/${prefix}/${size}/`);
+}
+
 export function posterImageSrc(posterPath: string | null | undefined): string | undefined {
   if (posterPath == null) return undefined;
   const trimmed = posterPath.trim();

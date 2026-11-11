@@ -15,7 +15,7 @@ Tous dans `apps/web/src/styles/01-foundation.css`, sauf ceux propres à la page 
 | Avatars | `--avatar-xs` (20) `-sm` (28) `-md` (36) `-lg` (56) `-xl` (96) ; `--color-avatar-0` à `-7` pour les initiales | la palette des initiales est choisie par `data-palette` sur l'élément, jamais par une couleur en dur ; la porte vérifie que `SIZE_PX` d'`Avatar.tsx` recopie ces valeurs |
 | Soulèvement | `--lift-sm` (-1 px), `-md` (-2 px), `-lg` (-4 px), `-xl` (-8 px) | le `translateY` d'un survol ; `Button` et `Card` prennent `-sm` |
 | Gabarit | `--header-height` (3,5 rem), `--mobile-nav-height` (4 rem + zone sûre) | posés dans la fondation, consommés sans repli |
-| Typographie | `--font-size-4xs` à `--font-size-6xl`, `--font-size-page-title` ; `--font-weight-regular/medium/semibold/bold/extrabold` ; `--leading-none` (1), `-tight` (1,2), `-snug` (1,35), `-normal` (1,4), `-comfortable` (1,5), `-relaxed` (1,6) ; `--tracking-tighter` (-0,03 em), `-tight` (-0,02), `-snug` (-0,01), `-slight` (0,01), `-wide` (0,03), `-wider` (0,06), `-widest` (0,12) ; `--font-body`, `--font-mono` | aucune valeur littérale de taille, de graisse, d'interlignage ou d'approche dans un module ; un `font-size` est un jeton ou un `clamp()` de jetons |
+| Typographie | `--font-size-4xs` à `--font-size-7xl` (le dernier pour les grands numéros du top 10 d'Explorer), `--font-size-page-title` ; `--font-weight-regular/medium/semibold/bold/extrabold` ; `--leading-none` (1), `-tight` (1,2), `-snug` (1,35), `-normal` (1,4), `-comfortable` (1,5), `-relaxed` (1,6) ; `--tracking-tighter` (-0,03 em), `-tight` (-0,02), `-snug` (-0,01), `-slight` (0,01), `-wide` (0,03), `-wider` (0,06), `-widest` (0,12) ; `--font-body`, `--font-mono` | aucune valeur littérale de taille, de graisse, d'interlignage ou d'approche dans un module ; un `font-size` est un jeton ou un `clamp()` de jetons |
 | Rayons | `--radius-xs` (4 px), `-sm` (6 px), `-md` (12 px), `-lg` (18 px), `-pill` | |
 | Bordures | `--border-width-field` (1,5 px) | tout autre trait fait 1 px ou 2 px, en littéral |
 | Focus | `--outline-focus` (contour), `--outline-offset` (2 px), `--outline-offset-inset` (-2 px, contour intérieur d'un menu ou d'une ligne), `--ring-focus` (halo pour les champs) | un `:focus-visible` qui retire le contour pose le halo, jamais un simple fond |
@@ -25,7 +25,7 @@ Tous dans `apps/web/src/styles/01-foundation.css`, sauf ceux propres à la page 
 | Mouvement | `--duration-instant` (0,01 ms), `--duration-fast` (0,10 s), `--duration-base` (0,15 s), `--duration-slow` (0,20 s), `--duration-enter` (0,25 s), `--duration-sheet` (0,32 s), `--duration-reveal` (0,6 s), `--duration-spin` (0,8 s), `--duration-pulse` (1,2 s), `--duration-shimmer` (1,4 s), `--duration-breathe` (2,4 s) ; `--ease-default/in-out/out/linear/reveal/spring` | chaque étape de `transition` porte sa durée et sa courbe, un `*-delay` aussi ; `--duration-instant` est la remise à zéro de `prefers-reduced-motion` ; une boucle décorative propre à un composant déclare son propre jeton dans son module (`--flame-flicker-duration`), un décalage de phase aussi (`--card-shake-stagger-*`, `--demo-float-offset`) |
 | Opacité | `--opacity-disabled` (0,5), `--opacity-muted` (0,6), `--opacity-hover` (0,8), `--opacity-dimmed` (0,85), `--opacity-poster-glow` (0,35 en clair, 0,55 en sombre) | état désactivé, contenu secondaire, fondu au survol, `aria-busy`, halo d’affiche ; un littéral n'est admis que dans une étape de `@keyframes` |
 | Couleurs | primitives réservées à la fondation et à `landingPalette.css` : teintes (`--blue-600`…), neutres `--white`, `--black`, `--slate-50` à `-900`, `--night-950` à `-600` (les fonds sombres) ; rôles `--color-*` consommés par les modules ; `--color-heat-0` à `-3` pour la carte d'activité | tableau des rôles ci-dessous ; une couleur littérale (hexadécimal, `rgb()`, `hsl()`, `oklch()` et les autres notations, nom de couleur quelle que soit sa casse) n'apparaît dans aucune feuille hors des déclarations de jetons de la fondation et de `landingPalette.css`, et dans aucun fichier TypeScript hors du logo des technologies, des boutons OAuth et du QR code |
-| Teintes de surface | `--color-surface-hover` (6 %), `-hover-strong` (10 %), `-active` (12 %), `-sunken`, `-translucent`, `--color-bg-tint`, `--color-bg-translucent` | remplacent tout `color-mix()` maison sur le texte, le fond ou la surface |
+| Teintes de surface | `--color-surface-hover` (6 %), `-hover-strong` (10 %), `-active` (12 %), `-sunken`, `-translucent`, `--color-bg-tint`, `--color-bg-translucent`, `--color-bg-scrim` (80 %), `--color-bg-veil` (35 %) | remplacent tout `color-mix()` maison sur le texte, le fond ou la surface |
 | Sur affiche | `--color-on-poster-*` | texte, bordures et voiles posés sur une image sombre |
 | Roue | `--color-wheel-0` à `-11` (segments), `--color-wheel-label`, `-label-shadow`, `-divider`, `-hub`, `-hub-stroke`, `-hub-shadow`, `-pointer`, `-pointer-stroke`, `-pointer-shadow` | le canvas les lit par `readCssToken` (`shared/utils/cssToken.ts`) au moment de dessiner, les confettis et la démo de la page d'accueil aussi |
 | Genres | `--color-genre-0` à `-5` | les segments de la barre des genres du profil, lus depuis le TypeScript par leur nom |
@@ -48,7 +48,7 @@ Chaque rôle porte sa déclinaison, en clair, en sombre et sous `.on-dark` ; un 
 | texte | | `--color-text`, `--color-text-muted` (secondaire), `--color-text-subtle` (métadonnées : date, durée, compteur) | | |
 | marque secondaire | `--color-brand-secondary` | `--color-brand-secondary-text` (surtitre du thème d’une soirée) | `--color-brand-secondary-bg`, `-glow` | `--color-brand-secondary-border` |
 | états de soirée | | `--color-badge-<état>-text` | `--color-badge-<état>-bg` | `--color-badge-<état>-border` |
-| teintes neutres | `--color-surface-hover` (6 %), `-hover-strong` (10 %), `-active` (12 %), `-sunken`, `-translucent`, `--color-bg-tint`, `--color-bg-translucent` | | | |
+| teintes neutres | `--color-surface-hover` (6 %), `-hover-strong` (10 %), `-active` (12 %), `-sunken`, `-translucent`, `--color-bg-tint`, `--color-bg-translucent`, `--color-bg-scrim`, `--color-bg-veil` | | | |
 | note d'un film (étoiles pleines, pastille de note) | `--color-rating` (ambre, identique en clair, en sombre et sous `.on-dark`) | | | |
 
 `--color-primary-text` existe parce que `--color-primary` colore des surfaces : la déclinaison texte de chaque accent tient 4,5:1 sur le fond, la surface, le fond léger et la teinte, en clair comme en sombre.
@@ -277,7 +277,7 @@ Toute liste d'onglets du produit passe par là, y compris deux onglets dans une 
 | `idBase`, `active`, `onChange` | | requis |
 | `tabs` | `{ key, label, icon?, iconOnly?, badge?, disabled? }[]` | `iconOnly` garde `label` comme nom accessible sans le dessiner ; `badge` rend un `CountBadge` `neutral`, recoloré par l'onglet actif et par la variante `pill` |
 | `ariaLabel` | `string` | |
-| `variant` | `underline` / `pill` | |
+| `variant` | `underline` / `pill` / `chip` | `chip` : puces séparées, l'active pleine à la couleur du texte (sélections d'Explorer) |
 
 `TabPanel` (`idBase`, le même que celui de `Tabs`, `tabKey`, `active`) rend le panneau associé.
 

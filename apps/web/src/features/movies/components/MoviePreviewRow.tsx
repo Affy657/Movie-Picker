@@ -8,12 +8,13 @@ import styles from './MoviePreviewRow.module.css';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import IconButton from '@/shared/components/IconButton';
 
-export type MoviePreviewRowSize = 'sm' | 'md' | 'wide';
+export type MoviePreviewRowSize = 'sm' | 'md' | 'wide' | 'ranked';
 
 const RAIL_SIZE_CLASS: Record<MoviePreviewRowSize, string | undefined> = {
   sm: undefined,
   md: styles.railMd,
   wide: styles.railWide,
+  ranked: styles.railRanked,
 };
 
 interface RailProps {
@@ -33,7 +34,7 @@ export function MoviePreviewRail({ size = 'sm', itemCount, label, children }: Re
     <div
       className={clsx(
         styles.railViewport,
-        size === 'md' && styles.railViewportMd,
+        (size === 'md' || size === 'ranked') && styles.railViewportMd,
         size === 'wide' && styles.railViewportWide
       )}
     >
@@ -82,6 +83,7 @@ interface RowProps {
   seeAllTo?: string;
   seeAllLabel?: string;
   toolbar?: ReactNode;
+  className?: string;
   children: ReactNode;
 }
 
@@ -92,6 +94,7 @@ export default function MoviePreviewRow({
   seeAllTo,
   seeAllLabel,
   toolbar,
+  className,
   children,
 }: Readonly<RowProps>) {
   const headingId = useId();
@@ -99,7 +102,7 @@ export default function MoviePreviewRow({
   const Heading = headingLevel === 3 ? 'h3' : 'h2';
 
   return (
-    <section className={styles.section} aria-labelledby={headingId}>
+    <section className={clsx(styles.section, className)} aria-labelledby={headingId}>
       <div className={styles.headerRow}>
         <div className={styles.headings}>
           <Heading id={headingId} className={styles.heading}>

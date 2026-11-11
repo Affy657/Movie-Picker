@@ -84,9 +84,14 @@ function peopleLine(event: MyEventSummary, t: Translate): string {
 type UpcomingEventCardProps = {
   event: MyEventSummary;
   onLeave?: () => void;
+  eyebrow?: string;
 };
 
-export default function UpcomingEventCard({ event, onLeave }: Readonly<UpcomingEventCardProps>) {
+export default function UpcomingEventCard({
+  event,
+  onLeave,
+  eyebrow,
+}: Readonly<UpcomingEventCardProps>) {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const preview = event.participantsPreview ?? [];
@@ -104,11 +109,13 @@ export default function UpcomingEventCard({ event, onLeave }: Readonly<UpcomingE
         padding="none"
         className={styles.card}
         data-with-menu={onLeave ? true : undefined}
+        data-compact={eyebrow ? true : undefined}
       >
         <PosterBackdrop posterPath={posters[0]?.posterPath} glow />
         <EventDateBlock date={event.date} />
         <span className={styles.divider} aria-hidden="true" />
         <span className={styles.main}>
+          {eyebrow ? <span className={styles.eyebrow}>{eyebrow}</span> : null}
           <span className={styles.title}>{event.title}</span>
           <span className="visually-hidden">
             {formatEventDateLong(event.date, event.time, locale, t('events.detail.dateTimeJoiner'))}

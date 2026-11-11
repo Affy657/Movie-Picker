@@ -1,0 +1,112 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3-5);
+  padding: var(--space-2) var(--space-2-5);
+  border-bottom: 1px solid var(--color-border-subtle);
+  transition: background var(--duration-base) var(--ease-default);
+}
+
+.trigger {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-base);
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.trigger:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset-inset);
+  border-radius: var(--radius-sm);
+}
+
+.rank {
+  flex: 0 0 var(--space-5);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.poster {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-10);
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--color-poster-placeholder);
+  color: var(--color-placeholder);
+}
+
+.poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+
+.title {
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.facts {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+}
+
+.count {
+  flex: 0 0 auto;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+@media (hover: hover) {
+  .row:hover {
+    background: var(--color-surface-hover);
+  }
+
+  .row:hover .title {
+    color: var(--color-primary-text);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row {
+    transition: none;
+  }
+}

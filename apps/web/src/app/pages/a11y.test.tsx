@@ -444,7 +444,7 @@ describe('accessibility (axe)', () => {
     await assertNoViolations(container, queryClient);
   });
 
-  it('WatchlistPage with the hover kebab and its open menu has no violations', async () => {
+  it('WatchlistPage with the hover actions on the posters has no violations', async () => {
     stubHoverCapability();
     server.use(
       http.get(`${TEST_API_V1}/auth/me`, () =>
@@ -478,18 +478,8 @@ describe('accessibility (axe)', () => {
         </MemoryRouter>
       </AppTestProviders>
     );
-    const kebab = await screen.findByRole('button', {
-      name: /plus d.actions.*ancien mais bien noté/i,
-    });
+    await screen.findByRole('button', { name: /^proposer « ancien mais bien noté »/i });
     await assertNoViolations(container, queryClient);
-
-    await userEvent.click(kebab);
-    const menu = await screen.findByRole('menu');
-    const menuResults = await axe(menu, { rules: { region: { enabled: false } } });
-    expect(
-      menuResults.violations,
-      menuResults.violations.map((v) => v.description).join('\n')
-    ).toHaveLength(0);
   });
 
   it('NotificationsPage (empty inbox) has no violations', async () => {

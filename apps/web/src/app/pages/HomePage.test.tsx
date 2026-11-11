@@ -134,10 +134,8 @@ describe('HomePage', () => {
   });
   afterAll(() => server.close());
 
-  const menuItemNames = () =>
-    screen
-      .getAllByRole('menuitem')
-      .map((item) => item.getAttribute('aria-label') ?? item.textContent?.trim());
+  const posterCard = async (title: string) =>
+    (await screen.findByRole('heading', { name: title, level: 3 })).closest('li') as HTMLElement;
 
   it('ouvre sur un titre de niveau un et son introduction', () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
@@ -181,7 +179,7 @@ describe('HomePage', () => {
     ).toBeInTheDocument();
   });
 
-  it('most-proposed row: rank badge and night count as meta instead of the year', async () => {
+  it('most proposed: a ranked list with the year, the genre and the night count', async () => {
     server.use(
       authMeGuestHandler,
       collectionsHandler,
@@ -201,19 +199,54 @@ describe('HomePage', () => {
     );
     renderPage();
 
-    const rankLabel = await screen.findByText('Rang 1');
-    const card = rankLabel.closest('li');
-    expect(card).not.toBeNull();
-    expect(within(card as HTMLElement).getByText('Dans 3 soirées')).toBeInTheDocument();
-    expect(within(card as HTMLElement).queryByText('2024')).not.toBeInTheDocument();
-    expect(
-      within(card as HTMLElement).getByRole('heading', { name: 'most-proposed 1', level: 3 })
-    ).toBeInTheDocument();
+    const section = (
+      await screen.findByRole('heading', { name: 'Les plus proposés', level: 2 })
+    ).closest('section') as HTMLElement;
+    const rows = await within(section).findAllByRole('listitem');
+    expect(rows).toHaveLength(3);
+    const first = rows[0] as HTMLElement;
+    expect(within(first).getByText('1')).toBeInTheDocument();
+    expect(within(first).getByText('most-proposed 1')).toBeInTheDocument();
+    expect(within(first).getByText('2024, Drame')).toBeInTheDocument();
+    expect(within(first).getByText('Dans 3 soirées')).toBeInTheDocument();
 
-    const trendingCard = screen
-      .getByRole('heading', { name: 'trending 1', level: 3 })
-      .closest('li') as HTMLElement;
-    expect(within(trendingCard).queryByText('2024')).not.toBeInTheDocument();
+    await userEvent.click(
+      within(first).getByRole('button', { name: 'Voir les détails de « most-proposed 1 »' })
+    );
+    expect(
+      await screen.findByRole('heading', { name: 'most-proposed 1', level: 2 })
+    ).toBeInTheDocument();
+  });
+
+  it('trending: a numbered top 10 at most, following the genre chips', async () => {
+    const genres: (string | null)[] = [];
+    server.use(
+      authMeGuestHandler,
+      collectionsHandler,
+      http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        const section = params.get('section') ?? 'trending';
+        if (section === 'trending') genres.push(params.get('genreIds'));
+        return HttpResponse.json({
+          section,
+          theme: null,
+          items: showcaseItems(section, 12),
+          disclaimer: '',
+          tmdbAttributionUrl: '',
+        });
+      })
+    );
+    renderPage();
+
+    const section = (
+      await screen.findByRole('heading', { name: /tendances de la semaine/i, level: 2 })
+    ).closest('section') as HTMLElement;
+    await within(section).findByText('Rang 10');
+    expect(within(section).queryByText('Rang 11')).not.toBeInTheDocument();
+    expect(within(section).getAllByRole('heading', { level: 3 })).toHaveLength(10);
+
+    await userEvent.click(within(section).getByRole('tab', { name: 'Comédie' }));
+    await waitFor(() => expect(genres).toContain('35'));
   });
 
   it('signed-in: the details modal offers the watchlist and the proposal', async () => {
@@ -265,9 +298,10 @@ describe('HomePage', () => {
     const user = userEvent.setup();
 
     await user.click(
-      await screen.findByRole('button', { name: /plus d’actions pour «\s*trending 1\s*»/i })
+      within(await posterCard('trending 1')).getByRole('button', {
+        name: 'Ajouter « trending 1 » à ma liste',
+      })
     );
-    await user.click(screen.getByRole('menuitem', { name: 'Ajouter à ma liste' }));
 
     await waitFor(() =>
       expect(added.bodies).toEqual([
@@ -313,6 +347,7 @@ describe('HomePage', () => {
     );
     renderPage();
 
+    await userEvent.click(await screen.findByRole('tab', { name: 'Vos amis ont vu' }));
     await userEvent.click(
       await screen.findByRole('button', { name: /voir les détails de « film d'un ami »/i })
     );
@@ -368,7 +403,7 @@ describe('HomePage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('hover, signed-in: the showcase card carries the library kebab', async () => {
+  it('hover, signed-in: the showcase card offers the watchlist toggle and Proposer', async () => {
     stubHoverCapability();
     server.use(
       authedUserHandler,
@@ -380,18 +415,15 @@ describe('HomePage', () => {
     renderPage();
     const user = userEvent.setup();
 
+    const card = await posterCard('trending 1');
+    expect(
+      within(card).getByRole('button', { name: 'Ajouter « trending 1 » à ma liste' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /plus d’actions/i })).not.toBeInTheDocument();
+
     await user.click(
-      await screen.findByRole('button', { name: /plus d’actions pour «\s*trending 1\s*»/i })
+      within(card).getByRole('button', { name: 'Proposer « trending 1 » dans une soirée' })
     );
-
-    expect(menuItemNames()).toEqual([
-      'Voir les détails',
-      'Ajouter à ma liste',
-      'Proposer dans une soirée',
-      'Ouvrir sur Letterboxd',
-    ]);
-
-    await user.click(screen.getByRole('menuitem', { name: 'Proposer dans une soirée' }));
 
     expect(
       await screen.findByText(/proposer «\s*trending 1\s*» dans une soirée/i)
@@ -414,63 +446,90 @@ describe('HomePage', () => {
     renderPage();
     const user = userEvent.setup();
 
+    const card = await posterCard('Film de ma liste');
+    expect(
+      within(card).queryByRole('img', { name: 'Déjà dans votre liste' })
+    ).not.toBeInTheDocument();
+
     await user.click(
-      await screen.findByRole('button', {
-        name: /plus d’actions pour «\s*film de ma liste\s*»/i,
-      })
+      within(card).getByRole('button', { name: 'Retirer « Film de ma liste » de ma liste' })
     );
-
-    expect(menuItemNames()).toEqual([
-      'Voir les détails',
-      'Retirer de ma liste',
-      'Proposer dans une soirée',
-      'Ouvrir sur Letterboxd',
-    ]);
-
-    await user.click(screen.getByRole('menuitem', { name: 'Retirer de ma liste' }));
 
     await waitFor(() => expect(removedPath).toContain('/watchlist/501'));
   });
 
-  it('signed-in: the personal rails show the title alone, without year, vote or runtime', async () => {
+  it('signed-in: Pour vous switches between the list, the recommendations and the friends', async () => {
     server.use(authedUserHandler, showcaseHandler, collectionsHandler, ...personalHandlers);
     renderPage();
 
-    const mine = (await screen.findByRole('heading', { name: 'Dans votre liste' })).closest(
+    const section = (await screen.findByRole('heading', { name: 'Pour vous', level: 2 })).closest(
       'section'
-    );
-    const friends = (await screen.findByRole('heading', { name: 'Vos amis ont vu' })).closest(
-      'section'
+    ) as HTMLElement;
+    const tabs = within(section).getAllByRole('tab');
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      'Dans votre liste',
+      'Recommandés',
+      'Vos amis ont vu',
+    ]);
+    expect(
+      within(section).queryByText('Parce que vous avez aimé Inception')
+    ).not.toBeInTheDocument();
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
+    const mineCard = within(section).getByText('Film de ma liste').closest('li');
+    expect(mineCard).toHaveTextContent('2021');
+    expect(within(section).getByRole('link', { name: /voir ma liste/i })).toHaveAttribute(
+      'href',
+      '/watchlist'
     );
 
-    const mineCard = within(mine!).getByText('Film de ma liste').closest('li');
-    expect(mineCard).not.toHaveTextContent('2021');
-    expect(mineCard).not.toHaveTextContent('3.7/5');
-    expect(mineCard).not.toHaveTextContent('2h08');
-    const friendCard = within(friends!).getByText("Film d'un ami").closest('li');
-    expect(friendCard).not.toHaveTextContent('2019');
-    expect(friendCard).not.toHaveTextContent('3.1/5');
-    expect(friendCard).not.toHaveTextContent('1h35');
+    await userEvent.click(tabs[2] as HTMLElement);
+    expect(await within(section).findByText("Film d'un ami")).toBeInTheDocument();
+    expect(within(section).queryByText('Film de ma liste')).not.toBeInTheDocument();
+
+    await userEvent.click(tabs[1] as HTMLElement);
+    expect(await within(section).findByText('recommendations 1')).toBeInTheDocument();
+    expect(within(section).getByText('Parce que vous avez aimé Inception')).toBeInTheDocument();
   });
 
-  it('hover, visitor: the kebab keeps only the details and Letterboxd', async () => {
+  it('signed-in with only a watchlist: Pour vous keeps that single tab', async () => {
+    server.use(
+      authedUserHandler,
+      showcaseHandler,
+      collectionsHandler,
+      ...personalHandlers.slice(0, 1),
+      http.get(`${TEST_API_V1}/users/me/following-watched-movies`, () =>
+        HttpResponse.json({ items: [] })
+      ),
+      http.get(`${TEST_API_V1}/users/me/watched-movies`, () => HttpResponse.json({ items: [] }))
+    );
+    renderPage();
+
+    const section = (await screen.findByRole('heading', { name: 'Pour vous', level: 2 })).closest(
+      'section'
+    ) as HTMLElement;
+    expect(
+      within(section)
+        .getAllByRole('tab')
+        .map((tab) => tab.textContent)
+    ).toEqual(['Dans votre liste']);
+  });
+
+  it('hover, visitor: the poster offers no library action', async () => {
     stubHoverCapability();
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
-    const user = userEvent.setup();
 
-    await user.click(
-      await screen.findByRole('button', { name: /plus d’actions pour «\s*trending 1\s*»/i })
-    );
-
-    expect(menuItemNames()).toEqual(['Voir les détails', 'Ouvrir sur Letterboxd']);
+    const card = await posterCard('trending 1');
+    expect(within(card).getAllByRole('button')).toEqual([
+      within(card).getByRole('button', { name: 'Voir les détails de « trending 1 »' }),
+    ]);
   });
 
   it('without hover capability: no kebab on the rails', async () => {
     server.use(authedUserHandler, showcaseHandler, collectionsHandler, ...personalHandlers);
     renderPage();
 
-    await screen.findByRole('heading', { name: /dans votre liste/i, level: 2 });
+    await screen.findByRole('heading', { name: 'Pour vous', level: 2 });
     await screen.findByRole('heading', { name: 'trending 1', level: 3 });
     expect(screen.queryByRole('button', { name: /plus d’actions/i })).not.toBeInTheDocument();
   });
@@ -496,6 +555,39 @@ describe('HomePage', () => {
     await waitFor(() => {
       expect(screen.queryByRole('heading', { name: /les plus proposés/i })).not.toBeInTheDocument();
     });
+    const cinema = screen
+      .getByRole('heading', { name: /actuellement au cinéma/i, level: 2 })
+      .closest('section') as HTMLElement;
+    expect(within(cinema).getByTestId('movie-preview-rail')).toBeInTheDocument();
+  });
+
+  it('shows now playing as a poster grid beside the most proposed list', async () => {
+    server.use(
+      authMeGuestHandler,
+      collectionsHandler,
+      http.get(`${TEST_API_V1}/movies/showcase`, ({ request }) => {
+        const section = new URL(request.url).searchParams.get('section') ?? 'trending';
+        const items = showcaseItems(section, 8).map((item, index) =>
+          section === 'most-proposed' ? { ...item, rank: index + 1, eventCount: 3 } : item
+        );
+        return HttpResponse.json({
+          section,
+          theme: null,
+          items,
+          disclaimer: '',
+          tmdbAttributionUrl: '',
+        });
+      })
+    );
+    renderPage();
+
+    await screen.findByRole('heading', { name: 'Les plus proposés', level: 2 });
+    const cinema = screen
+      .getByRole('heading', { name: /actuellement au cinéma/i, level: 2 })
+      .closest('section') as HTMLElement;
+    await within(cinema).findByRole('heading', { name: 'now-playing 1', level: 3 });
+    expect(within(cinema).queryByTestId('movie-preview-rail')).not.toBeInTheDocument();
+    expect(within(cinema).getAllByRole('heading', { level: 3 })).toHaveLength(8);
   });
 
   it('affiche les pastilles de genre en onglets', async () => {
@@ -547,27 +639,24 @@ describe('HomePage', () => {
     renderPage();
 
     await screen.findByRole('heading', { name: /tendances de la semaine/i, level: 2 });
-    expect(screen.queryByRole('heading', { name: /dans votre liste/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /vos amis ont vu/i })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', { name: /parce que vous avez aimé/i })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Pour vous' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: /dans votre liste/i })).not.toBeInTheDocument();
   });
 
-  it('adds the personal rows for a signed-in user', async () => {
+  it('orders the sections: Pour vous, trending, streaming, cinema beside the most proposed', async () => {
     server.use(authedUserHandler, showcaseHandler, collectionsHandler, ...personalHandlers);
     renderPage();
 
-    expect(
-      await screen.findByRole('heading', { name: /dans votre liste/i, level: 2 })
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByRole('heading', { name: /vos amis ont vu/i, level: 2 })
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByRole('heading', { name: /parce que vous avez aimé/i, level: 2 })
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /prochaine soirée/i })).not.toBeInTheDocument();
+    await screen.findByRole('heading', { name: 'Pour vous', level: 2 });
+    await screen.findByRole('heading', { name: 'Les plus proposés', level: 2 });
+    const order = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent ?? '');
+    const index = (name: string) => order.findIndex((text) => text.startsWith(name));
+    expect(index('Pour vous')).toBeLessThan(index('Tendances de la semaine'));
+    expect(index('Tendances de la semaine')).toBeLessThan(index('Ce soir en streaming'));
+    expect(index('Ce soir en streaming')).toBeLessThan(index('Actuellement au cinéma'));
+    expect(index('Actuellement au cinéma')).toBeLessThan(index('Les plus proposés'));
   });
 
   it('eager-loads the first posters of the first rendered rail only', async () => {
@@ -616,28 +705,35 @@ describe('HomePage', () => {
     );
     const { unmount } = renderPage();
 
-    await waitFor(() => expect(railImages(/ce soir en streaming/i)).toHaveLength(4));
-    expect(screen.queryByRole('heading', { name: /dans votre liste/i })).not.toBeInTheDocument();
-    expect(railLoading(/ce soir en streaming/i)).toEqual(['lazy', 'lazy', 'lazy', 'lazy']);
+    await waitFor(() => expect(railImages(/tendances de la semaine/i)).toHaveLength(4));
+    expect(screen.queryByRole('heading', { name: 'Pour vous' })).not.toBeInTheDocument();
+    expect(railLoading(/tendances de la semaine/i)).toEqual(['lazy', 'lazy', 'lazy', 'lazy']);
 
     releaseWatchlist();
-    await screen.findByRole('heading', { name: /dans votre liste/i, level: 2 });
-    expect(railLoading(/dans votre liste/i)).toEqual(['eager']);
-    expect(railLoading(/ce soir en streaming/i)).toEqual(['lazy', 'lazy', 'lazy', 'lazy']);
+    await screen.findByRole('heading', { name: 'Pour vous', level: 2 });
+    expect(railLoading(/pour vous/i)).toEqual(['eager']);
+    expect(railLoading(/tendances de la semaine/i)).toEqual(['lazy', 'lazy', 'lazy', 'lazy']);
     unmount();
 
     server.use(authMeGuestHandler, posterShowcaseHandler, collectionsHandler);
     renderPage();
 
-    await waitFor(() => expect(railImages(/ce soir en streaming/i)).toHaveLength(4));
-    expect(railLoading(/ce soir en streaming/i)).toEqual(['eager', 'eager', 'eager', 'lazy']);
+    await waitFor(() => expect(railImages(/tendances de la semaine/i)).toHaveLength(4));
+    expect(railLoading(/tendances de la semaine/i)).toEqual(['eager', 'eager', 'eager', 'lazy']);
   });
 
-  it('leads to movie night creation from the bottom band', () => {
+  it('leads to movie night creation from the top, without the old bottom band', async () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
 
-    expect(screen.getByRole('link', { name: /créer une soirée/i })).toHaveAttribute('href', '/new');
+    const create = await screen.findByRole('link', { name: 'Créer une soirée' });
+    const firstRow = await screen.findByRole('heading', { name: /tendances de la semaine/i });
+    expect(create).toHaveAttribute('href', '/new');
+    expect(create.compareDocumentPosition(firstRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    expect(screen.queryByText('Vous tenez votre film ?')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /créer une soirée/i })).toHaveLength(1);
   });
 
   it('declares a canonical on the root', () => {

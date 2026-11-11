@@ -291,6 +291,7 @@
   --font-size-4xl: 2.25rem;
   --font-size-5xl: 2.85rem;
   --font-size-6xl: 4.25rem;
+  --font-size-7xl: 7.5rem;
   --font-size-page-title: clamp(var(--font-size-3xl), 4vw, 1.875rem);
 
   --tracking-tighter: -0.03em;
@@ -445,6 +446,8 @@
   --color-surface-translucent: color-mix(in srgb, var(--color-surface) 70%, transparent);
   --color-surface-sunken: color-mix(in srgb, var(--color-text) 4%, var(--color-surface));
   --color-bg-translucent: color-mix(in srgb, var(--color-bg) 94%, transparent);
+  --color-bg-scrim: color-mix(in srgb, var(--color-bg) 80%, transparent);
+  --color-bg-veil: color-mix(in srgb, var(--color-bg) 35%, transparent);
   --color-bg-tint: color-mix(in srgb, var(--color-text) 3%, var(--color-bg));
   --color-primary-border-soft: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
   --color-brand-secondary-bg: color-mix(in srgb, var(--color-brand-secondary) 10%, transparent);

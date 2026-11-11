@@ -26,6 +26,8 @@ public sealed class GetMovieShowcaseHandlerTests
         _tmdb.Setup(t => t.GetEnrichmentAsync(It.IsAny<int>(), It.IsAny<MovieMediaType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(enrichment);
 
+    private static readonly MoviePickerOptions DefaultOptions = new();
+
     private GetMovieShowcaseHandler Build(string? apiKey = "key") =>
         new(
             _tmdb.Object,
@@ -196,10 +198,10 @@ public sealed class GetMovieShowcaseHandlerTests
     public async Task HandleAsync_MostProposedBelowThreshold_ReturnsEmpty()
     {
         _movies.Setup(r => r.ListMostProposedAsync(
-                MovieShowcaseCatalog.MostProposedMinEventCount,
+                DefaultOptions.MostProposedMinEventCount,
                 MovieShowcaseCatalog.MostProposedLimit,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Ranking(MovieShowcaseCatalog.MostProposedMinDistinctMovies - 1));
+            .ReturnsAsync(Ranking(DefaultOptions.MostProposedMinDistinctMovies - 1));
 
         var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.MostProposed));
 
@@ -210,17 +212,65 @@ public sealed class GetMovieShowcaseHandlerTests
     public async Task HandleAsync_MostProposedAboveThreshold_RanksFromOne()
     {
         _movies.Setup(r => r.ListMostProposedAsync(
-                MovieShowcaseCatalog.MostProposedMinEventCount,
+                DefaultOptions.MostProposedMinEventCount,
                 MovieShowcaseCatalog.MostProposedLimit,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Ranking(MovieShowcaseCatalog.MostProposedMinDistinctMovies));
+            .ReturnsAsync(Ranking(DefaultOptions.MostProposedMinDistinctMovies));
 
         var result = await Build().HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.MostProposed));
 
-        Assert.Equal(MovieShowcaseCatalog.MostProposedMinDistinctMovies, result.Items.Count);
+        Assert.Equal(DefaultOptions.MostProposedMinDistinctMovies, result.Items.Count);
         Assert.Equal(1, result.Items[0].Rank);
         Assert.Equal(2, result.Items[1].Rank);
         Assert.NotNull(result.Items[0].EventCount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MostProposed_HonoursLowerFloorsFromOptions()
+    {
+        _movies.Setup(r => r.ListMostProposedAsync(1, MovieShowcaseCatalog.MostProposedLimit, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Ranking(3));
+        var handler = new GetMovieShowcaseHandler(
+            _tmdb.Object,
+            _movies.Object,
+            new SharedCacheReadThrough(_cache, _shared.Object, new SingleFlight()),
+            Options.Create(new MoviePickerOptions
+            {
+                TmdbApiKey = "key",
+                MostProposedMinEventCount = 1,
+                MostProposedMinDistinctMovies = 1,
+            }));
+
+        var result = await handler.HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.MostProposed));
+
+        Assert.Equal(3, result.Items.Count);
+    }
+
+    [Fact]
+    public async Task HandleAsync_MostProposed_DoesNotServeARankingCachedUnderOtherFloors()
+    {
+        var shared = new InMemorySharedCache();
+        _movies.Setup(r => r.ListMostProposedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Ranking(3));
+        GetMovieShowcaseHandler On(MoviePickerOptions options) =>
+            new(
+                _tmdb.Object,
+                _movies.Object,
+                new SharedCacheReadThrough(new MemoryCache(new MemoryCacheOptions()), shared, new SingleFlight()),
+                Options.Create(options));
+
+        var strict = await On(new MoviePickerOptions { TmdbApiKey = "key" })
+            .HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.MostProposed));
+        var lenient = await On(new MoviePickerOptions
+        {
+            TmdbApiKey = "key",
+            MostProposedMinEventCount = 1,
+            MostProposedMinDistinctMovies = 1,
+        })
+            .HandleAsync(new MovieShowcaseQuery(MovieShowcaseSections.MostProposed));
+
+        Assert.Empty(strict.Items);
+        Assert.Equal(3, lenient.Items.Count);
     }
 
     [Fact]
@@ -228,7 +278,7 @@ public sealed class GetMovieShowcaseHandlerTests
     {
         _movies.Setup(r => r.ListMostProposedAsync(
                 It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Ranking(MovieShowcaseCatalog.MostProposedMinDistinctMovies));
+            .ReturnsAsync(Ranking(DefaultOptions.MostProposedMinDistinctMovies));
 
         var result = await Build(apiKey: null).HandleAsync(
             new MovieShowcaseQuery(MovieShowcaseSections.MostProposed));
@@ -494,7 +544,7 @@ public sealed class GetMovieShowcaseHandlerTests
         _tmdb.Setup(t => t.GetNowPlayingMoviesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Items(3));
         _movies.Setup(r => r.ListMostProposedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Ranking(MovieShowcaseCatalog.MostProposedMinDistinctMovies));
+            .ReturnsAsync(Ranking(DefaultOptions.MostProposedMinDistinctMovies));
         var handler = Build();
 
         await handler.HandleAsync(new MovieShowcaseQuery(section));

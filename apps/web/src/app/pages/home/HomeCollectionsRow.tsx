@@ -11,8 +11,19 @@ import { useMovieCollections } from '@/features/movies/hooks/useMovieShowcase';
 import { RAIL_PREVIEW_COUNT } from './HomeShowcaseRow';
 import styles from './HomeShowcaseRow.module.css';
 import { collectionDisplayName } from '@/features/movies/utils/collectionName';
+import type { MovieCollection } from '@/features/movies/api/showcaseApi';
 
 const SKELETON_CARDS = 6;
+const STACK_SIZE = 3;
+
+function stackSources(collection: MovieCollection): string[] {
+  const previews = collection.previewPosterPaths ?? [];
+  const paths = previews.length > 0 ? previews : [collection.posterPath];
+  return paths
+    .slice(0, STACK_SIZE)
+    .map((path) => tmdbPosterSrcForListDisplay(posterImageSrc(path)))
+    .filter((src): src is string => src != null);
+}
 const COLLECTION_CARD_HEIGHT = 102;
 
 export default function HomeCollectionsRow() {
@@ -47,7 +58,7 @@ export default function HomeCollectionsRow() {
     return null;
   } else {
     body = (
-      <MoviePreviewRail size="wide" itemCount={previewItems.length}>
+      <MoviePreviewRail size="md" itemCount={previewItems.length}>
         {previewItems.map((collection) => (
           <MovieCollectionCard
             key={collection.id}
@@ -59,7 +70,7 @@ export default function HomeCollectionsRow() {
               'showcase.collectionMovies',
               t
             )}
-            posterSrc={tmdbPosterSrcForListDisplay(posterImageSrc(collection.posterPath))}
+            stackSrcs={stackSources(collection)}
           />
         ))}
       </MoviePreviewRail>

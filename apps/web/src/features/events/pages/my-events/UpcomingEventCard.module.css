@@ -36,6 +36,26 @@
   min-width: 0;
 }
 
+.eyebrow {
+  composes: overline from '@/shared/components/typography.module.css';
+  font-size: var(--font-size-2xs);
+  line-height: var(--leading-none);
+  color: var(--color-primary-text);
+}
+
+.card[data-compact] {
+  min-height: 0;
+}
+
+.card[data-compact] .main {
+  gap: var(--space-1-5);
+}
+
+.card[data-compact] .theme,
+.card[data-compact] .people {
+  display: none;
+}
+
 .title {
   max-width: 100%;
   overflow: hidden;
@@ -91,6 +111,20 @@
 .actionIcon {
   flex-shrink: 0;
   transform: translateY(calc(var(--text-optical-nudge) * -1));
+}
+
+.card:focus-visible {
+  --fan-spread: var(--space-10);
+  --fan-tilt: 15deg;
+  --fan-lift: calc(var(--space-1) * -1);
+}
+
+@media (hover: hover) {
+  .card:hover {
+    --fan-spread: var(--space-10);
+    --fan-tilt: 15deg;
+    --fan-lift: calc(var(--space-1) * -1);
+  }
 }
 
 .menu {

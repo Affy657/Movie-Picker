@@ -126,6 +126,38 @@ public sealed class MoviesShowcaseControllerTests
     }
 
     [Fact]
+    public async Task GetShowcaseThemes_ReturnsTheHandlerPayloadForTheBrowserToCache()
+    {
+        var payload = new MovieShowcaseThemeListResponse
+        {
+            Items = [new MovieShowcaseThemeResponse { Theme = "frissons", Posters = [new MovieShowcasePosterResponse { Title = "Alien", PosterPath = "/alien.jpg" }] }],
+        };
+        var themes = new Mock<IGetMovieShowcaseThemesHandler>();
+        themes.Setup(h => h.HandleAsync(It.IsAny<CancellationToken>())).ReturnsAsync(payload);
+
+        var result = await _controller.GetShowcaseThemes(themes.Object, CancellationToken.None);
+
+        Assert.Same(payload, Assert.IsType<OkObjectResult>(result).Value);
+        Assert.Equal("public, max-age=300, stale-while-revalidate=3600", _controller.Response.Headers.CacheControl.ToString());
+    }
+
+    [Fact]
+    public async Task GetShowcaseThemes_KeepsAnIncompleteListOnlyBriefly()
+    {
+        var payload = new MovieShowcaseThemeListResponse
+        {
+            IsComplete = false,
+            Items = [new MovieShowcaseThemeResponse { Theme = "frissons", Posters = [new MovieShowcasePosterResponse { Title = "Alien", PosterPath = "/alien.jpg" }] }],
+        };
+        var themes = new Mock<IGetMovieShowcaseThemesHandler>();
+        themes.Setup(h => h.HandleAsync(It.IsAny<CancellationToken>())).ReturnsAsync(payload);
+
+        await _controller.GetShowcaseThemes(themes.Object, CancellationToken.None);
+
+        Assert.Equal("public, max-age=60", _controller.Response.Headers.CacheControl.ToString());
+    }
+
+    [Fact]
     public async Task PublicEndpoints_LetTheBrowserCacheTheResponse()
     {
         CaptureQuery();

@@ -90,7 +90,6 @@ export default function ProfileFavoritesSection({
               key={`${item.mediaType}|${item.tmdbId}`}
               item={item}
               ratingScale={ratingScale}
-              showFacts={false}
               hasHover={library.hasHover}
               isLoggedIn={library.isLoggedIn}
               inWatchlist={library.has(item)}

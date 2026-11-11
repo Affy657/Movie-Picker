@@ -1,10 +1,9 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import { Skeleton, SkeletonScreen } from '@/shared/components/Skeleton';
 import { Tabs, TabPanel, type TabDef } from '@/shared/components/Tabs';
 import { useTranslation, type TranslationKey } from '@/shared/i18n';
 import { pluralizeCount } from '@/shared/i18n/pluralizeCount';
 import MoviePreviewRow, { MoviePreviewRail } from '@/features/movies/components/MoviePreviewRow';
-import { MovieRankBadge } from '@/features/movies/components/ShowcaseMovieCard';
 import MovieBrowseCard, {
   type MovieBrowseCardItem,
   type MovieLibraryActions,
@@ -19,6 +18,16 @@ import InlineError from '@/shared/components/InlineError';
 
 const SKELETON_CARDS = 6;
 export const RAIL_PREVIEW_COUNT = 20;
+const TOP_COUNT = 10;
+const GRID_COUNT = 8;
+
+export type ShowcaseRowLayout = 'rail' | 'ranked' | 'grid';
+
+const LAYOUT_LIMIT: Record<ShowcaseRowLayout, number> = {
+  rail: RAIL_PREVIEW_COUNT,
+  ranked: TOP_COUNT,
+  grid: GRID_COUNT,
+};
 
 interface TabConfig<T extends string> {
   ariaLabel: string;
@@ -27,16 +36,21 @@ interface TabConfig<T extends string> {
   onChange: (key: T) => void;
 }
 
-interface Props<T extends string> {
-  headingKey: TranslationKey;
-  subtitle?: string;
-  seeAllTo: string;
+interface BodyProps {
   query: ShowcaseQuery;
-  showRank?: boolean;
+  layout?: ShowcaseRowLayout;
   eagerCount?: number;
   library: MovieLibraryActions;
   onSelect: (item: ShowcaseItem) => void;
+  emptyState?: boolean;
+}
+
+interface Props<T extends string> extends BodyProps {
+  headingKey: TranslationKey;
+  subtitle?: string;
+  seeAllTo: string;
   tabConfig?: TabConfig<T>;
+  className?: string;
 }
 
 function toCardItem(item: ShowcaseItem): MovieBrowseCardItem {
@@ -59,18 +73,93 @@ function SkeletonRow({ label }: Readonly<{ label: string }>) {
         {Array.from({ length: SKELETON_CARDS }, (_, index) => (
           <li key={index} className={styles.skeletonCard}>
             <Skeleton variant="poster" />
-            <div className={styles.skeletonBody}>
-              <Skeleton
-                variant="text"
-                width="80%"
-                height="calc(2 * var(--leading-snug) * var(--font-size-sm))"
-              />
-              <Skeleton variant="text" width="40%" height="var(--space-4)" />
-            </div>
           </li>
         ))}
       </ul>
     </SkeletonScreen>
+  );
+}
+
+function ShowcaseCards({
+  items,
+  layout,
+  eagerCount,
+  library,
+  onSelect,
+}: Readonly<{
+  items: ShowcaseItem[];
+  layout: ShowcaseRowLayout;
+  eagerCount: number;
+  library: MovieLibraryActions;
+  onSelect: (item: ShowcaseItem) => void;
+}>) {
+  const cards = items.map((item, index) => {
+    const cardItem = toCardItem(item);
+    return (
+      <MovieBrowseCard
+        key={`${cardItem.tmdbId}|${cardItem.mediaType}`}
+        item={cardItem}
+        rank={layout === 'ranked' ? index + 1 : undefined}
+        eager={index < eagerCount}
+        hasHover={library.hasHover}
+        isLoggedIn={library.isLoggedIn}
+        inWatchlist={library.has(cardItem)}
+        onToggleWatchlist={() => library.toggle(cardItem)}
+        onProposeToEvent={() => library.propose(cardItem)}
+        onOpenDetails={() => onSelect(item)}
+      />
+    );
+  });
+
+  if (layout === 'grid') return <ul className={styles.posterGrid}>{cards}</ul>;
+  return (
+    <MoviePreviewRail size={layout === 'ranked' ? 'ranked' : 'md'} itemCount={items.length}>
+      {cards}
+    </MoviePreviewRail>
+  );
+}
+
+export function ShowcaseRowBody({
+  query,
+  layout = 'rail',
+  eagerCount = 0,
+  library,
+  onSelect,
+  emptyState = false,
+}: Readonly<BodyProps>): ReactNode {
+  const { t } = useTranslation();
+  const showcase = useMovieShowcase(query);
+  const items = (showcase.data?.items ?? []).slice(0, LAYOUT_LIMIT[layout]);
+
+  if (showcase.isPending) return <SkeletonRow label={t('showcase.loading')} />;
+  if (showcase.isError) {
+    return (
+      <InlineError
+        message={t('showcase.error')}
+        retryLabel={t('showcase.retry')}
+        onRetry={() => void showcase.refetch()}
+        messageRole="status"
+      />
+    );
+  }
+  if (items.length === 0) {
+    return emptyState ? (
+      <EmptyState
+        compact
+        icon={<Film aria-hidden size={ICON_SIZE['2xl']} />}
+        title={t('showcase.empty')}
+        message={t('showcase.emptyMessage')}
+      />
+    ) : null;
+  }
+  return (
+    <ShowcaseCards
+      items={items}
+      layout={layout}
+      eagerCount={eagerCount}
+      library={library}
+      onSelect={onSelect}
+    />
   );
 }
 
@@ -79,92 +168,33 @@ export default function HomeShowcaseRow<T extends string>({
   subtitle,
   seeAllTo,
   query,
-  showRank = false,
+  layout = 'rail',
   eagerCount = 0,
   library,
   onSelect,
   tabConfig,
+  className,
 }: Readonly<Props<T>>) {
   const { t } = useTranslation();
   const panelIdBase = useId();
   const showcase = useMovieShowcase(query);
-  const items = showcase.data?.items ?? [];
-  const previewItems = items.slice(0, RAIL_PREVIEW_COUNT);
+  const total = showcase.data?.items.length ?? 0;
+  const settledEmpty = !showcase.isPending && !showcase.isError && total === 0;
 
-  const seeAllLabel = pluralizeCount(
-    items.length,
-    'showcase.seeAllMoviesOne',
-    'showcase.seeAllMovies',
-    t
+  if (settledEmpty && !tabConfig) return null;
+
+  const seeAllLabel = pluralizeCount(total, 'showcase.seeAllMoviesOne', 'showcase.seeAllMovies', t);
+
+  let body = (
+    <ShowcaseRowBody
+      query={query}
+      layout={layout}
+      eagerCount={eagerCount}
+      library={library}
+      onSelect={onSelect}
+      emptyState={!!tabConfig}
+    />
   );
-
-  const grid = (
-    <MoviePreviewRail size="md" itemCount={previewItems.length}>
-      {previewItems.map((item, index) => {
-        const cardItem = toCardItem(item);
-        return (
-          <MovieBrowseCard
-            key={`${cardItem.tmdbId}|${cardItem.mediaType}`}
-            item={cardItem}
-            showFacts={false}
-            meta={
-              showRank && item.eventCount != null
-                ? pluralizeCount(
-                    item.eventCount,
-                    'showcase.eventCountOne',
-                    'showcase.eventCount',
-                    t
-                  )
-                : undefined
-            }
-            eager={index < eagerCount}
-            hasHover={library.hasHover}
-            isLoggedIn={library.isLoggedIn}
-            inWatchlist={library.has(cardItem)}
-            onToggleWatchlist={() => library.toggle(cardItem)}
-            onProposeToEvent={() => library.propose(cardItem)}
-            onOpenDetails={() => onSelect(item)}
-            leadingBadge={
-              showRank && item.rank != null ? (
-                <MovieRankBadge
-                  rank={item.rank}
-                  label={t('showcase.rank', { rank: item.rank })}
-                  stacked
-                />
-              ) : undefined
-            }
-          />
-        );
-      })}
-    </MoviePreviewRail>
-  );
-
-  let body;
-  if (showcase.isPending) {
-    body = <SkeletonRow label={t('showcase.loading')} />;
-  } else if (showcase.isError) {
-    body = (
-      <InlineError
-        message={t('showcase.error')}
-        retryLabel={t('showcase.retry')}
-        onRetry={() => void showcase.refetch()}
-        messageRole="status"
-      />
-    );
-  } else if (items.length === 0 && !tabConfig) {
-    return null;
-  } else if (items.length === 0) {
-    body = (
-      <EmptyState
-        compact
-        icon={<Film aria-hidden size={ICON_SIZE['2xl']} />}
-        title={t('showcase.empty')}
-        message={t('showcase.emptyMessage')}
-      />
-    );
-  } else {
-    body = grid;
-  }
 
   if (tabConfig) {
     body = (
@@ -178,8 +208,9 @@ export default function HomeShowcaseRow<T extends string>({
     <MoviePreviewRow
       heading={t(headingKey)}
       subtitle={subtitle}
-      seeAllTo={items.length > 0 ? seeAllTo : undefined}
-      seeAllLabel={items.length > 0 ? seeAllLabel : undefined}
+      seeAllTo={total > 0 ? seeAllTo : undefined}
+      seeAllLabel={total > 0 ? seeAllLabel : undefined}
+      className={className}
       toolbar={
         tabConfig ? (
           <Tabs
@@ -188,7 +219,7 @@ export default function HomeShowcaseRow<T extends string>({
             active={tabConfig.active}
             onChange={tabConfig.onChange}
             ariaLabel={tabConfig.ariaLabel}
-            variant="pill"
+            variant="chip"
             className={styles.tabs}
           />
         ) : undefined

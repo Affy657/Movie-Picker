@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
@@ -52,4 +53,29 @@ public sealed class MovieCollectionResponse
 
     public string? PosterPath { get; init; }
     public int MovieCount { get; init; }
+
+    public IReadOnlyList<string> PreviewPosterPaths { get; init; } = Array.Empty<string>();
+}
+
+public sealed class MovieShowcaseThemeListResponse
+{
+    public IReadOnlyList<MovieShowcaseThemeResponse> Items { get; init; } =
+        Array.Empty<MovieShowcaseThemeResponse>();
+
+    [JsonIgnore]
+    public bool IsComplete { get; init; } = true;
+}
+
+public sealed class MovieShowcaseThemeResponse
+{
+    public string Theme { get; init; } = string.Empty;
+
+    public IReadOnlyList<MovieShowcasePosterResponse> Posters { get; init; } =
+        Array.Empty<MovieShowcasePosterResponse>();
+}
+
+public sealed class MovieShowcasePosterResponse
+{
+    public string Title { get; init; } = string.Empty;
+    public string PosterPath { get; init; } = string.Empty;
 }
