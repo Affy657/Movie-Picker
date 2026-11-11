@@ -612,11 +612,18 @@ describe('HomePage', () => {
     expect(railLoading(/ce soir en streaming/i)).toEqual(['eager', 'eager', 'eager', 'lazy']);
   });
 
-  it('leads to movie night creation from the bottom band', () => {
+  it('leads to movie night creation from the top, without the old bottom band', async () => {
     server.use(authMeGuestHandler, showcaseHandler, collectionsHandler);
     renderPage();
 
-    expect(screen.getByRole('link', { name: /créer une soirée/i })).toHaveAttribute('href', '/new');
+    const create = await screen.findByRole('link', { name: 'Créer une soirée' });
+    const firstRow = await screen.findByRole('heading', { name: /tendances de la semaine/i });
+    expect(create).toHaveAttribute('href', '/new');
+    expect(create.compareDocumentPosition(firstRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    expect(screen.queryByText('Vous tenez votre film ?')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /créer une soirée/i })).toHaveLength(1);
   });
 
   it('declares a canonical on the root', () => {

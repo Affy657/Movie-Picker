@@ -14,7 +14,7 @@ function flattenEvents(pages: MyEventsListResponse[] | undefined): MyEventSummar
   return pages?.flatMap((p) => p.events) ?? [];
 }
 
-function nextPageOffset(
+export function nextPageOffset(
   lastPage: MyEventsListResponse,
   allPages: MyEventsListResponse[]
 ): number | undefined {

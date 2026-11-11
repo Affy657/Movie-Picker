@@ -1,0 +1,192 @@
+.hero {
+  position: relative;
+  isolation: isolate;
+  margin-top: calc(var(--space-6) * -1);
+  margin-inline: calc(50% - 50vw);
+  padding: var(--space-12) calc(50vw - 50%) var(--space-10);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-10);
+}
+
+.opener {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  text-wrap: balance;
+}
+
+.intro {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.searchForm {
+  display: flex;
+  margin-top: var(--space-1);
+}
+
+.searchField {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.examples {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.panel {
+  min-width: 0;
+}
+
+.panelPlaceholder {
+  min-height: 12rem;
+}
+
+.nextEvent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2-5);
+}
+
+.nextEventHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-wider);
+  line-height: var(--leading-none);
+  text-transform: uppercase;
+  color: var(--color-primary-text);
+}
+
+.textLink {
+  composes: expanded from '@/shared/components/tapTarget.module.css';
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-0-5);
+  min-height: var(--space-6);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary-text);
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .textLink:hover {
+    color: var(--color-text);
+  }
+}
+
+.createCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  background: var(--color-surface-translucent);
+  backdrop-filter: var(--backdrop-blur-bar);
+}
+
+.wheel {
+  flex: 0 0 auto;
+  width: 8.5rem;
+  height: auto;
+}
+
+.createText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  min-width: 0;
+}
+
+.createTitle {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--color-text);
+}
+
+.createBody {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.createActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.createCompact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: inherit;
+  text-decoration: none;
+  background: var(--color-surface-translucent);
+  backdrop-filter: var(--backdrop-blur-bar);
+}
+
+.createCompact .createTitle {
+  font-size: var(--font-size-sm);
+}
+
+.createCompact .createBody {
+  font-size: var(--font-size-xs);
+}
+
+.wheelSmall {
+  flex: 0 0 auto;
+  width: var(--space-10);
+  height: auto;
+}
+
+.createChevron {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 47.9375rem) {
+  .hero {
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-6);
+  }
+
+  .inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+
+  .panelPlaceholder {
+    min-height: var(--space-20);
+  }
+}

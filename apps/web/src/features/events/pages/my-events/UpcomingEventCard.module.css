@@ -36,6 +36,28 @@
   min-width: 0;
 }
 
+.eyebrow {
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-wider);
+  line-height: var(--leading-none);
+  text-transform: uppercase;
+  color: var(--color-primary-text);
+}
+
+.card[data-compact] {
+  min-height: 0;
+}
+
+.card[data-compact] .main {
+  gap: var(--space-1-5);
+}
+
+.card[data-compact] .theme,
+.card[data-compact] .people {
+  display: none;
+}
+
 .title {
   max-width: 100%;
   overflow: hidden;

@@ -1,8 +1,5 @@
-import { useState, type SubmitEvent } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useState } from 'react';
 import PageLayout from '@/shared/components/PageLayout';
-import { buttonClass } from '@/shared/components/Button';
-import SearchField from '@/shared/components/SearchField';
 import { usePageSeo } from '@/shared/hooks/usePageSeo';
 import { absoluteUrl } from '@/shared/seo/siteMeta';
 import { useLocale, useTranslation } from '@/shared/i18n';
@@ -31,6 +28,7 @@ import LibraryMovieDetails, {
   useLibraryMovieDetails,
   type LibraryMovieSeed,
 } from '@/features/watchlist/components/LibraryMovieDetails';
+import HomeHero from './home/HomeHero';
 import HomeShowcaseRow from './home/HomeShowcaseRow';
 import HomeCollectionsRow from './home/HomeCollectionsRow';
 import HomePersonalRow, { type PersonalRowItem } from './home/HomePersonalRow';
@@ -40,13 +38,8 @@ import {
   useWatchlistRow,
 } from './home/usePersonalRows';
 import styles from './HomePage.module.css';
-import Card from '@/shared/components/Card';
-import { ICON_SIZE } from '@/shared/components/iconSize';
-import LinkButton from '@/shared/components/LinkButton';
 
 type GenreTabKey = 'all' | `${number}`;
-
-const SEARCH_EXAMPLES = ['Dune', 'Bong Joon-ho'];
 
 const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
 const FIRST_RAIL_EAGER_COUNT = 3;
@@ -75,8 +68,6 @@ export default function HomePage() {
   useIdlePrefetch(MOVIE_DETAILS_CHUNKS);
   const { locale } = useLocale();
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
   const [genreTab, setGenreTab] = useState<GenreTabKey>('all');
   const [themeTab, setThemeTab] = useState<ShowcaseTheme>(THEME_KEYS[0]);
   const [providerTab, setProviderTab] = useState<ShowcaseProvider>(PROVIDER_KEYS[0]);
@@ -153,44 +144,9 @@ export default function HomePage() {
       genreIds: item.genreIds,
     });
 
-  const runSearch = (term: string) => {
-    const trimmed = term.trim();
-    if (!trimmed) return;
-    void navigate(ROUTES.movieSearchFor(trimmed));
-  };
-
-  const submitSearch = (event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    runSearch(searchTerm);
-  };
-
   return (
     <PageLayout className={styles.home}>
-      <div className={styles.opener}>
-        <h1 className={styles.title}>{t('home.title')}</h1>
-        <p className={styles.intro}>{t('home.intro')}</p>
-        <form className={styles.searchForm} role="search" onSubmit={submitSearch}>
-          <label className="visually-hidden" htmlFor="home-search">
-            {t('home.searchLabel')}
-          </label>
-          <SearchField
-            id="home-search"
-            className={styles.searchField}
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder={t('home.searchPlaceholder')}
-            iconSize={ICON_SIZE.md}
-          />
-        </form>
-        <p className={styles.examples}>
-          <span className={styles.examplesLabel}>{t('home.searchExamplesLabel')}</span>
-          {SEARCH_EXAMPLES.map((example) => (
-            <LinkButton key={example} size="sm" onClick={() => runSearch(example)}>
-              {example}
-            </LinkButton>
-          ))}
-        </p>
-      </div>
+      <HomeHero />
 
       {watchlist.error ? (
         <p className="error" role="alert">
@@ -283,24 +239,6 @@ export default function HomePage() {
         library={library}
         onSelect={openDetails}
       />
-
-      <Card
-        as="section"
-        padding="none"
-        radius="lg"
-        className={styles.ctaBand}
-        aria-labelledby="home-cta-title"
-      >
-        <div className={styles.ctaText}>
-          <p id="home-cta-title" className={styles.ctaTitle}>
-            {t('home.ctaBand.title')}
-          </p>
-          <p className={styles.ctaBody}>{t('home.ctaBand.body')}</p>
-        </div>
-        <Link to={ROUTES.createEvent} className={buttonClass({ variant: 'primary' })}>
-          {t('home.ctaBand.action')}
-        </Link>
-      </Card>
 
       <LibraryMovieDetails
         target={details.target}

@@ -8,6 +8,7 @@ import {
   posterImageSrc,
   tmdbPosterSrcForListDisplay,
   tmdbPosterSrcSetForList,
+  posterSrcAtSize,
 } from '@/shared/utils/posterUrl';
 
 describe('posterImageSrc', () => {
@@ -80,5 +81,26 @@ describe('tmdbPosterSrcSetForList', () => {
 
   it('returns undefined for malformed input', () => {
     expect(tmdbPosterSrcSetForList('not a url')).toBeUndefined();
+  });
+});
+
+describe('posterSrcAtSize', () => {
+  it('asks the API relay for another size', () => {
+    expect(
+      posterSrcAtSize('https://api.movie-picker.fr/api/v1/posters/tmdb/w500/abc.jpg', 'w154')
+    ).toBe('https://api.movie-picker.fr/api/v1/posters/tmdb/w154/abc.jpg');
+  });
+
+  it('asks TMDB for another size', () => {
+    expect(posterSrcAtSize('https://image.tmdb.org/t/p/original/abc.jpg', 'w154')).toBe(
+      'https://image.tmdb.org/t/p/w154/abc.jpg'
+    );
+  });
+
+  it('leaves an unsized or missing URL alone', () => {
+    expect(posterSrcAtSize('https://example.com/abc.jpg', 'w154')).toBe(
+      'https://example.com/abc.jpg'
+    );
+    expect(posterSrcAtSize(undefined, 'w154')).toBeUndefined();
   });
 });

@@ -61,10 +61,16 @@ export const en: Locale = {
     seoTitle: "Movie Picker: pick the night's film, together",
     seoDescription:
       'Search for a film, browse trending titles, cinema releases and themed selections, then create the movie night that goes with it.',
-    ctaBand: {
-      title: 'Found your film?',
-      body: 'Create the night, invite your friends, let the wheel decide.',
+    nextEvent: {
+      title: 'Your next movie night',
+      createAnother: 'Create another night',
+    },
+    createNight: {
+      title: 'Can’t decide?',
+      body: 'Everyone proposes a film, everyone votes, the wheel decides.',
+      bodyShort: 'Create a night, the wheel decides.',
       action: 'Create a night',
+      howItWorks: 'How it works',
     },
     searchLabel: 'Search for a film',
     searchPlaceholder: 'Title, director, actor',

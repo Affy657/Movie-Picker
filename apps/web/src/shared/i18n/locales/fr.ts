@@ -59,10 +59,16 @@ export const fr = {
     seoTitle: 'Movie Picker : choisir le film de la soirée, ensemble',
     seoDescription:
       'Cherchez un film, parcourez les tendances, les sorties en salles et les sélections thématiques, puis créez la soirée qui va avec.',
-    ctaBand: {
-      title: 'Vous tenez votre film ?',
-      body: 'Créez la soirée, invitez vos amis, laissez la roue trancher.',
+    nextEvent: {
+      title: 'Votre prochaine soirée',
+      createAnother: 'Créer une autre soirée',
+    },
+    createNight: {
+      title: 'Vous n’arrivez pas à choisir ?',
+      body: 'Chacun propose un film, tout le monde vote, la roue tranche.',
+      bodyShort: 'Créez une soirée, la roue tranche.',
       action: 'Créer une soirée',
+      howItWorks: 'Comment ça marche',
     },
     searchLabel: 'Chercher un film',
     searchPlaceholder: 'Titre, réalisateur, acteur',
