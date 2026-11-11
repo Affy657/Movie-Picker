@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.10.1] - 2026-11-12
+
 ### Changed
 
 - **« Proposer un film » s'ouvre dans une fenêtre** : au centre de l'écran sur ordinateur, sur toute la hauteur sur téléphone, sans faire défiler la page. Elle montre tout de suite vos recherches récentes et les films de votre liste, chaque film avec son année, sa durée, sa note TMDB et s'il est en streaming. Un clic sur le titre ouvre un aperçu où ajouter un mot pour convaincre ; un film déjà proposé dit par qui et se vote d'ici ; chaque proposition se confirme et peut s'annuler.
@@ -673,7 +675,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.10.0...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.10.1...HEAD
+[1.10.1]: https://github.com/Affy657/Movie-Picker/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/Affy657/Movie-Picker/compare/v1.9.1...v1.10.0
 [1.9.1]: https://github.com/Affy657/Movie-Picker/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/Affy657/Movie-Picker/compare/v1.8.0...v1.9.0
