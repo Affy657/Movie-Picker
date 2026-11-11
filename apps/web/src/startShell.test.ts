@@ -7,9 +7,10 @@ import { BOOT_FAILURE_COPY } from '@/shared/pwa/bootFailure';
 import indexHtml from '../index.html?raw';
 
 function entryFailureScript(): string {
-  const scripts = [...indexHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(
-    ([, code]) => code ?? ''
-  );
+  const parsed = new DOMParser().parseFromString(indexHtml, 'text/html');
+  const scripts = [...parsed.querySelectorAll('script')]
+    .filter((element) => element.attributes.length === 0)
+    .map((element) => element.textContent ?? '');
   const script = scripts.find((code) => code.includes("addEventListener('error'"));
   expect(script).toBeDefined();
   return script!;
