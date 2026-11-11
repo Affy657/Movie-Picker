@@ -58,7 +58,8 @@ public sealed record TmdbCollectionSummary(
     string Name,
     string? Overview,
     string? PosterPath,
-    int MovieCount);
+    int MovieCount,
+    IReadOnlyList<string> PartPosterPaths);
 
 public interface ITmdbMovieSearch
 {

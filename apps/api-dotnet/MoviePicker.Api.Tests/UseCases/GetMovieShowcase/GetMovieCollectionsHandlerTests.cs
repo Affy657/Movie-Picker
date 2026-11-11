@@ -24,7 +24,13 @@ public sealed class GetMovieCollectionsHandlerTests
             Options.Create(new MoviePickerOptions { TmdbApiKey = apiKey }));
 
     private static TmdbCollectionSummary Summary(int id) =>
-        new(id, $"Saga {id}", $"Resume {id}", $"/poster-{id}.jpg", 4);
+        new(
+            id,
+            $"Saga {id}",
+            $"Resume {id}",
+            $"/poster-{id}.jpg",
+            5,
+            [$"/part-1-{id}.jpg", $"/part-2-{id}.jpg", $"/part-3-{id}.jpg", $"/part-4-{id}.jpg", $"/part-5-{id}.jpg"]);
 
     private void SetupAllCollections()
     {
@@ -85,7 +91,45 @@ public sealed class GetMovieCollectionsHandlerTests
         Assert.Equal($"Saga {expectedId}", first.Name);
         Assert.Equal($"Resume {expectedId}", first.Overview);
         Assert.Equal($"/poster-{expectedId}.jpg", first.PosterPath);
-        Assert.Equal(4, first.MovieCount);
+        Assert.Equal(5, first.MovieCount);
+    }
+
+    [Fact]
+    public async Task HandleAsync_PreviewsTheFirstThreePostersOfEachSagaInItsOrder()
+    {
+        SetupAllCollections();
+        var expectedId = MovieShowcaseCatalog.CollectionIds[0];
+
+        var first = (await Build().HandleAsync()).Items[0];
+
+        Assert.Equal(
+            [$"/part-1-{expectedId}.jpg", $"/part-2-{expectedId}.jpg", $"/part-3-{expectedId}.jpg"],
+            first.PreviewPosterPaths);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SagaWithFewerPostersThanThePreview_PreviewsThoseItHas()
+    {
+        _tmdb.Setup(t => t.GetCollectionAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((int id, CancellationToken _) => new TmdbCollectionSummary(id, $"Saga {id}", null, null, 2, ["/only.jpg"]));
+
+        var first = (await Build().HandleAsync()).Items[0];
+
+        Assert.Equal(["/only.jpg"], first.PreviewPosterPaths);
+    }
+
+    [Fact]
+    public async Task HandleAsync_SnapshotSharedBeforeThePreviewsExisted_IsNotServed()
+    {
+        SetupAllCollections();
+        var legacySnapshot = new List<MovieCollectionResponse> { new() { Id = 1, Name = "Saga without previews", MovieCount = 3 } };
+        _shared.Setup(c => c.TryGetAsync<IReadOnlyList<MovieCollectionResponse>>("showcase-collections-v1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SharedCacheEntry<IReadOnlyList<MovieCollectionResponse>>(legacySnapshot, DateTimeOffset.UtcNow.AddHours(1)));
+
+        var result = await Build().HandleAsync();
+
+        Assert.Equal(MovieShowcaseCatalog.CollectionIds.Count, result.Items.Count);
+        Assert.All(result.Items, item => Assert.Equal(3, item.PreviewPosterPaths.Count));
     }
 
     [Fact]

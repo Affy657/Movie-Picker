@@ -90,7 +90,7 @@ public sealed class StubTmdbMovieSearch : ITmdbMovieSearch
 
     public Task<TmdbCollectionSummary?> GetCollectionAsync(int collectionId, CancellationToken ct = default) =>
         Task.FromResult<TmdbCollectionSummary?>(
-            new TmdbCollectionSummary(collectionId, $"Saga stub {collectionId}", "Collection générée par le stub TMDB.", null, 4));
+            new TmdbCollectionSummary(collectionId, $"Saga stub {collectionId}", "Collection générée par le stub TMDB.", null, 4, []));
 
     public Task<IReadOnlyList<TmdbSearchItem>> GetRecommendationsAsync(
         int tmdbId,

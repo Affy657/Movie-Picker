@@ -20,6 +20,7 @@ public static class MovieShowcaseCatalog
     public const int MostProposedMinEventCount = 2;
     public const int MostProposedMinDistinctMovies = 30;
     public const int MaxSeedTmdbId = 10_000_000;
+    public const int PreviewPosterCount = 3;
 
     private const int A24CompanyId = 41_077;
     private const int FamilyGenreId = 10_751;

@@ -61,6 +61,7 @@ public sealed class StubTmdbMovieSearchShowcaseTests
         Assert.Equal(1_241, summary!.Id);
         Assert.Equal("Saga stub 1241", summary.Name);
         Assert.Equal(4, summary.MovieCount);
+        Assert.Empty(summary.PartPosterPaths);
     }
 
     [Fact]

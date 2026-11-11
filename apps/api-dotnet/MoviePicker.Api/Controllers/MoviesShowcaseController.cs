@@ -47,6 +47,22 @@ public sealed class MoviesShowcaseController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("showcase/themes")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.MovieShowcasePolicy)]
+    [SharedRateLimit(RateLimitingExtensions.MovieShowcaseFreeKeyHourlyPolicy)]
+    [ProducesResponseType(typeof(MovieShowcaseThemeListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> GetShowcaseThemes(
+        [FromServices] IGetMovieShowcaseThemesHandler handler,
+        CancellationToken ct)
+    {
+        var result = await handler.HandleAsync(ct);
+        Response.Headers.CacheControl = PublicCacheControl;
+        return Ok(result);
+    }
+
     [HttpGet("collections")]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitingExtensions.MovieShowcasePolicy)]

@@ -517,6 +517,43 @@ public sealed class TmdbMovieSearchTests
     }
 
     [Fact]
+    public async Task GetCollectionAsync_ListsThePartPostersInReleaseOrderAndSkipsFilmsWithoutOne()
+    {
+        var collectionJson = """
+            {
+              "id": 10,
+              "name": "Star Wars - La Saga",
+              "poster_path": "/saga.jpg",
+              "parts": [
+                { "id": 3, "title": "Le Retour du Jedi", "release_date": "1983-05-25", "poster_path": "/jedi.jpg" },
+                { "id": 4, "title": "Episode IX", "release_date": "", "poster_path": "/announced.jpg" },
+                { "id": 1, "title": "La Guerre des étoiles", "release_date": "1977-05-25", "poster_path": "/hope.jpg" },
+                { "id": 5, "title": "Sans affiche", "release_date": "1979-01-01", "poster_path": null },
+                { "id": 2, "title": "L'Empire contre-attaque", "release_date": "1980-05-20", "poster_path": "/empire.jpg" }
+              ]
+            }
+            """;
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(collectionJson) });
+        var sut = CreateSut(CreateHttpClient(mockHandler.Object), Options.Create(new MoviePickerOptions { TmdbApiKey = "key" }));
+
+        var summary = await sut.GetCollectionAsync(10);
+
+        Assert.NotNull(summary);
+        Assert.Equal(5, summary!.MovieCount);
+        Assert.Equal(
+            [
+                "https://image.tmdb.org/t/p/w154/hope.jpg",
+                "https://image.tmdb.org/t/p/w154/empire.jpg",
+                "https://image.tmdb.org/t/p/w154/jedi.jpg",
+                "https://image.tmdb.org/t/p/w154/announced.jpg",
+            ],
+            summary.PartPosterPaths);
+    }
+
+    [Fact]
     public async Task GetCollectionAsync_UnknownCollection_ReturnsNull()
     {
         var mockHandler = new Mock<HttpMessageHandler>();

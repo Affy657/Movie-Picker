@@ -25,3 +25,8 @@ public interface IGetMovieCollectionsHandler
 
     Task<bool> RefreshAsync(CancellationToken ct = default);
 }
+
+public interface IGetMovieShowcaseThemesHandler
+{
+    Task<MovieShowcaseThemeListResponse> HandleAsync(CancellationToken ct = default);
+}

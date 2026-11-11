@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using MoviePicker.Api.Application.Caching;
 using MoviePicker.Api.Application.DTOs;
 using MoviePicker.Api.Application.Ports;
+using MoviePicker.Api.Application.UseCases.GetMovieShowcase;
 using MoviePicker.Api.Configuration;
 using MoviePicker.Api.Domain.Entities;
 using MoviePicker.Api.Infrastructure.Persistence.InMemory;
@@ -63,9 +64,50 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
         return new HttpResponseMessage(HttpStatusCode.NotFound);
     }
 
+    private static HttpResponseMessage TmdbJson(string body) =>
+        new(HttpStatusCode.OK) { Content = new StringContent(body) };
+
+    private static HttpResponseMessage SagasWithUnorderedParts(string pathAndQuery) =>
+        pathAndQuery.StartsWith("/3/collection/", StringComparison.Ordinal)
+            ? TmdbJson("""
+                {
+                  "name": "Saga",
+                  "poster_path": "/saga.jpg",
+                  "parts": [
+                    { "id": 3, "title": "Troisième", "release_date": "2010-01-01", "poster_path": "/third.jpg" },
+                    { "id": 1, "title": "Premier", "release_date": "1990-01-01", "poster_path": "/first.jpg" },
+                    { "id": 4, "title": "Quatrième", "release_date": "2020-01-01", "poster_path": "/fourth.jpg" },
+                    { "id": 2, "title": "Deuxième", "release_date": "2000-01-01", "poster_path": null },
+                    { "id": 5, "title": "Cinquième", "release_date": "2005-01-01", "poster_path": "/fifth.jpg" }
+                  ]
+                }
+                """)
+            : new HttpResponseMessage(HttpStatusCode.NotFound);
+
+    private static HttpResponseMessage ThemeDiscoveries(string pathAndQuery)
+    {
+        if (!pathAndQuery.StartsWith("/3/discover/movie", StringComparison.Ordinal))
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+
+        var results = pathAndQuery.Contains("page=1", StringComparison.Ordinal)
+            ? """
+              [
+                { "id": 1, "title": "Alien", "release_date": "1979-05-25", "poster_path": "/alien.jpg" },
+                { "id": 2, "title": "Sans affiche", "release_date": "1980-01-01", "poster_path": null },
+                { "id": 3, "title": "The Thing", "release_date": "1982-06-25", "poster_path": "/thing.jpg" },
+                { "id": 4, "title": "Halloween", "release_date": "1978-10-25", "poster_path": "/halloween.jpg" },
+                { "id": 5, "title": "Scream", "release_date": "1996-12-20", "poster_path": "/scream.jpg" }
+              ]
+              """
+            : "[]";
+        return TmdbJson($$"""{"results":{{results}}}""");
+    }
+
     private HttpClient CreateClientOnTmdb(Func<string, HttpResponseMessage> route) =>
         _factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
+            services.RemoveAll<ISharedCache>();
+            services.AddSingleton<ISharedCache, InMemorySharedCache>();
             services.RemoveAll<ITmdbMovieSearch>();
             services.AddSingleton<ITmdbMovieSearch>(new TmdbMovieSearch(
                 new HttpClient(new TmdbRoutes(route)),
@@ -186,6 +228,7 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
 
     [Theory]
     [InlineData("/api/v1/movies/showcase?section=trending")]
+    [InlineData("/api/v1/movies/showcase/themes")]
     [InlineData("/api/v1/movies/collections")]
     public async Task PublicShowcase_IsCacheableByTheBrowser(string path)
     {
@@ -222,5 +265,59 @@ public sealed class MovieShowcaseEndpointTests : IClassFixture<MoviePickerApplic
         Assert.NotNull(body);
         Assert.NotEmpty(body!.Items);
         Assert.All(body.Items, item => Assert.False(string.IsNullOrWhiteSpace(item.Name)));
+    }
+
+    [Fact]
+    public async Task Collections_PreviewThreePostersPerSagaInReleaseOrder()
+    {
+        using var client = CreateClientOnTmdb(SagasWithUnorderedParts);
+
+        var res = await client.GetAsync("/api/v1/movies/collections");
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        using var body = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        var saga = body.RootElement.GetProperty("items")[0];
+        Assert.Equal(
+            [
+                "https://image.tmdb.org/t/p/w154/first.jpg",
+                "https://image.tmdb.org/t/p/w154/fifth.jpg",
+                "https://image.tmdb.org/t/p/w154/third.jpg",
+            ],
+            saga.GetProperty("previewPosterPaths").EnumerateArray().Select(path => path.GetString()).ToList());
+    }
+
+    [Fact]
+    public async Task ShowcaseThemes_IsAnonymous_PreviewsThreePostersPerThemeInCatalogOrder()
+    {
+        using var client = CreateClientOnTmdb(ThemeDiscoveries);
+
+        var res = await client.GetAsync("/api/v1/movies/showcase/themes");
+
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        using var body = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        var items = body.RootElement.GetProperty("items").EnumerateArray().ToList();
+        Assert.Equal<string?>(MovieShowcaseCatalog.ThemeKeys, items.Select(item => item.GetProperty("theme").GetString()).ToList());
+        var posters = items[0].GetProperty("posters").EnumerateArray()
+            .Select(poster => (poster.GetProperty("title").GetString(), poster.GetProperty("posterPath").GetString()))
+            .ToList();
+        Assert.Equal(
+            [
+                ("Alien", "https://image.tmdb.org/t/p/w154/alien.jpg"),
+                ("The Thing", "https://image.tmdb.org/t/p/w154/thing.jpg"),
+                ("Halloween", "https://image.tmdb.org/t/p/w154/halloween.jpg"),
+            ],
+            posters);
+    }
+
+    [Fact]
+    public async Task ShowcaseThemes_TmdbDown_ReturnsServiceUnavailable()
+    {
+        using var client = CreateClientOnTmdb(_ => new HttpResponseMessage(HttpStatusCode.InternalServerError));
+
+        var res = await client.GetAsync("/api/v1/movies/showcase/themes");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, res.StatusCode);
+        using var body = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        Assert.Equal("showcase_unavailable", body.RootElement.GetProperty("reason").GetString());
     }
 }
