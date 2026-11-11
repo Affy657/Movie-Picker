@@ -7,7 +7,7 @@ Fichier de travail pour agent : une session future doit pouvoir reprendre une de
 1. Avant d'agir sur une entrée, exécuter son `verify`. Sauf mention contraire dans l'entrée, une sortie signifie « encore ouvert », une sortie vide « déjà réglé, supprimer l'entrée sans rien faire d'autre ».
 2. `state: agent` se traite en autonomie ; `state: humain` demande un geste que l'agent ne peut pas faire (`bloque` dit lequel) ; `state: differe` attend son `declencheur`.
 3. Fin de traitement : supprimer l'entrée entière, git porte l'historique.
-4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-089`.
+4. Nouvelle entrée : même schéma de champs, identifiant `DEBT-NNN` jamais réutilisé. Prochain libre : `DEBT-090`.
 5. Ici uniquement de la dette, du code ou de l'infrastructure qui existe et fonctionne moins bien qu'il ne devrait. Une feature va dans `roadmap.md`.
 6. **Aucun identifiant d'infrastructure** (compte de service, bucket, identifiant de compte) : le dépôt est public, une faiblesse décrite avec sa cible se lit comme un mode d'emploi. Nommer le fichier ou la console où l'identifiant se relève, ou un espace réservé `<COMME_CECI>` ; la table des gabarits est dans `infra/README.md`.
 7. **Contraintes** (ce qui casse en silence si on y touche) et **Impasses** (essayé, mesuré, sans gain), en fin de fichier, ne se traitent jamais. Les lire avant d'optimiser le front ou de toucher au déploiement.
@@ -499,6 +499,15 @@ Schéma : `state` / `bloque` (avec `state: humain`) / `declencheur` (avec `state
 - verify: `grep -n "MAX_EVENT_PARTICIPANTS = " apps/web/src/features/events/types.ts`
 - fix: un seul plafond, rendu par l'API, une fois DEBT-033 tranchée
 - refs: DEBT-033, C3
+
+## DEBT-089 un test de suggestion d'idée tombe sur le délai de 100 ms d'une regex quand le poste est chargé
+
+- state: agent
+- impact: le 2026-11-11, `verify:local` a échoué une fois sur `CreateIdeaSuggestionHandlerTests.HandleAsync_MapsCategoryToExpectedPrefixAndLabel` (`RegexMatchTimeoutException` sur `PublishableAppVersionPattern`, interprétée, 100 ms) pendant que les trois voies tournaient ensemble ; le run précédent sur le même code était vert. La même regex peut aussi rejeter une suggestion en production sur une instance saturée.
+- ou: `apps/api-dotnet/MoviePicker.Api/Application/UseCases/IdeaSuggestions/CreateIdeaSuggestionHandler.cs`
+- verify: `grep -n "PublishableAppVersionPattern = new" apps/api-dotnet/MoviePicker.Api/Application/UseCases/IdeaSuggestions/CreateIdeaSuggestionHandler.cs`
+- fix: une regex générée (`[GeneratedRegex]`, comme les autres motifs du dépôt sous `SYSLIB1045`) ou un contrôle sans regex de la forme `x.y.z`, et un délai qui laisse de la marge à une machine chargée
+- fini-quand: plus de regex interprétée à 100 ms dans ce handler, et la suite API passe sous charge
 
 ---
 
