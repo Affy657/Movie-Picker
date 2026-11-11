@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.10.0] - 2026-11-12
+
 ### Added
 
 - **Explorer ouvre sur votre prochaine soirée** : en haut de la page, la recherche côtoie votre soirée en cours ou la plus proche, ou la roue pour en créer une, sur un fond d'affiches qui glisse lentement. Sur téléphone, une loupe apparaît dans l'en-tête dès que la recherche sort de l'écran.
@@ -666,7 +668,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.9.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/Affy657/Movie-Picker/compare/v1.9.1...v1.10.0
 [1.9.1]: https://github.com/Affy657/Movie-Picker/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/Affy657/Movie-Picker/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/Affy657/Movie-Picker/compare/v1.7.2...v1.8.0
