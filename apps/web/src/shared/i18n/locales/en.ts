@@ -95,6 +95,7 @@ export const en: Locale = {
     seeAllCollections: 'See all {{count}} collections',
     genreLabel: 'Genre',
     themeLabel: 'Theme',
+    themeSubtitle: 'A selection ready to go',
     allGenres: 'All',
     loading: 'Loading the selection',
     error: 'This selection is temporarily unavailable.',

@@ -68,3 +68,77 @@
     border-color: var(--color-primary);
   }
 }
+
+.stackLink {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.stackLink:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset);
+  border-radius: var(--radius-sm);
+}
+
+.stack {
+  --stack-step: var(--space-3);
+
+  position: relative;
+  display: block;
+  margin: var(--space-3) var(--space-6) var(--space-2) 0;
+  aspect-ratio: 2 / 3;
+}
+
+.stackPoster {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-poster-placeholder);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text-muted);
+  transition: transform var(--duration-enter) var(--ease-reveal);
+}
+
+.stackFront {
+  z-index: var(--z-raised);
+}
+
+.stackMiddle {
+  z-index: var(--z-base);
+  transform: translate(var(--stack-step), calc(var(--stack-step) * -0.6)) rotate(3deg);
+}
+
+.stackBack {
+  transform: translate(calc(var(--stack-step) * 2), calc(var(--stack-step) * -1.2)) rotate(6deg);
+}
+
+.stackLink:focus-visible .stack {
+  --stack-step: var(--space-6);
+}
+
+@media (hover: hover) {
+  .stackLink:hover .stack {
+    --stack-step: var(--space-6);
+  }
+
+  .stackLink:hover .name {
+    color: var(--color-primary-text);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stackPoster {
+    transition: none;
+  }
+}

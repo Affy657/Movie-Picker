@@ -3,6 +3,7 @@ import {
   SHOWCASE_STALE_TIME,
   fetchMovieCollections,
   fetchMovieShowcase,
+  fetchShowcaseThemes,
   showcaseQueryKey,
   type ShowcaseQuery,
 } from '@/features/movies/api/showcaseApi';
@@ -22,5 +23,13 @@ export function useMovieCollections(enabled = true) {
     queryFn: ({ signal }) => fetchMovieCollections(signal),
     staleTime: SHOWCASE_STALE_TIME,
     enabled,
+  });
+}
+
+export function useShowcaseThemes() {
+  return useQuery({
+    queryKey: ['movies', 'showcase', 'themes'] as const,
+    queryFn: ({ signal }) => fetchShowcaseThemes(signal),
+    staleTime: SHOWCASE_STALE_TIME,
   });
 }

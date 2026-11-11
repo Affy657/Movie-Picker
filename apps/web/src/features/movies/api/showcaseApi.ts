@@ -64,6 +64,17 @@ export interface MovieCollection {
   overview: string | null;
   posterPath: string | null;
   movieCount: number;
+  previewPosterPaths?: string[] | null;
+}
+
+export interface ShowcaseThemePoster {
+  title: string;
+  posterPath: string | null;
+}
+
+export interface ShowcaseThemePreview {
+  theme: string;
+  posters: ShowcaseThemePoster[];
 }
 
 export interface MovieCollectionListResponse {
@@ -133,4 +144,12 @@ export async function fetchMovieCollections(
     disclaimer: raw.disclaimer ?? '',
     tmdbAttributionUrl: raw.tmdbAttributionUrl ?? '',
   };
+}
+
+export async function fetchShowcaseThemes(signal?: AbortSignal): Promise<ShowcaseThemePreview[]> {
+  const raw = await fetchApi<{ items?: ShowcaseThemePreview[] | null }>(
+    '/movies/showcase/themes',
+    signal ? { signal } : undefined
+  );
+  return (raw.items ?? []).map((item) => ({ theme: item.theme, posters: item.posters ?? [] }));
 }

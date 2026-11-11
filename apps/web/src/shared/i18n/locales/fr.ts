@@ -93,6 +93,7 @@ export const fr = {
     seeAllCollections: 'Voir les {{count}} collections',
     genreLabel: 'Genre',
     themeLabel: 'Thème',
+    themeSubtitle: 'Une sélection prête à lancer',
     allGenres: 'Tous',
     loading: 'Chargement de la sélection',
     error: 'Cette sélection est momentanément indisponible.',

@@ -1,0 +1,77 @@
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-8) var(--space-4);
+}
+
+.themeLink {
+  --fan-width: 100%;
+  --fan-height: 10.5rem;
+  --fan-poster-width: var(--space-24);
+  --fan-spread: var(--space-9);
+  --fan-tilt: 9deg;
+  --fan-third: flex;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.themeLink:focus-visible {
+  outline: var(--outline-focus);
+  outline-offset: var(--outline-offset);
+  border-radius: var(--radius-md);
+}
+
+.fan {
+  max-width: 12rem;
+}
+
+.name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+.themeLink:focus-visible {
+  --fan-spread: var(--space-14);
+  --fan-tilt: 16deg;
+  --fan-lift: calc(var(--space-1) * -1);
+}
+
+@media (hover: hover) {
+  .themeLink:hover {
+    --fan-spread: var(--space-14);
+    --fan-tilt: 16deg;
+    --fan-lift: calc(var(--space-1) * -1);
+  }
+
+  .themeLink:hover .name {
+    color: var(--color-primary-text);
+  }
+}
+
+@media (max-width: 63.9375rem) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-3);
+  }
+
+  .themeLink {
+    --fan-height: 8.5rem;
+    --fan-poster-width: var(--space-20);
+    --fan-spread: var(--space-7);
+  }
+}

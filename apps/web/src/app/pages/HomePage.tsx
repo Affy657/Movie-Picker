@@ -9,16 +9,10 @@ import { loadMovieDetailsModal } from '@/features/movies/components/LazyMovieDet
 import { useIdlePrefetch } from '@/shared/hooks/useIdlePrefetch';
 import { useHasHoverCapability } from '@/shared/hooks/useHasHoverCapability';
 import type { MovieLibraryActions } from '@/features/movies/components/MovieBrowseCard';
-import type {
-  ShowcaseItem,
-  ShowcaseProvider,
-  ShowcaseTheme,
-} from '@/features/movies/api/showcaseApi';
+import type { ShowcaseItem, ShowcaseProvider } from '@/features/movies/api/showcaseApi';
 import {
   PROVIDER_KEYS,
   PROVIDER_LABEL_KEYS,
-  THEME_KEYS,
-  THEME_LABEL_KEYS,
   TRENDING_GENRE_IDS,
 } from '@/features/movies/showcaseSections';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -31,6 +25,7 @@ import LibraryMovieDetails, {
 import HomeHero from './home/HomeHero';
 import HomeShowcaseRow from './home/HomeShowcaseRow';
 import HomeCollectionsRow from './home/HomeCollectionsRow';
+import HomeThemeFans from './home/HomeThemeFans';
 import HomeForYou, { type PersonalRowItem } from './home/HomeForYou';
 import HomeMostProposed from './home/HomeMostProposed';
 import {
@@ -62,7 +57,6 @@ export default function HomePage() {
   const { locale } = useLocale();
   const { user } = useAuth();
   const [genreTab, setGenreTab] = useState<GenreTabKey>('all');
-  const [themeTab, setThemeTab] = useState<ShowcaseTheme>(THEME_KEYS[0]);
   const [providerTab, setProviderTab] = useState<ShowcaseProvider>(PROVIDER_KEYS[0]);
   const details = useLibraryMovieDetails();
   const [proposeTarget, setProposeTarget] = useState<LibraryMovieSeed | null>(null);
@@ -81,8 +75,6 @@ export default function HomePage() {
       label: genreLabel(id, locale),
     })),
   ];
-
-  const themeTabs = THEME_KEYS.map((key) => ({ key, label: t(THEME_LABEL_KEYS[key]) }));
 
   const providerTabs = PROVIDER_KEYS.map((key) => ({ key, label: t(PROVIDER_LABEL_KEYS[key]) }));
 
@@ -197,19 +189,7 @@ export default function HomePage() {
         />
         <HomeMostProposed onSelect={openDetails} />
       </div>
-      <HomeShowcaseRow
-        headingKey="showcase.sections.themeTitle"
-        seeAllTo={ROUTES.showcaseTheme(themeTab)}
-        query={{ section: 'theme', theme: themeTab }}
-        library={library}
-        onSelect={openDetails}
-        tabConfig={{
-          ariaLabel: t('showcase.themeLabel'),
-          tabs: themeTabs,
-          active: themeTab,
-          onChange: setThemeTab,
-        }}
-      />
+      <HomeThemeFans />
       <HomeCollectionsRow />
 
       <LibraryMovieDetails
