@@ -30,6 +30,13 @@
   padding: var(--space-2-5) var(--space-4);
 }
 
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+
 .title {
   margin: 0;
   font-size: var(--font-size-md);

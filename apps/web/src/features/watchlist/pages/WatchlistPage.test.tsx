@@ -292,7 +292,7 @@ describe('WatchlistPage (MSW)', () => {
     });
   });
 
-  it('searches for a movie, adds it with rating, runtime and genres, closes the search', async () => {
+  it('searches for a movie, adds it with rating, runtime and genres, keeps the results', async () => {
     let addedBody: Record<string, unknown> | null = null;
     server.use(
       authedUserHandler,
@@ -344,9 +344,7 @@ describe('WatchlistPage (MSW)', () => {
       genreIds: [18, 878],
     });
 
-    await waitFor(() =>
-      expect(screen.queryByRole('button', { name: /^ajouter « /i })).not.toBeInTheDocument()
-    );
+    expect(screen.getByText('Film Test')).toBeInTheDocument();
   });
 
   it('hover: removes a movie from the kebab through the watchlist toggle', async () => {

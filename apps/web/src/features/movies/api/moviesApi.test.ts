@@ -161,12 +161,15 @@ describe('movie mutations', () => {
       participantId: 'p1',
     };
 
-    await addMovieToEvent('soiree', body);
+    mockFetchApi.mockResolvedValue({ id: 'm-new' });
+
+    const created = await addMovieToEvent('soiree', body);
 
     expect(mockFetchApi).toHaveBeenCalledWith('/events/soiree/movies', {
       method: 'POST',
       body: JSON.stringify(body),
     });
+    expect(created).toEqual({ id: 'm-new', mapped: true });
   });
 
   it('voteMovie posts participantId and value', async () => {
@@ -322,6 +325,7 @@ describe('movie API paths', () => {
   ])(
     '%s keeps crafted identifiers inside their own path segments',
     async (_name, call, expected) => {
+      mockFetchApi.mockResolvedValue({ id: 'm1' });
       await call();
 
       expect(requestedPath()).toBe(expected);

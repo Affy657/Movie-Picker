@@ -25,26 +25,23 @@ test.describe('Event page layout', () => {
     await expect(page).toHaveURL(/\/e\/[^/?]+/, { timeout: 15_000 });
 
     await page.getByRole('button', { name: /proposer un film/i }).click();
-    const search = page.getByRole('searchbox', { name: /proposer un film/i });
+    const dialog = page.getByRole('dialog', { name: /proposer un film/i });
+    const search = dialog.getByRole('searchbox', { name: /chercher un film/i });
     await expect(search).toBeVisible({ timeout: 15_000 });
-    await expect
-      .poll(async () => (await box(search)).y - (await stickyBottom(page)), { timeout: 5_000 })
-      .toBeGreaterThanOrEqual(0);
 
     const searchBox = await box(search);
 
-    const searchButton = page.getByRole('button', { name: /^rechercher$/i }).first();
+    const searchButton = dialog.getByRole('button', { name: /^rechercher$/i });
     const buttonBox = await box(searchButton);
     expect(buttonBox.y).toBeGreaterThanOrEqual(searchBox.y);
     expect(buttonBox.y + buttonBox.height).toBeLessThanOrEqual(searchBox.y + searchBox.height + 1);
     await expect(searchButton).toHaveCSS('position', 'absolute');
 
-    await page
-      .getByRole('heading', { name: /proposer un film/i })
-      .locator('..')
+    await dialog
       .getByRole('button', { name: /^fermer$/i })
+      .last()
       .click();
-    await expect(search).toBeHidden();
+    await expect(dialog).toBeHidden();
 
     await addStubMovie(page);
 

@@ -1,23 +1,29 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import clsx from 'clsx';
-import { Film, ListFilter, Search } from 'lucide-react';
-import { addMovieToEvent, type MovieSearchItem } from '@/features/movies/api/moviesApi';
-import { othersAlreadySeenHint } from '@/features/movies/utils/seenHint';
+import { Check, History, ListFilter, Plus, Search } from 'lucide-react';
+import type { MovieSearchItem } from '@/features/movies/api/moviesApi';
 import { getErrorMessage } from '@/shared/api/apiError';
 import { useLocale, useTranslation, type Translate } from '@/shared/i18n';
-import { posterImageSrc, tmdbPosterSrcForListDisplay } from '@/shared/utils/posterUrl';
-import { formatRuntimeMinutes } from '@/shared/utils/formatRuntime';
-import { metaGenresLabel, movieMetaLine } from '@/shared/utils/movieMetaLine';
-import type { MovieData } from '@/shared/types/movie';
-import { safeTmdbWatchUrl } from '@/shared/utils/isSafeTmdbWatchPageUrl';
-import WatchProviderChips from '@/features/movies/components/WatchProviderChips';
+import type { RatingScale } from '@/shared/types/theme';
 import TmdbAttribution from '@/features/movies/components/TmdbAttribution';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { useSearchHistory } from '@/features/movies/hooks/useSearchHistory';
-import { useAnalytics } from '@/shared/hooks/useAnalytics';
 import { SEARCH_MIN_CHARS, useMovieSearch } from '@/features/movies/hooks/useMovieSearch';
 import { useMovieSearchFilters } from '@/features/movies/hooks/useMovieSearchFilters';
+import { matchesSearchFilters } from '@/features/movies/utils/matchesSearchFilters';
 import MovieSearchFiltersPanel from '@/features/movies/components/MovieSearchFiltersPanel';
+import MovieSearchQuickFilters from '@/features/movies/components/MovieSearchQuickFilters';
+import MovieSearchRow from '@/features/movies/components/MovieSearchRow';
 import ActiveFilterChips from '@/features/movies/components/ActiveFilterChips';
 import Chip from '@/shared/components/Chip';
 import { useClickOutside } from '@/shared/hooks/useClickOutside';
@@ -26,11 +32,6 @@ import styles from './AddMovieForm.module.css';
 import Button from '@/shared/components/Button';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import CountBadge from '@/shared/components/CountBadge';
-import { PaidOfferChip } from '@/features/movies/components/movieCardParts';
-
-function isSameTmdbItem(m: MovieData, r: MovieSearchItem): boolean {
-  return m.tmdbId === r.id && (m.mediaType ?? 'movie') === (r.mediaType ?? 'movie');
-}
 
 function searchFailureMessage(failure: unknown, t: Translate): string | null {
   return failure ? getErrorMessage(failure, t('movies.search.fallbackError')) : null;
@@ -46,47 +47,64 @@ function searchStatusLabel(
   return t('movies.search.a11yResultsCount', { count: search.count });
 }
 
+function itemKey(item: MovieSearchItem): string {
+  return `${item.mediaType ?? 'movie'}-${item.id}`;
+}
+
+export type MovieSearchItemAside = { status?: ReactNode; action?: ReactNode };
+
 export interface AddMovieFormProps {
   slug?: string;
-  participantId?: string;
-  participantPseudo?: string;
-  existingMovies?: MovieData[];
-  onAdded: () => void;
+  onAddItem: (item: MovieSearchItem) => Promise<void>;
+  onAdded: (item: MovieSearchItem) => void;
   disabled?: boolean;
-  onAddItem?: (item: MovieSearchItem) => Promise<void>;
   isItemAlreadyAdded?: (item: MovieSearchItem) => boolean;
   alreadyAddedLabel?: string;
   alreadyAddedHint?: string;
   addErrorLabel?: string;
+  addLabel?: string;
+  addAriaLabel?: (title: string) => string;
   searchPlaceholder?: string;
   searchAriaLabel?: string;
   searchWrapClassName?: string;
   showWatchProviders?: boolean;
   includeSeries?: boolean;
+  quickFilters?: boolean;
+  historyChips?: boolean;
+  flatResults?: boolean;
+  hideAttribution?: boolean;
+  suggestions?: { title: string; items: MovieSearchItem[]; action?: ReactNode };
+  renderItemAside?: (item: MovieSearchItem) => MovieSearchItemAside | undefined;
+  onOpenItem?: (item: MovieSearchItem) => void;
 }
 
 export default function AddMovieForm({
   slug,
-  participantId,
-  participantPseudo,
-  existingMovies = [],
+  onAddItem,
   onAdded,
   disabled,
-  onAddItem,
   isItemAlreadyAdded,
   alreadyAddedLabel,
   alreadyAddedHint,
   addErrorLabel,
+  addLabel,
+  addAriaLabel,
   searchPlaceholder,
   searchAriaLabel,
   searchWrapClassName,
   showWatchProviders = true,
   includeSeries = false,
+  quickFilters = false,
+  historyChips = false,
+  flatResults = false,
+  hideAttribution = false,
+  suggestions,
+  renderItemAside,
+  onOpenItem,
 }: Readonly<AddMovieFormProps>) {
   const { t } = useTranslation();
   const { tmdbLanguage } = useLocale();
   const { user } = useAuth();
-  const { track } = useAnalytics();
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory(user?.userId);
   const minCharsHintId = useId();
   const filtersPanelId = useId();
@@ -98,6 +116,7 @@ export default function AddMovieForm({
   const [addError, setAddError] = useState<string | null>(null);
 
   const filters = useMovieSearchFilters(tmdbLanguage, user?.ratingScale);
+  const apiFiltersAlone = filters.hasApiFilters && !suggestions;
 
   const trimmedForSearch = useMemo(() => query.trim(), [query]);
 
@@ -133,11 +152,10 @@ export default function AddMovieForm({
     failure,
     emptySearchKey,
     searchNow,
-    reset: resetSearch,
   } = useMovieSearch({
     term: trimmedForSearch,
     filters: filters.activeFilters,
-    hasApiFilters: filters.hasApiFilters,
+    hasApiFilters: apiFiltersAlone,
     lang: tmdbLanguage,
     eventSlug: slug,
     includeSeries,
@@ -150,7 +168,7 @@ export default function AddMovieForm({
   const error = addError ?? searchFailureMessage(failure, t);
   const a11ySearchStatus = searchStatusLabel({ searching, answered, count: results.length }, t);
 
-  const searchAllowed = trimmedForSearch.length >= SEARCH_MIN_CHARS || filters.hasApiFilters;
+  const searchAllowed = trimmedForSearch.length >= SEARCH_MIN_CHARS || apiFiltersAlone;
 
   const search = useCallback(() => {
     if (!searchAllowed) return;
@@ -166,31 +184,9 @@ export default function AddMovieForm({
 
   const dismissHistory = useCallback(() => setHistoryDismissed(true), []);
 
-  const historyAvailable = !trimmedForSearch && history.length > 0;
+  const historyAvailable = !historyChips && !trimmedForSearch && history.length > 0;
   const showHistory = inputFocused && !historyDismissed && historyAvailable;
-  const pendingHistoryFocusRef = useRef<'first' | 'last' | null>(null);
-
-  const focusHistoryEntry = (position: 'first' | 'last') => {
-    const items = containerRef.current?.querySelectorAll<HTMLElement>(HISTORY_ITEM_SELECTOR);
-    if (!items?.length) return;
-    items[position === 'first' ? 0 : items.length - 1]?.focus();
-  };
-
-  const focusHistoryItem = (position: 'first' | 'last') => {
-    if (showHistory) {
-      focusHistoryEntry(position);
-      return;
-    }
-    pendingHistoryFocusRef.current = position;
-    setHistoryDismissed(false);
-  };
-
-  useEffect(() => {
-    const position = pendingHistoryFocusRef.current;
-    if (!position || !showHistory) return;
-    pendingHistoryFocusRef.current = null;
-    focusHistoryEntry(position);
-  });
+  const focusHistoryItem = useHistoryFocus(containerRef, showHistory, setHistoryDismissed);
 
   const displayedResults = useMemo(
     () =>
@@ -202,41 +198,26 @@ export default function AddMovieForm({
     [results, filters.availabilityFilter]
   );
 
-  useEffect(() => {
-    if (disabled) return;
-    const el = containerRef.current;
-    if (!el) return;
-    const onFocusOut = (e: FocusEvent) => {
-      if (!el.contains(e.relatedTarget as Node | null)) {
-        setInputFocused(false);
-        setHistoryDismissed(false);
-      }
-    };
-    el.addEventListener('focusout', onFocusOut);
-    return () => el.removeEventListener('focusout', onFocusOut);
-  }, [disabled]);
+  const shownSuggestions = useMemo(
+    () =>
+      suggestions?.items.filter((item) =>
+        matchesSearchFilters(item, filters.activeFilters, filters.availabilityFilter)
+      ) ?? [],
+    [suggestions, filters.activeFilters, filters.availabilityFilter]
+  );
 
-  const addMovie = async (r: MovieSearchItem) => {
+  const leaveSearch = useCallback(() => {
+    setInputFocused(false);
+    setHistoryDismissed(false);
+  }, []);
+  useFocusLeave(containerRef, !disabled, leaveSearch);
+
+  const addMovie = async (item: MovieSearchItem) => {
     setAddError(null);
     setAdding(true);
     try {
-      if (onAddItem) {
-        await onAddItem(r);
-      } else if (slug && participantId) {
-        await addMovieToEvent(slug, {
-          tmdbId: r.id,
-          mediaType: r.mediaType,
-          title: r.title,
-          year: r.year,
-          posterPath: r.posterPath,
-          participantId,
-          genreIds: r.genreIds,
-        });
-        track('movie_added', { mediaType: r.mediaType });
-      }
-      resetSearch();
-      setQuery('');
-      onAdded();
+      await onAddItem(item);
+      onAdded(item);
       setHistoryDismissed(true);
       searchInputRef.current?.focus();
     } catch (err) {
@@ -246,26 +227,60 @@ export default function AddMovieForm({
     }
   };
 
+  const addActionLabels = addActionLabelsFor(
+    { addLabel, addAriaLabel, alreadyAddedLabel, alreadyAddedHint },
+    t
+  );
+
   if (disabled) return null;
 
-  const trimmed = trimmedForSearch;
-  const showMinCharsHint = trimmed.length > 0 && trimmed.length < SEARCH_MIN_CHARS;
-  const showNoResultsBlock =
-    !searching && searchAllowed && results.length === 0 && !error && emptySearchKey === searchKey;
-  const showAvailabilityEmpty =
-    !searching &&
-    results.length > 0 &&
-    displayedResults.length === 0 &&
-    filters.availabilityFilter != null;
+  const classes = formClasses(flatResults, quickFilters);
 
-  const hasResultsBlock = displayedResults.length > 0;
-  const activeFiltersCount = filters.activeFilterChips.length;
+  const trimmed = trimmedForSearch;
+  const flags = viewFlags({
+    trimmed,
+    searching,
+    searchAllowed,
+    resultsCount: results.length,
+    displayedCount: displayedResults.length,
+    hasError: !!error,
+    answeredEmpty: emptySearchKey === searchKey,
+    availabilityFilter: filters.availabilityFilter,
+    historyChips,
+    historyCount: history.length,
+    suggestionsCount: suggestions?.items.length ?? 0,
+  });
+
+  const renderRow = (item: MovieSearchItem) => {
+    const aside = renderItemAside?.(item);
+    return (
+      <MovieSearchRow
+        key={itemKey(item)}
+        item={item}
+        ratingScale={user?.ratingScale}
+        showAvailability={showWatchProviders}
+        status={aside?.status}
+        action={
+          aside?.action ?? (
+            <AddAction
+              item={item}
+              alreadyAdded={isItemAlreadyAdded?.(item) ?? false}
+              adding={adding}
+              onAdd={addMovie}
+              labels={addActionLabels}
+            />
+          )
+        }
+        onOpen={onOpenItem ? () => onOpenItem(item) : undefined}
+      />
+    );
+  };
 
   return (
-    <div className={styles.root}>
+    <div className={classes.root}>
       <div className={clsx(styles.searchWrap, searchWrapClassName)} ref={containerRef}>
         <div className={styles.searchRow}>
-          <div className={styles.inputWrap}>
+          <div className={classes.inputWrap}>
             <button
               type="button"
               className={styles.searchIconBtn}
@@ -277,53 +292,33 @@ export default function AddMovieForm({
             </button>
             <input
               ref={searchInputRef}
-              id="add-movie-search"
               type="search"
               enterKeyHint="search"
               autoCorrect="off"
-              className="input"
-              aria-label={searchAriaLabel ?? t('movies.search.label')}
+              className={classes.input}
+              aria-label={searchAriaLabel ?? t('movies.search.inputLabel')}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
                 setHistoryDismissed(false);
               }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  search();
-                } else if (e.key === 'Escape' && showHistory) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  dismissHistory();
-                } else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && historyAvailable) {
-                  e.preventDefault();
-                  focusHistoryItem(e.key === 'ArrowDown' ? 'first' : 'last');
-                }
-              }}
-              onFocus={() => {
-                setInputFocused(true);
-              }}
+              onKeyDown={(e) =>
+                handleSearchKeyDown(e, {
+                  search,
+                  showHistory,
+                  dismissHistory,
+                  historyAvailable,
+                  focusHistoryItem,
+                })
+              }
+              onFocus={() => setInputFocused(true)}
               placeholder={searchPlaceholder ?? t('movies.search.placeholder')}
               autoComplete="off"
               aria-busy={searching}
-              aria-describedby={showMinCharsHint ? minCharsHintId : undefined}
+              aria-describedby={flags.showMinCharsHint ? minCharsHintId : undefined}
             />
           </div>
-          <Button
-            variant={filters.filtersOpen ? 'soft' : 'secondary'}
-            className={clsx(styles.filterIconBtn, styles.filterIconBtnLabeled)}
-            onClick={() => filters.setFiltersOpen((v) => !v)}
-            aria-expanded={filters.filtersOpen}
-            aria-controls={filtersPanelId}
-            data-filters-toggle
-          >
-            <ListFilter size={ICON_SIZE.sm} aria-hidden />
-            <span className={styles.filterIconBtnLabel}>{t('movies.search.filtersToggle')}</span>
-            {activeFiltersCount > 0 && (
-              <CountBadge value={activeFiltersCount} size="sm" aria-hidden="true" />
-            )}
-          </Button>
+          {quickFilters ? null : <FiltersToggle filters={filters} panelId={filtersPanelId} />}
         </div>
 
         {showHistory && (
@@ -338,6 +333,213 @@ export default function AddMovieForm({
         )}
       </div>
 
+      <FiltersArea
+        quick={quickFilters}
+        filters={filters}
+        tmdbLanguage={tmdbLanguage}
+        panelId={filtersPanelId}
+        panelRef={filtersPanelRef}
+        ratingScale={user?.ratingScale}
+      />
+
+      <SearchMessages
+        flags={flags}
+        term={trimmed}
+        withTip={quickFilters}
+        minCharsHintId={minCharsHintId}
+        statusLabel={a11ySearchStatus}
+        error={error}
+      />
+      {flags.showHistoryChips ? (
+        <HistoryChips history={history} onSelect={selectHistoryItem} />
+      ) : null}
+      {flags.showResults ? (
+        <ResultsBlock
+          region={showWatchProviders && !hideAttribution ? searchMeta?.watchProvidersRegion : null}
+          flat={flatResults}
+          withAttribution={!hideAttribution}
+        >
+          {displayedResults.map(renderRow)}
+        </ResultsBlock>
+      ) : null}
+      {flags.showSuggestions && suggestions ? (
+        <SuggestionsSection
+          title={suggestions.title}
+          action={suggestions.action}
+          flat={flatResults}
+        >
+          {shownSuggestions.map(renderRow)}
+        </SuggestionsSection>
+      ) : null}
+    </div>
+  );
+}
+
+type ViewInput = {
+  trimmed: string;
+  searching: boolean;
+  searchAllowed: boolean;
+  resultsCount: number;
+  displayedCount: number;
+  hasError: boolean;
+  answeredEmpty: boolean;
+  availabilityFilter: string | undefined;
+  historyChips: boolean;
+  historyCount: number;
+  suggestionsCount: number;
+};
+
+function viewFlags(input: ViewInput) {
+  const settled = !input.searching;
+  const showNoResults =
+    settled &&
+    input.searchAllowed &&
+    input.resultsCount === 0 &&
+    !input.hasError &&
+    input.answeredEmpty;
+  const empty = input.trimmed.length === 0;
+  return {
+    showMinCharsHint: !empty && input.trimmed.length < SEARCH_MIN_CHARS,
+    showNoResults,
+    showAvailabilityEmpty:
+      settled &&
+      input.resultsCount > 0 &&
+      input.displayedCount === 0 &&
+      input.availabilityFilter != null,
+    showResults: input.displayedCount > 0,
+    showHistoryChips: input.historyChips && empty && input.historyCount > 0,
+    showSuggestions: input.suggestionsCount > 0 && (empty || showNoResults),
+  };
+}
+
+type KeyHandlers = {
+  search: () => void;
+  showHistory: boolean;
+  dismissHistory: () => void;
+  historyAvailable: boolean;
+  focusHistoryItem: (position: 'first' | 'last') => void;
+};
+
+function handleSearchKeyDown(e: KeyboardEvent<HTMLInputElement>, h: KeyHandlers) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    h.search();
+    return;
+  }
+  if (e.key === 'Escape' && h.showHistory) {
+    e.preventDefault();
+    e.stopPropagation();
+    h.dismissHistory();
+    return;
+  }
+  if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && h.historyAvailable) {
+    e.preventDefault();
+    h.focusHistoryItem(e.key === 'ArrowDown' ? 'first' : 'last');
+  }
+}
+
+type AddActionLabels = {
+  add: string;
+  aria: (title: string) => string;
+  added: string;
+  addedHint?: string;
+};
+
+function addActionLabelsFor(
+  custom: {
+    addLabel?: string;
+    addAriaLabel?: (title: string) => string;
+    alreadyAddedLabel?: string;
+    alreadyAddedHint?: string;
+  },
+  t: Translate
+): AddActionLabels {
+  return {
+    add: custom.addLabel ?? t('movies.search.addButton'),
+    aria: custom.addAriaLabel ?? ((title) => t('movies.search.addButtonAria', { title })),
+    added: custom.alreadyAddedLabel ?? t('movies.search.alreadyListed'),
+    addedHint: custom.alreadyAddedHint,
+  };
+}
+
+function AddAction({
+  item,
+  alreadyAdded,
+  adding,
+  onAdd,
+  labels,
+}: Readonly<{
+  item: MovieSearchItem;
+  alreadyAdded: boolean;
+  adding: boolean;
+  onAdd: (item: MovieSearchItem) => void;
+  labels: AddActionLabels;
+}>) {
+  if (alreadyAdded) {
+    return (
+      <span className={styles.added} title={labels.addedHint}>
+        <Check size={ICON_SIZE.md} aria-hidden />
+        {labels.added}
+      </span>
+    );
+  }
+  return (
+    <Button
+      type="button"
+      variant="secondary"
+      className={styles.addButton}
+      onClick={() => onAdd(item)}
+      disabled={adding}
+      aria-label={labels.aria(item.title)}
+    >
+      <Plus size={ICON_SIZE.md} aria-hidden />
+      <span className={styles.addLabel}>{labels.add}</span>
+    </Button>
+  );
+}
+
+type Filters = ReturnType<typeof useMovieSearchFilters>;
+
+function FiltersToggle({ filters, panelId }: Readonly<{ filters: Filters; panelId: string }>) {
+  const { t } = useTranslation();
+  const activeFiltersCount = filters.activeFilterChips.length;
+  return (
+    <Button
+      variant={filters.filtersOpen ? 'soft' : 'secondary'}
+      className={clsx(styles.filterIconBtn, styles.filterIconBtnLabeled)}
+      onClick={() => filters.setFiltersOpen((v) => !v)}
+      aria-expanded={filters.filtersOpen}
+      aria-controls={panelId}
+      data-filters-toggle
+    >
+      <ListFilter size={ICON_SIZE.sm} aria-hidden />
+      <span className={styles.filterIconBtnLabel}>{t('movies.search.filtersToggle')}</span>
+      {activeFiltersCount > 0 && (
+        <CountBadge value={activeFiltersCount} size="sm" aria-hidden="true" />
+      )}
+    </Button>
+  );
+}
+
+function FiltersArea({
+  quick,
+  filters,
+  tmdbLanguage,
+  panelId,
+  panelRef,
+  ratingScale,
+}: Readonly<{
+  quick: boolean;
+  filters: Filters;
+  tmdbLanguage: string;
+  panelId: string;
+  panelRef: RefObject<HTMLDivElement | null>;
+  ratingScale?: RatingScale;
+}>) {
+  const { t } = useTranslation();
+  if (quick) return <MovieSearchQuickFilters filters={filters} tmdbLanguage={tmdbLanguage} />;
+  return (
+    <>
       <ActiveFilterChips
         chips={filters.activeFilterChips}
         groupAriaLabel={t('movies.search.filtersToggle')}
@@ -345,11 +547,10 @@ export default function AddMovieForm({
         clearAllLabel={t('movies.search.filtersClearAll')}
         onClearAll={filters.clearAllFilters}
       />
-
       {filters.filtersOpen && (
-        <div ref={filtersPanelRef}>
+        <div ref={panelRef}>
           <MovieSearchFiltersPanel
-            panelId={filtersPanelId}
+            panelId={panelId}
             tmdbLanguage={tmdbLanguage}
             selectedGenres={filters.selectedGenres}
             selectedDecade={filters.selectedDecade}
@@ -357,7 +558,7 @@ export default function AddMovieForm({
             selectedLanguage={filters.selectedLanguage}
             availabilityFilter={filters.availabilityFilter}
             runtimeRange={filters.runtimeRange}
-            ratingScale={user?.ratingScale}
+            ratingScale={ratingScale}
             onToggleGenre={filters.toggleGenre}
             onToggleDecade={filters.toggleDecade}
             onToggleVoteMin={filters.toggleVoteMin}
@@ -367,149 +568,201 @@ export default function AddMovieForm({
           />
         </div>
       )}
+    </>
+  );
+}
 
-      {showMinCharsHint ? (
+function HistoryChips({
+  history,
+  onSelect,
+}: Readonly<{ history: string[]; onSelect: (query: string) => void }>) {
+  const { t } = useTranslation();
+  const titleId = useId();
+  return (
+    <section className={styles.section} aria-labelledby={titleId}>
+      <h3 id={titleId} className={styles.sectionTitle}>
+        {t('movies.search.historyTitle')}
+      </h3>
+      <div className={styles.recentChips}>
+        {history.map((entry) => (
+          <Chip
+            key={entry}
+            icon={History}
+            onClick={() => onSelect(entry)}
+            ariaLabel={t('movies.search.historySelectAria', { query: entry })}
+          >
+            {entry}
+          </Chip>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function NoResults({ term, withTip }: Readonly<{ term: string; withTip: boolean }>) {
+  const { t } = useTranslation();
+  const forQuery = term.length >= SEARCH_MIN_CHARS;
+  return (
+    <div className={styles.noResults}>
+      <p className={styles.noResultsHint}>
+        {forQuery
+          ? t('movies.search.noResultsForQuery', { query: term })
+          : t('movies.search.noResultsForFilters')}
+      </p>
+      {withTip && forQuery ? (
+        <p className={styles.noResultsTip}>{t('movies.search.noResultsTip')}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function ResultsBlock({
+  region,
+  flat,
+  withAttribution,
+  children,
+}: Readonly<{
+  region: string | null | undefined;
+  flat: boolean;
+  withAttribution: boolean;
+  children: ReactNode;
+}>) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {region ? (
+        <p className={styles.regionHint}>{t('movies.search.regionHint', { region })}</p>
+      ) : null}
+      <ul
+        className={clsx(styles.results, flat && styles.resultsFlat)}
+        aria-label={t('movies.search.resultsListAria')}
+      >
+        {children}
+      </ul>
+      {withAttribution ? <TmdbAttribution /> : null}
+    </>
+  );
+}
+
+function SuggestionsSection({
+  title,
+  action,
+  flat,
+  children,
+}: Readonly<{ title: string; action?: ReactNode; flat: boolean; children: ReactNode[] }>) {
+  const { t } = useTranslation();
+  const titleId = useId();
+  return (
+    <section className={styles.section} aria-labelledby={titleId}>
+      <div className={styles.sectionHead}>
+        <h3 id={titleId} className={styles.sectionTitle}>
+          {title}
+        </h3>
+        {action}
+      </div>
+      {children.length > 0 ? (
+        <ul className={clsx(styles.results, flat && styles.resultsFlat)} aria-label={title}>
+          {children}
+        </ul>
+      ) : (
+        <p className={styles.noResultsHint}>{t('movies.search.noResultsForFilters')}</p>
+      )}
+    </section>
+  );
+}
+
+function useHistoryFocus(
+  containerRef: RefObject<HTMLDivElement | null>,
+  showHistory: boolean,
+  setHistoryDismissed: (dismissed: boolean) => void
+) {
+  const pendingRef = useRef<'first' | 'last' | null>(null);
+
+  const focusEntry = useCallback(
+    (position: 'first' | 'last') => {
+      const items = containerRef.current?.querySelectorAll<HTMLElement>(HISTORY_ITEM_SELECTOR);
+      if (!items?.length) return;
+      items[position === 'first' ? 0 : items.length - 1]?.focus();
+    },
+    [containerRef]
+  );
+
+  useEffect(() => {
+    const position = pendingRef.current;
+    if (!position || !showHistory) return;
+    pendingRef.current = null;
+    focusEntry(position);
+  });
+
+  return (position: 'first' | 'last') => {
+    if (showHistory) {
+      focusEntry(position);
+      return;
+    }
+    pendingRef.current = position;
+    setHistoryDismissed(false);
+  };
+}
+
+function SearchMessages({
+  flags,
+  term,
+  withTip,
+  minCharsHintId,
+  statusLabel,
+  error,
+}: Readonly<{
+  flags: ReturnType<typeof viewFlags>;
+  term: string;
+  withTip: boolean;
+  minCharsHintId: string;
+  statusLabel: string;
+  error: string | null;
+}>) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {flags.showMinCharsHint ? (
         <p id={minCharsHintId} className={styles.minCharsHint}>
           {t('movies.search.liveSearchMinCharsHint', { min: SEARCH_MIN_CHARS })}
         </p>
       ) : null}
       <p role="status" aria-live="polite" aria-atomic="true" className="visually-hidden">
-        {a11ySearchStatus}
+        {statusLabel}
       </p>
-      {error && (
+      {error ? (
         <p className="error" role="alert">
           {error}
         </p>
-      )}
-      {showNoResultsBlock ? (
-        <p className={styles.noResultsHint}>
-          {trimmed.length >= SEARCH_MIN_CHARS
-            ? t('movies.search.noResultsForQuery', { query: trimmed })
-            : t('movies.search.noResultsForFilters')}
-        </p>
       ) : null}
-      {showAvailabilityEmpty ? (
+      {flags.showNoResults ? <NoResults term={term} withTip={withTip} /> : null}
+      {flags.showAvailabilityEmpty ? (
         <p className={styles.noResultsHint}>{t('movies.search.noResultsAvailability')}</p>
       ) : null}
-      {hasResultsBlock && (
-        <>
-          {showWatchProviders && searchMeta?.watchProvidersRegion ? (
-            <p className={styles.regionHint}>
-              {t('movies.search.regionHint', { region: searchMeta.watchProvidersRegion })}
-            </p>
-          ) : null}
-          <ul className={styles.results} aria-label={t('movies.search.resultsListAria')}>
-            {displayedResults.map((r) => {
-              const runtimeLabel = formatRuntimeMinutes(r.runtimeMinutes);
-              const genresLabel = metaGenresLabel(r.genreIds, tmdbLanguage);
-              const metaLine = movieMetaLine(r.year, genresLabel, runtimeLabel);
-              const allProviders = r.watchProviders ?? [];
-              const providers = allProviders.filter((p) => p.type === 'flatrate');
-              const rentCount = allProviders.filter((p) => p.type === 'rent').length;
-              const buyCount = allProviders.filter((p) => p.type === 'buy').length;
-              const posterSrcRaw = posterImageSrc(r.posterPath);
-              const posterSrc = posterSrcRaw
-                ? tmdbPosterSrcForListDisplay(posterSrcRaw)
-                : undefined;
-              const alreadyListed = existingMovies.find((m) => isSameTmdbItem(m, r));
-              const alreadyAdded = isItemAlreadyAdded ? isItemAlreadyAdded(r) : !!alreadyListed;
-              const seenHint = alreadyListed
-                ? othersAlreadySeenHint(alreadyListed.seenByPseudos, participantPseudo, t)
-                : null;
-              const safeWatchUrl = safeTmdbWatchUrl(r.tmdbWatchPageUrl);
-              return (
-                <li key={`${r.mediaType ?? 'movie'}-${r.id}`} className={styles.resultItem}>
-                  <div className={styles.posterWrap}>
-                    {posterSrc ? (
-                      <img src={posterSrc} alt="" loading="lazy" decoding="async" />
-                    ) : (
-                      <div className={styles.posterPlaceholder} aria-hidden>
-                        <Film size={ICON_SIZE.xl} />
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.resultBody}>
-                    <div className={styles.resultTextCol}>
-                      <span className={styles.resultTitle}>
-                        {r.title}
-                        {r.mediaType === 'tv' && (
-                          <Chip tone="primary" size="sm" className={styles.mediaTypeBadge}>
-                            {t('movies.list.tvBadge')}
-                          </Chip>
-                        )}
-                      </span>
-                      {metaLine ? <span className={styles.resultMeta}>{metaLine}</span> : null}
-                    </div>
-                    {alreadyListed ? (
-                      <p className={`${styles.resultDuplicate} hint`}>
-                        {t('movies.search.duplicateHint')}
-                        {seenHint ? <> {seenHint}</> : null}
-                      </p>
-                    ) : null}
-                    {showWatchProviders &&
-                      (providers.length > 0 || rentCount > 0 || buyCount > 0) && (
-                        <div className={styles.providersRow}>
-                          <WatchProviderChips
-                            providers={providers}
-                            variant="compact"
-                            watchPageUrl={safeWatchUrl}
-                          />
-                          {rentCount > 0 && (
-                            <PaidOfferChip
-                              type="rent"
-                              count={rentCount}
-                              ariaLabel={t('movies.watchProviders.alsoRentAria', {
-                                count: rentCount,
-                                title: r.title,
-                              })}
-                              href={safeWatchUrl ?? undefined}
-                            />
-                          )}
-                          {buyCount > 0 && (
-                            <PaidOfferChip
-                              type="buy"
-                              count={buyCount}
-                              ariaLabel={t('movies.watchProviders.alsoBuyAria', {
-                                count: buyCount,
-                                title: r.title,
-                              })}
-                              href={safeWatchUrl ?? undefined}
-                            />
-                          )}
-                        </div>
-                      )}
-                  </div>
-                  <div className={styles.resultAction}>
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      className={styles.addButton}
-                      onClick={() => addMovie(r)}
-                      disabled={adding || alreadyAdded}
-                      aria-label={
-                        alreadyAdded
-                          ? undefined
-                          : t('movies.search.addButtonAria', { title: r.title })
-                      }
-                      title={
-                        alreadyAdded
-                          ? (alreadyAddedHint ?? t('movies.search.alreadyListedHint'))
-                          : undefined
-                      }
-                    >
-                      {alreadyAdded
-                        ? (alreadyAddedLabel ?? t('movies.search.alreadyListed'))
-                        : t('movies.search.addButton')}
-                    </Button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          <TmdbAttribution />
-        </>
-      )}
-    </div>
+    </>
   );
+}
+
+function useFocusLeave(
+  containerRef: RefObject<HTMLDivElement | null>,
+  enabled: boolean,
+  onLeave: () => void
+) {
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!enabled || !el) return;
+    const onFocusOut = (e: FocusEvent) => {
+      if (!el.contains(e.relatedTarget as Node | null)) onLeave();
+    };
+    el.addEventListener('focusout', onFocusOut);
+    return () => el.removeEventListener('focusout', onFocusOut);
+  }, [containerRef, enabled, onLeave]);
+}
+
+function formClasses(flat: boolean, quick: boolean) {
+  return {
+    root: clsx(styles.root, flat && styles.rootFlat),
+    inputWrap: clsx(styles.inputWrap, quick && styles.inputWrapWide),
+    input: clsx('input', quick && styles.inputLarge),
+  };
 }

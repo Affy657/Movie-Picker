@@ -56,7 +56,3 @@
 .skeletonRow {
   border-radius: var(--radius-md);
 }
-
-.addSection {
-  margin-bottom: var(--space-4);
-}

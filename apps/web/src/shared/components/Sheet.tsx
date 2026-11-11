@@ -16,6 +16,8 @@ interface SheetProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   size?: SheetSize;
+  detail?: React.ReactNode;
+  className?: string;
 }
 
 export type SheetSize = 'md' | 'lg';
@@ -27,6 +29,8 @@ export default function Sheet({
   children,
   footer,
   size = 'md',
+  detail,
+  className,
 }: Readonly<SheetProps>) {
   const { t } = useTranslation();
   const titleId = useId();
@@ -39,16 +43,24 @@ export default function Sheet({
       onClose={onClose}
       ariaLabelledBy={titleId}
       dialogRef={dialogRef}
-      className={clsx(styles.dialog, size === 'lg' && styles.dialogTall, dragStyles.surface)}
+      className={clsx(
+        styles.dialog,
+        size === 'lg' && styles.dialogTall,
+        dragStyles.surface,
+        className
+      )}
     >
       {open && (
         <>
           <div className={dragStyles.grab} {...dragBind}>
             <span className={dragStyles.handle} aria-hidden="true" />
             <div className={styles.head}>
-              <h2 id={titleId} className={styles.title}>
-                {title}
-              </h2>
+              <div className={styles.heading}>
+                <h2 id={titleId} className={styles.title}>
+                  {title}
+                </h2>
+                {detail}
+              </div>
               <IconButton ariaLabel={t('common.close')} onClick={onClose}>
                 <X aria-hidden size={ICON_SIZE.md} />
               </IconButton>

@@ -146,12 +146,6 @@ export default function EventDetailSession({
     }
   }, [wheel.manualMode, wheel.removalMode]);
 
-  useEffect(() => {
-    if (addMovieOpen) {
-      moviesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [addMovieOpen]);
-
   const selection = wheelSelection(wheel);
 
   const isConnectedSelf =

@@ -98,7 +98,7 @@ export function useMovieSearch({
             includeSeries: request.includeSeries,
             filters: request.filters,
           });
-          if (!signal.aborted && request.term.length >= SEARCH_MIN_CHARS) {
+          if (!signal.aborted && request.term.length >= SEARCH_MIN_CHARS && body.items.length > 0) {
             latest.current.onSearched(request.term);
           }
           return body;

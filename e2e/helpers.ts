@@ -46,18 +46,18 @@ export async function createEvent(page: Page, title: string, date?: string): Pro
 
 export async function addStubMovie(page: Page, title: string = STUB_MOVIE): Promise<void> {
   await page.getByRole('button', { name: /proposer un film/i }).click();
-  const search = page.getByRole('searchbox', { name: /proposer un film/i });
+  const dialog = page.getByRole('dialog', { name: /proposer un film/i });
+  const search = dialog.getByRole('searchbox', { name: /chercher un film/i });
   await search.fill('stub');
-  const result = page.getByRole('listitem').filter({ hasText: title });
+  const result = dialog
+    .getByRole('list', { name: /résultats de la recherche/i })
+    .getByRole('listitem')
+    .filter({ hasText: title });
   await expect(result).toBeVisible({ timeout: 15_000 });
-  await result.getByRole('button', { name: /^ajouter « /i }).click();
-  await expect(search).toHaveValue('', { timeout: 15_000 });
-  await page
-    .getByRole('heading', { name: /proposer un film/i })
-    .locator('..')
-    .getByRole('button', { name: /^fermer$/i })
-    .click();
-  await expect(search).toBeHidden();
+  await result.getByRole('button', { name: /^proposer « /i }).click();
+  await expect(dialog.getByText(/est proposé à la soirée/i)).toBeVisible({ timeout: 15_000 });
+  await dialog.getByRole('button', { name: /^terminé$/i }).click();
+  await expect(dialog).toBeHidden();
 }
 
 export async function spinWheelAndDismissWinner(page: Page): Promise<void> {
