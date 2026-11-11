@@ -142,6 +142,8 @@ export const fr = {
       recommendationsSubtitle: 'À partir de votre dernière soirée',
       watchlistTitle: 'Dans votre liste',
       friendsTitle: 'Vos amis ont vu',
+      forYouTitle: 'Pour vous',
+      becauseYouLiked: 'Parce que vous avez aimé {{title}}',
     },
     themes: {
       frissons: "Frissons d'automne",
@@ -163,6 +165,7 @@ export const fr = {
       appleTvPlus: 'Apple TV+',
     },
     seeWatchlist: 'Voir ma liste',
+    forYouLabel: 'Sélections pour vous',
     providerLabel: 'Plateforme',
     searchHeading: 'Résultats pour « {{query}} »',
     searchEmptyQuery: 'Entrez un titre pour lancer la recherche.',

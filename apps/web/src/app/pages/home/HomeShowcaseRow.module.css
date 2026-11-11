@@ -19,12 +19,18 @@
   gap: var(--space-1-5);
 }
 
-.skeletonBody {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+.posterGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3-5);
 }
 
+.gridRow:only-child .posterGrid {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
 
 .tabs {
   margin: 0;
@@ -38,4 +44,21 @@
   outline: var(--outline-focus);
   outline-offset: var(--outline-offset);
   border-radius: var(--radius-sm);
+}
+
+@media (max-width: 47.9375rem) {
+  .posterGrid {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--poster-column-md);
+    margin: calc(var(--space-3) * -1) calc(var(--space-2) * -1);
+    padding: var(--space-3) var(--space-2);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .posterGrid > * {
+    scroll-snap-align: start;
+  }
 }

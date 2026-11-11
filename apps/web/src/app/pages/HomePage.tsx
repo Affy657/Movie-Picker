@@ -31,7 +31,8 @@ import LibraryMovieDetails, {
 import HomeHero from './home/HomeHero';
 import HomeShowcaseRow from './home/HomeShowcaseRow';
 import HomeCollectionsRow from './home/HomeCollectionsRow';
-import HomePersonalRow, { type PersonalRowItem } from './home/HomePersonalRow';
+import HomeForYou, { type PersonalRowItem } from './home/HomeForYou';
+import HomeMostProposed from './home/HomeMostProposed';
 import {
   useFriendsWatchedRow,
   useRecommendationSeed,
@@ -44,19 +45,11 @@ type GenreTabKey = 'all' | `${number}`;
 const MOVIE_DETAILS_CHUNKS = [loadMovieDetailsModal];
 const FIRST_RAIL_EAGER_COUNT = 3;
 
-type HomeRail = 'watchlist' | 'recommendations' | 'friends' | 'provider';
+type HomeRail = 'forYou' | 'trending';
 
-function resolveFirstRail(
-  personalRowsPending: boolean,
-  hasWatchlist: boolean,
-  hasRecommendations: boolean,
-  hasFriends: boolean
-): HomeRail | null {
+function resolveFirstRail(personalRowsPending: boolean, hasPersonal: boolean): HomeRail | null {
   if (personalRowsPending) return null;
-  if (hasWatchlist) return 'watchlist';
-  if (hasRecommendations) return 'recommendations';
-  if (hasFriends) return 'friends';
-  return 'provider';
+  return hasPersonal ? 'forYou' : 'trending';
 }
 
 function eagerCountFor(rail: HomeRail, firstRail: HomeRail | null): number {
@@ -111,11 +104,10 @@ export default function HomePage() {
     seedTitle,
     isPending: seedPending,
   } = useRecommendationSeed(isAuthenticated);
+  const personalPending = watchlistRow.isPending || friendsRow.isPending || seedPending;
   const firstRail = resolveFirstRail(
-    watchlistRow.isPending || friendsRow.isPending || seedPending,
-    watchlistRow.items.length > 0,
-    !!seedTmdbId,
-    friendsRow.items.length > 0
+    personalPending,
+    watchlistRow.items.length > 0 || !!seedTmdbId || friendsRow.items.length > 0
   );
 
   const openPersonalDetails = (item: PersonalRowItem) =>
@@ -154,55 +146,26 @@ export default function HomePage() {
         </p>
       ) : null}
 
-      <HomePersonalRow
-        headingKey="showcase.sections.watchlistTitle"
-        items={watchlistRow.items}
-        isPending={watchlistRow.isPending}
-        seeAllTo={ROUTES.watchlist}
-        seeAllLabel={t('showcase.seeWatchlist')}
-        eagerCount={eagerCountFor('watchlist', firstRail)}
+      <HomeForYou
+        watchlist={watchlistRow.items}
+        friends={friendsRow.items}
+        seed={
+          seedTmdbId ? { tmdbId: seedTmdbId, mediaType: seedMediaType, title: seedTitle } : null
+        }
+        isPending={personalPending}
+        eagerCount={eagerCountFor('forYou', firstRail)}
         library={library}
-        onSelect={openPersonalDetails}
-      />
-      {seedTmdbId ? (
-        <HomeShowcaseRow
-          headingKey="showcase.sections.recommendationsTitle"
-          seeAllTo={ROUTES.showcaseRecommendations(seedTmdbId, seedMediaType)}
-          query={{ section: 'recommendations', seedTmdbId, seedMediaType }}
-          library={library}
-          onSelect={openDetails}
-          eagerCount={eagerCountFor('recommendations', firstRail)}
-          subtitle={seedTitle}
-        />
-      ) : null}
-      <HomePersonalRow
-        headingKey="showcase.sections.friendsTitle"
-        items={friendsRow.items}
-        isPending={friendsRow.isPending}
-        eagerCount={eagerCountFor('friends', firstRail)}
-        library={library}
-        onSelect={openPersonalDetails}
-      />
-      <HomeShowcaseRow
-        headingKey="showcase.sections.providerTitle"
-        seeAllTo={ROUTES.showcaseProvider(providerTab)}
-        query={{ section: 'provider', provider: providerTab }}
-        library={library}
-        onSelect={openDetails}
-        eagerCount={eagerCountFor('provider', firstRail)}
-        tabConfig={{
-          ariaLabel: t('showcase.providerLabel'),
-          tabs: providerTabs,
-          active: providerTab,
-          onChange: setProviderTab,
-        }}
+        onSelectPersonal={openPersonalDetails}
+        onSelectShowcase={openDetails}
       />
       <HomeShowcaseRow
         headingKey="showcase.sections.trendingTitle"
         seeAllTo={ROUTES.showcaseTrendingForGenre(selectedGenreIds?.[0])}
         query={{ section: 'trending', genreIds: selectedGenreIds }}
+        layout="ranked"
         library={library}
         onSelect={openDetails}
+        eagerCount={eagerCountFor('trending', firstRail)}
         tabConfig={{
           ariaLabel: t('showcase.genreLabel'),
           tabs: genreTabs,
@@ -211,12 +174,29 @@ export default function HomePage() {
         }}
       />
       <HomeShowcaseRow
-        headingKey="showcase.sections.nowPlayingTitle"
-        seeAllTo={ROUTES.showcaseNowPlaying}
-        query={{ section: 'now-playing' }}
+        headingKey="showcase.sections.providerTitle"
+        seeAllTo={ROUTES.showcaseProvider(providerTab)}
+        query={{ section: 'provider', provider: providerTab }}
         library={library}
         onSelect={openDetails}
+        tabConfig={{
+          ariaLabel: t('showcase.providerLabel'),
+          tabs: providerTabs,
+          active: providerTab,
+          onChange: setProviderTab,
+        }}
       />
+      <div className={styles.pair}>
+        <HomeShowcaseRow
+          headingKey="showcase.sections.nowPlayingTitle"
+          seeAllTo={ROUTES.showcaseNowPlaying}
+          query={{ section: 'now-playing' }}
+          layout="grid"
+          library={library}
+          onSelect={openDetails}
+        />
+        <HomeMostProposed onSelect={openDetails} />
+      </div>
       <HomeShowcaseRow
         headingKey="showcase.sections.themeTitle"
         seeAllTo={ROUTES.showcaseTheme(themeTab)}
@@ -231,14 +211,6 @@ export default function HomePage() {
         }}
       />
       <HomeCollectionsRow />
-      <HomeShowcaseRow
-        headingKey="showcase.sections.mostProposedTitle"
-        seeAllTo={ROUTES.showcaseMostProposed}
-        query={{ section: 'most-proposed' }}
-        showRank
-        library={library}
-        onSelect={openDetails}
-      />
 
       <LibraryMovieDetails
         target={details.target}

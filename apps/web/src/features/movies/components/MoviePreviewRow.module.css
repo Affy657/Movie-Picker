@@ -111,6 +111,11 @@
   gap: var(--space-3-5);
 }
 
+.railRanked {
+  grid-auto-columns: calc(var(--poster-column-md) * 1.5);
+  gap: var(--space-2);
+}
+
 .railArrow {
   position: absolute;
   top: calc(var(--rail-poster-height) / 2);
@@ -143,5 +148,15 @@
 @media (max-width: 39.9375rem) {
   .heading {
     font-size: var(--font-size-lg);
+  }
+}
+
+@media (max-width: 47.9375rem) {
+  .rail {
+    scroll-snap-type: x mandatory;
+  }
+
+  .rail > * {
+    scroll-snap-align: start;
   }
 }

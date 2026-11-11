@@ -292,6 +292,7 @@
   --font-size-4xl: 2.25rem;
   --font-size-5xl: 2.85rem;
   --font-size-6xl: 4.25rem;
+  --font-size-7xl: 7.5rem;
   --font-size-page-title: clamp(var(--font-size-3xl), 4vw, 1.875rem);
 
   --tracking-tighter: -0.03em;

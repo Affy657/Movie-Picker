@@ -144,6 +144,8 @@ export const en: Locale = {
       recommendationsSubtitle: 'Based on your last movie night',
       watchlistTitle: 'In your list',
       friendsTitle: 'Your friends watched',
+      forYouTitle: 'For you',
+      becauseYouLiked: 'Because you liked {{title}}',
     },
     themes: {
       frissons: 'Autumn chills',
@@ -165,6 +167,7 @@ export const en: Locale = {
       appleTvPlus: 'Apple TV+',
     },
     seeWatchlist: 'Open my list',
+    forYouLabel: 'Picks for you',
     providerLabel: 'Platform',
     searchHeading: 'Results for "{{query}}"',
     searchEmptyQuery: 'Type a title to start searching.',

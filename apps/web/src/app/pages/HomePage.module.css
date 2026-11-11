@@ -6,3 +6,21 @@
   overflow-anchor: none;
   overflow-x: visible;
 }
+
+.pair {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-10);
+}
+
+.pair > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (max-width: 63.9375rem) {
+  .pair {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

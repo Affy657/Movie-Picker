@@ -6,7 +6,7 @@ import {
 import { useWatchlist } from '@/features/movies/hooks/useWatchlist';
 import { queryKeys } from '@/shared/hooks/queryKeys';
 import type { WatchlistItem } from '@/features/movies/api/watchlistApi';
-import type { PersonalRowItem } from './HomePersonalRow';
+import type { PersonalRowItem } from './HomeForYou';
 
 const FRIENDS_TAKE = 20;
 const WATCHLIST_TAKE = 20;

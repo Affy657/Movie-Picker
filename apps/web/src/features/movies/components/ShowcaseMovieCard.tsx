@@ -22,6 +22,8 @@ interface ShowcaseMovieCardProps {
   badges?: ReactNode;
   cornerBadge?: ReactNode;
   actions?: ReactNode;
+  rank?: number;
+  rankLabel?: string;
   className?: string;
 }
 
@@ -51,6 +53,8 @@ export default function ShowcaseMovieCard({
   badges,
   cornerBadge,
   actions,
+  rank,
+  rankLabel,
   className,
 }: Readonly<ShowcaseMovieCardProps>) {
   const { t, locale } = useTranslation();
@@ -104,6 +108,18 @@ export default function ShowcaseMovieCard({
       </div>
     </div>
   );
+
+  if (rank != null) {
+    return (
+      <li className={clsx(styles.card, styles.ranked, className)}>
+        <span className={styles.rankNumeral} aria-hidden>
+          {rank}
+        </span>
+        {rankLabel ? <span className="visually-hidden">{rankLabel}</span> : null}
+        {body}
+      </li>
+    );
+  }
 
   return <li className={clsx(styles.card, className)}>{body}</li>;
 }

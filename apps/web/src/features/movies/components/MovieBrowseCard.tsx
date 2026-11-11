@@ -59,6 +59,7 @@ interface MovieBrowseCardProps {
   ratingScale?: RatingScale;
   meta?: ReactNode;
   eager?: boolean;
+  rank?: number;
 }
 
 function RowAvailability({
@@ -227,6 +228,7 @@ function BrowseMoviePoster({
   ratingScale,
   meta,
   eager,
+  rank,
 }: Readonly<MovieBrowseCardProps>) {
   const { t } = useTranslation();
   const isTv = item.mediaType === 'tv';
@@ -242,6 +244,8 @@ function BrowseMoviePoster({
       runtimeMinutes={item.runtimeMinutes}
       meta={meta}
       eager={eager}
+      rank={rank}
+      rankLabel={rank != null ? t('showcase.rank', { rank }) : undefined}
       onOpenDetails={onOpenDetails}
       badges={
         hasBadges && (
