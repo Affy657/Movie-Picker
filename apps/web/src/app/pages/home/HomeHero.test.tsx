@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
@@ -8,6 +8,7 @@ import { AppTestProviders } from '@/test-utils/queryWrapper';
 import { authMeGuestHandler, TEST_API_V1 } from '@/mocks/handlers';
 import { stubMatchMedia } from '@/test-utils/matchMedia';
 import HomeHero from './HomeHero';
+import { useHomeSearchHidden } from './homeSearchVisibility';
 
 const authedUserHandler = http.get(`${TEST_API_V1}/auth/me`, () =>
   HttpResponse.json({
@@ -198,5 +199,50 @@ describe('HomeHero', () => {
       expect(image).toHaveAttribute('alt', '');
       expect(image.closest('[aria-hidden="true"]')).not.toBeNull();
     }
+  });
+
+  it('tells the header when its search scrolls above the screen, and back', () => {
+    let notify: (entries: Partial<IntersectionObserverEntry>[]) => void = () => undefined;
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(callback: (entries: Partial<IntersectionObserverEntry>[]) => void) {
+          notify = callback;
+        }
+        observe() {}
+        disconnect() {}
+      }
+    );
+    let hidden = false;
+    function Probe() {
+      hidden = useHomeSearchHidden();
+      return null;
+    }
+    server.use(authMeGuestHandler, trendingHandler);
+    const { unmount } = render(
+      <AppTestProviders>
+        <MemoryRouter>
+          <HomeHero />
+          <Probe />
+        </MemoryRouter>
+      </AppTestProviders>
+    );
+
+    act(() => notify([{ isIntersecting: false, boundingClientRect: { top: -40 } as DOMRect }]));
+    expect(hidden).toBe(true);
+    act(() => notify([{ isIntersecting: true, boundingClientRect: { top: 120 } as DOMRect }]));
+    expect(hidden).toBe(false);
+    act(() => notify([{ isIntersecting: false, boundingClientRect: { top: 900 } as DOMRect }]));
+    expect(hidden).toBe(false);
+
+    act(() => notify([{ isIntersecting: false, boundingClientRect: { top: -40 } as DOMRect }]));
+    unmount();
+    let afterUnmount = true;
+    function After() {
+      afterUnmount = useHomeSearchHidden();
+      return null;
+    }
+    render(<After />);
+    expect(afterUnmount).toBe(false);
   });
 });

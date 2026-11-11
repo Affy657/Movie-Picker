@@ -1,5 +1,5 @@
-import { useState, type SubmitEvent } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useEffect, useRef, useState, type RefObject, type SubmitEvent } from 'react';
+import { Link } from 'react-router';
 import { ChevronRight, Plus } from 'lucide-react';
 import { buttonClass } from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
@@ -14,20 +14,32 @@ import UpcomingEventCard from '@/features/events/pages/my-events/UpcomingEventCa
 import HomePosterWall from './HomePosterWall';
 import WheelGlyph from './WheelGlyph';
 import { useNextEvent } from './useNextEvent';
+import { SEARCH_EXAMPLES, useRunSearch } from './homeSearch';
+import { setHomeSearchHidden } from './homeSearchVisibility';
 import styles from './HomeHero.module.css';
 
-const SEARCH_EXAMPLES = ['Dune', 'Bong Joon-ho'];
+function useReportSearchVisibility(form: RefObject<HTMLFormElement | null>) {
+  useEffect(() => {
+    const element = form.current;
+    if (!element || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry) return;
+      setHomeSearchHidden(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+    });
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      setHomeSearchHidden(false);
+    };
+  }, [form]);
+}
 
 function HomeSearch() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const runSearch = useRunSearch();
   const [searchTerm, setSearchTerm] = useState('');
-
-  const runSearch = (term: string) => {
-    const trimmed = term.trim();
-    if (!trimmed) return;
-    void navigate(ROUTES.movieSearchFor(trimmed));
-  };
+  const formRef = useRef<HTMLFormElement>(null);
+  useReportSearchVisibility(formRef);
 
   const submitSearch = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -38,7 +50,7 @@ function HomeSearch() {
     <div className={styles.opener}>
       <h1 className={styles.title}>{t('home.title')}</h1>
       <p className={styles.intro}>{t('home.intro')}</p>
-      <form className={styles.searchForm} role="search" onSubmit={submitSearch}>
+      <form ref={formRef} className={styles.searchForm} role="search" onSubmit={submitSearch}>
         <label className="visually-hidden" htmlFor="home-search">
           {t('home.searchLabel')}
         </label>

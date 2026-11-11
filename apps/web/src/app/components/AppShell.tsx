@@ -13,6 +13,7 @@ import { LANDING_ANCHORS } from '@/app/pages/landing/anchors';
 import UserMenu from '@/features/auth/components/UserMenu';
 import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
+import HeaderSearch from './HeaderSearch';
 import PwaAutoUpdate from './PwaAutoUpdate';
 import ConsentBanner from './ConsentBanner';
 import InAppBrowserBanner from './InAppBrowserBanner';
@@ -232,6 +233,7 @@ export default function AppShell() {
                 ))
               : desktopItems.map((item) => <DesktopNavItem key={item.to} {...item} />)}
           </nav>
+          <HeaderSearch />
           <HeaderNavActions
             isLoading={isLoading}
             isAuthenticated={isAuthenticated}

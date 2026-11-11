@@ -73,6 +73,7 @@ export const en: Locale = {
       howItWorks: 'How it works',
     },
     searchLabel: 'Search for a film',
+    closeSearch: 'Close the search',
     searchPlaceholder: 'Title, director, actor',
     searchExamplesLabel: 'For example',
   },

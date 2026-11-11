@@ -71,6 +71,7 @@ export const fr = {
       howItWorks: 'Comment ça marche',
     },
     searchLabel: 'Chercher un film',
+    closeSearch: 'Fermer la recherche',
     searchPlaceholder: 'Titre, réalisateur, acteur',
     searchExamplesLabel: 'Par exemple',
   },
