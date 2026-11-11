@@ -99,3 +99,7 @@
   vertical-align: middle;
   color: var(--color-badge-host-text);
 }
+
+.toggle {
+  align-self: flex-start;
+}

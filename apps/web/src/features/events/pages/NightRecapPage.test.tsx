@@ -171,8 +171,10 @@ describe('NightRecapPage (MSW)', () => {
     expect(within(card).getByText('Moyenne 4,3/5, 3 notes')).toBeInTheDocument();
     const rows = ratingRows(card);
     expect(rows).toHaveLength(4);
-    expect(rows[0]).toHaveTextContent('Claire');
-    expect(rows[0]).toHaveTextContent('4,5/5');
+    expect(rows[0]).toHaveTextContent('Marius');
+    expect(rows[0]).toHaveTextContent('5/5');
+    expect(rows[1]).toHaveTextContent('Claire');
+    expect(rows[1]).toHaveTextContent('4,5/5');
     expect(rows[3]).toHaveTextContent('Sofia');
     expect(rows[3]).toHaveTextContent('Pas encore noté');
     expect(within(card).getByRole('link', { name: 'Claire' })).toHaveAttribute('href', '/u/claire');
@@ -258,7 +260,8 @@ describe('NightRecapPage (MSW)', () => {
     const rows = ratingRows(card);
     expect(rows[0]).toHaveTextContent('Vous');
     expect(within(card).getByText('Moyenne 8,7/10')).toBeInTheDocument();
-    expect(rows[1]).toHaveTextContent('9/10');
+    expect(rows[1]).toHaveTextContent('10/10');
+    expect(rows[2]).toHaveTextContent('9/10');
   });
 
   it('names a night planned for a later day by its date, not by tonight', async () => {
@@ -330,18 +333,21 @@ describe('NightRecapPage (MSW)', () => {
     renderRecap();
 
     const card = await screen.findByRole('region', { name: 'Les 2 films de la soirée' });
-    expect(
-      within(card)
-        .getAllByRole('button', { name: /^(Inception|Heat)$/ })
-        .map((tile) => tile.getAttribute('aria-label'))
-    ).toEqual(['Inception', 'Heat']);
+    const chips = within(
+      within(card).getByRole('list', { name: 'Films de la soirée' })
+    ).getAllByRole('button');
+    expect(chips).toHaveLength(2);
+    expect(chips[0]).toHaveAccessibleName(/^Inception/);
+    expect(chips[1]).toHaveAccessibleName(/^Heat/);
     expect(within(card).getByText('Moyenne 5,0/5, 1 note')).toBeInTheDocument();
 
-    await userEvent.click(within(card).getByRole('button', { name: 'Heat' }));
+    await userEvent.click(within(card).getByRole('button', { name: /^Heat/ }));
 
     expect(within(card).getByRole('heading', { level: 2, name: 'Heat' })).toBeInTheDocument();
     expect(within(card).queryByText(/^Moyenne/)).not.toBeInTheDocument();
-    expect(within(card).getAllByText('Pas encore noté')).toHaveLength(4);
+    expect(
+      ratingRows(card).filter((row) => row.textContent?.includes('Pas encore noté'))
+    ).toHaveLength(4);
   });
 
   it('shares the story of the night from the recap page', async () => {

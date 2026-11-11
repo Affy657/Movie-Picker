@@ -65,4 +65,36 @@ describe('RatingScaleAxis', () => {
     expect(container.querySelectorAll('[data-axis-mark]')).toHaveLength(1);
     expect(screen.getByText('+2')).toBeInTheDocument();
   });
+
+  it('turns every rating into a dot beyond six ratings and keeps only your own face', () => {
+    const { container } = renderAxis([
+      row('Adrien', 8, true),
+      row('Ana', 8),
+      row('Bob', 9),
+      row('Cleo', 9),
+      row('Dan', 7),
+      row('Eve', 6),
+      row('Fred', 10),
+    ]);
+
+    expect(container.querySelectorAll('[data-axis-face]')).toHaveLength(1);
+    expect(container.querySelector('[data-axis-face]')).toHaveAttribute('data-self');
+    expect(container.querySelectorAll('[data-axis-dot]')).toHaveLength(6);
+  });
+
+  it('stacks four marks at most on a crowded rating and counts the rest', () => {
+    const { container } = renderAxis([
+      row('Adrien', 8, true),
+      row('Ana', 8),
+      row('Bob', 8),
+      row('Cleo', 8),
+      row('Dan', 8),
+      row('Eve', 8),
+      row('Fred', 8),
+    ]);
+
+    expect(container.querySelectorAll('[data-axis-face]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-axis-dot]')).toHaveLength(3);
+    expect(screen.getByText('+3')).toBeInTheDocument();
+  });
 });

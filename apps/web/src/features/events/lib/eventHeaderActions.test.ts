@@ -13,7 +13,6 @@ const host: EventHeaderActionsInput = {
   canRemoveWinner: false,
   canReset: false,
   canCloseWithoutMovie: false,
-  canRate: false,
 };
 
 const guest: EventHeaderActionsInput = { ...host, isHost: false, canSpin: false };
@@ -25,7 +24,6 @@ describe('eventHeaderActions', () => {
       draw: null,
       manage: null,
       chosen: false,
-      rate: false,
     });
   });
 
@@ -80,7 +78,7 @@ describe('eventHeaderActions', () => {
     expect(plan.manage).toEqual({ removeWinner: false, reset: false, closeWithoutMovie: true });
   });
 
-  it('makes rating the main action once the movie can be rated', () => {
+  it('keeps the movie shown as chosen during the night and leaves rating to the movie card', () => {
     const plan = eventHeaderActions({
       ...host,
       lifecycle: 'live',
@@ -88,14 +86,13 @@ describe('eventHeaderActions', () => {
       remainingDraws: 0,
       canRemoveWinner: true,
       canReset: true,
-      canRate: true,
     });
-    expect(plan.rate).toBe(true);
-    expect(plan.chosen).toBe(false);
+    expect(plan.chosen).toBe(true);
     expect(plan.addMovie).toBe('secondary');
+    expect(plan).not.toHaveProperty('rate');
   });
 
-  it('only offers rating on a finished night', () => {
+  it('offers nothing in the header of a finished night', () => {
     expect(
       eventHeaderActions({
         ...guest,
@@ -104,8 +101,7 @@ describe('eventHeaderActions', () => {
         canAddMovie: false,
         hasWinner: true,
         remainingDraws: 0,
-        canRate: true,
       })
-    ).toEqual({ addMovie: null, draw: null, manage: null, chosen: false, rate: true });
+    ).toEqual({ addMovie: null, draw: null, manage: null, chosen: false });
   });
 });

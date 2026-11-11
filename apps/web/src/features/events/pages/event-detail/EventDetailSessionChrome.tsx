@@ -20,7 +20,6 @@ import type {
   AddMovieEntry,
   EventCounts,
   EventDateLabels,
-  HeaderRating,
   JoinGate,
   MoviesViewMode,
   ParticipantsToggle,
@@ -129,7 +128,6 @@ export default function EventDetailSessionChrome({
   share,
   settings,
   participants,
-  rating,
   addMovie,
   join,
   wheel,
@@ -152,7 +150,6 @@ export default function EventDetailSessionChrome({
   share: ShareOverlay;
   settings: SettingsOverlay;
   participants: ParticipantsToggle;
-  rating: HeaderRating;
   addMovie: AddMovieEntry;
   join: JoinGate;
   wheel: WheelApi;
@@ -176,7 +173,6 @@ export default function EventDetailSessionChrome({
     canRemoveWinner: wheel.showRemoveWinner,
     canReset: wheel.showReset,
     canCloseWithoutMovie: settings.canConfigure && lifecycle === 'pending',
-    canRate: rating.canRate,
   });
   return (
     <>
@@ -204,7 +200,6 @@ export default function EventDetailSessionChrome({
             addMovieTriggerRef={addMovie.triggerRef}
             onRequestReset={onRequestResetWheel}
             onRequestCloseWithoutMovie={onRequestCloseWithoutMovie}
-            onRate={rating.onRate}
           />
         }
         viewMode={viewToggleInHeader ? viewMode : undefined}

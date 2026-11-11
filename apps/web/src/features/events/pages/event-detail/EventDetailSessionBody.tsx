@@ -6,6 +6,7 @@ import EventClosedWithoutMovieState from '@/features/events/pages/event-detail/E
 import ViewModeToggle from '@/shared/components/ViewModeToggle';
 import ResponsiveDialog from '@/shared/components/ResponsiveDialog';
 import { useTranslation } from '@/shared/i18n';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 import type { EventData } from '@/features/events/types';
 import type { MovieData } from '@/shared/types/movie';
 import styles from './EventDetailSession.module.css';
@@ -64,6 +65,7 @@ function EventParticipantsDialog({
 }
 
 function EventWheelModalGate({ wheel }: Readonly<{ wheel: WheelApi }>) {
+  const { user } = useAuth();
   if (!wheel.isModalOpen || wheel.winnerIndex < 0 || !wheel.spinWinner) return null;
   return (
     <Suspense fallback={null}>
@@ -82,6 +84,7 @@ function EventWheelModalGate({ wheel }: Readonly<{ wheel: WheelApi }>) {
         skipSpin={wheel.manualReveal}
         winnerCount={wheel.winnerCount}
         remainingDraws={wheel.remainingDraws}
+        ratingScale={user?.ratingScale}
       />
     </Suspense>
   );

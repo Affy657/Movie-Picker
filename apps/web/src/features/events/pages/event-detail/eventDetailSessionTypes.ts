@@ -45,11 +45,6 @@ export type ParticipantsToggle = {
   onOpen: () => void;
 };
 
-export type HeaderRating = {
-  canRate: boolean;
-  onRate: () => void;
-};
-
 export type AddMovieEntry = {
   canAdd: boolean;
   onOpen: () => void;

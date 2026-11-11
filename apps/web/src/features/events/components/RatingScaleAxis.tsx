@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import clsx from 'clsx';
 import Avatar from '@/shared/components/Avatar';
 import { useTranslation } from '@/shared/i18n';
 import type { RatingScale } from '@/shared/types/theme';
@@ -21,6 +22,8 @@ export type ParticipantRating = {
 };
 
 const MAX_STACKED = 3;
+const MAX_FACES = 6;
+const MAX_DENSE_MARKS = 4;
 
 type RatedRow = ParticipantRating & { value: number };
 
@@ -31,6 +34,49 @@ function byValue(rows: RatedRow[]): RatedRow[][] {
 }
 
 const at = (value: number) => ({ '--at': `${(value / RATING_MAX) * 100}%` }) as CSSProperties;
+
+function Face({ row }: Readonly<{ row: RatedRow }>) {
+  return (
+    <span className={styles.person} data-self={row.isSelf || undefined} data-axis-face>
+      <Avatar avatarId={row.avatarId} pseudo={row.pseudo} size="sm" />
+    </span>
+  );
+}
+
+function FacesMark({ group }: Readonly<{ group: RatedRow[] }>) {
+  const shown = group.slice(0, MAX_STACKED);
+  const hidden = group.length - shown.length;
+  return (
+    <span className={styles.mark} style={at(group[0]?.value ?? 0)} data-axis-mark>
+      {hidden > 0 ? <span className={styles.more}>{`+${hidden}`}</span> : null}
+      {shown.map((row) => (
+        <Face key={row.participantId} row={row} />
+      ))}
+    </span>
+  );
+}
+
+function DenseMark({ group }: Readonly<{ group: RatedRow[] }>) {
+  const ordered = [...group.filter((row) => row.isSelf), ...group.filter((row) => !row.isSelf)];
+  const shown = ordered.slice(0, MAX_DENSE_MARKS);
+  const hidden = ordered.length - shown.length;
+  return (
+    <span
+      className={clsx(styles.mark, styles.denseMark)}
+      style={at(group[0]?.value ?? 0)}
+      data-axis-mark
+    >
+      {hidden > 0 ? <span className={styles.more}>{`+${hidden}`}</span> : null}
+      {shown.map((row) =>
+        row.isSelf ? (
+          <Face key={row.participantId} row={row} />
+        ) : (
+          <span key={row.participantId} className={styles.dot} data-axis-dot />
+        )
+      )}
+    </span>
+  );
+}
 
 export default function RatingScaleAxis({
   participants,
@@ -52,10 +98,12 @@ export default function RatingScaleAxis({
     })
     .join(', ');
   const ticks = Array.from({ length: 6 }, (_, index) => (index * max) / 5);
+  const dense = rated.length > MAX_FACES;
 
   return (
     <div
       className={styles.axis}
+      data-dense={dense || undefined}
       role="img"
       aria-label={t('events.ratings.scaleAria', { max, people, average: averageLabel })}
     >
@@ -69,29 +117,13 @@ export default function RatingScaleAxis({
           <span className={styles.tickLabel}>{tick}</span>
         </span>
       ))}
-      {byValue(rated).map((group) => {
-        const shown = group.slice(0, MAX_STACKED);
-        const hidden = group.length - shown.length;
-        return (
-          <span
-            key={group[0]?.value}
-            className={styles.mark}
-            style={at(group[0]?.value ?? 0)}
-            data-axis-mark
-          >
-            {hidden > 0 ? <span className={styles.more}>{`+${hidden}`}</span> : null}
-            {shown.map((row) => (
-              <span
-                key={row.participantId}
-                className={styles.person}
-                data-self={row.isSelf || undefined}
-              >
-                <Avatar avatarId={row.avatarId} pseudo={row.pseudo} size="sm" />
-              </span>
-            ))}
-          </span>
-        );
-      })}
+      {byValue(rated).map((group) =>
+        dense ? (
+          <DenseMark key={group[0]?.value} group={group} />
+        ) : (
+          <FacesMark key={group[0]?.value} group={group} />
+        )
+      )}
     </div>
   );
 }

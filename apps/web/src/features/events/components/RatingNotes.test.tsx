@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { LocaleProvider } from '@/shared/i18n';
 import RatingNotes from '@/features/events/components/RatingNotes';
@@ -31,7 +32,7 @@ function renderNotes(props: Partial<Parameters<typeof RatingNotes>[0]> = {}) {
 }
 
 describe('RatingNotes', () => {
-  it('lists every participant with their rating or a pending mention, plus the average', () => {
+  it('lists you first, then the ratings from highest to lowest, then who has not rated', () => {
     renderNotes();
 
     const list = screen.getByRole('list');
@@ -39,10 +40,37 @@ describe('RatingNotes', () => {
     expect(items).toHaveLength(4);
     expect(items[0]).toHaveTextContent('Vous');
     expect(items[0]).toHaveTextContent('Pas encore noté');
-    expect(items[1]).toHaveTextContent('Claire');
-    expect(items[1]).toHaveTextContent('4,5/5');
+    expect(items[1]).toHaveTextContent('Marius');
+    expect(items[1]).toHaveTextContent('5/5');
+    expect(items[2]).toHaveTextContent('Claire');
+    expect(items[2]).toHaveTextContent('4,5/5');
+    expect(items[3]).toHaveTextContent('Yanis');
     expect(items[3]).toHaveTextContent('Pas encore noté');
     expect(screen.getByText('Moyenne 4,8/5')).toBeInTheDocument();
+  });
+
+  it('shows five rows of a big group and lets the others be unfolded', async () => {
+    const group: ParticipantRating[] = [
+      { participantId: 'me', pseudo: 'Sofia', avatarId: null, value: 8, isSelf: true },
+      ...['Ana', 'Bob', 'Cleo', 'Dan', 'Eve', 'Fred', 'Gus'].map((pseudo, index) => ({
+        participantId: pseudo,
+        pseudo,
+        avatarId: null,
+        value: 4 + index,
+        isSelf: false,
+      })),
+    ];
+    renderNotes({ participants: group });
+
+    expect(within(screen.getByRole('list')).getAllByRole('listitem')).toHaveLength(5);
+    expect(screen.queryByText('Ana')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Afficher les 3 autres' }));
+
+    expect(within(screen.getByRole('list')).getAllByRole('listitem')).toHaveLength(8);
+    expect(screen.getByText('Ana')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Afficher moins' }));
+    expect(within(screen.getByRole('list')).getAllByRole('listitem')).toHaveLength(5);
   });
 
   it('links a participant with a public profile and marks the host', () => {
