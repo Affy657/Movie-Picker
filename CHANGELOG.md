@@ -8,6 +8,8 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+## [1.7.2] - 2026-11-11
+
 ### Fixed
 
 - **L'icône d'onglet existe aussi pour les navigateurs qui la demandent en `favicon.ico`**, et les icônes de l'app installée se mettent à jour au lieu de rester un an en cache.
@@ -615,7 +617,8 @@ Première version de production complète.
 
 - Prototype initial (MVP) : création de soirée, proposition de films (recherche TMDB), vote, roue de tirage, front React, API Node / Express.
 
-[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.7.1...HEAD
+[Non publié]: https://github.com/Affy657/Movie-Picker/compare/v1.7.2...HEAD
+[1.7.2]: https://github.com/Affy657/Movie-Picker/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/Affy657/Movie-Picker/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/Affy657/Movie-Picker/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/Affy657/Movie-Picker/compare/v1.5.0...v1.6.0
