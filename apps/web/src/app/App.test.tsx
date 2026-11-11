@@ -12,10 +12,6 @@ import {
   createUserStatsHandler,
   TEST_API_V1,
 } from '@/mocks/handlers';
-import { WHATS_NEW_NAV_RELEASED_AT_MS } from '@/shared/whatsNew';
-
-const HOUR_MS = 60 * 60 * 1000;
-const DAY_AFTER_RELEASE_MS = WHATS_NEW_NAV_RELEASED_AT_MS + 36 * HOUR_MS;
 
 function renderRoutes(initialEntries: string[]) {
   return render(
@@ -460,18 +456,8 @@ describe('App (routes)', () => {
       );
     });
 
-    it(`AppShell exposes the "What's new" link in the footer for signed-in users`, async () => {
-      server.use(
-        authedUserHandler,
-        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
-      );
-      renderRoutes(['/my-events']);
-      await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });
-      expect(screen.getByRole('button', { name: /^nouveautés$/i })).toBeInTheDocument();
-    });
-
-    it("AppShell exposes the What's new badge before the notifications for an older account", async () => {
-      vi.spyOn(Date, 'now').mockReturnValue(DAY_AFTER_RELEASE_MS);
+    it('AppShell never interrupts a signed-in user with a release dialog or badge', async () => {
+      vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-11-07T12:00:00.000Z'));
       server.use(
         http.get(`${TEST_API_V1}/auth/me`, () =>
           HttpResponse.json({
@@ -483,42 +469,27 @@ describe('App (routes)', () => {
             createdAt: '2026-06-01T00:00:00.000Z',
           })
         ),
-        http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] })),
-        http.get(`${TEST_API_V1}/notifications/inbox/unread-count`, () =>
-          HttpResponse.json({ unreadCount: 0 })
-        )
-      );
-      renderRoutes(['/my-events']);
-      const chip = await screen.findByRole(
-        'button',
-        { name: /voir les nouveautés/i },
-        { timeout: 20000 }
-      );
-      const bell = screen.getByRole('link', { name: /^notifications$/i });
-      expect(chip.compareDocumentPosition(bell) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    });
-
-    it("AppShell does not expose the What's new badge for an account created after the release", async () => {
-      vi.spyOn(Date, 'now').mockReturnValue(DAY_AFTER_RELEASE_MS);
-      server.use(
-        http.get(`${TEST_API_V1}/auth/me`, () =>
-          HttpResponse.json({
-            userId: 'u1',
-            displayName: 'Alice',
-            emailMasked: 'a***@test.local',
-            uiTheme: 'system',
-            accentColor: 'default',
-            createdAt: new Date(WHATS_NEW_NAV_RELEASED_AT_MS + 30 * HOUR_MS).toISOString(),
-          })
-        ),
         http.get(`${TEST_API_V1}/events/mine`, () => HttpResponse.json({ events: [] }))
       );
       renderRoutes(['/my-events']);
       await screen.findByRole('button', { name: /menu du compte/i }, { timeout: 20000 });
+      expect(screen.queryByRole('button', { name: /nouveautés/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: /quoi de neuf/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Journal des versions' })).toHaveAttribute(
+        'href',
+        '/nouveautes'
+      );
+    });
+
+    it('route /nouveautes shows the release notes', async () => {
+      renderRoutes(['/nouveautes']);
       expect(
-        screen.queryByRole('button', { name: /voir les nouveautés/i })
-      ).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /^nouveautés$/i })).toBeInTheDocument();
+        await screen.findByRole(
+          'heading',
+          { name: 'Journal des versions', level: 1 },
+          { timeout: 20000 }
+        )
+      ).toBeInTheDocument();
     });
   });
 

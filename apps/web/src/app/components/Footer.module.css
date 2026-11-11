@@ -209,20 +209,15 @@
   margin: 0;
 }
 
-.whatsNewLink {
-  padding: 0;
-  border: none;
-  background: none;
-  font: inherit;
+.releaseNotesLink {
   font-size: var(--font-size-2xs);
   color: var(--color-text-subtle);
   text-decoration: underline;
   text-underline-offset: 0.2em;
-  cursor: pointer;
 }
 
 @media (hover: hover) {
-  .whatsNewLink:hover {
+  .releaseNotesLink:hover {
     color: var(--color-primary-text);
   }
 }

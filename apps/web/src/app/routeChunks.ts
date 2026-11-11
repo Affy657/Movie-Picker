@@ -18,6 +18,7 @@ export const ROUTE_CHUNKS = {
   privacyPolicy: () => import('@/app/pages/PrivacyPolicyPage'),
   donate: () => import('@/app/pages/DonatePage'),
   tech: () => import('@/app/pages/TechPage'),
+  releaseNotes: () => import('@/app/pages/ReleaseNotesPage'),
   myEvents: () => import('@/features/events/pages/MyEventsPage'),
   watchlist: () => import('@/features/watchlist/pages/WatchlistPage'),
   notifications: () => import('@/features/notifications/pages/NotificationsPage'),

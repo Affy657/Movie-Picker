@@ -38,8 +38,6 @@ export const en: Locale = {
     accountMenu: 'Account menu',
     brandLabel: 'Movie Picker, home',
     skipToMain: 'Skip to main content',
-    whatsNew: "What's new",
-    whatsNewAria: "See what's new",
     landing: {
       howItWorks: 'How it works',
       wheel: 'The wheel',
@@ -1770,7 +1768,7 @@ export const en: Locale = {
     helpTitle: 'Help',
     reportIssue: 'Report an issue',
     donate: 'Support the project',
-    whatsNew: "What's new",
+    releaseNotes: 'Release notes',
     githubLabel: 'GitHub profile (new tab)',
     linkedinLabel: 'LinkedIn profile (new tab)',
     tmdbPrefix: 'Data provided by',
@@ -2103,306 +2101,19 @@ export const en: Locale = {
       rejectAll: 'Reject all',
     },
   },
-  whatsNew: {
-    title: "What's new?",
-    close: 'Got it',
-    categories: {
-      new: 'New',
-      improved: 'Improved',
+  releaseNotes: {
+    title: 'Release notes',
+    intro:
+      'Every release that changes something for you carries its own version number. Here is what changed, newest first.',
+    frenchOnly: 'This log is written in French.',
+    version: 'Version {{version}}',
+    sections: {
+      added: 'New',
+      changed: 'Changed',
+      deprecated: 'Going away',
+      removed: 'Removed',
       fixed: 'Fixed',
-    },
-    entries: {
-      watchlist: {
-        title: 'My list',
-        description: 'Park the films you fancy, suggest one in a click.',
-      },
-      letterboxd: {
-        title: 'Letterboxd sync',
-        description: 'Your Letterboxd watchlist lands here on its own.',
-      },
-      manualPick: {
-        title: 'Hand-picked winner',
-        description: 'Hosts can crown a film without spinning the wheel.',
-      },
-      streak: {
-        title: 'Streak flame',
-        description: 'One flame per week of movie night. Yours to keep alive.',
-      },
-      oauth: {
-        title: 'Google and GitHub sign-in',
-        description: 'One click and you are in, no password needed.',
-      },
-      donations: {
-        title: 'Support the project',
-        description: 'Movie Picker stays free. Donations pay for the servers.',
-      },
-      proposeIdea: {
-        title: 'Suggest an idea',
-        description: 'An idea, a bug, an improvement: send it in two fields.',
-      },
-      pwaInstall: {
-        title: 'Install the app',
-        description:
-          'A button in the footer and the account menu: native prompt on Chrome, a short guide on iPhone.',
-      },
-      wheelExclusion: {
-        title: 'Films out of the draw',
-        description: 'Hosts can set a film aside without deleting it.',
-      },
-      profileRevamp: {
-        title: 'Public profile revamp',
-        description: 'Stats, followers and recently watched, better laid out.',
-      },
-      weightedWheel: {
-        title: 'Vote-weighted wheel by default',
-        description: 'Votes now count in the draw, nothing to set up.',
-      },
-      explorationHome: {
-        title: 'A home page that suggests films',
-        description:
-          'Open the site and the films are already there. Dozens of selections sorted by mood, with or without an account.',
-      },
-      homeSearch: {
-        title: 'Search right at the top',
-        description:
-          'A title, a director, a genre: type it, we find it. Three examples get you started when inspiration runs dry.',
-      },
-      visitorNav: {
-        title: 'Everything is open, even without an account',
-        description:
-          'Browse, search, open a film sheet: nothing is locked any more. The account is for when you start a movie night.',
-      },
-      landingRevamp: {
-        title: 'A rebuilt showcase',
-        description:
-          'The presentation page has been redesigned, clearer and livelier, with the wheel playable right on screen.',
-      },
-      personalRows: {
-        title: 'A home page that knows you',
-        description:
-          'Your list, what the people you follow have watched, and recommendations drawn from the last film you saw on a movie night.',
-      },
-      streamingRow: {
-        title: 'Streaming tonight',
-        description:
-          'Netflix, Prime Video, Disney+, Canal+, Apple TV+: see at a glance what your subscriptions already include.',
-      },
-      themeSelections: {
-        title: 'Ten themed selections',
-        description:
-          'Chills, French comedies, the 80s to the 2000s, heists, A24 gems, under 90 minutes, all-time greats, family night.',
-      },
-      sagas: {
-        title: 'One hundred and twenty sagas',
-        description:
-          'Star Wars, Harry Potter, James Bond, Marvel, Asterix: the great franchises gathered, each with its own page.',
-      },
-      communityRanking: {
-        title: 'The community leaderboard',
-        description:
-          'The films movie nights propose the most, ranked. Just what you need when nobody can decide.',
-      },
-      browseLists: {
-        title: 'Every row has its page',
-        description:
-          'One click on "see all" opens the full list, with genre and type filters, sorting and search.',
-      },
-      carousels: {
-        title: 'Rows that scroll',
-        description:
-          'By finger, by wheel or with the arrows, the films scroll without ever leaving the page.',
-      },
-      listCardDetails: {
-        title: 'Rating and runtime on cards',
-        description:
-          'Movie lists and profiles show the rating and the runtime, like My list, so you can decide without opening the details.',
-      },
-      openBrowsing: {
-        title: 'Browse without an account',
-        description:
-          'Nav, My events, My list, Settings: all open without signing in. Log in only when you want to act.',
-      },
-      discoverHome: {
-        title: 'Discover page',
-        description: 'The product intro now lives on Discover. Home is My events.',
-      },
-      ideaAttachments: {
-        title: 'Screenshots with your ideas',
-        description:
-          'Attach up to 4 images to a suggestion: button, drag-and-drop or a plain paste.',
-      },
-      historyToEvent: {
-        title: 'Re-suggest a film you saw',
-        description: 'Send a film from your history to an ongoing event, no searching needed.',
-      },
-      rescheduleNotice: {
-        title: 'Heads-up when the date moves',
-        description:
-          'When the host reschedules, everyone gets a push notification and an inbox message.',
-      },
-      myEventsRevamp: {
-        title: 'My events, rebuilt',
-        description:
-          'Active and History tabs, a "Needs attention" block for events left hanging, and cards that finally fit on mobile.',
-      },
-      historyTools: {
-        title: 'Searchable history',
-        description:
-          'Search, sorting by date, title, films or guests, and a filter for nights that never got a film.',
-      },
-      settingsPage: {
-        title: 'Settings in five sections',
-        description:
-          'My account becomes Settings: Profile, Preferences, Notifications, Integrations, Account and security, all saved automatically.',
-      },
-      eventSettings: {
-        title: 'Event panel revamped',
-        description:
-          'Live saving, per-field errors, wheel mode and TV shows right from creation. Up to 15 films per person and 300 guests.',
-      },
-      movieList: {
-        title: 'Films as a list or a grid',
-        description:
-          'New list view, release date, My-list marker, redrawn platforms and film details in one tap.',
-      },
-      unifiedShare: {
-        title: 'One share dialog',
-        description:
-          'A single window for the link, the QR code and inviting the people you follow, on events and profiles alike.',
-      },
-      fasterFirstLoad: {
-        title: 'Faster to open',
-        description:
-          'The app fetches its core alongside everything else, so the first screen lands noticeably sooner.',
-      },
-      readableContrast: {
-        title: 'Stronger contrast',
-        description: 'Text and active chips now clear level AA, in both light and dark mode.',
-      },
-      analyticsPrivacy: {
-        title: 'Less data sent out',
-        description:
-          'Neither your display name nor your handle goes into usage analytics any more.',
-      },
-      inAppBrowser: {
-        title: 'Opening from Snapchat',
-        description:
-          'In-app browsers were wiping your session. A banner now offers to open Movie Picker in Safari or Chrome.',
-      },
-      userSearch: {
-        title: 'Find an account',
-        description: 'A Search tab in your follows finds a friend by nickname or by handle.',
-      },
-      recurringEvents: {
-        title: 'Recurring nights',
-        description:
-          'Weekly, fortnightly or monthly: the next one is born on its own when the previous one closes.',
-      },
-      eventTemplates: {
-        title: 'Night templates',
-        description:
-          'Up to five saved set-ups, reapplied in one click, and “Redo this night” from your history.',
-      },
-      multipleWinners: {
-        title: 'Several winning films',
-        description:
-          'The host picks how many films come out of the draw, up to ten: perfect for a marathon.',
-      },
-      voteLimit: {
-        title: 'Vote limit per participant',
-        description: 'The host sets a number of votes per person; everyone then has to choose.',
-      },
-      friendsWatchlist: {
-        title: 'A friend’s list',
-        description:
-          'Their watchlist can be read from their profile. Yours can be hidden with one account setting.',
-      },
-      openEventMovies: {
-        title: 'Films visible before joining',
-        description:
-          'A night link shows posters, scores and the winner without taking part; voting still requires joining.',
-      },
-      wheelAnnounce: {
-        title: 'The winner announced at the right moment',
-        description: 'The notification goes out when the wheel stops, no longer while it spins.',
-      },
-      letterboxdFromCard: {
-        title: 'Letterboxd from the card',
-        description: 'A film’s menu during a night opens its Letterboxd page in one click.',
-      },
-      scrollableDialogs: {
-        title: 'Dialogs that scroll on mobile',
-        description:
-          'Report a problem and Suggest an idea keep their buttons reachable, even with attached images.',
-      },
-      offlineEventPage: {
-        title: 'Night page offline',
-        description:
-          'A night link opened without network shows an error instead of an endless skeleton.',
-      },
-      movieRating: {
-        title: 'Rate the films you watched',
-        description:
-          'Half-star ratings, from the moment the night starts. Everyone sees the ratings and the average.',
-      },
-      ratingReminder: {
-        title: 'A reminder the next day',
-        description:
-          'At 10 a.m., a notification opens the film you still have to rate. You can turn it off in settings.',
-      },
-      nightRecap: {
-        title: 'The night recap',
-        description:
-          'The chosen films, the average and everyone’s rating, on a shareable link, no account needed.',
-      },
-      nightStory: {
-        title: 'Your night as a story',
-        description:
-          'A story-sized image with the recap link, to share from your phone or download.',
-      },
-      topFavorites: {
-        title: 'Your top 3',
-        description: 'Three favorite films or series, shown on your public profile.',
-      },
-      profilePhoto: {
-        title: 'Your profile photo',
-        description: 'Add a photo, crop it, and it becomes your avatar across the app.',
-      },
-      watchlistPick: {
-        title: 'Pick from my list',
-        description: 'A button draws a random film from your list, ready to suggest in one click.',
-      },
-      chosenMovie: {
-        title: 'The chosen film, front and center',
-        description:
-          'The night title and actions stay at the top, the winning film and its ratings right below.',
-      },
-      createEventSteps: {
-        title: 'Creating a night in three steps',
-        description:
-          'The title, the date, then the options grouped by stage. The night settings follow the same layout.',
-      },
-      exploreRows: {
-        title: 'A cleaner Explore page',
-        description: 'Just the title under each poster. The details stay on the film page.',
-      },
-      newAddress: {
-        title: 'A new address',
-        description: 'The site is now www.movie-picker.fr. Your old links still work.',
-      },
-      manageCookies: {
-        title: 'Your cookies, any time',
-        description: 'Change your mind from “Manage cookies”, at the bottom of every page.',
-      },
-      weightedWheelShare: {
-        title: 'Each film’s weight on the wheel',
-        description: 'In weighted mode, the wheel finally shows the share votes give to each film.',
-      },
-      fullDataExport: {
-        title: 'A complete data export',
-        description:
-          'It now includes the films you suggested, their ratings and your night templates.',
-      },
+      security: 'Security',
     },
   },
   pwaInstall: {

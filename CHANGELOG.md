@@ -8,6 +8,14 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Added
+
+- **Journal des versions** : toutes les versions de Movie Picker et ce que chacune a ajouté, changé ou corrigé, sur une page ouverte à tous depuis le lien « Journal des versions » du pied de page.
+
+### Removed
+
+- **La fenêtre « Quoi de neuf » et la pastille « Nouveautés » de la barre du haut** : plus rien ne s'ouvre de lui-même après une mise à jour, le journal des versions les remplace.
+
 ## [1.7.2] - 2026-11-11
 
 ### Fixed
@@ -63,7 +71,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
-- **Les nouveautés arrivent au fil de l'eau** : chaque amélioration est mise en ligne dès qu'elle est prête, avec son propre numéro de version, au lieu d'attendre une grosse mise à jour. « Quoi de neuf » ne s'ouvre plus que pour les nouveautés qui en valent la peine.
+- **Les nouveautés arrivent au fil de l'eau** : chaque amélioration est mise en ligne dès qu'elle est prête, avec son propre numéro de version, au lieu d'attendre une grosse mise à jour.
 - **La cloche de notifications ne recharge plus toute la boîte de réception** pour afficher son compteur.
 - **La liste de films d'une soirée coûte moins de lectures** : les enrichissements se lisent en une requête et les votes en un agrégat.
 - **La synchronisation Letterboxd manuelle s'espace de cinq minutes** et le dit à l'écran.

@@ -1,0 +1,20 @@
+.release {
+  margin-bottom: var(--space-8);
+}
+
+.group {
+  margin-top: var(--space-4);
+}
+
+.groupTitle {
+  composes: sectionLabel from '@/shared/components/typography.module.css';
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.note {
+  margin: calc(-1 * var(--space-4)) 0 var(--space-6);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-subtle);
+}

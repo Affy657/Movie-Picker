@@ -38,6 +38,7 @@ const LegalNoticePage = lazy(ROUTE_CHUNKS.legalNotice);
 const PrivacyPolicyPage = lazy(ROUTE_CHUNKS.privacyPolicy);
 const DonatePage = lazy(ROUTE_CHUNKS.donate);
 const TechPage = lazy(ROUTE_CHUNKS.tech);
+const ReleaseNotesPage = lazy(ROUTE_CHUNKS.releaseNotes);
 const MyEventsPage = lazy(ROUTE_CHUNKS.myEvents);
 const WatchlistPage = lazy(ROUTE_CHUNKS.watchlist);
 const NotificationsPage = lazy(ROUTE_CHUNKS.notifications);
@@ -111,6 +112,7 @@ export function AppRoutes() {
         <Route path={ROUTES.privacyPolicy} element={<PrivacyPolicyPage />} />
         <Route path={ROUTES.donate} element={<DonatePage />} />
         <Route path={ROUTES.tech} element={<TechPage />} />
+        <Route path={ROUTES.releaseNotes} element={<ReleaseNotesPage />} />
         <Route path={`${ROUTES.account}/*`} element={<AccountPage />} />
         <Route
           path={ROUTES.myEvents}
