@@ -2,6 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="preconnect" href="https://image.tmdb.org" crossorigin />
@@ -112,22 +113,117 @@
       [data-theme='dark'] #splash {
         background: #0f172a;
       }
-      #splash img {
+      .splash-mark {
         width: 72px;
         height: 72px;
+        overflow: visible;
       }
-      #splash span {
-        font-family:
-          system-ui,
-          -apple-system,
-          sans-serif;
-        font-size: 1.1rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        color: #0f172a;
+      .splash-clap {
+        fill: #1d4ed8;
       }
-      [data-theme='dark'] #splash span {
-        color: #f8fafc;
+      .splash-ink {
+        fill: #ffffff;
+      }
+      .splash-bar {
+        transform-origin: 8px 25px;
+        animation: splash-bar 1.8s infinite;
+      }
+      .splash-body {
+        transform-origin: 32px 53px;
+        animation: splash-body 1.8s infinite;
+      }
+      .splash-spark {
+        fill: none;
+        stroke: #22d3ee;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        opacity: 0;
+        transform-origin: 60px 20.75px;
+        animation: splash-spark 1.8s infinite;
+      }
+      @keyframes splash-bar {
+        0% {
+          transform: rotate(-11deg);
+          animation-timing-function: cubic-bezier(0.3, 0, 0.3, 1);
+        }
+        28% {
+          transform: rotate(-23deg);
+          animation-timing-function: cubic-bezier(0.6, 0, 1, 1);
+        }
+        40% {
+          transform: rotate(0deg);
+          animation-timing-function: ease-out;
+        }
+        46% {
+          transform: rotate(-4deg);
+          animation-timing-function: ease-in;
+        }
+        52%,
+        76% {
+          transform: rotate(0deg);
+          animation-timing-function: cubic-bezier(0.3, 0, 0.3, 1);
+        }
+        100% {
+          transform: rotate(-11deg);
+        }
+      }
+      @keyframes splash-body {
+        0%,
+        39% {
+          transform: scaleY(1);
+        }
+        43% {
+          transform: scaleY(0.95);
+        }
+        50%,
+        100% {
+          transform: scaleY(1);
+        }
+      }
+      @keyframes splash-spark {
+        0%,
+        39% {
+          opacity: 0;
+          transform: scale(0.6);
+        }
+        42% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        60%,
+        100% {
+          opacity: 0;
+          transform: scale(1.3);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .splash-mark * {
+          animation-play-state: paused;
+          animation-delay: 0s;
+        }
+      }
+      #splash-brand svg {
+        display: block;
+        width: auto;
+        height: 1.5rem;
+      }
+      .splash-word {
+        fill: #0f172a;
+      }
+      .splash-picker {
+        fill: #2563eb;
+      }
+      .splash-dot {
+        fill: #22d3ee;
+      }
+      [data-theme='dark'] .splash-clap {
+        fill: #3b82f6;
+      }
+      [data-theme='dark'] .splash-word {
+        fill: #f8fafc;
+      }
+      [data-theme='dark'] .splash-picker {
+        fill: #60a5fa;
       }
       #splash-title {
         max-width: 36rem;
@@ -155,8 +251,38 @@
   </head>
   <body>
     <div id="splash">
-      <img src="/logo.svg" alt="" width="72" height="72" />
-      <span id="splash-brand">Movie Picker</span>
+      <svg class="splash-mark" viewBox="5 5 54 54" aria-hidden="true" focusable="false">
+        <g transform="translate(32 32) scale(1.04) translate(-31.19 -30.25)">
+          <g class="splash-body">
+            <rect class="splash-clap" x="8" y="26" width="48" height="27" rx="4" />
+            <path
+              class="splash-ink"
+              d="M29.342 33.671L39.658 38.829Q41 39.5 39.658 40.171L29.342 45.329Q28 46 28 44.5L28 34.5Q28 33 29.342 33.671Z"
+            />
+          </g>
+          <g class="splash-bar" transform="rotate(-11 8 25)">
+            <rect class="splash-clap" x="8" y="16.5" width="48" height="8.5" rx="1.5" />
+            <path
+              class="splash-ink"
+              d="M10.03 25H15.78L19.48 16.5H13.73ZM21.53 25H27.28L30.98 16.5H25.23ZM33.03 25H38.78L42.48 16.5H36.73ZM44.53 25H50.28L53.98 16.5H48.23Z"
+            />
+          </g>
+          <path class="splash-spark" d="M58.5 14.5L61.5 12M59.5 20.75H63.5M58.5 27L61.5 29.5" />
+        </g>
+      </svg>
+      <span id="splash-brand"
+        ><svg viewBox="0 0 5687 958" aria-hidden="true" focusable="false">
+          <path
+            class="splash-word"
+            d="M0 755L0 244L138 244L138 291Q163 260 193 246Q222 232 260 232Q305 232 337 250Q368 268 386 304Q411 269 452 251Q493 232 544 232Q642 232 690 283Q738 333 738 437L738 755L600 755L600 486Q600 422 581 393Q562 364 520 364Q491 364 473 376Q455 389 446 415Q438 441 438 483L438 755L300 755L300 486Q300 422 281 393Q263 364 221 364Q177 364 157 392Q138 419 138 482L138 755ZM1066 767Q957 767 894 696Q831 625 831 500Q831 418 860 358Q889 298 941 265Q994 232 1066 232Q1138 232 1190 265Q1242 298 1271 358Q1299 418 1299 500Q1299 583 1271 643Q1243 703 1191 735Q1138 767 1066 767ZM1066 635Q1112 635 1137 600Q1163 564 1163 500Q1163 436 1137 400Q1111 364 1066 364Q1021 364 995 400Q969 437 969 500Q969 563 995 599Q1021 635 1066 635ZM1518 755L1331 244L1474 244L1577 536Q1581 546 1584 559Q1588 572 1591 584Q1594 572 1598 559Q1602 547 1605 536L1708 244L1851 244L1664 755ZM1925 755L1925 244L2062 244L2062 755ZM2401 767Q2326 767 2272 735Q2218 702 2189 642Q2160 582 2160 499Q2160 417 2190 357Q2219 297 2273 265Q2327 232 2401 232Q2464 232 2516 258Q2567 285 2597 338Q2628 392 2628 474Q2628 488 2627 508Q2627 528 2624 547L2295 547Q2296 579 2309 602Q2322 625 2346 637Q2369 650 2401 650Q2439 650 2466 638Q2492 626 2517 598L2596 678Q2561 719 2513 743Q2465 767 2401 767ZM2296 442L2496 442Q2493 413 2481 392Q2469 371 2448 360Q2427 349 2398 349Q2357 349 2329 373Q2302 397 2296 442Z"
+          />
+          <circle class="splash-word" cx="1989.5" cy="110" r="77.5" />
+          <path
+            class="splash-picker"
+            d="M2960 958L2960 244L3097 244L3097 280Q3135 232 3203 232Q3269 232 3317 264Q3364 297 3390 357Q3415 417 3415 500Q3415 580 3388 640Q3362 700 3314 734Q3266 767 3202 767Q3168 767 3142 755Q3116 743 3097 720L3097 896ZM3180 635Q3227 635 3252 600Q3277 564 3277 500Q3277 435 3252 399Q3227 364 3180 364Q3153 364 3133 373Q3113 382 3097 400L3097 597Q3106 614 3129 625Q3152 635 3180 635ZM3513 755L3513 244L3651 244L3651 755ZM3984 767Q3912 767 3859 735Q3806 702 3777 642Q3749 582 3749 500Q3749 418 3778 358Q3807 298 3860 265Q3913 232 3985 232Q4068 232 4123 271Q4178 310 4203 386L4072 430Q4060 398 4038 381Q4016 364 3987 364Q3943 364 3915 401Q3888 439 3888 500Q3888 561 3915 598Q3941 636 3984 636Q4016 636 4039 617Q4061 598 4073 562L4204 600Q4180 684 4124 725Q4069 767 3984 767ZM4300 755L4300 97L4437 33L4437 379L4571 244L4734 244L4581 394L4768 755L4618 755L4479 492L4437 532L4437 755ZM5031 767Q4956 767 4902 735Q4848 702 4819 642Q4790 582 4790 499Q4790 417 4820 357Q4849 297 4903 265Q4957 232 5031 232Q5094 232 5146 258Q5197 285 5227 338Q5258 392 5258 474Q5258 488 5257 508Q5257 528 5254 547L4925 547Q4926 579 4939 602Q4952 625 4976 637Q4999 650 5031 650Q5069 650 5096 638Q5122 626 5147 598L5226 678Q5191 719 5143 743Q5095 767 5031 767ZM4926 442L5126 442Q5123 413 5111 392Q5099 371 5078 360Q5057 349 5028 349Q4987 349 4959 373Q4932 397 4926 442ZM5351 755L5351 244L5488 244L5488 295Q5501 269 5530 250Q5560 232 5591 232Q5648 232 5687 273L5668 399Q5646 380 5626 372Q5606 365 5581 365Q5552 365 5531 378Q5510 391 5499 417Q5488 442 5488 478L5488 755Z"
+          />
+          <circle class="splash-dot" cx="3578" cy="110" r="110" /></svg
+      ></span>
       <p id="splash-title"></p>
     </div>
     <script>

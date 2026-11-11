@@ -340,7 +340,7 @@ export default defineConfig(({ mode }) => {
         filename: 'sw.ts',
         registerType: 'prompt',
         injectRegister: 'auto',
-        includeAssets: ['favicon.svg'],
+        includeAssets: ['favicon.svg', 'favicon.ico'],
         manifest: {
           name: 'Movie Picker',
           short_name: 'Movie Picker',

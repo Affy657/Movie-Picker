@@ -8,6 +8,14 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ## [Non publié]
 
+### Fixed
+
+- **L'icône d'onglet existe aussi pour les navigateurs qui la demandent en `favicon.ico`**, et les icônes de l'app installée se mettent à jour au lieu de rester un an en cache.
+
+### Changed
+
+- **Le logo se redresse et s'anime pendant le chargement** : le clap claque à l'ouverture de l'app et entre deux pages, et le nom s'écrit « movie picker », avec le point du i de « picker » en cyan. L'onglet, les icônes de l'app installée et l'aperçu des liens partagés suivent.
+
 ## [1.7.1] - 2026-11-11
 
 ### Security

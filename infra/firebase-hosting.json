@@ -23,11 +23,15 @@
       }
     },
     {
-      "glob": "/@(assets|icons)/**",
+      "glob": "/assets/**",
       "headers": { "Cache-Control": "public, max-age=31536000, immutable" }
     },
     {
-      "glob": "/@(favicon.svg|logo.svg|og-image.png)",
+      "glob": "/@(favicon.svg|favicon.ico|logo.svg|og-image.png)",
+      "headers": { "Cache-Control": "public, max-age=86400, must-revalidate" }
+    },
+    {
+      "glob": "/icons/**",
       "headers": { "Cache-Control": "public, max-age=86400, must-revalidate" }
     },
     {

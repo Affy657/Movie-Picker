@@ -38,9 +38,8 @@
 }
 
 .brandName {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-extrabold);
-  letter-spacing: var(--tracking-tight);
+  width: auto;
+  height: var(--space-5);
   transition: color var(--duration-base) var(--ease-default);
 }
 

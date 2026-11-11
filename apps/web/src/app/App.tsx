@@ -19,6 +19,7 @@ import { ROUTES } from '@/app/routes';
 import { ROUTE_CHUNKS } from '@/app/routeChunks';
 import { useHomeShowcasePrefetch } from '@/features/movies/homeShowcasePrefetch';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { BrandLoader } from '@/shared/brand/BrandLoader';
 
 const HomePage = lazy(ROUTE_CHUNKS.home);
 const ShowcaseListPage = lazy(ROUTE_CHUNKS.showcaseList);
@@ -49,7 +50,7 @@ function PageFallback() {
   const { t } = useTranslation();
   return (
     <PageLayout>
-      <p className="placeholder">{t('common.loading')}</p>
+      <BrandLoader label={t('common.loading')} />
     </PageLayout>
   );
 }
