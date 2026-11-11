@@ -1,14 +1,11 @@
 import clsx from 'clsx';
-import { useRef, useState, type ComponentType, type SVGProps } from 'react';
+import type { ComponentType, SVGProps } from 'react';
 import { Bookmark, CalendarDays, Compass, HelpCircle, LogIn, Plus, UserRound } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useTranslation, type TranslationKey, type Translate } from '@/shared/i18n';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ownProfileDestination } from '@/features/auth/utils/ownProfileDestination';
 import { useLetterboxdAutoSync } from '@/features/letterboxd/hooks/useLetterboxdAutoSync';
-import { useAnotherDialogOpen } from '@/shared/hooks/useAnotherDialogOpen';
-import { useWhatsNew } from '@/shared/hooks/useWhatsNew';
-import { shouldShowWhatsNewNavChip } from '@/shared/whatsNew';
 import { withReturnTo, ROUTES } from '@/app/routes';
 import { safeReturnTo } from '@/shared/utils/returnTo';
 import { routeIntentHandlers } from '@/app/routeChunks';
@@ -18,9 +15,6 @@ import InboxBell from '@/features/notifications/components/InboxBell';
 import Footer from './Footer';
 import PwaAutoUpdate from './PwaAutoUpdate';
 import ConsentBanner from './ConsentBanner';
-import WhatsNewModal from './WhatsNewModal';
-import WhatsNewNavChip from './WhatsNewNavChip';
-import { ProposeIdeaDialog } from './ProposeIdeaButton';
 import InAppBrowserBanner from './InAppBrowserBanner';
 import MovedOriginBanner from './MovedOriginBanner';
 import SignOutPendingNotice from './SignOutPendingNotice';
@@ -120,7 +114,6 @@ function HeaderNavActions({
   isOnAuthRoute,
   user,
   returnTo,
-  onOpenWhatsNew,
   t,
 }: Readonly<{
   isLoading: boolean;
@@ -128,7 +121,6 @@ function HeaderNavActions({
   isOnAuthRoute: boolean;
   user: ReturnType<typeof useAuth>['user'];
   returnTo: string;
-  onOpenWhatsNew: () => void;
   t: Translate;
 }>) {
   if (isLoading || (!isAuthenticated && isOnAuthRoute)) {
@@ -138,9 +130,6 @@ function HeaderNavActions({
   if (user) {
     return (
       <div className={styles.navActions}>
-        {shouldShowWhatsNewNavChip(user.createdAt) ? (
-          <WhatsNewNavChip onOpen={onOpenWhatsNew} />
-        ) : null}
         <InboxBell />
         <UserMenu user={user} />
       </div>
@@ -176,15 +165,6 @@ export default function AppShell() {
   const { user, isLoading } = useAuth();
   const location = useLocation();
   useLetterboxdAutoSync();
-  const {
-    isOpen: whatsNewOpen,
-    release: whatsNewRelease,
-    openOnDemand: openWhatsNew,
-    close: closeWhatsNew,
-  } = useWhatsNew(user?.userId);
-  const whatsNewRef = useRef<HTMLDialogElement>(null);
-  const anotherDialogOpen = useAnotherDialogOpen(whatsNewRef);
-  const [proposeIdeaOpen, setProposeIdeaOpen] = useState(false);
 
   const isAuthenticated = !!user;
   const ownProfilePath = user ? ownProfileDestination(user).path : null;
@@ -258,7 +238,6 @@ export default function AppShell() {
             isOnAuthRoute={isOnAuthRoute}
             user={user}
             returnTo={returnTo}
-            onOpenWhatsNew={openWhatsNew}
             t={t}
           />
         </div>
@@ -266,10 +245,7 @@ export default function AppShell() {
       <div className={styles.content}>
         <Outlet />
       </div>
-      <Footer
-        clearMobileNav={!isLandingRoute}
-        onOpenWhatsNew={isAuthenticated ? openWhatsNew : undefined}
-      />
+      <Footer clearMobileNav={!isLandingRoute} />
       {isLandingRoute ? null : (
         <nav className={styles.navMobile} aria-label={t('nav.navLabel')}>
           {mobileItems.map((item) => (
@@ -279,23 +255,6 @@ export default function AppShell() {
       )}
       <PwaAutoUpdate />
       <ConsentBanner />
-      {isAuthenticated ? (
-        <>
-          <WhatsNewModal
-            open={whatsNewOpen && !anotherDialogOpen}
-            dialogRef={whatsNewRef}
-            release={whatsNewRelease}
-            ownProfilePath={ownProfilePath}
-            onClose={closeWhatsNew}
-            onAction={(action) => {
-              if (action === 'proposeIdea') setProposeIdeaOpen(true);
-            }}
-          />
-          {proposeIdeaOpen ? (
-            <ProposeIdeaDialog open onClose={() => setProposeIdeaOpen(false)} />
-          ) : null}
-        </>
-      ) : null}
       <InAppBrowserBanner />
       <MovedOriginBanner />
       <SignOutPendingNotice />

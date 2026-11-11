@@ -36,8 +36,6 @@ export const fr = {
     accountMenu: 'Menu du compte',
     brandLabel: 'Movie Picker, accueil',
     skipToMain: 'Passer au contenu principal',
-    whatsNew: 'Nouveautés',
-    whatsNewAria: 'Voir les nouveautés',
     landing: {
       howItWorks: 'Comment ça marche',
       wheel: 'La roue',
@@ -1803,7 +1801,7 @@ export const fr = {
     helpTitle: 'Aide',
     reportIssue: 'Signaler un problème',
     donate: 'Soutenir le projet',
-    whatsNew: 'Nouveautés',
+    releaseNotes: 'Journal des versions',
     githubLabel: 'Profil GitHub (nouvel onglet)',
     linkedinLabel: 'Profil LinkedIn (nouvel onglet)',
     tmdbPrefix: 'Données fournies par',
@@ -2143,314 +2141,19 @@ export const fr = {
       rejectAll: 'Tout refuser',
     },
   },
-  whatsNew: {
-    title: 'Quoi de neuf ?',
-    close: 'C’est noté',
-    categories: {
-      new: 'Nouveautés',
-      improved: 'Améliorations',
+  releaseNotes: {
+    title: 'Journal des versions',
+    intro:
+      'Chaque mise en ligne qui change quelque chose pour vous porte son numéro de version. Voici ce qui a changé, de la plus récente à la plus ancienne.',
+    frenchOnly: 'Ce journal est tenu en français.',
+    version: 'Version {{version}}',
+    sections: {
+      added: 'Nouveautés',
+      changed: 'Changements',
+      deprecated: 'Bientôt retiré',
+      removed: 'Retraits',
       fixed: 'Corrections',
-    },
-    entries: {
-      watchlist: {
-        title: 'Ma liste',
-        description: 'Mettez vos envies de côté, proposez-en une en un clic.',
-      },
-      letterboxd: {
-        title: 'Synchro Letterboxd',
-        description: 'Votre watchlist Letterboxd arrive toute seule.',
-      },
-      manualPick: {
-        title: 'Gagnant désigné à la main',
-        description: 'L’hôte peut couronner un film sans passer par la roue.',
-      },
-      streak: {
-        title: 'Flamme de série',
-        description: 'Une flamme par semaine de soirée. À vous de la faire durer.',
-      },
-      oauth: {
-        title: 'Connexion Google et GitHub',
-        description: 'Un clic et vous êtes connecté, sans mot de passe.',
-      },
-      donations: {
-        title: 'Soutenir le projet',
-        description: 'Movie Picker reste gratuit. Les dons paient les serveurs.',
-      },
-      proposeIdea: {
-        title: 'Proposer une idée',
-        description: 'Une idée, un bug, une amélioration : envoyez-la en deux champs.',
-      },
-      pwaInstall: {
-        title: 'Installer l’app',
-        description:
-          'Un bouton dans le pied de page et le menu compte : prompt natif sur Chrome, guide sur iPhone.',
-      },
-      wheelExclusion: {
-        title: 'Films écartés du tirage',
-        description: 'L’hôte met un film de côté sans l’effacer de la liste.',
-      },
-      profileRevamp: {
-        title: 'Profil public repensé',
-        description: 'Statistiques, abonnés et derniers films vus, mieux rangés.',
-      },
-      weightedWheel: {
-        title: 'Roue pondérée par défaut',
-        description: 'Les votes comptent dans le tirage, sans rien régler.',
-      },
-      explorationHome: {
-        title: 'Un accueil qui vous propose des films',
-        description:
-          'Ouvrez le site, les films sont déjà là. Des dizaines de sélections classées par envie, avec ou sans compte.',
-      },
-      homeSearch: {
-        title: 'La recherche en tête de page',
-        description:
-          'Un titre, un réalisateur, un genre : tapez, on trouve. Trois exemples vous lancent quand l’inspiration manque.',
-      },
-      visitorNav: {
-        title: 'Tout est ouvert, même sans compte',
-        description:
-          'Explorer, chercher, ouvrir une fiche film : plus rien n’est verrouillé. Le compte sert au moment de lancer une soirée.',
-      },
-      landingRevamp: {
-        title: 'Une vitrine repensée',
-        description:
-          'La page de présentation a été refaite, plus claire et plus vivante, avec la roue jouable directement à l’écran.',
-      },
-      personalRows: {
-        title: 'Un accueil qui vous connaît',
-        description:
-          'Votre liste, ce qu’ont vu les personnes que vous suivez et des recommandations tirées du dernier film que vous avez regardé en soirée.',
-      },
-      streamingRow: {
-        title: 'Ce soir en streaming',
-        description:
-          'Netflix, Prime Video, Disney+, Canal+, Apple TV+ : voyez d’un coup d’œil ce qui est déjà inclus dans vos abonnements.',
-      },
-      themeSelections: {
-        title: 'Dix sélections thématiques',
-        description:
-          'Frissons, comédies françaises, années 80 à 2000, braquages, pépites A24, moins de 90 minutes, indétrônables, en famille.',
-      },
-      sagas: {
-        title: 'Cent vingt sagas',
-        description:
-          'Star Wars, Harry Potter, James Bond, Marvel, Astérix : les grandes franchises réunies, chacune avec sa page.',
-      },
-      communityRanking: {
-        title: 'Le palmarès de la communauté',
-        description:
-          'Les films que les soirées proposent le plus souvent, classés. De quoi trancher quand personne ne se décide.',
-      },
-      browseLists: {
-        title: 'Chaque rangée a sa page',
-        description:
-          'Un clic sur « voir tout » ouvre la liste complète, avec filtres par genre et par type, tri et recherche.',
-      },
-      carousels: {
-        title: 'Des rangées qui défilent',
-        description:
-          'Au doigt, à la molette ou aux flèches, les films défilent sans jamais quitter la page.',
-      },
-      listCardDetails: {
-        title: 'Note et durée sur les cartes',
-        description:
-          'Les listes de films et les profils affichent la note et la durée, comme Ma liste, pour trancher sans ouvrir la fiche.',
-      },
-      openBrowsing: {
-        title: 'Visite libre',
-        description:
-          'Nav, Mes soirées, Ma liste, Réglages : tout s’ouvre sans compte. Connectez-vous seulement pour agir.',
-      },
-      discoverHome: {
-        title: 'Page Découvrir',
-        description:
-          'La présentation du produit est sur Découvrir. L’accueil, c’est désormais Mes soirées.',
-      },
-      ideaAttachments: {
-        title: 'Captures dans vos idées',
-        description:
-          'Joignez jusqu’à 4 images à une suggestion : bouton, glisser-déposer ou simple collage.',
-      },
-      historyToEvent: {
-        title: 'Resservir un film déjà vu',
-        description:
-          'Proposez un film de votre historique à une soirée en cours, sans le rechercher.',
-      },
-      rescheduleNotice: {
-        title: 'Alerte de date changée',
-        description:
-          'Quand l’hôte reprogramme la soirée, tout le monde reçoit une notification push et un message.',
-      },
-      myEventsRevamp: {
-        title: 'Mes soirées repensées',
-        description:
-          'Onglets Actives et Historique, bloc « À traiter » pour les soirées en suspens, et cartes qui tiennent enfin sur mobile.',
-      },
-      historyTools: {
-        title: 'Historique fouillable',
-        description:
-          'Recherche, tris par date, titre, films ou participants, et filtre sur les soirées restées sans film choisi.',
-      },
-      settingsPage: {
-        title: 'Paramètres en cinq rubriques',
-        description:
-          'Mon compte devient Paramètres : Profil, Préférences, Notifications, Intégrations, Compte et sécurité, le tout enregistré automatiquement.',
-      },
-      eventSettings: {
-        title: 'Panneau de soirée revu',
-        description:
-          'Enregistrement en direct, erreurs par champ, mode de roue et séries TV dès la création. Jusqu’à 15 films par personne et 300 participants.',
-      },
-      movieList: {
-        title: 'Films en liste ou en grille',
-        description:
-          'Nouvelle vue liste, date de sortie, indicateur Ma liste, plateformes redessinées et fiche du film en un geste.',
-      },
-      unifiedShare: {
-        title: 'Partage unifié',
-        description:
-          'Une seule fenêtre pour le lien, le QR code et l’invitation de vos abonnements, sur la soirée comme sur le profil.',
-      },
-      fasterFirstLoad: {
-        title: 'Ouverture plus rapide',
-        description:
-          'L’app récupère son cœur en parallèle du reste : le premier affichage arrive nettement plus tôt.',
-      },
-      readableContrast: {
-        title: 'Contrastes renforcés',
-        description: 'Textes et pastilles actives passent le niveau AA, en clair comme en sombre.',
-      },
-      analyticsPrivacy: {
-        title: 'Moins de données envoyées',
-        description:
-          'Ni votre pseudo ni votre identifiant public ne partent plus dans les statistiques d’usage.',
-      },
-      inAppBrowser: {
-        title: 'Ouverture depuis Snapchat',
-        description:
-          'Les navigateurs intégrés aux réseaux effaçaient votre session. Un bandeau propose maintenant d’ouvrir Movie Picker dans Safari ou Chrome.',
-      },
-      userSearch: {
-        title: 'Trouver un compte',
-        description:
-          'Un onglet Rechercher dans vos abonnements retrouve un ami par pseudo ou par handle.',
-      },
-      recurringEvents: {
-        title: 'Soirées récurrentes',
-        description:
-          'Chaque semaine, tous les quinze jours ou chaque mois : la suivante naît toute seule à la clôture.',
-      },
-      eventTemplates: {
-        title: 'Modèles de soirée',
-        description:
-          'Jusqu’à cinq configurations enregistrées, à réappliquer en un clic, et « Refaire cette soirée » depuis l’historique.',
-      },
-      multipleWinners: {
-        title: 'Plusieurs films gagnants',
-        description:
-          'L’hôte choisit combien de films sortent du tirage, jusqu’à dix : idéal pour un marathon.',
-      },
-      voteLimit: {
-        title: 'Limite de votes par participant',
-        description: 'L’hôte fixe un nombre de votes par personne ; chacun doit alors choisir.',
-      },
-      friendsWatchlist: {
-        title: 'La liste d’un ami',
-        description:
-          'Sa watchlist se lit depuis son profil. La vôtre se masque d’un réglage dans le compte.',
-      },
-      openEventMovies: {
-        title: 'Les films visibles avant de rejoindre',
-        description:
-          'Un lien de soirée montre affiches, scores et gagnant sans participer ; voter demande toujours de rejoindre.',
-      },
-      wheelAnnounce: {
-        title: 'Le gagnant annoncé au bon moment',
-        description: 'La notification part quand la roue s’arrête, plus pendant qu’elle tourne.',
-      },
-      letterboxdFromCard: {
-        title: 'Letterboxd depuis la carte',
-        description: 'Le menu d’un film en soirée ouvre sa page Letterboxd en un clic.',
-      },
-      scrollableDialogs: {
-        title: 'Fenêtres qui défilent sur mobile',
-        description:
-          'Signaler un problème et Proposer une idée gardent leurs boutons accessibles, même avec des images jointes.',
-      },
-      offlineEventPage: {
-        title: 'Soirée hors ligne',
-        description:
-          'Un lien de soirée ouvert sans réseau affiche une erreur au lieu d’un squelette sans fin.',
-      },
-      movieRating: {
-        title: 'Notez les films vus',
-        description:
-          'Des étoiles, à la demi-étoile près, dès que la soirée commence. Tout le monde voit les notes et la moyenne.',
-      },
-      ratingReminder: {
-        title: 'Un rappel le lendemain',
-        description:
-          'À 10 h, une notification ouvre le film qu’il vous reste à noter. Elle se coupe dans les réglages.',
-      },
-      nightRecap: {
-        title: 'Le recap de la soirée',
-        description:
-          'Films choisis, moyenne et note de chacun, sur un lien à partager, lisible sans compte.',
-      },
-      nightStory: {
-        title: 'Votre soirée en story',
-        description:
-          'Une image au format story, avec le lien du recap, à partager depuis votre téléphone ou à télécharger.',
-      },
-      topFavorites: {
-        title: 'Votre top 3',
-        description: 'Trois films ou séries préférés, affichés sur votre profil public.',
-      },
-      profilePhoto: {
-        title: 'Votre photo de profil',
-        description:
-          'Ajoutez une photo, recadrez-la : elle devient votre avatar partout dans l’app.',
-      },
-      watchlistPick: {
-        title: 'Piocher dans ma liste',
-        description:
-          'Un bouton tire un film au hasard dans votre liste, à proposer dans une soirée en un clic.',
-      },
-      chosenMovie: {
-        title: 'Le film choisi en grand',
-        description:
-          'Le titre de la soirée et ses actions restent en haut, le film gagnant et ses notes juste dessous.',
-      },
-      createEventSteps: {
-        title: 'Créer une soirée en trois temps',
-        description:
-          'Le titre, la date, puis les options regroupées par étape. Les paramètres suivent la même grille.',
-      },
-      exploreRows: {
-        title: 'Explorer plus épuré',
-        description:
-          'Sous chaque affiche, le titre seul. Les détails restent dans la fiche du film.',
-      },
-      newAddress: {
-        title: 'Une nouvelle adresse',
-        description:
-          'Le site s’appelle www.movie-picker.fr. Vos anciens liens fonctionnent toujours.',
-      },
-      manageCookies: {
-        title: 'Vos cookies, à tout moment',
-        description: 'Changez d’avis depuis « Gérer les cookies », en bas de chaque page.',
-      },
-      weightedWheelShare: {
-        title: 'Le poids de chaque film sur la roue',
-        description:
-          'En mode pondéré, la roue montre enfin la part que les votes donnent à chaque film.',
-      },
-      fullDataExport: {
-        title: 'Un export de données complet',
-        description:
-          'Il contient aussi vos films proposés et leurs notes, et vos modèles de soirée.',
-      },
+      security: 'Sécurité',
     },
   },
   pwaInstall: {
@@ -2604,12 +2307,12 @@ export const fr = {
     },
     trajectory: {
       title: '{{months}} mois, {{shipped}} paliers livrés',
-      lead: "{{commits}} commits depuis février 2026. Chaque palier est parti en production avant que le suivant ne s'ouvre. Les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
+      lead: "{{commits}} commits depuis février 2026. Jusqu'à la V1.7, chaque palier est parti en production avant que le suivant ne s'ouvre ; depuis, chaque amélioration part seule. Les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
       plannedBadge: 'à venir',
       currentBadge: 'en cours',
-      unplannedSpan: 'Entre la V1.10 et la V2',
+      unplannedSpan: 'Le backlog',
       unplannedDetail:
-        'Des versions qui ne sont pas encore cadrées. Leur nombre et leur contenu dépendront des retours d’usage.',
+        "Une quarantaine d'idées rangées par thème, sans date ni numéro de version. Chacune se tire quand un retour d'usage la justifie.",
       techHeading: 'Les chantiers techniques ouverts',
       sharedCache: 'Cache partagé entre instances',
       sharedCacheHint:
@@ -2743,49 +2446,31 @@ export const fr = {
       v17Item5: 'Top 3 films préférés',
       v17Item6: 'Photo de profil',
       v17Item7: 'Pioche dans la watchlist',
-      v18When: 'Ensuite',
-      v18What: 'V1.8',
-      v18Detail:
-        'La bibliothèque personnelle : des listes de films à soi, faites à la main, remplies par des règles ou tenues à plusieurs, et les films déjà vus repris de Letterboxd.',
-      v18Hint:
-        "L'import Letterboxd remonte cette fois les films vus et leur note, là où la V1.4 ne synchronisait que la liste à voir.",
-      v18Item1: 'Mes listes',
-      v18Item2: 'Listes intelligentes',
-      v18Item3: 'Listes collaboratives',
-      v18Item4: 'Films vus importés de Letterboxd',
-      v18Item5: 'Écart watchlist Letterboxd',
-      v19When: 'Plus tard',
-      v19What: 'V1.9',
-      v19Detail:
-        "Une vraie connexion temps réel à la place du rafraîchissement périodique, une soirée lisible hors-ligne et cadrée par le thème de l'hôte, puis la palette de commandes.",
-      v19Hint:
-        'Le temps réel est le dernier chantier de plateforme encore ouvert sur la trajectoire produit.',
-      v19Item1: 'Synchronisation temps réel',
-      v19Item2: 'Présence sur la page soirée',
-      v19Item3: 'Consultation hors-ligne',
-      v19Item4: 'Thème imposé',
-      v19Item5: 'Palette de commandes',
-      v110When: 'Plus tard encore',
-      v110What: 'V1.10',
-      v110Detail:
-        "Ouvrir l'application au-delà de son cercle, avec un fil d'actualité et des soirées publiques, et la confiance que cela demande : double authentification, passkeys, sessions visibles, alerte de connexion, état du service et aide en ligne.",
-      v110Hint:
-        "Les soirées ouvertes à tous arrivent après le temps réel : en sondage, le coût d'une soirée croît avec chaque participant.",
-      v110Item1: 'Reprise hors-ligne',
-      v110Item2: "Fil d'actualité",
-      v110Item3: 'Soirée publique',
-      v110Item4: 'Double authentification',
-      v110Item5: 'Passkeys',
-      v110Item6: 'Sessions actives',
-      v110Item7: 'Alerte nouvelle connexion',
-      v110Item8: "Centre d'aide",
-      v110Item9: 'Statut du service',
+      flowWhen: 'Depuis novembre 2026',
+      flowWhat: 'Flux continu',
+      flowDetail:
+        'Plus de palier : chaque amélioration part en production le jour où elle est prête, avec son propre numéro de version, calculé à partir du journal des changements.',
+      flowHint:
+        "La version n'est plus une promesse de contenu mais la trace de ce qui est vraiment en ligne : le tag et la release ne naissent qu'au déploiement en production.",
+      flowItem1: 'Une version par livraison',
+      flowItem2: 'Tag et release à la mise en ligne',
+      flowItem3: 'Journal des versions',
+      nextWhen: 'Ensuite',
+      nextWhat: 'Prochainement',
+      nextDetail:
+        "Les entrées en tête du backlog, prises dans l'ordre. L'ordre suit l'usage mesuré : ce qui fait entrer du monde dans une soirée passe avant les nouvelles surfaces.",
+      nextHint:
+        "Une surface qu'on ne sait pas mesurer se mesure avant d'être enrichie : c'est pour cela que la mesure ouvre la liste.",
+      nextItem1: 'Mesurer ce qui sert',
+      nextItem2: 'Entrer dans une soirée depuis son lien',
+      nextItem3: "Un accueil qui dit ce que fait l'app",
+      nextItem4: 'Description de soirée',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:
         'Une application mobile native, pleinement intégrée à la plateforme. Le prototype de cours a été archivé plutôt que rafistolé.',
       v2Hint:
-        'Aucune date annoncée : le périmètre dépendra de ce que la V1.10 aura laissé derrière elle.',
+        "Aucune date annoncée : elle se décidera sur l'usage de la version web, pas sur un calendrier.",
       v2Item1: 'Application native',
       v2Item2: 'Notifications système',
       v2Item3: 'Parcours complet hors navigateur',

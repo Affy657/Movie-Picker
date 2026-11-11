@@ -26,6 +26,7 @@ export const ROUTES = {
   privacyPolicy: '/politique-de-confidentialite',
   donate: '/soutenir',
   tech: '/tech',
+  releaseNotes: '/nouveautes',
   notifications: '/notifications',
   howItWorks: '/decouvrir',
 

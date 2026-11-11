@@ -49,6 +49,18 @@ beforeEach(() => {
   localStorage.removeItem('mp.session-hint');
 });
 
+describe('Footer release notes', () => {
+  it('links the release notes next to the version, for every visitor', () => {
+    renderFooter();
+
+    expect(screen.getByRole('link', { name: 'Journal des versions' })).toHaveAttribute(
+      'href',
+      '/nouveautes'
+    );
+    expect(screen.queryByRole('button', { name: /nouveautés/i })).not.toBeInTheDocument();
+  });
+});
+
 describe('Footer language', () => {
   it('switches the interface language from the footer', async () => {
     const user = userEvent.setup();
