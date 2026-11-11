@@ -23,6 +23,7 @@ public sealed class GetMovieShowcaseThemesHandler : IGetMovieShowcaseThemesHandl
 
         return new MovieShowcaseThemeListResponse
         {
+            IsComplete = !Array.Exists(loads, load => load.Failed),
             Items = loads
                 .Select(load => load.Preview)
                 .OfType<MovieShowcaseThemeResponse>()

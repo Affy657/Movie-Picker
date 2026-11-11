@@ -99,4 +99,34 @@ describe('HeaderSearch', () => {
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
   });
+
+  it('closes when the page search comes back into view, and stays closed', async () => {
+    stubMatchMedia((query) => query.includes('max-width'));
+    renderHeaderSearch('/');
+    act(() => setHomeSearchHidden(true));
+    await userEvent.click(loupe() as HTMLElement);
+
+    act(() => setHomeSearchHidden(false));
+    act(() => setHomeSearchHidden(true));
+
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+  });
+
+  it('closes when the focus leaves the search', async () => {
+    stubMatchMedia((query) => query.includes('max-width'));
+    render(
+      <LocaleProvider>
+        <MemoryRouter initialEntries={['/']}>
+          <HeaderSearch />
+          <button type="button">Ailleurs</button>
+        </MemoryRouter>
+      </LocaleProvider>
+    );
+    act(() => setHomeSearchHidden(true));
+    await userEvent.click(loupe() as HTMLElement);
+
+    act(() => screen.getByRole('button', { name: 'Ailleurs' }).focus());
+
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+  });
 });

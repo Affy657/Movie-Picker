@@ -334,7 +334,7 @@ describe('ShowcaseListPage', () => {
         .map((button) => button.getAttribute('aria-label'))
     ).toEqual([
       'Voir les détails de « Film 1 »',
-      'Ajouter à ma liste',
+      'Ajouter « Film 1 » à ma liste',
       'Proposer « Film 1 » dans une soirée',
     ]);
   });

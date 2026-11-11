@@ -40,16 +40,6 @@
   min-width: 0;
 }
 
-.examples {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: 0;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-}
-
 .panel {
   min-width: 0;
 }
@@ -72,12 +62,10 @@
 }
 
 .eyebrow {
+  composes: overline from '@/shared/components/typography.module.css';
   margin: 0;
   font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-wider);
   line-height: var(--leading-none);
-  text-transform: uppercase;
   color: var(--color-primary-text);
 }
 
@@ -106,6 +94,7 @@
   padding: var(--space-6);
   background: var(--color-surface-translucent);
   backdrop-filter: var(--backdrop-blur-bar);
+  -webkit-backdrop-filter: var(--backdrop-blur-bar);
 }
 
 .wheel {
@@ -153,6 +142,7 @@
   text-decoration: none;
   background: var(--color-surface-translucent);
   backdrop-filter: var(--backdrop-blur-bar);
+  -webkit-backdrop-filter: var(--backdrop-blur-bar);
 }
 
 .createCompact .createTitle {

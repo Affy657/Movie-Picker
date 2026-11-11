@@ -364,7 +364,9 @@ describe('WatchlistPage (MSW)', () => {
     const user = userEvent.setup();
 
     await screen.findByText('Ancien Mais Bien Noté');
-    await user.click(screen.getByRole('button', { name: 'Retirer de ma liste' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Retirer « Ancien Mais Bien Noté » de ma liste' })
+    );
 
     await waitFor(() => expect(removeCalled).toBe(true));
   });
@@ -378,7 +380,9 @@ describe('WatchlistPage (MSW)', () => {
     await screen.findByText('Ancien Mais Bien Noté');
     expect(screen.queryByRole('button', { name: KEBAB_A })).not.toBeInTheDocument();
     expect(screen.queryByRole('img', { name: 'Déjà dans votre liste' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Retirer de ma liste' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Retirer « Ancien Mais Bien Noté » de ma liste' })
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /^proposer « ancien mais bien noté »/i })
     ).toBeInTheDocument();

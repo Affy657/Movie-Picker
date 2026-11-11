@@ -105,6 +105,7 @@ public sealed class GetMovieShowcaseThemesHandlerTests
         var result = await Build().HandleAsync();
 
         Assert.Empty(result.Items);
+        Assert.True(result.IsComplete);
     }
 
     private static Exception LoadFailure(string kind) => kind switch
@@ -128,6 +129,7 @@ public sealed class GetMovieShowcaseThemesHandlerTests
 
         Assert.Equal(MovieShowcaseCatalog.ThemeKeys.Count - 1, result.Items.Count);
         Assert.DoesNotContain(result.Items, item => item.Theme == theme);
+        Assert.False(result.IsComplete);
     }
 
     [Fact]

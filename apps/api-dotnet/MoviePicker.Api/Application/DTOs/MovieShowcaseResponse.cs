@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MoviePicker.Api.Domain.Entities;
 
 namespace MoviePicker.Api.Application.DTOs;
@@ -60,6 +61,9 @@ public sealed class MovieShowcaseThemeListResponse
 {
     public IReadOnlyList<MovieShowcaseThemeResponse> Items { get; init; } =
         Array.Empty<MovieShowcaseThemeResponse>();
+
+    [JsonIgnore]
+    public bool IsComplete { get; init; } = true;
 }
 
 public sealed class MovieShowcaseThemeResponse

@@ -1,15 +1,16 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type SubmitEvent } from 'react';
+import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import { useLocation } from 'react-router';
 import { Search, X } from 'lucide-react';
 import IconButton from '@/shared/components/IconButton';
-import LinkButton from '@/shared/components/LinkButton';
 import SearchField from '@/shared/components/SearchField';
 import { ICON_SIZE } from '@/shared/components/iconSize';
+import { useClickOutside } from '@/shared/hooks/useClickOutside';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
 import { ROUTES } from '@/app/routes';
 import { useHomeSearchHidden } from '@/app/pages/home/homeSearchVisibility';
-import { SEARCH_EXAMPLES, useRunSearch } from '@/app/pages/home/homeSearch';
+import { useRunSearch } from '@/app/pages/home/homeSearch';
+import SearchExamples from '@/app/pages/home/SearchExamples';
 import styles from './HeaderSearch.module.css';
 
 export default function HeaderSearch() {
@@ -24,16 +25,17 @@ export default function HeaderSearch() {
   const panelRef = useRef<HTMLFormElement>(null);
   const available = isMobile && pathname === ROUTES.home && searchHidden;
 
+  useClickOutside([panelRef, loupeRef], () => setOpen(false), open, {
+    returnFocusTo: loupeRef,
+    closeOnFocusLeave: true,
+  });
+
   useEffect(() => {
-    if (!open) return;
-    panelRef.current?.querySelector('input')?.focus({ preventScroll: true });
-    const closeOnOutside = (event: PointerEvent) => {
-      const target = event.target as Node | null;
-      if (panelRef.current?.contains(target) || loupeRef.current?.contains(target)) return;
-      setOpen(false);
-    };
-    document.addEventListener('pointerdown', closeOnOutside);
-    return () => document.removeEventListener('pointerdown', closeOnOutside);
+    if (!available) setOpen(false);
+  }, [available]);
+
+  useEffect(() => {
+    if (open) panelRef.current?.querySelector('input')?.focus({ preventScroll: true });
   }, [open]);
 
   if (!available) return null;
@@ -48,12 +50,6 @@ export default function HeaderSearch() {
     if (runSearch(term)) setOpen(false);
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
-    if (event.key !== 'Escape') return;
-    event.preventDefault();
-    close();
-  };
-
   return (
     <>
       <IconButton
@@ -66,13 +62,7 @@ export default function HeaderSearch() {
         <Search size={ICON_SIZE.lg} aria-hidden />
       </IconButton>
       {open ? (
-        <form
-          ref={panelRef}
-          role="search"
-          className={styles.panel}
-          onSubmit={submit}
-          onKeyDown={onKeyDown}
-        >
+        <form ref={panelRef} role="search" className={styles.panel} onSubmit={submit}>
           <div className={styles.fieldRow}>
             <label className="visually-hidden" htmlFor="header-search">
               {t('home.searchLabel')}
@@ -89,20 +79,11 @@ export default function HeaderSearch() {
               <X size={ICON_SIZE.lg} aria-hidden />
             </IconButton>
           </div>
-          <p className={styles.examples}>
-            <span>{t('home.searchExamplesLabel')}</span>
-            {SEARCH_EXAMPLES.map((example) => (
-              <LinkButton
-                key={example}
-                size="sm"
-                onClick={() => {
-                  if (runSearch(example)) setOpen(false);
-                }}
-              >
-                {example}
-              </LinkButton>
-            ))}
-          </p>
+          <SearchExamples
+            onPick={(example) => {
+              if (runSearch(example)) setOpen(false);
+            }}
+          />
         </form>
       ) : null}
     </>

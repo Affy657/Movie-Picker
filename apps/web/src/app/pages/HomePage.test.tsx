@@ -298,7 +298,9 @@ describe('HomePage', () => {
     const user = userEvent.setup();
 
     await user.click(
-      within(await posterCard('trending 1')).getByRole('button', { name: 'Ajouter à ma liste' })
+      within(await posterCard('trending 1')).getByRole('button', {
+        name: 'Ajouter « trending 1 » à ma liste',
+      })
     );
 
     await waitFor(() =>
@@ -414,7 +416,9 @@ describe('HomePage', () => {
     const user = userEvent.setup();
 
     const card = await posterCard('trending 1');
-    expect(within(card).getByRole('button', { name: 'Ajouter à ma liste' })).toBeInTheDocument();
+    expect(
+      within(card).getByRole('button', { name: 'Ajouter « trending 1 » à ma liste' })
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /plus d’actions/i })).not.toBeInTheDocument();
 
     await user.click(
@@ -447,7 +451,9 @@ describe('HomePage', () => {
       within(card).queryByRole('img', { name: 'Déjà dans votre liste' })
     ).not.toBeInTheDocument();
 
-    await user.click(within(card).getByRole('button', { name: 'Retirer de ma liste' }));
+    await user.click(
+      within(card).getByRole('button', { name: 'Retirer « Film de ma liste » de ma liste' })
+    );
 
     await waitFor(() => expect(removedPath).toContain('/watchlist/501'));
   });

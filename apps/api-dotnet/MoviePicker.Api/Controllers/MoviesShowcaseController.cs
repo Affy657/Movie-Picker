@@ -14,6 +14,7 @@ namespace MoviePicker.Api.Controllers;
 public sealed class MoviesShowcaseController : ControllerBase
 {
     private const string PublicCacheControl = "public, max-age=300, stale-while-revalidate=3600";
+    private const string IncompleteCacheControl = "public, max-age=60";
 
     [HttpGet("showcase")]
     [AllowAnonymous]
@@ -50,7 +51,6 @@ public sealed class MoviesShowcaseController : ControllerBase
     [HttpGet("showcase/themes")]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitingExtensions.MovieShowcasePolicy)]
-    [SharedRateLimit(RateLimitingExtensions.MovieShowcaseFreeKeyHourlyPolicy)]
     [ProducesResponseType(typeof(MovieShowcaseThemeListResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
@@ -59,7 +59,7 @@ public sealed class MoviesShowcaseController : ControllerBase
         CancellationToken ct)
     {
         var result = await handler.HandleAsync(ct);
-        Response.Headers.CacheControl = PublicCacheControl;
+        Response.Headers.CacheControl = result.IsComplete ? PublicCacheControl : IncompleteCacheControl;
         return Ok(result);
     }
 

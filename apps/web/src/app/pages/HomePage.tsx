@@ -117,7 +117,7 @@ export default function HomePage() {
 
   const selectedGenreIds = genreTab === 'all' ? undefined : [Number(genreTab)];
   const mostProposed = useMovieShowcase({ section: 'most-proposed' });
-  const hasMostProposed = !mostProposed.isSuccess || mostProposed.data.items.length > 0;
+  const hasMostProposed = mostProposed.isSuccess && mostProposed.data.items.length > 0;
 
   const openDetails = (item: ShowcaseItem) =>
     details.open({
@@ -181,28 +181,20 @@ export default function HomePage() {
           onChange: setProviderTab,
         }}
       />
-      {hasMostProposed ? (
-        <div className={styles.pair}>
-          <HomeShowcaseRow
-            headingKey="showcase.sections.nowPlayingTitle"
-            seeAllTo={ROUTES.showcaseNowPlaying}
-            query={{ section: 'now-playing' }}
-            layout="grid"
-            library={library}
-            onSelect={openDetails}
-            className={styles.pairMain}
-          />
-          <HomeMostProposed onSelect={openDetails} className={styles.pairSide} />
-        </div>
-      ) : (
+      <div className={hasMostProposed ? styles.pair : undefined}>
         <HomeShowcaseRow
           headingKey="showcase.sections.nowPlayingTitle"
           seeAllTo={ROUTES.showcaseNowPlaying}
           query={{ section: 'now-playing' }}
+          layout={hasMostProposed ? 'grid' : 'rail'}
           library={library}
           onSelect={openDetails}
+          className={hasMostProposed ? styles.pairMain : undefined}
         />
-      )}
+        {hasMostProposed ? (
+          <HomeMostProposed onSelect={openDetails} className={styles.pairSide} />
+        ) : null}
+      </div>
       <HomeThemeFans />
       <HomeCollectionsRow />
 

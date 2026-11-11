@@ -144,7 +144,9 @@ describe('ProfileWatchlistPage (MSW)', () => {
     renderPage('alice');
     await screen.findByText('Inception');
 
-    expect(await screen.findByRole('button', { name: 'Retirer de ma liste' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: 'Retirer « Inception » de ma liste' })
+    ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^proposer « inception »/i }));
 
     expect(

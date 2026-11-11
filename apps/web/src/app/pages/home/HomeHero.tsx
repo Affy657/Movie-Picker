@@ -4,7 +4,6 @@ import { ChevronRight, Plus } from 'lucide-react';
 import { buttonClass } from '@/shared/components/Button';
 import Card from '@/shared/components/Card';
 import SearchField from '@/shared/components/SearchField';
-import LinkButton from '@/shared/components/LinkButton';
 import { ICON_SIZE } from '@/shared/components/iconSize';
 import { useIsMobile } from '@/shared/hooks/useIsMobile';
 import { useTranslation } from '@/shared/i18n';
@@ -14,7 +13,8 @@ import UpcomingEventCard from '@/features/events/pages/my-events/UpcomingEventCa
 import HomePosterWall from './HomePosterWall';
 import WheelGlyph from './WheelGlyph';
 import { useNextEvent } from './useNextEvent';
-import { SEARCH_EXAMPLES, useRunSearch } from './homeSearch';
+import { useRunSearch } from './homeSearch';
+import SearchExamples from './SearchExamples';
 import { setHomeSearchHidden } from './homeSearchVisibility';
 import styles from './HomeHero.module.css';
 
@@ -22,7 +22,8 @@ function useReportSearchVisibility(form: RefObject<HTMLFormElement | null>) {
   useEffect(() => {
     const element = form.current;
     if (!element || typeof IntersectionObserver === 'undefined') return;
-    const observer = new IntersectionObserver(([entry]) => {
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries.at(-1);
       if (!entry) return;
       setHomeSearchHidden(!entry.isIntersecting && entry.boundingClientRect.top < 0);
     });
@@ -63,14 +64,7 @@ function HomeSearch() {
           iconSize={ICON_SIZE.md}
         />
       </form>
-      <p className={styles.examples}>
-        <span>{t('home.searchExamplesLabel')}</span>
-        {SEARCH_EXAMPLES.map((example) => (
-          <LinkButton key={example} size="sm" onClick={() => runSearch(example)}>
-            {example}
-          </LinkButton>
-        ))}
-      </p>
+      <SearchExamples onPick={runSearch} />
     </div>
   );
 }

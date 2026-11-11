@@ -114,8 +114,15 @@
   align-items: center;
   gap: var(--space-1-5);
   margin-top: var(--space-1);
+  opacity: 0;
   transform: translateY(var(--space-2));
-  transition: transform var(--duration-enter) var(--ease-reveal);
+  transition:
+    opacity var(--duration-slow) var(--ease-default),
+    transform var(--duration-enter) var(--ease-reveal);
+}
+
+.card[data-no-poster] .overlay {
+  opacity: 1;
 }
 
 .card:has(:focus-visible) {
@@ -135,6 +142,7 @@
 
 .card:has(:focus-visible) .actionBar {
   pointer-events: auto;
+  opacity: 1;
   transform: none;
 }
 
@@ -160,6 +168,7 @@
 
   .card:hover .actionBar {
     pointer-events: auto;
+    opacity: 1;
     transform: none;
   }
 

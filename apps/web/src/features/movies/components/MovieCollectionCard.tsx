@@ -32,7 +32,7 @@ function CollectionStack({
           ) : (
             srcs.map((src, index) => (
               <img
-                key={src}
+                key={`${index}-${src}`}
                 src={src}
                 alt=""
                 className={clsx(styles.stackPoster, STACK_SLOTS[index])}

@@ -37,11 +37,9 @@
 }
 
 .eyebrow {
+  composes: overline from '@/shared/components/typography.module.css';
   font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-wider);
   line-height: var(--leading-none);
-  text-transform: uppercase;
   color: var(--color-primary-text);
 }
 

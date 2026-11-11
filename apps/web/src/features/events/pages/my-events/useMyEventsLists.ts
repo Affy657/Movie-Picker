@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { infiniteQueryOptions, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchMyEventsList } from '@/features/events/api/eventsApi';
 import type { MyEventsListResponse, MyEventSummary } from '@/features/events/types';
 import { ApiError } from '@/shared/api/apiError';
@@ -10,16 +10,27 @@ function isPendingEvent(ev: MyEventSummary): boolean {
   return normalizeMyEventLifecycle(ev.lifecycle) === 'pending';
 }
 
-function flattenEvents(pages: MyEventsListResponse[] | undefined): MyEventSummary[] {
+export function flattenEvents(pages: MyEventsListResponse[] | undefined): MyEventSummary[] {
   return pages?.flatMap((p) => p.events) ?? [];
 }
 
-export function nextPageOffset(
+function nextPageOffset(
   lastPage: MyEventsListResponse,
   allPages: MyEventsListResponse[]
 ): number | undefined {
   if (!lastPage?.hasMore) return undefined;
   return allPages.reduce((sum, p) => sum + p.events.length, 0);
+}
+
+export function activeEventsQueryOptions(enabled: boolean) {
+  return infiniteQueryOptions({
+    queryKey: queryKeys.myEvents.active,
+    queryFn: ({ pageParam }: { pageParam: number }) => fetchMyEventsList('active', pageParam),
+    initialPageParam: 0,
+    getNextPageParam: nextPageOffset,
+    enabled,
+    retry: false,
+  });
 }
 
 interface MyEventsListsOptions {
@@ -29,14 +40,7 @@ interface MyEventsListsOptions {
 export function useMyEventsLists({ enabled }: MyEventsListsOptions) {
   const queryClient = useQueryClient();
 
-  const activeQuery = useInfiniteQuery({
-    queryKey: queryKeys.myEvents.active,
-    queryFn: ({ pageParam }: { pageParam: number }) => fetchMyEventsList('active', pageParam),
-    initialPageParam: 0,
-    getNextPageParam: nextPageOffset,
-    enabled,
-    retry: false,
-  });
+  const activeQuery = useInfiniteQuery(activeEventsQueryOptions(enabled));
 
   const historyQuery = useInfiniteQuery({
     queryKey: queryKeys.myEvents.finished(''),

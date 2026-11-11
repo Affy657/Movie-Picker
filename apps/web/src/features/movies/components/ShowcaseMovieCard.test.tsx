@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
-import ShowcaseMovieCard, { MovieRankBadge } from '@/features/movies/components/ShowcaseMovieCard';
+import ShowcaseMovieCard from '@/features/movies/components/ShowcaseMovieCard';
 import { LocaleProvider } from '@/shared/i18n';
 
 type CardProps = ComponentProps<typeof ShowcaseMovieCard>;
@@ -95,9 +95,19 @@ describe('ShowcaseMovieCard', () => {
   });
 
   it('renders the badges slot over the poster', () => {
-    renderCard({ badges: <MovieRankBadge rank={1} label="Rang 1" /> });
+    const { container } = renderCard({ badges: <span>Série</span> });
 
-    expect(screen.getByText('Rang 1')).toHaveClass('visually-hidden');
-    expect(screen.getByText('1')).toHaveAttribute('aria-hidden');
+    expect(container.querySelector('li')?.firstElementChild).toContainElement(
+      screen.getByText('Série')
+    );
+  });
+
+  it('flags a card without poster so its title stays on show, even on touch screens', () => {
+    const { container, unmount } = renderCard({ posterPath: null });
+    expect(container.querySelector('li')).toHaveAttribute('data-no-poster');
+    unmount();
+
+    const withPoster = renderCard();
+    expect(withPoster.container.querySelector('li')).not.toHaveAttribute('data-no-poster');
   });
 });

@@ -5,7 +5,6 @@ import type { ComponentProps } from 'react';
 import MovieBrowseCard, {
   type MovieBrowseCardItem,
 } from '@/features/movies/components/MovieBrowseCard';
-import { MovieRankBadge } from '@/features/movies/components/ShowcaseMovieCard';
 import { LocaleProvider } from '@/shared/i18n';
 
 type CardProps = ComponentProps<typeof MovieBrowseCard>;
@@ -69,7 +68,7 @@ describe('MovieBrowseCard', () => {
     const handlers = renderCard({ hasHover: true, isLoggedIn: true, inWatchlist: false });
 
     expect(screen.queryByRole('button', { name: /plus d’actions/i })).toBeNull();
-    await user.click(screen.getByRole('button', { name: 'Ajouter à ma liste' }));
+    await user.click(screen.getByRole('button', { name: 'Ajouter « Dune » à ma liste' }));
     expect(handlers.onToggleWatchlist).toHaveBeenCalledTimes(1);
 
     const propose = screen.getByRole('button', { name: 'Proposer « Dune » dans une soirée' });
@@ -86,7 +85,7 @@ describe('MovieBrowseCard', () => {
     await user.tab();
     expect(screen.getByRole('button', { name: 'Voir les détails de « Dune »' })).toHaveFocus();
     await user.tab();
-    expect(screen.getByRole('button', { name: 'Ajouter à ma liste' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Ajouter « Dune » à ma liste' })).toHaveFocus();
     await user.tab();
     expect(screen.getByRole('button', { name: /^Proposer « Dune »/ })).toHaveFocus();
   });
@@ -96,23 +95,25 @@ describe('MovieBrowseCard', () => {
     const handlers = renderCard({ hasHover: true, isLoggedIn: true, inWatchlist: true });
 
     expect(screen.getByRole('img', { name: 'Déjà dans votre liste' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Retirer de ma liste' }));
+    await user.click(screen.getByRole('button', { name: 'Retirer « Dune » de ma liste' }));
     expect(handlers.onToggleWatchlist).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Ajouter « Dune » à ma liste' })).toBeNull();
   });
 
   it('on the watchlist itself: no in-list badge, the toggle still removes the movie', () => {
     renderCard({ hasHover: true, isLoggedIn: true, inWatchlist: true, showListBadge: false });
 
     expect(screen.queryByRole('img', { name: 'Déjà dans votre liste' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Retirer de ma liste' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Retirer « Dune » de ma liste' })
+    ).toBeInTheDocument();
   });
 
   it('in the watchlist on a touch screen: the badge shows, no action button', () => {
     renderCard({ hasHover: false, isLoggedIn: true, inWatchlist: true });
 
     expect(screen.getByRole('img', { name: 'Déjà dans votre liste' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Retirer de ma liste' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Retirer « Dune » de ma liste' })).toBeNull();
   });
 
   it('row layout keeps the kebab on a hover-capable device', () => {
@@ -148,7 +149,7 @@ describe('MovieBrowseCard', () => {
   it('stacks the leading badge and the TV badge over the poster', () => {
     renderCard({
       item: { ...dune, mediaType: 'tv' },
-      leadingBadge: <MovieRankBadge rank={2} label="Rang 2" stacked />,
+      leadingBadge: <span>Rang 2</span>,
     });
 
     expect(screen.getByText('Rang 2')).toBeInTheDocument();
@@ -159,5 +160,11 @@ describe('MovieBrowseCard', () => {
     renderCard();
 
     expect(screen.queryByText('Série')).toBeNull();
+  });
+
+  it('names the watchlist toggle after the movie', () => {
+    renderCard({ hasHover: true, isLoggedIn: true, inWatchlist: false });
+
+    expect(screen.getByRole('button', { name: 'Ajouter « Dune » à ma liste' })).toBeInTheDocument();
   });
 });

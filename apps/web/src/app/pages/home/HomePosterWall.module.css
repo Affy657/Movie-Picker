@@ -21,6 +21,8 @@
 }
 
 .track {
+  --wall-drift-duration: 90s;
+
   position: absolute;
   top: -40%;
   right: -15%;
@@ -29,7 +31,7 @@
   grid-template-columns: repeat(auto-fill, 6.5rem);
   gap: var(--space-3);
   transform: rotate(-8deg);
-  animation: wall-drift var(--duration-drift) var(--ease-linear) infinite alternate;
+  animation: wall-drift var(--wall-drift-duration) var(--ease-linear) infinite alternate;
 }
 
 .tile {

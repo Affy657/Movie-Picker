@@ -234,6 +234,13 @@ describe('HomeHero', () => {
     expect(hidden).toBe(false);
     act(() => notify([{ isIntersecting: false, boundingClientRect: { top: 900 } as DOMRect }]));
     expect(hidden).toBe(false);
+    act(() =>
+      notify([
+        { isIntersecting: false, boundingClientRect: { top: -40 } as DOMRect },
+        { isIntersecting: true, boundingClientRect: { top: 80 } as DOMRect },
+      ])
+    );
+    expect(hidden).toBe(false);
 
     act(() => notify([{ isIntersecting: false, boundingClientRect: { top: -40 } as DOMRect }]));
     unmount();

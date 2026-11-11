@@ -339,7 +339,9 @@ describe('ProfileMoviesSection (MSW)', () => {
     renderSection('alice');
     const user = userEvent.setup();
 
-    expect(await screen.findByRole('button', { name: 'Ajouter à ma liste' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: 'Ajouter « Inception » à ma liste' })
+    ).toBeInTheDocument();
     await user.click(
       screen.getByRole('button', { name: 'Proposer « Inception » dans une soirée' })
     );
@@ -358,7 +360,9 @@ describe('ProfileMoviesSection (MSW)', () => {
     expect(
       await screen.findByRole('button', { name: 'Voir les détails de « Inception »' })
     ).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Ajouter à ma liste' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Ajouter « Inception » à ma liste' })
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^proposer/i })).not.toBeInTheDocument();
   });
 

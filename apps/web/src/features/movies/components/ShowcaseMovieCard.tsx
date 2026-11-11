@@ -27,19 +27,6 @@ interface ShowcaseMovieCardProps {
   className?: string;
 }
 
-export function MovieRankBadge({
-  rank,
-  label,
-  stacked,
-}: Readonly<{ rank: number; label: string; stacked?: boolean }>) {
-  return (
-    <span className={clsx(styles.badge, stacked && styles.badgeStacked)}>
-      <span className="visually-hidden">{label}</span>
-      <span aria-hidden>{rank}</span>
-    </span>
-  );
-}
-
 export default function ShowcaseMovieCard({
   title,
   year,
@@ -111,7 +98,10 @@ export default function ShowcaseMovieCard({
 
   if (rank != null) {
     return (
-      <li className={clsx(styles.card, styles.ranked, className)}>
+      <li
+        className={clsx(styles.card, styles.ranked, className)}
+        data-no-poster={posterSrc ? undefined : true}
+      >
         <span className={styles.rankNumeral} aria-hidden>
           {rank}
         </span>
@@ -121,5 +111,9 @@ export default function ShowcaseMovieCard({
     );
   }
 
-  return <li className={clsx(styles.card, className)}>{body}</li>;
+  return (
+    <li className={clsx(styles.card, className)} data-no-poster={posterSrc ? undefined : true}>
+      {body}
+    </li>
+  );
 }
