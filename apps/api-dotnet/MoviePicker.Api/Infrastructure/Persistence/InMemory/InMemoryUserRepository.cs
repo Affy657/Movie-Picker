@@ -11,7 +11,7 @@ public sealed class InMemoryUserRepository : IUserRepository
     private readonly ConcurrentDictionary<string, User> _byId = new();
     private readonly ConcurrentDictionary<string, string> _emailToId = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _handleToId = new(StringComparer.OrdinalIgnoreCase);
-    private readonly object _uniqueKeysGate = new();
+    private readonly Lock _uniqueKeysGate = new();
 
     public Task<User?> GetByIdAsync(string id, CancellationToken ct = default) =>
         Task.FromResult(_byId.TryGetValue(id, out var u) ? u : null);
