@@ -238,7 +238,7 @@ export function MenuChoiceRow<T extends string>({
   onChange,
 }: Readonly<MenuChoiceRowProps<T>>) {
   return (
-    <div role="group" aria-label={label} className={styles.choiceRow}>
+    <fieldset aria-label={label} className={styles.choiceRow}>
       {icon}
       <span className={clsx(styles.itemLabel, styles.choiceLabel)} aria-hidden="true">
         {label}
@@ -262,6 +262,6 @@ export function MenuChoiceRow<T extends string>({
           );
         })}
       </span>
-    </div>
+    </fieldset>
   );
 }

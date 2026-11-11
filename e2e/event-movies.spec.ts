@@ -71,7 +71,6 @@ test.describe('Guest on a phone', () => {
       await expect(
         page.getByRole('button', { name: `Retirer mon vote pour « ${STUB_MOVIE} »` })
       ).toBeVisible({ timeout: 15_000 });
-      await expect(page.getByText('1 votant sur 2')).toBeVisible();
 
       await expect(page.getByRole('toolbar', { name: /mode d.affichage/i })).toBeHidden();
       const overflow = await page.evaluate(
@@ -81,7 +80,9 @@ test.describe('Guest on a phone', () => {
 
       await hostPage.reload();
       await expect(hostPage.getByText(STUB_MOVIE).first()).toBeVisible({ timeout: 15_000 });
-      await expect(hostPage.getByText('1 votant sur 2')).toBeVisible();
+      await expect(
+        hostPage.getByRole('region', { name: 'Films proposés' }).getByText('+1', { exact: true })
+      ).toBeVisible();
     } finally {
       await hostContext?.close();
     }

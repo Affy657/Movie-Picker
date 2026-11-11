@@ -727,11 +727,11 @@ public sealed class ListMyEventsHandlerTests
         string pseudo,
         DateTimeOffset createdAt,
         string? userId = null) => new()
-    {
-        Id = id,
-        EventId = eventId,
-        Pseudo = pseudo,
-        UserId = userId,
-        CreatedAt = createdAt
-    };
+        {
+            Id = id,
+            EventId = eventId,
+            Pseudo = pseudo,
+            UserId = userId,
+            CreatedAt = createdAt
+        };
 }
