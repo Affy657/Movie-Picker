@@ -150,20 +150,21 @@ qualité sur `master` et sur les pull requests : Gitleaks, le lint des workflows
 (`actionlint`, `shellcheck`, `zizmor`), le lint et le build des deux applications, l'audit des
 dépendances npm et NuGet, les suites de tests, les E2E et le Quality Gate SonarCloud.
 
-`.github/workflows/deploy.yml` met en production, et **seulement à la main** : un push sur `master`
-ne déploie rien. Le déclenchement choisit son étape (la recette `staging.movie-picker.fr`, puis la
+`.github/workflows/deploy.yml` met en production sur déclenchement : un push sur `master` ne
+déploie rien. Le déclenchement choisit son étape (la recette `staging.movie-picker.fr`, puis la
 production) et sa cible (tout, front seul, API seule), refuse de partir si le run de CI du commit
 visé n'est pas vert, puis ajoute les deux portes propres au déploiement, les seuils Lighthouse et le
 scan Trivy de l'image. La production refuse de partir tant que la recette ne sert pas exactement le
 même commit, et elle redéploie l'image de conteneur que la recette exécute, sans la reconstruire.
-Grouper plusieurs livraisons dans un seul déploiement est le but : quand le dépôt était privé, ses
-minutes GitHub Actions étaient facturées et rejouer le chemin de déploiement à chaque commit en
-consommait la moitié.
+Le travail se fait en flux continu : chaque feature ou correctif rejoint `master` le jour où il est
+prêt et part en production dans la foulée, seul. Sa version se calcule à partir du `CHANGELOG.md`
+(une nouveauté donne une version mineure, un correctif une version de correctif), et le tag comme
+la release GitHub ne sont créés qu'une fois la production à jour.
 
 Trois choix structurent la mise en production :
 
-- **Rien ne part sans geste explicite**, donc la production est en retard sur `master` par défaut.
-  Un garde-fou final vérifie que chaque cible demandée est réellement déployée, parce qu'un job de
+- **Rien ne part sans geste explicite**, que donne la session qui livre ou la passe de maintenance
+  quotidienne, si bien que la production rattrape `master` dans la journée. Un garde-fou final vérifie que chaque cible demandée est réellement déployée, parce qu'un job de
   déploiement empêché par une porte rouge est *sauté* et non *en échec* : le run resterait vert.
 - **L'API n'est jamais promue avant d'être vérifiée.** Chaque révision est déployée sans trafic,
   éprouvée sur son URL taguée, et ne reçoit d'utilisateurs qu'une fois ses sondes vertes. Il n'y a
@@ -195,7 +196,7 @@ hébergement du front, identités et fédération GitHub) est décrite en Terraf
 | [`docs/development.md`](docs/development.md) | Installation détaillée, seed, scripts, tests, structure |
 | [`docs/design-system.md`](docs/design-system.md) | Jetons et composants partagés du front, props, états et garanties d'accessibilité |
 | [`CHANGELOG.md`](CHANGELOG.md) | Journal des versions, Keep a Changelog et SemVer |
-| [`docs/roadmap.md`](docs/roadmap.md) | Roadmap produit et tech, version par version |
+| [`docs/roadmap.md`](docs/roadmap.md) | Ce qui vient ensuite et le backlog, produit et tech |
 | [`docs/technical-debt.md`](docs/technical-debt.md) | Dette technique, contraintes et impasses connues |
 | [`docs/runbook-mongodb-restore.md`](docs/runbook-mongodb-restore.md) | Remettre une sauvegarde MongoDB dans le cluster de production |
 | [`archive/`](archive/) | Ce qui est gelé et conservé pour l'historique, hors du périmètre construit et déployé |

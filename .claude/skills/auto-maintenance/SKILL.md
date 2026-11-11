@@ -5,7 +5,7 @@ description: Passe de maintenance autonome de Movie Picker, sans aucun go de l'u
 
 # /auto-maintenance : la maintenance sans l'utilisateur
 
-**Délégation permanente, donnée par l'utilisateur le 2026-10-22.** Cette passe merge, pousse sur `master`, déploie la recette puis la production et revient en arrière **sans demander**. C'est la seule exception à la règle d'AGENTS.md qui interdit de déclencher `deploy.yml` sans demande explicite. Elle ne s'étend à aucune autre session, et à rien que ce skill ne décrit.
+**Délégation permanente, donnée par l'utilisateur le 2026-10-22.** Cette passe merge, pousse sur `master`, déploie la recette puis la production et revient en arrière **sans demander**. Avec la mise en ligne d'une feature validée par `/dev-feature`, c'est l'un des deux cas où `deploy.yml` part sans demande explicite (AGENTS.md). Elle ne s'étend à aucune autre session, et à rien que ce skill ne décrit.
 
 L'utilisateur n'entend parler de la passe **que s'il y a un problème** : un retour arrière, ou quelque chose qui attend son geste ou sa décision. Un run sans histoire se termine sans notification.
 
@@ -102,8 +102,11 @@ Les PR Dependabot d'abord, sur GitHub. Puis, depuis `$WT` (le checkout principal
 git -C C:/dev/movie-picker/.claude/worktrees/auto-maintenance fetch origin
 git -C C:/dev/movie-picker/.claude/worktrees/auto-maintenance switch -c integrate/auto-maintenance-<AAAA-MM-JJ> origin/master
 git -C C:/dev/movie-picker/.claude/worktrees/auto-maintenance merge --no-ff auto-maintenance/<AAAA-MM-JJ>
+pnpm --dir C:/dev/movie-picker/.claude/worktrees/auto-maintenance run release
 git -C C:/dev/movie-picker/.claude/worktrees/auto-maintenance push origin HEAD:master
 ```
+
+`release` ne fait quelque chose que si `## [Non publié]` de `CHANGELOG.md` liste un changement : un correctif que l'utilisateur peut constater (erreur Sentry ou GCP corrigée, bug d'affichage) y ajoute sa ligne sous `Fixed` ou `Security`, au format des lignes voisines ; une montée de dépendance, une issue Sonar ou une retouche de CI n'y vont pas. S'il annonce une version, la committer (`chore(release): X.Y.Z`) avant le push ; le tag et la release GitHub naissent au déploiement en production.
 
 Refus (`cannot lock ref`, non fast-forward) : une autre session a poussé pendant le hook. `git fetch`, nouvelle branche d'intégration, repousser, trois tentatives au plus.
 

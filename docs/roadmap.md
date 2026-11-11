@@ -10,14 +10,14 @@ Découpage par version, côté **métier / utilisateur** puis côté **plateform
 - **V1, V1.1, V1.2** : releases produit progressives sur la spec complète, sans casser le cœur métier.
 - **V1.3 à V1.10** : polish, enrichissement, outils hôte et nouvelles surfaces produit.
 - **Backlog** : idées et sujets non planifiés sur une date de release, triés régulièrement. Un backlog produit et un backlog tech, séparés, à la fin du fichier.
-- **Une branche par version** : chaque version se développe sur une branche qui porte son nom (`v1.6`, `v1.7`, …). Toutes les features de la version sont livrées sur cette branche, et elle n'est fusionnée dans `master` qu'une fois la version complète. Sur cette branche, la CI GitHub Actions n'est pas bloquante ; la fusion dans `master` rend la version déployable, et le déploiement reste un geste manuel (`deploy.yml`, voir `AGENTS.md`).
+- **Flux continu** : pas de branche ni de lot de version. Chaque entrée se livre seule, sur une branche courte fusionnée dans `master` et mise en production le jour où elle est prête, avec sa propre version calculée à partir du CHANGELOG (voir `AGENTS.md`). Une entrée livrée sort de ce fichier : le CHANGELOG et les releases GitHub portent l'historique. Les sections ✅ MVP à V1.7 restent comme trace de l'ancien découpage par version.
 - **Tailles t-shirt** : chaque item porte une estimation de charge, indépendante de sa valeur produit, pour comparer les versions autrement qu'au nombre de tickets. Échelle calibrée sur l'empreinte réelle des features déjà livrées.
   - `S` : moins de 800 lignes, une seule couche (front ou API), pas de changement de modèle.
   - `M` : 800 à 2000 lignes, front et API, au plus un champ ajouté au modèle.
   - `L` : 2000 à 5000 lignes, nouvelle entité ou nouveaux endpoints, plusieurs écrans touchés.
   - `XL` : au-delà, chantier structurant à découper en sous-tâches. Aucune feature livrée n'a atteint cette bande à ce jour.
   - `?` : périmètre pas assez défini pour être estimé.
-- **Poids d'une version** : somme des tailles de ses items, reportée dans le titre. `S` vaut 1, `M` vaut 3, `L` vaut 8, `XL` vaut 20 ; un `?` ne compte pas. C'est ce nombre qui permet de comparer deux versions et de décider d'y ajouter ou d'en retirer une feature.
+- **Poids d'une section** : somme des tailles de ses items, reportée dans le titre. `S` vaut 1, `M` vaut 3, `L` vaut 8, `XL` vaut 20 ; un `?` ne compte pas. Une entrée `L` ou `XL` se découpe en tranches livrables seules avant d'être commencée.
 - **Produit ou tech** : une entrée va en section Tech si elle est **transverse et indépendante de toute feature** (CI/CD, infra, sécurité de la chaîne, observabilité, outillage qualité). L'implémentation technique d'une feature (schéma, endpoints, cache) appartient à la feature elle-même.
 - **Types d'entrée tech** : 🏗️ infra et déploiement, ⚙️ CI/CD et qualité, 🔒 sécurité, 📊 observabilité, ♿ accessibilité.
 - **Format d'une entrée** : une ligne, ``- <statut> `type` `taille` **Titre** : description``, le type n'étant porté que par les entrées tech, ni version ni date après le titre (la section les porte). La description tient en une à deux phrases et 300 caractères au plus, et dit ce que l'utilisateur obtient plutôt que comment c'est construit. Le détail vit dans le code, la spec et les tests.

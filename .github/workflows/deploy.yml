@@ -1,10 +1,10 @@
 # Movie Picker deployment: Vite/React web app → Firebase Hosting; .NET API → Cloud Run.
 #
-# **Manual, never automatic.** A push to master no longer deploys: it only runs the gates of
-# `ci-cd.yml`. Production leaves when this workflow is triggered by hand, which allows grouping
-# several deliveries into a single deployment. When the repository was private, its GitHub Actions
-# minutes were billed and 99% of the cost went to master pushes: half of that cost was the
-# deployment path, replayed on every commit that was not delivered anyway.
+# **Triggered, never automatic, but right after each delivery.** A push to master only runs the
+# gates of `ci-cd.yml`. The session that delivers a change triggers this workflow once that run is
+# green, and the daily `/auto-maintenance` pass deploys whatever master holds: production follows
+# master within the day, one small delivery at a time, and its version is the one the delivered
+# commit carries (`pnpm run release`, `publish-release` below).
 #
 # **Through the staging first.** The same workflow deploys two stages, chosen at trigger time:
 # `staging` (the recette, `staging.movie-picker.fr`) then `production`. Production refuses to
@@ -878,3 +878,37 @@ jobs:
             echo "Every requested target is deployed to the $STAGE."
           fi
           exit "$fail"
+
+  # A version is born in the code: `pnpm run release` writes `APP_VERSION` and turns the
+  # `[Non publié]` section of `CHANGELOG.md` into the version before the merge. It becomes public
+  # here, once production serves the commit, so that a tag and a release always designate what
+  # users run. A deployment whose version is already published (a dependency update, a fix with
+  # nothing user-visible) publishes nothing. The only job with `contents: write`: it installs
+  # nothing from the lockfile, Node alone reads the changelog, and it holds no cloud identity.
+  publish-release:
+    name: 🏷️ Tag and publish the version production serves
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    needs: deploy-guard
+    if: inputs.stage == 'production'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Publish the release of the deployed version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -eo pipefail
+          version="$(node scripts/release.mjs current)"
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "$tag is already published: this deployment carries no new version."
+            exit 0
+          fi
+          node scripts/release.mjs notes "$version" > "$RUNNER_TEMP/notes.md"
+          gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --notes-file "$RUNNER_TEMP/notes.md" --latest
+          echo "Published $tag on $GITHUB_SHA."

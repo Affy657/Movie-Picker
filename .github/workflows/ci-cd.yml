@@ -10,7 +10,7 @@
 # and **so does master**: a commit touching neither `apps/` nor `scripts/` skipped the 9 test jobs
 # and concluded `success` in 12 s, yet `deploy.yml` reads only that conclusion. A red code commit
 # followed by a documentation commit gave a green run, hence an authorised deployment of code that
-# was never validated. The filter stays useful on PRs and `v*` branches, where nothing deploys; on
+# was never validated. The filter stays useful on PRs, where nothing deploys; on
 # master, minutes are free since the repository went public, and the conclusion of a run must
 # hold for the whole tree, not just the diff of the commit.
 #   - Web lane: lint-web, test-web.
@@ -39,18 +39,16 @@ name: 🔍 CI
 
 on:
   workflow_dispatch:
-  # Restricted to durable branches: an ephemeral branch with an open PR triggered two runs for the
-  # same commit (push + pull_request). It stays covered by pull_request.
+  # Master only: delivery is continuous, a feature lives on a short branch merged into master the
+  # day it is ready, and no long-lived version branch exists any more. An ephemeral branch with an
+  # open PR triggered two runs for the same commit (push + pull_request): it stays covered by
+  # pull_request.
   push:
     branches:
       - master
-      - "v*"
-  # A pull request into a version branch runs the gates too: a feature branch triggers no push
-  # run, so without `v*` here its review had no CI at all until the merge.
   pull_request:
     branches:
       - master
-      - "v*"
 
 permissions:
   contents: read
@@ -582,10 +580,9 @@ jobs:
   # `deploy.yml`, and the exclusion became a hole: `deploy.yml` consumes the *conclusion* of a CI
   # run, yet a skipped job does not fail a run. A manual run without Quality Gate therefore
   # concluded green and authorised a deployment Sonar had never seen.
-  # `v*` branches are analysed too, as named Sonar branches (`sonar.branch.name`), so that the
-  # Quality Gate is seen during the version rather than at its merge into master. Without that
-  # parameter, an analysis pushed from a branch would overwrite master's, which SonarCloud takes as
-  # the main branch by default.
+  # A manual run on another branch is analysed as a named Sonar branch (`sonar.branch.name`).
+  # Without that parameter, an analysis pushed from a branch would overwrite master's, which
+  # SonarCloud takes as the main branch by default.
   sonar:
     name: 📊 SonarCloud (analysis + coverage, blocking Quality Gate)
     needs: [changes, test-web, test-api]

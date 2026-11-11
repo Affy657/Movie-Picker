@@ -51,6 +51,7 @@ version publiée est associée à un tag Git et à une release GitHub.
 
 ### Changed
 
+- **Les nouveautés arrivent au fil de l'eau** : chaque amélioration est mise en ligne dès qu'elle est prête, avec son propre numéro de version, au lieu d'attendre une grosse mise à jour. « Quoi de neuf » ne s'ouvre plus que pour les nouveautés qui en valent la peine.
 - **La cloche de notifications ne recharge plus toute la boîte de réception** pour afficher son compteur.
 - **La liste de films d'une soirée coûte moins de lectures** : les enrichissements se lisent en une requête et les votes en un agrégat.
 - **La synchronisation Letterboxd manuelle s'espace de cinq minutes** et le dit à l'écran.
