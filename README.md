@@ -196,7 +196,7 @@ hébergement du front, identités et fédération GitHub) est décrite en Terraf
 | [`docs/development.md`](docs/development.md) | Installation détaillée, seed, scripts, tests, structure |
 | [`docs/design-system.md`](docs/design-system.md) | Jetons et composants partagés du front, props, états et garanties d'accessibilité |
 | [`CHANGELOG.md`](CHANGELOG.md) | Journal des versions, Keep a Changelog et SemVer |
-| [`docs/roadmap.md`](docs/roadmap.md) | Ce qui vient ensuite et le backlog, produit et tech |
+| [`docs/roadmap.md`](docs/roadmap.md) | Ce qui vient ensuite, le backlog et les idées écartées |
 | [`docs/technical-debt.md`](docs/technical-debt.md) | Dette technique, contraintes et impasses connues |
 | [`docs/runbook-mongodb-restore.md`](docs/runbook-mongodb-restore.md) | Remettre une sauvegarde MongoDB dans le cluster de production |
 | [`archive/`](archive/) | Ce qui est gelé et conservé pour l'historique, hors du périmètre construit et déployé |

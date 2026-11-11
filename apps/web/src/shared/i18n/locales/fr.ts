@@ -2307,12 +2307,12 @@ export const fr = {
     },
     trajectory: {
       title: '{{months}} mois, {{shipped}} paliers livrés',
-      lead: "{{commits}} commits depuis février 2026. Chaque palier est parti en production avant que le suivant ne s'ouvre. Les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
+      lead: "{{commits}} commits depuis février 2026. Jusqu'à la V1.7, chaque palier est parti en production avant que le suivant ne s'ouvre ; depuis, chaque amélioration part seule. Les {{planned}} derniers repères sont la suite prévue, pas du travail fait.",
       plannedBadge: 'à venir',
       currentBadge: 'en cours',
-      unplannedSpan: 'Entre la V1.10 et la V2',
+      unplannedSpan: 'Le backlog',
       unplannedDetail:
-        'Des versions qui ne sont pas encore cadrées. Leur nombre et leur contenu dépendront des retours d’usage.',
+        "Une quarantaine d'idées rangées par thème, sans date ni numéro de version. Chacune se tire quand un retour d'usage la justifie.",
       techHeading: 'Les chantiers techniques ouverts',
       sharedCache: 'Cache partagé entre instances',
       sharedCacheHint:
@@ -2446,49 +2446,31 @@ export const fr = {
       v17Item5: 'Top 3 films préférés',
       v17Item6: 'Photo de profil',
       v17Item7: 'Pioche dans la watchlist',
-      v18When: 'Ensuite',
-      v18What: 'V1.8',
-      v18Detail:
-        'La bibliothèque personnelle : des listes de films à soi, faites à la main, remplies par des règles ou tenues à plusieurs, et les films déjà vus repris de Letterboxd.',
-      v18Hint:
-        "L'import Letterboxd remonte cette fois les films vus et leur note, là où la V1.4 ne synchronisait que la liste à voir.",
-      v18Item1: 'Mes listes',
-      v18Item2: 'Listes intelligentes',
-      v18Item3: 'Listes collaboratives',
-      v18Item4: 'Films vus importés de Letterboxd',
-      v18Item5: 'Écart watchlist Letterboxd',
-      v19When: 'Plus tard',
-      v19What: 'V1.9',
-      v19Detail:
-        "Une vraie connexion temps réel à la place du rafraîchissement périodique, une soirée lisible hors-ligne et cadrée par le thème de l'hôte, puis la palette de commandes.",
-      v19Hint:
-        'Le temps réel est le dernier chantier de plateforme encore ouvert sur la trajectoire produit.',
-      v19Item1: 'Synchronisation temps réel',
-      v19Item2: 'Présence sur la page soirée',
-      v19Item3: 'Consultation hors-ligne',
-      v19Item4: 'Thème imposé',
-      v19Item5: 'Palette de commandes',
-      v110When: 'Plus tard encore',
-      v110What: 'V1.10',
-      v110Detail:
-        "Ouvrir l'application au-delà de son cercle, avec un fil d'actualité et des soirées publiques, et la confiance que cela demande : double authentification, passkeys, sessions visibles, alerte de connexion, état du service et aide en ligne.",
-      v110Hint:
-        "Les soirées ouvertes à tous arrivent après le temps réel : en sondage, le coût d'une soirée croît avec chaque participant.",
-      v110Item1: 'Reprise hors-ligne',
-      v110Item2: "Fil d'actualité",
-      v110Item3: 'Soirée publique',
-      v110Item4: 'Double authentification',
-      v110Item5: 'Passkeys',
-      v110Item6: 'Sessions actives',
-      v110Item7: 'Alerte nouvelle connexion',
-      v110Item8: "Centre d'aide",
-      v110Item9: 'Statut du service',
+      flowWhen: 'Depuis novembre 2026',
+      flowWhat: 'Flux continu',
+      flowDetail:
+        'Plus de palier : chaque amélioration part en production le jour où elle est prête, avec son propre numéro de version, calculé à partir du journal des changements.',
+      flowHint:
+        "La version n'est plus une promesse de contenu mais la trace de ce qui est vraiment en ligne : le tag et la release ne naissent qu'au déploiement en production.",
+      flowItem1: 'Une version par livraison',
+      flowItem2: 'Tag et release à la mise en ligne',
+      flowItem3: 'Journal des versions',
+      nextWhen: 'Ensuite',
+      nextWhat: 'Prochainement',
+      nextDetail:
+        "Les entrées en tête du backlog, prises dans l'ordre. L'ordre suit l'usage mesuré : ce qui fait entrer du monde dans une soirée passe avant les nouvelles surfaces.",
+      nextHint:
+        "Une surface qu'on ne sait pas mesurer se mesure avant d'être enrichie : c'est pour cela que la mesure ouvre la liste.",
+      nextItem1: 'Mesurer ce qui sert',
+      nextItem2: 'Entrer dans une soirée depuis son lien',
+      nextItem3: "Un accueil qui dit ce que fait l'app",
+      nextItem4: 'Description de soirée',
       v2When: 'Sans date annoncée',
       v2What: 'V2',
       v2Detail:
         'Une application mobile native, pleinement intégrée à la plateforme. Le prototype de cours a été archivé plutôt que rafistolé.',
       v2Hint:
-        'Aucune date annoncée : le périmètre dépendra de ce que la V1.10 aura laissé derrière elle.',
+        "Aucune date annoncée : elle se décidera sur l'usage de la version web, pas sur un calendrier.",
       v2Item1: 'Application native',
       v2Item2: 'Notifications système',
       v2Item3: 'Parcours complet hors navigateur',

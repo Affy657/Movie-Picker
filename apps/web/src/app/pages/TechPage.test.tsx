@@ -246,12 +246,12 @@ describe('TechPage', () => {
     const { container } = renderTechPage();
     const steps = [...container.querySelectorAll('section#trajectory > ol > li')];
 
-    expect(steps).toHaveLength(15);
+    expect(steps).toHaveLength(14);
     expect(steps[0]).toHaveTextContent(/MVP/);
     expect(steps.at(-1)).toHaveTextContent(/V2/);
-    expect(steps.some((step) => step.querySelector('h3')?.textContent?.includes('V1.8'))).toBe(
-      true
-    );
+    const titles = steps.map((step) => step.querySelector('h3')?.textContent ?? '');
+    expect(titles.some((title) => title.includes('Prochainement'))).toBe(true);
+    expect(titles.some((title) => /V1\.(8|9|10)\b/.test(title))).toBe(false);
 
     for (const step of steps.filter((step) => step.getAttribute('data-state') !== 'unplanned')) {
       expect(step.querySelector('h3')).not.toBeNull();
@@ -272,12 +272,16 @@ describe('TechPage', () => {
     const unplanned = steps.filter((step) => state(step) === 'unplanned');
     expect(unplanned).toHaveLength(1);
     expect(unplanned[0]).toBe(steps.at(-2));
-    expect(unplanned[0]?.textContent).toMatch(/pas encore/i);
-    expect(unplanned[0]?.textContent).toMatch(/V1\.10.*V2/);
+    expect(unplanned[0]?.textContent).toMatch(/backlog/i);
+    expect(unplanned[0]?.textContent).toMatch(/sans date ni numéro de version/i);
     expect(unplanned[0]?.querySelector('h3')).toBeNull();
     expect(unplanned[0]?.querySelectorAll('li')).toHaveLength(0);
 
-    expect(CURRENT_MILESTONES).toBe(0);
+    expect(CURRENT_MILESTONES).toBe(1);
+    const current = steps.find((step) => state(step) === 'current') as Element;
+    expect(current.querySelector('h3')).toHaveTextContent('Flux continu');
+    expect(steps.indexOf(current)).toBe(SHIPPED_MILESTONES);
+    expect(current).toHaveTextContent(/en cours/i);
     const v16 = steps.find((step) =>
       step.querySelector('h3')?.textContent?.startsWith('V1.6')
     ) as Element;
